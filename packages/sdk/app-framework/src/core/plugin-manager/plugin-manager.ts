@@ -48,7 +48,7 @@ import * as Semaphore from 'effect/Semaphore';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, makeAtomRegistry } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import type * as ActivationEvent from '../activation-event';
@@ -309,7 +309,7 @@ class ManagerImpl implements PluginManager {
     const core: string[] = plugins
       .filter(({ meta }) => meta.profile.tags?.includes('system'))
       .map(({ meta }) => meta.profile.key);
-    this.registry = registry ?? Registry.make();
+    this.registry = registry ?? makeAtomRegistry();
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
     });

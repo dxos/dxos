@@ -246,20 +246,33 @@ future object-residency policy is the single lifetime knob (decided
 with per-key state in owner-controlled containers. **App-graph (`graph.ts`
 `_node`/`_edges`) is excluded — being handled independently.**
 
-- [ ] **W1. TTL groundwork.** `defaultIdleTTL` (~5 s render-churn grace, not a
-      residency policy) on the `PluginManager` registry — and on every other
-      bare `Registry.make()` (`RegistryProvider` does not default it);
-      lifecycle regression test via `AtomRegistry.getNodes()`. Sharp edges:
-      `setIdleTTL(0)` = remove immediately; `setIdleTTL(Infinity)` =
-      `keepAlive`. First — enables the rest.
-- [ ] **W2. ECHO families → proxy-bounded.** Entity-keyed families become
-      `WeakMap<Entity, Atom>` (ephemeron-sound; proxy identity already
-      canonical per `proxy-identity.test.ts`); inner property/annotation maps
-      hang off the entry; ref-keyed families keep `Atom.family` (URI
-      Equal/Hash — fresh wrapper per read) minus `keepAlive`. No `setIdleTTL`
-      — avoids a second residency layer under ECHO's future object TTL. Drop
-      `keepAlive` from all 11; `withLabel`; GC test under `--expose-gc`.
-      Unblocks Phase 2 doc-handle eviction — residency stays ECHO's knob.
+- [x] **W1. TTL groundwork.** `makeAtomRegistry` in `@dxos/effect`
+      (`atom-registry.ts`) applies `DEFAULT_ATOM_IDLE_TTL` (5 s render-churn
+      grace, explicitly not a residency policy) and documents the two upstream
+      sharp edges — `setIdleTTL(0)` removes immediately (disabling the default
+      rather than inheriting it) and `setIdleTTL(Infinity)` is `keepAlive`.
+      Wired at the six production `Registry.make()` sites: `plugin-manager`,
+      `app-graph` graph + graph-builder (×2 incl. the traversal helper),
+      `AiContext`, `projection`, assistant `processor`. Left alone:
+      `sdk/migrations` and `common/graph` (no `@dxos/effect` edge; singleton
+      atoms only), plus test/story decorators. 5 lifecycle tests in
+      `atom-registry.test.ts` over `AtomRegistry.getNodes()`, including the
+      bare-registry sweep-immediately case this constructor exists to avoid.
+- [x] **W2. ECHO families → proxy-bounded.** `memoizePerEntity` /
+      `memoizePerEntityKey` (`internal/common/atom-memo.ts`) replace
+      `Atom.family` for the 8 entity-keyed families across `Obj/atoms.ts` and
+      `Annotation/atoms.ts`: a `WeakMap` keyed by the entity proxy, with inner
+      property/annotation tables owned by the entry so they die with it.
+      Non-proxy entities (queue-stored objects and other branded shapes, which
+      reach these families and can mint a fresh object per read) keep
+      `Atom.family`'s structural memoization — identity keying would churn an
+      atom per render there. Ref-keyed families (`refFamily`,
+      `refSimpleFamily`, `refPropertyFamily`) keep `Atom.family` since
+      `RefImpl` mints a fresh wrapper per read; `keepAlive` dropped from all 11. No `setIdleTTL` on any of them, so ECHO's future object-residency
+      policy stays the single knob. Tests: `atom-memo.test.ts` (memo identity,
+      per-key property atoms, node released when unobserved, clean rebuild +
+      re-subscribe, and a `--expose-gc`-gated collection test). Verified:
+      echo 577, echo-client 523, app-graph 158, app-framework 232, schema 51.
 - [ ] **W3. Attention/view-state containers.** `LocalBackend` un-pin (storage
       is the store); `MemoryBackend`/`AttentionManager` hold values in their
       existing `Map`s, one pinned notify atom per owner; prune ids on

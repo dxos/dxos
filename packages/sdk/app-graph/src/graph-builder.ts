@@ -14,6 +14,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
 import { type Type } from '@dxos/echo';
+import { makeAtomRegistry } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, getDebugName, isNonNullable } from '@dxos/util';
@@ -329,7 +330,7 @@ class GraphBuilderImpl implements GraphBuilder {
       tailSeparator: DEFAULT_TAIL_SEPARATOR,
       ...urlGrammar,
     };
-    this._registry = registry ?? Registry.make();
+    this._registry = registry ?? makeAtomRegistry();
     const graph = Graph.make({
       ...params,
       registry: this._registry,
@@ -666,7 +667,7 @@ const exploreImpl = async (
   path: string[] = [],
 ): Promise<void> => {
   const internal = builder as GraphBuilderImpl;
-  const { registry = Registry.make(), source = Node.RootId, relation, visitor } = options;
+  const { registry = makeAtomRegistry(), source = Node.RootId, relation, visitor } = options;
   // Break cycles.
   if (path.includes(source)) {
     return;

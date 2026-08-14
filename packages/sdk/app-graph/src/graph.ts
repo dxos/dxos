@@ -11,6 +11,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
+import { makeAtomRegistry } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable } from '@dxos/util';
@@ -247,7 +248,7 @@ class GraphImpl implements WritableGraph {
   });
 
   constructor({ registry, nodes, edges, onInitialize, onExpand, onRemoveNode }: GraphProps = {}) {
-    this._registry = registry ?? Registry.make();
+    this._registry = registry ?? makeAtomRegistry();
     this._onInitialize = onInitialize;
     this._onExpand = onExpand;
     this._onRemoveNode = onRemoveNode;

@@ -3,6 +3,7 @@
 //
 
 export * from './atom-kvs';
+export * from './atom-registry';
 export * as DynamicRuntime from './dynamic-runtime';
 export * as EffectEx from './EffectEx';
 export { type Configuration as OtelConfiguration, layerOtel } from './otel';

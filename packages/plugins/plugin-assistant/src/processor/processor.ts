@@ -34,7 +34,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, makeAtomRegistry } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -227,7 +227,7 @@ export class AiChatProcessor {
     private readonly _spaceLayer: Layer.Layer<SpaceServices, ServiceNotAvailableError, never>,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
-    this.#registry = this._options.observableRegistry ?? AtomRegistry.make();
+    this.#registry = this._options.observableRegistry ?? makeAtomRegistry();
     if (this._options.model && !this._options.system) {
       const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
       this._options.system = createSystemPrompt(capabilities);
