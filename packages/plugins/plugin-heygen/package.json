@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-heygen",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "HeyGen video-generation provider for Composer.",
   "homepage": "https://dxos.org",
@@ -30,9 +30,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/HeyGenPlugin.tsx",
-      "types": "./dist/types/src/HeyGenPlugin.d.ts",
-      "default": "./dist/lib/HeyGenPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#services": {
       "source": "./src/services/index.ts",
@@ -46,10 +46,10 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./HeyGenPlugin": {
+      "source": "./src/HeyGenPlugin.ts",
+      "types": "./dist/types/src/HeyGenPlugin.d.ts",
+      "import": "./dist/lib/HeyGenPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -63,13 +63,13 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-studio": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
@@ -78,6 +78,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

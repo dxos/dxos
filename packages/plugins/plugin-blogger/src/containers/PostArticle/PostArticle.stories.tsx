@@ -5,18 +5,20 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
-import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { BloggerOperationHandlerSet } from '#operations';
@@ -52,22 +54,21 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [
-        Capability.contributes(AppCapabilities.Translations, translations),
-        Capability.contributes(Capabilities.OperationHandler, BloggerOperationHandlerSet),
+        Capability.contribute(AppCapabilities.Translations, translations),
+        Capability.contribute(Capabilities.OperationHandler, BloggerOperationHandlerSet),
       ],
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        PreviewPlugin(),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        PreviewPlugin.make(),
+        ClientPlugin.make({
           types: [Blog.Publication, Blog.Post, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
             }),
         }),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
       ],
     }),
   ],
@@ -87,8 +88,17 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     // The client/space take a moment to initialize (identity creation, etc.), well past
-    // testing-library's default 1s `findBy*` timeout — mirrors the explicit timeouts other
-    // ECHO-backed stories use (e.g. plugin-kanban/KanbanArticle.stories.tsx).
-    void expect(await canvas.findByText('Post body.', undefined, { timeout: 10_000 })).toBeVisible();
+    // testing-library's default 1s `findBy*` timeout. Re-query and check visibility together
+    // inside `waitFor`: StrictMode double-mounts the body editor, so a bare `findByText` can
+    // resolve on the first CodeMirror instance right before it is detached, failing
+    // `toBeVisible` with "element is not in the document". Retrying as a unit lands on the
+    // live editor. Mirrors plugin-magazine/MagazineArticle.stories.tsx.
+    await waitFor(
+      async () => {
+        const body = await canvas.findByText('Post body.');
+        await expect(body).toBeVisible();
+      },
+      { timeout: 10_000 },
+    );
   },
 };

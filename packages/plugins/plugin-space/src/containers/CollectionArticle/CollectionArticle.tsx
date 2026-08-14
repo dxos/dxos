@@ -5,7 +5,8 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
 import { ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -92,8 +93,8 @@ const useCollectionItems = (collection: Collection.Collection, attendableId?: st
       objects.map((obj) => {
         const iconAnnotation = Obj.getIcon(obj);
         const targetPath = attendableId
-          ? Paths.getCollectionObjectPath(attendableId, obj.id)
-          : Paths.getObjectPathFromObject(obj);
+          ? GraphPath.getCollectionObjectPath(attendableId, obj.id)
+          : GraphPath.getObjectPathFromObject(obj);
 
         return {
           id: Obj.getURI(obj),

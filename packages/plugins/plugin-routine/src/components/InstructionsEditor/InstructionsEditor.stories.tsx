@@ -5,9 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Instructions, Skill } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Skill from '@dxos/compute/Skill';
 import { Filter, Ref } from '@dxos/echo';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
+import { type Space } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -49,7 +51,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A routine with no skills or context objects: the form shows empty add affordances. */
+/** A routine with no skills: the form shows an empty add affordance. */
 export const Default: Story = {
   decorators: [
     withSeededSpace((space) => {
@@ -58,12 +60,12 @@ export const Default: Story = {
   ],
 };
 
-/** A routine seeded with a context object: the Objects field renders the populated ref slot. */
-export const WithObject: Story = {
+/** A routine seeded with a skill: the Skills field renders the populated ref slot. */
+export const WithSkill: Story = {
   decorators: [
     withSeededSpace((space) => {
-      const subject = space.db.add(Text.make({ content: 'Meeting notes' }));
-      space.db.add(Instructions.make({ name: 'Summarize notes', objects: [Ref.make(subject)] }));
+      const skill = space.db.add(Skill.make({ key: 'org.dxos.test.summarize', name: 'Summarize' }));
+      space.db.add(Instructions.make({ name: 'Summarize notes', skills: [Ref.make(skill)] }));
     }),
   ],
 };

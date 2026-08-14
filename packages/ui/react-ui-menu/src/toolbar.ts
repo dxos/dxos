@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Node } from '@dxos/app-graph';
+import * as Node from '@dxos/app-graph/Node';
 
 /** `disposition` value an action opts into to appear in an object toolbar (vs context-menu-only). */
 export const TOOLBAR_DISPOSITION = 'toolbar';

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-iroh-beacon",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Iroh beacon plugin for peer-to-peer presence over iroh-gossip",
   "homepage": "https://dxos.org",
@@ -30,9 +30,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/IrohBeaconPlugin.ts",
-      "types": "./dist/types/src/IrohBeaconPlugin.d.ts",
-      "default": "./dist/lib/IrohBeaconPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -56,15 +56,15 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./IrohBeaconPlugin": {
+      "source": "./src/IrohBeaconPlugin.ts",
+      "types": "./dist/types/src/IrohBeaconPlugin.d.ts",
+      "import": "./dist/lib/IrohBeaconPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -78,12 +78,11 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
-    "@dxos/keys": "workspace:*",
+    "@dxos/halo": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

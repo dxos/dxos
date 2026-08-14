@@ -31,9 +31,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -55,6 +52,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -65,9 +65,6 @@
     },
     {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-form"
@@ -82,13 +79,7 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-attention"
-    },
-    {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-comments"
     },
     {
       "path": "../plugin-connector"
@@ -101,6 +92,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-review"
     },
     {
       "path": "../plugin-space"

@@ -17,7 +17,7 @@ import { IdentityDid } from '@dxos/keys';
  * analogue exists — atproto has no device concept at all (the PDS holds the signing keys),
  * whereas here every device is a distinct key-holding principal.
  */
-export const Kind = Schema.Literal('unknown', 'browser', 'native', 'mobile', 'agent', 'agent-managed');
+export const Kind = Schema.Literals(['unknown', 'browser', 'native', 'mobile', 'agent', 'agent-managed']);
 export type Kind = typeof Kind.Type;
 
 /**

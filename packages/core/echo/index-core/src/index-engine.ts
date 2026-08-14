@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
@@ -97,6 +97,15 @@ export interface DataSourceCursor {
 export interface IndexDataSource {
   readonly sourceName: string; // e.g. queue, automerge, etc.
 
+  /**
+   * Marks the start/end of one `IndexEngine.update` pass, letting a source reuse the
+   * cursor-independent part of its read across every index updated in that pass. Cursors differ per
+   * index, so the diff itself cannot be shared — only the underlying snapshot. Optional: a source
+   * with no expensive shared read can omit both.
+   */
+  beginPass?(): void;
+  endPass?(): void;
+
   getChangedObjects(
     ctx: Context,
     cursors: DataSourceCursor[],
@@ -125,7 +134,7 @@ export class IndexEngine {
   }
 
   migrate() {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       yield* this.#tracker.migrate();
       yield* this.#objectMetaIndex.migrate();
       yield* this.#ftsIndex.migrate();
@@ -137,7 +146,7 @@ export class IndexEngine {
    * Query text index and return full object metadata with rank.
    */
   queryText(query: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       return yield* this.#ftsIndex.query(query);
     });
   }
@@ -225,13 +234,58 @@ export class IndexEngine {
     return this.#objectMetaIndex.queryObjectIds(query);
   }
 
+  /**
+   * Delete index rows for garbage-collected documents and objects: whole documents (all their
+   * rows) plus individual objects removed from a surviving document. Cascades from `objectMeta`
+   * (by record id) into the FTS and reverse-ref indexes, and drops the tracker cursors for wiped
+   * documents. See `docs/GARBAGE_COLLECTION.md` in `@dxos/echo-host`.
+   *
+   * @returns Number of `objectMeta` rows deleted.
+   */
+  deleteObjects(opts: {
+    spaceId: SpaceId;
+    documentIds: readonly string[];
+    objects: readonly { documentId: string; objectId: string }[];
+  }): Effect.Effect<number, SqlError.SqlError, SqlTransaction.SqlTransaction | SqlClient.SqlClient> {
+    return Effect.gen({ self: this }, function* () {
+      const sqlTransaction = yield* SqlTransaction.SqlTransaction;
+      return yield* sqlTransaction.withTransaction(
+        Effect.gen({ self: this }, function* () {
+          const recordIds = yield* this.#objectMetaIndex.selectRecordIdsForRemoval({
+            spaceId: opts.spaceId,
+            documentIds: opts.documentIds,
+            objects: opts.objects,
+          });
+          if (recordIds.length > 0) {
+            yield* this.#ftsIndex.deleteByRecordIds(recordIds);
+            yield* this.#reverseRefIndex.deleteByRecordIds(recordIds);
+            yield* this.#objectMetaIndex.deleteByRecordIds(recordIds);
+          }
+          if (opts.documentIds.length > 0) {
+            yield* this.#tracker.deleteCursors({ spaceId: opts.spaceId, resourceIds: opts.documentIds });
+          }
+          return recordIds.length;
+        }),
+      );
+    }).pipe(Effect.withSpan('IndexEngine.deleteObjects'));
+  }
+
   update(
     ctx: Context,
     dataSource: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number },
   ): Effect.Effect<IndexingResult, SqlError.SqlError, SqlTransaction.SqlTransaction | SqlClient.SqlClient> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const result = makeEmptyIndexingResult();
+
+      dataSource.beginPass?.();
+
+      // One cursor read serves every index in this pass; the per-index diff still uses its own slice.
+      const cursorsByIndex = yield* this.#tracker.queryCursorsBySource({
+        sourceName: dataSource.sourceName,
+        // Pass undefined to get all cursors when spaceId is null.
+        spaceId: opts.spaceId ?? undefined,
+      });
 
       const {
         updated: updatedFtsIndex,
@@ -241,6 +295,7 @@ export class IndexEngine {
         indexName: 'fts5',
         spaceId: opts.spaceId,
         limit: opts.limit,
+        cursors: cursorsByIndex.get('fts5') ?? [],
       });
       result.updated += updatedFtsIndex;
       result.done = result.done && doneFtsIndex;
@@ -254,13 +309,19 @@ export class IndexEngine {
         indexName: 'reverseRef',
         spaceId: opts.spaceId,
         limit: opts.limit,
+        cursors: cursorsByIndex.get('reverseRef') ?? [],
       });
       result.updated += updatedReverseRefIndex;
       result.done = result.done && doneReverseRefIndex;
       accumulateIndexingResult(result, reverseRefObjects);
 
       return result as IndexingResult;
-    }).pipe(Effect.withSpan('IndexEngine.update'));
+    }).pipe(
+      // The snapshot must be dropped even when a pass fails, or the next pass would diff against
+      // stale heads and silently skip documents changed in between.
+      Effect.ensuring(Effect.sync(() => dataSource.endPass?.())),
+      Effect.withSpan('IndexEngine.update'),
+    );
   }
 
   /**
@@ -276,26 +337,22 @@ export class IndexEngine {
     ctx: Context,
     index: Index,
     source: IndexDataSource,
-    opts: { indexName: string; spaceId: SpaceId | null; limit?: number },
+    opts: { indexName: string; spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
   ): Effect.Effect<
     { updated: number; done: boolean; objects: readonly IndexerObject[] },
     SqlError.SqlError,
     SqlTransaction.SqlTransaction | SqlClient.SqlClient
   > {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const sqlTransaction = yield* SqlTransaction.SqlTransaction;
 
       // Reads run OUTSIDE the transaction: getChangedObjects may call RuntimeProvider.runPromise
       // internally (e.g. listDocumentHeads), which creates a fresh Effect fiber with no
       // TransactionConnection context. If those reads ran inside withTransaction, they would
       // try to acquire the same semaphore that the transaction already holds — causing a deadlock.
-      const cursors = yield* this.#tracker.queryCursors({
-        indexName: opts.indexName,
-        sourceName: source.sourceName,
-        // Pass undefined to get all cursors when spaceId is null.
-        spaceId: opts.spaceId ?? undefined,
+      const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, opts.cursors, {
+        limit: opts.limit,
       });
-      const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, cursors, { limit: opts.limit });
 
       if (objects.length === 0) {
         return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
@@ -303,7 +360,7 @@ export class IndexEngine {
 
       // Writes run INSIDE the transaction for atomicity.
       return yield* sqlTransaction.withTransaction(
-        Effect.gen(this, function* () {
+        Effect.gen({ self: this }, function* () {
           // Ensure objects exist in EntityMetaIndex.
           yield* this.#objectMetaIndex.update(objects);
 

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
 import { mutableArray, protoTimestamp, publicKey } from './service-schemas.ts';
@@ -62,7 +62,8 @@ export interface SubscribeToCredentialMessagesResponse extends Schema.Schema.Typ
 > {}
 
 export const SubscribeToSpacesRequest = Schema.Struct({
-  spaceKeys: mutableArray(publicKey),
+  // Optional: an empty payload subscribes to all spaces (the handler treats absent spaceKeys as no filter).
+  spaceKeys: Schema.optional(mutableArray(publicKey)),
 });
 export interface SubscribeToSpacesRequest extends Schema.Schema.Type<typeof SubscribeToSpacesRequest> {}
 
@@ -76,7 +77,8 @@ export const SubscribeToItemsResponse = Schema.Struct({
 export interface SubscribeToItemsResponse extends Schema.Schema.Type<typeof SubscribeToItemsResponse> {}
 
 export const SubscribeToFeedsRequest = Schema.Struct({
-  feedKeys: mutableArray(publicKey),
+  // Optional: an empty payload subscribes to all feeds (the handler treats absent feedKeys as no filter).
+  feedKeys: Schema.optional(mutableArray(publicKey)),
 });
 export interface SubscribeToFeedsRequest extends Schema.Schema.Type<typeof SubscribeToFeedsRequest> {}
 
@@ -231,10 +233,6 @@ export class Rpcs extends RpcGroup.make(
   }),
   Rpc.make('resetStorage', {
     payload: ResetStorageRequest,
-    error: serviceError,
-  }),
-  Rpc.make('getBlobs', {
-    success: protoMessage('dxos.devtools.host.GetBlobsResponse'),
     error: serviceError,
   }),
   Rpc.make('getSnapshots', {

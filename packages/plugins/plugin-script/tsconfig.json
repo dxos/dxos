@@ -35,12 +35,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -80,10 +74,10 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/mesh/rpc"
+      "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/mesh/rpc-tunnel"
+      "path": "../../core/halo/halo-react"
     },
     {
       "path": "../../core/protocols"
@@ -93,6 +87,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -165,9 +162,6 @@
     },
     {
       "path": "../plugin-game"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-markdown"

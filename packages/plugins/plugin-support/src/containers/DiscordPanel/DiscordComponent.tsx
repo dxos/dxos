@@ -129,7 +129,7 @@ const Header = () => {
   const { data, unavailable, guildId } = useWidgetContext();
 
   return (
-    <header className='flex items-center justify-between gap-1 px-2 bg-modal-surface'>
+    <header className='flex items-center justify-between gap-1 px-2 dx-modal-surface'>
       <a
         href={`https://discord.com/channels/${guildId}/${WELCOME_CHANNEL_ID}`}
         target='_blank'

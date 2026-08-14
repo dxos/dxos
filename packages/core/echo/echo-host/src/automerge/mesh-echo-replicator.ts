@@ -208,10 +208,9 @@ export class MeshEchoReplicator implements AutomergeReplicator {
  * Distinct from the generic {@link AutomergeReplicatorService} because `DataSpaceManager` drives
  * mesh-specific hooks (`authorizeDevice`, `createExtension`) not present on the base interface.
  */
-export class MeshEchoReplicatorService extends EffectContext.Tag('@dxos/echo-host/MeshEchoReplicator')<
-  MeshEchoReplicatorService,
-  MeshEchoReplicator
->() {}
+export class MeshEchoReplicatorService extends EffectContext.Service<MeshEchoReplicatorService, MeshEchoReplicator>()(
+  '@dxos/echo-host/MeshEchoReplicator',
+) {}
 
 /**
  * Effect Layer constructing a {@link MeshEchoReplicator}.

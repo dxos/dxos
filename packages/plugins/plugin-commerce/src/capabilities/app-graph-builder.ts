@@ -5,16 +5,19 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Position } from '@dxos/util';
 
-import { meta } from '../meta';
-import { Provider, Search, SearchOperation } from '../types';
+import { meta } from '#meta';
+import { Provider, Search, SearchOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -22,6 +25,7 @@ export default Capability.makeModule(
       // Show Provider.Provider objects as nodes under each space.
       GraphBuilder.createExtension({
         id: 'commerceProviders',
+        url: { key: 'commerce', kind: 'item', path: [] },
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const providers = get(space.db.query(Filter.type(Provider.Provider)).atom);
@@ -117,6 +121,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

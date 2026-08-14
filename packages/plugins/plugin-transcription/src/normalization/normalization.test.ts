@@ -2,9 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { FunctionExecutor, ServiceContainer } from '@dxos/compute-runtime';
+import { ProcessManager } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Actor, Message } from '@dxos/types';
@@ -48,54 +56,46 @@ const messages: MessageWithRangeId[] = [
   }),
 );
 
-// const REMOTE_AI = true;
+// Local process runtime that resolves and invokes operations through `Operation.Service`.
+// `sentenceNormalization` declares no services, so `ServiceResolver.layerRequirements()` is empty.
+const operationLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
+  Layer.provide(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+  Layer.provide(ServiceResolver.layerRequirements()),
+  Layer.provide(OperationHandlerSet.provide(OperationHandlerSet.make(sentenceNormalization))),
+  Layer.provide(Registry.layer),
+  Layer.provide(Trace.layerNoop),
+  Layer.provide(KeyValueStore.layerMemory),
+);
 
 describe.skip('SentenceNormalization', () => {
-  const getExecutor = () => {
-    return new FunctionExecutor(
-      new ServiceContainer().setServices({
-        // ai: {
-        //   client: REMOTE_AI
-        //     ? new Edge AiServiceClient({
-        //         endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-        //         defaultGenerationOptions: {
-        //           model: 'ai.claude.model.claude-3-5-sonnet-20241022',
-        //         },
-        //       })
-        //     : new Ollama AiServiceClient({
-        //         overrides: {
-        //           model: 'llama3.1:8b',
-        //         },
-        //       }),
-        // },
-      }),
-    );
-  };
-
   test('messages merging', { timeout: 120_000 }, async () => {
-    const executor = getExecutor();
-    const sentences: MessageWithRangeId[] = [];
-    let buffer: MessageWithRangeId[] = [];
-    let activeSentenceIndex = 0;
-    for (const message of messages) {
-      const result = await executor.invoke(sentenceNormalization, {
-        messages: [...buffer, message],
-      });
-      log.info('BEFORE sentence splicing', { activeSentenceIndex, sentences, inserting: result.sentences });
-      sentences.splice(activeSentenceIndex, sentences.length - activeSentenceIndex, ...result.sentences);
-      log.info('AFTER sentence splicing', { activeSentenceIndex, sentences });
+    const runtime = ManagedRuntime.make(operationLayer);
+    try {
+      const sentences: MessageWithRangeId[] = [];
+      let buffer: MessageWithRangeId[] = [];
+      let activeSentenceIndex = 0;
+      for (const message of messages) {
+        const result = await runtime.runPromise(
+          Operation.invoke(sentenceNormalization, { messages: [...buffer, message] }),
+        );
+        log.info('BEFORE sentence splicing', { activeSentenceIndex, sentences, inserting: result.sentences });
+        sentences.splice(activeSentenceIndex, sentences.length - activeSentenceIndex, ...result.sentences);
+        log.info('AFTER sentence splicing', { activeSentenceIndex, sentences });
 
-      if (sentences.length > 0) {
-        activeSentenceIndex = sentences.length - 1;
-        buffer = sentences.slice(activeSentenceIndex);
+        if (sentences.length > 0) {
+          activeSentenceIndex = sentences.length - 1;
+          buffer = sentences.slice(activeSentenceIndex);
+        }
       }
-    }
 
-    log.info('sentences', {
-      messages: JSON.stringify(messages, null, 2),
-      sentences: JSON.stringify(sentences, null, 2),
-    });
-    throw new Error('test');
+      log.info('sentences', {
+        messages: JSON.stringify(messages, null, 2),
+        sentences: JSON.stringify(sentences, null, 2),
+      });
+      throw new Error('test');
+    } finally {
+      await runtime.dispose();
+    }
   });
 
   // TODO(burdon): Restore a Feed-based version once `MessageNormalizer` has a

@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 // QueryAST is referenced indirectly through `Type.InstanceType<typeof TableSchema>`
 // (Ref.Ref(View.View) → View.View → QueryAST.Query) in the emitted .d.ts; the
@@ -13,7 +11,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { Annotation, DXN, JsonSchema, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { ViewAnnotation } from '@dxos/schema';
 
 // TODO(wittjosiah): Try to clean up this type inference.
@@ -23,11 +21,8 @@ export class Table extends Type.makeObject<Table>(DXN.make('org.dxos.type.table'
 
     view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
 
-    sizes: Schema.Record({
-      // TODO(wittjosiah): Should be JsonPath.
-      key: Schema.String,
-      value: Schema.Number,
-    }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+    // TODO(wittjosiah): Key should be JsonPath.
+    sizes: Schema.Record(Schema.String, Schema.Number).pipe(Schema.mutableKey, FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['name']),
     ViewAnnotation.set(['view']),
@@ -47,32 +42,27 @@ type MakeProps = {
  * Make a table as a view of a data set.
  */
 export const make = ({ name, sizes = {}, view, jsonSchema }: MakeProps): Table => {
-  const table = Obj.make(Table, { name, view: Ref.make(view), sizes } as Obj.MakeProps<typeof Table>);
-
-  // Preset sizes.
+  // Preset sizes are computed before construction: Effect 4 records are readonly at the type level,
+  // so the defaults go in as initial props rather than being assigned onto the live object.
+  const initialSizes: Record<string, number> = { ...sizes };
   if (jsonSchema) {
     const schema = JsonSchema.toEffectSchema(jsonSchema);
-    const properties = SchemaAST.getPropertySignatures(schema.ast);
-    for (const property of properties) {
+    for (const property of SchemaAST.getPropertySignatures(schema.ast)) {
       const name = property.name.toString() as SchemaEx.JsonPath;
-      if (sizes?.[name]) {
-        table.sizes[name] = sizes[name];
+      if (initialSizes[name] !== undefined) {
         continue;
       }
 
-      Match.type<SchemaAST.AST>().pipe(
-        Match.when({ _tag: 'BooleanKeyword' }, () => {
-          table.sizes[name] = 100;
-        }),
-        Match.when({ _tag: 'NumberKeyword' }, () => {
-          table.sizes[name] = 100;
-        }),
-        Match.orElse(() => {
-          // Noop.
-        }),
-      )(property.type);
+      // A plain switch rather than `Match.when({ _tag })`: matching an object pattern against
+      // Effect 4's mutually recursive AST union expands into a mapped type the checker cannot resolve.
+      switch (property.type._tag) {
+        case 'Boolean':
+        case 'Number':
+          initialSizes[name] = 100;
+          break;
+      }
     }
   }
 
-  return table;
+  return Obj.make(Table, { name, view: Ref.make(view), sizes: initialSizes } as Obj.MakeProps<typeof Table>);
 };

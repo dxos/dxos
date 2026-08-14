@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Entity, Obj, type Type } from '@dxos/echo';
 
@@ -21,7 +21,7 @@ import * as Node from './node';
  * @template TData - The type of data returned when the matcher succeeds.
  *   Defaults to Node.Node, but can be a more specific type (e.g., an ECHO entity).
  */
-export type NodeMatcher<TData = Node.Node> = (node: Node.Node, get: Atom.Context) => Option.Option<TData>;
+export type NodeMatcher<TData = Node.Node> = (node: Node.Node, get: Atom.AtomContext) => Option.Option<TData>;
 
 //
 // Basic Node Matchers
@@ -182,7 +182,7 @@ export const whenAll: {
   (...matchers: NodeMatcher<any>[]): NodeMatcher<any>;
 } =
   (...matchers: NodeMatcher<any>[]): NodeMatcher<any> =>
-  (node: Node.Node, get: Atom.Context) => {
+  (node: Node.Node, get: Atom.AtomContext) => {
     let first: Option.Option<any> = Option.none();
     for (const candidate of matchers) {
       const result = candidate(node, get);
@@ -220,7 +220,7 @@ export const whenAny: {
   (...matchers: NodeMatcher<any>[]): NodeMatcher<any>;
 } =
   (...matchers: NodeMatcher<any>[]): NodeMatcher<any> =>
-  (node: Node.Node, get: Atom.Context) => {
+  (node: Node.Node, get: Atom.AtomContext) => {
     for (const candidate of matchers) {
       const result = candidate(node, get);
       if (Option.isSome(result)) {
@@ -315,5 +315,5 @@ export const whenEchoObjectMatches = (node: Node.Node): Option.Option<Node.Node>
  */
 export const whenNot =
   (matcher: NodeMatcher<any>): NodeMatcher<unknown> =>
-  (node: Node.Node, get: Atom.Context): Option.Option<unknown> =>
+  (node: Node.Node, get: Atom.AtomContext): Option.Option<unknown> =>
     Option.isNone(matcher(node, get)) ? Option.some(node) : Option.none();

@@ -2,9 +2,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
-import { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
 
 // TODO(wittjosiah): Implement object duplication without serializer.
 const handler: Operation.WithHandler<typeof SpaceOperation.DuplicateObject> = SpaceOperation.DuplicateObject.pipe(

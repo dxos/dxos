@@ -84,7 +84,7 @@ describe('Ref', () => {
       tasks: [{ '/': `echo:/${id}` }],
     };
 
-    const contact = Type.getSchema(Contact).pipe(Schema.decodeUnknownSync)(contactData);
+    const contact = Schema.decodeUnknownSync(Type.getSchema(Contact))(contactData);
     expect(Ref.isRef(contact.tasks[0])).toEqual(true);
     expect(contact.tasks[0].uri.toString()).toEqual(`echo:/${id}`);
   });

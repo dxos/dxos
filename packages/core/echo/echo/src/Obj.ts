@@ -10,7 +10,6 @@ import * as Exit from 'effect/Exit';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as Utils from 'effect/Utils';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
@@ -72,11 +71,11 @@ export interface Unknown extends BaseObj {}
 // TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
 //   Effect Schema normalizes proxy objects to plain objects before calling filter predicates.
 //   Possible approaches: custom Schema.declare, AST manipulation, or upstream contribution.
-export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Object> = Schema.Struct({
-  id: Schema.String,
-}).pipe(
-  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  Schema.annotations({
+export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Object> = Schema.StructWithRest(
+  Schema.Struct({ id: Schema.String }),
+  [Schema.Record(Schema.String, Schema.Unknown)],
+).pipe(
+  Schema.annotate({
     [internal.TypeAnnotationId]: {
       kind: Entity.Kind.Object,
       typename: internal.ANY_OBJECT_TYPENAME,
@@ -286,7 +285,7 @@ export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Ef
 export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<Option.Option<T>, never> =>
   getReactive(snapshot).pipe(
     Effect.map(Option.some),
-    Effect.catchAll(() => Effect.succeed(Option.none())),
+    Effect.catch(() => Effect.succeed(Option.none())),
   );
 
 /**
@@ -380,8 +379,9 @@ export type Mutable<T> = internal.Mutable<T>;
  *
  * Note: Only accepts objects. Use `Relation.update` for relations.
  */
-export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): void => {
+export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): T => {
   internal.change(obj, callback);
+  return obj;
 };
 
 /**
@@ -576,6 +576,24 @@ export const getTypename = (entity: Unknown | Snapshot): string | undefined => i
 export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.Database | undefined =>
   internal.getDatabase(entity);
 
+/**
+ * Get the branch this object instance is bound to: `'main'` for the canonical object, or the branch of
+ * a `db.branch()` independent instance. The branch is a property of the instance — two instances of the
+ * same object id on different branches each report their own branch.
+ */
+export const getBranch = (obj: Unknown): string => internal.getBranch(obj);
+
+/**
+ * Get an immutable snapshot of the object at the given historical heads — a detached instance, not a
+ * pin on the live object. Only the surface that asks for it sees the historical value; the live
+ * object and every other surface are unaffected. The functional alternative to a read-time-travel pin.
+ */
+export const getVersion = <T extends Unknown>(obj: T, heads: readonly string[]): Snapshot<T> => {
+  const db = getDatabase(obj);
+  invariant(db, 'object is not bound to a database');
+  return db.getVersion(obj, heads);
+};
+
 //
 // Meta
 //
@@ -768,7 +786,7 @@ const valuesEqual = (left: unknown, right: unknown): boolean => {
     return left === right;
   }
   if (typeof left !== 'object' || typeof right !== 'object') {
-    return Utils.structuralRegion(() => Equal.equals(left, right));
+    return Equal.equals(left, right);
   }
   if (Ref.isRef(left) && Ref.isRef(right)) {
     return left.uri === right.uri;

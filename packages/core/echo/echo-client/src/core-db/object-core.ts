@@ -93,7 +93,16 @@ export class ObjectCore {
   public mountPath: Doc.KeyPath = [];
 
   /**
+   * The branch this core instance is bound to (`'main'` = the canonical document). Set on switch
+   * (device-global canonical) and on `db.branch` bindings (independent instances), so the branch is
+   * a property of the instance — `Obj.getBranch(obj)` reads it. Distinct from the device-global
+   * current-branch selection (persisted separately), which a `db.branch` instance overrides locally.
+   */
+  public branch: string = 'main';
+
+  /**
    * Handles link resolution as well as manual changes.
+   * Fires on real data changes (local writes, remote sync) and backs the subscription channel.
    */
   public readonly updates = new Event();
 
@@ -135,7 +144,7 @@ export class ObjectCore {
    * Memoized rebuilt Effect Schema for persisted `Type.Type` entities.
    * Lazily populated; invalidated when the entity's `jsonSchema` changes.
    */
-  public cachedStaticSlot?: Schema.Schema.AnyNoContext = undefined;
+  public cachedStaticSlot?: Schema.Codec<any, any> = undefined;
 
   /**
    * The single root proxy for this core. Replaces the `DatabaseImpl._rootProxies`

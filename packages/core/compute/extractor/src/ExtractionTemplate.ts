@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { type Database, type Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
@@ -22,11 +22,11 @@ import {
 import { type Resolver } from './Resolver';
 
 /** How to find an existing instance of a target type for create-or-update merge. */
-export const IdentitySpec = Schema.Struct({
+export const TargetIdentity = Schema.Struct({
   /** Candidate field name(s) used to build the {@link Resolver} input (e.g. `['email']`). */
   fields: Schema.Array(Schema.String),
 });
-export interface IdentitySpec extends Schema.Schema.Type<typeof IdentitySpec> {}
+export interface TargetIdentity extends Schema.Schema.Type<typeof TargetIdentity> {}
 
 /** A relation to create from the source object to an extracted target. */
 export const RelationSpec = Schema.Struct({
@@ -40,7 +40,7 @@ export const TargetSpec = Schema.Struct({
   /** ECHO typename to extract (drives the structured-output schema and getOrCreate). */
   type: Schema.String,
   /** How to find an existing instance for merge. Omit to always create. */
-  identity: Schema.optional(IdentitySpec),
+  identity: Schema.optional(TargetIdentity),
   /** Parent target type for containment via `Obj.setParent` (e.g. Segment → Trip). */
   parent: Schema.optional(Schema.String),
   /** Relations to create from the source to this target (e.g. Message → Trip). */
@@ -90,7 +90,7 @@ export interface TemplateExtractorOptions<Payload, PayloadEncoded extends Record
   /** Optional registered operation, so the extractor is also a first-class operation. */
   readonly operation?: Operation.Definition<ExtractInput, ExtractResult>;
   /** Effect Schema for the LLM structured output. */
-  readonly payloadSchema: Schema.Schema<Payload, PayloadEncoded>;
+  readonly payloadSchema: Schema.Codec<Payload, PayloadEncoded>;
   /** Cheap pre-LLM candidacy check (keywords/domains/etc.). */
   readonly match: (source: Obj.Any) => MatchResult;
   /** Source text handed to the LLM. */
@@ -137,8 +137,8 @@ export const makeTemplateExtractor = <Payload, PayloadEncoded extends Record<str
       // Wrap genuine failures + defects (e.g. AiService unavailable) as ExtractError, but leave
       // fiber interruption untouched so cancellation propagates (neither catchAll nor
       // catchAllDefect catches interruption).
-      Effect.catchAll((error) => Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, error))),
-      Effect.catchAllDefect((defect) =>
+      Effect.catch((error) => Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, error))),
+      Effect.catchDefect((defect) =>
         Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, defect)),
       ),
     );

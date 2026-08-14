@@ -4,9 +4,9 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom-react';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type Label } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -38,4 +38,4 @@ export type SimpleLayoutState = {
   companionVariant?: string;
 };
 
-export const State = Capability.make<Atom.Writable<SimpleLayoutState>>(`${meta.profile.key}.state`);
+export const State = Capability.makeSingleton<Atom.Writable<SimpleLayoutState>>()(`${meta.profile.key}.state`);

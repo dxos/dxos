@@ -1,6 +1,6 @@
 {
   "name": "@dxos/agent-runtime",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Local agent process runtime (agent-service) and assistant-coupled test helpers.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -50,13 +50,11 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect/ai": "catalog:",
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"
   },

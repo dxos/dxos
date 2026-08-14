@@ -5,6 +5,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
@@ -62,6 +63,14 @@ export type AddOptions = {
    * @default 'linked-doc'
    */
   placeIn?: ObjectPlacement;
+
+  /**
+   * Append the object to this feed instead of the automerge-backed space database. The object is
+   * returned synchronously (a live feed object) and persisted in the background — confirm the write
+   * completed with {@link Database.flush}. Synchronous alternative to the async
+   * {@link Database.appendToFeed}; `placeIn` is ignored when set.
+   */
+  to?: Feed.Feed;
 };
 
 /**
@@ -92,6 +101,18 @@ export type FlushOptions = {
    * @default false
    */
   updates?: boolean;
+};
+
+/**
+ * A caller-owned, writable **independent instance** of one object bound to one branch: a distinct
+ * object instance (not a UI surface), separate from the device-global canonical object.
+ * @see Database.branch
+ */
+export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = {
+  /** Live object bound to the branch document (`'main'` -> the canonical live object). */
+  readonly object: T;
+  /** Release the binding (drops the doc-handle listener; never deletes the branch document). */
+  dispose(): void;
 };
 
 /**
@@ -148,6 +169,8 @@ export interface Database extends Queryable {
    *
    * Only Object and Relation entities are accepted. To persist a Type definition use
    * {@link addType} — passing a Type entity is rejected at compile time (and at runtime).
+   *
+   * Pass `{ to: feed }` to append to a feed instead (synchronous; confirm with {@link flush}).
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T & RejectTypeEntity<T>, opts?: AddOptions): T;
 
@@ -185,6 +208,60 @@ export interface Database extends Queryable {
    */
   flush(opts?: FlushOptions): Promise<void>;
 
+  //
+  // Branching. A branch is a writable alternate timeline of an object subtree (same object ids,
+  // shared automerge history, true CRDT merge-back). The registry is synced on the space root;
+  // the currently-viewed branch stays device-local.
+  //
+
+  /**
+   * The device-global current branch for an object id (`'main'` by default).
+   * @deprecated Prefer `Obj.getBranch(obj)` — it takes the object and reports the branch of that
+   * specific instance (including `db.branch()` independent instances), not just the device selection.
+   */
+  getCurrentBranch(objectId: string): string;
+
+  /**
+   * An immutable snapshot of the object at the given historical heads — a detached instance, not a
+   * pin on the live object. Prefer `Obj.getVersion(obj, heads)`.
+   */
+  getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T>;
+
+  /** All branch names available for an object, including the implicit `'main'` (always first). */
+  listBranches(objectId: string): string[];
+
+  /**
+   * Fork the object and its referenced subtree into a new branch (does not switch to it).
+   * @param opts.fromHeads Fork from a historical frontier instead of the tip (a bare heads array
+   *   applies to the root only; a map forks each member from its own frontier).
+   */
+  createBranch(
+    rootObjectId: string,
+    name: string,
+    opts?: { fromHeads?: readonly string[] | Record<string, readonly string[]> },
+  ): Promise<void>;
+
+  /** Switch the object's subtree to a branch (or back to `'main'`). Device-local; cascades to children. */
+  switchBranch(rootObjectId: string, name: string): Promise<void>;
+
+  /** Merge a branch back into main across the subtree, then switch back to main. */
+  mergeBranch(rootObjectId: string, name: string, opts?: { deleteAfter?: boolean }): Promise<void>;
+
+  /** Fold main's changes into a branch across the subtree (the reverse of {@link mergeBranch}). */
+  syncBranch(rootObjectId: string, name: string): Promise<void>;
+
+  /** Delete a branch (its documents lose their sync reference). Cannot delete `'main'`. */
+  deleteBranch(rootObjectId: string, name: string): void;
+
+  /**
+   * Create a caller-owned, writable binding to one branch of one object — a live object whose reads
+   * resolve the branch document and whose writes land on the branch document only. Multiple bindings
+   * to different branches of the same object may coexist; the device-global current branch and other
+   * bindings are unaffected. Binding to `'main'` returns the canonical live object. Bindings are
+   * ephemeral and never persisted — the caller must `dispose()`.
+   */
+  branch<T extends Obj.Unknown>(obj: T, name: string): Promise<BranchBinding<T>>;
+
   /**
    * Removes feed items by ID.
    */
@@ -199,6 +276,14 @@ export interface Database extends Queryable {
    * Returns queue replication backlog for the feed's namespace.
    */
   getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
+
+  /**
+   * Disposes and drops the in-memory handle (live working-set / core cache) for a feed, so the next
+   * access re-reads it cold. Advanced cache-control; primarily used by tests to model a spawned
+   * process reading the feed with an empty in-memory cache. Public (not `_`-prefixed) so it survives
+   * declaration stripping for cross-package test use.
+   */
+  evictFeedHandle(feed: Feed.Feed): Promise<void>;
 
   /**
    * Hashes and uploads `bytes` via the chosen storage backend, returning an un-added Blob object.
@@ -234,23 +319,49 @@ export interface Database extends Queryable {
    * Subscribe to combined sync state changes.
    */
   subscribeToSyncState(cb: (state: SyncState) => void, options?: GetSyncStateOptions): CleanupFn;
+
+  /**
+   * Per-space storage metrics: objects (alive/deleted), automerge documents, feeds, feed blocks.
+   * Read-only. Intended as an occasional/administrative call. See garbage-collection design notes
+   * in `@dxos/echo-host`.
+   */
+  stats(): Promise<DatabaseStats>;
+
+  /**
+   * Reclaim storage held by soft-deleted objects and the documents / feed blocks that are no longer
+   * reachable. Per-space and destructive; intended as an occasional/administrative call. See
+   * garbage-collection design notes in `@dxos/echo-host`.
+   */
+  runGarbageCollection(options?: GarbageCollectionOptions): Promise<GarbageCollectionReport>;
+
+  /**
+   * Replaces the set of objects the space directory tracks, dropping everything not retained.
+   *
+   * Derived from the directory's own maps, so clearing a space costs one change rather than a scan
+   * of its contents. The objects are dropped, not soft-deleted: they are gone from the space and
+   * their documents are reclaimed by garbage collection, on this peer and — as the change
+   * replicates — on every other. Permanent; there is nothing left to restore from.
+   *
+   * @returns Ids of the objects dropped from the directory.
+   */
+  retainObjects(keep: Iterable<string>): string[];
 }
 
 export const isDatabase = (obj: unknown): obj is Database => {
   return obj ? typeof obj === 'object' && TypeId in obj && obj[TypeId] === TypeId : false;
 };
 
-export const Database: Schema.Schema<Database> = Schema.Any.pipe(Schema.filter((space) => isDatabase(space)));
+export const Database: Schema.Codec<Database> = Schema.Any.pipe(Schema.refine(isDatabase));
 
 /**
  * Effect service tag for Database dependency injection.
  */
-export class Service extends Context.Tag('@dxos/echo/Database/Service')<
+export class Service extends Context.Service<
   Service,
   {
     readonly db: Database;
   }
->() {}
+>()('@dxos/echo/Database/Service') {}
 
 /**
  * Layer that provides a Database service that throws when accessed.
@@ -265,7 +376,7 @@ export const notAvailable = Layer.succeed(Service, {
 /**
  * Creates a Database service instance from a Database.
  */
-export const makeService = (db: Database): Context.Tag.Service<Service> => {
+export const makeService = (db: Database): Service['Service'] => {
   return {
     get db() {
       return db;
@@ -349,6 +460,9 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError,
  * Adds an object or relation to the database.
  * @see {@link Database.add}
  */
+// The Effect wrapper intentionally omits the method's `opts` (e.g. `{ to: feed }`): it is applied
+// point-free (`Effect.forEach(Database.add)`), where a second parameter would collide with the
+// iteratee index. Effect-style feed appends go through `Database.appendToFeed` / `Feed.append`.
 export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Effect.Effect<T, never, Service> =>
   Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'));
 
@@ -394,6 +508,29 @@ export const flush = (opts?: FlushOptions) =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.flush(opts)))).pipe(
     Effect.withSpan('Database.flush'),
   );
+
+/**
+ * Reclaims storage held by soft-deleted objects and the documents they orphan.
+ * @see {@link Database.runGarbageCollection}
+ */
+export const runGarbageCollection = (options?: GarbageCollectionOptions) =>
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.runGarbageCollection(options)))).pipe(
+    Effect.withSpan('Database.runGarbageCollection'),
+  );
+
+/**
+ * Drops every object in the space except the retained ones. Permanent.
+ * @see {@link Database.retainObjects}
+ */
+export const retainObjects = (keep: Iterable<string>) =>
+  Service.pipe(Effect.map(({ db }) => db.retainObjects(keep))).pipe(Effect.withSpan('Database.retainObjects'));
+
+/**
+ * Per-space storage metrics.
+ * @see {@link Database.stats}
+ */
+export const stats = () =>
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.stats()))).pipe(Effect.withSpan('Database.stats'));
 
 /**
  * Creates a `QueryResult` object that can be subscribed to.
@@ -453,6 +590,55 @@ export interface SyncState {
 }
 
 /**
+ * Per-space storage metrics returned by {@link Database.stats}.
+ */
+export interface DatabaseStats {
+  readonly objects: {
+    /** Live (non-deleted) objects across the root and all linked documents. */
+    readonly alive: number;
+    /** Soft-deleted objects not yet reclaimed by garbage collection. */
+    readonly deleted: number;
+  };
+  /** Automerge documents owned by the space (root + linked + branch documents). */
+  readonly documents: number;
+  /** Feeds registered for the space. */
+  readonly feeds: number;
+  /** Total feed blocks stored locally for the space. */
+  readonly feedBlocks: number;
+}
+
+/**
+ * Options for {@link Database.runGarbageCollection}.
+ */
+export interface GarbageCollectionOptions {
+  /**
+   * Also delete stale index rows for reclaimed documents/objects.
+   * @default true
+   */
+  readonly index?: boolean;
+  /**
+   * Reserved for feed-block purge (positioned deletion markers). Not yet effective on the local
+   * host — see the feed-purge deferral in `@dxos/echo-host` garbage-collection design notes.
+   * @default true
+   */
+  readonly feeds?: boolean;
+}
+
+/**
+ * Report of what {@link Database.runGarbageCollection} reclaimed.
+ */
+export interface GarbageCollectionReport {
+  /** Soft-deleted objects unlinked from the space directory. */
+  readonly unlinkedObjects: number;
+  /** Automerge documents wiped from storage (chunks + heads). */
+  readonly removedDocuments: number;
+  /** Index rows deleted. */
+  readonly removedIndexEntries: number;
+  /** Feed blocks purged. */
+  readonly purgedFeedBlocks: number;
+}
+
+/**
  * Options for reading combined sync state.
  */
 export interface GetSyncStateOptions {
@@ -473,10 +659,10 @@ export const getSyncState = (options?: GetSyncStateOptions): Effect.Effect<SyncS
  * Subscribe to sync state changes.
  */
 export const subscribeToSyncState = (options?: GetSyncStateOptions): Stream.Stream<SyncState, never, Service> =>
-  Stream.asyncScoped((emit) =>
+  Stream.callback<SyncState, never, Service>((queue) =>
     Effect.gen(function* () {
       const { db } = yield* Service;
-      const cleanup = db.subscribeToSyncState((state) => emit.single(state), options);
+      const cleanup = db.subscribeToSyncState((state) => Queue.offerUnsafe(queue, state), options);
       yield* Effect.addFinalizer(() => Effect.sync(cleanup));
     }),
   );

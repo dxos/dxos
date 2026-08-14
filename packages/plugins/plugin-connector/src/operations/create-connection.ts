@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
+import { Connection } from '@dxos/link';
 
-import { Connection, ConnectorOperation } from '../types';
+import { ConnectorOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof ConnectorOperation.CreateConnection> =
   ConnectorOperation.CreateConnection.pipe(

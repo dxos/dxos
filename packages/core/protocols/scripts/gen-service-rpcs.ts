@@ -21,18 +21,8 @@ const SRC_DIR = join(dirname(fileURLToPath(import.meta.url)), '../src');
  * Keys double as the rpc tag prefix and must match the `ClientServices` keys in @dxos/client-protocol.
  */
 const SERVICES = [
-  { key: 'SystemService', fqn: 'dxos.client.services.SystemService' },
-  { key: 'NetworkService', fqn: 'dxos.client.services.NetworkService' },
-  { key: 'LoggingService', fqn: 'dxos.client.services.LoggingService' },
-  { key: 'IdentityService', fqn: 'dxos.client.services.IdentityService' },
-  { key: 'InvitationsService', fqn: 'dxos.client.services.InvitationsService' },
-  { key: 'DevicesService', fqn: 'dxos.client.services.DevicesService' },
   { key: 'SpacesService', fqn: 'dxos.client.services.SpacesService' },
   { key: 'DataService', fqn: 'dxos.echo.service.DataService' },
-  { key: 'QueryService', fqn: 'dxos.echo.query.QueryService' },
-  { key: 'FeedService', fqn: 'dxos.client.services.FeedService' },
-  { key: 'ContactsService', fqn: 'dxos.client.services.ContactsService' },
-  { key: 'EdgeAgentService', fqn: 'dxos.client.services.EdgeAgentService' },
   { key: 'DevtoolsHost', fqn: 'dxos.devtools.host.DevtoolsHost' },
 ] as const;
 
@@ -67,9 +57,9 @@ for (const { key, fqn } of SERVICES) {
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
 

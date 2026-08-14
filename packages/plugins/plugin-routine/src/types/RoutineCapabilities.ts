@@ -5,20 +5,30 @@
 import type * as Effect from 'effect/Effect';
 
 import type { DelegationStrategy } from '@dxos/agent-runtime';
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Routine from '@dxos/compute/Routine';
 import type { Database, Obj } from '@dxos/echo';
-
-import * as Routine from './Routine';
 
 /**
  * Optional supervisor strategy for the agent chat service. When contributed (by a plugin that knows
  * the agent/plan model, e.g. plugin-assistant), the conversational agent delegates outstanding work
  * to sub-agents and folds their results back into the conversation. Consumed by the AgentService
  * LayerSpec; absent by default (a plain conversational agent).
+ *
+ * A registry rather than a singleton: the AgentService reads it with `getAll` and takes the first,
+ * and a harness that needs the strategy in place before the app's own module activates has to be
+ * able to contribute one without the two colliding.
  */
-export const AgentDelegationStrategy = Capability.make<DelegationStrategy>(
+export const AgentDelegationStrategy = Capability.make<DelegationStrategy>()(
   'org.dxos.plugin.routine.capability.agentDelegationStrategy',
 );
+
+/**
+ * Id of the built-in blank template. Declared here (rather than on the template itself) so callers that
+ * scaffold a routine without the picker — e.g. a project's toolbar — can name it without importing the
+ * template module.
+ */
+export const BlankTemplateId = 'org.dxos.routine.blank';
 
 /**
  * An automation template contributed by a plugin. The create dialog and the per-object "Automations"
@@ -40,7 +50,7 @@ export type Template = {
   appliesTo?: (subject?: Obj.Unknown) => boolean;
   /**
    * Build the routine as a fully-wired in-memory {@link Routine.Routine} graph — the routine plus its owned
-   * trigger and instructions, assembled by `Routine.make`. The create flow persists it with a single
+   * trigger and instructions, assembled by `makeRoutine`. The create flow persists it with a single
    * `Database.add` (which cascades the owned children); scaffold must NOT call `Database.add` itself.
    * `Database.Service` may still be used for read-only lookups (e.g. loading a feed ref). `subject` is set
    * when scaffolding from an object's companion.
@@ -48,4 +58,4 @@ export type Template = {
   scaffold: (ctx: { name?: string; subject?: Obj.Unknown }) => Effect.Effect<Routine.Routine, Error, Database.Service>;
 };
 
-export const Template = Capability.make<Template>('org.dxos.plugin.routine.capability.template');
+export const Template = Capability.make<Template>()('org.dxos.plugin.routine.capability.template');

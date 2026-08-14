@@ -25,10 +25,17 @@ import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
+import { bootChunking } from './src/vite/boot-chunking';
+import { optimizeDepsInclude } from './src/vite/optimize-deps';
+import { traceBootLeak } from './src/vite/trace-boot-leak';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
+// Opt-in `DX_PLUGIN_SET=minimal` swaps the full plugin registry for plugin-defs.minimal.tsx
+// without touching main.tsx — for a faster boot when the full registry is not needed.
+const isMinimalPluginSet = process.env.DX_PLUGIN_SET === 'minimal';
+const pluginSetFile = isMinimalPluginSet ? 'src/plugin-defs.minimal.tsx' : 'src/plugin-defs.tsx';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -36,10 +43,30 @@ const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
+// Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
+const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
+
 /**
  * Transpile targets for oxc (dev) and Rolldown (build).
  */
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
+
+/**
+ * Glob matching the entry of every plugin the minimal registry can reach, for optimize-deps
+ * scanning. Derived from the registry sources so adding a plugin to `plugin-defs.minimal.tsx`
+ * needs no edit here; a specifier scan is enough because a missed plugin costs a
+ * "discovered new dependencies" reload rather than a wrong build.
+ */
+const minimalPluginEntries = () => {
+  const names = new Set<string>();
+  for (const file of [pluginSetFile, 'src/plugin-defs.core.tsx']) {
+    const source = readFileSync(path.join(dirname, file), 'utf8');
+    for (const [, name] of source.matchAll(/@dxos\/plugin-([a-z0-9-]+)/g)) {
+      names.add(name);
+    }
+  }
+  return path.resolve(rootDir, `packages/plugins/plugin-{${[...names].sort().join(',')}}/src/index.{ts,tsx}`);
+};
 
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
@@ -53,23 +80,18 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   //   * `?url` static-asset imports (e.g. plugin-zen's m4a samples,
   //     plugin-script's `esbuild.wasm`) get real bundled URLs instead of
   //     the `""` empty-url stub that `dx-compile` writes into `dist`.
-  // Disabled under `DX_FASTBUNDLE` for the smoke-test/preview build where
-  // build speed wins over correctness for unchanged source.
-  !isFastBundle &&
-    importSource({
-      include: ['@dxos/**', '#*'],
-      exclude: [
-        '@dxos/random-access-storage',
-        '@dxos/lock-file',
-        '@dxos/network-manager',
-        '@dxos/teleport',
-        '@dxos/config',
-        '@dxos/client-services',
-        '@dxos/observability',
-        // TODO(dmaretskyi): Decorators break in lit.
-        '@dxos/lit-*',
-      ],
-    }),
+  // Under `DX_FASTBUNDLE` (smoke-test/preview build) only the `@dxos/**`-to-source
+  // forcing is skipped, where build speed wins over correctness for unchanged source.
+  // Package-internal `#*` subpath imports must still resolve to source, or they fall
+  // through to `dist/lib/neutral/*` and fail when a package has not been compiled.
+  // Packages whose source is not vite-safe publish no `source` condition at all, so they resolve
+  // to dist here exactly as they do under node/bun — no app-local exclude list, and no divergence
+  // between runtimes. The `dist-runtime` moon tag keeps their dist built for `serve`. The same
+  // holds per-export for bundler-plugin entrypoints (`./vite-plugin`, `./plugin`) of packages whose
+  // remaining exports are vite-safe; the `vite-plugin` tag builds their dist.
+  importSource({
+    include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
+  }),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
   wasm(),
@@ -81,6 +103,13 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
  */
 export default defineConfig((env) => ({
   root: dirname,
+  define: {
+    // Per-dev-server-instance id (config re-evaluates on every server start/restart). main.tsx
+    // suffixes the coordinator SharedWorker *name* with it so a restarted server gets a fresh
+    // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
+    // URL + name). Empty in production builds — the name must stay stable across deploys.
+    __DX_DEV_SERVER_BOOT_ID__: JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+  },
   server: {
     host: true,
     https:
@@ -91,6 +120,21 @@ export default defineConfig((env) => ({
           }
         : undefined,
     watch: {
+      // Use the fs.watch backend, not fsevents. chokidar's fsevents handler keeps ONE native stream per
+      // root with a Set of listeners — one per watched path — and routes every event by running
+      // `indexOf` against every listener (lib/fsevents-handler.js, `cont.listeners.forEach`). Resolving
+      // `@dxos/*` from source means a watch per transformed module, so that set runs to thousands and
+      // grows as more of the app is browsed; a write burst then pins the main thread and the server
+      // stops responding (diagnosed via `moon run composer-app:diagnose-serve`: 4062 of 4064 samples in
+      // fse_dispatch_event, with no idle time at all). `ignored` does not help — chokidar filters after
+      // this routing, so the scan happens regardless.
+      useFsEvents: false,
+      // Build output is not source, and the watch root spans the monorepo, so a single
+      // `moon run <pkg>:build` — which rewrites dist across many packages — is a large event burst for
+      // no benefit. Vite already ignores .git, node_modules, test-results and its cache dir, and merges
+      // these in. Trade-off: rebuilding a package whose dist is consumed at runtime no longer triggers
+      // HMR, so that needs a server restart — the honest behaviour for a prebuilt dependency.
+      ignored: ['**/dist/**', '**/.moon/cache/**', '**/temp/**', '**/coverage/**', '**/*.tsbuildinfo'],
       // Coalesce write bursts (codemods, formatters, git checkout/rebase) into
       // a single HMR pass: chokidar holds add/change events until the file size
       // has been stable for `stabilityThreshold` ms, so a hundred-file burst
@@ -120,10 +164,24 @@ export default defineConfig((env) => ({
         './src/main.tsx',
         './src/workers/dedicated-worker.ts',
         './src/workers/coordinator-worker.ts',
-        './src/plugin-defs.tsx',
+        `./${pluginSetFile}`,
       ],
     },
   },
+  preview: {
+    // With https enabled (and no proxy) vite serves preview over HTTP/2, whose stream
+    // multiplexing removes the ~6-connection HTTP/1.1 request serialization across the
+    // ~500-chunk boot preload wave — the dominant pre-main cost when previewing locally.
+    // Same opt-in as `server`: HTTPS=true with key/cert at the repo root.
+    https:
+      process.env.HTTPS === 'true'
+        ? {
+            key: '../../../key.pem',
+            cert: '../../../cert.pem',
+          }
+        : undefined,
+  },
+
   oxc: {
     target: [...browserTargets],
   },
@@ -133,9 +191,7 @@ export default defineConfig((env) => ({
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
     target: [...browserTargets],
-    rollupOptions: {
-      // NOTE: Set cache to `false` to help debug flaky builds.
-      // cache: false,
+    rolldownOptions: {
       input: {
         internal: path.resolve(dirname, './internal.html'),
         main: path.resolve(dirname, './index.html'),
@@ -150,117 +206,51 @@ export default defineConfig((env) => ({
       external: ['playwright', 'playwright-core', /^chromium-bidi(\/|$)/, '@vitest/browser-playwright'],
       output: {
         chunkFileNames,
-        // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
-        // record form that worked in Rollup is rejected at runtime.
-        manualChunks: (id: string) => {
-          if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) {
-            return 'react';
-          }
+        // Chunk grouping: React pinned, and the boot path collapsed from ~520 default-split
+        // chunks into a handful via `bootChunking`. Coarser inference was measured and
+        // rejected (2026-08): per-package groups welded each package's eager and lazy halves
+        // (boot 4.03->10.07MB), and `$initial` tags span all five HTML entries plus their
+        // recursive dependencies (boot ->19MB).
+        codeSplitting: {
+          groups: [
+            { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
+            // Naive maxSize splitting cuts through module cycles and breaks evaluation
+            // order (rolldown#8803); the fix rolldown offers (strictExecutionOrder) costs
+            // ~+1.8MB of inhibited treeshaking. Instead the manifest carries a cycle-safe
+            // partition (see `boot-chunking.ts`) and each bucket becomes its own chunk.
+            {
+              name: boot.groupName,
+              includeDependenciesRecursively: false,
+              priority: 5,
+            },
+          ],
         },
       },
     },
   },
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite'],
-    // List deeply-imported dep entrypoints so vite's optimize-deps phase
-    // pre-bundles them up front. Without this, vite discovers them mid-load
-    // (when a dynamic import unwraps a new subpath), which forces a full page
-    // reload with the "Discovered new dependencies" banner — ~10 s of wasted
-    // dev time per discovery cycle and the most common cause of HMR appearing
-    // to hang. The pre-bundle cost is amortized after the first `vite serve`.
+    // The full set of dep entrypoints the app reaches, so vite's optimize-deps phase pre-bundles
+    // them up front rather than discovering them mid-load (when a dynamic import unwraps a new
+    // subpath), which forces a full page reload with the "Discovered new dependencies" banner —
+    // ~10 s of wasted dev time per cycle and the most common cause of HMR appearing to hang.
     //
-    // IMPORTANT: every entry must be resolvable from this app's root. If even
-    // one is not, vite aborts the *entire* dependency scan ("Failed to run
-    // dependency scan. Skipping dependency pre-bundling.") and pre-bundles
-    // nothing — worse than an empty list. Several entries below (@automerge/*,
-    // @atlaskit/pragmatic-drag-and-drop*, @effect/ai*, @opentelemetry/*,
-    // xstate, @xstate/react, react-qr-rounded) are only transitive deps of
-    // `@dxos/*` packages; they are listed as direct deps of composer-app in
-    // package.json *specifically* so they resolve from root and can be
-    // pre-bundled here — each one was observed triggering a mid-session
-    // "discovered new dependencies" reload before being added.
-    include: [
-      // React.
-      'react',
-      'react-dom',
-      'react/jsx-runtime',
-      // Effect (with subpath imports).
-      'effect',
-      'effect/Effect',
-      'effect/Array',
-      'effect/Ref',
-      'effect/Option',
-      'effect/Cause',
-      'effect/Exit',
-      'effect/Layer',
-      'effect/Runtime',
-      'effect/Fiber',
-      'effect/Deferred',
-      'effect/Function',
-      'effect/HashSet',
-      'effect/PubSub',
-      'effect/Schema',
-      'effect/Context',
-      'effect/Stream',
-      'effect/Console',
-      '@effect/platform',
-      '@effect/platform-browser',
-      // Effect Atom (reactive state; always loaded, triggered a mid-session reload before being listed).
-      '@effect-atom/atom',
-      '@effect-atom/atom/Registry',
-      // Effect AI (with submodule exports).
-      '@effect/ai',
-      '@effect/ai/AiError',
-      '@effect/ai/Chat',
-      '@effect/ai/LanguageModel',
-      '@effect/ai/Prompt',
-      '@effect/ai/Response',
-      '@effect/ai/Tool',
-      '@effect/ai/Toolkit',
-      '@effect/ai-anthropic',
-      '@effect/ai-anthropic/AnthropicClient',
-      '@effect/ai-anthropic/AnthropicLanguageModel',
-      '@effect/ai-anthropic/AnthropicTool',
-      '@effect/ai-openai',
-      '@effect/ai-openai/OpenAiClient',
-      '@effect/ai-openai/OpenAiLanguageModel',
-      // Automerge (CRDT; deeply imported via @dxos/echo).
-      '@automerge/automerge',
-      '@automerge/automerge-repo',
-      // OpenTelemetry (loaded eagerly via @dxos/observability).
-      '@opentelemetry/api',
-      '@opentelemetry/api-logs',
-      '@opentelemetry/exporter-logs-otlp-http',
-      '@opentelemetry/exporter-metrics-otlp-http',
-      '@opentelemetry/sdk-logs',
-      '@opentelemetry/sdk-metrics',
-      // XState + QR (HALO invitation flow via @dxos/shell).
-      'xstate',
-      '@xstate/react',
-      'react-qr-rounded',
-      // Atlaskit drag-and-drop (mosaic / dnd).
-      '@atlaskit/pragmatic-drag-and-drop',
-      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
-      // CodeMirror (many files in HAR).
-      'codemirror',
-      '@codemirror/state',
-      '@codemirror/view',
-      '@codemirror/language',
-      '@codemirror/commands',
-      '@codemirror/autocomplete',
-      '@codemirror/lang-javascript',
-      '@codemirror/lang-json',
-      '@codemirror/lang-markdown',
-      '@codemirror/theme-one-dark',
-      // Radix (many requests in HAR).
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu',
-      '@radix-ui/react-tooltip',
-      '@radix-ui/react-scroll-area',
-      '@radix-ui/react-popover',
-      '@radix-ui/react-slot',
-      '@radix-ui/react-context-menu',
-    ],
+    // The list is static rather than left to the `entries` scan below because vite runs that scan
+    // only when there is no valid optimizer cache: once a cache exists it is trusted wholesale, so
+    // a cache built by a session that never opened a given plugin stays permanently short of that
+    // plugin's deps and re-optimizes on first use, session after session. `include` is part of the
+    // cache's config hash, so regenerating this list also invalidates the cache it feeds.
+    //
+    // Regenerate with `moon run composer-app:gen-optimize-deps`.
+    //
+    // Entries must resolve from this app's root, which is why deps reached only through `@dxos/*`
+    // packages (@automerge/*, @atlaskit/pragmatic-drag-and-drop*, @opentelemetry/*, xstate, …) are
+    // also listed as direct deps of composer-app in package.json. An entry that stops resolving
+    // costs a warning per start, not a failed scan.
+    //
+    // `DX_PLUGIN_SET=minimal` keeps the scan instead: the list covers the full registry, and
+    // pre-bundling all of it is the cost that mode exists to avoid.
+    include: isMinimalPluginSet ? undefined : optimizeDepsInclude,
     // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
     // to `internal.html` / `devtools.html` / `reset.html` don't trip a
     // "discovered new dependencies" reload mid-session.
@@ -269,17 +259,20 @@ export default defineConfig((env) => ({
     // are loaded via `await import(...)` at runtime so their bare-module
     // imports aren't reachable from the static graph rooted at `index.html` —
     // Vite would discover them mid-session and trigger a re-optimize + full
-    // page reload per plugin family. Walking the entries at startup makes the
-    // first optimize-deps pass discover all transitive deps. Production
-    // bundling is unaffected: Rolldown still emits a separate chunk per
-    // dynamic import.
+    // page reload per plugin family. Walking the entries at startup catches
+    // whatever `include` above has drifted away from, and is what
+    // `gen-optimize-deps` regenerates that list from. Production bundling is
+    // unaffected: Rolldown still emits a separate chunk per dynamic import.
     entries: [
       './index.html',
       './internal.html',
       './devtools.html',
       './reset.html',
       './recovery.html',
-      path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
+      // Under DX_PLUGIN_SET=minimal, scan only the plugins the minimal registry can reach,
+      // read from the registry sources themselves — the hand-maintained list this replaces
+      // had drifted from them (missing `tasks`/`progress`, still naming a removed `outliner`).
+      isMinimalPluginSet ? minimalPluginEntries() : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
   resolve: {
@@ -288,6 +281,7 @@ export default defineConfig((env) => ({
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
     // native node: polyfill layer handle subpaths like `node:util/types`.
     alias: [
+      ...(isMinimalPluginSet ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }] : []),
       { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
       { find: /^node:util$/, replacement: '@dxos/node-std/util' },
       { find: /^node:path$/, replacement: '@dxos/node-std/path' },
@@ -295,6 +289,8 @@ export default defineConfig((env) => ({
       { find: /^path$/, replacement: '@dxos/node-std/path' },
       { find: /^node:crypto$/, replacement: '@dxos/node-std/crypto' },
       { find: /^crypto$/, replacement: '@dxos/node-std/crypto' },
+      { find: /^node:stream$/, replacement: '@dxos/node-std/stream' },
+      { find: /^stream$/, replacement: '@dxos/node-std/stream' },
       { find: /^tiktoken\/lite$/, replacement: path.resolve(dirname, 'stub.mjs') },
       // NOTE: react-ui must be aliased because vite-plugin-import-source only intercepts imports from
       //   source files — imports embedded inside compiled dist/ files bypass it entirely.
@@ -320,6 +316,7 @@ export default defineConfig((env) => ({
     plugins: () => [...sharedPlugins(env)],
   },
   plugins: [
+    traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
     ...sharedPlugins(env),
 
@@ -422,6 +419,7 @@ export default defineConfig((env) => ({
     // on the plugin definition (it raced with Vite's optimize-deps and produced
     // a chunk-content drift + partial-batch crash cascade).
     importMapPlugin(),
+    boot.plugin,
 
     // Hand the boot loader the Composer brand mark so the visual identity
     // is established before any JS bundle parses. The SVG carries its own
@@ -459,6 +457,11 @@ export default defineConfig((env) => ({
       injectManifest: {
         maximumFileSizeToCacheInBytes: 30000000,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
+        // The Phosphor catalog (~9,000 SVGs in /phosphor/) is deliberately NOT precached: the
+        // manifest entries alone would add one install-time request per file, slowing every
+        // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,
+        // so any icon the app has rendered once stays available offline.
+        globIgnores: ['**/phosphor/**'],
       },
       includeAssets: ['favicon.ico'],
       manifest: {
@@ -550,6 +553,9 @@ export default defineConfig((env) => ({
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
         path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
       ],
+      // Serves /phosphor/ for the runtime icon resolver in @dxos/react-ui; assets are copied
+      // into the build output and cached at runtime by sw.ts (excluded from the precache).
+      assets: [{ route: '/phosphor', dir: phosphorIconsCore }],
       // verbose: true,
     }),
 

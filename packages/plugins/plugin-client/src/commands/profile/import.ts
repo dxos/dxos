@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
-import * as FileSystem from '@effect/platform/FileSystem';
-import * as Path from '@effect/platform/Path';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
+import * as Path from 'effect/Path';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { ConfigService } from '@dxos/config';
@@ -31,7 +31,7 @@ export const handler = Effect.fn(function* ({
   const path = yield* Path.Path;
   const config = yield* ConfigService;
 
-  const { createLevel, createStorageObjects, importProfileData, decodeProfileArchive } = yield* Effect.promise(
+  const { createStorageObjects, importProfileData, decodeProfileArchive } = yield* Effect.promise(
     () => import('@dxos/client-services'),
   );
 
@@ -73,14 +73,10 @@ export const handler = Effect.fn(function* ({
   yield* Console.log(`Importing archive with ${archive.storage.length} entries`);
 
   const { storage } = createStorageObjects(storageConfig);
-  const level = yield* Effect.tryPromise({
-    try: () => createLevel(storageConfig),
-    catch: (error) => new Error(`Failed to create level: ${error}`),
-  });
 
   yield* Console.log('Beginning profile import...');
   yield* Effect.tryPromise({
-    try: () => importProfileData({ storage, level }, archive),
+    try: () => importProfileData({ storage }, archive),
     catch: (error) => new Error(`Failed to import profile data: ${error}`),
   });
   yield* Console.log('Profile import complete');
@@ -93,9 +89,9 @@ export const handler = Effect.fn(function* ({
 export const importCommand = Command.make(
   'import',
   {
-    file: Options.text('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
-    dataDir: Options.text('data-dir').pipe(Options.withDescription('Storage directory.'), Options.optional),
-    force: Options.boolean('force', { ifPresent: true }).pipe(Options.withDescription('Skip confirmation prompt.')),
+    file: Options.string('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
+    dataDir: Options.string('data-dir').pipe(Options.withDescription('Storage directory.'), Options.optional),
+    force: Options.boolean('force').pipe(Options.withDescription('Skip confirmation prompt.')),
   },
   handler,
 ).pipe(Command.withDescription('Import profile.'));

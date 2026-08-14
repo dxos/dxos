@@ -7,17 +7,17 @@ import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Connection, type RemoteTarget } from '#types';
+import { ConnectorSpec } from '#types';
 
 import { SyncTargetsDialog, type SyncTargetsDialogProps } from './SyncTargetsDialog';
 
-const availableTargets: RemoteTarget[] = [
+const availableTargets: ConnectorSpec.RemoteTarget[] = [
   { id: 'board-1', name: 'Product Roadmap', description: 'Quarterly planning board.' },
   { id: 'board-2', name: 'Engineering', description: 'Sprint tracking and backlog.' },
   { id: 'board-3', name: 'Marketing', description: 'Campaigns and content calendar.' },
@@ -25,7 +25,7 @@ const availableTargets: RemoteTarget[] = [
 ];
 
 type StoryArgs = {
-  availableTargets: ReadonlyArray<RemoteTarget>;
+  availableTargets: ReadonlyArray<ConnectorSpec.RemoteTarget>;
 };
 
 const DefaultStory = ({ availableTargets }: StoryArgs) => {

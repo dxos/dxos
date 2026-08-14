@@ -6,110 +6,125 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppAnnotation, AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList } from '@dxos/async';
-import { Annotation, Collection, Filter, Obj, Type } from '@dxos/echo';
+import { type Client } from '@dxos/client';
+import { Annotation, Collection, Obj, Type } from '@dxos/echo';
 import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { Graph } from '@dxos/plugin-graph';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Expando } from '@dxos/schema';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
-import { SpaceOperation } from '#operations';
-import { SpaceCapabilities } from '#types';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import { SHARED } from '../util';
+import { migrateToSettingsSpace } from '../migrations/settings-space';
+import { resolveSettingsSpace } from '../util/settings-space';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
 
 const isEchoRef = (id: string) => id.startsWith('echo:/');
 
+/**
+ * Resolve the designated default space, migrating a legacy profile into the settings space until
+ * one exists.
+ *
+ * Both inputs land late: `setupIdentitySpaces` writes the designation only after the settings space
+ * is already published to the space list, and a legacy space is only readable once it opens, which
+ * can be after the settings space resolves. Migration is idempotent, so retrying on each change is
+ * what recovers the ordering that would otherwise be lost.
+ */
+const resolveDefaultSpace = Effect.fnUntraced(function* (client: Client, settingsSpace: Space) {
+  while (true) {
+    yield* migrateToSettingsSpace({ settingsSpace, legacySpace: AppSpace.resolveLegacyDefaultSpace(client) });
+    const defaultSpace = AppSpace.getDefaultSpace(client);
+    if (defaultSpace) {
+      return defaultSpace;
+    }
+
+    yield* awaitChange(client, settingsSpace);
+  }
+});
+
+/**
+ * The next space-list change or settings-space property write, the two events that can supply a
+ * default space. The space list replays on subscribe, which would resolve this before anything has
+ * changed, so the replay is skipped.
+ */
+const awaitChange = (client: Client, settingsSpace: Space): Effect.Effect<void> =>
+  Effect.callback<void>((resume) => {
+    let replayed = false;
+    const spacesSub = client.spaces.subscribe(() => {
+      if (replayed) {
+        resume(Effect.void);
+      }
+      replayed = true;
+    });
+    const unsubscribe = Obj.subscribe(settingsSpace.properties, () => resume(Effect.void));
+    return Effect.sync(() => {
+      spacesSub.unsubscribe();
+      unsubscribe();
+    });
+  });
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();
 
-    const { invoke, invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
-    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const layoutAtom = yield* Capability.get(AppCapabilities.Layout);
-    const attention = yield* Capability.get(AttentionCapabilities.Attention);
-    const stateAtom = yield* Capability.get(SpaceCapabilities.State);
-    const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const { invoke, invokePromise } = yield* Capabilities.OperationInvoker;
+    const { graph } = yield* AppCapabilities.AppGraph;
+    const registry = yield* Capabilities.AtomRegistry;
+    const layoutAtom = yield* AppCapabilities.Layout;
+    const attention = yield* AttentionCapabilities.Attention;
+    const stateAtom = yield* SpaceCapabilities.State;
+    const ephemeralAtom = yield* SpaceCapabilities.EphemeralState;
+    const client = yield* ClientCapabilities.Client;
+    const haloIdentity = yield* ClientCapabilities.IdentityService;
 
     //
-    // Personal space initialization — deferred until found.
+    // Settings space bootstrap — one-shot, deferred until there is something to bootstrap from.
     //
 
-    // Fiber for the one-shot personal-space init Effect; interrupted in cleanup
-    // so it cannot access the db after client.destroy() closes the repo.
-    let personalSpaceInitFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
-    let personalSpaceInitialized = false;
+    // Interrupted in cleanup so it cannot touch the db after client.destroy() closes the repo.
+    let initFiber: Fiber.Fiber<void, unknown> | undefined;
 
-    const personalSpaceInitEffect = (personalSpace: Space, { fromCredential }: { fromCredential: boolean }) =>
-      Effect.gen(function* () {
-        yield* Effect.promise(() => personalSpace.waitUntilReady());
+    const initSettingsSpace = Effect.gen(function* () {
+      const settingsSpace = yield* resolveSettingsSpace(client);
+      const defaultSpace = yield* resolveDefaultSpace(client, settingsSpace);
 
-        if (fromCredential) {
-          AppSpace.setPersonalSpace(personalSpace);
-        }
+      // Only relevant on a cold boot with no workspace in the deck state.
+      if (registry.get(layoutAtom).workspace === 'default') {
+        yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(defaultSpace.id) });
+      }
+    });
 
-        // Check if deck state indicates we should switch to default space.
-        const layout = registry.get(layoutAtom);
-        if (layout.workspace === 'default') {
-          yield* invoke(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(personalSpace.id) });
-        }
-
-        const queryResults = yield* Effect.promise(() =>
-          personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run(),
-        );
-        if (!queryResults[0]) {
-          // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
-          //  Instead, we store order as an array of space ids.
-          try {
-            personalSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
-          } catch (err) {
-            // The space may have been destroyed (e.g. during test teardown) between the query and the add.
-            log.warn('Failed to initialize spaces order, space may be closing', { err });
-          }
-        }
-      });
-
-    const startPersonalSpaceInit = (personalSpace: Space, opts: { fromCredential: boolean }) => {
-      if (personalSpaceInitialized) {
+    // Deferred until a space exists to bootstrap from, so a client with no identity does not get a
+    // settings space created for it. `subscribe` replays, so this covers the initial pass too.
+    const spacesSub = client.spaces.subscribe(() => {
+      if (initFiber || client.spaces.get().length === 0) {
         return;
       }
-      // Set before forking so concurrent subscribe callbacks don't start a second initialization.
-      personalSpaceInitialized = true;
-      personalSpaceInitFiber = Effect.runFork(personalSpaceInitEffect(personalSpace, opts));
-    };
-
-    // Try to find the personal space now, or subscribe to find it later.
-    // Initialization is non-blocking so subscriptions wire immediately.
-    const resolved = AppSpace.resolvePersonalSpace(client);
-    if (resolved) {
-      startPersonalSpaceInit(resolved.space, resolved);
-    } else {
-      const personalSpaceSub = client.spaces.subscribe(() => {
-        const resolved = AppSpace.resolvePersonalSpace(client);
-        if (resolved) {
-          startPersonalSpaceInit(resolved.space, resolved);
-        }
-      });
-      subscriptions.add(() => personalSpaceSub.unsubscribe());
-    }
+      initFiber = Effect.runFork(initSettingsSpace);
+    });
+    subscriptions.add(() => spacesSub.unsubscribe());
 
     //
-    // Space subscriptions — set up immediately, do not depend on personal space.
+    // Space subscriptions — set up immediately, do not depend on default space.
     //
 
     // Await missing objects - subscribe to layout atom changes.
@@ -131,6 +146,8 @@ export default Capability.makeModule(
 
           const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
           if (!node && (isEchoRef(id) || id.length === SPACE_ID_LENGTH)) {
+            // Fire any `resolver` extension for the id first; the timeout below is the fallback when
+            // nothing materializes it.
             void Graph.initialize(graph, id);
             const timeout = setTimeout(async () => {
               const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
@@ -149,16 +166,7 @@ export default Capability.makeModule(
     subscriptions.add(() => lastActiveCleanup?.());
 
     // Cache space names.
-    const spaceNamesSub = client.spaces.subscribe(async (spaces) => {
-      // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
-      const personalSpaceForMigration = AppSpace.resolvePersonalSpace(client);
-      if (
-        personalSpaceForMigration?.space &&
-        personalSpaceForMigration.space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION
-      ) {
-        await personalSpaceForMigration.space.internal.migrate();
-      }
-
+    const spaceNamesSub = client.spaces.subscribe((spaces) => {
       spaces
         .filter((space) => space.state.get() === SpaceState.SPACE_READY)
         .forEach((space) => {
@@ -211,7 +219,7 @@ export default Capability.makeModule(
 
       const send = () => {
         const spaces = client.spaces.get();
-        const identity = client.halo.identity.get();
+        const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
           // Group parts by space for efficient messaging.
           const idsBySpace = reduceGroupBy(active, (id: string) => {
@@ -248,7 +256,7 @@ export default Capability.makeModule(
 
             void space
               .postMessage('viewing', {
-                identityKey: identity.identityKey.toHex(),
+                identityKey: identity.identityKey,
                 attended: current,
                 added,
                 removed,
@@ -287,10 +295,10 @@ export default Capability.makeModule(
             const { added, removed, attended } = message.payload;
 
             const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-            const currentIdentity = client.halo.identity.get();
+            const currentIdentity = Option.getOrUndefined(haloIdentity.getSnapshot());
             if (
               identityKey &&
-              !currentIdentity?.identityKey.equals(identityKey) &&
+              currentIdentity?.identityKey !== identityKey.toHex() &&
               Array.isArray(added) &&
               Array.isArray(removed)
             ) {
@@ -349,18 +357,19 @@ export default Capability.makeModule(
           });
         }),
       ),
-      Effect.catchAll((err) => Effect.sync(() => log.catch(err))),
+      Effect.catch((err) => Effect.sync(() => log.catch(err))),
     );
     registry.update(stateAtom, (current) => ({ ...current, enabledEdgeReplication: true }));
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.gen(function* () {
-        if (personalSpaceInitFiber) {
-          yield* Fiber.interrupt(personalSpaceInitFiber);
+        if (initFiber) {
+          yield* Fiber.interrupt(initFiber);
         }
         spaceSubscriptions.clear();
         subscriptions.clear();
       }),
     );
+    return [];
   }),
 );

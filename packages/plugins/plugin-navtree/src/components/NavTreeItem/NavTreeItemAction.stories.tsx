@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 

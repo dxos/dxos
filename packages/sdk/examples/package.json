@@ -1,6 +1,6 @@
 {
   "name": "@dxos/examples",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Example stories used by the docs.",
   "homepage": "https://dxos.org",
@@ -21,7 +21,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/react": "catalog:",
@@ -30,7 +29,10 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:",
-    "vite-plugin-top-level-await": "catalog:",
     "vite-plugin-wasm": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/test-utils": "workspace:*",
+    "@storybook/react-vite": "catalog:"
   }
 }

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { densityDimensions, staticDisabled } from '@dxos/ui-theme';
+import { staticDisabled } from '@dxos/ui-theme';
 import { getSize, mx, sizeValue, snapSize, textValence } from '@dxos/ui-theme';
 import {
   type ComponentFragment,
@@ -48,19 +48,23 @@ const valence = (valence?: MessageValence) => {
   }
 };
 
+// Height and inline padding come from the density knobs (theme/spacing.css) rather than utilities,
+// so a density class on any ancestor resizes the control without a matching React prop.
+const controlSize = 'min-h-(--dx-control) px-(--dx-control-pad) leading-(--dx-control-leading)';
+
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
   'py-0 w-full bg-transparent text-current placeholder-placeholder',
   'dx-focus-subdued',
-  densityDimensions(props.density),
+  controlSize,
   props.disabled && staticDisabled,
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
-  'py-0 w-full text-base-fg rounded-xs placeholder-placeholder',
-  textInputSurfaceFocus,
-  densityDimensions(props.density),
+  'py-0 w-full text-base-fg placeholder-placeholder',
+  'dx-input',
+  controlSize,
   props.disabled ? staticDisabled : textInputSurfaceHover,
 ];
 
@@ -80,14 +84,25 @@ const input: ComponentFunction<InputStyleProps> = (props, ...etc) =>
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
       ? mx(...sharedStaticInputStyles(props), ...etc)
-      : mx(
-          ...sharedDefaultInputStyles(props),
-          !props.disabled && 'dx-focus-ring',
-          valence(props.validationValence),
-          ...etc,
-        );
+      : mx(...sharedDefaultInputStyles(props), valence(props.validationValence), ...etc);
 
 const textArea: ComponentFunction<InputStyleProps> = (props, ...etc) => input(props, ...etc);
+
+// Container that carries the input surface/border/focus when the field has adornments; the inner
+// `<input>` renders "bare" (subdued) so the box wraps the whole row (start adornment · field · end).
+const container: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+  props.variant === 'subdued' || props.variant === 'static'
+    ? mx('flex items-center w-full', props.disabled && staticDisabled, ...etc)
+    : mx(
+        // `p-0` cancels dx-input's default padding: the inset comes from the adornments and the inner field.
+        'flex items-center w-full dx-input p-0',
+        valence(props.validationValence),
+        props.disabled ? staticDisabled : textInputSurfaceHover,
+        ...etc,
+      );
+
+const adornment: ComponentFunction<Partial<{ side: 'start' | 'end' }>> = (props, ...etc) =>
+  mx('shrink-0 flex items-center gap-1 text-description', props.side === 'start' ? 'ps-2' : 'pe-2', ...etc);
 
 const checkbox: ComponentFunction<InputStyleProps> = ({ size = 4 }, ...etc) =>
   mx('dx-checkbox dx-focus-ring', getSize(size), ...etc);
@@ -100,13 +115,7 @@ const switch_: ComponentFunction<InputStyleProps> = (_props, ...etc) => mx('dx-c
 const pin: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'font-mono selection:bg-transparent mx-auto',
-    props.density === 'lg'
-      ? 'text-lg'
-      : props.density === 'sm'
-        ? 'text-sm'
-        : props.density === 'xs'
-          ? 'text-xs'
-          : 'text-base pointer-fine:text-sm',
+    props.density === 'lg' ? 'text-lg' : props.density === 'sm' ? 'text-sm' : 'text-base pointer-fine:text-sm',
     props.disabled && 'cursor-not-allowed',
     ...etc,
   );
@@ -114,14 +123,9 @@ const pin: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'flex items-center justify-center tabular-nums',
-    props.density === 'lg'
-      ? 'size-12 rounded-xs'
-      : props.density === 'sm'
-        ? 'size-7 rounded-xs'
-        : props.density === 'xs'
-          ? 'size-6 rounded-xs'
-          : 'size-10 pointer-fine:size-8 rounded-xs',
-    'bg-input-surface text-base-fg transition-colors border border-separator',
+    // A PIN segment is a square control, so it takes the density height on both axes.
+    'size-(--dx-control) rounded-xs',
+    'bg-input-surface text-base-fg transition-colors border border-input-separator',
     'data-[focused]:bg-attention-surface data-[focused]:border-focus-ring-subtle',
     'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-focus-ring-subtle',
     valence(props.validationValence),
@@ -143,7 +147,7 @@ const validation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
 
 const triggerIcon: ComponentFunction<{}> = (_p, ...etc) =>
   mx(
-    'shrink-0 inline-flex items-center justify-center size-7 rounded-xs',
+    'shrink-0 inline-flex items-center justify-center size-(--dx-control-sm) rounded-xs',
     'bg-input-surface text-subdued hover:text-base-fg hover:bg-hover-surface',
     'dx-focus-ring',
     ...etc,
@@ -154,6 +158,8 @@ const block: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 
 export const inputTheme = {
   input,
+  container,
+  adornment,
   textArea,
   pin,
   segment,

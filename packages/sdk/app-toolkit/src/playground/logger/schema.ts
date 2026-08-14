@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
 export class Log extends Schema.TaggedClass<Log>()('org.dxos.test.logger.log', {

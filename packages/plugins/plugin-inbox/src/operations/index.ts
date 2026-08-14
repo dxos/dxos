@@ -2,41 +2,38 @@
 // Copyright 2024 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+
+import { InboxOperation } from '#types';
 
 export * from './extractor';
-export * from './util';
+// The feed-cursor helpers are public because a contributed processor keeps its cursor on a mailbox
+// feed that plugin-inbox owns — plugin-brain's analyze pass is the first such consumer.
+export * from './cursor';
 
-export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-mailbox'),
-  () => import('./analyze/analyze-mailbox'),
-  () => import('./analyze/analyze-topics'),
-  () => import('./analyze/create-topic-from-message'),
-  () => import('./classify-email'),
-  () => import('./delete-email'),
-  () => import('./delete-event'),
-  () => import('./draft-email-and-open'),
-  () => import('./draft-email'),
-  () => import('./extractor/contact-extractor'),
-  () => import('./extractor/extract-contact'),
-  () => import('./extractor/extract-mailbox'),
-  () => import('./extractor/extract-message'),
-  () => import('./extractor/summarize-extractor'),
-  () => import('./calendar/google/create'),
-  () => import('./calendar/google/list'),
-  () => import('./calendar/google/materialize/handler'),
-  () => import('./calendar/google/sync'),
-  () => import('./contacts/google/list-groups'),
-  () => import('./contacts/google/sync'),
-  () => import('./mail/google/materialize/handler'),
-  () => import('./mail/google/send'),
-  () => import('./mail/google/sync'),
-  () => import('./mail/jmap/materialize/handler'),
-  () => import('./mail/jmap/send'),
-  () => import('./mail/jmap/sync'),
-  () => import('./read-email'),
-  () => import('./rename-filter'),
-  () => import('./sync-contacts'),
-  () => import('./unsubscribe-sender'),
-  () => import('./sync-draft-events'),
-);
+export const InboxOperationHandlerSet = OperationHandlerSet.lazy([
+  InboxOperation.AddMailbox.pipe(Operation.lazyHandler(() => import('./add-mailbox'))),
+  InboxOperation.CreateProjectFromMessage.pipe(Operation.lazyHandler(() => import('./create-project-from-message'))),
+  InboxOperation.ClassifyEmail.pipe(Operation.lazyHandler(() => import('./classify-email'))),
+  InboxOperation.ResetFeedCursor.pipe(Operation.lazyHandler(() => import('./reset-feed-cursor'))),
+  InboxOperation.ClassifyMailbox.pipe(Operation.lazyHandler(() => import('./classify/classify-mailbox'))),
+  InboxOperation.DraftEmailAndOpen.pipe(Operation.lazyHandler(() => import('./draft-email-and-open'))),
+  InboxOperation.ScanMailbox.pipe(Operation.lazyHandler(() => import('./scan/scan-mailbox'))),
+  InboxOperation.DraftEmail.pipe(Operation.lazyHandler(() => import('./draft-email'))),
+  InboxOperation.ExtractContactFromMessage.pipe(Operation.lazyHandler(() => import('./extractor/contact-extractor'))),
+  InboxOperation.ExtractCorrespondents.pipe(
+    Operation.lazyHandler(() => import('./correspondents/extract-correspondents')),
+  ),
+  InboxOperation.ExtractContact.pipe(Operation.lazyHandler(() => import('./extractor/extract-contact'))),
+  InboxOperation.ExtractMailbox.pipe(Operation.lazyHandler(() => import('./extractor/extract-mailbox'))),
+  InboxOperation.ExtractMessage.pipe(Operation.lazyHandler(() => import('./extractor/extract-message'))),
+  InboxOperation.ExtractSubscriptions.pipe(
+    Operation.lazyHandler(() => import('./subscriptions/extract-subscriptions')),
+  ),
+  InboxOperation.ExtractSummaryFromMessage.pipe(Operation.lazyHandler(() => import('./extractor/summarize-extractor'))),
+  InboxOperation.SummarizeMailbox.pipe(Operation.lazyHandler(() => import('./summarize/summarize-mailbox'))),
+  InboxOperation.ReadEmail.pipe(Operation.lazyHandler(() => import('./read-email'))),
+  InboxOperation.RenameFilter.pipe(Operation.lazyHandler(() => import('./rename-filter'))),
+  InboxOperation.UnsubscribeSender.pipe(Operation.lazyHandler(() => import('./unsubscribe-sender'))),
+]);

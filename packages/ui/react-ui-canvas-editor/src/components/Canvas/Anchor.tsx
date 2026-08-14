@@ -14,22 +14,10 @@ import { mx } from '@dxos/ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties } from '../../layout';
-import { type CanvasBoard, type Polygon } from '../../types';
+import { type Polygon } from '../../types';
 import { type Anchor, resizeCursor } from '../anchors';
 import { styles } from '../styles';
-
-export const defaultAnchorSize: Dimension = { width: 8, height: 8 };
-
-export const DATA_ANCHOR_ID = 'data-anchor-id';
-
-export const anchorAttrs = (shape: CanvasBoard.Shape, anchor: Anchor) => {
-  return {
-    [DATA_ANCHOR_ID]: `${shape.id}-${anchor.id}`,
-  };
-};
-
-export const getAnchorElement = (root: HTMLElement, shapeId: string, anchorId: string): Element | null =>
-  root.querySelector(`[${DATA_ANCHOR_ID}="${shapeId}-${anchorId}"]`);
+import { anchorAttrs, defaultAnchorSize } from './anchor-defs';
 
 export type AnchorProps = ThemedClassName<{
   type: 'anchor' | 'resize';

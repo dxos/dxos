@@ -2,39 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 import { writeFileSync } from 'node:fs';
 
-import { CommandConfig } from '@dxos/cli-util';
+import { CommandConfig, formatBytes } from '@dxos/cli-util';
 import { type SpaceExportResult } from '@dxos/protocols';
 
 import { adminDownload, adminRequest, formatAdminError } from '../util';
 
 type ExportTriggerResponse = SpaceExportResult & { downloadUrl: string };
 
-const formatBytes = (bytes: number): string => {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
-
 export const exportSpace = Command.make(
   'export',
   {
-    spaceId: Args.text({ name: 'spaceId' }),
+    spaceId: Args.string('spaceId'),
     download: Options.boolean('download').pipe(
       Options.withDescription('Download the export after triggering it.'),
       Options.withDefault(false),
     ),
-    output: Options.text('output').pipe(
+    output: Options.string('output').pipe(
       Options.withDescription('Output file path for download.'),
       Options.withAlias('o'),
       Options.optional,
@@ -42,14 +32,14 @@ export const exportSpace = Command.make(
   },
   Effect.fn(function* ({ spaceId, download, output }) {
     const result = yield* adminRequest<ExportTriggerResponse>('POST', `/admin/spaces/${spaceId}/export`).pipe(
-      Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
+      Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))),
     );
 
     if (download) {
       const outputPath = output._tag === 'Some' ? output.value : `export-${spaceId}.json`;
 
       const response = yield* adminDownload(result.downloadPath).pipe(
-        Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
+        Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))),
       );
 
       const body = yield* response.text;

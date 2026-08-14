@@ -4,6 +4,10 @@ javascript:
   packageManager: pnpm
   dedupeOnLockfileChange: false
 
+# Declared so moon installs it from .prototools, as it does node and pnpm — otherwise a bare `bun`
+# resolves to whatever the CI image ships, which silently compiled the CLI with 1.3.4.
+bun: {}
+
 node: {}
 
 pnpm: {}

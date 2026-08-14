@@ -4,11 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { Connection } from '@dxos/plugin-connector/types';
+import { Connection } from '@dxos/link';
 
 import { meta } from '#meta';
 import { Blog } from '#types';
@@ -16,7 +16,7 @@ import { Blog } from '#types';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /** The database or collection a new object is filed under; matches `SpaceOperation.AddObject`'s `target`. */
-const TargetSchema = Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotations({
+const TargetSchema = Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]).annotate({
   description: 'The database or collection to add to.',
 });
 
@@ -32,7 +32,7 @@ export const AddPublication = Operation.make({
     icon: 'ph--books--regular',
   },
   input: Schema.Struct({
-    name: Schema.optional(Schema.String).annotations({ description: 'The publication name.' }),
+    name: Schema.optional(Schema.String).annotate({ description: 'The publication name.' }),
     target: TargetSchema,
   }),
   output: Ref.Ref(Blog.Publication),
@@ -50,15 +50,15 @@ export const AddPost = Operation.make({
     icon: 'ph--article--regular',
   },
   input: Schema.Struct({
-    publication: Ref.Ref(Blog.Publication).annotations({ description: 'The publication to add the post to.' }),
-    name: Schema.optional(Schema.String).annotations({ description: 'The post name.' }),
+    publication: Ref.Ref(Blog.Publication).annotate({ description: 'The publication to add the post to.' }),
+    name: Schema.optional(Schema.String).annotate({ description: 'The post name.' }),
     target: TargetSchema,
   }),
   output: Ref.Ref(Blog.Post),
 });
 
 /** Selects which contributed `PublisherService` to use; falls back to the first one when omitted. */
-const PublisherIdSchema = Schema.optional(Schema.String).annotations({
+const PublisherIdSchema = Schema.optional(Schema.String).annotate({
   description: 'Selects a contributed publisher service by id; defaults to the first one available.',
 });
 
@@ -79,8 +79,8 @@ export const SyncPosts = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    publication: Ref.Ref(Blog.Publication).annotations({ description: 'The publication whose posts to sync.' }),
-    connection: Ref.Ref(Connection.Connection).annotations({
+    publication: Ref.Ref(Blog.Publication).annotate({ description: 'The publication whose posts to sync.' }),
+    connection: Ref.Ref(Connection.Connection).annotate({
       description: 'The publisher connection to sync through.',
     }),
     publisherId: PublisherIdSchema,

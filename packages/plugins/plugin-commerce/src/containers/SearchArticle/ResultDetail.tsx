@@ -4,11 +4,11 @@
 
 import React, { Fragment } from 'react';
 
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Carousel, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
-import { type Result } from '../../types';
+import { meta } from '#meta';
+import { Result } from '#types';
 
 export type ResultDetailProps = {
   result?: Result.Result;

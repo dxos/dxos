@@ -85,7 +85,7 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
   readonly [internal.SchemaKindId]: internal.EntityKind.Object;
 
   /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
-  readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Codec<any, any>;
 
   /**
    * The fields defined in the original struct schema.
@@ -138,7 +138,7 @@ export const makeObject: {
   <Self>(
     dxn: DXN.DXN,
     options?: { id?: EntityId },
-  ): <_Schema extends Schema.Schema.Any>(schema: _Schema) => ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
+  ): <_Schema extends Schema.Top>(schema: _Schema) => ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
   // Boundary cast: overload implementation bodies cannot access outer generic params (`Self`),
   // so TypeScript cannot verify that makeObjectType's return matches the declared ObjClass<Self,…>.
 } = (dxn, options) => (schema) => internal.makeObjectType(dxn, schema, options) as any;
@@ -260,7 +260,7 @@ export interface Relation<
   readonly [internal.SchemaKindId]: internal.EntityKind.Relation;
 
   /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
-  readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Codec<any, any>;
 
   /**
    * The fields defined in the original struct schema.
@@ -309,7 +309,7 @@ export const makeRelation: {
      * see `Type.makeObject` for the workerd motivation.
      */
     id?: EntityId;
-  }) => <_Schema extends Schema.Schema.Any>(
+  }) => <_Schema extends Schema.Top>(
     schema: _Schema,
   ) => RelationClass<
     Self,
@@ -396,7 +396,7 @@ export const expectTypeKind = (entity: AnyEntity): Type => {
  * Type that represents any Ref schema (with unknown target type).
  * This is a schema type, not an instance type.
  */
-export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
+export type AnyRef = Schema.Codec<internal.Ref<any>, EncodedReference>;
 
 //
 // Schema utility functions
@@ -505,7 +505,7 @@ export const getVersion = (input: AnyEntity): string => {
 };
 
 /**
- * Strip URI prefixes (`dxn:`, `echo:/`, `echo://`) from a typename string.
+ * Strip URI prefixes (`dxn:`, `echo:/`, `echo://`, `echo:///`) from a typename string.
  * Typename is a bare identifier — callers reading from meta or from a
  * caller-supplied seed value shouldn't propagate URI prefixes downstream.
  */
@@ -513,11 +513,10 @@ const stripTypenamePrefix = (value: string): string => {
   if (value.startsWith('dxn:')) {
     return value.slice('dxn:'.length);
   }
-  if (value.startsWith('echo://')) {
-    return value.slice('echo://'.length);
-  }
-  if (value.startsWith('echo:/')) {
-    return value.slice('echo:/'.length);
+  // Strip the `echo:` scheme along with any leading slashes so every local form
+  // (`echo:/<id>`, `echo:///<id>`) and the qualified `echo://<space>/<id>` collapse consistently.
+  if (value.startsWith('echo:')) {
+    return value.slice('echo:'.length).replace(/^\/+/, '');
   }
   return value;
 };
@@ -627,7 +626,7 @@ export interface Type<A = unknown> extends BaseTypeEntity<A & EntityModule.OfKin
   readonly [internal.SchemaKindId]: internal.EntityKind.Type;
 
   /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
-  readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Codec<any, any>;
 }
 
 /**
@@ -664,7 +663,7 @@ export type InstanceType<T extends AnyEntity> =
  *   read from a hidden slot — these overloads preserve the instance type.
  * - For `Type.Type` entities (the meta-schema kind) the schema is rebuilt from
  *   `type.jsonSchema`; the instance type isn't statically knowable so the wide
- *   `AnyEntity` overload widens to `Schema.Schema.AnyNoContext`.
+ *   `AnyEntity` overload widens to `Schema.Codec<any, any>`.
  *
  * Always call this when you need to interact with the Effect Schema API
  * (e.g. before passing to Effect.Schema functions). For ECHO-side APIs
@@ -673,10 +672,10 @@ export type InstanceType<T extends AnyEntity> =
  * Only accepts `Type.AnyEntity` — raw `Schema.Schema` values can be used
  * directly without unwrapping.
  */
-export function getSchema<T extends AnyObj>(type: T): Schema.Schema<InstanceType<T>>;
-export function getSchema<T extends AnyRelation>(type: T): Schema.Schema<InstanceType<T>>;
-export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext;
-export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext {
+export function getSchema<T extends AnyObj>(type: T): Schema.Codec<InstanceType<T>, unknown>;
+export function getSchema<T extends AnyRelation>(type: T): Schema.Codec<InstanceType<T>, unknown>;
+export function getSchema(type: AnyEntity): Schema.Codec<any, any>;
+export function getSchema(type: AnyEntity): Schema.Codec<any, any> {
   // Static `Type.Type` entities carry the source Effect Schema on a hidden
   // slot so we can return it without round-tripping through JsonSchema.
   const staticSchema = internal.getStaticTypeSchema(type);
@@ -689,7 +688,7 @@ export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext {
   // schema's URI (via getSchemaURI) matches the entity's local EID.
   const rebuilt = internal.toEffectSchema(type.jsonSchema);
   if (typeof type.id === 'string') {
-    return rebuilt.annotations({
+    return rebuilt.annotate({
       [internal.TypeIdentifierAnnotationId]: EID.make({ entityId: type.id }),
     });
   }

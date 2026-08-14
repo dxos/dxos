@@ -2,8 +2,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 
 import { layoutStateAccess } from './state-access';
 
@@ -14,7 +15,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
 
       updateState((state) => ({
         ...state,
-        previousWorkspace: !Paths.isPinnedWorkspace(state.workspace) ? state.workspace : state.previousWorkspace,
+        previousWorkspace: !GraphPath.isPinnedWorkspace(state.workspace) ? state.workspace : state.previousWorkspace,
         workspace: input.subject,
         active: undefined,
         history: [],

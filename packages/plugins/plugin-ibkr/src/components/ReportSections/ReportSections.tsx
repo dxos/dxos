@@ -8,8 +8,9 @@ import { Format } from '@dxos/echo/Format';
 import { Select, useTranslation } from '@dxos/react-ui';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
+import { Ibkr } from '#types';
+
 import { meta } from '../../meta';
-import { type Ibkr } from '../../types';
 
 export type ReportSectionsProps = {
   positions: readonly Ibkr.Position[];
@@ -160,7 +161,7 @@ export const ReportSections = ({ positions, trades, cash, openLots, closedLots }
   const active = sections.find((section) => section.id === selected) ?? sections[0];
 
   return (
-    <div className='grid grid-rows-[min-content_1fr] min-bs-0 bs-full'>
+    <div className='grid grid-rows-[min-content_1fr] min-h-0 h-full'>
       <div className='p-2'>
         <Select.Root value={active?.id} onValueChange={setSelected}>
           <Select.TriggerButton />

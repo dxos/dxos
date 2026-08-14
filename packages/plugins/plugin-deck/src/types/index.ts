@@ -1,11 +1,10 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * from './schema';
-export * from './surface';
-
+export * as CompanionViewState from './CompanionViewState';
 export * as DeckCapabilities from './DeckCapabilities';
-export * as DeckEvents from './DeckEvents';
 export * as DeckOperation from './DeckOperation';
+export * as DeckRole from './DeckRole';
+export * as DeckSchema from './DeckSchema';
 export * as Settings from './Settings';

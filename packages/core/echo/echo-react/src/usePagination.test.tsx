@@ -308,6 +308,48 @@ describe('usePagination', () => {
     });
   });
 
+  test('holds the previous page across a query-identity change instead of blanking', async () => {
+    // Regression test for the mailbox "flash to loading during sync" bug. The Inbox/Sent view
+    // selects by an explicit id set (`Filter.id(...ids)`); each message tagged mid-sync grows that
+    // set, which is a new query identity and rebuilds the internal store. The rebuilt store must
+    // seed from the page already on screen -- keeping it visible with `isLoading` false -- rather
+    // than resetting to empty + loading and blanking the whole list on every sync batch.
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'tagged' }));
+    await appendPeople(feed, db, 5);
+
+    // Resolve the feed's object ids (newest-first) to build a growing id-set filter, as the mailbox
+    // system-tag view does from its `TagIndex`.
+    const all = await db
+      .query(Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')))
+      .run();
+    const ids = all.map((person) => person.id);
+
+    const queryFor = (selected: string[]) =>
+      Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.id(...selected)))
+        .from(feed)
+        .orderBy(Order.natural('desc'))
+        .limit(10);
+
+    const { result, rerender } = renderHook(({ query }) => usePagination(db, query), {
+      initialProps: { query: queryFor(ids.slice(0, 3)) },
+    });
+
+    await waitFor(() => expect(result.current.items).toHaveLength(3));
+    expect(result.current.isLoading).toBe(false);
+
+    // A new message gets tagged: the id set grows -> new query identity -> internal store rebuild.
+    rerender({ query: queryFor(ids.slice(0, 5)) });
+
+    // The previously-shown page stays on screen (never empties) and no loading state is surfaced for
+    // this background refresh -- the whole point of the fix. (Pre-fix: items [] and isLoading true.)
+    expect(result.current.items.length).toBeGreaterThan(0);
+    expect(result.current.isLoading).toBe(false);
+
+    await waitFor(() => expect(result.current.items).toHaveLength(5));
+  });
+
   test('pages over whole groups for a grouped query', async () => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
@@ -353,6 +395,45 @@ describe('usePagination', () => {
       ['person-5', 'person-1'],
       ['person-4', 'person-0'],
     ]);
+  });
+
+  test('pages over whole groups produced by a subquery semi-join (Filter.in(query.project(...)))', async () => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'semi-join' }));
+
+    // Three "threads" by title; only threads with an explicitly completed member qualify.
+    await db.appendToFeed(feed, [
+      Obj.make(TestSchema.Task, { title: 'a', completed: true }),
+      Obj.make(TestSchema.Task, { title: 'a', completed: false }),
+      Obj.make(TestSchema.Task, { title: 'b', completed: true }),
+      Obj.make(TestSchema.Task, { title: 'b', completed: false }),
+      Obj.make(TestSchema.Task, { title: 'c', completed: false }), // no qualifying member — excluded
+    ]);
+
+    const matches = Query.select(Filter.type(TestSchema.Task, { completed: true })).from(feed);
+    const source = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(matches.project('title')) }))
+      .from(feed)
+      .orderBy(Order.natural('asc'))
+      .aggregate({ title: Aggregate.group('title'), items: Aggregate.items() })
+      .limit(1);
+    const { result } = renderHook(() => usePagination(db, source));
+
+    // First page: one whole qualifying thread (both members), not a partial row slice.
+    await waitFor(() => {
+      expect(result.current.items).toHaveLength(1);
+    });
+    expect(result.current.items[0].items).toHaveLength(2);
+    expect(result.current.hasMore).toBe(true);
+
+    result.current.getNext();
+
+    // Second page reveals the other qualifying thread; the non-qualifying thread 'c' never appears.
+    await waitFor(() => {
+      expect(result.current.items.map((group) => group.title).sort()).toEqual(['a', 'b']);
+    });
+    expect(result.current.items.every((group) => group.items.length === 2)).toBe(true);
+    expect(result.current.items.some((group) => group.title === 'c')).toBe(false);
   });
 
   test('orders and pages groups by a max aggregate in both directions', async () => {
@@ -406,6 +487,65 @@ describe('usePagination', () => {
       ['p4', 'p0'],
       ['p5', 'p3'],
     ]);
+  });
+
+  test('isLoading is true while the first page loads, then false once it settles', async () => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'windowed' }));
+    await appendPeople(feed, db, 5);
+
+    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
+    const loadingStates: boolean[] = [];
+    const { result } = renderHook(() => {
+      const paginated = usePagination(db, query);
+      loadingStates.push(paginated.isLoading);
+      return paginated;
+    });
+
+    // The async feed query is in flight from the first render until its first result lands.
+    expect(loadingStates[0]).toBe(true);
+    await waitFor(() => expect(result.current.items).toHaveLength(3));
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  test('isLoading settles to false for an empty feed (never sticks)', async () => {
+    // An empty async feed still delivers a first response, so isLoading must clear on it.
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'empty' }));
+
+    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
+    const { result } = renderHook(() => usePagination(db, query));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.items).toHaveLength(0);
+  });
+
+  test('isLoading goes true again while getNext loads the next page', async () => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'windowed' }));
+    await appendPeople(feed, db, 10);
+
+    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
+    const loadingStates: boolean[] = [];
+    const { result } = renderHook(() => {
+      const paginated = usePagination(db, query);
+      loadingStates.push(paginated.isLoading);
+      return paginated;
+    });
+
+    await waitFor(() => expect(result.current.items).toHaveLength(3));
+    expect(result.current.isLoading).toBe(false);
+
+    loadingStates.length = 0;
+    result.current.getNext();
+    await waitFor(() => expect(result.current.items).toHaveLength(6));
+
+    // The next range was in flight between the request and its delivery, then settled.
+    expect(loadingStates.some((loading) => loading)).toBe(true);
+    expect(result.current.isLoading).toBe(false);
   });
 
   test('throws when the query does not carry a limit', async () => {

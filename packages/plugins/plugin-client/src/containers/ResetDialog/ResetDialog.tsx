@@ -5,18 +5,20 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Capability, type CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
-import { ConfirmReset, type ConfirmResetProps, translationKey } from '@dxos/shell/react';
+import { ConfirmReset, type ConfirmResetProps } from '@dxos/shell/react';
 
-import { type ClientPluginOptions } from '#types';
+import { meta } from '#meta';
+import { ClientOptions } from '#types';
 
 export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
-  Pick<ClientPluginOptions, 'onReset'> & {
+  Pick<ClientOptions.ClientPluginOptions, 'onReset'> & {
     capabilityManager: CapabilityManager.CapabilityManager;
     /**
      * Optional async action run before `client.reset()`. Throwing here aborts the
@@ -26,7 +28,7 @@ export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
   };
 
 export const ResetDialog = ({ mode, onReset, onBeforeReset, capabilityManager }: ResetDialogProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
 
@@ -51,11 +53,17 @@ export const ResetDialog = ({ mode, onReset, onBeforeReset, capabilityManager }:
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{t('reset-dialog.title')}</Dialog.Title>
+        <Dialog.Title>{t('logout.label')}</Dialog.Title>
       </Dialog.Header>
       <Dialog.Body>
-        <Dialog.Description classNames='sr-only'>{t('reset-dialog.description')}</Dialog.Description>
-        <ConfirmReset active mode={mode} onConfirm={handleReset} onCancel={handleCancel} />
+        <Dialog.Description classNames='sr-only'>{t('logout.description')}</Dialog.Description>
+        <ConfirmReset
+          active
+          mode={mode}
+          confirmLabel={t('logout.label')}
+          onConfirm={handleReset}
+          onCancel={handleCancel}
+        />
       </Dialog.Body>
     </Dialog.Content>
   );

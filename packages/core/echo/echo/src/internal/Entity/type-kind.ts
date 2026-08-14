@@ -3,8 +3,8 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
+import { SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
@@ -21,7 +21,7 @@ import { type EchoTypeOptions, type EchoTypeSchema, makeEchoTypeSchema } from '.
  * built-in `Type.Type` TypeSchema) from object and relation types.
  */
 export type EchoTypeKindSchema<
-  Self extends Schema.Schema.Any,
+  Self extends Schema.Top,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
 > = EchoTypeSchema<Self, {}, EntityKind.Type, Fields>;
 
@@ -36,7 +36,7 @@ export const EchoTypeKindSchema: {
   (
     dxn: DXN.DXN,
     options?: EchoTypeOptions,
-  ): <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+  ): <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ) => EchoTypeKindSchema<Self, Fields>;
 } = (dxn, options) => {
@@ -44,18 +44,25 @@ export const EchoTypeKindSchema: {
   const version = DXN.getVersion(dxn);
   invariant(version, `Type-kind schemas require a versioned DXN: ${dxn}`);
 
-  return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+  return <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ): EchoTypeKindSchema<Self, Fields> => {
-    invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
+    invariant(SchemaAST.isObjects(self.ast), 'Schema must be a TypeLiteral.');
 
     const fields = ((self as any).fields ?? {}) as Fields;
 
-    const schemaWithId = Schema.extend(self, Schema.Struct({ id: Schema.String }));
-    const ast = SchemaAST.annotations(schemaWithId.ast, {
+    // The id is prepended to the existing object node rather than rebuilt from `.fields`:
+    // rebuilding drops index signatures, which is how record-shaped types are declared.
+    const schemaWithId = new SchemaAST.Objects(
+      self.ast.propertySignatures.some((property) => property.name === 'id')
+        ? self.ast.propertySignatures
+        : [...self.ast.propertySignatures, new SchemaAST.PropertySignature('id', Schema.String.ast)],
+      self.ast.indexSignatures,
+    );
+    const ast = SchemaAST.annotate(schemaWithId, {
       ...self.ast.annotations,
       [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
-      [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+      ...makeTypeJsonSchemaAnnotation({
         kind: EntityKind.Type,
         typename,
         version,

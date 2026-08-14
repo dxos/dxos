@@ -11,7 +11,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import type { FilesystemWorkspace } from '#types';
+import { NativeFilesystemCapabilities } from '#types';
 
 import { readComposerConfig, writeComposerConfig } from '../../util';
 
@@ -25,11 +25,11 @@ export class MirrorSpaceManager {
   constructor(private readonly _client: Client) {}
 
   /** Get an existing mirror space or create a new one for the given workspace. */
-  getOrCreateSpace(workspace: FilesystemWorkspace): Effect.Effect<Space> {
+  getOrCreateSpace(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<Space> {
     return Effect.promise(() => this._getOrCreateSpaceAsync(workspace));
   }
 
-  private async _getOrCreateSpaceAsync(workspace: FilesystemWorkspace): Promise<Space> {
+  private async _getOrCreateSpaceAsync(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Promise<Space> {
     const cached = this._spaceByWorkspaceId.get(workspace.id);
     if (cached) {
       return cached;
@@ -48,7 +48,7 @@ export class MirrorSpaceManager {
     return promise;
   }
 
-  private async _doCreateSpace(workspace: FilesystemWorkspace): Promise<Space> {
+  private async _doCreateSpace(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Promise<Space> {
     const config = await EffectEx.runAndForwardErrors(readComposerConfig(workspace.path));
     if (config.spaceId) {
       const existing = this._client.spaces.get().find((space) => space.id === config.spaceId);

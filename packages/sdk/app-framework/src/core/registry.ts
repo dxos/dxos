@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, type Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -85,7 +86,7 @@ export class Manager {
   readonly plugins: Atom.Writable<PluginsState>;
   readonly #provider: PluginProvider;
 
-  constructor(provider: PluginProvider | undefined, atomRegistry: AtomRegistry.Registry) {
+  constructor(provider: PluginProvider | undefined, atomRegistry: AtomRegistry.AtomRegistry) {
     this.#provider = provider ?? NULL_PROVIDER;
     const initialLoading = provider !== undefined;
     this.plugins = Atom.make<PluginsState>({ entries: [], loading: initialLoading, error: null }).pipe(Atom.keepAlive);

@@ -11,7 +11,7 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, {
   type MouseEvent,
   type PropsWithChildren,
@@ -24,9 +24,9 @@ import React, {
   useState,
 } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import {
   Icon,
   IconButton,
@@ -99,7 +99,13 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
         case 'tab':
           return onTabChange?.(item);
         case 'link':
-          return onSelect?.({ item, path, current: !getItem(path).current, option: event.altKey });
+          return onSelect?.({
+            item,
+            path,
+            current: !getItem(path).current,
+            option: event.altKey,
+            shift: event.shiftKey,
+          });
       }
     },
     [item, parent, type, getItem, onSelect, onTabChange, isLg, runAction],
@@ -325,7 +331,7 @@ export const L0Menu = ({
       classNames={[
         'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
         'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] dx-contain-layout',
-        'w-(--dx-l0-size) bg-l0-surface dx-app-drag pb-[env(safe-area-inset-bottom)]',
+        'w-(--dx-l0-size) dx-l0-surface dx-app-drag pb-[env(safe-area-inset-bottom)]',
         '[body[data-platform="macos"]_&]:pt-[30px]',
         '[body[data-platform="ios"]_&]:pt-[max(env(safe-area-inset-top),0.25rem)]',
       ]}

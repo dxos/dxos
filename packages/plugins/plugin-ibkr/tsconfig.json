@@ -25,9 +25,6 @@
       "path": "../../common/errors"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -52,19 +49,25 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/app-framework"
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"
@@ -107,9 +110,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

@@ -8,7 +8,9 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 
 import { AiService } from '@dxos/ai';
-import { Credential, Operation, Trace } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { raise } from '@dxos/debug';
 import { Database, Registry } from '@dxos/echo';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -29,6 +31,7 @@ import {
   type Executable,
   NotExecuted,
   ValueBag,
+  type ValueEffect,
   isNotExecuted,
 } from '../types';
 import { createDefectLogger } from '../util';
@@ -244,7 +247,7 @@ export class GraphExecutor {
    * Get resolved schema for inputs of the node.
    * The schema will depend on other nodes this node is connected to.
    */
-  getInputSchema(nodeId: string): Schema.Schema.AnyNoContext {
+  getInputSchema(nodeId: string): Schema.Codec<any, any> {
     invariant(this._topology, 'Graph not loaded');
     const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
     return Schema.Struct(Object.fromEntries(node.outputs.map((output) => [output.name, output.schema] as const)));
@@ -254,7 +257,7 @@ export class GraphExecutor {
    * Get resolved schema for outputs of the node.
    * The schema will depend on other nodes this node is connected to.
    */
-  getOutputSchema(nodeId: string): Schema.Schema.AnyNoContext {
+  getOutputSchema(nodeId: string): Schema.Codec<any, any> {
     invariant(this._topology, 'Graph not loaded');
     const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
     return Schema.Struct(Object.fromEntries(node.inputs.map((input) => [input.name, input.schema] as const)));
@@ -273,7 +276,7 @@ export class GraphExecutor {
   }
 
   computeInput(nodeId: string, prop: string): Effect.Effect<unknown, Error | NotExecuted, ComputeRequirements> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       invariant(this._topology, 'Graph not loaded');
       const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
       const input = node.inputs.find((input) => input.name === prop) ?? failedInvariant();
@@ -306,7 +309,7 @@ export class GraphExecutor {
       }
 
       // Assert that the value matches the schema.
-      yield* Schema.decode(input.schema)(value).pipe(
+      yield* Schema.decodeEffect(input.schema)(value).pipe(
         Effect.mapError(
           (error) =>
             new InvalidValueError({
@@ -334,7 +337,7 @@ export class GraphExecutor {
    * Compute inputs for a node using a pull-based computation.
    */
   computeInputs(nodeId: string): ComputeResult<ValueBag<any>> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       invariant(this._topology, 'Graph not loaded');
       const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
       const layer = yield* this._createServiceLayer();
@@ -351,7 +354,7 @@ export class GraphExecutor {
    */
   private _createServiceLayer() {
     // TODO(dmaretskyi): Use Effect.context() > Context.pick to pass context.
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       return Layer.mergeAll(
         Layer.succeed(AiService.AiService, yield* AiService.AiService),
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
@@ -365,7 +368,7 @@ export class GraphExecutor {
   }
 
   computeOutput(nodeId: string, prop: string): Effect.Effect<unknown, Error | NotExecuted, ComputeRequirements> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const output = yield* this.computeOutputs(nodeId);
       invariant(ValueBag.isValueBag(output), 'Output must be a value bag');
       if (isNotExecuted(output)) {
@@ -392,7 +395,7 @@ export class GraphExecutor {
    * Compute outputs for a node using a pull-based computation.
    */
   computeOutputs(nodeId: string): ComputeResult<ValueBag<any>> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       invariant(this._topology, 'Graph not loaded');
       if (this._computeCache.has(nodeId)) {
         const result = yield* this._computeCache.get(nodeId)!;
@@ -405,7 +408,7 @@ export class GraphExecutor {
 
       const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
 
-      const compute = Effect.gen(this, function* () {
+      const compute = Effect.gen({ self: this }, function* () {
         const inputValues = yield* this.computeInputs(nodeId);
         // TODO(dmaretskyi): Consider resolving the node implementation at the start of the computation.
         const nodeSpec = yield* Effect.promise(() => this._computeNodeResolver(node.graphNode));
@@ -418,7 +421,7 @@ export class GraphExecutor {
           inputs: Object.keys(inputValues.values),
         });
 
-        // const sanitizedInputs = yield* Schema.decode(node.meta.input)(inputValues);
+        // const sanitizedInputs = yield* Schema.decodeEffect(node.meta.input)(inputValues);
         // TODO(dmaretskyi): Figure out schema validation on value bags.
         invariant(ValueBag.isValueBag(inputValues), 'Input must be a value bag');
         let outputBag = yield* nodeSpec.exec(inputValues, node.graphNode).pipe(
@@ -444,7 +447,7 @@ export class GraphExecutor {
             }
 
             // Assert that the value matches the schema.
-            yield* Schema.decode(outputTopology.schema)(value).pipe(
+            yield* Schema.decodeEffect(outputTopology.schema)(value).pipe(
               Effect.mapError(
                 (error) =>
                   new InvalidValueError({
@@ -462,9 +465,9 @@ export class GraphExecutor {
           }),
         );
 
-        const res: ValueBag<any>['values'] = {};
+        const res: Record<string, ValueEffect<any>> = {};
         for (const key of Object.keys(outputBag.values)) {
-          res[key] = yield* Effect.cached(outputBag.values[key]).pipe(
+          res[key] = yield* Effect.cached((outputBag.values as Record<string, ValueEffect<any>>)[key]).pipe(
             Effect.withSpan('cached-output', { attributes: { key } }),
           );
         }

@@ -3,10 +3,13 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as logPanelTranslations } from '@dxos/react-ui-debug/translations';
 
 import { meta } from '#meta';
 
 export const translations = [
+  // The R0 log companion and status popover render `@dxos/react-ui-debug`, so its namespace must be registered.
+  ...logPanelTranslations,
   {
     'en-US': {
       [meta.profile.key]: {
@@ -15,6 +18,22 @@ export const translations = [
         'generate-objects.label': 'Generate Objects',
         'space-objects.label': 'Database',
         'open-debug-panel.label': 'Show Debug',
+        'logs.label': 'Logs',
+        'open-logs.label': 'Show logs',
+
+        'remove-all-objects.confirm.description': 'Remove all objects from this space? This cannot be undone.',
+        'remove-all-objects.error.title': 'Failed to remove objects.',
+        'remove-all-objects.toast.title': 'Space cleared',
+        'remove-all-objects.toast.description_one': 'Removed {{count}} object.',
+        'remove-all-objects.toast.description_other': 'Removed {{count}} objects.',
+
+        'collect-garbage.confirm.description':
+          "Permanently reclaim this space's deleted objects? This cannot be undone.",
+        'collect-garbage.error.title': 'Garbage collection failed.',
+        'collect-garbage.toast.title': 'Garbage collected',
+        'collect-garbage.toast.empty.description': 'Nothing to reclaim.',
+        'collect-garbage.toast.description_one': 'Reclaimed {{count}} document.',
+        'collect-garbage.toast.description_other': 'Reclaimed {{count}} documents.',
 
         'settings.wireframe.label': 'Show wireframes.',
         'settings.wireframe.description': 'Overlay wireframe outlines on UI components for debugging layout.',
@@ -44,6 +63,19 @@ export const translations = [
           'Warning: Swapping the storage adapter will make your data unavailable.',
 
         'settings.data-store.label': 'Data Store',
+
+        'settings.debug-port.section.label': 'Agent debug port',
+        'settings.debug-port.section.description':
+          'Lets a local agent evaluate code against this page via composer-recovery.js. Off by default; stops on reload.',
+        'settings.debug-port.label': 'Open debug port.',
+        'settings.debug-port.description':
+          'Runs arbitrary code from a loopback server with full access to your data. Only enable while you are working with an agent you trust.',
+        'settings.debug-port.running.label': 'Listening on',
+        'settings.debug-port.session.label': 'Session id',
+        'settings.debug-port.session.description':
+          'Pass to composer-recovery.js --session. A new id is issued on every restart.',
+        'settings.debug-port.copy-session.label': 'Copy session id.',
+        'settings.debug-port.log.label': 'Debug port log',
       },
     },
   },

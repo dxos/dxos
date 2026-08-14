@@ -5,18 +5,19 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
-import { getSpace, useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
-import { Result, Search } from '../../types';
+import { meta } from '#meta';
+import { Result, Search } from '#types';
+
 import { ResultDetail } from './ResultDetail';
 import { ResultTile } from './ResultTile';
 
@@ -41,7 +42,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
   // Result filter: all vs starred-only (ephemeral view state).
   const [view, setView] = useState<'all' | 'starred'>('all');
 
-  const db = getSpace(search)?.db;
+  const db = Obj.getDatabase(search);
 
   // Results are immutable entries in the Search's feed queue.
   const echoFeed = search.feed?.target;
@@ -143,7 +144,9 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
     <Panel.Root role={role}>
       <Menu.Root {...menuActions} attendableId={id}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content>
@@ -157,7 +160,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
         )) ||
           (visibleResults.length === 0 ? (
             <Empty
-              classNames='bs-full'
+              classNames='h-full'
               label={view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
             />
           ) : (

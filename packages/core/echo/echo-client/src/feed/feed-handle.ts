@@ -2,28 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import * as Predicate from 'effect/Predicate';
-import * as Runtime from 'effect/Runtime';
 
-import { DeferredTask, Event } from '@dxos/async';
+import { DeferredTask, Event, UpdateScheduler } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, type Feed, Obj, type Ref } from '@dxos/echo';
 import {
+  ObjectDatabaseId,
   type ObjectJSON,
   ParentId,
   SelfURIId,
   assertObjectModel,
   isProxy,
+  makeDecodedEntityLive,
+  objectFromJSON,
   setRefResolverOnData,
 } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { runServiceCall } from '@dxos/protocols';
+import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
 
 import { type DatabaseImpl } from '../proxy-db';
+import { FeedObjectCore } from './feed-object-core';
 
 const TRACE_FEED_LOAD = false;
 
@@ -31,7 +35,14 @@ const TRACE_FEED_LOAD = false;
 // https://linear.app/dxos/issue/DX-449/queueappend-fails-when-there-are-too-many-objects-due-to-there-being
 const FEED_APPEND_BATCH_SIZE = 15;
 
-const POLLING_INTERVAL = 1_000;
+const RECONNECT_INITIAL_DELAY = 1_000;
+
+/**
+ * Ceiling for {@link FeedHandle.beginPolling}'s reconnect backoff after a stream error: the delay
+ * doubles after each failed attempt, capped here, and resets to {@link RECONNECT_INITIAL_DELAY} the
+ * moment a reconnected stream observes data.
+ */
+const RECONNECT_MAX_DELAY = 30_000;
 
 /**
  * Client-side handle for a single feed, backed by an EDGE queue.
@@ -44,13 +55,12 @@ export class FeedHandle {
 
   private readonly _refreshTask = new DeferredTask(this._ctx, async () => {
     const thisRefreshId = ++this._refreshId;
-    let changed = false;
     try {
       TRACE_FEED_LOAD &&
         log.info('feed refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
-      const { objects } = await runServiceCall(
+      const result = await runServiceCall(
         this._runtime,
-        this._service.FeedService.queryFeed({
+        this._service['FeedService.queryFeed']({
           query: {
             feedNamespace: this._namespace,
             spaceId: this._spaceId,
@@ -58,53 +68,7 @@ export class FeedHandle {
           },
         }),
       );
-      TRACE_FEED_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects?.length ?? 0 });
-      if (thisRefreshId !== this._refreshId) {
-        return;
-      }
-      if (this._ctx.disposed) {
-        return;
-      }
-
-      const decodedObjects = await Promise.all(
-        (objects ?? []).map(async (encoded) => {
-          let obj: ObjectJSON;
-          try {
-            obj = JSON.parse(encoded) as ObjectJSON;
-          } catch (err) {
-            log.verbose('feed object JSON parse failed; object ignored', { encoded, error: err });
-            return undefined;
-          }
-          if (!EntityId.isValid(obj.id)) {
-            log.verbose('feed object missing valid id; ignored', { obj });
-            return undefined;
-          }
-          try {
-            return await Obj.fromJSON(obj, {
-              refResolver: this._refResolver,
-              uri: EID.make({ spaceId: this._spaceId, entityId: obj.id }),
-              database: this._database,
-              parent: this._parentEntity,
-            });
-          } catch (err) {
-            log.verbose('schema validation error; object ignored', { obj, error: err });
-            return undefined;
-          }
-        }),
-      ).then((objects) => objects.filter(Predicate.isNotUndefined));
-
-      if (thisRefreshId !== this._refreshId) {
-        return;
-      }
-
-      for (const obj of decodedObjects) {
-        this._objectCache.set(obj.id, obj);
-      }
-
-      changed = objectSetChanged(this._objects, decodedObjects);
-
-      TRACE_FEED_LOAD && log.info('feed refresh', { changed, objects: objects?.length ?? 0, refreshId: thisRefreshId });
-      this._objects = decodedObjects;
+      await this.#applyQueryResult(thisRefreshId, result);
     } catch (err) {
       // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.
       //                   We should find the root cause and fix it instead of muting the error.
@@ -112,13 +76,62 @@ export class FeedHandle {
         log.catch(err);
       }
       this._error = err as Error;
-    } finally {
       this._isLoading = false;
-      if (changed) {
-        this.updated.emit();
-      }
+      this.updated.emit();
     }
   });
+
+  /**
+   * Applies a `queryFeed`/`subscribeFeed` snapshot to the working set, shared by the manual
+   * one-shot {@link _refreshTask} and {@link beginPolling}'s streaming subscription. `refreshId`
+   * guards against a superseded response (an overlapping manual {@link refresh} or a later stream
+   * push) clobbering fresher state that already landed.
+   */
+  async #applyQueryResult(refreshId: number, result: FeedService.FeedQueryResult): Promise<void> {
+    const { objects } = result;
+    TRACE_FEED_LOAD && log.info('items fetched', { refreshId, count: objects?.length ?? 0 });
+    if (refreshId !== this._refreshId || this._ctx.disposed) {
+      return;
+    }
+
+    const parsedObjects = (objects ?? []).flatMap((encoded) => {
+      try {
+        const obj = JSON.parse(encoded) as ObjectJSON;
+        if (!EntityId.isValid(obj.id)) {
+          log.verbose('feed object missing valid id; ignored', { obj });
+          return [];
+        }
+        return [obj];
+      } catch (err) {
+        log.verbose('feed object JSON parse failed; object ignored', { encoded, error: err });
+        return [];
+      }
+    });
+
+    // Routes through the same core-tracking materialization as query hydration, so a refreshed
+    // re-read never clobbers a not-yet-echoed local `Obj.update` and preserves entity identity.
+    const decodedObjects = await Promise.all(parsedObjects.map((obj) => this.upsertFromJSON(obj))).then((objects) =>
+      objects.filter(Predicate.isNotUndefined),
+    );
+
+    if (refreshId !== this._refreshId) {
+      return;
+    }
+
+    const changed = objectSetChanged(this._objects, decodedObjects);
+    TRACE_FEED_LOAD && log.info('feed refresh', { changed, objects: objects?.length ?? 0, refreshId });
+    this._objects = decodedObjects;
+    this._isLoading = false;
+    if (changed) {
+      this.updated.emit();
+    }
+  }
+
+  /**
+   * Debounces `Obj.update` mutations on live feed objects into a single background append per
+   * flush cycle (coalescing), mirroring `RepoProxy._sendUpdatesJob`'s use of the same primitive.
+   */
+  readonly #appendScheduler = new UpdateScheduler(this._ctx, () => this.#flushDirty());
 
   private readonly _spaceId: SpaceId;
   private readonly _feedId: string;
@@ -130,16 +143,36 @@ export class FeedHandle {
 
   private _parentEntity: Obj.Unknown | undefined = undefined;
 
-  private _objectCache = new Map<EntityId, Entity.Unknown>();
+  /** Per-object client-side state, keyed by id — the single source of truth for entity identity. */
+  readonly #cores = new Map<EntityId, FeedObjectCore>();
+  /** Cores with a local `Obj.update` not yet captured for append. */
+  readonly #dirtyCores = new Set<FeedObjectCore>();
+  /** In-flight append RPCs, awaited by {@link waitForPendingWrites}. */
+  readonly #inFlight = new Set<Promise<void>>();
+  /** Dedupes concurrent hydrations of the same id (reactive query + one-shot query racing). */
+  readonly #hydrating = new Map<EntityId, Promise<Entity.Unknown | undefined>>();
+
   private _objects: Entity.Unknown[] = [];
   private _isLoading = true;
   private _error: Error | null = null;
   private _refreshId = 0;
   private _loadObjectsPromise: Promise<Entity.Unknown[]> | undefined;
 
+  /** Cleanup for the active `FeedService.subscribeFeed` stream, set only while polling handlers > 0. */
+  #feedSubscriptionCleanup: (() => void) | null = null;
+  /** Pending reconnect after a stream error; cancelled on unsubscribe/dispose. */
+  #reconnectTimer: NodeJS.Timeout | null = null;
+  /** Current reconnect delay; grows on repeated failures, resets once a reconnected stream observes data. */
+  #reconnectDelay = RECONNECT_INITIAL_DELAY;
+  /**
+   * Bumped on every unsubscribe-to-zero and every fresh {@link beginPolling}, invalidating any
+   * reconnect scheduled by a superseded subscription so it can't fire alongside a newer one.
+   */
+  #subscriptionGeneration = 0;
+
   constructor(
     private readonly _service: FeedService.Client,
-    private readonly _runtime: Runtime.Runtime<never>,
+    private readonly _runtime: EffectContext.Context<never>,
     private readonly _refResolver: Ref.Resolver,
     private readonly _echoUri: EID.EID,
     private readonly _database: DatabaseImpl,
@@ -177,9 +210,60 @@ export class FeedHandle {
   }
 
   /**
-   * Insert into feed with optimistic update.
+   * Insert into feed with optimistic update, awaiting the append RPC. Re-appending an id that
+   * already has a core is an update (see `EntityMetaIndex`'s upsert-by-id): the argument's state is
+   * applied onto the existing working-set instance, which stays canonical, rather than registering a
+   * second core.
    */
   async append(items: Entity.Unknown[]): Promise<void> {
+    const cores = this.#registerItemsForAppend(items);
+
+    const batch = cores.map((core) => {
+      // Captured explicitly below — don't let the background scheduler also flush this core.
+      this.#dirtyCores.delete(core);
+      const { json, token } = core.captureForAppend();
+      return { core, json, token };
+    });
+
+    this.#addOptimistic(cores);
+
+    const encoded = batch.map(({ json }) => JSON.stringify(json));
+    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => {
+      log.catch(err);
+      this._error = err as Error;
+      this.updated.emit();
+      for (const { core, token } of batch) {
+        core.revertCapture(token);
+        this.#dirtyCores.add(core);
+      }
+      this.#appendScheduler.trigger();
+    });
+    this.#inFlight.add(sendPromise);
+    try {
+      await sendPromise;
+    } finally {
+      this.#inFlight.delete(sendPromise);
+    }
+  }
+
+  /**
+   * Synchronous alternative to {@link append}: registers each item as a live feed object and
+   * schedules the append in the background (no RPC awaited). Persistence is confirmed by
+   * {@link waitForPendingWrites} (which `db.flush()` awaits). Backs `db.add(obj, { to: feed })`.
+   */
+  appendSync(items: Entity.Unknown[]): void {
+    const cores = this.#registerItemsForAppend(items);
+    for (const core of cores) {
+      this.#onCoreDirty(core);
+    }
+    this.#addOptimistic(cores);
+  }
+
+  /**
+   * Shared preamble for {@link append}/{@link appendSync}: validate inputs, stamp feed metadata, and
+   * register (or update in place, for a re-append-by-id) the working-set core for each item.
+   */
+  #registerItemsForAppend(items: Entity.Unknown[]): FeedObjectCore[] {
     for (const item of items) {
       if (!isProxy(item) && !Entity.isEntity(item)) {
         throw new TypeError(
@@ -189,54 +273,57 @@ export class FeedHandle {
     }
     items.forEach((item) => assertObjectModel(item));
 
-    for (const item of items) {
+    return items.map((item) => {
       setRefResolverOnData(item, this._refResolver);
       defineHiddenProperty(item, SelfURIId, EID.make({ spaceId: this._spaceId, entityId: item.id }));
+      defineHiddenProperty(item, ObjectDatabaseId, this._database);
       if (this._parentEntity) {
         defineHiddenProperty(item, ParentId, this._parentEntity);
       }
-    }
 
-    // Optimistic update.
-    this._objects = [...this._objects, ...items];
-    for (const item of items) {
-      this._objectCache.set(item.id, item);
-    }
-    this.updated.emit();
-
-    const encoded = items.map((item) => JSON.stringify(Entity.toJSON(item)));
-
-    try {
-      for (let i = 0; i < encoded.length; i += FEED_APPEND_BATCH_SIZE) {
-        await runServiceCall(
-          this._runtime,
-          this._service.FeedService.insertIntoFeed({
-            subspaceTag: this._namespace,
-            spaceId: this._spaceId,
-            feedId: this._feedId,
-            objects: encoded.slice(i, i + FEED_APPEND_BATCH_SIZE),
-          }),
-        );
+      const id = EntityId.make(item.id);
+      const existingCore = this.#cores.get(id);
+      const core = existingCore ?? this.#registerCore(item);
+      if (existingCore && existingCore.entity !== item) {
+        existingCore.applyLocalUpdate(item);
       }
-    } catch (err) {
-      log.catch(err);
-      this._error = err as Error;
-      this.updated.emit();
-    }
+      return core;
+    });
+  }
+
+  /** Append newly-tracked core entities to the ordered working-set view and notify subscribers. */
+  #addOptimistic(cores: FeedObjectCore[]): void {
+    const existingIds = new Set(this._objects.map((obj) => obj.id));
+    this._objects = [...this._objects, ...cores.map((core) => core.entity).filter((obj) => !existingIds.has(obj.id))];
+    this.updated.emit();
+  }
+
+  /** Enqueue a core for the next background append and wake the scheduler. */
+  #onCoreDirty(core: FeedObjectCore): void {
+    this.#dirtyCores.add(core);
+    this.#appendScheduler.trigger();
   }
 
   async delete(ids: string[]): Promise<void> {
     // Optimistic update.
-    this._objects = this._objects.filter((item) => !ids.includes(item.id));
     for (const id of ids) {
-      this._objectCache.delete(id);
+      if (!EntityId.isValid(id)) {
+        continue;
+      }
+      const core = this.#cores.get(id);
+      if (core) {
+        core.markDeleted();
+        this.#cores.delete(id);
+        this.#dirtyCores.delete(core);
+      }
     }
+    this._objects = this._objects.filter((item) => !ids.includes(item.id));
     this.updated.emit();
 
     try {
       await runServiceCall(
         this._runtime,
-        this._service.FeedService.deleteFromFeed({
+        this._service['FeedService.deleteFromFeed']({
           subspaceTag: this._namespace,
           spaceId: this._spaceId,
           feedId: this._feedId,
@@ -249,13 +336,85 @@ export class FeedHandle {
     }
   }
 
+  /**
+   * Send captured append batches to the feed service, chunked to `FEED_APPEND_BATCH_SIZE` (the
+   * server rejects overly large single inserts).
+   */
+  async #sendAppendBatches(encoded: string[]): Promise<void> {
+    for (let i = 0; i < encoded.length; i += FEED_APPEND_BATCH_SIZE) {
+      await runServiceCall(
+        this._runtime,
+        this._service['FeedService.insertIntoFeed']({
+          subspaceTag: this._namespace,
+          spaceId: this._spaceId,
+          feedId: this._feedId,
+          objects: encoded.slice(i, i + FEED_APPEND_BATCH_SIZE),
+        }),
+      );
+    }
+  }
+
+  /**
+   * Flush every dirty core's pending `Obj.update`(s) as a single feed append per core (coalescing).
+   * Scheduled via `#appendScheduler`; also runs synchronously (via `runBlocking`) from
+   * {@link waitForPendingWrites}.
+   */
+  async #flushDirty(): Promise<void> {
+    if (this.#dirtyCores.size === 0) {
+      return;
+    }
+    const batch = [...this.#dirtyCores].map((core) => {
+      const { json, token } = core.captureForAppend();
+      return { core, json, token };
+    });
+    this.#dirtyCores.clear();
+
+    const encoded = batch.map(({ json }) => JSON.stringify(json));
+    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => {
+      log.catch(err);
+      this._error = err as Error;
+      this.updated.emit();
+      for (const { core, token } of batch) {
+        core.revertCapture(token);
+        this.#dirtyCores.add(core);
+      }
+      this.#appendScheduler.trigger();
+    });
+    this.#inFlight.add(sendPromise);
+    try {
+      await sendPromise;
+    } finally {
+      this.#inFlight.delete(sendPromise);
+    }
+  }
+
+  /**
+   * Wait for every pending local `Obj.update` to be captured and sent (not for it to be echoed back
+   * through polling — the index that serves queries is caught up synchronously by the query host
+   * itself, so callers don't need to wait on our own poll cycle). Mirrors `RepoProxy.flush`.
+   *
+   * Best-effort, matching the pre-existing append contract: a failed send re-queues its cores and
+   * reschedules, so this can return with a retry still pending, and the failure surfaces only via
+   * {@link error} rather than rejecting.
+   *
+   * TODO(wittjosiah): Drain until `#dirtyCores` and `#inFlight` both settle and propagate a
+   *   persistent failure, so `db.flush()` cannot report success over unwritten state. Needs a
+   *   bounded retry policy first — an unbounded drain would hang on a permanently failing send.
+   */
+  async waitForPendingWrites(): Promise<void> {
+    if (this.#dirtyCores.size > 0) {
+      await this.#appendScheduler.runBlocking();
+    }
+    await Promise.allSettled([...this.#inFlight]);
+  }
+
   async sync({
     shouldPush = true,
     shouldPull = true,
   }: { shouldPush?: boolean; shouldPull?: boolean } = {}): Promise<void> {
     await runServiceCall(
       this._runtime,
-      this._service.FeedService.syncFeed({
+      this._service['FeedService.syncFeed']({
         subspaceTag: this._namespace,
         spaceId: this._spaceId,
         feedId: this._feedId,
@@ -272,7 +431,7 @@ export class FeedHandle {
   async getSyncState(): Promise<Feed.SyncState> {
     const response = await runServiceCall(
       this._runtime,
-      this._service.FeedService.getSyncState({
+      this._service['FeedService.getSyncState']({
         spaceId: this._spaceId,
         namespaces: [this._namespace],
       }),
@@ -288,7 +447,7 @@ export class FeedHandle {
   async fetchObjectsJSON(): Promise<ObjectJSON[]> {
     const { objects } = await runServiceCall(
       this._runtime,
-      this._service.FeedService.queryFeed({
+      this._service['FeedService.queryFeed']({
         query: {
           feedNamespace: this._namespace,
           spaceId: this._spaceId,
@@ -306,15 +465,74 @@ export class FeedHandle {
     });
   }
 
-  async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
-    invariant(EntityId.isValid(obj.id), 'object missing valid id');
-    const decoded = await Obj.fromJSON(obj, {
-      refResolver: this._refResolver,
-      uri: EID.make({ spaceId: this._spaceId, entityId: obj.id }),
-      database: this._database,
-      parent: this._parentEntity,
-    });
-    return decoded;
+  /**
+   * The single materialization entry point for feed JSON: reconciles into an existing core's
+   * working-set instance, or decodes and registers a fresh live core. Used by polling, reference
+   * resolution, and (via `DatabaseImpl._getFeedHandleIfAvailable`) index-backed query hydration —
+   * whichever of these observes an id first wins the identity for that entity.
+   */
+  async upsertFromJSON(json: ObjectJSON): Promise<Entity.Unknown | undefined> {
+    if (!EntityId.isValid(json.id)) {
+      log.verbose('feed object missing valid id; ignored', { json });
+      return undefined;
+    }
+    const id = json.id;
+
+    const existingCore = this.#cores.get(id);
+    if (existingCore) {
+      try {
+        const decoded = await Obj.fromJSON(json, {
+          refResolver: this._refResolver,
+          uri: EID.make({ spaceId: this._spaceId, entityId: id }),
+          database: this._database,
+          parent: this._parentEntity,
+        });
+        existingCore.reconcile(decoded, json);
+      } catch (err) {
+        log.verbose('schema validation error; object ignored', { json, error: err });
+      }
+      return existingCore.entity;
+    }
+
+    let hydrating = this.#hydrating.get(id);
+    if (!hydrating) {
+      hydrating = this.#hydrateNew(json, id);
+      this.#hydrating.set(id, hydrating);
+      void hydrating.finally(() => this.#hydrating.delete(id));
+    }
+    return hydrating;
+  }
+
+  async #hydrateNew(json: ObjectJSON, id: EntityId): Promise<Entity.Unknown | undefined> {
+    try {
+      const snapshot = await objectFromJSON(json, {
+        refResolver: this._refResolver,
+        uri: EID.make({ spaceId: this._spaceId, entityId: id }),
+        database: this._database,
+        parent: this._parentEntity,
+      });
+      // Rewrap the decoded snapshot as a live reactive proxy so `Obj.update` mutates and notifies.
+      const decoded = makeDecodedEntityLive(snapshot);
+      invariant(Entity.isEntity(decoded), 'objectFromJSON produced an invalid entity');
+      // A concurrent writer (e.g. `append`) may have registered a core for this id while we were
+      // decoding — discard this (possibly stale) hydration rather than clobber the fresher core;
+      // the next poll or query reconciles it properly via the "existing core" branch above.
+      const racedCore = this.#cores.get(id);
+      if (racedCore) {
+        return racedCore.entity;
+      }
+      this.#registerCore(decoded);
+      return decoded;
+    } catch (err) {
+      log.verbose('schema validation error; object ignored', { json, error: err });
+      return undefined;
+    }
+  }
+
+  #registerCore(entity: Entity.Unknown): FeedObjectCore {
+    const core = new FeedObjectCore(entity, (dirtyCore) => this.#onCoreDirty(dirtyCore));
+    this.#cores.set(EntityId.make(entity.id), core);
+    return core;
   }
 
   /**
@@ -327,15 +545,15 @@ export class FeedHandle {
 
   getCachedObjectById<T extends Entity.Unknown = Entity.Unknown>(id: EntityId): T | undefined {
     // Feed entries may be objects or relations; callers narrow via the generic, mirroring
-    // DatabaseImpl.getObjectById. The cache holds fully-decoded entities keyed by id.
-    return this._objectCache.get(id) as T | undefined;
+    // DatabaseImpl.getObjectById.
+    return this.#cores.get(id)?.entity as T | undefined;
   }
 
   /**
    * Resolves feed items by id. Used by reference resolution.
    */
   async getObjectsById(ids: EntityId[]): Promise<(Entity.Unknown | undefined)[]> {
-    const missingIds = ids.filter((id) => !this._objectCache.has(id));
+    const missingIds = ids.filter((id) => !this.#cores.has(id));
     if (missingIds.length > 0) {
       this._loadObjectsPromise ??= this._loadObjects().finally(() => {
         this._loadObjectsPromise = undefined;
@@ -343,56 +561,103 @@ export class FeedHandle {
       await this._loadObjectsPromise;
     }
 
-    return ids.map((id) => this._objectCache.get(id));
+    return ids.map((id) => this.#cores.get(id)?.entity);
   }
 
   private async _loadObjects(): Promise<Entity.Unknown[]> {
     const objects = await this.fetchObjectsJSON();
     const decodedObjects = await Promise.all(
-      objects
-        .filter((obj) => EntityId.isValid(obj.id))
-        .map(async (obj) => {
-          try {
-            const decoded = await this.hydrateObject(obj);
-            this._objectCache.set(decoded.id, decoded);
-            return decoded;
-          } catch (err) {
-            log.verbose('schema validation error; object ignored', { obj, error: err });
-            return undefined;
-          }
-        }),
+      objects.filter((obj) => EntityId.isValid(obj.id)).map((obj) => this.upsertFromJSON(obj)),
     ).then((objects) => objects.filter(Predicate.isNotUndefined));
 
     return decodedObjects;
   }
 
-  private _pollingInterval: NodeJS.Timeout | null = null;
-
+  /**
+   * Subscribes to `FeedService.subscribeFeed`, replacing the previous poll-timer loop with a real
+   * server-push subscription — ref-counted so concurrent callers share one underlying stream.
+   */
   beginPolling(): () => void {
     if (this._pollingHandlers++ === 0) {
-      const poll = async () => {
-        await this._refreshTask.runBlocking();
-        if (this._pollingHandlers > 0 && !this._ctx.disposed) {
-          this._pollingInterval = setTimeout(poll, POLLING_INTERVAL);
-        }
-      };
-      queueMicrotask(poll);
+      this.#reconnectDelay = RECONNECT_INITIAL_DELAY;
+      this.#subscribeToFeed(++this.#subscriptionGeneration);
     }
 
     return () => {
       if (--this._pollingHandlers === 0) {
-        clearTimeout(this._pollingInterval!);
-        this._pollingInterval = null;
+        this.#teardownFeedSubscription();
       }
     };
   }
 
-  async dispose() {
-    this._pollingHandlers = 0;
-    if (this._pollingInterval) {
-      clearTimeout(this._pollingInterval);
-      this._pollingInterval = null;
+  /**
+   * Opens the shared `subscribeFeed` stream. On a stream error (the RPC connection dropping, say)
+   * this reopens after a backoff delay rather than leaving the handle without updates for the rest
+   * of its session — the poll loop it replaced self-healed on its next tick, so this subscription
+   * needs an equivalent recovery path. `generation` guards a reconnect scheduled by an earlier,
+   * now-superseded subscription (unsubscribed, or replaced by a fresh `beginPolling()`) from firing.
+   */
+  #subscribeToFeed(generation: number): void {
+    this.#feedSubscriptionCleanup = subscribeStream(
+      this._runtime,
+      this._service['FeedService.subscribeFeed']({
+        query: {
+          feedNamespace: this._namespace,
+          spaceId: this._spaceId,
+          feedIds: [this._feedId],
+        },
+      }),
+      {
+        onData: (result) => {
+          this.#reconnectDelay = RECONNECT_INITIAL_DELAY;
+          const refreshId = ++this._refreshId;
+          void this.#applyQueryResult(refreshId, result);
+        },
+        onError: (error) => {
+          if (!(error instanceof RpcClosedError)) {
+            log.catch(error);
+          }
+          this._error = error;
+          this._isLoading = false;
+          this.#feedSubscriptionCleanup = null;
+          this.updated.emit();
+          if (generation === this.#subscriptionGeneration && this._pollingHandlers > 0 && !this._ctx.disposed) {
+            const delay = this.#reconnectDelay;
+            this.#reconnectDelay = Math.min(this.#reconnectDelay * 2, RECONNECT_MAX_DELAY);
+            this.#reconnectTimer = setTimeout(() => {
+              this.#reconnectTimer = null;
+              this.#subscribeToFeed(generation);
+            }, delay);
+          }
+        },
+      },
+    );
+  }
+
+  /** Tears down the active subscription and cancels any pending reconnect. */
+  #teardownFeedSubscription(): void {
+    this.#subscriptionGeneration++;
+    if (this.#reconnectTimer) {
+      clearTimeout(this.#reconnectTimer);
+      this.#reconnectTimer = null;
     }
+    this.#feedSubscriptionCleanup?.();
+    this.#feedSubscriptionCleanup = null;
+  }
+
+  async dispose() {
+    // Drain before teardown: a same-tick `Obj.update` is still queued for the background append,
+    // so clearing `#dirtyCores` first would drop it. Runs while the scheduler and service are still
+    // live, and cannot reject — `waitForPendingWrites` is best-effort by contract.
+    await this.waitForPendingWrites();
+
+    this._pollingHandlers = 0;
+    this.#teardownFeedSubscription();
+    for (const core of this.#cores.values()) {
+      core.dispose();
+    }
+    this.#cores.clear();
+    this.#dirtyCores.clear();
     await this._ctx.dispose();
     await this._refreshTask.join();
   }

@@ -8,15 +8,9 @@ import { describe, test } from 'vitest';
 import { pickProperty } from './ast';
 
 describe('ast', () => {
-  const schema = Schema.Struct(
-    {
-      foo: Schema.Number,
-    },
-    {
-      key: Schema.String,
-      value: Schema.Any,
-    },
-  );
+  const schema = Schema.StructWithRest(Schema.Struct({ foo: Schema.Number }), [
+    Schema.Record(Schema.String, Schema.Any),
+  ]);
 
   test('field', ({ expect }) => {
     const field = pickProperty(schema, 'foo');

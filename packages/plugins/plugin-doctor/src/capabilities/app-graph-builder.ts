@@ -4,9 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -31,6 +33,6 @@ export default Capability.makeModule(
           ]),
       }),
     ]);
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

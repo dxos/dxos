@@ -1,0 +1,318 @@
+# Document Revisions & Review — Test Plan & Follow-Along Script
+
+Manual verification for the suggestion / comment / versioning feature set. Two parts:
+
+1. **Storybook checklist** — fast, isolated, deterministic (play functions already assert much of this;
+   this is the eyeball pass).
+2. **App script** — end-to-end in Composer with a realistic document, in the order a real reviewer works.
+
+Legend: ☐ = to verify. Note anything that differs from **Expected**.
+
+> ⚠️ **Known open design issue — read first: [§0 View-mode ↔ review-mode coupling](#0-open-design-issue).**
+> The reported "edit disappears when I switch to plain-text then back to markdown" is this. It is a
+> **visibility** issue, not data loss (the edit stays on your branch; reload shows it). Decide the model
+> before treating other mode-switch observations as bugs.
+
+---
+
+<a id="0-open-design-issue"></a>
+
+## 0. Open design issue — view-mode ↔ review-mode coupling
+
+**What happens.** The review posture (Editing / Suggesting / Viewing) is now folded into the editor
+view-mode dropdown. Selecting a built-in view mode also sets the posture:
+
+| Dropdown entry | Editor view mode       | Review posture (`mode`) | Suggestions shown? |
+| -------------- | ---------------------- | ----------------------- | ------------------ |
+| Source         | source (raw)           | editing                 | yes                |
+| Preview        | preview (rendered)     | **viewing**             | **no** (policy)    |
+| Read-only      | readonly               | **viewing**             | **no** (policy)    |
+| Suggesting     | (bound to your branch) | suggesting              | yes (yours inline) |
+
+So going **Suggesting → Source → Preview** lands you in `viewing`, and `viewing`'s render policy
+(`showSuggestions:false`) hides every suggestion — including your own in-progress one. It is still on
+your suggestion branch (visible in the comments/suggestions companion), and a reload resets `mode` to
+`editing` (the aspect is in-memory) so it reappears. **No data is lost.**
+
+**The smell.** "Render mode" (source vs rendered preview) and "review posture" (do I see suggestions)
+are two different axes that got conflated. "Preview" reads as "just render the markdown", not "hide my
+edits".
+
+**Options to pick from (morning):**
+
+1. **Decouple** — built-in view modes set only the editor view mode and never force `viewing`; leaving
+   Suggesting drops to `editing`. Suggestions stay visible across source/preview/readonly. `viewing`
+   becomes reachable only via a future explicit "Viewing" entry (or drop it). _Simplest fix for the
+   reported bug; loses the one-click clean-read until a Viewing entry is added._
+2. **Viewing shows suggestions read-only** — change `defaultReviewRenderPolicy` so `viewing` keeps
+   `showSuggestions:true` but `editable:false`. Preview/Read-only then render with suggestions visible
+   but non-interactive. _Keeps the mapping; changes what "Viewing" means._
+3. **Keep as-is** — treat it as intended GDocs-style (Viewing = clean read). Only add a tooltip/hint so
+   it's not surprising. _Least code; the reported behaviour stands._
+
+I did **not** change this overnight — it's your call. Everything below assumes the current (option 3)
+behaviour so you can feel it before deciding.
+
+---
+
+## 1. Storybook checklist
+
+Serve: `moon run storybook-react:serve` (port 9009) — or reuse your running instance. Navigate to each
+story and eyeball. (Most have play functions that already assert the core path; watch them run green,
+then interact manually.)
+
+### plugins/plugin-review/stories/DocumentVersioning
+
+- ☐ **TimeTravel** — create checkpoints on main; click older revisions (editor shows that snapshot,
+  read-only); click **Now** to return. Timeline git-graph renders the lane.
+- ☐ **BranchRevisions** — select a revision _on a branch_ (read-only), then the branch **Tip** (editable).
+- ☐ **BranchMerge** — merge a branch back via the History panel **Merge** button; timeline collapses the lane.
+- ☐ **ChainedBranches** — fork → merge → fork again → merge (flat registry; no nesting).
+- ☐ **ConflictAutoResolve** — concurrent same-line edits CRDT-merge with **no** conflict markers.
+- ☐ **ConflictResolution** — the marker-resolution UI (Accept branch / current / both) for a legacy block.
+- ☐ **AmbientReview** — default view overlays _both_ seeded authors' suggestions **and** the comment
+  highlight; editor editable (Editing). Use the **View mode** dropdown → **Read-only**: suggestions
+  disappear, the comment stays, editor read-only. Back to **Source**: suggestions return.
+  - ☐ **NEW: check indicator** — open the View mode dropdown; the current entry has a **✓** on its row.
+  - ☐ **NEW: change-bar gutter** — lines carrying a suggestion show a thin **vertical bar in the
+    author's colour** in the gutter; unchanged lines have none. Two authors on different lines → two colours.
+- ☐ **Suggesting** — View mode → **Suggesting**: editor rebinds to _your_ branch; type — your text is
+  green/your-colour (tracked insert), a second author (Bob) still overlays vs main and does **not**
+  strike your text. Your change-bar is your colour.
+  - ☐ **NEW: un-delete** — delete a word (strikethrough phantom appears); hover it → a **restore**
+    control floats above; click → the word returns and the phantom clears.
+
+### plugins/plugin-comments/containers/CommentsArticle
+
+- ☐ **WithComments** — existing comment threads render; select text → comment affordance.
+- ☐ **WithAgentSuggestions** — seeded suggestions appear as cards in the companion + overlaid inline;
+  layout is comments-top / history-bottom in the right column.
+- ☐ **NEW: comment flash** — create a comment and press Enter to submit the first message. Watch closely:
+  the thread must **not** blink out and back. It stays put through the draft→persisted handoff.
+
+### plugins/plugin-comments/components/SuggestionThread & SuggestionSources
+
+- ☐ **SuggestionThread / AcceptReject** — per-change Accept/Reject on a proposal card.
+- ☐ **SuggestionSources / Default + SwapDocument** — multi-author enumeration; swapping the document
+  re-resolves sources (no stale overlay).
+
+---
+
+## 2. App follow-along script (Composer)
+
+Use a **realistic document** — paste the sample in §3 into a new Markdown document so there are
+headings, lists, code, and multiple paragraphs to review.
+
+Two participants make multi-author scenarios real: use two browser profiles / spaces, or seed a second
+author via the storybook path. Solo is fine for everything except the multi-author overlay.
+
+### 2A. Comments
+
+- ☐ Select a phrase in a paragraph → add a comment → type a message → **Enter**. Thread appears in the
+  companion; **no flash** (§1 regression).
+- ☐ Reply to the thread; resolve it; toggle **Active / All** comments.
+- ☐ Delete a thread (undo restores it).
+- ☐ Comment on a **heading** and on a **list item** — anchors land on the right text.
+
+### 2B. Suggesting (your own edits)
+
+- ☐ View mode → **Suggesting**. Editor rebinds to your suggestion branch (title/tabs unaffected).
+- ☐ Insert a sentence mid-paragraph → renders in **your colour**, underlined; gutter change-bar in your colour.
+- ☐ Delete a few words → strikethrough phantom; **hover → restore** returns them.
+- ☐ Delete an entire list item / a fenced code line → the phantom preserves the line break (block deletion).
+- ☐ Multi-line: delete a whole paragraph → single phantom spanning the removed lines.
+- ☐ Open the **comments/suggestions companion** — your suggestion is listed as a card.
+- ☐ **Mode-switch matrix (the reported flow — see §0):** from Suggesting, switch to **Source**, then
+  **Preview**, then **Read-only**, then back to **Suggesting**. Note at each step whether your edit is
+  visible inline and whether it's in the companion. (Expected under current behaviour: hidden in
+  Preview/Read-only, visible in Source/Suggesting, always in the companion, always recoverable.)
+
+### 2C. Reviewing others' suggestions (needs a 2nd author)
+
+- ☐ In **Editing** (default) view: the other author's changes overlay inline in _their_ colour, with a
+  gutter bar; comment highlights coexist.
+- ☐ Hover an overlaid change → the **Accept / Reject** popover appears (in the tooltip layer, not clipped).
+- ☐ **Accept** one change → it merges into main and the overlay for it clears. **Reject** another → it
+  disappears without changing main.
+- ☐ Two authors editing near the same line → both bars/overlays attribute correctly (no strike of your text).
+
+### 2D. Versioning / History companion (the advanced path)
+
+- ☐ Open the **History** companion. Create a named checkpoint; it appears on the timeline.
+- ☐ Click an older checkpoint → editor shows the snapshot (read-only) → **Now** returns.
+- ☐ **New branch** from a revision; switch to it via the timeline; edit it; **Merge** it back.
+- ☐ Confirm the toolbar has **no** branch-selector dropdown anymore (removed — the companion is the path).
+  The `[Base | Diff | Branch]` banner still appears when a branch is selected via the companion.
+
+### 2E. Persistence / regressions
+
+- ☐ Reload mid-review — suggestions and comments reappear; nothing is lost (view posture resets to Editing).
+- ☐ A plain Markdown doc opened via a surface with **no** versioning provider (e.g. a preview/card)
+  still renders and edits normally (no crash, no version UI).
+
+---
+
+## 3. Sample realistic document
+
+Paste the block below (it deliberately contains headings, a bulleted list, a numbered list, and a
+fenced code block so every anchor / block-deletion case has something to hit).
+
+````markdown
+# Q3 Engineering Review
+
+## Summary
+
+The platform team shipped the new sync pipeline and cut p95 latency by 38%. Two
+follow-ups remain before GA: backpressure handling and the migration tooling.
+
+## Highlights
+
+- Sync pipeline rewrite landed (see RFC-142).
+- Latency: p95 380ms → 235ms.
+- Onboarded three design partners.
+
+## Risks
+
+1. Backpressure under burst load is untested at scale.
+2. The migration script has no dry-run mode.
+
+## Appendix
+
+```ts
+const rollout = { cohort: 'beta', percent: 10 };
+```
+
+Notes: revisit the cohort percentage after the first week.
+````
+
+---
+
+## 4. What each feature maps to (for filing issues precisely)
+
+- Change-bar gutter → `@dxos/ui-editor` `change-bar.ts` (fed by `trackChanges` + `suggestions`).
+- Own tracked edits + phantom + restore → `track-changes.ts`.
+- Foreign overlay + Accept/Reject popover → `suggest.ts` (+ `suggestions-overlay.ts`).
+- View-mode dropdown + Suggesting entry → `react-ui-editor` `view-mode.ts`; `plugin-markdown`
+  `MarkdownArticle` (assembly) + `MarkdownCapabilities.ViewModeExtension`; `plugin-comments`
+  `markdown-extension.ts` (contributes "Suggesting").
+- Dropdown check indicator → `react-ui-menu` `DropdownMenu.tsx`.
+- Comment flash → `plugin-comments` `add-message.ts` (order) + `CommentsArticle.tsx` (dedupe).
+- History companion (timeline/branches/checkpoints) → `plugin-versioning` `ObjectHistory.tsx`.
+- Review posture ↔ render policy → `plugin-versioning` `VersioningCapabilities` (`viewAspect`,
+  `defaultReviewRenderPolicy`); consumed in `MarkdownArticle`.
+
+---
+
+## 3. Post-merge (plugin-review) — combined review walkthrough (2026-07-24)
+
+All stories now live under **`plugins/plugin-review/*`** (worktree storybook: `localhost:9014`).
+Automated = play-asserted, runs in `moon run plugin-review:test-storybook` + CI. Manual = eyeball/judgment.
+
+### Automated (verify green, then spot-eyeball)
+
+| #   | Story                                                                 | Asserts                                                                          |
+| --- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| A1  | DocumentVersioning / **TimeTravel**                                   | v1–v3 checkpoints, travel back/forward, Now returns editable tip, banner testids |
+| A2  | DocumentVersioning / **BranchRevisions**                              | draft branch bind, branch-lane revisions, Base/Diff/Branch views                 |
+| A3  | DocumentVersioning / **BranchMerge**                                  | merge → content folded to main, branch archived                                  |
+| A4  | DocumentVersioning / **ChainedBranches**                              | sequential fork→merge chains                                                     |
+| A5  | DocumentVersioning / **ConflictAutoResolve** + **ConflictResolution** | CRDT auto-merge + conflict markers path                                          |
+| A6  | DocumentVersioning / **AmbientReviewTest**                            | overlay + comment coexistence (now via real SuggestionSourcesProvider)           |
+| A7  | DocumentVersioning / **EditingTypingTest**                            | typing stability on ambient path (no remount/caret loss)                         |
+| A8  | DocumentVersioning / **SuggestingTest**                               | own-branch bind, tracked changes, multi-author lanes                             |
+| A9  | SuggestionSources (2), SuggestionThread (1), VersionBanner (1)        | enumeration/thread/banner units                                                  |
+
+### Manual (no play coverage — the joint session)
+
+| #   | Story                                                      | Verify                                                                        |
+| --- | ---------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| M1  | CommentsArticle / **Default**                              | empty state prompt; create thread via selection + toolbar                     |
+| M2  | CommentsArticle / **WithComments**                         | threads render, anchor labels (AnchorResolver path), click-reveal scroll      |
+| M3  | CommentsArticle / **WithAgentSuggestions**                 | suggestion tiles + Accept/Reject route to ops                                 |
+| M4  | CommentsArticle / **WithCommentsAndSuggestions**           | mixed list, author colours consistent                                         |
+| M5  | CommentsArticle / **WithMentionAgent** / **WithAutoAgent** | agent replies (stubbed runner)                                                |
+| M6  | **ObjectHistory**                                          | static timeline renders; checkpoint/branch buttons; selection highlight lanes |
+| M8  | **MarkdownProperties**                                     | Versions summary counts; create checkpoint button                             |
+| M9  | DocumentVersioning / **Default**                           | bare doc, no review chrome (default binding path)                             |
+| M10 | VersionBanner variants                                     | checkpoint/branch/fork banners, view selector, hues                           |
+
+Exit criteria: automated suite green + M1–M10 checked; then §2 App script in `serve-min` (Review enabled).
+
+**Run 2026-07-24 (joint session): automated 9 files / 25 tests GREEN; M1–M10 ALL PASS (user-verified).**
+Notes: first story load after a storybook restart can 404 the dynamic import (optimize-deps race) — reload once;
+smoke-load each story before handing over. Per-story manual scripts now live as `Test:` bullets in each story's
+JSDoc (CommentsArticle: add/delete comments, click-thread ↔ highlight sync, overlay click-through).
+
+### 3b. Storybook-driven suggest/review walkthrough (interactive, after play settles)
+
+Numbered scripts live in each story's JSDoc (`Test:` blocks), on the play-free stories — a play would
+leave the story past the state its script starts from, so the automated twin carries the `Test`
+suffix and the plain name belongs to the hands-on story. Order:
+
+| #   | Story (plugins/plugin-review/…)                  | Flow (maps §2 app script onto storybook)                                                  |
+| --- | ------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| S1  | DocumentVersioning / **Suggesting**              | own edits: insert/delete phantoms, hover-restore, block deletion, mode-switch matrix (§0) |
+| S2  | DocumentVersioning / **AmbientReview**           | other-author overlay, Accept/Reject popover, comment click-through                        |
+| S3  | DocumentVersioning / **EditingTyping**           | typing stability on ambient path                                                          |
+| S4  | CommentsArticle / **WithAgentSuggestions**       | change-block cards: Accept folds / Reject reverts, author hues                            |
+| S5  | CommentsArticle / **WithCommentsAndSuggestions** | comments + suggestions coexistence, click-through                                         |
+| S6  | DocumentVersioning / **Default**                 | no-review baseline (default binding)                                                      |
+
+## 4. Full pass after the review fixes (prepared 2026-07-25)
+
+Everything below is on `localhost:9014` (this worktree's storybook). Every story seeds before mount, so
+each starts from the state its script describes — reload between runs to reset.
+
+**Fixed since the last pass, so worth confirming rather than re-reporting:** focus loss on every
+keystroke, accept/reject doing nothing, suggestions vanishing in Markdown mode, your typing struck
+through or surfacing as a card, deletion spans grabbing unrelated characters, the caret trapped after a
+trailing suggestion, cards not clearing on accept, the hover popover flickering, and the missing comment
+highlight in the review stories.
+
+**Known-open, do not spend time on:** decoration flicker when clicking a suggestion (S1.1), flicker when
+switching view modes (S1.6), timeline lanes not author-coloured (S1.8 — never implemented; needs a
+`Timeline` colour prop).
+
+### F1 — Suggesting (`stories/DocumentVersioning/Suggesting`)
+
+1. Switch the view-mode dropdown (note-pencil icon) to Suggesting: the editor rebinds to your branch and
+   Bob's suggestions still overlay.
+2. Type mid-paragraph: your text renders in your colour, underlined, with a gutter change-bar — and no
+   focus loss between keystrokes.
+3. Delete a few words: strikethrough phantom covering exactly what you removed, no stray characters at
+   either end; hover → restore returns them.
+4. Delete a range that cuts into the words at both ends: the strike still covers only what you deleted.
+5. Delete a whole bullet: the phantom preserves the line break.
+6. Click past Bob's closing-line suggestion at the very end: the caret gets there and typing lands after it.
+7. Round-trip Suggesting → Markdown → Plain text → Suggesting: suggestions survive every hop and the
+   editor stays editable.
+
+### F2 — AmbientReview (`stories/DocumentVersioning/AmbientReview`)
+
+1. Alice (lime) and Bob (violet) both overlay, each with a gutter bar; the seeded comment highlight sits
+   on “Reviewers can work through the changes”.
+2. Hover a change: the Accept/Reject popover opens, stays put as the pointer crosses the change, and
+   survives the pointer moving into it.
+3. Accept from the popover: the change folds into the document, the popover closes, its card leaves the
+   companion, and the other author's suggestion is untouched.
+4. Reject from the popover: the suggestion clears and the document is unchanged.
+5. Click the comment highlight under an overlay: the comment activates (the overlay must not eat the click).
+6. Click a change in the document: its card accents in the companion. Click a card: the caret moves to
+   the change and the editor takes focus.
+
+### F3 — EditingTyping (`stories/DocumentVersioning/EditingTyping`)
+
+1. Type steadily on the ambient path: no caret jump, no dropped keys, no strikethrough of your own text.
+2. Toggle view modes between bursts: content stable, no suggestion branch created for your keystrokes.
+
+### F4 / F5 — CommentsArticle (`containers/CommentsArticle/WithAgentSuggestions`, `WithCommentsAndSuggestions`)
+
+1. Suggestion cards list per author with consistent colours across card, decoration and timeline lane.
+2. Accept folds the change and drops the card; Reject clears it leaving the text untouched.
+3. With comments and suggestions together: both render, clicking either reveals its range, and neither
+   swallows the other's click.
+
+### F6 — Default (`stories/DocumentVersioning/Default`)
+
+1. Plain document, no review chrome, no decorations.
+2. Typing is clean — this is the control for anything that looks like a review-layer regression.

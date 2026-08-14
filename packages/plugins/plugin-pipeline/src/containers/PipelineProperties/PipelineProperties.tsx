@@ -3,14 +3,15 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { AppSurface, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
-import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, FormFieldHeader, ViewEditor } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
@@ -20,7 +21,9 @@ import { arrayMove } from '@dxos/util';
 
 import { meta } from '#meta';
 
-const ColumnFormSchema = Pipeline.Column.pipe(Schema.mutable, Schema.pick('name'));
+const ColumnFormSchema = Pipeline.Column.mapFields((fields) => Struct.pick(fields, ['name'])).mapFields(
+  Struct.map(Schema.mutableKey),
+);
 
 export type PipelinePropertiesProps = AppSurface.ObjectPropertiesProps<Pipeline.Pipeline>;
 

@@ -25,7 +25,7 @@ import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { type Notebook } from '#types';
+import { Notebook } from '#types';
 
 import { type ComputeGraph } from '../../notebook';
 import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEditor';
@@ -177,13 +177,14 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex w-full bg-group-surface text-description border-y border-subdued-separator', valueStyles)}>
+    <div className={mx('flex w-full dx-group-surface text-description border-y border-subdued-separator', valueStyles)}>
       <NotebookTextEditor readOnly value={value} />
     </div>
   );
 };
 
 const NotebookTextEditor = ({
+  classNames,
   extensions: extensionsProp,
   readOnly,
   ...props
@@ -202,7 +203,13 @@ const NotebookTextEditor = ({
 
   return (
     <Editor.Root>
-      <Editor.View classNames='border' {...props} extensions={extensions} selectionEnd />
+      {/* Focused-cell affordance: Editor.View no longer applies a focus border by default. */}
+      <Editor.View
+        {...props}
+        classNames={mx('border focus-within:border-focus-ring-subtle', classNames)}
+        extensions={extensions}
+        selectionEnd
+      />
     </Editor.Root>
   );
 };

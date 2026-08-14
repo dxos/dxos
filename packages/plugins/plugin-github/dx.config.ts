@@ -34,6 +34,6 @@ export default Config2.make({
       without requiring each member to hold their own GitHub token.
     `,
     icon: { key: 'ph--github-logo--regular', hue: 'purple' },
-    tags: ['labs', 'integration'],
+    tags: ['labs', 'connector'],
   },
 });

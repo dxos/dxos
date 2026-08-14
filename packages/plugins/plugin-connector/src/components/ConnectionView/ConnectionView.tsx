@@ -6,15 +6,14 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
-import { useObject } from '@dxos/react-client/echo';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Empty } from '@dxos/react-ui-list';
 
+import { type TestConnectionStatus } from '#hooks';
 import { meta } from '#meta';
-
-import { type TestConnectionStatus } from '../../hooks';
 
 // The action section uses Form's `settings` variant purely for its labeled-row chrome
 // (action-mode `Form.Row`s); there are no fields to bind, so the schema is empty.
@@ -33,7 +32,7 @@ export type ConnectionViewProps = {
   /** External-sync cursors authenticated by this connection. */
   bindings: ReadonlyArray<Cursor.ExternalCursor>;
   /** Schema describing per-binding `.options`; absent for connectors without per-binding options. */
-  optionsSchema?: Schema.Schema<any, any>;
+  optionsSchema?: Schema.Codec<any, any>;
   /** True when the connector exposes a `sync` operation (drives Sync-now visibility). */
   canSync: boolean;
   /** True when the connector exposes `getSyncTargets` (drives Change-targets visibility). */
@@ -203,7 +202,7 @@ const BindingRow = ({
   onRemove,
 }: {
   binding: Cursor.ExternalCursor;
-  optionsSchema?: Schema.Schema<any, any>;
+  optionsSchema?: Schema.Codec<any, any>;
   onRemove: (binding: Cursor.ExternalCursor) => void;
 }) => {
   const { t } = useTranslation(meta.profile.key);

@@ -7,14 +7,16 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Skill } from '@dxos/compute';
-import { Script } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
+import * as Skill from '@dxos/compute/Skill';
 import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import { useSpaces } from '@dxos/react-client/echo';
 import { ObjectProperties } from '@dxos/react-ui-form';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -49,7 +51,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Script.Script, Operation.PersistentOperation, Skill.Skill, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -59,7 +61,7 @@ const meta = {
               createScript(space);
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
       ],
     }),
   ],

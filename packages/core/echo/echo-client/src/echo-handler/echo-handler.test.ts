@@ -8,7 +8,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import {
   ATTR_RELATION_SOURCE,
@@ -24,8 +24,8 @@ import { openAndClose } from '@dxos/test-utils';
 
 import { Doc } from '../automerge';
 import { EchoTestBuilder, createTmpPath } from '../testing';
-import { createObject, getObjectCore } from './echo-handler';
-import { isEchoObject } from './echo-object-utils';
+import { createObject } from './echo-handler';
+import { getObjectCore, isEchoObject } from './echo-object-utils';
 
 const TEST_OBJECT: TestSchema.ExampleSchema = {
   string: 'foo',
@@ -122,13 +122,15 @@ describe('without database', () => {
     };
   }
 
+  const NestedStruct = Schema.Struct({
+    name: Schema.optional(Schema.String),
+    arr: Schema.optional(Schema.Array(Schema.String)),
+    ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
+  });
+
   const TestSchema: Type.Obj<TestSchema> = Schema.Struct({
     text: Schema.optional(Schema.String),
-    nested: Schema.Struct({
-      name: Schema.optional(Schema.String),
-      arr: Schema.optional(Schema.Array(Schema.String)),
-      ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
-    }),
+    nested: NestedStruct,
   }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0'))) as any;
 
   test('get schema on object', () => {
@@ -143,7 +145,8 @@ describe('without database', () => {
   // TODO(dmaretskyi): Fix -- right now we always return the root schema.
   test.skip('get schema on nested object', () => {
     const obj = createObject(Obj.make(TestSchema, { nested: { name: 'foo', arr: [] } }));
-    const NestedSchema = Type.getSchema(TestSchema).pipe(Schema.pluck('nested'), Schema.typeSchema);
+    // v4 dropped `Schema.pluck`; the standalone struct is the same projection.
+    const NestedSchema = Schema.toType(NestedStruct);
     expect(prepareAstForCompare(Type.getSchema(Obj.getType(obj.nested as Obj.Unknown)!).ast)).to.deep.eq(
       prepareAstForCompare(NestedSchema.ast),
     );
@@ -677,6 +680,22 @@ describe('Reactive Object with ECHO database', () => {
       const ref = Annotation.get(host, RootRefAnnotation).pipe(Option.getOrThrow);
       expect((await ref.load()).id).to.eq(root.id);
     });
+
+    // `useSpaceProperties`/`useObject` hand components a snapshot, so the snapshot read is what an
+    // app actually exercises; the meta dictionary holds the decoded `Ref` there too.
+    test('Annotation.get reads a Ref from a snapshot', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.registry.add([RootCollection, TestSchema.Example]);
+
+      const root = db.add(Obj.make(RootCollection, { name: 'root' }));
+      const host = db.add(Obj.make(TestSchema.Example, { string: 'host' }));
+      Obj.update(host, (host) => {
+        Annotation.set(host, RootRefAnnotation, Ref.make(root));
+      });
+
+      const ref = Annotation.get(Obj.getSnapshot(host), RootRefAnnotation).pipe(Option.getOrThrow);
+      expect((await ref.load()).id).to.eq(root.id);
+    });
   });
 
   describe('isDeleted', () => {
@@ -737,6 +756,83 @@ describe('Reactive Object with ECHO database', () => {
         Obj.getMeta(obj).keys.push(key);
       });
       expect(Obj.getMeta(obj).keys).to.deep.eq([key]);
+    });
+
+    // A nested record read off another object is a reactive proxy; assigning one copies by value.
+    // Detached sources used to throw "wrap with Ref.make" because the copy-on-assign path only
+    // recognized database-backed proxies, forcing callers to spread by hand.
+    describe('a foreign key read off another object', () => {
+      const key = { source: 'example.com', id: '123' };
+
+      const makeDetachedSource = () => {
+        const source = Obj.make(TestSchema.Expando, { string: 'detached' });
+        Obj.update(source, (source) => Obj.getMeta(source).keys.push({ ...key }));
+        return source;
+      };
+
+      test('pushes from a detached source', async () => {
+        const { db } = await builder.createDatabase();
+        const source = makeDetachedSource();
+        const target = db.add(Obj.make(TestSchema.Expando, { string: 'target' }));
+
+        Obj.update(target, (target) => {
+          Obj.getMeta(target).keys.push(Obj.getMeta(source).keys[0]);
+        });
+        expect(Obj.getMeta(target).keys).to.deep.eq([key]);
+      });
+
+      test('pushes from a database-backed source', async () => {
+        const { db } = await builder.createDatabase();
+        const source = db.add(Obj.make(TestSchema.Expando, { string: 'source' }));
+        Obj.update(source, (source) => Obj.getMeta(source).keys.push({ ...key }));
+        const target = db.add(Obj.make(TestSchema.Expando, { string: 'target' }));
+
+        Obj.update(target, (target) => {
+          Obj.getMeta(target).keys.push(Obj.getMeta(source).keys[0]);
+        });
+        expect(Obj.getMeta(target).keys).to.deep.eq([key]);
+      });
+
+      test('is copied by value, not shared', async () => {
+        const { db } = await builder.createDatabase();
+        const source = makeDetachedSource();
+        const target = db.add(Obj.make(TestSchema.Expando, { string: 'target' }));
+
+        Obj.update(target, (target) => {
+          Obj.getMeta(target).keys.push(Obj.getMeta(source).keys[0]);
+        });
+        Obj.update(source, (source) => {
+          Obj.getMeta(source).keys[0].id = 'mutated';
+        });
+        expect(Obj.getMeta(target).keys).to.deep.eq([key]);
+      });
+
+      test('still rejects a root object, which needs Ref.make', async () => {
+        const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+        const target = db.add(Obj.make(TestSchema.Expando, { string: 'target' }));
+        const root = Obj.make(TestSchema.Example, { string: 'root' });
+
+        expect(() =>
+          Obj.update(target, (target) => {
+            target.nested = root;
+          }),
+        ).to.throw(/Object references must be wrapped with `Ref\.make`/);
+      });
+    });
+
+    // Tags never had the asymmetry above: they hold refs, which the assignment path handles on an
+    // earlier branch than the proxy check. Asserted so a change to that ordering is caught.
+    test('a tag ref read off a detached object pushes', async () => {
+      const { db } = await builder.createDatabase({ types: [Tag.Tag] });
+      const tag = db.add(Tag.make({ label: 'tag' }));
+      const source = Obj.make(TestSchema.Expando, { string: 'detached' });
+      Obj.update(source, (source) => Obj.getMeta(source).tags.push(Ref.make(tag)));
+      const target = db.add(Obj.make(TestSchema.Expando, { string: 'target' }));
+
+      Obj.update(target, (target) => {
+        Obj.getMeta(target).tags.push(Obj.getMeta(source).tags[0]);
+      });
+      expect(Obj.getMeta(target).tags.map((ref) => ref.uri)).to.deep.eq([Ref.make(tag).uri]);
     });
 
     test('object with meta pushed to array', async () => {
@@ -1024,7 +1120,7 @@ describe('Reactive Object with ECHO database', () => {
     const Blob = Type.makeObject(DXN.make('com.example.type.blob', '0.1.0'))(
       Schema.Struct({
         name: Schema.String,
-        bytes: Schema.Uint8ArrayFromSelf,
+        bytes: Schema.Uint8Array,
       }),
     );
 

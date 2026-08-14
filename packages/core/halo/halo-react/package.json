@@ -1,7 +1,6 @@
 {
   "name": "@dxos/halo-react",
-  "version": "0.10.0",
-  "private": true,
+  "version": "0.11.1",
   "description": "React hooks for the @dxos/halo services.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/halo/halo-react#readme",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,11 +27,10 @@
   "dependencies": {
     "@dxos/halo": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@effect-atom/atom-react": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
-    "react": "catalog:",
-    "react-dom": "catalog:"
+    "react": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:",

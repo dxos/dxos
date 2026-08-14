@@ -7,10 +7,10 @@
 import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 
@@ -122,7 +122,7 @@ export const type: {
     schema: S,
     props?: Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>>;
-  <S extends Schema.Union<readonly Schema.Schema.AnyNoContext[]>>(
+  <S extends Schema.Union<readonly Schema.Codec<any, any>[]>>(
     union: S,
     props?: Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>>;
@@ -131,7 +131,7 @@ export const type: {
   // (e.g. Query.type / Query.sourceOf / Query.targetOf impls). Listed last so the
   // typed overloads above still win for monomorphic inputs.
   (input: Type$.AnyEntity | URI.URI, props?: Props<unknown>): Filter<unknown>;
-} = (input: Type$.AnyEntity | Schema.Schema.AnyNoContext | URI.URI, props?: Props<unknown>): any => {
+} = (input: Type$.AnyEntity | Schema.Codec<any, any> | URI.URI, props?: Props<unknown>): any => {
   if (Schema.isSchema(input) && SchemaAST.isUnion(input.ast)) {
     const typenames = input.ast.types.map((t) => internal.getTypeURIFromSpecifier(Schema.make(t)));
     return new FilterClass({
@@ -311,13 +311,27 @@ export const lte = <T>(value: T): Filter<T | undefined> => {
 };
 
 /**
- * Predicate for property to be in the provided array.
- * @param values - Values to check against.
+ * Predicate for property to be in the provided array, or in the set of values projected
+ * from a subquery's results (an uncorrelated `col IN (SELECT property FROM ...)` semi-join —
+ * see `Query.project`). The subquery may target a different scope than the parent query; it
+ * is resolved once at execution time.
+ * @param values - Values to check against, or a single subquery projection.
  */
-const in$ = <T>(...values: T[]): Filter<T> => {
+const in$: {
+  <T>(projection: internal.Projection<T>): Filter<T>;
+  <T>(...values: T[]): Filter<T>;
+} = <T>(...args: [internal.Projection<T>] | T[]): Filter<T> => {
+  if (args.length === 1 && internal.isProjection(args[0])) {
+    const projection = args[0];
+    return new FilterClass({
+      type: 'in-query',
+      subquery: projection.query,
+      property: projection.property,
+    });
+  }
   return new FilterClass({
     type: 'in',
-    values,
+    values: args,
   });
 };
 export { in$ as in };
@@ -444,7 +458,7 @@ const propsFilterToAst = (predicates: Props<any>): Pick<QueryAST.FilterObject, '
       'invalid id filter',
     );
     idFilter = typeof predicates.id === 'string' ? [predicates.id] : predicates.id;
-    Schema.Array(EntityId).pipe(Schema.validateSync)(idFilter);
+    Schema.decodeSync(Schema.toType(Schema.Array(EntityId)))(idFilter);
   }
 
   return {

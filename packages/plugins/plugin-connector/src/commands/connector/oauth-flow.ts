@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
@@ -123,7 +123,7 @@ export const createFetchOAuthInitiator = (): OAuthInitiator => ({
       return body.data.authUrl;
     }).pipe(
       Effect.provide(FetchHttpClient.layer),
-      Effect.catchAll((error) => Effect.fail(new Error(`OAuth initiation failed: ${error}`))),
+      Effect.catch((error) => Effect.fail(new Error(`OAuth initiation failed: ${error}`))),
     ),
 });
 
@@ -182,7 +182,7 @@ export const performOAuthFlow = Effect.fn(function* (
     Obj.update(accessToken, (accessToken) => {
       accessToken.token = oauthResult.accessToken;
     });
-  }).pipe(Effect.ensuring(server.stop().pipe(Effect.catchAll(() => Effect.void))));
+  }).pipe(Effect.ensuring(server.stop().pipe(Effect.catch(() => Effect.void))));
 });
 
 /**

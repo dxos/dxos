@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import {
   EchoEdgeReplicatorLayer,
@@ -29,7 +29,6 @@ import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { FeedProtocol } from '@dxos/protocols';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SqlTransaction } from '@dxos/sql-sqlite';
-import { BlobStoreApiService, SqliteBlobStore, SqliteBlobStoreLayer } from '@dxos/teleport-extension-object-sync';
 
 import { EdgeAgentManagerLayer, EdgeAgentManagerService } from '../agents';
 import {
@@ -84,10 +83,10 @@ export type ServiceContextRuntimeProps = Pick<
  * Combined storage migration effect gathered from the concrete SQLite stores.
  * Run by {@link ClientServicesHost} during open (storage migration stage).
  */
-export class StorageMigrationService extends EffectContext.Tag('@dxos/client-services/StorageMigration')<
+export class StorageMigrationService extends EffectContext.Service<
   StorageMigrationService,
   Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag>
->() {}
+>()('@dxos/client-services/StorageMigration') {}
 
 export type ServiceContextLayerOptions = ServiceContextRuntimeProps & {
   edgeFeatures?: Runtime.Client.EdgeFeatures;
@@ -113,7 +112,6 @@ export type ServiceContextStackContext =
   | CrossDeviceSpaceSynchronizerService
   | SigningContextProviderService
   | IMetadataStoreService
-  | BlobStoreApiService
   | FeedStoreService
   | StorageMigrationService;
 
@@ -130,32 +128,15 @@ export const ServiceContextLayer = (
 > => {
   const { edgeConnection, edgeHttpClient } = options;
 
-  // Non-edge: just the core.
-  if (!edgeConnection || !edgeHttpClient) {
-    return coreLayers(options);
-  }
-
-  // Edge: the feed-syncer sits above the core for its `EchoHostService` requirement. The edge
-  // replicator sits below the core — it needs only the edge inputs — so `DataSpaceManagerLayer`
-  // (inside the core) resolves `EdgeAutomergeReplicatorService` via `serviceOption`, exactly the
-  // way it resolves the mesh replicator. Edge inputs are provided at the bottom.
-  return feedSyncerLayer.pipe(
-    Layer.provideMerge(coreLayers(options)),
-    Layer.provideMerge(edgeReplicatorLayer(options)),
-    Layer.provideMerge(edgeInputLayer(edgeConnection, edgeHttpClient)),
-  );
-};
-
-/**
- * Composes the non-optional core layers into a single stack.
- */
-const coreLayers = (options: ServiceContextLayerOptions) =>
-  CrossDeviceSpaceSynchronizerLayer.pipe(
+  // Core stack, flattened into a single pipe. Optional replicators expose their service via
+  // `provideMerge` and are read with `serviceOption` down the stack; their absence is modelled by
+  // not wiring the layer, not by a null value.
+  const core = CrossDeviceSpaceSynchronizerLayer.pipe(
     Layer.provideMerge(EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(SigningContextProviderLayer),
     Layer.provideMerge(identityProviderLayer),
-    Layer.provideMerge(meshReplicatorLayer(options)),
+    Layer.provideMerge(options.disableP2pReplication ? Layer.empty : MeshEchoReplicatorLayer()),
     Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
     Layer.provideMerge(InvitationsManagerLayer()),
     Layer.provideMerge(InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps })),
@@ -171,44 +152,34 @@ const coreLayers = (options: ServiceContextLayerOptions) =>
     Layer.provideMerge(storageLayer),
   );
 
-/**
- * Optional mesh replicator: read via `serviceOption`, so its `ROut` is hidden (`Layer<never>`) —
- * absence when p2p is disabled is modelled by not providing it, not by a null value.
- */
-const meshReplicatorLayer = (options: ServiceContextLayerOptions): Layer.Layer<never, never, never> =>
-  options.disableP2pReplication ? Layer.empty : MeshEchoReplicatorLayer();
+  // Non-edge: just the core.
+  if (!edgeConnection || !edgeHttpClient) {
+    return core;
+  }
 
-/**
- * Optional edge replicator (subduction / echo / none) — `ROut` hidden, read via `serviceOption`.
- */
-const edgeReplicatorLayer = (
-  options: ServiceContextLayerOptions,
-): Layer.Layer<never, never, EdgeConnectionService | EdgeHttpClientService> =>
-  options.edgeFeatures?.subductionReplicator
-    ? EchoEdgeSubductionReplicatorLayer()
-    : options.edgeFeatures?.echoReplicator
-      ? EchoEdgeReplicatorLayer()
-      : Layer.empty;
-
-/**
- * Provides the edge inputs internally so they never appear in the stack's declared requirements.
- */
-const edgeInputLayer = (
-  edgeConnection: EdgeConnection,
-  edgeHttpClient: EdgeHttpClient,
-): Layer.Layer<EdgeConnectionService | EdgeHttpClientService> =>
-  Layer.mergeAll(
-    Layer.succeed(EdgeConnectionService, edgeConnection),
-    Layer.succeed(EdgeHttpClientService, edgeHttpClient),
+  // Edge: the feed syncer sits above the core for its `EchoHostService` requirement; the edge
+  // replicator sits below — it needs only the edge inputs, resolved via `serviceOption` inside the
+  // core. Edge inputs are provided internally so they never surface as stack requirements.
+  return FeedSyncerLayer({
+    peerId: '',
+    syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
+  }).pipe(
+    Layer.provideMerge(core),
+    Layer.provideMerge(
+      options.edgeFeatures?.subductionReplicator
+        ? EchoEdgeSubductionReplicatorLayer()
+        : options.edgeFeatures?.echoReplicator
+          ? EchoEdgeReplicatorLayer()
+          : Layer.empty,
+    ),
+    Layer.provideMerge(
+      Layer.mergeAll(
+        Layer.succeed(EdgeConnectionService, edgeConnection),
+        Layer.succeed(EdgeHttpClientService, edgeHttpClient),
+      ),
+    ),
   );
-
-/**
- * Optional feed syncer (only wired into the stack when edge is configured).
- */
-const feedSyncerLayer = FeedSyncerLayer({
-  peerId: '',
-  syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
-});
+};
 
 /**
  * Provides the {@link IdentityProviderService} from the resolved {@link IdentityManager}.
@@ -233,7 +204,6 @@ const storageMigrationLayer = Layer.effect(
     return Effect.all(
       [
         new SqliteMetadataStore({ runtime }).migrate,
-        new SqliteBlobStore({ runtime }).migrate,
         new SqliteKeyring({ runtime }).migrate,
         new SqliteStorage({ runtime }).migrate,
       ],
@@ -250,7 +220,6 @@ const storageLayer = Layer.empty.pipe(
   Layer.provideMerge(FeedFactoryLayer({ hypercore: { valueEncoding, stats: true } })),
   Layer.provideMerge(FeedStorageDirectoryLayer()),
   Layer.provideMerge(SqliteMetadataStoreLayer()),
-  Layer.provideMerge(SqliteBlobStoreLayer()),
   Layer.provideMerge(SqliteKeyringLayer()),
   Layer.provideMerge(SqliteStorageLayer()),
   Layer.provideMerge(storageMigrationLayer),
@@ -265,7 +234,7 @@ const storageLayer = Layer.empty.pipe(
  * runtime is disposed. Identity-, network-, and storage-bound lifecycle stays in `ClientServicesHost`.
  */
 const echoHostLayer = (options: { useSubduction?: boolean }) =>
-  Layer.scopedDiscard(
+  Layer.effectDiscard(
     Effect.gen(function* () {
       const echoHost = yield* EchoHostService;
       yield* Effect.acquireRelease(
@@ -275,7 +244,7 @@ const echoHostLayer = (options: { useSubduction?: boolean }) =>
     }),
   ).pipe(
     Layer.provideMerge(
-      Layer.unwrapEffect(
+      Layer.unwrap(
         Effect.gen(function* () {
           const identityManager = yield* IdentityManagerService;
           const spaceManager = yield* SpaceManagerService;

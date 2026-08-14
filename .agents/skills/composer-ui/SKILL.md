@@ -3,9 +3,10 @@ name: composer-ui
 description: Use when building or styling plugin UI with Composer's design system — the
   `@dxos/react-ui*` packages. Covers theme tokens, primitives (Panel/Card/List/Input/Button/Icon),
   the standard container layout (Panel + ScrollArea), lists/pickers/stacks, schema-driven forms,
-  toolbar/menu wiring, reactivity (useObject), attention/density, translations, and storybook setup.
-  The UI adjunct to the composer-plugins skill; consult it whenever you write a container/component,
-  reach for a Tailwind color class, build a toolbar, render a form or list, or add a story.
+  toolbar/menu wiring, reactivity (useObject), attention/density, translations, storybook setup, and
+  before/after screenshots. The UI adjunct to the composer-plugins skill; consult it whenever you write
+  a container/component, reach for a Tailwind color class, build a toolbar, render a form or list, add a
+  story, or open a PR that changes what the app renders.
 ---
 
 # Composer UI
@@ -15,9 +16,14 @@ to [[composer-plugins]] (which owns plugin _structure_: capabilities, surfaces, 
 and [[composite-components]] (which owns _authoring_ new `@dxos/react-ui` primitives). When you're
 laying out a container, picking a color class, wiring a toolbar, or writing a story, the rules live here.
 
-**Golden rule:** the design system already has a primitive, a token, or a layout for what you need.
+**Golden rule:** If the design system already has a primitive, a token, or a layout for what you need you must use it.
 Reaching for a raw `<div>` with custom classes, a native `<input>`, or a guessed color token is almost
 always a sign you missed an existing piece. Find it (grep an existing themed component) before inventing.
+
+Low-level components (plugin/_/src/components, react-ui-_). Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit` capabilitiess.
+Instead aspects that may be derived from capabilites must be passed as properties.
+Each component lives in its own subdirectory with an `index.ts` barrel.
+Use named exports; no default exports.
 
 ## Package family
 
@@ -65,6 +71,20 @@ Themed primitives accept overrides via a `classNames` prop (string or array) —
 Pass functional layout hints (`p-4`, `space-y-4`, `flex`, `@container` queries) freely; pass color/size
 through tokens. If you're writing more than a layout hint by hand, you're probably missing a primitive.
 
+## Sizing vs logical utilities (post-Tailwind-3)
+
+**Sizing is physical.** Use `w-*` / `h-*` / `min-w-*` / `max-h-*` / `size-*` for width and height. The
+custom `is-*` / `bs-*` (inline-size / block-size) utilities were **dropped** — Tailwind core never shipped
+logical _size_ utilities and keeps width/height physical, so `is-full` / `bs-[20rem]` are dead classes.
+Prefer `w-full` / `h-[20rem]`.
+
+**Direction-sensitive spacing stays logical** — these Tailwind ships and they flip correctly under RTL, so
+keep using them: `ps-*` / `pe-*` (padding), `ms-*` / `me-*` (margin), `start-*` / `end-*` (inset),
+`border-s` / `border-e` (border side), `text-start` / `text-end` (alignment). Do **not** rewrite these to
+physical (`pl-`, `ml-`, `left-`, `text-left`).
+
+Rule of thumb: **width/height → physical; margin/padding/inset/border-side/text-align → logical.**
+
 ## Icons
 
 Icons are Phosphor sprite references named `ph--<icon>--<weight>` (weights: `regular`, `bold`, `fill`,
@@ -77,6 +97,10 @@ import { Icon } from '@dxos/react-ui';
 
 `size` is a numeric `Size` (Tailwind scale), or inherit from the `--dx-icon-size` CSS var.
 See [`packages/ui/react-ui/src/components/Icon/Icon.tsx`](../../../packages/ui/react-ui/src/components/Icon/Icon.tsx).
+
+Nothing needs registering to use a new Phosphor icon — name it and it resolves. `dx--*` brand glyphs are
+`regular`-only. How resolution works (and why an icon might not appear) →
+[`packages/ui/react-ui/docs/icons.md`](../../../packages/ui/react-ui/docs/icons.md).
 
 ## Containers: Panel + ScrollArea
 
@@ -124,12 +148,27 @@ See: `plugin-chess/src/containers/ChessArticle/`, `plugin-sample/src/containers/
 
 ## Lists, pickers, and stacks
 
-Pick the collection primitive by decision order — don't hand-roll a list of mapped `<div>`s:
+**Rule: never hand-roll a list.** Any vertical collection of rows — even a
+read-only display list — is built from a `@dxos/react-ui-list` primitive, never
+a `map()` over `<div>`/`<li>`. A mapped stack of `<div>`s in a review is a
+defect; reach for the primitive below instead. `@dxos/react-ui`'s core
+`List`/`ListItem` are **deprecated** — do not use them; `Listbox` is their
+successor.
+
+Pick the collection primitive by decision order:
 
 1. **Need a picker / combobox** (choose from a set, typeahead)? **Check for an existing one first** —
    `Picker` / `Combobox` / `Listbox` in [`@dxos/react-ui-list`](../../../packages/ui/react-ui-list/src/components),
    or a domain widget like `SearchList` (`@dxos/react-ui-search`). Reuse before building.
-2. **A simple flat or tree list**? Use `@dxos/react-ui-list` — `List`, `RowList`, `Tree`, `Accordion`.
+2. **A simple flat list** (display rows, selectable rows, or rows with per-row
+   controls)? Use **`Listbox`** from `@dxos/react-ui-list`:
+   `Listbox.Root` (headless; omit `value`/`onValueChange` for a non-selectable
+   `role=list`, pass them for single-select) → `Listbox.Content` (the `<ul>`) →
+   `Listbox.Item id=… classNames=…` (a row; put arbitrary children — labels via
+   `Listbox.ItemLabel`, buttons, a `Select` — inside). See
+   `plugin-space/src/components/ForeignKeys/ForeignKeys.tsx` for the read-only
+   idiom. For a **reorderable / master-detail** list use `OrderedList`; for
+   hierarchy use `Tree` / `Accordion`.
 3. **A reorderable / resizable / tiled collection of surfaces**? Use the **`Stack` from
    `@dxos/react-ui-mosaic`** (`MosaicStack` / `MosaicVirtualStack`, with `MosaicStackTileComponent`
    tiles).
@@ -137,7 +176,7 @@ Pick the collection primitive by decision order — don't hand-roll a list of ma
 **Do NOT use `@dxos/react-ui-stack` — it is deprecated.** (Some plugins still import it; don't copy them.)
 The live Stack is the Mosaic one.
 
-**`dx-current` / `dx-selected` are automatic.** `List` and `Stack` drive current-item and selection state
+**`dx-current` / `dx-selected` are automatic.** `Listbox` and `Stack` drive current-item and selection state
 themselves (via react-tabster keyboard navigation) — you don't set those classes or wire focus by hand.
 Like `Form`, both **own their own padding and spacing**, so drop them straight into a `ScrollArea.Viewport`
 without a padded wrapper.
@@ -152,15 +191,14 @@ keyboard shortcuts) target the right surface. Skipping this breaks plugin compos
 ```tsx
 const actionsAtom = useMemo(
   () =>
-    Atom.make(
-      (): ActionGraphProps =>
-        MenuBuilder.make()
-          .action(
-            'add',
-            { label: ['add.label', { ns: meta.id }], icon: 'ph--plus--regular', disposition: 'toolbar' },
-            handleAdd,
-          )
-          .build(),
+    Atom.make((): ActionGraphProps =>
+      MenuBuilder.make()
+        .action(
+          'add',
+          { label: ['add.label', { ns: meta.id }], icon: 'ph--plus--regular', disposition: 'toolbar' },
+          handleAdd,
+        )
+        .build(),
     ),
   [handleAdd],
 );
@@ -204,6 +242,37 @@ The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `
 read fields not surfaced on `Snapshot<T>`). For _collections_ of objects use the reactive `useQuery`
 rather than holding a plain array. (Pure presentational components that just receive scalar props don't
 need any of this — keep `useObject` at the container boundary where the ECHO object enters.)
+
+## State management
+
+Two state stores — don't conflate them (full detail:
+`packages/ui/react-ui-attention/AUDIT.md`):
+
+- **Settings** — a user preference, _set infrequently_, applies globally, shown in the Settings UI.
+  Built with `createKvsStore` (one schema-validated blob per plugin, keyed by `meta.profile.key`);
+  read/write via `useAtomCapabilityState(XCapabilities.Settings)`. Idiom `org.dxos.effect.kvsStore`.
+- **ViewState** — the _current, sticky UI state that survives navigation_ (selection, scroll, split,
+  view mode). Per-context: keyed by `(aspect, contextId)`. Declare once with
+  `define({ key, backend, schema, defaultValue })`; the `backend` sets durability —
+  `'local'` persists across reloads (best-effort; degrades to memory when storage is blocked),
+  `'memory'` is session-only. Read/write via `useViewState` / `useViewStateActions` (React), or
+  `Capability.get(AttentionCapabilities.ViewState)` (operations / graph-builders). Idiom
+  `org.dxos.react-ui-attention.viewState`.
+
+The tell: _configure-once-and-forget_ → Settings; _tracks-what-you're-currently-doing_ → ViewState.
+Keep at most **one Settings object and one ViewState object per aspect** per plugin — widen an
+existing schema, don't add a parallel store.
+
+Passing state into low-level components (which must not resolve capabilities): prefer a **writable
+atom** over a `value` + `onChange` pair — simpler, and it needs no provider ancestor, so the component
+stays generic. **Caveat:** a ViewState `local` atom does _not_ self-persist on a direct set —
+persistence lives in `manager.set`. To hand ViewState down as one atom (e.g. combined with a settings
+field), use a writable derived atom whose write calls `manager.set` (see `MessageArticle`'s
+`optionsAtom`).
+
+Consider factoring each state concern into a small **file-local hook** (e.g., `useMessageExpansion`,
+`useThreadViewActions`) so the container body reads as a sequence
+of named concerns instead of an inline wall.
 
 ## Forms
 
@@ -347,9 +416,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default: Story = {
-  args: {
-    /* realistic props */
-  },
+  args: {/* realistic props */},
 };
 ```
 
@@ -388,15 +455,69 @@ never the repo root. If a story renders empty with "Invalid hook call" / "Cannot
 504 "Outdated Optimize Dep", that's Vite dep-optimizer churn (dual React), not your code — kill storybook,
 `rm -rf node_modules/.cache/storybook`, restart. Clean up the port and cache when done.
 
+## Before/after screenshots
+
+**A PR that changes rendered output ships before/after screenshots in its description.** A prop diff is
+not reviewable as UI — nothing in `centered padding thin` tells a reviewer whether the active-tab
+indicator now sits under the avatar. The pair is also the cheapest check on your own fix: measure the
+element in both states and the numbers either move the way you predicted or they don't.
+
+**Capture both states from one build.** Screenshot the fix, then restore the old value _in the live
+page_ — set the property back on the element, toggle the class — and screenshot again. Rebuilding `main`
+for the "before" swaps fonts, data, and window size along with it; reverting in the page leaves exactly
+one variable.
+
+**Measure, don't just look.** `getBoundingClientRect()` on the element and its neighbours plus the
+`getComputedStyle` property you changed, in both states, printed in the PR beside the images.
+`indicator 8.0..14.0, overlap=2px` is what makes the screenshot legible — and what catches a fix that
+moved the wrong box.
+
+Drive the surface from a story ("Verifying a story in a worktree" above), the local app, or the PR's own
+`pr-<n>-composer-main.dxos.workers.dev` preview once CI has deployed it:
+
+```ts
+const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2 });
+const clip = { x: 0, y: 0, width: 100, height: 260 };
+const measure = () =>
+  page.evaluate(() => {
+    const el = document.querySelector('[data-testid="…"]');
+    return { box: el.getBoundingClientRect(), pad: getComputedStyle(el).paddingInline };
+  });
+
+console.log('after ', await measure());
+await page.screenshot({ path: 'after.png', clip });
+// Re-apply the pre-fix value on the running page.
+await page.evaluate(() => {
+  document.querySelector('[data-testid="…"]').style.paddingInline = 'var(--scroll-strip)';
+});
+console.log('before', await measure());
+await page.screenshot({ path: 'before.png', clip });
+```
+
+`deviceScaleFactor: 2` and a tight `clip` are load-bearing — a full-page 1x shot of a 6px indicator shows
+nothing. In the cloud sandbox add the chromium proxy args from [[cloud-sandbox]]; the default launch
+cannot reach the preview host.
+
+**Hosting.** Nothing uploads to GitHub's CDN over the API, so commit the PNGs to the branch, take
+`https://raw.githubusercontent.com/dxos/dxos/<full-sha>/<path>` from that commit, then delete them in the
+next commit — the URL is pinned to the SHA, so the images keep rendering while the PR's final diff carries
+no binaries. Confirm with `curl -o /dev/null -w '%{http_code}'` once the deleting commit lands.
+
+What holds the blob after the delete is `refs/pull/<n>/head`, which GitHub retains, so it also survives the
+branch being deleted at merge. The URL is exactly that durable and no more: keep it to PR descriptions,
+and use a committed path under `assets/` for anything that must outlive the PR (a README, docs). Never
+link `.../<branch>/<path>` — that 404s the moment the file goes.
+
 ## Checklist
 
 - Layout from `Panel.*` + `ScrollArea.*`; no wrapper `<div>`s for styling; `asChild` when the child is composable.
 - Let `Form`/`List`/`Stack` own their padding/spacing — don't double-pad them.
-- Collections: existing picker/combobox → `react-ui-list` list → Mosaic `Stack`. Never `@dxos/react-ui-stack` (deprecated).
+- Collections: never hand-roll a list of mapped `<div>`s — existing picker/combobox → `react-ui-list` (`Listbox` for flat lists; `OrderedList`/`Tree`/`Accordion` otherwise) → Mosaic `Stack`. `@dxos/react-ui` `List`/`ListItem` and `@dxos/react-ui-stack` are deprecated.
 - Colors from verified tokens (grep `semantic.css` / copy a component); no invented tokens, no `className`.
 - Toolbars via `MenuBuilder` + `useMenuActions` + `Menu.Root` with `attendableId`.
 - Object editing via composed `Form` (`Viewport`/`Content`/`FieldSet`) + schema; no native inputs; form never mutates `values`.
 - ECHO object passed into a component → wrap with `useObject` at the container boundary.
 - Icons as `ph--<icon>--<weight>`.
 - Every major component/container has a basic `.stories.tsx` with `withTheme()` (parens) + `parameters: { translations }`; add a `play` function for complex data behaviour.
+- Rendered output changed → before/after screenshots in the PR description, both from one build, with the measurements beside them.
 - Authoring a new `Foo.Root`/`Foo.Content` primitive → [[composite-components]]; plugin wiring/surfaces → [[composer-plugins]].

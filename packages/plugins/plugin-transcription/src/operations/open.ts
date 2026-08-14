@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter } from '@dxos/echo';
-import { renderByline } from '@dxos/react-ui-transcription';
 import { Message } from '@dxos/types';
 
-import { TranscriptOperation } from '../types';
+import { TranscriptOperation } from '#types';
+
+import { renderByline } from '../util';
 
 const handler: Operation.WithHandler<typeof TranscriptOperation.Open> = TranscriptOperation.Open.pipe(
   Operation.withHandler(

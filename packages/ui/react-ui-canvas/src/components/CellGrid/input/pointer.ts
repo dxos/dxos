@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Registry } from '@effect-atom/atom-react';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import type { CellGridAtoms } from '../state/atoms';
 import type { Cell, CellCoord, Headers, SelectionRange, Tool } from '../state/types';
@@ -32,7 +32,7 @@ type DragState =
   | { kind: 'pan'; lastX: number; lastY: number };
 
 export type PointerControllerOptions<T> = {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   atoms: CellGridAtoms<T>;
   headers: Headers;
   handlers: PointerHandlers;
@@ -216,7 +216,7 @@ export const attachPointerHandlers = <T>(
  * Utility for consumers: toggle, set, or unset membership of a cell in the cells atom.
  */
 export const toggleCell = <T>(
-  registry: Registry.Registry,
+  registry: Registry.AtomRegistry,
   atoms: CellGridAtoms<T>,
   coord: CellCoord,
   factory: (coord: CellCoord) => Cell<T>,

@@ -7,32 +7,35 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { persistentClientServices } from '@dxos/client/testing';
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
-import { AccessToken, Cursor } from '@dxos/link';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Connection } from '@dxos/plugin-connector';
-import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
+import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
-import { DebugPlugin } from '@dxos/plugin-debug/plugin';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as DebugPlugin from '@dxos/plugin-debug/DebugPlugin';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { translations as progressTranslations } from '@dxos/plugin-progress/translations';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/story-modules';
+import { ModuleContainer } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { MailboxTriggerRelation, Module, StoryModulesPlugin, StorySyncPlugin } from '../testing';
+import { StoryRole } from '../modules';
+import { StorySyncPlugin } from '../testing';
+import { StoryModulesPlugin } from '../testing/modules';
 
 const TYPES = [
   AccessToken.AccessToken,
@@ -40,7 +43,6 @@ const TYPES = [
   Cursor.Cursor,
   Feed.Feed,
   Mailbox.Mailbox,
-  MailboxTriggerRelation,
   Message.Message,
   Operation.PersistentOperation,
   Organization.Organization,
@@ -52,16 +54,15 @@ const TYPES = [
 
 // Computed once at module scope (not inside the `withPluginManager` initializer, which re-runs on
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
-const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
+const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'main' }));
 
 const DECORATORS = [
   withSurfaceDebug(false),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
-    setupEvents: [AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: TYPES,
         ...CLIENT_SERVICES,
         onClientInitialized: ({ client }) =>
@@ -70,21 +71,22 @@ const DECORATORS = [
               return;
             }
 
-            const { personalSpace } = yield* initializeIdentity(client);
-            personalSpace.db.add(Mailbox.make());
-            yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+            const { defaultSpace } = yield* initializeIdentity(client);
+            defaultSpace.db.add(Mailbox.make());
+            yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
           }),
       }),
       SpacePlugin({}),
       InboxPlugin(),
-      ConnectorPlugin(),
-      DebugPlugin({}),
-      PreviewPlugin(),
-      ProgressPlugin(),
-      RoutinePlugin(),
+      ConnectorPlugin.make(),
+      DebugPlugin.make({}),
+      AssistantPlugin.make(),
+      PreviewPlugin.make(),
+      ProgressPlugin.make(),
+      RoutinePlugin.make(),
       StorySyncPlugin(),
       StoryModulesPlugin(),
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
     ],
   })),
 ];
@@ -92,11 +94,11 @@ const DECORATORS = [
 const DefaultStory = () => (
   <ModuleContainer
     layout={[
-      [Module.Mailbox, Module.Message],
-      [Module.Archive, Module.Stats],
-      [Module.Connector, Module.Triggers],
+      [StoryRole.Mailbox, StoryRole.Message],
+      [StoryRole.Archive, StoryRole.Stats, StoryRole.SyncState],
+      [StoryRole.Connector, StoryRole.Triggers],
+      [StoryRole.Trace, StoryRole.SwarmTrace],
     ]}
-    compact
   />
 );
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-pipeline",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Pipeline plugin for Composer",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,8 +14,12 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/workerd.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -40,24 +44,19 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/PipelinePlugin.workerd.ts",
-        "node": "./src/PipelinePlugin.node.ts",
-        "default": "./src/PipelinePlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/PipelinePlugin.d.ts",
-      "workerd": "./dist/lib/PipelinePlugin.workerd.mjs",
-      "node": "./dist/lib/PipelinePlugin.node.mjs",
-      "default": "./dist/lib/PipelinePlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -67,15 +66,15 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./PipelinePlugin": {
+      "source": "./src/PipelinePlugin.ts",
+      "types": "./dist/types/src/PipelinePlugin.d.ts",
+      "import": "./dist/lib/PipelinePlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -88,18 +87,11 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-query": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
-    "@dxos/plugin-inbox": "workspace:*",
-    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
@@ -116,17 +108,15 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-client": "workspace:*",
-    "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/plugin-theme": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",
@@ -136,7 +126,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

@@ -2,30 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+// @import-as-namespace
 
-import { meta } from '#meta';
+import { ThemePlugin } from '#plugin';
 
-import { type ThemePluginOptions } from './react-context';
+export { meta } from '#meta';
 
-const ReactContext = Capability.lazy('ReactContext', () => import('./react-context'));
-const Translator = Capability.lazy('Translator', () => import('./translator'));
-
-export const ThemePlugin = Plugin.define<ThemePluginOptions>(meta).pipe(
-  Plugin.addModule((options: ThemePluginOptions) => ({
-    id: Capability.getModuleTag(ReactContext),
-    activatesOn: ActivationEvents.Startup,
-    firesBeforeActivation: [AppActivationEvents.SetupTranslations],
-    activate: () => ReactContext(options),
-  })),
-  Plugin.addModule((options: ThemePluginOptions) => ({
-    id: Capability.getModuleTag(Translator),
-    activatesOn: ActivationEvents.Startup,
-    firesBeforeActivation: [AppActivationEvents.SetupTranslations],
-    activate: () => Translator(options),
-  })),
-  Plugin.make,
-);
-
-export default ThemePlugin;
+/** Constructs the plugin; the body is loaded eagerly. */
+export const make = ThemePlugin;

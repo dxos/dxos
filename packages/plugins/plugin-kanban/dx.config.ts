@@ -31,6 +31,7 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-kanban',
     icon: { key: 'ph--kanban--regular', hue: 'green' },
     spec: 'PLUGIN.mdl',
-    screenshots: [{ dark: 'https://dxos.network/plugin-details-kanban-dark.png' }],
+    screenshots: [{ dark: 'https://media.dxos.network/plugin-details-kanban-dark.png' }],
+    tags: ['beta'],
   },
 });

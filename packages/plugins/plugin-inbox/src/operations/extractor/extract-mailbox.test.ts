@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -21,7 +22,8 @@ import {
 } from '@dxos/extractor';
 import { Message } from '@dxos/types';
 
-import { InboxCapabilities, InboxOperation, Mailbox } from '../../types';
+import { InboxCapabilities, InboxOperation, Mailbox } from '#types';
+
 import extractMailboxHandler from './extract-mailbox';
 import extractMessageHandler from './extract-message';
 
@@ -86,7 +88,7 @@ const runExtractMailbox = (
       },
       schedule: () => Effect.void,
       invokePromise: async () => ({ error: new Error('Not available') }),
-    } as Context.Tag.Service<typeof Operation.Service>),
+    } as Context.Service.Shape<typeof Operation.Service>),
     Effect.provide(AiService.notAvailable),
   );
 

@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Registry, RegistryContext } from '@effect-atom/atom-react';
-import { type Decorator } from '@storybook/react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import { type Decorator } from '@storybook/react-vite';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { createElement, useMemo } from 'react';
 
-import { AttentionManager } from '../../attention';
 import { RootAttentionProvider, ViewStateProvider } from '../../components';
+import { Attention } from '../../types';
 
 /**
  * Storybook decorator that provides attention context.
@@ -17,7 +18,7 @@ export const withAttention = (initialAttendedId?: string): Decorator => {
   return (Story) => {
     const registry = useMemo(() => Registry.make(), []);
     const attention = useMemo(
-      () => (initialAttendedId ? new AttentionManager(registry, [initialAttendedId]) : undefined),
+      () => (initialAttendedId ? new Attention.AttentionManager(registry, [initialAttendedId]) : undefined),
       [registry],
     );
 

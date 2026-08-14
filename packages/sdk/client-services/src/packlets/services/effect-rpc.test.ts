@@ -4,17 +4,17 @@
 
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
-import * as Rpc from '@effect/rpc/Rpc';
-import * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
-import * as RpcServer from '@effect/rpc/RpcServer';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
+import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
@@ -29,7 +29,7 @@ import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
-import { type QueryStatusResponse, SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpacesService, SystemService } from '@dxos/protocols/rpc';
 
@@ -102,7 +102,7 @@ const setupRpc = async (
 
   const scope = Effect.runSync(Scope.make());
   onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-  return EffectEx.runPromise(makeClientServicesRpc(proxyPort).pipe(Scope.extend(scope)));
+  return EffectEx.runPromise(makeClientServicesRpc(proxyPort).pipe(Scope.provide(scope)));
 };
 
 const setup = async (
@@ -110,7 +110,7 @@ const setup = async (
   options?: { onRequest?: () => Promise<void> },
 ) => {
   const rpc = await setupRpc(services, options);
-  return makeServicesFromRpc(rpc, Runtime.defaultRuntime);
+  return makeServicesFromRpc(rpc, Context.empty());
 };
 
 //
@@ -142,7 +142,7 @@ describe('client services effect-rpc', () => {
   test('streaming call round trip', async ({ expect }) => {
     const proxy = await setup(() => ({
       SystemService: mockService<SystemService.Handlers>({
-        ['SystemService.queryStatus']: (): Stream.Stream<QueryStatusResponse, Error> =>
+        ['SystemService.queryStatus']: (): Stream.Stream<SystemService.QueryStatusResponse, Error> =>
           Stream.fromIterable([{ status: SystemStatus.INACTIVE }, { status: SystemStatus.ACTIVE }]),
       }),
     }));
@@ -154,7 +154,7 @@ describe('client services effect-rpc', () => {
   test('stream errors propagate to the consumer', async ({ expect }) => {
     const proxy = await setup(() => ({
       SystemService: mockService<SystemService.Handlers>({
-        ['SystemService.queryStatus']: (): Stream.Stream<QueryStatusResponse, Error> =>
+        ['SystemService.queryStatus']: (): Stream.Stream<SystemService.QueryStatusResponse, Error> =>
           Stream.make({ status: SystemStatus.ACTIVE }).pipe(Stream.concat(Stream.fail(new Error('stream failed')))),
       }),
     }));
@@ -182,6 +182,34 @@ describe('client services effect-rpc', () => {
     await expect(proxy.SystemService!.getConfig()).rejects.toThrow(
       'Service handler not available: SystemService.getConfig',
     );
+  });
+
+  test('a missing handler fails only its own call, not other in-flight calls', async ({ expect }) => {
+    // A missing handler fails only its own request; it must not end the shared connection.
+    const gate = new Trigger();
+    const proxy = await setup(() => ({
+      SystemService: mockService<SystemService.Handlers>({
+        ['SystemService.getConfig']: () => Effect.promise(() => gate.wait().then(() => ({}))),
+      }),
+    }));
+
+    const systemService = proxy.SystemService;
+    if (!systemService) {
+      throw new Error('setup did not expose SystemService');
+    }
+    // Stand-in for the in-flight `SystemService.reset`: dispatched, awaiting its handler.
+    const inFlight = systemService.getConfig();
+    // Stand-in for the late `FeedService.getSyncState` poll: its handler is gone.
+    const missing = systemService.reset().then(
+      () => 'unexpectedly resolved',
+      (err) => err,
+    );
+
+    await expect(missing).resolves.toSatisfy((err: unknown) =>
+      String(err).includes('Service handler not available: SystemService.reset'),
+    );
+    gate.wake();
+    await expect(inFlight).resolves.toBeDefined();
   });
 
   test('onRequest gates dispatch until ready', async ({ expect }) => {
@@ -224,15 +252,15 @@ describe('client services effect-rpc', () => {
       SystemService: mockService<SystemService.Handlers>({
         ['SystemService.getConfig']: () =>
           Effect.succeed({ runtime: { client: { remoteSource: 'https://example.com' } } }),
-        ['SystemService.queryStatus']: (): Stream.Stream<QueryStatusResponse, Error> =>
+        ['SystemService.queryStatus']: (): Stream.Stream<SystemService.QueryStatusResponse, Error> =>
           Stream.make({ status: SystemStatus.ACTIVE }),
       }),
     }));
 
-    const config = await EffectEx.runPromise(rpc.SystemService.getConfig(undefined));
+    const config = await EffectEx.runPromise(rpc['SystemService.getConfig'](undefined));
     expect(config.runtime?.client?.remoteSource).toEqual('https://example.com');
 
-    const statuses = await EffectEx.runPromise(rpc.SystemService.queryStatus({}).pipe(Stream.runCollect));
+    const statuses = await EffectEx.runPromise(rpc['SystemService.queryStatus']({}).pipe(Stream.runCollect));
     expect([...statuses].map((update) => update.status)).toEqual([SystemStatus.ACTIVE]);
   });
 });
@@ -251,7 +279,7 @@ describe('effect-rpc tests', () => {
       yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer), Effect.forkScoped);
 
       const clientLayer = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layerPlatform(() => port1)),
+        Layer.provide(BrowserWorker.layer(() => port1)),
       );
 
       yield* Effect.gen(function* () {
@@ -291,7 +319,7 @@ describe('effect-rpc tests', () => {
       yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer2), Effect.forkScoped);
 
       const clientLayer1 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layerPlatform(() => channel1.port1)),
+        Layer.provide(BrowserWorker.layer(() => channel1.port1)),
       );
 
       yield* Effect.gen(function* () {
@@ -301,7 +329,7 @@ describe('effect-rpc tests', () => {
       }).pipe(Effect.provide(clientLayer1));
 
       const clientLayer2 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layerPlatform(() => channel2.port1)),
+        Layer.provide(BrowserWorker.layer(() => channel2.port1)),
       );
 
       yield* Effect.gen(function* () {

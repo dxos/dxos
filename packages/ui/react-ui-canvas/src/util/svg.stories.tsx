@@ -7,7 +7,8 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Arrow, createPath } from './svg';
+import { Arrow } from './svg';
+import { createPath } from './svg-path';
 import { testId } from './util';
 
 const DefaultStory = () => (

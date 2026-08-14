@@ -7,19 +7,19 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
+import { CodePlugin } from '#plugin';
 import { translations } from '#translations';
 import { CodeProject, SourceFile, Spec } from '#types';
 
-import { CodePlugin } from '../../CodePlugin';
 import { CodeArticle } from './CodeArticle';
 
 const HELLO_WORLD = {
@@ -110,10 +110,9 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args: { seed, name } }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

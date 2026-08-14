@@ -7,12 +7,59 @@ tags:
   - vite
   - ts-test
   - storybook
+# Inherited from the tags above and not redeclared here: `build`, `lint`, `typecheck`,
+# `check-module-structure`, `test-storybook`, and `e2e` (`.moon/tasks/tag-*.yml`). `e2e` is the
+# gated suite — production `vite preview` against `src/playwright/playwright.config.ts`; every
+# spec that config cannot host has its own `e2e-*` task below.
 tasks:
+  # The production web bundle (`out/composer`), consumed by `vite preview`, the Tauri builds, and
+  # the Cloudflare worker. `build:functions` emits `_worker.js` after `vite build` so it survives
+  # Vite's `emptyOutDir`.
   bundle:
-    # Emit `_worker.js` after `vite build` so it survives Vite's `emptyOutDir`.
     script: pnpm exec vite build && pnpm run --silent build:functions
     deps:
       - prebuild
+  # The bundle Playwright serves, as its own target rather than an `env` override on `e2e`'s `bundle`
+  # dep: a dependency-level `env` map is part of that dependency's hash, so the override yields a bundle
+  # no other invocation can hydrate. `DX_PWA` stays on for `bundle`, which production deploys ship.
+  bundle-e2e:
+    extends: bundle
+    env:
+      DX_EDGE_BASE_URL: 'https://dxos.network'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: 'false'
+  # Structural budget on the eager boot graph (entry + modulepreload closure). Its own task rather
+  # than a step inside `bundle`: a perf budget must not fail the local build you are running in
+  # order to measure the very thing it is budgeting. `check-boot-budget` runs in the `check` job, so
+  # it gates every PR; `check-startup-budget` is still manual — its timings cannot gate without a
+  # fixed runner.
+  check-boot-budget:
+    command: node scripts/check-boot-budget.mjs
+    deps:
+      - bundle
+    inputs:
+      - scripts/check-boot-budget.mjs
+      - out/composer/index.html
+  # Runtime budget on startup: repeats the warm-cold harness scenario and gates on the MEDIAN
+  # modules-at-ready. `--repeat-each` reuses one preview server across the runs, and the samples
+  # accumulate via `appendRunSample`; the stale log is cleared first so a rerun cannot inherit a
+  # previous commit's numbers. Not cacheable — the point is to measure this commit.
+  check-startup-budget:
+    script: >-
+      rm -f ../../../test-results/composer-app/startup-warm-cold.runs.jsonl &&
+      pnpm exec playwright test --config=src/playwright/playwright-startup.config.ts --grep "warm-cold" --repeat-each=5 &&
+      node scripts/check-startup-budget.mjs
+    env:
+      DX_PWA: 'false'
+    options:
+      cache: false
+    deps:
+      # The env must ride the dep, not just this task: PWA is a build-time decision, so a bundle
+      # built without it precaches ~30 MB during the runs and contaminates the warm-cold numbers
+      # the budget gates on — while the spec's own guard reads this task's env and passes.
+      - target: bundle
+        env:
+          DX_PWA: 'false'
   # Native (Tauri) builds embed the web bundle via `frontendDist`; `beforeBuildCommand` is empty, so the
   # frontend + macOS ollama sidecar are hoisted to task deps here (no moon-in-moon). Locally
   # `moon run composer-app:tauri-build` builds them first; CI runs `tauri build` bare — frontend from a
@@ -21,6 +68,7 @@ tasks:
     deps:
       - bundle
       - fetch-ollama
+  # iOS counterpart of `tauri-build`; no sidecar (the ollama runtime is desktop-only).
   tauri-ios-build:
     deps:
       - bundle
@@ -33,9 +81,27 @@ tasks:
       - scripts/fetch-ollama.mjs
     outputs:
       - src-tauri/sidecar
-  compile:
+  # Regenerates `src/vite/optimize-deps.ts` from a cold dependency scan. Not cacheable — the point
+  # is to re-derive the list from the current source graph, and it rewrites a checked-in file.
+  gen-optimize-deps:
+    command: node scripts/gen-optimize-deps.mjs
+    options:
+      cache: false
+      outputStyle: stream
     deps:
       - prebuild
+      - '#dist-runtime:build'
+      - '#vite-plugin:build'
+      - echo-query:prebuild-query-lite
+  # Diagnose a hung `serve`: samples the busiest `vite dev` (writing the call graph to
+  # temp/) and, with `-- --kill`, force-kills it. Not cacheable — it inspects live process state.
+  diagnose-serve:
+    command: node scripts/diagnose-serve.mjs
+    options:
+      cache: false
+      outputStyle: stream
+  # Stages runtime assets that ship from a dependency's package rather than this app's `public/`
+  # (currently tldraw's). Every task that serves or bundles the app depends on it.
   prebuild:
     script: pnpm run --silent copy:assets
     deps:
@@ -44,23 +110,66 @@ tasks:
       - package.json
       - moon.yml
     outputs:
-      - public/assets/plugin-sketch
+      - public/assets/plugin-tldraw
+  # Dev server (`vite dev`) — the everyday inner loop, with the full plugin registry. Vite dev
+  # resolves @dxos/* from source (importSource), so pre-building the whole graph is wasted work:
+  # only packages whose dist is actually consumed need it, and each kind declares itself by tag.
   serve:
+    options:
+      # The `vite` tag contributes `^:build`, and deps merge by append — without this the whole
+      # graph is still built and the tags below are redundant.
+      mergeDeps: replace
     deps:
       - prebuild
-  # Dev-server startup harness — measures `vite serve` against the shared
-  # `dev-startup.spec.ts`. Distinct from `e2e` (which inherits from `ts-test`'s
-  # default playwright config and runs the production preview harness).
+      # dist consumed at runtime.
+      - '#dist-runtime:build'
+      # dist consumed at config-load time: `vite.config.ts` runs in Node, before importSource is
+      # active — and the plugin export itself publishes no `source` condition, so the app build
+      # takes its dist too rather than dragging Node-only source into the browser bundle
+      # (`pkg-lint`'s `build-tool-source-export` rule).
+      # The `vite-plugin` tag marks packages that *export a vite plugin this config loads*
+      # — not merely anything the config imports. A non-plugin import like `@dxos/util` stays
+      # untagged: the plugin packages depend on it, so their own `^:build` builds it first.
+      - '#vite-plugin:build'
+      # A build artifact, not runtime dist: plugin-script imports `@dxos/echo-query/api.d.ts?raw`
+      # for in-editor type hints, and vite's dependency scan aborts wholesale — pre-bundling
+      # nothing at all — if a single import in the crawl fails to resolve. Named explicitly because
+      # `prebuild`'s `^:prebuild` stops at the first hop: echo-query is reached through
+      # plugin-script, which has no `prebuild` task of its own to continue the chain.
+      - echo-query:prebuild-query-lite
+  # Production startup harness — all four `startup.spec.ts` scenarios (cold, warm-cold, throttled,
+  # boot-loader paint) against `vite preview`. Its own task because the spec records benchmark rows
+  # rather than asserting behaviour: `e2e` ignores it so a timing measurement never gates a merge.
+  # `check-startup-budget` is the gated counterpart, running one scenario repeatedly.
+  e2e-startup:
+    command: pnpm exec playwright test --config=src/playwright/playwright-startup.config.ts
+    # The spec hard-fails without this, so running the task bare has to set it.
+    env:
+      DX_PWA: 'false'
+    deps:
+      - prebuild
+      # `vite preview` serves `out/composer`, and PWA is a build-time decision — so the flag rides
+      # the dep too, or the harness measures a service worker precaching ~30 MB mid-run.
+      - target: bundle
+        env:
+          DX_PWA: 'false'
+  # Dev-server harness — `dev-*.spec.ts` under `vite serve`. Separate because dev is a materially
+  # different runtime, not just a slower one: each plugin definition is its own request, so plugin
+  # registration streams in over a window the bundled build never exposes.
   e2e-dev:
     command: pnpm exec playwright test --config=src/playwright/playwright-dev.config.ts
     deps:
       - prebuild
       - ^:build
+  # Welcome-screen focus regression — drives Storybook on :9009 rather than the app, so it cannot
+  # run under `e2e`'s `vite preview` web server.
   e2e-welcome-focus:
     command: pnpm exec playwright test --config=src/playwright/playwright-welcome-focus.config.ts
     deps:
       - prebuild
       - ^:build
+  # Vitest (inherited from `ts-test`); the extra inputs keep the cache honest about the Storybook
+  # and Vite config this app's tests load.
   test:
     inputs:
       - .storybook/*

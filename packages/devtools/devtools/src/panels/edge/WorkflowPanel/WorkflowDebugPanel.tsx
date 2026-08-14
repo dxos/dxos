@@ -3,16 +3,20 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Layer from 'effect/Layer';
-import * as SchemaAST from 'effect/SchemaAST';
+import * as Layer from 'effect/Layer';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type RuntimeServices, ServiceContainer } from '@dxos/compute-runtime';
+import { AiService } from '@dxos/ai';
+import { ConfiguredCredentialsService } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
-import { Database } from '@dxos/echo';
+import { Database, Registry } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -193,7 +197,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
     return (
       <div ref={forwardedRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
         {history.map((message, i) => (
-          <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
+          <div key={i} className='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)]'>
             <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
             <div className='overflow-auto'>
               <MessageItem message={message} />
@@ -229,19 +233,35 @@ const RobotAvatar = () => (
   </Avatar.Root>
 );
 
-const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices> => {
-  return new ServiceContainer()
-    .setServices({
-      trace: {
-        write: (event, payload) => {
-          log.info(event.key, payload as object);
-        },
+const createLocalExecutionContext = (
+  space: Space,
+): Layer.Layer<
+  | AiService.AiService
+  | Credential.CredentialsService
+  | Database.Service
+  | Trace.TraceService
+  | Operation.Service
+  | Registry.Service
+> => {
+  return Layer.mergeAll(
+    AiService.notAvailable,
+    Layer.succeed(Credential.CredentialsService, new ConfiguredCredentialsService()),
+    Database.layer(space.db),
+    Layer.succeed(Trace.TraceService, {
+      write: (event, payload) => {
+        log.info(event.key, payload as object);
       },
-      database: Database.makeService(space.db),
-      // Local execution context: remote invocation should not occur.
-      functionCallService: { invoke: () => Effect.die('No remote operation invoker configured') },
-    })
-    .createLayer();
+    }),
+    // Local execution context: operations are not invoked; any call dies loudly.
+    Layer.succeed(Operation.Service, {
+      invoke: () => Effect.die('Operation.Service not available in local workflow execution.'),
+      schedule: () => Effect.die('Operation.Service not available in local workflow execution.'),
+      invokePromise: async () => ({
+        error: new Error('Operation.Service not available in local workflow execution.'),
+      }),
+    } satisfies Operation.OperationService),
+    Layer.succeed(Registry.Service, makeRegistry()),
+  );
 };
 
 const inputTemplateFromAst = (ast: SchemaAST.AST): string => {

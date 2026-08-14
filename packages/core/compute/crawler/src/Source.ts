@@ -52,4 +52,4 @@ export interface SourceApi {
 }
 
 /** The transport seam: implemented by a Discord adapter (live) or a fixture (tests/demo). */
-export class Source extends Context.Tag('@dxos/crawler/Source')<Source, SourceApi>() {}
+export class Source extends Context.Service<Source, SourceApi>()('@dxos/crawler/Source') {}

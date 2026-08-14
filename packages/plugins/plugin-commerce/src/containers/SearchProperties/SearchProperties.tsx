@@ -6,13 +6,14 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
-import { Provider, Search, SearchOperation } from '../../types';
+import { meta } from '#meta';
+import { Provider, Search, SearchOperation } from '#types';
+
 import { buildUnionFormSchema } from '../../util';
 
 export type SearchPropertiesProps = {

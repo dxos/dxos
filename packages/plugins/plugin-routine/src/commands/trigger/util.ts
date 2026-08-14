@@ -2,21 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Prompt from '@effect/cli/Prompt';
-import * as Ansi from '@effect/printer-ansi/Ansi';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
-import { FormBuilder } from '@dxos/cli-util';
-import { Operation, Trigger } from '@dxos/compute';
-import { Annotation, Database, Entity, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import { Ansi, Doc, FormBuilder } from '@dxos/cli-util';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
+import { Annotation, Database, Entity, type Err, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { FeedAnnotation } from '@dxos/schema';
+import { getFeedRef, isFeedOwnerSchema } from '@dxos/schema';
 
 export type TriggerRemoteStatus = 'available' | 'not available' | 'n/a';
 
@@ -34,7 +33,14 @@ export const getTriggerRemoteStatus = (trigger: Trigger.Trigger, remoteCronIds: 
 /**
  * Pretty prints a trigger with ANSI colors.
  */
-export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remoteStatus?: TriggerRemoteStatus) {
+// Annotated: the inferred `Doc` resolves through a path `@dxos/cli-util` does not export (TS2883).
+export const printTrigger: (
+  trigger: Trigger.Trigger,
+  remoteStatus?: TriggerRemoteStatus,
+) => Effect.Effect<Doc.Doc<any>, Err.EntityNotFoundError> = Effect.fn(function* (
+  trigger: Trigger.Trigger,
+  remoteStatus?: TriggerRemoteStatus,
+) {
   const fn = trigger.runnable && (yield* Database.load(trigger.runnable));
 
   return FormBuilder.make({
@@ -45,10 +51,10 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
       trigger.enabled ? 'enabled' : 'disabled',
       trigger.enabled ? Ansi.green : Ansi.blackBright,
     ),
-    FormBuilder.option('kind', Option.fromNullable(trigger.spec?.kind)),
+    FormBuilder.option('kind', Option.fromNullishOr(trigger.spec?.kind)),
     FormBuilder.option(
       'remote',
-      Option.fromNullable(remoteStatus),
+      Option.fromNullishOr(remoteStatus),
       Match.type<TriggerRemoteStatus>().pipe(
         Match.withReturnType<Ansi.Ansi>(),
         Match.when('available', () => Ansi.green),
@@ -67,7 +73,7 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
         ),
       ),
     ),
-    FormBuilder.nestedOption('spec', Option.fromNullable(trigger.spec).pipe(Option.map(printSpec))),
+    FormBuilder.nestedOption('spec', Option.fromNullishOr(trigger.spec).pipe(Option.map(printSpec))),
     FormBuilder.build,
   );
 });
@@ -107,7 +113,7 @@ const printFeed = (spec: Trigger.FeedSpec) =>
  * @param defaults - Optional default values to use as initial values and pre-select optional properties
  */
 export const promptForSchemaInput = Effect.fn(function* (
-  schema: Schema.Schema.AnyNoContext | undefined,
+  schema: Schema.Codec<any, any> | undefined,
   defaults?: Record<string, any> | undefined,
 ) {
   if (!schema) {
@@ -117,7 +123,7 @@ export const promptForSchemaInput = Effect.fn(function* (
   const ast = schema.ast;
 
   // Check if it's a struct/object type
-  if (!SchemaAST.isTypeLiteral(ast)) {
+  if (!SchemaAST.isObjects(ast)) {
     return {};
   }
 
@@ -206,7 +212,7 @@ export const promptForSchemaInput = Effect.fn(function* (
 
     const key = info.key;
     const propType = info.prop.type;
-    const schemaDefault = Option.getOrUndefined(SchemaAST.getDefaultAnnotation(propType));
+    const schemaDefault = SchemaAST.getDefaultAnnotation(propType);
     const defaultValue = defaults?.[key] ?? schemaDefault;
 
     if (SchemaAST.isBooleanKeyword(propType)) {
@@ -350,11 +356,7 @@ export const selectFeed = Effect.fn(function* () {
   const schemas = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run;
 
   // Filter schemas that have FeedAnnotation.
-  const feedSchemas = schemas.filter((type) => {
-    const schema = Type.getSchema(type);
-    const annotation = FeedAnnotation.get(schema);
-    return Option.isSome(annotation) && annotation.value === true;
-  });
+  const feedSchemas = schemas.filter(isFeedOwnerSchema);
 
   if (feedSchemas.length === 0) {
     return yield* Effect.fail(new Error('No schemas with Feed annotation found'));
@@ -369,8 +371,8 @@ export const selectFeed = Effect.fn(function* () {
       const objects = yield* Database.query(Filter.type(Type.getURI(schema))).run;
 
       for (const obj of objects) {
-        // Access the feed property (which is a Ref<Feed>).
-        const feedRef = (obj as any).feed as Ref.Ref<any> | undefined;
+        // Resolved through the property named by `FeedAnnotation`, not a hardcoded `feed`.
+        const feedRef = getFeedRef(obj);
         if (!feedRef) {
           continue;
         }
@@ -389,7 +391,7 @@ export const selectFeed = Effect.fn(function* () {
           description,
         });
       }
-    }).pipe(Effect.catchAll(() => Effect.void));
+    }).pipe(Effect.catch(() => Effect.void));
   }
 
   if (feedChoices.length === 0) {
@@ -407,5 +409,5 @@ export const selectFeed = Effect.fn(function* () {
 /**
  * Pretty prints trigger removal result with ANSI colors.
  */
-export const printTriggerRemoved = (id: string) =>
+export const printTriggerRemoved = (id: string): Doc.Doc<any> =>
   FormBuilder.make({ title: 'Trigger removed' }).pipe(FormBuilder.set('id', id), FormBuilder.build);

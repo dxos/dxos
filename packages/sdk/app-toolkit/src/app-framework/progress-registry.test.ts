@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
 import { createProgressRegistry } from './progress-registry';

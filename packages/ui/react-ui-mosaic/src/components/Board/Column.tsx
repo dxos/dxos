@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
-import { createContext } from '@radix-ui/react-context';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, {
   type PropsWithChildren,
   type ReactElement,
@@ -14,7 +13,7 @@ import React, {
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
@@ -25,29 +24,9 @@ import { translationKey } from '#translations';
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic';
-import { useBoard } from './Board';
+import { BoardColumnProvider, useBoardColumn } from './BoardColumnContext';
+import { useBoard } from './BoardContext';
 import { BoardItem } from './Item';
-
-//
-// Column context
-//
-
-const BOARD_COLUMN_CONTEXT_NAME = 'Board.Column';
-
-export type BoardColumnContextValue<TColumn = unknown> = {
-  column: TColumn;
-};
-
-const [BoardColumnProvider, useBoardColumnContext] = createContext<BoardColumnContextValue | null>(
-  BOARD_COLUMN_CONTEXT_NAME,
-  null,
-);
-
-/** Returns the current column when rendered inside a board column (e.g., in column header or item tile). */
-export function useBoardColumn<TColumn = unknown>(): TColumn | undefined {
-  const value = useBoardColumnContext(BOARD_COLUMN_CONTEXT_NAME);
-  return value?.column as TColumn | undefined;
-}
 
 type BoardColumnProps<TColumn = any> = Pick<
   MosaicTileProps<TColumn>,
@@ -87,7 +66,7 @@ const BoardColumnRootInner = composable<HTMLDivElement, BoardColumnRootProps>(
           border
           classNames={mx(
             'group/column',
-            'h-full w-full md:w-card-default-width snap-center bg-deck-surface',
+            'h-full w-full md:w-card-default-width snap-center dx-deck-surface',
             'overflow-hidden',
             classNames,
           )}

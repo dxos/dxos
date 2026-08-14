@@ -3,10 +3,10 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import { Atom } from '@effect-atom/atom-react';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { memo, useMemo } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
@@ -18,7 +18,7 @@ import { addImageUpload } from './image';
 import { addLists } from './lists';
 import { addSearch } from './search';
 import { type EditorToolbarState } from './types';
-import { addViewMode } from './view-mode';
+import { type ViewModeItem, addViewMode } from './view-mode';
 
 // TODO(burdon): Enable toolbar variants (e.g., markdown, code).
 
@@ -35,6 +35,8 @@ export type EditorToolbarFeatureFlags = Partial<{
   // TODO(wittjosiah): Factor out (depends on plugin-level capabilities.)
   onImageUpload: () => void;
   onViewModeChange: (mode: EditorViewMode) => void;
+  /** Override the view-mode dropdown entries (default: the three built-in modes). See {@link ViewModeItem}. */
+  viewModes: ViewModeItem[];
 }>;
 
 export type EditorToolbarActionGraphProps = {
@@ -59,7 +61,9 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, .
   return (
     <ElevationProvider elevation={role === SECTION_ROLE ? 'positioned' : 'base'}>
       <Menu.Root {...menuActions} attendableId={attendableId} onAction={onAction}>
-        <Menu.Toolbar classNames={classNames} />
+        <Menu.Toolbar classNames={classNames}>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Menu.Root>
     </ElevationProvider>
   );
@@ -86,6 +90,7 @@ const useMarkdownMenuActions = ({ state, getView, customActions, ...features }: 
       features?.showSearch,
       features?.onImageUpload,
       features?.onViewModeChange,
+      features?.viewModes,
     ],
   );
 
@@ -110,7 +115,7 @@ const createMarkdownActions = ({
       .separator('gap')
       .subgraph(customActions && get(customActions))
       .subgraph(features?.showSearch !== false && addSearch(getView))
-      .subgraph(features?.onViewModeChange && addViewMode(stateSnapshot, features.onViewModeChange))
+      .subgraph(features?.onViewModeChange && addViewMode(stateSnapshot, features.onViewModeChange, features.viewModes))
       .build();
   });
 };

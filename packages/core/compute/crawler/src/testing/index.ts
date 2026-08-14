@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
-import { FactStore } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 
 import { AgentRegistry } from '../AgentRegistry';
 import { type Page, Source, type SourceApi, type ThreadRef } from '../Source';
@@ -274,7 +274,7 @@ export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
 export const coreLayer: Layer.Layer<StateStore | AgentRegistry | FactStore> = Layer.mergeAll(
   StateStore.layerMemory,
   AgentRegistry.layerMemory,
-  FactStore.layerMemory,
+  FactStoreLive.layerMemory,
 );
 
 /**

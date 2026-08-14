@@ -73,10 +73,10 @@ export const processEmail = async ({ email, context }: ProcessEmailProps): Promi
   //         name: 'submit_result',
   //         description: 'Submit the result',
   //         schema: Schema.Struct({
-  //           labels: Schema.Array(Schema.String).annotations({
+  //           labels: Schema.Array(Schema.String).annotate({
   //             description: 'The labels to apply to the email',
   //           }),
-  //           summary: Schema.String.annotations({
+  //           summary: Schema.String.annotate({
   //             description: 'A summary of the email',
   //           }),
   //         }),

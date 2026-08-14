@@ -6,15 +6,15 @@ import { addMinutes, differenceInMinutes, format } from 'date-fns';
 import React, { useCallback, useRef } from 'react';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Card, Icon, IconBlock, Input, Select, useTranslation } from '@dxos/react-ui';
+import { Row } from '@dxos/react-ui-card';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, REF_REGEX, RefEditor } from '@dxos/react-ui-form';
 import { type Actor, type Event as EventType, Person } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-
-import { Row } from '../Row';
 
 export type EventEditorProps = {
   event: EventType.Event;
@@ -172,7 +172,16 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     [update, people],
   );
 
-  const gridClasses = 'grid grid-cols-[1fr_8rem] gap-2';
+  // Flex, NOT a nested grid: `Card.Row` places its grandchildren with `col-start-2` (so a control
+  // wrapped in an `Input.Root` still lands in the content column), which collapsed a nested grid's
+  // children into its second track and pushed the date fields to the right edge. Grid placement is
+  // inert on flex children, so the row's rule cannot reach into this layout.
+  const fieldClasses = 'flex items-center gap-2';
+
+  // The trailing control of each date row (all-day switch, duration select) takes the SAME fixed
+  // width, so the two rows' leading date fields end at the same x and the controls line up as a
+  // column — which the nested grid used to provide.
+  const trailingClasses = 'shrink-0 min-w-32';
 
   return (
     <>
@@ -197,14 +206,16 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
               <Input.TriggerIcon icon='ph--calendar--regular' />
             </IconBlock>
           </Card.Block>
-          <div className={gridClasses}>
-            {allDay ? (
-              <Input.Date value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
-            ) : (
-              <Input.DateTime value={toDateTimeInput(data.startDate)} onValueChange={handleStartDateTimeChange} />
-            )}
+          <div className={fieldClasses}>
+            <div className='grow'>
+              {allDay ? (
+                <Input.Date value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
+              ) : (
+                <Input.DateTime value={toDateTimeInput(data.startDate)} onValueChange={handleStartDateTimeChange} />
+              )}
+            </div>
             <Input.Root>
-              <div className='flex items-center gap-2'>
+              <div className={mx('flex items-center gap-2', trailingClasses)}>
                 <Input.Switch checked={allDay} onCheckedChange={handleAllDayChange} />
                 <Input.Label>{t('event-all-day.label')}</Input.Label>
               </div>
@@ -221,9 +232,13 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
                 <Input.TriggerIcon icon='ph--calendar--regular' />
               </IconBlock>
             </Card.Block>
-            <div className={gridClasses}>
-              <Input.DateTime value={toDateTimeInput(data.endDate)} onValueChange={handleEndDateTimeChange} />
-              <SelectDuration value={presetValue} onValueChange={handleDurationChange} />
+            <div className={fieldClasses}>
+              <div className='grow'>
+                <Input.DateTime value={toDateTimeInput(data.endDate)} onValueChange={handleEndDateTimeChange} />
+              </div>
+              <div className={trailingClasses}>
+                <SelectDuration value={presetValue} onValueChange={handleDurationChange} />
+              </div>
             </div>
           </Card.Row>
         </Input.Root>

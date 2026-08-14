@@ -28,7 +28,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withPluginManager({
-      plugins: [...corePlugins(), ClientPlugin({})],
+      plugins: [...corePlugins(), ClientPlugin.make({})],
     }),
   ],
   parameters: {

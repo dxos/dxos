@@ -6,21 +6,31 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useState } from 'react';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Role from '@dxos/app-framework/Role';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppSpace } from '@dxos/app-toolkit';
+import { Surface } from '@dxos/app-framework/ui';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Database, Feed, Tag } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useClient } from '@dxos/react-client';
+import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
+import { ModuleContainer } from '@dxos/storybook-testing';
+import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message, Organization, Person } from '@dxos/types';
 
 const HOST_STORY_TYPES = [
@@ -59,13 +69,16 @@ const HOST_STORY_CLIENT_SERVICES = persistentClientServices(
   }),
 );
 
-const HostStory = () => {
+/** Role token for the story-local module, referenced by the `ModuleContainer` layout. */
+const HostRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.mailboxHost');
+
+const HostModule = () => {
   const client = useClient();
   const [invitation, setInvitation] = useState<{ code: string; secret?: string; state: string }>();
   const [recoveryCode, setRecoveryCode] = useState<string>();
 
   const identity = client.halo.identity.get();
-  const space = AppSpace.getPersonalSpace(client);
+  const space = AppSpace.getDefaultSpace(client);
 
   // Recovery code (seed phrase) — the path a bun CLI can actually use to join this identity:
   // `dx account login --method recovery-code` recovers over EDGE (HTTP), whereas device-invitation
@@ -106,14 +119,14 @@ const HostStory = () => {
   }, [client]);
 
   return (
-    <div className='flex flex-col gap-4 p-4 max-is-[48rem]' data-testid='mailbox-host'>
+    <div className='flex flex-col gap-4 p-4 max-w-[48rem]' data-testid='mailbox-host'>
       <div className='flex flex-col gap-1'>
         <h1 className='text-lg font-medium'>Live mailbox host</h1>
         <p className='text-sm text-description'>
           A persistent, EDGE-dev space seeded with a mailbox. Connect the CLI to this identity, then read the mailbox
           over EDGE replication:
         </p>
-        <pre className='text-xs rounded bg-modalSurface p-2 whitespace-pre-wrap'>
+        <pre className='text-xs rounded bg-modal-surface p-2 whitespace-pre-wrap'>
           {'dx account login --method recovery-code "<recovery code>"\ndx mailbox subscriptions'}
         </pre>
       </div>
@@ -135,7 +148,7 @@ const HostStory = () => {
         <div className='flex items-center justify-between'>
           <span className='text-sm font-medium'>Recovery code (CLI login)</span>
           <button
-            className='rounded bg-accentSurface px-3 py-1 text-accentSurfaceText'
+            className='rounded bg-accent-bg px-3 py-1 text-accent-fg'
             onClick={onCreateRecoveryCode}
             data-testid='recovery-button'
           >
@@ -161,7 +174,7 @@ const HostStory = () => {
       <div className='flex flex-col gap-2 rounded border border-separator p-3'>
         <div className='flex items-center justify-between'>
           <span className='text-sm font-medium'>Device invitation (browser / Composer only)</span>
-          <button className='rounded bg-neutralSurface px-3 py-1' onClick={onShare} data-testid='share-button'>
+          <button className='rounded bg-neutral-surface px-3 py-1' onClick={onShare} data-testid='share-button'>
             Create device invitation
           </button>
         </div>
@@ -192,17 +205,36 @@ const HostStory = () => {
   );
 };
 
+/** Registers the story-local module surface for the `ModuleContainer` layout. */
+const StoryHostPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('story.inbox.mailboxHostModule'), name: 'Mailbox Host Story Module' }),
+).pipe(
+  Plugin.addModule({
+    id: 'mailbox-host-module',
+    provides: [Capabilities.ReactSurface],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(Capabilities.ReactSurface, [
+          Surface.create({ id: 'inbox.mailboxHost', filter: Surface.makeFilter(HostRole), component: HostModule }),
+          ...moduleSurfaces,
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
+const DefaultStory = () => <ModuleContainer layout={[[HostRole], [ModuleRole.Logging]]} />;
+
 const meta = {
   title: 'stories/stories-inbox/MailboxHost',
-  render: HostStory,
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager(() => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: HOST_STORY_TYPES,
           ...HOST_STORY_CLIENT_SERVICES,
           onClientInitialized: ({ client }) =>
@@ -211,7 +243,7 @@ const meta = {
                 return;
               }
 
-              const { personalSpace: space } = yield* initializeIdentity(client);
+              const { defaultSpace: space } = yield* initializeIdentity(client);
               const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
               const feed = yield* Effect.promise(() => mailbox.feed.load());
               const messages = SEED_SENDERS.map((sender, index) =>
@@ -231,16 +263,17 @@ const meta = {
         }),
         SpacePlugin({}),
         InboxPlugin(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
+        StoryHostPlugin(),
       ],
     })),
   ],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...inboxTranslations],
+    translations: [...inboxTranslations, ...debugTranslations],
   },
-} satisfies Meta<typeof HostStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

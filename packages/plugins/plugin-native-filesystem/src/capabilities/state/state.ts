@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { NativeFilesystemCapabilities, type NativeFilesystemState } from '#types';
+import { NativeFilesystemCapabilities } from '#types';
 
 import { loadWorkspace, refreshWorkspace } from '../../util';
 import { createDirectoryWatcher } from './directory-watcher';
@@ -20,10 +21,10 @@ import { MirrorSpaceManager } from './mirror-space-manager';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const registry = yield* Capabilities.AtomRegistry;
+    const client = yield* ClientCapabilities.Client;
 
-    const stateAtom = Atom.make<NativeFilesystemState>({
+    const stateAtom = Atom.make<NativeFilesystemCapabilities.NativeFilesystemState>({
       workspaces: [],
       currentFile: undefined,
     }).pipe(Atom.keepAlive);
@@ -51,7 +52,7 @@ export default Capability.makeModule(
       (workspace) =>
         mirrorSpaceManager.getOrCreateSpace(workspace).pipe(
           Effect.asVoid,
-          Effect.catchAllCause((cause) => {
+          Effect.catchCause((cause) => {
             log.warn('Failed to restore mirror space for workspace', { workspaceId: workspace.id, cause });
             return Effect.void;
           }),
@@ -107,7 +108,7 @@ export default Capability.makeModule(
           }
           yield* markdownDocuments.syncFromDisk(workspace);
         }).pipe(
-          Effect.catchAllCause((cause) => {
+          Effect.catchCause((cause) => {
             log.warn('Failed to restore markdown documents for workspace', { workspaceId: workspace.id, cause });
             return Effect.void;
           }),
@@ -115,17 +116,16 @@ export default Capability.makeModule(
       { discard: true, concurrency: 'unbounded' },
     );
 
-    yield* Effect.forkDaemon(restoreFromDiskEffect);
+    yield* Effect.forkDetach(restoreFromDiskEffect);
 
     // Start directory watchers for restored workspaces.
     const currentWorkspaces = registry.get(stateAtom).workspaces;
     yield* Effect.forEach(currentWorkspaces, directoryWatcher.startWatching, { discard: true });
 
+    yield* Effect.addFinalizer(() => directoryWatcher.stopAll());
     return [
-      Capability.contributes(NativeFilesystemCapabilities.State, stateAtom),
-      Capability.contributes(NativeFilesystemCapabilities.FilesystemManager, filesystemManager, () =>
-        directoryWatcher.stopAll(),
-      ),
+      Capability.contribute(NativeFilesystemCapabilities.State, stateAtom),
+      Capability.contribute(NativeFilesystemCapabilities.FilesystemManager, filesystemManager),
     ];
   }),
 );

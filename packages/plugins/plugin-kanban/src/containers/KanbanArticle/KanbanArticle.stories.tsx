@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useContext, useMemo } from 'react';
@@ -12,6 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, type QueryAST, Type, View } from '@dxos/echo';
+import { useQuery, useType } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
 import { invariant } from '@dxos/invariant';
 // `/plugin` entrypoints used here for the same reason as `corePlugins()` —
@@ -20,9 +21,10 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
-import { type Space, useQuery, useSpaces, useType } from '@dxos/react-client/echo';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -34,7 +36,7 @@ import { useProjectionModel } from '#hooks';
 import { translations } from '#translations';
 import { Kanban } from '#types';
 
-import { KanbanPlugin } from '../../KanbanPlugin';
+import { KanbanPlugin } from '../../plugin';
 
 random.seed(0);
 
@@ -63,7 +65,7 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
   withPluginManager({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [...types, View.View, Kanban.Kanban],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
@@ -73,9 +75,9 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
             yield* Effect.promise(() => onSpaceCreated?.(space) ?? Promise.resolve());
           }),
       }),
-      PreviewPlugin(),
+      PreviewPlugin.make(),
       SpacePlugin({}),
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
       KanbanPlugin(),
     ],
   });

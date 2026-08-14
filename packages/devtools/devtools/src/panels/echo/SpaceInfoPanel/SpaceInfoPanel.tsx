@@ -9,11 +9,11 @@ import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 
-import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
+import { DatabaseStatsInfo } from './DatabaseStatsInfo';
 import { FeedTable, type FeedTableProps } from './FeedTable';
 import { PipelineTable, type PipelineTableProps } from './PipelineTable';
 import { SpaceProperties } from './SpaceProperties';
@@ -78,21 +78,27 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
   );
 
   return (
-    <PanelContainer toolbar={toolbar}>
-      {space && metadata && (
-        <div>
-          <SpaceProperties space={space} metadata={metadata} />
-          <div className='h-24'>
-            <PipelineTable state={pipelineState ?? {}} metadata={metadata} onSelect={props.onSelectPipeline} />
+    <Panel.Root>
+      <Panel.Toolbar asChild>{toolbar}</Panel.Toolbar>
+      <Panel.Content>
+        {space && metadata && (
+          <div>
+            <SpaceProperties space={space} metadata={metadata} />
+            <div className='h-24'>
+              <PipelineTable state={pipelineState ?? {}} metadata={metadata} onSelect={props.onSelectPipeline} />
+            </div>
+            <div className='h-48'>
+              <FeedTable onSelect={props.onSelectFeed} />
+            </div>
+            <div className='border-t border-separator'>
+              <SyncStateInfo space={space} />
+            </div>
+            <div className='border-t border-separator'>
+              <DatabaseStatsInfo space={space} />
+            </div>
           </div>
-          <div className='h-48'>
-            <FeedTable onSelect={props.onSelectFeed} />
-          </div>
-          <div className='border-t border-separator'>
-            <SyncStateInfo space={space} />
-          </div>
-        </div>
-      )}
-    </PanelContainer>
+        )}
+      </Panel.Content>
+    </Panel.Root>
   );
 };

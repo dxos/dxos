@@ -2,22 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
-import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
+import type * as Statement from 'effect/unstable/sql/Statement';
 
 import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta';
+import { SQL_CHUNK_SIZE, chunkArray } from '../utils';
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
 
 /**
  * Normalizes an echo: EID to the local (unqualified) form so SQL comparisons are consistent.
- * DB rows always store `echo:/<entityId>`; a space-qualified `echo://<space>/<entityId>` would
- * otherwise miss every row for that type.
+ * Rows are indexed in the canonical `echo:///<entityId>` form; a space-qualified
+ * `echo://<space>/<entityId>` would otherwise miss every row for that type.
  */
 const _normalizeTypeUri = (typeDXN: string): string => {
   if (!typeDXN.startsWith('echo:')) {
@@ -29,6 +33,18 @@ const _normalizeTypeUri = (typeDXN: string): string => {
   }
   const entityId = EID.getEntityId(eid);
   return entityId ? EID.make({ entityId }) : typeDXN;
+};
+
+/**
+ * Every stored `typeDXN` form equivalent to a normalized type identifier. Rows written before
+ * `echo:///<id>` became the canonical local EID hold the single-slash `echo:/<id>` form; both
+ * address the same stored schema, so queries must match either without requiring a reindex.
+ */
+const _typeUriEquivalents = (normalized: string): string[] => {
+  if (normalized.startsWith('echo:///')) {
+    return [normalized, `echo:/${normalized.slice('echo:///'.length)}`];
+  }
+  return [normalized];
 };
 
 const _escapeLikePrefix = (prefix: string) => {
@@ -101,45 +117,20 @@ const buildSourceCondition = (
 };
 
 export class EntityMetaIndex implements Index {
-  migrate = Effect.fn('EntityMetaIndex.runMigrations')(function* () {
-    const sql = yield* SqlClient.SqlClient;
-
-    yield* sql`CREATE TABLE IF NOT EXISTS objectMeta (
-      recordId INTEGER PRIMARY KEY AUTOINCREMENT,
-      objectId TEXT NOT NULL,
-      queueId TEXT NOT NULL DEFAULT '',
-      queueNamespace TEXT NOT NULL DEFAULT '',
-      spaceId TEXT NOT NULL,
-      documentId TEXT NOT NULL DEFAULT '',
-      entityKind TEXT NOT NULL,
-      typeDXN TEXT NOT NULL,
-      deleted INTEGER NOT NULL,
-      source TEXT,
-      target TEXT,
-      parent TEXT,
-      version INTEGER NOT NULL,
-      createdAt INTEGER,
-      updatedAt INTEGER
-    )`;
-
-    // Add `parent` column for tables created before it was introduced.
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN parent TEXT`, () => Effect.void);
-    // Add timestamp columns for tables created before they were introduced.
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN createdAt INTEGER`, () => Effect.void);
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN updatedAt INTEGER`, () => Effect.void);
-    // Add queueNamespace column for tables created before it was introduced.
-    yield* Effect.catchAll(
-      sql`ALTER TABLE objectMeta ADD COLUMN queueNamespace TEXT NOT NULL DEFAULT ''`,
-      () => Effect.void,
-    );
-
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta(spaceId, objectId)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDXN ON objectMeta(spaceId, typeDXN)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_version ON objectMeta(version)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_parent ON objectMeta(spaceId, parent)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_updatedAt ON objectMeta(updatedAt)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_createdAt ON objectMeta(createdAt)`;
-  });
+  /**
+   * Applies any migrations this database has not recorded yet.
+   *
+   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+   */
+  migrate = Effect.fn('EntityMetaIndex.runMigrations')(() =>
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      Effect.provide(SqlTransaction.clientLayer),
+      // A malformed bundled manifest is a defect, not something a caller can recover from.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      Effect.asVoid,
+    ),
+  );
 
   query = Effect.fn('EntityMetaIndex.query')(
     (
@@ -150,13 +141,16 @@ export class EntityMetaIndex implements Index {
         const normalizedTypeDXN = _normalizeTypeUri(query.typeDXN);
         const parsedDxn = DXN.isDXN(normalizedTypeDXN) ? normalizedTypeDXN : undefined;
         const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
+        const forms = _typeUriEquivalents(normalizedTypeDXN);
+        const exactMatch = sql.or(forms.map((form) => sql`typeDXN = ${form}`));
+        // Version wildcard must cover every equivalent form so a versionless query still matches
+        // legacy versioned rows written under the single-slash prefix.
+        const likeMatch = sql.or(forms.map((form) => sql`typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'`));
 
         // SQLite stores booleans as integers, so we need to specify the raw row type.
         const rows = hasNoVersion
-          ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDXN = ${
-              normalizedTypeDXN
-            } OR typeDXN LIKE ${_escapeLikePrefix(normalizedTypeDXN)} ESCAPE '\\')`
-          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDXN = ${normalizedTypeDXN}`;
+          ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (${exactMatch} OR ${likeMatch})`
+          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND ${exactMatch}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -229,9 +223,13 @@ export class EntityMetaIndex implements Index {
             const normalized = _normalizeTypeUri(typeDXN);
             const parsedDxn = DXN.isDXN(normalized) ? normalized : undefined;
             const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
-            const exactMatch = sql`typeDXN = ${normalized}`;
+            const forms = _typeUriEquivalents(normalized);
+            const exactMatch = sql.or(forms.map((form) => sql`typeDXN = ${form}`));
             return hasNoVersion
-              ? sql.or([exactMatch, sql`typeDXN LIKE ${_escapeLikePrefix(normalized)} ESCAPE '\\'`])
+              ? sql.or([
+                  exactMatch,
+                  sql.or(forms.map((form) => sql`typeDXN LIKE ${_escapeLikePrefix(form)} ESCAPE '\\'`)),
+                ])
               : exactMatch;
           }),
         );
@@ -287,15 +285,21 @@ export class EntityMetaIndex implements Index {
               const objectId = castData.id;
 
               // Check for existing record by (spaceId, queueId) or (spaceId, documentId).
-              let existing: readonly { recordId: number }[];
+              type ExistingRow = {
+                recordId: number;
+                entityKind: string;
+                typeDXN: string;
+                source: string | null;
+                target: string | null;
+                parent: string | null;
+              };
+              let existing: readonly ExistingRow[];
               if (documentId) {
-                existing = yield* sql<{
-                  recordId: number;
-                }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+                existing =
+                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
               } else if (queueId) {
-                existing = yield* sql<{
-                  recordId: number;
-                }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+                existing =
+                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
               } else {
                 // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
                 existing = [];
@@ -306,17 +310,44 @@ export class EntityMetaIndex implements Index {
               const [{ v }] = result;
               const version = (v ?? 0) + 1;
 
+              // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
+              // tombstone appended by `Feed.remove`. Preserve the prior row's body-derived columns
+              // (type, kind, relation endpoints, parent) rather than recomputing them from the empty
+              // block; otherwise `typeDXN` collapses to the `'type'` fallback and type-scoped queries
+              // with `deleted: 'include'` stop matching the deleted object. Only `deleted`/`version`/
+              // `updatedAt` advance for such a block.
+              const priorRow = existing.length > 0 ? existing[0] : undefined;
+              const isPartialBlock = castData[ATTR_TYPE] === undefined;
+              const preserveBody = isPartialBlock && priorRow !== undefined;
+
               // Extract metadata.
-              const entityKind = castData[ATTR_RELATION_SOURCE] ? 'relation' : 'object';
+              const entityKind = preserveBody
+                ? priorRow.entityKind
+                : castData[ATTR_RELATION_SOURCE]
+                  ? 'relation'
+                  : 'object';
               // Type identifier as stored on `system.type`: a typename DXN for static schemas,
-              // an `echo:` EID for stored (dynamic) schemas.
-              const typeDXN = URI.make(castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type');
+              // an `echo:` EID for stored (dynamic) schemas. Normalize the EID form so the indexed
+              // value matches the normalized value the query path compares against (legacy
+              // single-slash `echo:/<id>` and canonical `echo:///<id>` address the same schema).
+              // A preserved prior row was normalized when it was written, so it needs no re-normalizing.
+              const typeDXN = preserveBody
+                ? priorRow.typeDXN
+                : URI.make(_normalizeTypeUri(castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type'));
               const deleted = castData[ATTR_DELETED] ? 1 : 0;
               // Relations.
-              const source = entityKind === 'relation' ? (castData[ATTR_RELATION_SOURCE] ?? null) : null;
-              const target = entityKind === 'relation' ? (castData[ATTR_RELATION_TARGET] ?? null) : null;
+              const source = preserveBody
+                ? priorRow.source
+                : entityKind === 'relation'
+                  ? (castData[ATTR_RELATION_SOURCE] ?? null)
+                  : null;
+              const target = preserveBody
+                ? priorRow.target
+                : entityKind === 'relation'
+                  ? (castData[ATTR_RELATION_TARGET] ?? null)
+                  : null;
               // Parent (nullable).
-              const parent = castData[ATTR_PARENT] ?? null;
+              const parent = preserveBody ? priorRow.parent : (castData[ATTR_PARENT] ?? null);
 
               const updatedAtTimestamp = object.updatedAt;
               // Prefer the creation timestamp stored in the document (survives compaction/migrations).
@@ -324,6 +355,10 @@ export class EntityMetaIndex implements Index {
               const createdAtTimestamp = object.createdAt ?? updatedAtTimestamp;
 
               if (existing.length > 0) {
+                // Feed entries collapse by id to the latest whole-object block — a re-append reusing
+                // an existing id (a live feed object's `Obj.update`) UPDATEs this row wholesale.
+                // TODO(wittjosiah): With partial-update blocks (see `EchoFeedCodec.encode`'s TODO),
+                // this becomes a field-level last-write-wins merge instead of a wholesale replace.
                 yield* sql`
                   UPDATE objectMeta SET
                     version = ${version},
@@ -411,6 +446,53 @@ export class EntityMetaIndex implements Index {
           ...row,
           deleted: !!row.deleted,
         }));
+      }),
+  );
+
+  /**
+   * Record ids of rows belonging to whole documents or specific objects — the set garbage
+   * collection reclaims across the dependent indexes.
+   */
+  selectRecordIdsForRemoval = Effect.fn('EntityMetaIndex.selectRecordIdsForRemoval')(
+    (query: {
+      spaceId: SpaceId;
+      documentIds: readonly string[];
+      objects: readonly { documentId: string; objectId: string }[];
+    }): Effect.Effect<number[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const recordIds = new Set<number>();
+
+        for (const chunk of chunkArray(query.documentIds)) {
+          const rows = yield* sql<{
+            recordId: number;
+          }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND ${sql.in('documentId', chunk)}`;
+          rows.forEach((row) => recordIds.add(row.recordId));
+        }
+
+        // Two bound variables per object; keep chunks under the SQLite limit.
+        for (const chunk of chunkArray(query.objects, Math.floor(SQL_CHUNK_SIZE / 2))) {
+          const conditions = chunk.map(
+            (object) => sql`(documentId = ${object.documentId} AND objectId = ${object.objectId})`,
+          );
+          const rows = yield* sql<{
+            recordId: number;
+          }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND (${sql.or(conditions)})`;
+          rows.forEach((row) => recordIds.add(row.recordId));
+        }
+
+        return [...recordIds];
+      }),
+  );
+
+  /** Delete metadata rows by record id. */
+  deleteByRecordIds = Effect.fn('EntityMetaIndex.deleteByRecordIds')(
+    (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        for (const chunk of chunkArray(recordIds)) {
+          yield* sql`DELETE FROM objectMeta WHERE ${sql.in('recordId', chunk)}`;
+        }
       }),
   );
 

@@ -15,5 +15,6 @@ export default Config2.make({
       Provides specialized views for component development and design system exploration.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-testing',
+    tags: ['labs'],
   },
 });

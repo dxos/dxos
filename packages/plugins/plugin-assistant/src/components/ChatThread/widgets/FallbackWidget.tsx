@@ -14,8 +14,8 @@ export const FallbackWidget = ({ _tag, ...props }: XmlWidgetProps<MessageThreadC
   return (
     <TogglePanel.Root>
       <TogglePanel.Content>
-        <TogglePanel.Header classNames='bg-group-surface'>{_tag}</TogglePanel.Header>
-        <TogglePanel.Body classNames='bg-modal-surface'>
+        <TogglePanel.Header classNames='dx-group-surface'>{_tag}</TogglePanel.Header>
+        <TogglePanel.Body classNames='dx-modal-surface'>
           <TogglePanel.Viewport>
             <JsonHighlighter classNames='p-2! text-sm' data={props} />
           </TogglePanel.Viewport>

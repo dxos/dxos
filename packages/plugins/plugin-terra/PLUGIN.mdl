@@ -1,0 +1,18 @@
+---
+id: org.dxos.plugin.terra
+name: TerraPlugin
+version: 0.1.0
+---
+
+A deterministic 3D planet plugin for `DXOS` Composer, rendering seed-driven stylized worlds
+with `Babylon.js`. The same seed and configuration always produce the same land, water, and
+biome layout, so planets are fully reproducible and shareable by seed plus configuration.
+
+Terrain is generated procedurally — elevation and biome placement derive from layered simplex
+noise seeded via `seedrandom` — and rendered as a stylized low-poly sphere with distinct land,
+water, and biome coloring.
+
+Live parameters (seed, water level, elevation and mountain scale, tree density, resolution) let
+users reshape the planet in real-time from a config panel without leaving Composer. Biomes are
+assigned from elevation and latitude, and trees/rocks are scattered across land using thin
+instances for cheap rendering at scale.

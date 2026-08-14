@@ -4,10 +4,12 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { Button, ButtonGroup, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -21,16 +23,17 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
+  const connectors = useCapabilities(ConnectorSpec.Connector);
 
-  const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({ db, subject });
+  const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({ db, subject, connectors });
 
   const handleViewTrigger = useCallback(() => {
     if (!db) {
       return;
     }
     void invokePromise(LayoutOperation.Open, {
-      subject: [Paths.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.routines')],
-      workspace: Paths.getSpacePath(db.spaceId),
+      subject: [GraphPath.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.routines')],
+      workspace: GraphPath.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);
 

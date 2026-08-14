@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { LogLevel, log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, Panel, ScrollContainer, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
+import { Button, Panel, ScrollArea, ScrollContainer, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
 import { type ScrollController } from '@dxos/react-ui';
 import { useExecutionGraph } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -136,9 +136,20 @@ const generateCommits = (n: number): Pick<TimelineProps, 'commits' | 'branches'>
   return { commits, branches };
 };
 
+const DefaultStory = (props: TimelineProps) => {
+  return (
+    <ScrollArea.Root>
+      <ScrollArea.Viewport>
+        <Timeline {...props} />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+};
+
 const meta = {
   title: 'ui/react-ui-components/Timeline',
   component: Timeline,
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Timeline>;
 

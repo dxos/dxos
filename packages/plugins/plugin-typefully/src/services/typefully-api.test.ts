@@ -6,13 +6,12 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { AccessToken } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector/types';
+import { AccessToken, Connection } from '@dxos/link';
 
 import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
 import { makeTypefullyPublisherService } from './typefully-api';
 
-const PROXY = 'https://cors-proxy.dxos.workers.dev/api.typefully.com/v2';
+const PROXY = 'https://cors.dxos.network/api.typefully.com/v2';
 
 // Records what the stubbed `fetch` was called with so tests can assert the real request (method, URL,
 // auth header, body). Requests are routed through the DXOS CORS proxy, which relays the caller's

@@ -4,19 +4,19 @@
 
 import { Obj, type Type } from '@dxos/echo';
 
-import { type ApiAuthorization, type BaseServiceRegistry, ServiceType, categoryIcons } from '#types';
+import { AssistantService } from '#types';
 
-const ServiceTypeSchema = ServiceType as unknown as Type.Obj<ServiceType>;
+const ServiceTypeSchema = AssistantService.ServiceType as unknown as Type.Obj<AssistantService.ServiceType>;
 
-export class MockServiceRegistry implements BaseServiceRegistry {
-  async queryServices(): Promise<ServiceType[]> {
+export class MockServiceRegistry implements AssistantService.BaseServiceRegistry {
+  async queryServices(): Promise<AssistantService.ServiceType[]> {
     return TEST_SERVICES;
   }
 }
 
 // TODO(burdon): Can we generalize credentials?
 
-const AMADEUS_AUTH: ApiAuthorization = {
+const AMADEUS_AUTH: AssistantService.ApiAuthorization = {
   type: 'oauth',
   clientId: 'BOEnpLd1sMyKjAPGKYeAPFFy60u53QEG',
   clientSecret: 'n4qldSN7usvD57gm',
@@ -24,7 +24,7 @@ const AMADEUS_AUTH: ApiAuthorization = {
   grantType: 'client_credentials',
 };
 
-const VISUAL_CROSSING_CREDENTIALS: ApiAuthorization = {
+const VISUAL_CROSSING_CREDENTIALS: AssistantService.ApiAuthorization = {
   type: 'api-key',
   key: 'FDPRVS953KB4GQQLD25GRT975',
   placement: {
@@ -49,7 +49,7 @@ const VISUAL_CROSSING_CREDENTIALS: ApiAuthorization = {
 // TODO(burdon): Support yaml endpoints.
 //  - e.g., https://github.com/konfig-sdks/openapi-examples/blob/main/xkcd/openapi.yaml
 
-const TEST_SERVICES: ServiceType[] = [
+const TEST_SERVICES: AssistantService.ServiceType[] = [
   Obj.make(ServiceTypeSchema, {
     serviceId: 'amadeus.com/service/FlightSearch',
     name: 'Amadeus Flight Search',
@@ -115,7 +115,9 @@ const TEST_SERVICES: ServiceType[] = [
       serviceId: `example.com/service/test-${i}`,
       name: `Test ${i}`,
       description: `Test ${i}`,
-      category: Object.keys(categoryIcons)[Math.floor(Math.random() * Object.keys(categoryIcons).length)],
+      category: Object.keys(AssistantService.categoryIcons)[
+        Math.floor(Math.random() * Object.keys(AssistantService.categoryIcons).length)
+      ],
       interfaces: [
         {
           kind: 'api',

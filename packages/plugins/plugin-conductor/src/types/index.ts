@@ -1,3 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2023 DXOS.org
 //
+
+export * as ConductorEvents from './ConductorEvents';

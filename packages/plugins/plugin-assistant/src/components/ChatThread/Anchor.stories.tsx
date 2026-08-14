@@ -8,12 +8,14 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Database, Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Organization } from '@dxos/types';
 
@@ -63,12 +65,12 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        PreviewPlugin(),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        PreviewPlugin.make(),
+        ClientPlugin.make({
           types: [Organization.Organization],
           onClientInitialized: Effect.fnUntraced(function* ({ client }) {
-            const { personalSpace } = yield* initializeIdentity(client);
+            const { defaultSpace } = yield* initializeIdentity(client);
             yield* Effect.gen(function* () {
               yield* Database.add(
                 Obj.make(Organization.Organization, {
@@ -77,7 +79,7 @@ const meta = {
                   description: 'A decentralized network for collaborative applications.',
                 }),
               );
-            }).pipe(Effect.provide(Database.layer(personalSpace.db)));
+            }).pipe(Effect.provide(Database.layer(defaultSpace.db)));
           }),
         }),
       ],

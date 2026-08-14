@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-slack",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "DXOS plugin that integrates Slack as a sync source via the generic Integration mechanism.",
   "homepage": "https://dxos.org",
@@ -30,9 +30,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/SlackPlugin.ts",
-      "types": "./dist/types/src/SlackPlugin.d.ts",
-      "default": "./dist/lib/SlackPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -52,18 +52,39 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./package.json": "./package.json",
+    "./SlackEvents": {
+      "source": "./src/types/SlackEvents.ts",
+      "types": "./dist/types/src/types/SlackEvents.d.ts",
+      "import": "./dist/lib/SlackEvents.mjs"
+    },
+    "./SlackOperation": {
+      "source": "./src/types/SlackOperation.ts",
+      "types": "./dist/types/src/types/SlackOperation.d.ts",
+      "import": "./dist/lib/SlackOperation.mjs"
+    },
+    "./SlackPlugin": {
+      "source": "./src/SlackPlugin.ts",
+      "types": "./dist/types/src/SlackPlugin.d.ts",
+      "import": "./dist/lib/SlackPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SlackEvents": [
+        "dist/types/src/types/SlackEvents.d.ts"
+      ],
+      "SlackOperation": [
+        "dist/types/src/types/SlackOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -75,7 +96,6 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -86,11 +106,9 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/effect": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "vite": "catalog:"
   },

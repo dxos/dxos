@@ -4,21 +4,38 @@
 
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { NativePasskey } from '@dxos/app-toolkit';
-import { PublicKey } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
+import * as Operation from '@dxos/compute/Operation';
+import { Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
+import { getHostPlatform } from '@dxos/util';
 
-import { ClientCapabilities } from '../types';
 import { CreatePasskey } from './definitions';
+
+/**
+ * Best-effort name for a newly created passkey, so the list is not a column of identical dates.
+ * The authenticator never tells us which it is, so the platform is the only distinguishing thing
+ * available at creation time; the user can rename it on the account page.
+ */
+const PLATFORM_NAMES: Partial<Record<ReturnType<typeof getHostPlatform>, string>> = {
+  macos: 'macOS',
+  windows: 'Windows',
+  ios: 'iOS',
+  linux: 'Linux',
+};
+
+const defaultPasskeyLabel = (): string => {
+  const platform = PLATFORM_NAMES[getHostPlatform()];
+  return platform ? `Passkey on ${platform}` : 'Passkey';
+};
 
 const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const identity = client.halo.identity.get();
+      const identity = Option.getOrUndefined(yield* Identity.getSnapshot);
       invariant(identity, 'Identity not available');
 
       const lookupKey = PublicKey.random();
@@ -47,11 +64,11 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
               navigator.credentials.create({
                 publicKey: {
                   challenge: new Uint8Array(),
-                  rp: { id: location.hostname, name: 'Composer' },
+                  rp: { id: NativePasskey.getRelyingPartyId(), name: 'Composer' },
                   user: {
                     id: lookupKey.asUint8Array() as Uint8Array<ArrayBuffer>,
                     name: identity.did,
-                    displayName: identity.profile?.displayName ?? '',
+                    displayName: identity.displayName ?? '',
                   },
                   pubKeyCredParams: [
                     { type: 'public-key', alg: -8 },
@@ -73,16 +90,15 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
         ),
       );
 
-      invariant(client.services.services.IdentityService, 'IdentityService not available');
-      yield* Effect.promise(() =>
-        client.services.services.IdentityService!.createRecoveryCredential({
-          data: {
-            recoveryKey,
-            algorithm,
-            lookupKey,
-          },
-        }),
-      );
+      yield* Identity.createRecoveryCredential({
+        externalKey: {
+          recoveryKey: recoveryKey.toHex(),
+          lookupKey: lookupKey.toHex(),
+          algorithm,
+          label: defaultPasskeyLabel(),
+          kind: 'passkey',
+        },
+      });
     }),
   ),
 );

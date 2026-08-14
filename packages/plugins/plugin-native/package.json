@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-native",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Composer plugin that runs when on a native device.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,9 +29,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/NativePlugin.tsx",
-      "types": "./dist/types/src/NativePlugin.d.ts",
-      "default": "./dist/lib/NativePlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -51,18 +51,55 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./package.json": "./package.json",
+    "./NativeCapabilities": {
+      "source": "./src/types/NativeCapabilities.ts",
+      "types": "./dist/types/src/types/NativeCapabilities.d.ts",
+      "import": "./dist/lib/NativeCapabilities.mjs"
+    },
+    "./NativeEvents": {
+      "source": "./src/types/NativeEvents.ts",
+      "types": "./dist/types/src/types/NativeEvents.d.ts",
+      "import": "./dist/lib/NativeEvents.mjs"
+    },
+    "./NativePlugin": {
+      "source": "./src/NativePlugin.ts",
+      "types": "./dist/types/src/NativePlugin.d.ts",
+      "import": "./dist/lib/NativePlugin.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./Update": {
+      "source": "./src/types/Update.ts",
+      "types": "./dist/types/src/types/Update.d.ts",
+      "import": "./dist/lib/Update.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "NativeCapabilities": [
+        "dist/types/src/types/NativeCapabilities.d.ts"
+      ],
+      "NativeEvents": [
+        "dist/types/src/types/NativeEvents.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "Update": [
+        "dist/types/src/types/Update.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -74,12 +111,10 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@tauri-apps/api": "catalog:",
     "@tauri-apps/plugin-os": "catalog:",
     "@tauri-apps/plugin-process": "catalog:",
@@ -88,7 +123,6 @@
     "date-fns": "catalog:"
   },
   "devDependencies": {
-    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@types/react": "catalog:",

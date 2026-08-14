@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useContext, useMemo, useRef } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
+import { useQuery, useType } from '@dxos/echo-react';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { useQuery, useType } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui';
 import {
   Table as TableComponent,

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useEffect, useLayoutEffect } from 'react';
+import React, { type PropsWithChildren, Suspense, useEffect, useLayoutEffect, useMemo } from 'react';
 
 import { Capabilities } from '../../../common';
 import { topologicalSort } from '../../../helpers';
@@ -20,8 +20,13 @@ export type AppProps = Pick<UseAppOptions, 'debounce'> & {
 export const App = ({ ready, error, debounce, progress }: AppProps) => {
   const reactContexts = useCapabilities(Capabilities.ReactContext);
   const reactRoots = useCapabilities(Capabilities.ReactRoot);
+  const sortedContexts = useMemo(() => topologicalSort(reactContexts), [reactContexts]);
   const stage = useLoading(ready, debounce);
   const placeholderDismissed = stage >= LoadingState.Done;
+  // The shell mounts a tick EARLIER than the dismissal, at the same stage that starts the loader's
+  // outro: the loader is still on screen (z-index 10) and fading, so the real UI paints beneath it
+  // instead of after it — gating both on `Done` leaves a blank frame between the two.
+  const shellMounted = stage >= LoadingState.FadeOut;
 
   // Relay the startup lifecycle into the boot loader injected by
   // `@dxos/app-framework/vite-plugin` (a Solid app inlined into `index.html`,
@@ -83,34 +88,47 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
     throw error;
   }
 
-  // The boot loader owns the screen until handoff completes; render nothing
+  // The boot loader owns the screen until its outro starts; render nothing
   // until then (any DOM here would sit invisibly behind the `z-index: 10`
   // loader anyway).
   // TODO(wittjosiah): Consider using Suspense instead.
-  if (!placeholderDismissed) {
+  if (!shellMounted) {
     return null;
   }
 
-  const ComposedContext = composeContexts(reactContexts);
   return (
-    <ComposedContext>
-      {reactRoots.map(({ id, root: Component }) => (
-        <Component key={id} />
-      ))}
-    </ComposedContext>
+    // Contexts nest, so one suspending provider necessarily withholds everything below it; the
+    // boundary here at least keeps that from unwinding past the app's providers.
+    <Suspense fallback={null}>
+      <ContextChain contexts={sortedContexts}>
+        {reactRoots.map(({ id, root: Component }) => (
+          // One boundary per root: roots read capabilities whose providers activate in a later
+          // wave, and `useCapability` suspends on that. A shared boundary would let one late root
+          // withhold every other root's already-renderable content — the blank shell this fixes.
+          <Suspense key={id} fallback={null}>
+            <Component />
+          </Suspense>
+        ))}
+      </ContextChain>
+    </Suspense>
   );
 };
 
-const composeContexts = (contexts: Capabilities.ReactContext[]) => {
+/**
+ * Nests each provider around the next at render time so the element type is a constant: composing
+ * the nesting into a component makes it a new type per render, remounting the whole app on any
+ * capability change. A contributed context appends, so the chain extends inward and the providers
+ * above keep their positions; a removed one still shifts everything below it.
+ */
+const ContextChain = ({ contexts, children }: PropsWithChildren<{ contexts: Capabilities.ReactContext[] }>) => {
   if (contexts.length === 0) {
-    return ({ children }: PropsWithChildren) => <>{children}</>;
+    return <>{children}</>;
   }
 
-  return topologicalSort(contexts)
-    .map(({ context }) => context)
-    .reduce((Acc, Next) => ({ children }) => (
-      <Acc>
-        <Next>{children}</Next>
-      </Acc>
-    ));
+  const [{ context: Context }, ...rest] = contexts;
+  return (
+    <Context>
+      <ContextChain contexts={rest}>{children}</ContextChain>
+    </Context>
+  );
 };

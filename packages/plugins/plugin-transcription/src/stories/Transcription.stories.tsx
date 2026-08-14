@@ -17,16 +17,12 @@ import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useSt
 
 import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/pipeline-transcription';
 import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
-import {
-  Transcription,
-  renderByline,
-  useAudioFile,
-  useFeedModelAdapter,
-  useRecordingPipeline,
-} from '@dxos/react-ui-transcription';
+import { Transcription, useAudioFile, useFeedModelAdapter, useRecordingPipeline } from '@dxos/react-ui-transcription';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { createStoryDecorators } from '../testing';
+import { createStoryDecorators } from '#testing';
+
+import { renderByline } from '../util';
 
 // Small chunk threshold so the transcriber emits every few seconds while the file plays (streaming),
 // instead of only flushing the whole buffer on stop.
@@ -173,6 +169,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
-    audioUrl: 'https://dxos.network/audio-london.m4a',
+    audioUrl: 'https://media.dxos.network/audio-london.m4a',
   },
 };

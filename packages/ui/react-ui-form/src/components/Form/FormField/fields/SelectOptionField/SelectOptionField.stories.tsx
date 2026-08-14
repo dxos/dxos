@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
 import { SelectOption } from '@dxos/echo/Format';
@@ -17,7 +18,7 @@ import { SelectOptionField } from './SelectOptionField';
 
 const TestSchema = Schema.Struct({
   options: Schema.Array(SelectOption).pipe(Schema.mutable),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 const DefaultStory = () => {
   const [values, setValues] = useState<{ options: SelectOption[] }>({

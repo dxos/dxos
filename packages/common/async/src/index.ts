@@ -16,7 +16,6 @@ export * from './persistent-lifecycle';
 export * from './push-iterable';
 export * from './stream-to-array';
 export * from './task-scheduling';
-export * from './test-stream';
 export * from './testing';
 export * from './timeout';
 export * from './timer';

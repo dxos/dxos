@@ -4,16 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Instructions, Operation, Skill, Template } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { RoutineOperation } from '@dxos/plugin-routine/types';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { Text } from '@dxos/schema';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
@@ -33,7 +37,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
             const client = yield* Capability.get(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found.');
-            const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+            const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
             const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry });
             yield* Effect.promise(() =>
               binder.use(async (b: AiContext.Binder) => {
@@ -79,7 +83,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
               },
               { spaceId: db.spaceId },
             ).pipe(
-              Effect.catchAll((error) => {
+              Effect.catch((error) => {
                 log.catch(error);
                 return Effect.void;
               }),

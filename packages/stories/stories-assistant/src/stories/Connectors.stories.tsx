@@ -4,29 +4,33 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ConnectorsSkill, LinearSkill } from '@dxos/assistant-toolkit';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
-import { Calendar, CalendarSkill, InboxSkill, Mailbox } from '@dxos/plugin-inbox';
+import { meta as connectorMeta } from '@dxos/plugin-connector';
+import { CalendarSkill, InboxSkill } from '@dxos/plugin-inbox';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import { TranscriptionSkill } from '@dxos/plugin-transcription';
+import { Cell } from '@dxos/storybook-testing';
 import { Event, Message, Person, Pipeline, Task, Transcript } from '@dxos/types';
 
+import { StoryRole } from '../modules';
 import {
-  Module,
   ModuleContainer,
   accessTokensFromEnv,
+  addToRootCollection,
   config,
   createDecorators,
   createTestMailbox,
   createTestTranscription,
+  storyParameters,
 } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Connectors',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -38,16 +42,15 @@ type Story = StoryObj<typeof meta>;
 export const WithMail: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { MarkdownPlugin }, { ThreadPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-thread/plugin'),
+      const [InboxPlugin, MarkdownPlugin, ThreadPlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-thread/ThreadPlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
+        plugins: [InboxPlugin.make(), MarkdownPlugin.make(), ThreadPlugin.make()],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
       await space.db.flush();
@@ -63,30 +66,40 @@ export const WithMail: Story = {
         await binder.bind({ objects: [Ref.make(mailbox)] });
       }
     },
+    skills: [AssistantSkill.key, MarkdownSkill.key, InboxSkill.key],
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
-    skills: [AssistantSkill.key, MarkdownSkill.key, InboxSkill.key],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };
 
-// Test with prompt: Sync my email.
+/**
+ * Prompt: "sync my email".
+ */
 export const WithGmail: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-connector/plugin'),
+      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-connector/ConnectorPlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), ConnectorPlugin()],
+        plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
     },
     config: config.persistent,
     types: [Feed.Feed, Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      addToRootCollection(space, [mailbox]);
+      return [
+        [StoryRole.Chat],
+        [
+          Cell.article(mailbox),
+          { type: AppSurface.Article, data: { subject: `${connectorMeta.profile.key}.space-settings` } },
+        ],
+        [StoryRole.Context],
+      ];
     },
     onChatCreated: async ({ space, binder }) => {
       const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
@@ -95,12 +108,8 @@ export const WithGmail: Story = {
         await binder.bind({ objects: [Ref.make(mailbox)] });
       }
     },
-  }),
-  args: {
-    showContext: true,
-    layout: [[Module.Chat], [Module.Inbox, Module.TokenManager]],
     skills: [AssistantSkill.key, InboxSkill.key],
-  },
+  }),
 };
 
 /**
@@ -112,15 +121,14 @@ export const WithGmail: Story = {
 export const WithConnectorPrompt: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-connector/plugin'),
+      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-connector/ConnectorPlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), ConnectorPlugin()],
+        plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
     },
-    config: config.remote,
     types: [Feed.Feed, Mailbox.Mailbox],
     onChatCreated: async ({ space, chat }) => {
       const feed = await chat.feed.load();
@@ -134,11 +142,10 @@ export const WithConnectorPrompt: Story = {
         }),
       ]);
     },
+    skills: [AssistantSkill.key, ConnectorsSkill.key],
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
-    skills: [AssistantSkill.key, ConnectorsSkill.key],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };
 
@@ -146,15 +153,14 @@ export const WithConnectorPrompt: Story = {
 export const WithCalendar: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-connector/plugin'),
+      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-connector/ConnectorPlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), ConnectorPlugin()],
+        plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
     },
-    config: config.remote,
     types: [Feed.Feed, Calendar.Calendar, Event.Event],
     onInit: async ({ space }) => {
       space.db.add(Calendar.make({ name: 'Calendar' }));
@@ -166,11 +172,14 @@ export const WithCalendar: Story = {
         await binder.bind({ objects: [Ref.make(calendar)] });
       }
     },
+    skills: [AssistantSkill.key, CalendarSkill.key],
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat], [Module.TokenManager]],
-    skills: [AssistantSkill.key, CalendarSkill.key],
+    layout: [
+      [StoryRole.Chat],
+      [{ type: AppSurface.Article, data: { subject: `${connectorMeta.profile.key}.space-settings` } }],
+      [StoryRole.Context],
+    ],
   },
 };
 
@@ -180,30 +189,28 @@ const VITE_LINEAR_API_KEY = process.env.VITE_LINEAR_API_KEY;
 export const WithLinearSync: Story = {
   decorators: createDecorators({
     plugins: [],
-    config: config.remote,
     types: [Task.Task, Person.Person, Pipeline.Pipeline],
     accessTokens: accessTokensFromEnv({
       'linear.app': VITE_LINEAR_API_KEY,
     }),
+    skills: [LinearSkill.key],
   }),
   args: {
-    layout: [[Module.Chat], [Module.Graph]],
-    skills: [LinearSkill.key],
+    layout: [[StoryRole.Chat], [StoryRole.Graph]],
   },
 };
 
 export const WithTranscription: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ TranscriptionPlugin }, { PreviewPlugin }] = await Promise.all([
-        import('@dxos/plugin-transcription/plugin'),
-        import('@dxos/plugin-preview/plugin'),
+      const [TranscriptionPlugin, PreviewPlugin] = await Promise.all([
+        import('@dxos/plugin-transcription/TranscriptionPlugin'),
+        import('@dxos/plugin-preview/PreviewPlugin'),
       ]);
       return {
-        plugins: [TranscriptionPlugin(), PreviewPlugin()],
+        plugins: [TranscriptionPlugin.make(), PreviewPlugin.make()],
       };
     },
-    config: config.remote,
     types: [Transcript.Transcript],
     onInit: async ({ space }) => {
       const feed = space.db.add(Feed.make());
@@ -215,10 +222,9 @@ export const WithTranscription: Story = {
       const objects = await space.db.query(Filter.type(Transcript.Transcript)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
+    skills: [AssistantSkill.key, TranscriptionSkill.key],
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
-    skills: [AssistantSkill.key, TranscriptionSkill.key],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };

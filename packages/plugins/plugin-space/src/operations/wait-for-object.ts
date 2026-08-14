@@ -2,11 +2,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Operation from '@dxos/compute/Operation';
 
-import { SpaceCapabilities } from '../types';
-import { SpaceOperation } from './definitions';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.WaitForObject> = SpaceOperation.WaitForObject.pipe(
   Operation.withHandler(

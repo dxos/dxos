@@ -32,9 +32,11 @@ Standard semver, the same rules pre- and post-1.0:
 
 A `minor` does **not** cascade the group to `1.0.0` (the tooling keeps standard semver at every version — mechanics live in the spec). Note breaking changes in the **body** so they reach the changelog.
 
+**`major` is rejected by CI while we are pre-1.0** (`pnpm check-changeset-bumps`, a gate in **Check**). The groups are `fixed`, so one stray `major` versions all ~300 packages to `1.0.0` in a single release — and nothing surfaces the mistake until `changeset version` runs on `main`. Write `minor` and describe the break in the body.
+
 ## Body + format
 
-`.changeset/<slug>.md` (any unique slug). One or two sentences, **changelog quality** — the body ships verbatim in `CHANGELOG.md` (via `@changesets/changelog-github`), so write it from the **consumer's** point of view and end with a period.
+`.changeset/<slug>.md` (any unique slug). One or two sentences, **changelog quality** — the body ships verbatim in `CHANGELOG.md` (via `@changesets/changelog-git`), so write it from the **consumer's** point of view and end with a period.
 
 ```md
 ---
@@ -46,7 +48,7 @@ Fix subscription leak in the query handler.
 
 ✅ `Add streaming variant of Query.run().` &nbsp;&nbsp; ❌ `refactored stuff` / `addresses review comments` / `WIP`
 
-Packages from _different_ groups in one PR → one line each (each still bumps its whole group):
+Packages from _different_ groups in one PR → one line each **in the same file** (each still bumps its whole group):
 
 ```md
 ---
@@ -56,3 +58,17 @@ Packages from _different_ groups in one PR → one line each (each still bumps i
 
 Add streaming query API and surface it in the markdown plugin.
 ```
+
+## How many files
+
+**One per PR.** A changeset is a changelog entry, so the question is how many entries a reader wants —
+not how many packages, groups, or commits you touched. Work spanning two groups is still one story and
+belongs in one file with a line per group, as above; so does a fix that took five commits.
+
+Add a second file **only when the PR genuinely addresses two unrelated things** a reader would look up
+separately — e.g. a query-planner fix that happens to ride along with an unrelated toolbar change. If
+you catch yourself writing "and also" between two unrelated clauses, that's the signal. Splitting one
+piece of work into several files fragments the changelog into entries nobody can follow, and re-reads
+as several releases' worth of change.
+
+When a PR grows and you have accumulated a file per commit, consolidate before opening it.

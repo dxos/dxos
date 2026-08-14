@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Plugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 import { PluginDetail } from '#components';
 import { getPluginPath } from '#meta';
@@ -76,9 +76,11 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
     (targetId: string) => {
       void invokePromise(LayoutOperation.Open, {
         subject: [getPluginPath(targetId)],
+        pivotId: getPluginPath(pluginId),
+        disposition: 'add',
       });
     },
-    [invokePromise],
+    [invokePromise, pluginId],
   );
 
   const actions = usePluginActions({

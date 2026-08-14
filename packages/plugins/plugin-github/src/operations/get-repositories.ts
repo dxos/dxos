@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
+import { GitHubOperation } from '#types';
+
 import { GitHubApi } from '../services';
-import { GitHubOperation } from '../types';
 
 /**
  * Discovery only — list GitHub repositories reachable from the connection's
@@ -29,7 +30,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetGitHubRepositorie
         const target = connection.target;
         const db = target ? Obj.getDatabase(target) : undefined;
         if (!db) {
-          return yield* Effect.dieMessage('No database for connection ref.');
+          return yield* Effect.die(new Error('No database for connection ref.'));
         }
 
         return yield* Effect.gen(function* () {

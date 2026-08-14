@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Filter, Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';

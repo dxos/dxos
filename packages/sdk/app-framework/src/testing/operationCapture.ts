@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 
 import { Capabilities } from '../common';
 import { Capability } from '../core';
@@ -26,7 +26,7 @@ export type OperationCapture = {
    * Wraps the real OperationInvoker from the given manager. Pass to
    * `withPluginManager({ capabilities: (m) => capture.wrap(m) })`.
    */
-  wrap(manager: CapabilityManagerLike): Capability.Any[];
+  wrap(manager: CapabilityManagerLike): Capability.AnyContribution[];
   /** Returns all recorded calls (mocked or real) for the given operation. */
   getCalls<I, O>(op: Operation.Definition<I, O>): CapturedCall<I>[];
   /** Clears all recorded calls (useful between play function steps). */
@@ -131,7 +131,7 @@ export const makeOperationCapture = (
         },
       };
 
-      return [Capability.contributes(Capabilities.OperationInvoker, wrapped)];
+      return [Capability.contribute(Capabilities.OperationInvoker, wrapped)];
     },
     getCalls<I, O>(op: Operation.Definition<I, O>): CapturedCall<I>[] {
       const key = String(op.meta.key);

@@ -8,7 +8,6 @@
 export type TaskStatus = 'pending' | 'running' | 'done' | 'error';
 
 /** Live progress for one task: `current`/`total` is the item (e.g. message) index. */
-// TODO(burdon): Implement pause/resume functionality.
 export type TaskProgress = {
   /** Stable key within a registry. */
   readonly name: string;
@@ -61,8 +60,8 @@ export interface TaskHandle {
  */
 export interface ProgressApi {
   /**
-   * Registers (or resumes) a task and marks it running; returns a handle to update it. Pass
-   * `onCancel` to make the task cancellable — UIs then show a cancel control that invokes
+   * Registers (or resumes) a task and marks it running; returns a handle to update it.
+   * Pass `onCancel` to make the task cancellable — UIs then show a cancel control that invokes
    * {@link ProgressApi.cancel}.
    */
   readonly task: (name: string, options?: { total?: number; label?: string; onCancel?: () => void }) => TaskHandle;
@@ -128,6 +127,11 @@ export const make = (): ProgressApi => {
       done: () => touch(entry, (item) => (item.status = 'done')),
       fail: (error) => touch(entry, (item) => ((item.status = 'error'), (item.error = error))),
       remove: () => {
+        // Scoped to this handle: two writers can register the same key, and a superseded handle
+        // must not delete the live entry (which would also strip its cancel handler).
+        if (tasks.get(name) !== entry) {
+          return;
+        }
         tasks.delete(name);
         cancelHandlers.delete(name);
         emit();

@@ -6,7 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Credential, Operation } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
 import * as Ibkr from './Ibkr';
@@ -138,7 +139,7 @@ export const SyncLots = Operation.make({
   },
   input: Schema.Struct({
     account: Ref.Ref(Ibkr.Portfolio),
-    report: Schema.optional(Ref.Ref(Ibkr.Report)).annotations({
+    report: Schema.optional(Ref.Ref(Ibkr.Report)).annotate({
       description: 'When set, sync lots from this report instead of the latest feed snapshot.',
     }),
   }),

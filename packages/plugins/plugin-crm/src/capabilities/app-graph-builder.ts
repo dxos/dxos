@@ -2,18 +2,29 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
-import { Annotation, Filter, Type } from '@dxos/echo';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as Operation from '@dxos/compute/Operation';
+import { Annotation, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Organization, Person } from '@dxos/types';
 
 import { meta } from '#meta';
+import { CrmOperation } from '#types';
+
+/** A node whose data is a researchable CRM object, tagged so the action can pick the right operation. */
+type ResearchSubject =
+  | { kind: 'person'; subject: Person.Person }
+  | { kind: 'organization'; subject: Organization.Organization };
 
 /** Node type for a CRM type-collection node (data is the ECHO Type). */
 const CRM_TYPE_NODE = `${meta.profile.key}/type-node`;
@@ -27,13 +38,13 @@ export default Capability.makeModule(
       // CRM section group — created here so it only appears when the CRM plugin is active and
       // hides when it has no children (i.e. the space has no organizations or people).
       GraphBuilder.createExtension({
-        id: Paths.GroupSegments.crm,
+        id: GraphPath.GroupSegments.crm,
         match: AppNodeMatcher.whenSpace,
         connector: (space) =>
           Effect.succeed([
             AppNode.makeGroup({
-              id: Paths.GroupSegments.crm,
-              type: Paths.GroupTypes.crm,
+              id: GraphPath.GroupSegments.crm,
+              type: GraphPath.GroupTypes.crm,
               label: ['nav-tree-group-crm.label', { ns: meta.profile.key }],
               space,
               position: 500,
@@ -46,7 +57,8 @@ export default Capability.makeModule(
       // natural type folders under the Database section.
       GraphBuilder.createExtension({
         id: 'crmTypes',
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.crm),
+        url: { key: 'crm', kind: 'item', path: [GraphPath.GroupSegments.crm] },
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.crm),
         connector: (space, get) => {
           // Index the registry once per rebuild so each type resolves its registered schema in O(1).
           const registered = new Map(
@@ -62,9 +74,66 @@ export default Capability.makeModule(
           );
         },
       }),
+
+      // Research on the object's own node, so any surface showing a Person/Organization (the record
+      // article's toolbar, the nav-tree context menu) offers it without depending on plugin-crm.
+      GraphBuilder.createExtension({
+        id: 'crmResearch',
+        match: (node): Option.Option<ResearchSubject> => {
+          if (Obj.instanceOf(Person.Person, node.data)) {
+            return Option.some({ kind: 'person', subject: node.data });
+          }
+          if (Obj.instanceOf(Organization.Organization, node.data)) {
+            return Option.some({ kind: 'organization', subject: node.data });
+          }
+          return Option.none();
+        },
+        actions: (matched) => {
+          const db = Obj.getDatabase(matched.subject);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
+            {
+              id: 'research',
+              // Scheduled, not invoked: research is a long run, and the pair is sequenced so the image
+              // pass sees whatever the profile step just wrote.
+              data: () =>
+                Effect.gen(function* () {
+                  // Branched rather than parameterised: the two operations take differently-typed
+                  // subject refs, and collapsing them would mean widening one of the inputs.
+                  if (matched.kind === 'person') {
+                    yield* Operation.schedule(
+                      CrmOperation.ResearchPerson,
+                      { subject: Ref.make(matched.subject) },
+                      { spaceId: db.spaceId },
+                    );
+                  } else {
+                    yield* Operation.schedule(
+                      CrmOperation.ResearchOrganization,
+                      { subject: Ref.make(matched.subject) },
+                      { spaceId: db.spaceId },
+                    );
+                  }
+                  // Set-scoped rather than subject-scoped (it walks everything missing an image), so it
+                  // is bounded by `limit` instead of targeting this object. A subject-scoped variant
+                  // would be the cleaner call here — see TASKS.md.
+                  yield* Operation.schedule(CrmOperation.EnrichImages, { limit: 8 }, { spaceId: db.spaceId });
+                }),
+              properties: {
+                label: ['research.label', { ns: meta.profile.key }],
+                icon: 'ph--sparkle--regular',
+                disposition: ['toolbar', 'list-item'],
+                presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                testId: 'crm.record.research',
+              },
+            },
+          ]);
+        },
+      }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );
 
@@ -77,7 +146,7 @@ const createTypeNode = ({
 }: {
   type: Type.AnyEntity;
   space: Space;
-  get: Atom.Context;
+  get: Atom.AtomContext;
   registered: ReadonlyMap<string, Type.AnyEntity>;
 }): Node.NodeArg<Type.AnyEntity> | null => {
   const typename = Type.getTypename(type);
@@ -91,7 +160,7 @@ const createTypeNode = ({
   const annotation = Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(entity)));
 
   return Node.make({
-    id: Paths.getTypeSlug(entity),
+    id: GraphPath.getTypeSlug(entity),
     type: CRM_TYPE_NODE,
     data: entity,
     properties: {

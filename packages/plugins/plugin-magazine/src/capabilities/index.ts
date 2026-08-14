@@ -2,16 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const RoutineTemplates = Capability.lazy('RoutineTemplates', () => import('./routine-templates'));
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  requires: [AttentionCapabilities.ViewState],
+});
+export const RoutineTemplates = Capability.lazyModule(
+  'RoutineTemplates',
+  { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
+  () => import('./routine-templates'),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
+export const Schema = AppCapability.schema(() => import('./schema'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.objectProperties'],
+});

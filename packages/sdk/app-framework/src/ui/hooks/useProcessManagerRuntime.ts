@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { type DependencyList, use, useCallback, useMemo } from 'react';
 
-import { Operation, ServiceResolver } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { EffectEx } from '@dxos/effect';
 import type { SpaceId } from '@dxos/keys';
 
@@ -34,10 +35,14 @@ export const useProcessManagerRuntime = (): Capabilities.ProcessManagerRuntime =
  * space-scoped services like `Database.Service`) without each call site having
  * to thread the id through manually.
  */
-export const useSpaceCallback = <const Tags extends readonly Context.Tag<any, any>[], T>(
+export const useSpaceCallback = <const Tags extends readonly Context.Key<any, any>[], T>(
   spaceId: SpaceId | undefined,
   tags: Tags,
-  fn: () => Effect.Effect<T, any, Context.Tag.Identifier<Tags[number]> | Capabilities.ProcessManagerRuntimeServices>,
+  fn: () => Effect.Effect<
+    T,
+    any,
+    Context.Service.Identifier<Tags[number]> | Capabilities.ProcessManagerRuntimeServices
+  >,
   deps?: DependencyList,
 ): (() => Promise<T>) => {
   const runtime = useProcessManagerRuntime();
@@ -58,10 +63,10 @@ export const useSpaceCallback = <const Tags extends readonly Context.Tag<any, an
  * Suspensefully resolve a single space-scoped service via the
  * {@link Capabilities.ProcessManagerRuntime}'s service resolver.
  */
-export const useSpaceService = <T extends Context.Tag<any, any>>(
+export const useSpaceService = <T extends Context.Key<any, any>>(
   tag: T,
   spaceId: SpaceId | undefined,
-): Context.Tag.Service<T> | undefined => {
+): Context.Service.Shape<T> | undefined => {
   const runtime = useProcessManagerRuntime();
   const promise = useMemo(() => {
     if (spaceId === undefined) {
@@ -69,7 +74,7 @@ export const useSpaceService = <T extends Context.Tag<any, any>>(
     }
     const layer = ServiceResolver.provide({ space: spaceId }, tag);
     const effect = Effect.flatMap(tag, (service) => Effect.succeed(service)).pipe(Effect.provide(layer));
-    return runtime.runPromiseExit(effect as Effect.Effect<Context.Tag.Service<T>, any, any>);
+    return runtime.runPromiseExit(effect as Effect.Effect<Context.Service.Shape<T>, any, any>);
   }, [runtime, spaceId, tag]);
   if (!promise) {
     return undefined;

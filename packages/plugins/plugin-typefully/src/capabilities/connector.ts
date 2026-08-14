@@ -5,15 +5,15 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Format, Obj, Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
-import { Connection, Connector } from '@dxos/plugin-connector';
+import { AccessToken, Connection } from '@dxos/link';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
 
 const TypefullyTokenForm = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'API key',
     description: 'The Typefully API key (v2) from account settings (Settings → API).',
   }),
@@ -66,6 +66,6 @@ export const createTypefullyConnectorEntry = () => ({
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [createTypefullyConnectorEntry()]);
+    return Capability.contribute(ConnectorSpec.Connector, [createTypefullyConnectorEntry()]);
   }),
 );

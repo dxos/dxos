@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
 import { Collection, Filter, Obj, Query } from '@dxos/echo';
-import { type Space, useMembers, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
+import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { type ActivityDatum, Dashboard } from '@dxos/react-ui-dashboard';
 

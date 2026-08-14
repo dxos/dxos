@@ -2,17 +2,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 
-import { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.OpenMembers> = SpaceOperation.OpenMembers.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Operation.invoke(LayoutOperation.Open, {
-        subject: [Paths.getSpacePath(input.space.id, 'settings')],
-        workspace: Paths.getSpacePath(input.space.id),
+        subject: [GraphPath.getSpacePath(input.space.id, 'settings')],
+        workspace: GraphPath.getSpacePath(input.space.id),
       });
     }),
   ),

@@ -7,18 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Format, Obj, Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
-import {
-  Connection,
-  ConnectionTestError,
-  Connector,
-  type CredentialForm,
-  type OnTokenCreated,
-  type TestConnection,
-} from '@dxos/plugin-connector';
+import { AccessToken, Connection } from '@dxos/link';
+import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
+
+import { DiscordOperation, DiscordTargetOptions } from '#types';
 
 import {
   DISCORD_BOT_LABEL,
@@ -29,7 +25,6 @@ import {
 } from '../constants';
 import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors';
 import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services';
-import { DiscordOperation, DiscordTargetOptions } from '../types';
 
 /**
  * Manual-credential form for the Discord Bot connector.
@@ -40,7 +35,7 @@ import { DiscordOperation, DiscordTargetOptions } from '../types';
  * in `constants.ts` surfaces the invite link.
  */
 const DiscordTokenForm = Schema.Struct({
-  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotations({
+  token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
     title: 'Bot Token',
     description:
       'Bot token from your application\'s "Bot" page in the Discord developer portal. ' +
@@ -77,7 +72,7 @@ const validateToken = (token: string) =>
     }),
   );
 
-const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>> = {
+const credentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>> = {
   schema: DiscordTokenForm,
   defaultValues: { token: '' },
   // Validates before the dialog closes so 401/format errors are shown inline.
@@ -118,7 +113,7 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
  * Connection.
  */
 const makeOnTokenCreated =
-  (makeLayer: (token: string) => Layer.Layer<DiscordREST>): OnTokenCreated =>
+  (makeLayer: (token: string) => Layer.Layer<DiscordREST>): ConnectorSpec.OnTokenCreated =>
   ({ accessToken }) =>
     Effect.gen(function* () {
       if (accessToken.account) {
@@ -141,7 +136,7 @@ const userOnTokenCreated = makeOnTokenCreated(makeDiscordUserLayerFromToken);
  * A rejected token or transport failure surfaces as a user-facing error so the
  * connection UI can offer to reauthenticate.
  */
-const userTestConnection: TestConnection = ({ accessToken }) =>
+const userTestConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   Effect.gen(function* () {
     const rest = yield* DiscordREST;
     yield* rest.getMyUser();
@@ -155,7 +150,7 @@ const userTestConnection: TestConnection = ({ accessToken }) =>
   );
 
 /**
- * Contributes two `Connector` entries for Discord:
+ * Contributes two `ConnectorSpec.Connector` entries for Discord:
  * - `discord` — bot token (manual credential form, syncs guild channels the bot was invited to)
  * - `discord-user` — OAuth user token (syncs guild channels the user is a member of)
  *
@@ -167,16 +162,18 @@ const userTestConnection: TestConnection = ({ accessToken }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: DISCORD_PROVIDER_ID,
         source: DISCORD_SOURCE,
         label: DISCORD_BOT_LABEL,
         credentialForm,
-        optionsSchema: DiscordTargetOptions,
-        getSyncTargets: DiscordOperation.GetDiscordChannels,
-        materializeTarget: DiscordOperation.MaterializeDiscordTarget,
-        sync: DiscordOperation.SyncDiscordChannel,
+        sync: {
+          operation: DiscordOperation.SyncDiscordChannel,
+          getTargets: DiscordOperation.GetDiscordChannels,
+          materializeTarget: DiscordOperation.MaterializeDiscordTarget,
+          optionsSchema: DiscordTargetOptions.DiscordTargetOptions,
+        },
         onTokenCreated,
       },
       {
@@ -187,10 +184,12 @@ export default Capability.makeModule(
           provider: OAuthProvider.DISCORD,
           scopes: ['identify', 'guilds'],
         },
-        optionsSchema: DiscordTargetOptions,
-        getSyncTargets: DiscordOperation.GetDiscordChannels,
-        materializeTarget: DiscordOperation.MaterializeDiscordTarget,
-        sync: DiscordOperation.SyncDiscordChannel,
+        sync: {
+          operation: DiscordOperation.SyncDiscordChannel,
+          getTargets: DiscordOperation.GetDiscordChannels,
+          materializeTarget: DiscordOperation.MaterializeDiscordTarget,
+          optionsSchema: DiscordTargetOptions.DiscordTargetOptions,
+        },
         onTokenCreated: userOnTokenCreated,
         testConnection: userTestConnection,
       },

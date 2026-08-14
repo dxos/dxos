@@ -4,32 +4,32 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { expect, screen, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { CallsPlugin } from '@dxos/plugin-calls/plugin';
+import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Graph } from '@dxos/plugin-graph';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { Calendar } from '@dxos/plugin-inbox/types';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { TagIndex, Text } from '@dxos/schema';
 import { Actor, AnchoredTo, Event, Transcript } from '@dxos/types';
 
-import { MeetingPlugin } from '../MeetingPlugin';
-import { Meeting } from '../types';
+import { MeetingPlugin } from '#plugin';
+import { Meeting } from '#types';
 
 type StoryArgs = {
   /** Seed a Meeting already linked to the event (toolbar shows "Open meeting"); otherwise "Create meeting". */
@@ -51,18 +51,6 @@ const DefaultStory = (_: StoryArgs) => {
 
   // The selected feed event (first by chronological order from the builder).
   const event = events[0];
-
-  const { graph } = useAppGraph();
-  const eventUri = event ? Obj.getURI(event) : undefined;
-  // Initialize (run the URI-keyed resolver to create the hidden Event node) and expand its action
-  // relation, mirroring what plugin-deck's plank does for an attended node in the running app.
-  useEffect(() => {
-    if (!eventUri) {
-      return;
-    }
-
-    void Graph.initialize(graph, eventUri).then(() => Graph.expand(graph, eventUri, 'action'));
-  }, [graph, eventUri]);
 
   if (!db || !calendar || !event) {
     return <Loading data={{ db: !!db, calendar, event, meeting }} />;
@@ -96,10 +84,9 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [
             Feed.Feed,
             Calendar.Calendar,
@@ -122,7 +109,7 @@ const meta = {
           }),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace: space } = yield* initializeIdentity(client);
+              const { defaultSpace: space } = yield* initializeIdentity(client);
 
               // Calendar with a backing feed. Events are appended to the feed to simulate the
               // Google Calendar sync (synced events live in the feed, not the db).
@@ -202,13 +189,13 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        StorybookPlugin({}),
-        InboxPlugin(),
-        CallsPlugin(),
-        TranscriptionPlugin(),
+        StorybookPlugin.make({}),
+        InboxPlugin.make(),
+        CallsPlugin.make(),
+        TranscriptionPlugin.make(),
         MeetingPlugin(),
-        MarkdownPlugin(),
-        PreviewPlugin(),
+        MarkdownPlugin.make(),
+        PreviewPlugin.make(),
       ],
     })),
   ],
@@ -230,13 +217,11 @@ export const Default: Story = {
 /**
  * Asserts plugin-meeting's contributed "Open meeting" action renders in the Event-article toolbar.
  * The story seeds a Meeting already linked to the event, so the action resolves to its open variant.
- * This exercises the full graph: the article's `attendableId` is the event URI, plugin-inbox's
- * `eventObjectNode` resolver creates a hidden `Event.Event` node at that id, and plugin-meeting's
- * type extension attaches the action.
  */
 export const MeetingAction: Story = {
   // TODO(burdon): Skipped — the event toolbar's overflow dropdown does not yet render contributed
   //   graph actions, so the "Open meeting" menu item isn't surfaced (pending react-ui-menu work).
+  // TODO(wittjosiah): Also blocked on the hidden Event.Event node not materializing in this story.
   tags: ['!test'],
   args: {
     withMeeting: true,

@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
-import * as Record from 'effect/Record';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
@@ -14,8 +15,18 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable } from '@dxos/util';
 
+import { scheduleTask } from '#scheduler';
+
 import * as Node from './node';
-import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, shallowEqual } from './util';
+import {
+  normalizeRelation,
+  primaryKey,
+  primaryParts,
+  secondaryKey,
+  secondaryParts,
+  shallowEqual,
+  withLabel,
+} from './util';
 
 const graphSymbol = Symbol('graph');
 
@@ -54,7 +65,7 @@ export type GraphTraversalOptions = {
 };
 
 export type GraphProps = {
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
   nodes?: MakeOptional<Node.Node, 'data' | 'cacheable'>[];
   edges?: Record<string, Edges>;
   onExpand?: (id: string, relation: Node.Relation) => void;
@@ -143,12 +154,12 @@ class GraphImpl implements WritableGraph {
   readonly _onInitialize?: GraphProps['onInitialize'];
   readonly _onRemoveNode?: GraphProps['onRemoveNode'];
 
-  readonly _registry: Registry.Registry;
-  readonly _expanded = Record.empty<string, boolean>();
+  readonly _registry: Registry.AtomRegistry;
+  readonly _expanded = new Set<string>();
   readonly _pendingExpands = new Set<string>();
-  readonly _initialized = Record.empty<string, boolean>();
-  readonly _initialEdges = Record.empty<string, Edges>();
-  readonly _initialNodes = Record.fromEntries([
+  readonly _initialized = new Set<string>();
+  readonly _initialEdges = new Map<string, Edges>();
+  readonly _initialNodes = new Map<string, Option.Option<Node.Node>>([
     [
       Node.RootId,
       this._constructNode({
@@ -162,8 +173,8 @@ class GraphImpl implements WritableGraph {
 
   /** @internal */
   readonly _node = Atom.family<string, Atom.Writable<Option.Option<Node.Node>>>((id) => {
-    const initial = Option.flatten(Record.get(this._initialNodes, id));
-    return Atom.make<Option.Option<Node.Node>>(initial).pipe(Atom.keepAlive, Atom.withLabel(`graph:node:${id}`));
+    const initial = this._initialNodes.get(id) ?? Option.none();
+    return Atom.make<Option.Option<Node.Node>>(initial).pipe(Atom.keepAlive, withLabel(`graph:node:${id}`));
   });
 
   readonly _nodeOrThrow = Atom.family<string, Atom.Atom<Node.Node>>((id) => {
@@ -175,8 +186,8 @@ class GraphImpl implements WritableGraph {
   });
 
   readonly _edges = Atom.family<string, Atom.Writable<Edges>>((id) => {
-    const initial = Record.get(this._initialEdges, id).pipe(Option.getOrElse(() => ({}) as Edges));
-    return Atom.make<Edges>(initial).pipe(Atom.keepAlive, Atom.withLabel(`graph:edges:${id}`));
+    const initial = this._initialEdges.get(id) ?? ({} as Edges);
+    return Atom.make<Edges>(initial).pipe(Atom.keepAlive, withLabel(`graph:edges:${id}`));
   });
 
   // NOTE: Currently the argument to the family needs to be referentially stable for the atom to be referentially stable.
@@ -195,7 +206,7 @@ class GraphImpl implements WritableGraph {
         .map((id) => get(this._node(id)))
         .filter(Option.isSome)
         .map((o) => o.value);
-    }).pipe(Atom.withLabel(`graph:connections:${key}`));
+    }).pipe(withLabel(`graph:connections:${key}`));
   });
 
   readonly _actions = Atom.family<string, Atom.Atom<(Node.Action | Node.ActionGroup)[]>>((id) => {
@@ -204,7 +215,7 @@ class GraphImpl implements WritableGraph {
         return [];
       }
       return get(this._connections(connectionKey(id, Node.actionRelation()))) as (Node.Action | Node.ActionGroup)[];
-    }).pipe(Atom.withLabel(`graph:actions:${id}`));
+    }).pipe(withLabel(`graph:actions:${id}`));
   });
 
   readonly _json = Atom.family<string, Atom.Atom<any>>((id) => {
@@ -232,7 +243,7 @@ class GraphImpl implements WritableGraph {
 
       const root = get(this._nodeOrThrow(id));
       return toJSON(root);
-    }).pipe(Atom.withLabel(`graph:json:${id}`));
+    }).pipe(withLabel(`graph:json:${id}`));
   });
 
   constructor({ registry, nodes, edges, onInitialize, onExpand, onRemoveNode }: GraphProps = {}) {
@@ -243,13 +254,13 @@ class GraphImpl implements WritableGraph {
 
     if (nodes) {
       nodes.forEach((node) => {
-        Record.set(this._initialNodes, node.id, this._constructNode(node));
+        this._initialNodes.set(node.id, this._constructNode(node));
       });
     }
 
     if (edges) {
       Object.entries(edges).forEach(([source, edges]) => {
-        Record.set(this._initialEdges, source, edges);
+        this._initialEdges.set(source, edges);
       });
     }
   }
@@ -667,10 +678,10 @@ export function waitForPath(
  */
 const initializeImpl = async <T extends ExpandableGraph | WritableGraph>(graph: T, id: string): Promise<T> => {
   const internal = getInternal(graph);
-  const initialized = Record.get(internal._initialized, id).pipe(Option.getOrElse(() => false));
+  const initialized = internal._initialized.has(id);
   log('initialize', { id, initialized });
   if (!initialized) {
-    Record.set(internal._initialized, id, true);
+    internal._initialized.add(id);
     await internal._onInitialize?.(id);
   }
   return graph;
@@ -680,6 +691,9 @@ const initializeImpl = async <T extends ExpandableGraph | WritableGraph>(graph: 
  * Initialize a node in the graph.
  *
  * Fires the `onInitialize` callback to provide initial data for a node.
+ *
+ * TODO(wittjosiah): Remove? No graph-builder extension declares a `resolver`, so `onInitialize` has
+ * nothing to run; callers expand the nodes they need explicitly.
  */
 export function initialize<T extends ExpandableGraph | WritableGraph>(graph: T, id: string): Promise<T>;
 export function initialize(id: string): <T extends ExpandableGraph | WritableGraph>(graph: T) => Promise<T>;
@@ -699,10 +713,48 @@ export function initialize<T extends ExpandableGraph | WritableGraph>(
 }
 
 /**
- * Implementation helper for expand.
+ * Resolves when the node exists in the graph; immediately if it already does.
+ *
+ * The graph is populated asynchronously — connectors expand a level at a time and the objects
+ * behind them load out of band — and {@link expandSync} is fire-and-forget, so a consumer that needs
+ * a specific node has no completion to await and would otherwise poll for it.
+ *
+ * Deliberately unbounded: whether a node is merely late or will never arrive is the caller's
+ * question, so the deadline belongs at the call site (`Effect.timeout`). Interrupting is safe —
+ * the subscription is released on interruption.
+ */
+export const waitFor = (graph: BaseGraph, id: string): Effect.Effect<Node.Node> =>
+  Effect.suspend(() => {
+    const current = getNodeImpl(graph, id);
+    if (Option.isSome(current)) {
+      return Effect.succeed(current.value);
+    }
+
+    return Effect.callback<Node.Node>((resume) => {
+      const unsubscribe = graph.onNodeChanged.on(({ id: changed, node }) => {
+        if (changed === id && Option.isSome(node)) {
+          unsubscribe();
+          resume(Effect.succeed(node.value));
+        }
+      });
+
+      // Re-read after subscribing: a node added between the read above and the subscription
+      // emits nothing further, and the wait would hang on an event that already happened.
+      const raced = getNodeImpl(graph, id);
+      if (Option.isSome(raced)) {
+        unsubscribe();
+        resume(Effect.succeed(raced.value));
+      }
+
+      return Effect.sync(() => unsubscribe());
+    });
+  });
+
+/**
+ * Implementation helper for expandSync.
  * If the node does not exist yet, the expand is recorded as pending and applied when the node is added.
  */
-const expandImpl = <T extends ExpandableGraph | WritableGraph>(
+const expandSyncImpl = <T extends ExpandableGraph | WritableGraph>(
   graph: T,
   id: string,
   relation: Node.RelationInput,
@@ -718,48 +770,73 @@ const expandImpl = <T extends ExpandableGraph | WritableGraph>(
     return graph;
   }
 
-  const expanded = Record.get(internal._expanded, key).pipe(Option.getOrElse(() => false));
+  const expanded = internal._expanded.has(key);
   log('expand', { key, expanded });
   if (!expanded) {
-    Record.set(internal._expanded, key, true);
+    internal._expanded.add(key);
     internal._onExpand?.(id, normalizedRelation);
   }
   return graph;
 };
 
 /**
- * Expand a node in the graph.
+ * Expand a node in the graph, synchronously.
  *
- * Fires the `onExpand` callback to add connections to the node.
+ * Fires the `onExpand` callback to add connections to the node. That callback subscribes to the node's
+ * connector atom immediately, so every matching builder extension runs before this returns — which is why
+ * anything on a paint-critical path (a pointer handler, a render) should prefer {@link expand}.
+ *
+ * Expanding a node that is already expanded for the same relation is a no-op.
  */
-export function expand<T extends ExpandableGraph | WritableGraph>(
+export function expandSync<T extends ExpandableGraph | WritableGraph>(
   graph: T,
   id: string,
   relation: Node.RelationInput,
 ): T;
-export function expand(
+export function expandSync(
   id: string,
   relation: Node.RelationInput,
 ): <T extends ExpandableGraph | WritableGraph>(graph: T) => T;
-export function expand<T extends ExpandableGraph | WritableGraph>(
+export function expandSync<T extends ExpandableGraph | WritableGraph>(
   graphOrId: T | string,
   idOrRelation: string | Node.RelationInput,
   relation?: Node.RelationInput,
 ): T | (<T extends ExpandableGraph | WritableGraph>(graph: T) => T) {
   if (typeof graphOrId === 'string') {
-    // Curried: expand(id, relation)
+    // Curried: expandSync(id, relation).
     const id = graphOrId;
     const rel = idOrRelation as Node.RelationInput;
-    return <T extends ExpandableGraph | WritableGraph>(graph: T) => expandImpl(graph, id, rel);
+    return <T extends ExpandableGraph | WritableGraph>(graph: T) => expandSyncImpl(graph, id, rel);
   } else {
-    // Direct: expand(graph, id, relation)
+    // Direct: expandSync(graph, id, relation).
     const graph = graphOrId;
     const id = idOrRelation as string;
     invariant(relation !== undefined, 'Relation is required.');
     const rel = relation;
-    return expandImpl(graph, id, rel);
+    return expandSyncImpl(graph, id, rel);
   }
 }
+
+/**
+ * Expand a node in the graph, off the paint-critical path.
+ *
+ * Yields to the main thread before running {@link expandSync}, so a caller reacting to input does not
+ * block the frame. Interrupting the effect cancels a still-pending expansion, which makes rescheduling
+ * (e.g. superseding a hover with the next one) a matter of interrupting the previous fiber.
+ */
+export const expand = <T extends ExpandableGraph | WritableGraph>(
+  graph: T,
+  id: string,
+  relation: Node.RelationInput,
+): Effect.Effect<void> =>
+  Effect.promise((signal) =>
+    scheduleTask(
+      () => {
+        expandSyncImpl(graph, id, relation);
+      },
+      { strategy: 'idle', signal },
+    ),
+  );
 
 /**
  * Implementation helper for sortEdges.
@@ -878,13 +955,17 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
       const typeChanged = existing.type !== type;
       const dataChanged = !shallowEqual(existing.data, data);
       const propertiesChanged = Object.keys(properties).some((key) => existing.properties[key] !== properties[key]);
+      // `changed` is on the visit log because counting `existing node` lines alone measures how often a
+      // node was re-offered, not how often it actually changed — two very different costs.
+      const changed = typeChanged || dataChanged || propertiesChanged;
       log('existing node', {
         id,
+        changed,
         typeChanged,
         dataChanged,
         propertiesChanged,
       });
-      if (typeChanged || dataChanged || propertiesChanged) {
+      if (changed) {
         log('updating node', { id, type, data, properties });
         const newNode = Option.some({
           ...existing,
@@ -908,7 +989,7 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
       for (const pendingKey of toApply) {
         internal._pendingExpands.delete(pendingKey);
         const relation = relationFromKey(primaryParts(pendingKey)[1]);
-        Record.set(internal._expanded, pendingKey, true);
+        internal._expanded.add(pendingKey);
         internal._onExpand?.(id, relation);
       }
     },

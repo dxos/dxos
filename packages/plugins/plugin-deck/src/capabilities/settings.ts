@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
@@ -18,15 +18,14 @@ export default Capability.makeModule(() =>
       schema: Settings.Settings,
       defaultValue: () => ({
         showHints: false,
-        enableDeck: false,
         enableNativeRedirect: false,
-        encapsulatedPlanks: false,
+        flatten: true,
       }),
     });
 
     return [
-      Capability.contributes(DeckCapabilities.Settings, settingsAtom),
-      Capability.contributes(AppCapabilities.Settings, {
+      Capability.contribute(DeckCapabilities.Settings, settingsAtom),
+      Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,

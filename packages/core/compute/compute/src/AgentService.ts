@@ -10,8 +10,10 @@ import type * as Stream from 'effect/Stream';
 
 import type { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import type { ContentBlock } from '@dxos/types';
 
 import type * as Trace from './Trace';
+import { Instructions } from './types';
 
 /**
  * Service interface for the agent session manager.
@@ -30,7 +32,7 @@ export interface Service {
   hydrate: () => Effect.Effect<void>;
 }
 
-export class AgentService extends Context.Tag('@dxos/functions-runtime/AgentService')<AgentService, Service>() {}
+export class AgentService extends Context.Service<AgentService, Service>()('@dxos/functions-runtime/AgentService') {}
 
 /**
  * Handle to an agent session.
@@ -52,9 +54,9 @@ export interface Session {
   addContext: (context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, Database.Service>;
 
   /**
-   * Submits a prompt to the agent.
+   * Submit a turn: a plain user prompt, or pre-built content blocks (e.g. synthetic context + prompt).
    */
-  submitPrompt: (prompt: string) => Effect.Effect<void>;
+  submitPrompt: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>;
 
   /**
    * Wait until agent has completed its work.
@@ -71,15 +73,17 @@ export interface Session {
    * Replays buffered events, then streams new ones until the process ends.
    *
    * When forking a collector from a short-lived parent (e.g. `useEffect` +
-   * `runPromise(Effect.forEach(subscribe))`), use {@link Effect.forkDaemon} so the
+   * `runPromise(Effect.forEach(subscribe))`), use {@link Effect.forkDetach} so the
    * stream survives after the parent scope closes; interrupt it on dispose.
    */
   subscribeEphemeral: () => Stream.Stream<Trace.Message>;
 }
 
-export const getSession = Effect.serviceFunctionEffect(AgentService, (service) => service.getSession);
+export const getSession = (...args: Parameters<Context.Service.Shape<typeof AgentService>['getSession']>) =>
+  AgentService.use((service) => service.getSession(...args));
 
-export const hydrate = Effect.serviceFunctionEffect(AgentService, (service) => service.hydrate);
+export const hydrate = (...args: Parameters<Context.Service.Shape<typeof AgentService>['hydrate']>) =>
+  AgentService.use((service) => service.hydrate(...args));
 
 export interface GetSessionOptions {
   readonly model?: DXN.DXN;
@@ -87,4 +91,10 @@ export interface GetSessionOptions {
   // the model into the agent process — the id alone does not identify a resolver.
   readonly provider?: DXN.DXN;
   readonly systemPrompt?: string;
+  /**
+   * Instructions steering the conversation (typically the Chat's `instructions` ref), persisted as a
+   * spawn annotation so a re-hydrated process recovers it. Read at spawn only: repointing requires a
+   * process restart (same staleness model as `model`/`provider`).
+   */
+  readonly instructions?: Ref.Ref<Instructions.Instructions>;
 }

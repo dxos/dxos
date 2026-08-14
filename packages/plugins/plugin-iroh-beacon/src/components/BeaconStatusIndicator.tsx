@@ -4,23 +4,25 @@
 
 import React from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/ui';
+import { useOptionalAtomCapability } from '@dxos/app-framework/ui';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+import { type BeaconPeer } from '#types';
 
 import { BeaconCapabilities } from '../capabilities/beacon-service';
-import { type BeaconPeer } from '../types';
 
 /** Status bar icon with popover showing live beacon peer list. */
 export const BeaconStatusIndicator = () => {
-  const state = useAtomCapability(BeaconCapabilities.State);
+  // The status bar paints with the shell, but the beacon service activates on `SpacesReady` — which
+  // the forked client initialization can land long after — so absence is a normal early state here.
+  const state = useOptionalAtomCapability(BeaconCapabilities.State);
   const { t } = useTranslation(meta.profile.key);
-  const onlineCount = state.peers.filter((peer) => peer.online).length;
+  const onlineCount = state?.peers.filter((peer) => peer.online).length ?? 0;
 
-  const iconClass = onlineCount > 0 ? 'text-green-500' : state.status === 'connecting' ? 'animate-pulse' : undefined;
+  const iconClass = onlineCount > 0 ? 'text-green-500' : state?.status === 'connecting' ? 'animate-pulse' : undefined;
 
   return (
     <Popover.Root>
@@ -46,9 +48,13 @@ export const BeaconStatusIndicator = () => {
 };
 
 const BeaconPopover = () => {
-  const state = useAtomCapability(BeaconCapabilities.State);
+  const state = useOptionalAtomCapability(BeaconCapabilities.State);
   const { t } = useTranslation(meta.profile.key);
-  const onlineCount = state.peers.filter((peer) => peer.online).length;
+  const onlineCount = state?.peers.filter((peer) => peer.online).length ?? 0;
+
+  if (!state) {
+    return <span className='text-sm text-description p-2'>{t('no-peers.label')}</span>;
+  }
 
   return (
     <div className='flex flex-col gap-2 w-[280px] p-2'>

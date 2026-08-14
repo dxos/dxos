@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useRef, useState } from 'react';
 
 import { Filter, Obj, Type } from '@dxos/echo';
@@ -20,15 +19,12 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { doLayout } from '../../layout';
 import { Container, DragTest, useSelection } from '../../testing';
-import { type CanvasGraphModel, RectangleShape } from '../../types';
+import { type CanvasGraphModel, Polygon, isPolygon } from '../../types';
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 
 const generator: ValueGenerator = random as any;
 
 const types = [TestSchema.Organization, TestSchema.Project, TestSchema.Person];
-
-// TODO(burdon): Ref expando breaks the form.
-const RectangleShapeWithoutRef = Schema.omit<any, any, ['object']>('object')(RectangleShape);
 
 type RenderProps = EditorRootProps &
   PropsWithChildren<{
@@ -75,24 +71,28 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
       {/* TODO(burdon): Need to set schema based on what is selected. */}
       {sidebar && (
         <Container id='sidebar' classNames='flex grow overflow-hidden'>
-          {sidebar === 'selected' && selected && (
-            <Form.Root
-              schema={RectangleShapeWithoutRef}
-              values={selected}
-              fieldMap={{
-                // TODO(burdon): Replace by type.
-                center: (props) => <TupleField {...props} binding={['x', 'y']} />,
-                size: (props) => <TupleField {...props} binding={['width', 'height']} />,
-              }}
-            >
-              <Form.Viewport>
-                <Form.Content>
-                  <Form.FieldSet />
-                  <Form.Actions />
-                </Form.Content>
-              </Form.Viewport>
-            </Form.Root>
-          )}
+          {sidebar === 'selected' &&
+            selected &&
+            isPolygon(selected) && (
+              // `Polygon`, not `RectangleShape`: the selection is only ever narrowed that far, and the
+              // rectangle's `type: 'rectangle'` literal is not assignable from a `Shape`'s `string`.
+              <Form.Root
+                schema={Polygon}
+                values={selected}
+                fieldMap={{
+                  // TODO(burdon): Replace by type.
+                  center: (props) => <TupleField {...props} binding={['x', 'y']} />,
+                  size: (props) => <TupleField {...props} binding={['width', 'height']} />,
+                }}
+              >
+                <Form.Viewport>
+                  <Form.Content>
+                    <Form.FieldSet />
+                    <Form.Actions />
+                  </Form.Content>
+                </Form.Viewport>
+              </Form.Root>
+            )}
 
           {sidebar === 'json' && <JsonHighlighter data={{ graph: graph?.graph }} classNames='text-xs' />}
         </Container>

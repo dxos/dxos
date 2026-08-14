@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { describe, test } from 'vitest';
 
 import { Surface as SurfaceInternals } from '@dxos/app-framework/ui';

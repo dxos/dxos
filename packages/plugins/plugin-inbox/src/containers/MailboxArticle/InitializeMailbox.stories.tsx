@@ -7,21 +7,22 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Feed, Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
+import { InboxPlugin } from '../../plugin';
 import { InitializeMailbox } from './InitializeMailbox';
 
 type StoryArgs = {
@@ -44,17 +45,16 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager<StoryArgs>(({ args: { withToken = false } }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [AccessToken.AccessToken, Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => initializeMailbox(personalSpace));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              yield* Effect.promise(() => initializeMailbox(defaultSpace.db));
               if (withToken) {
-                personalSpace.db.add(
+                defaultSpace.db.add(
                   Obj.make(AccessToken.AccessToken, {
                     source: 'google.com',
                     account: 'user@example.com',
@@ -62,12 +62,12 @@ const meta = {
                   }),
                 );
               }
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         InboxPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     })),
   ],

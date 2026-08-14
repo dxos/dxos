@@ -1,6 +1,6 @@
 {
   "name": "@dxos/messaging",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Messaging",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -34,24 +34,18 @@
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
-    "@dxos/credentials": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/rpc": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "catalog:",
-    "isomorphic-ws": "catalog:",
-    "ws": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/keyring": "workspace:*",
-    "@dxos/signal": "workspace:*",
-    "@dxos/test-utils": "workspace:*"
+    "@dxos/credentials": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

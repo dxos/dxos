@@ -2,20 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
-import { Capabilities, Plugin } from '@dxos/app-framework';
-import { AppSpace } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { CommandConfig, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { ClientOperation } from '#operations';
 
@@ -43,12 +42,7 @@ export const handler = Effect.fn(function* ({
     yield* invoke(ClientOperation.CreateAgent);
   }
 
-  // Create personal space for the CLI identity.
-  const space = yield* Effect.promise(() =>
-    client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
-  );
-  yield* Effect.promise(() => space.waitUntilReady());
-  yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
+  const { defaultSpace: space } = yield* AppSpace.setupIdentitySpaces(client);
   yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
 
   if (json) {
@@ -70,10 +64,10 @@ export const handler = Effect.fn(function* ({
 export const create = Command.make(
   'create',
   {
-    agent: Options.boolean('noAgent', { ifPresent: false }).pipe(
-      Options.withDescription('Do not create an EDGE agent for the identity.'),
-    ),
-    displayName: Options.text('displayName').pipe(
+    agent: Options.boolean('noAgent')
+      .pipe(Options.map((value) => !value))
+      .pipe(Options.withDescription('Do not create an EDGE agent for the identity.')),
+    displayName: Options.string('displayName').pipe(
       Options.withDescription('The display name of the identity.'),
       Options.optional,
     ),

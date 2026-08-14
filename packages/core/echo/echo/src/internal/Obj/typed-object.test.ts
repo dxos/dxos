@@ -3,9 +3,9 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
+import { SchemaAST } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import * as Type from '../../Type';
@@ -27,6 +27,6 @@ describe('EchoObjectSchema DSL', () => {
   });
 
   test('expect schema', async () => {
-    expect(SchemaAST.isTypeLiteral(Type.getSchema(Organization).ast)).to.be.true;
+    expect(SchemaAST.isObjects(Type.getSchema(Organization).ast)).to.be.true;
   });
 });

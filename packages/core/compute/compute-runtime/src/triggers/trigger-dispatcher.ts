@@ -2,31 +2,35 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { Registry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Cron from 'effect/Cron';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
+import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { Operation, Process, RunAgainError, Trigger, TriggerEvent } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { RunAgainError } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
+import * as Trigger from '@dxos/compute/Trigger';
+import * as TriggerEvent from '@dxos/compute/TriggerEvent';
+import { Database, Entity, Feed, Filter, Obj, Query, QueryResult, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { EntityId } from '@dxos/keys';
+import { EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as ProcessManager from '../ProcessManager';
@@ -181,7 +185,7 @@ const MAX_TRACKED_INVOCATIONS = 10;
 const MAX_TRACKED_ERRORS = 10;
 
 // TODO(dmaretskyi): Extract a separate TriggerMonmitor service to @dxos/compute that would work with both local and edge dispatcher.
-export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
+export class TriggerDispatcher extends Context.Service<
   TriggerDispatcher,
   {
     readonly timeControl: TimeControl;
@@ -232,7 +236,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
      */
     getCurrentTime(): Date;
   }
->() {
+>()('@dxos/functions/TriggerDispatcher') {
   static layer = (
     options: Omit<TriggerDispatcherOptions, 'services'>,
   ): Layer.Layer<TriggerDispatcher, never, TriggerDispatcherServices> =>
@@ -248,7 +252,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
 const DEFAULT_MAX_CONCURRENCY = 5;
 const DEFAULT_FAILURE_COOLDOWN = Duration.seconds(30);
 
-class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
+class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispatcher> {
   readonly livePollInterval: Duration.Duration;
   readonly timeControl: TimeControl;
 
@@ -257,6 +261,22 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   private _internalTime: Date;
   private _timerFiber: Fiber.Fiber<void, void> | undefined;
   private _triggers: Trigger.Trigger[] = [];
+
+  /**
+   * Live query over `Trigger` objects, subscribed once in {@link start} so the trigger list stays
+   * current reactively. While set, {@link _fetchTriggers} reads {@link QueryResult.results}
+   * directly instead of re-querying the database, so the natural-time poll loop no longer issues a
+   * fresh `Filter.type(Trigger)` query on every tick.
+   */
+  #triggerQuery: QueryResult.QueryResult<Trigger.Trigger> | undefined;
+  #triggerQueryUnsubscribe: (() => void) | undefined;
+
+  /**
+   * Fiber forked by the trigger-query subscription callback to run {@link refreshTriggers}
+   * reactively. Tracked so {@link stop} (and the natural-time-processing failure path) can
+   * interrupt an in-flight refresh instead of letting it repopulate state after shutdown.
+   */
+  #pendingRefreshFiber: Fiber.Fiber<void, never> | undefined;
 
   /**
    * Unified runtime state for every trigger kind: cron schedule, failure cooldown, and pending
@@ -282,7 +302,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
    * manual, and retry drain). Enforces {@link _maxConcurrency} on top of any per-trigger
    * concurrency. Created eagerly so it can wrap invocations without an initialization effect.
    */
-  private _concurrencyLimiter: Effect.Semaphore;
+  private _concurrencyLimiter: Semaphore.Semaphore;
 
   /**
    * Monotonic counter assigning FIFO ordering to pending retries so re-enqueued retries land at
@@ -297,7 +317,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     this._internalTime = options.startingTime ?? new Date();
     this._maxConcurrency = options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;
     this._failureCooldown = options.failureCooldown ?? DEFAULT_FAILURE_COOLDOWN;
-    this._concurrencyLimiter = Effect.unsafeMakeSemaphore(this._maxConcurrency);
+    this._concurrencyLimiter = Semaphore.makeUnsafe(this._maxConcurrency);
   }
 
   private _isInCooldown = (triggerId: string): boolean => {
@@ -333,7 +353,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
    * Publish the current per-trigger runtime state onto the observable dispatcher state so the UI
    * can render cursor/next-run/cooldown/retry status.
    */
-  private _publishRuntimeStatuses = (registry: Registry.Registry): void => {
+  private _publishRuntimeStatuses = (registry: Registry.AtomRegistry): void => {
     const triggers: TriggerRuntimeStatus[] = Array.fromIterable(this._runtimeState.values()).map((entry) => ({
       triggerId: entry.trigger.id,
       nextExecution: entry.nextExecution,
@@ -353,7 +373,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   }
 
   start = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       if (this._running) {
         return;
       }
@@ -370,31 +390,37 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
       // Start natural time processing if enabled
       if (this.timeControl === 'natural') {
+        yield* this.#subscribeToTriggers();
         this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(
-          Effect.tapErrorCause((cause) => {
-            const error = EffectEx.causeToError(cause);
-            log.error('trigger dispatcher error', { error });
-            this._running = false;
-            registry.update(
-              this._state,
-              Struct.evolve({
-                enabled: () => false,
-                errors: (errors) => [...errors, error].slice(-MAX_TRACKED_ERRORS),
-              }),
-            );
-            return Effect.void;
-          }),
-          Effect.forkDaemon,
+          Effect.tapCause((cause) =>
+            Effect.gen({ self: this }, function* () {
+              const error = EffectEx.causeToError(cause);
+              log.error('trigger dispatcher error', { error });
+              this._running = false;
+              this._timerFiber = undefined;
+              registry.update(
+                this._state,
+                Struct.evolve({
+                  enabled: () => false,
+                  errors: (errors) => [...errors, error].slice(-MAX_TRACKED_ERRORS),
+                }),
+              );
+              // A crash bypasses `stop()` (`_running` is already false, so a later `stop()` call
+              // would no-op) — tear the subscription down here so it doesn't outlive the dispatcher.
+              yield* this.#teardownTriggerSubscription();
+            }),
+          ),
+          Effect.forkDetach,
         );
       } else {
-        return yield* Effect.dieMessage('TriggerDispatcher started in manual time control mode');
+        return yield* Effect.die(new Error('TriggerDispatcher started in manual time control mode'));
       }
 
       log.info('TriggerDispatcher started', { timeControl: this.timeControl });
     }).pipe(Effect.provide(this._services));
 
   stop = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       if (!this._running) {
         return;
       }
@@ -414,6 +440,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         this._timerFiber = undefined;
       }
 
+      // Stop the reactive trigger query subscription.
+      yield* this.#teardownTriggerSubscription();
+
       // Clear runtime state for all triggers.
       this._runtimeState.clear();
       this._publishRuntimeStatuses(registry);
@@ -422,7 +451,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     }).pipe(Effect.provide(this._services));
 
   invokeTrigger = (options: InvokeTriggerOptions): Effect.Effect<TriggerExecutionResult> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const { trigger, event } = options;
       log('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
 
@@ -446,13 +475,13 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       // Sandboxed section. The global concurrency limiter wraps the actual op invocation so that
       // the total number of concurrent invocations across all triggers/kinds never exceeds
       // `_maxConcurrency`, on top of any per-trigger concurrency enforced at the call sites.
-      const result = yield* Effect.gen(this, function* () {
+      const result = yield* Effect.gen({ self: this }, function* () {
         if (!trigger.enabled) {
-          return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
+          return yield* Effect.die(new Error('Attempting to invoke disabled trigger'));
         }
 
         if (!trigger.runnable) {
-          return yield* Effect.dieMessage('Trigger has no runnable reference');
+          return yield* Effect.die(new Error('Trigger has no runnable reference'));
         }
 
         // Resolve the operation definition from the persistent record.
@@ -489,9 +518,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
         return yield* handle.runAndExit({ inputs: [inputData] }).pipe(
           Stream.runCollect,
-          Effect.map(Chunk.head),
-          Effect.flatten,
-          Effect.catchTag('NoSuchElementException', () => Effect.dieMessage('Trigger invocation produced no output')),
+          Effect.map(Array.head),
+          Effect.flatMap((result) => Effect.fromOption(result)),
+          Effect.catchTag('NoSuchElementError', () => Effect.die(new Error('Trigger invocation produced no output'))),
         );
       }).pipe(this._concurrencyLimiter.withPermits(1), Effect.exit);
 
@@ -518,7 +547,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       } else {
         // TODO(wittjosiah): A fiber interrupt (e.g. a scheduled timer fire colliding with an in-flight
         //   `runAgain` retry, or the dispatcher stopping) reaches here and arms a failure cooldown. An
-        //   interrupt is not a genuine failure — distinguish `Cause.isInterrupted(result.cause)` and
+        //   interrupt is not a genuine failure — distinguish `Cause.hasInterrupts(result.cause)` and
         //   treat it as neutral (re-schedulable, no cooldown) instead.
         const cooldownMs = Duration.toMillis(this._failureCooldown);
         const until = new Date(this.getCurrentTime().getTime() + cooldownMs);
@@ -533,9 +562,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       this._publishRuntimeStatuses(registry);
       registry.update(
         this._state,
-        Struct.evolve({
-          invocations: Array.map((_) =>
-            _.invocationId === invocation.invocationId ? { ..._, result: () => result } : _,
+        (state): TriggerDispatcherState => ({
+          ...state,
+          invocations: state.invocations.map((_) =>
+            _.invocationId === invocation.invocationId ? { ..._, result } : _,
           ),
         }),
       );
@@ -553,7 +583,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   invokeScheduledTriggers = ({ kinds = ['timer', 'feed', 'subscription'], untilExhausted = false } = {}): Effect.Effect<
     TriggerExecutionResult[]
   > =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       yield* this.refreshTriggers();
       const invocations: TriggerExecutionResult[] = [];
       for (const kind of kinds) {
@@ -671,7 +701,14 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 continue;
               }
 
-              const objects = yield* Database.query(Query.fromAst(spec.query.ast)).run;
+              const { db } = yield* Database.Service;
+
+              // Include tombstones so deletions surface uniformly for both sources via the
+              // `Obj.isDeleted` branch below: the database emits a real tombstone, and a feed
+              // removal (`Feed.remove`) now also produces a queryable tombstone that retains the
+              // object's type/body (the index merges the `{ id, '@deleted': true }` block onto the
+              // prior snapshot — see `FtsIndex.update` / `EntityMetaIndex.update`).
+              const objects = yield* Database.query(Query.fromAst(spec.query.ast).options({ deleted: 'include' })).run;
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
                 Effect.catchTag('TriggerStateNotFound', () =>
@@ -686,36 +723,54 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 ),
               );
               invariant(state.state?._tag === 'subscription');
+              // `processedVersions` grows with the number of distinct objects ever seen by this
+              // trigger (an entry is dropped only when an object is observed deleted). That is
+              // acceptable for the local dispatcher, whose state is process-scoped; an edge
+              // dispatcher persisting this across restarts needs a bounded strategy (e.g. TTL or
+              // a high-water-mark cursor) instead of an unbounded per-object signature map.
+              const processedVersions = state.state.processedVersions;
+
+              const fire = (type: TriggerEvent.SubscriptionMutationType, objectId: string, uri: URI.URI) =>
+                this.invokeTrigger({
+                  trigger,
+                  event: {
+                    type,
+                    subject: db.makeRef(uri),
+                    changedObjectId: objectId,
+                  } satisfies TriggerEvent.SubscriptionEvent,
+                });
 
               let updated = false;
               for (const object of objects) {
-                const existingVersion = Record.get(state.state.processedVersions, object.id).pipe(
-                  Option.map(Obj.decodeVersion),
-                );
-                const currentVersion = Obj.version(object);
-                const run =
-                  Option.isNone(existingVersion) ||
-                  Obj.compareVersions(currentVersion, existingVersion.value) === 'different';
+                const existingSignature = Record.get(processedVersions, object.id);
 
-                if (!run) {
+                // Tombstone (database or feed): emit `deleted` once, then drop the key so a later
+                // re-creation reads as a fresh `created`.
+                if (Obj.isDeleted(object)) {
+                  if (Option.isSome(existingSignature)) {
+                    invocations.push(yield* fire('deleted', object.id, Obj.getURI(object)));
+                    delete (processedVersions as Record<string, string>)[object.id];
+                    updated = true;
+                  }
                   continue;
                 }
 
-                const { db } = yield* Database.Service;
-                invocations.push(
-                  yield* this.invokeTrigger({
-                    trigger,
-                    event: {
-                      // TODO(dmaretskyi): Change type not supported.
-                      type: 'unknown',
+                // Change detection is by content signature rather than `Obj.version`: feed-backed
+                // objects are unversioned (no automerge heads), so version comparison can't see a
+                // re-append as an update. A canonical JSON signature covers both the database and
+                // feed sources uniformly.
+                const currentSignature = objectSignature(object);
+                const type: TriggerEvent.SubscriptionMutationType | undefined = Option.isNone(existingSignature)
+                  ? 'created'
+                  : existingSignature.value !== currentSignature
+                    ? 'updated'
+                    : undefined;
+                if (!type) {
+                  continue;
+                }
 
-                      subject: db.makeRef(Obj.getURI(object)),
-
-                      changedObjectId: object.id,
-                    } satisfies TriggerEvent.SubscriptionEvent,
-                  }),
-                );
-                (state.state.processedVersions as any)[object.id] = Obj.encodeVersion(currentVersion);
+                invocations.push(yield* fire(type, object.id, Obj.getURI(object)));
+                (processedVersions as Record<string, string>)[object.id] = currentSignature;
                 updated = true;
               }
 
@@ -729,7 +784,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             // Direct triggers are only invoked through invokeTrigger.
             break;
           default: {
-            return yield* Effect.dieMessage(`Unknown trigger kind: ${kind}`);
+            return yield* Effect.die(new Error(`Unknown trigger kind: ${kind}`));
           }
         }
       }
@@ -749,7 +804,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
    * concurrency limit (enforced within {@link invokeTrigger}) and are processed FIFO.
    */
   private _drainRetries = ({ untilExhausted }: { untilExhausted: boolean }): Effect.Effect<TriggerExecutionResult[]> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const invocations: TriggerExecutionResult[] = [];
       while (true) {
         const pending: { trigger: Trigger.Trigger; enqueuedAt: number; event: TriggerEvent.TriggerEvent }[] = [];
@@ -792,9 +847,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     });
 
   advanceTime = (duration: Duration.Duration): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       if (this.timeControl !== 'manual') {
-        return yield* Effect.dieMessage('advanceTime can only be used in manual time control mode');
+        return yield* Effect.die(new Error('advanceTime can only be used in manual time control mode'));
       }
 
       const millis = Duration.toMillis(duration);
@@ -815,7 +870,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   };
 
   refreshTriggers = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const triggers = yield* this._fetchTriggers();
       this._triggers = triggers;
       const currentTriggerIds = new Set(triggers.map((t) => t.id));
@@ -839,8 +894,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           // Parse cron expression using Effect's Cron module
           const cronEither = Cron.parse(timerSpec.cron);
 
-          if (Either.isRight(cronEither)) {
-            const cron = cronEither.right;
+          if (Result.isSuccess(cronEither)) {
+            const cron = cronEither.success;
             const now = this.getCurrentTime();
             const nextExecution = entry.nextExecution ?? Cron.next(cron, now);
 
@@ -859,7 +914,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             log.error('Invalid cron expression', {
               triggerId: trigger.id,
               cron: timerSpec.cron,
-              error: cronEither.left.message,
+              error: cronEither.failure.message,
             });
           }
         } else {
@@ -878,16 +933,68 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       .pipe(Effect.provide(this._services));
 
   private _fetchTriggers = () =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
+      // The local dispatcher only runs triggers that are not explicitly routed to edge.
+      if (this.#triggerQuery) {
+        // `#subscribeToTriggers` keeps this query current reactively — reuse its cached results
+        // instead of issuing a fresh database query on every poll tick.
+        return this.#triggerQuery.results.filter((t) => !t.remote);
+      }
       const objects = yield* Database.query(
         Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerDispatcher.fetchTriggers'),
       ).run;
-      // The local dispatcher only runs triggers that are not explicitly routed to edge.
       return objects.filter((t) => !t.remote);
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 
+  /**
+   * Subscribe once to a live `Trigger` query so trigger objects update reactively as they change,
+   * replacing the previous behavior of re-querying the database for the full trigger list on every
+   * natural-time poll tick (~1/s), the dominant contributor to `TriggerDispatcher`'s idle-time SQL
+   * churn. Torn down in {@link #teardownTriggerSubscription}.
+   */
+  #subscribeToTriggers = (): Effect.Effect<void> =>
+    Effect.gen({ self: this }, function* () {
+      const queryResult = yield* Database.query(
+        Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerDispatcher.watchTriggers'),
+      );
+      this.#triggerQuery = queryResult;
+      this.#triggerQueryUnsubscribe = queryResult.subscribe(
+        () => {
+          // Tracked so a subsequent `#teardownTriggerSubscription` can interrupt this fiber —
+          // otherwise a refresh forked just before shutdown could still complete afterward, see
+          // `this.#triggerQuery` as already cleared, fall back to a fresh one-shot query, and
+          // repopulate trigger state after the dispatcher has stopped.
+          this.#pendingRefreshFiber = Effect.runFork(
+            this.refreshTriggers().pipe(
+              Effect.tapCause((cause) =>
+                Effect.sync(() => log.error('failed to refresh triggers', { error: EffectEx.causeToError(cause) })),
+              ),
+            ),
+          );
+        },
+        { fire: true },
+      );
+    }).pipe(Effect.provide(this._services));
+
+  /**
+   * Unsubscribe from the live trigger query and interrupt any refresh it forked, so neither can
+   * repopulate trigger state after the dispatcher has stopped — called from both {@link stop} and
+   * the natural-time-processing failure path in {@link start} (a crash bypasses `stop()` since it
+   * sets `_running` to `false` directly).
+   */
+  #teardownTriggerSubscription = (): Effect.Effect<void> =>
+    Effect.gen({ self: this }, function* () {
+      this.#triggerQueryUnsubscribe?.();
+      this.#triggerQueryUnsubscribe = undefined;
+      this.#triggerQuery = undefined;
+      if (this.#pendingRefreshFiber) {
+        yield* Fiber.interrupt(this.#pendingRefreshFiber);
+        this.#pendingRefreshFiber = undefined;
+      }
+    });
+
   private _startNaturalTimeProcessing = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       yield* this.invokeScheduledTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 
@@ -900,3 +1007,26 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
  * Key for the current cursor for feed triggers.
  */
 export const KEY_FEED_CURSOR = 'org.dxos.key.local-trigger-dispatcher.feed-cursor';
+
+/**
+ * Canonical content signature of an entity, used by subscription triggers to detect changes across
+ * both the database and feed sources. Keys are sorted so the string is stable regardless of property
+ * order; a change to any field (or to the feed queue position on re-append) yields a new signature.
+ */
+const objectSignature = (object: Obj.Unknown): string => {
+  const sortKeys = (input: unknown): unknown => {
+    if (Array.isArray(input)) {
+      return input.map(sortKeys);
+    }
+    if (input !== null && typeof input === 'object') {
+      return Object.keys(input as Record<string, unknown>)
+        .sort()
+        .reduce<Record<string, unknown>>((acc, key) => {
+          acc[key] = sortKeys((input as Record<string, unknown>)[key]);
+          return acc;
+        }, {});
+    }
+    return input;
+  };
+  return JSON.stringify(sortKeys(Entity.toJSON(object)));
+};

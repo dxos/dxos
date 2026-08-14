@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
+import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { serviceError } from './service-rpc.ts';
 import { mutableArray } from './service-schemas.ts';
@@ -147,6 +148,16 @@ export class Rpcs extends RpcGroup.make(
     success: FeedQueryResult,
     error: serviceError,
   }),
+  /**
+   * Pushes a new query snapshot whenever the feed's contents change, so a client can subscribe
+   * instead of polling {@link queryFeed} on a timer.
+   */
+  Rpc.make('subscribeFeed', {
+    payload: QueryFeedRequest,
+    success: FeedQueryResult,
+    error: serviceError,
+    stream: true,
+  }),
   Rpc.make('insertIntoFeed', {
     payload: InsertIntoFeedRequest,
     error: serviceError,
@@ -164,8 +175,23 @@ export class Rpcs extends RpcGroup.make(
     success: GetSyncStateResponse,
     error: serviceError,
   }),
+  /**
+   * Pushes a new sync-state snapshot whenever the feed backlog changes, so a client can subscribe
+   * instead of polling {@link getSyncState} on a timer.
+   */
+  Rpc.make('subscribeSyncState', {
+    payload: GetSyncStateRequest,
+    success: GetSyncStateResponse,
+    error: serviceError,
+    stream: true,
+  }),
 ).prefix('FeedService.') {}
 
 export interface Client extends RpcClient.RpcClient<RpcGroup.Rpcs<typeof Rpcs>> {}
 
 export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpcs>> {}
+
+/**
+ * Effect service tag for the `FeedService` RPC handlers.
+ */
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/FeedService') {}

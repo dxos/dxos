@@ -12,17 +12,17 @@ import * as Schema from 'effect/Schema';
 
 export interface Service {
   /** Read a value by key. Returns `None` if key does not exist. */
-  get<S extends Schema.Schema<any, string, any>>(
+  get<S extends Schema.Codec<any, string, any>>(
     schema: S,
     key: string,
-  ): Effect.Effect<Option.Option<Schema.Schema.Type<S>>, never, Schema.Schema.Context<S>>;
+  ): Effect.Effect<Option.Option<Schema.Schema.Type<S>>, never, S['DecodingServices']>;
 
   /** Write a value for the given key. */
-  set<S extends Schema.Schema<any, string, any>>(
+  set<S extends Schema.Codec<any, string, any>>(
     schema: S,
     key: string,
     value: Schema.Schema.Type<S>,
-  ): Effect.Effect<void, never, Schema.Schema.Context<S>>;
+  ): Effect.Effect<void, never, S['DecodingServices']>;
 
   /** Remove a key. */
   delete(key: string): Effect.Effect<void>;
@@ -39,13 +39,18 @@ export interface Service {
  * Each process receives its own namespaced instance via the process manager.
  * Construct a live implementation with `StorageService.layer` from `@dxos/functions-runtime`.
  */
-export class StorageService extends Context.Tag('@dxos/functions/StorageService')<StorageService, Service>() {}
+export class StorageService extends Context.Service<StorageService, Service>()('@dxos/functions/StorageService') {}
 
-export const get = Effect.serviceFunctionEffect(StorageService, (_) => _.get);
-export const set = Effect.serviceFunctionEffect(StorageService, (_) => _.set);
-export const deleteKey = Effect.serviceFunctionEffect(StorageService, (_) => _.delete);
-export const list = Effect.serviceFunctionEffect(StorageService, (_) => _.list);
-export const clear = Effect.serviceFunctionEffect(StorageService, (_) => _.clear);
+export const get = (...args: Parameters<Context.Service.Shape<typeof StorageService>['get']>) =>
+  StorageService.use((service) => service.get(...args));
+export const set = (...args: Parameters<Context.Service.Shape<typeof StorageService>['set']>) =>
+  StorageService.use((service) => service.set(...args));
+export const deleteKey = (...args: Parameters<Context.Service.Shape<typeof StorageService>['delete']>) =>
+  StorageService.use((service) => service.delete(...args));
+export const list = (...args: Parameters<Context.Service.Shape<typeof StorageService>['list']>) =>
+  StorageService.use((service) => service.list(...args));
+export const clear = (...args: Parameters<Context.Service.Shape<typeof StorageService>['clear']>) =>
+  StorageService.use((service) => service.clear(...args));
 
 /**
  * Typed cell in a storage service.
@@ -61,10 +66,7 @@ export interface Cell<T> extends Pipeable.Pipeable {
 /**
  * Create a typed cell in a storage service.
  */
-export const cell = <S extends Schema.Schema<any, string, any>>(
-  schema: S,
-  key: string,
-): Cell<Schema.Schema.Type<S>> => {
+export const cell = <S extends Schema.Codec<any, string, any>>(schema: S, key: string): Cell<Schema.Schema.Type<S>> => {
   return {
     key,
     get: get(schema, key),

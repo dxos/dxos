@@ -1,6 +1,7 @@
 layer: library
 language: typescript
 tags:
+  - dist-runtime
   - ts-build
   - ts-test-browser
   - ts-test-storybook
@@ -13,7 +14,7 @@ tasks:
       mergeOutputs: replace
     outputs:
       - dist/bundle
-  compile:
+  build:
     args:
       - '--entryPoint=src/react.ts'
       - '--entryPoint=src/testing/index.ts'

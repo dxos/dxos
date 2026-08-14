@@ -8,21 +8,22 @@ import React, { useEffect, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { EffectEx } from '@dxos/effect';
 import { type RDF } from '@dxos/pipeline-rdf';
-import { BrainPlugin } from '@dxos/plugin-brain/plugin';
-import { BrainCapabilities } from '@dxos/plugin-brain/types';
+import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
+import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { ModuleContainer, type ModuleLayout } from '@dxos/story-modules';
+import { ModuleContainer, type ModuleLayout } from '@dxos/storybook-testing';
 
 import { FactsStoryContext } from '../modules';
+import { StoryRole } from '../modules';
 import { CrawlerStoresPlugin } from '../testing';
-import { Module, StoryModulesPlugin } from '../testing/modules';
+import { StoryModulesPlugin } from '../testing/modules';
 
 /**
  * The columns of the Facts story, driven through `ModuleContainer`. The crawl/query/questions modules
@@ -30,10 +31,14 @@ import { Module, StoryModulesPlugin } from '../testing/modules';
  * consume the shared display state. Facts live in the `FactStoreRegistry`; crawler-only stores come
  * from the story-local {@link CrawlerStoresPlugin}.
  */
-const CRAWL_LAYOUT: ModuleLayout = [[Module.Crawl, Module.Query, Module.Questions], [Module.Facts], [Module.Entities]];
+const CRAWL_LAYOUT: ModuleLayout = [
+  [StoryRole.Crawl, StoryRole.Query, StoryRole.Questions],
+  [StoryRole.Facts],
+  [StoryRole.Entities],
+];
 
 /** In-memory variant: just the viewer + entity nav over a seeded store. */
-const VIEWER_LAYOUT: ModuleLayout = [[Module.Facts], [Module.Entities]];
+const VIEWER_LAYOUT: ModuleLayout = [[StoryRole.Facts], [StoryRole.Entities]];
 
 /**
  * Owns the cross-module display state (current facts view + selected entity) and drives the layout.
@@ -93,10 +98,9 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               if (!client.halo.identity.get()) {
@@ -105,10 +109,10 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
-        BrainPlugin(),
+        BrainPlugin.make(),
         CrawlerStoresPlugin(),
         StoryModulesPlugin(),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
       ],
     }),
   ],

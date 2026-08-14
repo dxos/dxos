@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-framework",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "A framework for building applications from composible plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,10 +17,6 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    },
-    "./workerd": {
-      "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/browser/index.mjs"
     },
     "./ActivationEvent": {
       "source": "./src/core/activation-event.ts",
@@ -42,15 +38,55 @@
       "types": "./dist/types/src/core/capability.d.ts",
       "import": "./dist/lib/core/capability.mjs"
     },
+    "./CapabilityManager": {
+      "source": "./src/core/capability-manager.ts",
+      "types": "./dist/types/src/core/capability-manager.d.ts",
+      "import": "./dist/lib/core/capability-manager.mjs"
+    },
+    "./HistoryTracker": {
+      "source": "./src/plugin-process-manager/history/history-tracker.ts",
+      "types": "./dist/types/src/plugin-process-manager/history/history-tracker.d.ts",
+      "import": "./dist/lib/plugin-process-manager/history/history-tracker.mjs"
+    },
     "./Plugin": {
       "source": "./src/core/plugin.ts",
       "types": "./dist/types/src/core/plugin.d.ts",
       "import": "./dist/lib/core/plugin.mjs"
     },
+    "./PluginAssetCache": {
+      "source": "./src/core/plugin-asset-cache.ts",
+      "types": "./dist/types/src/core/plugin-asset-cache.d.ts",
+      "import": "./dist/lib/core/plugin-asset-cache.mjs"
+    },
     "./PluginManager": {
-      "source": "./src/core/plugin-manager.ts",
-      "types": "./dist/types/src/core/plugin-manager.d.ts",
+      "source": "./src/core/plugin-manager/index.ts",
+      "types": "./dist/types/src/core/plugin-manager/index.d.ts",
       "import": "./dist/lib/core/plugin-manager.mjs"
+    },
+    "./PluginManifest": {
+      "source": "./src/core/plugin-manifest.ts",
+      "types": "./dist/types/src/core/plugin-manifest.d.ts",
+      "import": "./dist/lib/core/plugin-manifest.mjs"
+    },
+    "./Registry": {
+      "source": "./src/core/registry.ts",
+      "types": "./dist/types/src/core/registry.d.ts",
+      "import": "./dist/lib/core/registry.mjs"
+    },
+    "./Role": {
+      "source": "./src/common/Role.ts",
+      "types": "./dist/types/src/common/Role.d.ts",
+      "import": "./dist/lib/common/Role.mjs"
+    },
+    "./UndoMapping": {
+      "source": "./src/plugin-process-manager/history/undo-mapping.ts",
+      "types": "./dist/types/src/plugin-process-manager/history/undo-mapping.d.ts",
+      "import": "./dist/lib/plugin-process-manager/history/undo-mapping.mjs"
+    },
+    "./UndoRegistry": {
+      "source": "./src/plugin-process-manager/history/undo-registry.ts",
+      "types": "./dist/types/src/plugin-process-manager/history/undo-registry.d.ts",
+      "import": "./dist/lib/plugin-process-manager/history/undo-registry.mjs"
     },
     "./UrlLoader": {
       "source": "./src/core/url-loader.ts",
@@ -63,7 +99,6 @@
       "import": "./dist/lib/config.mjs"
     },
     "./vite-plugin": {
-      "source": "./src/vite-plugin/index.ts",
       "types": "./dist/types/src/vite-plugin/index.d.ts",
       "import": "./dist/lib/vite-plugin.mjs"
     },
@@ -86,7 +121,8 @@
       "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts",
       "import": "./dist/lib/ui.mjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "scripts": {
@@ -103,6 +139,7 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -111,15 +148,10 @@
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
-    "@dxos/storybook-addon-logger": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect/cli": "catalog:",
-    "@effect/platform": "catalog:",
     "babel-preset-solid": "catalog:",
     "cjs-module-lexer": "catalog:",
     "esbuild": "catalog:",
@@ -127,26 +159,23 @@
     "solid-js": "catalog:"
   },
   "devDependencies": {
-    "@dxos/brand": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/storybook-addon-logger": "workspace:*",
+    "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "typedoc": "catalog:",
-    "vite": "catalog:",
-    "vite-plugin-solid": "catalog:"
+    "vite": "catalog:"
   },
   "peerDependencies": {
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@testing-library/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",

@@ -2,20 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { LayerSpec, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
-import { LayerStack, ProcessManager, ProcessMonitor, RemoteProcessManager } from '@dxos/compute-runtime';
+import {
+  LayerStack,
+  ProcessManager,
+  ProcessMonitor,
+  RemoteProcessManager,
+  RemoteTraceMonitor,
+} from '@dxos/compute-runtime';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trace from '@dxos/compute/Trace';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public
 // alias instead of a relative `node_modules` path (TS2883).
 import { OperationInvoker } from '@dxos/operation';
 
-import { ActivationEvents, Capabilities } from '../common';
+import { Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
 import { layerIdb } from './idb-key-value-store';
 
@@ -25,9 +35,8 @@ import { layerIdb } from './idb-key-value-store';
 // Hosts the {@link ProcessManager} runtime for the plugin system.
 //
 // Workflow:
-// 1. Activates {@link ActivationEvents.SetupProcessManager} so plugins can
-//    contribute {@link Capabilities.LayerSpec} entries and
-//    {@link Capabilities.OperationHandler} sets.
+// 1. Requires {@link Capabilities.LayerSpec} and {@link Capabilities.OperationHandler}
+//    contributions from dependency-mode modules.
 // 2. Collects all contributed {@link LayerSpec.LayerSpec}s and builds a
 //    {@link LayerStack} whose {@link ServiceResolver} drives process-scoped
 //    service resolution.
@@ -41,18 +50,80 @@ import { layerIdb } from './idb-key-value-store';
 //    (the plugin system manages its lifecycle).
 //
 
+/**
+ * Trace sink over the LIVE contribution list, so a sink contributed after the runtime was built (an
+ * on-demand module, like plugin-progress's adapter) still observes writes. Instances are cached per
+ * factory, since a sink may hold state across writes and must not be rebuilt underneath itself.
+ */
+export const makeDynamicTraceSink = (
+  getFactories: () => readonly Capabilities.TraceSinkFactory[],
+  resolver: ServiceResolver.ServiceResolver,
+): Trace.Sink => {
+  const instances = new Map<Capabilities.TraceSinkFactory, Trace.Sink>();
+  const resolve = (): Trace.Sink[] => {
+    const sinks: Trace.Sink[] = [];
+    for (const factory of getFactories()) {
+      const existing = instances.get(factory);
+      if (existing) {
+        sinks.push(existing);
+        continue;
+      }
+      try {
+        const sink = factory({ resolver });
+        instances.set(factory, sink);
+        sinks.push(sink);
+      } catch (err) {
+        // One factory that cannot build must not cost the sinks behind it their messages.
+        log.warn('trace sink factory failed', { err });
+      }
+    }
+    return sinks;
+  };
+
+  // `mergeSinks` per write, for its guarantee that one throwing sink cannot break the chain.
+  return { write: (message) => Trace.mergeSinks(resolve()).write(message) };
+};
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
     const pluginManager = yield* Plugin.Service;
-    const atomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
+    const atomRegistry = yield* Capabilities.AtomRegistry;
 
-    yield* Plugin.activate(ActivationEvents.SetupProcessManager);
+    const layerSpecContributions = yield* Capabilities.LayerSpec;
+    const traceSinkContributions = yield* Capabilities.TraceSink;
+    const operationHandlerContributions = yield* Capabilities.OperationHandler;
+    const remoteTraceMonitorContributions = yield* Capabilities.RemoteTraceMonitor;
+    // One-shot snapshot: startup soft-ordering makes same-pass providers visible; entries
+    // contributed by plugins enabled later do not join the stack (same as the event window).
+    const layerSpecs = layerSpecContributions.get();
 
-    const layerSpecs = yield* Capability.getAll(Capabilities.LayerSpec);
-    const traceSinkFactories = yield* Capability.getAll(Capabilities.TraceSink);
+    // The snapshot is restart-scoped — the stack below bakes into one runtime, and rebuilding it
+    // for a late arrival would tear down every live service on it. A LayerSpec contributed after
+    // this point is therefore silently absent, and the failure surfaces hops away as a missing
+    // service (which is exactly how it has bitten us). Name it here instead.
+    const layerSpecModulesAtSnapshot = new Set(
+      Object.keys(atomRegistry.get(capabilityManager.atomByModule(Capabilities.LayerSpec))),
+    );
+    const cancelLayerSpecWatch = atomRegistry.subscribe(
+      capabilityManager.atomByModule(Capabilities.LayerSpec),
+      (byModule) => {
+        for (const moduleId of Object.keys(byModule)) {
+          if (!layerSpecModulesAtSnapshot.has(moduleId)) {
+            layerSpecModulesAtSnapshot.add(moduleId);
+            log.error('LayerSpec contributed after the runtime was built — it is ignored until the next boot', {
+              module: moduleId,
+              fix: 'contribute it with AppCapability.layerSpec (or declare activatesOn: ActivationEvents.Startup)',
+            });
+          }
+        }
+      },
+    );
+    yield* Effect.addFinalizer(() => Effect.sync(cancelLayerSpecWatch));
+    // Optional swarm-backed remote trace source (DX-1125); first contribution wins, else empty.
+    const remoteTraceMonitors = remoteTraceMonitorContributions.get();
 
-    log.info('setup process manager', { traceSinkFactories });
+    log.info('setup process manager', { traceSinks: traceSinkContributions.get().length });
 
     // Forward reference to `ProcessManager.ProcessManagerService`. The runtime
     // that owns the manager depends transitively on `ServiceResolver` (which is
@@ -95,13 +166,11 @@ export default Capability.makeModule(
     const layerStack = new LayerStack.LayerStack({ layers: [ambientLayerSpec, ...layerSpecs] });
     const serviceResolver = layerStack.getServiceResolver();
 
-    const handlerSet = OperationHandlerSet.reactive(
-      atomRegistry,
-      capabilityManager.atom(Capabilities.OperationHandler),
-    );
+    // Handler sets register eagerly at startup (keyed sets defer only handler BODIES), so the
+    // reactive view over contributions is complete at boot — no demand pull on a miss.
+    const handlerSet = OperationHandlerSet.reactive(atomRegistry, operationHandlerContributions.atom);
 
-    const traceSinks = traceSinkFactories.map((factory) => factory({ resolver: serviceResolver }));
-    const mergedTraceSink = Trace.mergeSinks(traceSinks);
+    const mergedTraceSink = makeDynamicTraceSink(() => traceSinkContributions.get(), serviceResolver);
 
     // Base services required by ProcessManager and the operation invoker.
     // Sensible defaults are provided here; plugins that want alternative
@@ -127,19 +196,24 @@ export default Capability.makeModule(
     // App-framework has no EDGE runtime, so the remote process view is empty;
     // the aggregate monitor therefore equals the local process tree.
     const remoteProcessManagerLayer = RemoteProcessManager.layerNoop.pipe(Layer.provide(baseLayer));
+    // Remote ephemeral trace (DX-1125): use the first contributed swarm-backed monitor, else no-op.
+    const remoteTraceMonitorLayer =
+      remoteTraceMonitors.length > 0
+        ? Layer.succeed(RemoteTraceMonitor.Service, remoteTraceMonitors[0])
+        : RemoteTraceMonitor.layerNoop;
     const processMonitorLayer = ProcessMonitor.layer.pipe(
-      Layer.provide(Layer.mergeAll(processManagerLayer, remoteProcessManagerLayer, baseLayer)),
+      Layer.provide(Layer.mergeAll(processManagerLayer, remoteProcessManagerLayer, remoteTraceMonitorLayer, baseLayer)),
     );
 
     const runtimeLayer = Layer.mergeAll(baseLayer, processManagerLayer, operationInvokerLayer, processMonitorLayer);
 
     const managedRuntime = ManagedRuntime.make(runtimeLayer as Layer.Layer<any, any, never>);
 
-    // TODO(dmaretskyi): Capability modules don't currently expose a teardown
-    // hook (`makeModule` only allows `Service | Plugin.Service` in the effect's
-    // requirements, ruling out `Effect.addFinalizer`). Once the plugin
-    // framework grows a shutdown lifecycle, dispose `managedRuntime` and then
-    // call `layerStack.destroy()` to tear down keep-alive slices.
+    // The module scope closes on deactivation/shutdown: dispose the runtime, then tear
+    // down the stack's keep-alive slices.
+    yield* Effect.addFinalizer(() =>
+      Effect.promise(() => managedRuntime.dispose()).pipe(Effect.andThen(Effect.promise(() => layerStack.destroy()))),
+    );
 
     const processManagerRuntime: Capabilities.ProcessManagerRuntime = {
       runPromise: (effect, options) => managedRuntime.runPromise(effect as Effect.Effect<any, any, any>, options),
@@ -179,10 +253,10 @@ export default Capability.makeModule(
     );
 
     return [
-      Capability.contributes(Capabilities.ProcessManagerRuntime, processManagerRuntime),
-      Capability.contributes(Capabilities.ServiceResolver, serviceResolver),
-      Capability.contributes(Capabilities.ProcessMonitor, processMonitor),
-      Capability.contributes(Capabilities.OperationInvoker, operationInvoker),
+      Capability.contribute(Capabilities.ProcessManagerRuntime, processManagerRuntime),
+      Capability.contribute(Capabilities.ServiceResolver, serviceResolver),
+      Capability.contribute(Capabilities.ProcessMonitor, processMonitor),
+      Capability.contribute(Capabilities.OperationInvoker, operationInvoker),
     ];
   }),
 );

@@ -8,8 +8,8 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type VariantContent } from '#surfaces';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { ImageVariant } from './ImageVariant';
 import { VideoVariant } from './VideoVariant';
 
@@ -37,7 +37,7 @@ type Story = StoryObj;
 
 export const Image: Story = {
   render: () => (
-    <div className='is-96'>
+    <div className='w-96'>
       <ImageVariant variant={imageVariant} />
     </div>
   ),
@@ -45,7 +45,7 @@ export const Image: Story = {
 
 export const Video: Story = {
   render: () => (
-    <div className='is-96'>
+    <div className='w-96'>
       <VideoVariant variant={videoVariant} />
     </div>
   ),

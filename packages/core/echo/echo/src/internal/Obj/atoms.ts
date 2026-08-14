@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
-import * as Result from '@effect-atom/atom/Result';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { assertArgument } from '@dxos/invariant';
 
@@ -15,7 +15,7 @@ import type * as Obj from '../../Obj';
 import type * as Ref from '../../Ref';
 import type * as Relation from '../../Relation';
 import { getLabel } from '../Annotation';
-import { snapshotForComparison } from '../common/atom-snapshot';
+import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot';
 import { subscribe } from '../common/proxy/reactive';
 import { getDatabase, isEntity } from '../Entity';
 import { RefTypeId } from '../Ref/ref';
@@ -62,14 +62,16 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
   return Atom.make<Obj.Snapshot<T> | undefined>((get) => {
     let unsubscribeTarget: (() => void) | undefined;
 
-    const setupTargetSubscription = (target: T): Obj.Snapshot<T> => {
+    const setupTargetSubscription = (target: T): Obj.Snapshot<T> | undefined => {
       unsubscribeTarget?.();
       unsubscribeTarget = subscribe(target, () => {
         // Deleted objects resolve to undefined so callers don't need to inspect isDeleted.
         // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
         get.setSelf(isDeleted(target) ? undefined : (getSnapshot(target) as unknown as Obj.Snapshot<T>));
       });
-      return getSnapshot(target) as unknown as Obj.Snapshot<T>;
+      // Guard the initial value too: an already-deleted target must resolve to undefined, not leak a
+      // snapshot until the next update.
+      return isDeleted(target) ? undefined : (getSnapshot(target) as unknown as Obj.Snapshot<T>);
     };
 
     get.addFinalizer(() => {
@@ -91,10 +93,11 @@ const propertyFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
 
       const unsubscribe2 = subscribe(obj, () => {
         const newValue = obj[key];
-        const newSnapshot = snapshotForComparison(newValue);
-        if (newSnapshot !== previousSnapshot) {
-          previousSnapshot = newSnapshot;
-          get.setSelf(newSnapshot);
+        // Content comparison against the last emitted snapshot: identity would be unequal for every
+        // array/object, firing on any mutation of `obj` (see `snapshotEquals`).
+        if (!snapshotEquals(newValue, previousSnapshot)) {
+          previousSnapshot = snapshotForComparison(newValue);
+          get.setSelf(previousSnapshot);
         }
       });
 
@@ -124,7 +127,7 @@ const objectWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(obj: T): At
  * Atom family for ECHO refs — returns the live reactive object, not a snapshot.
  */
 const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined> => {
-  const effect = (get: Atom.Context) =>
+  const effect = (get: Atom.AtomContext) =>
     Effect.gen(function* () {
       const snapshot = get(makeAtom(ref));
       if (snapshot == null) {
@@ -136,7 +139,7 @@ const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T
 
   return Function.pipe(
     Atom.make(effect),
-    Atom.map((result) => Result.getOrElse(result, () => undefined)),
+    Atom.map((result) => AsyncResult.getOrElse(result, () => undefined)),
   );
 });
 

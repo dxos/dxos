@@ -25,52 +25,22 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/invariant"
-    },
-    {
       "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
     },
     {
-      "path": "../../common/log-store-idb"
-    },
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/tracing"
-    },
-    {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/compute/assistant-toolkit"
     },
     {
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/compute-hyperformula"
-    },
-    {
-      "path": "../../core/compute/conductor"
-    },
-    {
-      "path": "../../core/compute/operation"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-host"
-    },
-    {
-      "path": "../../core/protocols"
+      "path": "../../devtools/cli-util"
     },
     {
       "path": "../../devtools/devtools"
@@ -79,7 +49,13 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/client-services"
@@ -91,34 +67,16 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../sdk/types"
-    },
-    {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-attention"
-    },
-    {
-      "path": "../../ui/react-ui-canvas-compute"
-    },
-    {
-      "path": "../../ui/react-ui-canvas-editor"
-    },
-    {
-      "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-introspect"
     },
     {
-      "path": "../../ui/react-ui-syntax-highlighter"
+      "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-table"
+      "path": "../../ui/react-ui-terminal"
     },
     {
       "path": "../../ui/ui-theme"
@@ -127,28 +85,10 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-inbox"
-    },
-    {
-      "path": "../plugin-markdown"
-    },
-    {
       "path": "../plugin-script"
     },
     {
-      "path": "../plugin-sheet"
-    },
-    {
-      "path": "../plugin-sketch"
-    },
-    {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-status-bar"
     },
     {
       "path": "../plugin-testing"

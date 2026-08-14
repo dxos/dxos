@@ -12,7 +12,7 @@ import { ChatSurface } from '#types';
 
 /**
  * Renders an agent-requested UI surface (the `<surface>` content block) by dispatching to a
- * registered {@link ChatSurface} surface keyed on its `role`. The payload is carried as JSON in the
+ * registered {@link ChatSurface.ChatSurface} surface keyed on its `role`. The payload is carried as JSON in the
  * tag's text content; a malformed payload renders the surface with no data rather than throwing.
  */
 export const SurfaceWidget = ({ role, children }: XmlWidgetProps<{ role?: string }>) => {
@@ -37,5 +37,5 @@ export const SurfaceWidget = ({ role, children }: XmlWidgetProps<{ role?: string
     return null;
   }
 
-  return <Surface.Surface type={ChatSurface} data={{ role, data }} limit={1} />;
+  return <Surface.Surface type={ChatSurface.ChatSurface} data={{ role, data }} limit={1} />;
 };

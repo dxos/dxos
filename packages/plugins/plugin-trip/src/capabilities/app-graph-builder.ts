@@ -2,19 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import { addDays, endOfDay, format, startOfDay, subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { GraphBuilder } from '@dxos/plugin-graph';
-import { Calendar, getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
-import { type ViewStateManager, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import { getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import { Selection, ViewState } from '@dxos/react-ui-attention';
 import { Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -26,10 +28,10 @@ import { getPlanningWindowDays } from '../operations/extractor/config';
  * Resolves the inclusive event window [from, to] for a calendar node: the user's committed
  * `'range'` selection if present, otherwise today through today + the configured planning window.
  */
-const resolvePlanningWindow = (viewState: ViewStateManager, nodeId: string): { from: Date; to: Date } => {
+const resolvePlanningWindow = (viewState: ViewState.Manager, nodeId: string): { from: Date; to: Date } => {
   // Read without asserting the mode (the dedicated range context may be empty or, defensively, hold
   // another mode), falling back to the default window otherwise.
-  const selection = viewState.get(selectionAspect, getCalendarRangeSelectionId(nodeId));
+  const selection = viewState.get(Selection.aspect, getCalendarRangeSelectionId(nodeId));
   const range =
     selection.mode === 'range' && selection.from && selection.to
       ? { from: selection.from, to: selection.to }
@@ -42,10 +44,10 @@ const resolvePlanningWindow = (viewState: ViewStateManager, nodeId: string): { f
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const viewState = yield* AttentionCapabilities.ViewState;
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
-        const selection = get(viewState.atom(selectionAspect, nodeId));
+        const selection = get(viewState.atom(Selection.aspect, nodeId));
         return selection.mode === 'single' ? selection.id : undefined;
       }),
     );
@@ -68,7 +70,7 @@ export default Capability.makeModule(
         }
         return Effect.succeed([
           AppNode.makeCompanion({
-            id: linkedSegment('segment'),
+            variant: 'segment',
             label: ['segment.companion.label', { ns: meta.profile.key }],
             icon: 'ph--ticket--regular',
             data: segment ?? 'segment',
@@ -156,6 +158,6 @@ export default Capability.makeModule(
         ]),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [extension, mergeExtension, planTripExtension]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [extension, mergeExtension, planTripExtension]);
   }),
 );

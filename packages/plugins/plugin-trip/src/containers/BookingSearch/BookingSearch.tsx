@@ -7,7 +7,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { getSpace } from '@dxos/react-client/echo';
 import { Message, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Empty } from '@dxos/react-ui-list';
@@ -15,7 +14,7 @@ import { trim } from '@dxos/util';
 
 import { OfferStack } from '#components';
 import { meta } from '#meta';
-import { Booking, BookingOperation, BookingSearch as BookingSearchType, Segment, TripCapabilities } from '#types';
+import { Booking, BookingOperation, BookingSearch, Segment, TripCapabilities } from '#types';
 
 import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment';
 
@@ -49,7 +48,7 @@ export type BookingSearchProps = {
   segment: Segment.Segment;
 };
 
-export const BookingSearch = ({ segment }: BookingSearchProps) => {
+const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const kind = Segment.getKind(segment);
@@ -68,7 +67,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
   const destination = Segment.getDestination(segment);
   // Driven by the schema-based Form; fields mirror the SearchBookings flight query
   // (departureDate is an ISO string, as stored by Format.DateTime).
-  const [query, setQuery] = useState<BookingSearchType.FlightSearchFields>({
+  const [query, setQuery] = useState<BookingSearch.FlightSearchFields>({
     origin: origin?.code,
     destination: destination?.code,
     departureDate: Segment.getDepartAt(segment),
@@ -76,7 +75,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
     passengers: 1,
   });
 
-  const [offers, setOffers] = useState<readonly BookingSearchType.Offer[] | undefined>(undefined);
+  const [offers, setOffers] = useState<readonly BookingSearch.Offer[] | undefined>(undefined);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
@@ -88,7 +87,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
   // provider rejection (e.g. Duffel's "departure_date must be in the future"), so catch it here and
   // block submit before hitting the provider.
   const handleValidate = useCallback(
-    (values: BookingSearchType.FlightSearchFields) =>
+    (values: BookingSearch.FlightSearchFields) =>
       isPastDate(values.departureDate)
         ? [{ path: 'departureDate', message: t('booking.past-date.message') }]
         : undefined,
@@ -146,15 +145,15 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
   }, [service, query, invokePromise, messageForError]);
 
   const handleSelectOffer = useCallback(
-    (offer: BookingSearchType.Offer) => {
+    (offer: BookingSearch.Offer) => {
       if (offer._tag !== 'flight') {
         return;
       }
-      const space = getSpace(segment);
-      if (!space) {
+      const db = Obj.getDatabase(segment);
+      if (!db) {
         return;
       }
-      const booking = space.db.add(Booking.make(offerToBookingProps(offer)));
+      const booking = db.add(Booking.make(offerToBookingProps(offer)));
       const details = offerToFlightDetails(offer);
       Obj.update(segment, (segment) => {
         // Mutate the (flight) details in place: a whole-object assignment would require the
@@ -180,26 +179,25 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
 
   if (services.length === 0) {
     return (
-      <div className='p-form-padding'>
-        <Message.Root valence='info'>
+      <Message.Root valence='info'>
+        <Message.Content classNames='m-form-padding'>
           <Message.Title>{t('booking.no-providers.message')}</Message.Title>
-          <Message.Content classNames='flex flex-col py-1 gap-2'>
-            {/* `span` (not `p`): Message.Content already renders a `<p>`, and `<p>` cannot nest `<p>`. */}
+          <Message.Body classNames='flex flex-col py-1 gap-2'>
             <span>{t('booking.enable-providers.message')}</span>
             <PluginRegistryButton />
-          </Message.Content>
-        </Message.Root>
-      </div>
+          </Message.Body>
+        </Message.Content>
+      </Message.Root>
     );
   }
 
-  const flightOffers = offers?.filter((offer): offer is BookingSearchType.FlightOffer => offer._tag === 'flight');
+  const flightOffers = offers?.filter((offer): offer is BookingSearch.FlightOffer => offer._tag === 'flight');
 
   return (
     <div className='flex flex-col dx-container'>
       {/* Query form: content-height (Viewport without `scroll`) — does not expand; offers fill the rest. */}
       <Form.Root
-        schema={BookingSearchType.FlightSearchFields}
+        schema={BookingSearch.FlightSearchFields}
         values={query}
         onValidate={handleValidate}
         onValuesChanged={(values) => setQuery(values)}
@@ -249,4 +247,6 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
   );
 };
 
-BookingSearch.displayName = 'BookingSearch';
+BookingSearchContainer.displayName = 'BookingSearch';
+
+export { BookingSearchContainer as BookingSearch };

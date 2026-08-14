@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Node } from '@dxos/app-graph';
+import * as Node from '@dxos/app-graph/Node';
 import { EffectEx } from '@dxos/effect';
 import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
 import { getHostPlatform } from '@dxos/util';
@@ -36,14 +36,14 @@ export const fallbackIcon = 'ph--circle-dashed--regular';
 
 export const createMenuAction = <P extends {} = {}>(
   id: string,
-  invoke: () => void,
+  invoke: (params?: Node.InvokeProps) => void,
   properties: P & MenuActionProperties,
 ) =>
   ({
     id,
     type: Node.ActionType,
     properties,
-    data: () => Effect.sync(invoke),
+    data: (params?: Node.InvokeProps) => Effect.sync(() => invoke(params)),
   }) satisfies MenuAction;
 
 export const createMenuItemGroup = <P extends MenuItemGroupProperties>(id: string, properties: P) =>

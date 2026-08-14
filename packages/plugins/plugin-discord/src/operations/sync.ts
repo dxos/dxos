@@ -6,22 +6,22 @@ import { DiscordREST } from 'dfx';
 import type { MessageResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
+import { DiscordOperation } from '#types';
 
 import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
 import { formatDiscordSyncFailure } from '../errors';
 import { makeDiscordLayerFromToken } from '../services';
-import { DiscordOperation } from '../types';
 
 /**
  * Hard cap on `maxDays` to keep a misconfigured (or fat-fingered) value
@@ -168,7 +168,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
 
         // Captured on the success path so the cursor's value + run status advance in one atomic update.
         let newestId: string | undefined;
-        const outcome = yield* Effect.either(
+        const outcome = yield* Effect.result(
           Effect.gen(function* () {
             const rest = yield* DiscordREST;
 
@@ -216,7 +216,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
           }).pipe(Effect.provide(Database.layer(db)), Effect.provide(makeDiscordLayerFromToken(accessToken.token))),
         );
 
-        if (outcome._tag === 'Right') {
+        if (outcome._tag === 'Success') {
           Cursor.advance(binding, newestId);
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
@@ -225,9 +225,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               title: ['sync-toast.success.label', { ns: meta.profile.key }],
             }),
           );
-          return outcome.right;
+          return outcome.success;
         } else {
-          const message = formatDiscordSyncFailure(outcome.left);
+          const message = formatDiscordSyncFailure(outcome.failure);
           Cursor.recordError(binding, message);
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
@@ -237,7 +237,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               description: message,
             }),
           );
-          return yield* Effect.fail(outcome.left);
+          return yield* Effect.fail(outcome.failure);
         }
       }),
     ),

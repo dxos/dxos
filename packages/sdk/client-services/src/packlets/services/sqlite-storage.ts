@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 import type { Callback, FileStat, RandomAccessStorage } from 'random-access-storage';
 
 import { RuntimeProvider } from '@dxos/effect';
@@ -14,6 +15,8 @@ import { FeedStorageDirectoryService } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { Directory, type File, type Storage, StorageType, wrapFile } from '@dxos/random-access-storage';
 import { SqlTransaction } from '@dxos/sql-sqlite';
+
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/hypercore';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
@@ -40,10 +43,9 @@ export type SqliteStorageOptions = {
 /**
  * Effect service tag for {@link SqliteStorage}.
  */
-export class SqliteStorageService extends EffectContext.Tag('@dxos/client-services/SqliteStorage')<
-  SqliteStorageService,
-  SqliteStorage
->() {}
+export class SqliteStorageService extends EffectContext.Service<SqliteStorageService, SqliteStorage>()(
+  '@dxos/client-services/SqliteStorage',
+) {}
 
 /** Minimal cross-platform EventEmitter needed by the RandomAccessStorage contract. */
 class BaseEventEmitter {
@@ -161,7 +163,11 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
 
   #buffer: Buffer = Buffer.alloc(0);
   #loaded = false;
+  // The one-shot initial DB read (populates `#buffer`); set once, on first access.
   #loading: Promise<void> | null = null;
+  // The latest in-flight DB write (from `write`/`del`); replaced on each save, so it always
+  // tracks the most recent one. `close()` drains both before reporting closed.
+  #saving: Promise<void> | null = null;
 
   constructor(
     private readonly filePath: string,
@@ -224,16 +230,27 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
   private async _saveToDb(): Promise<void> {
     const filePath = this.filePath;
     const data = this.#buffer;
-    await RuntimeProvider.runPromise(this.runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`INSERT OR REPLACE INTO hypercore_files (path, data) VALUES (${filePath}, ${data})`;
-      }),
-    );
+    try {
+      await RuntimeProvider.runPromise(this.runtime)(
+        Effect.gen(function* () {
+          const sql = yield* SqlClient.SqlClient;
+          yield* sql`INSERT OR REPLACE INTO hypercore_files (path, data) VALUES (${filePath}, ${data})`;
+        }),
+      );
+    } catch (err) {
+      // Symmetric with `_loadFromDb`: a write racing teardown rejects (as `SqlError: Failed to
+      // execute statement` wrapping "connection is not open") when the shared SQL connection is
+      // torn down before this file's `#closed` flips. Persisting to a dead connection is moot
+      // during disposal, so swallow it; rethrow only a genuine failure against a live connection.
+      // An unswallowed rejection here surfaces as an unhandled rejection that fails the test worker.
+      if (!this.#closed && !isClosedConnectionError(err)) {
+        throw err;
+      }
+    }
   }
 
   write(offset: number, data: Buffer, cb: Callback<any>): void {
-    this._ensureLoaded()
+    const saving = this._ensureLoaded()
       .then(() => {
         const end = offset + data.length;
         if (end > this.#buffer.length) {
@@ -244,8 +261,14 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
         data.copy(this.#buffer, offset);
         return this._saveToDb();
       })
-      .then(() => cb(null))
-      .catch((err) => cb(err));
+      .then(
+        () => cb(null),
+        (err) => cb(err),
+      );
+    // Track the in-flight save so `close()` can drain it before reporting closed — otherwise a
+    // write racing `close()` (e.g. a background sync write racing `client.reset()`'s teardown)
+    // keeps running against a connection the container may tear down immediately after.
+    this.#saving = saving.catch(() => {});
   }
 
   read(offset: number, size: number, cb: Callback<Buffer>): void {
@@ -265,7 +288,7 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
   }
 
   del(offset: number, size: number, cb: Callback<any>): void {
-    this._ensureLoaded()
+    const saving = this._ensureLoaded()
       .then(() => {
         const end = Math.min(offset + size, this.#buffer.length);
         if (offset < end) {
@@ -273,8 +296,12 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
         }
         return this._saveToDb();
       })
-      .then(() => cb(null))
-      .catch((err) => cb(err));
+      .then(
+        () => cb(null),
+        (err) => cb(err),
+      );
+    // See `write()`: track the in-flight save so `close()` can drain it before reporting closed.
+    this.#saving = saving.catch(() => {});
   }
 
   stat(cb: Callback<FileStat>): void {
@@ -287,9 +314,11 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
 
   close(cb: Callback<Error>): void {
     this.#closed = true;
-    // Drain any in-flight initial load before reporting closed, so a read never races a
-    // torn-down SQL connection (avoids "database connection is not open" unhandled rejections).
-    (this.#loading ?? Promise.resolve()).then(
+    // Drain any in-flight initial load and any in-flight write/del before reporting closed, so
+    // neither races a torn-down SQL connection (avoids "database connection is not open" errors,
+    // and the resulting stall in callers — e.g. `client.reset()`'s feed teardown — that wait on
+    // this file's `close()` to settle before tearing down the connection itself).
+    Promise.all([this.#loading ?? Promise.resolve(), this.#saving ?? Promise.resolve()]).then(
       () => cb(null),
       () => cb(null),
     );
@@ -332,18 +361,20 @@ export class SqliteStorage implements Storage {
     this.path = path;
   }
 
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
-    'SqliteStorage.migrate',
-  )(() =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* sql`CREATE TABLE IF NOT EXISTS hypercore_files (
-          path TEXT PRIMARY KEY,
-          data BLOB NOT NULL DEFAULT x''
-        )`;
-      log('hypercore_files table ready');
-    }).pipe(Effect.withSpan('SqliteStorage.migrate')),
-  )();
+  /**
+   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
+   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
+   * `BEGIN` / `COMMIT` — rejected in workerd.
+   */
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
+    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
+  ).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('SqliteStorage.migrate'),
+  );
 
   get size(): number {
     return this.#files.size;

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-testing",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Plugin testing utils",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -34,9 +34,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/StorybookPlugin.ts",
-      "types": "./dist/types/src/StorybookPlugin.d.ts",
-      "default": "./dist/lib/StorybookPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#types": {
       "source": "./src/types/index.ts",
@@ -55,13 +55,26 @@
       "types": "./dist/types/src/harness.d.ts",
       "import": "./dist/lib/harness.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./package.json": "./package.json",
+    "./StorybookCapabilities": {
+      "source": "./src/types/StorybookCapabilities.ts",
+      "types": "./dist/types/src/types/StorybookCapabilities.d.ts",
+      "import": "./dist/lib/StorybookCapabilities.mjs"
+    },
+    "./StorybookPlugin": {
+      "source": "./src/StorybookPlugin.ts",
+      "types": "./dist/types/src/StorybookPlugin.d.ts",
+      "import": "./dist/lib/StorybookPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "StorybookCapabilities": [
+        "dist/types/src/types/StorybookCapabilities.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -71,16 +84,14 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

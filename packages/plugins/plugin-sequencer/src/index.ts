@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './meta';
-export * from './plugin';
-export * from './types';
+export * as SequencerPlugin from './SequencerPlugin';
+export * from '#meta';
+export * from '#types';

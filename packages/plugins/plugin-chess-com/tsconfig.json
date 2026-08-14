@@ -28,9 +28,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -43,16 +40,19 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/app-toolkit"
+      "path": "../../sdk/app-graph"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/schema"
@@ -79,16 +79,10 @@
       "path": "../plugin-game"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
       "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

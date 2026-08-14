@@ -4,11 +4,6 @@
 
 // @import-as-namespace
 
-// Re-export Chat schema for backward compatibility.
-import { Chat as ChatModule } from '@dxos/assistant-toolkit';
-export const Chat = ChatModule.Chat;
-export type Chat = ChatModule.Chat;
-
 import { type DXN } from '@dxos/keys';
 
 // Re-export Settings as merged const/type (not as namespace).

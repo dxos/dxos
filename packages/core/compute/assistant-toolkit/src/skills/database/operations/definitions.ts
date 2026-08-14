@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Harness } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
@@ -38,7 +38,7 @@ export const Query = Operation.make({
       <example description="All tasks related to Cyberdyne and Bob">
         {
           "typename": "org.dxos.type.task",
-          "text": "cyberdyne bob",
+          "text": "cyberdyne bob"
         }
       </example>
 
@@ -46,14 +46,14 @@ export const Query = Operation.make({
         {
           "typename": "org.dxos.type.document",
           "text": "financial report Q1 2026",
-          "includeContent": true
+          "includeContent": true,
           "limit": 3
         }
       </example>
 
       <example description="Emails from specific mailboxes">
         {
-          "in": [{"/" : "echo:/YYYYYY"}, {"/" : "echo:/XXXXXXX"}],
+          "in": ["echo:///YYYYYY", "echo:///XXXXXXX"],
           "typename": "org.dxos.type.email",
           "includeContent": true,
           "limit": 20
@@ -63,7 +63,7 @@ export const Query = Operation.make({
   },
   input: Schema.Struct({
     in: Schema.optional(
-      Schema.Array(Ref.Ref(Obj.Unknown)).annotations({
+      Schema.Array(Ref.Ref(Obj.Unknown)).annotate({
         description:
           'Scope the query to children of specific objects (transitively). ' +
           'Use this to query items within containers such as feeds or folders. ' +
@@ -71,31 +71,31 @@ export const Query = Operation.make({
       }),
     ),
     typename: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'The typename of the objects to list.',
         example: 'org.dxos.type.task',
       }),
     ),
     text: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         description: 'Full text search query.',
         example: 'email cyberdyne bob',
       }),
     ),
     includeContent: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         description: 'Include the full object data in the response.',
         default: false,
       }),
     ),
     limit: Schema.optional(
-      Schema.Number.annotations({
+      Schema.Number.annotate({
         description: 'The maximum number of results to return.',
         default: 10,
       }),
     ),
     includeQueues: Schema.optional(
-      Schema.Boolean.annotations({
+      Schema.Boolean.annotate({
         description: 'Search in queues as well as spaces. Only use this if searching for emails.',
         default: false,
       }),
@@ -132,18 +132,27 @@ export const ObjectCreate = Operation.make({
     name: 'Create object',
     icon: 'ph--plus--regular',
     description: trim`
-      Creates a new object and adds it to the current space.
-      Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
+      Creates a new object of any type and adds it to the current space.
+      When a type has its own create tool (e.g. the markdown skill creates documents), prefer that
+      tool — it builds the object's owned parts correctly. Use this one for types that have none.
+      Get the full JSON Schema from the schema-list tool (pass \`typenames: [typename]\`) and ensure
+      that the data matches the corresponding schema.
       References are provided in the following format: { "/": "echo:..." }.
-      Reference examples: { "/": "echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
+      Reference examples: { "/": "echo:///01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
     `,
   },
   input: Schema.Struct({
-    typename: Schema.String.annotations({
+    typename: Schema.String.annotate({
       description: 'The typename of the object to create.',
       examples: ['dxn:org.dxos.type.person'],
     }),
-    properties: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    properties: Schema.Record(Schema.String, Schema.Any),
+    attach: Schema.optional(Schema.Boolean).annotate({
+      description: trim`
+        Attach the object to the space root collection so it appears in the navigation tree.
+        Set for top-level objects; leave unset for subordinate objects referenced by others.
+      `,
+    }),
   }),
   output: Schema.Unknown,
   services: [Database.Service],
@@ -157,12 +166,12 @@ export const ObjectUpdate = Operation.make({
     description: trim`
       Updates the object properties.
       References are provided in the following format: { "/": "echo:..." }.
-      Reference examples: { "/": "echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
+      Reference examples: { "/": "echo:///01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
     `,
   },
   input: Schema.Struct({
     obj: Ref.Ref(Obj.Unknown),
-    properties: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    properties: Schema.Record(Schema.String, Schema.Any),
   }),
   output: Schema.Unknown,
   services: [Database.Service],
@@ -196,13 +205,13 @@ export const SchemaAdd = Operation.make({
   },
   input: Schema.Struct({
     name: Schema.String,
-    typename: Schema.String.annotations({
+    typename: Schema.String.annotate({
       description: 'The typename of the schema in the format of "com.example.type.type".',
     }),
     // Typed as a record so the tool parameter advertises `type: object` to the LLM, forcing it to
     // emit the JSON Schema as an object rather than a JSON-encoded string (which an unconstrained
     // `Schema.Any` parameter would allow, breaking `makeObjectFromJsonSchema`).
-    jsonSchema: Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({
+    jsonSchema: Schema.Record(Schema.String, Schema.Any).annotate({
       description: 'The JSON Schema (draft-07) object describing the fields of the new type.',
     }),
   }),
@@ -216,11 +225,28 @@ export const SchemaList = Operation.make({
     name: 'List schemas',
     icon: 'ph--list--regular',
     description: trim`
-      Lists schemas definitions.
+      Lists schema definitions registered in the space.
+
+      By default (no typenames) returns a lightweight summary for every type: typename, kind,
+      name, description, and field names. This is cheap and safe to call often.
+
+      Putting every type's full JSON Schema into context at once wastes a lot of it. To get the
+      full JSON Schema for specific types, call again with \`typenames\` set to only the typenames
+      you actually need (from the summary call) — e.g. right before creating or updating an object
+      of that type.
     `,
   },
   input: Schema.Struct({
     limit: Schema.optional(Schema.Number),
+    typenames: Schema.optional(
+      Schema.Array(Schema.String).annotate({
+        description: trim`
+          Return the full JSON Schema only for these typenames, instead of the default summary.
+          Get the typenames from a prior summary call (no typenames set).
+        `,
+        example: ['org.dxos.type.task'],
+      }),
+    ),
   }),
   output: Schema.Array(Schema.Unknown),
   services: [Database.Service],
@@ -237,7 +263,7 @@ export const ContextAdd = Operation.make({
     `,
   },
   input: Schema.Struct({
-    obj: Ref.Ref(Obj.Unknown).annotations({
+    obj: Ref.Ref(Obj.Unknown).annotate({
       description: 'Object to add to the chat context.',
     }),
   }),
@@ -256,7 +282,7 @@ export const ContextRemove = Operation.make({
     `,
   },
   input: Schema.Struct({
-    obj: Ref.Ref(Obj.Unknown).annotations({
+    obj: Ref.Ref(Obj.Unknown).annotate({
       description: 'Object to remove from the chat context.',
     }),
   }),
@@ -271,14 +297,15 @@ export const RelationCreate = Operation.make({
     icon: 'ph--arrows-merge--regular',
     description: trim`
       Creates a new relation and adds it to the current space.
-      Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
+      Get the full JSON Schema from the schema-list tool (pass \`typenames: [typename]\`) and ensure
+      that the data matches the corresponding schema.
     `,
   },
   input: Schema.Struct({
     typename: Schema.String,
     source: Ref.Ref(Obj.Unknown),
     target: Ref.Ref(Obj.Unknown),
-    properties: Schema.Any.annotations({
+    properties: Schema.Any.annotate({
       description: 'The data to be stored in the relation.',
     }),
   }),

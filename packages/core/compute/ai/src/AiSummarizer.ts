@@ -4,10 +4,10 @@
 
 // @import-as-namespace
 
-import type * as AiError from '@effect/ai/AiError';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
+import type * as AiError from 'effect/unstable/ai/AiError';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
@@ -29,7 +29,7 @@ export const summarize: (
 
     // Last turn must be a user message for summarization to work.
     // Repeating the instructions to ensure the model sees them, otherwise the model tends to forget them.
-    prompt = prompt.pipe(Prompt.merge(instructions));
+    prompt = prompt.pipe(Prompt.concat(instructions));
 
     const response = yield* LanguageModel.generateText({
       prompt,
@@ -58,7 +58,7 @@ export const DEFAULT_INSTRUCTIONS = trim`
     Processing a flight booking confirmation email. The user requested a round-trip flight from Warsaw to Barcelona for March 15–22, 2026.
 
     Action taken:
-    - Found existing booking object \`echo:/01KHZWKQ9HPJYG147HV7CP5ARX\` (type \`echo:/01KHXAMH4F3V94RCYC7P7M2H0C\` / \`com.example.type.flight-booking\`) matching confirmation code ABC123.
+    - Found existing booking object \`echo:///01KHZWKQ9HPJYG147HV7CP5ARX\` (type \`echo:///01KHXAMH4F3V94RCYC7P7M2H0C\` / \`com.example.type.flight-booking\`) matching confirmation code ABC123.
     - Updated the booking status from "pending" to "confirmed".
     - Added flight details: Outbound WAW→BCN Mar 15 08:30, Return BCN→WAW Mar 22 14:15, carrier LOT Polish Airlines.
     - Stored passenger info and seat assignments in notes.

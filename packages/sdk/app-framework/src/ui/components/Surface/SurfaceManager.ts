@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
-import * as Data from 'effect/Data';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
-import { type Definition, isValidLocalId } from './types';
+import { type Definition } from './types';
 
-const EMPTY_CANDIDATES: ReadonlyArray<Definition> = Data.array<Definition[]>([]);
+const EMPTY_CANDIDATES: ReadonlyArray<Definition> = [];
 
 /**
  * Groups definitions by role with each bucket pre-sorted by {@link Position}, so
@@ -38,6 +38,10 @@ export const indexByRole = (definitions: Definition[]): Map<string, Definition[]
   return index;
 };
 
+/** Definitions are stable objects, so a bucket is unchanged when it holds the same ones in order. */
+const sameCandidates = (left: ReadonlyArray<Definition>, right: ReadonlyArray<Definition>): boolean =>
+  left.length === right.length && left.every((definition, index) => definition === right[index]);
+
 /**
  * Owns the per-manager surface memoization: one derived index atom plus a per-role
  * family of candidate atoms. A single instance is provided via
@@ -54,19 +58,23 @@ export class SurfaceManager {
     return indexByRole(this.#dropInvalid(definitions));
   }).pipe(Atom.keepAlive);
 
-  // Per-role candidate atoms. `Data.array` gives the result structural equality, so a
-  // contribution to a different role recomputes to an equal value and is dropped —
-  // that role's subscribers never re-render.
+  // Per-role candidate atoms. The atom carries the equality, so a contribution to a different role
+  // recomputes this bucket to an equal value and is dropped — that role's subscribers never
+  // re-render. (v4 removed `Data.array`, which used to supply that equality structurally.)
   readonly #candidates = Atom.family<string, Atom.Atom<ReadonlyArray<Definition>>>((role) =>
     Atom.make((get) => {
       const bucket = get(this.#index).get(role);
-      return bucket ? Data.array(bucket) : EMPTY_CANDIDATES;
-    }).pipe(Atom.keepAlive),
+      return bucket ? [...bucket] : EMPTY_CANDIDATES;
+    }).pipe(Atom.withEquality(sameCandidates), Atom.keepAlive),
   );
 
   // Ids already reported as invalid on this manager, so a persistently-malformed
   // contribution warns once rather than on every index rebuild.
   #warnedInvalidIds = new Set<string>();
+
+  // Roles whose surface demand event has already been dispatched, so re-renders and
+  // repeated availability checks do not re-activate the role's modules.
+  #requestedRoles = new Set<string>();
 
   constructor(capabilities: CapabilityManager.CapabilityManager) {
     this.#capabilities = capabilities;
@@ -77,17 +85,43 @@ export class SurfaceManager {
     return this.#candidates(role);
   }
 
+  /**
+   * Claims the first surface demand for a role, returning `true` only to that first caller so
+   * it can fire the activation event. Subsequent calls — re-renders, repeated availability
+   * checks — return `false`.
+   */
+  requestRole(role: string): boolean {
+    if (role === '' || this.#requestedRoles.has(role)) {
+      return false;
+    }
+    this.#requestedRoles.add(role);
+    return true;
+  }
+
+  /**
+   * Returns a claimed role to the pool. The claim is taken before the dispatch is known to have
+   * happened, so a dispatch that fails or is interrupted (shutdown, a failed activation) must give
+   * it back — nothing else re-requests the role, and `useIsSurfaceAvailable`'s own retry is
+   * claimed away too, leaving every surface in that role permanently empty.
+   */
+  releaseRole(role: string): void {
+    this.#requestedRoles.delete(role);
+  }
+
   /** Drops definitions with an invalid local id, warning once per id. */
   #dropInvalid(definitions: Definition[]): Definition[] {
     return definitions.filter((definition) => {
-      if (isValidLocalId(definition.id)) {
+      if (DXN.isValidPath(definition.id)) {
         return true;
       }
       if (!this.#warnedInvalidIds.has(definition.id)) {
         this.#warnedInvalidIds.add(definition.id);
-        log.warn('dropping surface with invalid id; the final segment must be camelCase (no hyphens or underscores)', {
-          id: definition.id,
-        });
+        log.warn(
+          'dropping surface with invalid id; the final segment must be camelCase — letters and digits, starting with a letter',
+          {
+            id: definition.id,
+          },
+        );
       }
       return false;
     });

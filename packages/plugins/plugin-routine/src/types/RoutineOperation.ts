@@ -6,9 +6,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Chat } from '@dxos/assistant-toolkit';
-import { Instructions, Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Chat from '@dxos/assistant-toolkit/Chat';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 // Value-side `EID` import keeps TS declaration emit portable — `TriggerTemplate`
 // references `EID.Schema` and the inferred `CreateTriggerFromTemplate` type
@@ -17,8 +20,7 @@ import { EID as _EchoURIReference } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-import * as Routine from './Routine';
-import { TriggerTemplate } from './schema';
+import { TriggerTemplate } from './Routine';
 export { _EchoURIReference };
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
@@ -35,7 +37,7 @@ export const CreateTriggerFromTemplate = Operation.make({
     template: TriggerTemplate,
     enabled: Schema.optional(Schema.Boolean),
     scriptName: Schema.optional(Schema.String),
-    input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+    input: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   }),
   output: Schema.Void,
 });
@@ -76,7 +78,7 @@ export const RunPromptInNewChat = Operation.make({
     /** Skill keys to look up and bind to the new chat. */
     skills: Schema.optional(Schema.Array(Schema.String)),
     /** Raw instructions or an existing Routine object reference. */
-    instructions: Schema.Union(Schema.String, Ref.Ref(Instructions.Instructions)),
+    instructions: Schema.Union([Schema.String, Ref.Ref(Instructions.Instructions)]),
     /**
      * When true, skips opening the chat: runs the Agent prompt operation against the new chat via the compute runtime (traced).
      */
@@ -87,16 +89,18 @@ export const RunPromptInNewChat = Operation.make({
   }),
 });
 
-// Runs a routine's `runnable` directly (bypassing its triggers). The runnable receives no input;
-// the trigger-driven path is what supplies event-mapped input, so manual runs target runnables that
-// need none.
+// Runs a routine's action now, routed by its first trigger — that is where both the runnable's input
+// (e.g. a sync routine's binding cursor) and the `remote` flag live. A `remote` trigger force-runs on the
+// EDGE dispatcher over HTTP, since that is the only runtime it is registered on; a local one runs
+// in-process. Without the trigger a manual run would invoke an input-taking runnable with nothing, and
+// would silently run an edge routine on the client.
 export const RunRoutine = Operation.make({
   meta: {
     key: makeKey('runAutomation'),
     name: 'Run Routine',
     icon: 'ph--play--regular',
   },
-  services: [Capability.Service],
+  services: [Capability.Service, Trigger.TriggerMonitorService],
   input: Schema.Struct({
     routine: Ref.Ref(Routine.Routine),
   }),

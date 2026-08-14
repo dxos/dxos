@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli-util",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Shared CLI utilities for DXOS CLI commands and plugins",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -12,11 +12,27 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#platform": {
+      "source": {
+        "node": "./src/util/platform.node.ts",
+        "default": "./src/util/platform.browser.ts"
+      },
+      "types": "./dist/types/src/util/platform.node.d.ts",
+      "node": "./dist/lib/util/platform.node.mjs",
+      "default": "./dist/lib/util/platform.browser.mjs"
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./oauth": {
+      "source": "./src/oauth/index.ts",
+      "types": "./dist/types/src/oauth/index.d.ts",
+      "import": "./dist/lib/oauth.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
@@ -30,29 +46,24 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/cli": "catalog:",
-    "@effect/platform": "catalog:",
     "@effect/platform-bun": "catalog:",
-    "@effect/printer": "catalog:",
-    "@effect/printer-ansi": "catalog:",
     "get-port-please": "catalog:"
   },
   "devDependencies": {
     "effect": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
+    "typescript": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"

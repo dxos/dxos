@@ -2,16 +2,33 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const Compiler = Capability.lazy('Compiler', () => import('./compiler'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import { ScriptCapabilities, ScriptEvents } from '#types';
+
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const Schema = AppCapability.schema(() => import('./schema'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const Compiler = Capability.lazyModule(
+  'Compiler',
+  {
+    provides: [ScriptCapabilities.Compiler],
+    // Genuine runtime event: the compiler is only loaded on demand (`hooks/useCompiler.ts`), not at startup.
+    activatesOn: ScriptEvents.SetupCompiler,
+  },
+  () => import('./compiler'),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const ScriptSettings = Capability.lazy('ScriptSettings', () => import('./settings'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.objectProperties', 'org.dxos.role.section'],
+});
+export const ScriptSettings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
+  provides: [ScriptCapabilities.Settings],
+});

@@ -3,6 +3,7 @@
 //
 
 export * as CodeCapabilities from './CodeCapabilities';
+export * as CodeEvents from './CodeEvents';
 export * as CodeOperation from './CodeOperation';
 export * as CodeProject from './CodeProject';
 export * as Settings from './Settings';

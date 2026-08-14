@@ -4,14 +4,12 @@
 
 // ISSUE(burdon): deprecated types: MixedStreamParser => effect
 
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Entity, Key, Obj, type Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { ReferenceAnnotationId } from '@dxos/echo/Annotation';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { deepMapValues, trim } from '@dxos/util';
 
 export type SearchOptions<T extends Type.AnyEntity> = {
@@ -79,7 +77,7 @@ export const search = async <T extends Type.AnyEntity>(
   //     ...Object.fromEntries(
   //       mappedSchema.map((schema, index) => [
   //         `objects_${index}`,
-  //         Schema.Array(schema).annotations({
+  //         Schema.Array(schema).annotate({
   //           description: `The objects to answer the query of type ${Type.getTypename(schema) ?? SchemaAST.getIdentifierAnnotation(schema.ast).pipe(Option.getOrNull)}`,
   //         }),
   //       ]),
@@ -127,7 +125,7 @@ const DATA_EXTRACTION_INSTRUCTIONS = trim`
 /**
  * Runs the LLM to produce a structured output matching a schema
  */
-// const getStructuredOutput = async <S extends Schema.Schema.AnyNoContext>(
+// const getStructuredOutput = async <S extends Schema.Codec<any, any>>(
 //   AiService: AiServiceClient,
 //   request: Omit<GenerateRequest, 'tools'> & { schema: S },
 // ): Promise<Schema.Schema.Type<S>> => {
@@ -172,7 +170,7 @@ const DATA_EXTRACTION_INSTRUCTIONS = trim`
 //       }),
 //     ],
 //     schema: Schema.Struct({
-//       terms: Schema.Array(Schema.String).annotations({
+//       terms: Schema.Array(Schema.String).annotate({
 //         description: 'The search terms to use to find the objects. 0-10 terms.',
 //       }),
 //     }),
@@ -196,7 +194,7 @@ const sanitizeObjects = (entries: { data: any; schema: Type.AnyObj }[]) => {
           const ref = value['/'];
           if (idMap.has(ref)) {
             // TODO(dmaretskyi): Whats the best way to represent a local url.
-            return { '/': `echo:/${idMap.get(ref)}` };
+            return { '/': `echo:///${idMap.get(ref)}` };
           } else {
             // Search URIs?
             return { '/': `search:?q=${encodeURIComponent(ref)}` };
@@ -212,14 +210,14 @@ const sanitizeObjects = (entries: { data: any; schema: Type.AnyObj }[]) => {
 
 const SoftRef = Schema.Struct({
   '/': Schema.String,
-}).annotations({
+}).annotate({
   description: 'Reference to another object.',
 });
 
 // TODO(burdon): Move to @dxos/echo.
-const mapSchemaRefs = (schema: Schema.Schema.AnyNoContext): Schema.Schema.AnyNoContext => {
+const mapSchemaRefs = (schema: Schema.Codec<any, any>): Schema.Codec<any, any> => {
   const go = (ast: SchemaAST.AST): SchemaAST.AST => {
-    if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome)) {
+    if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId) !== undefined) {
       return SoftRef.ast;
     }
 

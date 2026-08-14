@@ -2,14 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { addressToA1Notation } from '@dxos/compute-hyperformula';
+import { addressToA1Notation } from '@dxos/compute-hyperformula/types';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { EID, Filter, Key, Type, View } from '@dxos/echo';
 import { OperationInvoker } from '@dxos/operation';
-import { Markdown } from '@dxos/plugin-markdown';
-import { Sheet } from '@dxos/plugin-sheet';
-import { Sketch } from '@dxos/plugin-sketch';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as Sheet from '@dxos/plugin-sheet/Sheet';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 import { random } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -70,10 +71,15 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
   [
-    Type.getTypename(Sketch.Sketch),
+    Type.getTypename(Drawing.Drawing),
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        const obj = space.db.add(Sketch.make({ name: random.commerce.productName() }));
+        const obj = space.db.add(
+          Drawing.make({
+            name: random.commerce.productName(),
+            canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA }),
+          }),
+        );
         return obj;
       });
 

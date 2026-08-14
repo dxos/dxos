@@ -7,13 +7,19 @@ import type * as Schema from 'effect/Schema';
 import { EntityId } from '@dxos/keys';
 
 import { getTypeAnnotation } from '../../Annotation/annotations';
-import { type AnyProperties, KindId, ParentId, SchemaKindId, StaticTypeSchemaSlot } from '../types';
+import { type AnyProperties, KindId, ParentId, SchemaId, SchemaKindId, StaticTypeSchemaSlot } from '../types';
 import { type EntityMeta, EntityMetaSchema } from '../types/meta';
 import { MetaId } from '../types/model-symbols';
 import { defineHiddenProperty } from './define-hidden-property';
 import { attachTypedJsonSerializer } from './json-serializer';
-import { createProxy, getProxyTarget, isValidProxyTarget } from './proxy-utils';
-import { TypedReactiveHandler, TypeSource, prepareTypedTarget, setMetaOwner } from './typed-handler';
+import { createProxy, getProxyTarget, isProxy, isValidProxyTarget } from './proxy-utils';
+import {
+  TypedReactiveHandler,
+  TypeSource,
+  prepareDecodedTypedTarget,
+  prepareTypedTarget,
+  setMetaOwner,
+} from './typed-handler';
 
 /**
  *
@@ -40,13 +46,16 @@ export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId | S
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 // TODO(dmaretskyi): Could mutate original object making it unusable.
 export const makeObject = <T extends AnyProperties>(
-  schema: Schema.Schema<T, any, never>,
+  // Matches what this forwards to. Effect 4's `Schema.Schema<T>` pins only `Type` and leaves the
+  // service channels open, so narrowing to `Codec<T, any, never>` here rejected ordinary callers
+  // and needed a cast to get past.
+  schema: Schema.Schema<T>,
   obj: NoInfer<MakeObjectProps<T>>,
   meta?: Partial<EntityMeta>,
   typeSource?: TypeSource,
 ): T => {
   // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
-  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema as Schema.Schema<T, any>, typeSource);
+  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema, typeSource);
 };
 
 const createReactiveObject = <T extends AnyProperties>(
@@ -94,6 +103,39 @@ const createReactiveObject = <T extends AnyProperties>(
   }
 
   return proxy;
+};
+
+/**
+ * Rewrap an object decoded from JSON (via `objectFromJSON`) into a live reactive proxy, so that
+ * `Obj.update` synchronously mutates it and `Obj.subscribe`/atoms fire — the same contract as
+ * automerge-backed objects. Unlike {@link makeObject}, the target already carries `SchemaId`/
+ * `TypeId` stamped by `setSchema`/`setTypename` (both `configurable: false`), so this does not
+ * re-derive or re-stamp them — it only validates against the schema, reactifies nested arrays,
+ * rewraps `[MetaId]` as a live nested proxy, and wraps the whole object in a proxy.
+ *
+ * Objects whose type could not be resolved at decode time (no `SchemaId`) are returned unchanged —
+ * they remain plain snapshots and `Obj.update` on them stays a no-op, since there is no schema to
+ * validate mutations against.
+ */
+export const makeDecodedEntityLive = <T extends AnyProperties>(obj: T): T => {
+  const schema = (obj as any)[SchemaId] as Schema.Codec<T, any> | undefined;
+  if (!schema) {
+    return obj;
+  }
+
+  prepareDecodedTypedTarget(obj, schema);
+
+  const meta = (obj as any)[MetaId];
+  if (meta != null && typeof meta === 'object' && !isProxy(meta)) {
+    prepareTypedTarget(meta, EntityMetaSchema);
+    const metaProxy = createProxy(meta, TypedReactiveHandler.instance);
+    defineHiddenProperty(obj, MetaId, metaProxy);
+    const metaTarget = getProxyTarget(metaProxy);
+    setMetaOwner(metaTarget, obj);
+  }
+
+  attachTypedJsonSerializer(obj);
+  return createProxy(obj, TypedReactiveHandler.instance);
 };
 
 /**

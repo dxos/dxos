@@ -30,8 +30,12 @@ const root = execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).tri
 const apps = resolveApps(root, { environment, only });
 
 if (apps.length === 0) {
-  console.log(`No apps configured for environment=${environment} app=${only} — nothing to deploy.`);
-  process.exit(0);
+  const valid =
+    resolveApps(root, { environment })
+      .map((app) => app.name)
+      .join(', ') || '(none)';
+  console.error(`"${only}" has no env.${environment} — nothing would be deployed. Apps with that env: ${valid}`);
+  process.exit(1);
 }
 
 for (const { name, outDir, wranglerConfig } of apps) {

@@ -2,16 +2,55 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
+import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 
-export const AutomationTemplates = Capability.lazy('AutomationTemplates', () => import('./automation-templates'));
-
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
-
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+export const AutomationTemplates = Capability.lazyModule(
+  'AutomationTemplates',
+  { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
+  () => import('./automation-templates'),
 );
+
+export const MailboxAction = Capability.lazyModule(
+  'MailboxAction',
+  // Rides the inbox feature it contributes to, exactly as the plugin-brain sibling does — the
+  // action is unreachable until a mailbox renders.
+  { provides: [InboxCapabilities.MailboxAction], activatesOn: InboxEvents.Start },
+  () => import('./mailbox-action'),
+);
+
+export const MailboxProcessor = Capability.lazyModule(
+  'MailboxProcessor',
+  { provides: [InboxCapabilities.MailboxProcessor], activatesOn: InboxEvents.Start },
+  () => import('./mailbox-processor'),
+);
+
+export const SenderAction = Capability.lazyModule(
+  'SenderAction',
+  // Rides the inbox feature it contributes to, like its MailboxAction sibling — the entry is
+  // unreachable until a conversation renders.
+  { provides: [InboxCapabilities.SenderAction], activatesOn: InboxEvents.Start },
+  () => import('./sender-action'),
+);
+
+export const ProjectTemplates = Capability.lazyModule(
+  'ProjectTemplates',
+  { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
+  () => import('./project-templates'),
+);
+
+export const Schema = AppCapability.schema(() => import('./schema'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});

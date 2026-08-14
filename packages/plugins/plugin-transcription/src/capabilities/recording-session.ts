@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { TranscriptionCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const sessionAtom = Atom.make<TranscriptionCapabilities.RecordingSession | null>(null).pipe(Atom.keepAlive);
-    return Capability.contributes(TranscriptionCapabilities.RecordingSession, sessionAtom);
+    return Capability.contribute(TranscriptionCapabilities.RecordingSession, sessionAtom);
   }),
 );

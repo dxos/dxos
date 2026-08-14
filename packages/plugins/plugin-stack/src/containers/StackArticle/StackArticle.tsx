@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useId, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
@@ -172,7 +173,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
 
   return (
     <Panel.Root>
-      <Panel.Toolbar classNames='bg-toolbar-surface'>
+      <Panel.Toolbar classNames='dx-toolbar-surface'>
         <Toolbar.Root classNames='dx-document'>
           <Toolbar.IconButton
             square

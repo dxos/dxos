@@ -4,13 +4,18 @@
 
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
-import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, isTreeData } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
@@ -18,12 +23,15 @@ import { arrayMove } from '@dxos/util';
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
 import { useNavTreeModel, useNavTreeState } from '#hooks';
 import { meta } from '#meta';
-import { type NavTreeItemGraphNode } from '#types';
+import { NavTreeNode } from '#types';
 
 import { filterItems, getParent, resolveMigrationOperation } from '../../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
+
+/** How long the cursor must rest on a row before it is prefetched; long enough that merely crossing it does not. */
+const HOVER_SETTLE_DELAY = Duration.millis(150);
 
 // TODO(wittjosiah): Avoid using Surface within the navtree, prefer declarative data flow.
 const NavTreeItemEnd = ({ node, open }: { node: Node.Node; open: boolean }) => {
@@ -70,14 +78,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       ({ item: { id }, path, open }: { item: Node.Node; path: string[]; open: boolean }) => {
         // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
         setItem(path, 'open', open);
-        Graph.expand(graph, id, 'child');
+        Graph.expandSync(graph, id, 'child');
       },
       [graph, setItem],
     );
 
     const handleTabChange = useCallback(
-      (node: NavTreeItemGraphNode) => {
-        Graph.expand(graph, node.id, 'child');
+      (node: NavTreeNode.NavTreeItemGraphNode) => {
+        Graph.expandSync(graph, node.id, 'child');
 
         const {
           tab: activeTab,
@@ -102,15 +110,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         if (activeItems.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
-            if (layout.mode === 'multi') {
-              void invokePromise(LayoutOperation.Set, { subject: [item.id] });
-            } else {
-              void invokePromise(LayoutOperation.Open, { subject: [item.id] });
-            }
+            void invokePromise(LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
-      [invokePromise, graph, layout.mode],
+      [invokePromise, graph],
     );
 
     const blockInstruction = useCallback(
@@ -129,7 +133,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     }, []);
 
     const handleSelect = useCallback(
-      ({ item: node, path, option }: { item: Node.Node; path: string[]; option: boolean }) => {
+      ({ item: node, path, option, shift }: { item: Node.Node; path: string[]; option: boolean; shift: boolean }) => {
         if (!node.data) {
           return;
         }
@@ -144,11 +148,13 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         const current = getItem(path).current;
         if (!current) {
-          if (layout.mode === 'multi') {
-            void invokePromise(LayoutOperation.Set, { subject: [node.id] });
-          } else {
-            void invokePromise(LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
-          }
+          // Plain click navigates (the deck becomes this item); shift forces a new plank (see the Open
+          // handler, which upgrades any disposition to add when shift is held).
+          void invokePromise(LayoutOperation.Open, {
+            subject: [node.id],
+            disposition: 'solo',
+            modifiers: { shift },
+          });
         } else if (option) {
           void invokePromise(LayoutOperation.Close, { subject: [node.id] });
         } else {
@@ -164,7 +170,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokePromise, getItem, runAction, isLg, layout.mode],
+      [graph, invokePromise, getItem, runAction, isLg],
     );
 
     const handleBack = useCallback(() => void invokePromise(LayoutOperation.RevertWorkspace), [invokePromise]);
@@ -181,8 +187,8 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           const target = location.current.dropTargets[0];
           const instruction: Instruction | null = extractInstruction(target.data);
           if (instruction !== null && instruction.type !== 'instruction-blocked') {
-            const sourceNode = source.data.item as NavTreeItemGraphNode;
-            const targetNode = target.data.item as NavTreeItemGraphNode;
+            const sourceNode = source.data.item as NavTreeNode.NavTreeItemGraphNode;
+            const targetNode = target.data.item as NavTreeNode.NavTreeItemGraphNode;
             const sourcePath = source.data.path as string[];
             const targetPath = target.data.path as string[];
             const sameParent = sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join();
@@ -237,12 +243,30 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       for (const child of workspaceChildren) {
         if (Node.hasDisposition(child, 'group')) {
           setItem([Node.RootId, tab, child.id], 'open', true);
-          Graph.expand(graph, child.id, 'child');
+          Graph.expandSync(graph, child.id, 'child');
         }
       }
     }, [workspaceChildren, tab, setItem, graph]);
 
-    const onItemHover = useCallback(({ item }: { item: Node.Node }) => Graph.expand(graph, item.id, 'child'), [graph]);
+    // Prefetching a hovered row is speculative, so it waits out the cursor rather than racing it: a sweep
+    // should only pay for the row the cursor stops on.
+    const hoverExpandRef = useRef<Fiber.Fiber<void> | undefined>(undefined);
+    const interruptHoverExpand = useCallback(() => {
+      if (hoverExpandRef.current) {
+        void Effect.runFork(Fiber.interrupt(hoverExpandRef.current));
+        hoverExpandRef.current = undefined;
+      }
+    }, []);
+    useEffect(() => interruptHoverExpand, [interruptHoverExpand]);
+    const onItemHover = useCallback(
+      ({ item }: { item: Node.Node }) => {
+        interruptHoverExpand();
+        hoverExpandRef.current = Effect.runFork(
+          Effect.sleep(HOVER_SETTLE_DELAY).pipe(Effect.andThen(Graph.expand(graph, item.id, 'child'))),
+        );
+      },
+      [graph, interruptHoverExpand],
+    );
 
     const navTreeContextValue = useMemo(
       () => ({

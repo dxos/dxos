@@ -6,27 +6,27 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-const LevelLetter = Schema.Literal('T', 'D', 'V', 'I', 'W', 'E');
-const SelectField = Schema.Literal('t', 'l', 'm', 'f', 'n', 'o', 'c', 'i', 'e');
+const LevelLetter = Schema.Literals(['T', 'D', 'V', 'I', 'W', 'E']);
+const SelectField = Schema.Literals(['t', 'l', 'm', 'f', 'n', 'o', 'c', 'i', 'e']);
 
-const GroupBy = Schema.Union(
-  Schema.Literal('level', 'message', 'file', 'tabId'),
-  Schema.TemplateLiteral('context.', Schema.String),
-);
+const GroupBy = Schema.Union([
+  Schema.Literals(['level', 'message', 'file', 'tabId']),
+  Schema.TemplateLiteral(['context.', Schema.String]),
+]);
 
-const Aggregate = Schema.Literal('count', 'sample', 'firstLast');
-const Order = Schema.Literal('asc', 'desc');
-const Format = Schema.Literal('json', 'jsonl', 'pretty');
+const Aggregate = Schema.Literals(['count', 'sample', 'firstLast']);
+const Order = Schema.Literals(['asc', 'desc']);
+const Format = Schema.Literals(['json', 'jsonl', 'pretty']);
 
-const TimeBound = Schema.Union(Schema.String, Schema.Number);
+const TimeBound = Schema.Union([Schema.String, Schema.Number]);
 
 const QueryComposerLogsInput = Schema.Struct({
   filters: Schema.optional(
-    Schema.Array(Schema.String).annotations({
+    Schema.Array(Schema.String).annotate({
       description: trim`
         LOG_FILTER strings; OR across array entries. Same syntax as DX_LOG / @dxos/log
         parseFilter — comma-separated tokens of "<pattern>:<level>", a bare "<level>",
@@ -37,7 +37,7 @@ const QueryComposerLogsInput = Schema.Struct({
     }),
   ),
   grep: Schema.optional(
-    Schema.Array(Schema.String).annotations({
+    Schema.Array(Schema.String).annotate({
       description: trim`
         JavaScript RegExp sources tested AND-wise against the full JSON line. Use
         sparingly; prefer "filters" or "messageRegex" when possible.
@@ -46,41 +46,41 @@ const QueryComposerLogsInput = Schema.Struct({
     }),
   ),
   messageRegex: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       description: 'Regex applied to the message field only. Convenience over "grep".',
       examples: ['^Failed to', 'Query'],
     }),
   ),
   since: Schema.optional(
-    TimeBound.annotations({
+    TimeBound.annotate({
       description: 'Inclusive lower bound. ISO 8601 string or epoch milliseconds.',
       examples: ['2026-01-01T00:00:00Z', 1735689600000],
     }),
   ),
   until: Schema.optional(
-    TimeBound.annotations({
+    TimeBound.annotate({
       description: 'Inclusive upper bound. ISO 8601 string or epoch milliseconds.',
     }),
   ),
   levels: Schema.optional(
-    Schema.Array(LevelLetter).annotations({
+    Schema.Array(LevelLetter).annotate({
       description: 'Allow-list of short level letters (T,D,V,I,W,E). Empty/undefined = all.',
       examples: [['W', 'E']],
     }),
   ),
   tabId: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       description: 'Filter by `i` (environment / tab id; output of inferEnvironmentName).',
     }),
   ),
   select: Schema.optional(
-    Schema.Array(SelectField).annotations({
+    Schema.Array(SelectField).annotate({
       description: 'Fields to keep on projected entries. Default: all.',
       examples: [['t', 'l', 'm']],
     }),
   ),
   groupBy: Schema.optional(
-    GroupBy.annotations({
+    GroupBy.annotate({
       description: trim`
         Group results by one of: "level", "message", "file", "tabId", or
         "context.<key>" to read the parsed "c" JSON object (single level).
@@ -89,32 +89,32 @@ const QueryComposerLogsInput = Schema.Struct({
     }),
   ),
   aggregate: Schema.optional(
-    Aggregate.annotations({
+    Aggregate.annotate({
       description: 'What to compute per group. Default "count".',
     }),
   ),
   sampleSize: Schema.optional(
-    Schema.Number.annotations({
+    Schema.Number.annotate({
       description: 'Max samples per bucket when aggregate=sample. Default 3, max 25.',
     }),
   ),
   topK: Schema.optional(
-    Schema.Number.annotations({
+    Schema.Number.annotate({
       description: 'Keep top N groups by count. Default 50, max 1000.',
     }),
   ),
   limit: Schema.optional(
-    Schema.Number.annotations({
+    Schema.Number.annotate({
       description: 'Max raw entries returned when no aggregate. Default 100, max 1000.',
     }),
   ),
   order: Schema.optional(
-    Order.annotations({
+    Order.annotate({
       description: '"asc" (oldest first) or "desc" (newest first). Default "asc".',
     }),
   ),
   format: Schema.optional(
-    Format.annotations({
+    Format.annotate({
       description: trim`
         Output format for "entries". Default "json". "pretty" mirrors
         scripts/query-logs.mjs formatLine output for human reading.
@@ -122,7 +122,7 @@ const QueryComposerLogsInput = Schema.Struct({
     }),
   ),
   dbName: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       description: 'Override IDB name for testing. Defaults to composer-app LOG_STORE_DB_NAME.',
     }),
   ),
@@ -137,19 +137,19 @@ const GroupOutput = Schema.Struct({
 });
 
 const QueryComposerLogsOutput = Schema.Struct({
-  total: Schema.Number.annotations({ description: 'Number of records read from IDB before filtering.' }),
-  matched: Schema.Number.annotations({ description: 'Number that passed all filters.' }),
-  elapsedMs: Schema.Number.annotations({ description: 'Wall time in milliseconds.' }),
-  truncated: Schema.Boolean.annotations({
+  total: Schema.Number.annotate({ description: 'Number of records read from IDB before filtering.' }),
+  matched: Schema.Number.annotate({ description: 'Number that passed all filters.' }),
+  elapsedMs: Schema.Number.annotate({ description: 'Wall time in milliseconds.' }),
+  truncated: Schema.Boolean.annotate({
     description: 'True if `entries` was truncated by `limit`, or buckets by `topK`.',
   }),
   entries: Schema.optional(
-    Schema.Array(Schema.Unknown).annotations({
+    Schema.Array(Schema.Unknown).annotate({
       description: 'Present iff no `groupBy`. Max length = effective `limit`.',
     }),
   ),
   groups: Schema.optional(
-    Schema.Array(GroupOutput).annotations({
+    Schema.Array(GroupOutput).annotate({
       description: 'Present iff `groupBy` is set, sorted by count descending.',
     }),
   ),

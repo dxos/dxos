@@ -54,7 +54,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { FooSkill } from '#skills';
 
 export default Capability.makeModule<[], Capability.Capability<typeof AppCapabilities.SkillDefinition>[]>(() =>
-  Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, FooSkill)]),
+  Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, FooSkill)]),
 );
 ```
 

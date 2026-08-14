@@ -5,32 +5,40 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 export const Settings = Schema.Struct({
-  enableDeck: Schema.optional(
-    Schema.Boolean.annotations({
-      title: 'Enable Deck',
-      description: 'Display multiple panels side by side instead of one at a time.',
-    }),
-  ),
-  // TODO(burdon): Rename layoutMode? (e.g., bento/encapsulated or floating/compact, etc.)
-  encapsulatedPlanks: Schema.optional(
-    Schema.Boolean.annotations({
-      title: 'Encapsulated planks',
-      description: 'Render each plank inside its own isolated container.',
-    }),
-  ),
   showHints: Schema.optional(
-    Schema.Boolean.annotations({
+    Schema.Boolean.annotate({
       title: 'Show hints',
       description: 'Show helpful tips and keyboard shortcut hints in the interface.',
     }),
   ),
   enableNativeRedirect: Schema.optional(
-    Schema.Boolean.annotations({
+    Schema.Boolean.annotate({
       title: 'Enable native url redirect',
       description: 'Redirect supported URLs to the native desktop application.',
     }),
   ),
-}).pipe(Schema.mutable);
+  flatten: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Flatten deck',
+      description:
+        'Show one plank at a time with your navigation history as breadcrumbs in the heading, instead of a scrolling deck of open planks.',
+    }),
+  ),
+
+  //
+  // Layout experiments. Each is off by default and independent of the others, so a shape can be tried
+  // without committing to it; drop the flag once one is settled rather than leaving it as a permanent
+  // preference.
+  //
+  overscroll: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Scroll past the last plank',
+      description:
+        'Let the deck keep scrolling once the last plank reaches the right edge, so it can be brought to the front like any other plank — the one before it collapses to a spine, leaving empty space beside it.',
+    }),
+  ),
+}).mapFields(Struct.map(Schema.mutableKey));
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

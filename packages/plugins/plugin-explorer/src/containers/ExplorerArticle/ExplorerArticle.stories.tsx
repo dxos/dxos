@@ -8,17 +8,20 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Query, Type, View } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory, createRelationFactory } from '@dxos/schema/testing';
 import { HasConnection, HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
-import { Graph } from '../../types';
+import { Graph } from '#types';
+
 import { ExplorerArticle, type ExplorerArticleVariant } from './ExplorerArticle';
 
 const generator = random as any as ValueGenerator;
@@ -46,8 +49,8 @@ const meta: Meta<StoryArgs> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [
             Graph.Graph,
             HasRelationship.HasRelationship,
@@ -58,10 +61,10 @@ const meta: Meta<StoryArgs> = {
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(() =>
                 createObjectFactory(
-                  personalSpace.db,
+                  defaultSpace.db,
                   generator,
                 )([
                   { type: Organization.Organization, count: 20 },
@@ -73,7 +76,7 @@ const meta: Meta<StoryArgs> = {
               // groups (organization ref + relationships) fanning out from a focused person.
               yield* Effect.promise(() =>
                 createRelationFactory(
-                  personalSpace.db,
+                  defaultSpace.db,
                   generator,
                 )([
                   { type: HasRelationship.HasRelationship, count: 40, data: { kind: 'friend' } },
@@ -83,12 +86,12 @@ const meta: Meta<StoryArgs> = {
 
               const { view } = yield* Effect.promise(() =>
                 ViewModel.makeFromDatabase({
-                  db: personalSpace.db,
+                  db: defaultSpace.db,
                   typename: Type.getTypename(Graph.Graph),
                 }),
               );
 
-              const graph = personalSpace.db.add(
+              const graph = defaultSpace.db.add(
                 Graph.make({
                   name: 'Root',
                   view,
@@ -98,11 +101,11 @@ const meta: Meta<StoryArgs> = {
                 }),
               );
 
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
               return graph;
             }),
         }),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

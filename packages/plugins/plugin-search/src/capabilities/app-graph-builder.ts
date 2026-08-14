@@ -4,33 +4,45 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, Paths } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as Operation from '@dxos/compute/Operation';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { SearchOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Reactive read: the connector may evaluate before the client module finishes
+    // activating; the atom dependency re-evaluates it when the client lands.
+    const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
+    // Layout is optional: in standalone harnesses (Storybook, tests) no plugin contributes
+    // `AppCapabilities.Layout`; hoisting the atom lets the connector heal reactively if it lands.
+    const layoutCapabilityAtom = yield* Capability.atom(AppCapabilities.Layout);
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'spaceSearch',
         match: NodeMatcher.whenRoot,
         connector: (node, get) =>
           Effect.gen(function* () {
-            const client = yield* Capability.get(ClientCapabilities.Client);
-            const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
+            const [client] = get(clientAtom);
+            if (!client) {
+              return [];
+            }
+            const [layoutAtom] = get(layoutCapabilityAtom);
             const layout = layoutAtom ? get(layoutAtom) : undefined;
-            const spaceId = layout?.workspace ? Paths.getSpaceIdFromPath(layout.workspace) : undefined;
+            const spaceId = layout?.workspace ? GraphPath.getSpaceIdFromPath(layout.workspace) : undefined;
             const space = spaceId ? client.spaces.get(spaceId) : null;
 
             return [
               AppNode.makeDeckCompanion({
-                id: linkedSegment('search'),
+                id: Attention.linkedSegment('search'),
                 label: ['search.label', { ns: meta.profile.key }],
                 icon: 'ph--magnifying-glass--regular',
                 data: space,
@@ -62,6 +74,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

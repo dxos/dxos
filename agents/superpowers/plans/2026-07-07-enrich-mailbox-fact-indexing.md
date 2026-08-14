@@ -260,12 +260,7 @@ describe('extractFactsUnitStage', () => {
         blocks: [{ type: 'text', text: 'Alice owes Bob $5' }],
       });
       const units: FactUnit[] = [];
-      const extract = (_m: Message.Message) =>
-        Promise.resolve([
-          {
-            /* minimal RDF.Fact */
-          } as any,
-        ]);
+      const extract = (_m: Message.Message) => Promise.resolve([{/* minimal RDF.Fact */} as any]);
       yield* Stream.fromIterable([message]).pipe(
         extractFactsUnitStage(extract),
         Pipeline.run({ sink: (unit) => Effect.sync(() => units.push(unit)) }),
@@ -310,19 +305,19 @@ export type FactUnit = {
 export const extractFactsUnitStage = (extract: FactIndexer): Stage.Stage<Message.Message, FactUnit> =>
   Stage.map('extract-facts-unit', (message: Message.Message) =>
     Effect.tryPromise(() => extract(message)).pipe(
-      Effect.map(
-        (facts): FactUnit => ({
-          facts,
-          foreignId: messageSource(message),
-          // NOTE(workaround): `message.created` is the incremental cursor key because ECHO's native
-          // feed cursor is unimplemented (Feed.cursor is stubbed; TODO @dxos/feed FeedCursor). Replace
-          // with the native queue sequence when available. See design D3.
-          key: Date.parse(message.created),
-        }),
-      ),
-      Effect.orElseSucceed(
-        (): FactUnit => ({ facts: [], foreignId: messageSource(message), key: Date.parse(message.created) }),
-      ),
+      Effect.map((facts): FactUnit => ({
+        facts,
+        foreignId: messageSource(message),
+        // NOTE(workaround): `message.created` is the incremental cursor key because ECHO's native
+        // feed cursor is unimplemented (Feed.cursor is stubbed; TODO @dxos/feed FeedCursor). Replace
+        // with the native queue sequence when available. See design D3.
+        key: Date.parse(message.created),
+      })),
+      Effect.orElseSucceed((): FactUnit => ({
+        facts: [],
+        foreignId: messageSource(message),
+        key: Date.parse(message.created),
+      })),
     ),
   );
 ```
@@ -377,16 +372,12 @@ describe('factsCommit', () => {
         /* build via SyncBinding test seam with binding={cursor:Ref.make(cursor)} */ {} as any;
       const page = Chunk.fromIterable<FactUnit>([
         {
-          facts: [
-            /* fact */
-          ] as any,
+          facts: [/* fact */] as any,
           foreignId: 'm1',
           key: 100,
         },
         {
-          facts: [
-            /* fact */
-          ] as any,
+          facts: [/* fact */] as any,
           foreignId: 'm2',
           key: 200,
         },

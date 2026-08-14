@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Graph from '../graph';
 import * as GraphBuilder from '../graph-builder';
 import * as Node from '../node';
 
 export type SetupGraphBuilderOptions = {
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
   extensions?: GraphBuilder.BuilderExtensions;
 };
 
@@ -30,7 +30,7 @@ export const setupGraphBuilder = ({ registry = Registry.make(), extensions }: Se
       GraphBuilder.addExtension(builder, nextExtensions);
     },
     expand: async (id: string, relation: Node.RelationInput = 'child') => {
-      Graph.expand(graph, id, relation);
+      Graph.expandSync(graph, id, relation);
       await GraphBuilder.flush(builder);
     },
     flush: () => GraphBuilder.flush(builder),

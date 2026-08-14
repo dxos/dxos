@@ -1,16 +1,17 @@
 // Copyright 2025 DXOS.org
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const SimpleLayoutOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./close'),
-  () => import('./open'),
-  () => import('./revert-workspace'),
-  () => import('./set'),
-  () => import('./set-layout-mode'),
-  () => import('./switch-workspace'),
-  () => import('./update-complementary'),
-  () => import('./update-dialog'),
-  () => import('./update-popover'),
-  () => import('./update-sidebar'),
-);
+export const SimpleLayoutOperationHandlerSet = OperationHandlerSet.lazy([
+  LayoutOperation.Close.pipe(Operation.lazyHandler(() => import('./close'))),
+  LayoutOperation.Open.pipe(Operation.lazyHandler(() => import('./open'))),
+  LayoutOperation.RevertWorkspace.pipe(Operation.lazyHandler(() => import('./revert-workspace'))),
+  LayoutOperation.Set.pipe(Operation.lazyHandler(() => import('./set'))),
+  LayoutOperation.SwitchWorkspace.pipe(Operation.lazyHandler(() => import('./switch-workspace'))),
+  LayoutOperation.UpdateComplementary.pipe(Operation.lazyHandler(() => import('./update-complementary'))),
+  LayoutOperation.UpdateDialog.pipe(Operation.lazyHandler(() => import('./update-dialog'))),
+  LayoutOperation.UpdatePopover.pipe(Operation.lazyHandler(() => import('./update-popover'))),
+  LayoutOperation.UpdateSidebar.pipe(Operation.lazyHandler(() => import('./update-sidebar'))),
+]);

@@ -2,17 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { useObject } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
+import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 
@@ -65,8 +66,8 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       void showItem({
         contextId: id,
         selectionId: post.id,
-        companion: linkedSegment('post'),
-        path: Paths.getObjectPathFromObject(subject),
+        companion: Attention.linkedSegment('post'),
+        path: GraphPath.getObjectPathFromObject(subject),
       });
     },
     [id, showItem, invoker, subject],
@@ -76,7 +77,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   useEffect(() => {
     if (noPosts) {
       void invoker.invokePromise(LayoutOperation.UpdateCompanion, {
-        subject: linkedSegment('settings'),
+        subject: Attention.linkedSegment('settings'),
       });
     }
   }, [noPosts, invoker]);
@@ -98,7 +99,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     <Panel.Root role={role}>
       <Menu.Root {...menu} attendableId={attendableId}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content>

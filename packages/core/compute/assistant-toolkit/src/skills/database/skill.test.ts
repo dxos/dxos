@@ -8,10 +8,11 @@ import * as Schema from 'effect/Schema';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Entity, Feed, Filter, JsonSchema, Obj, Query, Ref, Relation, Scope, Tag, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EID, EntityId } from '@dxos/keys';
+import { DXN, EID, EntityId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -26,7 +27,8 @@ const TestLayer = AssistantTestLayer({
   types: [Organization.Organization, Person.Person, Employer.Employer, Tag.Tag, Skill.Skill, Feed.Feed],
   skills: [DatabaseSkill.make()],
   tracing: 'pretty',
-  aiServicePreset: 'edge-remote',
+  model: DXN.make('com.anthropic.model.claude-sonnet-4-6.default'),
+  aiServicePreset: 'direct',
 });
 
 // A representative draft-07 JSON Schema as a model would emit for the `add-schema` tool.
@@ -42,7 +44,7 @@ const PROJECT_JSON_SCHEMA = {
   required: ['name'],
 };
 
-describe('Database Skill', () => {
+describe('Database Skill', { tags: ['model-fixture'] }, () => {
   //
   // Schema
   //
@@ -69,14 +71,14 @@ describe('Database Skill', () => {
       // The tool parameter is typed as an object so the model emits the JSON Schema as an object.
       // An unconstrained parameter let some models emit a JSON-encoded string, which then corrupted
       // the created type; a non-object is now rejected at the tool-call boundary.
-      const decode = Schema.decodeUnknown(SchemaAdd.input);
+      const decode = Schema.decodeUnknownEffect(SchemaAdd.input);
       const base = { name: 'Project', typename: 'com.example.type.project' };
 
       const fromObject = yield* decode({ ...base, jsonSchema: PROJECT_JSON_SCHEMA });
       expect(fromObject.jsonSchema).toEqual(PROJECT_JSON_SCHEMA);
 
-      const fromString = yield* Effect.either(decode({ ...base, jsonSchema: JSON.stringify(PROJECT_JSON_SCHEMA) }));
-      expect(fromString._tag).toBe('Left');
+      const fromString = yield* Effect.result(decode({ ...base, jsonSchema: JSON.stringify(PROJECT_JSON_SCHEMA) }));
+      expect(fromString._tag).toBe('Failure');
     }),
   );
 
@@ -387,7 +389,7 @@ describe('Database Skill', () => {
         });
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Remove Context Corp' }));
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(Obj.getURI(org)) as Ref.Ref<any>;
+        const ref = db.makeRef<Organization.Organization>(Obj.getURI(org));
         yield* agent.addContext([ref]);
         const uri = Obj.getURI(org);
         yield* agent.submitPrompt(`Remove the organization "Remove Context Corp" from the chat context.`);

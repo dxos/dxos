@@ -30,5 +30,6 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sample',
     icon: { key: 'ph--book-open--regular', hue: 'cyan' },
     spec: 'PLUGIN.mdl',
+    tags: ['labs'],
   },
 });

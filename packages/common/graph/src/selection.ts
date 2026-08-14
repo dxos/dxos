@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { invariant } from '@dxos/invariant';
 
@@ -17,7 +18,7 @@ export type SelectionModelProps = {
  */
 // TODO(burdon): Reconcile with react-ui-attention.
 export class SelectionModel {
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: Registry.AtomRegistry;
   private readonly _selected: Atom.Writable<Set<string>>;
   private readonly _mode: SelectionMode;
 

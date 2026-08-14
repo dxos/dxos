@@ -6,22 +6,22 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref, Type } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 
 import { meta } from '#meta';
-
-import * as Connection from './Connection';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
- * Runs {@link ConnectorEntry.sync} for every external-sync cursor authenticated by a Connection.
- * Centralises the fan-out so the graph-builder action and the React hook share
- * the same code path. `Capability.Service` is declared as a service so the
- * handler can resolve the connector entry at invocation time.
+ * Syncs every external-sync cursor authenticated by a Connection. Centralises the fan-out so the
+ * graph-builder action and the React hook share the same code path. A cursor whose sync Routine
+ * exists is synced by force-running that Routine's trigger, so the run is driven by the trigger
+ * dispatcher exactly as a scheduled fire would be; a cursor with no Routine falls back to invoking
+ * {@link ConnectorEntry.sync} directly. `Capability.Service` is declared as a service so the handler
+ * can resolve the connector entry and the trigger monitor at invocation time.
  */
 export const SyncConnection = Operation.make({
   meta: {
@@ -50,10 +50,10 @@ export const CreateConnection = Operation.make({
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
-    accessToken: Ref.Ref(AccessToken.AccessToken).annotations({
+    accessToken: Ref.Ref(AccessToken.AccessToken).annotate({
       description: 'The access token this Connection uses to authenticate to its service.',
     }),
-    name: Schema.String.annotations({
+    name: Schema.String.annotate({
       description: 'Optional user-friendly label.',
     }).pipe(Schema.optional),
   }),

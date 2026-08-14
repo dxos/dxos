@@ -10,11 +10,11 @@ import { composable } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { PostContent } from '#components';
 import { translations } from '#translations';
+import { Subscription } from '#types';
 
-import { PostContent } from '../components';
 import { type ExtractedArticle, extractArticle } from '../operations/extraction';
-import { Subscription } from '../types';
 
 type State =
   | { status: 'idle' }
@@ -70,7 +70,7 @@ const DefaultStory = () => {
                   void handleFetch();
                 }
               }}
-              classNames='is-full min-is-[24rem]'
+              classNames='w-full min-w-[24rem]'
             />
           </Input.Root>
           <Select.Root

@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { type SpacePluginOptions } from '#types';
+import { SpaceSchema } from '#types';
 
 import {
   createCollectionExtensions,
@@ -18,7 +18,7 @@ import {
 } from './extensions';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ shareableLinkOrigin = window.location.origin }: SpacePluginOptions = {}) {
+  Effect.fnUntraced(function* ({ shareableLinkOrigin = window.location.origin }: SpaceSchema.SpacePluginOptions = {}) {
     const extensions = yield* Effect.all([
       createSpaceExtensions(),
       createSettingsExtensions(),
@@ -27,6 +27,6 @@ export default Capability.makeModule(
       createCompanionExtensions(),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat());
   }),
 );

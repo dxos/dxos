@@ -1,10 +1,13 @@
 // Copyright 2025 DXOS.org
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const TableOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-row'),
-  () => import('./create'),
-  () => import('./export-rows'),
-  () => import('./on-schema-added'),
-);
+import { TableOperation } from '#types';
+
+export const TableOperationHandlerSet = OperationHandlerSet.lazy([
+  TableOperation.AddRow.pipe(Operation.lazyHandler(() => import('./add-row'))),
+  TableOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),
+  TableOperation.ExportRows.pipe(Operation.lazyHandler(() => import('./export-rows'))),
+  TableOperation.OnTypeAdded.pipe(Operation.lazyHandler(() => import('./on-schema-added'))),
+]);

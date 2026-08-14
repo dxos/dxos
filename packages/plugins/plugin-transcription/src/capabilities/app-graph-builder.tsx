@@ -5,10 +5,12 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { Mic } from '#components';
 import { meta } from '#meta';
@@ -44,6 +46,6 @@ export default Capability.makeModule(
         ]),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+import * as Struct from 'effect/Struct';
 import { describe, expect, test } from 'vitest';
 
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -77,7 +76,7 @@ describe('effect-to-json', () => {
     );
     const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
       Schema.Struct({
-        name: Ref(Nested).annotations({ [FieldLookupAnnotationId]: 'name' }),
+        name: Ref(Nested).annotate({ [FieldLookupAnnotationId]: 'name' }),
       }),
     );
     const jsonSchema = toJsonSchema(Test);
@@ -128,8 +127,8 @@ describe('effect-to-json', () => {
   test('annotations', () => {
     const TempSchema = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
       Schema.Struct({
-        name: Schema.String.annotations({ description: 'Person name', title: 'Name' }),
-        email: Schema.String.pipe(FormatAnnotation.set(TypeFormat.Email)).annotations({
+        name: Schema.String.annotate({ description: 'Person name', title: 'Name' }),
+        email: Schema.String.pipe(FormatAnnotation.set(TypeFormat.Email)).annotate({
           description: 'Email address',
         }),
       }),
@@ -186,7 +185,7 @@ describe('effect-to-json', () => {
     const Contact = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
       Schema.Struct({
         name: Schema.String,
-        organization: Ref(Organization).annotations({ description: 'Contact organization' }),
+        organization: Ref(Organization).annotate({ description: 'Contact organization' }),
       }),
     );
 
@@ -212,19 +211,15 @@ describe('effect-to-json', () => {
           type: 'string',
         },
         organization: {
-          allOf: [
-            {
-              $id: '/schemas/echo/ref',
-              $ref: '/schemas/echo/ref',
-              reference: {
-                schema: {
-                  $ref: 'dxn:com.example.type.organization',
-                },
-                schemaVersion: '0.1.0',
-              },
-            },
-          ],
+          $id: '/schemas/echo/ref',
+          $ref: '/schemas/echo/ref',
           description: 'Contact organization',
+          reference: {
+            schema: {
+              $ref: 'dxn:com.example.type.organization',
+            },
+            schemaVersion: '0.1.0',
+          },
         },
       },
       required: ['name', 'organization', 'id'],
@@ -242,7 +237,7 @@ describe('effect-to-json', () => {
     const Contact = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
       Schema.Struct({
         name: Schema.String,
-        organization: Ref(Organization).annotations({ description: 'Contact organization' }),
+        organization: Ref(Organization).annotate({ description: 'Contact organization' }),
       }),
     );
 
@@ -266,22 +261,49 @@ describe('effect-to-json', () => {
     log('schema', { jsonSchema });
   });
 
+  test('serialize a pair of mutually-recursive schemas (A embeds B, B embeds A)', () => {
+    // Unlike a schema that's self-referential (caught by suspendCache within one expansion), a
+    // *mutual* cycle across two distinct schemas isn't: each side starts a fresh suspendCache with
+    // no memory of the other already being in flight, so without the `inProgress` guard this
+    // recurses forever (A -> B -> A -> B -> ...).
+    interface A {
+      readonly kind: 'a';
+      readonly b?: B;
+    }
+    interface B {
+      readonly kind: 'b';
+      readonly a?: A;
+    }
+    const A: Schema.Codec<A> = Schema.Struct({
+      kind: Schema.Literal('a'),
+      b: Schema.optional(Schema.suspend((): Schema.Codec<B> => B)),
+    });
+    const B: Schema.Codec<B> = Schema.Struct({
+      kind: Schema.Literal('b'),
+      a: Schema.optional(Schema.suspend((): Schema.Codec<A> => A)),
+    });
+
+    const jsonSchema = toJsonSchema(A);
+    expect(jsonSchema.properties?.kind).toEqual({ type: 'string', enum: ['a'] });
+    expect(jsonSchema.properties?.b).toBeDefined();
+  });
+
   test('tuple schema with description', () => {
     const schema = Schema.Struct({
-      args: Schema.Tuple(
-        Schema.String.annotations({ description: 'The source currency' }),
-        Schema.String.annotations({ description: 'The target currency' }),
-      ),
+      args: Schema.Tuple([
+        Schema.String.annotate({ description: 'The source currency' }),
+        Schema.String.annotate({ description: 'The target currency' }),
+      ]),
     });
     const jsonSchema = toJsonSchema(schema);
     log('schema', { jsonSchema });
 
-    (Schema.asserts(JsonSchemaType) as any)(jsonSchema);
+    Schema.asserts(JsonSchemaType, jsonSchema);
   });
 
   test('reference with title annotation', () => {
     const schema = Schema.Struct({
-      contact: Ref(TestSchema.Person).annotations({ title: 'Custom Title' }),
+      contact: Ref(TestSchema.Person).annotate({ title: 'Custom Title' }),
     });
 
     // log.info('schema before', { ast: schema.ast });
@@ -292,15 +314,9 @@ describe('effect-to-json', () => {
     const effectSchema = toEffectSchema(jsonSchema);
     // log.info('effect schema', { ast: effectSchema.ast });
 
-    expect(
-      effectSchema.pipe(
-        Schema.pluck('contact'),
-        Schema.typeSchema,
-        (s) => s.ast,
-        SchemaAST.getAnnotation(SchemaAST.TitleAnnotationId),
-        Option.getOrUndefined,
-      ),
-    ).to.eq('Custom Title');
+    // `Schema.pluck` has no v4 replacement; the property is read off the AST directly.
+    const contact = SchemaAST.getPropertySignatures(effectSchema.ast).find((property) => property.name === 'contact');
+    expect(SchemaAST.getAnnotation(contact!.type, SchemaAST.TitleAnnotationId)).to.eq('Custom Title');
   });
 
   test('relation schema', () => {
@@ -373,7 +389,7 @@ describe('effect-to-json', () => {
 
   test('object id with description', () => {
     const schema = Schema.Struct({
-      id: EntityId.annotations({ description: 'The id' }),
+      id: EntityId.annotate({ description: 'The id' }),
     });
     // log.info('schema', { schema: EntityId.ast });
     const jsonSchema = toJsonSchema(schema);
@@ -456,7 +472,7 @@ describe('json-to-effect', () => {
         boolean: Schema.Boolean,
         array: Schema.Array(Schema.String),
         twoDArray: Schema.Array(Schema.Array(Schema.String)),
-        record: Schema.Record({ key: Schema.String, value: Schema.Number }),
+        record: Schema.Record(Schema.String, Schema.Number),
         object: Schema.Struct({ id: Schema.String, field: Ref(Organization) }),
         echoObject: Ref(Organization),
         echoObjectArray: Schema.Array(Ref(Organization)),
@@ -465,7 +481,7 @@ describe('json-to-effect', () => {
       } as const;
 
       const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
-        partial ? Schema.partial(Schema.Struct(fields)) : Schema.Struct(fields),
+        partial ? Schema.Struct(fields).mapFields(Struct.map(Schema.optional)) : Schema.Struct(fields),
       );
 
       const jsonSchema = toJsonSchema(Test);
@@ -526,7 +542,7 @@ describe('json-to-effect', () => {
       typename: 'com.example.type.project',
       version: '0.1.0',
     });
-    expect(getTypeIdentifierAnnotation(schema)).to.deep.eq('echo:/01JERV1HQCQZDQ4NVCJ42QB38F');
+    expect(getTypeIdentifierAnnotation(schema)).to.deep.eq('echo:///01JERV1HQCQZDQ4NVCJ42QB38F');
   });
 
   test('symbol annotations get compared', () => {
@@ -537,7 +553,7 @@ describe('json-to-effect', () => {
 
   test('description gets preserved', () => {
     const schema = Schema.Struct({
-      name: Schema.String.annotations({ description: 'Name' }),
+      name: Schema.String.annotate({ description: 'Name' }),
     });
     const jsonSchema = toJsonSchema(schema);
     const effectSchema = toEffectSchema(jsonSchema);
@@ -589,14 +605,14 @@ describe('json-to-effect', () => {
 
   test('default annotation ', () => {
     const schema = Schema.Struct({
-      str: Schema.String.annotations({
+      str: Schema.String.annotate({
         default: 'foo',
       }),
-      arr: Schema.Array(Schema.String).annotations({
+      arr: Schema.Array(Schema.String).annotate({
         default: [],
       }),
       obj: Schema.Struct({
-        foo: Schema.optional(Schema.String).annotations({
+        foo: Schema.optional(Schema.String).annotate({
           default: 'bar',
         }),
       }),
@@ -625,7 +641,6 @@ describe('json-to-effect', () => {
             "propertyOrder": [
               "foo",
             ],
-            "required": [],
             "type": "object",
           },
           "str": {
@@ -670,7 +685,6 @@ describe('json-to-effect', () => {
         "propertyOrder": [
           "contact",
         ],
-        "required": [],
         "type": "object",
       }
     `);
@@ -730,6 +744,25 @@ describe('json-to-effect', () => {
     const effectSchema = toEffectSchema(jsonSchema);
     expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(input.ast));
   });
+
+  // An unconstrained value type serializes to the empty schema, so v4 emits no `additionalProperties`
+  // and the document reads as a closed struct. Operations persist their input schema through this
+  // round-trip (`Operation.serialize`), so losing it turned a property bag into a struct that accepts
+  // nothing — and the re-emitted tool schema was rejected by the model provider outright.
+  test('an open record survives the round-trip', ({ expect }) => {
+    const input = Schema.Struct({ properties: Schema.Record(Schema.String, Schema.Any) });
+
+    const jsonSchema = toJsonSchema(input);
+    const serialized = jsonSchema.properties?.properties;
+    expect(serialized?.additionalProperties).to.eq(true);
+
+    // Lossless: re-serializing the decoded schema reproduces the document.
+    expect(toJsonSchema(toEffectSchema(jsonSchema))).to.deep.eq(jsonSchema);
+
+    // And the decoded schema still accepts arbitrary keys.
+    const decoded = Schema.decodeUnknownSync(toEffectSchema(jsonSchema))({ properties: { any: 1, keys: 'ok' } });
+    expect(decoded).to.deep.eq({ properties: { any: 1, keys: 'ok' } });
+  });
 });
 
 describe('reference', () => {
@@ -750,44 +783,36 @@ describe('reference', () => {
   });
 
   test('title annotation', () => {
-    const schema = Ref(TestSchema.Person).annotations({ title: 'My custom title' });
+    const schema = Ref(TestSchema.Person).annotate({ title: 'My custom title' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      allOf: [
-        {
-          $id: '/schemas/echo/ref',
-          $ref: '/schemas/echo/ref',
-          reference: {
-            schema: {
-              $ref: 'dxn:com.example.type.person',
-            },
-            schemaVersion: '0.1.0',
-          },
+      $id: '/schemas/echo/ref',
+      $ref: '/schemas/echo/ref',
+      reference: {
+        schema: {
+          $ref: 'dxn:com.example.type.person',
         },
-      ],
+        schemaVersion: '0.1.0',
+      },
       title: 'My custom title',
     });
   });
 
   test('description annotation', () => {
-    const schema = Ref(TestSchema.Person).annotations({ description: 'My custom description' });
+    const schema = Ref(TestSchema.Person).annotate({ description: 'My custom description' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      allOf: [
-        {
-          $id: '/schemas/echo/ref',
-          $ref: '/schemas/echo/ref',
-          reference: {
-            schema: {
-              $ref: 'dxn:com.example.type.person',
-            },
-            schemaVersion: '0.1.0',
-          },
-        },
-      ],
+      $id: '/schemas/echo/ref',
+      $ref: '/schemas/echo/ref',
       description: 'My custom description',
+      reference: {
+        schema: {
+          $ref: 'dxn:com.example.type.person',
+        },
+        schemaVersion: '0.1.0',
+      },
     });
 
     const effectSchema = toEffectSchema(jsonSchema);
@@ -805,10 +830,35 @@ describe('reference', () => {
     });
   });
 
+  test('widened reference node still decodes as a reference', () => {
+    // A wire boundary (e.g. the MCP tool-schema projection) may widen a reference with the
+    // structural keywords so schema-unaware consumers see an object. Decoding must still match the
+    // sentinel before the generic object branch, or the reference rebuilds as a plain struct.
+    const widened = {
+      $id: '/schemas/echo/ref',
+      $ref: '/schemas/echo/ref',
+      type: 'object',
+      properties: { '/': { type: 'string' } },
+      required: ['/'],
+      reference: {
+        schema: {
+          $ref: 'dxn:com.example.type.person',
+        },
+        schemaVersion: '0.1.0',
+      },
+    } as JsonSchemaType;
+    const deserializedSchema = toEffectSchema(widened);
+    const refAst = getReferenceAst(deserializedSchema.ast);
+    expect(refAst).toEqual({
+      typename: Type.getTypename(TestSchema.Person),
+      version: Type.getVersion(TestSchema.Person),
+    });
+  });
+
   test('empty struct round-trips as TypeLiteral', () => {
     const schema = Schema.Struct({});
     const jsonSchema = toJsonSchema(schema);
     const deserialized = toEffectSchema(jsonSchema);
-    expect(deserialized.ast._tag).toBe('TypeLiteral');
+    expect(deserialized.ast._tag).toBe('Objects');
   });
 });

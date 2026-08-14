@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { type StateError, type StateStore, type Type, tapStage } from '@dxos/crawler';
@@ -73,7 +73,7 @@ export const summarizeSegment = (
   LanguageModel.generateObject({ schema: TopicShape, prompt: topicPrompt(segment, messages) }).pipe(
     Effect.provide(AiService.model(DEFAULT_MODEL).pipe(Layer.orDie)),
     Effect.map(({ value }) => value),
-    Effect.catchAll(() => Effect.succeed({} as { name?: string; summary?: string })),
+    Effect.catch(() => Effect.succeed({} as { name?: string; summary?: string })),
     Effect.map(({ name, summary }) => ({
       name: name?.trim() || fallbackName(messages),
       summary:

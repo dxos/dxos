@@ -5,17 +5,19 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Trigger } from '@dxos/compute';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
+import { SchemaAST } from '@dxos/effect';
 import { IconButton, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { ParentLabelAnnotation } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { Routine } from '#types';
 
+import { wireTriggers } from '../../util';
 import {
   FrequencyDefaults,
   Schedule,
@@ -31,61 +33,47 @@ import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
 
 // `enabled` is extended onto every spec form so it renders inline with the kind's fields.
-const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled', 'remote'));
+// `SchemaAST` rather than `mapFields`/`fieldsAssign`: `Type.getSchema` returns a `Codec`, which
+// carries no field literals for a struct operation.
+const EnabledFields = SchemaAST.pick(Type.getSchema(Trigger.Trigger).ast, ['enabled', 'remote']);
+
+const withEnabled = (fields: Schema.Struct.Fields): Schema.Codec<any, any> =>
+  Schema.make<Schema.Codec<any, any>>(SchemaAST.assignFields(Schema.Struct(fields).ast, EnabledFields));
 
 // Scoped trigger form, modeled as a top-level discriminated union (one member per pluggable variant) so the
 // Form renders the chosen kind's fields as one flat field set (no nested, bordered sub-fieldset). The kind
 // itself is chosen by `TriggerKindPicker` (a radio-card list) rather than a select. The feed field carries
 // ParentLabelAnnotation so the built-in RefField labels feed options by their parent object (e.g. the mailbox).
-const TimerSpecForm = Schema.extend(
-  Schema.Struct({
-    kind: Schema.Literal('timer'),
-    cron: Schema.String.pipe(Schema.annotations({ title: 'Schedule (cron)' }), Schema.optional),
-  }),
-  EnabledForm,
-);
+const TimerSpecForm = withEnabled({
+  kind: Schema.Literal('timer'),
+  cron: Schema.String.pipe(Schema.annotate({ title: 'Schedule (cron)' }), Schema.optional),
+});
 
-const SubscriptionSpecForm = Schema.extend(
-  Schema.Struct({
-    kind: Schema.Literal('subscription'),
-    // The object type to watch; converted to a `Filter.type` query. `typename` renders via a custom select of
-    // the space/registry types (see `TypeSelectField`); `deep`/`delay` map to the subscription's options.
-    typename: Schema.String.pipe(Schema.annotations({ title: 'Type' }), Schema.optional),
-    deep: Schema.Boolean.pipe(Schema.annotations({ title: 'Nested' }), Schema.optional),
-    delay: Schema.Number.pipe(Schema.annotations({ title: 'Delay (ms)' }), Schema.optional),
-  }),
-  EnabledForm,
-);
+const SubscriptionSpecForm = withEnabled({
+  kind: Schema.Literal('subscription'),
+  // The object type to watch; converted to a `Filter.type` query. `typename` renders via a custom select of
+  // the space/registry types (see `TypeSelectField`); `deep`/`delay` map to the subscription's options.
+  typename: Schema.String.pipe(Schema.annotate({ title: 'Type' }), Schema.optional),
+  deep: Schema.Boolean.pipe(Schema.annotate({ title: 'Nested' }), Schema.optional),
+  delay: Schema.Number.pipe(Schema.annotate({ title: 'Delay (ms)' }), Schema.optional),
+});
 
-const WebhookSpecForm = Schema.extend(
-  Schema.Struct({
-    kind: Schema.Literal('webhook'),
-    method: Schema.String.pipe(Schema.annotations({ title: 'Method' }), Schema.optional),
-    port: Schema.Number.pipe(Schema.annotations({ title: 'Port' }), Schema.optional),
-  }),
-  EnabledForm,
-);
+const WebhookSpecForm = withEnabled({
+  kind: Schema.Literal('webhook'),
+  method: Schema.String.pipe(Schema.annotate({ title: 'Method' }), Schema.optional),
+  port: Schema.Number.pipe(Schema.annotate({ title: 'Port' }), Schema.optional),
+});
 
-const FeedSpecForm = Schema.extend(
-  Schema.Struct({
-    kind: Schema.Literal('feed'),
-    feed: Ref.Ref(Feed.Feed).pipe(
-      ParentLabelAnnotation.set(true),
-      Schema.annotations({ title: 'Feed' }),
-      Schema.optional,
-    ),
-  }),
-  EnabledForm,
-);
+const FeedSpecForm = withEnabled({
+  kind: Schema.Literal('feed'),
+  feed: Ref.Ref(Feed.Feed).pipe(ParentLabelAnnotation.set(true), Schema.annotate({ title: 'Feed' }), Schema.optional),
+});
 
-const EmailSpecForm = Schema.extend(
-  Schema.Struct({
-    kind: Schema.Literal('email'),
-  }),
-  EnabledForm,
-);
+const EmailSpecForm = withEnabled({
+  kind: Schema.Literal('email'),
+});
 
-const TriggerForm = Schema.Union(TimerSpecForm, SubscriptionSpecForm, WebhookSpecForm, FeedSpecForm, EmailSpecForm);
+const TriggerForm = Schema.Union([TimerSpecForm, SubscriptionSpecForm, WebhookSpecForm, FeedSpecForm, EmailSpecForm]);
 type TriggerFormValues = Schema.Schema.Type<typeof TriggerForm>;
 
 // Flat view of the form values: `Partial<TriggerFormValues>` collapses a discriminated union to its common
@@ -200,7 +188,7 @@ export const TriggerEditor = ({ classNames, db, routine, trigger, readonly }: Tr
         onValuesChanged={handleValuesChanged}
       >
         {/* TODO(burdon): Generalize Form handling (indented section) for discriminated unions. */}
-        <Form.Content classNames={mx(kind && 'pb-2 bg-card-surface border border-separator rounded-xs', classNames)}>
+        <Form.Content classNames={mx(kind && 'pb-2 dx-card-surface border border-separator rounded-xs', classNames)}>
           {kind ? (
             <>
               <div className='flex items-center'>
@@ -342,7 +330,7 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
       const remote = values.remote;
       // Edit the spec, `enabled`, and `remote` on the trigger directly from the form values.
       // The trigger's `function` and `input` (including the instructions binding and any operation-specific
-      // bindings like `{ magazine }`) are wired once by `Routine.make`, so they are not re-derived here.
+      // bindings like `{ magazine }`) are wired once by `makeRoutine`, so they are not re-derived here.
       if (trigger) {
         Obj.update(trigger, (trigger) => {
           // The subscription spec's QueryAST is deeply readonly while the live ECHO draft's `spec` is mutable;
@@ -353,7 +341,7 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
           trigger.remote = remote;
         });
       } else {
-        // Defensive: the draft normally carries an owned trigger already (see `Routine.make`). If absent,
+        // Defensive: the draft normally carries an owned trigger already (see `makeRoutine`). If absent,
         // create one in memory and attach it to the routine graph — nothing is persisted until save.
         const created = Trigger.make({ spec, enabled, remote });
         Obj.setParent(created, routine);
@@ -362,7 +350,7 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
         });
         // Wire the new trigger's `function`/`input` to dispatch the routine's action (RunInstructions binds the
         // owned instructions; an operation binds directly).
-        Routine.wireTriggers(routine);
+        wireTriggers(routine);
       }
     },
     [routine, trigger],

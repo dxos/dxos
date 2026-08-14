@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { Cell, Selection, Tool, Viewport } from './types';
 

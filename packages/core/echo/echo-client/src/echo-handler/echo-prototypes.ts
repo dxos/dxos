@@ -68,6 +68,7 @@ import {
   EventId,
   type JsonSchemaType,
   MetaId,
+  ObjectBranchId,
   ObjectDatabaseId,
   ObjectDeletedId,
   type ObjectJSON,
@@ -142,7 +143,7 @@ export const getReified = (target: ProxyTarget): any => {
   return target[symbolInternals].getDecoded(fullPath);
 };
 
-export const getSchema = (target: ProxyTarget): Schema.Schema.AnyNoContext | undefined => {
+export const getSchema = (target: ProxyTarget): Schema.Codec<any, any> | undefined => {
   if (target[symbolNamespace] === META_NAMESPACE) {
     return EntityMetaSchema;
   }
@@ -315,7 +316,7 @@ const getSchemaKind = (target: ProxyTarget, receiver: any): EntityKind | undefin
  * Lazily rebuilds the Effect Schema from the entity's `jsonSchema` and caches it on internals.
  * Lets persisted Type entities structurally satisfy `Type<A>` via the proxy `get` trap.
  */
-const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Schema.AnyNoContext | undefined => {
+const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Codec<any, any> | undefined => {
   if (target[symbolInternals].getKind() !== EntityKind.Type) {
     return undefined;
   }
@@ -327,7 +328,7 @@ const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Sch
   if (jsonSchema == null) {
     return undefined;
   }
-  const rebuilt = toEffectSchema(jsonSchema).annotations({
+  const rebuilt = toEffectSchema(jsonSchema).annotate({
     [TypeIdentifierAnnotationId]: EID.make({ entityId: target[symbolInternals].id }),
   });
   target[symbolInternals].cachedStaticSlot = rebuilt;
@@ -349,10 +350,12 @@ export const getVersion = (target: ProxyTarget): Obj.Version => {
 /** The meta sub-proxy for the object. `self` is the proxy (its handler backs the meta proxy). */
 const getMeta = (self: ProxyTarget): EntityMeta => {
   const target = rawTarget(self);
-  // Reuse the root target's event so subscribers of the meta proxy are notified: the central
-  // `core.updates` subscription emits on the root's event only (see the nested-record path).
+  // Reuse the root target's events so subscribers of the meta proxy are notified: the central
+  // core subscriptions emit on the root's events only (see the nested-record path).
   const metaTarget = createRecordTarget(
-    createInstanceState(target[symbolInternals], META_NAMESPACE, [], { event: target[EventId] }),
+    createInstanceState(target[symbolInternals], META_NAMESPACE, [], {
+      event: target[EventId],
+    }),
   );
   return createProxy(metaTarget, getProxyHandler(self)) as any;
 };
@@ -507,7 +510,7 @@ export class EchoRecord {
     throw new Error('EchoRecord is a behaviour prototype and must not be instantiated.');
   }
 
-  get [SchemaId](): Schema.Schema.AnyNoContext | undefined {
+  get [SchemaId](): Schema.Codec<any, any> | undefined {
     return getSchema(this);
   }
 
@@ -605,11 +608,15 @@ export class EchoRoot extends EchoRecord {
     return getEchoDatabase(this[symbolInternals]);
   }
 
+  get [ObjectBranchId](): string {
+    return this[symbolInternals].branch;
+  }
+
   get [SchemaKindId](): EntityKind | undefined {
     return getSchemaKind(this, this);
   }
 
-  get [StaticTypeSchemaSlot](): Schema.Schema.AnyNoContext | undefined {
+  get [StaticTypeSchemaSlot](): Schema.Codec<any, any> | undefined {
     return getStaticTypeSchemaSlot(this, this);
   }
 

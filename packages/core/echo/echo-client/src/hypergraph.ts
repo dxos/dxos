@@ -536,14 +536,12 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
     // TODO(dmaretskyi): Consider throwing if space not found.
 
-    if (!OBJECT_DIAGNOSTICS.has(objectId)) {
-      OBJECT_DIAGNOSTICS.set(objectId, {
-        spaceId,
-        objectId,
-        loadReason: 'reference access',
-        loadedStack: new StackTrace(),
-      });
-    }
+    recordObjectDiagnostic(objectId, () => ({
+      spaceId,
+      objectId,
+      loadReason: 'reference access',
+      loadedStack: new StackTrace().getStack(),
+    }));
 
     log('trap', { spaceId, objectId });
     if (onResolve) {
@@ -813,11 +811,38 @@ type ObjectDiagnostic = {
   objectId: string;
   spaceId: string;
   loadReason: string;
-  loadedStack?: StackTrace;
+  /**
+   * Formatted at capture. Storing the `StackTrace` itself would keep this map — which is never
+   * pruned — holding an unformatted stack, and an unformatted stack retains the receiver of every
+   * frame it captured, i.e. the hypergraph and the whole client graph behind it (DX-1140).
+   */
+  loadedStack?: string;
   query?: string;
 };
 
+/**
+ * First load of each object, for the `referenced-objects` diagnostic. Bounded because entries are
+ * keyed by object id and never removed: a long-lived host that keeps resolving new objects (a worker
+ * syncing a mailbox, say) would otherwise accumulate one entry per object forever. Oldest entries are
+ * dropped first, so the diagnostic keeps the most recent loads.
+ */
 export const OBJECT_DIAGNOSTICS = new Map<string, ObjectDiagnostic>();
+
+const MAX_OBJECT_DIAGNOSTICS = 1_000;
+
+export const recordObjectDiagnostic = (objectId: string, diagnostic: () => ObjectDiagnostic): void => {
+  if (OBJECT_DIAGNOSTICS.has(objectId)) {
+    return;
+  }
+  if (OBJECT_DIAGNOSTICS.size >= MAX_OBJECT_DIAGNOSTICS) {
+    // Map iteration is insertion-ordered, so the first key is the oldest.
+    const oldest = OBJECT_DIAGNOSTICS.keys().next();
+    if (!oldest.done) {
+      OBJECT_DIAGNOSTICS.delete(oldest.value);
+    }
+  }
+  OBJECT_DIAGNOSTICS.set(objectId, diagnostic());
+};
 
 trace.diagnostic({
   id: 'referenced-objects',
@@ -828,7 +853,7 @@ trace.diagnostic({
         objectId: object.objectId,
         spaceId: object.spaceId,
         loadReason: object.loadReason,
-        creationStack: object.loadedStack?.getStack(),
+        creationStack: object.loadedStack,
         query: object.query,
       };
     });

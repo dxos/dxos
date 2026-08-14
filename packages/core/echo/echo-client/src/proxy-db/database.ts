@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import { type Heads } from '@automerge/automerge';
+import * as EffectContext from 'effect/Context';
+import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
@@ -44,17 +45,18 @@ import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { runServiceCall } from '@dxos/protocols';
+import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { EntityManager } from '../core-db';
+import { type BranchStore, EntityManager } from '../core-db';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
+  checkoutVersionSnapshot,
   createObject,
   getObjectCore,
   initEchoReactiveObjectRootProxy,
@@ -132,6 +134,14 @@ export interface EchoDatabase extends Database.Database {
    */
   _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
 
+  //
+  // Branching — inherited from {@link Database.Database} (`createBranch`/`switchBranch`/
+  // `mergeBranch`/`deleteBranch`/`listBranches`/`getCurrentBranch`/`branch`). Client-only extras:
+  //
+
+  /** Fires after any branch operation (create / switch / merge / delete) for reactive branch UI. */
+  readonly branchesChanged: ReadOnlyEvent<void>;
+
   /**
    * Insert new objects.
    * @deprecated Use `add` instead.
@@ -157,13 +167,23 @@ export interface EchoDatabase extends Database.Database {
   getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
 }
 
+/**
+ * A caller-owned, writable **independent instance** of one object bound to one branch (a distinct
+ * object instance, not a UI surface).
+ * @see Database.BranchBinding
+ */
+export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = Database.BranchBinding<T>;
+
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: EffectContext.Context<never>;
   spaceId: SpaceId;
+
+  /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
+  branchStore?: BranchStore;
 
   /**
    * Run a reactive query for dynamic schemas.
@@ -189,9 +209,25 @@ type SpaceFeedSyncState = Pick<Database.SyncState, 'blocksToPull' | 'blocksToPus
 const EMPTY_FEED_SYNC_STATE: SpaceFeedSyncState = { blocksToPull: '0', blocksToPush: '0', totalBlocks: '0' };
 
 /**
- * Poll interval for feed block backlog, which has no change stream.
+ * Sums per-namespace feed block backlog counts into the space-wide totals tracked by
+ * {@link SpaceFeedSyncState}. Shared by the one-shot {@link DatabaseImpl.getSyncState} and the
+ * streaming {@link DatabaseImpl.subscribeToSyncState}.
  */
-const FEED_SYNC_POLL_INTERVAL = 2_000;
+const aggregateFeedSyncState = (response: FeedService.GetSyncStateResponse): SpaceFeedSyncState => {
+  let blocksToPull = 0n;
+  let blocksToPush = 0n;
+  let totalBlocks = 0n;
+  for (const namespace of response.namespaces ?? []) {
+    blocksToPull += BigInt(namespace.blocksToPull);
+    blocksToPush += BigInt(namespace.blocksToPush);
+    totalBlocks += BigInt(namespace.totalBlocks);
+  }
+  return {
+    blocksToPull: String(blocksToPull),
+    blocksToPush: String(blocksToPush),
+    totalBlocks: String(totalBlocks),
+  };
+};
 
 /**
  * Selects the peer to report the automerge backlog against: the explicit `peerId` when given,
@@ -251,7 +287,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   #feedService: FeedService.Client | undefined;
 
   /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
-  readonly #runtime: Runtime.Runtime<never>;
+  readonly #runtime: EffectContext.Context<never>;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -275,9 +311,15 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       runtime: params.runtime,
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
+      branchStore: params.branchStore,
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
+
+    // Effect hashes an unmarked object structurally, walking its prototype chain — on a database
+    // that recurses through the whole entity graph and throws on the first strict-mode function it
+    // reaches. Identity is the only sensible equality here, and it is what `Atom.family(db)` wants.
+    Equal.byReferenceUnsafe(this);
   }
 
   [inspect.custom]() {
@@ -381,12 +423,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return schema;
   }
 
-  private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext | Type.AnyEntity): Type.AnyEntity {
-    let schema: Schema.Schema.AnyNoContext;
+  private _addPersistentSchema(schemaInput: Schema.Codec<any, any> | Type.AnyEntity): Type.AnyEntity {
+    let schema: Schema.Codec<any, any>;
     let meta: TypeAnnotation | undefined;
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;
-      schema = Type.getSchema(entity).annotations({ [TypeIdentifierAnnotationId]: undefined });
+      schema = Type.getSchema(entity).annotate({ [TypeIdentifierAnnotationId]: undefined });
       meta =
         getTypeAnnotation(schema) ??
         ({
@@ -407,10 +449,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // Update jsonSchema with the full annotated schema.
     // TypeSchema.jsonSchema is readonly in the type but writable via change context.
     schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
-      schema.annotations({
+      schema.annotate({
         [TypeAnnotationId]: meta,
         [TypeIdentifierAnnotationId]: typeId,
-        [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+        ...makeTypeJsonSchemaAnnotation({
           identifier: typeId,
           kind: meta.kind,
           typename: meta.typename,
@@ -474,6 +516,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     invariant(!Type.isType(obj), 'use db.addType() to persist Type entities');
+    if (opts?.to) {
+      // Synchronous feed append: registers the object as a live feed object and schedules the
+      // background write. Returns the same instance; confirm persistence with `db.flush()`.
+      this.#getFeedHandle(opts.to).appendSync([obj]);
+      return obj;
+    }
     return this._addObject(obj, opts);
   }
 
@@ -603,6 +651,19 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /**
    * @internal
+   * Like {@link _getOrCreateFeedHandle}, but returns `undefined` instead of throwing when no feed
+   * service is connected. Used by query hydration, which must fall back to a plain (non-live)
+   * decode rather than fail the whole query when the feed backend isn't available.
+   */
+  _getFeedHandleIfAvailable(feedUri: EID.EID, namespace?: string): FeedHandle | undefined {
+    if (!this.#feedService) {
+      return undefined;
+    }
+    return this._getOrCreateFeedHandle(feedUri, namespace);
+  }
+
+  /**
+   * @internal
    * Returns an already-instantiated feed handle for a URI, without creating one.
    */
   _tryGetFeedHandle(feedUri: EID.EID): FeedHandle | undefined {
@@ -615,6 +676,23 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    */
   _knownFeedHandles(): Iterable<FeedHandle> {
     return this.#feeds.values();
+  }
+
+  /**
+   * Disposes and drops the cached feed handle for a feed (its live working-set / core cache). A
+   * subsequent access re-creates a fresh handle that re-reads the feed cold — primarily used by
+   * tests to model a spawned process reading the feed with an empty in-memory cache.
+   */
+  async evictFeedHandle(feed: Feed.Feed): Promise<void> {
+    const feedUri = Feed.getFeedUri(feed);
+    if (!feedUri) {
+      return;
+    }
+    const handle = this.#feeds.get(feedUri);
+    if (handle) {
+      this.#feeds.delete(feedUri);
+      await handle.dispose();
+    }
   }
 
   #getFeedHandle(feed: Feed.Feed): FeedHandle {
@@ -647,6 +725,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
     await this._entityManager.flush(opts);
+    await Promise.all([...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()));
   }
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
@@ -699,7 +778,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   subscribeToSyncState(cb: (state: Database.SyncState) => void, options?: Database.GetSyncStateOptions): CleanupFn {
     const ctx = Context.default();
-    let cancelled = false;
     let automerge: SpaceSyncState = { peers: [] };
     let feeds: SpaceFeedSyncState = EMPTY_FEED_SYNC_STATE;
     const emit = () => cb(combineSyncState(automerge, feeds, this.spaceId, options?.peerId));
@@ -712,35 +790,25 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    // Feed blocks have no change stream, so poll the backend.
-    let pollInFlight = false;
-    const pollFeeds = async () => {
-      // Skip overlapping ticks so a slow RPC can't emit stale state after a newer poll.
-      if (pollInFlight) {
-        return;
-      }
-      pollInFlight = true;
-      try {
-        const next = await this.#getSpaceFeedSyncState();
-        if (!cancelled) {
-          feeds = next;
-          emit();
-        }
-      } catch (error) {
-        // Keep the previous feeds state on failure rather than leaving an unhandled rejection.
-        if (!cancelled) {
-          log.warn('failed to poll feed sync state', { error });
-        }
-      } finally {
-        pollInFlight = false;
-      }
-    };
-    void pollFeeds();
-    const timer = setInterval(() => void pollFeeds(), FEED_SYNC_POLL_INTERVAL);
-    ctx.onDispose(() => {
-      cancelled = true;
-      clearInterval(timer);
-    });
+    if (this.#feedService) {
+      ctx.onDispose(
+        subscribeStream(
+          this.#runtime,
+          this.#feedService['FeedService.subscribeSyncState']({ spaceId: this.spaceId, namespaces: [] }),
+          {
+            onData: (response) => {
+              feeds = aggregateFeedSyncState(response);
+              emit();
+            },
+            onError: (error) => {
+              if (!(error instanceof RpcClosedError)) {
+                log.warn('feed sync state stream failed', { error });
+              }
+            },
+          },
+        ),
+      );
+    }
 
     return () => {
       void ctx.dispose();
@@ -756,21 +824,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     }
     const response = await runServiceCall(
       this.#runtime,
-      this.#feedService.FeedService.getSyncState({ spaceId: this.spaceId, namespaces: [] }),
+      this.#feedService['FeedService.getSyncState']({ spaceId: this.spaceId, namespaces: [] }),
     );
-    let blocksToPull = 0n;
-    let blocksToPush = 0n;
-    let totalBlocks = 0n;
-    for (const namespace of response.namespaces ?? []) {
-      blocksToPull += BigInt(namespace.blocksToPull);
-      blocksToPush += BigInt(namespace.blocksToPush);
-      totalBlocks += BigInt(namespace.totalBlocks);
-    }
-    return {
-      blocksToPull: String(blocksToPull),
-      blocksToPush: String(blocksToPush),
-      totalBlocks: String(totalBlocks),
-    };
+    return aggregateFeedSyncState(response);
   }
 
   getAllObjectIds(): string[] {
@@ -813,6 +869,61 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.getObjectDocumentId(objectId);
   }
 
+  get branchesChanged(): ReadOnlyEvent<void> {
+    return this._entityManager.branchesChanged;
+  }
+
+  getCurrentBranch(objectId: string): string {
+    return this._entityManager.getCurrentBranch(objectId);
+  }
+
+  getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T> {
+    return checkoutVersionSnapshot(obj, [...heads]);
+  }
+
+  listBranches(objectId: string): string[] {
+    return this._entityManager.listBranches(objectId);
+  }
+
+  createBranch(
+    rootObjectId: string,
+    name: string,
+    opts?: { fromHeads?: Heads | Record<string, Heads> },
+  ): Promise<void> {
+    return this._entityManager.createBranch(rootObjectId, name, opts);
+  }
+
+  switchBranch(rootObjectId: string, name: string): Promise<void> {
+    return this._entityManager.switchBranch(rootObjectId, name);
+  }
+
+  mergeBranch(rootObjectId: string, name: string, opts?: { deleteAfter?: boolean }): Promise<void> {
+    return this._entityManager.mergeBranch(rootObjectId, name, opts);
+  }
+
+  syncBranch(rootObjectId: string, name: string): Promise<void> {
+    return this._entityManager.syncBranch(rootObjectId, name);
+  }
+
+  deleteBranch(rootObjectId: string, name: string): void {
+    this._entityManager.deleteBranch(rootObjectId, name);
+  }
+
+  async branch<T extends Obj.Unknown>(obj: T, name: string): Promise<BranchBinding<T>> {
+    assertArgument(isEchoObject(obj), 'obj', 'expected ECHO object stored in the database');
+    // Guard against foreign/unbound objects: 'main' would hand back an unrelated live object as a
+    // valid binding, and other branches resolve by id only (an id collision could bind another
+    // space's data).
+    assertArgument(getObjectCore(obj).database === this, 'obj', 'object is not bound to this database');
+    if (name === 'main') {
+      // The live object IS the main binding; nothing to release.
+      return { object: obj, dispose: () => {} };
+    }
+    const { core, dispose } = await this._entityManager.bindCoreToBranch(getObjectCore(obj).id, name);
+    const object = initEchoReactiveObjectRootProxy(core, this) as T;
+    return { object, dispose };
+  }
+
   getObjectCoreById(id: string, opts?: Parameters<EntityManager['getObjectCoreById']>[1]) {
     return this._entityManager.getObjectCoreById(id, opts);
   }
@@ -852,6 +963,18 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /** @deprecated Use `flush()`. */
   async updateIndexes(): Promise<void> {
     await this._entityManager.updateIndexes();
+  }
+
+  async stats(): Promise<Database.DatabaseStats> {
+    return this._entityManager.stats();
+  }
+
+  async runGarbageCollection(options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
+    return this._entityManager.runGarbageCollection(options);
+  }
+
+  retainObjects(keep: Iterable<string>): string[] {
+    return this._entityManager.retainObjects(keep);
   }
 
   /**

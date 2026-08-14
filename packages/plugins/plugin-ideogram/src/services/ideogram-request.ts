@@ -12,20 +12,20 @@ import { FormInputAnnotation } from '@dxos/echo/Annotation';
  * `prompt`; the count is supplied by the generate op. Studio renders these as a schema-driven form.
  */
 export const IdeogramRequestConfig = Schema.Struct({
-  model: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false)).annotations({ title: 'Model' })),
+  model: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false)).annotate({ title: 'Model' })),
   prompt: Schema.NonEmptyString.pipe(
     Format.FormatAnnotation.set(Format.TypeFormat.Text),
-    Schema.annotations({ title: 'Prompt' }),
+    Schema.annotate({ title: 'Prompt' }),
   ),
   negativePrompt: Schema.optional(
     Schema.String.pipe(
       Format.FormatAnnotation.set(Format.TypeFormat.Text),
-      Schema.annotations({ title: 'Negative prompt' }),
+      Schema.annotate({ title: 'Negative prompt' }),
     ),
   ),
-  aspectRatio: Schema.optional(Schema.String.annotations({ title: 'Aspect ratio' })),
-  styleType: Schema.optional(Schema.String.annotations({ title: 'Style' })),
-  seed: Schema.optional(Schema.Number.annotations({ title: 'Seed' })),
+  aspectRatio: Schema.optional(Schema.String.annotate({ title: 'Aspect ratio' })),
+  styleType: Schema.optional(Schema.String.annotate({ title: 'Style' })),
+  seed: Schema.optional(Schema.Number.annotate({ title: 'Seed' })),
 });
 export interface IdeogramRequestConfig extends Schema.Schema.Type<typeof IdeogramRequestConfig> {}
 

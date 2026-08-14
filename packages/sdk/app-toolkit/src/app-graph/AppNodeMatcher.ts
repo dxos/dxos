@@ -6,7 +6,7 @@
 
 import * as Option from 'effect/Option';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { type Space, isSpace } from '@dxos/client/echo';
 
 /**
@@ -64,7 +64,7 @@ export const whenSpaceSettings = (node: Node.Node): Option.Option<Space> => {
  * ```ts
  * GraphBuilder.createExtension({
  *   id: 'myAiSection',
- *   match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
+ *   match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
  *   connector: (space) => Effect.succeed([...]),
  * });
  * ```

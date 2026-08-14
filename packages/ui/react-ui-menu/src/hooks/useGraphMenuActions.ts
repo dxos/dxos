@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { type Graph, Node } from '@dxos/app-graph';
+import type * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 
 import { applyPresentation } from '../presentation';
 import {
@@ -84,7 +85,7 @@ export const buildGraphMenu = (
  */
 export const graphActions = (
   graph: Graph.ReadableGraph | undefined,
-  get: Atom.Context,
+  get: Atom.AtomContext,
   nodeId: string | undefined,
   options?: GraphMenuOptions,
 ): ActionGraphProps =>

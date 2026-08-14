@@ -13,7 +13,7 @@ describe('is405', () => {
   });
 
   test('matches UnknownException wrapping a 405 Error', ({ expect }) => {
-    const wrapped = new Cause.UnknownException(new Error('SSE error: Non-200 status code (405)'));
+    const wrapped = new Cause.UnknownError(new Error('SSE error: Non-200 status code (405)'));
     expect(McpToolkit.is405(wrapped)).toBe(true);
   });
 
@@ -22,7 +22,7 @@ describe('is405', () => {
   });
 
   test('does not match UnknownException wrapping a non-405 Error', ({ expect }) => {
-    const wrapped = new Cause.UnknownException(new Error('connection refused'));
+    const wrapped = new Cause.UnknownError(new Error('connection refused'));
     expect(McpToolkit.is405(wrapped)).toBe(false);
   });
 

@@ -2,21 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Paths } from '@dxos/app-toolkit';
-import { linkedSegment } from '@dxos/react-ui-attention/types';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
 import { Calendar } from '#types';
 
-const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = Paths.createTypeSectionPaths(
+const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = GraphPath.createTypeSectionPaths(
   Calendar.Calendar,
-  { groupId: Paths.GroupSegments.communications },
+  { groupId: GraphPath.GroupSegments.communications },
 );
 
 /** Well-known local segment names (private — use the path helpers below). */
 const Segments = {
   mailboxes: 'mailboxes',
+  inbox: 'inbox',
+  starred: 'starred',
+  important: 'important',
+  allMail: 'all-mail',
+  sent: 'sent',
   drafts: 'drafts',
-  topics: 'topics',
   subscriptions: 'subscriptions',
 } as const;
 
@@ -25,17 +28,29 @@ export const getMailboxesSectionId = (): string => Segments.mailboxes;
 
 /** Canonical qualified path to the mailboxes section of a space. */
 export const getMailboxesPath = (spaceId: string): string =>
-  Paths.getSpacePath(spaceId, Paths.GroupSegments.communications, Segments.mailboxes);
+  GraphPath.getSpacePath(spaceId, GraphPath.GroupSegments.communications, Segments.mailboxes);
 
 /** Canonical qualified path to a specific mailbox within a space. */
 export const getMailboxPath = (spaceId: string, mailboxId: string): string =>
   `${getMailboxesPath(spaceId)}/${mailboxId}`;
 
+/** Canonical segment ID for the "Inbox" child node. */
+export const getInboxId = (): string => Segments.inbox;
+
+/** Canonical segment ID for the "Starred" child node. */
+export const getStarredId = (): string => Segments.starred;
+
+/** Canonical segment ID for the "Important" child node. */
+export const getImportantId = (): string => Segments.important;
+
+/** Canonical segment ID for the "All Mail" (unfiltered) child node. */
+export const getAllMailId = (): string => Segments.allMail;
+
+/** Canonical segment ID for the "Sent" child node. */
+export const getSentId = (): string => Segments.sent;
+
 /** Canonical segment ID for the drafts child node. */
 export const getDraftsId = (): string => Segments.drafts;
-
-/** Canonical segment ID for the topics child node. */
-export const getTopicsId = (): string => Segments.topics;
 
 /** Canonical segment ID for the subscriptions child node. */
 export const getSubscriptionsId = (): string => Segments.subscriptions;
@@ -44,12 +59,20 @@ export const getSubscriptionsId = (): string => Segments.subscriptions;
 export const getMailboxDraftsPath = (spaceId: string, mailboxId: string): string =>
   `${getMailboxPath(spaceId, mailboxId)}/${Segments.drafts}`;
 
+/** Appends a feed-object child id to a parent path as a plain child segment (message/event planks are
+ * ordinary hidden children of their mailbox/calendar, not linked companions). */
+export const getFeedObjectPath = (parentPath: string, childId: string): string => `${parentPath}/${childId}`;
+
 /**
- * Appends a linked-segment child ID to a parent path for feed-object navigation.
- * The `~` prefix signals attention propagation to the parent node.
+ * Canonical qualified path to one of a message's attachments. Keyed by INDEX because an attachment has
+ * no identity of its own — it is an entry in `message.attachments`, not an object.
  */
-export const getFeedObjectPath = (parentPath: string, childId: string): string =>
-  `${parentPath}/${linkedSegment(childId)}`;
+export const getMailboxAttachmentPath = (
+  spaceId: string,
+  mailboxId: string,
+  messageId: string,
+  index: number,
+): string => `${getMailboxMessagePath(spaceId, mailboxId, messageId)}/attachment-${index}`;
 
 /** Canonical qualified path to a message within a mailbox. */
 export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messageId: string): string =>

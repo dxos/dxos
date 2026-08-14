@@ -17,7 +17,7 @@ const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(AssistantTestLayer({ tracing: 'noop' })),
 );
 
-describe('AiRequest.Request xml response', () => {
+describe('AiRequest.Request xml response', { tags: ['model-fixture'] }, () => {
   // End-to-end regression: drive a real (memoized) LLM call via `AiRequest` and inspect the
   // streamed blocks. Original bug: when the user prompted "respond with your name inside an
   // xml tag", the model emitted `<name>Claude</name>` as text, but `AiParser.makeContentBlock`

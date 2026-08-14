@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-export const Surface = Capability.lazy('Surface', () => import('./surface'));
+export const Surface = AppCapability.surface(() => import('./surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.section'],
+});

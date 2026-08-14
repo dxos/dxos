@@ -4,15 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { MarkdownCapabilities, type MarkdownExtensionProvider } from '@dxos/plugin-markdown/types';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { image } from '../extensions';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const provider: MarkdownExtensionProvider = ({ document, viewMode }) => {
+    const provider: MarkdownCapabilities.MarkdownExtensionProvider = ({ document, viewMode }) => {
       if (viewMode === 'source') {
         return undefined;
       }
@@ -28,6 +28,6 @@ export default Capability.makeModule(() =>
       return undefined;
     };
 
-    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [provider]);
+    return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [provider]);
   }),
 );

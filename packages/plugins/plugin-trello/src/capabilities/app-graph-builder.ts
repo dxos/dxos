@@ -5,19 +5,19 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { isCursorForTarget } from '@dxos/plugin-connector';
-import { GraphBuilder } from '@dxos/plugin-graph';
-import { Kanban } from '@dxos/plugin-kanban';
+import * as Kanban from '@dxos/plugin-kanban/Kanban';
 
 import { meta } from '#meta';
+import { TrelloOperation } from '#types';
 
 import { TRELLO_SOURCE } from '../constants';
-import { TrelloOperation } from '../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -78,6 +78,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

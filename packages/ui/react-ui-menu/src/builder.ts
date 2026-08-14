@@ -64,7 +64,7 @@ export interface MenuBuilder extends ActionGroupBuilder {
   /**
    * Add a root-level toolbar overflow dropdown (⋮) with built-in trigger styling.
    */
-  menu(id: string, cb: ActionGroupBuilderFn): this;
+  menu(id: string, cb: ActionGroupBuilderFn, testId?: string): this;
 
   /**
    * Return the assembled action graph.
@@ -108,8 +108,8 @@ class MenuBuilderImpl implements MenuBuilder {
     return this;
   }
 
-  menu(id: string, cb: ActionGroupBuilderFn): this {
-    return this.group(id, overflowMenuProperties, cb);
+  menu(id: string, cb: ActionGroupBuilderFn, testId?: string): this {
+    return this.group(id, testId === undefined ? overflowMenuProperties : { ...overflowMenuProperties, testId }, cb);
   }
 
   subgraph(subgraphOrCb: ActionGraphProps | ActionGroupBuilderFn | false | null | undefined): this {

@@ -4,7 +4,7 @@
 
 import { Collection, Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { Event, Message, Organization, Person, Pipeline, Project, Task } from '@dxos/types';
+import { Event, Message, Organization, Person, Pipeline, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -89,16 +89,16 @@ export const translations = [
         'delete-object.label': 'Delete pipeline',
         'object-deleted.label': 'Pipeline deleted',
       },
-      [Type.getTypename(Project.Project)]: {
-        'typename.label': 'Project',
-        'typename.label_zero': 'Projects',
-        'typename.label_one': 'Project',
-        'typename.label_other': 'Projects',
-        'object-name.placeholder': 'New project',
-        'add-object.label': 'Add project',
-        'rename-object.label': 'Rename project',
-        'delete-object.label': 'Delete project',
-        'object-deleted.label': 'Project deleted',
+      [Type.getTypename(TaskSet.TaskSet)]: {
+        'typename.label': 'Task set',
+        'typename.label_zero': 'Task sets',
+        'typename.label_one': 'Task set',
+        'typename.label_other': 'Task sets',
+        'object-name.placeholder': 'New task set',
+        'add-object.label': 'Add task set',
+        'rename-object.label': 'Rename task set',
+        'delete-object.label': 'Delete task set',
+        'object-deleted.label': 'Task set deleted',
       },
       [Type.getTypename(Task.Task)]: {
         'typename.label': 'Task',
@@ -113,6 +113,8 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Spaces',
+        'navigation-failed-toast.title': 'Link could not be processed',
+        'navigation-failed-toast.description': 'Something went wrong while handling this link. Please try again.',
         'add-object.label': 'Add object',
         'first-run.message': 'Nothing selected.',
         'create-space.label': 'Create space',
@@ -146,7 +148,6 @@ export const translations = [
         'upload-file.message': 'Drag file here or click to browse',
         'object-name.placeholder': 'Object',
         'object.placeholder': 'Type a title here…',
-        'personal-space.label': 'Personal Space',
         'spaces.label': 'Spaces',
         'space-settings.label': 'Your spaces',
         'space-settings.description':
@@ -208,10 +209,13 @@ export const translations = [
         'name.label': 'Name',
         'name.placeholder': 'Name',
         'object-properties.label': 'Properties',
+        'private.label': 'Private space',
         'edge-replication.label': 'Enable EDGE Replication',
         'saving-locally.label': 'Writing to disk',
         'downloading.label': 'Replicating from peers',
         'uploading.label': 'Replicating to peers',
+        'stalled.label': 'Replication stalled',
+        'disconnected.label': 'Not connected (changes not replicated)',
         'offline-persisted.label': 'Saved to disk (offline)',
         'remote-synced.label': 'Synced with peers',
         'syncing.label': 'Space syncing',
@@ -233,6 +237,10 @@ export const translations = [
         'settings.show-hidden.label': 'Show hidden types',
         'settings.show-hidden.description':
           'Include types annotated as hidden (e.g. Tag, View, Feed) in the database section.',
+        'settings.default-space.label': 'Default space',
+        'settings.default-space.description':
+          'Space used for content that is not scoped to the space you are in, such as quick entry and chat. Only private spaces can be chosen.',
+        'settings.default-space.placeholder': 'Select space',
         'settings.space-list.label': 'Spaces',
         'settings.space-list.description': 'Settings for each space you belong to.',
         'settings.open-settings.label': 'Open settings',
@@ -269,6 +277,8 @@ export const translations = [
         'display-name.description': 'Name of the space as it appears in the app.',
         'icon.description': 'Icon used to represent the space in the app.',
         'hue.description': 'Color used to represent the space in the app.',
+        'private.description':
+          'A private space can never be shared — no one else can be invited to it. This is fixed when the space is created and cannot be changed.',
         'edge-replication.description':
           "Only change this if you know what you're doing. Disabling this will prevent the space from replicating through Composer's EDGE services, and relies solely on peer-to-peer sync.",
         'space-id.title': 'Space ID',
@@ -294,6 +304,8 @@ export const translations = [
         'danger-zone.description': 'Destructive actions that cannot be undone.',
 
         'delete-space.title': 'Delete Space',
+        'delete-default-space.description':
+          'This is your default space, so it cannot be deleted. Choose a different default space in Settings first.',
         'delete-space.description':
           'Remove this space from all of your devices. The space stops replicating and is hidden everywhere. This action cannot be undone.',
         'delete-space.label': 'Delete space',
@@ -318,9 +330,26 @@ export const translations = [
         'layout.label': 'Layout',
         'layout-masonry.label': 'Cards',
         'layout-table.label': 'Table',
+        'layout-duplicates.label': 'Duplicates',
         'open-object.label': 'Open object',
         'search-placeholder.label': 'Filter...',
         'search-no-results.message': 'No matches.',
+        'item-count.label_zero': 'No items',
+        'item-count.label_one': '1 item',
+        'item-count.label_other': '{{count}} items',
+        'delete-selected.label_one': 'Delete {{count}} object',
+        'delete-selected.label_other': 'Delete {{count}} objects',
+        'merge-duplicates.label': 'Merge',
+        'skip-duplicates.label': 'Skip',
+        'previous-duplicate.label': 'Previous group',
+        'next-duplicate.label': 'Next group',
+        'rescan-duplicates.label': 'Rescan',
+        'duplicates-position.label': 'Group',
+        'confirm-merge.label': 'Confirm merge',
+        'cancel-merge.label': 'Cancel',
+        'duplicates-none.label': 'None',
+        'duplicates-none.message': 'No duplicates found.',
+        'duplicates-scanning.message': 'Scanning for duplicates…',
 
         'search.placeholder': 'Search…',
         'auth-code.message': 'Authorization code',

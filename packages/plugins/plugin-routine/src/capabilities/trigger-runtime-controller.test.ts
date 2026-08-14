@@ -5,12 +5,13 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { ServiceResolver } from '@dxos/compute';
 import { TriggerDispatcher } from '@dxos/compute-runtime';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import type { SpaceId } from '@dxos/keys';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -32,17 +33,17 @@ const getDispatcher = (harness: Awaited<ReturnType<typeof createComposerTestApp>
 describe('TriggerRuntimeController', () => {
   test('toggles the per-space TriggerDispatcher as triggersDisabled changes', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({ types: [Feed.Feed] }), RoutinePlugin()],
+      plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin()],
     });
 
-    // Creating identity also creates the personal space and emits SpacesReady,
+    // Creating identity also creates the default space and emits SpacesReady,
     // which is what gates the TriggerRuntimeController module's activation.
-    const { personalSpace } = await EffectEx.runAndForwardErrors(
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
     await harness.waitForEvent(ClientEvents.SpacesReady);
 
-    const dispatcher = await getDispatcher(harness, personalSpace.id);
+    const dispatcher = await getDispatcher(harness, defaultSpace.id);
 
     // Observe the dispatcher's `state` atom (the same surface the UI hook
     // exposes through `useTriggerRuntimeControls`).
@@ -56,13 +57,13 @@ describe('TriggerRuntimeController', () => {
       await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(true);
 
       // `triggersDisabled = true` → dispatcher should stop.
-      Obj.update(personalSpace.properties, (properties) => {
+      Obj.update(defaultSpace.properties, (properties) => {
         properties.triggersDisabled = true;
       });
       await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(false);
 
       // Back to enabled → dispatcher should start again.
-      Obj.update(personalSpace.properties, (properties) => {
+      Obj.update(defaultSpace.properties, (properties) => {
         properties.triggersDisabled = false;
       });
       await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(true);
@@ -76,22 +77,22 @@ describe('TriggerRuntimeController', () => {
 
   test('does not re-issue start when triggersDisabled is reasserted to the same value', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({ types: [Feed.Feed] }), RoutinePlugin()],
+      plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin()],
     });
 
-    const { personalSpace } = await EffectEx.runAndForwardErrors(
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
     await harness.waitForEvent(ClientEvents.SpacesReady);
 
-    const dispatcher = await getDispatcher(harness, personalSpace.id);
+    const dispatcher = await getDispatcher(harness, defaultSpace.id);
 
     await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(true);
 
     // Writing the same enabled state should be a no-op: the controller
     // dedupes via its `lastDisabled` tracker so the dispatcher stays
     // running without an intervening stop/start flicker.
-    Obj.update(personalSpace.properties, (properties) => {
+    Obj.update(defaultSpace.properties, (properties) => {
       properties.triggersDisabled = false;
     });
     // Give any spurious transition a chance to land before we check.

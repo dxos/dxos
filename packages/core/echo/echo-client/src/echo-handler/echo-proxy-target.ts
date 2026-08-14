@@ -54,10 +54,10 @@ export type ProxyTarget = {
   /**
    * Used for objects created by `createObject`.
    */
-  [SchemaId]?: Schema.Schema.AnyNoContext;
+  [SchemaId]?: Schema.Codec<any, any>;
 
   /**
-   * For modifications.
+   * For modifications. Fires on real changes.
    */
   [EventId]: Event<void>;
 } & ({ [key: keyof any]: any } | EchoArray<any>);

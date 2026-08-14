@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Type } from '@dxos/echo';
 
-export const ThreadState = Schema.Literal('awaiting-mine', 'awaiting-theirs', 'resolved', 'stalled');
+export const ThreadState = Schema.Literals(['awaiting-mine', 'awaiting-theirs', 'resolved', 'stalled']);
 export type ThreadState = Schema.Schema.Type<typeof ThreadState>;
 
 // A canonical (spec §4) conversation aggregate: messages sharing a derived threadId, with a rolling

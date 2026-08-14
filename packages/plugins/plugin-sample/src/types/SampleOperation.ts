@@ -10,7 +10,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
@@ -30,17 +30,17 @@ export const CreateSampleItem = Operation.make({
     icon: 'ph--plus--regular',
   },
   input: Schema.Struct({
-    name: Schema.optional(Schema.String).annotations({ description: 'Display name for the item.' }),
+    name: Schema.optional(Schema.String).annotate({ description: 'Display name for the item.' }),
   }),
   output: Schema.Struct({
-    object: Schema.Any.annotations({ description: 'The created SampleItem object.' }),
+    object: Schema.Any.annotate({ description: 'The created SampleItem object.' }),
   }),
 });
 
 export const Randomize = Operation.make({
   meta: { key: makeKey('randomize'), name: 'Randomize Sample Item', icon: 'ph--shuffle--regular' },
   input: Schema.Struct({
-    item: Schema.Any.annotations({ description: 'The SampleItem to randomize.' }),
+    item: Schema.Any.annotate({ description: 'The SampleItem to randomize.' }),
   }),
   output: Schema.Void,
 });
@@ -48,8 +48,8 @@ export const Randomize = Operation.make({
 export const UpdateStatus = Operation.make({
   meta: { key: makeKey('updateStatus'), name: 'Update Status', icon: 'ph--pencil--regular' },
   input: Schema.Struct({
-    item: Schema.Any.annotations({ description: 'The SampleItem to update.' }),
-    status: Schema.String.annotations({ description: 'The new status value.' }),
+    item: Schema.Any.annotate({ description: 'The SampleItem to update.' }),
+    status: Schema.String.annotate({ description: 'The new status value.' }),
   }),
   output: Schema.Void,
 });

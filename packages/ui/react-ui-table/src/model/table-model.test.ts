@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, JsonSchema, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { LocalBackend, MemoryBackend, ViewStateManager } from '@dxos/react-ui-attention';
+import { LocalBackend, MemoryBackend, ViewState } from '@dxos/react-ui-attention';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
 import { Table } from '../types';
@@ -24,7 +24,7 @@ import {
 describe('TableModel', () => {
   let updateCount = 0;
   let model: any;
-  let registry: Registry.Registry;
+  let registry: Registry.AtomRegistry;
 
   beforeEach(async () => {
     updateCount = 0;
@@ -137,7 +137,7 @@ describe('TableModel sort view state', () => {
       const registry = Registry.make();
       const local = new LocalBackend({ registry, storage });
       disposables.push(local);
-      const viewState = new ViewStateManager({ registry, backends: { memory: new MemoryBackend(), local } });
+      const viewState = new ViewState.Manager({ registry, backends: { memory: new MemoryBackend(), local } });
       const projection = new ProjectionModel({
         registry,
         view,
@@ -203,7 +203,7 @@ const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
   }),
 );
 
-const createTableInputs = (registry: Registry.Registry): { object: Table.Table; projection: ProjectionModel } => {
+const createTableInputs = (registry: Registry.AtomRegistry): { object: Table.Table; projection: ProjectionModel } => {
   const schema = createEchoSchema(Type.getSchema(Test));
   const view = ViewModel.make({
     query: Query.select(Filter.type(schema)),
@@ -220,7 +220,7 @@ const createTableInputs = (registry: Registry.Registry): { object: Table.Table; 
   return { object, projection };
 };
 
-const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {
+const createTableModel = (registry: Registry.AtomRegistry, props: Partial<TableModelProps> = {}): TableModel => {
   const { object, projection } = createTableInputs(registry);
   return new TableModel({
     registry,

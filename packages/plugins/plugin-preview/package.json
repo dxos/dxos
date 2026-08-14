@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-preview",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Preview plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,8 +14,12 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/workerd.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#meta": {
@@ -25,14 +29,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/PreviewPlugin.workerd.ts",
-        "node": "./src/PreviewPlugin.node.ts",
-        "default": "./src/PreviewPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/PreviewPlugin.d.ts",
-      "workerd": "./dist/lib/PreviewPlugin.workerd.mjs",
-      "node": "./dist/lib/PreviewPlugin.node.mjs",
-      "default": "./dist/lib/PreviewPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -46,11 +50,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
@@ -60,6 +59,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./PreviewPlugin": {
+      "source": "./src/PreviewPlugin.ts",
+      "types": "./dist/types/src/PreviewPlugin.d.ts",
+      "import": "./dist/lib/PreviewPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -80,12 +84,11 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*"
   },
@@ -93,8 +96,8 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/react-ui-components": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

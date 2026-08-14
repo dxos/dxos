@@ -5,9 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Collection } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { SearchPlugin } from '@dxos/plugin-search/testing';
@@ -18,18 +17,16 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { ReactRoot, ReactSurface, State } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
+import { type SimpleLayoutPluginOptions } from '#plugin';
 import { translations } from '#translations';
-import { SimpleLayoutEvents } from '#types';
 
-import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
 import { SimpleLayout } from './SimpleLayout';
 
 const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
   return withPluginManager({
-    setupEvents: [AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [Collection.Collection],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
@@ -37,27 +34,14 @@ const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
           }),
       }),
 
-      SearchPlugin(),
+      SearchPlugin.make(),
       SpacePlugin({}),
 
       // TODO(burdon): This should be factored ouf from SimpleLayoutPlugin.
       Plugin.define<SimpleLayoutPluginOptions>(pluginMeta).pipe(
-        Plugin.addModule(({ isPopover = false }) => ({
-          id: Capability.getModuleTag(State),
-          activatesOn: ActivationEvents.Startup,
-          firesAfterActivation: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
-          activate: () => State({ initialState: { isPopover } }),
-        })),
-        Plugin.addModule({
-          id: Capability.getModuleTag(ReactRoot),
-          activatesOn: ActivationEvents.Startup,
-          activate: ReactRoot,
-        }),
-        Plugin.addModule({
-          id: Capability.getModuleTag(ReactSurface),
-          activatesOn: ActivationEvents.Startup,
-          activate: ReactSurface,
-        }),
+        Plugin.addModule(State),
+        Plugin.addModule(ReactRoot),
+        Plugin.addModule(ReactSurface),
         Plugin.make,
       )({ isPopover }),
     ],

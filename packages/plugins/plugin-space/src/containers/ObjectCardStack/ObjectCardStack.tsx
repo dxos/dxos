@@ -5,7 +5,7 @@
 import React, { forwardRef, useId, useMemo, useState } from 'react';
 
 import { type Database, Filter, Type } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
@@ -49,21 +49,22 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
         <Panel.Content>
           {selectedObjects.length === 0 ? (
             <Message.Root>
-              <Message.Title>{t('row-details-no-selection.label')}</Message.Title>
+              <Message.Content classNames='m-trim-md'>
+                <Message.Title>{t('row-details-no-selection.label')}</Message.Title>
+              </Message.Content>
             </Message.Root>
           ) : (
             <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
-              <ScrollArea.Root orientation='vertical' centered>
+              <ScrollArea.Root orientation='vertical' centered padding>
                 <ScrollArea.Viewport ref={setViewport}>
                   <Mosaic.Stack
+                    classNames='py-trim-md gap-trim-md'
                     draggable={false}
-                    // TODO(wittjosiah): Expose gap as a prop.
-                    // gap={2}
                     items={selectedObjects}
                     getId={(obj) => obj.id}
                     Tile={({ ...props }) => (
                       <Mosaic.Tile {...props}>
-                        <Card.Root fullWidth classNames='pb-form-gap'>
+                        <Card.Root fullWidth gutter='sm'>
                           <ObjectForm object={props.data} type={type} />
                         </Card.Root>
                       </Mosaic.Tile>

@@ -1,8 +1,9 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
 export * as Chess from './Chess';
+export * as ChessEvents from './ChessEvents';
 export * as ChessOperation from './ChessOperation';
 export * as ChessPositionIndex from './ChessPositionIndex';
 export * as PlayerReview from './PlayerReview';

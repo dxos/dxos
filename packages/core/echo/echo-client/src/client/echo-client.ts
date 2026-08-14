@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
@@ -12,6 +12,7 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
+import { type BranchStore } from '../core-db';
 import { HypergraphImpl } from '../hypergraph';
 import { DatabaseImpl } from '../proxy-db';
 import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider';
@@ -24,7 +25,7 @@ export type ConnectToServiceProps = {
   feedService?: FeedService.Client;
 
   /** Runtime used to run effect-rpc service calls at Promise/callback boundaries. */
-  runtime?: Runtime.Runtime<never>;
+  runtime?: EffectContext.Context<never>;
 };
 
 export type ConstructDatabaseProps = {
@@ -50,6 +51,9 @@ export type ConstructDatabaseProps = {
    */
   // TODO(dmaretskyi): Remove.
   owningObject?: unknown;
+
+  /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
+  branchStore?: BranchStore;
 };
 
 /**
@@ -66,7 +70,7 @@ export class EchoClient extends Resource {
   private _dataService: DataService.Client | undefined = undefined;
   private _queryService: QueryService.Client | undefined = undefined;
   private _feedService: FeedService.Client | undefined = undefined;
-  private _runtime: Runtime.Runtime<never> = Runtime.defaultRuntime;
+  private _runtime: EffectContext.Context<never> = EffectContext.empty();
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
@@ -95,7 +99,7 @@ export class EchoClient extends Resource {
     this._dataService = dataService;
     this._queryService = queryService;
     this._feedService = feedService;
-    this._runtime = runtime ?? Runtime.defaultRuntime;
+    this._runtime = runtime ?? EffectContext.empty();
     return this;
   }
 
@@ -143,6 +147,7 @@ export class EchoClient extends Resource {
     reactiveSchemaQuery,
     preloadSchemaOnOpen,
     spaceKey,
+    branchStore,
   }: ConstructDatabaseProps): DatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
@@ -156,6 +161,7 @@ export class EchoClient extends Resource {
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
       spaceKey,
+      branchStore,
     });
     this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);

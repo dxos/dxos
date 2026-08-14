@@ -8,13 +8,15 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Collection, Database, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Tag, View } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { useQuery } from '@dxos/echo-react';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
@@ -54,8 +56,8 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [
             Tag.Tag,
             Feed.Feed,
@@ -68,7 +70,7 @@ const meta = {
             Message.Message,
           ],
           onClientInitialized: Effect.fnUntraced(function* ({ client }) {
-            const { personalSpace } = yield* initializeIdentity(client);
+            const { defaultSpace } = yield* initializeIdentity(client);
 
             yield* Effect.gen(function* () {
               const tag = yield* Database.add(Tag.make({ label: 'important', hue: 'green' }));
@@ -187,7 +189,7 @@ const meta = {
               }
 
               // Generate sample Contacts.
-              const factory = createObjectFactory(personalSpace.db, random as any);
+              const factory = createObjectFactory(defaultSpace.db, random as any);
               yield* Effect.promise(() => factory([{ type: Person.Person, count: 12 }]));
 
               // Generate sample Projects.
@@ -199,11 +201,11 @@ const meta = {
                   }),
                 );
               }
-            }).pipe(Effect.provide(Database.layer(personalSpace.db)));
+            }).pipe(Effect.provide(Database.layer(defaultSpace.db)));
           }),
         }),
-        InboxPlugin(),
-        PreviewPlugin(),
+        InboxPlugin.make(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

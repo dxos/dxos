@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
-import { SupportOperation } from '../types';
+import { SupportOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SupportOperation.SearchDocs> = SupportOperation.SearchDocs.pipe(
   Operation.withHandler(

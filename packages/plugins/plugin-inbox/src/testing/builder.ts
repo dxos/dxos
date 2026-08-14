@@ -4,11 +4,10 @@
 
 import { addDays, addMinutes, roundToNearestMinutes, startOfDay, subDays } from 'date-fns';
 
-import { Ref } from '@dxos/echo';
+import { type Database, Ref } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
 import { random } from '@dxos/random';
-import { type Space } from '@dxos/react-client/echo';
-import { Actor, Event, Message, Person } from '@dxos/types';
+import { Actor, ContentBlock, Event, Message, Person } from '@dxos/types';
 
 //
 // Types
@@ -35,8 +34,8 @@ export type BuilderOptions = {
 };
 
 export type MessageLinkOptions = {
-  /** Space to which linked Person objects will be added. */
-  space: Space;
+  /** Database to which linked Person objects will be added. */
+  db: Database.Database;
   /** Maximum number of linked Person objects to splice into the text. Defaults to 5. */
   max?: number;
 };
@@ -238,14 +237,17 @@ export class Builder {
       .multiple(() => random.lorem.paragraph(random.number.int({ min: 1, max: 3 })), { count: paragraphCount })
       .join('\n\n');
 
-    let blocks: { _tag: 'text'; text: string }[];
+    // Seeded blocks carry the fields synced mail always has — a disposition (authored by a person,
+    // as opposed to a derived `summary`) and a mime type — so stories exercise the same shapes the
+    // renderers see in production rather than a stripped-down one.
+    let blocks: ContentBlock.Text[];
     if (links) {
-      const { space, max = 5 } = links;
+      const { db, max = 5 } = links;
       const words = text.split(' ');
       const linkCount = Math.floor(Math.random() * max) + 1;
       for (let index = 0; index < linkCount; index++) {
         const fullName = random.person.fullName();
-        const obj = space.db.add(Person.make({ fullName }));
+        const obj = db.add(Person.make({ fullName }));
         const dxn = Ref.make(obj).uri;
         const position = Math.floor(Math.random() * words.length);
         words.splice(position, 0, `[${fullName}](${dxn})`);
@@ -255,20 +257,23 @@ export class Builder {
       // First block plain text (links stripped), second block enriched text (links intact).
       text = enrichedText.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
       blocks = [
-        { _tag: 'text', text },
-        { _tag: 'text', text: enrichedText },
+        { _tag: 'text', text, disposition: 'user', mimeType: 'text/plain' },
+        { _tag: 'text', text: enrichedText, disposition: 'user', mimeType: 'text/markdown' },
       ];
     } else {
-      blocks = [{ _tag: 'text', text }];
+      blocks = [{ _tag: 'text', text, disposition: 'user', mimeType: 'text/plain' }];
     }
 
+    const from = this._randomActor();
     this._messages.push(
       Message.make({
         created: created.toISOString(),
-        sender: this._randomActor(),
+        sender: from,
         blocks,
         ...(threadId && { threadId }),
         properties: {
+          from,
+          to: this._randomActor()?.email,
           subject:
             random.helpers.arrayElement(['', 'Re: ']) + random.lorem.sentence(random.number.int({ min: 4, max: 8 })),
           snippet: text.slice(0, 120),

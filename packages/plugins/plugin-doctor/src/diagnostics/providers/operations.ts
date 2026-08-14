@@ -4,8 +4,10 @@
 
 import { AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
-import { Credential, Operation, StorageService, Trace } from '@dxos/compute';
-import { FunctionInvocationService } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as StorageService from '@dxos/compute/StorageService';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Registry } from '@dxos/echo';
 
 import { meta } from '#meta';
@@ -15,9 +17,9 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
 
 /**
  * Services known to be available to operations at invocation time.
- * Mirrors the `FunctionServices` union plus a few extras commonly declared in
- * operations across the repo. Keys are derived from the canonical `Context.Tag`
- * definitions so refactors of those tags propagate here automatically.
+ * Covers the services commonly declared in operations across the repo. Keys are
+ * derived from the canonical `Context.Tag` definitions so refactors of those
+ * tags propagate here automatically.
  */
 export const KNOWN_SERVICES: ReadonlySet<string> = new Set(
   [
@@ -26,7 +28,6 @@ export const KNOWN_SERVICES: ReadonlySet<string> = new Set(
     Registry.Service,
     Credential.CredentialsService,
     Database.Service,
-    FunctionInvocationService,
     Operation.Service,
     StorageService.StorageService,
     Trace.TraceService,

@@ -5,21 +5,24 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Connection, Cursor } from '@dxos/link';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
 import { meta } from '#meta';
-import { Connector } from '#types';
+import { ConnectorAnnotations, ConnectorOperation, ConnectorSpec } from '#types';
 
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
-import { Connection, ConnectorAuthAnnotation, ConnectorOperation } from '../types';
 import { connectorAuthActions, isCursorForConnection, isCursorForTarget } from '../util';
 
 /**
@@ -59,13 +62,17 @@ const whenObjectHasCursor: NodeMatcher.NodeMatcher<Cursor.Cursor> = (node, get) 
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Hoisted so the connector-reading extensions below establish a reactive dependency instead of
+    // reading the capability manager synchronously (graph-extension bodies must never sync-get).
+    const connectorAtom = yield* Capability.atom(ConnectorSpec.Connector);
+
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'connectionActions',
         match: (node) => (Connection.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        actions: (connection) =>
+        actions: (connection, get) =>
           Effect.gen(function* () {
-            const connectors = (yield* Capability.Service).getAll(Connector).flat();
+            const connectors = get(connectorAtom).flat();
             const connector = connectors.find((entry) => entry.id === connection.connectorId);
             const spaceId = Obj.getDatabase(connection)?.spaceId;
             const actions = [];
@@ -116,6 +123,7 @@ export default Capability.makeModule(
       // Separate listing extension so the graph reacts when connections are added or removed.
       GraphBuilder.createExtension({
         id: 'connectionsSection',
+        url: { key: 'connections', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
         match: AppNodeMatcher.whenSpaceSettings,
         connector: (space) =>
           Effect.succeed([
@@ -143,7 +151,7 @@ export default Capability.makeModule(
         connector: (cursor) =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('connector'),
+              variant: 'connector',
               label: ['connection-companion.label', { ns: meta.profile.key }],
               icon: 'ph--plugs-connected--regular',
               data: cursor,
@@ -151,7 +159,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Connector-auth ("Connect X") for any object whose type carries `ConnectorAuthAnnotation` —
+      // ConnectorSpec.Connector-auth ("Connect X") for any object whose type carries `ConnectorAnnotations.ConnectorAuthAnnotation` —
       // the single cross-plugin toolbar contribution. Opting in is purely declarative (annotate the
       // type); the connectorIds / bindTarget come from the annotation, and connected-state is derived
       // from bindTarget. Owning plugins inline their own sync/generate actions separately.
@@ -163,7 +171,9 @@ export default Capability.makeModule(
           }
           const type = Obj.getType(node.data);
           const schema = type ? Type.getSchema(type) : undefined;
-          const annotation = schema ? Option.getOrUndefined(ConnectorAuthAnnotation.get(schema)) : undefined;
+          const annotation = schema
+            ? Option.getOrUndefined(ConnectorAnnotations.ConnectorAuthAnnotation.get(schema))
+            : undefined;
           return annotation ? Option.some({ object: node.data, annotation }) : Option.none();
         },
         // A dropdown group, contributed via `actionGroups` so its type/nested actions are preserved.
@@ -173,6 +183,12 @@ export default Capability.makeModule(
             if (!db) {
               return [];
             }
+            // Read the connector list reactively BEFORE anything can return early. Connector modules
+            // activate lazily, so on a fresh load this runs while the list is still empty — and an
+            // early return that never touched the atom registered no dependency, so the action never
+            // reappeared once the provider activated. That is why Connect showed up only right after
+            // creating a mailbox: unrelated graph churn, not the capability arriving.
+            const allConnectors = get(connectorAtom).flat();
             const capabilities = yield* Capability.Service;
             const connectorIds =
               typeof annotation.connectorIds === 'function'
@@ -195,7 +211,6 @@ export default Capability.makeModule(
               // Connected: the owning plugin's own sync/generate action covers this state.
               return [];
             }
-            const allConnectors = capabilities.getAll(Connector).flat();
             return connectorAuthActions({
               connectorIds,
               db,
@@ -210,6 +225,7 @@ export default Capability.makeModule(
       // Connection objects listed under the connections section node.
       GraphBuilder.createExtension({
         id: 'connectionListing',
+        url: { key: 'connection', kind: 'item', path: [SpaceSchema.SETTINGS_SECTION_ID, CONNECTIONS_SECTION_ID] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === CONNECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -231,6 +247,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

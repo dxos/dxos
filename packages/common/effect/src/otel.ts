@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Tracer from '@effect/opentelemetry/OtelTracer';
 import * as Resource from '@effect/opentelemetry/Resource';
-import * as Tracer from '@effect/opentelemetry/Tracer';
 import { type Attributes, trace } from '@opentelemetry/api';
 import * as Effect from 'effect/Effect';
 import type * as Function from 'effect/Function';
@@ -26,7 +26,7 @@ export const layerOtel: {
 } = (
   evaluate: Function.LazyArg<Configuration> | Effect.Effect<Configuration, any, any>,
 ): Layer.Layer<Resource.Resource> =>
-  Layer.unwrapEffect(
+  Layer.unwrap(
     Effect.map(
       Effect.isEffect(evaluate) ? (evaluate as Effect.Effect<Configuration>) : Effect.sync(evaluate),
       (config) => {

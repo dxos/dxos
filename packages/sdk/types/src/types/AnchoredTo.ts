@@ -15,6 +15,8 @@ export class AnchoredTo extends Type.makeRelation<AnchoredTo>(DXN.make('org.dxos
   Schema.Struct({
     id: Obj.ID,
     anchor: Schema.optional(Schema.String),
+    /** Branch the anchored thread pertains to (a branch-review comment); undefined = main/unbranched. */
+    branch: Schema.optional(Schema.String),
   }),
 ) {}
 

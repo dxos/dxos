@@ -4,16 +4,15 @@
 
 import React from 'react';
 
-import { useProgress } from '@dxos/app-toolkit/ui';
-import { type ModuleProps } from '@dxos/story-modules';
+import { useProgressMonitor } from '@dxos/app-toolkit/ui';
 
 import { PipelinePanel } from '../components';
 import { PIPELINE_RUN, usePipelineStory } from './pipeline-context';
 
 /** CENTER: the pipeline picker + run controls. Triggers the run; status/progress come from the monitor. */
-export const PipelineModule = (_: ModuleProps) => {
+export const PipelineModule = () => {
   const { pipelines, selected, onSelect, onStart, onStop } = usePipelineStory();
-  const progress = useProgress(PIPELINE_RUN);
+  const progress = useProgressMonitor(PIPELINE_RUN);
   const running = progress?.status === 'running';
   const processed = progress?.current ?? 0;
   return (

@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, EID, Obj, Ref } from '@dxos/echo';
 
+import { Ibkr, IbkrOperation } from '#types';
+
 import { IBKR_SYNC_CRON } from './constants';
-import { type Ibkr, IbkrOperation } from './types';
 
 /** Stable string form of the sync operation's key, used to recognize its serialized record. */
 export const SYNC_OPERATION_KEY = String(IbkrOperation.SyncPortfolioReport.meta.key);

@@ -1,0 +1,44 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
+import { Database, Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
+
+import { CommentCapabilities, CommentOperation } from '#types';
+
+const handler: Operation.WithHandler<typeof CommentOperation.RespondToThread> = CommentOperation.RespondToThread.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ thread: threadRef, subject: subjectRef }) {
+      const runner = yield* Capability.get(CommentCapabilities.AgentRunner);
+      const thread = yield* Database.load(threadRef);
+      const subject = yield* Database.load(subjectRef);
+
+      yield* runner.run({ thread, subject }).pipe(
+        // Runner errors are caught here so the user's message remains in the
+        // thread (no assistant message is appended) and an observability event
+        // is emitted for diagnostics.
+        Effect.catch((error) =>
+          Effect.gen(function* () {
+            log.warn('comment-thread agent failed', { threadId: thread.id, error });
+            const db = Obj.getDatabase(thread);
+            yield* Operation.schedule(ObservabilityOperation.SendEvent, {
+              name: 'comments.agent.failed',
+              properties: {
+                spaceId: db?.spaceId,
+                threadId: thread.id,
+              },
+            });
+          }),
+        ),
+      );
+    }),
+  ),
+);
+
+export default handler;

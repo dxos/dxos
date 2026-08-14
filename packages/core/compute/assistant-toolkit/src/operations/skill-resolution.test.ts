@@ -8,7 +8,8 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
-import { Instructions, Skill } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Text } from '@dxos/schema';
@@ -58,7 +59,7 @@ describe('Skill binding resolution (registry refs)', () => {
 
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
 
         // Bind the instructions's own registry ref (the fix) and persist it to the feed.
         const writer = new AiContext.Binder({ feed, runtime });
@@ -69,9 +70,9 @@ describe('Skill binding resolution (registry refs)', () => {
         // in-memory cache, so the persisted binding ref must resolve on its own.
         const reader = new AiContext.Binder({ feed, runtime });
         yield* Effect.promise(() => reader.open()).pipe(
-          Effect.timeoutFail({
+          Effect.timeoutOrElse({
             duration: Duration.seconds(3),
-            onTimeout: () => new Error('TIMED OUT resolving bound skill on feed re-read'),
+            orElse: () => Effect.fail(new Error('TIMED OUT resolving bound skill on feed re-read')),
           }),
         );
 
@@ -103,7 +104,7 @@ describe('Skill binding resolution (registry refs)', () => {
 
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
 
         // The pre-fix behaviour: re-wrap the resolved skill with `Ref.make`, minting an
         // EID ref that addresses a skill which only exists in the registry.
@@ -111,11 +112,16 @@ describe('Skill binding resolution (registry refs)', () => {
         yield* Effect.promise(() => writer.open());
         yield* Effect.promise(() => writer.bind({ skills: [Ref.make(skill)], objects: [] }));
 
+        // Model a spawned process reading the feed cold: drop the in-memory feed handle so the
+        // reader re-decodes the binding freshly, without the writer's identity-preserved instance
+        // (whose ref still carries the in-memory skill target).
+        yield* Effect.promise(() => db.evictFeedHandle(feed));
+
         const reader = new AiContext.Binder({ feed, runtime });
         yield* Effect.promise(() => reader.open()).pipe(
-          Effect.timeoutFail({
+          Effect.timeoutOrElse({
             duration: Duration.seconds(3),
-            onTimeout: () => new Error('TIMED OUT resolving bound skill on feed re-read'),
+            orElse: () => Effect.fail(new Error('TIMED OUT resolving bound skill on feed re-read')),
           }),
         );
 

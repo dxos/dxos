@@ -2,31 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
-export const RegistrySettingsSchema = Schema.mutable(
-  Schema.Struct({
-    experimental: Schema.optional(Schema.Boolean),
-    /**
-     * Manifest URL for a plugin served by a local Vite dev server. The
-     * registry settings panel pre-fills this with `localhost:3967`; authors
-     * iterating on a different port can edit it.
-     */
-    devPluginUrl: Schema.optional(Schema.String),
-    /**
-     * When true, the registry plugin attempts to load `devPluginUrl` on every
-     * app boot. Failures (dev server offline, manifest 404) are logged and
-     * the flag stays on so the next boot retries — the user explicitly turns
-     * it off when they're done iterating.
-     */
-    devPluginEnabled: Schema.optional(Schema.Boolean),
-  }),
-);
+export const RegistrySettingsSchema = Schema.Struct({
+  experimental: Schema.optional(Schema.Boolean),
+  /**
+   * Manifest URL for a plugin served by a local Vite dev server. The
+   * registry settings panel pre-fills this with `localhost:3967`; authors
+   * iterating on a different port can edit it.
+   */
+  devPluginUrl: Schema.optional(Schema.String),
+  /**
+   * When true, the registry plugin attempts to load `devPluginUrl` on every
+   * app boot. Failures (dev server offline, manifest 404) are logged and
+   * the flag stays on so the next boot retries — the user explicitly turns
+   * it off when they're done iterating.
+   */
+  devPluginEnabled: Schema.optional(Schema.Boolean),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type RegistrySettings = Schema.Schema.Type<typeof RegistrySettingsSchema>;
 
@@ -34,18 +33,21 @@ export type RegistrySettings = Schema.Schema.Type<typeof RegistrySettingsSchema>
  * Per-plugin capabilities exposed by `@dxos/plugin-registry`.
  */
 export namespace RegistryCapabilities {
-  export const Settings = Capability.make<Atom.Writable<RegistrySettings>>(`${meta.profile.key}.capability.settings`);
+  export const Settings = Capability.makeSingleton<Atom.Writable<RegistrySettings>>()(
+    `${meta.profile.key}.capability.settings`,
+  );
 }
 
-export const RegistryTagType = Schema.Literal(
+export const RegistryTagType = Schema.Literals([
   'new',
   'beta',
+  'alpha',
   'labs',
   'popular',
   'featured',
   'experimental',
   'registry',
   'local',
-);
+]);
 
 export type RegistryTagType = Schema.Schema.Type<typeof RegistryTagType>;

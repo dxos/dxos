@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry as AtomRegistry } from '@effect-atom/atom-react';
-import * as AiError from '@effect/ai/AiError';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -11,9 +9,12 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
+import * as AiError from 'effect/unstable/ai/AiError';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type AiService, Model, type OpaqueToolkit } from '@dxos/ai';
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import {
   AiContext,
   AiSession,
@@ -25,8 +26,13 @@ import {
   formatSystemPrompt,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { AgentService, type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';
-import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
+import { type ServiceNotAvailableError } from '@dxos/compute';
+import * as AgentService from '@dxos/compute/AgentService';
+import type * as Credential from '@dxos/compute/Credential';
+import type * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
+import { Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -36,6 +42,7 @@ import { Message } from '@dxos/types';
 import { AssistantOperation } from '#types';
 
 import { findInCause } from '../util/error-cause';
+import { type ProcessorRequestContext, createPromptContent } from './prompt';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.
@@ -67,7 +74,7 @@ export type AiChatProcessorOptions = {
   provider?: DXN.DXN;
   modelRegistry?: Model.Registry;
   registry?: Registry.Registry;
-  observableRegistry?: AtomRegistry.Registry;
+  observableRegistry?: AtomRegistry.AtomRegistry;
   /**
    * For tracing.
    */
@@ -83,6 +90,8 @@ export type ProcessorRequestOptions = {};
 
 export type ProcessorRequest = {
   message: string;
+  /** Ephemeral context (e.g. companion-document selection) captured at submit time. */
+  context?: ProcessorRequestContext;
   options?: ProcessorRequestOptions;
 };
 
@@ -113,13 +122,19 @@ const QUOTA_PATTERN = /\b429\b|rate.?limit|too many requests|usage quota|quota e
 /** Whether an error denotes an over-quota (HTTP 429) rejection, detected by typed status or message text. */
 const isQuotaError = (err: unknown): boolean => {
   if (AiError.isAiError(err)) {
-    if (err._tag === 'HttpResponseError' && err.response.status === 429) {
+    // v4 classifies the failure semantically on `reason` rather than by status; these are the two
+    // shapes a 429 arrives as.
+    if (err.reason._tag === 'RateLimitError' || err.reason._tag === 'QuotaExhaustedError') {
       return true;
     }
-    return QUOTA_PATTERN.test(err.description ?? err.message);
+    return QUOTA_PATTERN.test(describeAiError(err));
   }
   return typeof err === 'string' && QUOTA_PATTERN.test(err);
 };
+
+/** `description` is declared on only some reason variants; the wrapper's `message` is the fallback. */
+const describeAiError = (err: AiError.AiError): string =>
+  ('description' in err.reason ? err.reason.description : undefined) ?? err.message;
 
 /**
  * Maps a failure from the agent fiber to an error suitable for display.
@@ -139,7 +154,7 @@ export const parseError = (err: unknown): Error => {
 
   let message: string | undefined;
   if (AiError.isAiError(err)) {
-    message = err.description?.trim() || err.message;
+    message = describeAiError(err).trim();
   } else if (typeof err === 'string') {
     // TODO(burdon): This is brittle.
     // UnknownError: ChatCompletionsClient.streamText: model 'gemma3:27b' not found
@@ -161,7 +176,7 @@ export const parseError = (err: unknown): Error => {
  * Uses AgentService to spawn a process-backed agent and subscribes to ephemeral trace events for streaming.
  */
 export class AiChatProcessor {
-  readonly #registry: AtomRegistry.Registry;
+  readonly #registry: AtomRegistry.AtomRegistry;
 
   /** Pending messages (finalized, non-streaming). */
   readonly #pending = Atom.make<Message.Message[]>([]);
@@ -173,7 +188,7 @@ export class AiChatProcessor {
   readonly #finalizedIds = new Set<string>();
 
   /** Currently active request fiber. */
-  #requestFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
+  #requestFiber: Fiber.Fiber<void, unknown> | undefined;
 
   /** Last request (for retries). */
   #lastRequest: ProcessorRequest | undefined;
@@ -243,13 +258,14 @@ export class AiChatProcessor {
 
   async getSystemPrompt(): Promise<string> {
     return this._runtime.runPromise(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const skills = this.context.getSkills();
         const objects = this.context.getObjects();
+        const instructions = yield* this.#getInstructions();
         // Tier A only: system-prompt formatting runs operations that read the conversation context;
         // the live-host Tier B control surface is not reachable from this fiber.
-        const runtime = yield* Effect.runtime<Database.Service>();
-        return yield* formatSystemPrompt({ system: this._options.system, skills, objects }).pipe(
+        const runtime = yield* Effect.context<Database.Service>();
+        return yield* formatSystemPrompt({ system: this._options.system, skills, objects, instructions }).pipe(
           Effect.provideService(
             Harness.HarnessService,
             Harness.fromBinder({ feed: this._feed, runtime, binder: this.context }),
@@ -257,6 +273,22 @@ export class AiChatProcessor {
         );
       }).pipe(Effect.provide(this._spaceLayer), Effect.orDie),
     );
+  }
+
+  /**
+   * Resolves the chat's steering instructions, if any. The session is feed-centric and cannot reach
+   * its chat, so the ref is resolved here and handed down.
+   */
+  #getInstructions(): Effect.Effect<Instructions.Instructions[], never, Database.Service> {
+    return Effect.gen({ self: this }, function* () {
+      const instructionsRef = this._options.chat?.target?.instructions;
+      if (!instructionsRef) {
+        return [];
+      }
+
+      const instructions = yield* Database.load(instructionsRef).pipe(Effect.orElseSucceed(() => undefined));
+      return instructions ? [instructions] : [];
+    });
   }
 
   /**
@@ -273,7 +305,7 @@ export class AiChatProcessor {
       this.#registry.set(this.mcpErrors, []);
       this.#registry.set(this.active, true);
 
-      const effect = Effect.gen(this, function* () {
+      const effect = Effect.gen({ self: this }, function* () {
         // NOTE: Gets or creates a session for the feed.
         log.info('init agent session', {
           feed: Obj.getURI(this._feed),
@@ -283,6 +315,7 @@ export class AiChatProcessor {
         const session = yield* AgentService.getSession(this._feed, {
           model: this._options.model,
           provider: this._options.provider,
+          instructions: this._options.chat?.target?.instructions,
         });
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(
@@ -297,11 +330,11 @@ export class AiChatProcessor {
               }
             }),
           ),
-          Effect.fork,
+          Effect.forkChild,
         );
 
         log('chat processor submitting prompt', { length: requestProp.message.length });
-        yield* session.submitPrompt(requestProp.message);
+        yield* session.submitPrompt(createPromptContent(requestProp));
         log('chat processor submitPrompt returned, waiting for agent', {});
 
         // On the first message (no name yet), schedule rename immediately so it
@@ -322,7 +355,7 @@ export class AiChatProcessor {
       // preserved as a clean Error rather than an opaque FiberFailure.
       const exit = await this._runtime.runPromise(Fiber.await(this.#requestFiber));
       if (Exit.isFailure(exit)) {
-        if (Cause.isInterruptedOnly(exit.cause)) {
+        if (Cause.hasInterruptsOnly(exit.cause)) {
           this.#discardStreaming();
           return;
         }
@@ -350,7 +383,7 @@ export class AiChatProcessor {
    */
   async cancel(): Promise<void> {
     await EffectEx.runAndForwardErrors(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         log.info('cancelling request', { fiber: this.#requestFiber });
         if (this.#requestFiber) {
           yield* Fiber.interrupt(this.#requestFiber);

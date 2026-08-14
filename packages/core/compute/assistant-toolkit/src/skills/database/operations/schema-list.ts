@@ -4,7 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Instructions, Operation, Skill } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, JsonSchema, Query, Scope, Type, View } from '@dxos/echo';
 
 import { SchemaList } from './definitions';
@@ -15,23 +17,38 @@ const excludedTypenames = EXCLUDED_TYPES.map((type) => Type.getTypename(type));
 
 export default SchemaList.pipe(
   Operation.withHandler(
-    Effect.fn(function* () {
+    Effect.fn(function* ({ typenames }) {
       const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
         .run;
-      return [...types]
+      const sorted = [...types]
         .filter((schema) => !excludedTypenames.includes(Type.getTypename(schema)))
         .sort((a, b) => {
           const aKey = `${Type.getTypename(a)}:${Type.getVersion(a)}`;
           const bKey = `${Type.getTypename(b)}:${Type.getVersion(b)}`;
           return aKey.localeCompare(bKey);
-        })
-        .map((schema) => {
-          return {
-            typename: Type.getTypename(schema),
-            jsonSchema: JsonSchema.toJsonSchema(schema),
-            kind: Type.isRelation(schema) ? 'relation' : 'record',
-          };
         });
+
+      if (typenames && typenames.length > 0) {
+        const requested = new Set(typenames);
+        return sorted
+          .filter((schema) => requested.has(Type.getTypename(schema)))
+          .map((schema) => ({
+            typename: Type.getTypename(schema),
+            kind: Type.isRelation(schema) ? 'relation' : 'record',
+            jsonSchema: JsonSchema.toJsonSchema(schema),
+          }));
+      }
+
+      return sorted.map((schema) => {
+        const jsonSchema = JsonSchema.toJsonSchema(schema);
+        return {
+          typename: Type.getTypename(schema),
+          kind: Type.isRelation(schema) ? 'relation' : 'record',
+          name: jsonSchema.title ?? Type.getTypename(schema),
+          description: jsonSchema.description,
+          fields: Object.keys(jsonSchema.properties ?? {}),
+        };
+      });
     }),
   ),
 );

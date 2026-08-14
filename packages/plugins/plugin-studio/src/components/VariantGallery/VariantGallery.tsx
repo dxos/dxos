@@ -65,7 +65,7 @@ export const VariantGallery = ({ variants, emptyMessage, selectedIds, onSelect }
 
   if (items.length === 0) {
     return (
-      <div role='status' className='flex items-center justify-center bs-full text-subdued'>
+      <div role='status' className='flex items-center justify-center h-full text-subdued'>
         {emptyMessage ?? t('empty.message')}
       </div>
     );

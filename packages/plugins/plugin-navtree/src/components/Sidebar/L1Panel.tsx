@@ -5,12 +5,14 @@
 import * as Option from 'effect/Option';
 import React, { memo, useCallback, useMemo } from 'react';
 
-import { Node } from '@dxos/app-graph';
-import { Paths } from '@dxos/app-toolkit';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph, useActionRunner, useEdges } from '@dxos/plugin-graph';
+import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
+import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
 import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Tree } from '@dxos/react-ui-list';
+import { Empty, Tree } from '@dxos/react-ui-list';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
@@ -22,27 +24,54 @@ import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
 import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns';
 
+/**
+ * Delay before the unavailable-workspace message appears, timed from the last change to the set of
+ * space workspaces rather than from mount, so it lands only once that set has held still.
+ */
+const RENDER_DELAY = '1s';
+
+/**
+ * Width held for the item-end slot, whose surface resolves after the tree has painted: a
+ * `min-content` track would start collapsed and re-truncate every label when it lands. Sized to
+ * what fills it, an `AttentionGlyph` (`w-3`) inset by `mx-1`.
+ */
+const ITEM_END_SIZE = '1.25rem';
+
 export type L1PanelProps = {
   open?: boolean;
   path: string[];
-  item: Node.Node;
+  /** The tab's workspace id, which may name a workspace that has no graph node. */
+  id: string;
+  /** Absent when the workspace is not in the graph; the panel then renders the unavailable message. */
+  item?: Node.Node;
+  /**
+   * Identity of the set of space workspaces, which the unavailable message is a claim about. Empty
+   * means not-loaded-yet rather than nothing-to-show, since every identity ends up with at least a
+   * settings space.
+   */
+  spaces?: string;
   isCurrent: boolean;
   onBack?: () => void;
 };
 
 /**
- * Space or settings panel.
+ * Space or settings panel. Without an `item` — a link to a workspace this identity never had or which no
+ * longer exists, or persisted deck state pointing at one after a profile switch — the panel body is the
+ * unavailable-workspace message, so the sidebar is never blank.
  */
-const L1Panel$ = ({ open, path, item, isCurrent, onBack }: L1PanelProps) => {
+const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const title = toLocalizedString(item.properties.label, t);
-  const isActivated = useIsActivatedWorkspace(item);
+  const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
+  const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
+  // Needs a published space list to make the claim against, and a workspace actually being asked
+  // for — the sentinel deck means none has resolved yet.
+  const reportUnavailable = !!spaces && id !== DeckSchema.DEFAULT_DECK_ID;
 
   return (
     <Tabs.Panel
-      key={item.id}
-      value={item.id}
+      key={id}
+      value={id}
       classNames={[
         'absolute inset-y-0 end-0',
         'w-[calc(100%-var(--dx-l0-size))] lg:w-(--dx-l1-size) grid-cols-1 grid-rows-[var(--dx-rail-size)_1fr]',
@@ -51,18 +80,38 @@ const L1Panel$ = ({ open, path, item, isCurrent, onBack }: L1PanelProps) => {
       ]}
       tabIndex={-1}
       aria-label={title}
-      {...(isCurrent && { 'data-testid': 'navtree.workspace.visible' })}
+      // An unavailable workspace has no tab in the rail, so the generated `aria-labelledby` would
+      // reference a missing element.
+      {...(!item && { 'aria-labelledby': undefined })}
+      {...(isCurrent && {
+        'data-testid': item ? 'navtree.workspace.visible' : 'navtree.workspace.unavailable',
+      })}
       {...(!open && { inert: true })}
     >
-      {shouldRenderContent && <L1PanelContent open={open} path={path} item={item} onBack={onBack} />}
+      {shouldRenderContent &&
+        (item ? (
+          <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
+        ) : (
+          reportUnavailable && (
+            <Empty
+              // Spaces publish one at a time, so remounting restarts the delay until they stop.
+              key={spaces}
+              label={t('workspace-unavailable.description')}
+              // Second grid row, so the message clears the rail exactly as the tree does, and
+              // hugging its top rather than stretching to the row's full height.
+              classNames='row-start-2 self-start animate-fade-in'
+              style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
+            />
+          )
+        ))}
     </Tabs.Panel>
   );
 };
 
 /** Determines whether a workspace tab has been populated with real child content (i.e. expanded at least once). */
-const useIsActivatedWorkspace = (item: Node.Node): boolean => {
+const useIsActivatedWorkspace = (id: string): boolean => {
   const { graph } = useAppGraph();
-  const edges = useEdges(graph, item.id);
+  const edges = useEdges(graph, id);
 
   return useMemo(() => {
     const childIds = edges[Graph.relationKey('child')] ?? [];
@@ -79,13 +128,17 @@ const useIsActivatedWorkspace = (item: Node.Node): boolean => {
 /**
  * Mounted panel content for active or previously-visited tabs.
  */
-const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'path' | 'item' | 'onBack'>) => {
+const L1PanelContent = ({
+  path,
+  item,
+  onBack,
+}: Pick<L1PanelProps, 'open' | 'path' | 'onBack'> & { item: Node.Node }) => {
   const navTreeContext = useNavTreeContext();
 
   return (
     <DensityProvider density='md'>
       <L1PanelHeader path={path} item={item} onBack={onBack} />
-      <ScrollArea.Root thin orientation='vertical'>
+      <ScrollArea.Root centered padding thin orientation='vertical'>
         <ScrollArea.Viewport>
           <Tree
             classNames='pt-[2px]'
@@ -95,7 +148,7 @@ const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'pat
             path={path}
             levelOffset={5}
             draggable
-            gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]'
+            gridTemplateColumns={`[tree-row-start] minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
             renderColumns={NavTreeItemColumns}
             blockInstruction={navTreeContext.blockInstruction}
             canDrop={navTreeContext.canDrop}
@@ -113,11 +166,11 @@ const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'pat
 /**
  * Header row.
  */
-const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path' | 'onBack'>) => {
+const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBack'> & { item: Node.Node }) => {
   const { t } = useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
-  const backCapableWorkspace = Paths.isPinnedWorkspace(item.id);
+  const backCapableWorkspace = GraphPath.isPinnedWorkspace(item.id);
 
   const { menuActions, onAction } = useL1MenuActions({ item, path });
   useLoadDescendents(item);
@@ -125,7 +178,9 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
   return (
     <div
       data-tauri-drag-region
-      className='grid grid-cols-[28px_1fr_min-content_min-content] w-full items-center dx-app-drag dx-density-lg'
+      className='grid w-full items-center dx-app-drag dx-density-lg'
+      // Same late item-end surface as the tree rows below, so the header holds the slot too.
+      style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
     >
       {backCapableWorkspace ? (
         <IconButton
@@ -211,7 +266,7 @@ const MenuActions = ({
 /**
  * Builds the menu actions for the L1 panel header.
  */
-const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>): L1MenuActions => {
+const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'path'> & { item: Node.Node }): L1MenuActions => {
   const runAction = useActionRunner();
 
   const menuActions = getListActions(useActions(item));
@@ -226,4 +281,4 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>): 
   return { menuActions, onAction };
 };
 
-export const L1Panel = memo(L1Panel$);
+export const L1Panel = memo(L1PanelInner);

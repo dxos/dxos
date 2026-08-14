@@ -2,8 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.section'],
+});
+export const Schema = AppCapability.schema(() => import('./schema'));

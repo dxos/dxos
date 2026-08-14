@@ -70,11 +70,12 @@ pnpm watch
 ## Run commands
 
 Examples of ways to start up different workloads in dev mode:
-| Command | Description |
-| :-- | :-- |
-| `moon run tasks-app:serve` | Runs the `tasks-app` in dev mode |
-| `moon run composer-app:serve` | Runs the `composer-app` in dev mode |
-| `moon run docs:serve` | Runs the `docs` astro app in dev mode |
+
+| Command                       | Description                           |
+| :---------------------------- | :------------------------------------ |
+| `moon run tasks-app:serve`    | Runs the `tasks-app` in dev mode      |
+| `moon run composer-app:serve` | Runs the `composer-app` in dev mode   |
+| `moon run docs:serve`         | Runs the `docs` astro app in dev mode |
 
 Use `--quiet` to suppress progress output (recommended for LLMs to keep context fresh).
 Use `--on-failure=continue` to continue running other unrelated tasks even if some fail.
@@ -82,12 +83,13 @@ Use `--on-failure=continue` to continue running other unrelated tasks even if so
 ## Test commands
 
 Examples of ways to run different test workloads:
-| Command | Description |
-| :-- | :-- |
-| `moon run client-services:test` | Runs the unit tests for `client-services` |
-| `moon run echo-db:test-watch` | Runs the unit tests for `echo-db` whenever any of the source files in the package change |
-| `moon run todomvc:e2e` | Runs the playwright tests for `halo-app` |
-| `moon run todomvc --debug` | Runs tests with playwright inspector |
+
+| Command                         | Description                                                                              |
+| :------------------------------ | :--------------------------------------------------------------------------------------- |
+| `moon run client-services:test` | Runs the unit tests for `client-services`                                                |
+| `moon run echo-db:test-watch`   | Runs the unit tests for `echo-db` whenever any of the source files in the package change |
+| `moon run todomvc:e2e`          | Runs the playwright tests for `halo-app`                                                 |
+| `moon run todomvc --debug`      | Runs tests with playwright inspector                                                     |
 
 ## Storybooks
 
@@ -251,17 +253,20 @@ gh run watch
 
 Handy as aliases — e.g. `gh alias set deploy-labs 'workflow run deploy-apps.yml -f environment=labs'`, then just `gh deploy-labs`.
 
-**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. composer's `SIGNOZ_INGESTION_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-main`) applies only there. Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
+**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. composer's `SIGNOZ_INGESTION_KEY`, docs' `DX_POSTHOG_API_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-main`) applies only there. `remote` defaults to `all` — every app (from `.github/workflows/scripts/apps.mjs`) that defines the given env — or name one app to restrict it; `dev` always requires an app (there's no "all" for local `wrangler dev`). Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
 
 ```bash
-# Push secrets to the deployed composer-labs Worker.
+# Push secrets to every app that has a labs env (currently just composer).
 pnpm secrets remote labs
 
-# See what would be pushed without making any change.
+# Push secrets to one specific Worker.
+pnpm secrets remote staging docs
+
+# See what would be pushed, for the whole environment, without making any change.
 pnpm secrets remote main --dry-run
 
-# Write .dev.vars for local `wrangler dev`.
-pnpm secrets dev
+# Write .dev.vars for local `wrangler dev` (app is required).
+pnpm secrets dev composer
 
 # Target a different 1Password item.
 pnpm secrets remote labs --item "some other item"
@@ -273,7 +278,9 @@ New packages are created with `"private": true` in their `package.json` (see [Ne
 
 1. Build the package and its dependencies: `moon run <package-name>:build` (this also builds upstream deps via `moon`'s task graph).
 2. Set the package's `version` to `0.0.0` and remove `"private": true` from its `package.json` at the same time — a private package cannot be published.
-3. Run `npm login && pnpm publish-package @dxos/<PACKAGE>`
+3. Run `pnpm login`, then either:
+   - one package: `pnpm publish-package @dxos/<PACKAGE>`
+   - all packages failing the published-package gate: `pnpm publish-unpublished-packages --yes`
 4. On npmjs.com, go to the package's **Settings → Trusted Publisher** and add GitHub Actions as a trusted publisher:
    - Repository: `dxos/dxos`
    - Workflow file: `publish-all.yml`
@@ -295,6 +302,40 @@ Examples:
 ## CI
 
 See [CI docs](./.github/workflows/README.md).
+
+## Trunk (flaky test quarantining / CI Autopilot)
+
+CI already uploads test results to [Trunk](https://trunk.io), which detects
+flaky tests and quarantines (auto-skips) them instead of letting them block
+merges. The org-wide Trunk MCP server ("CI Autopilot") is already configured
+for this repo — it just needs a one-time per-user authentication:
+
+```bash
+claude mcp add --transport http trunk https://mcp.trunk.io/mcp --scope project
+```
+
+Then run `claude .`, run `/mcp`, select `trunk`, and hit Enter to authenticate
+with your own Trunk account.
+
+For how an agent should use the server's tools (investigating a CI failure,
+looking up a flaky test), see the `trunk-quarantine` agent skill
+(`.agents/skills/trunk-quarantine/SKILL.md`).
+
+### Manually quarantining a test
+
+Quarantining is a dashboard-only action — there's no CLI or config-file way to
+do it, and it's gated by each repo's **Manual Quarantine Permissions** setting
+(**Settings → Repositories → [repo] → Flaky Tests**), so admins may need to do
+this step.
+
+- **From a test's details page:** click **Quarantine**, choose **Always** in
+  the quarantine-status control, add a required comment, then **Save**.
+- **From the Flaky Tests table:** open the row's **⋮** actions menu and select
+  **Quarantine test**.
+
+To reverse it, use the same controls: **Remove Quarantine** on the details
+page, or **Unquarantine test** from the table's actions menu. Every override
+is logged in the test's **Events** tab (author, timestamp, comment).
 
 ## Patching third-party repos
 
@@ -336,6 +377,42 @@ Formatting is done by `prettier` and linting by `eslint`. Passing lint is requir
 Run `pnpm lint` to conform the entire repository with (equivalent of `lint --fix`).
 
 Run `pnpm lint:changed` to lint only what you've been working on using `pnpm changed-packages`.
+
+### Unused dependencies and dead code
+
+`pnpm knip` reports unused dependencies, dependencies that are imported without being declared, and
+source files nothing references. CI runs the same command in the **Check** workflow's `knip` job, so
+a clean local run is a clean CI run. It analyses the source tree directly — resolving workspace
+packages through their `source` export condition — so it needs no build and takes about 80 seconds.
+
+Most of what the config in `.config/knip.ts` does is teach knip the ways this repo reaches code
+without importing it: lazily via `() => import('./handler')`, by path from a moon task or vite
+alias, through a `browser` field substitution, from CSS `@import` and Tailwind `@plugin`, or from a
+glslify `#pragma`. Each rule is derived from the manifests and task definitions rather than
+hardcoded, so a new package is covered without touching the config. When knip reports something that
+is genuinely reachable, prefer extending the relevant rule over adding an ignore.
+
+`pnpm knip` runs two passes. The first checks the whole repo for unused dependencies, undeclared
+imports and unreferenced files. The second adds `--production --strict`, which analyses only what
+ships — no tests, stories or configs — and requires production code to import from `dependencies`
+alone. That second pass is what keeps a published package from making consumers install a package
+only its storybook needs. Only entry and project patterns suffixed with `!` count as production, so
+a new pattern needs that suffix to be visible to it.
+
+Unreferenced _files_ are excluded from the strict pass: some 74 components are reachable only from
+stories, and whether those are work in progress or genuinely dead is a judgement per component
+rather than a rule. `pnpm knip --production --strict` without the exclusion lists them.
+
+A `peerDependencies` entry is a contract that the consumer must supply the package, so it belongs
+there only when the code a consumer runs needs it. Something only a storybook or a test imports is a
+`devDependency`, not a peer — the strict pass reports the difference rather than exempting it.
+
+**The repo root's own dependencies are not audited.** They are consumed by moon task commands and the
+shared vitest/vite bases rather than by the few files knip attributes to the root workspace, so
+nearly all of them read as unused, and removing them breaks `pnpm install` on peer resolution. The
+root workspace is still analysed — it is what supplies `vitest` and friends to every other package —
+but its dependencies are ignored. Auditing them needs a pass of its own; drop the
+`ignoreDependencies` entry on the `'.'` workspace to see that backlog.
 
 ### ESLint errors in vscode
 
@@ -437,7 +514,11 @@ See the [Run commands](#run-commands) section above for the full list.
 ### Gotchas
 
 - `pnpm install` must run with `CI=true` or `HUSKY=0` in non-interactive environments to skip the husky git-hooks setup prompt.
-- The `DEPOT_TOKEN` warning from moon is expected and harmless (remote-cache auth token).
+- A remote-cache warning from moon means the certificates aren't installed. Running moon directly,
+  nothing breaks — builds fall back to the local cache and just don't share the team's. Install
+  them with `tools/moon-cache/install-certs.sh --op` — once per machine, covering every worktree. In GitHub Actions it is stricter: any job
+  using `.github/actions/setup` **fails** when the credentials are missing or the cache does not
+  answer, unless it is a fork PR or the call passes `remote-cache: 'false'`.
 - The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
 - Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
 - No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.

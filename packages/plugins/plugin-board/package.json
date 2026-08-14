@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-board",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Surface plugin for card baords",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -34,9 +34,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/BoardPlugin.tsx",
-      "types": "./dist/types/src/BoardPlugin.d.ts",
-      "default": "./dist/lib/BoardPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -56,18 +56,39 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./package.json": "./package.json",
+    "./Board": {
+      "source": "./src/types/Board.ts",
+      "types": "./dist/types/src/types/Board.d.ts",
+      "import": "./dist/lib/Board.mjs"
+    },
+    "./BoardEvents": {
+      "source": "./src/types/BoardEvents.ts",
+      "types": "./dist/types/src/types/BoardEvents.d.ts",
+      "import": "./dist/lib/BoardEvents.mjs"
+    },
+    "./BoardPlugin": {
+      "source": "./src/BoardPlugin.ts",
+      "types": "./dist/types/src/BoardPlugin.d.ts",
+      "import": "./dist/lib/BoardPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Board": [
+        "dist/types/src/types/Board.d.ts"
+      ],
+      "BoardEvents": [
+        "dist/types/src/types/BoardEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -85,26 +106,22 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/random": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-board": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/plugin-theme": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

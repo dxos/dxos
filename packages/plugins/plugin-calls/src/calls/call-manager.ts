@@ -2,12 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import type * as Context from 'effect/Context';
+import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Resource } from '@dxos/context';
+import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
@@ -203,7 +207,8 @@ export class CallManager extends Resource {
   // TODO(burdon): Can this be mocked?
   constructor(
     private readonly _client: Client,
-    private readonly _registry: Registry.Registry,
+    private readonly _registry: Registry.AtomRegistry,
+    private readonly _haloIdentity: Context.Service.Shape<typeof Identity.Service>,
   ) {
     super();
     this._client.config.getOrThrow('runtime.services.edge.url');
@@ -216,15 +221,16 @@ export class CallManager extends Resource {
   protected override async _open(): Promise<void> {
     await this._mediaManager.open();
     await this._swarmSynchronizer.open();
-    const subscription = this._client.halo.identity.subscribe((identity) => {
-      if (identity) {
-        this._swarmSynchronizer._setIdentity(identity);
+    const unsubscribe = this._haloIdentity.subscribe((identity) => {
+      if (Option.isSome(identity)) {
+        this._swarmSynchronizer._setIdentity(identity.value);
       }
-      if (this._client.halo.device) {
-        this._swarmSynchronizer._setDevice(this._client.halo.device);
+      const currentDevice = this._haloIdentity.getDevicesSnapshot().find((device) => device.current);
+      if (currentDevice) {
+        this._swarmSynchronizer._setDevice(currentDevice);
       }
     });
-    this._ctx.onDispose(() => subscription.unsubscribe());
+    this._ctx.onDispose(() => unsubscribe());
 
     this._swarmSynchronizer.stateUpdated.on(this._ctx, (state) => this._onCallStateUpdated(state));
     this._mediaManager.stateUpdated.on(this._ctx, (state) => this._onMediaStateUpdated(state));

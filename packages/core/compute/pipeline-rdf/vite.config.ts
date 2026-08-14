@@ -6,8 +6,10 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    index: 'src/index.ts',
-    testing: 'src/testing/index.ts',
+    'index': 'src/index.ts',
+    'fact-store': 'src/store/fact-store.ts',
+    'types': 'src/types/index.ts',
+    'testing': 'src/testing/index.ts',
   },
   test: { node: true },
 });

@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj } from '@dxos/echo';
 import { createKvsStore } from '@dxos/effect';
 
@@ -34,9 +34,9 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(AssistantCapabilities.State, stateAtom),
-      Capability.contributes(AssistantCapabilities.CompanionChatCache, companionChatCacheAtom),
-      Capability.contributes(AssistantCapabilities.HomeSuggestionsCache, homeSuggestionsCacheAtom),
+      Capability.contribute(AssistantCapabilities.State, stateAtom),
+      Capability.contribute(AssistantCapabilities.CompanionChatCache, companionChatCacheAtom),
+      Capability.contribute(AssistantCapabilities.HomeSuggestionsCache, homeSuggestionsCacheAtom),
     ];
   }),
 );

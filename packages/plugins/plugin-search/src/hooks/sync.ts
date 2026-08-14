@@ -2,12 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as SchemaAST from 'effect/SchemaAST';
-
 import { Entity, Obj, Type } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
+import { type SearchResult } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
-
-import { type SearchResult } from '#types';
 
 export const queryStringToMatch = (queryString?: string): RegExp | undefined => {
   const trimmed = queryString?.trim();
@@ -20,7 +18,7 @@ export const getIcon = (type: Type.AnyEntity | undefined): string | undefined =>
     return undefined;
   }
   const schema = Type.getSchema(type);
-  if (!SchemaAST.isTypeLiteral(schema.ast)) {
+  if (!SchemaAST.isObjects(schema.ast)) {
     return undefined;
   }
   const keys = schema.ast.propertySignatures.map((p) => p.name);

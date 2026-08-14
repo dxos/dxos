@@ -11,4 +11,5 @@ export * as RoutingOperation from './RoutingOperation';
 export * as Segment from './Segment';
 export * as Trip from './Trip';
 export * as TripCapabilities from './TripCapabilities';
+export * as TripEvents from './TripEvents';
 export * as TripOperation from './TripOperation';

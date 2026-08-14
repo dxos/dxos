@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom-react';
 import type * as Types from 'effect/Types';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
 import {
@@ -57,7 +57,7 @@ export const makeDynamicTable = ({
   type,
   properties,
 }: {
-  registry: Registry.Registry;
+  registry: Registry.AtomRegistry;
   type: Type.AnyEntity;
   properties?: TablePropertyDefinition[];
 }): { projection: ProjectionModel; object: Table.Table } => {

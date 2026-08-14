@@ -6,11 +6,8 @@
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { composeRefs } from '@radix-ui/react-compose-refs';
-import { createContextScope } from '@radix-ui/react-context';
-import type { Scope } from '@radix-ui/react-context';
 import { useId } from '@radix-ui/react-id';
 import * as MenuPrimitive from '@radix-ui/react-menu';
-import { createMenuScope } from '@radix-ui/react-menu';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
@@ -31,31 +28,19 @@ import React, {
 
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import {
+  DROPDOWN_MENU_NAME,
+  DropdownMenuProvider,
+  type DropdownMenuScopedProps,
+  useDropdownMenuContext,
+  useMenuScope,
+} from './DropdownMenuContext';
 
 type Direction = 'ltr' | 'rtl';
 
 //
 // DropdownMenu
 //
-
-const DROPDOWN_MENU_NAME = 'DropdownMenu';
-
-type ScopedProps<P> = P & { __scopeDropdownMenu?: Scope };
-const [createDropdownMenuContext, createDropdownMenuScope] = createContextScope(DROPDOWN_MENU_NAME, [createMenuScope]);
-const useMenuScope: (scope?: Scope) => any = createMenuScope();
-
-type DropdownMenuContextValue = {
-  triggerId: string;
-  triggerRef: RefObject<HTMLButtonElement | null>;
-  contentId: string;
-  open: boolean;
-  onOpenChange(open: boolean): void;
-  onOpenToggle(): void;
-  modal: boolean;
-};
-
-const [DropdownMenuProvider, useDropdownMenuContext] =
-  createDropdownMenuContext<DropdownMenuContextValue>(DROPDOWN_MENU_NAME);
 
 type DropdownMenuRootProps = PropsWithChildren<{
   dir?: Direction;
@@ -73,7 +58,7 @@ const DropdownMenuRoot = ({
   open: openProp,
   defaultOpen,
   onOpenChange,
-}: ScopedProps<DropdownMenuRootProps>) => {
+}: DropdownMenuScopedProps<DropdownMenuRootProps>) => {
   const menuScope = useMenuScope(__scopeDropdownMenu);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [open = false, setOpen] = useControllableState({
@@ -113,7 +98,7 @@ type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
 type DropdownMenuTriggerProps = PrimitiveButtonProps;
 
 const DropdownMenuTrigger = forwardRef<DropdownMenuTriggerElement, DropdownMenuTriggerProps>(
-  (props: ScopedProps<DropdownMenuTriggerProps>, forwardedRef) => {
+  (props: DropdownMenuScopedProps<DropdownMenuTriggerProps>, forwardedRef) => {
     const { __scopeDropdownMenu, disabled = false, ...triggerProps } = props;
     const context = useDropdownMenuContext(TRIGGER_NAME, __scopeDropdownMenu);
     const menuScope = useMenuScope(__scopeDropdownMenu);
@@ -177,7 +162,7 @@ type DropdownMenuVirtualTriggerProps = {
   virtualRef: RefObject<DropdownMenuTriggerElement | null>;
 };
 
-const DropdownMenuVirtualTrigger = (props: ScopedProps<DropdownMenuVirtualTriggerProps>) => {
+const DropdownMenuVirtualTrigger = (props: DropdownMenuScopedProps<DropdownMenuVirtualTriggerProps>) => {
   const { __scopeDropdownMenu, virtualRef } = props;
   const context = useDropdownMenuContext(VIRTUAL_TRIGGER_NAME, __scopeDropdownMenu);
   const menuScope = useMenuScope(__scopeDropdownMenu);
@@ -200,7 +185,7 @@ const PORTAL_NAME = 'DropdownMenu.Portal';
 type MenuPortalProps = ComponentPropsWithoutRef<typeof MenuPrimitive.Portal>;
 type DropdownMenuPortalProps = MenuPortalProps;
 
-const DropdownMenuPortal: FC<DropdownMenuPortalProps> = (props: ScopedProps<DropdownMenuPortalProps>) => {
+const DropdownMenuPortal: FC<DropdownMenuPortalProps> = (props: DropdownMenuScopedProps<DropdownMenuPortalProps>) => {
   const { __scopeDropdownMenu, ...portalProps } = props;
   const menuScope = useMenuScope(__scopeDropdownMenu);
   return <MenuPrimitive.Portal {...menuScope} {...portalProps} />;
@@ -239,7 +224,7 @@ type MenuContentProps = ThemedClassName<ComponentPropsWithoutRef<typeof MenuPrim
 type DropdownMenuContentProps = Omit<MenuContentProps, 'onEntryFocus'>;
 
 const DropdownMenuContent = forwardRef<DropdownMenuContentElement, DropdownMenuContentProps>(
-  (props: ScopedProps<DropdownMenuContentProps>, forwardedRef) => {
+  (props: DropdownMenuScopedProps<DropdownMenuContentProps>, forwardedRef) => {
     const { __scopeDropdownMenu, classNames, collisionPadding = 8, collisionBoundary, ...contentProps } = props;
     const { tx } = useThemeContext();
     const context = useDropdownMenuContext(CONTENT_NAME, __scopeDropdownMenu);
@@ -318,7 +303,7 @@ type MenuGroupProps = ComponentPropsWithoutRef<typeof MenuPrimitive.Group>;
 type DropdownMenuGroupProps = MenuGroupProps;
 
 const DropdownMenuGroup = forwardRef<DropdownMenuGroupElement, DropdownMenuGroupProps>(
-  (props: ScopedProps<DropdownMenuGroupProps>, forwardedRef) => {
+  (props: DropdownMenuScopedProps<DropdownMenuGroupProps>, forwardedRef) => {
     const { __scopeDropdownMenu, ...groupProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
     return <MenuPrimitive.Group {...menuScope} {...groupProps} ref={forwardedRef} />;
@@ -338,7 +323,7 @@ type MenuLabelProps = ThemedClassName<ComponentPropsWithoutRef<typeof MenuPrimit
 type DropdownMenuLabelProps = MenuLabelProps;
 
 const DropdownMenuGroupLabel = forwardRef<DropdownMenuLabelElement, DropdownMenuLabelProps>(
-  (props: ScopedProps<DropdownMenuLabelProps>, forwardedRef) => {
+  (props: DropdownMenuScopedProps<DropdownMenuLabelProps>, forwardedRef) => {
     const { __scopeDropdownMenu, classNames, ...labelProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
     const { tx } = useThemeContext();
@@ -366,7 +351,7 @@ type MenuItemProps = ThemedClassName<ComponentPropsWithoutRef<typeof MenuPrimiti
 type DropdownMenuItemProps = MenuItemProps;
 
 const DropdownMenuItem = forwardRef<DropdownMenuItemElement, DropdownMenuItemProps>(
-  (props: ScopedProps<DropdownMenuItemProps>, forwardedRef) => {
+  (props: DropdownMenuScopedProps<DropdownMenuItemProps>, forwardedRef) => {
     const { __scopeDropdownMenu, classNames, ...itemProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
     const { tx } = useThemeContext();
@@ -394,7 +379,7 @@ type MenuCheckboxItemProps = ThemedClassName<ComponentPropsWithoutRef<typeof Men
 type DropdownMenuCheckboxItemProps = MenuCheckboxItemProps;
 
 const DropdownMenuCheckboxItem = forwardRef<DropdownMenuCheckboxItemElement, DropdownMenuCheckboxItemProps>(
-  (props: ScopedProps<DropdownMenuCheckboxItemProps>, forwardedRef) => {
+  (props: DropdownMenuScopedProps<DropdownMenuCheckboxItemProps>, forwardedRef) => {
     const { __scopeDropdownMenu, classNames, ...checkboxItemProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
     const { tx } = useThemeContext();
@@ -422,7 +407,7 @@ type MenuRadioGroupProps = ComponentPropsWithoutRef<typeof MenuPrimitive.RadioGr
 type DropdownMenuRadioGroupProps = MenuRadioGroupProps;
 
 const DropdownMenuRadioGroup = forwardRef<DropdownMenuRadioGroupElement, DropdownMenuRadioGroupProps>(
-  (props: ScopedProps<DropdownMenuRadioGroupProps>, forwardedRef) => {
+  (props: DropdownMenuScopedProps<DropdownMenuRadioGroupProps>, forwardedRef) => {
     const { __scopeDropdownMenu, ...radioGroupProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
     return <MenuPrimitive.RadioGroup {...menuScope} {...radioGroupProps} ref={forwardedRef} />;
@@ -442,7 +427,7 @@ type MenuRadioItemProps = ComponentPropsWithoutRef<typeof MenuPrimitive.RadioIte
 type DropdownMenuRadioItemProps = ThemedClassName<MenuRadioItemProps>;
 
 const DropdownMenuRadioItem = forwardRef<DropdownMenuRadioItemElement, DropdownMenuRadioItemProps>(
-  (props: ScopedProps<DropdownMenuRadioItemProps>, forwardedRef) => {
+  (props: DropdownMenuScopedProps<DropdownMenuRadioItemProps>, forwardedRef) => {
     const { __scopeDropdownMenu, classNames, ...itemProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
     const { tx } = useThemeContext();
@@ -470,7 +455,7 @@ type MenuItemIndicatorProps = ComponentPropsWithoutRef<typeof MenuPrimitive.Item
 type DropdownMenuItemIndicatorProps = MenuItemIndicatorProps;
 
 const DropdownMenuItemIndicator = forwardRef<DropdownMenuItemIndicatorElement, DropdownMenuItemIndicatorProps>(
-  (props: ScopedProps<DropdownMenuItemIndicatorProps>, forwardedRef) => {
+  (props: DropdownMenuScopedProps<DropdownMenuItemIndicatorProps>, forwardedRef) => {
     const { __scopeDropdownMenu, ...itemIndicatorProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
     return <MenuPrimitive.ItemIndicator {...menuScope} {...itemIndicatorProps} ref={forwardedRef} />;
@@ -490,7 +475,7 @@ type MenuSeparatorProps = ThemedClassName<ComponentPropsWithoutRef<typeof MenuPr
 type DropdownMenuSeparatorProps = MenuSeparatorProps;
 
 const DropdownMenuSeparator = forwardRef<DropdownMenuSeparatorElement, DropdownMenuSeparatorProps>(
-  (props: ScopedProps<DropdownMenuSeparatorProps>, forwardedRef) => {
+  (props: DropdownMenuScopedProps<DropdownMenuSeparatorProps>, forwardedRef) => {
     const { __scopeDropdownMenu, classNames, ...separatorProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
     const { tx } = useThemeContext();
@@ -518,7 +503,7 @@ type MenuArrowProps = ThemedClassName<ComponentPropsWithoutRef<typeof MenuPrimit
 type DropdownMenuArrowProps = MenuArrowProps;
 
 const DropdownMenuArrow = forwardRef<DropdownMenuArrowElement, DropdownMenuArrowProps>(
-  (props: ScopedProps<DropdownMenuArrowProps>, forwardedRef) => {
+  (props: DropdownMenuScopedProps<DropdownMenuArrowProps>, forwardedRef) => {
     const { __scopeDropdownMenu, classNames, ...arrowProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
     const { tx } = useThemeContext();
@@ -546,7 +531,7 @@ type DropdownMenuSubProps = {
   onOpenChange?(open: boolean): void;
 };
 
-const DropdownMenuSub: FC<DropdownMenuSubProps> = (props: ScopedProps<DropdownMenuSubProps>) => {
+const DropdownMenuSub: FC<DropdownMenuSubProps> = (props: DropdownMenuScopedProps<DropdownMenuSubProps>) => {
   const { __scopeDropdownMenu, children, open: openProp, onOpenChange, defaultOpen } = props;
   const menuScope = useMenuScope(__scopeDropdownMenu);
   const [open = false, setOpen] = useControllableState({
@@ -573,7 +558,7 @@ type MenuSubTriggerProps = ComponentPropsWithoutRef<typeof MenuPrimitive.SubTrig
 type DropdownMenuSubTriggerProps = MenuSubTriggerProps;
 
 const DropdownMenuSubTrigger = forwardRef<DropdownMenuSubTriggerElement, DropdownMenuSubTriggerProps>(
-  (props: ScopedProps<DropdownMenuSubTriggerProps>, forwardedRef) => {
+  (props: DropdownMenuScopedProps<DropdownMenuSubTriggerProps>, forwardedRef) => {
     const { __scopeDropdownMenu, ...subTriggerProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
     return <MenuPrimitive.SubTrigger {...menuScope} {...subTriggerProps} ref={forwardedRef} />;
@@ -593,7 +578,7 @@ type MenuSubContentProps = ComponentPropsWithoutRef<typeof MenuPrimitive.SubCont
 type DropdownMenuSubContentProps = MenuSubContentProps;
 
 const DropdownMenuSubContent = forwardRef<DropdownMenuSubContentElement, DropdownMenuSubContentProps>(
-  (props: ScopedProps<DropdownMenuSubContentProps>, forwardedRef) => {
+  (props: DropdownMenuScopedProps<DropdownMenuSubContentProps>, forwardedRef) => {
     const { __scopeDropdownMenu, ...subContentProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
 
@@ -645,11 +630,9 @@ export const DropdownMenu = {
   SubContent: DropdownMenuSubContent,
 };
 
-type DropdownMenuScope = Scope;
-
-const useDropdownMenuMenuScope: (scope?: DropdownMenuScope) => any = useMenuScope;
-
-export { createDropdownMenuScope, useDropdownMenuContext, useDropdownMenuMenuScope };
+// Type-only re-export (erased, so it does not affect the refresh boundary): keeps the inferred
+// types of downstream composites nameable across package boundaries.
+export type { DropdownMenuScopedProps } from './DropdownMenuContext';
 
 export type {
   DropdownMenuArrowProps,

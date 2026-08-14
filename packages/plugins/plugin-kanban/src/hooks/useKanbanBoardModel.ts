@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import type { BoardModel } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 
-import { type BaseKanbanItem, type ColumnStructure, type Kanban } from '#types';
+import { Kanban, KanbanLayout } from '#types';
 
 import {
   computeColumnStructure,
@@ -21,19 +22,19 @@ import {
 /**
  * Builds a board model that maps kanban arrangement and projection onto columns and per-column items.
  *
- * @template T - Item type (must have id; defaults to BaseKanbanItem).
+ * @template T - Item type (must have id; defaults to KanbanLayout.BaseKanbanItem).
  * @param kanban - Kanban object (arrangement, view).
  * @param projection - ProjectionModel for pivot field and options.
  * @param itemsAtom - Atom holding the full item list.
  * @param registry - Registry for reading atom values.
  * @returns BoardModel with columns atom, items family, and getColumns/getItems.
  */
-export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
+export function useKanbanBoardModel<T extends KanbanLayout.BaseKanbanItem = KanbanLayout.BaseKanbanItem>(
   kanban: Kanban.Kanban,
   projection: ProjectionModel,
   itemsAtom: Atom.Atom<T[]>,
-  registry: Registry.Registry,
-): BoardModel<ColumnStructure, T> {
+  registry: Registry.AtomRegistry,
+): BoardModel<KanbanLayout.ColumnStructure, T> {
   // Source atoms: reactive reads from the kanban object; items come from the passed-in atom (e.g. AtomQuery or in-memory).
   const arrangementAtom = useMemo(() => Obj.atomProperty(kanban, 'arrangement'), [kanban]);
   const viewSnapshotAtom = useMemo(
@@ -97,7 +98,7 @@ export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
   // Per-column slice of arrangement so each column’s items atom only depends on that column’s ids.
   const columnArrangementAtomFamily = useMemo(
     () =>
-      Atom.family<string, Atom.Atom<ColumnStructure>>((columnValue: string) =>
+      Atom.family<string, Atom.Atom<KanbanLayout.ColumnStructure>>((columnValue: string) =>
         Atom.make((get) => {
           const byColumn = get(effectiveByColumnAtom);
           return {
@@ -142,7 +143,7 @@ export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
     () => ({
       getColumnId: (data) => data.columnValue,
       getItemId: (data) => (data as T).id,
-      isColumn: (obj): obj is ColumnStructure =>
+      isColumn: (obj): obj is KanbanLayout.ColumnStructure =>
         typeof obj === 'object' && obj !== null && 'columnValue' in obj && 'ids' in obj,
       // TODO(wittjosiah): This should be restricted to objects of the type of the kanban view.
       isItem: (obj): obj is T => Obj.isObject(obj),

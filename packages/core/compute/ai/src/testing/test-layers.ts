@@ -3,16 +3,16 @@
 //
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Config from 'effect/Config';
-import type * as ConfigError from 'effect/ConfigError';
+import type * as ConfigError from 'effect/Config';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as AiModelResolver from '../AiModelResolver';
 import type * as AiService from '../AiService';
 import { AnthropicResolver, LMStudioResolver, OllamaResolver } from '../resolvers';
-import { MemoizedAiService } from './memoization';
+import { LanguageModelFixture } from './model-fixture';
 import { tapHttpErrors } from './tap';
 
 export type AiServiceLayer = Layer.Layer<AiService.AiService, ConfigError.ConfigError, never>;
@@ -33,7 +33,7 @@ export const DirectAiServiceLayer: AiServiceLayer = TestRouter.pipe(
   Layer.provide(
     AnthropicClient.layerConfig({
       // `DX_ANTHROPIC_API_KEY` (not `ANTHROPIC_API_KEY`, which breaks Claude Code) — see the
-      // `regenerate-memoized-llm` skill.
+      // `regenerate-model-fixture` skill.
       apiKey: Config.redacted('DX_ANTHROPIC_API_KEY').pipe(Config.withDefault(Redacted.make('not-a-real-key'))),
       transformClient: tapHttpErrors,
     }),
@@ -99,11 +99,11 @@ export const AiServiceTestingPreset = (preset: AiServicePreset): AiServiceLayer 
 
 /**
  * AiService for testing.
- * Refer to {@link MemoizedAiService} documentation for details on how memoization works.
+ * Refer to {@link LanguageModelFixture} documentation for details on how memoization works.
  *
  * Defaults to the `direct` preset, which talks to the Anthropic API directly using the
- * `DX_ANTHROPIC_API_KEY` env var. Cache regeneration (`ALLOW_LLM_GENERATION=1`) therefore
- * requires `DX_ANTHROPIC_API_KEY` to be set — see the `regenerate-memoized-llm` skill.
+ * `DX_ANTHROPIC_API_KEY` env var. Fixture regeneration (`DX_UPDATE_MODEL_FIXTURES=1`) therefore
+ * requires `DX_ANTHROPIC_API_KEY` to be set — see the `regenerate-model-fixture` skill.
  */
 export const TestAiService = ({
   disableMemoization = false,
@@ -113,7 +113,7 @@ export const TestAiService = ({
   disableMemoization?: boolean;
   preset?: AiServicePreset;
   /**
-   * Patterns matching run-specific identifiers (e.g. `MemoizedLanguageModel.SPACE_ID_PATTERN`) to
+   * Patterns matching run-specific identifiers (e.g. `LanguageModelFixture.SPACE_ID_PATTERN`) to
    * canonicalize for memoized-conversation matching and substitute back on a cache hit. Opt-in.
    */
   dynamicValuePatterns?: readonly RegExp[];
@@ -121,6 +121,6 @@ export const TestAiService = ({
   if (disableMemoization) {
     return AiServiceTestingPreset(preset);
   } else {
-    return MemoizedAiService.layerTest({ dynamicValuePatterns }).pipe(Layer.provide(AiServiceTestingPreset(preset)));
+    return LanguageModelFixture.layerTest({ dynamicValuePatterns }).pipe(Layer.provide(AiServiceTestingPreset(preset)));
   }
 };

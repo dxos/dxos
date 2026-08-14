@@ -9,7 +9,8 @@ import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext, Harness } from '@dxos/assistant';
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -30,16 +31,15 @@ const TestLayer = AssistantTestLayer({
 });
 
 /** Conversation DXN for the scoped test harness feed. */
-class TestConversation extends Context.Tag('@dxos/assistant-toolkit/TestConversation')<
-  TestConversation,
-  { conversation: URI.URI }
->() {}
+class TestConversation extends Context.Service<TestConversation, { conversation: URI.URI }>()(
+  '@dxos/assistant-toolkit/TestConversation',
+) {}
 
-const ConversationHarnessLayer = Layer.unwrapScoped(
+const ConversationHarnessLayer = Layer.unwrap(
   Effect.gen(function* () {
     const feed = yield* Database.add(Feed.make());
     const conversation = Obj.getURI(feed);
-    const runtime = yield* Effect.runtime<Database.Service>();
+    const runtime = yield* Effect.context<Database.Service>();
     const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
     return Layer.mergeAll(
       Layer.succeed(TestConversation, { conversation }),

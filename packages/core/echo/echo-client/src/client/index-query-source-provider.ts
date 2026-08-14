@@ -3,13 +3,13 @@
 //
 
 import * as Array from 'effect/Array';
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Entity, type Hypergraph, Obj, Query } from '@dxos/echo';
+import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_TYPE, makeDecodedEntityLive } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,8 +22,16 @@ import {
 import { type QueryService } from '@dxos/protocols/rpc';
 import { isNonNullable } from '@dxos/util';
 
-import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
-import { type QuerySource, type SourceEntry, getTargetSpacesForQuery } from '../query';
+import { type FeedHandle } from '../feed/feed-handle';
+import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph';
+import { DatabaseImpl } from '../proxy-db';
+import {
+  type QuerySource,
+  type SourceEntry,
+  getQueryDeletedOption,
+  getTargetSpacesForQuery,
+  queryTargetsSpacesOrFeeds,
+} from '../query';
 
 export type LoadObjectProps = {
   spaceId: SpaceId;
@@ -52,7 +60,7 @@ export interface ObjectLoader {
 
 export type IndexQueryProviderProps = {
   service: QueryService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: EffectContext.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -79,7 +87,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
 
 export type IndexQuerySourceProps = {
   service: QueryService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: EffectContext.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -147,6 +155,13 @@ export class IndexQuerySource implements QuerySource {
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]> {
     this._query = query;
+    // The index serves spaces and feeds; a query whose explicit scopes target neither
+    // (e.g. registry-only) is answered entirely by other sources. Forwarding it anyway
+    // made the whole query fail on edge — the query host rejects space-less queries, and
+    // the fail-fast merge in `GraphQueryContext.run` discarded the registry source's results.
+    if (!queryTargetsSpacesOrFeeds(query)) {
+      return [];
+    }
     return new Promise((resolve, reject) => {
       this._runOneShot(query, resolve, reject);
     });
@@ -167,6 +182,11 @@ export class IndexQuerySource implements QuerySource {
     // Don't start a reactive remote query until the query context is started (calls `open()`).
     // This prevents `.query(...).run()` from accidentally triggering a REACTIVE query in addition to the ONE_SHOT query.
     if (!this._open) {
+      return;
+    }
+
+    // Same gate as `run`: no space/feed scope means nothing here to watch.
+    if (!queryTargetsSpacesOrFeeds(query)) {
       return;
     }
 
@@ -203,7 +223,7 @@ export class IndexQuerySource implements QuerySource {
 
     cleanup = subscribeStream(
       this._params.runtime,
-      this._params.service.QueryService.execQuery({
+      this._params.service['QueryService.execQuery']({
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.ONE_SHOT,
@@ -242,7 +262,7 @@ export class IndexQuerySource implements QuerySource {
 
     this._streamCleanup = subscribeStream(
       this._params.runtime,
-      this._params.service.QueryService.execQuery({
+      this._params.service['QueryService.execQuery']({
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.REACTIVE,
@@ -389,14 +409,12 @@ export class IndexQuerySource implements QuerySource {
     queryStartTimestamp: number,
     result: RemoteQueryResult,
   ): Promise<SourceEntry | null> {
-    if (!OBJECT_DIAGNOSTICS.has(result.id)) {
-      OBJECT_DIAGNOSTICS.set(result.id, {
-        objectId: result.id,
-        spaceId: result.spaceId,
-        loadReason: 'query',
-        query: JSON.stringify(this._query ?? null),
-      });
-    }
+    recordObjectDiagnostic(result.id, () => ({
+      objectId: result.id,
+      spaceId: result.spaceId,
+      loadReason: 'query',
+      query: JSON.stringify(this._query ?? null),
+    }));
 
     invariant(SpaceId.isValid(result.spaceId), 'Invalid spaceId');
     invariant(EntityId.isValid(result.id), 'Invalid id');
@@ -413,20 +431,43 @@ export class IndexQuerySource implements QuerySource {
       // A feed item's parent is the Feed object (whose id equals the queue id). Setting it here mirrors
       // the client feed-handle read path so `Obj.getParent` resolves for index-hydrated feed items.
       const parent = database?.getObjectById(result.queueId);
+      // Route through the feed handle so index-hydrated results share identity (and live `Obj.update`
+      // semantics) with the same object read via polling or `db.appendToFeed`. When no handle is
+      // available (feed service not connected, or the Feed object isn't loaded) we still return a
+      // *live* object — feed objects must uniformly follow the live type-spec/API; only core-tracked
+      // identity and background persistence are unavailable in that degraded state.
+      let feedHandle: FeedHandle | undefined;
+      if (database instanceof DatabaseImpl) {
+        if (Obj.instanceOf(Feed.Feed)(parent)) {
+          feedHandle = database._getFeedHandleIfAvailable(queueEchoUri, parent.namespace);
+          feedHandle?.setParentEntity(parent);
+        } else {
+          // Parent Feed not loaded — reuse an already-created handle (correct namespace) if present,
+          // but don't mint one at a guessed namespace.
+          feedHandle = database._tryGetFeedHandle(queueEchoUri);
+        }
+      }
       let object;
       try {
-        object = await Obj.fromJSON(json, {
-          refResolver,
-          uri: EID.make({ spaceId: result.spaceId, entityId: result.id }),
-          database,
-          parent,
-        });
+        object = feedHandle
+          ? await feedHandle.upsertFromJSON(json)
+          : makeDecodedEntityLive(
+              await Obj.fromJSON(json, {
+                refResolver,
+                uri: EID.make({ spaceId: result.spaceId, entityId: result.id }),
+                database,
+                parent,
+              }),
+            );
       } catch (err) {
         const typeDxn = typeof json[ATTR_TYPE] === 'string' ? json[ATTR_TYPE] : '<unknown>';
         if (!emittedSchemaValidationWarnings.has(typeDxn)) {
           emittedSchemaValidationWarnings.add(typeDxn);
           log.warn('object failed schema validation', { type: typeDxn, error: err });
         }
+        return null;
+      }
+      if (!object) {
         return null;
       }
       const queryResult: SourceEntry = {
@@ -448,6 +489,13 @@ export class IndexQuerySource implements QuerySource {
       return null;
     }
 
+    // The host's index lags a local delete: its in-flight response still lists the object, and
+    // because results are a union across sources any stale entry resurfaces it after the working
+    // set has already dropped it. The local flag is authoritative here.
+    if (!this._matchesDeletedOption(object)) {
+      return null;
+    }
+
     const queryResult: SourceEntry = {
       id: object.id,
       result: object,
@@ -456,6 +504,19 @@ export class IndexQuerySource implements QuerySource {
       group: _groupFromRemoteResult(result),
     };
     return queryResult;
+  }
+
+  /** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */
+  private _matchesDeletedOption(object: Entity.Unknown): boolean {
+    const deleted = Entity.isDeleted(object);
+    switch (this._query === undefined ? 'exclude' : getQueryDeletedOption(this._query)) {
+      case 'exclude':
+        return !deleted;
+      case 'only':
+        return deleted;
+      case 'include':
+        return true;
+    }
   }
 
   /**

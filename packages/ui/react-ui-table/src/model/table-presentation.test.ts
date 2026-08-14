@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { DXN, Filter, JsonSchema, Query, Type } from '@dxos/echo';
@@ -16,7 +16,7 @@ import { TablePresentation } from './table-presentation';
 
 describe('TablePresentation', () => {
   describe('getCells', () => {
-    let registry: Registry.Registry;
+    let registry: Registry.AtomRegistry;
     let data: any[];
     let model: any;
     let presentation: TablePresentation;
@@ -86,7 +86,7 @@ describe('TablePresentation', () => {
   });
 
   describe('pinned columns', () => {
-    let registry: Registry.Registry;
+    let registry: Registry.AtomRegistry;
     let model: TableModel;
     let presentation: TablePresentation;
 
@@ -151,7 +151,7 @@ const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
   }),
 );
 
-const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {
+const createTableModel = (registry: Registry.AtomRegistry, props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Type.getSchema(Test));
   const view = ViewModel.make({
     query: Query.select(Filter.type(schema)),

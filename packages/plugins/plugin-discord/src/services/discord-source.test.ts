@@ -3,7 +3,7 @@
 //
 
 import type { MessageResponse } from 'dfx/types';
-import type * as ConfigError from 'effect/ConfigError';
+import type * as ConfigError from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, expect, test } from 'vitest';

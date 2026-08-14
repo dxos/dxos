@@ -7,8 +7,7 @@ import React, { useState } from 'react';
 import { mx } from '@dxos/ui-theme';
 
 import { type ThemedClassName } from '../../util';
-
-export type MediaKind = 'video' | 'audio';
+import { type MediaKind, detectMediaKind, isEmbedUrl } from './media-kind';
 
 export type MediaFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 
@@ -21,41 +20,8 @@ const FIT_CLASS: Record<MediaFit, string> = {
   'scale-down': 'object-scale-down',
 };
 
-const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogv', '.mov', '.m4v'];
-const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'];
-
 /** iframe sandbox flags compatible with typical oEmbed-style players. */
 const DEFAULT_IFRAME_SANDBOX = 'allow-scripts allow-same-origin allow-presentation';
-
-/**
- * Best-effort detection of `video` vs `audio` from a media URL.
- * Inspects the pathname's extension (ignoring query/hash). Returns `undefined`
- * when the URL doesn't look like a recognised media file — callers should
- * default to 'video' or render a fallback (e.g. iframe / img).
- */
-export const detectMediaKind = (src: string): MediaKind | undefined => {
-  // Strip query and hash, then take the last path segment's extension.
-  const pathname = src.split(/[?#]/, 1)[0]!;
-  const lower = pathname.toLowerCase();
-  if (VIDEO_EXTENSIONS.some((extension) => lower.endsWith(extension))) {
-    return 'video';
-  }
-  if (AUDIO_EXTENSIONS.some((extension) => lower.endsWith(extension))) {
-    return 'audio';
-  }
-
-  return undefined;
-};
-
-/**
- * Heuristic match for URLs that should render as native `<video>` / `<audio>`
- * (i.e. URLs ending in a recognised media extension).
- *
- * NB: Cloudflare Stream embed URLs serve an HTML player page, **not** a media
- * stream, so they cannot be loaded via `<video>`. Those are detected by
- * {@link isCloudflareStreamEmbed} and rendered via `<iframe>` instead.
- */
-export const isEmbedUrl = (src: string): boolean => detectMediaKind(src) !== undefined;
 
 /**
  * Match Cloudflare Stream `/iframe` embed URLs of the form
@@ -164,7 +130,7 @@ type IframePlayerProps = ThemedClassName<{
 const IframePlayer = ({ src, alt, classNames }: IframePlayerProps) => {
   const [loaded, setLoaded] = useState(false);
   return (
-    <div className={mx('relative bg-baseSurface', classNames)}>
+    <div className={mx('relative bg-base-surface', classNames)}>
       <iframe
         src={src}
         title={alt ?? 'Embedded media'}

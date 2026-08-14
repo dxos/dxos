@@ -2,39 +2,51 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
-import { CommandConfig, performRecoveryOAuthFlow, print } from '@dxos/cli-util';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import { CommandConfig, print } from '@dxos/cli-util';
+import { performRecoveryOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
-import { HubHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
 
+import { ClientOperation } from '#operations';
+
 import { printIdentity, waitForState } from '../../halo/util';
+import {
+  ATMOSPHERE_INPUT_PROMPT,
+  ATMOSPHERE_METHOD,
+  ATMOSPHERE_METHOD_TITLE,
+  METHOD_ALIASES,
+  hubClient,
+  methodOption,
+} from '../util';
 
-type LoginMethod = 'email' | 'atproto' | 'device-invitation' | 'recovery-code';
+type LoginMethod = 'email' | typeof ATMOSPHERE_METHOD | 'device-invitation' | 'recovery-code';
 
-const LOGIN_METHODS: LoginMethod[] = ['email', 'atproto', 'device-invitation', 'recovery-code'];
+const LOGIN_METHODS: LoginMethod[] = ['email', ATMOSPHERE_METHOD, 'device-invitation', 'recovery-code'];
 
 const METHOD_CHOICES = [
   { title: 'Email', value: 'email' as const },
-  { title: 'AT Protocol', value: 'atproto' as const },
+  { title: ATMOSPHERE_METHOD_TITLE, value: ATMOSPHERE_METHOD },
   { title: 'Device invitation', value: 'device-invitation' as const },
   { title: 'Recovery code', value: 'recovery-code' as const },
 ];
 
 const INPUT_PROMPT: Record<LoginMethod, string> = {
   'email': 'Email address',
-  'atproto': 'atproto handle or DID (e.g. alice.bsky.social)',
+  [ATMOSPHERE_METHOD]: ATMOSPHERE_INPUT_PROMPT,
   'device-invitation': 'Invitation code or URL',
   'recovery-code': 'Recovery code (seed phrase)',
 };
@@ -42,20 +54,22 @@ const INPUT_PROMPT: Record<LoginMethod, string> = {
 export const login = Command.make(
   'login',
   {
-    method: Options.choice('method', LOGIN_METHODS).pipe(
+    method: methodOption(LOGIN_METHODS, METHOD_ALIASES).pipe(
       Options.withDescription(
-        'Login method (email | atproto | device-invitation | recovery-code). Prompted if omitted.',
+        'Login method (email | atmosphere | device-invitation | recovery-code). Prompted if omitted.',
       ),
       Options.optional,
     ),
-    input: Args.text({ name: 'input' }).pipe(
-      Args.withDescription('Method input: email address / atproto handle / invitation code / recovery code.'),
+    input: Args.string('input').pipe(
+      Args.withDescription('Method input: email address / Atmosphere handle / invitation code / recovery code.'),
       Args.optional,
     ),
   },
   Effect.fn(function* ({ method, input }) {
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
+    const manager = yield* Plugin.Service;
+    const { invoke } = manager.capabilities.get(Capabilities.OperationInvoker);
     // TODO(wittjosiah): How to surface this error to the user cleanly?
     invariant(!client.halo.identity.get(), 'Already logged in. Run `dx account logout` first.');
 
@@ -68,8 +82,8 @@ export const login = Command.make(
       : yield* Prompt.text({ message: `${INPUT_PROMPT[resolvedMethod]}:` }).pipe(Prompt.run);
 
     const identity = yield* Match.value(resolvedMethod).pipe(
-      Match.when('atproto', () => loginWithAtproto(client, resolvedInput)),
-      Match.when('email', () => loginWithEmail(client, resolvedInput)),
+      Match.when(ATMOSPHERE_METHOD, () => loginWithAtmosphere(client, resolvedInput)),
+      Match.when('email', () => loginWithEmail(client, resolvedInput, invoke)),
       Match.when('recovery-code', () => loginWithRecoveryCode(client, resolvedInput)),
       Match.when('device-invitation', () => loginWithDeviceInvitation(client, resolvedInput)),
       Match.exhaustive,
@@ -87,10 +101,11 @@ export const login = Command.make(
 ).pipe(Command.withDescription('Log in to an existing DXOS identity (same methods as Composer).'));
 
 /**
- * atproto / Bluesky OAuth login: runs the gate recovery flow (local server + browser) and redeems
- * the resulting one-time `recoveryProof` to admit this device into the existing identity's HALO.
+ * Atmosphere (atproto / Bluesky) OAuth login: runs the gate recovery flow (local server + browser)
+ * and redeems the resulting one-time `recoveryProof` to admit this device into the existing
+ * identity's HALO.
  */
-const loginWithAtproto = (client: Client, handle: string) =>
+const loginWithAtmosphere = (client: Client, handle: string) =>
   Effect.gen(function* () {
     const edgeBaseUrl = client.config.values.runtime?.services?.edge?.url;
     invariant(edgeBaseUrl, 'Edge services not configured (runtime.services.edge.url).');
@@ -108,20 +123,58 @@ const loginWithRecoveryCode = (client: Client, recoveryCode: string) =>
   Effect.tryPromise(() => client.halo.recoverIdentity({ recoveryCode }));
 
 /**
- * Email login: hub-service inlines a one-time `token` for test emails and emails it out-of-band
- * otherwise. Redeems the token to admit this device into HALO.
+ * Email login, mirroring the gate's login tab (`WelcomeScreen.handleLogin`). Hub-service answers in
+ * one of two ways:
+ *
+ * - `needsIdentity`: the address may bind a fresh Account but has no identity yet. Create one
+ *   locally and retry with its DID; the hub then admits it directly — there is no token because
+ *   there is nothing to recover — and we provision the agent as the gate does.
+ * - otherwise: the link went out by email (a token is never returned inline), so prompt for the
+ *   token from the message.
  */
-const loginWithEmail = (client: Client, email: string) =>
+const loginWithEmail = (client: Client, email: string, invoke: Capabilities.OperationInvoker['invoke']) =>
   Effect.gen(function* () {
-    const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
-    invariant(hubUrl, 'Hub URL not configured (runtime.app.env.DX_HUB_URL).');
-    const hub = new HubHttpClient(hubUrl);
-    const { token: inlineToken } = yield* Effect.tryPromise(() => hub.login(DxContext.default(), { email }));
-    let token = inlineToken;
-    if (!token) {
-      yield* Console.log(`A login link was sent to ${email}. Paste the token from the email below.`);
-      token = yield* Prompt.text({ message: 'Login token' }).pipe(Prompt.run);
+    const hub = yield* hubClient;
+    const result = yield* Effect.tryPromise(() => hub.login(DxContext.default(), { email }));
+
+    if (result.needsIdentity) {
+      // `CreateIdentity` fires `IdentityCreated`, which is what provisions the identity's spaces.
+      yield* invoke(ClientOperation.CreateIdentity, { displayName: email.split('@')[0] });
+      const identity = client.halo.identity.get();
+      invariant(identity, 'identity should exist after create');
+      // The local identity outlives any failure from here on, and the `Already logged in` guard
+      // above rejects a plain retry, so every failure below carries the same recovery step.
+      const recovery =
+        'A local identity was created and remains bound to this profile; run `dx account logout` ' +
+        'to clear it before retrying.';
+
+      const retry = yield* Effect.tryPromise({
+        try: () =>
+          hub.login(DxContext.default(), {
+            email,
+            identityDid: identity.did,
+            identityKey: identity.identityKey.toHex(),
+          }),
+        catch: (cause) =>
+          new Error(
+            `Login request for ${email} failed (${cause instanceof Error ? cause.message : String(cause)}). ${recovery}`,
+          ),
+      });
+      if (!retry.admitted) {
+        return yield* Effect.fail(
+          new Error(
+            `Hub did not admit ${email}. A gated hub only admits addresses with an account — ` +
+              'run `dx account signup <ACCESS-CODE>` to create one. ' +
+              recovery,
+          ),
+        );
+      }
+      yield* invoke(ClientOperation.CreateAgent);
+      return identity;
     }
+
+    yield* Console.log(`A login link was sent to ${email}. Paste the token from the email below.`);
+    const token = yield* Prompt.text({ message: 'Login token' }).pipe(Prompt.run);
     return yield* Effect.tryPromise(() => client.halo.recoverIdentity({ token }));
   });
 

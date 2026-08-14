@@ -25,9 +25,11 @@ export function transform(
   code: RolldownMagicString,
   ast: Program,
   filename: string,
-  options: { specs: LogMetaTransformSpec[] },
+  options: { specs: LogMetaTransformSpec[]; registerFiles?: boolean },
 ): void {
-  const edits = computeLogMetaEdits(ast, code.toString(), options.specs, filename);
+  const edits = computeLogMetaEdits(ast, code.toString(), options.specs, filename, {
+    registerFiles: options.registerFiles ?? false,
+  });
   const sorted = [...edits].sort((a, b) => b.pos - a.pos);
   for (const { pos, text } of sorted) {
     code.appendLeft(pos, text);
@@ -44,7 +46,7 @@ export function transform(
 export const transformLogMeta = (
   code: string,
   filename: string,
-  options: { specs?: LogMetaTransformSpec[]; lang?: 'ts' | 'tsx' | 'js' | 'jsx' } = {},
+  options: { specs?: LogMetaTransformSpec[]; lang?: 'ts' | 'tsx' | 'js' | 'jsx'; registerFiles?: boolean } = {},
 ): string | null => {
   const lang = options.lang ?? langFromFilename(filename);
   if (lang === undefined) {
@@ -52,7 +54,10 @@ export const transformLogMeta = (
   }
   const ast = parseAst(code, { astType: lang.includes('ts') ? 'ts' : 'js', lang });
   const ms = new RolldownMagicString(code);
-  transform(ms, ast, filename, { specs: options.specs ?? DEFAULT_LOG_META_TRANSFORM_SPEC });
+  transform(ms, ast, filename, {
+    specs: options.specs ?? DEFAULT_LOG_META_TRANSFORM_SPEC,
+    registerFiles: options.registerFiles ?? false,
+  });
   const next = ms.toString();
   return next === code ? null : next;
 };
@@ -277,6 +282,7 @@ export function computeLogMetaEdits(
   code: string,
   specs: LogMetaTransformSpec[],
   displayPath: string,
+  options: { registerFiles?: boolean } = {},
 ): LogMetaEdit[] {
   if (specs.length === 0) {
     return [];
@@ -289,9 +295,13 @@ export function computeLogMetaEdits(
 
   const edits: LogMetaEdit[] = [];
   const preambleAt = preambleInsertIndex(program);
+  const leadingNewline = preambleAt > 0 && code[preambleAt - 1] !== '\n' ? '\n' : '';
+  const registration = options.registerFiles
+    ? 'globalThis.DX_LOG_FILES&&globalThis.DX_LOG_FILES.register(__dxlog_file);\n'
+    : '';
   edits.push({
     pos: preambleAt,
-    text: `${preambleAt > 0 && code[preambleAt - 1] !== '\n' ? '\n' : ''}var __dxlog_file=${JSON.stringify(displayPath)};\n`,
+    text: `${leadingNewline}var __dxlog_file=${JSON.stringify(displayPath)};\n${registration}`,
   });
 
   new Visitor({

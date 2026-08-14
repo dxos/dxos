@@ -1,0 +1,130 @@
+---
+id: org.dxos.review.non-negotiables
+name: NonNegotiables
+version: 0.1.0
+---
+
+Repo-wide review rules derived from the `CLAUDE.md` non-negotiables. Each `rule`
+block below is discovered by the agentic-review harness, matched against the
+changed files its globs select, and applied by a focused subagent. A `rule` is
+just one of the block types an `.mdl` document may define; descriptor documents
+(`SPEC.mdl`, `PLUGIN.mdl`) define none and are skipped.
+
+## Extensions
+
+| Term   | URI                   |
+| ------ | --------------------- |
+| `rule` | org.dxos.mdl.rule@1.0 |
+
+## Rules
+
+```mdl
+rule no-sleep-in-test: No sleep or polling in tests
+  Tests must not use `sleep`, `setTimeout`/`setInterval` waits, or busy-poll
+  loops to synchronize with async work — they are slow and flaky. Prefer a
+  `Trigger`, `waitForCondition`, an ECHO query subscription, or Effect
+  `TestClock` (which virtualizes `Effect.sleep`). A real macrotask turn is
+  acceptable only when a test needs one across runtimes — say so if a flagged
+  case is that exception.
+  scope: repo
+  files:
+    - packages/**/*.test.ts
+    - packages/**/*.test.tsx
+  grep: sleep|setTimeout|setInterval
+  severity: warn
+```
+
+```mdl
+rule no-casts: No casts to silence the type-checker
+  Casts that suppress the type system hide the real error. Flag `as any`,
+  `as unknown as T` (the double-cast escape hatch), widened `any` in signatures,
+  and the non-null assertion `!` (as in `foo!.bar` or `arr![0]`). Fix the type
+  at its source. `as const` is allowed — do not flag it, nor a `!` inside a
+  string literal or comment.
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+  grep: as any|as unknown|: any\b|<any\b|[^!=]![.\[]
+  severity: error
+```
+
+```mdl
+rule no-compat-shims: No compatibility re-exports when moving code
+  When code moves, every call site must be updated in the same change — do not
+  leave a compatibility re-export or shim behind at the old location. Flag
+  re-export shims kept only for backwards compatibility (e.g. `export * from
+  './new-location'` where the implementation used to live) and comments
+  announcing a temporary compat layer. Genuine barrel/`index.ts` public-API
+  re-exports are expected — do not flag those.
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+  grep: compat|backward|@deprecated|re-export|export \*
+  severity: warn
+```
+
+```mdl
+rule no-echo-internal-in-sdk: SDK and app code uses the public ECHO API
+  `@dxos/echo/internal` is ECHO's private surface and carries no compatibility
+  guarantee, so sdk, plugin, and app code must import from the public entry
+  (`@dxos/echo`) whenever an equivalent exists — e.g. `Annotation.make` in place
+  of `createAnnotationHelper`, `Obj`/`Ref`/`Type` in place of their internal
+  counterparts. Flag an `@dxos/echo/internal` import and name the public
+  alternative. Do not flag an import with no public equivalent; say so instead.
+  Packages under `packages/core/echo/**` are ECHO itself — never flag those.
+  scope: repo
+  files:
+    - packages/sdk/**/*.ts
+    - packages/sdk/**/*.tsx
+    - packages/plugins/**/*.ts
+    - packages/plugins/**/*.tsx
+    - packages/apps/**/*.ts
+    - packages/apps/**/*.tsx
+  grep: '@dxos/echo/internal'
+  severity: warn
+```
+
+```mdl
+rule private-new-packages: New packages must be private
+  Every newly-added package must set `"private": true` in its `package.json`;
+  the flag is removed manually only once a trusted publisher exists. Flag a
+  `package.json` that is newly added in this change and lacks `"private": true`.
+  Do not flag existing published packages that are merely modified. If you
+  cannot tell whether the package is new, note the uncertainty rather than
+  asserting a violation.
+  scope: repo
+  files:
+    - packages/**/package.json
+  severity: error
+```
+
+```mdl
+rule workspace-deps: In-repo deps use the workspace protocol
+  Any in-repo `@dxos/*` dependency must use the workspace protocol, never a
+  version range or the catalog. Flag an `@dxos/*` entry in
+  `dependencies`/`devDependencies` that is not `workspace:*`. In
+  `peerDependencies` it must be `workspace:^` (caret) — a `workspace:*` peer
+  reads as out-of-range on any bump and cascades a spurious major, so flag a
+  `*` peer too. Ignore `@dxos/*` names external to this monorepo.
+  scope: repo
+  files:
+    - packages/**/package.json
+  grep: @dxos/
+  severity: error
+```
+
+## Appendix
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent to changed files.
+  inline-prose: true
+  fields:
+    files:      Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:      Prose             # optional regex pre-filter over file contents
+    severity?:  warn | error      # defaults to warn
+    scope?:     dir | repo        # glob base: this file's dir (default) or repo root
+```

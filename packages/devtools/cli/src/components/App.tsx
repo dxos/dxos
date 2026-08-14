@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom-react';
 import { DebugOverlayCorner, type KeyEvent, hexToRgb } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/solid';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import {
   type Accessor,
   ErrorBoundary,
@@ -42,7 +42,7 @@ export type AppProps = ParentProps<{
   debug?: boolean;
   focusElements?: string[];
   logBuffer?: LogBuffer;
-  registry?: Registry.Registry;
+  registry?: Registry.AtomRegistry;
   theme?: Theme;
 }>;
 

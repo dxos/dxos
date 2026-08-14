@@ -4,26 +4,27 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
 
-import { type DeckState, type EphemeralDeckState, type StoredDeckState } from './schema';
+import { type DeckState, type EphemeralDeckState, type StoredDeckState } from './DeckSchema';
 
-export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 
 /** Persisted state (stored in KVS/localStorage). */
-export const State = Capability.make<Atom.Writable<StoredDeckState>>(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<StoredDeckState>>()(`${meta.profile.key}.capability.state`);
 
 /** Transient/ephemeral state (not persisted). */
-export const EphemeralState = Capability.make<Atom.Writable<EphemeralDeckState>>(
-  `${meta.profile.key}.capability.ephemeral-state`,
+export const EphemeralState = Capability.makeSingleton<Atom.Writable<EphemeralDeckState>>()(
+  `${meta.profile.key}.capability.ephemeralState`,
 );
 
 /** Get the current active deck from state. */

@@ -22,9 +22,9 @@ import {
 } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
-import { Sheet, useComputeGraph } from '#components';
+import { Sheet as SheetComponent, useComputeGraph } from '#components';
 import { useTestSheet, withComputeGraphDecorator } from '#testing';
-import { Sheet as SheetType } from '#types';
+import { Sheet } from '#types';
 
 import { useSheetModel } from '../model';
 import { compute, computeGraphFacet } from './compute';
@@ -88,9 +88,9 @@ const Grid = () => {
 
   return (
     <div className='flex w-[40rem] overflow-hidden'>
-      <Sheet.Root graph={graph} sheet={sheet} attendableId='test'>
-        <Sheet.Content />
-      </Sheet.Root>
+      <SheetComponent.Root graph={graph} sheet={sheet} attendableId='test'>
+        <SheetComponent.Content />
+      </SheetComponent.Root>
     </div>
   );
 };
@@ -110,7 +110,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({
-      types: [SheetType.Sheet],
+      types: [Sheet.Sheet],
       createIdentity: true,
       createSpace: true,
     }),

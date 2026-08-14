@@ -4,13 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { getSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { Provider, Result, SearchOperation } from '../types';
+import { Provider, Result, SearchOperation } from '#types';
+
 import { type ResultData, bindRequest, deriveResultMapping, extractResults, fetchPage } from '../util';
 
 /** Pure: given a fully-configured provider and a response body, produce result data. */
@@ -82,9 +82,9 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
       // listings (identity = url); a matched listing keeps its original snapshot, and its `starred`
       // tag (keyed by Result id on the Search) survives because the Result object is never recreated.
       const feed = yield* Database.load(search.feed);
-      const space = getSpace(search);
-      invariant(space, 'Search is not in a space.');
-      const databaseLayer = Database.layer(space.db);
+      const db = Obj.getDatabase(search);
+      invariant(db, 'Search is not in a space.');
+      const databaseLayer = Database.layer(db);
       const existing = yield* Feed.query(feed, Filter.type(Result.Result)).run.pipe(Effect.provide(databaseLayer));
       const seen = new Set(existing.map((result) => result.url));
 

@@ -1,6 +1,8 @@
 layer: library
 language: typescript
 tags:
+  - vite-plugin
+  - dist-runtime
   - ts-vite-build
   - ts-test
   - pack
@@ -17,8 +19,8 @@ tasks:
       - '--outputPath=dist/plugin'
       - '--platform=node'
     deps:
-      - ^:compile
-      - dx-compile:compile
+      - ^:build
+      - dx-compile:build
     inputs:
       - '@group(production)'
     outputs:

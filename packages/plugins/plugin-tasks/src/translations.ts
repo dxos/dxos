@@ -1,0 +1,70 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
+import { Outline } from '@dxos/types';
+
+import { meta } from '#meta';
+import { Journal } from '#types';
+
+export const translations = [
+  {
+    'en-US': {
+      [Type.getTypename(Journal.Journal)]: {
+        'typename.label': 'Journal',
+        'typename.label_zero': 'Journals',
+        'typename.label_one': 'Journal',
+        'typename.label_other': 'Journals',
+        'object-name.placeholder': 'New journal',
+        'add-object.label': 'Add journal',
+        'rename-object.label': 'Rename journal',
+        'delete-object.label': 'Delete journal',
+        'object-deleted.label': 'Journal deleted',
+      },
+      [Type.getTypename(Outline.Outline)]: {
+        'typename.label': 'Outline',
+        'typename.label_zero': 'Outlines',
+        'typename.label_one': 'Outline',
+        'typename.label_other': 'Outlines',
+        'object-name.placeholder': 'New outline',
+        'add-object.label': 'Add outline',
+        'rename-object.label': 'Rename outline',
+        'delete-object.label': 'Delete outline',
+        'object-deleted.label': 'Outline deleted',
+      },
+      [meta.profile.key]: {
+        'plugin.name': 'Tasks',
+        'task-set.tasks.label': 'Tasks',
+        'task-create.placeholder': 'Add task',
+        'task-status.todo.label': 'Todo',
+        'task-status.in-progress.label': 'In progress',
+        'task-status.done.label': 'Done',
+        'task-status.failed.label': 'Failed',
+        'task-status.cancelled.label': 'Cancelled',
+        'delete-object.label': 'Delete object',
+        'create-outline.label': 'Create outline',
+        'text.placeholder': 'Enter text...',
+        'menu.label': 'Menu',
+
+        'meeting-notes.label': 'Notes',
+        'today.label': 'Today',
+        'start-today.label': "Start today's entry",
+        'toggle-calendar.label': 'Toggle calendar',
+
+        'quick-entry.label': 'Add journal entry',
+        'quick-entry-dialog.title': 'Quick Journal Entry',
+        'quick-entry.placeholder': 'Write something...',
+        'quick-entry-cancel.label': 'Cancel',
+        'quick-entry-save.label': 'Save',
+        'quick-entry-save-and-continue.label': 'Save & Add Another',
+
+        'delete-row.menu': 'Delete row',
+        'convert-to-task.menu': 'Convert to task',
+
+        'back.label': 'Back to outline',
+      },
+    },
+  },
+] as const satisfies Resource[];

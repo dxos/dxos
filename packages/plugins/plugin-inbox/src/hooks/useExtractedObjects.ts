@@ -3,9 +3,9 @@
 //
 
 import { type Database, Filter, type Obj, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 
-import { ExtractedFrom, Mailbox } from '../types';
+import { ExtractedFrom, Mailbox } from '#types';
 
 /**
  * Returns the set of objects extracted from a given Message — i.e. the `Source` of every

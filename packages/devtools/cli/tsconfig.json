@@ -20,9 +20,6 @@
       "path": "../../common/context"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -36,9 +33,6 @@
     },
     {
       "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/lock-file"
     },
     {
       "path": "../../common/log"
@@ -68,9 +62,6 @@
       "path": "../../core/compute/edge-compute"
     },
     {
-      "path": "../../core/compute/operation"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -92,16 +83,19 @@
       "path": "../../plugins/plugin-client"
     },
     {
-      "path": "../../plugins/plugin-comments"
-    },
-    {
       "path": "../../plugins/plugin-connector"
     },
     {
       "path": "../../plugins/plugin-game"
     },
     {
+      "path": "../../plugins/plugin-google"
+    },
+    {
       "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-jmap"
     },
     {
       "path": "../../plugins/plugin-kanban"
@@ -117,6 +111,9 @@
     },
     {
       "path": "../../plugins/plugin-registry"
+    },
+    {
+      "path": "../../plugins/plugin-review"
     },
     {
       "path": "../../plugins/plugin-routine"
@@ -147,12 +144,6 @@
     },
     {
       "path": "../../sdk/client-protocol"
-    },
-    {
-      "path": "../../sdk/client-services"
-    },
-    {
-      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/schema"

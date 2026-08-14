@@ -4,13 +4,11 @@
 
 import { useMemo } from 'react';
 
-import { Obj, Tag } from '@dxos/echo';
+import { Obj, type Tag } from '@dxos/echo';
 import { getHashStyles } from '@dxos/ui-theme';
 
-import { type MessageStackTag } from '#components';
+import { type InboxStackTag } from '#components';
 import { Mailbox } from '#types';
-
-import { GoogleMail } from '../apis';
 
 /**
  * Resolve the message's tag uris (from the Mailbox tag index) to Tag objects for label/hue.
@@ -27,17 +25,19 @@ export const useMessageTags = (
     return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
   });
 
-  return useGmailTags(tags);
+  return useVisibleTags(tags);
 };
 
 /**
- * Map onto Gmail labels.
+ * Chip-renderable tags: drops unlabelled ones and assigns each a stable hue derived from its uri when
+ * the tag carries none. Provider-agnostic — a synced provider label reaches this already resolved to a
+ * {@link Tag} object, so nothing here knows Gmail from JMAP.
  */
-export const useGmailTags = (tags?: MessageStackTag[]) => {
+export const useVisibleTags = (tags?: InboxStackTag[]) => {
   return useMemo(
     () =>
       (tags ?? [])
-        .filter((tag) => !GoogleMail.isSystemLabel(tag.id) && tag.label)
+        .filter((tag) => tag.label)
         .map((tag) => ({ id: tag.id, hue: tag.hue ?? getHashStyles(tag.id).hue, label: tag.label })),
     [tags],
   );

@@ -10,8 +10,7 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { useAtomValue } from '@effect-atom/atom-react';
-import * as Schema from 'effect/Schema';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, {
   type FC,
   type KeyboardEvent,
@@ -27,8 +26,6 @@ import React, {
 import { invariant } from '@dxos/invariant';
 import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
-  ghostFocusWithin,
-  ghostHover,
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
@@ -37,6 +34,7 @@ import {
 
 import { Treegrid, TREEGRID_PARENT_OF_SEPARATOR } from '../Treegrid';
 import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
+import { type TreeData } from './tree-data';
 import { useTree } from './TreeContext';
 import { TreeDropIndicator } from './TreeDropIndicator';
 import { TreeItemHeading } from './TreeItemHeading';
@@ -61,15 +59,6 @@ const NavTreeSectionHeader = ({ label }: { label: Label }) => {
 
 type TreeItemDragState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
-export const TreeDataSchema = Schema.Struct({
-  id: Schema.String,
-  path: Schema.Array(Schema.String),
-  item: Schema.Any,
-});
-
-export type TreeData = Schema.Schema.Type<typeof TreeDataSchema>;
-export const isTreeData = (data: unknown): data is TreeData => Schema.is(TreeDataSchema)(data);
-
 export type ColumnRenderer<T extends { id: string } = any> = FC<{
   item: T;
   path: string[];
@@ -89,7 +78,7 @@ export type TreeItemProps<T extends { id: string } = any> = {
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
-  onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
+  onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean; shift: boolean }) => void;
   onItemHover?: (params: { item: T }) => void;
 };
 
@@ -267,7 +256,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   );
 
   const handleSelect = useCallback(
-    (option = false) => {
+    ({ option, shift }: { option: boolean; shift: boolean } = { option: false, shift: false }) => {
       // If the item is a branch, toggle it if:
       //   - also holding down the option key
       //   - or the item is currently selected
@@ -276,7 +265,7 @@ const RawTreeItem = <T extends { id: string } = any>({
       } else if (canSelectItem) {
         canSelect?.({ item, path });
         rowRef.current?.focus();
-        onSelect?.({ item, path, current: !current, option });
+        onSelect?.({ item, path, current: !current, option, shift });
       }
     },
     [item, path, current, isBranch, canSelectItem, handleOpenToggle, onSelect],
@@ -362,8 +351,7 @@ const RawTreeItem = <T extends { id: string } = any>({
           hoverableFocusedKeyboardControls,
           hoverableFocusedWithinControls,
           hoverableDescriptionIcons,
-          ghostFocusWithin,
-          ghostHover,
+          'focus-within:bg-hover-surface hover:bg-hover-surface',
           className,
         )}
         onKeyDown={handleKeyDown}

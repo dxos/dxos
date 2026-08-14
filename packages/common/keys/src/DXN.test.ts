@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { describe, expectTypeOf, test } from 'vitest';
 
 import * as DXN from './DXN';
 
@@ -58,6 +58,59 @@ describe('DXN.Name', () => {
       // @ts-expect-error
       DXN.make('org.dxos.app-framework.event.setup-react-surface');
     });
+  });
+});
+
+describe('DXN.Path', () => {
+  test('accepts a camelCase final segment, with or without a dotted prefix', ({ expect }) => {
+    expectTypeOf<DXN.Path<'about'>>().toEqualTypeOf<'about'>();
+    expectTypeOf<DXN.Path<'integrationArticle'>>().toEqualTypeOf<'integrationArticle'>();
+    expectTypeOf<DXN.Path<'article.taskSet'>>().toEqualTypeOf<'article.taskSet'>();
+    // Only the final segment is constrained; a prefix may carry a hyphenated typename.
+    expectTypeOf<DXN.Path<'org.dxos.type.task-set.article'>>().toEqualTypeOf<'org.dxos.type.task-set.article'>();
+
+    expect(
+      ['about', 'integrationArticle', 'article.taskSet', 'org.dxos.type.task-set.article'].every(DXN.isValidPath),
+    ).toBe(true);
+  });
+
+  test('rejects a final segment the surface manager would drop', ({ expect }) => {
+    expectTypeOf<DXN.Path<'article.task-set'>>().toEqualTypeOf<never>();
+    expectTypeOf<DXN.Path<'plugin-settings'>>().toEqualTypeOf<never>();
+    expectTypeOf<DXN.Path<'plugin_settings'>>().toEqualTypeOf<never>();
+    // Must start with a letter — the id becomes a DXN path segment.
+    expectTypeOf<DXN.Path<'1article'>>().toEqualTypeOf<never>();
+    expectTypeOf<DXN.Path<''>>().toEqualTypeOf<never>();
+    // Any character the runtime regex excludes, not just the separators.
+    expectTypeOf<DXN.Path<'article/task'>>().toEqualTypeOf<never>();
+    expectTypeOf<DXN.Path<'article task'>>().toEqualTypeOf<never>();
+    expectTypeOf<DXN.Path<'article.task/set'>>().toEqualTypeOf<never>();
+
+    expect(
+      [
+        'article.task-set',
+        'plugin-settings',
+        'plugin_settings',
+        '1article',
+        '',
+        'article/task',
+        'article task',
+        'article.task/set',
+      ].some(DXN.isValidPath),
+    ).toBe(false);
+  });
+
+  test('passes a widened string through for the runtime to check', () => {
+    // A computed id (`${typename}.sectionObjects`) has no literal type to inspect.
+    expectTypeOf<DXN.Path<string>>().toEqualTypeOf<string>();
+  });
+
+  test('accepts an interpolated segment, whose placeholder cannot be inspected', () => {
+    expectTypeOf<DXN.Path<`beta${number}`>>().toEqualTypeOf<`beta${number}`>();
+    expectTypeOf<DXN.Path<`r${number}s${number}`>>().toEqualTypeOf<`r${number}s${number}`>();
+    expectTypeOf<DXN.Path<`prefix.item${number}`>>().toEqualTypeOf<`prefix.item${number}`>();
+    // A separator around the placeholder is still caught.
+    expectTypeOf<DXN.Path<`beta-${number}`>>().toEqualTypeOf<never>();
   });
 });
 

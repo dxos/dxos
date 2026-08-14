@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
@@ -18,8 +18,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
-import { Organization, Person } from '@dxos/types';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
+import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 

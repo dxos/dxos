@@ -84,7 +84,7 @@ const parseEntryPoints = (moonYmlText) => {
 /**
  * Rewrite moon.yml: swap `ts-build` → `ts-vite-build`, drop the `compile` task block,
  * and inject a `build` override that re-declares the dropped compile-task deps
- * (e.g. `prebuild`, `glsl`, `gen-pieces`) so the new build still waits on them.
+ * (e.g. `prebuild`) so the new build still waits on them.
  */
 const rewriteMoonYml = (text, buildExtraDeps = []) => {
   const lines = text.split('\n');

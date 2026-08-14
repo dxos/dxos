@@ -31,6 +31,7 @@ import type { DXN, EID, EntityId, URI } from '@dxos/keys';
 const OrderTypeId: Order$.OrderTypeId = '~@dxos/echo/Order';
 const FilterTypeId: Filter$.FilterTypeId = '~@dxos/echo/Filter';
 const QueryTypeId: Query$.QueryTypeId = '~@dxos/echo/Query';
+const ProjectionTypeId: Query$.ProjectionTypeId = '~@dxos/echo/Query.Projection';
 
 class OrderClass implements Order$.Any {
   private static 'variance': Order$.Any[typeof OrderTypeId] = {} as Order$.Any[typeof OrderTypeId];
@@ -113,6 +114,10 @@ const _filterMatchValueLocal = (filter: QueryAST.Filter, value: unknown): boolea
     }
     case 'in':
       return filter.values.includes(value);
+    case 'in-query':
+      // The QuickJS sandbox has no database access to run a subquery — a semi-join predicate
+      // must be resolved to a literal `in` by the query executor before reaching this matcher.
+      throw new Error('in-query filters are not supported in the sandboxed toPredicate matcher.');
     case 'range':
       return (value as any) >= filter.from && (value as any) <= filter.to;
     case 'not':
@@ -518,6 +523,9 @@ class QueryClass implements Query$.Any {
 
   private static 'variance': Query$.Any[typeof QueryTypeId] = {} as Query$.Any[typeof QueryTypeId];
 
+  private static 'projectionVariance': Query$.Projection<any>[typeof ProjectionTypeId] =
+    {} as Query$.Projection<any>[typeof ProjectionTypeId];
+
   static is(value: unknown): value is Query$.Any {
     return typeof value === 'object' && value !== null && QueryTypeId in value;
   }
@@ -549,13 +557,17 @@ class QueryClass implements Query$.Any {
     }
   }
 
-  static type<S extends Schema.Schema.All>(
+  project(property: string): Query$.Projection<any> {
+    return { [ProjectionTypeId]: QueryClass.projectionVariance, query: this.ast, property };
+  }
+
+  static type<S extends Schema.Top>(
     schema: S,
     predicates?: Filter$.Props<Schema.Schema.Type<S>>,
   ): Query$.Query<Schema.Schema.Type<S>>;
   static type(type: Type$.Type, predicates?: Filter$.Props<Obj$.Unknown>): Query$.Query<Obj$.Unknown>;
   static type(schema: string, predicates?: Filter$.Props<unknown>): Query$.Query<any>;
-  static type(schema: Schema.Schema.All | Type$.Type | string, predicates?: Filter$.Props<unknown>): Query$.Any {
+  static type(schema: Schema.Top | Type$.Type | string, predicates?: Filter$.Props<unknown>): Query$.Any {
     if (typeof schema !== 'string') {
       throw new TypeError('expected typename as the first paramter');
     }
@@ -583,6 +595,10 @@ class QueryClass implements Query$.Any {
       source: source.ast,
       exclude: exclude.ast,
     });
+  }
+
+  static project(query: Query$.Any, property: string): Query$.Projection<any> {
+    return { [ProjectionTypeId]: QueryClass.projectionVariance, query: query.ast, property };
   }
 
   static from(...args: any[]): Query$.Any {
@@ -858,6 +874,8 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.${filter.operator}(${JSON.stringify(filter.value)})`;
     case 'in':
       return `Filter.in(${filter.values.map((v) => JSON.stringify(v)).join(', ')})`;
+    case 'in-query':
+      return `Filter.in(${prettyQuery(filter.subquery)}.project(${JSON.stringify(filter.property)}))`;
     case 'contains':
       return `Filter.contains(${JSON.stringify(filter.value)})`;
     case 'range':
@@ -965,17 +983,26 @@ const prettyQuery = (query: QueryAST.Query): string => {
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
     case 'aggregate': {
       const aggregates = query.aggregates.map((aggregate) => {
-        const arg =
-          aggregate.kind === 'items'
-            ? aggregate.limit !== undefined
-              ? `{ limit: ${aggregate.limit} }`
-              : ''
-            : aggregate.kind === 'count'
-              ? ''
-              : JSON.stringify(aggregate.property);
-        return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${arg})`;
+        return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${prettyAggregateArg(aggregate)})`;
       });
       return `${prettyQuery(query.query)}.aggregate({ ${aggregates.join(', ')} })`;
     }
+  }
+};
+
+/** Renders one aggregate's constructor argument, mirroring the `Aggregate.*` call that produced it. */
+const prettyAggregateArg = (aggregate: QueryAST.GroupAggregate): string => {
+  switch (aggregate.kind) {
+    case 'count':
+      return '';
+    case 'items':
+      return aggregate.limit !== undefined ? `{ limit: ${aggregate.limit} }` : '';
+    case 'group':
+      return aggregate.properties.length === 1
+        ? JSON.stringify(aggregate.properties[0])
+        : `{ coalesce: ${JSON.stringify(aggregate.properties)} }`;
+    case 'max':
+    case 'min':
+      return JSON.stringify(aggregate.property);
   }
 };

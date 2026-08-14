@@ -28,6 +28,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -35,9 +38,6 @@
     },
     {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -49,16 +49,19 @@
       "path": "../../core/compute/compute-runtime"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-client"
+      "path": "../../core/halo/halo"
     },
     {
-      "path": "../../core/echo/echo-protocol"
+      "path": "../../core/halo/halo-adapter-client"
     },
     {
-      "path": "../../core/halo/credentials"
+      "path": "../../core/halo/halo-react"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -71,6 +74,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -106,13 +112,7 @@
       "path": "../../ui/react-ui-pickers"
     },
     {
-      "path": "../../ui/react-ui-syntax-highlighter"
-    },
-    {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-observability"

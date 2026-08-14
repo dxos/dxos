@@ -4,23 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { invariant } from '@dxos/invariant';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import { Identity } from '@dxos/halo';
 
 import { RECOVERY_CODE_DIALOG } from '../constants';
-import { ClientCapabilities } from '../types';
 import { CreateRecoveryCode } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreateRecoveryCode> = CreateRecoveryCode.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      invariant(client.services.services.IdentityService, 'IdentityService not available');
-      const { recoveryCode } = yield* Effect.promise(() =>
-        client.services.services.IdentityService!.createRecoveryCredential({}),
-      );
+      const { recoveryCode } = yield* Identity.createRecoveryCredential();
       yield* Operation.invoke(LayoutOperation.UpdateDialog, {
         subject: RECOVERY_CODE_DIALOG,
         blockAlign: 'start',

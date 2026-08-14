@@ -9,7 +9,7 @@ import { Card, Focus, SystemIconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useMagazinePostData } from '#atoms';
-import { type Magazine, type Subscription } from '#types';
+import { Magazine, Subscription } from '#types';
 
 import { formatDate } from '../../util/date';
 

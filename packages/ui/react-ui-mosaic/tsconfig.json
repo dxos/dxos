@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/invariant"
     },
     {
@@ -39,13 +36,10 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../react-ui"
@@ -55,9 +49,6 @@
     },
     {
       "path": "../react-ui-dnd"
-    },
-    {
-      "path": "../react-ui-list"
     },
     {
       "path": "../react-ui-menu"

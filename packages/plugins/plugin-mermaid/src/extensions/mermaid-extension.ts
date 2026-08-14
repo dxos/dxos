@@ -5,14 +5,19 @@
 import { syntaxTree } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
-import _mermaid from 'mermaid';
+import Mermaid from 'mermaid';
 
 export type MermaidOptions = {};
 
 /**
  * Extension to create mermaid diagrams.
+ *
+ * The fenced source is highlighted while the cursor is inside the block (where this extension
+ * suppresses the widget). That highlighting comes from `mermaidLanguageDescription`, registered in
+ * `@dxos/ui-editor`'s markdown bundle rather than here: `codeLanguages` is read once when the
+ * markdown parser is built, so an extension contributed afterwards cannot add a fenced-code language.
  */
-export const mermaid = (_options: MermaidOptions = {}): Extension => {
+export const mermaid = (_: MermaidOptions = {}): Extension => {
   return [
     ViewPlugin.fromClass(
       class {
@@ -159,7 +164,7 @@ class MermaidWidget extends WidgetType {
 
     setTimeout(async () => {
       // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/config.type.ts
-      _mermaid.initialize({
+      Mermaid.initialize({
         darkMode: view.state.facet(EditorView.darkTheme),
         theme: 'neutral',
         // TODO(burdon): Styles.
@@ -200,9 +205,9 @@ class MermaidWidget extends WidgetType {
   async render(_container: Element): Promise<string | undefined> {
     try {
       // https://github.com/mermaid-js/mermaid
-      const valid = await _mermaid.parse(this._source);
+      const valid = await Mermaid.parse(this._source);
       if (valid) {
-        const result = await _mermaid.render(this._id, this._source);
+        const result = await Mermaid.render(this._id, this._source);
         this._error = undefined;
         this._svg = result.svg;
         return result.svg;

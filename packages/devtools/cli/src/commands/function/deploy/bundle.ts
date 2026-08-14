@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as PlatformError from '@effect/platform/Error';
-import type * as FileSystem from '@effect/platform/FileSystem';
 import * as Effect from 'effect/Effect';
+import type * as FileSystem from 'effect/FileSystem';
+import type * as PlatformError from 'effect/PlatformError';
 import { type Message } from 'esbuild';
 
 import { CommandConfig } from '@dxos/cli-util';

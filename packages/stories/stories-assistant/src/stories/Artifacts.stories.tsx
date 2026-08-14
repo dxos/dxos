@@ -8,17 +8,15 @@ import { Filter, Ref, Type, View } from '@dxos/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
 import { ChessSkill } from '@dxos/plugin-chess';
 import { MapSkill } from '@dxos/plugin-map';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { ViewModel } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Module, ModuleContainer, config, createDecorators } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
+import { StoryRole } from '../modules';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Artifacts',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -29,18 +27,17 @@ type Story = StoryObj<typeof meta>;
 export const WithChess: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ Chess }, { ChessPlugin }, { Game }, { GamePlugin }] = await Promise.all([
+      const [{ Chess }, ChessPlugin, { Game }, GamePlugin] = await Promise.all([
         import('@dxos/plugin-chess'),
-        import('@dxos/plugin-chess/plugin'),
+        import('@dxos/plugin-chess/ChessPlugin'),
         import('@dxos/plugin-game'),
-        import('@dxos/plugin-game/plugin'),
+        import('@dxos/plugin-game/GamePlugin'),
       ]);
       return {
-        plugins: [GamePlugin(), ChessPlugin()],
+        plugins: [GamePlugin.make(), ChessPlugin.make()],
         types: [Game.Game, Chess.State],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const [{ Chess }, { Game }] = await Promise.all([import('@dxos/plugin-chess'), import('@dxos/plugin-game')]);
       // TODO(burdon): Add player DID (for user and assistant).
@@ -73,11 +70,10 @@ export const WithChess: Story = {
       const objects = await space.db.query(Filter.type(Game.Game)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
+    skills: [AssistantSkill.key, ChessSkill.key],
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
-    skills: [AssistantSkill.key, ChessSkill.key],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };
 
@@ -85,19 +81,18 @@ export const WithChess: Story = {
 export const WithMap: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ Map }, { MapPlugin }, { TablePlugin }, { Table }, { createLocationSchema: _ }] = await Promise.all([
+      const [{ Map }, MapPlugin, TablePlugin, { Table }, { createLocationSchema: _ }] = await Promise.all([
         import('@dxos/plugin-map'),
-        import('@dxos/plugin-map/plugin'),
-        import('@dxos/plugin-table/plugin'),
+        import('@dxos/plugin-map/MapPlugin'),
+        import('@dxos/plugin-table/TablePlugin'),
         import('@dxos/react-ui-table/types'),
         import('@dxos/plugin-map/testing'),
       ]);
       return {
-        plugins: [MapPlugin(), TablePlugin()],
+        plugins: [MapPlugin.make(), TablePlugin.make()],
         types: [View.View, Map.Map, Table.Table],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const [{ Map }, { Table }, { createLocationSchema }] = await Promise.all([
         import('@dxos/plugin-map'),
@@ -123,28 +118,26 @@ export const WithMap: Story = {
       const objects = await space.db.query(Filter.type(View.View)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
+    skills: [AssistantSkill.key, MapSkill.key],
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
-    skills: [AssistantSkill.key, MapSkill.key],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };
 
 export const WithTrip: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ MarkdownPlugin }, { Map }, { MapPlugin }] = await Promise.all([
-        import('@dxos/plugin-markdown/plugin'),
+      const [MarkdownPlugin, { Map }, MapPlugin] = await Promise.all([
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
         import('@dxos/plugin-map'),
-        import('@dxos/plugin-map/plugin'),
+        import('@dxos/plugin-map/MapPlugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin(), MapPlugin()],
+        plugins: [MarkdownPlugin.make(), MapPlugin.make()],
         types: [Map.Map],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const { Map } = await import('@dxos/plugin-map');
       // TODO(burdon): Table.
@@ -188,24 +181,22 @@ export const WithTrip: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };
 
 export const WithBoard: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ Board }, { BoardPlugin }] = await Promise.all([
+      const [{ Board }, BoardPlugin] = await Promise.all([
         import('@dxos/plugin-board'),
-        import('@dxos/plugin-board/plugin'),
+        import('@dxos/plugin-board/BoardPlugin'),
       ]);
       return {
-        plugins: [BoardPlugin()],
+        plugins: [BoardPlugin.make()],
         types: [Board.Board],
       };
     },
-    config: config.remote,
     onInit: async ({ space }) => {
       const { Board } = await import('@dxos/plugin-board');
       space.db.add(Board.makeBoard());
@@ -217,7 +208,6 @@ export const WithBoard: Story = {
     },
   }),
   args: {
-    showContext: true,
-    layout: [[Module.Chat]],
+    layout: [[StoryRole.Chat], [StoryRole.Context]],
   },
 };

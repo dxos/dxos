@@ -4,23 +4,30 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, AppSpace, Paths } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CreateAtom from '@dxos/app-graph/CreateAtom';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Expando } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
-import { SPACE_HOME_NODE_TYPE, SPACE_TYPE, SpaceCapabilities } from '#types';
+import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
 
-import { SHARED, getSpaceDisplayName } from '../../../util';
+import { getSpaceDisplayName } from '../../../util';
 import {
   CAN_DROP_SPACE,
   CREATE_OBJECT_IN_SPACE_LABEL,
@@ -43,18 +50,26 @@ const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.profile.key }
 /** Creates space-related extensions: primary actions, space nodes, space actions, and the Home node. */
 export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
+  // Hoisted so connector/action bodies read reactively via `get(...)` instead of a sync
+  // `Capability.get`, establishing a dependency that heals once the capability lands.
+  const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
+  const stateCapAtom = yield* Capability.atom(SpaceCapabilities.State);
+  const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
+  const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.SettingsAtom);
+  const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
 
   return yield* Effect.all([
     GraphBuilder.createExtension({
       id: 'spaceHome',
       position: Position.first,
+      url: { key: 'home', kind: 'singleton', path: [] },
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
           {
-            id: Paths.SPACE_HOME_SEGMENT,
-            type: SPACE_HOME_NODE_TYPE,
-            data: SPACE_HOME_NODE_TYPE,
+            id: GraphPath.SPACE_HOME_SEGMENT,
+            type: SpaceSchema.SPACE_HOME_NODE_TYPE,
+            data: SpaceSchema.SPACE_HOME_NODE_TYPE,
             properties: {
               label: SPACE_HOME_NODE_LABEL,
               icon: 'ph--house--regular',
@@ -64,7 +79,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               droppable: false,
               space,
             },
-          } satisfies Node.NodeArg<typeof SPACE_HOME_NODE_TYPE>,
+          } satisfies Node.NodeArg<typeof SpaceSchema.SPACE_HOME_NODE_TYPE>,
         ]),
     }),
 
@@ -107,7 +122,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: `${SpaceOperation.ExportSpace.meta.key}.binary`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.BINARY });
               }
@@ -122,7 +137,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: `${SpaceOperation.ExportSpace.meta.key}.json`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.JSON });
               }
@@ -137,7 +152,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenMembers.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenMembers, { space });
               }
@@ -156,7 +171,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenSettings.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenSettings, { space });
               }
@@ -178,37 +193,57 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
       match: NodeMatcher.whenRoot,
       connector: (_node, get) => {
         // This reactive connector can recompute once during the teardown window (e.g. when stories
-        // swap plugin managers) after the Client capability has been removed; tolerate its absence
-        // via the safe `getAll` lookup rather than the throwing `get`.
-        const [client] = capabilities.getAll(ClientCapabilities.Client);
+        // swap plugin managers) after the Client capability has been removed; the hoisted atom
+        // resolves to an empty array rather than throwing in that case.
+        const [client] = get(clientAtom);
         if (!client) {
           return Effect.succeed([]);
         }
-        const stateAtom = capabilities.get(SpaceCapabilities.State);
-        const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+        const [stateAtom] = get(stateCapAtom);
+        const [ephemeralAtom] = get(ephemeralCapAtom);
+        if (!stateAtom || !ephemeralAtom) {
+          return Effect.succeed([]);
+        }
         const spacesAtom = CreateAtom.fromObservable(client.spaces);
 
         const spaces = get(spacesAtom);
-        const personalSpace = AppSpace.getPersonalSpace(client);
-
-        if (!spaces || !personalSpace) {
+        if (!spaces) {
           return Effect.succeed([]);
         }
 
-        const settingsAtom = capabilities.get(SpaceCapabilities.Settings);
+        // Cross-space ordering lives in the settings space; until it exists and opens (or before
+        // the migration has run) spaces simply render in their natural order. `spacesAtom` covers
+        // the space appearing; its state is read through an atom so the ordering also appears when
+        // an already-listed settings space finishes opening.
+        const settingsSpace = AppSpace.getSettingsSpace(client);
+        const settingsSpaceState = settingsSpace ? get(CreateAtom.fromObservable(settingsSpace.state)) : undefined;
+        const orderingSpace = settingsSpaceState === SpaceState.SPACE_READY ? settingsSpace : undefined;
+
+        const [settingsAtom] = get(settingsCapAtom);
+        if (!settingsAtom) {
+          return Effect.succeed([]);
+        }
         const settings = get(settingsAtom);
         const state = get(stateAtom);
         const ephemeralState = get(ephemeralAtom);
 
         try {
-          const [spacesOrder] = get(personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).atom);
-          const { graph } = capabilities.get(AppCapabilities.AppGraph);
+          const [spacesOrder] = orderingSpace
+            ? get(orderingSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).atom)
+            : [undefined];
+          const [appGraph] = get(appGraphAtom);
+          if (!appGraph) {
+            return Effect.succeed([]);
+          }
+          const { graph } = appGraph;
 
           const spacesOrderSnapshot = spacesOrder ? get(Obj.atom(spacesOrder)) : undefined;
           const order: string[] = (spacesOrderSnapshot as any)?.order ?? [];
           const orderMap = new Map(order.map((id, index) => [id, index]));
 
-          const spaceStates = spaces.map((space) => get(CreateAtom.fromObservable(space.state)));
+          // Keyed by id rather than position: the array below is re-sorted by `orderMap`, so a
+          // positional lookup would test one space's readiness against another's state.
+          const spaceStates = new Map(spaces.map((space) => [space.id, get(CreateAtom.fromObservable(space.state))]));
 
           spaces.forEach((space) => {
             if (space.state.get() === SpaceState.SPACE_READY) {
@@ -223,16 +258,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 .sort((sortA, sortB) => orderMap.get(sortA.id)! - orderMap.get(sortB.id)!),
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
-              .filter((space, idx) => spaceStates[idx] === SpaceState.SPACE_READY)
-              .filter(
-                (space) =>
-                  space.tags.length === 0 || AppSpace.isPersonalSpace(space) || AppSpace.isExemplarSpace(space),
-              )
+              .filter((space) => spaceStates.get(space.id) === SpaceState.SPACE_READY)
+              .filter((space) => AppSpace.isVisibleSpace(space))
               .map((space) =>
                 constructSpaceNode({
                   space,
                   navigable: ephemeralState.navigableCollections,
-                  personal: AppSpace.isPersonalSpace(space),
                   namesCache: state.spaceNames,
                   graph,
                   spacesOrder,
@@ -243,8 +274,6 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
       },
-      // TODO(graph-path-ids): Resolver temporarily disabled; redesign needed for path-based IDs.
-      // resolver: (id, get) => { ... },
     }),
 
     // Communications section group — no single plugin owns this category; it lives here so the
@@ -252,13 +281,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     // future plugin-communications) should own this once one exists.
     // TODO(wittjosiah): Move to a dedicated communications plugin when one exists.
     GraphBuilder.createExtension({
-      id: Paths.GroupSegments.communications,
+      id: GraphPath.GroupSegments.communications,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
           AppNode.makeGroup({
-            id: Paths.GroupSegments.communications,
-            type: Paths.GroupTypes.communications,
+            id: GraphPath.GroupSegments.communications,
+            type: GraphPath.GroupTypes.communications,
             label: ['nav-tree-group-comm.label', { ns: meta.profile.key }],
             space,
             position: 100,
@@ -270,13 +299,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
       id: 'actions',
       match: AppNodeMatcher.whenSpace,
       actions: (space, get) => {
-        const [client] = get(capabilities.atom(ClientCapabilities.Client));
-        const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
-        const ephemeralState = get(ephemeralAtom);
+        const [client] = get(clientAtom);
+        const [ephemeralAtom] = get(ephemeralCapAtom);
 
-        if (!client) {
+        if (!client || !ephemeralAtom) {
           return Effect.succeed([]);
         }
+        const ephemeralState = get(ephemeralAtom);
 
         // Recompute actions when a migration completes (state transition or versionProperty stamp).
         get(CreateAtom.fromObservable(space.state));
@@ -303,14 +332,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 const constructSpaceNode = ({
   space,
   navigable = false,
-  personal,
   namesCache,
   graph,
   spacesOrder,
 }: {
   space: Space;
   navigable?: boolean;
-  personal?: boolean;
   namesCache?: Record<string, string>;
   graph?: Graph.ExpandableGraph;
   spacesOrder?: Obj.Any;
@@ -339,11 +366,11 @@ const constructSpaceNode = ({
 
   return Node.make({
     id: space.id,
-    type: SPACE_TYPE,
+    type: SpaceSchema.SPACE_TYPE,
     cacheable: AppNode.CACHEABLE_PROPS,
     data: space,
     properties: {
-      label: getSpaceDisplayName(space, { personal, namesCache }),
+      label: getSpaceDisplayName(space, { namesCache }),
       description: space.state.get() === SpaceState.SPACE_READY && space.properties.description,
       hue: space.state.get() === SpaceState.SPACE_READY && space.properties.hue,
       icon:

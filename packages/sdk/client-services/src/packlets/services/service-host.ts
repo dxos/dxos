@@ -2,16 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
-import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { Event, Mutex, Trigger, synchronized } from '@dxos/async';
 import {
@@ -47,7 +46,13 @@ import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeSignalManager, type SignalManager, SignalManagerService, WebsocketSignalManager } from '@dxos/messaging';
+import {
+  EdgeSignalManager,
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  type SignalManager,
+  SignalManagerService,
+} from '@dxos/messaging';
 import {
   SwarmNetworkManager,
   SwarmNetworkManagerService,
@@ -58,9 +63,20 @@ import {
 import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { Invitation, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  ContactsService,
+  DataService,
+  DevicesService,
+  EdgeAgentService,
+  FeedService,
+  IdentityService,
+  InvitationsService,
+  NetworkService,
+  QueryService,
+  SpacesService,
+} from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { type BlobStoreApi, BlobStoreApiService } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
@@ -102,20 +118,7 @@ import {
   SigningContextProviderService,
 } from '../spaces';
 import { SystemServiceImpl } from '../system';
-import {
-  type ClientServicesRpcContext,
-  ClientServicesRpcLayer,
-  ContactsServiceRpc,
-  DataServiceRpc,
-  DevicesServiceRpc,
-  EdgeAgentServiceRpc,
-  FeedServiceRpc,
-  IdentityServiceRpc,
-  InvitationsServiceRpc,
-  NetworkServiceRpc,
-  QueryServiceRpc,
-  SpacesServiceRpc,
-} from './client-services-layer';
+import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer';
 import {
   type CrossDeviceSpaceSynchronizer,
   CrossDeviceSpaceSynchronizerService,
@@ -202,7 +205,6 @@ export class ClientServicesHost {
   // Stack components, resolved from the layer runtime on open. Present after `open` starts.
   #ctx?: Context;
   #metadataStore?: IMetadataStore;
-  #blobStore?: BlobStoreApi;
   #keyring?: KeyringApi;
   #feedStore?: FeedStore<any>;
   #spaceManager?: SpaceManager;
@@ -267,7 +269,7 @@ export class ClientServicesHost {
           const rpc = await EffectEx.runPromise(
             makeInProcessClientServicesRpc(() => this.#handlers).pipe(Effect.provideService(Scope.Scope, scope)),
           );
-          const services = makeServicesFromRpc(rpc, Runtime.defaultRuntime);
+          const services = makeServicesFromRpc(rpc, EffectContext.empty());
           return await createDiagnostics(services, this, this.#config!);
         } finally {
           await EffectEx.runPromise(Scope.close(scope, Exit.void));
@@ -324,10 +326,6 @@ export class ClientServicesHost {
 
   get metadataStore(): IMetadataStore {
     return this.#metadataStore ?? failUndefined();
-  }
-
-  get blobStore(): BlobStoreApi {
-    return this.#blobStore ?? failUndefined();
   }
 
   get recoveryManager(): EdgeIdentityRecoveryManager {
@@ -434,9 +432,11 @@ export class ClientServicesHost {
         this.#config?.get('runtime.services.iceProviders') &&
           createIceProvider(this.#config!.get('runtime.services.iceProviders')!),
       ),
+      // Edge is the only real signaling transport; without it fall back to an isolated in-memory
+      // manager (no cross-process signaling). The former KUBE `WebsocketSignalManager` is removed.
       signalManager = this.#edgeConnection && this.#config?.get('runtime.client.edgeFeatures')?.signaling
         ? new EdgeSignalManager({ edgeConnection: this.#edgeConnection })
-        : new WebsocketSignalManager(this.#config?.get('runtime.services.signaling') ?? []),
+        : new MemorySignalManager(new MemorySignalManagerContext()),
     } = options;
     this.#signalManager = signalManager;
 
@@ -502,7 +502,6 @@ export class ClientServicesHost {
       Effect.all({
         // Components.
         metadataStore: IMetadataStoreService,
-        blobStore: BlobStoreApiService,
         keyring: KeyringApiService,
         feedStore: FeedStoreService,
         spaceManager: SpaceManagerService,
@@ -520,21 +519,20 @@ export class ClientServicesHost {
         echoEdgeReplicator: Effect.serviceOption(EdgeAutomergeReplicatorService),
         feedSyncer: Effect.serviceOption(FeedSyncerService),
         // Handlers.
-        identityService: IdentityServiceRpc,
-        contactsService: ContactsServiceRpc,
-        invitationsService: InvitationsServiceRpc,
-        devicesService: DevicesServiceRpc,
-        spacesService: SpacesServiceRpc,
-        networkService: NetworkServiceRpc,
-        edgeAgentService: EdgeAgentServiceRpc,
-        dataService: DataServiceRpc,
-        queryService: QueryServiceRpc,
-        feedService: FeedServiceRpc,
+        identityService: IdentityService.Tag,
+        contactsService: ContactsService.Tag,
+        invitationsService: InvitationsService.Tag,
+        devicesService: DevicesService.Tag,
+        spacesService: SpacesService.Tag,
+        networkService: NetworkService.Tag,
+        edgeAgentService: EdgeAgentService.Tag,
+        dataService: DataService.Tag,
+        queryService: QueryService.Tag,
+        feedService: FeedService.Tag,
       }),
     );
 
     this.#metadataStore = resolved.metadataStore;
-    this.#blobStore = resolved.blobStore;
     this.#keyring = resolved.keyring;
     this.#feedStore = resolved.feedStore;
     this.#spaceManager = resolved.spaceManager;
@@ -580,10 +578,9 @@ export class ClientServicesHost {
       },
     });
 
-    const identityService = resolved.identityService;
     this.#handlers = {
       SystemService: this.#systemService,
-      IdentityService: identityService,
+      IdentityService: resolved.identityService,
       ContactsService: resolved.contactsService,
       InvitationsService: resolved.invitationsService,
       DevicesService: resolved.devicesService,
@@ -605,11 +602,9 @@ export class ClientServicesHost {
     };
 
     // Run the open lifecycle stages (formerly ServiceContext._open).
+    // The identity service impl's open/close lifecycle is owned by its layer scope in
+    // {@link ClientServicesRpcLayer} and runs when the stack runtime is disposed.
     await this._openStack(ctx);
-
-    log('service-host: opening identity service...');
-    await identityService.open();
-    log('service-host: identity service opened');
 
     const devtoolsProxy = this.#config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {
@@ -664,9 +659,6 @@ export class ClientServicesHost {
         // Echo metadata + large space data.
         yield* sql`DELETE FROM space_metadata`;
         yield* sql`DELETE FROM space_large`;
-        // Blob store.
-        yield* sql`DELETE FROM blobs_meta`;
-        yield* sql`DELETE FROM blobs_data`;
         // Keyring.
         yield* sql`DELETE FROM keyring`;
         // Automerge chunks + heads.
@@ -923,10 +915,9 @@ export class ClientServicesHost {
  * builds its component stack, so client RPC handler layers can resolve the orchestration entry
  * points (`createIdentity`, readiness gates, …) they need.
  */
-export class ClientServicesHostService extends EffectContext.Tag('@dxos/client-services/ClientServicesHost')<
-  ClientServicesHostService,
-  ClientServicesHost
->() {}
+export class ClientServicesHostService extends EffectContext.Service<ClientServicesHostService, ClientServicesHost>()(
+  '@dxos/client-services/ClientServicesHost',
+) {}
 
 /**
  * Layer that constructs a {@link ClientServicesHost} from its props and exposes it under

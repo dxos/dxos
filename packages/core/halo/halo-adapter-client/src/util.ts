@@ -12,6 +12,7 @@ import {
   Invitation as ClientInvitation,
   InvitationEncoder,
 } from '@dxos/client/invitations';
+import { EffectEx } from '@dxos/effect';
 import { Invitation as HaloInvitation, Space as HaloSpace, InvitationError } from '@dxos/halo';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -22,13 +23,28 @@ import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/
  * consumer stops or the observable errors.
  */
 export const streamFromObservable = <T>(observable: MulticastObservable<T>): Stream.Stream<T> =>
-  Stream.async<T, Error>((emit) => {
+  EffectEx.streamFromEmitter<T, Error>((emit) => {
     const subscription = observable.subscribe(
       (value: T) => void emit.single(value),
       (err: Error) => void emit.fail(err),
     );
     return Effect.sync(() => subscription.unsubscribe());
   }).pipe(Stream.orDie);
+
+/**
+ * Like {@link streamFromObservable}, but the observable is resolved lazily after the client
+ * has initialized — `client.halo`/`client.spaces` throw before then, and the adapters must be
+ * constructible over a client whose forked `initialize()` is still running. Emissions begin at
+ * initialization (with the observable's then-current value), so consumers see "no value yet"
+ * as silence, never as a false empty reading.
+ */
+export const streamFromClientObservable = <T>(
+  client: { waitUntilInitialized(): Promise<void> },
+  getObservable: () => MulticastObservable<T>,
+): Stream.Stream<T> =>
+  Stream.unwrap(
+    Effect.promise(() => client.waitUntilInitialized()).pipe(Effect.map(() => streamFromObservable(getObservable()))),
+  );
 
 const TERMINAL_STATES: ReadonlySet<ClientInvitation.State> = new Set([
   ClientInvitation.State.SUCCESS,
@@ -67,7 +83,7 @@ const toEvent = (invitation: ClientInvitation): HaloInvitation.Event | undefined
  * completing after a terminal event.
  */
 export const invitationEvents = (observable: CancellableInvitationObservable): Stream.Stream<HaloInvitation.Event> =>
-  Stream.async<HaloInvitation.Event>((emit) => {
+  EffectEx.streamFromEmitter<HaloInvitation.Event>((emit) => {
     const subscription = observable.subscribe(
       (invitation: ClientInvitation) => {
         const event = toEvent(invitation);

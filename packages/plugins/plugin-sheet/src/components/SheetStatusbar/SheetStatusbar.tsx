@@ -9,7 +9,7 @@ import { Icon } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { mapFormulaIndicesToRefs } from '#types';
+import { SheetUtil } from '#types';
 
 import { useSheetContext } from '../SheetRoot';
 
@@ -24,7 +24,7 @@ export const SheetStatusbar = composable<HTMLDivElement, SheetStatusbarProps>((p
   if (cursor) {
     value = model.getCellValue(cursor);
     if (isFormula(value)) {
-      value = model.graph.mapFunctionBindingFromId(mapFormulaIndicesToRefs(model.sheet, value));
+      value = model.graph.mapFunctionBindingFromId(SheetUtil.mapFormulaIndicesToRefs(model.sheet, value));
       formula = true;
     } else if (value != null) {
       value = String(value);
@@ -36,7 +36,7 @@ export const SheetStatusbar = composable<HTMLDivElement, SheetStatusbarProps>((p
       ref={forwardedRef}
       {...rest}
       className={mx(
-        'flex shrink-0 justify-between items-center px-4 py-1 text-sm bg-toolbar-surface border-y !border-subdued-separator',
+        'flex shrink-0 justify-between items-center px-4 py-1 text-sm dx-toolbar-surface border-y !border-subdued-separator',
         className,
       )}
     >

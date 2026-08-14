@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { layout } from './layout';
+import { getColumnWidth, layout } from './layout';
 
 describe('layout', () => {
   test('assigns each tile to the shortest column (not by index)', ({ expect }) => {
@@ -55,5 +55,54 @@ describe('layout', () => {
   test('clamps a non-positive column count to one', ({ expect }) => {
     const { rects } = layout({ heights: [10, 10], columnCount: 0, containerWidth: 100, gapPx: 0 });
     expect(rects.map((rect) => rect.column)).toEqual([0, 0]);
+  });
+
+  test('start-aligns columns when centring is off', ({ expect }) => {
+    const options = {
+      heights: [100, 100],
+      columnCount: 2,
+      containerWidth: 1000,
+      gapPx: 10,
+      maxColumnWidthPx: 200,
+    };
+
+    // Capped columns use 410 of 1000, so centring insets both sides by 295.
+    const centred = layout({ ...options, centered: true });
+    expect(centred.rects[0].x).toBe(295);
+
+    const startAligned = layout({ ...options, centered: false });
+    expect(startAligned.rects[0].x).toBe(0);
+    expect(startAligned.rects[1].x).toBe(210);
+
+    // Only the offset changes; the columns themselves are identical.
+    expect(startAligned.columnWidth).toBe(centred.columnWidth);
+    expect(startAligned.height).toBe(centred.height);
+  });
+
+  test('centres by default', ({ expect }) => {
+    const rects = layout({
+      heights: [100],
+      columnCount: 1,
+      containerWidth: 1000,
+      gapPx: 10,
+      maxColumnWidthPx: 200,
+    }).rects;
+    expect(rects[0].x).toBe(400);
+  });
+});
+
+describe('getColumnWidth', () => {
+  test('matches the width the layout resolves, so cache keys and rendering cannot disagree', ({ expect }) => {
+    const cases = [
+      { columnCount: 1, containerWidth: 300, gapPx: 8 },
+      { columnCount: 3, containerWidth: 1000, gapPx: 12 },
+      { columnCount: 4, containerWidth: 1600, gapPx: 12, maxColumnWidthPx: 320 },
+      // Degenerate: no width yet (the frame before the viewport is measured).
+      { columnCount: 2, containerWidth: 0, gapPx: 8 },
+    ];
+
+    for (const options of cases) {
+      expect(getColumnWidth(options), JSON.stringify(options)).toBe(layout({ ...options, heights: [] }).columnWidth);
+    }
   });
 });

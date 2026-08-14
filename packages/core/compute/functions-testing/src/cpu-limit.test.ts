@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';

@@ -6,17 +6,17 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
+import { useType } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
-import { useType } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
-import { type Map } from '#types';
+import { Map } from '#types';
 
 // TODO(wittjosiah): Add center and zoom.
 export const MapSettingsSchema = Schema.Struct({
-  coordinateSource: Schema.optional(Schema.String.annotations({ title: 'Coordinate source type' })),
-  coordinateColumn: Schema.optional(Schema.String.annotations({ title: 'Coordinate column' })),
+  coordinateSource: Schema.optional(Schema.String.annotate({ title: 'Coordinate source type' })),
+  coordinateColumn: Schema.optional(Schema.String.annotate({ title: 'Coordinate column' })),
 });
 
 type MapViewEditorProps = { object: Map.Map };

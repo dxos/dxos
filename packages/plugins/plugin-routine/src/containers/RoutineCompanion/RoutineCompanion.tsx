@@ -2,22 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Routine from '@dxos/compute/Routine';
 import { Database, Filter, Obj, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { useQuery } from '@dxos/react-client/echo';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon, RoutineForm } from '#components';
+import { RoutineForm } from '#components';
 import { meta } from '#meta';
-import { Routine, RoutineCapabilities } from '#types';
+import { RoutineCapabilities } from '#types';
 
 import { connectedRoutinesQuery } from '../../util';
 
@@ -108,7 +110,7 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
       return;
     }
 
-    // The draft is a fully-wired graph (see `Routine.make`); a single add cascades the owned trigger and
+    // The draft is a fully-wired graph (see `makeRoutine`); a single add cascades the owned trigger and
     // instructions, and the subject carried in the instructions' `objects` is the structural connection the
     // query finds.
     const persistedRoutine = db.add(draft);
@@ -141,7 +143,7 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
 
   // Row icon, reactive per row: an enabled routine takes its type's hue (amber); disabled uses the default
   // icon colour. Subscribes (via `get`) only to this routine's triggers' `enabled` flags.
-  const getIcon = useCallback((get: Atom.Context, routine: Routine.Routine): MasterDetailIcon => {
+  const getIcon = useCallback((get: Atom.AtomContext, routine: Routine.Routine): MasterDetailIcon => {
     const { icon, hue } = Obj.getIcon(routine) ?? { icon: 'ph--lightning--regular', hue: undefined };
     const { enabled } = get(routineEnabled(routine));
     return { icon, hue: enabled ? hue : undefined };
@@ -149,7 +151,7 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
 
   // Row label, reactive per row via the object's label atom, so a rename updates the row live.
   const getLabel = useCallback(
-    (get: Atom.Context, routine: Routine.Routine): string =>
+    (get: Atom.AtomContext, routine: Routine.Routine): string =>
       get(Obj.labelAtom(routine)) || t('object-name.placeholder', { ns: Type.getTypename(Routine.Routine) }) || '',
     [t],
   );
@@ -157,7 +159,7 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
   // Trailing adornment: a warning badge on a row whose routine has left the connected set (it stays in the
   // session-stable list — see {@link useConnectedRoutines} — rather than disappearing while still selected/edited).
   const getAdornment = useCallback(
-    (_get: Atom.Context, routine: Routine.Routine): MasterDetailAdornment | undefined =>
+    (_get: Atom.AtomContext, routine: Routine.Routine): MasterDetailAdornment | undefined =>
       statusFor(routine.id) === 'detached'
         ? { icon: 'ph--warning--regular', label: t('routine-detached.message') }
         : undefined,
@@ -189,9 +191,11 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root>
         <Panel.Toolbar>
-          <Menu.Toolbar className='dx-document' />
+          <Menu.Toolbar classNames='dx-document'>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
-        <Panel.Content asChild className='pt-trim-md'>
+        <Panel.Content asChild classNames='pt-trim-md'>
           <ScrollArea.Root>
             <ScrollArea.Viewport>
               <MasterDetail<Routine.Routine>
@@ -289,7 +293,7 @@ type GetMenuOptions = {
 
 const useGetMenu = ({ t, handleDelete }: GetMenuOptions) =>
   useCallback(
-    (_get: Atom.Context, routine: Routine.Routine): ActionGraphProps =>
+    (_get: Atom.AtomContext, routine: Routine.Routine): ActionGraphProps =>
       MenuBuilder.make()
         .action(
           'delete',

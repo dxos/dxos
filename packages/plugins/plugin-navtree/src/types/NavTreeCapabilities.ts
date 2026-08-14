@@ -4,9 +4,9 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom-react';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
@@ -18,4 +18,4 @@ export type NavTreeStateStore = {
   setItem: (path: string[], key: 'open' | 'current', next: boolean) => void;
 };
 
-export const State = Capability.make<NavTreeStateStore>(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<NavTreeStateStore>()(`${meta.profile.key}.capability.state`);

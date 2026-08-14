@@ -7,17 +7,10 @@ import * as EffectStream from 'effect/Stream';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { type LogLevel, type LogProcessor, type LogEntry as NaturalLogEntry, log } from '@dxos/log';
-import {
-  type ControlMetricsRequest,
-  type ControlMetricsResponse,
-  type LogEntry,
-  type Metrics,
-  QueryLogsRequest,
-  type QueryMetricsRequest,
-  type QueryMetricsResponse,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { type LogEntry, QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type LoggingService } from '@dxos/protocols/rpc';
 import { numericalValues, tracer } from '@dxos/util';
 
@@ -45,7 +38,7 @@ export class LoggingServiceImpl implements LoggingService.Handlers {
   ['LoggingService.controlMetrics']({
     reset,
     record,
-  }: ControlMetricsRequest): Effect.Effect<ControlMetricsResponse, Error> {
+  }: LoggingService.ControlMetricsRequest): Effect.Effect<LoggingService.ControlMetricsResponse, Error> {
     return Effect.sync(() => {
       if (reset) {
         tracer.clear();
@@ -66,21 +59,21 @@ export class LoggingServiceImpl implements LoggingService.Handlers {
    */
   ['LoggingService.queryMetrics']({
     interval = 5_000,
-  }: QueryMetricsRequest): EffectStream.Stream<QueryMetricsResponse, Error> {
+  }: LoggingService.QueryMetricsRequest): EffectStream.Stream<LoggingService.QueryMetricsResponse, Error> {
     // TODO(burdon): Map all traces; how to bind to reducer/metrics shape (e.g., numericalValues)?
     const getNumericalValues = (key: string) => {
       const events = tracer.get(key) ?? [];
       return { key, stats: numericalValues(events, 'duration') };
     };
 
-    return EffectStream.async<QueryMetricsResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<LoggingService.QueryMetricsResponse, Error>((emit) => {
       const update = () => {
-        const metrics: Metrics = {
+        const metrics: LoggingService.Metrics = {
           timestamp: new Date(),
           values: [
             getNumericalValues('dxos.echo.pipeline.control'),
             getNumericalValues('dxos.echo.pipeline.data'),
-          ].filter(Boolean) as Metrics.KeyPair[],
+          ].filter(Boolean) as LoggingService.KeyPair[],
         };
 
         void emit.single({
@@ -98,7 +91,7 @@ export class LoggingServiceImpl implements LoggingService.Handlers {
   }
 
   ['LoggingService.queryLogs'](request: QueryLogsRequest): EffectStream.Stream<LogEntry, Error> {
-    return EffectStream.async<LogEntry, Error>((emit) => {
+    return EffectEx.streamFromEmitter<LogEntry, Error>((emit) => {
       const ctx = Context.default();
       const handler = (entry: NaturalLogEntry) => {
         // This call was caused by the logging service itself.

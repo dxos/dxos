@@ -7,14 +7,16 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { SAMPLE_MESSAGES, corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { type SearchResult, buildSnippet } from '@dxos/react-ui-search';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
@@ -48,8 +50,7 @@ const enrichResult = (result: SearchResult, query: string): SearchResult => {
 };
 
 const DefaultStory = () => {
-  const spaces = useSpaces();
-  const space = spaces[spaces.length - 1];
+  const [space] = useSpaces();
   const [query, setQuery] = useState('');
 
   const objects = useQuery(space?.db, buildSearchQuery(query));
@@ -66,7 +67,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div role='none' className='flex flex-col gap-2 p-2 max-w-[32rem]'>
+    <div className='flex flex-col gap-2 p-2 max-w-[32rem]'>
       <input
         type='text'
         placeholder='Search…'
@@ -85,18 +86,18 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager({
-      capabilities: [Capability.contributes(AppCapabilities.Translations, translations)],
+      capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [Message.Message],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
 
               for (const { from, subject, body } of SAMPLE_MESSAGES) {
-                personalSpace.db.add(
+                defaultSpace.db.add(
                   Message.make({
                     sender: { email: from.email, name: from.name },
                     blocks: [{ _tag: 'text', text: body }],
@@ -104,7 +105,7 @@ const meta = {
                   }),
                 );
               }
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
       ],

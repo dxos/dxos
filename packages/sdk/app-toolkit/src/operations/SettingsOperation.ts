@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
 const SETTINGS_PLUGIN = 'org.dxos.plugin.settings';
@@ -22,7 +22,7 @@ export const Open = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    plugin: Schema.optional(Schema.String.annotations({ description: 'The plugin to open settings for.' })),
+    plugin: Schema.optional(Schema.String.annotate({ description: 'The plugin to open settings for.' })),
   }),
   output: Schema.Void,
 });

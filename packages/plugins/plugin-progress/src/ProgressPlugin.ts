@@ -2,32 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+// @import-as-namespace
 
-import { ProgressRegistry, ReactSurface, TraceProgressSink } from '#capabilities';
-import { meta } from '#meta';
-import { translations } from '#translations';
+import { ProgressPlugin } from '#plugin';
 
-export const ProgressPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'progress-registry',
-    activatesOn: ActivationEvents.Startup,
-    firesAfterActivation: [AppActivationEvents.ProgressRegistryReady],
-    activate: () => ProgressRegistry(),
-  }),
-  Plugin.addModule({
-    id: 'trace-progress-sink',
-    activatesOn: ActivationEvents.SetupProcessManager,
-    activate: () => TraceProgressSink(),
-  }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
-    activate: () => ReactSurface(),
-  }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.make,
-);
+export { meta } from '#meta';
 
-export default ProgressPlugin;
+/** Constructs the plugin; the body is loaded eagerly. */
+export const make = ProgressPlugin;

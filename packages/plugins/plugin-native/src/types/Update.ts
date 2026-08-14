@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 // @import-as-namespace
 

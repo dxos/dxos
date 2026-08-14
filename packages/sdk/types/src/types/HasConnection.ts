@@ -19,11 +19,11 @@ export class HasConnection extends Type.makeRelation<HasConnection>(
 })(
   Schema.Struct({
     id: Obj.ID,
-    kind: Schema.String.annotations({
+    kind: Schema.String.annotate({
       description: 'The kind of relationship.',
       examples: ['customer', 'vendor', 'investor'],
     }),
-  }).annotations({
+  }).annotate({
     description: 'A relationship between two organizations.',
   }),
 ) {}

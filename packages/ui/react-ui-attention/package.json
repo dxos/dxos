@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-attention",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Signifier components and providers for attention system.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,27 +35,21 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@radix-ui/primitive": "catalog:",
-    "@radix-ui/react-compose-refs": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-menu": "catalog:",
     "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",

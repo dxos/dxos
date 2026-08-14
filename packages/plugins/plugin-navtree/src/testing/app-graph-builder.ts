@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type BuilderExtensions } from '@dxos/app-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import { log } from '@dxos/log';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { random } from '@dxos/random';
 
 export const storybookGraphBuilders = (): BuilderExtensions => {

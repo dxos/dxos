@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-attention",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Plugin for attention",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,9 +29,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/AttentionPlugin.ts",
-      "types": "./dist/types/src/AttentionPlugin.d.ts",
-      "default": "./dist/lib/AttentionPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#types": {
       "source": "./src/types/index.ts",
@@ -45,18 +45,38 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./AttentionAction": {
+      "source": "./src/types/AttentionAction.ts",
+      "types": "./dist/types/src/types/AttentionAction.d.ts",
+      "import": "./dist/lib/AttentionAction.mjs"
+    },
+    "./AttentionCapabilities": {
+      "source": "./src/types/AttentionCapabilities.ts",
+      "types": "./dist/types/src/types/AttentionCapabilities.d.ts",
+      "import": "./dist/lib/AttentionCapabilities.mjs"
+    },
+    "./AttentionPlugin": {
+      "source": "./src/AttentionPlugin.ts",
+      "types": "./dist/types/src/AttentionPlugin.d.ts",
+      "import": "./dist/lib/AttentionPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "AttentionAction": [
+        "dist/types/src/types/AttentionAction.d.ts"
+      ],
+      "AttentionCapabilities": [
+        "dist/types/src/types/AttentionCapabilities.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -67,7 +87,6 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/keyboard": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -77,9 +96,9 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

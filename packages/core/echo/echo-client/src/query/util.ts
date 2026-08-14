@@ -53,6 +53,28 @@ const filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
 };
 
 /**
+ * Whether the filter is a subquery-membership predicate (`Filter.in(query.project(...))`, AST
+ * type `in-query`) or composes one via `and` / `or` / `not` / a nested `object` prop. Unlike
+ * `child-of`, which is only ever a root filter, `in-query` is always nested inside an `object`
+ * filter's `props` — so unlike `filterContainsChildOf` above, this must also recurse into `props`.
+ */
+const filterContainsInQuery = (filter: QueryAST.Filter): boolean => {
+  if (filter.type === 'in-query') {
+    return true;
+  }
+  if (filter.type === 'object') {
+    return Object.values(filter.props).some(filterContainsInQuery);
+  }
+  if (filter.type === 'and' || filter.type === 'or') {
+    return filter.filters.some(filterContainsInQuery);
+  }
+  if (filter.type === 'not') {
+    return filterContainsInQuery(filter.filter);
+  }
+  return false;
+};
+
+/**
  * Whether the query carries an `order`/`skip`/`limit` clause anywhere in its AST.
  *
  * These clauses impose windowing semantics (a specific ordering, or a slice of a larger result
@@ -71,6 +93,23 @@ export const queryHasWindowing = (query: QueryAST.Query): boolean => {
     }
   });
   return hasWindowing;
+};
+
+/**
+ * The query's disposition toward deleted objects, defaulting to `'exclude'` when it carries no
+ * `options` clause.
+ *
+ * Read by an AST walk rather than through {@link isSimpleSelectionQuery} so it also answers for the
+ * windowed and complex queries that helper deliberately rejects.
+ */
+export const getQueryDeletedOption = (query: QueryAST.Query): 'exclude' | 'include' | 'only' => {
+  let deleted: QueryAST.QueryOptions['deleted'];
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'options' && node.options.deleted !== undefined) {
+      deleted = node.options.deleted;
+    }
+  });
+  return deleted ?? 'exclude';
 };
 
 /**
@@ -111,7 +150,11 @@ export const isSimpleSelectionQuery = (
       };
     }
     case 'select': {
-      if (filterContainsTimestamp(query.filter) || filterContainsChildOf(query.filter)) {
+      if (
+        filterContainsTimestamp(query.filter) ||
+        filterContainsChildOf(query.filter) ||
+        filterContainsInQuery(query.filter)
+      ) {
         return null;
       }
       return { filter: query.filter, options: undefined };
@@ -120,6 +163,31 @@ export const isSimpleSelectionQuery = (
       return null;
     }
   }
+};
+
+/**
+ * Whether the query selects from spaces or feeds — the data that space-backed sources
+ * (`SpaceQuerySource`, `IndexQuerySource`) can serve.
+ *
+ * A query with no explicit `from` scope defaults to the owning space and returns true.
+ * A query whose explicit scopes contain no space/feed entry (e.g. registry-only) returns
+ * false: it is answered entirely by other sources (`RegistryQuerySource`), and forwarding
+ * it to a space-backed source is at best wasted work — the edge query host rejects such
+ * queries outright ("Query must specify at least one spaceId in options"), failing the
+ * whole query even though the registry source produced results.
+ */
+export const queryTargetsSpacesOrFeeds = (query: QueryAST.Query): boolean => {
+  let hasExplicitNonEmptyScope = false;
+  let hasSpaceOrFeedScope = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'from' && node.from._tag === 'scope' && node.from.scopes.length > 0) {
+      hasExplicitNonEmptyScope = true;
+      if (node.from.scopes.some((scope) => scope._tag === 'space' || scope._tag === 'feed')) {
+        hasSpaceOrFeedScope = true;
+      }
+    }
+  });
+  return !hasExplicitNonEmptyScope || hasSpaceOrFeedScope;
 };
 
 export type RegistryQueryScope = { included: boolean; locations: ReadonlySet<'local' | 'remote'> };

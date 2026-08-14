@@ -14,17 +14,24 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
-import { MemoizedAiService } from '@dxos/ai/testing';
-import { PartialBlock, SessionLink } from '@dxos/assistant';
-import { Operation, OperationHandlerSet, Process, ServiceResolver, Skill, Trace } from '@dxos/compute';
+import { LanguageModelFixture } from '@dxos/ai/testing';
+import { type HarnessControlRpcs, PartialBlock, SessionLink } from '@dxos/assistant';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { getSession, hydrate } from '@dxos/compute/AgentService';
-import { Annotation, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Skill from '@dxos/compute/Skill';
+import * as Trace from '@dxos/compute/Trace';
+import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
+import { Text } from '@dxos/schema';
 import { Message, Organization } from '@dxos/types';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer, waitForMessage } from '../testing';
 import * as ResearchService from '../testing/ResearchService';
 import { AGENT_PROCESS_KEY } from './agent-process';
 import * as AgentService from './AgentService';
@@ -39,7 +46,7 @@ const Research = Operation.make({
     description: 'Research an organization',
   },
   input: Schema.Struct({
-    website: Schema.String.annotations({ description: 'The website of the organization to research' }),
+    website: Schema.String.annotate({ description: 'The website of the organization to research' }),
   }),
   output: Schema.String,
   services: [ResearchService.ResearchService],
@@ -85,7 +92,7 @@ const ResearchSkill = Skill.make({
 });
 
 const assistantTestLayerOptions = {
-  types: [Organization.Organization, Feed.Feed, Skill.Skill],
+  types: [Organization.Organization, Feed.Feed, Skill.Skill, Instructions.Instructions, Text.Text],
   tracing: 'pretty' as const,
   aiServicePreset: 'edge-remote' as const,
   operationHandlers: [handlers],
@@ -144,57 +151,53 @@ const DelegationTestLayer = AssistantTestLayer({
   agent: { delegationStrategy: StubDelegationStrategy },
 });
 
-describe('Agent Service', () => {
+describe('Agent Service', { tags: ['model-fixture'] }, () => {
   it.effect(
     'can answer a question',
     Effect.fnUntraced(
       function* (_) {
-        const agent = yield* AgentService.createSession();
-        yield* agent.submitPrompt('What is the capital of France?');
-        yield* agent.waitForCompletion();
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('What is the capital of France?');
+        yield* session.waitForCompletion();
 
-        const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
+        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('paris');
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped(
+  it.effect(
     'tool call',
     Effect.fnUntraced(
       function* (_) {
-        const agent = yield* AgentService.createSession({
-          skills: [ResearchSkill],
-        });
-        yield* agent.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
+        const session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+        yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         yield* researchService.waitForTaskToAppear();
         yield* researchService.completeOneTask();
-        yield* agent.waitForCompletion();
+        yield* session.waitForCompletion();
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped(
+  it.effect(
     'can be stopped while waiting for a tool call',
     Effect.fnUntraced(
       function* (_) {
-        let agent = yield* AgentService.createSession({
-          skills: [ResearchSkill],
-        });
-        yield* agent.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
+        let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+        yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         yield* researchService.waitForTaskToAppear();
 
-        yield* agent.terminate();
+        yield* session.terminate();
         expect(researchService.getTasks().map((task) => task.state)).toEqual(['interrupted']);
       },
       Effect.provide(TestLayer()),
@@ -202,14 +205,12 @@ describe('Agent Service', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'restart during tool call',
     Effect.fnUntraced(
       function* (_) {
-        let agent = yield* AgentService.createSession({
-          skills: [ResearchSkill],
-        });
-        yield* agent.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
+        let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+        yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         yield* researchService.waitForTaskToAppear();
@@ -224,23 +225,21 @@ describe('Agent Service', () => {
         yield* researchService.waitForTaskToAppear();
         yield* researchService.completeAllTasks();
 
-        agent = yield* getSession(agent.feed);
-        yield* agent.waitForCompletion();
+        session = yield* getSession(session.feed);
+        yield* session.waitForCompletion();
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped(
+  it.effect(
     'recovers queued tool results after reload',
     Effect.fnUntraced(
       function* (_) {
-        let agent = yield* AgentService.createSession({
-          skills: [ResearchSkill],
-        });
-        yield* agent.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
+        let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+        yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         yield* researchService.waitForTaskToAppear();
@@ -251,30 +250,46 @@ describe('Agent Service', () => {
         yield* processManager.startup();
         yield* hydrate();
 
-        // Redelivery may re-issue tools from the interrupted turn.
-        yield* researchService.waitForTaskToAppear();
-        yield* researchService.completeAllTasks();
+        session = yield* getSession(session.feed);
+        yield* session.waitForCompletion();
 
-        agent = yield* getSession(agent.feed);
-        yield* agent.waitForCompletion();
+        // Recovery replays an already-queued result as a synthetic `<result pid=N>` block rather than
+        // re-issuing the tool, so the research must not run a second time — a re-issue would duplicate
+        // the side effects of an operation that had already completed.
+        //
+        // NOTE: whether the result is still queued at shutdown is a race with the agent consuming it,
+        // so this asserts the invariant that holds either way. Covering redelivery deterministically
+        // needs a seam that holds the turn loop while a result sits queued — see the effect-smol
+        // ledger entry "Cover the agent redelivery path deterministically".
+        expect(researchService.getTasks().map((task) => task.state)).toEqual(['completed']);
+        session = yield* getSession(session.feed);
 
-        const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
-        const text = messages.map(Message.extractText).join('\n');
-        expect(text.toLocaleLowerCase()).toContain('cyberdyne');
+        // The recovery turn begins when the rehydrated process fires its alarm, which is after
+        // `waitForCompletion` settles (that only covers the turn in flight), so poll the feed for the
+        // reply instead. Asserting on the ASSISTANT's text and on a fact only the tool result carries:
+        // the prompt itself says "Cyberdyne", so matching that over every message would pass even when
+        // the recovered result never reached the model.
+        const recovered = yield* waitForMessage(
+          session.feed,
+          (message) =>
+            message.sender.role === 'assistant' && Message.extractText(message).toLocaleLowerCase().includes('nasdaq'),
+          { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : 15_000 },
+        );
+        expect(Message.extractText(recovered).toLocaleLowerCase()).toContain('nasdaq');
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : 30_000 },
   );
 
-  it.scoped(
+  it.effect(
     'rehydrates an idle session and replays conversation history',
     Effect.fnUntraced(
       function* (_) {
-        let agent = yield* AgentService.createSession();
-        yield* agent.submitPrompt('What is the capital of France? Reply with just the city name.');
-        yield* agent.waitForCompletion();
+        let session = yield* AgentService.createSession();
+        yield* session.submitPrompt('What is the capital of France? Reply with just the city name.');
+        yield* session.waitForCompletion();
 
         // Simulate app teardown + reboot while the session sits idle (nothing in-flight).
         const processManager = yield* ProcessManager.ProcessManagerService;
@@ -284,11 +299,11 @@ describe('Agent Service', () => {
 
         // The rehydrated agent is bound to the same feed, so a follow-up that only makes sense
         // with prior context resolves against the pre-restart turn.
-        agent = yield* getSession(agent.feed);
-        yield* agent.submitPrompt('What country did I just ask you about? Reply with just the country name.');
-        yield* agent.waitForCompletion();
+        session = yield* getSession(session.feed);
+        yield* session.submitPrompt('What country did I just ask you about? Reply with just the country name.');
+        yield* session.waitForCompletion();
 
-        const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
+        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('paris');
         expect(text.toLocaleLowerCase()).toContain('france');
@@ -296,10 +311,10 @@ describe('Agent Service', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped(
+  it.effect(
     'hydrate is a no-op when there are no persisted agents',
     Effect.fnUntraced(
       function* (_) {
@@ -315,22 +330,20 @@ describe('Agent Service', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'runs AI agent with background tools via process manager',
     Effect.fnUntraced(
       function* (_) {
-        const agent = yield* AgentService.createSession({
-          skills: [ResearchSkill],
-        });
+        const session = yield* AgentService.createSession({ skills: [ResearchSkill] });
 
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         const taskDrainer = yield* Effect.gen(function* () {
           yield* researchService.waitForTaskToAppear();
           yield* researchService.completeOneTask();
-        }).pipe(Effect.forever, Effect.fork);
+        }).pipe(Effect.forever, Effect.forkChild);
 
         let ephemeralEventCount = 0;
-        const ephemeralFiber = yield* agent.subscribeEphemeral().pipe(
+        const ephemeralFiber = yield* session.subscribeEphemeral().pipe(
           Stream.runForEach((msg) =>
             Effect.gen(function* () {
               for (const event of msg.events) {
@@ -340,15 +353,15 @@ describe('Agent Service', () => {
               }
             }),
           ),
-          Effect.fork,
+          Effect.forkChild,
         );
 
         for (const org of ResearchService.getTestData().organizations) {
-          yield* agent.submitPrompt(JSON.stringify(org));
+          yield* session.submitPrompt(JSON.stringify(org));
         }
-        yield* agent.submitPrompt('When all research is complete, print 1-sentence summary for each organization.');
+        yield* session.submitPrompt('When all research is complete, print 1-sentence summary for each organization.');
         // TODO(dmaretskyi): wait until settles and only now start draining
-        yield* agent.waitForCompletion();
+        yield* session.waitForCompletion();
 
         yield* Fiber.interrupt(taskDrainer);
         yield* Fiber.interrupt(ephemeralFiber);
@@ -358,21 +371,25 @@ describe('Agent Service', () => {
       Effect.provide(TestLayer({ enableToolBackgrounding: true })),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 120_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : undefined },
   );
 
+  // Superseded by the ungated scripted-model port in `delegation-scripted.test.ts` (and the
+  // real-strategy test in `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`); kept
+  // in place until this file's memoized fixtures are next regenerated, since removing it would
+  // shift the shared deterministic ID stream the later fixtures depend on.
   describe('delegation (stub)', () => {
-    it.scoped(
+    it.effect(
       'delegates work to a sub-agent and folds the result back on completion',
       Effect.fnUntraced(
         function* (_) {
           delegationHarness.pending = [{ id: 'task-1', input: 'forty-two' }];
           delegationHarness.completed = [];
 
-          const agent = yield* AgentService.createSession();
-          yield* agent.submitPrompt('What is the capital of France?');
+          const session = yield* AgentService.createSession();
+          yield* session.submitPrompt('What is the capital of France?');
           // Settles on the turn's reply; the delegated child runs in the background (not awaited here).
-          yield* agent.waitForCompletion();
+          yield* session.waitForCompletion();
 
           // The post-turn reconcile spawned a linked child; its exit drives onChildEvent → onComplete.
           yield* Effect.promise(async () => {
@@ -389,7 +406,7 @@ describe('Agent Service', () => {
         Effect.provide(DelegationTestLayer),
         TestHelpers.provideTestContext,
       ),
-      { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
     );
   });
 
@@ -398,7 +415,7 @@ describe('Agent Service', () => {
 
   // Placed last so it does not perturb the shared deterministic ID stream of the tests above
   // (memoized conversations are keyed per file and depend on prior execution order).
-  it.scoped(
+  it.effect(
     'forks a conversation into a new feed and replays source history via a SessionLink',
     Effect.fnUntraced(
       function* (_) {
@@ -413,7 +430,7 @@ describe('Agent Service', () => {
         );
         const lastMessage = sourceMessages.sort((a, b) => a.created.localeCompare(b.created)).at(-1);
         if (!lastMessage) {
-          return yield* Effect.dieMessage('source conversation produced no messages');
+          return yield* Effect.die(new Error('source conversation produced no messages'));
         }
 
         // Fork: a fresh session whose feed links back to the source via a SessionLink (mirrors the
@@ -439,22 +456,22 @@ describe('Agent Service', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
   // Placed last (like the fork test) so it does not perturb the shared deterministic ID stream of
   // the memoized tests above.
-  it.scoped(
+  it.effect(
     'agent process succeeds when idle and respawns for a follow-up turn',
     Effect.fnUntraced(
       function* (_) {
         const processManager = yield* ProcessManager.ProcessManagerService;
 
-        const agent = yield* AgentService.createSession();
-        const target = Obj.getURI(agent.feed);
+        const session = yield* AgentService.createSession();
+        const target = Obj.getURI(session.feed);
 
-        yield* agent.submitPrompt('What is the capital of France? Reply with just the city name.');
-        yield* agent.waitForCompletion();
+        yield* session.submitPrompt('What is the capital of France? Reply with just the city name.');
+        yield* session.waitForCompletion();
 
         // With no queued work, alarms, delegations, or undelivered tool results, the process calls
         // `ctx.succeed()` (see `maybeComplete` / `isAgentWorkPending`) and reaches a terminal state
@@ -467,35 +484,41 @@ describe('Agent Service', () => {
 
         // A follow-up turn does not reuse the succeeded process: `getSession` skips terminal handles
         // and spawns a fresh one, which replays conversation history from the feed.
-        const followUp = yield* getSession(agent.feed);
+        const followUp = yield* getSession(session.feed);
         yield* followUp.submitPrompt('What country did I just ask you about? Reply with just the country name.');
         yield* followUp.waitForCompletion();
 
         const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
         expect(processes.some((process) => String(process.pid) !== firstPid)).toBe(true);
 
-        const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
+        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('france');
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 
   // Drives the process control plane directly (no LLM turn), so it is placed after the memoized
   // tests above to avoid perturbing their shared deterministic ID stream.
-  it.scoped(
+  it.effect(
     'setAlarm over the process control surface reaches the live agent and arms a self-wake',
     Effect.fnUntraced(
       function* (_) {
         const processManager = yield* ProcessManager.ProcessManagerService;
 
-        // createSession spawns the agent process (no LLM turn yet) bound to a stamped host marker.
-        const agent = yield* AgentService.createSession();
-        const target = Obj.getURI(agent.feed);
-        const [handle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        // Spawns the agent process (no LLM turn yet) bound to a stamped host marker.
+        const session = yield* AgentService.createSession();
+        const target = Obj.getURI(session.feed);
+        // `list` erases the RPC group to `any`, which Effect 4 resolves to an `unknown` requirement
+        // on every call; naming the group restores it.
+        const handles: readonly ProcessManager.Handle<any, any, HarnessControlRpcs>[] = yield* processManager.list({
+          target,
+          key: AGENT_PROCESS_KEY,
+        });
+        const [handle] = handles;
 
         // The spawn stamped the harness-host annotation so the process is discoverable as the owner.
         expect(
@@ -507,7 +530,7 @@ describe('Agent Service', () => {
         // void result proves the control-plane wiring end-to-end (persistence semantics are covered
         // by the AlarmManager unit tests).
         const now = yield* Clock.currentTimeMillis;
-        const at = DateTime.unsafeMake(now + Duration.toMillis(Duration.hours(1)));
+        const at = DateTime.makeUnsafe(now + Duration.toMillis(Duration.hours(1)));
         yield* handle.rpc.setAlarm({ at, message: 'finish the report' });
 
         // The RPC did not fail the process; it remains live and ready for the conversation to resume.
@@ -515,6 +538,68 @@ describe('Agent Service', () => {
         expect(handle.status.state).not.toBe(Process.State.TERMINATED);
 
         yield* handle.terminate();
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
+// Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
+describe('Agent Service (control plane)', () => {
+  // Exercises the instruction-aware reuse identity on both paths — the session cache and the
+  // remount (rediscovered process) path.
+  it.effect(
+    'session reuse tracks the steering-instructions ref',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+
+        const instructionsA = yield* Database.add(Instructions.make({ text: 'Steering A.' }));
+        const instructionsB = yield* Database.add(Instructions.make({ text: 'Steering B.' }));
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.flush();
+        const target = Obj.getURI(feed);
+
+        const isActive = (state: Process.State) =>
+          state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
+        const activePids = Effect.gen(function* () {
+          const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+          return processes.filter((process) => isActive(process.status.state));
+        });
+
+        // Spawn with A: the ref URI is stamped as a spawn annotation.
+        const sessionA = yield* getSession(feed, { instructions: Ref.make(instructionsA) });
+        const [handleA] = yield* activePids;
+        const pidA = String(handleA.pid);
+        expect(
+          Option.getOrNull(Annotation.getDictionary(handleA.params.annotations, Process.InstructionsAnnotation)),
+        ).toBe(Ref.make(instructionsA).uri);
+
+        // Unchanged ref: the cached session (and process) is reused.
+        const sessionAgain = yield* getSession(feed, { instructions: Ref.make(instructionsA) });
+        expect(sessionAgain).toBe(sessionA);
+        expect((yield* activePids).map((handle) => String(handle.pid))).toEqual([pidA]);
+
+        // Repointed ref: the process is torn down and respawned with the new annotation.
+        yield* getSession(feed, { instructions: Ref.make(instructionsB) });
+        const [handleB] = yield* activePids;
+        expect(String(handleB.pid)).not.toBe(pidA);
+        expect(
+          Option.getOrNull(Annotation.getDictionary(handleB.params.annotations, Process.InstructionsAnnotation)),
+        ).toBe(Ref.make(instructionsB).uri);
+
+        // Remount path (cache cleared by hydrate): present-to-absent also respawns, since the
+        // rediscovered process's spawn annotation no longer matches the request.
+        yield* hydrate();
+        yield* getSession(feed);
+        const [handleNone] = yield* activePids;
+        expect(String(handleNone.pid)).not.toBe(String(handleB.pid));
+        expect(
+          Option.getOrNull(Annotation.getDictionary(handleNone.params.annotations, Process.InstructionsAnnotation)),
+        ).toBeNull();
+
+        yield* handleNone.terminate();
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,

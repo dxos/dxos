@@ -8,8 +8,9 @@ import * as Layer from 'effect/Layer';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { Operation, Trace } from '@dxos/compute';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
@@ -47,7 +48,7 @@ const TestLayer = Layer.mergeAll(
 );
 
 describe('workflow', () => {
-  it.scoped(
+  it.effect(
     'run',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -62,7 +63,7 @@ describe('workflow', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'runFromInput',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -84,7 +85,7 @@ describe('workflow', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'workflow without outputs is allowed',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -108,7 +109,7 @@ describe('workflow', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'workflow as executable',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -125,7 +126,7 @@ describe('workflow', () => {
   );
 
   describe('subgraph', () => {
-    it.scoped(
+    it.effect(
       'subgraph compute',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -141,7 +142,7 @@ describe('workflow', () => {
       ),
     );
 
-    it.scoped(
+    it.effect(
       'failed subgraph resolution fails loading',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -157,7 +158,7 @@ describe('workflow', () => {
   });
 
   describe('function', () => {
-    it.scoped(
+    it.effect(
       'function node without function reference fails to load',
       Effect.fnUntraced(
         function* ({ expect }) {

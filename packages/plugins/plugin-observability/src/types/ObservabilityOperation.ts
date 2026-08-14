@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
@@ -37,8 +37,8 @@ export const SendEvent = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    name: Schema.String.annotations({ description: 'The name of the event.' }),
-    properties: Schema.optional(Schema.Any).annotations({ description: 'Event properties.' }),
+    name: Schema.String.annotate({ description: 'The name of the event.' }),
+    properties: Schema.optional(Schema.Any).annotate({ description: 'Event properties.' }),
   }),
   output: Schema.Void,
 });

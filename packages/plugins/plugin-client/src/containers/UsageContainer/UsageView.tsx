@@ -126,7 +126,7 @@ const computeRows = (data: GetProfileUsageResponse, t: TFunction): UsageRow[] =>
  * markers; `Schema.Number` keeps the field context-free (`R = never`) so the struct stays assignable to `Form`.
  */
 const usageField = (title: string, description: string) =>
-  Schema.optional(Schema.Number.annotations({ title, description }));
+  Schema.optional(Schema.Number.annotate({ title, description }));
 
 /**
  * Build the Effect schema (one annotated field per limit) and matching values. Unlimited limits have no
@@ -215,8 +215,10 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
           <Form.Section title={t('usage-section.title')} description={t('usage-section.description')}>
             {message ? (
               <Message.Root valence={message.valence}>
-                <Message.Title icon={message.icon}>{t(message.title)}</Message.Title>
-                <Message.Content>{t(message.description)}</Message.Content>
+                <Message.Content>
+                  <Message.Title icon={message.icon}>{t(message.title)}</Message.Title>
+                  <Message.Body>{t(message.description)}</Message.Body>
+                </Message.Content>
               </Message.Root>
             ) : (
               <Form.FieldSet fieldProvider={meterFieldProvider} />

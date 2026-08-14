@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Atom from '@effect-atom/atom/Atom';
-import type * as Result from '@effect-atom/atom/Result';
 import * as Cause from 'effect/Cause';
+import type * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import { type Accessor, createMemo, createSignal, onCleanup } from 'solid-js';
 
 import { useRegistry } from '../registry';
@@ -14,15 +14,15 @@ import { useRegistry } from '../registry';
  * Automatically handles loading and error states
  */
 export function useAtomResource<A, E>(
-  atom: Atom.Atom<Result.Result<A, E>>,
+  atom: Atom.Atom<AsyncResult.AsyncResult<A, E>>,
 ): {
   value: Accessor<A | undefined>;
   error: Accessor<E | undefined>;
   loading: Accessor<boolean>;
-  result: Accessor<Result.Result<A, E>>;
+  result: Accessor<AsyncResult.AsyncResult<A, E>>;
 } {
   const registry = useRegistry();
-  const [result, setResult] = createSignal<Result.Result<A, E>>(registry.get(atom));
+  const [result, setResult] = createSignal<AsyncResult.AsyncResult<A, E>>(registry.get(atom));
 
   const unsubscribe = registry.subscribe(
     atom,

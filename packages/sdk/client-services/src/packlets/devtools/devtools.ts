@@ -9,13 +9,13 @@ import { Event as AsyncEvent } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import {
   type ClearSnapshotsRequest,
   type EnableDebugLoggingRequest,
   type EnableDebugLoggingResponse,
   type Event,
   type ExportSqliteDatabaseResponse,
-  type GetBlobsResponse,
   type GetConfigResponse,
   type GetNetworkPeersRequest,
   type GetNetworkPeersResponse,
@@ -75,7 +75,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   'constructor'(private readonly params: DevtoolsServiceProps) {}
 
   ['DevtoolsHost.events'](): EffectStream.Stream<Event, Error> {
-    return EffectStream.async<Event, Error>((emit) => {
+    return EffectEx.streamFromEmitter<Event, Error>((emit) => {
       const ctx = Context.default();
       this.params.events.ready.on(ctx, () => {
         void emit.single({ ready: {} });
@@ -101,15 +101,6 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
           usageQuota: navigatorInfo?.quota ?? 0,
         };
       },
-      catch: (error) => error as Error,
-    });
-  }
-
-  ['DevtoolsHost.getBlobs'](): Effect.Effect<GetBlobsResponse, Error> {
-    return Effect.tryPromise({
-      try: async () => ({
-        blobs: await this.params.context.blobStore.list(),
-      }),
       catch: (error) => error as Error,
     });
   }
@@ -203,7 +194,12 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   }
 
   ['DevtoolsHost.subscribeToSignal'](): EffectStream.Stream<SignalResponse, Error> {
-    return toEffectStream(subscribeToSignal({ signalManager: this.params.context.signalManager }));
+    return toEffectStream(
+      subscribeToSignal({
+        signalManager: this.params.context.signalManager,
+        networkManager: this.params.context.networkManager,
+      }),
+    );
   }
 
   ['DevtoolsHost.subscribeToSwarmInfo'](
@@ -242,7 +238,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
  * The underlying stream is closed (disposing its resources) when the Effect stream terminates.
  */
 const toEffectStream = <T>(stream: Stream<T>): EffectStream.Stream<T, Error> =>
-  EffectStream.async<T, Error>((emit) => {
+  EffectEx.streamFromEmitter<T, Error>((emit) => {
     stream.subscribe(
       (message) => void emit.single(message),
       (error) => (error ? void emit.fail(error) : void emit.end()),

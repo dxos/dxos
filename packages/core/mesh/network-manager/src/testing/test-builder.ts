@@ -4,16 +4,9 @@
 
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
-import {
-  MemorySignalManager,
-  MemorySignalManagerContext,
-  type SignalManager,
-  WebsocketSignalManager,
-} from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
 import { schema } from '@dxos/protocols/proto';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
@@ -31,15 +24,7 @@ import {
 } from '../transport';
 import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
 
-// Signal server will be started by the setup script.
-const port = process.env.SIGNAL_PORT ?? 4000;
-export const TEST_SIGNAL_HOSTS: Runtime.Services.Signal[] = [
-  { server: `ws://localhost:${port}/.well-known/dx/signal` },
-];
-
 export type TestBuilderOptions = {
-  signalHosts?: Runtime.Services.Signal[];
-  bridge?: boolean;
   transport?: TransportKind;
 };
 
@@ -51,11 +36,9 @@ export class TestBuilder {
 
   constructor(public readonly options: TestBuilderOptions = {}) {}
 
-  createSignalManager(): WebsocketSignalManager | MemorySignalManager {
-    if (this.options.signalHosts) {
-      return new WebsocketSignalManager(this.options.signalHosts);
-    }
-
+  createSignalManager(): MemorySignalManager {
+    // KUBE `WebsocketSignalManager` was removed; signaling is always in-memory (the shared context
+    // connects peers in-process). The transport is chosen independently via `options.transport`.
     return new MemorySignalManager(this._signalContext);
   }
 
@@ -86,9 +69,7 @@ export class TestPeer {
   constructor(
     private readonly testBuilder: TestBuilder,
     public readonly peerId: PublicKey,
-    public readonly transport: TransportKind = testBuilder.options.signalHosts
-      ? TransportKind.WEB_RTC
-      : TransportKind.MEMORY,
+    public readonly transport: TransportKind = TransportKind.MEMORY,
   ) {
     this._signalManager = this.testBuilder.createSignalManager();
     this._networkManager = this.createNetworkManager(this.transport);
@@ -98,57 +79,49 @@ export class TestPeer {
   // TODO(burdon): Move to TestBuilder.
   createNetworkManager(transport: TransportKind): SwarmNetworkManager {
     let transportFactory: TransportFactory;
-    if (this.testBuilder.options.signalHosts) {
-      log.info(`using ${transport} transport with signal server.`);
-      switch (transport) {
-        case TransportKind.MEMORY:
-          throw new Error('Memory transport not supported with signal server.');
-        case TransportKind.TCP:
-          transportFactory = TcpTransportFactory;
-          break;
-        case TransportKind.WEB_RTC:
-          transportFactory = createRtcTransportFactory();
-          break;
-        case TransportKind.WEB_RTC_PROXY:
-          {
-            // Simulates bridge to shared worker.
-            const [proxyPort, servicePort] = createLinkedPorts();
+    switch (transport) {
+      case TransportKind.MEMORY:
+        transportFactory = MemoryTransportFactory;
+        break;
+      case TransportKind.TCP:
+        transportFactory = TcpTransportFactory;
+        break;
+      case TransportKind.WEB_RTC:
+        transportFactory = createRtcTransportFactory();
+        break;
+      case TransportKind.WEB_RTC_PROXY:
+        {
+          // Simulates bridge to shared worker.
+          const [proxyPort, servicePort] = createLinkedPorts();
 
-            this._proxy = createProtoRpcPeer({
-              port: proxyPort,
-              requested: {
-                BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-              },
-              noHandshake: true,
-              encodingOptions: {
-                preserveAny: true,
-              },
-            });
+          this._proxy = createProtoRpcPeer({
+            port: proxyPort,
+            requested: {
+              BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+            },
+            noHandshake: true,
+            encodingOptions: {
+              preserveAny: true,
+            },
+          });
 
-            this._service = createProtoRpcPeer({
-              port: servicePort,
-              exposed: {
-                BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-              },
-              handlers: { BridgeService: new RtcTransportService() },
-              noHandshake: true,
-              encodingOptions: {
-                preserveAny: true,
-              },
-            });
+          this._service = createProtoRpcPeer({
+            port: servicePort,
+            exposed: {
+              BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+            },
+            handlers: { BridgeService: new RtcTransportService() },
+            noHandshake: true,
+            encodingOptions: {
+              preserveAny: true,
+            },
+          });
 
-            transportFactory = new RtcTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
-          }
-          break;
-        default:
-          throw new Error(`Unsupported transport: ${transport}`);
-      }
-    } else {
-      if (transport !== TransportKind.MEMORY && transport !== TransportKind.TCP) {
-        log.warn(`specified transport ${transport} but no signalling configured, using memory transport instead`);
-      }
-      log.info(`using ${transport} transport without signal server.`);
-      transportFactory = MemoryTransportFactory;
+          transportFactory = new RtcTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
+        }
+        break;
+      default:
+        throw new Error(`Unsupported transport: ${transport}`);
     }
 
     return new SwarmNetworkManager({

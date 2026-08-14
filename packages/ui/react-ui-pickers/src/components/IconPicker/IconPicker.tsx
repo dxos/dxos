@@ -6,9 +6,9 @@ import React from 'react';
 
 import { type ButtonProps, Icon, type IconProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
+import { iconValues } from '@dxos/ui-types';
 
 import { PickerButton, type PickerButtonProps } from '../PickerButton';
-import { iconValues } from './icons';
 
 export type IconPickerProps = {
   disabled?: boolean;

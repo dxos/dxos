@@ -4,10 +4,8 @@
 
 // @import-as-namespace
 
-import { Atom, type Registry } from '@effect-atom/atom';
-import * as RpcClient from '@effect/rpc/RpcClient';
 import * as Cause from 'effect/Cause';
-import type * as Clock from 'effect/Clock';
+import * as Clock from 'effect/Clock';
 import type * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
@@ -19,10 +17,15 @@ import * as Predicate from 'effect/Predicate';
 import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
-import { Process, type Trace } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
 import type * as StorageService from '@dxos/compute/StorageService';
+import type * as Trace from '@dxos/compute/Trace';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
@@ -79,18 +82,18 @@ const toPersistedChildEvent = (event: Process.ChildEvent<unknown>) =>
  */
 const serializeFailure = (cause: Cause.Cause<unknown>): NonNullable<Process.Info['error']> => {
   const message = Cause.pretty(cause);
-  const value = Cause.failureOption(cause).pipe(
-    Option.orElse(() => Cause.dieOption(cause)),
+  const value = Cause.findErrorOption(cause).pipe(
+    Option.orElse(() => Option.fromNullishOr(cause.reasons.find(Cause.isDieReason)?.defect)),
     Option.getOrNull,
   );
-  if (!Predicate.isRecord(value)) {
+  if (!Predicate.isObject(value)) {
     return { message };
   }
   return {
     name: typeof value.name === 'string' ? value.name : undefined,
     message: typeof value.message === 'string' ? value.message : message,
     stack: typeof value.stack === 'string' ? value.stack : undefined,
-    context: Predicate.isRecord(value.context) ? value.context : undefined,
+    context: Predicate.isObject(value.context) ? value.context : undefined,
   };
 };
 
@@ -142,17 +145,17 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   // Fiber running the pending alarm `Effect.sleep`. Driven by the ambient `Clock`, so alarms honor
   // a `TestClock` under tests and use real time in production. `null` when no alarm is pending or
   // once the sleep has elapsed and the handler is running.
-  #alarmFiber: Fiber.RuntimeFiber<void> | null = null;
+  #alarmFiber: Fiber.Fiber<void> | null = null;
   // True from the moment a fired alarm clears #alarmFiber until its handler starts running. A 0ms
   // alarm fires on the next microtask, which can precede the completion of the handler that
   // scheduled it; without this flag #handlerCompleted would see no pending alarm and settle to IDLE,
   // letting runUntilSettled resolve during the persistence→dispatch hand-off before the turn runs.
   #alarmDispatching = false;
   #services: Context.Context<R | Process.BaseServices>;
-  #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
+  #alarmSemaphore = Effect.runSync(Semaphore.make(1));
   readonly #callbacks: Process.Callbacks<I, O, R, any>;
-  readonly #scope: Scope.CloseableScope;
-  readonly #registry: Registry.Registry;
+  readonly #scope: Scope.Closeable;
+  readonly #registry: Registry.AtomRegistry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
   readonly #storage: StorageService.Service;
   readonly #traceSink: Trace.Sink;
@@ -163,13 +166,14 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   readonly #onStatusChanged: (() => void) | undefined;
   readonly #hasRunningChildren: () => boolean;
   readonly #onTerminate?: () => Effect.Effect<void>;
+  readonly #cancellation?: AbortController;
   constructor(
     readonly pid: Process.ID,
     parentId: Process.ID | null,
     callbacks: Process.Callbacks<I, O, R, any>,
-    scope: Scope.CloseableScope,
+    scope: Scope.Closeable,
     services: Context.Context<R | Process.BaseServices>,
-    registry: Registry.Registry,
+    registry: Registry.AtomRegistry,
     outputQueue: Queue.Queue<OutputItem<O>>,
     storage: StorageService.Service,
     key: string,
@@ -186,6 +190,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     restoring?: boolean,
     encodeInput?: (input: I) => Effect.Effect<unknown>,
     initialState?: Process.State,
+    cancellation?: AbortController,
   ) {
     this.parentId = parentId;
     this.key = key;
@@ -207,6 +212,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     this.#persistence = persistence ?? NOOP_PERSISTENCE;
     this.#restoring = restoring ?? false;
     this.#encodeInput = encodeInput ?? ((input) => Effect.succeed(input));
+    this.#cancellation = cancellation;
 
     this.#currentStatus = {
       state: initialState ?? Process.State.RUNNING,
@@ -262,7 +268,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     }
     this.#inputCount++;
     log('lifecycle: input', { n: this.#inputCount });
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const encoded = yield* this.#encodeInput(input);
       const seq = yield* this.#persistence.appendEvent({ _tag: 'input', value: encoded });
       yield* this.#runHandler('input', () => this.#callbacks.onInput(input), seq).pipe(Effect.asVoid);
@@ -274,12 +280,12 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   pushEphemeral(event: Trace.Message): void {
     this.#ephemeralBuffer.push(event);
     for (const queue of this.#ephemeralSubscribers) {
-      Queue.unsafeOffer(queue, Option.some(event));
+      Queue.offerUnsafe(queue, Option.some(event));
     }
   }
   subscribeEphemeral(): Stream.Stream<Trace.Message> {
     return Stream.unwrap(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         const snapshot = [...this.#ephemeralBuffer.buffer];
         const queue = yield* Queue.unbounded<Option.Option<Trace.Message>>();
         this.#ephemeralSubscribers.push(queue);
@@ -291,7 +297,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     );
   }
   terminate(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       if (this.#finished) {
         log('lifecycle: terminate skipped (already finished)');
         return;
@@ -299,6 +305,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       log('lifecycle: terminating');
       this.#finished = true;
       this.#setStatus(Process.State.TERMINATING);
+      // Before the scope-close interrupt, so non-Effect work holding the run's Cancellation signal
+      // (e.g. an in-flight fetch) unhooks with the fiber. Suspend deliberately does not fire it.
+      this.#cancellation?.abort();
       if (this.#onTerminate !== undefined) {
         yield* this.#onTerminate();
       }
@@ -320,7 +329,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
    * intact so the process can be hydrated by a future manager. Used on app shutdown.
    */
   suspend(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       if (this.#finished) {
         return;
       }
@@ -333,11 +342,16 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       this.#setStatus(state);
       // Clears in-memory timer only; does NOT touch persisted alarmDueAt.
       this.#clearAlarm();
-      Queue.unsafeOffer(this.#outputQueue, Option.none());
+      Queue.offerUnsafe(this.#outputQueue, Option.none());
       for (const queue of this.#ephemeralSubscribers) {
-        Queue.unsafeOffer(queue, Option.none());
+        Queue.offerUnsafe(queue, Option.none());
       }
       this.#ephemeralSubscribers.length = 0;
+      // A handler that wakes its caller (a deferred, a queue) resumes that fiber inline, so
+      // `suspend` can be running nested inside the very handler fiber the close must interrupt.
+      // Interrupting a fiber from inside its own run loop while another fiber joins it never
+      // settles, so step out first.
+      yield* Effect.yieldNow;
       yield* Scope.close(this.#scope, Exit.void);
     });
   }
@@ -364,15 +378,15 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       case 'spawn':
         return this.#runHandler('spawn', () => this.#callbacks.onSpawn(), event.seq).pipe(Effect.flatMap(Fiber.join));
       case 'input':
-        return Effect.gen(this, function* () {
+        return Effect.gen({ self: this }, function* () {
           // The runtime assumes handlers are idempotent: an input whose handler was interrupted
           // is always re-delivered. Operations that are not idempotent guard against unsafe
           // retries themselves (see `Process.fromOperation`).
           // event.value is persisted JSON; cast required at deserialization boundary since
           // Process.Process<I,O,R> does not expose the input Schema (runtime object does).
-          const defWithSchema = definition as unknown as { input: Schema.Schema<I, unknown, never> };
-          const input = yield* Schema.decode(defWithSchema.input)(event.value).pipe(Effect.orDie);
-          yield* yield* this.#runHandler('input', () => this.#callbacks.onInput(input), event.seq);
+          const defWithSchema = definition as unknown as { input: Schema.Codec<I, unknown, never> };
+          const input = yield* Schema.decodeEffect(defWithSchema.input)(event.value).pipe(Effect.orDie);
+          yield* Fiber.join(yield* this.#runHandler('input', () => this.#callbacks.onInput(input), event.seq));
         });
       case 'alarm':
         return this.#dispatchAlarm(event.seq);
@@ -385,7 +399,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     }
   }
   runToCompletion(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const deferred = yield* Deferred.make<void>();
       const unsubscribe = this.#registry.subscribe(
         this.statusAtom,
@@ -397,7 +411,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
               return Effect.runSync(Deferred.succeed(deferred, undefined));
             case Process.State.FAILED: {
               const error = state.exit.pipe(
-                Option.flatMap(Exit.causeOption),
+                Option.flatMap(Exit.getCause),
                 Option.map(Cause.pretty),
                 Option.getOrElse(() => 'Process failed with unknown error'),
               );
@@ -413,7 +427,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   }
 
   runUntilSettled(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const deferred = yield* Deferred.make<void>();
       const unsubscribe = this.#registry.subscribe(
         this.statusAtom,
@@ -435,7 +449,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
                 : Effect.void;
             case Process.State.FAILED: {
               const error = state.exit.pipe(
-                Option.flatMap(Exit.causeOption),
+                Option.flatMap(Exit.getCause),
                 Option.map(Cause.pretty),
                 Option.getOrElse(() => 'Process failed with unknown error'),
               );
@@ -452,7 +466,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   runAndExit(options: { readonly inputs: readonly I[] }): Stream.Stream<O> {
     const { inputs } = options;
     return Stream.unwrap(
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         // Make sure we dont miss any outputs.
         const outputs = this.subscribeOutputs().pipe(Stream.interruptWhen(this.#runAndExitInterruptEffect()));
         yield* Effect.forEach(inputs, (input) => this.submitInput(input));
@@ -464,11 +478,11 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   #assertRunAndExitProcessActive(): Effect.Effect<void> {
     const { state, exit } = this.#currentStatus;
     if (state === Process.State.TERMINATED) {
-      return Effect.dieMessage('Process was terminated');
+      return Effect.die(new Error('Process was terminated'));
     }
     if (state === Process.State.FAILED) {
       const message = exit.pipe(
-        Option.flatMap(Exit.causeOption),
+        Option.flatMap(Exit.getCause),
         Option.map(Cause.pretty),
         Option.getOrElse(() => 'Process failed with unknown error'),
       );
@@ -477,10 +491,16 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     return Effect.void;
   }
   /**
-   * Completes when the process becomes IDLE or SUCCEEDED (interrupt output stream). Defects on FAILED or TERMINATED.
+   * Ends the output stream once the process reaches IDLE or SUCCEEDED; cuts it on FAILED or
+   * TERMINATED.
+   *
+   * A successful finish ends the stream by offering the queue's end sentinel rather than
+   * interrupting: the sentinel queues behind outputs already emitted, whereas an interrupt cuts
+   * them off — a process that finishes before its consumer starts draining would yield nothing. A
+   * failure still interrupts, since its outputs are not wanted.
    */
   #runAndExitInterruptEffect(): Effect.Effect<void, never, never> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const deferred = yield* Deferred.make<void>();
       const unsubscribe = this.#registry.subscribe(
         this.statusAtom,
@@ -488,10 +508,11 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           switch (state.state) {
             case Process.State.IDLE:
             case Process.State.SUCCEEDED:
-              return Effect.runSync(Deferred.succeed(deferred, undefined));
+              Queue.offerUnsafe(this.#outputQueue, Option.none());
+              return Effect.void;
             case Process.State.FAILED: {
               const error = state.exit.pipe(
-                Option.flatMap(Exit.causeOption),
+                Option.flatMap(Exit.getCause),
                 Option.getOrElse(() => Cause.die('Process failed with unknown error')),
               );
               return Effect.runSync(Deferred.failCause(deferred, error));
@@ -538,13 +559,13 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   }
 
   #makeAlarmSleepEffect(delay: number): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       // 0ms delays must not block on the TestClock — use yieldNow() so they complete in the
       // current event loop without requiring a TestClock.adjust call from the test.
       if (delay > 0) {
-        yield* Effect.sleep(Duration.millis(delay)).pipe(Effect.withClock(this.#clock));
+        yield* Effect.sleep(Duration.millis(delay)).pipe(Effect.provideService(Clock.Clock, this.#clock));
       } else {
-        yield* Effect.yieldNow();
+        yield* Effect.yieldNow;
       }
       // The alarm has fired and is committed to dispatching its handler. Mark the process busy
       // before clearing #alarmFiber so it is not reported settled across the persistence writes and
@@ -579,7 +600,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     log('lifecycle: submit output', { pid: this.pid });
     this.#outputCount++;
     this.#onStatusChanged?.();
-    Queue.unsafeOffer(this.#outputQueue, Option.some(output));
+    Queue.offerUnsafe(this.#outputQueue, Option.some(output));
   }
 
   requestChildEvent(event: Process.ChildEvent<unknown>): void {
@@ -604,9 +625,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     name: string,
     fn: () => Effect.Effect<void, never, R | Process.BaseServices>,
     eventSeq?: number,
-  ): Effect.Effect<Fiber.RuntimeFiber<void>> {
+  ): Effect.Effect<Fiber.Fiber<void>> {
     return Effect.uninterruptibleMask((restore) =>
-      Effect.gen(this, function* () {
+      Effect.gen({ self: this }, function* () {
         // Secondary guard: the primary guard in requestChildEvent is synchronous, but the
         // appendEvent(IDB) call before #runHandler yields to the scheduler, during which
         // the process may have set #finished=true. Bail cleanly rather than clobbering state.
@@ -615,7 +636,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           if (eventSeq !== undefined) {
             yield* this.#persistence.removeEvent(eventSeq).pipe(Effect.ignore);
           }
-          return yield* Effect.forkDaemon(Effect.void);
+          return yield* Effect.forkDetach(Effect.void);
         }
         this.#activeHandlers++;
         this.#setStatus(Process.State.RUNNING);
@@ -648,12 +669,12 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           // calls are no-ops when the record has already been deleted (terminal state).
           Effect.tap(() => this.#persistence.setAlarm(this.#alarmDueAt)),
           Effect.tap(() => this.#persistence.setState(this.#currentStatus.state)),
-          Effect.catchAllCause((cause) =>
-            Effect.gen(this, function* () {
+          Effect.catchCause((cause) =>
+            Effect.gen({ self: this }, function* () {
               recordWall();
               // Do NOT remove the event on a pure interruption — the scope was closed for
               // suspend/restart, so the event must stay in the mailbox for re-delivery.
-              if (eventSeq !== undefined && !Cause.isInterruptedOnly(cause)) {
+              if (eventSeq !== undefined && !Cause.hasInterruptsOnly(cause)) {
                 yield* this.#persistence.removeEvent(eventSeq);
               }
               yield* this.#handleError(cause);
@@ -666,7 +687,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   }
 
   #handlerCompleted(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       this.#activeHandlers--;
       log('handler completed', { pid: this.pid, activeHandlers: this.#activeHandlers, finished: this.#finished });
 
@@ -678,13 +699,13 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         this.#finished = true;
         const error = this.#failError;
         yield* this.#cleanup().pipe(
-          Effect.tap(() => this.#setStatus(Process.State.FAILED, Exit.die(error))),
+          Effect.tap(() => Effect.sync(() => this.#setStatus(Process.State.FAILED, Exit.die(error)))),
           Effect.tap(() => this.#onFinished?.(Process.State.FAILED, Cause.die(error)) ?? Effect.void),
         );
       } else if (this.#succeedRequested && this.#activeHandlers === 0) {
         this.#finished = true;
         yield* this.#cleanup().pipe(
-          Effect.tap(() => this.#setStatus(Process.State.SUCCEEDED, Exit.void)),
+          Effect.tap(() => Effect.sync(() => this.#setStatus(Process.State.SUCCEEDED, Exit.void))),
           Effect.tap(() => this.#onFinished?.(Process.State.SUCCEEDED) ?? Effect.void),
         );
       } else if (this.#activeHandlers === 0) {
@@ -710,7 +731,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     }
     log('lifecycle: failed', { cause: Cause.pretty(cause) });
     this.#finished = true;
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       this.#setStatus(Process.State.FAILED, Exit.failCause(cause));
       yield* this.#cleanup();
       yield* this.#onFinished?.(Process.State.FAILED, cause) ?? Effect.void;
@@ -718,12 +739,12 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   }
 
   #cleanup(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       log('lifecycle: cleanup');
       this.#clearAlarm();
-      Queue.unsafeOffer(this.#outputQueue, Option.none());
+      Queue.offerUnsafe(this.#outputQueue, Option.none());
       for (const queue of this.#ephemeralSubscribers) {
-        Queue.unsafeOffer(queue, Option.none());
+        Queue.offerUnsafe(queue, Option.none());
       }
       this.#ephemeralSubscribers.length = 0;
       yield* this.#storage.clear();

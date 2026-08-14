@@ -2,21 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type AppSurface, useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
-import { useObject, useType } from '@dxos/react-client/echo';
+import { useObject, useType } from '@dxos/echo-react';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { KanbanBoard } from '#components';
 import { useEchoChangeCallback, useItemsProjection, useProjectionModel } from '#hooks';
-import { KanbanOperation } from '#types';
-import { Kanban } from '#types';
+import { Kanban, KanbanOperation } from '#types';
 
 export type KanbanArticleProps = AppSurface.ObjectArticleProps<Kanban.Kanban>;
 

@@ -7,23 +7,42 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
-    'InboxPlugin': 'src/InboxPlugin.tsx',
-    'InboxPlugin.node': 'src/InboxPlugin.node.ts',
-    'InboxPlugin.workerd': 'src/InboxPlugin.workerd.ts',
+    'InboxPlugin': 'src/InboxPlugin.ts',
+    'plugin': 'src/plugin.tsx',
+    'plugin.node': 'src/plugin.node.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
     'skills': 'src/skills/index.ts',
+    'sync': 'src/sync/index.ts',
     'capabilities': 'src/capabilities/index.ts',
+    'capabilities.workerd': 'src/capabilities/workerd.ts',
     'capabilities/node': 'src/capabilities/node.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
     'hooks': 'src/hooks/index.ts',
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
-    'plugin': 'src/plugin.ts',
-    'plugin.workerd': 'src/plugin.workerd.ts',
-    'testing': 'src/testing.ts',
+    'testing': 'src/testing/index.ts',
+    'testing/sync-fixture': 'src/testing/sync-fixture.ts',
     'translations': 'src/translations.ts',
+    'SyncOptions': 'src/types/SyncOptions.ts',
+    'SyncStreamConfig': 'src/types/SyncStreamConfig.ts',
+    'Calendar': 'src/types/Calendar.ts',
+    'ExtractedFrom': 'src/types/ExtractedFrom.ts',
+    'InboxCapabilities': 'src/types/InboxCapabilities.ts',
+    'InboxEvents': 'src/types/InboxEvents.ts',
+    'InboxOperation': 'src/types/InboxOperation.ts',
+    'Mailbox': 'src/types/Mailbox.ts',
+    'Settings': 'src/types/Settings.ts',
+    'DraftEvent': 'src/types/DraftEvent.ts',
+    'SystemTags': 'src/types/SystemTags.ts',
     'types': 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  // Many stories here use `withClientProvider` (ECHO/Automerge-backed); per-file isolation
+  // re-instantiates that WASM module graph for every story file and exhausts the single headless
+  // chromium's WASM memory partway through the suite (`RangeError: ... Out of memory: Cannot
+  // allocate Wasm memory for new instance`). Share the module graph across files instead.
+  // The first story in a file pays the whole lazy module-load bill — tens of seconds, against a
+  // couple for each story after it — which the 15s browser-mode default cannot cover.
+  test: { node: true, storybook: { isolate: false, timeout: 60_000 } },
 });

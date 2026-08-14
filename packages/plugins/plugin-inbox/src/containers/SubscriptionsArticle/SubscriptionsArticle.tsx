@@ -8,19 +8,14 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
-import { Card, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Card, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Empty } from '@dxos/react-ui-list';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
 import { InboxOperation, Mailbox } from '#types';
-
-export type SubscriptionsArticleProps = AppSurface.SpaceArticleProps<{
-  attendableId?: string;
-  mailbox: Mailbox.Mailbox;
-}>;
 
 type SubscriptionTileData = {
   readonly subscription: Mailbox.Subscription;
@@ -69,28 +64,34 @@ const SubscriptionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<Subscri
 
 SubscriptionTile.displayName = 'SubscriptionTile';
 
+export type SubscriptionsArticleProps = AppSurface.ObjectArticleProps<Mailbox.Mailbox>;
+
 /**
  * Bulk-mail subscriptions for a mailbox: every sender with a `List-Unsubscribe` affordance, with a
  * checkbox to select and a toolbar Remove action that adds a skip-sender filter and fires the one-click
  * unsubscribe (`UnsubscribeSender`). Already-filtered senders drop out of the list.
  */
-export const SubscriptionsArticle = ({ role, space, attendableId, mailbox }: SubscriptionsArticleProps) => {
+export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
-  const id = String(attendableId ?? Obj.getURI(mailbox));
   const feed = useResolveRef(mailbox.feed);
+  const db = Obj.getDatabase(mailbox);
   const messages = useQuery(
-    space.db,
+    db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
+  // Senders removed by a successful unsubscribe this session. The operation adds a skip-sender filter,
+  // but `mailbox.messageFilters` is a stable proxy ref whose contents mutate in place, so a `useMemo`
+  // keyed on it never recomputes — track successful removals explicitly to drop them from the list.
+  const [removed, setRemoved] = useState<ReadonlySet<string>>(new Set());
 
   const subscriptions = useMemo(
     () =>
       Mailbox.deriveSubscriptions(messages).filter(
-        (sub) => !Mailbox.isFiltered(mailbox, { sender: { email: sub.email } }),
+        (sub) => !removed.has(sub.email) && !Mailbox.isFiltered(mailbox, { sender: { email: sub.email } }),
       ),
-    [messages, mailbox, mailbox.messageFilters],
+    [messages, mailbox, mailbox.messageFilters, removed],
   );
 
   const toggle = useCallback((email: string) => {
@@ -105,79 +106,103 @@ export const SubscriptionsArticle = ({ role, space, attendableId, mailbox }: Sub
     });
   }, []);
 
-  const removeSelected = useCallback(() => {
-    const spaceId = space.db.spaceId;
-    for (const sub of subscriptions) {
-      if (selected.has(sub.email)) {
-        void invokePromise(
+  const removeSelected = useCallback(async () => {
+    const spaceId = db?.spaceId;
+    const targets = subscriptions.filter((sub) => selected.has(sub.email));
+    setSelected(new Set());
+    await Promise.all(
+      targets.map(async (sub) => {
+        const { data } = await invokePromise(
           InboxOperation.UnsubscribeSender,
           { mailbox: Ref.make(mailbox), email: sub.email, unsubscribe: sub.unsubscribe },
           { spaceId },
         );
-      }
-    }
-    setSelected(new Set());
-  }, [subscriptions, selected, space.db, mailbox, invokePromise]);
+        // Drop the sender from the list only once the operation confirms the skip filter was applied.
+        if (data?.filtered) {
+          setRemoved((prev) => new Set(prev).add(sub.email));
+        }
+      }),
+    );
+  }, [subscriptions, selected, db, mailbox, invokePromise]);
 
-  const menuActions = useSubscriptionsActions(selected.size, removeSelected);
+  // Substring match (not fuzzy): fuzzy re-orders by score, which would defeat the noisiest-first sort.
+  const { results, handleSearch } = useSearchListResults({
+    items: subscriptions,
+    fuzzy: false,
+    extract: (subscription) => `${subscription.name ?? ''} ${subscription.email}`,
+  });
+
+  // Select-all over the VISIBLE (filtered) senders: checking with a filter active selects only the
+  // matches, and a partial selection renders indeterminate.
+  const allSelected = results.length > 0 && results.every((subscription) => selected.has(subscription.email));
+  const someSelected = results.some((subscription) => selected.has(subscription.email));
+  const toggleAll = useCallback(() => {
+    setSelected(allSelected ? new Set() : new Set(results.map((subscription) => subscription.email)));
+  }, [allSelected, results]);
+
   const items = useMemo(
     () =>
-      subscriptions.map((subscription) => ({
+      results.map((subscription) => ({
         subscription,
         selected: selected.has(subscription.email),
         onToggle: toggle,
       })),
-    [subscriptions, selected, toggle],
+    [results, selected, toggle],
   );
 
+  // A mailbox with no subscriptions has nothing to filter; past that an empty list means no matches.
+  const empty =
+    subscriptions.length === 0
+      ? t('subscriptions.empty.message')
+      : results.length === 0
+        ? t('subscriptions.no-results.message')
+        : undefined;
+
   return (
-    <Panel.Root role={role}>
-      <Menu.Root {...menuActions} attendableId={id}>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root role={role}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Toolbar.Root classNames='dx-document px-3'>
+            <Input.Root>
+              <Input.Checkbox
+                checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                disabled={results.length === 0}
+                onCheckedChange={toggleAll}
+                data-testid='subscriptions-select-all'
+              />
+            </Input.Root>
+            <SearchList.Input classNames='grow' placeholder={t('subscriptions.filter.placeholder')} />
+            <Toolbar.IconButton
+              icon='ph--trash--regular'
+              iconOnly={false}
+              disabled={selected.size === 0}
+              label={t('subscriptions.remove.label', { count: selected.size })}
+              onClick={() => void removeSelected()}
+              data-testid='subscriptions-remove'
+            />
+          </Toolbar.Root>
         </Panel.Toolbar>
-      </Menu.Root>
-      <Panel.Content asChild>
-        {subscriptions.length === 0 ? (
-          <Empty label={t('subscriptions.empty.message')} />
-        ) : (
-          <ScrollArea.Root orientation='vertical' padding thin>
-            <ScrollArea.Viewport>
-              <Mosaic.Container asChild>
-                <Mosaic.Stack
-                  Tile={SubscriptionTile}
-                  items={items}
-                  draggable={false}
-                  getId={(item) => item.subscription.email}
-                />
-              </Mosaic.Container>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        )}
-      </Panel.Content>
-    </Panel.Root>
+        <Panel.Content asChild>
+          {empty ? (
+            <Empty label={empty} />
+          ) : (
+            <ScrollArea.Root orientation='vertical' padding thin>
+              <ScrollArea.Viewport classNames='dx-document'>
+                <Mosaic.Container asChild>
+                  <Mosaic.Stack
+                    Tile={SubscriptionTile}
+                    items={items}
+                    draggable={false}
+                    getId={(item) => item.subscription.email}
+                  />
+                </Mosaic.Container>
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          )}
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 
 SubscriptionsArticle.displayName = 'SubscriptionsArticle';
-
-/** Toolbar menu for the subscriptions view: a single Remove action, disabled until a sender is selected. */
-const useSubscriptionsActions = (selectedCount: number, onRemove: () => void) =>
-  useMenuBuilder(
-    () =>
-      MenuBuilder.make()
-        .root({ label: ['subscriptions.toolbar.title', { ns: meta.profile.key }] })
-        .action(
-          'remove',
-          {
-            icon: 'ph--trash--regular',
-            iconOnly: false,
-            disabled: selectedCount === 0,
-            label: ['subscriptions.remove.label', { ns: meta.profile.key, count: selectedCount }],
-            testId: 'subscriptions-remove',
-          },
-          onRemove,
-        )
-        .build(),
-    [selectedCount, onRemove],
-  );

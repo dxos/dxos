@@ -3,6 +3,7 @@
 //
 
 import * as A from '@automerge/automerge';
+import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
 import { type InspectOptionsStylized } from 'node:util';
 
@@ -301,12 +302,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const newTarget = defaultMap(
         target[symbolInternals].targetsMap,
         targetKey,
-        // Reuse the root target's event: the central `core.updates` subscription emits on the root's
-        // event only, so a derived record proxy with its own event would never notify its subscribers
-        // (arrays preserve `target[EventId]` for the same reason).
+        // Reuse the root target's event: the central core subscriptions emit on the root's
+        // event only, so a derived record proxy with its own event would never notify its
+        // subscribers (arrays preserve `target[EventId]` for the same reason).
         (): ProxyTarget =>
           createRecordTarget(
-            createInstanceState(target[symbolInternals], namespace, dataPath, { event: target[EventId] }),
+            createInstanceState(target[symbolInternals], namespace, dataPath, {
+              event: target[EventId],
+            }),
           ),
       );
 
@@ -367,17 +370,19 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return target[symbolInternals].getDecoded([getNamespace(target), ...path]);
     });
 
-    const _ = Schema.asserts(propertySchema)(value);
+    Schema.asserts(propertySchema, value);
     SchemaValidator.assertExactProperties(propertySchema, value, (path) => getDeep(value, path));
     return value;
   }
 
   private _handleLinksAssignment(target: ProxyTarget, value: any): any {
     return deepMapValues(value, (value, recurse) => {
-      if (isEchoObjectField(value)) {
-        // The value is a value-object field of another echo-object. We don't want to create a reference
-        // to it or have shared mutability, we need to copy by value.
-        return recurse({ ...value });
+      if (isEchoObjectField(value) || isDetachedObjectField(value)) {
+        // The value is a value-object field of another object — database-backed or detached. We don't
+        // want to create a reference to it or have shared mutability, we need to copy by value.
+        // Arrays are copied as arrays: spreading one into an object literal would turn it into a
+        // record of numeric keys.
+        return recurse(Array.isArray(value) ? [...value] : { ...value });
       } else if (isProxy(value)) {
         throw new Error('Object references must be wrapped with `Ref.make`');
       } else if (Ref.isRef(value)) {
@@ -738,9 +743,6 @@ export const throwIfCustomClass = (prop: Doc.KeyPath[number], value: any) => {
   }
 };
 
-// Re-export from echo-object-utils for backward compatibility.
-export { getObjectCore };
-
 /**
  * @returns Automerge document (or a part of it) that backs the object.
  * Mostly used for debugging.
@@ -750,9 +752,6 @@ export const getObjectDocument = (obj: Obj.Any): A.Doc<EntityStructure> => {
   return getDeep(core.getDoc(), core.mountPath)!;
 };
 
-// Re-export from echo-object-utils for backward compatibility.
-export { isRootDataObject };
-
 /**
  * @returns True if `value` is part of another EchoObjectSchema but not the root data object.
  */
@@ -760,6 +759,15 @@ const isEchoObjectField = (value: any) => {
   return (
     isProxy(value) && getProxyHandler(value) instanceof EchoReactiveHandler && !isRootDataObject(getProxyTarget(value))
   );
+};
+
+/**
+ * @returns True if `value` is a nested record of a detached (never-added) object — an in-memory
+ * reactive proxy rather than an {@link EchoReactiveHandler} one. `isEntity` is the handler-agnostic
+ * root test: only root objects and relations carry an entity kind, so a nested record fails it.
+ */
+const isDetachedObjectField = (value: any) => {
+  return isProxy(value) && !(getProxyHandler(value) instanceof EchoReactiveHandler) && !Entity.isEntity(value);
 };
 
 const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
@@ -988,11 +996,19 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
 
   const obj = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
   assertObjectModel(obj);
+
+  // Identity, not structure, is this proxy's equality. Effect compares and hashes an unmarked object
+  // by walking its properties, so two proxies over the same entity — a branch binding and the live
+  // object, or two bindings of one branch — collapse into a single `Atom.family` entry keyed on
+  // whichever came first. The survivor's `subscribe` targets a proxy the caller may already have
+  // disposed, so the other binding's updates are never delivered.
+  Equal.byReferenceUnsafe(obj);
+
   core.rootProxy = obj;
   return obj;
 };
 
-const validateSchema = (schema: Schema.Schema.AnyNoContext) => {
+const validateSchema = (schema: Schema.Codec<any, any>) => {
   const dxn = getSchemaURI(schema);
   invariant(dxn, 'Schema must be defined via TypedObject.');
   const entityKind = getEntityKind(schema);
@@ -1000,7 +1016,7 @@ const validateSchema = (schema: Schema.Schema.AnyNoContext) => {
   SchemaValidator.validateSchema(schema);
 };
 
-const setSchemaPropertiesOnObjectCore = (core: ObjectCore, schema: Schema.Schema.AnyNoContext | undefined) => {
+const setSchemaPropertiesOnObjectCore = (core: ObjectCore, schema: Schema.Codec<any, any> | undefined) => {
   if (schema != null) {
     const uri = getSchemaURI(schema);
     invariant(uri, 'Schema must be defined via TypedObject.');
@@ -1012,11 +1028,7 @@ const setSchemaPropertiesOnObjectCore = (core: ObjectCore, schema: Schema.Schema
   }
 };
 
-const setRelationSourceAndTarget = (
-  target: ProxyTarget,
-  core: ObjectCore,
-  schema: Schema.Schema.AnyNoContext | undefined,
-) => {
+const setRelationSourceAndTarget = (target: ProxyTarget, core: ObjectCore, schema: Schema.Top | undefined) => {
   const kind = schema && getEntityKind(schema);
   if (kind === EntityKind.Relation) {
     // `getSource` and `getTarget` don't work here since they assert entity kind.

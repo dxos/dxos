@@ -3,13 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
-import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -18,6 +17,7 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
+import { omitId } from '../../util';
 import { ObjectPicker } from './ObjectPicker';
 
 random.seed(1);
@@ -27,8 +27,7 @@ const createPerson = () =>
     fullName: random.person.fullName(),
   });
 
-const omitId = Schema.omit<any, any, ['id']>('id');
-const personSchema = omitId(Type.getSchema(Person.Person));
+const personSchema = omitId(Person.Person);
 
 // Mock functions for testing
 const mockHandleSelect = fn();

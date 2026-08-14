@@ -3,17 +3,16 @@
 //
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
-import * as Reactivity from '@effect/experimental/Reactivity';
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import isEqual from 'fast-deep-equal';
 
-import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { type Entity, Filter, Obj, Query, type Type } from '@dxos/echo';
 import { EchoHost } from '@dxos/echo-host';
@@ -30,6 +29,7 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
+import { type BranchStore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 type OpenDatabaseOptions = {
@@ -91,9 +91,33 @@ export class EchoTestPeer extends Resource {
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
   /** Owns the in-process effect-rpc clients bridged from the host handlers. */
-  private _serviceScope?: Scope.CloseableScope;
+  private _serviceScope?: Scope.Closeable;
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
+
+  /**
+   * Device-local current-branch selections per space, held on the peer so they survive `reload()`
+   * (which recreates ECHO but not the peer). Stands in for the host metadata store; non-synced.
+   */
+  private readonly _branchStores = new Map<string, Map<string, string>>();
+
+  private _branchStoreFor(spaceId: string): BranchStore {
+    let map = this._branchStores.get(spaceId);
+    if (!map) {
+      map = new Map<string, string>();
+      this._branchStores.set(spaceId, map);
+    }
+    const store = map;
+    return {
+      load: async () => Object.fromEntries(store),
+      save: async (entries) => {
+        store.clear();
+        for (const [key, value] of Object.entries(entries)) {
+          store.set(key, value);
+        }
+      },
+    };
+  }
 
   private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
   private _managedRuntime!: ManagedRuntime.ManagedRuntime<
@@ -122,12 +146,12 @@ export class EchoTestPeer extends Resource {
     // Keep the same SQLite-backed services across peer reloads by reading them from the
     // persistent runtime context, then provide those services into a new runtime that
     // recreates only the transaction layer.
-    const persistedSqlLayer = Layer.unwrapEffect(
-      this._persistentRuntime.runtimeEffect.pipe(
-        Effect.map((runtime) =>
+    const persistedSqlLayer = Layer.unwrap(
+      this._persistentRuntime.contextEffect.pipe(
+        Effect.map((context) =>
           Layer.merge(
-            Layer.succeed(SqlClient.SqlClient, EffectContext.get(runtime.context, SqlClient.SqlClient)),
-            Layer.succeed(SqlExport.SqlExport, EffectContext.get(runtime.context, SqlExport.SqlExport)),
+            Layer.succeed(SqlClient.SqlClient, EffectContext.get(context, SqlClient.SqlClient)),
+            Layer.succeed(SqlExport.SqlExport, EffectContext.get(context, SqlExport.SqlExport)),
           ),
         ),
       ),
@@ -144,7 +168,7 @@ export class EchoTestPeer extends Resource {
     this._managedRuntime = this._createManagedRuntime();
 
     this._echoHost = new EchoHost({
-      runtime: this._managedRuntime.runtimeEffect,
+      runtime: this._managedRuntime.contextEffect,
       assignQueuePositions: this._assignQueuePositions,
     });
     this._clients.clear();
@@ -264,7 +288,13 @@ export class EchoTestPeer extends Resource {
     // NOTE: Client closes the database when it is closed.
     const root = await this.host.createSpaceRoot(this._ctx, spaceKey);
     const spaceId = await createIdFromSpaceKey(spaceKey);
-    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
+    const db = client.constructDatabase({
+      spaceId,
+      spaceKey,
+      reactiveSchemaQuery,
+      preloadSchemaOnOpen,
+      branchStore: this._branchStoreFor(String(spaceId)),
+    });
     await db.setSpaceRoot(root.url);
     await db.open();
 
@@ -294,7 +324,13 @@ export class EchoTestPeer extends Resource {
       resolvedRootUrl = this.host.spaces.find((s) => s.spaceId === spaceId)?.rootDocUrl;
       invariant(resolvedRootUrl, 'Root URL not found on host');
     }
-    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
+    const db = client.constructDatabase({
+      spaceId,
+      spaceKey,
+      reactiveSchemaQuery,
+      preloadSchemaOnOpen,
+      branchStore: this._branchStoreFor(String(spaceId)),
+    });
     await db.setSpaceRoot(resolvedRootUrl);
     await db.open();
 
@@ -357,15 +393,6 @@ export const createDataAssertion = ({
         db.add(Obj.make(TestSchema.Expando, { type: 'task', title: 'A', idx })),
       );
       await db.flush();
-    },
-    waitForReplication: (db: EchoDatabase) => {
-      return waitForCondition({
-        breakOnError: true,
-        condition: async () => {
-          const { received } = await findSeedObject(db);
-          return received.every((obj) => obj != null);
-        },
-      });
     },
     verify: async (db: EchoDatabase) => {
       const { objects } = await findSeedObject(db);

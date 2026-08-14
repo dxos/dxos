@@ -25,7 +25,7 @@ export class Employer extends Type.makeRelation<Employer>(DXN.make('org.dxos.rel
     startDate: Schema.optional(Schema.String),
     endDate: Schema.optional(Schema.String),
   }).pipe(
-    Schema.annotations({
+    Schema.annotate({
       description: 'An employing organization of a person.',
     }),
   ),

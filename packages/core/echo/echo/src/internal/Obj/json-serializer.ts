@@ -13,7 +13,7 @@ import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Arra
 import type * as Database from '../../Database';
 import type * as Obj from '../../Obj';
 import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
-import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
+import { defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import {
   type AnyEntity,
   ATTR_PARENT,
@@ -33,6 +33,7 @@ import {
   ATTR_SELF_URI,
   ATTR_SELF_URI_LEGACY,
   ObjectDatabaseId,
+  ObjectDeletedId,
   type ObjectJSON,
   RelationSourceDXNId,
   RelationSourceId,
@@ -42,9 +43,6 @@ import {
   assertObjectModel,
 } from '../Entity';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../Ref';
-
-// Re-export for backward compatibility.
-export { attachTypedJsonSerializer };
 
 type DeepReplaceRef<T> =
   T extends Ref<any>
@@ -100,7 +98,7 @@ export const objectFromJSON = async (
 
   let obj: any;
   if (schema != null) {
-    obj = await schema.pipe(Schema.decodeUnknownPromise)(decodedInput);
+    obj = await Schema.decodeUnknownPromise(schema)(decodedInput);
     if (refResolver) {
       setRefResolverOnData(obj, refResolver);
     }
@@ -148,7 +146,7 @@ export const objectFromJSON = async (
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {
-    const meta = await EntityMetaSchema.pipe(Schema.decodeUnknownPromise)(normalizeMeta(jsonData[ATTR_META]));
+    const meta = await Schema.decodeUnknownPromise(EntityMetaSchema)(normalizeMeta(jsonData[ATTR_META]));
     invariant(Array.isArray(meta.keys));
     defineHiddenProperty(obj, MetaId, meta);
   } else {
@@ -175,6 +173,10 @@ export const objectFromJSON = async (
     defineHiddenProperty(obj, ObjectDatabaseId, database);
   }
 
+  // Carry the deletion marker so a tombstone snapshot (e.g. a feed item removed via `Feed.remove`)
+  // hydrates with `Obj.isDeleted === true` rather than as a live object.
+  defineHiddenProperty(obj, ObjectDeletedId, jsonData[ATTR_DELETED] === true);
+
   assertObjectModel(obj);
   invariant((obj as any)[ATTR_TYPE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_META] === undefined, 'Invalid object model');
@@ -183,6 +185,7 @@ export const objectFromJSON = async (
   invariant((obj as any)[ATTR_SELF_URI_LEGACY] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_SOURCE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_TARGET] === undefined, 'Invalid object model');
+
   return obj;
 };
 
@@ -220,7 +223,7 @@ const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }
 
 /**
  * Recursively replaces encoded `Uint8Array` JSON markers with actual `Uint8Array` instances.
- * Runs before schema decoding so `Schema.Uint8ArrayFromSelf` sees real bytes.
+ * Runs before schema decoding so `Schema.Uint8Array` sees real bytes.
  */
 const restoreUint8Arrays = (data: unknown): any =>
   deepMapValues(data, (value, recurse) => {

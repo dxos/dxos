@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { EID } from '@dxos/keys';
@@ -123,10 +124,10 @@ describe('Obj', () => {
       expect(EID.isEID(uri)).toBe(true);
     });
 
-    test("prefer: 'relative' returns local EID echo:/<id>", ({ expect }) => {
+    test("prefer: 'relative' returns local EID echo:///<id>", ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
       const uri = Obj.getURI(obj, { prefer: 'relative' });
-      expect(uri).toMatch(/^echo:\/[^/]/);
+      expect(uri).toMatch(/^echo:\/\/\/[^/]/);
       expect(EID.isLocal(EID.parse(uri))).toBe(true);
     });
 
@@ -587,6 +588,48 @@ describe('Obj', () => {
       // - Obj.Any: can access arbitrary properties (has [key: string]: any)
       expectTypeOf<Obj.Unknown>().toMatchTypeOf<Obj.Any>();
       expectTypeOf<Obj.Any>().toMatchTypeOf<Obj.Unknown>();
+    });
+  });
+
+  describe('atomProperty', () => {
+    test('fires only when the observed property changes', ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice', tasks: [] });
+
+      const tasksAtom = Obj.atomProperty(obj, 'tasks');
+      let fires = 0;
+      registry.subscribe(tasksAtom, () => {
+        fires++;
+      });
+      expect(registry.get(tasksAtom)).toEqual([]);
+      // Mounting may notify once with the initial value; only the delta after this matters.
+      const baseline = fires;
+
+      // Writes to other properties must not re-fire an array-valued atom: comparing fresh snapshots by
+      // identity is unequal for arrays/objects on every notification.
+      Obj.update(obj, (obj) => {
+        obj.name = 'Bob';
+      });
+      Obj.update(obj, (obj) => {
+        obj.name = 'Carol';
+      });
+      expect(fires).toBe(baseline);
+
+      // A genuine change to the observed property still fires.
+      const task = Obj.make(TestSchema.Task, { title: 'x' });
+      Obj.update(obj, (obj) => {
+        // Optional-chained for the mutator's widened type; the length assertion below catches a no-op.
+        obj.tasks?.push(Ref.make(task));
+      });
+      expect(fires).toBe(baseline + 1);
+      expect(registry.get(tasksAtom)).toHaveLength(1);
+
+      // Still silent for unrelated writes once the array holds refs: `Ref` mints a fresh wrapper per
+      // property read, so identity comparison would re-fire here every time (see `elementEquals`).
+      Obj.update(obj, (obj) => {
+        obj.name = 'Dana';
+      });
+      expect(fires).toBe(baseline + 1);
     });
   });
 

@@ -4,23 +4,26 @@
 
 // @import-as-namespace
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Context from 'effect/Context';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
-import type * as Option from 'effect/Option';
 import * as Schema$ from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
-import { Capability as Capability$ } from '@dxos/app-framework';
-import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
-import type { Credential, Operation, Skill } from '@dxos/compute';
+import * as Capability$ from '@dxos/app-framework/Capability';
+import { BuilderExtensions } from '@dxos/app-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import type { Database, Type } from '@dxos/echo';
 import { type Translator as Translator$ } from '@dxos/i18n';
-import { EID, type URI } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
+import type { Position } from '@dxos/util';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations';
@@ -71,12 +74,12 @@ export type Layout = Readonly<{
  * Layout capability - provides reactive access to the current layout state.
  * @category Capability
  */
-export const Layout = Capability$.make<Atom.Atom<Layout>>(LAYOUT_CAPABILITY_ID);
+export const Layout = Capability$.makeSingleton<Atom.Atom<Layout>>()(LAYOUT_CAPABILITY_ID);
 
 /**
  * @category Capability
  */
-export const Translations = Capability$.make<Readonly<Translations$.Resource[]>>(
+export const Translations = Capability$.make<Readonly<Translations$.Resource[]>>()(
   'org.dxos.app-framework.capability.translations',
 );
 
@@ -85,16 +88,15 @@ export const Translations = Capability$.make<Readonly<Translations$.Resource[]>>
  * (operations, services, Effect programs) can translate strings dynamically.
  * @category Capability
  */
-export const Translator = Capability$.make<Translator$>('org.dxos.app-framework.capability.translator');
+export const Translator = Capability$.makeSingleton<Translator$>()('org.dxos.app-framework.capability.translator');
 
 /**
  * Effect service for the {@link Translator} capability, consumable via `yield* TranslatorService`
  * once {@link translatorLayer} is provided.
  */
-export class TranslatorService extends Context.Tag('@dxos/app-toolkit/TranslatorService')<
-  TranslatorService,
-  Translator$
->() {}
+export class TranslatorService extends Context.Service<TranslatorService, Translator$>()(
+  '@dxos/app-toolkit/TranslatorService',
+) {}
 
 /**
  * Layer that resolves {@link TranslatorService} from the {@link Translator} capability.
@@ -133,28 +135,32 @@ export type StatsPanelStore = Readonly<{
 /**
  * @category Capability
  */
-export const StatsPanel = Capability$.make<StatsPanelStore>('org.dxos.app-toolkit.capability.statsPanel');
+export const StatsPanel = Capability$.makeSingleton<StatsPanelStore>()('org.dxos.app-toolkit.capability.statsPanel');
 
-export type AppGraph = Readonly<{
-  graph: Graph.ExpandableGraph;
-  explore: typeof GraphBuilder.explore;
-}>;
+/**
+ * The graph builder instance. Its `graph` is the reactive node tree; the builder also carries the
+ * `urlKey` declarations and node→extension provenance that URL resolution (`@dxos/app-graph`'s
+ * `path-resolution.ts`) reads and reverse-maps — neither derivable from `graph` alone.
+ */
+export type AppGraph = GraphBuilder.GraphBuilder;
 
 /**
  * @category Capability
  */
-export const AppGraph = Capability$.make<AppGraph>('org.dxos.app-framework.capability.appGraph');
+export const AppGraph = Capability$.makeSingleton<AppGraph>()('org.dxos.app-framework.capability.appGraph');
 
 /**
  * @category Capability
  */
-export const AppGraphBuilder = Capability$.make<BuilderExtensions>('org.dxos.app-framework.capability.appGraphBuilder');
+export const AppGraphBuilder = Capability$.make<BuilderExtensions>()(
+  'org.dxos.app-framework.capability.appGraphBuilder',
+);
 
 export type Settings = {
   prefix: string;
   // Settings are persisted as plain atoms, so the schema is always context-free
   // (`R = never`); this lets a schema-driven form decode/validate it directly.
-  schema: Schema$.Schema.AnyNoContext;
+  schema: Schema$.Codec<any, any, never, never>;
   atom: Atom.Writable<any>;
 };
 
@@ -173,35 +179,36 @@ export const isSettings = (value: unknown): value is Settings =>
 /**
  * @category Capability
  */
-export const Settings = Capability$.make<Settings>('org.dxos.app-framework.capability.settings');
+export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.capability.settings');
 
 export type Schema = ReadonlyArray<Type.AnyEntity>;
 
 /**
  * @category Capability
  */
-export const Schema = Capability$.make<Schema>('org.dxos.app-framework.capability.schema');
+export const Schema = Capability$.make<Schema>()('org.dxos.app-framework.capability.schema');
 
 export type Toolkit = OpaqueToolkit.OpaqueToolkit;
 
 /**
  * @category Capability
  */
-export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capability.aiToolkit');
+export const Toolkit = Capability$.make<Toolkit>()('org.dxos.app-framework.capability.aiToolkit');
 
 /**
  * @category Capability
  */
-export const SkillDefinition = Capability$.make<Skill.Definition>('org.dxos.app-framework.capability.skillDefinition');
+export const SkillDefinition = Capability$.make<Skill.Definition>()(
+  'org.dxos.app-framework.capability.skillDefinition',
+);
 
 /**
  * A static asset bundled with a plugin's published package, exposed for
  * other plugins to read.
  *
  * Contributors import the raw file (e.g. `import spec from '../PLUGIN.mdl?raw'`)
- * and contribute it via this capability on
- * {@link AppActivationEvents.SetupPluginAssets}. Consumers read all
- * contributions with `Capability.getAll(AppCapabilities.PluginAsset)`.
+ * and contribute it via this capability from a dependency-mode module. Consumers
+ * read all contributions with `Capability.getAll(AppCapabilities.PluginAsset)`.
  */
 export type PluginAsset = Readonly<{
   /** Owning plugin id (matches `Plugin.Meta.id`). */
@@ -217,7 +224,7 @@ export type PluginAsset = Readonly<{
 /**
  * @category Capability
  */
-export const PluginAsset = Capability$.make<PluginAsset>('org.dxos.app-framework.capability.pluginAsset');
+export const PluginAsset = Capability$.make<PluginAsset>()('org.dxos.app-framework.capability.pluginAsset');
 
 /**
  * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is
@@ -226,14 +233,14 @@ export const PluginAsset = Capability$.make<PluginAsset>('org.dxos.app-framework
  */
 export const AiModelResolver = Capability$.make<
   Layer$.Layer<AiModelResolver$.AiModelResolver, never, Credential.CredentialsService>
->('org.dxos.app-framework.capability.aiModelResolver');
+>()('org.dxos.app-framework.capability.aiModelResolver');
 
 export type FileUploader = (db: Database.Database, file: File) => Promise<FileInfo | undefined>;
 
 /**
  * @category Capability
  */
-export const FileUploader = Capability$.make<FileUploader>('org.dxos.app-framework.capability.fileUploader');
+export const FileUploader = Capability$.make<FileUploader>()('org.dxos.app-framework.capability.fileUploader');
 
 export type AnchorSort = {
   key: string;
@@ -243,7 +250,19 @@ export type AnchorSort = {
 /**
  * @category Capability
  */
-export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchorSort');
+export const AnchorSort = Capability$.make<AnchorSort>()('org.dxos.app-framework.capability.anchorSort');
+
+/** Anchor→text resolution contributed per typename by plugins whose objects support cursor-range anchors. */
+export type AnchorResolver = Readonly<{
+  key: string;
+  /** Resolve an anchor (`"${fromCursor}:${toCursor}"`) to the text it spans, or `undefined` when unresolvable. */
+  getText: (obj: any, anchor: string) => string | undefined;
+}>;
+
+/**
+ * @category Capability
+ */
+export const AnchorResolver = Capability$.make<AnchorResolver>()('org.dxos.app-framework.capability.anchorResolver');
 
 /** Text content extractor contributed per typename by plugins that support text extraction. */
 export type TextContent = Readonly<{
@@ -254,21 +273,20 @@ export type TextContent = Readonly<{
 /**
  * @category Capability
  */
-export const TextContent = Capability$.make<TextContent>('org.dxos.app-framework.capability.textContent');
+export const TextContent = Capability$.make<TextContent>()('org.dxos.app-framework.capability.textContent');
 
 /** Comment configuration contributed per typename by plugins that support commenting. */
 export type CommentConfig = Readonly<{
   id: string;
   comments: 'anchored' | 'unanchored';
   selectionMode?: string;
-  getAnchorLabel?: (obj: any, anchor: string) => string | undefined;
   scrollToAnchor?: Operation.Definition.Any;
 }>;
 
 /**
  * @category Capability
  */
-export const CommentConfig = Capability$.make<CommentConfig>('org.dxos.app-framework.capability.commentConfig');
+export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
 
 export type NavigationTarget = {
   /** Navigation path usable with the Open operation. */
@@ -277,6 +295,14 @@ export type NavigationTarget = {
   label: string;
   /** Object type. */
   type: string;
+  /**
+   * Sort order among the targets resolved for one query. A resolver that only produces a generic path —
+   * the database subtree, which guarantees every ECHO object *a* path but is not where the tree shows
+   * it — declares `Position.last`, so a resolver that knows the object's canonical home (its collection,
+   * a type section) is preferred. Only the resolver knows how specific its answer is, hence a declared
+   * position rather than path sniffing by the caller.
+   */
+  position?: Position.Position;
 };
 
 export type NavigationQuery = {
@@ -287,12 +313,47 @@ export type NavigationQuery = {
  * Resolves a query to navigation targets.
  * Each plugin interprets the query and returns matching targets.
  * When called without a query, returns the plugin's default navigable pages.
+ *
+ * Requires `Database.Service`: a resolver turns an object URI into a path, which means loading the
+ * object. The caller derives the database from the query's space and provides the layer — see
+ * `NavigationOperation.ResolveNavigationTargets`, the one entry point that runs every resolver.
  * @category Capability
  */
-export type NavigationTargetResolver = (query?: NavigationQuery) => Effect$.Effect<NavigationTarget[]>;
+export type NavigationTargetResolver = (
+  query?: NavigationQuery,
+) => Effect$.Effect<NavigationTarget[], never, Database.Service>;
 
-export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
+export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>()(
   'org.dxos.app-framework.capability.navigationTargetResolver',
+);
+
+/**
+ * What a {@link NavigationTargetLoader} was able to determine about a target.
+ *
+ * Three-valued because the caller's responses to a missing node are opposites: it waits for one that
+ * is merely late and fails fast on one that is absent. `absent` is therefore reserved for a store
+ * that actually answered — an unreachable edge or an unparseable id is `unknown`.
+ * @category Capability
+ */
+export type NavigationTargetVerdict = 'exists' | 'absent' | 'unknown';
+
+/**
+ * Loads/verifies a navigation target by its `(spaceId, entityId)` so graph resolution can materialize
+ * its node. Contributed by the plugin that owns object storage (plugin-client), consumed by layout
+ * plugins — this is the abstraction that keeps layout plugins from depending on the client for
+ * loading. `load` loads the object into local ECHO when present locally (so a URL-driven restore
+ * materializes the plank's node), and resolves `exists` if the object is present locally or, as a
+ * fallback, remotely. A remote-only object resolves `exists` but cannot render until it replicates
+ * locally.
+ * @category Capability
+ */
+export type NavigationTargetLoader = Readonly<{
+  id: string;
+  load: (target: { spaceId: string; entityId: string }) => Effect$.Effect<NavigationTargetVerdict>;
+}>;
+
+export const NavigationTargetLoader = Capability$.make<NavigationTargetLoader>()(
+  'org.dxos.app-framework.capability.navigationTargetLoader',
 );
 
 /**
@@ -303,21 +364,8 @@ export const NavigationTargetResolver = Capability$.make<NavigationTargetResolve
  */
 export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
 
-export const NavigationHandler = Capability$.make<NavigationHandler>(
+export const NavigationHandler = Capability$.make<NavigationHandler>()(
   'org.dxos.app-toolkit.capability.navigationHandler',
-);
-
-/**
- * Resolves a qualified graph path to a DXN.
- * Each plugin recognizes its own path patterns and returns the corresponding DXN.
- * Returns None if the path is not recognized by this resolver.
- * Used to validate navigation targets against remote services (e.g., edge).
- * @category Capability
- */
-export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<EID.EID>>;
-
-export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
-  'org.dxos.app-framework.capability.navigationPathResolver',
 );
 
 /** A transient progress monitor handle — the update side of one registry entry. */
@@ -349,4 +397,6 @@ export type ProgressRegistry = Readonly<{
 /**
  * @category Capability
  */
-export const ProgressRegistry = Capability$.make<ProgressRegistry>('org.dxos.app-toolkit.capability.progressRegistry');
+export const ProgressRegistry = Capability$.makeSingleton<ProgressRegistry>()(
+  'org.dxos.app-toolkit.capability.progressRegistry',
+);

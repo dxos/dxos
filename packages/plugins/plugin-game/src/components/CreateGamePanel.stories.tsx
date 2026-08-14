@@ -7,12 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN, Obj, Type } from '@dxos/echo';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { type GameVariant } from '#types';
+import { GameCapabilities } from '#types';
 
 import { CreateGamePanel } from './CreateGamePanel';
 
@@ -20,15 +21,15 @@ import { CreateGamePanel } from './CreateGamePanel';
 // the picker reads (label, icon, inputSchema). createVariant is a no-op since we
 // don't actually submit through a database here.
 const Card = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
 }).pipe(Type.makeObject(DXN.make('org.dxos.story.cards', '0.1.0')));
 
 const Dice = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-  faces: Schema.optional(Schema.Number.annotations({ title: 'Number of faces' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  faces: Schema.optional(Schema.Number.annotate({ title: 'Number of faces' })),
 }).pipe(Type.makeObject(DXN.make('org.dxos.story.dice', '0.1.0')));
 
-const dummyVariants: GameVariant[] = [
+const dummyVariants: GameCapabilities.GameVariant[] = [
   {
     id: 'org.dxos.story.cards',
     label: 'Card game',
@@ -81,7 +82,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-game/components/CreateGamePanel',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager()],
   parameters: { layout: 'fullscreen', translations },
 } satisfies Meta<typeof DefaultStory>;
 

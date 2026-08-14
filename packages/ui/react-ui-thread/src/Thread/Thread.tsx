@@ -36,10 +36,11 @@ import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
+import { translationKey } from '#translations';
+
 import { command } from '../command';
 import { ThreadContextProvider, useThreadContext } from '../context';
 import { Message } from '../Message';
-import { translationKey } from '../translations';
 import { type MessageMetadata, type ThreadContextValue } from '../types';
 
 const getMessageId = (message: MessageType.Message) => Obj.getURI(message);
@@ -66,6 +67,10 @@ const ThreadRoot = ({
   editable,
   onMessageDelete,
   onAcceptProposal,
+  onAcceptChange,
+  onRejectChange,
+  onMessageSelect,
+  currentMessageId,
 }: ThreadRootProps) => {
   // Composer focus handler registered by Thread.Textbox; invoked by Thread.Header's caret.
   const composerFocus = useRef<(() => void) | undefined>(undefined);
@@ -86,6 +91,10 @@ const ThreadRoot = ({
       focusComposer={focusComposer}
       onMessageDelete={onMessageDelete}
       onAcceptProposal={onAcceptProposal}
+      onAcceptChange={onAcceptChange}
+      onRejectChange={onRejectChange}
+      onMessageSelect={onMessageSelect}
+      currentMessageId={currentMessageId}
     >
       {children}
     </ThreadContextProvider>

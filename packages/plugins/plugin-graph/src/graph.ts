@@ -5,9 +5,13 @@
 import * as Effect from 'effect/Effect';
 import * as Record from 'effect/Record';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
@@ -16,10 +20,18 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
+
+    // Live view: extensions contributed by dependency-mode modules (including those enabled
+    // later in the session) reach this subscription reactively.
     const extensionsByModuleAtom = yield* Capability.atomByModule(AppCapabilities.AppGraphBuilder);
 
-    const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry);
+    // The grammar's fixed tiers, configured here rather than declared by an extension: no connector
+    // produces their nodes (see `GraphBuilder.UrlGrammar`).
+    const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry, {
+      anchorKey: UrlPath.WORKSPACE_KEY,
+      linkedKey: UrlPath.COMPANION_KEY,
+    });
     // const interval = setInterval(() => {
     //   localStorage.setItem(KEY, builder.graph.pickle());
     // }, 5_000);
@@ -30,7 +42,10 @@ export default Capability.makeModule(
         const next: GraphBuilder.BuilderExtension[] = [];
         for (const [moduleId, extensions] of Object.entries(extensionsByModule)) {
           for (const ext of GraphBuilder.flattenExtensions(extensions)) {
-            next.push({ ...ext, id: `${moduleId}.${ext.id}` });
+            next.push({
+              ...ext,
+              id: `${moduleId}.${ext.id}`,
+            });
           }
         }
         const current = Record.values(registry.get(builder.extensions));
@@ -42,19 +57,17 @@ export default Capability.makeModule(
     );
 
     // await builder.initialize();
-    void Graph.expand(builder.graph, Node.RootId, 'child');
+    void Graph.expandSync(builder.graph, Node.RootId, 'child');
 
     setupDevtools(builder.graph);
 
-    return Capability.contributes(
-      AppCapabilities.AppGraph,
-      { graph: builder.graph, explore: GraphBuilder.explore },
-      () =>
-        Effect.sync(() => {
-          // clearInterval(interval);
-          unsubscribe();
-        }),
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        // clearInterval(interval);
+        unsubscribe();
+      }),
     );
+    return Capability.contribute(AppCapabilities.AppGraph, builder);
   }),
 );
 

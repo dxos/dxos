@@ -6,8 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Credential, Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
@@ -34,29 +35,29 @@ export const Generate = Operation.make({
     icon: 'ph--sparkle--regular',
   },
   input: Schema.Struct({
-    artifact: Ref.Ref(Artifact.Artifact).annotations({
+    artifact: Ref.Ref(Artifact.Artifact).annotate({
       description: 'Reference to the Artifact whose prompt drives generation.',
     }),
     provider: Schema.optional(
-      Schema.String.annotations({ description: 'GenerationService id; defaults to the first for the kind.' }),
+      Schema.String.annotate({ description: 'GenerationService id; defaults to the first for the kind.' }),
     ),
     name: Schema.optional(
-      Schema.String.annotations({ description: 'Human label for the produced variant (defaults from the prompt).' }),
+      Schema.String.annotate({ description: 'Human label for the produced variant (defaults from the prompt).' }),
     ),
     config: Schema.optional(
-      Schema.Record({ key: Schema.String, value: Schema.Unknown }).annotations({
+      Schema.Record(Schema.String, Schema.Unknown).annotate({
         description: 'Kind-specific request config (recorded on the produced variant).',
       }),
     ),
     variant: Schema.optional(
-      Ref.Ref(Variant.Variant).annotations({
+      Ref.Ref(Variant.Variant).annotate({
         description: 'Pending variant to resume (awaits its in-flight jobId; no re-enqueue).',
       }),
     ),
-    count: Schema.optional(Schema.Number.annotations({ description: 'Number of variants to generate (default 1).' })),
+    count: Schema.optional(Schema.Number.annotate({ description: 'Number of variants to generate (default 1).' })),
   }),
   output: Schema.Struct({
-    count: Schema.Number.annotations({ description: 'Number of variants appended.' }),
+    count: Schema.Number.annotate({ description: 'Number of variants appended.' }),
   }),
   services: [Database.Service, Capability.Service, Credential.CredentialsService],
 });

@@ -4,9 +4,9 @@
 
 import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
-import * as Runtime from 'effect/Runtime';
+import * as Context from 'effect/Context';
 
-import { Event, UpdateScheduler } from '@dxos/async';
+import { Event, Trigger, UpdateScheduler, sleep } from '@dxos/async';
 import { type Struct } from '@dxos/codec-protobuf';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -22,6 +22,15 @@ const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
 
 /**
+ * Passes {@link RepoProxy.flush} makes before reporting a batch as unsendable. A failed
+ * `_sendUpdates` re-queues its batch, so each pass is a fresh attempt at the same work.
+ */
+const FLUSH_ATTEMPTS = 3;
+
+/** Backoff between {@link FLUSH_ATTEMPTS}, multiplied by the attempt number. */
+const FLUSH_RETRY_DELAY_MS = 50;
+
+/**
  * A proxy (thin client) to the Automerge Repo.
  * Inspired by Automerge's `Repo`.
  */
@@ -34,6 +43,13 @@ export class RepoProxy extends Resource {
    * {@link _subscriptionId}).
    */
   private _subscriptionCleanup?: () => void = undefined;
+
+  /**
+   * Woken by the first batch the host sends on `DataService.subscribe`, which it emits once the
+   * subscription is registered. `updateSubscription` before that point fails with
+   * "Subscription not found", since the host registers asynchronously.
+   */
+  private _subscriptionReady = new Trigger();
 
   private readonly _pendingCreations = new Map<string, Promise<void>>();
 
@@ -55,6 +71,14 @@ export class RepoProxy extends Resource {
   private _sendUpdatesJob?: UpdateScheduler = undefined;
 
   /**
+   * How a failed batch becomes visible to {@link flush} — `_sendUpdates` cannot throw. Each flush
+   * attempt compares the counter before and after, so concurrent flushes cannot mask each other's
+   * failure (a single cleared field would).
+   */
+  private _sendFailureCount = 0;
+  private _lastSendError: Error | undefined = undefined;
+
+  /**
    * Flag to indicate reconnection is in progress.
    * When true, in-flight _sendUpdates operations should abort early.
    */
@@ -70,7 +94,7 @@ export class RepoProxy extends Resource {
 
   constructor(
     private _dataService: DataService.Client,
-    private readonly _runtime: Runtime.Runtime<never>,
+    private readonly _runtime: Context.Context<never>,
     private readonly _spaceId: SpaceId,
   ) {
     super();
@@ -102,11 +126,32 @@ export class RepoProxy extends Resource {
     return this._createHandle<T>({ initialValue });
   }
 
+  /**
+   * Waits until every pending document creation and update has been handed to the host.
+   *
+   * Throws if a batch could not be sent. `_sendUpdates` re-queues a failed batch for the next pass,
+   * but a short-lived writer (a server-side ECHO client in a worker invocation) is disposed as soon
+   * as `flush()` resolves — so resolving over a re-queued batch loses the write silently.
+   */
   async flush(): Promise<void> {
     // Wait for all creations to be completed.
     await Promise.all([...this._pendingCreations.values()]);
-    // Wait for all updates to be sent.
-    await this._sendUpdatesJob?.runBlocking();
+    // Wait for all updates to be sent, retrying a failed batch before giving up on it.
+    for (let attempt = 1; ; attempt++) {
+      const failuresBefore = this._sendFailureCount;
+      await this._sendUpdatesJob?.runBlocking();
+      if (this._sendFailureCount === failuresBefore) {
+        return;
+      }
+      // Closing makes the remaining work moot.
+      if (this._lifecycleState === LifecycleState.CLOSED) {
+        return;
+      }
+      if (attempt >= FLUSH_ATTEMPTS) {
+        throw this._lastSendError ?? new Error('Failed to send document updates.');
+      }
+      await sleep(FLUSH_RETRY_DELAY_MS * attempt);
+    }
   }
 
   protected override async _open(): Promise<void> {
@@ -114,9 +159,10 @@ export class RepoProxy extends Resource {
       maxFrequency: MAX_UPDATE_FREQ,
     });
     // TODO(dmaretskyi): Set proper space id.
+    this._subscriptionReady.reset();
     this._subscriptionCleanup = subscribeStream(
       this._runtime,
-      this._dataService.DataService.subscribe({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
+      this._dataService['DataService.subscribe']({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
       { onData: (updates) => this._receiveUpdate(updates) },
     );
   }
@@ -165,23 +211,20 @@ export class RepoProxy extends Resource {
     this._subscriptionCleanup?.();
 
     // Create new subscription.
-    // TODO(dxos): The old PbStream path awaited `waitUntilReady()` here before `updateSubscription`
-    // below, because the host registers the subscription asynchronously (after `synchronizer.open()`).
-    // The effect-rpc Stream has no readiness channel yet, so on reconnect `updateSubscription` can
-    // race ahead of registration and fail with "Subscription not found". Add an in-band ready
-    // sentinel to the `subscribe` stream and await it here before re-adding documents.
+    this._subscriptionReady.reset();
     this._subscriptionCleanup = subscribeStream(
       this._runtime,
-      this._dataService.DataService.subscribe({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
+      this._dataService['DataService.subscribe']({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
       { onData: (updates) => this._receiveUpdate(updates) },
     );
 
     // Re-sync all existing documents.
     const documentIds = Object.keys(this._handles);
     if (documentIds.length > 0) {
+      await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
       await runServiceCall(
         this._runtime,
-        this._dataService.DataService.updateSubscription({
+        this._dataService['DataService.updateSubscription']({
           subscriptionId: this._subscriptionId,
           addIds: documentIds,
           removeIds: [],
@@ -287,7 +330,7 @@ export class RepoProxy extends Resource {
       handle._internalId,
       runServiceCall(
         this._runtime,
-        this._dataService.DataService.createDocument({
+        this._dataService['DataService.createDocument']({
           spaceId: this._spaceId,
           initialValue: initialValue as Struct,
         }),
@@ -314,6 +357,9 @@ export class RepoProxy extends Resource {
   }
 
   private _receiveUpdate({ updates }: BatchedDocumentUpdates): void {
+    // The host opens every subscription with an empty batch once it is registered; a real update
+    // always carries at least one entry, so this is unambiguous.
+    this._subscriptionReady.wake();
     if (!updates) {
       return;
     }
@@ -363,9 +409,14 @@ export class RepoProxy extends Resource {
     this._pendingUpdateIds.clear();
 
     try {
+      await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
       await runServiceCall(
         this._runtime,
-        this._dataService.DataService.updateSubscription({ subscriptionId: this._subscriptionId, addIds, removeIds }),
+        this._dataService['DataService.updateSubscription']({
+          subscriptionId: this._subscriptionId,
+          addIds,
+          removeIds,
+        }),
         { timeout: RPC_TIMEOUT },
       );
 
@@ -391,7 +442,7 @@ export class RepoProxy extends Resource {
       if (updates.length > 0) {
         await runServiceCall(
           this._runtime,
-          this._dataService.DataService.update({ subscriptionId: this._subscriptionId, updates }),
+          this._dataService['DataService.update']({ subscriptionId: this._subscriptionId, updates }),
           { timeout: RPC_TIMEOUT },
         );
         if (this._lifecycleState === LifecycleState.CLOSED) {
@@ -407,6 +458,11 @@ export class RepoProxy extends Resource {
     } catch (err) {
       // Don't restore pending updates if generation changed - this task is abandoned.
       const isAbandoned = generation !== this._generation;
+      // Recorded even when the error is not raised below: `flush` still needs to know.
+      if (!isAbandoned) {
+        this._lastSendError = err as Error;
+        this._sendFailureCount++;
+      }
       if (!isAbandoned) {
         // Restore the state of pending updates if the RPC call failed.
         addIds.forEach((id) => this._pendingAddIds.add(id));

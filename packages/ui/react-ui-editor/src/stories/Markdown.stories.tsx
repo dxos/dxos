@@ -48,7 +48,7 @@ export const Headings: Story = {
 
 export const Links: Story = {
   render: () => (
-    <EditorStory text={join(content.links, content.footer)} extensions={[linkTooltip(renderLinkTooltip)]} />
+    <EditorStory text={join(content.links, content.footer)} extensions={[linkTooltip({ render: renderLinkTooltip })]} />
   ),
 };
 

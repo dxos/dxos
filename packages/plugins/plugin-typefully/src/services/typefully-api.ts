@@ -2,23 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientError from '@effect/platform/HttpClientError';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientError from 'effect/unstable/http/HttpClientError';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { proxyFetchLegacy } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
-import { Publisher } from '@dxos/plugin-blogger/types';
-import { type Connection } from '@dxos/plugin-connector/types';
+import { Connection } from '@dxos/link';
+import * as Publisher from '@dxos/plugin-blogger/Publisher';
 
 import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
 
@@ -42,10 +41,9 @@ type TypefullyCredentialsValue = {
  * explicit parameter. Typefully uses a static API key (not OAuth), stored on the
  * connection's linked `AccessToken`.
  */
-export class TypefullyCredentials extends Context.Tag('@dxos/plugin-typefully/TypefullyCredentials')<
-  TypefullyCredentials,
-  TypefullyCredentialsValue
->() {
+export class TypefullyCredentials extends Context.Service<TypefullyCredentials, TypefullyCredentialsValue>()(
+  '@dxos/plugin-typefully/TypefullyCredentials',
+) {
   static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(
       TypefullyCredentials,
@@ -71,13 +69,11 @@ const TypefullyPlatformResponse = Schema.Struct({
   posts: Schema.optional(Schema.NullOr(Schema.Array(TypefullyPostResponse))),
 });
 const TypefullyDraftResponse = Schema.Struct({
-  id: Schema.Union(Schema.Number, Schema.String),
+  id: Schema.Union([Schema.Number, Schema.String]),
   draft_title: Schema.optional(Schema.NullOr(Schema.String)),
   scheduled_date: Schema.optional(Schema.NullOr(Schema.String)),
   // Platform values can be `null` for platforms the draft doesn't target (e.g. `"x_article": null`).
-  platforms: Schema.optional(
-    Schema.NullOr(Schema.Record({ key: Schema.String, value: Schema.NullOr(TypefullyPlatformResponse) })),
-  ),
+  platforms: Schema.optional(Schema.NullOr(Schema.Record(Schema.String, Schema.NullOr(TypefullyPlatformResponse)))),
 });
 type TypefullyDraftResponse = Schema.Schema.Type<typeof TypefullyDraftResponse>;
 
@@ -88,7 +84,7 @@ const TypefullyListResponse = Schema.Struct({ results: Schema.Array(TypefullyDra
 const SocialSetsResponse = Schema.Struct({
   results: Schema.Array(
     Schema.Struct({
-      id: Schema.Union(Schema.Number, Schema.String),
+      id: Schema.Union([Schema.Number, Schema.String]),
       name: Schema.optional(Schema.NullOr(Schema.String)),
       team: Schema.optional(
         Schema.NullOr(Schema.Struct({ id: Schema.String, name: Schema.optional(Schema.NullOr(Schema.String)) })),
@@ -125,26 +121,25 @@ const toDraftBody = (input: Publisher.PublisherDraftInput): Record<string, unkno
 
 type TypefullyEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException | Publisher.PublisherError,
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | Publisher.PublisherError,
   HttpClient.HttpClient | TypefullyCredentials
 >;
 
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException | Publisher.PublisherError,
+  error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | Publisher.PublisherError,
 ): boolean => {
-  if (error instanceof ParseResult.ParseError || error instanceof Publisher.PublisherError) {
+  if (error instanceof Schema.SchemaError || error instanceof Publisher.PublisherError) {
     return false;
   }
-  if (Cause.isTimeoutException(error)) {
+  if (Cause.isTimeoutError(error)) {
     return true;
   }
-  if (error._tag === 'RequestError') {
+  // v4 hangs the specific failure off `HttpClientError.reason`: a transport-level failure is always
+  // worth retrying, and a response failure only on 429/5xx.
+  if (error.reason._tag !== 'StatusCodeError') {
     return true;
   }
-  if (error.reason !== 'StatusCode') {
-    return true;
-  }
-  const status = error.response.status;
+  const status = error.reason.response.status;
   return status === 429 || (status >= 500 && status <= 599);
 };
 
@@ -158,7 +153,7 @@ const withAuth = (request: HttpClientRequest.HttpClientRequest, creds: Typefully
 
 /** Retry transient failures (429/5xx, network, timeout); never retry a decode/publisher error. */
 const TYPEFULLY_RETRY = {
-  schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+  schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
   while: shouldRetry,
 };
 
@@ -166,11 +161,13 @@ const TYPEFULLY_RETRY = {
  * Authenticate, issue, decode, time out and retry a Typefully request. Retries
  * transient failures (429/5xx, network, timeout); never retries a decode error.
  */
-const execute = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Schema<T>): TypefullyEffect<T> =>
+const execute = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Codec<T>): TypefullyEffect<T> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const creds = yield* TypefullyCredentials;
-    const client = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const client = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
     return yield* client.execute(withAuth(request, creds)).pipe(
       // Read the body as text first so a shape mismatch surfaces the actual payload (Typefully's
       // response shape is under-documented) instead of an opaque "Expected ReadonlyArray<…>".
@@ -181,7 +178,7 @@ const execute = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema
             catch: () => new Publisher.PublisherError(`Typefully returned non-JSON: ${text.slice(0, 500)}`),
           }).pipe(
             Effect.flatMap((json) =>
-              Schema.decodeUnknown(schema)(json).pipe(
+              Schema.decodeUnknownEffect(schema)(json).pipe(
                 Effect.mapError(
                   (error) =>
                     new Publisher.PublisherError(
@@ -205,7 +202,7 @@ const executeVoid = (request: HttpClientRequest.HttpClientRequest): TypefullyEff
     const httpClient = yield* HttpClient.HttpClient;
     const creds = yield* TypefullyCredentials;
     const client = httpClient.pipe(
-      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
     yield* client
@@ -239,7 +236,7 @@ const createDraftEffect = (input: Publisher.PublisherDraftInput): TypefullyEffec
     Effect.flatMap((socialSetId) =>
       execute(
         HttpClientRequest.post(`${TYPEFULLY_API_URL}/social-sets/${socialSetId}/drafts`).pipe(
-          HttpClientRequest.bodyUnsafeJson(toDraftBody(input)),
+          HttpClientRequest.bodyJsonUnsafe(toDraftBody(input)),
         ),
         TypefullyDraftResponse,
       ),
@@ -256,7 +253,7 @@ const updateDraftEffect = (
     Effect.flatMap((socialSetId) =>
       execute(
         HttpClientRequest.patch(`${TYPEFULLY_API_URL}/social-sets/${socialSetId}/drafts/${id}`).pipe(
-          HttpClientRequest.bodyUnsafeJson(toDraftBody(input)),
+          HttpClientRequest.bodyJsonUnsafe(toDraftBody(input)),
         ),
         TypefullyDraftResponse,
       ),
@@ -280,7 +277,7 @@ const getDraftEffect = (id: string): TypefullyEffect<Publisher.PublisherDraft> =
 const deleteDraftEffect = (id: string): TypefullyEffect<void> =>
   resolveSocialSetIdEffect().pipe(
     Effect.flatMap((socialSetId) =>
-      executeVoid(HttpClientRequest.del(`${TYPEFULLY_API_URL}/social-sets/${socialSetId}/drafts/${id}`)),
+      executeVoid(HttpClientRequest.make('DELETE')(`${TYPEFULLY_API_URL}/social-sets/${socialSetId}/drafts/${id}`)),
     ),
   );
 

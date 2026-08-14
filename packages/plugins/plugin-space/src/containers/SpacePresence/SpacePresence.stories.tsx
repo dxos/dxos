@@ -6,7 +6,6 @@ import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
-import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -15,9 +14,10 @@ import { FullPresence, type Member, type MemberPresenceProps, SmallPresence } fr
 
 const viewers = (n: number, currentlyAttended = true): Member[] =>
   Array.from({ length: n }, () => ({
-    role: HaloSpaceMember.Role.ADMIN,
-    identity: { did: IdentityDid.random(), identityKey: PublicKey.random() },
-    presence: SpaceMember.PresenceState.ONLINE,
+    role: 'admin',
+    did: IdentityDid.random(),
+    identityKey: PublicKey.random().toHex(),
+    online: true,
     lastSeen: Date.now(),
     currentlyAttended,
   }));

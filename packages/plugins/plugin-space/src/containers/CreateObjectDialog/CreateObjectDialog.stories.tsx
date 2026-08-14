@@ -55,8 +55,8 @@ const DefaultStory = () => {
 
 const mockInputSchema = Schema.Struct({
   id: Schema.String,
-  name: Schema.String.annotations({ title: 'Name' }),
-  description: Schema.optional(Schema.String.annotations({ title: 'Description' })),
+  name: Schema.String.annotate({ title: 'Name' }),
+  description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
 });
 
 const mockMetadata: Metadata = {

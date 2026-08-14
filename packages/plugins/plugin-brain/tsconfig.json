@@ -34,6 +34,12 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
+      "path": "../../core/compute/pipeline-email"
+    },
+    {
       "path": "../../core/compute/pipeline-rdf"
     },
     {
@@ -49,6 +55,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../sdk/types"
     },
     {
@@ -58,7 +67,19 @@
       "path": "../../ui/react-ui-rdf"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-inbox"
+    },
+    {
+      "path": "../plugin-projects"
+    },
+    {
+      "path": "../plugin-routine"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

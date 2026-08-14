@@ -6,8 +6,8 @@ import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
 import { type Database, Entity, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
-import { useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
 /**

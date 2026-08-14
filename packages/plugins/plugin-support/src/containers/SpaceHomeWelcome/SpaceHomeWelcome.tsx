@@ -2,18 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-import React, { memo, useCallback, useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
-import { AppSpace } from '@dxos/app-toolkit';
-import { Annotation } from '@dxos/echo';
-import { type Space, useObject } from '@dxos/react-client/echo';
+import { useDefaultSpace } from '@dxos/app-toolkit/ui';
+import { type Space } from '@dxos/react-client/echo';
 import { Carousel, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { WelcomeDismissedAnnotation } from '../../annotations';
+import { useWelcomeDismissed } from './use-welcome-dismissed';
 
 const WELCOME_SLIDE = {
   src: 'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/f58459bcdf3a6f3e93644a4e0f39b22a/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2Ff58459bcdf3a6f3e93644a4e0f39b22a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
@@ -25,14 +23,15 @@ type SpaceScopedProps = {
 };
 
 /**
- * Home content contributor: the Welcome carousel on the personal space. Kept mounted (toggled
+ * Home content contributor: the Welcome carousel on the default space. Kept mounted (toggled
  * `hidden` when dismissed) so the cross-origin Stream iframe is not torn down and re-created on
- * every show/hide — that remount froze the UI. Renders nothing on non-personal spaces.
+ * every show/hide — that remount froze the UI. Renders nothing on other spaces.
  */
 export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
-  const isPersonal = !!space && AppSpace.isPersonalSpace(space);
-  const [dismissed] = useWelcomeDismissed(space);
-  if (!isPersonal) {
+  const defaultSpace = useDefaultSpace();
+  const isDefault = !!space && space.id === defaultSpace?.id;
+  const [dismissed] = useWelcomeDismissed();
+  if (!isDefault) {
     return null;
   }
 
@@ -44,26 +43,7 @@ export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
 };
 
 /**
- * Reactively read the per-space "welcome dismissed" annotation (synced via space properties) and a
- * setter that persists it. `useObject` subscribes to the properties object, so the Hide button, the
- * Settings "Show welcome page" action, and other devices all re-render live.
- */
-export const useWelcomeDismissed = (space?: Space): [boolean, (value: boolean) => void] => {
-  const spaceProperties = useMemo(() => space?.properties, [space]);
-  const [properties, updateProperties] = useObject(spaceProperties);
-  const dismissed = properties
-    ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
-    : false;
-  const setDismissed = useCallback(
-    (value: boolean) => updateProperties((current) => Annotation.set(current, WelcomeDismissedAnnotation, value)),
-    [updateProperties],
-  );
-
-  return [dismissed, setDismissed];
-};
-
-/**
- * Welcome content (personal space): plugin showcase carousel. The guided-tour and dismiss actions
+ * Welcome content (default space): plugin showcase carousel. The guided-tour and dismiss actions
  * live in the article toolbar (contributed as graph actions; see plugin-support app-graph-builder).
  *
  * Memoized (no props) so the home article's ongoing reactive re-renders (recent-objects query,

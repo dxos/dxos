@@ -5,7 +5,7 @@
 import * as Data from 'effect/Data';
 import type * as Effect from 'effect/Effect';
 
-import { type Subscription } from '#types';
+import { Subscription } from '#types';
 
 export type FetchOptions = {
   corsProxy?: string;

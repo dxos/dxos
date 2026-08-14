@@ -11,28 +11,34 @@ const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 // TODO(dmaretskyi): Make brand.
 // export const EntityIdBrand: unique symbol = Symbol('@dxos/echo/EntityId');
 // export const EntityIdSchema = Schema.ULID.pipe(S.brand(EntityIdBrand));
-const EntityIdSchema = Schema.String.pipe(Schema.pattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i)).annotations({
+const EntityIdSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i))).annotate({
   description: 'A Universally Unique Lexicographically Sortable Identifier',
   pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$',
 });
 
 export type EntityId = typeof EntityIdSchema.Type;
 
-export interface EntityIdClass extends Schema.SchemaClass<EntityId, string> {
+export interface EntityIdClass extends Schema.Codec<EntityId, string> {
+  // `Codec` only pins the decoded and encoded types; it widens the constructor and iso views to
+  // `unknown`, which structural APIs read -- `Schema.Record` rejects a key whose `~type.make` is
+  // not a `PropertyKey`. Pin them back to the id itself.
+  readonly '~type.make': EntityId;
+  readonly 'Iso': EntityId;
+
   /**
    * @returns true if the string is a valid EntityId.
    */
-  isValid(id: string): id is EntityId;
+  'isValid'(id: string): id is EntityId;
 
   /**
    * Creates an EntityId from a string validating the format.
    */
-  make(id: string): EntityId;
+  'make'(id: string): EntityId;
 
   /**
    * Generates a random EntityId.
    */
-  random(): EntityId;
+  'random'(): EntityId;
 
   /**
    * Derives a deterministic ULID-format EntityId from arbitrary seed values.
@@ -55,7 +61,7 @@ export interface EntityIdClass extends Schema.SchemaClass<EntityId, string> {
    * EntityId.deterministic('org.dxos.type.person', '0.1.0'); // stable across runs
    * ```
    */
-  deterministic(...seed: (string | number)[]): EntityId;
+  'deterministic'(...seed: (string | number)[]): EntityId;
 
   /**
    * WARNING: To be used only within tests.
@@ -74,7 +80,7 @@ export interface EntityIdClass extends Schema.SchemaClass<EntityId, string> {
    *
    * NOTE: The generated IDs depend on the order of EntityId.random() calls, which might be affected by test order, scheduling, etc.
    */
-  dangerouslyDisableRandomness(): void;
+  'dangerouslyDisableRandomness'(): void;
 
   /**
    * WARNING: To be used only within tests.
@@ -92,7 +98,7 @@ export interface EntityIdClass extends Schema.SchemaClass<EntityId, string> {
    *
    * NOTE: The generated IDs depend on the order of EntityId.random() calls, which might be affected by test order, scheduling, etc.
    */
-  dangerouslySetSeed(time: number, seed: number): void;
+  'dangerouslySetSeed'(time: number, seed: number): void;
 }
 
 /**
@@ -100,26 +106,28 @@ export interface EntityIdClass extends Schema.SchemaClass<EntityId, string> {
  *
  * Follows ULID spec.
  */
-export const EntityId: EntityIdClass = class extends EntityIdSchema {
-  static #factory: ULIDFactory = monotonicFactory();
-  static #seedTime: number | undefined = undefined;
+// Effect 4 schemas are values rather than extensible classes, so the statics are merged onto the
+// schema and the former private statics become module-level state.
+let factory: ULIDFactory = monotonicFactory();
+let seedTime: number | undefined;
 
-  static isValid(id: string): id is EntityId {
+export const EntityId: EntityIdClass = Object.assign(EntityIdSchema, {
+  isValid: (id: string): id is EntityId => {
     try {
-      Schema.decodeSync(EntityId)(id);
+      Schema.decodeSync(EntityIdSchema)(id);
       return true;
     } catch {
       return false;
     }
-  }
+  },
 
-  static random(): EntityId {
-    return this.#factory(this.#seedTime) as EntityId;
-  }
+  make: (id: string): EntityId => Schema.decodeSync(EntityIdSchema)(id) as EntityId,
 
-  static deterministic(...seed: (string | number)[]): EntityId {
+  random: (): EntityId => factory(seedTime) as EntityId,
+
+  deterministic: (...seed: (string | number)[]): EntityId => {
     const input = seed.map((value) => String(value)).join('\0');
-    // FNV-1a 32-bit ×2 → 64 bits of derived entropy, packed into the 80-bit ULID random component.
+    // FNV-1a 32-bit x2 -> 64 bits of derived entropy, packed into the 80-bit ULID random component.
     let h1 = 0x811c9dc5 >>> 0;
     let h2 = 0x1b873593 >>> 0;
     for (let i = 0; i < input.length; i++) {
@@ -127,7 +135,7 @@ export const EntityId: EntityIdClass = class extends EntityIdSchema {
       h1 = Math.imul(h1 ^ code, 0x01000193) >>> 0;
       h2 = Math.imul(h2 ^ ((code << 13) | (code >>> 3)), 0x01000193) >>> 0;
     }
-    // 10 chars for the time component, all '0' — pins to the ULID epoch (timestamp 0) so the leading
+    // 10 chars for the time component, all '0' -- pins to the ULID epoch (timestamp 0) so the leading
     // char is in [0-7]. The randomness lives entirely in the 16-char random component below.
     const time = ALPHABET[0].repeat(10);
     let bits = (BigInt(h1) << 32n) | BigInt(h2);
@@ -137,18 +145,18 @@ export const EntityId: EntityIdClass = class extends EntityIdSchema {
       bits >>= 5n;
     }
     return (time + rand) as EntityId;
-  }
+  },
 
-  static dangerouslyDisableRandomness() {
-    this.#factory = monotonicFactory(makeTestPRNG());
-    this.#seedTime = new Date('2025-01-01').getTime();
-  }
+  dangerouslyDisableRandomness: (): void => {
+    factory = monotonicFactory(makeTestPRNG());
+    seedTime = new Date('2025-01-01').getTime();
+  },
 
-  static dangerouslySetSeed(time: number, seed: number) {
-    this.#factory = monotonicFactory(makeTestPRNG(seed));
-    this.#seedTime = time;
-  }
-};
+  dangerouslySetSeed: (time: number, seed: number): void => {
+    factory = monotonicFactory(makeTestPRNG(seed));
+    seedTime = time;
+  },
+});
 
 /**
  * Test PRNG that always starts with the same seed and produces the same sequence.

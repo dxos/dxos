@@ -4,13 +4,12 @@
 
 // @import-as-namespace
 
-import { Atom } from '@effect-atom/atom-react';
-import * as Data from 'effect/Data';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { type EntityId } from '@dxos/keys';
+import { EID, type EntityId } from '@dxos/keys';
 
 /**
  * An inverse tag index: a standalone object holding a `Record<tagId, objectId[]>` mapping a tag id
@@ -28,7 +27,7 @@ import { type EntityId } from '@dxos/keys';
 export class TagIndex extends Type.makeObject<TagIndex>(DXN.make('org.dxos.type.tagIndex', '0.1.0'))(
   Schema.Struct({
     /** Inverse index keyed by tag id; the value is the array of object ids carrying that tag. */
-    index: Schema.Record({ key: Schema.String, value: Schema.Array(Obj.ID) }).pipe(FormInputAnnotation.set(false)),
+    index: Schema.Record(Schema.String, Schema.Array(Obj.ID)).pipe(FormInputAnnotation.set(false)),
   }).pipe(Annotation.HiddenAnnotation.set(true)),
 ) {}
 
@@ -60,8 +59,9 @@ export interface Accessor {
 }
 
 type TagKey = readonly [TagIndex, EntityId, string | undefined];
+type TaggedIdsKey = readonly [TagIndex, string];
 
-const tagsEqual = (left: readonly string[], right: readonly string[]): boolean =>
+const arraysEqual = <T>(left: readonly T[], right: readonly T[]): boolean =>
   left.length === right.length && left.every((value, index) => value === right[index]);
 
 const tagFamily = Atom.family((key: TagKey) =>
@@ -86,6 +86,23 @@ const tagFamily = Atom.family((key: TagKey) =>
   }).pipe(Atom.keepAlive),
 );
 
+const taggedIdsFamily = Atom.family((key: TaggedIdsKey) =>
+  Atom.make<readonly EntityId[]>((get) => {
+    const [tagIndex, tagId] = key;
+    const read = (): readonly EntityId[] => bind(tagIndex).objects(tagId);
+    let previous = read();
+    const unsubscribe = Obj.subscribe(tagIndex, () => {
+      const next = read();
+      if (!arraysEqual(next, previous)) {
+        previous = next;
+        get.setSelf(next);
+      }
+    });
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  }).pipe(Atom.keepAlive),
+);
+
 const objectTagsFamily = Atom.family((key: TagKey) =>
   Atom.make<string[]>((get) => {
     const [tagIndex, objectId] = key;
@@ -93,7 +110,7 @@ const objectTagsFamily = Atom.family((key: TagKey) =>
     let previous = read();
     const unsubscribe = Obj.subscribe(tagIndex, () => {
       const next = read();
-      if (!tagsEqual(next, previous)) {
+      if (!arraysEqual(next, previous)) {
         previous = next;
         get.setSelf(next);
       }
@@ -117,10 +134,30 @@ export function atom(
   tagUri?: string | undefined,
 ): ((objectId: EntityId) => Atom.Atom<string[]>) | Atom.Atom<boolean> {
   if (objectId === undefined) {
-    return (objectId: EntityId) => objectTagsFamily(Data.tuple(tagIndex, objectId, undefined));
+    return (objectId: EntityId) => objectTagsFamily([tagIndex, objectId, undefined]);
   }
-  return tagFamily(Data.tuple(tagIndex, objectId, tagUri));
+  return tagFamily([tagIndex, objectId, tagUri]);
 }
+
+/**
+ * Reactive atom for the ids of every object carrying `tagId` — the inverse of {@link atom}'s
+ * per-object family. Re-renders only when that tag's own id set changes (not on unrelated tags).
+ */
+export const taggedIdsAtom = (tagIndex: TagIndex, tagId: string): Atom.Atom<readonly EntityId[]> =>
+  taggedIdsFamily([tagIndex, tagId]);
+
+/**
+ * Reduce a tag id to its space-relative form for membership comparison. A tag id is a {@link Tag}
+ * object's URI; older data (and live writes) store it space-absolute (`echo://<space>/<eid>`), which
+ * does not survive a space import because the space id changes. Comparing by the entity id (via the
+ * relative EID) makes membership space-agnostic, so an absolute query matches a relatively-stored key
+ * and vice versa — with no migration of existing absolute keys. Non-EID ids are returned unchanged.
+ */
+const canonicalTagId = (tagId: string): string => {
+  const eid = EID.tryParse(tagId);
+  const entityId = eid ? EID.getEntityId(eid) : undefined;
+  return entityId ? EID.make({ entityId }) : tagId;
+};
 
 /** Binds an {@link Accessor} over a {@link TagIndex} object; all mutations go through `Obj.update`. */
 export const bind = (tagIndex: TagIndex): Accessor => {
@@ -146,7 +183,22 @@ export const bind = (tagIndex: TagIndex): Accessor => {
     tagIds: () => Object.keys(read()),
     objects: (tagId) => {
       const index = read();
-      return has(index, tagId) ? index[tagId] : [];
+      // Match by canonical (space-relative) id so absolute and relative keys for the same tag both
+      // resolve; union across any mixed-form keys (defensive — a space rarely holds both).
+      const target = canonicalTagId(tagId);
+      const matches = Object.keys(index).filter((key) => canonicalTagId(key) === target);
+      if (matches.length <= 1) {
+        return matches.length === 0 ? [] : index[matches[0]];
+      }
+      const merged: EntityId[] = [];
+      for (const key of matches) {
+        for (const objectId of index[key]) {
+          if (!merged.includes(objectId)) {
+            merged.push(objectId);
+          }
+        }
+      }
+      return merged;
     },
     tags: (objectId) => {
       const index = read();

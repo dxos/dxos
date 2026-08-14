@@ -2,14 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useContext, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Graph from '@dxos/app-graph/Graph';
 import { type Database, Filter, type Obj, type Ref } from '@dxos/echo';
-import { Connection, Connector, CONNECTOR_AUTH_GROUP_ID, connectorAuthActions } from '@dxos/plugin-connector';
-import { Graph, useActionRunner } from '@dxos/plugin-graph';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
+import { Connection } from '@dxos/link';
+import { CONNECTOR_AUTH_GROUP_ID, connectorAuthActions } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Menu, useGraphMenuActions } from '@dxos/react-ui-menu';
 
@@ -19,7 +22,7 @@ import { meta } from '#meta';
 const NODE_ID = 'connector-auth-root';
 
 export type ConnectorAuthMenuProps = {
-  /** Stable ids of the {@link Connector} entries this menu offers: existing connections from any of
+  /** Stable ids of the {@link ConnectorSpec.Connector} entries this menu offers: existing connections from any of
    * them are offered for reuse, and each (with an auth flow) gets a "Connect X" entry. */
   connectorIds: readonly string[];
   /** Omitted when there is no active database yet (e.g. no space selected) — nothing is offered. */
@@ -38,7 +41,7 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget }: Connecto
   const { t } = useTranslation(meta.profile.key);
   const registry = useContext(RegistryContext);
   const runAction = useActionRunner();
-  const allConnectors = useCapabilities(Connector).flat();
+  const allConnectors = useCapabilities(ConnectorSpec.Connector).flat();
   const allConnections = useQuery(db, Filter.type(Connection.Connection));
 
   const graph = useMemo(() => {

@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { FC, PropsWithChildren, ReactNode } from 'react';
+import type { ComponentType, FC, PropsWithChildren, ReactNode } from 'react';
 
+import type { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { MakeOptional, Position } from '@dxos/util';
 
@@ -167,7 +168,9 @@ export type ReactDefinition<T extends Record<string, any> = any> = Readonly<{
   id: string;
   role: string | string[];
   position?: Position.Position;
-  component: ComponentFunction<T>;
+  component: ComponentType<any>;
+  /** Maps the surface props onto the component's props; see {@link TypedReactDefinition.props}. */
+  props?: (props: ComponentProps<T>) => Record<string, any>;
   filter?: (data: Record<string, unknown>, role?: string) => data is T;
 }>;
 
@@ -198,18 +201,47 @@ export type Definition<T extends Record<string, any> = any> = ReactDefinition<T>
 /**
  * Typed React surface definition — role is derived from the filter's bindings.
  */
-export type TypedReactDefinition<T extends Record<string, any> = any> = Readonly<{
-  id: string;
+export type TypedReactDefinition<
+  T extends Record<string, any> = any,
+  P extends Record<string, any> = ComponentProps<T>,
+  Id extends string = string,
+> = Readonly<{
+  id: [DXN.Path<Id>] extends [never]
+    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
+    : Id;
   filter: Filter<T>;
-  component: ComponentFunction<T>;
   position?: Position.Position;
+  /**
+   * Accepts any component type (not just a function) so a container re-exported through a
+   * `lazy()` barrel as `ComponentType<any>` can be registered without a cast.
+   */
+  component: ComponentType<P>;
+  /**
+   * Maps the surface props onto the component's own props, so a plain container can be registered
+   * directly instead of being wrapped in an adapter that unpacks `data`.
+   *
+   * Prefer this over an inline `component: ({ data }) => <Container … />`: the mapper's input type
+   * derives from the same `filter` that defines the surface's data shape, so the unpacking is
+   * checked against the filter rather than restated by hand.
+   *
+   * @example
+   * Surface.create({
+   *   id: 'defaultPluginSettings',
+   *   filter: AppSurface.settings(AppSurface.Article),
+   *   component: DefaultSettings,
+   *   props: ({ data: { subject } }) => ({ subject }),
+   * });
+   */
+  props?: (props: ComponentProps<T>) => P;
 }>;
 
 /**
  * Typed Web Component surface definition.
  */
-export type TypedWebComponentDefinition<T extends Record<string, any> = any> = Readonly<{
-  id: string;
+export type TypedWebComponentDefinition<T extends Record<string, any> = any, Id extends string = string> = Readonly<{
+  id: [DXN.Path<Id>] extends [never]
+    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
+    : Id;
   filter: Filter<T>;
   tagName: string;
   position?: Position.Position;
@@ -232,37 +264,31 @@ const expandBindings = <T extends Record<string, any>>(
 };
 
 /**
- * Whether a surface or extension local ID follows NSID conventions: the final
- * dot-separated segment must be camelCase (letters and digits only, starting
- * with a letter — no hyphens or underscores). This mirrors the rule enforced
- * when the id is appended to a plugin's NSID to form a full DXN path.
- *
- * A definition with an invalid id is dropped at dispatch rather than rejected
- * here, so a single malformed contribution cannot crash plugin activation.
- *
- * @example Valid:   'about', 'integrationArticle', 'article.journal'
- * @example Invalid: 'integration-article', 'plugin-spec'
- */
-export const isValidLocalId = (id: string): boolean => /^[a-zA-Z][a-zA-Z0-9]*$/.test(id.split('.').pop() ?? '');
-
-/**
  * Creates a React surface definition from a typed filter.
  */
-export function create<T extends Record<string, any> = any>(definition: TypedReactDefinition<T>): ReactDefinition<T>;
-export function create<T extends Record<string, any> = any>(definition: TypedReactDefinition<T>): ReactDefinition<T> {
-  const { id, filter, component, position } = definition;
+export function create<
+  T extends Record<string, any> = any,
+  P extends Record<string, any> = ComponentProps<T>,
+  const Id extends string = string,
+>(definition: TypedReactDefinition<T, P, Id>): ReactDefinition<T>;
+export function create<
+  T extends Record<string, any> = any,
+  P extends Record<string, any> = ComponentProps<T>,
+  const Id extends string = string,
+>(definition: TypedReactDefinition<T, P, Id>): ReactDefinition<T> {
+  const { id, filter, component, props, position } = definition;
   const { role, guard } = expandBindings(filter);
-  return { kind: 'react', id, role, position, component, filter: guard };
+  return { kind: 'react', id, role, position, component, props, filter: guard };
 }
 
 /**
  * Creates a Web Component surface definition from a typed filter.
  */
-export function createWeb<T extends Record<string, any> = any>(
-  definition: TypedWebComponentDefinition<T>,
+export function createWeb<T extends Record<string, any> = any, const Id extends string = string>(
+  definition: TypedWebComponentDefinition<T, Id>,
 ): WebComponentDefinition<T>;
-export function createWeb<T extends Record<string, any> = any>(
-  definition: TypedWebComponentDefinition<T>,
+export function createWeb<T extends Record<string, any> = any, const Id extends string = string>(
+  definition: TypedWebComponentDefinition<T, Id>,
 ): WebComponentDefinition<T> {
   const { id, filter, tagName, position } = definition;
   const { role, guard } = expandBindings(filter);

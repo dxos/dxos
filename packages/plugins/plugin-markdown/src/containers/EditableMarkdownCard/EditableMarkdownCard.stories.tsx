@@ -9,10 +9,11 @@ import React from 'react';
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
@@ -56,12 +57,12 @@ const meta: Meta<typeof EditableMarkdownCardStory> = {
       plugins: [
         ...corePlugins(),
         ProcessManagerPlugin(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              personalSpace.db.add(
+              const { defaultSpace } = yield* initializeIdentity(client);
+              defaultSpace.db.add(
                 Markdown.make({
                   name: random.lorem.words(3),
                   content: '# Title\n' + random.lorem.paragraphs(3),

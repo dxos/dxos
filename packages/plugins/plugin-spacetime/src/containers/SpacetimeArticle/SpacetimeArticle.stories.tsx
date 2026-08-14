@@ -8,10 +8,12 @@ import React, { useEffect, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -45,7 +47,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Scene.Scene, Model.Object],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -55,7 +57,7 @@ const meta = {
               space.db.add(Scene.make({ name: 'Test Scene' }));
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
       ],
     }),
   ],

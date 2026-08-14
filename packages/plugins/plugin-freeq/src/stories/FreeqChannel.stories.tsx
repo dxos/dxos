@@ -6,24 +6,26 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Query } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
+import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { translations as threadTranslations } from '@dxos/plugin-thread/translations';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
+import { FreeqPlugin } from '#plugin';
+import { translations } from '#translations';
+
 import { FREEQ_BACKEND_KIND } from '../constants';
-import { FreeqPlugin } from '../FreeqPlugin';
-import { translations } from '../translations';
 import { FreeqChannel, makeFreeqChannel } from '../types';
 
 /** Live freeq server + channel the demo connects to (guest read; no handle). */
@@ -49,16 +51,16 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
-      capabilities: [Capability.contributes(AppCapabilities.Schema, types)],
+      capabilities: [Capability.contribute(AppCapabilities.Schema, types)],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types,
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               // Live freeq channel over WebSocket; guest (no handle) is read-only against the server.
-              personalSpace.db.add(
+              defaultSpace.db.add(
                 Channel.make({
                   name: DEMO_CHANNEL,
                   backend: {
@@ -70,7 +72,7 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
-        ThreadPlugin(),
+        ThreadPlugin.make(),
         FreeqPlugin(),
       ],
     }),

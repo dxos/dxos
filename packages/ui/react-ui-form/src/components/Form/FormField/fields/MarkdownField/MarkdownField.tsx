@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Ref } from '@dxos/echo';
@@ -16,16 +16,6 @@ import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
 import { FormRow } from '../../FormRow';
-
-// Mirror the focus treatment of `Input` (default variant): a `focus-ring-subtle` ring of `dx-focus-line`
-// width rather than a recolored 1px border, and suppress the editor wrapper's `accent-bg` border so a
-// second click never turns the outline blue. Keyed on `focus-within` because focus lands on the inner
-// CodeMirror contenteditable, not this wrapper.
-const editorClassNames = [
-  'min-h-[6lh] transition-colors rounded-xs p-1 px-2 bg-input-surface border border-input-separator',
-  'focus:border-separator focus-within:border-separator focus-within:bg-focus-surface',
-  'focus-within:ring-2 focus-within:ring-offset-0 focus-within:ring-focus-ring-subtle focus-within:z-[1]',
-];
 
 /**
  * Form field that edits a markdown value in a CodeMirror editor.
@@ -116,7 +106,7 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
 
   return (
     <Editor.Root>
-      <Editor.View classNames={editorClassNames} extensions={extensions} />
+      <Editor.View classNames='dx-input' extensions={extensions} />
     </Editor.Root>
   );
 };
@@ -135,7 +125,7 @@ const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: String
   return (
     <Editor.Root>
       <Editor.View
-        classNames={editorClassNames}
+        classNames='dx-input min-h-[6lh]'
         extensions={extensions}
         value={value}
         onChange={readonly ? undefined : handleChange}

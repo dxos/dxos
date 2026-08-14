@@ -16,14 +16,14 @@ import { EID, IdentityDid } from '@dxos/keys';
  * granted to trust-minimized relays such as HALO Hub/EDGE sync services.
  * Replaces the legacy `SpaceMember.Role` enum (READER/EDITOR/ADMIN/OWNER).
  */
-export const Access = Schema.Literal('pull', 'read', 'edit', 'admin');
+export const Access = Schema.Literals(['pull', 'read', 'edit', 'admin']);
 export type Access = typeof Access.Type;
 
 /**
  * Addresses a group member: an individual identity or device (DID), or a nested group,
  * space, or document (EID).
  */
-export const Subject = Schema.Union(IdentityDid, EID.Schema);
+export const Subject = Schema.Union([IdentityDid, EID.Schema]);
 export type Subject = typeof Subject.Type;
 
 /**

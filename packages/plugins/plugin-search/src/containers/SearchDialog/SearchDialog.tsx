@@ -5,17 +5,18 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
+import { type SearchResult } from '@dxos/react-ui-search';
 
 import { buildSearchQuery, toSearchResults, useGlobalSearch } from '#hooks';
 import { meta } from '#meta';
-import { type SearchResult } from '#types';
 
 export type SearchDialogProps = AppSurface.SpaceArticleProps<{
   pivotId?: string;
@@ -47,12 +48,12 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
         return;
       }
 
-      const qualifiedPath = Paths.getObjectPathFromObject(result.object);
+      const qualifiedPath = GraphPath.getObjectPathFromObject(result.object);
       await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       await invokePromise(LayoutOperation.Open, {
         subject: [qualifiedPath],
         pivotId,
-        positioning: 'end',
+        disposition: 'add',
       });
     },
     [pivotId, invokePromise],
@@ -66,8 +67,6 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
           <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
-      {/* Dialog.Body is the column propagator; without it the SearchList input/viewport are direct
-          children of Dialog.Content's Column grid and land in the gutter (misplaced searchbox). */}
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch}>
           <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />

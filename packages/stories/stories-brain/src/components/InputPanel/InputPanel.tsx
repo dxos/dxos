@@ -145,7 +145,7 @@ export const InputPanel = ({
           <Button variant={mode === 'record' ? 'primary' : 'ghost'} onClick={() => onModeChange('record')}>
             Record
           </Button>
-          <div role='none' className='grow' />
+          <div className='grow' />
           {mode === 'document' && parse && (
             <Input.Root>
               <div className='flex items-center gap-2 px-2'>
@@ -210,7 +210,7 @@ export const InputPanel = ({
                     dataset.messages.map((message) => (
                       <div
                         key={message.id}
-                        className='flex flex-col min-w-0 bg-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+                        className='flex flex-col min-w-0 dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
                       >
                         <div className='font-medium truncate'>{message.subject}</div>
                         <div className='text-sm text-description truncate'>{message.from}</div>

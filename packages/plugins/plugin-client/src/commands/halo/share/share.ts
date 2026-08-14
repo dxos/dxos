@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, copyToClipboard, openBrowser, print } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
@@ -24,6 +24,13 @@ export const handler = Effect.fn(function* ({
   const { json } = yield* CommandConfig;
   const client = yield* ClientService;
 
+  // Validate up front — an invalid host inside `onConnecting` would abort after the invitation
+  // is already hosted, without printing the codes.
+  yield* Effect.try({
+    try: () => new URL(host),
+    catch: () => new Error(`--host must be an absolute URL: ${host}`),
+  });
+
   // Always use persistent and delegated (auth required) due to P2P limitations
   const observable = client.halo.share({
     authMethod: Invitation.AuthMethod.SHARED_SECRET,
@@ -40,18 +47,22 @@ export const handler = Effect.fn(function* ({
           const authCode = invitation.authCode!;
 
           // Copy auth code to clipboard
-          yield* copyToClipboard(authCode).pipe(Effect.catchAll(() => Effect.void));
+          yield* copyToClipboard(authCode).pipe(Effect.catch(() => Effect.void));
+
+          const url = new URL(host);
+          url.searchParams.set('deviceInvitationCode', invitationCode);
 
           if (!json) {
             yield* Console.log(`\nSecret: ${authCode} (copied to clipboard)\n`);
+            yield* Console.log(`\nInvitation: ${invitationCode}\n`);
+            // Print the joinable URL even when not opening so it can be pasted manually.
+            yield* Console.log(`\nURL: ${url.toString()}\n`);
           }
 
           if (open) {
-            const url = new URL(host);
-            url.searchParams.append('deviceInvitationCode', invitationCode);
-            yield* openBrowser(url.toString()).pipe(Effect.catchAll(() => Effect.void));
-          } else if (!json) {
-            yield* Console.log(`\nInvitation: ${invitationCode}\n`);
+            yield* openBrowser(url.toString()).pipe(
+              Effect.catch(() => Console.error(`Failed to open browser: ${url.toString()}`)),
+            );
           }
         }),
     },
@@ -87,8 +98,8 @@ export const share = Command.make(
       Options.withDescription('Lifetime of the invitation in seconds.'),
       Options.withDefault(12 * 60 * 60), // 12 hours - HALO invitations are typically shorter-lived
     ),
-    open: Options.boolean('open', { ifPresent: true }).pipe(Options.withDescription('Open browser with invitation.')),
-    host: Options.text('host').pipe(
+    open: Options.boolean('open').pipe(Options.withDescription('Open browser with invitation.')),
+    host: Options.string('host').pipe(
       Options.withDescription('Application Host URL.'),
       Options.withDefault('https://composer.space'),
     ),

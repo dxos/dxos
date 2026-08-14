@@ -2,4 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './meta';
+export * as TransformerPlugin from './TransformerPlugin';
+export * from '#meta';

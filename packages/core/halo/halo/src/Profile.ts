@@ -30,7 +30,7 @@ export class Profile extends Type.makeObject<Profile>(DXN.make('org.dxos.halo.pr
     displayName: Schema.optional(Schema.String),
     avatarUrl: Schema.optional(Format.URL),
     /** Application-defined properties. */
-    data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+    data: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   }).pipe(Annotation.LabelAnnotation.set(['displayName'])),
 ) {}
 

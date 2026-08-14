@@ -17,11 +17,12 @@ import * as HasRelationship from './HasRelationship';
 import * as HasSubject from './HasSubject';
 import * as Message from './Message';
 import * as Organization from './Organization';
+import * as Outline from './Outline';
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
-import * as Project from './Project';
 import * as Provider from './Provider';
 import * as Task from './Task';
+import * as TaskSet from './TaskSet';
 import * as Thread from './Thread';
 import * as Transcript from './Transcript';
 
@@ -58,11 +59,12 @@ export {
   HasSubject,
   Message,
   Organization,
+  Outline,
   Person,
   Pipeline,
-  Project,
   Provider,
   Task,
+  TaskSet,
   Thread,
   Transcript,
 };

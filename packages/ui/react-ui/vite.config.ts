@@ -11,5 +11,5 @@ export default defineConfig({
     translations: 'src/translations.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  test: { node: { environment: 'happy-dom' }, storybook: true },
 });

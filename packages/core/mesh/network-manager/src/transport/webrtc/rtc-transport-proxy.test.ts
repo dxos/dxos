@@ -5,7 +5,8 @@
 import { Duplex } from 'stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event as AsyncEvent, TestStream, Trigger, sleep } from '@dxos/async';
+import { Event as AsyncEvent, Trigger, sleep } from '@dxos/async';
+import { TestStream } from '@dxos/async/testing';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols/proto';

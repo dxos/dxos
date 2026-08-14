@@ -7,14 +7,11 @@ import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
-import { type SignalManager } from '@dxos/messaging';
+import { EffectEx } from '@dxos/effect';
+import { type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
-import {
-  type NetworkStatus,
-  type SubscribeSwarmStateRequest,
-  type UpdateConfigRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type Peer, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import {
   type JoinRequest,
   type LeaveRequest,
@@ -31,7 +28,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
   ) {}
 
   ['NetworkService.queryStatus'](): EffectStream.Stream<NetworkStatus, Error> {
-    return EffectStream.async<NetworkStatus, Error>((emit) => {
+    return EffectEx.streamFromEmitter<NetworkStatus, Error>((emit) => {
       const ctx = Context.default();
       const update = () => {
         void emit.single({
@@ -49,7 +46,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 
-  ['NetworkService.updateConfig'](request: UpdateConfigRequest): Effect.Effect<void, Error> {
+  ['NetworkService.updateConfig'](request: NetworkService.UpdateConfigRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         await this.networkManager.setConnectionState(request.swarm);
@@ -86,9 +83,9 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
   }
 
   ['NetworkService.subscribeSwarmState'](
-    request: SubscribeSwarmStateRequest,
+    request: NetworkService.SubscribeSwarmStateRequest,
   ): EffectStream.Stream<SwarmResponse, Error> {
-    return EffectStream.async<SwarmResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<SwarmResponse, Error>((emit) => {
       const ctx = Context.default();
       this.signalManager.swarmState?.on(ctx, (state) => {
         if (request.topic.equals(state.swarmKey)) {
@@ -109,16 +106,47 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 
-  ['NetworkService.subscribeMessages'](peer: Peer): EffectStream.Stream<Message, Error> {
-    return EffectStream.async<Message, Error>((emit) => {
+  ['NetworkService.subscribeMessages'](
+    request: NetworkService.SubscribeMessagesRequest,
+  ): EffectStream.Stream<Message, Error> {
+    const { peer, tags = [] } = request;
+    return EffectEx.streamFromEmitter<Message, Error>((emit) => {
       const ctx = Context.default();
-      this.signalManager.onMessage.on(ctx, (message) => {
-        if (message.recipient.peerKey === peer.peerKey) {
-          void emit.single(message);
-        }
+
+      // This stream crosses the client-services RPC (protobufjs codec, e.g. dedicated worker → main
+      // thread). Its `Message.payload` is a `google.protobuf.Any` without `preserve_any`, and the
+      // codec refuses to encode an Any lacking '@type' — stamping the opaque form
+      // ('@type': 'google.protobuf.Any' + type_url/value) makes it pass through verbatim.
+      const encodableAny = (payload: Message['payload']): Message['payload'] => ({
+        ...payload,
+        '@type': 'google.protobuf.Any',
       });
 
-      return Effect.promise(() => ctx.dispose());
+      // The subscription encapsulates routing (DX-1125): point-to-point messages addressed to `peer`,
+      // plus — when `tags` are set — swarm broadcasts whose tags intersect. The returned callback owns
+      // teardown, refcounted so it releases only this stream's tag registration.
+      let unsubscribe: UnsubscribeCallback | undefined;
+      void this.signalManager
+        .subscribeMessages({
+          peer,
+          tags,
+          onMessage: (message) => {
+            void emit.single({ ...message, payload: encodableAny(message.payload) });
+          },
+        })
+        .then((unsub) => {
+          if (ctx.disposed) {
+            void unsub();
+          } else {
+            unsubscribe = unsub;
+          }
+        })
+        .catch((err) => emit.fail(err instanceof Error ? err : new Error(String(err))));
+
+      return Effect.promise(async () => {
+        await unsubscribe?.();
+        await ctx.dispose();
+      });
     });
   }
 }

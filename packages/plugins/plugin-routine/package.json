@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-routine",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Prompt chain plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,10 +15,12 @@
   "imports": {
     "#capabilities": {
       "source": {
+        "workerd": "./src/capabilities/workerd.ts",
         "node": "./src/capabilities/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
@@ -49,14 +51,14 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/RoutinePlugin.workerd.ts",
-        "node": "./src/RoutinePlugin.node.ts",
-        "default": "./src/RoutinePlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/RoutinePlugin.d.ts",
-      "workerd": "./dist/lib/RoutinePlugin.workerd.mjs",
-      "node": "./dist/lib/RoutinePlugin.node.mjs",
-      "default": "./dist/lib/RoutinePlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#testing": "./src/testing/index.ts",
     "#translations": {
@@ -87,11 +89,7 @@
       "types": "./dist/types/src/hooks/index.d.ts",
       "import": "./dist/lib/hooks.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
+    "./package.json": "./package.json",
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
@@ -102,13 +100,49 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
+    "./Routine": {
+      "source": "./src/types/Routine.ts",
+      "types": "./dist/types/src/types/Routine.d.ts",
+      "import": "./dist/lib/Routine.mjs"
+    },
+    "./RoutineCapabilities": {
+      "source": "./src/types/RoutineCapabilities.ts",
+      "types": "./dist/types/src/types/RoutineCapabilities.d.ts",
+      "import": "./dist/lib/RoutineCapabilities.mjs"
+    },
+    "./RoutineEvents": {
+      "source": "./src/types/RoutineEvents.ts",
+      "types": "./dist/types/src/types/RoutineEvents.d.ts",
+      "import": "./dist/lib/RoutineEvents.mjs"
+    },
+    "./RoutineOperation": {
+      "source": "./src/types/RoutineOperation.ts",
+      "types": "./dist/types/src/types/RoutineOperation.d.ts",
+      "import": "./dist/lib/RoutineOperation.mjs"
+    },
+    "./RoutinePlugin": {
+      "source": "./src/RoutinePlugin.ts",
+      "types": "./dist/types/src/RoutinePlugin.d.ts",
+      "import": "./dist/lib/RoutinePlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Routine": [
+        "dist/types/src/types/Routine.d.ts"
+      ],
+      "RoutineCapabilities": [
+        "dist/types/src/types/RoutineCapabilities.d.ts"
+      ],
+      "RoutineEvents": [
+        "dist/types/src/types/RoutineEvents.d.ts"
+      ],
+      "RoutineOperation": [
+        "dist/types/src/types/RoutineOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "assets",
     "dist",
@@ -124,29 +158,25 @@
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/cli-util": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
-    "@dxos/conductor": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
-    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
@@ -157,13 +187,9 @@
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect/cli": "catalog:",
-    "@effect/printer-ansi": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:",
     "cronstrue": "catalog:"
   },
@@ -171,10 +197,9 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
@@ -185,8 +210,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

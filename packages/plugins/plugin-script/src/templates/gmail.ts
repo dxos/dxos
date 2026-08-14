@@ -60,7 +60,7 @@ export default defineFunction({
           HttpClient.execute,
           Effect.flatMap((res: any) => res.json),
           Effect.timeout('1 second'),
-          Effect.retry(Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))),
+          Effect.retry(Schedule.exponential(1000).pipe(Schedule.upTo({ times: 3 }))),
           Effect.scoped,
         );
 
@@ -198,18 +198,18 @@ interface Text extends S.Schema.Type<typeof Text> {}
 
 const MessageType = S.Struct({
   id: EntityId,
-  created: S.String.annotations({
+  created: S.String.annotate({
     description: 'ISO date string when the message was sent.',
   }),
-  sender: ActorSchema.annotations({
+  sender: ActorSchema.annotate({
     description: 'Identity of the message sender.',
   }),
-  blocks: S.Array(Text).annotations({
+  blocks: S.Array(Text).annotate({
     description: 'Contents of the message.',
   }),
   properties: S.optional(
     S.mutable(
-      S.Record({ key: S.String, value: S.Any }).annotations({
+      S.Record({ key: S.String, value: S.Any }).annotate({
         description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
       }),
     ),

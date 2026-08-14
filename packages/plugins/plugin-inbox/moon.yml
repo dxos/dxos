@@ -12,22 +12,16 @@ tasks:
     # remain UI-free under workerd so it can load in non-DOM environments.
     command: >-
       pnpm exec dx-trace-imports
-      --export ./plugin
+      --export ./InboxPlugin
       --to "@dxos/react-ui"
-      --conditions workerd,worker,node
+      --conditions workerd,worker
       --fail-on present
     deps:
-      - dx-trace-imports:compile
-      - compile
+      - dx-trace-imports:build
+      - build
     inputs:
       - tsconfig.json
       - '@group(production)'
       - /pnpm-lock.yaml
     options:
       timeout: 60
-  deploy-functions:
-    script: |
-      $workspaceRoot/scripts/dx --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-inbox/src/functions/google/gmail/sync.ts && \
-      $workspaceRoot/scripts/dx --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-inbox/src/functions/google/calendar/sync.ts && \
-      $workspaceRoot/scripts/dx --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-inbox/src/functions/classify.ts
-    preset: server

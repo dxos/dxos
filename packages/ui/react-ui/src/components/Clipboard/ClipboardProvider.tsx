@@ -2,19 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useState } from 'react';
 
-export type ClipboardContextValue = {
-  textValue: string;
-  setTextValue: (nextValue: string) => Promise<void>;
-};
-
-export const ClipboardContext = createContext<ClipboardContextValue>({
-  textValue: '',
-  setTextValue: async (_) => {},
-});
-
-export const useClipboard = () => useContext(ClipboardContext);
+import { ClipboardContext } from './ClipboardContext';
 
 export const ClipboardProvider = ({ children }: PropsWithChildren<{}>) => {
   const [textValue, setInternalTextValue] = useState('');

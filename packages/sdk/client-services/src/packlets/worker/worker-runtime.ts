@@ -2,16 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import type * as RpcServer from '@effect/rpc/RpcServer';
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Context_ from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import type * as RpcServer from 'effect/unstable/rpc/RpcServer';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Trigger } from '@dxos/async';
 import { type Config } from '@dxos/config';
@@ -19,12 +19,7 @@ import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import {
-  MemorySignalManager,
-  MemorySignalManagerContext,
-  WebsocketSignalManager,
-  setIdentityTags,
-} from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { makeInProcessClient } from '@dxos/protocols';
 import { DevicesService, IdentityService } from '@dxos/protocols/rpc';
@@ -40,8 +35,8 @@ import { WorkerSession } from './worker-session';
 // serves the client services (+ WorkerService); systemProtocol carries the reverse-direction
 // BridgeService (worker→tab).
 export type CreateSessionProps = {
-  appProtocol: RpcServer.Protocol['Type'];
-  systemProtocol: RpcClient.Protocol['Type'];
+  appProtocol: RpcServer.Protocol['Service'];
+  systemProtocol: RpcClient.Protocol['Service'];
   shellPort?: MessagePort;
   onClose?: () => Promise<void>;
 };
@@ -87,10 +82,9 @@ export interface WorkerRuntimeService {
 /**
  * Context tag for the dedicated-worker runtime service. Provided by {@link layerWorkerRuntime}.
  */
-export class WorkerRuntime extends Context_.Tag('@dxos/client-services/WorkerRuntime')<
-  WorkerRuntime,
-  WorkerRuntimeService
->() {}
+export class WorkerRuntime extends Context_.Service<WorkerRuntime, WorkerRuntimeService>()(
+  '@dxos/client-services/WorkerRuntime',
+) {}
 
 /**
  * Constructs the {@link WorkerRuntimeService}. The SQLite {@link ManagedRuntime} and
@@ -109,11 +103,10 @@ export const makeWorkerRuntime = ({
   const sessions = new Set<WorkerSession>();
   const signalMetadataTags: any = { runtime: 'worker-runtime' };
 
-  let signalTelemetryEnabled = false;
   let stopped = false;
   let sessionForNetworking: WorkerSession | undefined;
   let config: Config;
-  let serviceScope: Scope.CloseableScope | undefined;
+  let serviceScope: Scope.Closeable | undefined;
 
   if (sqliteLayer) {
     log.warn('Using testing SQLite layer');
@@ -153,7 +146,7 @@ export const makeWorkerRuntime = ({
         await EffectEx.runPromise(stop());
       },
     },
-    runtime: runtime.runtimeEffect,
+    runtime: runtime.contextEffect,
     runtimeProps: {
       // Auto-activate spaces that were previously active after leader changeover.
       autoActivateSpaces: true,
@@ -186,20 +179,18 @@ export const makeWorkerRuntime = ({
         log('worker-runtime: storage lock acquired, resolving config');
         config = await configProvider();
         log('worker-runtime: config resolved');
-        signalTelemetryEnabled = config.get('runtime.client.signalTelemetryEnabled') ?? false;
         const observabilityGroup = config.get('runtime.client.observabilityGroup');
         if (observabilityGroup) {
           signalMetadataTags.group = observabilityGroup;
         }
-        const signals = config.get('runtime.services.signaling');
         log('worker-runtime: initializing client services host');
         clientServices.initialize({
           config,
+          // Edge signaling is created in the services host from the edge connection; otherwise fall
+          // back to an isolated in-memory manager (KUBE `WebsocketSignalManager` removed).
           signalManager: config.get('runtime.client.edgeFeatures')?.signaling
             ? undefined
-            : signals
-              ? new WebsocketSignalManager(signals, () => (signalTelemetryEnabled ? signalMetadataTags : {}))
-              : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+            : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
           transportFactory,
         });
         log('worker-runtime: client services host initialized, opening');

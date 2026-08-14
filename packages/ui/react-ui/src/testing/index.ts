@@ -5,3 +5,4 @@
 export * from './decorators';
 
 export * from './Loading';
+export * from './TestGrid';
