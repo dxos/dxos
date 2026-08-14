@@ -16,7 +16,6 @@ projects:
     design: .agents/projects/test-profiling-leaks/DESIGN.md
     prs: [12523]
     resume: 'Tooling MERGED via PR #12523 (squashed to main f1c67714). Phase 4 sweep DONE — RESULTS.md: leak check across all 8 layers (echo/halo/mesh/sdk/composer/compute/assistant/agentService) shows no leak signatures (every suite ends below its test-1 warmed baseline; only sub-MB post-warmup fixture drift, agentService largest at +1.4 MB); clean CPU profiles on the 2 heavy layers (assistant, agent-runtime) are startup/module-load bound with no product hotspot. Follow-up branch restarted from main for the Phase 4 docs. IMPLEMENTED + verified on echo/halo/mesh/sdk/composer/compute. Env-gated block in createNodeProject (vite.base.config.ts): DX_PROFILE_TESTS → --cpu-prof; DX_DEBUG_LEAKS → tools/vitest/leak-setup.ts (before/after heap snapshots + per-test heapUsed slope). vitest-4 flattened the pool model (no poolOptions.forks/singleFork; execArgv/isolate/fileParallelism/maxWorkers top-level) and dropped config repeats — recorded in DESIGN.md §Implementation. Also fixed the moon test task''s missing ''"$@"'' passthrough so `moon run <pkg>:test -- <file>` filters to one file. Gitignored *.heapsnapshot + profiles/. CI GREEN on PR #12523 (one transient cache.dxos.network flake in `test`, cleared by re-running the job). Added the `test-perf-leaks` skill (.agents/skills/) documenting the workflow. Remaining follow-ups: point the tooling at long-lived integration suites (echo-host, client-services) when leak-hunting; apply the same `"$@"` passthrough fix to test-browser/test-workerd.'
-
   - name: memory-usage
     status: active
     user: jdw
@@ -27,7 +26,6 @@ projects:
     design: .agents/projects/memory-usage/DESIGN.md
     prs: [12505, 12561]
     resume: 'Investigation complete (DESIGN.md composition model; RESEARCH.md industry comparison). Phase 3 code-residency fixes landed: ~2.9MB of resident code removed (~32MB memory) across onboarding assets, emoji-mart, mermaid, bip39, AI/MCP runtime, ML runtime, EVM client, welcome screen. Target 300-400MB resting. PR #12505 OPEN (draft) — Phase 3 + Phase 2 payload retention (Linear DX-1148, reverted from this PR to land separately). PR #12561 OPEN (separate from #12505) — Phase 4 idle-churn sites S1-S4: S1 TriggerDispatcher now watches Trigger objects via one reactive query instead of re-querying every 1Hz tick; S2 (FeedHandle) and S3 (space sync-state) polling now back off on repeated no-change ticks (capped 30s/15s) and reset to fast interval on real change; S4 investigated, no code change (matchesHint already precise; amplification traced to S1s one-shot per-tick query, expected to fall away once S1-S3 stop generating spurious ticks). Next: verify with scripts/memory/soak.mjs once #12561 lands; Remedies/Sequencing sections in TASKS.md still open.'
-
   - name: leveldb-removal
     status: active
     user: root
@@ -48,7 +46,6 @@ projects:
     design: packages/plugins/plugin-crm/DESIGN.md
     prs: [12441]
     resume: 'PR #12441 OPEN — watch Check to green. Phase 4 shipped: Process CRM mailbox toolbar action, stories-inbox ProcessMailbox story (play test green), R2 fixture design (DESIGN.md §8), TESTPLAN.md. Audit+spec in packages/plugins/plugin-crm/DESIGN.md; plugin-inbox recordExtraction first-entry bug fixed.'
-
   - name: agent-directives
     status: active
     user: burdon
@@ -59,7 +56,6 @@ projects:
     design: .agents/projects/agent-directives/DESIGN.md
     prs: [12453, 12463]
     resume: 'PR #12453 MERGED 2026-08-04; PR #12463 OPEN — https://github.com/dxos/dxos/pull/12463. Phases 1-3 essentially DONE. The mode toggle is now the `/mode` SLASH COMMAND, not a sentinel: UserPromptSubmit carries the RAW typed text and fires BEFORE a command expands, so hooks/mode.sh greps `/mode <MODE>` there and the write stays deterministic — the planned UserPromptExpansion hook was never needed (that event is for BLOCKING an expansion, not beating it). commands/mode.md is inert ergonomics. `$mode` REMOVED; anchoring to the FIRST LINE retires the prose-flips-the-mode bug class entirely. `$project` WAS CONVERTED THE SAME WAY (it fired on the very message asking to convert it): `/project VERB [ARGS]` first-line only, legacy $track/track:/$hydrate/$checkpoint/$resume/$rehydrate all REMOVED, plus a new `tasks` verb and a bare-`/project` status report. Both hooks take head -1 before matching (grep -E anchors ^ per line) and require a trailing boundary after the value (`/mode tersex` used to prefix-match). Bare `/mode` = re-orientation report (worktree+branch, consulted instruction files, current mode) with NO numbered options — a numeric reply is the one form the hook cannot catch. REVERSED from #12453: the worktree/files-read line is FIRST-REPLY ONLY again (user, 2026-08-04) — per-turn injection is for rules governing every reply; a once-per-session rule belongs on SessionStart, where session-context.sh already delivers it. Phase 3 closed: mode.sh split kept + documented (the command gave the backend a second caller), task-planning SKILL.md slash-command claim fixed, branch-beacon.sh emits systemMessage + additionalContext (lives in ~/.claude, NOT in the PR — will not travel to another machine). The task-planning SKILL.md was thinned 215->186 lines: the per-verb enumeration lives ONLY in the hook directives now, and the skill keeps what applies when nobody types a command (TASKS.md convention, registry schema, handoff steps). REMAINING: (a) close the .agent/ entry at .agents/projects/ai-testing-strategy/TASKS.md:411 when this lands. CLOSED BY DECISION: updating ~/.claude/CLAUDE.md (user chose to skip 2026-08-04 — it has no stale markers, and the hook already covers this repo).'
-
   - name: lenses
     status: active
     user: josiah
