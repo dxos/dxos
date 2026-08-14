@@ -1,7 +1,5 @@
 ---
 '@dxos/app-toolkit': minor
-'@dxos/plugin-client': patch
-'@dxos/plugin-deck': patch
 ---
 
 Fix planks restoring to Not Found — and being erased from the URL — on a cold reload.

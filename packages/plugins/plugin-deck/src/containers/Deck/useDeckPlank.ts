@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as Graph from '@dxos/app-graph/Graph';
 import * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
@@ -43,6 +44,8 @@ export type DeckPlank = {
   node: Node.Node | undefined;
   /** Whether a URL restore gave up on this plank; distinguishes "gave up" from "still loading". */
   unresolved: boolean;
+  /** The not-found sentinel's node, so an unresolved plank can borrow its label and icon. */
+  notFoundNode: Node.Node | undefined;
   capabilities: PlankCapabilities;
   /** Grouped sigil-menu actions, or `undefined` when the node is unresolved. */
   sigilActions: AttentionSigilAction[][] | undefined;
@@ -73,6 +76,11 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   // leave a freshly-created plank's sigil menu empty until an unrelated re-render.
   const actions = useActions(graph, node?.id);
   const companions = useCompanions(id);
+  const notFoundNode = useNode(graph, NotFound.NOT_FOUND_PATH);
+  const resolvedOnce = useRef(false);
+  if (node) {
+    resolvedOnce.current = true;
+  }
 
   // Ordering within the active stack drives the increment-start/end affordances.
   const index = active ? active.findIndex((entryId) => entryId === id) : -1;
@@ -152,8 +160,10 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
 
   return {
     node,
-    // Gated on the node so a stale entry from a restore that has since healed stops applying.
-    unresolved: !node && !!state.unresolved?.includes(id),
+    // Latched on first sight of the node: a plank that healed is no longer unresolved, so a later
+    // graph gap shows loading rather than resurrecting the restore's verdict.
+    unresolved: !node && !resolvedOnce.current && !!state.unresolved?.includes(id),
+    notFoundNode,
     capabilities,
     sigilActions,
     popoverAnchorId: state.popoverAnchorId,

@@ -44,6 +44,9 @@ import { shouldDeferNavigationHandlers } from './check-app-scheme';
 //  settles, so the slowest pair holds back the ones that already resolved.
 const RESOLVE_TIMEOUT = '10 seconds';
 
+/** Cap on a single navigation-target loader, whose own waits (client init, space readiness) are unbounded. */
+const LOADER_TIMEOUT = '5 seconds';
+
 /** Strip the `root/` prefix off a qualified workspace path, back to the bare `UrlPath` workspace token. */
 const bareWorkspace = (qualifiedWorkspace: string): string => {
   const [, workspace] = qualifiedWorkspace.split('/');
@@ -258,9 +261,16 @@ export default Capability.makeModule(
             }
             return Effect.forEach(candidates, (entityId) =>
               Effect.forEach(loaders, (loader) =>
-                loader
-                  .load({ spaceId: pair.workspace, entityId })
-                  .pipe(Effect.catch(() => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown'))),
+                loader.load({ spaceId: pair.workspace, entityId }).pipe(
+                  // A loader may await client initialization or space readiness, neither of which is
+                  // bounded; unbounded here would strand the restore before it ever reaches its own
+                  // deadline. Expiring is `unknown`, so the pair keeps its wait.
+                  Effect.timeoutOrElse({
+                    duration: LOADER_TIMEOUT,
+                    orElse: () => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown'),
+                  }),
+                  Effect.catch(() => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown')),
+                ),
               ),
             ).pipe(Effect.tap((results) => Effect.sync(() => (verdicts[index] = combineVerdicts(results.flat())))));
           },

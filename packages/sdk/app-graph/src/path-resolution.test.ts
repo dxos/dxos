@@ -403,7 +403,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'dyn', id: 'missing', workspace: WORKSPACE_A }],
         }),
       );
-      expect(results[0]?.nodeId).toBeUndefined();
+      expect(results).toEqual([{ pairIndex: 0, candidateId: `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/missing` }]);
     });
 
     test('a key shared by two extensions resolves nodes produced by either', async ({ expect }) => {
@@ -430,7 +430,7 @@ describe('path-resolution', () => {
           { wait: () => '200 millis' },
         ),
       );
-      expect(results[0]?.nodeId).toBeUndefined();
+      expect(results).toEqual([{ pairIndex: 0, candidateId: `${Node.RootId}/${WORKSPACE_A}/neverArrives` }]);
       expect(Date.now() - started).toBeLessThan(400);
     });
 
@@ -447,7 +447,7 @@ describe('path-resolution', () => {
           { wait: () => '200 millis' },
         ),
       );
-      expect(results[0]?.nodeId).toBeUndefined();
+      expect(results).toEqual([{ pairIndex: 0, candidateId: `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/missing` }]);
       expect(Date.now() - started).toBeGreaterThanOrEqual(150);
     });
   });
