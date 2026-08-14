@@ -57,6 +57,8 @@ import { type SpaceDocumentListUpdatedEvent, SpaceStateManager } from './space-s
  */
 const CLOSURE_YIELD_INTERVAL = 32;
 
+const AUTOMATIC_GARBAGE_COLLECTION = false;
+
 /**
  * Every path that can start an indexing run. Logged on each run so an idle-churn loop is
  * attributable from `app.log` alone — the counts are otherwise indistinguishable between a
@@ -340,18 +342,21 @@ export class EchoHost extends Resource {
         e.documentIds,
       );
 
-      // Documents that left the directory are this peer's share of a garbage-collection pass some
-      // peer explicitly ran: the unlink replicates as an ordinary change, and its arrival here is
-      // the evidence. Reclaiming them locally is what makes one invocation free disk everywhere,
-      // rather than requiring every peer to run collection itself.
-      //
-      // Safe because a departed document id never comes back: automerge delivers causally, so a
-      // link removal is never observed before the create it depends on, and the sole writer of a
-      // `links` key (object creation) always writes a freshly created document url. Registering
-      // the new collection state first also means no fetch can race the wipe.
-      const departed = previous ? this.#departedDocuments(previous, e) : [];
-      if (departed.length > 0 || e.previousRootId) {
-        this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
+      // TODO(dmaretskyi): Current algortithm is too expensive.
+      if (AUTOMATIC_GARBAGE_COLLECTION) {
+        // Documents that left the directory are this peer's share of a garbage-collection pass some
+        // peer explicitly ran: the unlink replicates as an ordinary change, and its arrival here is
+        // the evidence. Reclaiming them locally is what makes one invocation free disk everywhere,
+        // rather than requiring every peer to run collection itself.
+        //
+        // Safe because a departed document id never comes back: automerge delivers causally, so a
+        // link removal is never observed before the create it depends on, and the sole writer of a
+        // `links` key (object creation) always writes a freshly created document url. Registering
+        // the new collection state first also means no fetch can race the wipe.
+        const departed = previous ? this.#departedDocuments(previous, e) : [];
+        if (departed.length > 0 || e.previousRootId) {
+          this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
+        }
       }
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
