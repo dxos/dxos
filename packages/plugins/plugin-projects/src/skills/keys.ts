@@ -14,12 +14,3 @@
  * `dxn:<key>`, and slashes make the DXN invalid, yielding an unresolvable Ref URI at bind time.
  */
 export const ARTIFACT_SKILL_KEYS = ['org.dxos.skill.markdown', 'org.dxos.skill.table', 'org.dxos.skill.sheet'] as const;
-
-/**
- * Typed reference to the space-backed project-management skill, for `Operation.mcpTool({ skill })`
- * at operation definition sites (see `Operation.SkillRef`). The key's final segment doubles as the
- * skill's MCP prompt name (`/codeProject`) and its `skillLoad` name. `projects-skill.ts` builds the
- * definition from this same constant, so an annotation passing this reference always names the
- * skill that actually ships.
- */
-export const CodeProjectSkill = { key: 'org.dxos.plugin.projects.skill.codeProject' } as const;

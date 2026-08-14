@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { ProjectsSkillDefinition } from '#skills';
+import { CodeProjectSkillDefinition } from '#skills';
 
 const skillDefinition = () =>
-  Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, ProjectsSkillDefinition)]);
+  Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, CodeProjectSkillDefinition)]);
 
 export default skillDefinition;

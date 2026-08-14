@@ -10,11 +10,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { CodeProjectSkillDefinition } from '@dxos/plugin-projects/skills';
 import { Outline, Task } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import { CodeProjectSkill } from './skill-refs';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
@@ -78,7 +77,7 @@ export const GetOutline = Operation.make({
     content: Schema.String,
     items: Schema.Array(Schema.Struct({ title: Schema.String, done: Schema.Boolean })),
   }),
-}).pipe(Operation.mcpTool({ name: 'outlineGet', safety: 'read', aspect: 'tasks', skill: CodeProjectSkill }));
+}).pipe(Operation.mcpTool({ name: 'outlineGet', safety: 'read', aspect: 'tasks', skill: CodeProjectSkillDefinition }));
 
 export const UpdateOutline = Operation.make({
   meta: {
@@ -100,4 +99,6 @@ export const UpdateOutline = Operation.make({
     id: Schema.String,
     content: Schema.String,
   }),
-}).pipe(Operation.mcpTool({ name: 'outlineUpdate', safety: 'write', aspect: 'tasks', skill: CodeProjectSkill }));
+}).pipe(
+  Operation.mcpTool({ name: 'outlineUpdate', safety: 'write', aspect: 'tasks', skill: CodeProjectSkillDefinition }),
+);
