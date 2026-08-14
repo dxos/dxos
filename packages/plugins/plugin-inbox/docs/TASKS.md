@@ -159,11 +159,12 @@ Committed, unpushed. This is the PR to open first.
       currently lists every message, so a single thread fills it with five near-identical "Re: …" rows
       (see the Nicole Gudmand card). Show only the LATEST message per conversation, keyed on the same
       thread id the mailbox conversation view groups by.
-- [ ] **Related messages should show the snippet or summary, not the subject** (requested 2026-08-13,
-      the issue the item above asks to file) — every row in a thread repeats the same subject, which
-      carries no information once collapsed to one row per conversation. Prefer the derived summary when
-      the summarization pipeline has produced one, falling back to the provider snippet.
-
+- [x] **Related messages show the snippet or summary, not the subject** — `messageDigest` picks the
+      derived summary, else the provider snippet, else the subject. Summaries live on a SECOND feed
+      (`mailbox.annotations`), so `RelatedToContact` queries it separately and passes a
+      `Map<messageId, summary>`; the message feed carries none. Both mail mappers set
+      `properties.snippet`, so the middle rung is populated for synced mail before any summarization
+      runs. A row with nothing to say is dropped rather than rendered with an empty label. 5 tests.
 - [ ] **`useContactLookup` does not resolve** — the one open defect. `InboxStack` gained a `db` prop →
       one `Person` query for the whole list handed to tiles as `getContact`, but every avatar reads as
       unknown in the `Spec` story despite seeded Persons. Suspects: the URI→`EID.tryParse` of a freshly

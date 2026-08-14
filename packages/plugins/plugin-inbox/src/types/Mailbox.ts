@@ -48,50 +48,94 @@ export interface Subscription extends Schema.Schema.Type<typeof Subscription> {}
 
 export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.mailbox', '0.1.0'))(
   Schema.Struct({
+    /** Display name; falls back to the bound account's address when absent. */
     name: Schema.String.pipe(Schema.optional),
+
+    /** The durable message log. Every pipeline in `docs/PIPELINE.md` reads from (or writes to) this. */
     feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
-    // Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) → message ids.
-    // Messages are immutable Queue items, so their tag associations live in a child `TagIndex` object
-    // (the `meta.tags` augmentation for feed objects). Tag labels/hues live on the `Tag` objects.
+
+    /**
+     * Append-only feed of derived annotations about the messages in {@link feed} — summaries today
+     * (see {@link makeSummary}), each a Message whose `parentMessage` names its subject.
+     *
+     * A second feed rather than a record on this object: annotations are immutable and unbounded, so
+     * they belong in an append-only structure instead of growing the mailbox document, and
+     * re-deriving one (better model, changed prompt) appends a new version rather than destroying the
+     * old. The primary feed stays pure — no reader has to filter annotations out of the message list.
+     * Provisioned lazily on first annotation, like {@link tags}.
+     */
+    annotations: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false), Schema.optional),
+
+    /**
+     * Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) → message ids.
+     *
+     * Messages are immutable Queue items, so their tag associations cannot live on the message and
+     * live in a child `TagIndex` object instead (the `meta.tags` augmentation for feed objects). Tag
+     * labels and hues live on the `Tag` objects themselves.
+     */
     tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+
+    /**
+     * Which contributed object extractors run over this mailbox, and the confidence a match must
+     * clear before its result is kept.
+     */
     extractors: Schema.Struct({
       enabled: Schema.Array(Schema.String),
       threshold: Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 }))),
     }).pipe(FormInputAnnotation.set(false), Schema.optional),
-    // Exclusion filters (see {@link Filter}) honored across the UI, sync, and analysis — messages
-    // matching any filter are hidden and never committed / scanned.
-    messageFilters: Schema.optional(Schema.Array(Filter)),
-    // Optional per-mailbox reply guidance (tone, standing facts, sign-off, skills). A shared
-    // `Instructions` object can be referenced by several mailboxes, or a distinct one created per
-    // mailbox; the reply generator merges its text + skills into the session prompt.
-    instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotate({ title: 'Instructions' }), Schema.optional),
-    // Provenance for extracted objects, keyed by message id → extracted object ids. Feed-stored
-    // Messages are immutable Queue items and cannot be ECHO relation endpoints, so (like `tags`)
-    // the association lives here on the mutable Mailbox. The referenced objects are space-db
-    // objects resolved by id (`db.getObjectById`).
+
+    /**
+     * Provenance for extracted objects: message id → extracted object ids.
+     *
+     * Feed-stored Messages are immutable Queue items and cannot be ECHO relation endpoints, so — as
+     * with {@link tags} — the association lives here on the mutable Mailbox. The referenced objects
+     * are space-db objects resolved by id (`db.getObjectById`).
+     */
     extracted: Schema.Record(Schema.String, Schema.Array(Schema.String)).pipe(
       FormInputAnnotation.set(false),
       Schema.optional,
     ),
-    // Bulk-mail subscriptions extracted from the feed (`ExtractSubscriptions`): one entry per sender
-    // with an unsubscribe affordance (header or body link). Replaced wholesale each run — persisted
-    // derived state for the UI, never a source of truth.
-    subscriptions: Schema.Array(Subscription).pipe(FormInputAnnotation.set(false), Schema.optional),
-    // Append-only feed of derived annotations about the messages in `feed` — summaries today (see
-    // {@link makeSummary}), each a Message whose `parentMessage` names its subject. A second feed
-    // rather than a record on this object: annotations are immutable and unbounded, so they belong
-    // in an append-only structure instead of growing the mailbox document, and re-deriving one
-    // (better model, changed prompt) appends a new version rather than destroying the old. The
-    // primary feed stays pure — no reader has to filter annotations out of the message list.
-    // Provisioned lazily on first annotation, like `tags`.
-    annotations: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false), Schema.optional),
+
+    /**
+     * SAVED VIEWS, shown as named children under the mailbox in the navtree. Each is a serialized
+     * query string the user built in the filter bar and named (`SaveFilterPopover`); selecting one
+     * scopes the list to it. Additive and presentational — a saved view narrows what you are LOOKING
+     * at and never changes what the mailbox contains.
+     *
+     * Not to be confused with {@link messageFilters} below, which is the opposite in every respect.
+     */
     // TODO(wittjosiah): Factor out to relation?
-    filters: Schema.Array(
-      Schema.Struct({
-        name: Schema.String,
-        filter: Schema.String,
-      }),
-    ).pipe(FormInputAnnotation.set(false)),
+    filters: Schema.Array(Schema.Struct({ name: Schema.String, filter: Schema.String })).pipe(
+      FormInputAnnotation.set(false),
+    ),
+
+    /**
+     * EXCLUSION RULES (see {@link Filter}), honored across the UI, sync and analysis — a message
+     * matching any of them is hidden everywhere, never committed to the feed, and never scanned by a
+     * pipeline. This is the "ignore this sender" list, subtractive and global.
+     *
+     * The distinction from {@link filters} above: a saved view is a lens the user points at the
+     * mailbox and can switch away from; an exclusion rule removes mail from the mailbox entirely, for
+     * every surface and every pass, until the rule itself is deleted.
+     */
+    messageFilters: Schema.optional(Schema.Array(Filter)),
+
+    /**
+     * Optional per-mailbox reply guidance: tone, standing facts, sign-off, skills.
+     *
+     * A shared `Instructions` object can be referenced by several mailboxes, or a distinct one
+     * created per mailbox; the reply generator merges its text and skills into the session prompt.
+     */
+    instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotate({ title: 'Instructions' }), Schema.optional),
+
+    /**
+     * Bulk-mail subscriptions extracted from the feed by `ExtractSubscriptions`: one entry per sender
+     * carrying an unsubscribe affordance (header or body link).
+     *
+     * Replaced wholesale each run — persisted derived state for the UI, never a source of truth,
+     * which is why that pass must see every message and cannot take a feed cursor.
+     */
+    subscriptions: Schema.Array(Subscription).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
     // Reading a mailbox is a chain: the message replaces the message plank rather than growing the
@@ -271,6 +315,7 @@ export const ignoreSender = (mailbox: Mailbox, email: string): void => {
   if (email.length === 0 || (mailbox.messageFilters ?? []).some((filter) => filter.from === email)) {
     return;
   }
+
   Obj.update(mailbox, (mailbox) => {
     (mailbox.messageFilters ??= []).push({ from: email });
   });

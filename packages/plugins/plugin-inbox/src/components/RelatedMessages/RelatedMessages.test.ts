@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { type Message } from '@dxos/types';
 
-import { latestPerConversation } from './RelatedMessages';
+import { latestPerConversation, messageDigest } from './RelatedMessages';
 
 const message = (id: string, created: string, threadId?: string): Message.Message =>
   ({ id, created, threadId }) as Message.Message;
@@ -50,5 +50,38 @@ describe('latestPerConversation', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('dated');
+  });
+
+  describe('messageDigest', () => {
+    const withProps = (id: string, properties: Record<string, unknown>): Message.Message =>
+      ({ id, created: '2026-07-01T00:00:00.000Z', properties }) as unknown as Message.Message;
+
+    test('prefers the derived summary', ({ expect }) => {
+      const summaries = new Map([['m1', 'Agreed to ship on Friday.']]);
+      expect(messageDigest(withProps('m1', { subject: 'Re: launch', snippet: 'Sounds good...' }), summaries)).toBe(
+        'Agreed to ship on Friday.',
+      );
+    });
+
+    test('falls back to the provider snippet before the subject', ({ expect }) => {
+      // Both mail mappers set `snippet`, so this rung is populated for synced mail even before any
+      // summarization has run.
+      expect(messageDigest(withProps('m1', { subject: 'Re: launch', snippet: 'Sounds good...' }))).toBe(
+        'Sounds good...',
+      );
+    });
+
+    test('falls back to the subject when nothing better exists', ({ expect }) => {
+      expect(messageDigest(withProps('m1', { subject: 'Re: launch' }))).toBe('Re: launch');
+    });
+
+    test('is undefined when the message says nothing', ({ expect }) => {
+      expect(messageDigest(withProps('m1', {}))).toBeUndefined();
+    });
+
+    test('ignores a summary belonging to a different message', ({ expect }) => {
+      const summaries = new Map([['other', 'Not this one.']]);
+      expect(messageDigest(withProps('m1', { snippet: 'Mine.' }), summaries)).toBe('Mine.');
+    });
   });
 });
