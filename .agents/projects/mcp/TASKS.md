@@ -23,9 +23,15 @@ changes what a model sees lives in the shared package or it is a bug.
       about the surface is theirs. 32 unit tests, including a parity test that fails if the
       annotation id drifts from `Operation.McpToolAnnotation`.
 - [x] **`dx mcp serve`** — stdio host over the CLI's own plugin registry. Verified live against a
-      real MCP handshake: 12 tools (project/task/outline verbs + `skillLoad`), `codeProject` as a
-      prompt, `skillLoad` returning the skill body, ref parameters narrowed to their object shape,
-      and the shared server instructions on `initialize`.
+      real MCP handshake: 22 tools (project/task/outline verbs + `skillLoad`, plus the ported
+      static toolkits), `codeProject` as a prompt, `skillLoad` returning the skill body and the
+      identical text via `prompts/get`, ref parameters narrowed to their object shape, safety hints
+      on every tool, and the shared server instructions on `initialize`.
+- [x] **Static toolkits ported to the CLI** (2026-08-14) — `whoami`/`listSpaces`, the object CRUD,
+      and `listPlugins`/`listTypes`/`listOperations`. Serving the projection alone left a client
+      without the tools an agent reaches for first. Copied, not shared — see the factoring item
+      below. Object CRUD is advertised and argument-validated but **not verified end-to-end**; that
+      needs a profile with a space.
 - [x] plugin-projects + plugin-tasks added to the CLI plugin set (and to the default profile), so
       the annotated operations are in the registry the command projects.
 - [x] **Edge consumes the package** (2026-08-14, edge#888) — `mcp-space-service` keeps OAuth,
@@ -37,9 +43,22 @@ changes what a model sees lives in the shared package or it is a bug.
 - [ ] **Fidelity check in CI** — one test running the same registry fixture through both hosts
       (edge worker + `dx mcp serve`), asserting identical `tools/list`, `prompts/list` and
       `skillLoad`. The contract enforced, not documented.
-- [ ] **Registry construction shared** — `dx mcp serve` reads the CLI's enabled plugins;
-      operation-service assembles its own list plus base types. Factor one assembly so both hosts
-      register the same operations, skills and types.
+- [ ] **Static toolkits → plugin operations** — `whoami`, `listSpaces`, the object CRUD and the
+      discovery tools are hand-written twice, once per host (TODOs in
+      `cli/src/commands/mcp/{space,object,discovery}-tools.ts` and edge's `src/mcp/*-tools.ts`).
+      Contributed as annotated operations they would project through `@dxos/mcp-server` like the
+      project and task verbs, and both copies would be deleted. The object tools are the easy half
+      — they already only wrap `database.*` operations.
+- [ ] **Space visibility factored out** — which spaces a session may target is decided twice and
+      differently: the CLI filters `client.spaces` through `AppSpace.isVisibleSpace`, while edge's
+      `space-tools.ts` hard-codes its own `SETTINGS_SPACE_TAG` constant plus `withoutHaloSpace` /
+      `withinSessionContext` against the grant's space ids. Same intent — never surface the HALO
+      space or the settings space as a target — reached by two unrelated code paths, so a change to
+      the rule (a new internal tag, say) silently applies to one host only. One predicate, shared;
+      it belongs wherever the tag constants live rather than in either host.
+- [ ] **Registry construction shared** — `dx mcp serve` merges the CLI's curated
+      `operationHandlers`; operation-service assembles its own list plus base types. Factor one
+      assembly so both hosts register the same operations, skills and types.
 - [ ] **Watch/reload** — see Milestone 7; today an edit still needs a restart.
 
 ## Milestone 7 — third-party plugins and reload (design: [DESIGN.md](./DESIGN.md) §2-3)

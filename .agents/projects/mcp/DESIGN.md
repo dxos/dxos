@@ -19,6 +19,23 @@ the tool list, descriptions, schemas, prompts or `skillLoad` output lives in the
 bug. A CI test running one registry fixture through both hosts is what will enforce this
 (TASKS.md M6); today it is a convention.
 
+### 1.1 What the contract does not yet cover
+
+Two things a model sees are still decided per host, and both are duplication rather than genuine
+host-layer difference:
+
+- **The static toolkits.** `whoami`, `listSpaces`, the object CRUD and the discovery tools have no
+  operation behind them, so each host hand-writes a toolkit. They are copies (the CLI's were ported
+  from edge's), which means a change to any of their shapes has to be made twice and nothing
+  detects a miss. The route out is the one the project and task verbs already take: contribute them
+  as annotated operations from a plugin, and both hosts project them.
+- **Space visibility.** Both hosts implement "never surface the HALO space or the settings space as
+  a target", and neither shares an implementation: the CLI filters `client.spaces` through
+  `AppSpace.isVisibleSpace` (which reads space tags), while edge re-declares `SETTINGS_SPACE_TAG`
+  and pairs it with `withoutHaloSpace` / `withinSessionContext` over the grant's space ids. The
+  inputs differ — a live client versus an OAuth grant — but the _rule_ should not, and today adding
+  an internal tag would fix one host and quietly miss the other.
+
 ## 2. Third-party plugins in the CLI (2026-08-14)
 
 **Goal.** A shipped `dx` binary loads plugins that were not compiled into it, and those plugins'
