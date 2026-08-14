@@ -1,5 +1,6 @@
 ---
 '@dxos/echo': minor
+'@dxos/plugin-inbox': patch
 ---
 
 Add `Ref.byAnnotation(annotationId)`, a reference schema constrained by an annotation on the target's schema rather than by a concrete typename, so a schema can express "a ref to any type carrying X". The constraint is enforced where references are validated (operation input decoding) and survives a JSON schema round trip.

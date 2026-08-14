@@ -52,9 +52,11 @@ describe('Ref.byAnnotation', () => {
     expect(() => validate({ owner: Ref.make(calendar) })).not.toThrow();
   });
 
-  test('rejects a ref to an unannotated type, naming the missing annotation', ({ expect }) => {
+  test('rejects a ref to an unannotated type, naming the type and the missing annotation', ({ expect }) => {
     const contact = Obj.make(Contact, { name: 'Alice' });
-    expect(() => validate({ owner: Ref.make(contact) })).toThrow(FeedAnnotationId);
+    expect(() => validate({ owner: Ref.make(contact) })).toThrow(
+      `Referenced object (${Type.getTypename(Contact)}) does not carry \`${FeedAnnotationId}\`.`,
+    );
   });
 
   test('rejects a value that is not a ref', ({ expect }) => {

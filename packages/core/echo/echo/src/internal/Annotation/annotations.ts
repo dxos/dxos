@@ -267,8 +267,7 @@ export type ReferenceAnnotationValue = TypeAnnotation;
 export const ReferenceAnnotation = createAnnotationHelper<ReferenceAnnotationValue>(ReferenceAnnotationId);
 
 /**
- * Constrains a reference by an annotation on the target's schema rather than by a concrete typename,
- * so a schema can express "a ref to any type carrying X" (see `Ref.byAnnotation`).
+ * Reference constrained by an annotation on the target's schema instead of a typename (`Ref.byAnnotation`).
  */
 export const ReferenceConstraintAnnotationId = '@dxos/schema/annotation/ReferenceConstraint';
 

@@ -28,6 +28,7 @@ import {
   getSchemaURI,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
+  getTypename,
 } from '../Annotation/annotations';
 import {
   ANY_OBJECT_TYPENAME,
@@ -132,11 +133,7 @@ export interface RefFn {
   >;
 
   /**
-   * Reference constrained by an annotation on the target's schema rather than by a concrete
-   * typename: "a ref to ANY type carrying X". Use it for operations that name a capability
-   * (e.g. "an object that owns a feed") instead of one specific type.
-   *
-   * @see {@link byAnnotation} on the public `Ref` module for the documented contract.
+   * Reference to ANY type carrying {@link annotationId}. See `Ref.byAnnotation` for the contract.
    */
   byAnnotation: <T extends AnyEntity = AnyEntity>(annotationId: string) => RefSchema<T>;
 
@@ -333,9 +330,8 @@ export type JsonSchemaReferenceInfo = {
   schemaVersion?: string;
 
   /**
-   * Annotation the target's schema must carry, for a reference constrained by capability rather
-   * than by typename. Written to the encoded node so the constraint survives a schema stored as
-   * JSON and rebuilt via `JsonSchema.toEffectSchema`.
+   * Annotation the target's schema must carry, on the encoded node so the constraint survives a
+   * schema stored as JSON and rebuilt via `JsonSchema.toEffectSchema`.
    */
   annotation?: string;
 };
@@ -361,7 +357,7 @@ export const createEchoReferenceSchema = (
   typename: string | undefined,
   version: string | undefined,
   options?: {
-    /** Annotation the target's schema must carry. @see {@link Ref.byAnnotation} */
+    /** Constrains the target by annotation instead of by typename (`Ref.byAnnotation`). */
     annotationId?: string;
   },
 ): Schema.Codec<Ref<any>, EncodedReference> => {
@@ -435,11 +431,10 @@ export const createEchoReferenceSchema = (
 /**
  * Narrows a reference to targets whose schema carries {@link annotationId}.
  *
- * The check is synchronous because that is where references are actually validated -- an operation
- * input boundary runs `Schema.decodeUnknownSync(Schema.toType(input))` -- so it can only inspect a
- * target already in the working set. A reference whose target has not been loaded is passed rather
- * than rejected: an unresolved reference cannot be proven to violate the constraint, and failing it
- * would reject valid references to objects that simply are not local yet.
+ * A type-side check because that is where references are validated: an operation input boundary
+ * runs `Schema.decodeUnknownSync(Schema.toType(input))`. Being synchronous, it can only inspect a
+ * target already in the working set, so an unresolved reference passes -- it cannot be proven to
+ * violate the constraint, and rejecting it would fail valid references to non-local objects.
  */
 const withAnnotationConstraint = (
   schema: Schema.Codec<Ref<any>, EncodedReference>,
@@ -447,27 +442,30 @@ const withAnnotationConstraint = (
 ): Schema.Codec<Ref<any>, EncodedReference> =>
   schema
     .pipe(
-      Schema.refine(
-        (ref: Ref<any>): ref is Ref<any> => {
-          const target = getCheckableTarget(ref);
-          return target === undefined || hasSchemaAnnotation(target, annotationId);
-        },
-        {
-          title: `Ref<${annotationId}>`,
-          description: `Reference to an object whose schema carries \`${annotationId}\`.`,
-          message: `Referenced object's schema does not carry \`${annotationId}\`.`,
-        },
+      Schema.check(
+        // A filter rather than a plain predicate, so the failure can name the type that was
+        // actually referenced -- the first thing anyone debugging a rejected input asks.
+        Schema.makeFilter<Ref<any>>(
+          (ref) => {
+            const target = getCheckableTarget(ref);
+            if (target === undefined || hasSchemaAnnotation(target, annotationId)) {
+              return undefined;
+            }
+            return `Referenced object (${getTypename(target) ?? 'untyped'}) does not carry \`${annotationId}\`.`;
+          },
+          {
+            title: `Ref<${annotationId}>`,
+            description: `Reference to an object whose schema carries \`${annotationId}\`.`,
+          },
+        ),
       ),
     )
     .annotate({ [ReferenceConstraintAnnotationId]: { annotationId } });
 
-/**
- * The target of a reference when it can be read without awaiting IO, otherwise undefined.
- * Reading `target` probes the resolver's working set and schedules a load on a miss.
- */
-const getCheckableTarget = (ref: Ref<any>): unknown => (ref.isAvailable ? ref.target : undefined);
+/** Guarded on `isAvailable` because `target` throws on a reference with no resolver. */
+const getCheckableTarget = (ref: Ref<any>): AnyProperties | undefined => (ref.isAvailable ? ref.target : undefined);
 
-const hasSchemaAnnotation = (target: unknown, annotationId: string): boolean => {
+const hasSchemaAnnotation = (target: AnyProperties, annotationId: string): boolean => {
   const schema = getSchema(target);
   return schema !== undefined && SchemaAST.getAnnotation(schema.ast, annotationId) !== undefined;
 };
