@@ -311,6 +311,25 @@ this repo does not unit-test. One entry is worth acting on rather than dismissin
       them the operation: a FactStore provider layer, the `Analyze` toolbar action, the settings atom,
       and the fact surfaces/template. The only real residue is the runtime gap in the item above.
 
+## Refactor: split Mailbox.ts's helpers into grouped util modules (requested 2026-08-14)
+
+- [ ] **Factor the util functions out of `types/Mailbox.ts` into grouped files under `src/util/`, and
+      reconcile with what is already there.** `types/Mailbox.ts` is 671 lines and holds ~26 exported
+      helpers alongside the schema; `src/util/` already exists with `util.ts` (338 lines, another ~16
+      helpers), `match-filter.ts` and `on-arrival.ts`, so this is a reconciliation rather than a plain
+      move. Natural groupings visible in the current file: - **tags** — `tagUri`, `applyTag`, `removeTag`, `buildMessageTagsIndex`, `getTagsForMessage` - **extraction provenance** — `recordExtraction`, `getExtractedObjectIds` - **filtering** — `matchesFilter`, `isFiltered`, `ignoreSender`, `isNoReplyAddress`,
+      `isOrgSender`, `isReplyable`, `identityAddresses` (note `util/match-filter.ts` already owns
+      adjacent logic — reconcile, do not duplicate) - **annotations / summaries** — `makeSummary`, `findOrCreateAnnotations`, `getSummaryText`,
+      `summaryIndex`, `conversationSummary`, `mergeAnnotations` - **subscriptions** — `getUnsubscribeTarget`, `parseUnsubscribe`, `extractBodyUnsubscribe`,
+      `getUnsubscribeAffordance`, `deriveSubscriptions`
+      `types/Mailbox.ts` should keep only the schema, `instanceOf`, `make` and the type-level exports.
+      WATCH: the barrel is `#types` (`export * as Mailbox from './Mailbox'`), so call sites read
+      `Mailbox.getSummaryText(...)`. Moving these changes every call site's import — update them all in
+      the same change, no compatibility re-exports (see AGENTS.md). `util/index.ts` is a flat
+      `export *`, so grouped files must not collide on names.
+
+---
+
 ## Phase 4: Summarization
 
 ### Tasks
