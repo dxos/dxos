@@ -141,6 +141,13 @@ export type ClientServicesHostProps = {
   connectionLog?: boolean;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
+  /**
+   * Start edge networking as soon as the stack is open. Set `false` when the embedder drives it via
+   * {@link ClientServicesHost.startNetworking} — the worker does, so the dial cannot compete with
+   * the boot RPCs the tab is waiting on.
+   * @default true
+   */
+  autoConnect?: boolean;
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction>;
   runtimeProps?: ServiceContextRuntimeProps;
 };
@@ -204,6 +211,12 @@ export class ClientServicesHost {
 
   // Stack components, resolved from the layer runtime on open. Present after `open` starts.
   #ctx?: Context;
+
+  /** Guards {@link startNetworking} so repeated calls cannot start two connection loops. */
+  #networkingStarted = false;
+
+  /** See {@link ClientServicesHostProps.autoConnect}. */
+  readonly #autoConnect: boolean;
   #metadataStore?: IMetadataStore;
   #keyring?: KeyringApi;
   #feedStore?: FeedStore<any>;
@@ -234,10 +247,12 @@ export class ClientServicesHost {
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
     callbacks,
+    autoConnect = true,
     runtime,
     runtimeProps,
   }: ClientServicesHostProps) {
     this.#callbacks = callbacks;
+    this.#autoConnect = autoConnect;
     this.#runtime = runtime;
     this.#runtimeProps = runtimeProps ?? {};
 
@@ -421,7 +436,13 @@ export class ClientServicesHost {
     const endpoint = config?.get('runtime.services.edge.url');
     if (endpoint) {
       const clientTag = resolveTelemetryTag(config);
-      this.#edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
+      // Dialing is driven by `startNetworking()` rather than `open()`, so the host controls when
+      // outbound work is allowed to compete with boot.
+      this.#edgeConnection = new EdgeClient(createStubEdgeIdentity(), {
+        socketEndpoint: endpoint,
+        clientTag,
+        deferConnect: true,
+      });
       this.#edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
     }
 
@@ -620,6 +641,24 @@ export class ClientServicesHost {
     this.#statusUpdate.emit();
     const deviceKey = this.#identityManager?.identity?.deviceKey;
     log('opened', { deviceKey });
+  }
+
+  /**
+   * Allows outbound network activity to begin. Idempotent. Called automatically when the stack opens
+   * unless {@link ClientServicesHostProps.autoConnect} is `false`, in which case the embedder decides
+   * when connecting is safe (and owns any delay).
+   *
+   * Only the edge dial needs gating: subduction defers while the socket is not `CONNECTED` and
+   * resumes from its reconnect handler, and feed sync starts from `onReconnected`. Both therefore
+   * follow this gate without their own.
+   */
+  startNetworking(): void {
+    if (this.#networkingStarted || !this.#edgeConnection) {
+      return;
+    }
+    this.#networkingStarted = true;
+    log('starting edge networking');
+    this.#edgeConnection.startNetworking();
   }
 
   @synchronized
@@ -886,6 +925,10 @@ export class ClientServicesHost {
     log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
     log('stack opened');
+
+    if (this.#autoConnect) {
+      this.startNetworking();
+    }
   }
 
   /**

@@ -52,6 +52,14 @@ import { QueryServiceImpl } from './query-service';
 import { type SpaceDocumentListUpdatedEvent, SpaceStateManager } from './space-state-manager';
 
 /**
+ * Documents walked between event-loop yields during a reachability traversal. Bounds how long one
+ * pass can hold the worker thread; the walk is best-effort maintenance and never latency-critical.
+ */
+const CLOSURE_YIELD_INTERVAL = 32;
+
+const AUTOMATIC_GARBAGE_COLLECTION = false;
+
+/**
  * Every path that can start an indexing run. Logged on each run so an idle-churn loop is
  * attributable from `app.log` alone — the counts are otherwise indistinguishable between a
  * data-driven pass and a self-sustaining invalidation cycle.
@@ -334,18 +342,21 @@ export class EchoHost extends Resource {
         e.documentIds,
       );
 
-      // Documents that left the directory are this peer's share of a garbage-collection pass some
-      // peer explicitly ran: the unlink replicates as an ordinary change, and its arrival here is
-      // the evidence. Reclaiming them locally is what makes one invocation free disk everywhere,
-      // rather than requiring every peer to run collection itself.
-      //
-      // Safe because a departed document id never comes back: automerge delivers causally, so a
-      // link removal is never observed before the create it depends on, and the sole writer of a
-      // `links` key (object creation) always writes a freshly created document url. Registering
-      // the new collection state first also means no fetch can race the wipe.
-      const departed = previous ? this.#departedDocuments(previous, e) : [];
-      if (departed.length > 0 || e.previousRootId) {
-        this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
+      // TODO(dmaretskyi): Current algortithm is too expensive.
+      if (AUTOMATIC_GARBAGE_COLLECTION) {
+        // Documents that left the directory are this peer's share of a garbage-collection pass some
+        // peer explicitly ran: the unlink replicates as an ordinary change, and its arrival here is
+        // the evidence. Reclaiming them locally is what makes one invocation free disk everywhere,
+        // rather than requiring every peer to run collection itself.
+        //
+        // Safe because a departed document id never comes back: automerge delivers causally, so a
+        // link removal is never observed before the create it depends on, and the sole writer of a
+        // `links` key (object creation) always writes a freshly created document url. Registering
+        // the new collection state first also means no fetch can race the wipe.
+        const departed = previous ? this.#departedDocuments(previous, e) : [];
+        if (departed.length > 0 || e.previousRootId) {
+          this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
+        }
       }
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
@@ -607,6 +618,12 @@ export class EchoHost extends Resource {
             candidates.add(documentId);
           }
         }
+        // Nothing to reclaim: return before touching the live directory. Walking it to build a
+        // reachable set no candidate would be tested against costs one storage load per document in
+        // the space, which on a large space is seconds of thread time for no possible outcome.
+        if (candidates.size === 0) {
+          return;
+        }
 
         // Re-checked against the live directory: between the event and this task the documents
         // could have been re-linked (a concurrent write merging in), and reachable data is never
@@ -619,7 +636,11 @@ export class EchoHost extends Resource {
           log('reclamation skipped, live space directory unavailable', { spaceId });
           return;
         }
-        const reachable = await this.#collectClosure(root.documentId);
+        // Only the candidates' reachability is in question, so the walk stops as soon as every one
+        // has been found rather than enumerating the whole space. Proving a candidate *unreachable*
+        // still costs a full traversal — that is inherent to reachability — but the common
+        // re-link case now exits after a few loads instead of thousands.
+        const reachable = await this.#collectClosure(root.documentId, candidates);
 
         const stale: DocumentId[] = [];
         for (const documentId of candidates) {
@@ -660,15 +681,35 @@ export class EchoHost extends Resource {
    * members. Storage-only: fetching from the network here would re-materialize the very documents
    * being collected. A document that is not on disk terminates the walk.
    */
-  async #collectClosure(documentId: DocumentId): Promise<Set<DocumentId>> {
+  async #collectClosure(documentId: DocumentId, stopWhenFound?: ReadonlySet<DocumentId>): Promise<Set<DocumentId>> {
     const visited = new Set<DocumentId>();
     const queue: DocumentId[] = [documentId];
+    // When the caller only needs a membership answer, track what is still outstanding so the walk
+    // can stop early. An empty set means the caller wants the full closure.
+    const outstanding = stopWhenFound ? new Set(stopWhenFound) : undefined;
+    let sinceYield = 0;
     while (queue.length > 0) {
       const next = queue.shift()!;
       if (visited.has(next)) {
         continue;
       }
       visited.add(next);
+      outstanding?.delete(next);
+      if (outstanding?.size === 0) {
+        break;
+      }
+      // Every load parses an automerge document on the single worker thread, so a large space would
+      // otherwise hold it for seconds and stall the RPCs a booting tab is waiting on.
+      if (++sinceYield >= CLOSURE_YIELD_INTERVAL) {
+        sinceYield = 0;
+        await sleep(0);
+        // Throw rather than return what has been walked so far: a truncated traversal is not a
+        // closure, and returning it would read as "these documents are unreachable" and wipe live
+        // data. `#scheduleReclaim` swallows this once the context is disposed.
+        if (this._ctx.disposed) {
+          throw new Error('closure traversal aborted: context disposed');
+        }
+      }
       const doc = await this.#loadFromStorage(next);
       if (!doc) {
         continue;
