@@ -187,8 +187,23 @@ Committed, unpushed. This is the PR to open first.
 - [ ] **Avatar not aligned with the actor's name** — both surfaces (conversation view AND the mailbox
       message card). Note `Card.theme.ts`'s `subgrid` carries `items-center`, which is the alignment
       rule to look at before the row gap.
-- [ ] **Messages without `threadId` never render** in the mailbox conversation view — invisible
-      messages are effectively data loss in that view.
+- [ ] **Messages without `threadId` are silently truncated to 4** — DIAGNOSED, needs a decision.
+      Not the conversation view: it is `MailboxArticle`'s aggregate. `Aggregate.group('threadId')` puts
+      EVERY threadless message into one `null`-key group, and `Aggregate.items({ limit:
+    MAILBOX_THREAD_PREVIEW_COUNT })` caps that group at **4**. Line 217 then splits `entry.items` into
+      singleton conversations — but only ever the 4 it was given. So a mailbox with >4 threadless
+      messages renders 4 and silently drops the rest; `entry.count` knows the true size and is discarded
+      on that branch. Capping is right for a real thread (one row, `count` shows the full size) and
+      wrong for the null group, which is N unrelated messages each deserving a row.
+      REACHABLE: `threadId` is `Schema.optional` and NO plugin-inbox creation site sets one — synced
+      Gmail/JMAP mail carries a server-set id, but drafts, transcription and assistant-authored messages
+      do not.
+      NO CHEAP FIX. `Aggregate.group` takes a plain property name, so `threadId ?? id` is not
+      expressible; the items limit is per-aggregate, so it cannot differ for the null group; and
+      raising it inflates every real thread's preview payload. Options: (a) extend ECHO's aggregate to
+      accept a computed group key; (b) derive a `threadId` at write time (`deriveThreadId` already
+      exists in pipeline-email) so the null group never forms — does not fix existing data;
+      (c) select threadless messages in a separate paginated query and merge in the view.
 - [x] **Open an attachment in its own plank** — `Row.Attachments` is presentational today; needs a click
       handler, the attachment ref resolved to its Blob/object DXN, and a surface for that type.
 - [ ] **Mailbox card: rows showing the inbox message count** — read `inbox`-tag membership from the tag
