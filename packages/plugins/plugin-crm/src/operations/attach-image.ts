@@ -8,10 +8,14 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy';
 import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { Organization, Person } from '@dxos/types';
 
 import { CrmOperation } from '#types';
+
+/** Tagged failure channel for the attach-image path (validation, download, re-host). */
+export class AttachImageError extends BaseError.extend('AttachImageError', 'Failed to attach image') {}
 
 // SVG is intentionally excluded: inline <script>/event handlers make it a
 // stored-XSS risk for any downstream surface that renders the image via
@@ -176,33 +180,39 @@ export const attachImageToSubject = ({
   subject: Person.Person | Organization.Organization;
   url: string;
   imageServiceUrl?: string;
-}): Effect.Effect<string, Error> =>
+}): Effect.Effect<string, AttachImageError> =>
   Effect.gen(function* () {
     const serviceUrl = getImageServiceUrl(imageServiceUrl);
     if (!serviceUrl) {
       return yield* Effect.fail(
-        new Error('Image service endpoint is not configured (imageServiceUrl input or DX_CRM_IMAGE_SERVICE_URL).'),
+        new AttachImageError({
+          message: 'Image service endpoint is not configured (imageServiceUrl input or DX_CRM_IMAGE_SERVICE_URL).',
+        }),
       );
     }
 
     const validatedSource = yield* Effect.try({
       try: () => validateExternalUrl(url),
-      catch: (cause) => new Error(`Rejected source URL: ${String(cause)}`),
+      catch: (cause) => new AttachImageError({ message: `Rejected source URL: ${String(cause)}` }),
     });
 
     const downloaded = yield* Effect.tryPromise({
       try: () => proxyFetchLegacy(validatedSource, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }),
-      catch: (cause) => new Error(`Failed to download image: ${String(cause)}`),
+      catch: (cause) => new AttachImageError({ message: `Failed to download image: ${String(cause)}` }),
     });
     if (!downloaded.ok) {
-      return yield* Effect.fail(new Error(`Failed to download image: ${downloaded.status} ${downloaded.statusText}`));
+      return yield* Effect.fail(
+        new AttachImageError({ message: `Failed to download image: ${downloaded.status} ${downloaded.statusText}` }),
+      );
     }
 
     const contentLengthHeader = downloaded.headers.get('content-length');
     if (contentLengthHeader) {
       const contentLength = Number(contentLengthHeader);
       if (Number.isFinite(contentLength) && contentLength > MAX_IMAGE_BYTES) {
-        return yield* Effect.fail(new Error(`Image exceeds size cap (${contentLength} bytes > ${MAX_IMAGE_BYTES})`));
+        return yield* Effect.fail(
+          new AttachImageError({ message: `Image exceeds size cap (${contentLength} bytes > ${MAX_IMAGE_BYTES})` }),
+        );
       }
     }
 
@@ -242,7 +252,7 @@ export const attachImageToSubject = ({
         }
         return new Blob(chunks as BlobPart[]);
       },
-      catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+      catch: (cause) => new AttachImageError({ message: cause instanceof Error ? cause.message : String(cause) }),
     });
 
     const responseType = downloaded.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase();
@@ -252,14 +262,14 @@ export const attachImageToSubject = ({
     let contentType: string | undefined;
     if (responseType) {
       if (!ALLOWED_CONTENT_TYPES.has(responseType)) {
-        return yield* Effect.fail(new Error(`Unsupported image content-type: ${responseType}`));
+        return yield* Effect.fail(new AttachImageError({ message: `Unsupported image content-type: ${responseType}` }));
       }
       contentType = responseType;
     } else {
       contentType = inferContentTypeFromUrl(validatedSource.toString());
     }
     if (!contentType || !ALLOWED_CONTENT_TYPES.has(contentType)) {
-      return yield* Effect.fail(new Error('Unable to determine image content-type'));
+      return yield* Effect.fail(new AttachImageError({ message: 'Unable to determine image content-type' }));
     }
 
     const blob = sourceBlob.type === contentType ? sourceBlob : new Blob([sourceBlob], { type: contentType });
@@ -267,9 +277,13 @@ export const attachImageToSubject = ({
     const client = new EdgeServiceClient({ baseUrl: serviceUrl, timeout: FETCH_TIMEOUT_MS });
     const { url: uploadedUrl } = yield* Image.thumbnail(client, blob, {
       filename: filenameFromUrl(validatedSource.toString()),
-    }).pipe(Effect.mapError((cause) => new Error(`Image service upload failed: ${cause.message}`)));
+    }).pipe(
+      Effect.mapError((cause) => new AttachImageError({ message: `Image service upload failed: ${cause.message}` })),
+    );
     if (!isAbsoluteHttpUrl(uploadedUrl)) {
-      return yield* Effect.fail(new Error('Image service returned an invalid or non-absolute URL'));
+      return yield* Effect.fail(
+        new AttachImageError({ message: 'Image service returned an invalid or non-absolute URL' }),
+      );
     }
 
     Entity.update(subject as Entity.Any, (obj) => {
@@ -286,7 +300,9 @@ export default CrmOperation.AttachImage.pipe(
       const target = yield* Database.load(subject);
       if (!Obj.instanceOf(Person.Person, target) && !Obj.instanceOf(Organization.Organization, target)) {
         return yield* Effect.fail(
-          new Error('Subject must be a Person or Organization (image field is only defined on those types)'),
+          new AttachImageError({
+            message: 'Subject must be a Person or Organization (image field is only defined on those types)',
+          }),
         );
       }
       const imageUrl = yield* attachImageToSubject({ subject: target, url, imageServiceUrl });

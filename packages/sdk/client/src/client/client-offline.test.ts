@@ -20,6 +20,31 @@ vi.mock('isomorphic-ws', () => ({
   },
 }));
 
+describe('Client with offline config (no edge endpoint)', () => {
+  test('boots, database round-trips, zero network activity, zero warnings', { timeout: 10_000 }, async () => {
+    const networkCalls = interceptNetwork();
+    const problems = captureProblems();
+
+    const client = new Client({ config: new Config() });
+    // Safety net for failure paths; a second destroy after the explicit one below is a no-op.
+    onTestFinished(() => client.destroy());
+    await client.initialize();
+    await client.halo.createIdentity();
+    await client.addTypes([TestSchema.Expando]);
+
+    const space = await client.spaces.create();
+    space.db.add(Obj.make(TestSchema.Expando, { name: 'offline' }));
+    await space.db.flush();
+    const names = (await space.db.query(Filter.type(TestSchema.Expando)).run()).map((obj) => obj.name);
+    expect(names).toContain('offline');
+
+    await client.destroy();
+
+    expect(networkCalls).toEqual([]);
+    expect(problems).toEqual([]);
+  });
+});
+
 /**
  * Replaces the global network entry points with recorders that fail the call, so any attempt
  * to touch the network surfaces both in the recorded list and as a loud runtime error.
@@ -62,26 +87,3 @@ const captureProblems = (): string[] => {
   onTestFinished(removeProcessor);
   return problems;
 };
-
-describe('Client with offline config (no edge endpoint)', () => {
-  test('boots, database round-trips, zero network activity, zero warnings', { timeout: 10_000 }, async () => {
-    const networkCalls = interceptNetwork();
-    const problems = captureProblems();
-
-    const client = new Client({ config: new Config() });
-    await client.initialize();
-    await client.halo.createIdentity();
-    await client.addTypes([TestSchema.Expando]);
-
-    const space = await client.spaces.create();
-    space.db.add(Obj.make(TestSchema.Expando, { name: 'offline' }));
-    await space.db.flush();
-    const names = (await space.db.query(Filter.type(TestSchema.Expando)).run()).map((obj) => obj.name);
-    expect(names).toContain('offline');
-
-    await client.destroy();
-
-    expect(networkCalls).toEqual([]);
-    expect(problems).toEqual([]);
-  });
-});

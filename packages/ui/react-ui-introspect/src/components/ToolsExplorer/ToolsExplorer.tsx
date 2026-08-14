@@ -38,9 +38,18 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(({ s
     if (!serverUrl) {
       return;
     }
+    // The URL now comes from user config; surface a malformed value as a connection failure
+    // instead of throwing into the nearest error boundary.
+    let url: URL;
+    try {
+      url = new URL(serverUrl);
+    } catch (err) {
+      setConnectError(err instanceof Error ? err : new Error(String(err)));
+      return;
+    }
     let cancelled = false;
     const next = new Client({ name: 'react-ui-introspect', version: '0.0.0' }, { capabilities: {} });
-    const transport = new StreamableHTTPClientTransport(new URL(serverUrl));
+    const transport = new StreamableHTTPClientTransport(url);
     next.connect(transport).then(
       async () => {
         if (cancelled) {

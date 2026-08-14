@@ -24,21 +24,22 @@ const operations = [
   CodeOperation.RunBuild,
 ];
 
-export type CoderSkillOptions = {
-  /**
-   * URL of the introspect-mcp server (`runtime.services.edgeServices: introspect`). The agent uses
-   * its tools (list_packages, get_package, list_symbols, find_symbol, get_symbol) to look up DXOS
-   * and Composer APIs while authoring code; without it the skill ships no MCP servers.
-   */
-  introspectMcpUrl?: string;
-};
+/**
+ * URL of the introspect-mcp server. The agent uses its tools (list_packages,
+ * get_package, list_symbols, find_symbol, get_symbol) to look up DXOS and
+ * Composer APIs while authoring code.
+ *
+ * TODO(burdon): Make configurable via plugin Settings once EDGE deployment
+ * URL is finalized.
+ */
+const INTROSPECT_MCP_URL = 'https://edge.dxos.workers.dev/introspect/mcp';
 
-export const makeCoderSkill = ({ introspectMcpUrl }: CoderSkillOptions = {}) =>
+const make = () =>
   Skill.make({
     key: SKILL_KEY,
     name: 'Coder',
     tools: Skill.toolDefinitions({ operations }),
-    ...(introspectMcpUrl ? { mcpServers: [{ url: introspectMcpUrl, protocol: 'http' as const }] } : {}),
+    mcpServers: [{ url: INTROSPECT_MCP_URL, protocol: 'http' }],
     instructions: Template.make({
       source: trim`
         You are the Coder. You help the user author a DEUS specification (an .mdl
@@ -97,7 +98,7 @@ export const makeCoderSkill = ({ introspectMcpUrl }: CoderSkillOptions = {}) =>
 
 const skill: Skill.Definition = {
   key: SKILL_KEY,
-  make: makeCoderSkill,
+  make,
 };
 
 export default skill;

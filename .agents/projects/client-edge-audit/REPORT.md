@@ -14,11 +14,13 @@ _2026-08-14 · project `client-edge-audit` · branch `claude/client-edge-audit-5
    double-gated, and the only boot log is a debug-level "P2P network is not
    configured". A new test pins this: DB round-trip succeeds with **zero
    network calls and zero WARN+ log entries**.
-3. **No defaults (goal 3): fixed.** `@dxos/config` shipped three families of
-   production-endpoint defaults (`defaultConfig` → `wss://dxos.network/`,
-   `configPreset()` → main, `EDGE_SERVICE_DEFAULTS` → six workers). All
-   removed, all consumers updated to treat absence as "feature unavailable",
-   and a config test now pins the endpoint-free behavior.
+3. **No defaults (goal 3): fixed.** `@dxos/config` shipped two families of
+   silent production-endpoint defaults: `defaultConfig` (written to first-run
+   CLI profiles as `wss://dxos.network/` + ICE + IPFS) and
+   `EDGE_SERVICE_DEFAULTS` (six workers). Both are deleted, all consumers
+   updated to treat absence as "feature unavailable", and a config test pins
+   the endpoint-free behavior. `configPreset` keeps its `edge: 'main'` default
+   by decision — calling the preset factory is itself an explicit opt-in.
 
 Everything builds (full-repo `:build` green), all touched-package tests pass,
 lint + format clean.
@@ -77,11 +79,11 @@ client, now plugin-wnfs blockstore).
 
 In `@dxos/config` (the violations that mattered):
 
-| Was                                                                                                                                                                 | Now                                                                                                     |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `defaultConfig` carried `edge.url: wss://dxos.network/` + ICE + IPFS, and `ConfigService.load()` **wrote it to `~/.config/dx/profile/<name>.yml`** on first CLI run | `defaultConfig` is endpoint-free (features + storage only); first-run profiles materialize no endpoints |
-| `configPreset()` silently defaulted `edge: 'main'`                                                                                                                  | `edge` omitted unless the caller names an environment (same as `sandbox`)                               |
-| `EDGE_SERVICE_DEFAULTS` — six production workers; `getEdgeServiceEndpoint` could not return "absent"                                                                | constant deleted; returns `string \| undefined`; new `no-default-endpoints.test.ts` pins it             |
+| Was                                                                                                                                                                 | Now                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `defaultConfig` carried `edge.url: wss://dxos.network/` + ICE + IPFS, and `ConfigService.load()` **wrote it to `~/.config/dx/profile/<name>.yml`** on first CLI run | `defaultConfig` deleted; first runs write an **empty** profile and both load branches merge `profileBuiltinDefaults` (fixing the first-run branch that skipped it) |
+| `configPreset()` defaulted `edge: 'main'`                                                                                                                           | **Kept by decision** — the preset factory call is an explicit opt-in                                                                                               |
+| `EDGE_SERVICE_DEFAULTS` — six production workers; `getEdgeServiceEndpoint` could not return "absent"                                                                | constant deleted; returns `string \| undefined`; new `no-default-endpoints.test.ts` pins it                                                                        |
 
 Consumers updated to handle absence explicitly:
 
@@ -95,9 +97,6 @@ Consumers updated to handle absence explicitly:
 - **plugin-devtools** — new `ToolsExplorerContainer` resolves the introspect
   endpoint from config; `react-ui-introspect`'s `ToolsExplorer` lost its
   `localhost:39476` default and renders a "not configured" message instead.
-- **plugin-code** — the Coder skill's introspect MCP server is now resolved
-  from config at skill-make time and omitted when unconfigured (was a
-  hard-coded `edge.dxos.workers.dev` URL).
 - **CLI hub commands** — `?? 'https://hub.dxos.network'` (two sites) → fail
   with `HubApiError('Hub URL is not configured (runtime.services.hub.url).')`.
 - **sdk/client devtools hook** — no more `https://halo.dxos.org` fallback
@@ -111,8 +110,12 @@ Consumers updated to handle absence explicitly:
   today's behavior through app config, which is the legitimate channel.
 
 Deliberately kept: app-level `dx.yml` endpoints (that _is_ provided config),
-explicit CLI choices (`dx profile create` templates, `--host` option defaults),
-and test-only literals.
+explicit CLI choices (`dx profile create` templates, `--host` option defaults,
+`configPreset` environments), and test-only mock URLs. The live image-service
+e2e no longer defaults its target either — enabling `DX_RUN_IMAGE_SERVICE_E2E`
+without `DX_IMAGE_SERVICE_URL` now fails loudly. Attempted then reverted as
+out-of-scope: config-wiring the Coder skill's introspect MCP URL (plugin-code)
+— recorded in Phase 4 with the other feature-time literals.
 
 ## Verification
 

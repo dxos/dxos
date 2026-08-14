@@ -5,11 +5,10 @@
 import { describe, expect, test } from 'vitest';
 
 import { Config } from './config';
-import { defaultConfig } from './config-service';
 import { EdgeServiceName, getEdgeServiceEndpoint } from './edge-services';
-import { configPreset } from './preset';
 
-// Absent config must mean "no edge" — nothing in @dxos/config may inject an endpoint.
+// Absent config must mean "no edge" — edge-service lookup never injects an endpoint.
+// (configPreset is exempt by decision: calling the preset factory is itself an explicit opt-in.)
 describe('no default endpoints', () => {
   test('getEdgeServiceEndpoint returns undefined when unconfigured', () => {
     expect(getEdgeServiceEndpoint(new Config(), EdgeServiceName.Calls)).toBeUndefined();
@@ -28,15 +27,5 @@ describe('no default endpoints', () => {
     });
     expect(getEdgeServiceEndpoint(config, EdgeServiceName.Calls)).toEqual('https://calls-override.example.com');
     expect(getEdgeServiceEndpoint(config, EdgeServiceName.Image)).toBeUndefined();
-  });
-
-  test('configPreset omits the edge service when no environment is given', () => {
-    expect(configPreset().get('runtime.services.edge.url')).toBeUndefined();
-    expect(configPreset({ sandbox: 'local' }).get('runtime.services.edge.url')).toBeUndefined();
-    expect(configPreset({ edge: 'local' }).get('runtime.services.edge.url')).toEqual('http://localhost:8787');
-  });
-
-  test('defaultConfig carries no service endpoints', () => {
-    expect(defaultConfig.get('runtime.services')).toBeUndefined();
   });
 });

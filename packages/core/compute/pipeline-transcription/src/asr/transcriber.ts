@@ -117,6 +117,11 @@ export class Transcriber extends Resource {
   }
 
   protected override async _open(ctx: Context): Promise<void> {
+    // Fail before any audio is captured: a missing transport discovered mid-drain would discard
+    // the user's buffered speech.
+    if (!this._transcribeFn && !this._config.endpoint) {
+      throw new Error('Transcription endpoint is not configured (runtime.services.edgeServices: transcription).');
+    }
     log.info('opening');
     this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
     await this._recorder.start();

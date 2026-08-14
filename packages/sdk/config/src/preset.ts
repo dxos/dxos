@@ -8,7 +8,8 @@ import { Config } from './config';
 
 export type ConfigPresetOptions = {
   /**
-   * Edge service. Omitted from the config when unset — there is no implicit environment.
+   * Edge service.
+   * @default main
    */
   edge?: 'local' | 'dev' | 'main' | 'production';
 
@@ -37,7 +38,7 @@ const sandboxUrl = (sandbox: NonNullable<ConfigPresetOptions['sandbox']>) =>
     Match.exhaustive,
   );
 
-export const configPreset = ({ edge, sandbox }: ConfigPresetOptions = {}) =>
+export const configPreset = ({ edge = 'main', sandbox }: ConfigPresetOptions = {}) =>
   new Config({
     version: 1,
     runtime: {
@@ -49,7 +50,9 @@ export const configPreset = ({ edge, sandbox }: ConfigPresetOptions = {}) =>
         },
       },
       services: {
-        ...(edge ? { edge: { url: edgeUrl(edge) } } : {}),
+        edge: {
+          url: edgeUrl(edge),
+        },
         ...(sandbox ? { sandbox: { url: sandboxUrl(sandbox) } } : {}),
       },
     },

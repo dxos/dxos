@@ -1,6 +1,6 @@
 # Client–Edge Audit — Tasks
 
-_Resume: Phases 1–3 complete and committed; open a PR, then pick up Phase 4 follow-ups. Uncommitted: none expected after the Phase 2/3 commit._
+_Resume: PR #12598 open — drive review + Check to green and land it, then pick up Phase 4 follow-ups. Uncommitted: none expected._
 
 ## Phase 1: Inventory client→edge communication points
 
@@ -31,8 +31,9 @@ warnings/errors.
 
 - [x] **Determine current offline behavior** — SDK boot is already silent and
       clean (every edge site gated; signaling falls back to memory; the P2P
-      note logs at debug). App-level noise identified: module-loader
-      capability warn + ipdata boot warn (see Phase 4).
+      note logs at debug). App-level noise: ipdata missing-key boot warn
+      (fixed in this branch — downgraded to debug) and the module-loader
+      capability warn (Phase 4).
 - [x] **Add an automated offline test** —
       [client-offline.test.ts](../../../packages/sdk/client/src/client/client-offline.test.ts):
       empty `Config()`, identity + space + object round-trip, `fetch`/
@@ -49,17 +50,18 @@ warnings/errors.
 - [x] **Find any code/config default that injects an edge endpoint** — full
       list in DESIGN.md §Config plumbing & defaults.
 - [x] **Remove them** — shipped in this branch:
-  - `@dxos/config`: `defaultConfig` stripped of `services` (edge/ICE/IPFS) —
-    CLI first-run profile is now endpoint-free; `configPreset` no longer
-    defaults `edge: 'main'` (omit-when-unset); `EDGE_SERVICE_DEFAULTS` deleted,
-    `getEdgeServiceEndpoint` returns `string | undefined`. New
-    `no-default-endpoints.test.ts` pins all three.
+  - `@dxos/config`: `defaultConfig` DELETED — `ConfigService.load` writes an
+    empty first-run profile and merges `profileBuiltinDefaults` on both load
+    branches (fixing the first-run branch that skipped the merge);
+    `EDGE_SERVICE_DEFAULTS` deleted, `getEdgeServiceEndpoint` returns
+    `string | undefined`. Pinned by `no-default-endpoints.test.ts`.
+    `configPreset` keeps its `edge = 'main'` default by decision — the factory
+    call is itself an explicit opt-in.
   - Consumers updated to handle absence: pipeline-transcription `Transcriber`
     (clear error; endpoint now threaded from config via plugin-transcription),
     plugin-crm `attach-image` (typed error), plugin-support screenshot upload
     (skip + debug log), plugin-calls `join()` (invariant), plugin-devtools
-    ToolsExplorer (new config-driven container), plugin-code Coder skill (MCP
-    server omitted when unconfigured, resolved from config at make time).
+    ToolsExplorer (new config-driven container).
   - `react-ui-introspect`: `DEFAULT_INTROSPECT_MCP_URL` removed; explorer
     renders a "not configured" state.
   - CLI hub commands: `?? 'https://hub.dxos.network'` (×2) → fail with
@@ -99,11 +101,15 @@ warnings/errors.
 - [ ] **react-edge-client is dead weight** — `useEdgeClient` has zero call
       sites; only a type import in plugin-transcription keeps the package
       alive. Consolidate into `client.edge` and remove.
-- [ ] **Remaining feature-time literals (outside client stack)** — plugin-video
-      `TRANSCRIPTION_ENDPOINT` (has TODO), plugin-client `ACCOUNT_PROFILE_URL`,
-      plugin-script `hub.dxos.network` serverName, assistant-toolkit discord
-      cors URL + browser-skill playwright-mcp URL, composer-crx literals,
-      agent-hosting `localhost:8082` (invariant-gated).
+- [ ] **Remaining feature-time literals (outside client stack)** — plugin-code
+      `INTROSPECT_MCP_URL` (Coder skill MCP server; config-wiring was attempted
+      in PR #12598 and deliberately reverted to keep the PR client-scoped — a
+      skill `Definition.make` is nullary, so config injection needs the
+      capability-wrapper seam), plugin-video `TRANSCRIPTION_ENDPOINT` (has
+      TODO), plugin-client `ACCOUNT_PROFILE_URL`, plugin-script
+      `hub.dxos.network` serverName, assistant-toolkit discord cors URL +
+      browser-skill playwright-mcp URL, composer-crx literals, agent-hosting
+      `localhost:8082` (invariant-gated).
 - [ ] **Document the devtools EdgeSelector override channel** — writes
       `org.dxos.settings.config` to localforage, which Composer's `setupConfig`
       reads first; invisible to users.

@@ -27,24 +27,6 @@ export const memoryConfig = new Config({
   },
 });
 
-// Deliberately endpoint-free: `ConfigService.load` materializes this to disk on first run, and an
-// absent `runtime.services` must mean "no edge" rather than a silently-defaulted production endpoint.
-export const defaultConfig = new Config({
-  runtime: {
-    client: {
-      edgeFeatures: {
-        subductionReplicator: true,
-        feedReplicator: true,
-        signaling: true,
-        agents: true,
-      },
-      storage: {
-        persistent: true,
-      },
-    },
-  },
-});
-
 export class ConfigService extends Context.Service<ConfigService, Config>()('ConfigService') {
   static layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
 
@@ -69,12 +51,15 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
           ? Effect.fail(error)
           : Effect.gen(function* () {
               const Yaml = yield* Effect.promise(() => import('yaml'));
-              const configValues = defaultConfig.values;
+              // First run materializes an EMPTY profile: the file records only user choices, while
+              // features/storage come from profileBuiltinDefaults on every load (same as the read
+              // path) — never a silently-defaulted endpoint.
+              const configValues = new Config().values;
               const fs = yield* FileSystem.FileSystem;
               const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
               yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });
               yield* fs.writeFileString(pathToCreate, Yaml.stringify(configValues));
-              return ConfigService.of(new Config(configValues));
+              return ConfigService.of(new Config(configValues, profileBuiltinDefaults(args.profile).values));
             }),
       ),
     );
