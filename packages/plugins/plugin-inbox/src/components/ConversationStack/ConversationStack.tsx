@@ -328,7 +328,7 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
           <ScrollArea.Viewport ref={viewportRef}>
             <Mosaic.Stack
               Tile={ConversationMessageTile}
-              classNames='dx-document gap-2 pbs-2'
+              classNames='dx-document gap-2 py-2'
               items={tileItems}
               getId={getId}
               draggable={false}
@@ -357,8 +357,8 @@ const MESSAGE_TILE_COLUMNS = 'grid grid-cols-[auto_1fr_auto]';
  * their content aligns with the senders and bodies. `DxAvatar` renders `size * 4` px, matching `w-9`;
  * `is-9` is not a real Tailwind utility (see the Slider regression guard).
  */
-const MESSAGE_AVATAR_SIZE = 9;
-const MESSAGE_AVATAR_GUTTER = 'w-9';
+const MESSAGE_AVATAR_SIZE = 8;
+const MESSAGE_AVATAR_GUTTER = 'w-8';
 
 const MESSAGE_TILE_NAME = 'ConversationStack.MessageTile';
 
@@ -544,7 +544,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
   // One subgrid spanning the tile's columns, so the summary row and the detail/body row share them.
   return (
     <div className='contents'>
-      <div className='col-span-full grid grid-cols-subgrid items-start'>
+      <div className='col-span-full grid grid-cols-subgrid items-start pbs-1'>
         {/* Summary row: avatar (col 1) | title (col 2) | date + star (col 3) | menu (col 4). */}
         {/* `db` (not `getContact`): a conversation holds few messages, so a query per tile is
             affordable here — unlike the virtualized mailbox list, which resolves the whole page at once. */}

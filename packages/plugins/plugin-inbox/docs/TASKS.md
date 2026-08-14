@@ -368,14 +368,15 @@ server-assigned id.
       resolves to the entity id). Each threadless message forms its own group, so the `items` preview
       cap (`MAILBOX_THREAD_PREVIEW_COUNT` = 4) can no longer truncate a pool of unrelated messages.
       Removed the null-group split in `MailboxArticle.tsx`.
-- [ ] **Threadless messages never reach the list at all** (blocks the above from being observable).
-      `buildThreadSemiJoin` (`containers/MailboxArticle/mailbox-search.ts`) wraps every view filter in
-      `Filter.type(Message, { threadId: Filter.in(matches.project('threadId')) })`, and a message with
-      no `threadId` can never satisfy it — in conversation **and** flat mode. Measured with the
-      `GroupedWithoutThreads` story (`threads: 0`, 20 messages): 0 tiles rendered, before and after the
-      grouping fix. Fix direction: union the semi-join with the directly-matching messages, so a
-      threadless match stands in for its own thread; needs care with the outer `.from(scopes)` (the
-      subquery's scope differs from the outer one) and with paging over the union.
+- [x] **Threadless messages never reach the list at all** — FIXED. `buildThreadSemiJoin` now returns
+      `Query.all(wholeThreads, Query.select(viewFilter))`: the semi-join arm still expands a match to
+      its whole thread, and the direct-match arm carries the threadless messages that
+      `threadId IN (…)` can never admit (they have no id to be found by and project nothing into the
+      subquery). The second arm is deliberately unscoped so the caller's own `.from(scopes)` applies to
+      it, while the subquery keeps its separate `matchesScope`. `Query.all` gained a typed overload in
+      `@dxos/echo` so the union stays a `Query<Message>` rather than needing a cast at the call site.
+      Covered by three live-DB tests (threadless reaches the list; not duplicated; a threaded message
+      matching both arms returns once).
 
 ---
 

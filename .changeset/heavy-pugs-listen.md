@@ -1,4 +1,5 @@
 ---
+'@dxos/echo': minor
 '@dxos/react-ui-card': minor
 '@dxos/react-ui-form': minor
 '@dxos/plugin-inbox': minor
@@ -18,4 +19,9 @@ Fix defects found by driving the mailbox against real data.
 - `react-ui-form`: nested groups in a `settings`-variant form regain the gap between their sub-fields;
   `FormFieldSetContainer` resolved its styles once at module scope and so always used the `default`
   variant.
+- `echo`: `Query.all` gains a typed overload, so a union of same-typed queries stays assignable where
+  its arms were rather than widening to `Query.Any`.
+- `plugin-inbox`: a message with no `threadId` (a draft, transcription or assistant-authored message)
+  now reaches the mailbox list. The whole-thread semi-join is unioned with the direct matches, since
+  `threadId IN (…)` can never admit a threadless row.
 - `plugin-deck`: the leading breadcrumb label no longer shifts as a trail appears or disappears.

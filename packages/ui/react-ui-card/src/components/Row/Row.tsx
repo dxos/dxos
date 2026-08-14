@@ -303,7 +303,7 @@ export const ContactAvatar = ({
   role,
   db,
   getContact,
-  size = 6,
+  size = 5,
   onContactCreate,
   onClick,
 }: ContactAvatarProps) => {
@@ -356,7 +356,7 @@ export const ContactAvatar = ({
           icon='ph--user-circle-plus--regular'
           // One step below the avatar it replaces, so the button reads as an affordance rather than
           // as a heavier stand-in for the face.
-          size={Number(size) >= 8 ? 6 : 5}
+          size={Number(size) >= 8 ? 5 : 4}
           label={t('create-contact.label')}
           classNames='absolute inset-0 opacity-0 group-hover/contact:opacity-100 focus-visible:opacity-100'
           onClick={handleContactCreate}
