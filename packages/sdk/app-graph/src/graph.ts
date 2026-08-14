@@ -219,13 +219,19 @@ class GraphImpl implements WritableGraph {
     }
 
     const { id, relation } = relationFromConnectionKey(key);
-    const stored = relationKey(Node.relation(relation.kind, 'outbound'));
-    const nodes = this._model.neighborsAtom(id, stored, relation.direction === 'outbound' ? 'outgoing' : 'incoming');
     return Atom.make((get) =>
-      get(nodes)
-        .map((node) => node.data)
-        .filter(isNonNullable),
-    ).pipe(withLabel(`graph:connections:${key}`));
+      (get(this._edges(id))[relationKey(relation)] ?? [])
+        .map((childId) => get(this._node(childId)))
+        .filter(Option.isSome)
+        .map((node) => node.value),
+    ).pipe(
+      // Depend on each child's own atom so a child's change invalidates this view, but cut off on the
+      // resolved list: without this a no-op re-add re-allocates the Options and notifies spuriously.
+      Atom.withEquality(
+        (a: Node.Node[], b: Node.Node[]) => a.length === b.length && a.every((node, index) => node === b[index]),
+      ),
+      withLabel(`graph:connections:${key}`),
+    );
   });
 
   readonly _actions = Atom.family<string, Atom.Atom<(Node.Action | Node.ActionGroup)[]>>((id) => {

@@ -146,84 +146,84 @@ Gate before Phase 9. Requested 2026-08-13.
 
       A/B at `23198521` (the consolidation) splits the failure: 2 failed, 3 passed.
 
-      1. **Drag / re-order broke at the consolidation** (`re-order collections`, `drag object into
-         collection`). Sibling order in app-graph is carried by *edge insertion order* —
-         `sortEdgesImpl` removes and re-adds a relation's edges — and `_connections` reads it back
-         through `model.neighborsAtom`. **Ordering is verified CORRECT at HEAD** — a direct
-         `Graph.sortEdges` round-trip over four siblings returns the requested order twice running —
-         so the incremental adjacency (`Map`-keyed, order-preserving) landed later already fixed that
-         era's bug, and the drag specs now fail for the same cause as deletion. Treat this as one
-         remaining regression, not two.
-      **Narrowed to `23198521` … `8ff86d48`.** A/B at `8ff86d48` (resolver removal) fails 4/5, so
-      the GraphBuilder split `a86d7718` is EXONERATED. A/B at `23198521` fails only the drag pair, so
-      deletion broke in between. Both intermediate commits need build patches to A/B: remove the
-      `Graph.initialize` call in `plugin-space/spaces-ready.ts`, and make `GraphNodeMatcher`'s
-      `whenRoot`/`whenId`/`whenNodeType` generic in `TNode`.
+          1. **Drag / re-order broke at the consolidation** (`re-order collections`, `drag object into
+             collection`). Sibling order in app-graph is carried by *edge insertion order* —
+             `sortEdgesImpl` removes and re-adds a relation's edges — and `_connections` reads it back
+             through `model.neighborsAtom`. **Ordering is verified CORRECT at HEAD** — a direct
+             `Graph.sortEdges` round-trip over four siblings returns the requested order twice running —
+             so the incremental adjacency (`Map`-keyed, order-preserving) landed later already fixed that
+             era's bug, and the drag specs now fail for the same cause as deletion. Treat this as one
+             remaining regression, not two.
+          **Narrowed to `23198521` … `8ff86d48`.** A/B at `8ff86d48` (resolver removal) fails 4/5, so
+          the GraphBuilder split `a86d7718` is EXONERATED. A/B at `23198521` fails only the drag pair, so
+          deletion broke in between. Both intermediate commits need build patches to A/B: remove the
+          `Graph.initialize` call in `plugin-space/spaces-ready.ts`, and make `GraphNodeMatcher`'s
+          `whenRoot`/`whenId`/`whenNodeType` generic in `TNode`.
 
-      **`8ff86d48` is NOT the cause** — checked rather than assumed: `initializeImpl` only added the
-      id to `_initialized` and awaited `_onInitialize`, which fired resolver extensions. Nothing
-      declared a `resolver:`, so both the function and its call site were genuinely dead. Removing
-      them cannot be the behaviour change.
+          **`8ff86d48` is NOT the cause** — checked rather than assumed: `initializeImpl` only added the
+          id to `_initialized` and awaited `_onInitialize`, which fired resolver extensions. Nothing
+          declared a `resolver:`, so both the function and its call site were genuinely dead. Removing
+          them cannot be the behaviour change.
 
-      **CULPRIT: `99ac23f1`** ("generalize neighbourhood and tree views into the core") — A/B fails
-      4/5 there, against 2/5 at its parent `23198521`. It is the commit that turns the drag-only
-      failure into the full four.
+          **CULPRIT: `99ac23f1`** ("generalize neighbourhood and tree views into the core") — A/B fails
+          4/5 there, against 2/5 at its parent `23198521`. It is the commit that turns the drag-only
+          failure into the full four.
 
-      The visible semantic change in its diff, and the place to start:
+          The visible semantic change in its diff, and the place to start:
 
-      ```diff
-      -      for (const edge of sortByOrder(this._model.outgoing(id))) {
-      +      for (const edge of this._model.outgoing(id)) {
-      -      for (const edge of sortByOrder(this._model.incoming(id))) {
-      +      for (const edge of this._model.incoming(id)) {
-      ```
+          ```diff
+          -      for (const edge of sortByOrder(this._model.outgoing(id))) {
+          +      for (const edge of this._model.outgoing(id)) {
+          -      for (const edge of sortByOrder(this._model.incoming(id))) {
+          +      for (const edge of this._model.incoming(id)) {
+          ```
 
-      `_edges` stopped ordering by the edge's `data.order`, and `_connections` moved from
-      `get(this._edges(id))` + `get(this._node(childId))` per child onto `model.neighborsAtom`, which
-      returns raw adjacency order and reads `.data` non-reactively. Two candidate consequences, both
-      worth checking directly: (a) `data.order` is now vestigial — sort survives only because
-      `sortEdgesImpl` re-inserts edges, verified working at HEAD, so any path that sets `order`
-      without re-inserting silently loses its ordering; (b) the per-child `get(this._node(id))`
-      dependency is gone, so a child whose app-level `data` changes without a model version bump no
-      longer invalidates the parent's connections.
+          `_edges` stopped ordering by the edge's `data.order`, and `_connections` moved from
+          `get(this._edges(id))` + `get(this._node(childId))` per child onto `model.neighborsAtom`, which
+          returns raw adjacency order and reads `.data` non-reactively. Two candidate consequences, both
+          worth checking directly: (a) `data.order` is now vestigial — sort survives only because
+          `sortEdgesImpl` re-inserts edges, verified working at HEAD, so any path that sets `order`
+          without re-inserting silently loses its ordering; (b) the per-child `get(this._node(id))`
+          dependency is gone, so a child whose app-level `data` changes without a model version bump no
+          longer invalidates the parent's connections.
 
-      **Fix attempt 1, reverted — but it narrowed the mechanism.** Restoring `sortByOrder` is
-      meaningless at HEAD: `GraphEdge` no longer carries `data` at all, since ordering moved to pure
-      insertion order (verified working). So candidate (a) is dead. Restoring the per-child
-      `get(this._node(childId))` dependency in `_connections` builds and leaves 119/120 green but
-      **fails `graph.test.ts > Graph > connections updates`** — so the two forms genuinely differ in
-      notification behaviour, which is direct evidence for candidate (b). The fix is therefore not a
-      straight revert: keep the `neighborsAtom` read (it is what makes the view cheap) and work out
-      whether the missing per-child dependency, or the notification count that test pins, is the
-      correct semantics. Start by reading that test's expectation against both forms.
+          **Fix attempt 1, reverted — but it narrowed the mechanism.** Restoring `sortByOrder` is
+          meaningless at HEAD: `GraphEdge` no longer carries `data` at all, since ordering moved to pure
+          insertion order (verified working). So candidate (a) is dead. Restoring the per-child
+          `get(this._node(childId))` dependency in `_connections` builds and leaves 119/120 green but
+          **fails `graph.test.ts > Graph > connections updates`** — so the two forms genuinely differ in
+          notification behaviour, which is direct evidence for candidate (b). The fix is therefore not a
+          straight revert: keep the `neighborsAtom` read (it is what makes the view cheap) and work out
+          whether the missing per-child dependency, or the notification count that test pins, is the
+          correct semantics. Start by reading that test's expectation against both forms.
 
-      **Candidate (b) is now weak too.** `graph.test.ts > Graph > connections updates` asserts that
-      updating an existing child fires exactly one update and a no-op re-add fires none. HEAD's
-      `neighborsAtom` form passes it; the restored per-child form fails it by *over*-firing (each
-      recompute builds a fresh `Option`, so there is no equality cutoff). So HEAD's reactivity is the
-      stricter and more correct of the two — the missing dependency is not obviously the bug.
+          **Candidate (b) is now weak too.** `graph.test.ts > Graph > connections updates` asserts that
+          updating an existing child fires exactly one update and a no-op re-add fires none. HEAD's
+          `neighborsAtom` form passes it; the restored per-child form fails it by *over*-firing (each
+          recompute builds a fresh `Option`, so there is no equality cutoff). So HEAD's reactivity is the
+          stricter and more correct of the two — the missing dependency is not obviously the bug.
 
-      **What is left, and it is concrete:** at `99ac23f1` the edge type still had `data.order`, so
-      dropping `sortByOrder` there genuinely broke ordering at that commit. Ordering was only made
-      correct again later, by accident, when the incremental adjacency made insertion order
-      authoritative. That accounts for the drag pair. It does NOT yet account for the two deletion
-      specs, which is the piece still unexplained — and the next thing to isolate is what else in
-      `99ac23f1` reaches the delete path, most likely the `_json`/`toTree` move or the `_edges`
-      ordering feeding `removeNodeImpl`'s edge enumeration.
+          **What is left, and it is concrete:** at `99ac23f1` the edge type still had `data.order`, so
+          dropping `sortByOrder` there genuinely broke ordering at that commit. Ordering was only made
+          correct again later, by accident, when the incremental adjacency made insertion order
+          authoritative. That accounts for the drag pair. It does NOT yet account for the two deletion
+          specs, which is the piece still unexplained — and the next thing to isolate is what else in
+          `99ac23f1` reaches the delete path, most likely the `_json`/`toTree` move or the `_edges`
+          ordering feeding `removeNodeImpl`'s edge enumeration.
 
-      2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
-         consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
-         `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
-         console error. NOTE `8ff86d48` does not build in isolation — it removed `Graph.initialize`
-         while `plugin-space/spaces-ready.ts` still called it, and that call site was only fixed
-         during the main merge; patch that line to A/B across it. `6e3e2cd3` does not build in
-         isolation either (the `GraphNodeMatcher` type-erasure defect fixed during the merge), so
-         expect to patch one or two files per step when bisecting this region.
+          2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
+             consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
+             `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
+             console error. NOTE `8ff86d48` does not build in isolation — it removed `Graph.initialize`
+             while `plugin-space/spaces-ready.ts` still called it, and that call site was only fixed
+             during the main merge; patch that line to A/B across it. `6e3e2cd3` does not build in
+             isolation either (the `GraphNodeMatcher` type-erasure defect fixed during the merge), so
+             expect to patch one or two files per step when bisecting this region.
 
-      CLEARED, each by revert + rebuild + rerun: the orphan check; the incremental adjacency maps;
-      `addEdgeImpl` + the `sortEdges` Set membership; and the `origin/main` merge (the pre-merge tip
-      `fd8084de` fails identically). Graph-level repros for the cascade, action expansion, position
-      ordering and re-order all pass (`expansion.test.ts`) — neither bug is visible at that layer.
+          CLEARED, each by revert + rebuild + rerun: the orphan check; the incremental adjacency maps;
+          `addEdgeImpl` + the `sortEdges` Set membership; and the `origin/main` merge (the pre-merge tip
+          `fd8084de` fails identically). Graph-level repros for the cascade, action expansion, position
+          ordering and re-order all pass (`expansion.test.ts`) — neither bug is visible at that layer.
 
 - [ ] **Composer e2e** — run the Composer e2e suite; the builder/expansion path is only exercised
       end-to-end there (navtree expansion, URL resolution, deck routing).
