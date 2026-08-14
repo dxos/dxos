@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 
 import {
   useAtomCapability,
@@ -127,11 +127,10 @@ export const MailboxArticle = ({
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   const [filterText, setFilterText] = useState<string>(filterProp ?? '');
-  const [filter, setFilter] = useState<Filter.Any>();
-  useEffect(() => {
-    const { filter } = builder.build(filterText);
-    setFilter(filter);
-  }, [filterText, builder]);
+  // Supplied by the query editor, which already parses the DSL to decorate it — deriving the filter
+  // here as well parsed every keystroke twice. `builder` remains for the seeds below, which are set
+  // programmatically and so produce no editor event.
+  const [filter, setFilter] = useState<Filter.Any | undefined>(() => builder.build(filterProp ?? '').filter);
 
   // Whether messages are grouped into conversations (threads). On by default.
   const conversations = settings.conversations ?? true;
@@ -378,6 +377,7 @@ export const MailboxArticle = ({
         value={filterText}
         filter={filter}
         onChange={setFilterText}
+        onFilterChange={setFilter}
         onSave={handleSaveFilter}
         onClear={handleClear}
         editorRef={filterEditorRef}

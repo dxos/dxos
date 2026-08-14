@@ -4,6 +4,8 @@
 '@dxos/react-ui-form': minor
 '@dxos/plugin-inbox': minor
 '@dxos/plugin-deck': minor
+'@dxos/plugin-explorer': minor
+'@dxos/react-ui-components': minor
 ---
 
 Fix defects found by driving the mailbox against real data.
@@ -24,4 +26,12 @@ Fix defects found by driving the mailbox against real data.
 - `plugin-inbox`: a message with no `threadId` (a draft, transcription or assistant-authored message)
   now reaches the mailbox list. The whole-thread semi-join is unioned with the direct matches, since
   `threadId IN (…)` can never admit a threadless row.
+- `react-ui-components`: `QueryEditor` gains `onFilterChange`, handing back the parsed query it was
+  already building for its own decorations — `plugin-inbox` and `plugin-explorer` each ran a second
+  `QueryBuilder` over the same text, so the DSL was parsed twice per keystroke. Supplying the callback
+  is what opts into parsing, so a caller that only wants the text pays nothing. A tag decorates from
+  the `#` keystroke and only becomes atomic once a space terminates it (it was unconditionally atomic,
+  which swallowed keystrokes mid-label), bracket matching is off so an object literal's braces no
+  longer take a background wash while focused, and typenames complete as you type rather than only on
+  Ctrl-Space.
 - `plugin-deck`: the leading breadcrumb label no longer shifts as a trail appears or disappears.

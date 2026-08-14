@@ -42,19 +42,31 @@ export const query = ({ tags }: QueryOptions = {}): Extension => {
 };
 
 /**
- * Decorations
+ * The extension's decorations for a given state.
+ *
+ * Exported as a pure function of `(state, options)` so the atomicity rules — which govern whether a
+ * tag can still be edited — are testable without mounting an `EditorView`.
  */
-const decorations = ({ tags }: QueryOptions): Extension => {
-  const buildDecorations = (state: EditorState) => {
+export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions = {}): DecorationSet => {
+  {
     const hasFocus = state.field(focusField);
     const isInside = (node: SyntaxNodeRef) => {
       const range = intersectRanges(state.selection.main, node);
       return hasFocus && range && (state.selection.main.from > 0 || range.to - range.from > 0);
     };
 
-    const deco = new RangeSetBuilder<Decoration>();
+    // Collected rather than fed straight to a `RangeSetBuilder`, which demands ascending `from`:
+    // the bare-`#` ranges below come from a document scan and interleave with the tree's own.
+    const collected: { from: number; to: number; deco: Decoration }[] = [];
+    const deco = {
+      add: (from: number, to: number, value: Decoration) => collected.push({ from, to, deco: value }),
+    };
+    const tagged: Range[] = [];
     syntaxTree(state).iterate({
       enter: (node) => {
+        if (node.type.id === QueryDSL.Node.Tag) {
+          tagged.push({ from: node.from, to: node.to });
+        }
         switch (node.type.name) {
           case '(':
           case ')': {
@@ -105,13 +117,17 @@ const decorations = ({ tags }: QueryOptions): Extension => {
               const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
               const tag = Tag.findTagByLabel(tags, label);
               const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
+              // Atomic only once the tag is TERMINATED by whitespace. An atomic range cannot be
+              // edited character-by-character, so covering a label the user is still typing would
+              // swallow their next keystroke; by the time the terminating space exists the caret has
+              // already moved past the tag, so the chip never sits under it. Backspace then removes
+              // the tag whole, which is how a chip should behave.
               deco.add(
                 node.from,
                 node.to,
-                Decoration.widget({
-                  widget: new TagWidget(label, hue),
-                  atomic: true,
-                }),
+                isTerminated(state, node.to)
+                  ? Decoration.widget({ widget: new TagWidget(label, hue), atomic: true })
+                  : Decoration.mark({ class: mx('rounded-xs px-0.5', getStyles(hue).surface) }),
               );
             }
             break;
@@ -173,15 +189,37 @@ const decorations = ({ tags }: QueryOptions): Extension => {
       },
     });
 
-    return deco.finish();
-  };
+    // A `#` with no label yet parses as an error, not a `Tag`, so the tree cannot decorate it — but
+    // the affordance has to appear on the keystroke that opens the tag, not once it is valid.
+    for (const range of bareTagRanges(state, tagged)) {
+      collected.push({
+        from: range.from,
+        to: range.to,
+        deco: Decoration.mark({ class: mx('rounded-xs px-0.5', getStyles(getHashHue('')).surface) }),
+      });
+    }
 
+    const builder = new RangeSetBuilder<Decoration>();
+    // Widgets and marks can start at the same offset; `startSide` keeps that pairing stable.
+    collected.sort((a, b) => a.from - b.from || a.to - b.to);
+    for (const { from, to, deco } of collected) {
+      builder.add(from, to, deco);
+    }
+
+    return builder.finish();
+  }
+};
+
+/**
+ * Decorations
+ */
+const decorations = ({ tags }: QueryOptions): Extension => {
   return [
     StateField.define<DecorationSet>({
-      create: (state) => buildDecorations(state),
+      create: (state) => buildQueryDecorations(state, { tags }),
       update: (deco, tr) => {
         if (tr.docChanged || tr.newSelection) {
-          return buildDecorations(tr.state);
+          return buildQueryDecorations(tr.state, { tags });
         }
 
         return deco;
@@ -406,3 +444,39 @@ function intersectRanges(a: Range, b: Range): Range | null {
   const end = Math.min(a.to, b.to);
   return start <= end ? { from: start, to: end } : null;
 }
+
+/** Label characters the grammar admits after `#` (`Tag { "#" $[a-zA-Z0-9_\-]+ }`). */
+const TAG_LABEL_CHAR = /[a-zA-Z0-9_-]/;
+
+/**
+ * Whether a token is closed off by whitespace — what separates a tag the user has finished from one
+ * they are still typing, and so whether its decoration may be atomic.
+ *
+ * The end of the document deliberately does NOT terminate: that is exactly where the caret sits while
+ * a label is being typed, and going atomic there would swallow the next keystroke.
+ */
+const isTerminated = (state: EditorState, to: number): boolean =>
+  to < state.doc.length && /\s/.test(state.sliceDoc(to, to + 1));
+
+/**
+ * Ranges of an in-progress tag — a `#` the parser has not yet accepted as a {@link QueryDSL.Node.Tag},
+ * because the grammar requires at least one label character after it. Skips offsets the tree already
+ * claimed, and any `#` inside a string, where it is content rather than a tag.
+ */
+const bareTagRanges = (state: EditorState, tagged: readonly Range[]): Range[] => {
+  const ranges: Range[] = [];
+  const text = state.sliceDoc();
+  const covered = (index: number) => tagged.some(({ from, to }) => index >= from && index < to);
+  for (let index = text.indexOf('#'); index !== -1; index = text.indexOf('#', index + 1)) {
+    if (covered(index) || syntaxTree(state).resolveInner(index, 1).type.id === QueryDSL.Node.String) {
+      continue;
+    }
+    let end = index + 1;
+    while (end < text.length && TAG_LABEL_CHAR.test(text[end])) {
+      end++;
+    }
+    ranges.push({ from: index, to: end });
+  }
+
+  return ranges;
+};
