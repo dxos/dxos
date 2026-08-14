@@ -16,6 +16,8 @@ import { getPort } from 'get-port-please';
 
 import { openBrowser } from '#platform';
 
+import { CommandConfig } from '../services';
+
 /** Default timeout for a full OAuth browser round-trip. */
 export const OAUTH_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -124,7 +126,15 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
       ),
     ]);
 
-    const serverLayer = HttpRouter.serve(routes).pipe(Layer.provide(BunHttpServer.layer({ port })));
+    // The flow is interactive, so the router's per-request log lines (and the listen banner) are
+    // noise between the user's command and its result; keep them behind `--verbose`.
+    const verbose = yield* Effect.serviceOption(CommandConfig).pipe(
+      Effect.map(Option.match({ onNone: () => false, onSome: (config) => config.verbose })),
+    );
+    const serverLayer = HttpRouter.serve(routes, {
+      disableLogger: !verbose,
+      disableListenLog: !verbose,
+    }).pipe(Layer.provide(BunHttpServer.layer({ port })));
     const scope = yield* Scope.make();
     yield* Layer.build(serverLayer).pipe(Scope.provide(scope));
 
