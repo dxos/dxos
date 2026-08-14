@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { identity } from './identity';
+
 /**
  * Response passes applied to outgoing JSON-RPC messages.
  *
@@ -108,7 +110,14 @@ export const decorateInitialize = (
   if (result?.serverInfo == null) {
     return false;
   }
-  result.serverInfo = { ...(result.serverInfo as Record<string, unknown>), ...(options.serverInfo ?? {}) };
+  // The shared identity goes underneath, so a host adds transport-dependent fields (icon URIs need
+  // an origin) without restating — or contradicting — the name and mark every host advertises.
+  result.serverInfo = {
+    ...(result.serverInfo as Record<string, unknown>),
+    title: identity.title,
+    websiteUrl: identity.websiteUrl,
+    ...(options.serverInfo ?? {}),
+  };
   result.instructions ??= options.instructions ?? SERVER_INSTRUCTIONS;
   return true;
 };

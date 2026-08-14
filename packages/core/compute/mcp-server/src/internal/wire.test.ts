@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import * as Identity from './identity';
 import * as Wire from './wire';
 
 const toolsList = <T>(tools: T[]) => ({ jsonrpc: '2.0', id: 1, result: { tools } });
@@ -74,11 +75,22 @@ describe('Wire', () => {
   });
 
   describe('decorateInitialize', () => {
-    test('serverInfo is merged and the instructions state the skillLoad convention', ({ expect }) => {
+    test('the shared identity is merged and the instructions state the skillLoad convention', ({ expect }) => {
       const message: any = { result: { serverInfo: { name: 'DXOS', version: '0.1.0' } } };
-      expect(Wire.decorateInitialize(message, { serverInfo: { title: 'DXOS Spaces' } })).to.be.true;
-      expect(message.result.serverInfo).to.deep.equal({ name: 'DXOS', version: '0.1.0', title: 'DXOS Spaces' });
+      expect(Wire.decorateInitialize(message)).to.be.true;
+      expect(message.result.serverInfo).to.deep.equal({
+        name: 'DXOS',
+        version: '0.1.0',
+        title: Identity.identity.title,
+        websiteUrl: Identity.identity.websiteUrl,
+      });
       expect(message.result.instructions).to.include('skillLoad');
+    });
+
+    test('a host field wins over the shared identity', ({ expect }) => {
+      const message: any = { result: { serverInfo: { name: 'DXOS' } } };
+      Wire.decorateInitialize(message, { serverInfo: { title: 'Something else' } });
+      expect(message.result.serverInfo.title).to.equal('Something else');
     });
 
     test('instructions already on the result are not replaced', ({ expect }) => {

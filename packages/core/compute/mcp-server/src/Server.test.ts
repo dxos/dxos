@@ -156,6 +156,46 @@ describe('Server', () => {
       expect(failureOf(await run(gateway, 'codeProject')).code).to.equal('operation_failed');
     });
   });
+
+  describe('normalizeResponse', () => {
+    const jsonResponse = (body: unknown) =>
+      new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
+
+    const initialize = { jsonrpc: '2.0', id: 1, result: { serverInfo: { name: 'x', version: '1' } } };
+
+    test('unwraps a single-element batch, which the MCP transport requires', async ({ expect }) => {
+      const response = await Server.normalizeResponse(jsonResponse([initialize]));
+      const body = await response.json();
+      expect(Array.isArray(body)).to.be.false;
+      expect(body.id).to.equal(1);
+    });
+
+    test('leaves a multi-element batch alone', async ({ expect }) => {
+      const response = await Server.normalizeResponse(jsonResponse([initialize, initialize]));
+      expect(await response.json()).to.have.length(2);
+    });
+
+    test('advertises the shared identity, with host fields layered on top', async ({ expect }) => {
+      const icons = Server.icons('https://mcp.example');
+      const response = await Server.normalizeResponse(jsonResponse([initialize]), { serverInfo: { icons } });
+      const { serverInfo } = (await response.json()).result;
+      expect(serverInfo.title).to.equal(Server.identity.title);
+      expect(serverInfo.websiteUrl).to.equal(Server.identity.websiteUrl);
+      expect(serverInfo.icons[0].src).to.equal(`https://mcp.example${Server.ICON_LIGHT_PATH}`);
+      // The name the layer set is the host's own and must survive the merge.
+      expect(serverInfo.name).to.equal('x');
+    });
+
+    test('serves the embedded mark for its own paths only', async ({ expect }) => {
+      const icon = Server.iconResponse(Server.ICON_DARK_PATH);
+      if (!icon) {
+        throw new Error('the mark was not served for its own path');
+      }
+      expect(icon.headers.get('Content-Type')).to.equal('image/png');
+      expect((await icon.arrayBuffer()).byteLength).to.be.greaterThan(0);
+      expect(Server.iconResponse('/nope.png')).to.be.undefined;
+    });
+  });
 });
 
 const failureOf = <A>(result: Result.Result<A, Server.ToolFailure>): Server.ToolFailure => {

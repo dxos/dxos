@@ -21,8 +21,6 @@ import { makeGateway } from './gateway';
 import { ObjectToolkit, objectHandlers } from './object-tools';
 import { SpaceToolkit, spaceHandlers } from './space-tools';
 
-const SERVER_NAME = 'DXOS Spaces';
-
 /**
  * Names of the statically-defined tools; projected operations must not collide with them.
  * Task and project verbs are deliberately absent — they arrive via the annotation projection.
@@ -69,7 +67,7 @@ export const serve = Command.make(
       ).pipe(
         Layer.provide(
           McpServer.layerStdio({
-            name: SERVER_NAME,
+            name: Server.identity.name,
             version: DXOS_VERSION,
             protocols: [McpProtocol.v2025_06_18],
           }),

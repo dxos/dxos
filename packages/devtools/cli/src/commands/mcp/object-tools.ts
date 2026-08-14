@@ -153,9 +153,6 @@ export const QueryObjects = Tool.make('queryObjects', {
 
 export const ObjectToolkit = Toolkit.make(CreateObject, GetObject, UpdateObject, DeleteObject, QueryObjects);
 
-/** JSON ref envelope decoded by the operation's input schema back into a live `Ref`. */
-const toRefEnvelope = (id: string): { '/': string } => ({ '/': id });
-
 /**
  * Drops keys whose value is `undefined` so they never reach an operation's input.
  *
@@ -210,7 +207,7 @@ export const objectHandlers = (gateway: LocalGateway) =>
         Effect.flatMap((resolvedSpaceId) =>
           call(gateway, {
             key: DatabaseOperationKeys.load,
-            input: { refs: [toRefEnvelope(id)], ...optional({ expandDepth }) },
+            input: { refs: [Server.refEnvelope(id)], ...optional({ expandDepth }) },
             spaceId: resolvedSpaceId,
           }),
         ),
@@ -228,14 +225,14 @@ export const objectHandlers = (gateway: LocalGateway) =>
         if (properties != null) {
           const object = yield* call(gateway, {
             key: DatabaseOperationKeys.objectUpdate,
-            input: { obj: toRefEnvelope(id), properties },
+            input: { obj: Server.refEnvelope(id), properties },
             spaceId: resolvedSpaceId,
           });
           return { object };
         }
         const output = yield* call(gateway, {
           key: MARKDOWN_UPDATE_KEY,
-          input: { doc: toRefEnvelope(id), edits },
+          input: { doc: Server.refEnvelope(id), edits },
           spaceId: resolvedSpaceId,
         });
         return { newContent: newContentOf(output) };
@@ -246,7 +243,7 @@ export const objectHandlers = (gateway: LocalGateway) =>
         Effect.flatMap((resolvedSpaceId) =>
           call(gateway, {
             key: DatabaseOperationKeys.objectDelete,
-            input: { obj: toRefEnvelope(id) },
+            input: { obj: Server.refEnvelope(id) },
             spaceId: resolvedSpaceId,
           }),
         ),

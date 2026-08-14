@@ -18,6 +18,7 @@ import { log } from '@dxos/log';
 import * as Gateway from './Gateway';
 export { ToolFailure, type ToolFailureCode, failure } from './internal/failure';
 import { ToolFailure, failure } from './internal/failure';
+import * as identityInternal from './internal/identity';
 import * as Projection from './internal/projection';
 import * as spaceInternal from './internal/space';
 import * as wireInternal from './internal/wire';
@@ -295,11 +296,12 @@ export const stdio: Layer.Layer<EffectStdio.Stdio, never, EffectStdio.Stdio> = L
 );
 
 /**
- * The same passes over an HTTP response body, for a host that owns its own transport
- * (`McpServer.layerHttp` behind a worker's fetch handler).
+ * The same passes over an HTTP response body, plus the batch unwrap the transport requires, for a
+ * host that owns its own transport (`McpServer.layerHttp` behind a worker's fetch handler).
  *
- * `serverInfo` is merged into the `initialize` result: the MCP `Implementation` may carry `title`,
- * `websiteUrl` and `icons`, and `McpServer` offers no way to supply them.
+ * `serverInfo` is merged into the `initialize` result on top of the shared identity: the MCP
+ * `Implementation` may carry `title`, `websiteUrl` and `icons`, and `McpServer` offers no way to
+ * supply them. Pass `icons` here — they need an origin, which only the host knows.
  */
 export const normalizeResponse = async (
   response: Response,
@@ -309,8 +311,26 @@ export const normalizeResponse = async (
     return response;
   }
   const text = await response.text();
-  const normalized = wireInternal.normalizeText(text, options);
-  return new Response(normalized ?? text, { status: response.status, headers: response.headers });
+  const unwrapped = unwrapBatch(text);
+  const normalized = wireInternal.normalizeText(unwrapped, options);
+  return new Response(normalized ?? unwrapped, { status: response.status, headers: response.headers });
+};
+
+/**
+ * Unwraps a single-element JSON-RPC batch.
+ *
+ * Effect's RPC HTTP transport always answers with an array, while MCP's Streamable HTTP transport
+ * requires a lone JSON-RPC object for a single request — and a client that gets the array does not
+ * recognise the server's tools at all. Spec compliance rather than host policy, so every HTTP host
+ * needs it and none should have to know that.
+ */
+const unwrapBatch = (text: string): string => {
+  try {
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) && parsed.length === 1 ? JSON.stringify(parsed[0]) : text;
+  } catch {
+    return text;
+  }
 };
 
 //
@@ -324,3 +344,16 @@ export const normalizeResponse = async (
 export const spaceIdParameter = spaceInternal.idParameter;
 export const resolveSpaceId = spaceInternal.resolveId;
 export const qualifyRefs = spaceInternal.qualifyRefs;
+
+/** JSON ref envelope an operation's input schema decodes back into a live `Ref`. */
+export const refEnvelope = (id: string): { '/': string } => ({ '/': id });
+
+//
+// Server identity, shared by every host.
+//
+
+export const identity = identityInternal.identity;
+export const icons = identityInternal.icons;
+export const iconResponse = identityInternal.iconResponse;
+export const ICON_LIGHT_PATH = identityInternal.ICON_LIGHT_PATH;
+export const ICON_DARK_PATH = identityInternal.ICON_DARK_PATH;
