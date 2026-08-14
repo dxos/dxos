@@ -241,8 +241,20 @@ Gate before Phase 9. Requested 2026-08-13.
       re-test these): emission-order reordering, `properties.label` updates on an existing node,
       inbound `getConnections` (what `getParent` uses), and `sortEdges` round-trips.
 
-      Next: the flush clearly happens (the row shows up eventually), so look at *when subscribers are
-      notified* rather than at whether the write lands — the `Atom.batch` wrapping in
+      **The graph layer is now fully exonerated.** A mounted-subscriber script (the render path's
+      actual usage, `registry.subscribe(graph.connections(root, 'child'))`) is notified correctly when
+      a sibling is added: `["root/a"] -> ["root/a","root/b"]`, notifications 1 -> 2. Together with the
+      four scripts above, add/remove/reorder/rename all behave correctly at the graph level.
+      `NavTreeContainer.tsx` also matches `origin/main` modulo the namespace renames, so the merge
+      resolution there is faithful.
+
+      That leaves the layer between the graph and the rendered rows as the only place still changed by
+      this branch: `@dxos/app-toolkit`'s `TypeSection` (which builds the collections section and
+      returns its objects as inline `nodes`) and `AppNodeMatcher`, both touched by the matcher split
+      and the `url` -> `meta` rename. Start there, not in `@dxos/graph`.
+
+      Superseded note: the flush clearly happens (the row shows up eventually), so look at *when
+      subscribers are notified* rather than at whether the write lands — the `Atom.batch` wrapping in
       `_scheduleDirtyFlush`, and the equality cutoff added to `_connections`, are the two places a
       notification can be swallowed.
 
