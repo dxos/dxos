@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { type CoderSkillOptions, default as CoderSkill, makeCoderSkill } from './coder';
+export { default as CoderSkill, type CoderSkillOptions, makeCoderSkill } from './coder';
