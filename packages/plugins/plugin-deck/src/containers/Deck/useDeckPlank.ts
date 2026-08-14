@@ -77,9 +77,11 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   const actions = useActions(graph, node?.id);
   const companions = useCompanions(id);
   const notFoundNode = useNode(graph, NotFound.NOT_FOUND_PATH);
-  const resolvedOnce = useRef(false);
+  // Keyed by id, not a boolean: call sites render planks unkeyed, so a swapped id reuses this
+  // instance and a plain latch would carry the previous plank's verdict onto the new one.
+  const resolvedOnce = useRef<string | undefined>(undefined);
   if (node) {
-    resolvedOnce.current = true;
+    resolvedOnce.current = id;
   }
 
   // Ordering within the active stack drives the increment-start/end affordances.
@@ -162,7 +164,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
     node,
     // Latched on first sight of the node: a plank that healed is no longer unresolved, so a later
     // graph gap shows loading rather than resurrecting the restore's verdict.
-    unresolved: !node && !resolvedOnce.current && !!state.unresolved?.includes(id),
+    unresolved: !node && resolvedOnce.current !== id && !!state.unresolved?.includes(id),
     notFoundNode,
     capabilities,
     sigilActions,
