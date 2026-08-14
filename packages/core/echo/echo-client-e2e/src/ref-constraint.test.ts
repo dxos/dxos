@@ -9,11 +9,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 
-/**
- * Pins the exact reach of `Ref.byAnnotation` against a real database: the check is synchronous, so
- * it fires only for a target already in the working set. Asserted rather than documented, because
- * the gap is the feature's main limitation and must fail loudly if the resolution path changes.
- */
+/** Asserts where `Ref.byAnnotation` stops biting, so the limit fails loudly if resolution changes. */
 
 const FeedAnnotationId = 'com.example.annotation.feed';
 
@@ -52,7 +48,7 @@ describe('Ref.byAnnotation against a database', () => {
     await db.flush();
     const contactUri = Obj.getURI(contact);
 
-    // Working set populated: both directions are enforced.
+    // Resident target: both directions are enforced.
     expect(() => validate({ owner: db.makeRef(Obj.getURI(mailbox)) })).not.toThrow();
     expect(() => validate({ owner: db.makeRef(contactUri) })).toThrow(FeedAnnotationId);
 
@@ -60,11 +56,10 @@ describe('Ref.byAnnotation against a database', () => {
     await using reopened = await peer.openDatabase(spaceKey);
     reopened.graph.registry.add([Mailbox, Contact]);
 
-    // Cold context: the target is on disk but not in the working set, so a synchronous check cannot
-    // see it and the reference is accepted. This is the documented best-effort limit.
+    // Accepted because a synchronous check cannot see a target that is on disk but not resident.
     expect(() => validate({ owner: reopened.makeRef(contactUri) })).not.toThrow();
 
-    // Once the handler loads the target, the same reference is rejected.
+    // The same reference is rejected once the handler has loaded the target.
     const ref = reopened.makeRef(contactUri);
     await ref.load();
     expect(() => validate({ owner: ref })).toThrow(FeedAnnotationId);
