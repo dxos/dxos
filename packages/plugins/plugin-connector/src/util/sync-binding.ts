@@ -49,8 +49,13 @@ export const syncBinding = ({
     if (sync.remote) {
       // EDGE dispatches a remote trigger by resolving it through an index query, so a trigger created
       // moments ago (the first sync of a new connection) is reported as "not found" unless EDGE has
-      // both replicated and indexed it first (DX-1153).
-      yield* Database.sync({ to: 'edge', entities: [Obj.getURI(trigger)], indexed: true });
+      // both replicated and indexed it first (DX-1153). The barrier is best-effort: an exhausted
+      // budget (or a peer with no EDGE transport at all) still leaves the force-run worth attempting,
+      // and failing the sync outright would be a worse outcome than the race it guards against.
+      yield* Database.sync({ to: 'edge', entities: [Obj.getURI(trigger)], indexed: true }).pipe(
+        Effect.tapError((error) => Effect.logWarning('sync barrier did not complete; running trigger anyway', error)),
+        Effect.ignore,
+      );
     }
 
     yield* fireSyncTrigger(trigger).pipe(Effect.provide(syncTriggerMonitorLayer(spaceId)));
