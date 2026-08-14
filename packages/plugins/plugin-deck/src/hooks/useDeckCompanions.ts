@@ -3,7 +3,6 @@
 //
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as NodeType from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections } from '@dxos/plugin-graph/hooks';
@@ -12,7 +11,7 @@ import { Position } from '@dxos/util';
 
 import { DeckSchema } from '#types';
 
-export type DeckCompanion = NodeType.Node<
+export type DeckCompanion = AppGraphNode.Node<
   any,
   {
     label: Label;

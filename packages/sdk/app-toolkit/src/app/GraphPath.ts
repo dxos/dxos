@@ -6,7 +6,6 @@
 
 import * as Option from 'effect/Option';
 
-import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
 import { Key, Obj, Type } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';

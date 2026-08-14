@@ -15,7 +15,7 @@ import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type MakeOptional, isNonNullable } from '@dxos/util';
+import { type MakeOptional } from '@dxos/util';
 
 import { scheduleTask } from '#scheduler';
 
