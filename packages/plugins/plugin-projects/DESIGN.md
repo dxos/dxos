@@ -26,10 +26,12 @@ to be one of the core aspects of Composer.
   outliner's convert-to-task pattern, #12423): the markdown line carries the `echo://`
   link back and its label follows renames. Tasks are assignable (`assignee: Actor` —
   human by Person ref, agent by DID), syncable (GitHub/Linear mirrors), and queryable.
-- **Containment is the ECHO parent edge, not ref fields**: a `TaskSet` parents its root
-  tasks; a task parents its sub-tasks (one tree: `TaskSet → Task → sub-Task`; set
-  membership of a sub-task is transitive). No membership arrays, no backrefs; deletion
-  cascades structurally.
+- **Structure is uni-directional refs; the parent edge is lifecycle bookkeeping only**
+  (REVISED 2026-08-14 — see [Task model v2](#task-model-v2-decided-2026-08-14)): a
+  `TaskSet` enumerates ALL its tasks (flat) and its phases in ordered ref arrays;
+  hierarchy (`task.parentTask`) and phasing (`task.phase`) are many-to-one refs on the
+  task, Linear-shaped. Parent edges are still set — but only for deletion cascade,
+  never as the queryable data model.
 - **Delegation is the promotion moment for agents**: only a durable `Task` can be
   delegated to a sub-agent — delegating is exactly when scratch becomes real. There is
   no separate `Plan` type; the conversation's working set IS its outline plus the open
@@ -44,7 +46,113 @@ title-keyed upsert rewrites checklist items in place rather than duplicating the
 `WithSubAgentsTest2` (delegation adds an unchecked item; the supervisor's `onComplete`
 checks it off). **Open gap:** promotion is still delegation-only — there is no
 `promote-task` verb, so an agent cannot turn a checklist line into a durable `Task`
-except by delegating it. Human convert-to-task is the only other path.
+except by delegating it. Human convert-to-task is the only other path. (Verb specced
+2026-08-14 — see "Promotion and the outline-first rule" below; tracked as M6 Phase 3.)
+
+## Task model v2 (decided 2026-08-14)
+
+Third revision of task containment (backref plan → parent edge in M5 → this), so the
+rationale is recorded in full. Decided in design session (josiah × claude), session
+branch `claude/projects-task-sets-modeling-b5rk70`.
+
+### Principle
+
+**Every structural relationship is stored exactly once, as a uni-directional ref in the
+schema.** Enumeration/ownership edges point down (container → ordered ref array);
+classification edges point up (many-to-one ref on the child). The ECHO parent edge is
+NOT part of the data model: `setParent` means "co-loaded, cascade-deletes with" — it is
+not reactive, not schema-visible, and traversable only child→parent. Operations still
+set it, as lifecycle bookkeeping alongside the refs (the `Instructions.make` pattern:
+ref for structure, parent for cascade).
+
+### Schema
+
+```text
+TaskSet (org.dxos.type.taskSet)
+   name?, description?, image?         meta.keys: [linear team/project | github repo]
+   phases: Array<Ref<Phase>>           ordered — the phase sequence
+   tasks:  Array<Ref<Task>>            ordered — EVERY task in the set, flat (incl. sub-tasks)
+
+Phase (org.dxos.type.phase — NEW)      meta.keys: [linear/github milestone]
+   name, description?
+   status?: upcoming | active | done
+   targetDate?
+
+Task (org.dxos.type.task)
+   title, priority?, status?, assignee?, estimate?, description?
+   phase?:      Ref<Phase>             unset ⇒ backlog (sub-tasks: inherit nearest ancestor's)
+   parentTask?: Ref<Task>              unset ⇒ root task; recursion unbounded
+```
+
+Parent-edge bookkeeping (cascade only): tasks and phases parent to their TaskSet;
+sub-tasks parent to their parent task. Consequences: deleting a set deletes everything;
+deleting a task deletes its subtree; **deleting a phase never deletes tasks** — the
+delete-phase operation sweeps `task.phase` refs (readers treat a dangling phase ref as
+backlog anyway). Deleting a task requires sweeping its subtree's refs out of
+`TaskSet.tasks` (cascade deletes the objects, not the array entries).
+
+### Why (each of these was decisive)
+
+1. **Enumeration.** "All tasks in the set" is one array read — no tree walk over
+   phases or sub-task recursion. This is the argument that killed both `Phase.tasks`
+   arrays and root-only `tasks` + `subtasks` arrays: each reintroduced recursive
+   enumeration or double-entry membership.
+2. **Single-field moves.** Re-phasing or re-parenting a task is one field write on one
+   object — no paired array splices, so concurrent moves cannot duplicate or lose a
+   task. The exclusivity invariant ("in exactly one phase") holds by construction.
+3. **Ordering.** Array order is canonical order; no fractional-index fields. Phase
+   sequence = `phases` order; per-phase and per-parent task order are induced from the
+   global `tasks` order (one canonical order, views filter it). If per-context manual
+   ordering is ever needed, add Linear-style per-context sort keys then — not pre-paid.
+4. **Schema self-description.** An agent reading the type sees the structure. The
+   motivating failure: with no native phasing, agents improvised `[Phase 1]` prefixes
+   in task titles.
+5. **Reactivity.** `Query.children()` does not re-emit on property changes (known M5
+   gap); ref arrays and ref fields are ordinary reactive reads.
+6. **Linear-shaped sync.** In both Linear and GitHub the milestone is a per-issue
+   pointer to a first-class entity (`Issue.projectMilestone`, `issue.milestone`), and
+   sub-issues hang off `Issue.parent` — a sub-issue may carry a different milestone
+   than its parent. `task.phase` and `task.parentTask` sync as field copies; Phase
+   objects carry milestone foreign keys in `Obj.getMeta` (embedded structs could not).
+   The one deliberate divergence from Linear: `TaskSet.tasks`/`phases` are stored
+   arrays where Linear uses indexed reverse lookups + `sortOrder` floats — the arrays
+   are what buy cheap total enumeration and ordering without index machinery.
+
+Derived at view time, never stored: backlog (root tasks with `phase` unset), the tree
+(group by `parentTask`), phase groups (partition by `phase`, order groups by the
+`phases` array), sub-task phase inheritance (nearest ancestor's, unless overridden —
+Linear's behavior).
+
+Invariants live in the `TaskOperation` verbs (the single write path shared by UI and
+agents): array entry + parent edge written together; `task.phase` must point into the
+task's own set's `phases`; delete sweeps refs. Readers stay tolerant (dedupe by id,
+dangling ref ⇒ backlog/root) since concurrent array merges can still double an entry.
+
+**Naming**: `TaskSet` is retained for now. The type's dual role (native container AND
+sync mirror of a Linear team/project or GitHub repo) rules out native-flavored names
+like `Plan`; `Tracker` is the recorded candidate if a rename is ever worth the
+typename churn.
+
+### Promotion and the outline-first rule
+
+The two-forms model gets teeth for agents:
+
+- **Outline-first**: agents default to writing checklist lines in the outline. A line
+  becomes a Task only when it (a) has/needs an assignee, (b) is being delegated (the
+  existing promotion moment), or (c) must exist outside the project (external mirror,
+  cross-object reference). Under-promotion is self-correcting (promote later, one
+  verb); over-promotion is cleanup. This rule belongs in the ProjectSkill/planning
+  skill text and the MCP code-project skill — the M5 dogfood mapping "`$track` →
+  `taskCreate`" is wrong under it (`$track` writes an outline line; promotion is
+  separate). Porting a `TASKS.md` means: outline near-verbatim (headings → hierarchy,
+  checkbox state kept); promote only qualifying lines; done items stay markdown.
+- **`promote-task` verb** (closes the delegation-only gap): given an outline line,
+  create the Task in the project's TaskSet (append to `tasks`, parent-edge to the set),
+  carry checkbox state into `task.status`, rewrite the markdown line with the
+  `echo://` backlink (label follows renames — the existing convert-to-task contract),
+  and **phase-aware**: a line under a `## <heading>` that corresponds to a phase
+  find-or-creates the `Phase` and sets `task.phase`. The outline's structure seeds the
+  TaskSet's structure lazily, one promotion at a time.
 
 ## Background: Project, Agent, Chat, AiSession
 
@@ -99,7 +207,7 @@ end-state per [`MILESTONE-5.md`](./MILESTONE-5.md) (Phase 0 decided 2026-08-01);
 | `Task`            | `@dxos/types`             | Work item: title/status/priority/assigned/estimate/project       | 0.2.0: `assignee: Actor` (was `assigned: Ref<Person>`), `taskSet` (was `project`), +`failed`/`cancelled` |
 | `Actor`           | `@dxos/types` (struct)    | Identity shape (`Message.sender`): role/contact/DID/email/name   | Also `Task.assignee` — agents by DID, no `Ref<Agent>` variant                                            |
 | `Person`          | `@dxos/types`             | Contact record; target of `Actor.contact`                        |                                                                                                          |
-| `Milestone`       | — (does not exist)        | Phasing marker                                                   | DEFERRED; when added: ECHO type, `Task.milestone?: Ref<Milestone>`, owned by TaskSet                     |
+| `Phase`           | — (does not exist)        | Phasing span within a TaskSet (≙ Linear/GitHub milestone)        | M6 (un-defers M5's `Milestone`): ECHO type, `task.phase?: Ref<Phase>`, `TaskSet.phases` ordered array    |
 | `Outline`         | `plugin-outliner`         | `{name, content: Ref<Text>}` hierarchical checklist document     | **Moves to `@dxos/types`**; `project` field renamed `taskSet`                                            |
 | `Plan`            | `@dxos/assistant-toolkit` | Conversation working set: embedded tasks driving supervisor loop | `Plan.Task` gains `taskRef?: Ref<Task>` (promotion / write-through)                                      |
 | `Chat`            | `@dxos/assistant-toolkit` | Conversation: feed + `instructions` ref + `plan`                 |                                                                                                          |
@@ -112,25 +220,56 @@ Outline surfaces and `TaskOperation.*`; **plugin-projects** owns Project lifecyc
 wiring, and composition; **plugin-github / plugin-linear** sync into `TaskSet`/`Task` via meta
 foreign keys; **plugin-kanban** adopts the plugin-tasks model.
 
+M6 (task model v2, 2026-08-14) revises this table's M5 targets: `TaskSet` gains
+`phases`/`tasks` arrays and `Task` gains `phase`/`parentTask` refs (see "Task model v2");
+`Project.artifacts` becomes an inline ref array (`Collection` no longer used there);
+`Project.routines` is REMOVED (companion join replaces it — see "Project slimming").
+
 ### `Project` (`@dxos/compute`)
 
-`org.dxos.type.project@0.2.0`:
+Today (`org.dxos.type.project@0.3.0`): `name?`, `description?`, `status?`, `goals?`
+(embedded structs), `instructions?: Ref(Instructions)` (owned), `routines: Ref[]`,
+`artifacts?: Ref(Collection)`, `outline?: Ref(Outline)`, `taskSet?: Ref(TaskSet)`.
+
+M6 target (project slimming, decided 2026-08-14):
 
 ```text
 name?: string
 description?: string
-instructions: Ref(Instructions)      // owned (Obj.setParent), cascade-delete/clone
-routines: Ref(Routine)[]             // routines created in project scope
-artifacts?: Ref(Collection)          // owned child Collection (documents, outliners, tables, …)
+status?: active | paused | blocked | ended
+goals?: Goal[]                       // embedded {id, text, status} — nothing refs a goal, so no objects
+instructions?: Ref(Instructions)     // owned (Obj.setParent), cascade-delete/clone
+artifacts: Ref(Obj.Unknown)[]        // INLINE ordered ref array — Collection dropped
+outline?: Ref(Outline)               // shared scratch checklist (all project chats write here)
+taskSet?: Ref(TaskSet)               // owned, or adopted synced mirror
 ```
+
+Two fields change:
+
+- **`artifacts` inlines.** The `Collection` indirection was never load-bearing:
+  `ObjectGallery` already renders plain ref arrays (the routines gallery proved it),
+  and `Instructions.objects` is precedent for an inline heterogeneous ref array.
+  `ProjectSkill.artifact-add/-list` retarget to the field.
+- **`routines` is REMOVED.** The array duplicated what already exists: routines
+  connect to their project via `instructions.objects` (seeded at creation), and
+  `connectedRoutinesQuery` / `RoutineCompanion` discover them through the structural
+  reverse-ref index — same as for any other object. The ProjectArticle routines
+  gallery goes with it; routines surface in the project's companion only. The
+  routine's parent edge to the project also goes: deleting a project no longer
+  cascades its routines — cleanup is handled by the deletion-guard + staleness
+  mechanism below, deliberately preferring the canonical routine model over a
+  project-shaped special case.
+
+The resulting line: **refs for what the project owns and orders (instructions,
+artifacts, outline, taskSet); queries for what accumulates around it (chats by parent
+edge, routines by companion join, agents via their chats).** Chats stay parent-edge
+attached — numerous, append-only, naturally time-ordered, so a ref array would be a
+CRDT hot spot with no ordering benefit; this is the recorded justification for the one
+deviation from schema-visible structure. `goals` stays embedded because nothing
+references a goal from outside (the same test that made `Phase` an object).
 
 The type lives in `@dxos/compute` (next to Instructions, Skill, Trigger) so
 brain/inbox/EDGE-side code can reference it without a plugin dependency.
-Artifacts use a `Collection` (core, `@dxos/echo`) to reuse existing collection
-UI and drag-drop.
-
-Chats are **not** a field: they are parented to the Project in the ECHO
-hierarchy — see [Project chats](#project-chats).
 
 ### `Routine` (`@dxos/compute`)
 
@@ -374,6 +513,93 @@ chat appears twice, once under its project and once at the space level.
 `IconButton` invokes `ProjectOperation.CreateChat`. The same action is
 contributed to the project's navtree node (`disposition: 'list-item-primary'`)
 so `+` works from the tree.
+
+## Routine staleness and deletion guards (decided 2026-08-14)
+
+Removing `Project.routines` (and the routine→project parent edge) means deleting a
+project no longer cleans up its routines. Rather than special-casing projects, this is
+solved by two generic mechanisms: routines referencing deleted objects is a common
+problem (any object a routine watches or binds can be deleted), and deletion needing a
+second look is a common problem (any type can have dependents worth surfacing).
+
+### Staleness: three tiers by ref class
+
+A routine's outbound refs classify by role, and the policy follows the role:
+
+| Ref class                               | Example (Sender Ledger) | On deletion of the target                                                      |
+| --------------------------------------- | ----------------------- | ------------------------------------------------------------------------------ |
+| Source/input (`trigger.spec`, `.input`) | the mailbox feed        | **auto-disable** the trigger + record reason + badge in UI                     |
+| Context (`instructions.objects`)        | the project             | **flag only** (companion badge + run-trace warning); the routine keeps running |
+| Registry (`skills`, `runnable`)         | ProjectSkill            | cannot dangle — registry URIs, not space objects                               |
+
+Context refs must not auto-disable: the list is heterogeneous (ten bound documents, one
+deleted ⇒ the routine is degraded, not broken), and the model cannot distinguish
+load-bearing context from incidental. The delete guard (below) is what protects the
+load-bearing case — it moves the decision to the moment a human with intent is present.
+
+Mechanics (both land their effect on the **Trigger** — the dispatcher never learns what
+a Routine is, keeping EDGE compatible):
+
+- **Dispatcher pre-flight**: before scheduling/firing, resolve the spec's source refs;
+  tombstoned/unresolvable ⇒ persist `trigger.enabled = false` plus a new structured
+  field (`disabledReason?: { kind: 'stale-dependency' | 'failure' | 'user', ref?, at }`)
+  — structural disable, distinct from the transient failure cooldown. Disable is
+  **lazy** (next fire attempt), which is accepted: an eager sweep would need a
+  deletion watcher over the reverse-ref index for marginal benefit.
+- **`RunInstructions`**: a dead context ref is skipped as today (degrade, don't crash)
+  but now records a warning on the run trace (`RoutineTraceCompanion`), so degradation
+  is diagnosable post-hoc instead of silent.
+- **UI**: the companion/card badge is computed live from the refs (dangling source or
+  context ref via `Obj.isDeleted` on resolution — same predicate family as
+  `routinesForObject`), so a never-firing stale routine still shows flagged. A
+  space-level stale-routines list (disabled-for-staleness + live dangling refs) gives
+  the sweep; delete cascades trigger + instructions via the routine's own parent
+  edges. Flag-and-confirm always — never auto-delete.
+
+### Deletion guards (generic, plugin-contributed)
+
+A capability — plugins contribute `{ appliesTo(object), check(objects) =>
+Effect<GuardVerdict[]> }` with:
+
+```text
+GuardVerdict = {
+  severity: 'warn' | 'block'        // gates whether plain "Continue" is offered
+  message: string
+  subjects?: Ref[]                  // what the guard found (rendered as a list)
+  alternative?: { label, operation: DXN, input }   // AT MOST ONE per verdict
+}
+```
+
+The generic delete flow collects verdicts from applicable guards; no verdicts ⇒ delete
+exactly as today (confirmation-free, undo-toast — no guard, no friction). Otherwise one
+card: every message; **Continue present iff no verdict is `block`**; each alternative
+rendered as a button. Severity and alternative are orthogonal — all four quadrants are
+meaningful (`warn` alone: "3 chats reference this"; `warn`+alt: the routines case;
+`block` alone: "sync-managed mirror, would be recreated"; `block`+alt: the type case).
+
+- **Choosing an alternative is confirm-convenient**: it runs the operation, re-runs
+  the guards, and **completes the deletion automatically** — one click, done. The
+  re-check (not the click) is what authorizes: the alternative clears the condition,
+  and the loop verifies it, which keeps the flow correct under concurrent edits and
+  needs no recursion policy (an alternative's own deletions surface in the next round).
+- **Agents get the same contract**: the delete operation fails typed
+  (`DeleteGuarded { verdicts }`) with the same structured verdicts; the agent may
+  cancel, invoke the alternative operation and retry, or — warn-level only — retry
+  with an acknowledgement parameter (the programmatic "Continue"). `block` has no
+  acknowledgement on either surface. One policy, both write paths.
+- **Batch semantics**: guards receive the full deletion set and verdict over it
+  (multi-select ⇒ one card, not N dialogs).
+- **Undo**: an executed alternative plus the primary delete should commit as one undo
+  unit — the hardest implementation detail in the design, costed up front.
+
+First two consumers:
+
+1. **plugin-projects**: deleting a Project with connected routines ⇒ `warn`, subjects =
+   the routines (via `connectedRoutinesQuery`), alternative = "Delete N routines".
+2. **Schema/space layer**: deleting a stored type with instances or views pointing at
+   it ⇒ `block` (dangling-typed objects would be unopenable), alternative = "Delete
+   N objects of this type". "Anything that points at the type" resolves via the same
+   reverse-ref machinery.
 
 ## Agent ↔ Project convergence (analysis, decision pending)
 

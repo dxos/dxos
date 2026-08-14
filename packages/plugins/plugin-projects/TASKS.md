@@ -1,6 +1,20 @@
 # plugin-projects — Tasks
 
-_Resume: M5 Phases 1+3 + Phase 2 core MERGED as PR #12431; **Phase 4 DXOS SIDE MERGED as PR #12440** 2026-08-03 (McpToolAnnotation + all 12 §7.2 verbs, annotation verified through `Operation.serialize`). Also merged from this branch: #12442 (story rename) and #12444 (doc corrections). The checklist loop is now covered by CI play scripts in `stories-assistant/Chat.stories.tsx` — `WithPlanningScripted` (scripted `update-tasks`, title-keyed upsert does not duplicate) and `WithSubAgentsTest2` (delegation adds an unchecked item, checks it off on sub-agent completion); `WithPlanning`/`WithSubAgentsTest1` are the live `!test` counterparts. Next: Phase 2 remainder (templates scaffold/adopt TaskSet, app-graph task nodes, goals authoring, stories-projects play test); Phase 4 edge projection is the peer agent's. Do NOT pin a worktree in resume pointers — each session works in its harness-assigned worktree. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
+_Resume (2026-08-14, josiah design session, branch `claude/projects-task-sets-modeling-b5rk70`):
+**Milestone 6 DESIGNED, docs-only so far** — task model v2 (uni-directional refs: `TaskSet.tasks`
+flat + `TaskSet.phases` ordered arrays, NEW `Phase` type, `task.phase`/`task.parentTask` many-to-one
+refs, parent edge demoted to cascade-only bookkeeping — third and recorded-why revision of
+containment), project slimming (`artifacts` inlined to a ref array, `routines` field + routine
+parent edge REMOVED in favor of the companion join), outline-first agent rule + phase-aware
+`promote-task` verb (fixes the "`$track` → `taskCreate`" M5 dogfood mapping, which is WRONG under
+two-forms), three-tier routine staleness (source refs auto-disable w/ `disabledReason`; context refs
+flag-only; registry refs immune), and a generic plugin-contributed deletion-guard capability
+(severity gates Continue; one alternative-action per verdict, run-then-recheck-then-delete; typed
+`DeleteGuarded` for agents). All in DESIGN.md §§ "Task model v2", "`Project`", "Routine staleness
+and deletion guards". NO MIGRATIONS assumption carried from M5 — re-confirm before Phase 1 lands.
+Implementation NOT started; phases below._
+
+_Superseded pointer (2026-08-03): M5 Phases 1+3 + Phase 2 core MERGED as PR #12431; **Phase 4 DXOS SIDE MERGED as PR #12440** 2026-08-03 (McpToolAnnotation + all 12 §7.2 verbs, annotation verified through `Operation.serialize`). Also merged from this branch: #12442 (story rename) and #12444 (doc corrections). The checklist loop is now covered by CI play scripts in `stories-assistant/Chat.stories.tsx` — `WithPlanningScripted` (scripted `update-tasks`, title-keyed upsert does not duplicate) and `WithSubAgentsTest2` (delegation adds an unchecked item, checks it off on sub-agent completion); `WithPlanning`/`WithSubAgentsTest1` are the live `!test` counterparts. Next: Phase 2 remainder (templates scaffold/adopt TaskSet, app-graph task nodes, goals authoring, stories-projects play test); Phase 4 edge projection is the peer agent's. Do NOT pin a worktree in resume pointers — each session works in its harness-assigned worktree. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
 
 _Superseded pointer (2026-07-29): Milestone 4 (USE-CASES.md) groundwork + UC-A + UC-B + UC-C implemented and OPEN as PR #12389 (one growing PR, per user direction 2026-07-29; leave open for review — do NOT auto-merge). §2.1 decision RATIFIED by the user (keep `artifacts` as outputs; routines inherit project scope; no schema change — scope travels via `instructions.objects`/`skills` seeding). Check GREEN on 668f48f01f (all jobs; two review-fix rounds: public-deps inversion, CreateProjectPanel story context, six CodeRabbit threads fixed/answered). Preview: https://pr-12389-composer-main.dxos.workers.dev. NOTE: commits from 3f6744347c on are UNSIGNED (1Password signing agent unreachable mid-session). Next: user walkthrough of the three `stories-projects` stories (each has numbered manual steps), then land. Live-model runs NOT executed — no `DX_ANTHROPIC_API_KEY` in the session env (`sender-ledger.eval.ts` authored but unverified; run live before trusting it). Earlier context: #12335…#12386 merged; #12388 (would have ended the registry entry) CLOSED unmerged. Still open: URL binding for project chats (MAJOR, needs Josiah)._
 
@@ -410,6 +424,93 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
 - [ ] **Phase 5 — MCP-first dogfood** (alongside 2–4) — this milestone as a Project in the
       shared space; goals/tasks mirrored; task-planning skill registry `tasksDxn` once the sync
       spec lands; Claude Desktop demo over the tunnel.
+
+## Milestone 6: task model v2 — uni-directional refs, phases, delete guards
+
+Designed 2026-08-14 (josiah × claude, session branch `claude/projects-task-sets-modeling-b5rk70`).
+Design: DESIGN.md §§ "Task model v2", "`Project` (`@dxos/compute`)" (M6 target), "Routine staleness
+and deletion guards". Supersedes M5's parent-edge containment; un-defers M5's `Milestone` as
+`Phase`. Carries the M5 "NO MIGRATIONS (nothing deployed)" assumption — re-confirm at Phase 1.
+
+### Phase 1 — task schema v2
+
+- [ ] **`Phase` type** — `org.dxos.type.phase` in `@dxos/types`: name, description?,
+      status? (upcoming|active|done), targetDate?; label/icon annotations; parented to its TaskSet.
+- [ ] **`TaskSet` arrays** — `phases: Ref<Phase>[]` (ordered = phase sequence) +
+      `tasks: Ref<Task>[]` (ordered, EVERY task flat, incl. sub-tasks); update the docstring that
+      currently rejects membership arrays (record the reversal, DESIGN.md has the why).
+- [ ] **`Task` refs** — `phase?: Ref<Phase>` (unset ⇒ backlog; sub-tasks inherit nearest ancestor
+      unless overridden) + `parentTask?: Ref<Task>` (unset ⇒ root; NOT named `parent` — collides
+      with the ECHO parent-edge concept, doc the distinction at the field).
+- [ ] **`TaskOperation` verbs uphold the invariants** — create/update/move/delete write array entry + parent edge together; `task.phase` must resolve within the task's own set; phase-delete
+      sweeps `task.phase` refs; task-delete sweeps the subtree's entries out of `TaskSet.tasks`;
+      new verbs for phase CRUD + reorder (splice `phases`/`tasks` arrays).
+- [ ] **`TaskSetArticle` renders from the flat array** — partition by `phase` (groups ordered by
+      the `phases` array, backlog last/first per design), tree by `parentTask`, per-group order
+      induced from global `tasks` order; tolerant readers (dedupe by id, dangling ref ⇒
+      backlog/root).
+- [ ] **Sync mapping** — linear/github: milestone entities ⇔ `Phase` (foreign keys in `Obj.getMeta`),
+      `issue.milestone`/`Issue.projectMilestone` ⇔ `task.phase`, `Issue.parent`/sub-issues ⇔
+      `task.parentTask` (sub-issue sync is currently absent — this adds it as field copies);
+      membership array reconciliation on upsert/tombstone.
+- [ ] **Re-confirm NO MIGRATIONS** — nothing deployed still true? If not, this phase gains
+      taskSet/task typename migrations before landing.
+
+### Phase 2 — project slimming
+
+- [ ] **`artifacts` → inline `Ref<Obj.Unknown>[]`** — drop the Collection indirection;
+      `ProjectSkill.artifact-add/-list` retarget; `ObjectGallery` already takes ref arrays;
+      create-object capability stops making a Collection.
+- [ ] **Remove `Project.routines` + the routine→project parent edge** — `CreateRoutine` handler
+      stops parenting/splicing; ProjectArticle drops the routines gallery + its delete handler
+      (companion is the only routines surface); templates (`inboxResearch`, `crmProject`) stop
+      pushing the ref; delete-project cascade test updated (routines now survive project deletion —
+      covered by guards/staleness instead).
+
+### Phase 3 — outline-first + promote-task
+
+- [ ] **Skill text: outline-first rule** — ProjectSkill + planning skill + MCP code-project skill:
+      default writes are outline checklist lines; promote only for assignee / delegation / external
+      mirror; fix the M5 dogfood mapping (`$track` ⇒ outline upsert, NOT `taskCreate`) in
+      MILESTONE-5.md §8 and the skill instructions.
+- [ ] **`promote-task` verb** — outline line → Task in the project's TaskSet (array + parent edge),
+      checkbox state → `task.status`, markdown line rewritten with the `echo://` backlink (label
+      follows renames); **phase-aware**: heading find-or-creates a `Phase`, sets `task.phase`.
+- [ ] **Promotion eval** — extend the checklist-loop coverage: agent promotes a line, human
+      completes the Task, checklist line reflects it (the M5 follow-up, now unblocked by the verb).
+- [ ] **Registry-port repair guidance** — re-port `TASKS.md`s that were bulk-minted into Tasks:
+      outline near-verbatim, promote only qualifying lines (likely a handful; done items stay
+      markdown). Applies to the mcp-space-service port flow (cross-stream, coordinate there).
+
+### Phase 4 — routine staleness
+
+- [ ] **`Trigger.disabledReason?`** — structured `{ kind: 'stale-dependency' | 'failure' | 'user',
+    ref?, at }` beside `enabled`; distinct from the transient failure cooldown.
+- [ ] **Dispatcher pre-flight** — resolve source refs (spec.feed / cursor target / subscription
+      scope) before fire; tombstoned ⇒ persist disable + reason (lazy disable is accepted — no
+      deletion watcher).
+- [ ] **`RunInstructions` trace warning** — dead context ref still skipped, now recorded on the run
+      trace so degradation is diagnosable in `RoutineTraceCompanion`.
+- [ ] **UI badges + sweep** — companion/card badge computed live from dangling source/context refs
+      (`Obj.isDeleted` on resolution); space-level stale-routines list; flag-and-confirm delete
+      only, never auto-delete.
+
+### Phase 5 — deletion guards (generic; motivated here, home is app-framework/plugin-space)
+
+- [ ] **Guard capability + contract** — `{ appliesTo, check(objects) => GuardVerdict[] }`;
+      `GuardVerdict = { severity: warn|block, message, subjects?, alternative?: { label, operation,
+    input } }` (max one alternative); batch semantics (full deletion set, one card).
+- [ ] **Delete-flow integration** — no verdicts ⇒ today's frictionless path; card composes all
+      verdicts, Continue iff no block; alternative = run operation → re-run guards → complete the
+      delete automatically (re-check authorizes, not the click).
+- [ ] **Agent path** — typed `DeleteGuarded { verdicts }` failure; `acknowledge` param as the
+      programmatic warn-level Continue; block unacknowledgeable on both surfaces.
+- [ ] **Undo unit** — executed alternative + primary delete commit as one undo; costed as the
+      hardest piece, design before building.
+- [ ] **Consumer 1: projects/routines guard** — warn + subjects via `connectedRoutinesQuery` +
+      alternative "Delete N routines".
+- [ ] **Consumer 2: type-deletion guard** — block when instances/views reference the stored type +
+      alternative "Delete N objects of this type" (reverse-ref machinery).
 
 ## Milestone 4 (scoping): what comes after this PR
 
