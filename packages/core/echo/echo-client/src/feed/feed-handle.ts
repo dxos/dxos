@@ -35,6 +35,15 @@ const TRACE_FEED_LOAD = false;
 // https://linear.app/dxos/issue/DX-449/queueappend-fails-when-there-are-too-many-objects-due-to-there-being
 const FEED_APPEND_BATCH_SIZE = 15;
 
+const RECONNECT_INITIAL_DELAY = 1_000;
+
+/**
+ * Ceiling for {@link FeedHandle.beginPolling}'s reconnect backoff after a stream error: the delay
+ * doubles after each failed attempt, capped here, and resets to {@link RECONNECT_INITIAL_DELAY} the
+ * moment a reconnected stream observes data.
+ */
+const RECONNECT_MAX_DELAY = 30_000;
+
 /**
  * Client-side handle for a single feed, backed by an EDGE queue.
  * Internal to echo-client — feed operations are exposed through {@link DatabaseImpl}.
@@ -68,6 +77,7 @@ export class FeedHandle {
       }
       this._error = err as Error;
       this._isLoading = false;
+      this.updated.emit();
     }
   });
 
@@ -150,6 +160,15 @@ export class FeedHandle {
 
   /** Cleanup for the active `FeedService.subscribeFeed` stream, set only while polling handlers > 0. */
   #feedSubscriptionCleanup: (() => void) | null = null;
+  /** Pending reconnect after a stream error; cancelled on unsubscribe/dispose. */
+  #reconnectTimer: NodeJS.Timeout | null = null;
+  /** Current reconnect delay; grows on repeated failures, resets once a reconnected stream observes data. */
+  #reconnectDelay = RECONNECT_INITIAL_DELAY;
+  /**
+   * Bumped on every unsubscribe-to-zero and every fresh {@link beginPolling}, invalidating any
+   * reconnect scheduled by a superseded subscription so it can't fire alongside a newer one.
+   */
+  #subscriptionGeneration = 0;
 
   constructor(
     private readonly _service: FeedService.Client,
@@ -560,38 +579,70 @@ export class FeedHandle {
    */
   beginPolling(): () => void {
     if (this._pollingHandlers++ === 0) {
-      this.#feedSubscriptionCleanup = subscribeStream(
-        this._runtime,
-        this._service['FeedService.subscribeFeed']({
-          query: {
-            feedNamespace: this._namespace,
-            spaceId: this._spaceId,
-            feedIds: [this._feedId],
-          },
-        }),
-        {
-          onData: (result) => {
-            const refreshId = ++this._refreshId;
-            void this.#applyQueryResult(refreshId, result);
-          },
-          onError: (error) => {
-            if (!(error instanceof RpcClosedError)) {
-              log.catch(error);
-            }
-            this._error = error;
-            this._isLoading = false;
-            this.updated.emit();
-          },
-        },
-      );
+      this.#reconnectDelay = RECONNECT_INITIAL_DELAY;
+      this.#subscribeToFeed(++this.#subscriptionGeneration);
     }
 
     return () => {
       if (--this._pollingHandlers === 0) {
-        this.#feedSubscriptionCleanup?.();
-        this.#feedSubscriptionCleanup = null;
+        this.#teardownFeedSubscription();
       }
     };
+  }
+
+  /**
+   * Opens the shared `subscribeFeed` stream. On a stream error (the RPC connection dropping, say)
+   * this reopens after a backoff delay rather than leaving the handle without updates for the rest
+   * of its session — the poll loop it replaced self-healed on its next tick, so this subscription
+   * needs an equivalent recovery path. `generation` guards a reconnect scheduled by an earlier,
+   * now-superseded subscription (unsubscribed, or replaced by a fresh `beginPolling()`) from firing.
+   */
+  #subscribeToFeed(generation: number): void {
+    this.#feedSubscriptionCleanup = subscribeStream(
+      this._runtime,
+      this._service['FeedService.subscribeFeed']({
+        query: {
+          feedNamespace: this._namespace,
+          spaceId: this._spaceId,
+          feedIds: [this._feedId],
+        },
+      }),
+      {
+        onData: (result) => {
+          this.#reconnectDelay = RECONNECT_INITIAL_DELAY;
+          const refreshId = ++this._refreshId;
+          void this.#applyQueryResult(refreshId, result);
+        },
+        onError: (error) => {
+          if (!(error instanceof RpcClosedError)) {
+            log.catch(error);
+          }
+          this._error = error;
+          this._isLoading = false;
+          this.#feedSubscriptionCleanup = null;
+          this.updated.emit();
+          if (generation === this.#subscriptionGeneration && this._pollingHandlers > 0 && !this._ctx.disposed) {
+            const delay = this.#reconnectDelay;
+            this.#reconnectDelay = Math.min(this.#reconnectDelay * 2, RECONNECT_MAX_DELAY);
+            this.#reconnectTimer = setTimeout(() => {
+              this.#reconnectTimer = null;
+              this.#subscribeToFeed(generation);
+            }, delay);
+          }
+        },
+      },
+    );
+  }
+
+  /** Tears down the active subscription and cancels any pending reconnect. */
+  #teardownFeedSubscription(): void {
+    this.#subscriptionGeneration++;
+    if (this.#reconnectTimer) {
+      clearTimeout(this.#reconnectTimer);
+      this.#reconnectTimer = null;
+    }
+    this.#feedSubscriptionCleanup?.();
+    this.#feedSubscriptionCleanup = null;
   }
 
   async dispose() {
@@ -601,8 +652,7 @@ export class FeedHandle {
     await this.waitForPendingWrites();
 
     this._pollingHandlers = 0;
-    this.#feedSubscriptionCleanup?.();
-    this.#feedSubscriptionCleanup = null;
+    this.#teardownFeedSubscription();
     for (const core of this.#cores.values()) {
       core.dispose();
     }
