@@ -160,14 +160,19 @@ Gate before Phase 9. Requested 2026-08-13.
       `Graph.initialize` call in `plugin-space/spaces-ready.ts`, and make `GraphNodeMatcher`'s
       `whenRoot`/`whenId`/`whenNodeType` generic in `TNode`.
 
-      **Prime suspect: `8ff86d48` itself.** It deleted `Graph.initialize`, `onInitialize` and the
-      `_initialized` set on the premise that nothing declared a `resolver:`. But `spaces-ready.ts`
-      *did* call `void Graph.initialize(graph, id)` — that commit does not even compile, and the call
-      site was only removed later, during the main merge, on the same premise. If `initializeImpl`
-      did anything beyond firing resolvers (materializing the node, marking it initialized, kicking
-      expansion), removing that call is a live behaviour change on exactly the path these specs use.
-      Next step: A/B `6e3e2cd3` with the same two patches — if it passes, the culprit is `8ff86d48`
-      alone, and the fix is to restore whatever `initialize` did for the non-resolver case.
+      **`8ff86d48` is NOT the cause** — checked rather than assumed: `initializeImpl` only added the
+      id to `_initialized` and awaited `_onInitialize`, which fired resolver extensions. Nothing
+      declared a `resolver:`, so both the function and its call site were genuinely dead. Removing
+      them cannot be the behaviour change.
+
+      **Next suspect: `99ac23f1`** ("generalize neighbourhood and tree views into the core"). It is
+      the only remaining commit in the region with runtime semantics for app-graph: `_connections`
+      moved onto `model.neighborsAtom` and `_json` onto `model.toTree`. `neighbors()` deliberately
+      *skips edges whose other endpoint is a placeholder* — and app-graph relies on placeholder nodes
+      for tombstones and for edges that arrive before their endpoint. If a node the navtree needs is
+      momentarily a placeholder, its connections silently vanish, which matches a menu that renders
+      but acts on nothing. A/B it with the same two build patches; if it passes, the culprit is
+      `6e3e2cd3` (decorator injection) by elimination.
 
       2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
          consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
