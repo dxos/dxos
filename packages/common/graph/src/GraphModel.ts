@@ -535,6 +535,61 @@ export abstract class AbstractGraphModel<
     return this.batch(() => this.copy(this.#detachNode(id, options)));
   }
 
+  /**
+   * Drops the nodes and their incident edges outright, reclaiming their slots.
+   *
+   * Distinct from {@link AbstractGraphModel.removeNode}, which tombstones: it keeps the slot so an
+   * edge pointing at the id stays legal and re-resolves if the node comes back. That is the right
+   * semantics for deletion, and the wrong one for unloading a subgraph the session may never look
+   * at again — the slot, the id-index entry and the adjacency entries all survive, so a long
+   * session retains every node it has ever materialized. Release is for the unload case: the
+   * subgraph is expected to be rebuilt from its source if it is needed again.
+   *
+   * Edges reaching *into* the released set from outside are removed with it, since their endpoint
+   * no longer exists in any form.
+   */
+  release(ids: readonly string[]): void {
+    this.batch(() => {
+      for (const id of ids) {
+        const index = this.#nodeIndex.get(id);
+        if (index === undefined) {
+          continue;
+        }
+
+        // Unlink first, so the incident-edge maps and the edge-id bimap stay in step; the graph's
+        // own `removeNode` drops its incident edges but knows nothing of those indexes.
+        this.#incidentEdges(id).forEach((edge) => this.#unlinkEdge(edge));
+        EffectGraph.removeNode(this.#graph, index);
+        this.#nodeIndex.delete(id);
+        this.#outgoing.delete(id);
+        this.#incoming.delete(id);
+        this.#mirrorMutate((mirror) => removeInPlace(mirror.nodes, (candidate) => candidate.id === id));
+      }
+
+      this.#touch();
+    });
+  }
+
+  /**
+   * Ids reachable from `id` along `type` edges, excluding `id` itself — the subgraph a caller
+   * unloading a branch wants to hand to {@link AbstractGraphModel.release}.
+   */
+  descendants(id: string, type?: string): string[] {
+    const seen = new Set<string>();
+    const queue = [id];
+    while (queue.length > 0) {
+      for (const node of this.neighbors(queue.shift()!, type)) {
+        if (!seen.has(node.id)) {
+          seen.add(node.id);
+          queue.push(node.id);
+        }
+      }
+    }
+
+    seen.delete(id);
+    return [...seen];
+  }
+
   removeNodes(ids: string[], options?: { detachEdges?: boolean }): Model {
     return this.batch(() => {
       const nodes: Node[] = [];

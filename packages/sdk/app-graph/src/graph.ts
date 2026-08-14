@@ -999,6 +999,55 @@ export function sortEdges<T extends ExpandableGraph | WritableGraph>(
 export const batch = <T extends WritableGraph, A>(graph: T, fn: () => A): A => getInternal(graph)._model.batch(fn);
 
 /**
+ * Unloads the nodes: they leave the model outright, along with the expansion bookkeeping that would
+ * otherwise keep the graph remembering ids it will never be asked about again.
+ *
+ * Unlike {@link removeNodes} this leaves no tombstone, so a subsequent read of a released relation
+ * expands it afresh rather than resolving to an emptied node.
+ */
+export const release = <T extends WritableGraph>(graph: T, ids: readonly string[]): T => {
+  const internal = getInternal(graph);
+  internal._model.batch(() => {
+    for (const id of ids) {
+      internal._relations.delete(id);
+      releaseExpansion(internal, id);
+    }
+
+    internal._model.release(ids);
+  });
+
+  return graph;
+};
+
+/** Forgets that any relation of `id` was ever expanded, so the next read expands it again. */
+const releaseExpansion = (internal: GraphImpl, id: string): void => {
+  for (const set of [internal._expanded, internal._pendingExpands]) {
+    for (const key of [...set]) {
+      if (primaryParts(key)[0] === id) {
+        set.delete(key);
+      }
+    }
+  }
+};
+
+/**
+ * Forgets that `relation` of `id` was expanded. Paired with the builder tearing down the matching
+ * connector subscription, so a relation whose contents were released re-expands rather than
+ * resolving to the emptied list it had before.
+ */
+export const releaseRelation = <T extends ExpandableGraph | WritableGraph>(
+  graph: T,
+  id: string,
+  relation: string,
+): T => {
+  const internal = getInternal(graph);
+  const key = primaryKey(id, relation);
+  internal._expanded.delete(key);
+  internal._pendingExpands.delete(key);
+  return graph;
+};
+
+/**
  * Implementation helper for addNodes.
  */
 const addNodesImpl = <T extends WritableGraph>(graph: T, nodes: Node.NodeArg<any, Record<string, any>>[]): T => {

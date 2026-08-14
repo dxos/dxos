@@ -256,6 +256,11 @@ export class GraphBuilder extends Builder.GraphBuilder<
     return yieldOrContinue('idle');
   }
 
+  override _onReleaseRelation(target: { id: string; relation: string }): void {
+    super._onReleaseRelation(target);
+    Graph.releaseRelation(this.graph, target.id, target.relation);
+  }
+
   override _onExpand(id: string, relation: string): void {
     super._onExpand(id, relation);
 
@@ -308,6 +313,7 @@ const makeStore = (
     sortEdges: (id, relation, order) => void Graph.sortEdges(graph, id, Graph.relationFromKey(relation), [...order]),
     setNode: (id, node) => graph._setNode(id, node),
     batch: (fn) => Graph.batch(graph, fn),
+    release: (ids) => void Graph.release(graph, ids),
     constructNode: (node) => graph._constructNode(node),
   };
 };
@@ -330,7 +336,7 @@ export const from = (pickle?: string, registry?: Registry.AtomRegistry, urlGramm
 };
 
 // The expansion lifecycle is the generic engine's; the app layer only specializes the vocabulary.
-export { addExtension, destroy, explore, flush, removeExtension } from '@dxos/graph/GraphBuilder';
+export { addExtension, destroy, explore, flush, release, removeExtension } from '@dxos/graph/GraphBuilder';
 
 /**
  * Flatten arbitrarily nested extension groups into a single list. Pinned to the app extension type,

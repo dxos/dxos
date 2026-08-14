@@ -125,6 +125,12 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
    * then discarded — their dependents keep a stale value and are never notified.
    */
   batch?(fn: () => void): void;
+  /**
+   * Drops the nodes outright, reclaiming whatever the store holds for them, if it can. Unlike
+   * {@link Store.removeNodes} this is not a deletion the graph should remember — the caller is
+   * unloading a subgraph it expects to rebuild from source.
+   */
+  release?(ids: readonly string[]): void;
 }
 
 /**
@@ -466,6 +472,22 @@ export class GraphBuilder<
     this._subscriptions.set(id, forNode);
   }
 
+  /**
+   * A relation is being torn down by {@link release}: drop its expansion subscription so the next
+   * read expands it again. Override to unwind whatever expansion bookkeeping the layer keeps.
+   */
+  _onReleaseRelation({ id, relation }: { id: string; relation: string }): void {
+    const forNode = this._subscriptions.get(id);
+    const cancel = forNode?.get(connectorKey(id, relation));
+    if (cancel) {
+      cancel();
+      forNode!.delete(connectorKey(id, relation));
+      if (forNode!.size === 0) {
+        this._subscriptions.delete(id);
+      }
+    }
+  }
+
   _onRemoveNode(id: string): void {
     this._nodeExtensions.delete(id);
     const forNode = this._subscriptions.get(id);
@@ -621,6 +643,7 @@ const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNode
       Option.match(node, { onNone: () => model.removeNode(id), onSome: (value) => model.setNode(value) }),
     constructNode: ({ nodes: _, ...node }) => Option.some(node),
     batch: (fn) => model.batch(fn),
+    release: (ids) => model.release(ids),
   };
 };
 
@@ -665,6 +688,34 @@ export const removeExtension: {
  * Wait for all pending connector updates to be flushed.
  */
 export const flush = (builder: Any): Promise<void> => builder._flushPromise;
+
+/**
+ * Unloads the nodes and everything the builder remembers about them: expansion subscriptions, the
+ * per-connector diff state, and provenance. The nodes leave the store outright rather than being
+ * tombstoned, so reading a released relation again re-expands it from its connectors.
+ *
+ * Releasing a node does NOT release its descendants — the caller chooses the set, since what counts
+ * as a releasable unit (a workspace, a collection, one node) is a policy the builder has no view of.
+ * {@link explore} and the store's own traversal are how that set is collected.
+ */
+export const release = (builder: Any, ids: readonly string[]): void => {
+  const released = new Set(ids);
+  for (const [key, previous] of [...builder._connectorPrevious]) {
+    // A connector rooted at a released node, or one that produced one. The second case matters:
+    // its diff state still claims the node was emitted, so leaving it in place would mean the
+    // connector never re-emits and the node never comes back. Both tear down to "never expanded".
+    if (released.has(relationFromConnectorKey(key).id) || previous.some((id) => released.has(id))) {
+      builder._connectorPrevious.delete(key);
+      builder._connectorPreviousArgs.delete(key);
+      builder._connectorPreviousInlineIds.delete(key);
+      builder._dirtyConnectors.delete(key);
+      builder._onReleaseRelation(relationFromConnectorKey(key));
+    }
+  }
+
+  ids.forEach((id) => builder._onRemoveNode(id));
+  builder._store.release?.(ids);
+};
 
 /**
  * Release every expansion subscription the builder holds.

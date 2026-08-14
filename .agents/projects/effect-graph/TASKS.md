@@ -146,225 +146,225 @@ Gate before Phase 9. Requested 2026-08-13.
 
       A/B at `23198521` (the consolidation) splits the failure: 2 failed, 3 passed.
 
-                                                          1. **Drag / re-order broke at the consolidation** (`re-order collections`, `drag object into
-                                                             collection`). Sibling order in app-graph is carried by *edge insertion order* —
-                                                             `sortEdgesImpl` removes and re-adds a relation's edges — and `_connections` reads it back
-                                                             through `model.neighborsAtom`. **Ordering is verified CORRECT at HEAD** — a direct
-                                                             `Graph.sortEdges` round-trip over four siblings returns the requested order twice running —
-                                                             so the incremental adjacency (`Map`-keyed, order-preserving) landed later already fixed that
-                                                             era's bug, and the drag specs now fail for the same cause as deletion. Treat this as one
-                                                             remaining regression, not two.
-                                                          **Narrowed to `23198521` … `8ff86d48`.** A/B at `8ff86d48` (resolver removal) fails 4/5, so
-                                                          the GraphBuilder split `a86d7718` is EXONERATED. A/B at `23198521` fails only the drag pair, so
-                                                          deletion broke in between. Both intermediate commits need build patches to A/B: remove the
-                                                          `Graph.initialize` call in `plugin-space/spaces-ready.ts`, and make `GraphNodeMatcher`'s
-                                                          `whenRoot`/`whenId`/`whenNodeType` generic in `TNode`.
+                                                                  1. **Drag / re-order broke at the consolidation** (`re-order collections`, `drag object into
+                                                                     collection`). Sibling order in app-graph is carried by *edge insertion order* —
+                                                                     `sortEdgesImpl` removes and re-adds a relation's edges — and `_connections` reads it back
+                                                                     through `model.neighborsAtom`. **Ordering is verified CORRECT at HEAD** — a direct
+                                                                     `Graph.sortEdges` round-trip over four siblings returns the requested order twice running —
+                                                                     so the incremental adjacency (`Map`-keyed, order-preserving) landed later already fixed that
+                                                                     era's bug, and the drag specs now fail for the same cause as deletion. Treat this as one
+                                                                     remaining regression, not two.
+                                                                  **Narrowed to `23198521` … `8ff86d48`.** A/B at `8ff86d48` (resolver removal) fails 4/5, so
+                                                                  the GraphBuilder split `a86d7718` is EXONERATED. A/B at `23198521` fails only the drag pair, so
+                                                                  deletion broke in between. Both intermediate commits need build patches to A/B: remove the
+                                                                  `Graph.initialize` call in `plugin-space/spaces-ready.ts`, and make `GraphNodeMatcher`'s
+                                                                  `whenRoot`/`whenId`/`whenNodeType` generic in `TNode`.
 
-                                                          **`8ff86d48` is NOT the cause** — checked rather than assumed: `initializeImpl` only added the
-                                                          id to `_initialized` and awaited `_onInitialize`, which fired resolver extensions. Nothing
-                                                          declared a `resolver:`, so both the function and its call site were genuinely dead. Removing
-                                                          them cannot be the behaviour change.
+                                                                  **`8ff86d48` is NOT the cause** — checked rather than assumed: `initializeImpl` only added the
+                                                                  id to `_initialized` and awaited `_onInitialize`, which fired resolver extensions. Nothing
+                                                                  declared a `resolver:`, so both the function and its call site were genuinely dead. Removing
+                                                                  them cannot be the behaviour change.
 
-                                                          **CULPRIT: `99ac23f1`** ("generalize neighbourhood and tree views into the core") — A/B fails
-                                                          4/5 there, against 2/5 at its parent `23198521`. It is the commit that turns the drag-only
-                                                          failure into the full four.
+                                                                  **CULPRIT: `99ac23f1`** ("generalize neighbourhood and tree views into the core") — A/B fails
+                                                                  4/5 there, against 2/5 at its parent `23198521`. It is the commit that turns the drag-only
+                                                                  failure into the full four.
 
-                                                          The visible semantic change in its diff, and the place to start:
+                                                                  The visible semantic change in its diff, and the place to start:
 
-                                                          ```diff
-                                                          -      for (const edge of sortByOrder(this._model.outgoing(id))) {
-                                                          +      for (const edge of this._model.outgoing(id)) {
-                                                          -      for (const edge of sortByOrder(this._model.incoming(id))) {
-                                                          +      for (const edge of this._model.incoming(id)) {
-                                                          ```
+                                                                  ```diff
+                                                                  -      for (const edge of sortByOrder(this._model.outgoing(id))) {
+                                                                  +      for (const edge of this._model.outgoing(id)) {
+                                                                  -      for (const edge of sortByOrder(this._model.incoming(id))) {
+                                                                  +      for (const edge of this._model.incoming(id)) {
+                                                                  ```
 
-                                                          `_edges` stopped ordering by the edge's `data.order`, and `_connections` moved from
-                                                          `get(this._edges(id))` + `get(this._node(childId))` per child onto `model.neighborsAtom`, which
-                                                          returns raw adjacency order and reads `.data` non-reactively. Two candidate consequences, both
-                                                          worth checking directly: (a) `data.order` is now vestigial — sort survives only because
-                                                          `sortEdgesImpl` re-inserts edges, verified working at HEAD, so any path that sets `order`
-                                                          without re-inserting silently loses its ordering; (b) the per-child `get(this._node(id))`
-                                                          dependency is gone, so a child whose app-level `data` changes without a model version bump no
-                                                          longer invalidates the parent's connections.
+                                                                  `_edges` stopped ordering by the edge's `data.order`, and `_connections` moved from
+                                                                  `get(this._edges(id))` + `get(this._node(childId))` per child onto `model.neighborsAtom`, which
+                                                                  returns raw adjacency order and reads `.data` non-reactively. Two candidate consequences, both
+                                                                  worth checking directly: (a) `data.order` is now vestigial — sort survives only because
+                                                                  `sortEdgesImpl` re-inserts edges, verified working at HEAD, so any path that sets `order`
+                                                                  without re-inserting silently loses its ordering; (b) the per-child `get(this._node(id))`
+                                                                  dependency is gone, so a child whose app-level `data` changes without a model version bump no
+                                                                  longer invalidates the parent's connections.
 
-                                                          **Fix attempt 1, reverted — but it narrowed the mechanism.** Restoring `sortByOrder` is
-                                                          meaningless at HEAD: `GraphEdge` no longer carries `data` at all, since ordering moved to pure
-                                                          insertion order (verified working). So candidate (a) is dead. Restoring the per-child
-                                                          `get(this._node(childId))` dependency in `_connections` builds and leaves 119/120 green but
-                                                          **fails `graph.test.ts > Graph > connections updates`** — so the two forms genuinely differ in
-                                                          notification behaviour, which is direct evidence for candidate (b). The fix is therefore not a
-                                                          straight revert: keep the `neighborsAtom` read (it is what makes the view cheap) and work out
-                                                          whether the missing per-child dependency, or the notification count that test pins, is the
-                                                          correct semantics. Start by reading that test's expectation against both forms.
+                                                                  **Fix attempt 1, reverted — but it narrowed the mechanism.** Restoring `sortByOrder` is
+                                                                  meaningless at HEAD: `GraphEdge` no longer carries `data` at all, since ordering moved to pure
+                                                                  insertion order (verified working). So candidate (a) is dead. Restoring the per-child
+                                                                  `get(this._node(childId))` dependency in `_connections` builds and leaves 119/120 green but
+                                                                  **fails `graph.test.ts > Graph > connections updates`** — so the two forms genuinely differ in
+                                                                  notification behaviour, which is direct evidence for candidate (b). The fix is therefore not a
+                                                                  straight revert: keep the `neighborsAtom` read (it is what makes the view cheap) and work out
+                                                                  whether the missing per-child dependency, or the notification count that test pins, is the
+                                                                  correct semantics. Start by reading that test's expectation against both forms.
 
-                                                          **Candidate (b) is now weak too.** `graph.test.ts > Graph > connections updates` asserts that
-                                                          updating an existing child fires exactly one update and a no-op re-add fires none. HEAD's
-                                                          `neighborsAtom` form passes it; the restored per-child form fails it by *over*-firing (each
-                                                          recompute builds a fresh `Option`, so there is no equality cutoff). So HEAD's reactivity is the
-                                                          stricter and more correct of the two — the missing dependency is not obviously the bug.
+                                                                  **Candidate (b) is now weak too.** `graph.test.ts > Graph > connections updates` asserts that
+                                                                  updating an existing child fires exactly one update and a no-op re-add fires none. HEAD's
+                                                                  `neighborsAtom` form passes it; the restored per-child form fails it by *over*-firing (each
+                                                                  recompute builds a fresh `Option`, so there is no equality cutoff). So HEAD's reactivity is the
+                                                                  stricter and more correct of the two — the missing dependency is not obviously the bug.
 
-                                                          **What is left, and it is concrete:** at `99ac23f1` the edge type still had `data.order`, so
-                                                          dropping `sortByOrder` there genuinely broke ordering at that commit. Ordering was only made
-                                                          correct again later, by accident, when the incremental adjacency made insertion order
-                                                          authoritative. That accounts for the drag pair. It does NOT yet account for the two deletion
-                                                          specs, which is the piece still unexplained — and the next thing to isolate is what else in
-                                                          `99ac23f1` reaches the delete path, most likely the `_json`/`toTree` move or the `_edges`
-                                                          ordering feeding `removeNodeImpl`'s edge enumeration.
+                                                                  **What is left, and it is concrete:** at `99ac23f1` the edge type still had `data.order`, so
+                                                                  dropping `sortByOrder` there genuinely broke ordering at that commit. Ordering was only made
+                                                                  correct again later, by accident, when the incremental adjacency made insertion order
+                                                                  authoritative. That accounts for the drag pair. It does NOT yet account for the two deletion
+                                                                  specs, which is the piece still unexplained — and the next thing to isolate is what else in
+                                                                  `99ac23f1` reaches the delete path, most likely the `_json`/`toTree` move or the `_edges`
+                                                                  ordering feeding `removeNodeImpl`'s edge enumeration.
 
-                                                          **FIXED: `delete a collection`** — `_connections` reads each child's own atom again, with an
-                                                      equality cutoff on the resolved list. Perf unaffected.
+                                                                  **FIXED: `delete a collection`** — `_connections` reads each child's own atom again, with an
+                                                              equality cutoff on the resolved list. Perf unaffected.
 
-                                                      **`deletion undo` fails at the DELETE step (line 93), not the undo.** Expects 0, gets 3 on a
-                                                      three-level nest where the two-level case now passes: the orphan cascade stops at depth 1.
-                                                      `removeEdgeImpl`'s orphan branch calls `removeNodesImpl(graph, [endpoint])` with `edges`
-                                                      defaulting to **false**. Passing `true` there was TRIED and made no difference (unit tests stay
-                                                      green, e2e unchanged), so it is not the cause and was reverted — do not retry it. The depth-1
-                                                      cascade observation still stands; the mechanism is elsewhere.
+                                                              **`deletion undo` fails at the DELETE step (line 93), not the undo.** Expects 0, gets 3 on a
+                                                              three-level nest where the two-level case now passes: the orphan cascade stops at depth 1.
+                                                              `removeEdgeImpl`'s orphan branch calls `removeNodesImpl(graph, [endpoint])` with `edges`
+                                                              defaulting to **false**. Passing `true` there was TRIED and made no difference (unit tests stay
+                                                              green, e2e unchanged), so it is not the cause and was reverted — do not retry it. The depth-1
+                                                              cascade observation still stands; the mechanism is elsewhere.
 
-                                                      **ROOT CAUSE OF THE REMAINING THREE (probed 2026-08-14).** A throwaway spec that creates two
-                                                      collections and prints the navtree rows shows:
+                                                              **ROOT CAUSE OF THE REMAINING THREE (probed 2026-08-14).** A throwaway spec that creates two
+                                                              collections and prints the navtree rows shows:
 
-                                                      ```
-                                                      BEFORE: ["Click to open\nNew collection"]                      <- two created, one rendered
-                                                      AFTER : ["...New collection\nMore actions", "...New collection"]  <- second appears only later
-                                                      ```
+                                                              ```
+                                                              BEFORE: ["Click to open\nNew collection"]                      <- two created, one rendered
+                                                              AFTER : ["...New collection\nMore actions", "...New collection"]  <- second appears only later
+                                                              ```
 
-                                                      **A newly created sibling does not appear in the navtree until a later, unrelated interaction
-                                                      forces a refresh.** That is the whole remaining bug, and it explains all three specs without
-                                                      needing separate causes: `re-order` and `drag` rename by row index, so with only one row
-                                                      rendered the rename lands on the wrong object and `Collection 1` never exists (the drag then
-                                                      times out in `boundingBox`, which is the error you see); `deletion undo` counts three nested
-                                                      rows that were never all present.
+                                                              **A newly created sibling does not appear in the navtree until a later, unrelated interaction
+                                                              forces a refresh.** That is the whole remaining bug, and it explains all three specs without
+                                                              needing separate causes: `re-order` and `drag` rename by row index, so with only one row
+                                                              rendered the rename lands on the wrong object and `Collection 1` never exists (the drag then
+                                                              times out in `boundingBox`, which is the error you see); `deletion undo` counts three nested
+                                                              rows that were never all present.
 
-                                                      It is an *addition* notification gap — the mirror of the removal gap already fixed in
-                                                      `_connections`. Ruled out at the graph level, each with a direct script (all pass, so do not
-                                                      re-test these): emission-order reordering, `properties.label` updates on an existing node,
-                                                      inbound `getConnections` (what `getParent` uses), and `sortEdges` round-trips.
+                                                              It is an *addition* notification gap — the mirror of the removal gap already fixed in
+                                                              `_connections`. Ruled out at the graph level, each with a direct script (all pass, so do not
+                                                              re-test these): emission-order reordering, `properties.label` updates on an existing node,
+                                                              inbound `getConnections` (what `getParent` uses), and `sortEdges` round-trips.
 
-                                                      **The graph layer is now fully exonerated.** A mounted-subscriber script (the render path's
-                                                      actual usage, `registry.subscribe(graph.connections(root, 'child'))`) is notified correctly when
-                                                      a sibling is added: `["root/a"] -> ["root/a","root/b"]`, notifications 1 -> 2. Together with the
-                                                      four scripts above, add/remove/reorder/rename all behave correctly at the graph level.
-                                                      `NavTreeContainer.tsx` also matches `origin/main` modulo the namespace renames, so the merge
-                                                      resolution there is faithful.
+                                                              **The graph layer is now fully exonerated.** A mounted-subscriber script (the render path's
+                                                              actual usage, `registry.subscribe(graph.connections(root, 'child'))`) is notified correctly when
+                                                              a sibling is added: `["root/a"] -> ["root/a","root/b"]`, notifications 1 -> 2. Together with the
+                                                              four scripts above, add/remove/reorder/rename all behave correctly at the graph level.
+                                                              `NavTreeContainer.tsx` also matches `origin/main` modulo the namespace renames, so the merge
+                                                              resolution there is faithful.
 
-                                                      That leaves the layer between the graph and the rendered rows as the only place still changed by
-                                                      this branch: `@dxos/app-toolkit`'s `TypeSection` (which builds the collections section and
-                                                      returns its objects as inline `nodes`) and `AppNodeMatcher`, both touched by the matcher split
-                                                      and the `url` -> `meta` rename. Start there, not in `@dxos/graph`.
+                                                              That leaves the layer between the graph and the rendered rows as the only place still changed by
+                                                              this branch: `@dxos/app-toolkit`'s `TypeSection` (which builds the collections section and
+                                                              returns its objects as inline `nodes`) and `AppNodeMatcher`, both touched by the matcher split
+                                                              and the `url` -> `meta` rename. Start there, not in `@dxos/graph`.
 
-                                                      Superseded note: the flush clearly happens (the row shows up eventually), so look at *when
-                                                      subscribers are notified* rather than at whether the write lands — the `Atom.batch` wrapping in
-                                                      `_scheduleDirtyFlush`, and the equality cutoff added to `_connections`, are the two places a
-                                                      notification can be swallowed.
+                                                              Superseded note: the flush clearly happens (the row shows up eventually), so look at *when
+                                                              subscribers are notified* rather than at whether the write lands — the `Atom.batch` wrapping in
+                                                              `_scheduleDirtyFlush`, and the equality cutoff added to `_connections`, are the two places a
+                                                              notification can be swallowed.
 
-                                                      **RESOLVED (2026-08-14). `collections.spec.ts` is 5/5 green and the full composer e2e
-                                      suite is 19 passed / 17 skipped / 0 failed. Benchmarks beat the pre-refactor bar.**
+                                                              **RESOLVED (2026-08-14). `collections.spec.ts` is 5/5 green and the full composer e2e
+                                              suite is 19 passed / 17 skipped / 0 failed. Benchmarks beat the pre-refactor bar.**
 
-                                      Three defects compounded, all in how writes interact with Effect's atom registry.
+                                              Three defects compounded, all in how writes interact with Effect's atom registry.
 
-                                      1. **Stale read on the write path.** A flush applies its writes inside one batch, which
-                                         bumps the model version once at the end, so reading a node back through `_node(id)`
-                                         mid-flush yields the value from *before* the flush. `addNodeImpl` merges onto what it
-                                         reads, so a second producer of the same node in the same flush undid the first write —
-                                         and where the stale read reported the node absent, rebuilt it from that producer's
-                                         properties alone, dropping the label entirely. That is the rename bug. Fixed by
-                                         reading the model directly (`_currentNode`/`_currentEdges`) in `addNodeImpl`,
-                                         `sortEdgesImpl`, `removeNodeImpl` and `expandSyncImpl`. Pinned by
-                                         `app-graph/src/batch.test.ts`.
+                                              1. **Stale read on the write path.** A flush applies its writes inside one batch, which
+                                                 bumps the model version once at the end, so reading a node back through `_node(id)`
+                                                 mid-flush yields the value from *before* the flush. `addNodeImpl` merges onto what it
+                                                 reads, so a second producer of the same node in the same flush undid the first write —
+                                                 and where the stale read reported the node absent, rebuilt it from that producer's
+                                                 properties alone, dropping the label entirely. That is the rename bug. Fixed by
+                                                 reading the model directly (`_currentNode`/`_currentEdges`) in `addNodeImpl`,
+                                                 `sortEdgesImpl`, `removeNodeImpl` and `expandSyncImpl`. Pinned by
+                                                 `app-graph/src/batch.test.ts`.
 
-                                      2. **`Atom.batch` strands invalidations.** Effect gathers invalidated nodes during a batch
-                                         and rebuilds them in a pass that runs only as the outermost batch closes; a flush
-                                         re-enters the registry (connectors resubscribe as nodes arrive), and nodes gathered
-                                         after that pass are discarded without rebuilding. Measured on the live graph after
-                                         adding a second collection:
+                                              2. **`Atom.batch` strands invalidations.** Effect gathers invalidated nodes during a batch
+                                                 and rebuilds them in a pass that runs only as the outermost batch closes; a flush
+                                                 re-enters the registry (connectors resubscribe as nodes arrive), and nodes gathered
+                                                 after that pass are discarded without rebuilding. Measured on the live graph after
+                                                 adding a second collection:
 
-                                         ```
-                                         modelNode[0]: state=stale  listeners=0 lazy=true  children=1
-                                         connections : state=valid  listeners=0 lazy=false parents=2   <- never invalidated
-                                         ```
+                                                 ```
+                                                 modelNode[0]: state=stale  listeners=0 lazy=true  children=1
+                                                 connections : state=valid  listeners=0 lazy=false parents=2   <- never invalidated
+                                                 ```
 
-                                         The store held the new value, the derived view kept the old one, and no subscriber
-                                         fired — which is why a later unrelated read "repaired" it. Fixed by removing
-                                         `Atom.batch` from the write path entirely: the flush now coalesces through the new
-                                         optional `Store.batch` hook (`Graph.batch` -> `GraphModel.batch`), a depth counter
-                                         that emits one version bump per group without touching the registry's batch phase.
+                                                 The store held the new value, the derived view kept the old one, and no subscriber
+                                                 fired — which is why a later unrelated read "repaired" it. Fixed by removing
+                                                 `Atom.batch` from the write path entirely: the flush now coalesces through the new
+                                                 optional `Store.batch` hook (`Graph.batch` -> `GraphModel.batch`), a depth counter
+                                                 that emits one version bump per group without touching the registry's batch phase.
 
-                                      3. **A subscribed-but-unread atom is inert.** It has no parents, so nothing can invalidate
-                                         it and its subscriber never fires. `addNodeImpl`'s old `registry.get(_node(id))` had
-                                         been wiring that chain by accident, so removing it in (1) regressed
-                                         `delete a collection` and `can subscribe to a node before it exists`. Made deliberate:
-                                         `Graph._touch` reads the atom *after* the write (touching first materializes it as
-                                         `none` and costs a spurious notification), and only for atoms the registry already
-                                         tracks, so a write does not materialize an atom nobody asked for. `_node` also gained
-                                         an equality cutoff on the payload, since `Option.some` allocates a fresh wrapper on
-                                         every recompute and would otherwise notify on every version bump.
+                                              3. **A subscribed-but-unread atom is inert.** It has no parents, so nothing can invalidate
+                                                 it and its subscriber never fires. `addNodeImpl`'s old `registry.get(_node(id))` had
+                                                 been wiring that chain by accident, so removing it in (1) regressed
+                                                 `delete a collection` and `can subscribe to a node before it exists`. Made deliberate:
+                                                 `Graph._touch` reads the atom *after* the write (touching first materializes it as
+                                                 `none` and costs a spurious notification), and only for atoms the registry already
+                                                 tracks, so a write does not materialize an atom nobody asked for. `_node` also gained
+                                                 an equality cutoff on the payload, since `Option.some` allocates a fresh wrapper on
+                                                 every recompute and would otherwise notify on every version bump.
 
-                                      Benchmarks, against the pre-refactor "before" column in DESIGN.md (best of 3, idle box):
+                                              Benchmarks, against the pre-refactor "before" column in DESIGN.md (best of 3, idle box):
 
-                                      | operation                         | before |  now | |
-                                      | --------------------------------- | -----: | ---: | ----------- |
-                                      | expand 1000 nodes                 | 513 ms | 23 ms | 22x faster |
-                                      | expand 100x10 tree                | 668 ms | 21 ms | 32x faster |
-                                      | 50 connector updates @ 1000 nodes | 895 ms | 318 ms | 2.8x faster |
-                                      | 50 updates @ 200 mounted atoms    | 946 ms | 462 ms | 2.0x faster |
-                                      | reads / traverse / getPath        |     -- |    -- | parity |
-                                      | remove 1000 nodes                 | 15.5 ms | 5-6 ms | 2.8x faster |
-                                      | remove 100x10 tree, 101 expanded  |    n/a | 6-9 ms | new case |
+                                              | operation                         | before |  now | |
+                                              | --------------------------------- | -----: | ---: | ----------- |
+                                              | expand 1000 nodes                 | 513 ms | 23 ms | 22x faster |
+                                              | expand 100x10 tree                | 668 ms | 21 ms | 32x faster |
+                                              | 50 connector updates @ 1000 nodes | 895 ms | 318 ms | 2.8x faster |
+                                              | 50 updates @ 200 mounted atoms    | 946 ms | 462 ms | 2.0x faster |
+                                              | reads / traverse / getPath        |     -- |    -- | parity |
+                                              | remove 1000 nodes                 | 15.5 ms | 5-6 ms | 2.8x faster |
+                                              | remove 100x10 tree, 101 expanded  |    n/a | 6-9 ms | new case |
 
-                                      `remove` was the one operation under the bar until the removal path was profiled; see the
-                                      entry below.
+                                              `remove` was the one operation under the bar until the removal path was profiled; see the
+                                              entry below.
 
-                                      Dead ends, each measured — do NOT retry:
-                                      - Removing `Atom.batch` from the flush while `graph.ts` still used `Atom.batch`
-                                        internally: strictly worse (5 failed, `create collection` breaks). Both have to go.
-                                      - Removing the `Atom.withEquality` cutoffs on `_edges` and `_connections`: no change.
-                                      - `Atom.setLazy(false)` on `_node`/`_edges`/`_connections`: fixes nothing the above does
-                                        not, and costs 17 s on `50 updates @ 200 mounted atoms` (36x regression).
-                                      - Nothing throws inside the flush; an `unhandledrejection`/`error` listener records zero.
+                                              Dead ends, each measured — do NOT retry:
+                                              - Removing `Atom.batch` from the flush while `graph.ts` still used `Atom.batch`
+                                                internally: strictly worse (5 failed, `create collection` breaks). Both have to go.
+                                              - Removing the `Atom.withEquality` cutoffs on `_edges` and `_connections`: no change.
+                                              - `Atom.setLazy(false)` on `_node`/`_edges`/`_connections`: fixes nothing the above does
+                                                not, and costs 17 s on `50 updates @ 200 mounted atoms` (36x regression).
+                                              - Nothing throws inside the flush; an `unhandledrejection`/`error` listener records zero.
 
-                                      Worth reporting upstream: Effect's `batch()` discards invalidations gathered after its
-                                      rebuild pass rather than rebuilding them, leaving derived atoms stale with no
-                                      notification. See the "upstream proposals" item.
+                                              Worth reporting upstream: Effect's `batch()` discards invalidations gathered after its
+                                              rebuild pass rather than rebuilding them, leaving derived atoms stale with no
+                                              notification. See the "upstream proposals" item.
 
-                                      **REMOVAL COST, profiled and fixed.** Two allocations-per-element defects, both measured rather
-                                      than inferred (a counter on `GraphModel.copy` and one on the subscription scan):
+                                              **REMOVAL COST, profiled and fixed.** Two allocations-per-element defects, both measured rather
+                                              than inferred (a counter on `GraphModel.copy` and one on the subscription scan):
 
-                                      - `GraphModel.removeNode`/`removeEdge` returned the removed subgraph as a freshly constructed
-                                        model — a `beginMutation` graph, four `Atom.family` caches and a version atom each — and every
-                                        app-graph caller discarded it. Dropping a 1000-node connector output cost **1000 `copy()`
-                                        calls**. The removal internals now mutate and report what left as plain arrays; the public
-                                        methods build one result graph per call, and `detachEdge` builds none at all for callers that
-                                        discard it, which is what `Graph._removeEdge` does, one edge at a time.
-                                      - `GraphBuilder._onRemoveNode` scanned the whole subscription map per removed node, with a
-                                        `split` per entry. Subscriptions are now keyed by node id, then relation.
+                                              - `GraphModel.removeNode`/`removeEdge` returned the removed subgraph as a freshly constructed
+                                                model — a `beginMutation` graph, four `Atom.family` caches and a version atom each — and every
+                                                app-graph caller discarded it. Dropping a 1000-node connector output cost **1000 `copy()`
+                                                calls**. The removal internals now mutate and report what left as plain arrays; the public
+                                                methods build one result graph per call, and `detachEdge` builds none at all for callers that
+                                                discard it, which is what `Graph._removeEdge` does, one edge at a time.
+                                              - `GraphBuilder._onRemoveNode` scanned the whole subscription map per removed node, with a
+                                                `split` per entry. Subscriptions are now keyed by node id, then relation.
 
-                                      | case | before | after | |
-                                      | --- | ---: | ---: | --- |
-                                      | remove 1000 nodes (1 relation expanded) | 18-30 ms | 5-6 ms | ~4x faster |
-                                      | remove 100x10 tree (101 expanded) | 45.5 ms | 6-9 ms | ~5x faster |
+                                              | case | before | after | |
+                                              | --- | ---: | ---: | --- |
+                                              | remove 1000 nodes (1 relation expanded) | 18-30 ms | 5-6 ms | ~4x faster |
+                                              | remove 100x10 tree (101 expanded) | 45.5 ms | 6-9 ms | ~5x faster |
 
-                                      The second case is new — the flat one expands a single relation, so it never priced what removal
-                                      costs per node holding an expansion subscription, which is every node a rendered tree reaches.
-                                      `bench.test.ts` covers both now.
+                                              The second case is new — the flat one expands a single relation, so it never priced what removal
+                                              costs per node holding an expansion subscription, which is every node a rendered tree reaches.
+                                              `bench.test.ts` covers both now.
 
-                                      Method note: `@dxos/graph` resolves to its built `dist` in test runs, not `src`. Editing that
-                                      package and running `npx vitest` without `moon run graph:build` first measures the old code — the
-                                      first profiling attempt reported zeros for exactly this reason.
+                                              Method note: `@dxos/graph` resolves to its built `dist` in test runs, not `src`. Editing that
+                                              package and running `npx vitest` without `moon run graph:build` first measures the old code — the
+                                              first profiling attempt reported zeros for exactly this reason.
 
-                                      2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
-                                                             consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
-                                                             `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
-                                                             console error. NOTE `8ff86d48` does not build in isolation — it removed `Graph.initialize`
-                                                             while `plugin-space/spaces-ready.ts` still called it, and that call site was only fixed
-                                                             during the main merge; patch that line to A/B across it. `6e3e2cd3` does not build in
-                                                             isolation either (the `GraphNodeMatcher` type-erasure defect fixed during the merge), so
-                                                             expect to patch one or two files per step when bisecting this region.
+                                              2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
+                                                                     consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
+                                                                     `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
+                                                                     console error. NOTE `8ff86d48` does not build in isolation — it removed `Graph.initialize`
+                                                                     while `plugin-space/spaces-ready.ts` still called it, and that call site was only fixed
+                                                                     during the main merge; patch that line to A/B across it. `6e3e2cd3` does not build in
+                                                                     isolation either (the `GraphNodeMatcher` type-erasure defect fixed during the merge), so
+                                                                     expect to patch one or two files per step when bisecting this region.
 
-                                                          CLEARED, each by revert + rebuild + rerun: the orphan check; the incremental adjacency maps;
-                                                          `addEdgeImpl` + the `sortEdges` Set membership; and the `origin/main` merge (the pre-merge tip
-                                                          `fd8084de` fails identically). Graph-level repros for the cascade, action expansion, position
-                                                          ordering and re-order all pass (`expansion.test.ts`) — neither bug is visible at that layer.
+                                                                  CLEARED, each by revert + rebuild + rerun: the orphan check; the incremental adjacency maps;
+                                                                  `addEdgeImpl` + the `sortEdges` Set membership; and the `origin/main` merge (the pre-merge tip
+                                                                  `fd8084de` fails identically). Graph-level repros for the cascade, action expansion, position
+                                                                  ordering and re-order all pass (`expansion.test.ts`) — neither bug is visible at that layer.
 
 - [ ] **Composer e2e** — run the Composer e2e suite; the builder/expansion path is only exercised
       end-to-end there (navtree expansion, URL resolution, deck routing).
@@ -396,31 +396,50 @@ Gate before Phase 9. Requested 2026-08-13.
 
 ## Phase 9: node atom release / eviction
 
-The atom set grows monotonically: `Atom.family` memoizes a node atom per id and `keepAlive` roots
-never drop. Nothing releases a subgraph once it has been materialized, so a long session accumulates
-every node ever visited. Investigate a release model that is **generic at the `GraphModel` level**
-but motivated by, and validated against, the app-graph usage.
+**The premise was half wrong, and measuring it changed the design.** `retention.test.ts` records
+the characterization as executable assertions.
 
-- [ ] **Characterize the growth** — measure atom/node/edge counts and retained bytes over a session
-      that visits N workspaces; confirm `Atom.family`'s `WeakRef`/`FinalizationRegistry` memoization
-      is (or is not) already reclaiming unmounted atoms, and what pins them (keepAlive roots, the
-      builder's `_subscriptions`, `_connectorPrevious*` maps, `_nodeExtensions`).
-- [ ] **Decide the unit of release** — whole subgraph (a workspace's descendants) vs individual
-      nodes. Subgraph release is what the workspace-switch case wants; per-node is what an LRU
-      wants. They likely compose: LRU over subgraph roots.
-- [ ] **Evaluate the policies**: - _Explicit unload_ — the app tells the graph "workspace X is no longer active"; deterministic,
-      but every caller must remember to do it and a switch-back pays full re-expansion. - _LRU over subgraph roots_ — keep the K most recently active workspaces materialized so
-      switching back and forth stays instant, evict beyond that. Needs a size/cost metric. - _Reference/mount-driven_ — release what has had no mounted subscriber for T; closest to how
-      Atom already thinks, but expansion state (`_expanded`, connector subscriptions) is not
-      mount-scoped today.
-- [ ] **Design the core API** — something like `model.release(ids)` / `model.evict(policy)` plus a
-      retention hook, with the invariants spelled out: what happens to dangling edges, whether a
-      released node's atom identity survives (so a re-materialized node does not invalidate holders),
-      and how the builder's expansion bookkeeping is unwound in step.
-- [ ] **Wire the app-graph layer** — released subgraph ⇒ drop connector subscriptions, expansion
-      marks, provenance entries; re-expand lazily on next read.
-- [ ] **Tests** — release-then-reread rehydrates identically; no subscriber of a retained node is
-      notified by an eviction elsewhere; memory reclaimed (count-based assertions, not bytes).
+`Atom.family` memoizes **weakly** (`WeakRef` + `FinalizationRegistry`), and `AtomRegistry` drops a
+node once it has no listener and no dependents (`canBeRemoved`), cascading to its parents. So the
+atom set does **not** grow with every node visited. Visiting 20 workspaces of 50 items each:
+
+```
+registryNodes=128  modelNodes=1021  modelEdges=1020
+subs=21  connectorState=42  provenance=1020  expanded=42  relations=1021
+```
+
+Atom count tracks **expanded relations** (which the builder subscribes to, and which therefore pin
+their node and connector atoms), not nodes. What grows monotonically is the **graph and the
+builder's bookkeeping**: every node ever materialized stays in the model, keeps its provenance
+entry, and its relation set is remembered. That is what release had to address.
+
+- [x] **Characterize the growth** — numbers above; asserted in `retention.test.ts`.
+- [x] **Decide the unit of release** — a caller-chosen id set. The core cannot know what a
+      releasable unit is, so it takes ids and `GraphModel.descendants(id, relation)` collects a
+      subtree. LRU-over-roots composes on top rather than being baked in.
+- [x] **Design the core API** — `GraphModel.release(ids)`, distinct from `removeNode`, which
+      _tombstones_: it keeps the slot so a returning node re-resolves dangling edges, which is right
+      for deletion and wrong for unloading. Release drops the slot, the id-index entry and the
+      adjacency entries, and takes edges reaching into the set with it.
+- [x] **Wire the app-graph layer** — `GraphBuilder.release(builder, ids)` tears down expansion
+      subscriptions, per-connector diff state and provenance; `Graph.release` additionally forgets
+      the expansion marks and relation sets. `Store.release` is the port between them.
+- [x] **Tests** — release-then-reread rehydrates identically; a retained subgraph's subscriber is
+      not notified by an eviction elsewhere; counts return to their pre-visit baseline.
+
+**The non-obvious correctness requirement, found by test rather than inspection.** Releasing a node
+that a _live_ connector still lists leaves that connector's diff state claiming it was already
+emitted, so it never re-emits and the node never comes back. `release` therefore tears down any
+connector whose previous output intersects the released set — not just connectors rooted at released
+ids — via the new `_onReleaseRelation` hook, so the relation re-expands on next read.
+
+- [ ] **Evaluate the policies** — the mechanism is in; _when_ to call it is not decided. Explicit
+      unload, LRU over subgraph roots, and mount-driven release are still open, and the choice is a
+      product decision about workspace-switch behaviour rather than a graph one. Note that
+      mount-driven is already half-served: Effect reclaims the atoms on unmount by itself, so a
+      mount-driven policy would only be releasing the model and bookkeeping.
+- [ ] **Decide where the policy lives** — `@dxos/graph` (generic, e.g. `evict(policy)`), app-graph,
+      or the app/plugin layer that knows what a workspace is.
 
 ## Phase 6: app-graph reconciliation
 
