@@ -383,7 +383,9 @@ class GraphImpl implements WritableGraph {
 
   /** @internal */
   _removeEdge(source: string, target: string, relation: string): void {
-    this._model.removeEdge(storedEdge(source, target, relation).id);
+    // `detachEdge`, not `removeEdge`: the latter hands back the removed edge as a graph, and nothing
+    // here reads it.
+    this._model.detachEdge(storedEdge(source, target, relation).id);
   }
 
   /** @internal */

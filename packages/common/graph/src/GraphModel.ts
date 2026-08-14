@@ -531,29 +531,41 @@ export abstract class AbstractGraphModel<
    * Removes the node, returning it and any detached edges as a separate graph. Retaining the
    * incident edges leaves them dangling, which is legal — they resolve again if the node returns.
    */
-  removeNode(id: string, { detachEdges = true }: { detachEdges?: boolean } = {}): Model {
-    return this.batch(() => {
-      const node = this.findNode(id);
-      const removedNodes = node ? [node] : [];
-      const removedEdges = detachEdges ? this.#incidentEdges(id) : [];
-      removedEdges.forEach((edge) => this.#detachEdge(edge));
-
-      const index = this.#nodeIndex.get(id);
-      if (index !== undefined) {
-        EffectGraph.updateNode(this.#graph, index, (slot) => ({ ...slot, value: Option.none() }));
-        this.#touch();
-        this.#mirrorMutate((mirror) => removeInPlace(mirror.nodes, (node) => node.id === id));
-      }
-
-      return this.copy({ nodes: removedNodes, edges: removedEdges });
-    });
+  removeNode(id: string, options?: { detachEdges?: boolean }): Model {
+    return this.batch(() => this.copy(this.#detachNode(id, options)));
   }
 
   removeNodes(ids: string[], options?: { detachEdges?: boolean }): Model {
     return this.batch(() => {
-      const graphs = ids.map((id) => this.removeNode(id, options));
-      return this.copy().addGraphs(graphs);
+      const nodes: Node[] = [];
+      const edges: Edge[] = [];
+      for (const id of ids) {
+        const detached = this.#detachNode(id, options);
+        nodes.push(...detached.nodes);
+        edges.push(...detached.edges);
+      }
+
+      return this.copy({ nodes, edges });
     });
+  }
+
+  /**
+   * Performs the removal and reports what left, without building a graph to hold it — constructing
+   * one allocates a registry-backed model, which is most of the cost of removing a node in bulk.
+   */
+  #detachNode(id: string, { detachEdges = true }: { detachEdges?: boolean } = {}): { nodes: Node[]; edges: Edge[] } {
+    const node = this.findNode(id);
+    const edges = detachEdges ? this.#incidentEdges(id) : [];
+    edges.forEach((edge) => this.#unlinkEdge(edge));
+
+    const index = this.#nodeIndex.get(id);
+    if (index !== undefined) {
+      EffectGraph.updateNode(this.#graph, index, (slot) => ({ ...slot, value: Option.none() }));
+      this.#touch();
+      this.#mirrorMutate((mirror) => removeInPlace(mirror.nodes, (candidate) => candidate.id === id));
+    }
+
+    return { nodes: node ? [node] : [], edges };
   }
 
   //
@@ -632,21 +644,31 @@ export abstract class AbstractGraphModel<
   }
 
   removeEdge(id: string): Model {
-    return this.batch(() => {
-      const edge = this.findEdge(id);
-      if (edge) {
-        this.#detachEdge(edge);
-      }
-
-      return this.copy({ nodes: [], edges: edge ? [edge] : [] });
-    });
+    return this.batch(() => this.copy({ nodes: [], edges: this.#detachEdgeById(id) }));
   }
 
   removeEdges(ids: string[]): Model {
-    return this.batch(() => {
-      const graphs = ids.map((id) => this.removeEdge(id));
-      return this.copy().addGraphs(graphs);
-    });
+    return this.batch(() => this.copy({ nodes: [], edges: ids.flatMap((id) => this.#detachEdgeById(id)) }));
+  }
+
+  /**
+   * Removes the edge, reporting whether it was there. Unlike {@link GraphModel.removeEdge} this
+   * builds nothing to hold the result, which is what a caller removing edges one at a time wants:
+   * the result graph is a registry-backed model, and allocating one per edge dominates the cost of
+   * dropping a connector's whole output.
+   */
+  detachEdge(id: string): boolean {
+    return this.batch(() => this.#detachEdgeById(id).length > 0);
+  }
+
+  /** See {@link GraphModel.detachEdge} for why the removal paths avoid building a graph. */
+  #detachEdgeById(id: string): Edge[] {
+    const edge = this.findEdge(id);
+    if (edge) {
+      this.#unlinkEdge(edge);
+    }
+
+    return edge ? [edge] : [];
   }
 
   //
@@ -931,7 +953,7 @@ export abstract class AbstractGraphModel<
     return index;
   }
 
-  #detachEdge(edge: Edge): void {
+  #unlinkEdge(edge: Edge): void {
     const index = this.#edgeIndex.get(edge.id);
     if (index === undefined) {
       return;

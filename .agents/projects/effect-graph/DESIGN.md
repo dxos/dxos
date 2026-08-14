@@ -404,7 +404,7 @@ Two alternating before/after rounds, after the optimization pass below **and** a
 | `getNode()` x1000                 | 0.35 ms |   0.36 ms | parity       |
 | traverse 1000 nodes               | 3.35 ms |   3.34 ms | parity       |
 | `getPath` root → leaf             | 2.38 ms |   2.57 ms | parity       |
-| remove 1000 nodes                 | 15.5 ms |   17.4 ms | 1.12× slower |
+| remove 1000 nodes                 | 15.5 ms |    5.4 ms | 2.9× faster  |
 
 **Attribution.** Most of the expansion win is NOT this refactor. `Atom.withLabel` captures and formats
 a stack trace on every call, and both trees label an atom per node, per connection key and per

@@ -231,8 +231,12 @@ export class GraphBuilder<
     return Pipeable.pipeArguments(this, arguments);
   }
 
-  /** Active subscriptions keyed by composite ID, cleaned up on node removal. */
-  readonly _subscriptions = new Map<string, CleanupFn>();
+  /**
+   * Expansion subscriptions, keyed by the node they belong to and then by relation key. Nested
+   * rather than flat: removal cancels a node's subscriptions, and a flat map makes that a scan of
+   * every subscription in the graph per removed node.
+   */
+  readonly _subscriptions = new Map<string, Map<string, CleanupFn>>();
   /** Connector updates pending flush, keyed by connector key. */
   readonly _dirtyConnectors = new Map<string, { nodes: Arg[]; previous: string[] }>();
   /** Last-flushed node IDs per connector key, used for edge removal on update. */
@@ -457,16 +461,17 @@ export class GraphBuilder<
       { immediate: true },
     );
 
-    this._subscriptions.set(primaryKey(id, 'expand', key), cancel);
+    const forNode = this._subscriptions.get(id) ?? new Map<string, CleanupFn>();
+    forNode.set(key, cancel);
+    this._subscriptions.set(id, forNode);
   }
 
   _onRemoveNode(id: string): void {
     this._nodeExtensions.delete(id);
-    for (const [key, cleanup] of this._subscriptions) {
-      if (primaryParts(key)[0] === id) {
-        cleanup();
-        this._subscriptions.delete(key);
-      }
+    const forNode = this._subscriptions.get(id);
+    if (forNode) {
+      this._subscriptions.delete(id);
+      forNode.forEach((cleanup) => cleanup());
     }
   }
 }
@@ -665,7 +670,7 @@ export const flush = (builder: Any): Promise<void> => builder._flushPromise;
  * Release every expansion subscription the builder holds.
  */
 export const destroy = (builder: Any): void => {
-  builder._subscriptions.forEach((unsubscribe) => unsubscribe());
+  builder._subscriptions.forEach((forNode) => forNode.forEach((unsubscribe) => unsubscribe()));
   builder._subscriptions.clear();
 };
 

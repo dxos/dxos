@@ -225,4 +225,39 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
       },
     );
   });
+
+  test('remove: a materialized subtree, every level expanded', async () => {
+    // The flat case above expands one relation, so it does not price what removal costs per node
+    // that holds an expansion subscription of its own — which is every node a rendered tree reaches.
+    await measure(
+      `remove ${PARENTS}x${CHILDREN} tree`,
+      `${PARENTS * CHILDREN} nodes, ${PARENTS + 1} expanded`,
+      async ({ registry, builder, state }) => {
+        registry.set(state, false);
+        await GraphBuilder.flush(builder);
+      },
+      {
+        prepare: async () => {
+          const state = Atom.make(true).pipe(Atom.keepAlive);
+          const { registry, builder, graph } = setup((node) =>
+            Atom.make((get) =>
+              !get(state)
+                ? []
+                : Option.match(get(node), {
+                    onNone: () => [],
+                    onSome: (source) => (source.id === ROOT ? nodeArgs(PARENTS, 'p') : nodeArgs(CHILDREN, 'c')),
+                  }),
+            ),
+          );
+          Graph.expandSync(graph, ROOT, 'child');
+          await GraphBuilder.flush(builder);
+          for (const parent of nodeArgs(PARENTS, 'p')) {
+            Graph.expandSync(graph, `${ROOT}/${parent.id}`, 'child');
+          }
+          await GraphBuilder.flush(builder);
+          return { registry, builder, state };
+        },
+      },
+    );
+  });
 });
