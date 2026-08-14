@@ -107,6 +107,14 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
               keywordTagMap.set(keyword, Mailbox.tagUri(tag));
             }
 
+            // Mail from someone the space already knows is worth surfacing, so it lands under the
+            // `important` folder on arrival. Resolved once per sync rather than per message, and
+            // reusing the shared canonical tag rather than a parallel one — the Gmail provider marks
+            // known senders the same way, so both read identically downstream.
+            const knownSenderTagUri = Mailbox.tagUri(
+              yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, 'important')),
+            );
+
             // Fused decode + map; `undefined` drops the item (no body, or unmappable). Constructs the
             // `Change` (an `insert`) directly, so no separate wrapping stage is needed downstream.
             const toMapped = (
@@ -132,6 +140,11 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                   return uri ? [uri] : [];
                 });
                 const tagUris = [...folderUris, ...keywordUris];
+                // `contact` is the Person the space already holds for this sender (resolved above to
+                // link `message.sender.contact`), so knowing they are known costs no extra lookup.
+                if (contact && !tagUris.includes(knownSenderTagUri)) {
+                  tagUris.push(knownSenderTagUri);
+                }
                 const attachments = yield* fetchAttachments(target, decoded.attachments);
                 return {
                   _tag: 'insert',

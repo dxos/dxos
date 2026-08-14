@@ -13,9 +13,10 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Feed, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex, Text } from '@dxos/schema';
+
+import { BrainOperation } from '#types';
 
 import { mailboxFacts } from './mailbox-facts';
 
@@ -78,7 +79,7 @@ describe('mailbox facts project template', () => {
     expect(Obj.getParent(routine!)?.id).toBe(project.id);
     expect(routine!.spec?.kind).toBe('runnable');
     expect(routine!.spec?.kind === 'runnable' && routine!.spec.runnable.uri.toString()).toBe(
-      InboxOperation.AnalyzeMailbox.meta.key.toString(),
+      BrainOperation.AnalyzeMailbox.meta.key.toString(),
     );
 
     // Timer trigger, off by default, with the mailbox ref baked into the operation input.

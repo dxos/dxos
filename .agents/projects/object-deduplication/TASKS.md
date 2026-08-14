@@ -96,7 +96,7 @@ Second round (UI/robustness):
       `senderSignals`, which reads the `noReply`/`listUnsubscribe` flags the provider mappers
       already record. 8 unit tests.
 - [~] 4.5a **Outbound signal not wired** — MOVED to the `mailbox-research` project
-  (`packages/stories/stories-brain/TASKS.md`, "Contact extraction — recipients of sent mail").
+  (`packages/stories/stories-brain/docs/TASKS.md`, "Contact extraction — recipients of sent mail").
   `SenderSignals.outbound` exists and is honoured, but nothing sets it: "we replied to this
   address" is a fact about the _recipients_ of sent mail, and recipients are not extracted at
   all today. Until that lands the allow-list is effectively "domain matches a known

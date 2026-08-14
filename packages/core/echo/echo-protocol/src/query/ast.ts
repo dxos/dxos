@@ -445,7 +445,7 @@ export const QuerySkipClause: Schema.Codec<QuerySkipClause> = QuerySkipClause_;
  * result record (`row[name]`) and orderable via a following `orderBy(Order.property(name))`. A
  * tagged union per kind — `property`/`limit`/`order` are present exactly when the kind uses them,
  * so read sites narrow by `kind` instead of guarding an unused optional field.
- * - `group` partitions members by a scalar `property`; its coerced key value is the field's value.
+ * - `group` partitions members by a scalar key; its coerced key value is the field's value.
  *   Composite keys are formed from multiple `group` entries. A query with no `group` entries
  *   aggregates its entire input into a single row.
  * - `max`/`min` reduce a scalar member `property`.
@@ -458,7 +458,13 @@ export const QuerySkipClause: Schema.Codec<QuerySkipClause> = QuerySkipClause_;
 const GroupAggregateGroup_ = Schema.Struct({
   name: Schema.String,
   kind: Schema.Literal('group'),
-  property: Schema.String,
+  /**
+   * Fallback chain: the first property holding a scalar value supplies this key component (`a ?? b`),
+   * so a single entry is the plain property form. Composite keys come from multiple `group` entries,
+   * never from this list. Non-empty — an empty chain has no key to read and would silently degrade
+   * to a single `null`-keyed group.
+   */
+  properties: Schema.NonEmptyArray(Schema.String),
 });
 const GroupAggregateMax_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('max'), property: Schema.String });
 const GroupAggregateMin_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('min'), property: Schema.String });

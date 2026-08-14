@@ -90,14 +90,13 @@ export const MailboxArticle = ({
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
-  // Gmail sync (`#sync`), the process pipeline (`#process`) and the enrichment cascade (`#enrich`)
+  // Gmail sync (`#sync`), the process pipeline (`#process`) and the scan cascade (`#scan`)
   // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
   // first — it is the one that changes what the list contains rather than what is known about it.
   const syncProgress = useProgressMonitor(createSyncProgressKey(mailbox));
-  const processProgress = useProgressMonitor(InboxOperation.createProcessProgressKey(mailbox));
-  const enrichProgress = useProgressMonitor(InboxOperation.createEnrichProgressKey(mailbox));
+  const scanProgress = useProgressMonitor(InboxOperation.createScanProgressKey(mailbox));
   const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
-  const progress = [syncProgress, processProgress, enrichProgress].find(isActive);
+  const progress = [syncProgress, scanProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 
@@ -116,6 +115,10 @@ export const MailboxArticle = ({
   // Starred messages drive the per-tile star toggle; starred state also lives under the tag index.
   const starredUri = useSystemTagUri(db, 'starred');
   const starredAtom = useMemo(() => SystemTags.tagAtom(tagIndex, starredUri), [tagIndex, starredUri]);
+
+  // Inbox membership drives the tile menu's archive direction; archiving is this tag coming off.
+  const inboxUri = useSystemTagUri(db, 'inbox');
+  const inboxAtom = useMemo(() => SystemTags.tagAtom(tagIndex, inboxUri), [tagIndex, inboxUri]);
 
   // This view's canonical system tag, resolved by id (`undefined` until sync/first draft creates it).
   const systemTagUri = useSystemTagUri(db, systemTag);
@@ -188,7 +191,11 @@ export const MailboxArticle = ({
       ? conversations
         ? source
             .aggregate({
-              threadId: Aggregate.group('threadId'),
+              // Falling back to the message id keeps every threadless message (drafts,
+              // transcriptions, assistant-authored) its own conversation; grouping on `threadId`
+              // alone pools them all under the `null` key, where `items`' preview cap would silently
+              // drop all but the first few.
+              threadId: Aggregate.group({ coalesce: ['threadId', 'id'] }),
               lastMessageAt: Aggregate.max('created'),
               count: Aggregate.count(),
               items: Aggregate.items({
@@ -203,18 +210,16 @@ export const MailboxArticle = ({
   );
 
   // The aggregate query already orders threads (by latest message) and their members (newest-first),
-  // so entries map straight to stack items. Messages without a `threadId` share the aggregate's
-  // single `null`-key group; split them back into singleton conversations at that group's position.
-  // A thread's preview is capped at `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
+  // and its group key falls back to the message id, so a threadless message arrives as its own
+  // one-member group — entries map straight to stack items. A thread's preview is capped at
+  // `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
   const items = useMemo<InboxStackItem[]>(() => {
     const result: InboxStackItem[] = [];
     for (const entry of pagination.items) {
-      if (!isThreadGroup(entry)) {
-        result.push(entry);
-      } else if (entry.threadId == null) {
-        result.push(...entry.items.map((message) => ({ id: message.id, messages: [message] })));
-      } else {
+      if (isThreadGroup(entry)) {
         result.push({ id: entry.threadId, messages: entry.items, total: entry.count });
+      } else {
+        result.push(entry);
       }
     }
     return applyPostFilters(result, mailbox, searchQuery);
@@ -279,6 +284,16 @@ export const MailboxArticle = ({
           if (message && db) {
             void Effect.runFork(
               SystemTags.toggleTag(mailbox, message, 'starred').pipe(Effect.provide(Database.layer(db))),
+            );
+          }
+          break;
+        }
+
+        case 'archive': {
+          const message = messages.find((message) => message.id === action.messageId);
+          if (message && db) {
+            void Effect.runFork(
+              SystemTags.toggleTag(mailbox, message, 'inbox').pipe(Effect.provide(Database.layer(db))),
             );
           }
           break;
@@ -403,8 +418,10 @@ export const MailboxArticle = ({
             currentId={currentId}
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
+            inboxAtom={inboxAtom}
             pagination={pagination}
             loading={loading}
+            enableArchive
             enableIgnoreSender
             enableCreateTopic
             searchQuery={searchQuery}
@@ -429,7 +446,8 @@ MailboxArticle.displayName = 'MailboxArticle';
 
 /** One thread's worth of results from the conversation-aggregated message query (see the query above). */
 type ThreadGroup = {
-  threadId: string | null | undefined;
+  /** The thread's id, or the message's own id for a message that carries no `threadId`. */
+  threadId: string;
   lastMessageAt: string | null;
   count: number;
   /** Capped preview (see `MAILBOX_THREAD_PREVIEW_COUNT`); `count` carries the full thread size. */
