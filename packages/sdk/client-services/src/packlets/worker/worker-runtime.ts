@@ -238,7 +238,7 @@ export const makeWorkerRuntime = ({
         // whole worker start sequence has drained, not just the stack open. The extra grace period
         // yields the thread so any RPC already queued behind this turn is served before the dial and
         // its auth-header request start competing for it.
-        log('worker-runtime: boot complete, scheduling networking start', {
+        log.info('worker-runtime: boot complete, scheduling networking start', {
           delay: EDGE_NETWORKING_START_DELAY,
         });
         scheduleTask(
