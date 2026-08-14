@@ -458,6 +458,7 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
       />
 
       <Toast.Root
+        data-testid='assistant.error'
         type='foreground'
         open={!!toastError}
         duration={20_000}

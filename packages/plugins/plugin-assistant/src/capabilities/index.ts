@@ -64,14 +64,19 @@ export const CompanionChatProvisioner = Capability.lazyModule(
   () => import('./companion-chat-provisioner'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// Both resolvers activate on `Startup`, not `AssistantEvents.Start`: `AiService` is a LayerSpec, and
+// the process manager snapshots LayerSpec contributions once during startup — its `AiModelResolver`
+// require is multi-arity, so it orders within a round but never blocks across rounds. A resolver
+// contributed in a later round is therefore invisible, leaving the AI service permanently holding
+// only the empty fallback resolver and failing every request with `AiModelNotAvailableError`.
 export const EdgeModelResolver = Capability.lazyModule(
   'EdgeModelResolver',
-  { provides: [AppCapabilities.AiModelResolver], activatesOn: AssistantEvents.Start },
+  { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
   () => import('./edge-model-resolver'),
 );
 export const LocalModelResolver = Capability.lazyModule(
   'LocalModelResolver',
-  { provides: [AppCapabilities.AiModelResolver], activatesOn: AssistantEvents.Start },
+  { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
   () => import('./local-model-resolver'),
 );
 export const MarkdownExtension = Capability.lazyModule(
