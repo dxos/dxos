@@ -11,7 +11,9 @@ import * as GraphBuilder from './GraphBuilder';
 import * as GraphNode from './GraphNode';
 
 const setup = (props: GraphBuilder.ModelProps<string> = {}) => {
-  const registry = Registry.make();
+  // The caller's registry when one is supplied — reads must go through the registry the builder
+  // writes to, or they never see its version bumps.
+  const registry = props.registry ?? Registry.make();
   const builder = new GraphBuilder.ModelGraphBuilder<string>({ registry, ...props });
   const children = (id: string, relation?: string) => registry.get(builder.children(id, relation)).map(({ id }) => id);
   return { registry, builder, model: builder.graph, children };

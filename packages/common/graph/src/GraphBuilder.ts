@@ -543,6 +543,20 @@ export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, M
   /** Relations already expanded, so a repeated read does not re-subscribe the same connectors. */
   readonly #expanded = new Set<string>();
 
+  /** Memoized {@link ModelGraphBuilder.children} views, so subscribers of a relation share one atom. */
+  readonly #children = Atom.family<string, Atom.Atom<ModelNode[]>>((key) => {
+    const [id, relation] = primaryParts(key);
+    const model = this.graph;
+    return Atom.make((get) => {
+      get(model.version);
+      return model
+        .outgoing(id, relation)
+        .toSorted((a, b) => a.data.order - b.data.order)
+        .map((edge) => model.findNode(edge.target))
+        .filter(isNonNullable);
+    });
+  });
+
   constructor({ model, rootId = GraphNode.RootId, ...props }: ModelProps<Meta> = {}) {
     super({
       ...props,
@@ -571,15 +585,13 @@ export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, M
       this._onExpand(id, relation);
     }
 
-    const model = this.graph;
-    return Atom.make((get) => {
-      get(model.version);
-      return model
-        .outgoing(id, relation)
-        .toSorted((a, b) => a.data.order - b.data.order)
-        .map((edge) => model.findNode(edge.target))
-        .filter(isNonNullable);
-    });
+    return this.#children(key);
+  }
+
+  override _onReleaseRelation(target: { id: string; relation: string }): void {
+    super._onReleaseRelation(target);
+    // Forget the expansion mark too, or the next read hits the #expanded guard and never re-subscribes.
+    this.#expanded.delete(primaryKey(target.id, target.relation));
   }
 
   override _onRemoveNode(id: string): void {
@@ -602,13 +614,24 @@ const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNode
     }),
   );
 
+  const edgeId = ({ source, target, relation }: Edge) => GraphEdge.createId({ source, target, relation });
+
+  const addEdge = (edge: Edge): void => {
+    const id = edgeId(edge);
+    if (!model.findEdge(id)) {
+      model.addEdge({ id, type: edge.relation, source: edge.source, target: edge.target, data: { order: 0 } });
+    }
+  };
+
   const addNode = (node: ModelNodeArg): void => {
     const { nodes: children, ...rest } = node;
     model.setNode(rest);
-    children?.forEach(addNode);
+    children?.forEach((child) => {
+      addNode(child);
+      // Without this edge an inline descendant is materialized but unreachable through children().
+      addEdge({ source: node.id, target: child.id, relation: 'child' });
+    });
   };
-
-  const edgeId = ({ source, target, relation }: Edge) => GraphEdge.createId({ source, target, relation });
 
   return {
     graph: model,
@@ -620,16 +643,22 @@ const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNode
         model.removeNodes([...ids], { detachEdges: edges });
         ids.forEach((id) => hooks.onRemoveNode(id));
       }),
-    addEdges: (edges) =>
-      model.batch(() =>
-        edges.forEach((edge) => {
-          const id = edgeId(edge);
-          if (!model.findEdge(id)) {
-            model.addEdge({ id, type: edge.relation, source: edge.source, target: edge.target, data: { order: 0 } });
+    addEdges: (edges) => model.batch(() => edges.forEach(addEdge)),
+    removeEdges: (edges, removeOrphans) =>
+      model.batch(() => {
+        const present = edges.filter((edge) => model.findEdge(edgeId(edge)) !== undefined);
+        model.removeEdges(present.map(edgeId));
+        if (removeOrphans) {
+          // Mirrors the app store: a node a connector stopped producing leaves with its last edge.
+          const orphans = [...new Set(present.flatMap(({ source, target }) => [source, target]))].filter(
+            (id) => id !== GraphNode.RootId && model.findNode(id) !== undefined && !model.hasEdges(id),
+          );
+          if (orphans.length > 0) {
+            model.removeNodes(orphans);
+            orphans.forEach((id) => hooks.onRemoveNode(id));
           }
-        }),
-      ),
-    removeEdges: (edges) => model.removeEdges(edges.map(edgeId).filter((id) => model.findEdge(id) !== undefined)),
+        }
+      }),
     sortEdges: (id, relation, order) =>
       model.batch(() => {
         for (const edge of model.outgoing(id, relation)) {
@@ -710,6 +739,15 @@ export const release = (builder: Any, ids: readonly string[]): void => {
       builder._connectorPrevious.delete(key);
       builder._connectorPreviousArgs.delete(key);
       builder._connectorPreviousInlineIds.delete(key);
+      builder._dirtyConnectors.delete(key);
+      builder._onReleaseRelation(relationFromConnectorKey(key));
+    }
+  }
+
+  // A connector expanded but never flushed has no diff state yet — its first emission is still
+  // sitting in the dirty queue, and left there the flush would re-materialize the released nodes.
+  for (const [key, { nodes }] of [...builder._dirtyConnectors]) {
+    if (released.has(relationFromConnectorKey(key).id) || nodes.some((node: NodeArgLike) => released.has(node.id))) {
       builder._dirtyConnectors.delete(key);
       builder._onReleaseRelation(relationFromConnectorKey(key));
     }

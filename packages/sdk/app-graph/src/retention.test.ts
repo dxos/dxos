@@ -65,11 +65,7 @@ const visit = async (
 };
 
 const counts = ({ registry, builder, graph }: ReturnType<typeof setup>) => {
-  const internal = graph as unknown as {
-    _model: { nodes: unknown[]; edges: unknown[] };
-    _expanded: Set<string>;
-    _relations: Map<string, unknown>;
-  };
+  const internal = Graph.getInternal(graph);
   return {
     registryNodes: registry.getNodes().size,
     modelNodes: internal._model.nodes.length,
@@ -126,7 +122,7 @@ describe('retention', () => {
     expect(registry.getNodes().has(graph.node(child))).to.be.true;
 
     // Releasing the subgraph cancels the mounts; the registry drops the atoms.
-    const internal = graph as unknown as { _model: { descendants: (id: string, type?: string) => string[] } };
+    const internal = Graph.getInternal(graph);
     GraphBuilder.release(builder, [root, ...internal._model.descendants(root, Graph.relationKey('child'))]);
     await settle();
     expect(registry.getNodes().has(graph.node(child))).to.be.false;
@@ -160,7 +156,7 @@ describe('retention', () => {
     }
     expect(counts(harness).modelNodes).to.equal(baseline.modelNodes + WORKSPACES * CHILDREN);
 
-    const internal = graph as unknown as { _model: { descendants: (id: string, type?: string) => string[] } };
+    const internal = Graph.getInternal(graph);
     for (const id of workspaceIds()) {
       const root = `${GraphNode.RootId}/${id}`;
       GraphBuilder.release(builder, internal._model.descendants(root, Graph.relationKey('child')));
@@ -184,7 +180,7 @@ describe('retention', () => {
     const before = registry.get(graph.connections(root, 'child')).map(({ id }) => id);
     expect(before).to.have.length(CHILDREN);
 
-    const internal = graph as unknown as { _model: { descendants: (id: string, type?: string) => string[] } };
+    const internal = Graph.getInternal(graph);
     GraphBuilder.release(builder, [root, ...internal._model.descendants(root, Graph.relationKey('child'))]);
     await settle();
     expect(registry.get(graph.connections(root, 'child'))).to.deep.equal([]);
@@ -211,7 +207,7 @@ describe('retention', () => {
     registry.get(graph.connections(retained, 'child'));
     notifications = 0;
 
-    const internal = graph as unknown as { _model: { descendants: (id: string, type?: string) => string[] } };
+    const internal = Graph.getInternal(graph);
     const released = `${GraphNode.RootId}/w0`;
     GraphBuilder.release(builder, [released, ...internal._model.descendants(released, Graph.relationKey('child'))]);
     await settle();

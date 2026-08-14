@@ -52,7 +52,9 @@ export class SpaceGraphModel extends GraphModel.AbstractGraphModel<SpaceGraphNod
   private _timeout?: NodeJS.Timeout;
 
   override copy(graph?: Partial<GraphModel.Data<SpaceGraphNode, SpaceGraphEdge>>): SpaceGraphModel {
-    return new SpaceGraphModel({ registry: this.registry, graph });
+    // No shared registry: a copy is a detached snapshot, and its keepAlive version atom would pin an
+    // entry in the source's registry forever.
+    return new SpaceGraphModel({ graph });
   }
 
   get objects(): Entity.Unknown[] {

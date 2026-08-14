@@ -443,7 +443,12 @@ const edgesEqual = (a: Edges, b: Edges): boolean => {
  * Internal helper to access GraphImpl internals.
  * @internal
  */
-const getInternal = (graph: BaseGraph): GraphImpl => {
+/**
+ * The implementation behind a graph handle. Exported for this package's tests, which assert against
+ * the model and expansion bookkeeping; not part of the public surface.
+ * @internal
+ */
+export const getInternal = (graph: BaseGraph): GraphImpl => {
   return graph as unknown as GraphImpl;
 };
 

@@ -29,19 +29,23 @@ export type Any = Specialize<Base, { data?: any }>;
  */
 export type Of<Data = any> = Specialize<Base, { data: Data }>;
 
-const KEY_REGEX = /\w+/;
+// A control character, so a generated id stays unambiguous whatever the node ids and relation
+// contain — '_' is legal in all of them.
+const SEPARATOR = '\u0001';
+
+const KEY_REGEX = /^[^\u0001]+$/;
 
 /** The `relation` distinguishes parallel edges between a pair; it is not the edge `type`. */
 type Meta = { source: string; target: string; relation?: string };
 
 export const createId = ({ source, target, relation }: Meta): string => {
-  invariant(source.match(KEY_REGEX), `invalid source: ${source}`);
-  invariant(target.match(KEY_REGEX), `invalid target: ${target}`);
-  return [source, relation, target].join('_');
+  invariant(KEY_REGEX.test(source), `invalid source: ${source}`);
+  invariant(KEY_REGEX.test(target), `invalid target: ${target}`);
+  return [source, relation, target].join(SEPARATOR);
 };
 
 export const parseId = (id: string): Meta => {
-  const [source, relation, target] = id.split('_');
+  const [source, relation, target] = id.split(SEPARATOR);
   invariant(source.length && target.length);
   return { source, relation: relation.length ? relation : undefined, target };
 };

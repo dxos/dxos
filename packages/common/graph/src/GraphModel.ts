@@ -663,9 +663,6 @@ export abstract class AbstractGraphModel<
   }
 
   /**
-   * Edges leaving the node, in insertion order.
-   */
-  /**
    * Whether any edge is incident on the node. Answered from the endpoint index, so it costs nothing
    * even mid-mutation — unlike reading the adjacency index, which rebuilds on every version bump.
    */
@@ -673,6 +670,9 @@ export abstract class AbstractGraphModel<
     return (this.#outgoing.get(id)?.size ?? 0) > 0 || (this.#incoming.get(id)?.size ?? 0) > 0;
   }
 
+  /**
+   * Edges leaving the node, in insertion order.
+   */
   outgoing(id: string, type?: string): Edge[] {
     return collectEdges(this.#outgoing.get(id), type);
   }
@@ -1121,7 +1121,9 @@ export class GraphModel<
   Edge extends GraphEdge.Any = GraphEdge.Any,
 > extends AbstractGraphModel<Node, Edge, GraphModel<Node, Edge>> {
   override copy(graph?: Partial<Data<Node, Edge>>): GraphModel<Node, Edge> {
-    return new GraphModel<Node, Edge>({ registry: this.registry, graph });
+    // Deliberately not this.registry: a copy is a detached snapshot, and its keepAlive version atom
+    // would pin an entry in a shared registry forever — one leak per discarded removal result.
+    return new GraphModel<Node, Edge>({ graph });
   }
 }
 
