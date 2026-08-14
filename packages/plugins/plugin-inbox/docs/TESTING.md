@@ -105,17 +105,17 @@ partial, blocked, not run, unreachable in this mailbox, or inconclusive. See the
 | ------ | ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | A1     | **doc stale**    | SEVEN children, not six — the doc omits **Important**. Order otherwise as written.                                               |
 | A2     | pass             | All seven icons distinct (tray / star / bookmark-simple / stack / paper-plane / pencil / envelope).                              |
-| A3     | pass             | 358 messages carry `inbox`; the folder renders them.                                                                             |
-| A4     | pass             | Renders exactly 3 — matches the TagIndex's `Starred` set exactly.                                                                |
+| A3     | pass             | Every message carrying `inbox` renders in the folder.                                                                            |
+| A4     | pass             | Row count matches the TagIndex's `Starred` set exactly.                                                                          |
 | A5     | pass             | Mailbox row and Inbox child render an identical list at different URLs.                                                          |
 | B1     | partial          | Order correct. "AI reply" absent because `plugin-brain` is disabled — the contribution degrades cleanly.                         |
 | B2     | pass             | Archive and Delete adjacent, no divider between them.                                                                            |
-| B3-B5  | pass             | Archive → chip gone, count 358→357; label flips to "Move to Inbox"; restore → 358. State left as found.                          |
+| B3-B5  | pass             | Archive → chip gone, count N→N−1; label flips to "Move to Inbox"; restore → N. State left as found.                              |
 | B6, B7 | not run          | Plank-closing behaviour.                                                                                                         |
 | C1     | **FAIL → fixed** | Archive was missing entirely. `ConversationTile` never destructured `enableArchive`, and every live tile is a conversation tile. |
 | C2-C4  | blocked          | By C1. Re-run now that it is fixed.                                                                                              |
 | D1, D2 | pass             | Person avatar in the gutter; a `"DISPLAY NAME" <addr>` header renders as the bare address.                                       |
-| D3, D4 | unreachable      | No multi-recipient and no missing-`To` message among 47 harvested. `parseAddressList` already unit-tests both shapes.            |
+| D3, D4 | unreachable      | No multi-recipient and no missing-`To` message in the sample harvested. `parseAddressList` already unit-tests both shapes.       |
 | E1     | unreachable      | The space holds zero `Person` objects, so no contact can resolve.                                                                |
 | E2     | inconclusive     | The reveal is CSS `:hover`, which a synthetic event cannot trigger.                                                              |
 | E3, E4 | not run          | E3 creates data in the user's space.                                                                                             |
@@ -132,7 +132,7 @@ app shows you everything on screen, not just the thing you set out to check:
    `toolbar-menu.label` rendered raw as the accessible name of every icon-only button, app-wide. Every
    sibling namespace (`-card`, `-form`, `-table`, …) is re-exported by some plugin; the base one is not.
 2. **A message whose sender has neither name nor address collapsed the date to the row's start** —
-   `justify-between` with a conditionally-rendered name leaves one child. 1 of 35 live messages.
+   `justify-between` with a conditionally-rendered name leaves one child. One message in the sample.
 3. **`FormFieldSetContainer` resolved its styles once at module scope**, pinning the `default` variant,
    so a `settings` form's nested groups lost the gap between sub-fields.
 
@@ -145,10 +145,10 @@ of them actually need a human, and the split is sharp.
 
 ### What the port does better than a human
 
-- **It reads the model, not the pixels.** `Starred` rendering exactly 3 rows is only meaningful next to
+- **It reads the model, not the pixels.** the `Starred` row count is only meaningful next to
   the TagIndex's own count of 3. One snippet gets both, so the assertion is "the view matches the data"
   rather than "three rows looked right". Same for B3-B5, where the archive round-trip was asserted on
-  the tag index (358 → 357 → 358), not on a chip appearing to vanish.
+  the tag index (N → N−1 → N), not on a chip appearing to vanish.
 - **It makes state changes safely reversible.** The archive test mutated real mail and put it back in
   the same snippet, with the count proving restoration. A human doing this by hand has no such receipt.
 - **It measures.** E6 is a 4-8px offset — precisely the kind of thing eyes disagree about and
