@@ -275,7 +275,24 @@ Gate before Phase 9. Requested 2026-08-13.
       is produced at any point**. So the interaction completes end to end and the label never changes.
       Row-render latency is 200-500 ms and is NOT the cause (measured separately).
 
-      Next: determine whether the write reaches ECHO. Either the popover's submit writes to a stale
+      **INSTRUMENTED RESULT (do not re-derive).** Logging `AppNode.makeObject`'s label read and the
+      builder's flush guard shows, in order, after the rename:
+
+      ```
+      DXPROBE makeObject <id> "Renamed A"          <- ECHO write landed, labelAtom fired, connector re-ran
+      DXPROBE flush .../collections|childoutbound  <- flush NOT skipped; renamed node reaches the store
+      PROBE labels: ["...New collection..."]        <- row still shows the old label
+      ```
+
+      So everything above the store is correct: write, subscription, connector re-run, change
+      detection, flush. The break is at or below `Graph.addNodes` -> `addNodeImpl` -> `_setNode` ->
+      notification, or in the navtree's render. `addNodeImpl` computes `propertiesChanged` as
+      `Object.keys(properties).some((key) => existing.properties[key] !== properties[key])` — check
+      that first: if the label is compared by reference and the two values are an array vs a string
+      it should differ, but if `properties` arrives already merged the check can see no change and
+      skip building a new node, leaving `_node(id)` unfired and every downstream cutoff satisfied.
+
+      Superseded: determine whether the write reaches ECHO. Either the popover's submit writes to a stale
       object captured in the action closure, or it writes correctly and the connector's
       `get(Obj.labelAtom(object))` subscription no longer re-runs. Instrumenting
       `AppNode.makeObject`'s label read is the fastest way to tell those apart.
