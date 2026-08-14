@@ -12,6 +12,7 @@ import { Obj } from '@dxos/echo';
 import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types';
 
 import {
+  AttachmentArticle,
   CalendarArticle,
   CalendarProperties,
   EditMessageArticle,
@@ -28,6 +29,7 @@ import { Calendar, Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../constants';
 import { getSubscriptionsId } from '../paths';
+import { isAttachmentRef } from './app-graph-builder';
 import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
@@ -72,6 +74,19 @@ export default Capability.makeModule(() =>
         ),
         component: MessageArticleSurface,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      Surface.create({
+        id: 'attachment',
+        // Matched by the node's own type rather than the subject: the subject is the MESSAGE, which
+        // the message surface also claims, so only the attachment node distinguishes the two.
+        filter: AppSurface.subject(AppSurface.Article, isAttachmentRef),
+        component: AttachmentArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({
+          role,
+          subject: subject.message,
+          attachmentIndex: subject.index,
+          attendableId,
+        }),
       }),
       Surface.create({
         id: 'event',

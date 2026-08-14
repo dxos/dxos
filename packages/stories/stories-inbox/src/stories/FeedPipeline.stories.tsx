@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
-import { expect, screen, userEvent, within } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 
 import { Provider } from '@dxos/ai';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
@@ -26,6 +26,7 @@ import { log } from '@dxos/log';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
+import * as BrainOperation from '@dxos/plugin-brain/BrainOperation';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
@@ -98,9 +99,9 @@ type StoryAction = {
 };
 
 /**
- * Story-local module: drives the cursored `ProcessMailbox` pipeline, `ResetProcessCursor`, and the
- * `AnalyzeMailbox` fact variant via the OperationInvoker (the same operations the mailbox toolbar
- * runs), reporting live counts so the play function can assert cursor semantics from the DOM.
+ * Story-local module: drives the cursored mailbox pipelines and their cursor resets via the
+ * OperationInvoker (the same operations the mailbox toolbar runs), reporting live counts so the play
+ * function can assert cursor semantics from the DOM.
  * Resolves the active space like every module surface (`ModuleContainer` sets the workspace).
  */
 const ProcessModule = () => {
@@ -186,19 +187,14 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         },
       },
       {
-        // Every pipeline cursor at once: the tagged process/classify cursors (reset operation) and
+        // Every pipeline cursor at once: the tagged classify cursor (reset operation) and
         // the analyze pipeline's UNTAGGED feed cursor (a plain object removal — it predates the
         // tagged-consumer convention), so the next run of any cursored pipeline re-reads the feed.
         id: 'reset',
         label: 'Cursors',
         run: async () => {
-          const process = await invoker.invokePromise(
-            InboxOperation.ResetProcessCursor,
-            { mailbox: Ref.make(mailbox) },
-            { spaceId: space.id },
-          );
           const classify = await invoker.invokePromise(
-            InboxOperation.ResetProcessCursor,
+            InboxOperation.ResetFeedCursor,
             { mailbox: Ref.make(mailbox), cursorId: 'classifyMailbox' },
             { spaceId: space.id },
           );
@@ -213,7 +209,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           if (analyze) {
             space.db.remove(analyze);
           }
-          return { process, classify, analyzeCursor: !!analyze };
+          return { classify, analyzeCursor: !!analyze };
         },
       },
     ];
@@ -249,11 +245,11 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
       {
         // Ollama drives the story's LLM tiers, so `strict: false` skips the structured-output pass
         // local models never honor.
-        id: 'enrich',
-        label: 'InboxOperation.EnrichMailbox',
+        id: 'scan',
+        label: 'InboxOperation.ScanMailbox',
         run: () =>
           invoker.invokePromise(
-            InboxOperation.EnrichMailbox,
+            InboxOperation.ScanMailbox,
             { mailbox: Ref.make(mailbox), me: USER_EMAILS, model: OLLAMA_MODEL, strict: false },
             { spaceId: space.id },
           ),
@@ -261,13 +257,6 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
       //
       // InboxOperation
       //
-      {
-        // The cursored log-title pipeline (resumes after the cursor; Reset clears it).
-        id: 'process',
-        label: 'InboxOperation.ProcessMailbox',
-        run: () =>
-          invoker.invokePromise(InboxOperation.ProcessMailbox, { mailbox: Ref.make(mailbox) }, { spaceId: space.id }),
-      },
       {
         // Correspondent pipeline: Person (+ derived Organization) per sender the user has sent or
         // replied to — the outbound signal is derived from the feed, so no allow-list is needed.
@@ -353,7 +342,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         // Fact analysis against local Ollama; the in-memory FactStore is not ECHO-reactive, so the
         // count is polled while the run commits per page, then refreshed once at the end.
         id: 'analyze',
-        label: 'InboxOperation.AnalyzeMailbox',
+        label: 'BrainOperation.AnalyzeMailbox',
         run: async () => {
           const refresh = async () => {
             const stored = await EffectEx.runPromise(
@@ -367,7 +356,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           const timer = setInterval(() => void refresh(), 500);
           try {
             return await invoker.invokePromise(
-              InboxOperation.AnalyzeMailbox,
+              BrainOperation.AnalyzeMailbox,
               {
                 mailbox: Ref.make(mailbox),
                 model: OLLAMA_MODEL,
@@ -454,7 +443,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     ];
   }, [space, client, invoker, mailbox, messages, projects, factStores]);
 
-  const [actionId, setActionId] = useState('process');
+  const [actionId, setActionId] = useState('scan');
 
   // The single invoker seam: every pipeline runs through here, so result/error handling and the
   // run counter are uniform. A failure is rendered as a terminal error state (never swallowed to
@@ -753,10 +742,9 @@ export const FixtureTest: Story = {
       return text;
     };
 
-    // Wait for the seeded messages to finish loading — the query streams results in, so capturing
-    // on first sight of a nonzero count reads a partial corpus (e.g. 100 of 391). Require the count
-    // to hold steady across several consecutive polls (the stream can pause between batches for
-    // longer than one interval) before trusting it.
+    // The cursor-semantics assertions that lived here drove `InboxOperation.ProcessMailbox`, which has
+    // been deleted; the surviving cursor helpers are covered by node tests (`cursor.test.ts`) instead.
+    // What remains worth asserting from the browser is that the fixture corpus actually loads.
     const countOf = (text: string): number => Number(/"messages":\s*(\d+)/.exec(text)?.[1] ?? 0);
     let messageCount = 0;
     let stablePolls = 0;
@@ -769,156 +757,7 @@ export const FixtureTest: Story = {
       },
       { interval: 500 },
     );
-    // `waitFor` returns its last observation on timeout; a partial stream must fail here, not
-    // masquerade as the baseline for the processed-count assertions below.
     void expect(stablePolls).toBeGreaterThanOrEqual(3);
     void expect(messageCount).toBeGreaterThan(0);
-
-    // First pass (Process is the default selection): every seeded message is processed and the
-    // tagged cursor is created + advanced.
-    await userEvent.click(canvas.getByTestId('execute'));
-    const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
-    void expect(afterFirst).toMatch(new RegExp(`"processed":\\s*${messageCount}\\b`));
-    void expect(afterFirst).toMatch(/"cursors":\s*1\b/);
-    void expect(afterFirst).not.toMatch(/"cursorMax":\s*0\b/);
-
-    // Second pass: strictly-greater skip — nothing new to process.
-    await userEvent.click(canvas.getByTestId('execute'));
-    const afterSecond = await waitFor((text) => /"runs":\s*2\b/.test(text));
-    void expect(afterSecond).toMatch(/"processed":\s*0\b/);
-
-    // Reset clears the cursor (object reused) and zeroes the run counter, so the next run
-    // re-processes the whole feed.
-    await userEvent.click(canvas.getByTestId('reset'));
-    const afterReset = await waitFor((text) => /"reset":\s*true\b/.test(text));
-    void expect(afterReset).toMatch(/"runs":\s*0\b/);
-    void expect(afterReset).toMatch(/"cursorMax":\s*0\b/);
-    await userEvent.click(canvas.getByTestId('execute'));
-    const afterRerun = await waitFor((text) => /"runs":\s*1\b/.test(text) && /"processed":/.test(text));
-    void expect(afterRerun).toMatch(new RegExp(`"processed":\\s*${messageCount}\\b`));
-    void expect(afterRerun).toMatch(/"cursors":\s*1\b/);
-  },
-};
-
-/**
- * Picks a workbench action in the toolbar select by ACTION ID (Radix portals the options to
- * `document.body`, hence `screen`). Testid-based so display-label edits never break the tests.
- */
-const selectAction = async (canvas: ReturnType<typeof within>, id: string) => {
-  await userEvent.click(canvas.getByTestId('action-select'));
-  await userEvent.click(await screen.findByTestId(`action-${id}`));
-};
-
-/** The CRM demo seed: 3 demo messages plus the extraction-gate Organizations. */
-export const Crm: Story = {
-  args: {
-    seed: 'crm',
-  },
-};
-
-/**
- * The deterministic CRM pipeline over the demo mailbox: every demo sender is at a known
- * Organization, so one run creates one Person (org-linked) and one Profile per sender, records
- * provenance on the Mailbox, and advances a durable feed cursor. A second run is an idempotent
- * catch-up that creates nothing.
- */
-export const CrmTest: Story = {
-  args: {
-    seed: 'crm',
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const waitFor = async (
-      predicate: (text: string) => boolean,
-      { timeout = 30_000, interval = 100 }: { timeout?: number; interval?: number } = {},
-    ): Promise<string> => {
-      const deadline = Date.now() + timeout;
-      let text = canvas.queryByTestId('counts')?.textContent ?? '';
-      while (Date.now() < deadline) {
-        if (predicate(text)) {
-          return text;
-        }
-        await new Promise((resolve) => setTimeout(resolve, interval));
-        text = canvas.queryByTestId('counts')?.textContent ?? '';
-      }
-      return text;
-    };
-
-    // The demo seed lands as one batch of four messages.
-    await waitFor((text) => /"messages":\s*4\b/.test(text));
-
-    // First pass: one Person + one Profile per allow-listed demo sender (the unknown-org Wayne
-    // sender is denied by the gate), all provenance recorded, cursor created.
-    await selectAction(canvas, 'crm');
-    await userEvent.click(canvas.getByTestId('execute'));
-    const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
-    void expect(afterFirst).toMatch(/"contacts":\s*3\b/);
-    void expect(afterFirst).toMatch(/"profiles":\s*3\b/);
-    void expect(afterFirst).toMatch(/"linked":\s*3\b/);
-    void expect(afterFirst).toMatch(/"cursors":\s*1\b/);
-
-    // Second pass: idempotent catch-up — nothing new is created (`last.contacts` reports 0).
-    await userEvent.click(canvas.getByTestId('execute'));
-    const afterSecond = await waitFor((text) => /"runs":\s*2\b/.test(text));
-    void expect(afterSecond).toMatch(/"profiles":\s*3\b/);
-    void expect(afterSecond).toMatch(/"contacts":\s*0\b/);
-  },
-};
-
-/** The trip fixture: two same-PNR flight legs plus an unrelated digest, for the Dispatch pipeline. */
-export const Trips: Story = {
-  args: {
-    seed: 'trip',
-  },
-};
-
-/**
- * Reproduces the real composer path: messages live in a Mailbox feed (immutable Queue items) and
- * are extracted via the `ExtractMessage` operation. Asserts the two same-PNR legs collapse into a
- * single Trip with two Segments (not two Trips).
- */
-export const TripTest: Story = {
-  args: {
-    seed: 'trip',
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const waitFor = async (
-      predicate: (text: string) => boolean,
-      { timeout = 30_000, interval = 100 }: { timeout?: number; interval?: number } = {},
-    ): Promise<string> => {
-      const deadline = Date.now() + timeout;
-      let text = canvas.queryByTestId('counts')?.textContent ?? '';
-      while (Date.now() < deadline) {
-        if (predicate(text)) {
-          return text;
-        }
-        await new Promise((resolve) => setTimeout(resolve, interval));
-        text = canvas.queryByTestId('counts')?.textContent ?? '';
-      }
-      return text;
-    };
-
-    // The trip fixture lands as one batch of three messages.
-    await waitFor((text) => /"messages":\s*3\b/.test(text));
-
-    // First pass: both same-PNR legs collapse into ONE Trip with TWO Segments, and both end linked to
-    // it. The third message (a digest from `news@example.com`) does NOT link: the contact extractor
-    // refuses machine senders, so a newsletter address no longer becomes a Person.
-    await selectAction(canvas, 'dispatch');
-    await userEvent.click(canvas.getByTestId('execute'));
-    const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
-    void expect(afterFirst).toMatch(/"trips":\s*1\b/);
-    void expect(afterFirst).toMatch(/"segments":\s*2\b/);
-    void expect(afterFirst).toMatch(/"linked":\s*2\b/);
-
-    // Second pass over the same messages must be idempotent — still ONE Trip, TWO Segments
-    // (segments updated in place, not duplicated). This is the "extract twice" case.
-    await userEvent.click(canvas.getByTestId('execute'));
-    const afterSecond = await waitFor((text) => /"runs":\s*2\b/.test(text));
-    void expect(afterSecond).toMatch(/"trips":\s*1\b/);
-    void expect(afterSecond).toMatch(/"segments":\s*2\b/);
   },
 };

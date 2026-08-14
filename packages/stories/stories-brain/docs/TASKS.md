@@ -1,15 +1,80 @@
 # stories-brain research tasks
 
-_Resume: PR #12546 MERGED 2026-08-12 (squash `12b6618058`); since then, on this branch: the
-conversation summary is its own tile at the foot of the ConversationStack (`5a50523dca`) and carries
-its provenance (`54ddecd421`). Next action: whole-conversation summarization — thread-scoped input to
-`SummarizeMailbox`, then `dx-anchor` DXN links to referenced entities, then task extraction rendered
-as a markdown task list. Uncommitted: none._
+_Resume: **This is the umbrella work-stream; the inbox SURFACE work lives in the child ledger**
+`packages/plugins/plugin-inbox/docs/TASKS.md` (registry project `mailbox-pipeline`) — see the MOVED note
+below, and do not add surface work here. THIS file keeps the model-ladder / FINDINGS / Topics research
+it was created for: 42 open items.
+
+Child-ledger status as of 2026-08-14: **PR #12555 is in the merge queue** (auto-merge, squash, 84
+commits) carrying Phases 0-5 — virtual folders, archive, sender enrichment, and the processor topology
+(contributed passes, DAG ordering, per-processor cursor tags, `AnalyzeMailbox`/`GenerateReply` moved to
+plugin-brain). Two ECHO changes are spawned and awaiting review, and they gate the rest: computed
+aggregate group keys, and annotation-constrained refs.
+
+NOTHING in those 84 commits has been verified in a running app. The 27-step plan in
+`packages/plugins/plugin-inbox/docs/TESTING.md` needs a WARM browser — an automation browser starts
+with an empty OPFS and trips the fixed 30s startup budget at `useApp.tsx:236`, which is a cold-profile
+problem, not a worktree or code one. Uncommitted: none._
+
+## MOVED: the inbox surface work now lives in `packages/plugins/plugin-inbox/docs/TASKS.md`
+
+Split 2026-08-13. That ledger (registry project `mailbox-pipeline`) owns the mailbox pipeline and the surface over it —
+folders, message actions, contact affordances, summarization UI — structured as PHASES THAT MAP ONTO
+PRs, plus a manual test plan. THIS file keeps the model-ladder / FINDINGS / Topics research it was
+created for. Do not add inbox surface work here.
+
+## Priorities (triaged with the user 2026-08-13)
+
+Work this order. Items not listed are P2 — real, but not this push.
+
+**P0 — next:** RecordArticle toolbar + menu (`plugin-space/src/containers/RecordArticle/`) built on the
+menu idiom, with injected enrich actions (contact, organization).
+
+**P1 — this push,** in the user's stated order: ConversationStack contact affordance → conversation menu
+actions (create Project + composite sender enrichment) → gate the Enrich button on configured
+connections → plugin-crm `EnrichImages` story → delete `ProcessMailbox` → **open the PR** → attachment
+in its own plank. Also P1: the `useContactLookup` defect; `useCardHover` regression test; avatar/name
+alignment (both surfaces); whole-conversation summarization incl. `dx-anchor` links and task extraction;
+investor-log LLM summaries; messages without `threadId` never rendering; mailbox-card inbox counts;
+live verification in the app (AFTER the PR).
+
+**Resolved by triage — do not re-open as separate work:**
+
+- `ProcessMailbox` deletion CLOSES "real stages behind the `log-title` seam" — the seam is
+  `ProcessMailbox`, so it goes with it.
+- Conversation-menu create-Project ABSORBS the create-project-from-message form.
+- The two single-flight items are ONE item, P2.
+- The ConversationStack story item is part of the contact-affordance item.
+- DROPPED: hover-driven LLM enrichment (the menu action covers it); regenerating a summary with extra
+  instructions.
+- Syncing tags back to Gmail is P2 — so archive is LOCAL-ONLY for now, and a Gmail sync will restore an
+  archived message. Accepted deliberately, not an oversight.
+
+**Structural:** this ledger moves to `packages/plugins/plugin-inbox/docs/TASKS.md` as its own registry
+project; `stories-brain` keeps the model-ladder/FINDINGS research it was created for.
+
+**The inbox items below are marked `MOVED`** — they are owned by the new ledger (several already
+shipped in PR #12555) and are recorded here only so the history stays readable. Do not work them from
+this file.
 
 Outstanding work for the mailbox-feed research harness (`src/test/harness/*`, tests in `src/test/*`).
 Results/fixtures are local-only under the git-ignored `fixtures/local/`.
 
-## Mailbox pipeline routine (2026-08-10)
+## Mailbox pipeline routine (2026-08-10) — REMOVED 2026-08-13
+
+**`InboxOperation.ProcessMailbox` and its routine template were deleted.** The checked items below
+describe work that no longer exists; they are kept as a record of what was learned, not as shipped
+features. Do not treat them as available functionality.
+
+What SURVIVED the deletion, because it turned out not to be process-specific:
+
+- The feed-cursor helpers, now `plugin-inbox/src/operations/cursor.ts` (out of the deleted `process/`
+  directory). `ClassifyMailbox` depends on them. `PROCESS_CURSOR_KEY_SOURCE` became
+  `FEED_CURSOR_KEY_SOURCE`, and `id` is now REQUIRED — it used to default to the process pipeline's
+  tag, so a caller that forgot one silently shared that pipeline's cursor.
+- The cursor-reset operation, renamed `ResetFeedCursor` with a required `cursorId`. Deleting it would
+  have removed the only way to reset the classify cursor, which its test relies on.
+- `CrmOperation.ProcessMailbox` is a DIFFERENT operation in plugin-crm and is untouched.
 
 Spec: `agents/superpowers/specs/2026-08-10-mailbox-pipeline-routine-design.md`. A manually
 triggerable routine driving a **cursored** pipeline over the Mailbox feed — the cursor machinery
@@ -115,10 +180,10 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       whole thread if any message's sender is known. Deterministic tests in `summarize-threads.test.ts`
       (5); the model-fixture test is tagged `model-fixture` and SKIPPED here, so its recordings still
       need regenerating for the new prompt (`regenerate-model-fixture` skill, needs a key).
-- [ ] **`dx-anchor` DXN links + task extraction in summaries** — the remaining two parts of the
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **`dx-anchor` DXN links + task extraction in summaries** — the remaining two parts of the
       summarization work (entity links to Person/Organization, and a markdown task list at the foot of
       the summary). Not started.
-- [ ] **List-level contact lookup does not resolve** (open, found 2026-08-12) — `InboxStack` gained a
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **List-level contact lookup does not resolve** (open, found 2026-08-12) — `InboxStack` gained a
       `db` prop → `useContactLookup` (ONE `Person` query for the whole list, passed to tiles as
       `getContact`, so a list costs one query rather than a hook per row) and `ContactAvatar` was
       factored out of `Row.Person` so list tiles share the hover/create treatment. In the
@@ -127,7 +192,7 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       for all of them. Suspects: the URI→`EID.tryParse` of a freshly added object, or the story's
       `useQuery` not seeing the seeds. The story's play test therefore asserts only that the list
       renders. NEXT: log the lookup map inside `useContactLookup`.
-- [ ] **Toolbar Clear does not clear the filter** (reported 2026-08-13) — `MailboxArticle`'s
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **Toolbar Clear does not clear the filter** (reported 2026-08-13) — `MailboxArticle`'s
       `handleClear` (around `MailboxArticle.tsx:232`) resets only React state (`setFilterText` /
       `setFilter`), but the filter box is an UNCONTROLLED CodeMirror `QueryEditor`, so its text
       survives and the box still reads as filtered. Fix: also drive the editor, which the container
@@ -135,37 +200,119 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       `EventEditor` uses for its attendee editor (`actorListRef.current?.setText(...)`). Cover it in
       the `MailboxArticle` `SearchFilter` play test: type a term, press Clear, assert both the editor
       text and the tile count return to their pre-filter state.
-- [ ] **Open an attachment in a new plank** (requested 2026-08-13) — the attachments row in the
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **Open an attachment in a new plank** (requested 2026-08-13) — the attachments row in the
       message header (`ConversationStack.tsx`'s `Row.Attachments`, fed from `message.attachments`)
       lists them but does not open them. Clicking one should open it as its own plank via
       `LayoutOperation.Open` with the attachment's object path (the same call the message tile's
       `onOpen` uses for a message), so a PDF/image gets the deck's own surface rather than an inline
       preview. Needs: a click handler on `Row.Attachments` (react-ui-card, currently presentational),
       the attachment ref resolved to its Blob/object DXN, and a surface that renders that type.
-- [ ] **Starred virtual folder in the navtree** (requested 2026-08-13) — add a mailbox child node in
-      the app graph (beside `All Mail` / `Sent` / `Drafts` / `Subscriptions`) that opens the mailbox
-      with a starred filter. The pieces exist: those siblings are graph nodes carrying a
-      `properties.filter` / `systemTag` that `MailboxArticle` reads, and starred membership already
-      lives in the mailbox tag index (`SystemTags.systemTagKey('starred')`), so this is a node plus a
-      filter, not new query machinery.
-- [ ] **ConversationStack avatar has no contact affordance** (reported 2026-08-13) — the message tile
+- [x] **Inbox + Starred virtual folders in the navtree** (requested 2026-08-13) — `Inbox`
+      (`systemTag: 'inbox'`) and `Starred` (`systemTag: 'starred'`) mailbox child nodes in
+      `app-graph-builder.ts`, `getInboxId`/`getStarredId` in `paths.ts`, `inbox.label`/`starred.label`
+      translations. No new query machinery: the siblings' `properties.filter`/`systemTag` path that
+      `MailboxArticle` reads already resolves membership through the mailbox tag index. `All Mail`
+      moved to `ph--stack--regular` because `Inbox` takes the tray icon. FOUND: `inbox.label` already
+      existed as a DEAD key (nothing referenced it) — removed the orphan instead of duplicating it.
+      NOTE: the mailbox ROOT node already carried `filter: '#inbox'` + `systemTag: 'inbox'` as a
+      placeholder, so the root and the new child resolve to the same view — which is what Gmail does
+      (the account row _is_ the inbox).
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **`InboxOperation.ArchiveMessage` — Gmail semantics** (decided 2026-08-13) — archive REMOVES the
+      `inbox` system tag. There is no `archived` tag and the filter language needs no complement
+      operator: Gmail's INBOX is a label and JMAP's inbox is a mailbox role, so both providers already
+      map onto `SystemTags` (`plugin-google/…/sync/system-tags.ts:14`, `plugin-jmap/…/sync/system-tags.ts:13`)
+      and un-archiving is simply re-adding the tag. This is why "Inbox = non-archived" needs no
+      negation — modelling an `archived` tag _and_ a complement would be a second, divergent model of
+      the same fact. SURFACE (requested 2026-08-13): **Archive / Unarchive message menu items.** One
+      operation with the tag toggle behind it, surfaced as two labels chosen from the message's
+      current `inbox` membership — the same `useMessageActions` menu in `ConversationStack` that the
+      conversation-menu item below extends, so build them together. `translations.ts` already carries
+      an orphan `'action-archive.menu': 'Archive'` referenced by nothing (an archive affordance was
+      started and abandoned) — wire that key rather than adding a second, and add the unarchive
+      counterpart beside it. Membership is readable per-message via the existing
+      `SystemTags.tagAtom` family, which is what `Row.Star` already uses for starred, so the label
+      flips reactively without a query per row.
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **ConversationStack avatar has no contact affordance** (reported 2026-08-13) — the message tile
       renders a bare `Avatar`, so the popover/create mechanism the `Row.Person` surfaces got is absent
       in `MessageArticle`. Swap it for the exported `ContactAvatar` and host `ContactPreview` in the
       story.
-- [ ] **`useCardHover` target-change regression test** — the cleanup now also runs when `open`/
+- [x] **`Row` story star was not reactive** (reported 2026-08-13) — the Default story passed
+      `<Row.Star starred onToggle={() => {}} />`: hardcoded on, no-op handler, so the toggle rendered
+      but never moved. `Row.Star` itself is fine (controlled, and it does fire `onToggle`) — the story
+      now owns the state. Verified in the browser on :9013: `unstar.label` → `star.label` →
+      `unstar.label` across two clicks.
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **`useCardHover` target-change regression test** — the cleanup now also runs when `open`/
       `enabled` change (a timer armed for the previous contact could fire a stale `open`), but the test
       CodeRabbit asked for is not written; it needs the hook exported from `Row.tsx` or a story-level
       driver.
-- [ ] **MessageArticle conversation menu actions** (requested 2026-08-12) — add per-message menu items
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **MessageArticle conversation menu actions** (requested 2026-08-12) — add per-message menu items
       to (a) create a Project from the message, and (b) run enhanced extraction on the sender (image +
       Organization). (a) reuses `ProjectOperation.CreateTrackingProject` (the operation exists; PLAN.md
       deliverable 3's form is still unbuilt); (b) is the same research + `EnrichImages` path as the
       hover-enrichment item below. Menu is built in `ConversationStack`'s `useMessageActions`.
-- [ ] **ConversationStack story: popovers + unknown actors** (requested 2026-08-12) — the
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **Hide the Enrich button when no connections are configured** (requested 2026-08-13) — the
+      mailbox toolbar's `enrich` action is contributed unconditionally in `app-graph-builder.ts` (the
+      pipeline action with `disposition: ['toolbar', …]`, made the SINGLE pipeline trigger in
+      `31b1192d89`). With no connection there is nothing to enrich against, so it is a dead primary
+      affordance on a fresh mailbox. Gate the CONTRIBUTION rather than rendering it disabled — a
+      disabled primary button still reads as the main call to action. `translations.ts` already carries
+      `'no-connections.label': 'No connections configured'`, so an empty state for this condition
+      exists; check whether the same predicate can drive both. Settle the scope: Enrich only, or every
+      connection-dependent pipeline action. Verify with a mailbox that has no connection — that state
+      is also what catches a regression.
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **Filter box: caret lands BEFORE an existing chip** (reported 2026-08-13) — with a chip present
+      (e.g. the `#sent` / `#starred` system-tag filter), placing the cursor and typing inserts ahead of
+      the chip; it should land after. Same uncontrolled CodeMirror `QueryEditor` as the "Toolbar Clear"
+      item above — fix them in one pass, both being the editor's state not matching what is displayed.
+      HYPOTHESIS (unverified): the chip is a widget decoration and the caret resolves to its left,
+      governed by the decoration's `side` (and by `atomicRanges` if the chip is atomic). But default
+      focus placing the caret at offset 0 produces the SAME symptom with a different fix, so separate
+      click-to-place from focus-with-no-selection before changing anything. Cover both entry paths with
+      a play test asserting where inserted text lands.
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **Sync tags back to Gmail** (requested 2026-08-13) — tag changes are currently one-way: the
+      providers map their vocabulary onto `SystemTags` on the way IN
+      (`plugin-google/…/sync/system-tags.ts`, `plugin-jmap/…/sync/system-tags.ts`), but a locally
+      toggled star/archive never reaches the provider. Needs the inverse mapping plus a write path on
+      the Gmail connector (label add/remove), and a decision on conflict handling when both sides moved
+      since the last sync. Directly gates the archive work above: archiving locally without pushing the
+      `inbox` label removal means the message returns on the next sync.
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **plugin-crm story driving `CrmOperation.EnrichImages`** (requested 2026-08-13) — a story
+      proximate to the operation showing a Person and an Organization and driving enrichment. plugin-crm
+      has NO stories today, so this is the package's first storybook setup (config, deps, moon target).
+      Seed a Person and an Organization with no `image`, render their cards, and a button invoking the
+      operation and showing the result. The image service must be reachable from the storybook —
+      establish that empirically and report it rather than faking a result.
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **Delete `ProcessMailbox`** (decided 2026-08-13) — remove the operation, `ResetProcessCursor`,
+      its routine template, the cursor helpers, tests and translations. It is context-menu-only today
+      (`disposition: ['list-item']`). NOTE: the "Mailbox pipeline routine (2026-08-10)" phase at the top
+      of this file is a full ledger of BUILDING it — that phase has to be rewritten as removed, not left
+      standing as completed work, or the ledger will claim shipped features that no longer exist.
+- [ ] **Split this work-stream out of `stories-brain`** (requested 2026-08-13) — this ledger is the
+      mailbox/inbox stream but lives in a research-harness package, and the registry summary still
+      describes only model routing. The code it tracks is overwhelmingly `plugin-inbox` +
+      `react-ui-card`. Decide the split: (a) move the ledger to `packages/plugins/plugin-inbox/docs/TASKS.md`
+      and register a new project, leaving `stories-brain` with the model-ladder/FINDINGS research it was
+      created for; or (b) keep one project and just relocate the file. Either way the ~40 older Topics /
+      FINDINGS / model-routing items should not follow the inbox work into a new home. Broader question
+      the user raised: how projects should be structured in general — one per package, per work-stream,
+      or per branch — since the registry currently mixes all three.
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **Mailbox card: rows showing the inbox message count** (requested 2026-08-13) — the mailbox card
+      should carry rows reporting how many messages are in the inbox. Counts come from the same
+      `inbox`-tag membership the new folder filters use (`SystemTags`/`TagIndex`), so this reads the
+      tag index rather than scanning the feed. Settle which counts earn a row — total vs unread vs
+      inbox-only — and keep it reactive (a tag-index atom, not a query per render).
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **Record when each subscription was last unsubscribed** (requested 2026-08-13) — `ExtractSubscriptions`
+      re-detects subscriptions from old messages after the user has already unsubscribed, so the same
+      ones keep reappearing. The mailbox needs per-subscription state (the unsubscribe timestamp) that
+      extraction consults, skipping any subscription whose evidence predates its last unsubscribe.
+      Note the corpus is immutable: the old messages remain and will always match, so suppression has to
+      live in the mailbox's own state rather than in message filtering.
+- [ ] **(part of the contact-affordance item above) ConversationStack story: popovers + unknown actors** (requested 2026-08-12) — the
       `ConversationStack` `Default` story should (a) host `ContactPreview` so DXN links in message
       content open popovers, (b) give the message avatar the same hover/create mechanism as
       `Row.Person` (use the extracted `ContactAvatar`), and (c) seed only 50% of actors as Persons.
-- [ ] **Enhanced (LLM) enrichment from the hover affordance** (requested 2026-08-12) — hovering a
+- [x] **DROPPED (2026-08-13) — Enhanced (LLM) enrichment from the hover affordance** — superseded by the
+      composite sender-enrichment MENU action; the hover path is not wanted. Originally (2026-08-12) — hovering a
       Person/Organization icon should also offer the AGENTIC enrichment, not just the deterministic
       create: run the research operation to create/update the object's researched fields AND fetch its
       image. The pieces exist — `CrmOperation.ResearchPerson` / `ResearchOrganization`
@@ -188,14 +335,15 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
       `Contact`), whose `onContactCreate` runs the extractor's own `buildContactFromActor`; play tests
       cover both states, including that no create button exists until hover. `Default` is also live
       now (star owns its state, avatar resolves its contact).
-- [ ] **Conversation-view avatar is not centered on the actor's name** (reported 2026-08-12) — in
+- [x] MOVED → `packages/plugins/plugin-inbox/docs/TASKS.md` — **Conversation-view avatar is not centered on the actor's name** (reported 2026-08-12) — in
       `MailboxArticle` grouped/conversation mode (story `Default`) the avatar sits low, centered
       against the whole tile instead of the sender line; the flat view (`Flat`) is correct. Look at
       the conversation tile's grid row alignment in `InboxStack` (the flat tile aligns its avatar to
       the first row; the conversation tile appears to center across both rows).
 - [ ] **Live verification in the app** — run from the mailbox toolbar against a synced mailbox:
       meter appears with titles, Stop mid-run keeps the committed cursor, reset re-processes.
-- [ ] **Real stages behind the `log-title` seam** — facts/tag/summarize (see the model-policy /
+- [x] **CLOSED (2026-08-13) — Real stages behind the `log-title` seam** — the seam IS `ProcessMailbox`,
+      which is being deleted, so there is nothing left to put stages behind. Was: — facts/tag/summarize (see the model-policy /
       triage work above) once the skeleton is proven live.
 - [ ] **Operation-level single-flight per mailbox** (from PR #12538 review) — nothing serializes a
       routine-triggered run against a manual one, and a reset issued mid-run (UI-guarded only) could
@@ -208,7 +356,7 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
 Six pipelines over the FeedPipeline workbench plus a summarization tier and the orchestrator that
 cascades them, shipped on **PR #12546** (branch `claude/mailbox-research-1e4396`, opened
 after #12538 landed). Test index: `packages/stories/stories-inbox/AUDIT.md`; product plan:
-`packages/plugins/plugin-inbox/PLAN.md` § "Mailbox pipelines → product".
+`packages/plugins/plugin-inbox/docs/PLAN.md` § "Mailbox pipelines → product".
 
 ### Tasks
 
@@ -277,7 +425,7 @@ analyze`) with a mailbox-global default and per-project overrides (user chose op
       NOT taken by `EnrichMailbox`, which spawns `SummarizeMailbox` and would deadlock on its own
       child. A re-entrant or durable lease at the operation layer would close both this and the
       `ProcessMailbox` gap above.
-- [ ] **Create-project-from-message UI** — the operation side is done; the message-context form is
+- [ ] **(absorbed by the conversation-menu item) Create-project-from-message UI** — the operation side is done; the message-context form is
       not built (PLAN.md deliverable 3).
 - [x] **Conversation summary tile** — the summary renders once, as the last tile under the messages
       (`ConversationStack.SummaryTile`), aligned to the message column template via the shared avatar
@@ -289,7 +437,7 @@ analyze`) with a mailbox-global default and per-project overrides (user chose op
     message in isolation. The annotation still names a parent, so the read model keeps working.
   - `dx-anchor` links (ECHO DXNs) to entities the summary references — Person, Organization, etc.
   - Task extraction, rendered as a markdown task list with those links at the foot of the summary.
-- [ ] **Regenerate a summary with extra instructions** — the user re-runs summarization for a
+- [x] **DROPPED (2026-08-13) — Regenerate a summary with extra instructions** — the user re-runs summarization for a
       conversation while adding guidance ("focus on the contract terms", "who owes what?"), either
       from the MessageArticle UI or the companion chat. Re-derivation already appends and supersedes,
       so the storage model needs nothing; the missing pieces are the instruction input surface and an

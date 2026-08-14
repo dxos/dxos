@@ -72,6 +72,15 @@ export const googleMailSyncProvider = (options: {
               }),
             );
 
+            // Mail from someone the space already knows is worth surfacing, so it lands under the
+            // `important` folder on arrival. Resolved once per sync rather than per message, and
+            // reusing Gmail's own `important` tag rather than inventing a parallel one — so a message
+            // Gmail already flagged and one flagged here are the same thing to every reader.
+            const db = Obj.getDatabase(mailbox);
+            const knownSenderTagUri = db
+              ? Mailbox.tagUri(yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, 'important')))
+              : undefined;
+
             // Fused decode + map; `undefined` drops the item (no body, or a filtered sender). Constructs
             // the `Change` (an `insert`) directly, so no separate wrapping stage is needed downstream.
             const toMapped = (
@@ -94,6 +103,11 @@ export const googleMailSyncProvider = (options: {
                   const uri = labelMap.get(labelId);
                   return uri ? [uri] : [];
                 });
+                // `contact` is the Person the space already holds for this sender (resolved above to
+                // link `message.sender.contact`), so no extra lookup is needed to know they are known.
+                if (contact && knownSenderTagUri && !tagUris.includes(knownSenderTagUri)) {
+                  tagUris.push(knownSenderTagUri);
+                }
                 const attachments = yield* fetchAttachments(userId, decoded.raw.id, decoded.attachments);
                 return {
                   _tag: 'insert',

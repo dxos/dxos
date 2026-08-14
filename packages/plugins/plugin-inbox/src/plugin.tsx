@@ -12,6 +12,7 @@ import {
   CreateObject,
   IdentitySpecs,
   InboxSettings,
+  MailboxProcessors,
   NavigationTargetResolver,
   OperationHandler,
   ReactSurface,
@@ -35,6 +36,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(InboxSettings),
   Plugin.addModule(AutomationTemplates),
   Plugin.addModule(ContactExtractor),
+  Plugin.addModule(MailboxProcessors),
   Plugin.addModule(SummarizeExtractor),
   Plugin.make,
 );

@@ -3,7 +3,7 @@
 //
 
 import { format, intervalToDuration } from 'date-fns';
-import React, { type MouseEvent, useCallback, useEffect, useRef } from 'react';
+import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useRef } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
@@ -65,7 +65,13 @@ const HOVER_CARD_DELAY = 400;
  * aborts a pending open. Returned as bare callbacks rather than DOM props so a caller can compose
  * them with its own pointer handlers.
  */
-const useCardHover = (open: () => void, enabled: boolean) => {
+/**
+ * Arms a delayed `open` on hover, cancelling on unmount AND whenever the target changes.
+ *
+ * Exported for its regression test: the cancellation-on-target-change is a dependency-array property,
+ * not extractable logic, so it can only be pinned by rendering the hook.
+ */
+export const useCardHover = (open: () => void, enabled: boolean) => {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const cancel = useCallback(() => {
     if (timeoutRef.current !== undefined) {
@@ -497,13 +503,15 @@ RowStar.displayName = 'Row.Star';
 type RowAttachmentsProps = {
   /** Optional — callers may pass an undefined/empty list (e.g. a message with no attachments). */
   attachments?: readonly Message.Attachment[];
+  /**
+   * Opens an attachment, by its index in `attachments`. The index rather than the attachment itself
+   * because an attachment has no identity of its own — it is an entry on the message.
+   */
+  onAttachmentClick?: (index: number) => void;
 };
 
-/**
- * A Card.Row listing a message's attachments by name with a generic file icon. Not yet clickable —
- * resolving the attachment's ref to open/preview it is a follow-up.
- */
-const RowAttachments = ({ attachments }: RowAttachmentsProps) => {
+/** A Card.Row listing a message's attachments by name; each chip opens its attachment when clickable. */
+const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps) => {
   if (!attachments?.length) {
     return null;
   }
@@ -514,8 +522,31 @@ const RowAttachments = ({ attachments }: RowAttachmentsProps) => {
         <Icon icon='ph--paperclip--regular' />
       </Card.Block>
       <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='message-attachments'>
-        {attachments.map((attachment) => (
-          <Tag key={attachment.ref.uri} hue='neutral' classNames='inline-flex items-center gap-1'>
+        {attachments.map((attachment, index) => (
+          <Tag
+            key={attachment.ref.uri}
+            hue='neutral'
+            classNames={mx('inline-flex items-center gap-1', onAttachmentClick && 'cursor-pointer')}
+            // `Tag` renders a span, so a bare `onClick` would be mouse-only. `role`/`tabIndex` plus the
+            // key handler give it the button semantics it needs to be reachable from the keyboard.
+            {...(onAttachmentClick && {
+              role: 'button',
+              tabIndex: 0,
+              onClick: (event: MouseEvent) => {
+                // The row sits inside a tile that also handles clicks; opening an attachment must not
+                // also select the message behind it.
+                event.stopPropagation();
+                onAttachmentClick(index);
+              },
+              onKeyDown: (event: KeyboardEvent) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onAttachmentClick(index);
+                }
+              },
+            })}
+          >
             <Icon icon='ph--file--regular' size={3} />
             {attachment.name ?? attachment.ref.uri}
           </Tag>

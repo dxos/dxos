@@ -11,9 +11,8 @@ import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import { type FactExtractor, messageSource, runFactPipeline } from '@dxos/pipeline-email';
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
-
-import { Mailbox } from '#types';
 
 const makeMessage = (suffix: string, created: string) =>
   Obj.make(Message.Message, {

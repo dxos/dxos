@@ -13,11 +13,18 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { Annotation, Filter, Type } from '@dxos/echo';
+import * as Operation from '@dxos/compute/Operation';
+import { Annotation, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Organization, Person } from '@dxos/types';
 
 import { meta } from '#meta';
+import { CrmOperation } from '#types';
+
+/** A node whose data is a researchable CRM object, tagged so the action can pick the right operation. */
+type ResearchSubject =
+  | { kind: 'person'; subject: Person.Person }
+  | { kind: 'organization'; subject: Organization.Organization };
 
 /** Node type for a CRM type-collection node (data is the ECHO Type). */
 const CRM_TYPE_NODE = `${meta.profile.key}/type-node`;
@@ -65,6 +72,63 @@ export default Capability.makeModule(
               (node): node is NonNullable<typeof node> => node !== null,
             ),
           );
+        },
+      }),
+
+      // Research on the object's own node, so any surface showing a Person/Organization (the record
+      // article's toolbar, the nav-tree context menu) offers it without depending on plugin-crm.
+      GraphBuilder.createExtension({
+        id: 'crmResearch',
+        match: (node): Option.Option<ResearchSubject> => {
+          if (Obj.instanceOf(Person.Person, node.data)) {
+            return Option.some({ kind: 'person', subject: node.data });
+          }
+          if (Obj.instanceOf(Organization.Organization, node.data)) {
+            return Option.some({ kind: 'organization', subject: node.data });
+          }
+          return Option.none();
+        },
+        actions: (matched) => {
+          const db = Obj.getDatabase(matched.subject);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
+            {
+              id: 'research',
+              // Scheduled, not invoked: research is a long run, and the pair is sequenced so the image
+              // pass sees whatever the profile step just wrote.
+              data: () =>
+                Effect.gen(function* () {
+                  // Branched rather than parameterised: the two operations take differently-typed
+                  // subject refs, and collapsing them would mean widening one of the inputs.
+                  if (matched.kind === 'person') {
+                    yield* Operation.schedule(
+                      CrmOperation.ResearchPerson,
+                      { subject: Ref.make(matched.subject) },
+                      { spaceId: db.spaceId },
+                    );
+                  } else {
+                    yield* Operation.schedule(
+                      CrmOperation.ResearchOrganization,
+                      { subject: Ref.make(matched.subject) },
+                      { spaceId: db.spaceId },
+                    );
+                  }
+                  // Set-scoped rather than subject-scoped (it walks everything missing an image), so it
+                  // is bounded by `limit` instead of targeting this object. A subject-scoped variant
+                  // would be the cleaner call here — see TASKS.md.
+                  yield* Operation.schedule(CrmOperation.EnrichImages, { limit: 8 }, { spaceId: db.spaceId });
+                }),
+              properties: {
+                label: ['research.label', { ns: meta.profile.key }],
+                icon: 'ph--sparkle--regular',
+                disposition: ['toolbar', 'list-item'],
+                presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                testId: 'crm.record.research',
+              },
+            },
+          ]);
         },
       }),
     ]);

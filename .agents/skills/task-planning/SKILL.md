@@ -48,7 +48,7 @@ ended: []
 
 - The registry records the **location** of each doc, so an existing effort points
   at its package files and a brand-new project defaults to
-  `.agents/projects/<name>/{TASKS.md,DESIGN.md}`. Keep it committed and current.
+  `.agents/projects/<name>/docs/{TASKS.md,DESIGN.md}`. Keep it committed and current.
 
 ### The `/project` command
 
