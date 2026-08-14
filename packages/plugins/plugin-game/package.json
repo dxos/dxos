@@ -35,19 +35,24 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/GamePlugin.workerd.tsx",
-        "node": "./src/GamePlugin.node.tsx",
-        "default": "./src/GamePlugin.tsx"
+        "workerd": "./src/plugin.workerd.tsx",
+        "node": "./src/plugin.node.tsx",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/GamePlugin.d.ts",
-      "workerd": "./dist/lib/GamePlugin.workerd.mjs",
-      "node": "./dist/lib/GamePlugin.node.mjs",
-      "default": "./dist/lib/GamePlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     },
     "#util": "./src/util/index.ts"
   },
@@ -56,6 +61,13 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     },
     "./Game": {
       "source": "./src/types/Game.ts",
@@ -72,22 +84,15 @@
       "types": "./dist/types/src/types/GameEvents.d.ts",
       "import": "./dist/lib/GameEvents.mjs"
     },
+    "./GamePlugin": {
+      "source": "./src/GamePlugin.ts",
+      "types": "./dist/types/src/GamePlugin.d.ts",
+      "import": "./dist/lib/GamePlugin.mjs"
+    },
     "./GameUtil": {
       "source": "./src/util/load-game.ts",
       "types": "./dist/types/src/util/load-game.d.ts",
       "import": "./dist/lib/GameUtil.mjs"
-    },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

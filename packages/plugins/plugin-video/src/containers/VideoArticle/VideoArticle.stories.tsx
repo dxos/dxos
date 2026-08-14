@@ -17,10 +17,10 @@ import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
+import { VideoPlugin } from '#plugin';
 import { translations } from '#translations';
+import { Video } from '#types';
 
-import { VideoPlugin } from '../../plugin';
-import * as Video from '../../types/Video';
 import { VideoArticle } from './VideoArticle';
 
 const DefaultStory = () => {
@@ -57,7 +57,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Video.Video, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -74,7 +74,7 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        MarkdownPlugin(),
+        MarkdownPlugin.make(),
         VideoPlugin(),
       ],
     }),

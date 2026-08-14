@@ -6,7 +6,7 @@ import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperatio
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as MarkdownOperation from '../types/MarkdownOperation';
+import { MarkdownOperation } from '#types';
 
 export const MarkdownOperationHandlerSet = OperationHandlerSet.lazy([
   CollaborationOperation.AcceptChange.pipe(Operation.lazyHandler(() => import('./accept-change'))),

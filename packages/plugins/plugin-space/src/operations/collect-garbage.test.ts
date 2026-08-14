@@ -15,8 +15,9 @@ import * as Skill from '@dxos/compute/Skill';
 import { Collection, Database, DXN, Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 
+import { SpaceOperation } from '#types';
+
 import CollectGarbageHandler from './collect-garbage';
-import { SpaceOperation } from './definitions';
 
 class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.testObject', '0.1.0'))(
   Schema.Struct({

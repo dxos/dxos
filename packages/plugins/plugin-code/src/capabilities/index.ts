@@ -8,12 +8,12 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as CodeCapabilities from '../types/CodeCapabilities';
-import * as CodeEvents from '../types/CodeEvents';
+import { CodeCapabilities, CodeEvents } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [AppCapabilities.PluginAsset],
 });
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const BuildRunState = Capability.lazyModule(
   'BuildRunState',

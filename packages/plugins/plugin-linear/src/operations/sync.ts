@@ -17,11 +17,11 @@ import { syncConnectionBindings } from '@dxos/plugin-connector';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
+import { LinearOperation } from '#types';
 
 import { LINEAR_SOURCE } from '../constants';
 import { formatLinearSyncFailure } from '../errors';
 import { LinearApi } from '../services';
-import * as LinearOperation from '../types/LinearOperation';
 
 //
 // Direction: bidirectional (pull-then-push) for projects and tasks.

@@ -16,11 +16,11 @@ import { syncConnectionBindings } from '@dxos/plugin-connector';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
+import { SlackOperation } from '#types';
 
 import { SLACK_SOURCE } from '../constants';
 import { formatSlackSyncFailure } from '../errors';
 import { SlackApi } from '../services';
-import * as SlackOperation from '../types/SlackOperation';
 
 type SlackConversation = SlackApi.SlackConversation;
 type SlackMessage = SlackApi.SlackMessage;

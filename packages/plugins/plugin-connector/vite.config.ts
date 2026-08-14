@@ -8,8 +8,8 @@ export default defineConfig({
   entry: {
     'index': 'src/index.ts',
     'ConnectorPlugin': 'src/ConnectorPlugin.ts',
-    'ConnectorPlugin.node': 'src/ConnectorPlugin.node.ts',
-    'ConnectorPlugin.workerd': 'src/ConnectorPlugin.workerd.ts',
+    'plugin.node': 'src/plugin.node.ts',
+    'plugin.workerd': 'src/plugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities/node': 'src/capabilities/node.ts',
     'components': 'src/components/index.ts',
@@ -25,6 +25,7 @@ export default defineConfig({
     'ConnectorForm': 'src/types/ConnectorForm.ts',
     'ConnectorEvents': 'src/types/ConnectorEvents.ts',
     'ConnectorOperation': 'src/types/ConnectorOperation.ts',
+    'types': 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

@@ -13,7 +13,7 @@ import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Button, Icon, IconButton, Input, Panel, Select, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
@@ -22,11 +22,7 @@ import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from
 import { VariantGallery } from '#components';
 import { meta } from '#meta';
 import { VariantRenderer } from '#surfaces';
-
-import type * as Artifact from '../../types/Artifact';
-import * as StudioCapabilities from '../../types/StudioCapabilities';
-import * as StudioOperation from '../../types/StudioOperation';
-import * as Variant from '../../types/Variant';
+import { Artifact, StudioCapabilities, StudioOperation, Variant } from '#types';
 
 export type ArtifactArticleProps = AppSurface.ObjectArticleProps<Artifact.Artifact>;
 

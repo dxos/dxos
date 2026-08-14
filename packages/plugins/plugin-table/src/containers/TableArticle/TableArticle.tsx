@@ -15,7 +15,7 @@ import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@
 import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel } from '@dxos/react-ui';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import {
@@ -35,8 +35,7 @@ import { type Table } from '@dxos/react-ui-table/types';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { meta } from '#meta';
-
-import * as TableOperation from '../../types/TableOperation';
+import { TableOperation } from '#types';
 
 export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table>;
 

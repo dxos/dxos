@@ -16,8 +16,8 @@ import { type MaybePromise } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
+import { SpaceCapabilities } from '#types';
 
-import type * as SpaceCapabilities from '../../types/SpaceCapabilities';
 import { getSpaceDisplayName } from '../../util';
 
 /** Display-ready option for the create object search list. */

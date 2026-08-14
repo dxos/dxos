@@ -3,9 +3,9 @@
 //
 
 export * from './companion-anchor';
-export * from './companion-view-state';
 export * from './layoutAppliesTopbar';
 export * from './migrate-persisted-state';
+export * from './navigation-target';
 export * from './resolve-sidebar-state';
 export * from './serialize-deck-url';
 export * from './set-active';

@@ -7,8 +7,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { StateMap } from '@dxos/schema';
 
-import * as Magazine from '../types/Magazine';
-import type * as Subscription from '../types/Subscription';
+import { Magazine, Subscription } from '#types';
 
 /** Per-Post magazine-scoped curation slice (agent-written snippet/hero image). */
 export type CurationSlice = { snippet: string | undefined; imageUrl: string | undefined };

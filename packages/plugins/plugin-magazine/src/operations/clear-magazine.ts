@@ -9,8 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import * as FeedOperation from '../types/FeedOperation';
-import * as Subscription from '../types/Subscription';
+import { FeedOperation, Subscription } from '#types';
 
 /**
  * Clears a Magazine's curated posts, preserving any that are starred. With no `starred` tag in the

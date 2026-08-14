@@ -9,8 +9,9 @@ import { IconButton, Message, Status, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 import { formatForDisplay } from '@dxos/schema';
 
+import { Ibkr } from '#types';
+
 import { meta } from '../../meta';
-import * as Ibkr from '../../types/Ibkr';
 
 export type FundamentalsPanelProps = {
   snapshot?: Ibkr.FundamentalsSnapshot;

@@ -16,8 +16,9 @@ import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { TagIndex } from '@dxos/schema';
 import { Event, Organization, Person } from '@dxos/types';
 
+import { GoogleCalendarApi } from '#services';
+
 import { GOOGLE_CALENDAR_CONNECTOR_ID, GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { GoogleCalendarApi } from '../../../services';
 import { generateCalendarDataset, generateRecurringSeries } from '../../../testing/calendar-fixtures';
 import { type SyncCalendarProps, syncCalendar } from './sync';
 

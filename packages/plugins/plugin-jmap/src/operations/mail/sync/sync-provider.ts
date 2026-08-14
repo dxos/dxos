@@ -20,10 +20,11 @@ import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { TagIndex } from '@dxos/schema';
 import { Person } from '@dxos/types';
 
-import { Jmap, JmapMail } from '../../../apis';
+import { Jmap, JmapMail } from '#apis';
+import { JmapMailApi } from '#services';
+
 import { JMAP_DOMAIN } from '../../../constants';
 import { type JmapApiError } from '../../../errors';
-import { JmapMailApi } from '../../../services';
 import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
 import { findOrCreateJmapTag } from '../tags';
 import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';

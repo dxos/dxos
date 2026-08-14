@@ -7,7 +7,9 @@ import * as Record from 'effect/Record';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 
@@ -55,7 +57,7 @@ export default Capability.makeModule(
     );
 
     // await builder.initialize();
-    void Graph.expand(builder.graph, Node.RootId, 'child');
+    void Graph.expandSync(builder.graph, Node.RootId, 'child');
 
     setupDevtools(builder.graph);
 

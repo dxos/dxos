@@ -10,8 +10,9 @@ import { Obj, Ref } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { AccessToken, Connection } from '@dxos/link';
 
+import { ConnectorSpec } from '#types';
+
 import { CUSTOM_PROVIDER_ID } from '../constants';
-import * as ConnectorSpec from '../types/ConnectorSpec';
 
 /** Default form for manually entered access tokens (custom connector). */
 const CustomTokenForm = Schema.Struct({

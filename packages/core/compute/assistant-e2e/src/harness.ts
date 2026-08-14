@@ -26,13 +26,13 @@ import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { DXN, type SpaceId } from '@dxos/keys';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -150,17 +150,17 @@ const DEFAULT_CLIENT_TYPES: Type.AnyEntity[] = [
 ];
 
 const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions): Promise<Plugin.Plugin[]> => [
-  ClientPlugin({
+  ClientPlugin.make({
     ...(options.edge || options.sandbox
       ? { config: configPreset({ edge: options.edge, sandbox: options.sandbox }) }
       : {}),
     types: [...DEFAULT_CLIENT_TYPES, ...(options.clientTypes ?? [])],
   }),
-  AssistantPlugin({
+  AssistantPlugin.make({
     aiServiceMiddleware: await makeLanguageModelFixtureMiddleware(ctx, options),
   }),
-  RoutinePlugin(),
-  InboxPlugin(),
+  RoutinePlugin.make(),
+  InboxPlugin.make(),
   ...(options.plugins ?? []),
 ];
 

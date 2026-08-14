@@ -15,8 +15,8 @@ import { useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
+import { RoutineCapabilities } from '#types';
 
-import * as RoutineCapabilities from '../../types/RoutineCapabilities';
 import { RoutineForm } from '../RoutineForm';
 
 export type CreateRoutinePanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {

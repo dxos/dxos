@@ -16,8 +16,9 @@ import { type ConnectionAuthExpiredError, syncConnectionBindings } from '@dxos/p
 import { type MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/sync';
 import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 
+import { type JmapDataset, JmapMailApi } from '#services';
+
 import { jmapMailSyncProvider } from '../operations/mail/sync/sync-provider';
-import { type JmapDataset, JmapMailApi } from '../services';
 
 /**
  * Test entry point for the JMAP sync — the account-level fan-out over `runMailSync` with this

@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as SheetOperation from '../types/SheetOperation';
+import { SheetOperation } from '#types';
 
 export const SheetOperationHandlerSet = OperationHandlerSet.lazy([
   SheetOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),

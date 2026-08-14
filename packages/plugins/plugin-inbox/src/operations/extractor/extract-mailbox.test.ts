@@ -8,8 +8,8 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -22,9 +22,8 @@ import {
 } from '@dxos/extractor';
 import { Message } from '@dxos/types';
 
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
+import { InboxCapabilities, InboxOperation, Mailbox } from '#types';
+
 import extractMailboxHandler from './extract-mailbox';
 import extractMessageHandler from './extract-message';
 

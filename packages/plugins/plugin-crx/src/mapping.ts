@@ -5,7 +5,7 @@
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Organization, Person } from '@dxos/types';
 
-import type * as PageAction from './types/PageAction';
+import { PageAction } from '#types';
 
 const MAX_NOTES_LENGTH = 4000;
 

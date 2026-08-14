@@ -8,8 +8,8 @@ import { NamePopover } from '@dxos/app-framework/ui';
 import { Icon, IconButton, Tag, TextTooltip, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import * as ReviewCapabilities from '../../types/ReviewCapabilities';
+import { meta } from '#meta';
+import { ReviewCapabilities } from '#types';
 
 type BranchView = ReviewCapabilities.BranchView;
 

@@ -10,7 +10,8 @@ import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import * as Subscription from '../../types/Subscription';
+import { Subscription } from '#types';
+
 import { SubscriptionStack, type SubscriptionStackAction } from './SubscriptionStack';
 
 const generateFeeds = (count: number): Subscription.Subscription[] =>

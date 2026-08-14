@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as RoutineOperation from '../types/RoutineOperation';
+import { RoutineOperation } from '#types';
 
 export const RoutineOperationHandlerSet = OperationHandlerSet.lazy([
   RoutineOperation.CreateTriggerFromTemplate.pipe(

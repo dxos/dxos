@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 
 import { type IncomingMessage } from '../services';
 import { makeFreeqChannel } from '../types';

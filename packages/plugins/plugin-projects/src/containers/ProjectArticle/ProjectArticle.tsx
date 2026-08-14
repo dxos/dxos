@@ -14,7 +14,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -22,8 +22,7 @@ import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/
 
 import { ObjectCard } from '#components';
 import { meta } from '#meta';
-
-import * as ProjectOperation from '../../types/ProjectOperation';
+import { ProjectOperation } from '#types';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST

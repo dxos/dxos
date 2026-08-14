@@ -9,7 +9,8 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Connection, Cursor } from '@dxos/link';
 
-import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
+
 import { isCursorForConnection } from '../../util';
 
 /** A user-chosen remote target to bind. */

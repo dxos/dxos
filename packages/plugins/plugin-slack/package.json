@@ -30,14 +30,19 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/SlackPlugin.ts",
-      "types": "./dist/types/src/SlackPlugin.d.ts",
-      "default": "./dist/lib/SlackPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -47,16 +52,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./SlackEvents": {
       "source": "./src/types/SlackEvents.ts",
       "types": "./dist/types/src/types/SlackEvents.d.ts",
@@ -67,7 +68,11 @@
       "types": "./dist/types/src/types/SlackOperation.d.ts",
       "import": "./dist/lib/SlackOperation.mjs"
     },
-    "./package.json": "./package.json"
+    "./SlackPlugin": {
+      "source": "./src/SlackPlugin.ts",
+      "types": "./dist/types/src/SlackPlugin.d.ts",
+      "import": "./dist/lib/SlackPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

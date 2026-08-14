@@ -26,12 +26,13 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Builder, InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
-import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
+import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import { translations as projectsTranslations } from '@dxos/plugin-projects/translations';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -141,7 +142,7 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
     setupEvents: [AppActivationEvents.AssistantStart],
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [
           Mailbox.Mailbox,
           Project.Project,
@@ -179,11 +180,11 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
             });
           }),
       }),
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
       SpacePlugin({}),
       InboxPlugin(),
-      ProjectsPlugin(),
-      RoutinePlugin(),
+      ProjectsPlugin.make(),
+      RoutinePlugin.make(),
       StoryModulesPlugin(),
       ...(ai ? [StoryAiPlugin(ai)] : []),
       ...plugins,

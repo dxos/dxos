@@ -9,8 +9,9 @@ import type * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 
+import { ConnectorSpec } from '#types';
+
 import { ConnectionSyncError } from '../errors';
-import * as ConnectorSpec from '../types/ConnectorSpec';
 import { findBindingForTarget } from './find-binding';
 import { syncConnectionOrOfferRoutine } from './run-sync';
 import { findSyncTriggerForBinding, fireSyncTrigger, syncTriggerMonitorLayer } from './sync-trigger';

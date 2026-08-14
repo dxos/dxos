@@ -33,6 +33,7 @@ export default defineConfig({
     'types': 'src/types/index.ts',
     'testing': 'src/testing/index.ts',
     'ui': 'src/ui/index.ts',
+    'app-graph/DeckSpec': 'src/app-graph/DeckSpec.ts',
   },
   jsx: 'react',
   test: { node: true },

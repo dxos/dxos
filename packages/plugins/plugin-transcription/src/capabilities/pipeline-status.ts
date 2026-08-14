@@ -7,7 +7,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
+import { TranscriptionCapabilities } from '#types';
 
 /**
  * Observable live-transcription lifecycle phase, written by the driver and read by UI (toolbar

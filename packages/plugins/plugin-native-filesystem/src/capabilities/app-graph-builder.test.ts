@@ -8,13 +8,15 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { qualifyId } from '@dxos/app-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
+import { NativeFilesystemCapabilities } from '#types';
 
 import { MockFilesystemManager } from '../testing/mock-filesystem-manager';
-import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
 import { createFilesystemEntryExtensions } from './app-graph-builder';
 
 const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;

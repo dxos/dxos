@@ -18,8 +18,9 @@ import { Connection } from '@dxos/link';
 import { MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/sync';
 import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 
+import { type GmailDataset, GoogleCredentials, GoogleMailApi } from '#services';
+
 import { googleMailSyncProvider } from '../operations/mail/sync/sync-provider';
-import { type GmailDataset, GoogleCredentials, GoogleMailApi } from '../services';
 
 /**
  * Test entry point for the Gmail sync — `runMailSync` with the Gmail provider layer, leaving the API for

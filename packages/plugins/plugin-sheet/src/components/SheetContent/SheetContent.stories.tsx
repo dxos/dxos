@@ -14,8 +14,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
 import { translations } from '#translations';
+import { Sheet } from '#types';
 
-import * as Sheet from '../../types/Sheet';
 import { useComputeGraph } from '../ComputeGraph';
 import { SheetRoot } from '../SheetRoot';
 import { SheetContent } from './SheetContent';

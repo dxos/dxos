@@ -10,7 +10,7 @@ import { type HubHttpClient } from '@dxos/edge-client';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import * as ClientCapabilities from '../types/ClientCapabilities';
+import { ClientCapabilities } from '#types';
 
 /**
  * Returns the shared `HubHttpClient` singleton for hub-service API calls.

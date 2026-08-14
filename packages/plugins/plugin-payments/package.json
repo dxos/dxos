@@ -30,9 +30,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/PaymentsPlugin.tsx",
-      "types": "./dist/types/src/PaymentsPlugin.d.ts",
-      "default": "./dist/lib/PaymentsPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#services": {
       "source": "./src/services/index.ts",
@@ -43,6 +43,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -51,11 +56,7 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
+    "./package.json": "./package.json",
     "./PaymentsCapabilities": {
       "source": "./src/types/PaymentsCapabilities.ts",
       "types": "./dist/types/src/types/PaymentsCapabilities.d.ts",
@@ -66,12 +67,16 @@
       "types": "./dist/types/src/types/PaymentsEvents.d.ts",
       "import": "./dist/lib/PaymentsEvents.mjs"
     },
+    "./PaymentsPlugin": {
+      "source": "./src/PaymentsPlugin.ts",
+      "types": "./dist/types/src/PaymentsPlugin.d.ts",
+      "import": "./dist/lib/PaymentsPlugin.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

@@ -5,8 +5,8 @@
 import React, { type ReactNode, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import type * as Node from '@dxos/app-graph/Node';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Node } from '@dxos/plugin-graph';
 import { type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';

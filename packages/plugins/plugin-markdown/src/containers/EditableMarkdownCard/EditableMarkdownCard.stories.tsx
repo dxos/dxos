@@ -21,8 +21,8 @@ import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
+import { Markdown } from '#types';
 
-import * as Markdown from '../../types/Markdown';
 import { EditableMarkdownCard, type EditableMarkdownCardProps } from './EditableMarkdownCard';
 
 random.seed(1234);
@@ -57,7 +57,7 @@ const meta: Meta<typeof EditableMarkdownCardStory> = {
       plugins: [
         ...corePlugins(),
         ProcessManagerPlugin(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

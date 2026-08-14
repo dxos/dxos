@@ -4,7 +4,7 @@
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
-import * as Book from './types/Book';
+import { Book } from '#types';
 
 const { getSectionPath: getBooksPath, getObjectPath: getBookPath } = GraphPath.createTypeSectionPaths(Book.Book, {
   groupId: GraphPath.GroupSegments.content,

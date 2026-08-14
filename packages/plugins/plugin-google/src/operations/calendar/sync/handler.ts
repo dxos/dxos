@@ -12,7 +12,8 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { syncConnectionBindings } from '@dxos/plugin-connector';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
-import { GoogleCalendarApi, GoogleCredentials } from '../../../services';
+import { GoogleCalendarApi, GoogleCredentials } from '#services';
+
 import { syncCalendar } from './sync';
 
 const handler = InboxOperation.GoogleCalendarSync.pipe(

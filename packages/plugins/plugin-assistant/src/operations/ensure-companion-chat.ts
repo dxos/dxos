@@ -10,8 +10,7 @@ import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Query } from '@dxos/echo';
 
-import * as AssistantCapabilities from '../types/AssistantCapabilities';
-import * as AssistantOperation from '../types/AssistantOperation';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionChat> =
   AssistantOperation.EnsureCompanionChat.pipe(

@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -15,11 +16,11 @@ import * as Operation from '@dxos/compute/Operation';
 import { EID, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Graph } from '@dxos/plugin-graph';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
+import { DeckCapabilities } from '#types';
+
 import { addSubjectsToActiveDeck, resolveLevelOpen, resolveSeededPlanks, updatePlankNames } from '../layout';
-import * as DeckCapabilities from '../types/DeckCapabilities';
 import { computeActiveUpdates, openableChildren, resolveDeckSpec } from '../util';
 import { updateActiveDeck } from './helpers';
 
@@ -46,7 +47,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
                   return false;
                 }
                 for (const loader of loaders) {
-                  if (yield* loader.load({ spaceId, entityId })) {
+                  // Anything short of a store answering "no" counts as existing: a 404 here replaces
+                  // the plank outright, so an unreachable edge must not be able to trigger one.
+                  if ((yield* loader.load({ spaceId, entityId })) !== 'absent') {
                     return true;
                   }
                 }

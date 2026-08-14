@@ -6,7 +6,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
-import * as BrainOperation from '../types/BrainOperation';
+import { BrainOperation } from '#types';
 
 export const BrainOperationHandlerSet = OperationHandlerSet.lazy([
   BrainOperation.QueryFacts.pipe(Operation.lazyHandler(() => import('./query-facts'))),

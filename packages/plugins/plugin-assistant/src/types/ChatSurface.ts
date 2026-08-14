@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Role } from '@dxos/app-framework';
+import * as Role from '@dxos/app-framework/Role';
 
 /**
  * Role token for surfaces an agent requests inline in the conversation via the `<surface>` content

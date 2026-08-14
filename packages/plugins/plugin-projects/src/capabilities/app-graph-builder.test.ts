@@ -6,14 +6,17 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { qualifyId } from '@dxos/app-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
-import * as ProjectOperation from '../types/ProjectOperation';
+import { ProjectOperation } from '#types';
+
 import { createProjectActionExtension } from './app-graph-builder';
 
 describe('project app graph builder', () => {

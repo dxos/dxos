@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export * as SettingsPath from './types/SettingsPath';
+export * as SettingsPlugin from './SettingsPlugin';
 export * from './actions';
-export * from './meta';
+export * from '#meta';
+export * from '#types';

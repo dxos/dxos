@@ -397,6 +397,23 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
 const VITEST_SUBCOMMAND = process.argv.slice(2).find((arg) => !arg.startsWith('-'));
 const IS_VITEST_RUN = process.env.VITEST === 'true' && (VITEST_SUBCOMMAND === 'run' || process.argv.includes('--run'));
 
+// The Claude Code cloud sandbox ships a Chromium older than Playwright's pin and proxies egress
+// through a gateway that resets Chromium's TLS 1.3 handshake, so browser mode cannot launch without
+// these; empty elsewhere, leaving dev and CI untouched.
+const SANDBOX_LAUNCH_OPTIONS = process.env.CLAUDE_CODE_REMOTE
+  ? {
+      launchOptions: {
+        executablePath: '/opt/pw-browsers/chromium',
+        args: [
+          '--no-sandbox',
+          `--proxy-server=${process.env.HTTPS_PROXY}`,
+          '--proxy-bypass-list=127.0.0.1;localhost',
+          '--ssl-version-max=tls1.2',
+        ],
+      },
+    }
+  : {};
+
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
     test: {
@@ -416,15 +433,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         // Pin the browser timezone so `Intl.DateTimeFormat().resolvedOptions().timeZone`
         // does not resolve to `Etc/Unknown` in headless CI containers — react-aria's
         // calendar feeds that value back into `Intl.DateTimeFormat`, which throws.
-        provider: playwright({
-          contextOptions: { timezoneId: 'America/Los_Angeles' },
-          // The Claude Code cloud sandbox ships an older Chromium than Playwright's pin (which refuses
-          // to launch the headless shell it expects); point at the pre-installed binary. Gated so real
-          // dev/CI runs keep Playwright's own browsers (see the cloud-sandbox skill).
-          ...(process.env.CLAUDE_CODE_REMOTE
-            ? { launchOptions: { executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] } }
-            : {}),
-        }),
+        provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' }, ...SANDBOX_LAUNCH_OPTIONS }),
         instances: [{ browser: 'chromium' }],
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
@@ -536,7 +545,7 @@ const createBrowserProject = ({
         enabled: true,
         screenshotFailures: false,
         headless: !isDebug,
-        provider: playwright(),
+        provider: playwright({ ...SANDBOX_LAUNCH_OPTIONS }),
         instances: [{ browser: browserName }],
         isolate: false,
       },

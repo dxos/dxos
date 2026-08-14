@@ -15,8 +15,7 @@ import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
+import { InboxOperation, Mailbox } from '#types';
 
 /**
  * Extracts unsubscribe affordances from every feed message — the `List-Unsubscribe` header the sync

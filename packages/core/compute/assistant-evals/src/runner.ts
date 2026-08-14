@@ -23,13 +23,13 @@ import type * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -71,7 +71,7 @@ const createDefaultPlugins = async (options: {
   plugins?: Plugin.Plugin[];
   types?: Type.AnyEntity[];
 }): Promise<Plugin.Plugin[]> => [
-  ClientPlugin({
+  ClientPlugin.make({
     types: [
       Organization.Organization,
       Person.Person,
@@ -81,11 +81,11 @@ const createDefaultPlugins = async (options: {
       ...(options.types ?? []),
     ],
   }),
-  AssistantPlugin({
+  AssistantPlugin.make({
     aiServiceMiddleware: await makeAiServiceMiddleware(),
   }),
-  RoutinePlugin(),
-  InboxPlugin(),
+  RoutinePlugin.make(),
+  InboxPlugin.make(),
   ...(options.plugins ?? []),
 ];
 

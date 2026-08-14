@@ -13,9 +13,10 @@ import { type Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { SpaceOperation } from '@dxos/plugin-space';
 
+import { ConnectorSpec } from '#types';
+
 import { ConnectionSyncError, SyncRoutineMissingError } from '../errors';
 import { SyncTemplateId } from '../templates/sync';
-import type * as ConnectorSpec from '../types/ConnectorSpec';
 import { findSyncTriggerForConnection, fireSyncTrigger, syncTriggerMonitorLayer } from './sync-trigger';
 
 /**

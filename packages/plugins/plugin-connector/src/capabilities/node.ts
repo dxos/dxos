@@ -9,8 +9,7 @@ import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as ConnectorEvents from '../types/ConnectorEvents';
-import * as ConnectorSpec from '../types/ConnectorSpec';
+import { ConnectorEvents, ConnectorSpec } from '#types';
 
 export * from './connector-coordinator';
 
@@ -34,3 +33,5 @@ export const RoutineTemplate = Capability.lazyModule(
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./routine-template'),
 );
+
+export const Schema = AppCapability.schema(() => import('./schema'));

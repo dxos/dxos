@@ -1084,3 +1084,92 @@ window entry, not composer boot). #12438 fixes it via `OperationHandlerSet.async
 
 Expanding the subpath lint across all packages is tracked as a `TODO(wittjosiah)` on
 `DXOS_SUBPATH_PACKAGES` in `dxos-subpath-imports.js`, beside the list it would replace.
+
+## Finding 2026-08-12 (`sideEffects: true` audit; barrel work is NOT a boot lever) — follow-ups
+
+Context: the `dxos-subpath-exports` branch moved every plugin's namespaces into per-directory
+barrels (`export * from './types'`). Two questions fell out.
+
+**MEASURED, NEGATIVE: `sideEffects: false` buys nothing at boot today.** Flipping `plugin-space`
+(9 namespaces, boot-critical) moved `check-boot-budget` by exactly zero — 25 preload entries /
+5.47 MB before and after, with `plugin-space:build` and `composer-app:bundle` both confirmed
+re-run uncached. The subpath migration already removed barrel traversal from the boot path, so
+there is no unused module reached through a barrel left for rollup to drop. Do not re-derive this
+expecting bytes. NOT measured: `check-startup-budget` (modules-at-ready) and total bundle beyond
+the preload closure — a win, if any, would show there.
+
+Also confirmed the barrel refactor itself is boot-neutral: the branch point measures the same
+25 / 5.47 MB as the branch tip. (The 23 / 5.31 MB quoted in this file's earlier notes is an older
+commit and is not comparable.)
+
+**Audit: 88 of 98 plugins have NO module-scope side effect at all.** The other 10 split three ways:
+
+- CSS/font imports (`plugin-excalidraw`, `plugin-explorer`, `plugin-presenter`, `plugin-tldraw`,
+  `plugin-onboarding`) — needs the array form (`"sideEffects": ["**/*.css"]`), never `false`.
+- Third-party augmentation imports (`plugin-terra` x5, `plugin-spacetime`) —
+  `import '@babylonjs/core/Meshes/thinInstanceMesh'` patches `Mesh.prototype`. Not removable;
+  scope with the array form instead.
+- Registration at import time — the refactorable ones, all the same anti-pattern:
+  1. `plugin-deck` `DeckPlugin.ts` — `setAutoFreeze(false)` at module scope; carries its own
+     `TODO(Zan)` to move it. Belongs in activation.
+  2. `plugin-library` `atproto/book-lens.ts` — `Panproto.registerTextFormat` / `registerRefType`.
+     The comment there explicitly leans on the flag ("plugin-library is `sideEffects: true`, so it
+     is retained"), which is the flag masking a real dependency. Export a `register()` and call it
+     from the capability that needs the lens.
+  3. `plugin-map-solid` — `components/MapSurface/index.ts` is nothing but `import './MapSurface'`,
+     existing only to fire a top-level `customElement('dx-map-surface', ...)`. Export
+     `registerMapSurface()` and call it from `capabilities/surface.tsx`.
+
+Follow-ups, in dependency order:
+
+- [ ] Move the three import-time registrations into activation (deck, library, map-solid).
+- [ ] Scope the CSS/augmentation packages to the array form rather than `true`.
+- [ ] Flip the remaining 88 to `"sideEffects": false` and measure `check-startup-budget`, not
+      `check-boot-budget` — the latter is already known flat.
+
+### Follow-up 2026-08-12 (schema capability is eagerly-arrayed at all 101 call sites)
+
+`AppCapability.schema` already accepts the lazy loader form
+(`() => Promise<{ default: [...] }>`) exactly as `AppCapability.commands` does — the API
+gap is not in app-toolkit, it is that **all 101 call sites pass the eager array**
+(`AppCapability.schema([Chess.State, ...])`), which dereferences every schema at plugin-body
+module scope. Same shape as the operation-handler-set leak fixed in b4904463: the definitions
+are eager even though the consumer is lazy.
+
+No activation question to settle: omitting `activatesOn` already normalizes to
+`ActivationEvents.Idle` (see its docstring in `common/activation-events.ts`), and Idle is
+documented as being for exactly this kind of registration contribution. So schema is already
+idle-activated — the conversion is purely about the MODULE GRAPH, not timing. The array literal
+is built when `XPlugin.tsx` is evaluated no matter when the module activates.
+
+- [x] DONE, and MEASURED NEGATIVE: converting the call sites to the loader form moved
+      `check-boot-budget` by -354 bytes (4,730,304 -> 4,729,950, 21 chunks either side) on a
+      genuinely re-run bundle. The reason is the one anticipated here: the arrays sit in
+      `XPlugin.tsx`, already behind the lazy `#plugin` dynamic import, so they were never in the
+      boot graph and deferring them defers nothing. Keep the change for consistency with
+      `commands` and because it drops `#types` from ~50 plugin bodies, but do NOT record it as a
+      startup lever. Untested: whether it moves `check-startup-budget` or lazy-chunk size.
+      Shape, for reference: 99 call sites across 52 packages became 62 modules. 44 packages share
+      one `schema.ts` across their platform variants (the arrays were previously restated per
+      variant); 8 needed `schema.node.ts` / `schema.workerd.ts` because their variants really do
+      register different sets — plugin-inbox registers 9 in the browser and 4 headless.
+
+### Follow-up 2026-08-12 (a `#types` barrel import inside a plugin can close an eval cycle)
+
+Routing an intra-plugin sibling import through the package's own barrel (`../types/Drawing` ->
+`#types`) is NOT always a rename. The barrel pulls in every sibling module, and if one of them
+imports back into the importing directory the cycle closes: `types/index` -> `types/XOperation`
+-> `#model` -> `model/builder` -> `#types`. The namespace binding is then still in TDZ when the
+first module evaluates, and it fails at RUNTIME as `Cannot read properties of undefined` on a
+schema field, with nothing wrong at the type level. Cost 7 new cycles across illustrator, terra
+and voxel before CI caught it; fixed by restoring the direct sibling import in those 7 files.
+
+Rule of thumb: prefer `#types` for cross-directory reads, but keep the DIRECT module import when
+the target directory's barrel can reach back into yours. In voxel the barrel form also silently
+promoted `import type * as Voxel` to a value import, which is what made an erased edge real.
+
+- [ ] `scripts/check-cycles.mjs` covers only `packages/{common,core}` and uses madge, which does
+      not resolve the `imports` map — so BOTH the plugins tree and every `#` edge are invisible to
+      CI. Extend it to `packages/plugins` with `#` self-reference resolution. Baseline before
+      turning it on: 15 pre-existing cycles in plugins (barrel <-> component/hook cycles), so it
+      needs an allowlist or those fixed first.

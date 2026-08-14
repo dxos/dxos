@@ -11,8 +11,9 @@ import { Database } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
+import { ConnectorSpec } from '#types';
+
 import { SyncRoutineMissingError } from '../../errors';
-import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { runConnectionSync } from '../../util';
 
 /**

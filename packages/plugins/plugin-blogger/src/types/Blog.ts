@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type CapabilityManager } from '@dxos/app-framework';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';

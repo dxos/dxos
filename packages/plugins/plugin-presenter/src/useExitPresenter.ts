@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 
-import * as PresenterOperation from './types/PresenterOperation';
+import { PresenterOperation } from '#types';
 
 /**
  * Exits presentation for the given object. Delegates to the toggle operation so the

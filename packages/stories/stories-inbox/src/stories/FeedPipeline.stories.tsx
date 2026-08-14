@@ -8,11 +8,11 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { expect, screen, userEvent, within } from 'storybook/test';
 
 import { Provider } from '@dxos/ai';
-import { Role } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Role from '@dxos/app-framework/Role';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -26,12 +26,12 @@ import { log } from '@dxos/log';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
-import { BrainPlugin } from '@dxos/plugin-brain/plugin';
+import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
+import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import * as CrmOperation from '@dxos/plugin-crm/CrmOperation';
-import { CrmPlugin } from '@dxos/plugin-crm/plugin';
+import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
 import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
 import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
@@ -41,11 +41,12 @@ import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
-import { ProjectOperationHandlerSet } from '@dxos/plugin-projects/plugin';
+import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
+import { ProjectOperationHandlerSet } from '@dxos/plugin-projects/operations';
 import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as Booking from '@dxos/plugin-trip/Booking';
 import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
@@ -635,7 +636,7 @@ const meta = {
       setupEvents: [ActivationEvents.Startup],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [
             AccessToken.AccessToken,
             Booking.Booking,
@@ -680,15 +681,15 @@ const meta = {
               });
             }),
         }),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
         SpacePlugin({}),
         InboxPlugin(),
-        BrainPlugin(),
-        ConnectorPlugin(),
-        CrmPlugin(),
-        MarkdownPlugin(),
-        PreviewPlugin(),
-        ProgressPlugin(),
+        BrainPlugin.make(),
+        ConnectorPlugin.make(),
+        CrmPlugin.make(),
+        MarkdownPlugin.make(),
+        PreviewPlugin.make(),
+        ProgressPlugin.make(),
         TripPlugin(),
         // Both provide the `AiService` LayerSpec, so exactly one is registered per variant: the trip
         // seed needs the canned flight payloads; every other variant targets local Ollama.
@@ -903,14 +904,15 @@ export const TripTest: Story = {
     // The trip fixture lands as one batch of three messages.
     await waitFor((text) => /"messages":\s*3\b/.test(text));
 
-    // First pass: both same-PNR legs collapse into ONE Trip with TWO Segments. Every message ends
-    // linked (the travel pair to the Trip, the digest to the contact extracted on dispatch).
+    // First pass: both same-PNR legs collapse into ONE Trip with TWO Segments, and both end linked to
+    // it. The third message (a digest from `news@example.com`) does NOT link: the contact extractor
+    // refuses machine senders, so a newsletter address no longer becomes a Person.
     await selectAction(canvas, 'dispatch');
     await userEvent.click(canvas.getByTestId('execute'));
     const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
     void expect(afterFirst).toMatch(/"trips":\s*1\b/);
     void expect(afterFirst).toMatch(/"segments":\s*2\b/);
-    void expect(afterFirst).toMatch(/"linked":\s*3\b/);
+    void expect(afterFirst).toMatch(/"linked":\s*2\b/);
 
     // Second pass over the same messages must be idempotent — still ONE Trip, TWO Segments
     // (segments updated in place, not duplicated). This is the "extract twice" case.

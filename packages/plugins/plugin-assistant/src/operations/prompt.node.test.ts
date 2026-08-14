@@ -14,9 +14,9 @@ import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Message } from '@dxos/types';
 
@@ -32,7 +32,7 @@ describe('Agent prompt (composer plugin harness)', () => {
     { tags: ['manual'], timeout: 60_000 },
     async ({ expect }) => {
       await using harness = await createComposerTestApp({
-        plugins: [ClientPlugin({}), AssistantPlugin(), RoutinePlugin()],
+        plugins: [ClientPlugin.make({}), AssistantPlugin(), RoutinePlugin.make()],
       });
 
       const { defaultSpace } = await EffectEx.runAndForwardErrors(

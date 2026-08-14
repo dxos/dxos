@@ -10,7 +10,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { PathResolution } from '@dxos/app-graph';
+import * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -24,11 +24,11 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { Attention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
-import * as DeckCapabilities from '../types/DeckCapabilities';
-import * as DeckSchema from '../types/DeckSchema';
+import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
+
 import {
-  COMPANION_VIEW_STATE_CONTEXT,
-  companionAspect,
+  combineVerdicts,
+  getCandidateEntityIds,
   getRenderedPlanks,
   resolveCompanionAnchor,
   serializeDeckToUrl,
@@ -40,7 +40,12 @@ import { shouldDeferNavigationHandlers } from './check-app-scheme';
  * waits on the candidate node and returns as soon as it lands, so this only bounds the wait for a
  * node that never arrives. Generous because it costs nothing when the chain lands early.
  */
+// TODO(wittjosiah): Shorten, or apply the restore per-pair. `Set` applies once after every pair
+//  settles, so the slowest pair holds back the ones that already resolved.
 const RESOLVE_TIMEOUT = '10 seconds';
+
+/** Cap on a single navigation-target loader, whose own waits (client init, space readiness) are unbounded. */
+const LOADER_TIMEOUT = '5 seconds';
 
 /** Strip the `root/` prefix off a qualified workspace path, back to the bare `UrlPath` workspace token. */
 const bareWorkspace = (qualifiedWorkspace: string): string => {
@@ -55,6 +60,7 @@ export default Capability.makeModule(
     const navigationTargetLoaders = yield* AppCapabilities.NavigationTargetLoader;
     const registry = yield* Capabilities.AtomRegistry;
     const stateAtom = yield* DeckCapabilities.State;
+    const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
     const settingsAtom = yield* DeckCapabilities.Settings;
     const viewState = yield* AttentionCapabilities.ViewState;
     const attention = yield* AttentionCapabilities.Attention;
@@ -130,6 +136,12 @@ export default Capability.makeModule(
           orElse: () => Effect.succeed(Option.none<A>()),
         }),
       );
+
+    /** Fallback for the outbound sync while a plank's node is out of the graph and unrepresentable. */
+    const lastRepresentation = new Map<string, PathResolution.RepresentedNode>();
+    const seedRepresentation = (nodeId: string, node: PathResolution.RepresentedNode) => {
+      lastRepresentation.set(nodeId, node);
+    };
 
     const handleNavigation = Effect.fn(function* (url?: URL, options?: { abortIf?: () => boolean }) {
       const resolvedUrl = url ?? new URL(window.location.href);
@@ -230,45 +242,55 @@ export default Capability.makeModule(
       // without this the walk races async loading and falls to not-found on reload/deep-link. The
       // NavigationTargetLoader (contributed by plugin-client) keeps this plugin free of a client
       // dependency; absent (e.g. headless), resolution simply falls back to its guided search. The
-      // per-pair boolean records which planks the loader confirmed exist, gating the resolve retry
-      // below so a genuine 404 fails fast instead of waiting out the timeout.
+      // per-pair verdict records what the loader could determine, gating the resolve retry below so
+      // a genuine 404 fails fast instead of waiting out the timeout.
       const loaders = navigationTargetLoaders.get();
-      // Keyless pairs (singleton keys like the space home) carry no object id to confirm against;
-      // their nodes materialize with the workspace's graph subtree, so they wait rather than
-      // fail fast. Fail-fast stays reserved for object pairs a loader positively disconfirmed.
-      const confirmed = pairs.map((pair) => pair.id === undefined);
+      // Waiting is the default; fail-fast has to be earned. Keyless pairs (singleton keys like the
+      // space home) have no object to confirm against and stay `unknown`.
+      const verdicts: AppCapabilities.NavigationTargetVerdict[] = pairs.map(() => 'unknown');
       if (loaders.length > 0) {
         yield* Effect.forEach(
           pairs,
           (pair, index) => {
-            if (pair.id === undefined) {
+            // Which tail segment holds the object id is extension-specific, so ask about all of them
+            // (see `getCandidateEntityIds`). A pair naming no object at all stays `unknown`.
+            const candidates =
+              pair.id === undefined ? [] : getCandidateEntityIds(pair.id, builder.urlGrammar.tailSeparator);
+            if (candidates.length === 0) {
               return Effect.void;
             }
-            // A static-path pair id is `<...pathSegments>+<objectId>`; the loader wants the bare object
-            // id (the final tail segment), else `EntityId.isValid` rejects the compound form.
-            const entityId = pair.id.slice(pair.id.lastIndexOf(builder.urlGrammar.tailSeparator) + 1);
-            return Effect.forEach(loaders, (loader) =>
-              loader.load({ spaceId: pair.workspace, entityId }).pipe(Effect.catch(() => Effect.succeed(false))),
-            ).pipe(Effect.tap((results) => Effect.sync(() => (confirmed[index] = results.some(Boolean)))));
+            return Effect.forEach(candidates, (entityId) =>
+              Effect.forEach(loaders, (loader) =>
+                loader.load({ spaceId: pair.workspace, entityId }).pipe(
+                  // A loader may await client initialization or space readiness, neither of which is
+                  // bounded; unbounded here would strand the restore before it ever reaches its own
+                  // deadline. Expiring is `unknown`, so the pair keeps its wait.
+                  Effect.timeoutOrElse({
+                    duration: LOADER_TIMEOUT,
+                    orElse: () => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown'),
+                  }),
+                  Effect.catch(() => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown')),
+                ),
+              ),
+            ).pipe(Effect.tap((results) => Effect.sync(() => (verdicts[index] = combineVerdicts(results.flat())))));
           },
           { concurrency: 'unbounded' },
         );
       }
 
       // Loading an object does not load its container chain (e.g. the collection it lives in), which
-      // resolution expands but cannot synchronously observe. Resolution waits for the candidate node
-      // itself — the id is known before the lookup — so the restore completes the moment the chain
-      // lands. Only confirmed pairs wait: a pair a loader disconfirmed is absent, not late, and must
-      // fail fast rather than hold the restore for the full deadline.
+      // resolution expands but cannot synchronously observe. On a cold restore every pair misses the
+      // immediate read, so the wait is the normal path and only proof of absence may skip it.
       const resolved = yield* PathResolution.resolveUrl(
         builder,
         { workspace, pairs },
-        { wait: (index) => (confirmed[index] ? RESOLVE_TIMEOUT : undefined) },
+        { wait: (index) => (verdicts[index] === 'absent' ? undefined : RESOLVE_TIMEOUT) },
       );
 
       // Planks resolve in chain order; a `companion/<variant>` pair belongs to the plank before it rather
       // than being a plank of its own, so it drives that plank's companion state and the selected variant.
       const plankIds: string[] = [];
+      const unresolved: string[] = [];
       let companionNodeId: string | null = null;
       let companionAnchorId: string | undefined;
       pairs.forEach((pair, index) => {
@@ -278,9 +300,24 @@ export default Capability.makeModule(
             companionNodeId = nodeId;
             companionAnchorId = plankIds[plankIds.length - 1];
           }
-        } else {
-          plankIds.push(nodeId ?? NotFound.NOT_FOUND_PATH);
+          return;
         }
+        if (nodeId) {
+          plankIds.push(nodeId);
+          return;
+        }
+        // Keyed on the id it would have, not the sentinel, which is a different object: `useNode`
+        // then renders it the moment the node lands.
+        const candidateId = resolved[index]?.candidateId;
+        if (!candidateId) {
+          // An unknown key names nothing to address.
+          plankIds.push(NotFound.NOT_FOUND_PATH);
+          return;
+        }
+        plankIds.push(candidateId);
+        unresolved.push(candidateId);
+        // An absent node has no graph provenance, so only the URL itself can represent this pair.
+        seedRepresentation(candidateId, { key: pair.key, id: pair.id, workspace: pair.workspace });
       });
 
       // Re-checked after resolution, which is a second multi-second wait: `Set` overrides the deck
@@ -288,6 +325,9 @@ export default Capability.makeModule(
       if (options?.abortIf?.()) {
         return;
       }
+
+      // Recorded before `Set` so the planks never render as blank loaders in the frame that adds them.
+      registry.set(ephemeralAtom, { ...registry.get(ephemeralAtom), unresolved });
 
       // `Set` already means "override the deck's active list wholesale" — exactly a URL-driven
       // restore, for one plank or many, with no separate disposition to invent.
@@ -385,13 +425,26 @@ export default Capability.makeModule(
       const workspace = bareWorkspace(state.activeDeck);
 
       const representations = new Map<string, PathResolution.RepresentedNode>();
+      let lossy = false;
       for (const id of deck.active) {
-        const represented = PathResolution.representNode(builder, id);
+        const represented = PathResolution.representNode(builder, id).pipe(
+          // Provenance is deleted the moment a node leaves the graph, so a plank whose subtree is
+          // momentarily absent (a connector re-emitting, a query settling) is unrepresentable.
+          Option.orElse(() => Option.fromUndefinedOr(lastRepresentation.get(id))),
+        );
         if (Option.isSome(represented)) {
           representations.set(id, represented.value);
+          lastRepresentation.set(id, represented.value);
         } else {
-          log.warn('plank has no URL representation; omitting from URL', { id });
+          lossy = true;
+          log.warn('plank has no URL representation', { id });
         }
+      }
+
+      // A shortened URL is indistinguishable from one the user chose, so the next restore reads it as
+      // truth and the plank is lost. A stale URL heals on the next successful sync; a truncated one cannot.
+      if (lossy) {
+        return;
       }
 
       // The companion shares a container with the attended plank, and is serialized as
@@ -405,7 +458,7 @@ export default Capability.makeModule(
         const anchorId = resolveCompanionAnchor(rendered, attention.getCurrent());
         // Only the attended plank's companion is on screen, so only it belongs in the URL.
         const plankId = anchorId && deck.companionPlanks.includes(anchorId) ? anchorId : undefined;
-        const selection = viewState.get(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
+        const selection = viewState.get(CompanionViewState.aspect, CompanionViewState.CONTEXT);
         if (plankId && selection.variant) {
           const companionNodeId = `${plankId}/${Attention.linkedSegment(selection.variant)}`;
           const represented = PathResolution.representNode(builder, companionNodeId);
@@ -443,7 +496,7 @@ export default Capability.makeModule(
       userNavigated = true;
       syncUrl();
     });
-    const unsubscribeCompanionVariant = viewState.subscribe(companionAspect, COMPANION_VIEW_STATE_CONTEXT, () =>
+    const unsubscribeCompanionVariant = viewState.subscribe(CompanionViewState.aspect, CompanionViewState.CONTEXT, () =>
       syncUrl(),
     );
     // Only the unconditional BASELINE write is deferred: it serializes the current deck whether or

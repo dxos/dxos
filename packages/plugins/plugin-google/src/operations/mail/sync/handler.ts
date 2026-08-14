@@ -13,7 +13,8 @@ import { syncConnectionBindings } from '@dxos/plugin-connector';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import { runMailSync } from '@dxos/plugin-inbox/sync';
 
-import { GoogleCredentials, GoogleMailApi } from '../../../services';
+import { GoogleCredentials, GoogleMailApi } from '#services';
+
 import { googleMailSyncProvider } from './sync-provider';
 
 const handler = InboxOperation.GoogleMailSync.pipe(

@@ -11,7 +11,8 @@ import { Filter, Query, Type, View } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -19,7 +20,8 @@ import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory, createRelationFactory } from '@dxos/schema/testing';
 import { HasConnection, HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
-import * as Graph from '../../types/Graph';
+import { Graph } from '#types';
+
 import { ExplorerArticle, type ExplorerArticleVariant } from './ExplorerArticle';
 
 const generator = random as any as ValueGenerator;
@@ -47,8 +49,8 @@ const meta: Meta<StoryArgs> = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
           types: [
             Graph.Graph,
             HasRelationship.HasRelationship,
@@ -103,7 +105,7 @@ const meta: Meta<StoryArgs> = {
               return graph;
             }),
         }),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
       ],
     }),
   ],

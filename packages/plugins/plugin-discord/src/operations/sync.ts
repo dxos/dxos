@@ -15,11 +15,11 @@ import { syncConnectionBindings } from '@dxos/plugin-connector';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
+import { DiscordOperation } from '#types';
 
 import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
 import { formatDiscordSyncFailure } from '../errors';
 import { makeDiscordLayerFromToken } from '../services';
-import * as DiscordOperation from '../types/DiscordOperation';
 
 /**
  * Hard cap on `maxDays` to keep a misconfigured (or fat-fingered) value

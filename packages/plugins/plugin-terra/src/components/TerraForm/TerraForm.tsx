@@ -9,7 +9,7 @@ import React, { useCallback } from 'react';
 import { IconButton, Input, Slider } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
-import * as Terra from '../../types/Terra';
+import { Terra } from '#types';
 
 export type TerraFormProps = {
   config: Terra.TerraConfig;

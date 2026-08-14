@@ -19,8 +19,7 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-
-import * as SpaceSurface from '../../types/SpaceSurface';
+import { SpaceSurface } from '#types';
 
 export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
 

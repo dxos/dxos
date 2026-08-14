@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as TranscriptOperation from '../types/TranscriptOperation';
+import { TranscriptOperation } from '#types';
 
 export const TranscriptionOperationHandlerSet = OperationHandlerSet.lazy([
   TranscriptOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),

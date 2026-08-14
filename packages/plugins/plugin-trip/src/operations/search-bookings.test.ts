@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 
-import * as BookingSearch from '../types/BookingSearch';
-import * as TripCapabilities from '../types/TripCapabilities';
+import { BookingSearch, TripCapabilities } from '#types';
+
 import handler from './search-bookings';
 
 const FLIGHT_OFFER: BookingSearch.FlightOffer = {

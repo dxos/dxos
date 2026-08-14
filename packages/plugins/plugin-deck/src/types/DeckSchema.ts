@@ -99,6 +99,11 @@ export const EphemeralDeckState = Schema.Struct({
   expanded: Schema.optional(Schema.String),
   /** Whether the deck is showing every plank at once as shrunk-to-fit tiles. Transient. */
   expose: Schema.optional(Schema.Boolean),
+  /**
+   * Planks a URL restore could not resolve, by item ID. Separates "gave up" from "still loading",
+   * which an absent node cannot express on its own. Transient — resolvability is not a deck fact.
+   */
+  unresolved: Schema.optional(Schema.Array(Schema.String)),
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literals(['default', 'alert'])),
   dialogBlockAlign: Schema.optional(Schema.Literals(['start', 'center', 'end'])),

@@ -9,7 +9,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
-import { GoogleCalendar } from '../../../apis';
+import { GoogleCalendar } from '#apis';
+
 import { GoogleCredentials } from '../../../services/google-credentials';
 import { toGoogleEvent } from '../mapper';
 

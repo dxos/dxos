@@ -3,9 +3,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { SpaceOperation } from './definitions';
-
-export { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
 
 export const SpaceOperationHandlerSet = OperationHandlerSet.lazy([
   SpaceOperation.AddObject.pipe(Operation.lazyHandler(() => import('./add-object'))),

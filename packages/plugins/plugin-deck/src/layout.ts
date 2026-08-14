@@ -4,9 +4,9 @@
 
 import { produce } from 'immer';
 
-import { DeckSpec } from '@dxos/app-toolkit';
+import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 
-import * as DeckSchema from './types/DeckSchema';
+import { DeckSchema } from '#types';
 
 export type AddSubjectsToActiveDeckOptions = {
   /** Insert opened subjects immediately after this plank (in-plank navigation anchors at its origin). */

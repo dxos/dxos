@@ -8,7 +8,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { type Connection } from '@dxos/link';
 import { makeRoutine } from '@dxos/plugin-routine';
 
-import type * as ConnectorSpec from '../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
 
 /**
  * Build the sync Routine for `connection` as a fully-wired, unpersisted draft graph: one Routine per

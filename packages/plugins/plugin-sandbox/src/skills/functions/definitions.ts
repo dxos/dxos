@@ -10,7 +10,7 @@ import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { File } from '@dxos/types';
 
-import * as Sandbox from '../../types/Sandbox';
+import { Sandbox } from '#types';
 
 const SandboxRef = Ref.Ref(Sandbox.Sandbox).annotate({
   description: 'The sandbox object ID.',

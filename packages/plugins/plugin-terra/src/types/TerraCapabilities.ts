@@ -6,8 +6,9 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 
+import { meta } from '#meta';
+
 import { type PlanetCache as PlanetCacheType } from '../engine';
-import { meta } from '../meta';
 
 /**
  * Planets generated so far, shared by every Terra surface and outliving each one: generation takes

@@ -13,7 +13,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability, useOptionalCapability } from '@dxos/app-framework/ui';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -21,10 +22,11 @@ import { Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
+import { SAMPLE_MESSAGES, corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -32,10 +34,10 @@ import { Loading, TestGrid, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { initializeMailbox, seedSummaries } from '#testing';
+import { InboxCapabilities, Mailbox } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as Mailbox from '../../types/Mailbox';
+import { InboxPlugin } from '../../plugin';
+import * as InboxOperation from '../../types/InboxOperation';
 import { MailboxArticle } from './MailboxArticle';
 
 // No-op handler for the one layout operation the article invokes that belongs to DeckPlugin, which
@@ -96,9 +98,31 @@ type StoryArgs = {
   seedSearchTerm?: boolean;
   /** Seeds a sync binding (AccessToken → Connection → Cursor) so `InitializeMailbox` shows "Mailbox empty" instead of "No connections configured". */
   bound?: boolean;
+  /** Registers a running `#enrich` monitor so the statusbar progress meter renders (see `ProgressProbe`). */
+  progress?: boolean;
 };
 
-const DefaultStory = ({ conversations }: StoryArgs) => {
+/**
+ * Registers a running monitor under the mailbox's `#enrich` progress key, exactly as the enrichment
+ * cascade's trace status does — so the article's statusbar meter is exercised WITHOUT an LLM or a
+ * scheduled process. The producer/consumer key derivation is the thing under test: both sides call
+ * `createEnrichProgressKey` on their own copy of the mailbox.
+ */
+const ProgressProbe = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
+  const registry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+  useEffect(() => {
+    if (!registry) {
+      return;
+    }
+    const handle = registry.register(InboxOperation.createEnrichProgressKey(mailbox), { label: 'Enriching' });
+    handle.total(10);
+    handle.set(3);
+    return () => handle.remove();
+  }, [registry, mailbox]);
+  return null;
+};
+
+const DefaultStory = ({ conversations, progress }: StoryArgs) => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
 
@@ -149,6 +173,7 @@ const DefaultStory = ({ conversations }: StoryArgs) => {
     <TestGrid.Root>
       <TestGrid.Stack>
         <TestGrid.Panel {...attentionAttributes}>
+          {progress && <ProgressProbe mailbox={mailbox} />}
           <MailboxArticle role='article' subject={mailbox} attendableId={ATTENDABLE_ID} />
         </TestGrid.Panel>
         {selected && (
@@ -179,7 +204,7 @@ const meta = {
     withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10, seedSearchTerm = false, bound = false } }) => ({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [
             Feed.Feed,
             Mailbox.Mailbox,
@@ -255,9 +280,10 @@ const meta = {
             }),
         }),
 
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
+        ProgressPlugin.make(),
         InboxPlugin(),
-        PreviewPlugin(),
+        PreviewPlugin.make(),
         MockDeckOperationsPlugin(),
       ],
     })),
@@ -274,6 +300,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     count: 50,
+    conversations: true,
   },
 };
 
@@ -335,5 +362,98 @@ export const SearchFilter: Story = {
       },
       { timeout: 5_000 },
     );
+  },
+};
+
+// The statusbar progress meter, which the enrichment cascade and Gmail sync drive through the
+// progress registry. Both sides key the monitor by the mailbox URI, derived independently — the bug
+// this guards is a key that differs between producer and consumer, which leaves the run invisible.
+export const Progress: Story = {
+  args: {
+    count: 10,
+    progress: true,
+  },
+  play: async ({ canvasElement }) => {
+    const meter = await waitFor(
+      () => {
+        const found = canvasElement.querySelector('[role="progressbar"]');
+        if (!found) {
+          throw new Error('Progress meter not rendered.');
+        }
+        return found;
+      },
+      { timeout: 12_000 },
+    );
+    await expect(meter).toBeInTheDocument();
+  },
+};
+
+// Regression guard for "the mailbox only ever shows one page": the list is a windowed
+// `usePagination` query (10 items) and the virtualizer must request the next page as its loaded edge
+// nears the viewport.
+export const Paging: Story = {
+  args: {
+    count: 50,
+    conversations: false,
+  },
+  play: async ({ canvasElement }) => {
+    const getTileCount = () => canvasElement.querySelectorAll('[data-object-id]').length;
+    await waitFor(() => expect(getTileCount()).toBeGreaterThan(0), { timeout: 12_000 });
+    const firstPage = getTileCount();
+
+    // The list's scroll container is the `ScrollArea.Viewport` — the tallest scrollable element on
+    // the canvas (it is not a Radix viewport, so there is no data attribute to match).
+    const viewport = [...canvasElement.querySelectorAll<HTMLElement>('*')]
+      .filter((element) => element.scrollHeight > element.clientHeight + 8 && element.clientHeight > 200)
+      .at(0);
+    if (!viewport) {
+      throw new Error('Mailbox scroll viewport not found.');
+    }
+
+    // Scroll to the loaded end, which is what arms the virtualizer's next-page trigger.
+    for (let attempt = 0; attempt < 8; attempt++) {
+      viewport.scrollTop = viewport.scrollHeight;
+      viewport.dispatchEvent(new Event('scroll', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      if (getTileCount() > firstPage) {
+        break;
+      }
+    }
+
+    await expect(getTileCount()).toBeGreaterThan(firstPage);
+  },
+};
+
+export const PagingGrouped: Story = {
+  args: {
+    count: 50,
+    conversations: true,
+    threads: 12,
+  },
+  play: async ({ canvasElement }) => {
+    const getTileCount = () => canvasElement.querySelectorAll('[data-object-id]').length;
+    await waitFor(() => expect(getTileCount()).toBeGreaterThan(0), { timeout: 12_000 });
+    const firstPage = getTileCount();
+
+    // The list's scroll container is the `ScrollArea.Viewport` — the tallest scrollable element on
+    // the canvas (it is not a Radix viewport, so there is no data attribute to match).
+    const viewport = [...canvasElement.querySelectorAll<HTMLElement>('*')]
+      .filter((element) => element.scrollHeight > element.clientHeight + 8 && element.clientHeight > 200)
+      .at(0);
+    if (!viewport) {
+      throw new Error('Mailbox scroll viewport not found.');
+    }
+
+    // Scroll to the loaded end, which is what arms the virtualizer's next-page trigger.
+    for (let attempt = 0; attempt < 8; attempt++) {
+      viewport.scrollTop = viewport.scrollHeight;
+      viewport.dispatchEvent(new Event('scroll', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      if (getTileCount() > firstPage) {
+        break;
+      }
+    }
+
+    await expect(getTileCount()).toBeGreaterThan(firstPage);
   },
 };

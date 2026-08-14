@@ -548,23 +548,36 @@ export const AnalyzeMailbox = Operation.make({
 });
 
 /**
+ * Progress key for a mailbox monitor: the mailbox URI plus a per-pipeline suffix, so the pipelines
+ * coexist on one mailbox.
+ *
+ * The URI is pinned to the ABSOLUTE form. The producer (an operation, which resolves the mailbox
+ * through `Database.load`) and the consumer (the article, holding the object from a space query)
+ * derive the key independently, and the default `Obj.getURI` form follows how the object was
+ * hydrated — a relative URI on one side and an absolute one on the other means the article looks up a
+ * monitor name the sink never registered, and no meter appears.
+ */
+const createProgressKey = (mailbox: Mailbox.Mailbox, suffix: string) =>
+  Obj.getURI(mailbox, { prefer: 'absolute' }).toString() + suffix;
+
+/**
  * Progress-registry key for a mailbox's process-pipeline monitor — the mailbox URI plus `#process`,
  * so it coexists with the `#sync` monitor. `MailboxArticle` and the toolbar action subscribe to it.
  */
-export const createProcessProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#process';
+export const createProcessProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#process');
 
 /** Progress-registry key for a mailbox's fact-analysis monitor ({@link AnalyzeMailbox}). */
-export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#analyze';
+export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#analyze');
 
 /** Progress-registry key for a mailbox's correspondent-extraction monitor ({@link ExtractCorrespondents}). */
 export const createCorrespondentsProgressKey = (mailbox: Mailbox.Mailbox) =>
-  Obj.getURI(mailbox).toString() + '#correspondents';
+  createProgressKey(mailbox, '#correspondents');
 
 /** Progress-registry key for a mailbox's pipeline-cascade monitor ({@link EnrichMailbox}). */
-export const createEnrichProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#enrich';
+export const createEnrichProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#enrich');
 
 /** Progress-registry key for a mailbox's summarization monitor ({@link SummarizeMailbox}). */
-export const createSummarizeProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#summarize';
+export const createSummarizeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#summarize');
 
 /** Hard per-run cap on messages summarized — one LLM call each, so the run must stay bounded. */
 export const MAX_SUMMARIZE_MAILBOX_BATCH_LIMIT = 50;
@@ -781,7 +794,7 @@ export const ResetProcessCursor = Operation.make({
 }).pipe(Operation.idempotent);
 
 /** Progress-registry key for a mailbox's classification monitor ({@link ClassifyMailbox}). */
-export const createClassifyProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#classify';
+export const createClassifyProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#classify');
 
 /** Hard per-run cap on messages classified — LLM batches must stay bounded. */
 export const MAX_CLASSIFY_MAILBOX_BATCH_LIMIT = 100;
@@ -860,7 +873,7 @@ export const CreateProjectFromMessage = Operation.make({
 
 /** Progress-registry key for a mailbox's subscription-extraction monitor ({@link ExtractSubscriptions}). */
 export const createSubscriptionsProgressKey = (mailbox: Mailbox.Mailbox) =>
-  Obj.getURI(mailbox).toString() + '#subscriptions';
+  createProgressKey(mailbox, '#subscriptions');
 
 export const ExtractSubscriptions = Operation.make({
   meta: {

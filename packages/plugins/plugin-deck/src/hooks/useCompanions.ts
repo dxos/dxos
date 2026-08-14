@@ -5,11 +5,11 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { useContext, useEffect, useState } from 'react';
 
+import type * as Node from '@dxos/app-graph/Node';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { type Node } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckSchema } from '#types';
 
 /**
  * Companion (child) nodes for a plank.

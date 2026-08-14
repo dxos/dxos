@@ -30,14 +30,19 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/TrelloPlugin.ts",
-      "types": "./dist/types/src/TrelloPlugin.d.ts",
-      "default": "./dist/lib/TrelloPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -47,16 +52,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./TrelloEvents": {
       "source": "./src/types/TrelloEvents.ts",
       "types": "./dist/types/src/types/TrelloEvents.d.ts",
@@ -67,7 +68,11 @@
       "types": "./dist/types/src/types/TrelloOperation.d.ts",
       "import": "./dist/lib/TrelloOperation.mjs"
     },
-    "./package.json": "./package.json"
+    "./TrelloPlugin": {
+      "source": "./src/TrelloPlugin.ts",
+      "types": "./dist/types/src/TrelloPlugin.d.ts",
+      "import": "./dist/lib/TrelloPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -88,6 +93,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -96,7 +102,6 @@
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",

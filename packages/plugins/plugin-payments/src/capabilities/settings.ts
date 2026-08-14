@@ -9,9 +9,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-
-import * as PaymentsCapabilities from '../types/PaymentsCapabilities';
-import * as Settings from '../types/Settings';
+import { PaymentsCapabilities, Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

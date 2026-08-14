@@ -7,8 +7,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Obj } from '@dxos/echo';
 
-import type * as Magazine from '../types/Magazine';
-import type * as Subscription from '../types/Subscription';
+import { Magazine, Subscription } from '#types';
+
 import { getImageUrl, getSnippet } from '../util/post-content';
 import { postCurationAtom } from './post-curation';
 import { postReadAtom } from './post-read';

@@ -9,7 +9,8 @@ import { Database, Filter, Obj } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import * as ConnectorSpec from '../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
+
 // Direct module imports, not the `../util` barrel: `util/sync-target` imports this file (to seed the
 // recreation dialog), so going through the barrel would create a module cycle.
 import { isCursorForConnection } from '../util/cursor-predicates';

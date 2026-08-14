@@ -9,9 +9,7 @@ import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as ConnectorCoordination from '../types/ConnectorCoordination';
-import * as ConnectorEvents from '../types/ConnectorEvents';
-import * as ConnectorSpec from '../types/ConnectorSpec';
+import { ConnectorCoordination, ConnectorEvents, ConnectorSpec } from '#types';
 
 export * from './connector-coordinator';
 
@@ -44,3 +42,4 @@ export const RoutineTemplate = Capability.lazyModule(
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.formInput'],
 });
+export const Schema = AppCapability.schema(() => import('./schema'));

@@ -26,7 +26,7 @@ import { translationKey } from '@dxos/react-ui-board/translations';
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
-import type * as Board from '../../types/Board';
+import { Board } from '#types';
 
 type Position = { x: number; y: number };
 

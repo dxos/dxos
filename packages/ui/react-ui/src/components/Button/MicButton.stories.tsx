@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { translations } from '#translations';
+
 import { withTheme } from '../../testing';
-import { translations } from '../../translations';
 import { Tooltip } from '../Tooltip';
 import { MicButton, type MicButtonProps } from './MicButton';
 

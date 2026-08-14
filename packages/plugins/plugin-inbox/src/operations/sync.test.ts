@@ -17,8 +17,9 @@ import { captureSink } from '@dxos/pipeline/testing';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message, Organization, Person } from '@dxos/types';
 
+import { Mailbox } from '#types';
+
 import { seedMailboxBinding } from '../testing/sync-fixture';
-import type * as Mailbox from '../types/Mailbox';
 
 const TEST_SOURCE = 'test.mail';
 

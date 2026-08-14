@@ -35,25 +35,22 @@
 import { readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
-/** Entry + modulepreload links. ~20 today; sized to survive a partition reshuffle, not to track it. */
-const MAX_PRELOAD_ENTRIES = 30;
+/** Entry + modulepreload links. 20 today; sized to survive a partition reshuffle, not to track it. */
+const MAX_PRELOAD_ENTRIES = 25;
 
 /**
- * Total on-disk size of those chunks. ~5.30 MB today.
+ * Total on-disk size of those chunks. 4.05 MB today.
  *
- * Re-baselined 2026-08-04 (was 4.75 MB) after the eager graph was audited: the `services/index.ts`
- * re-export that put hypercore, wa-sqlite, network-manager and teleport back in the closure was
- * evicted (-810 KB), and what remains is real client-side weight rather than a leak — echo-client
- * reaches automerge-repo's `fullfat` entrypoint through `doc-handle-proxy`, and the query planner
- * (`filterMatchDoc` / `QueryPlanner`) lives in echo-host but evaluates client-side. Both are value
- * imports through narrow subpaths, so there is no re-export to delete; slimming them means moving
- * code or picking a different automerge entrypoint, and that was consciously deferred.
+ * Re-baselined 2026-08-13 (was 6.00 MB) after two independent cuts: the Effect 3 -> 4 migration
+ * (5.73 -> 4.97 MB) and the `./plugin` -> `XPlugin` namespace split, which evicted the operation
+ * handler sets five plugins re-exported from their boot-loaded registration entrypoint
+ * (4.97 -> 4.05 MB).
  *
- * NOTE: at this ceiling the margin (~700 KB) is WIDER than the 200-550 KB leak classes described
- * above, so a single leak no longer necessarily trips this. Tighten it back toward the measured
- * number if either of the two remaining consumers is slimmed.
+ * The ~200 KB margin is deliberately at the low end of the 200-550 KB leak classes above, which
+ * restores the property the 6.00 MB ceiling had given up: a single leak of any known class trips
+ * this. Expect it to catch accepted growth too — that is the review point, not a false positive.
  */
-const MAX_PRELOAD_BYTES = 6 * 1024 * 1024;
+const MAX_PRELOAD_BYTES = 4.25 * 1024 * 1024;
 
 const outDir = path.join(process.cwd(), 'out/composer');
 const html = readFileSync(path.join(outDir, 'index.html'), 'utf8');

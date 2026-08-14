@@ -9,8 +9,7 @@ import { Database, Obj, Type } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
-import * as ConnectorCoordination from '../types/ConnectorCoordination';
-import * as ConnectorForm from '../types/ConnectorForm';
+import { ConnectorCoordination, ConnectorForm } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

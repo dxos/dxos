@@ -11,7 +11,7 @@ import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import { SpaceCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -8,7 +8,8 @@ import React from 'react';
 import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import * as Book from '../../types/Book';
+import { Book } from '#types';
+
 import { BookCard } from './BookCard';
 
 // NOTE: build the ECHO object inside `render` — never pass a reactive ECHO object as a story `arg`,

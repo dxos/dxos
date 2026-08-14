@@ -421,6 +421,57 @@ export const summaryIndex = (annotations: Iterable<MessageLike>): Map<string, st
   return index;
 };
 
+/** A conversation's summary and its provenance, so the UI can attribute and date it. */
+export type ConversationSummary = {
+  readonly summary: string;
+  /** Message the summary was derived from. */
+  readonly messageId: string;
+  /** Model that produced it, when the annotation recorded one. */
+  readonly model?: string;
+  /** When it was derived — NOT the message's date, so a stale summary reads as stale. */
+  readonly created: string;
+};
+
+/**
+ * The summary shown for a whole conversation: the newest annotation naming any message in the thread.
+ * `SummarizeMailbox` files one summary per thread under its newest message, so this normally resolves
+ * to that annotation — and to the most recent one when a re-derivation has superseded it.
+ *
+ * Takes the annotations rather than a {@link summaryIndex} map because provenance (`model`, `created`)
+ * lives on the annotation Message, which the map discards.
+ */
+export const conversationSummary = (
+  messages: Iterable<Pick<Message.Message, 'id'>>,
+  annotations: Iterable<MessageLike>,
+): ConversationSummary | undefined => {
+  const ids = new Set<string>();
+  for (const message of messages) {
+    ids.add(message.id);
+  }
+
+  // The summary text and parent id are captured in the loop, where they are known to be present —
+  // narrowing them again afterwards would need non-null assertions.
+  let newest: ConversationSummary | undefined;
+  for (const annotation of annotations) {
+    const parent = annotation.parentMessage;
+    const summary = getSummaryText(annotation);
+    if (!parent || !ids.has(parent) || summary === undefined) {
+      continue;
+    }
+    if (newest && Date.parse(annotation.created) <= Date.parse(newest.created)) {
+      continue;
+    }
+    const model = annotation.properties?.model;
+    newest = {
+      summary,
+      messageId: parent,
+      ...(typeof model === 'string' ? { model } : {}),
+      created: annotation.created,
+    };
+  }
+  return newest;
+};
+
 /** A feed message paired with the annotations derived from it. */
 export type AnnotatedMessage = {
   readonly message: Message.Message;

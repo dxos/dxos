@@ -51,7 +51,7 @@ describe('scaffoldConnectionSyncRoutine', () => {
   test('scaffolds an account routine wrapping the connector sync op with a priority event template', async ({
     expect,
   }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -78,7 +78,7 @@ describe('scaffoldConnectionSyncRoutine', () => {
   });
 
   test('marks the trigger remote for a connector that syncs on EDGE', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -89,7 +89,7 @@ describe('scaffoldConnectionSyncRoutine', () => {
   });
 
   test('a persisted draft is findable from the connection (the sync button’s lookup)', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 

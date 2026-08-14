@@ -21,10 +21,7 @@ import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
-
-import * as SpaceCapabilities from '../../types/SpaceCapabilities';
-import * as SpaceSchema from '../../types/SpaceSchema';
+import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
 
 const SpaceFormSchema = SpaceSchema.SpaceForm;
 

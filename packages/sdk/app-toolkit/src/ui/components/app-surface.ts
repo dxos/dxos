@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { Role } from '@dxos/app-framework';
+import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
 import type { SchemaAST } from '@dxos/effect';

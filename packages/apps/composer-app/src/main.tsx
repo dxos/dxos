@@ -15,8 +15,9 @@ import React, { StrictMode, Suspense, lazy, useCallback, useEffect, useState } f
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { EdgeRegistryPluginProvider, PluginAssetCache } from '@dxos/app-framework';
+import { EdgeRegistryPluginProvider } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
 import { bootLoader, useApp } from '@dxos/app-framework/ui';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 // Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the
@@ -183,7 +184,7 @@ const main = async () => {
 
   // Load these in parallel; HTTP/2 multiplexes the four chunks and even on
   // local-disk the parser can interleave parses.
-  const [{ Config, defs, SaveConfig }, { createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
+  const [{ Config, defs, SaveConfig }, { Client, createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
     await Promise.all([
       import('@dxos/config'),
       import('@dxos/react-client'),
@@ -412,6 +413,13 @@ const main = async () => {
   profiler?.mark('services:end');
   profiler?.measure('services', 'services:start', 'services:end');
 
+  // Started here so the handshake and storage open overlap plugin loading, which plugin-client's
+  // lazily-imported module would otherwise sit behind. Its call surfaces failures; this one only
+  // has to not reject unhandled.
+  performance.mark('milestone:client-initialize:start');
+  const client = new Client({ config, services });
+  void client.initialize().catch((err) => log.catch(err));
+
   profiler?.mark('plugins:start');
 
   const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
@@ -425,6 +433,7 @@ const main = async () => {
     appKey: APP_KEY,
     config,
     services,
+    client,
     observability,
     logStore,
     onFatalError: (error) => raiseFatalError(error),

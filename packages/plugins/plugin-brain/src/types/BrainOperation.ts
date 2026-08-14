@@ -12,7 +12,7 @@ import { DXN } from '@dxos/echo';
 import { FactStore } from '@dxos/pipeline-rdf/fact-store';
 import * as RDF from '@dxos/pipeline-rdf/types';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 

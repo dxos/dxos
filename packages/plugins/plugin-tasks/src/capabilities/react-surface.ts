@@ -12,8 +12,7 @@ import { Outline, TaskSet } from '@dxos/types';
 
 import { JournalArticle, OutlineArticle, OutlineCard, QuickEntryDialog, TaskSetArticle } from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
-
-import * as Journal from '../types/Journal';
+import { Journal } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -39,7 +38,7 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
-        id: 'article.task-set',
+        id: 'article.taskSet',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, TaskSet.TaskSet),
           AppSurface.object(AppSurface.Section, TaskSet.TaskSet),

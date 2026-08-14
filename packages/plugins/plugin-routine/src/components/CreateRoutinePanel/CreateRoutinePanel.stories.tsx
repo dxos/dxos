@@ -19,8 +19,8 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { RoutineCapabilities } from '#types';
 
-import * as RoutineCapabilities from '../../types/RoutineCapabilities';
 import { CreateRoutinePanel } from './CreateRoutinePanel';
 
 const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions];
@@ -54,7 +54,7 @@ const withRoutinePlugins = () =>
   withPluginManager({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {

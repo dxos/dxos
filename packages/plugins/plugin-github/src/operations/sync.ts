@@ -16,11 +16,11 @@ import { syncConnectionBindings } from '@dxos/plugin-connector';
 import { Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
+import { GitHubOperation } from '#types';
 
 import { GITHUB_SOURCE } from '../constants';
 import { formatGitHubSyncFailure } from '../errors';
 import { GitHubApi } from '../services';
-import * as GitHubOperation from '../types/GitHubOperation';
 
 const { mergeField, snapshotField } = ConnectorSync;
 

@@ -7,7 +7,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as TripCapabilities from '@dxos/plugin-trip/TripCapabilities';
 import * as TripEvents from '@dxos/plugin-trip/TripEvents';
 
-import * as DuffelCapabilities from '../types/DuffelCapabilities';
+import { DuffelCapabilities } from '#types';
 
 export const Duffel = AppCapability.settings(() => import('./duffel'), {
   requires: [Capabilities.AtomRegistry],

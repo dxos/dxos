@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
 
-import * as Blog from '../types/Blog';
-import * as Publisher from '../types/Publisher';
+import { Blog, Publisher } from '#types';
 
 /** The post's linked remote id for `source`, if it has ever been synced there. */
 export const linkedId = (post: Blog.Post, source: string): string | undefined => Obj.getKeys(post, source)[0]?.id;
