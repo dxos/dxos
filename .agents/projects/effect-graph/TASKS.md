@@ -154,6 +154,21 @@ Gate before Phase 9. Requested 2026-08-13.
          so the incremental adjacency (`Map`-keyed, order-preserving) landed later already fixed that
          era's bug, and the drag specs now fail for the same cause as deletion. Treat this as one
          remaining regression, not two.
+      **Narrowed to `23198521` … `8ff86d48`.** A/B at `8ff86d48` (resolver removal) fails 4/5, so
+      the GraphBuilder split `a86d7718` is EXONERATED. A/B at `23198521` fails only the drag pair, so
+      deletion broke in between. Both intermediate commits need build patches to A/B: remove the
+      `Graph.initialize` call in `plugin-space/spaces-ready.ts`, and make `GraphNodeMatcher`'s
+      `whenRoot`/`whenId`/`whenNodeType` generic in `TNode`.
+
+      **Prime suspect: `8ff86d48` itself.** It deleted `Graph.initialize`, `onInitialize` and the
+      `_initialized` set on the premise that nothing declared a `resolver:`. But `spaces-ready.ts`
+      *did* call `void Graph.initialize(graph, id)` — that commit does not even compile, and the call
+      site was only removed later, during the main merge, on the same premise. If `initializeImpl`
+      did anything beyond firing resolvers (materializing the node, marking it initialized, kicking
+      expansion), removing that call is a live behaviour change on exactly the path these specs use.
+      Next step: A/B `6e3e2cd3` with the same two patches — if it passes, the culprit is `8ff86d48`
+      alone, and the fix is to restore whatever `initialize` did for the non-resolver case.
+
       2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
          consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
          `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
