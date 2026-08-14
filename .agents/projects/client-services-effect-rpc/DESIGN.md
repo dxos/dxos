@@ -8,7 +8,7 @@ Three layered efforts, easy to conflate — keep them distinct:
    machinery that carries client ⇄ worker/host service calls → `@effect/rpc` over `RpcPort`.
 2. **Internal service architecture**: `WorkerRuntime`/`WorkerSession`/`ServiceContext`/
    `ClientServicesHost` as imperative Promise-based classes → Effect `Context.Tag` + `Layer`
-   services. Orthogonal to (1) — this is about *how the host is built*, not *what's on the wire*.
+   services. Orthogonal to (1) — this is about _how the host is built_, not _what's on the wire_.
 3. **RPC payload encoding**: request/response messages riding the effect-rpc envelope as
    protobuf-encoded `Uint8Array` (`protoMessage(fqn)`) → hand-authored Effect `Schema.Struct`,
    for the subset of messages that exist only at the service-RPC boundary.
@@ -17,7 +17,7 @@ Three layered efforts, easy to conflate — keep them distinct:
 
 ### 1. Transport seam — DONE
 
-Shipped in **PR #12127** — *"feat: Replace client-services with effect-rpc"* (dm/effect-rpc →
+Shipped in **PR #12127** — _"feat: Replace client-services with effect-rpc"_ (dm/effect-rpc →
 main, merged 2026-07-09). All 13 client services now serve/consume via `@effect/rpc` `RpcGroup`
 definitions generated from the proto descriptors (`scripts/gen-service-rpcs.ts`), riding custom
 `RpcClient.Protocol`/`RpcServer.Protocol` implementations over `RpcPort` (msgpack framing +
@@ -28,18 +28,18 @@ tunnel, devtools window messaging, linked test ports all carry it unchanged).
 
 Explicitly **out of scope** in #12127, and their status since:
 
-| Surface | Then | Now |
-| --- | --- | --- |
-| `dxos.iframe.WorkerService` (tab→worker control) | protobuf | **migrated** — deleted from proto, served via effect-rpc `WorkerService` in `@dxos/protocols/rpc` over the app `MessagePort` (changeset `962c8cd`) |
-| `fromSocket`/`fromAgent` byte-transport providers | protobuf | **removed entirely** — `f15c632`; `createClientServices` throws on `remote_source` now |
-| `dxos.mesh.bridge.BridgeService` (WebRTC transport bridge, worker↔tab) | protobuf | **still protobuf** — retained deliberately, no migration started |
-| `dxos.iframe.AppService`/`ShellService` (shell↔app iframe transport) | protobuf | **still protobuf** — retained deliberately, no migration started |
-| Teleport extensions (gossip/object-sync/replicator), signal client, `websocket-rpc` devtools remote proxy | protobuf | **untouched** — lower-level wire protocols, not part of this conversion's scope |
+| Surface                                                                                                   | Then     | Now                                                                                                                                                |
+| --------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dxos.iframe.WorkerService` (tab→worker control)                                                          | protobuf | **migrated** — deleted from proto, served via effect-rpc `WorkerService` in `@dxos/protocols/rpc` over the app `MessagePort` (changeset `962c8cd`) |
+| `fromSocket`/`fromAgent` byte-transport providers                                                         | protobuf | **removed entirely** — `f15c632`; `createClientServices` throws on `remote_source` now                                                             |
+| `dxos.mesh.bridge.BridgeService` (WebRTC transport bridge, worker↔tab)                                    | protobuf | **still protobuf** — retained deliberately, no migration started                                                                                   |
+| `dxos.iframe.AppService`/`ShellService` (shell↔app iframe transport)                                      | protobuf | **still protobuf** — retained deliberately, no migration started                                                                                   |
+| Teleport extensions (gossip/object-sync/replicator), signal client, `websocket-rpc` devtools remote proxy | protobuf | **untouched** — lower-level wire protocols, not part of this conversion's scope                                                                    |
 
 ### 2. Internal service architecture — DONE
 
-Shipped in **PR #12214** — *"client-services: remove shared-worker path; convert worker
-runtime & host to Effect services"* (merged 2026-07-16), four phases:
+Shipped in **PR #12214** — _"client-services: remove shared-worker path; convert worker
+runtime & host to Effect services"_ (merged 2026-07-16), four phases:
 kill shared-worker → `WorkerRuntime`/`WorkerSession` as Effect services → delete
 `ServiceRegistry` → fold `ServiceContext` into `ClientServicesHost`. Verified directly against
 current `main` source: `ServiceContext` is a `type` alias for `ClientServicesHost`
@@ -54,7 +54,7 @@ PR #12516 squash — a rebase artifact, not intentional) still shows Phase 4 che
 remaining work** — treat the source as ground truth over that file. Worth a follow-up commit
 to reconcile the checkboxes so a future session doesn't re-litigate a solved problem.
 
-PR **#12193** — *"client-services: replace ServiceContext class with effect-native lifecycle"*
+PR **#12193** — _"client-services: replace ServiceContext class with effect-native lifecycle"_
 — is still **open** (dmaretskyi, dm/remove-service-context-refactor-khq87s → main, last
 updated 2026-07-14) and proposed a different mechanism (a slim `ClientLifecycleService` tag)
 for the same problem #12214 solved differently. It predates #12214 by one day and was never
@@ -64,7 +64,7 @@ call for its author/reviewer, not something to force from here.
 ### 3. RPC payload encoding — PARTIAL, work-in-progress branch stalled and stale
 
 Design spec: `plans/worker-package/service-rpc-schemas.md` (see "Where the plan docs came
-from" below). Rule: a message inlines as an Effect `Schema.Struct` only when its *only*
+from" below). Rule: a message inlines as an Effect `Schema.Struct` only when its _only_
 consumers are the effect-rpc service definition and the host implementation (service-boundary
 messages); anything shared outside the RPC boundary (client proxies, echo-client, plugins,
 devtools UI) stays `protoMessage` **permanently, by design** — this is not migration debt, it's
