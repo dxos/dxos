@@ -189,8 +189,8 @@ Committed, unpushed. This is the PR to open first.
       rule to look at before the row gap.
 - [ ] **Messages without `threadId` are silently truncated to 4** — DIAGNOSED, needs a decision.
       Not the conversation view: it is `MailboxArticle`'s aggregate. `Aggregate.group('threadId')` puts
-      EVERY threadless message into one `null`-key group, and `Aggregate.items({ limit:
-    MAILBOX_THREAD_PREVIEW_COUNT })` caps that group at **4**. Line 217 then splits `entry.items` into
+      EVERY threadless message into one `null`-key group, and the items aggregate caps that group at
+      `MAILBOX_THREAD_PREVIEW_COUNT` (**4**). Line 217 then splits `entry.items` into
       singleton conversations — but only ever the 4 it was given. So a mailbox with >4 threadless
       messages renders 4 and silently drops the rest; `entry.count` knows the true size and is discarded
       on that branch. Capping is right for a real thread (one row, `count` shows the full size) and
