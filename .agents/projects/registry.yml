@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: client-services-effect-rpc
+    status: active
+    user: root
+    host: vm
+    created: 2026-08-14
+    summary: 'Convert client-services RPC off protobuf onto @effect/rpc — transport seam, internal WorkerRuntime/ServiceContext architecture, and RPC payload encoding.'
+    tasks: .agents/projects/client-services-effect-rpc/TASKS.md
+    design: .agents/projects/client-services-effect-rpc/DESIGN.md
+    prs: [12127, 12214, 12193]
+    resume: 'Audited from git/GitHub history + current source, no code changed. Two of three sub-efforts are DONE: (1) RPC transport seam — protobuf createProtoRpcPeer/RpcPeer -> @effect/rpc over RpcPort for all 13 client services, PR #12127 merged 2026-07-09; follow-on changesets migrated dxos.iframe.WorkerService off protobuf and removed the fromSocket/fromAgent providers entirely; dxos.mesh.bridge.BridgeService and dxos.iframe.AppService/ShellService remain protobuf by deliberate choice, unscheduled. (2) Internal WorkerRuntime/WorkerSession/ServiceContext/ClientServicesHost architecture (imperative classes -> Effect Context.Tag + Layer) — PR #12214 merged 2026-07-16, verified directly against main source (ServiceContext is a type alias for ClientServicesHost, service-host.ts:162/929). packages/sdk/client-services/TASKS.md still shows stale unchecked Phase 4 boxes with a superseded blocked-on-circular-dependency note (that file landed on main via an unrelated PR #12516 squash artifact) - real code is done, doc is stale. PR #12193 (open, alternate ServiceContext-removal approach) predates #12214 by a day and looks superseded but was never closed. (3) RPC PAYLOAD ENCODING is the incomplete third: only service-only boundary messages are meant to inline as Effect Schema.Struct (shared types stay protoMessage permanently by design, per plans/worker-package/service-rpc-schemas.md). That inlining plus a deeper app-port transport migration (generic RpcPort -> native @effect/platform-browser BrowserWorker MessagePort-direct platform) happened on branch origin/dm/worker-package, stalled 2026-07-10 (commit 877a2a14b7), never opened as a PR, and is now badly diverged from main (predates the #12214 fold; no clean rebase path). Its own status at the time: Phase A code landed but NOT verified green (effect-rpc.test.ts suite 1 was 8/10 failing, suspected MessagePort lifecycle-ordering regression; devtools extension RPC bridge broke and was never re-bridged); Phases B (generate WorkerService/BridgeService effect-rpc groups - hazard: the codegen script clobbers hand-edited inline-schema files), C (system port to duplex effect-rpc), D (cleanup) never started. The plans/worker-package/*.md design docs exist on main only because of the same PR #12516 squash artifact, out of place per repo convention. NEXT: ask the user whether to (a) resume dm/worker-package by re-deriving its commits against current main, (b) call the conversion done at the transport-seam level, or (c) just do the low-risk doc cleanup (reconcile client-services/TASKS.md, resolve PR #12193, relocate plans/worker-package/). See DESIGN.md "Open questions".'
   - name: test-profiling-leaks
     status: active
     user: dmaretskyi
