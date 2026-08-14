@@ -42,11 +42,14 @@ providers):
 | `dxos.iframe.AppService`/`ShellService` (shell↔app iframe **control** transport, distinct from the row above) | protobuf         | **still protobuf** — explicitly retained per #12204 ("still back the shell↔app iframe transport"), no migration started                                                      |
 | Teleport extensions (gossip/object-sync/replicator), signal client, `websocket-rpc` devtools remote proxy     | protobuf         | **untouched** — lower-level wire protocols, not part of this conversion's scope                                                                                              |
 
-The remaining protobuf surface after #12206 is the 13 migrated client-service `.proto`
-definitions themselves (`SystemService`, `SpacesService`, `QueryService`, `DataService`, …) plus
-`BridgeService` — per #12206's own follow-up note, deleting those `.proto` `service {}` blocks
-(message types stay) is the next step, gated on re-sourcing the `ClientServices` Promise/`Stream`
-type off the generated proto service interfaces. **This is the work item #4 below implements.**
+The remaining protobuf surface **for the migrated client-service set** after #12206 is the 13
+`.proto` `service {}` definitions themselves (`SystemService`, `SpacesService`, `QueryService`,
+`DataService`, …) — per #12206's own follow-up note, deleting those blocks (message types stay)
+is the next step, gated on re-sourcing the `ClientServices` Promise/`Stream` type off the
+generated proto service interfaces. **This is the work item #4 below implements.** This is
+scoped to that migrated set only: `BridgeService`, `AppService`/`ShellService`, and the
+lower-level protobuf protocols in the table above are retained out-of-scope surfaces, not part
+of what's being counted down here.
 
 ### 2. Internal service architecture — DONE
 

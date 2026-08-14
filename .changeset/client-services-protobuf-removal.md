@@ -13,6 +13,7 @@ types still shared outside the RPC boundary (`ContactBook`, `QueryEdgeStatusResp
 `LogEntry`, and the `QueryService` request/response types, among others) are unaffected and
 remain protobuf-encoded on the wire. Consumers that imported a generated proto service
 interface type for any of these ten services must use `@dxos/protocols/rpc`'s effect-rpc
-definitions instead. `@dxos/client-protocol`'s deprecated `ClientServices` map is unaffected
-in shape — each entry is now backed by a hand-written Promise/`Stream` interface with the same
-signature (`ClientServices['ContactsService']` had no consumers and is removed).
+definitions instead. `@dxos/client-protocol`'s deprecated `ClientServices` map keeps its existing entries'
+signatures — each is now backed by a hand-written Promise/`Stream` interface with the same
+shape as before — except `ClientServices['ContactsService']`, which had no consumers and is
+removed.
