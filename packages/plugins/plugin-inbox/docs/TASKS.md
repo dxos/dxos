@@ -212,9 +212,12 @@ Committed, unpushed. This is the PR to open first.
       handler, the attachment ref resolved to its Blob/object DXN, and a surface for that type.
 - [ ] **Mailbox card: rows showing the inbox message count** — read `inbox`-tag membership from the tag
       index (a reactive atom), never a feed scan. Settle which counts earn a row.
-- [ ] **`useCardHover` target-change regression test** — the cleanup already runs when `open`/`enabled`
-      change; the test CodeRabbit asked for was never written. Needs the hook exported from `Row.tsx` or
-      a story-level driver.
+- [x] **`useCardHover` target-change regression test** — the hook is exported from `Row.tsx` and
+      rendered, since the behaviour is a dependency-array property rather than extractable logic.
+      Needed `happy-dom` in `react-ui-card`'s vite config (it ran bare node) and
+      `@testing-library/react` as a devDep, both matching react-ui's existing setup. 7 tests; the two
+      regression cases were mutation-checked — reverting the deps to `[cancel]` fails exactly those
+      two and leaves the other five green.
 
 ---
 

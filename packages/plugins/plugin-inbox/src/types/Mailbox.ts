@@ -15,6 +15,8 @@ import { Message } from '@dxos/types';
 
 export const SKILL_KEY = 'org.dxos.skill.inbox';
 
+// TOOD(burdon): Factor out Message/Email utils.
+
 // TODO(burdon): Implement as labels?
 export enum MessageState {
   NONE = 0,
@@ -342,6 +344,7 @@ export const isOrgSender = (message: MessageLike): boolean => {
   if (localPart && ROLE_LOCALPART_RE.test(localPart)) {
     return true;
   }
+
   const name = message.sender?.name;
   return !!name && ORG_NAME_RE.test(name);
 };
@@ -360,6 +363,7 @@ export const isReplyable = (message: MessageLike, options: { senderClass?: 'pers
   if (properties.noReply === true || hasUnsubscribe || isNoReplyAddress(message.sender?.email)) {
     return false;
   }
+
   // A classified type (from the LLM stage) wins over the heuristic; otherwise fall back to it.
   return options.senderClass ? options.senderClass === 'person' : !isOrgSender(message);
 };
@@ -419,11 +423,13 @@ export const findOrCreateAnnotations = (mailbox: Mailbox, db: Pick<Database.Data
   if (existing) {
     return existing;
   }
+
   const feed = db.add(Feed.make());
   Obj.setParent(feed, mailbox);
   Obj.update(mailbox, (mailbox) => {
     mailbox.annotations = Ref.make(feed);
   });
+
   return feed;
 };
 
@@ -551,6 +557,7 @@ export function* mergeAnnotations(
       byParent.set(parent, [annotation]);
     }
   }
+
   for (const list of byParent.values()) {
     list.sort((left, right) => Date.parse(right.created) - Date.parse(left.created));
   }
@@ -583,6 +590,7 @@ export const parseUnsubscribe = (header: string): { http?: string; mailto?: stri
       targets.mailto = url;
     }
   }
+
   // A body-extracted affordance is a bare URL with no angle brackets.
   const bare = header.trim();
   if (!targets.http && !targets.mailto) {
@@ -592,6 +600,7 @@ export const parseUnsubscribe = (header: string): { http?: string; mailto?: stri
       targets.mailto = bare;
     }
   }
+
   return targets;
 };
 
@@ -642,6 +651,7 @@ export const deriveSubscriptions = (
       byEmail.set(email, { email, name: message.sender?.name, unsubscribe: target, count: 1 });
     }
   }
+
   // Count ties break alphabetically (then by email, so case-insensitively equal names stay
   // deterministic): Map insertion order follows message order, which is unstable across syncs and
   // reads as an unsorted list.

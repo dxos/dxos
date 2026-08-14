@@ -65,7 +65,13 @@ const HOVER_CARD_DELAY = 400;
  * aborts a pending open. Returned as bare callbacks rather than DOM props so a caller can compose
  * them with its own pointer handlers.
  */
-const useCardHover = (open: () => void, enabled: boolean) => {
+/**
+ * Arms a delayed `open` on hover, cancelling on unmount AND whenever the target changes.
+ *
+ * Exported for its regression test: the cancellation-on-target-change is a dependency-array property,
+ * not extractable logic, so it can only be pinned by rendering the hook.
+ */
+export const useCardHover = (open: () => void, enabled: boolean) => {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const cancel = useCallback(() => {
     if (timeoutRef.current !== undefined) {
