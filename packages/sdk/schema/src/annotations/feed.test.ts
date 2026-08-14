@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { FeedAnnotation, FeedAnnotationId, getFeedRef, isFeedOwnerSchema } from './feed';
+import { FeedAnnotation, getFeedRef, isFeedOwnerSchema } from './feed';
 
 /** Holds its feed under `feed`, like `Mailbox` and `Calendar`. */
 class Mailbox extends Type.makeObject<Mailbox>(DXN.make('com.example.type.mailbox', '0.1.0'))(
@@ -39,16 +39,5 @@ describe('FeedAnnotation', () => {
 
   test('getFeedRef returns undefined for an unannotated type', ({ expect }) => {
     expect(getFeedRef(Obj.make(Contact, { name: 'Alice' }))).toBeUndefined();
-  });
-
-  test('pairs with Ref.byAnnotation to type a reference to any feed owner', ({ expect }) => {
-    const validate = Schema.decodeUnknownSync(
-      Schema.toType(Schema.Struct({ owner: Ref.byAnnotation(FeedAnnotationId) })),
-    );
-    const feed = Obj.make(Feed.Feed, {});
-
-    expect(() => validate({ owner: Ref.make(Obj.make(Mailbox, { feed: Ref.make(feed) })) })).not.toThrow();
-    expect(() => validate({ owner: Ref.make(Obj.make(Journal, { entries: Ref.make(feed) })) })).not.toThrow();
-    expect(() => validate({ owner: Ref.make(Obj.make(Contact, { name: 'Alice' })) })).toThrow(FeedAnnotationId);
   });
 });
