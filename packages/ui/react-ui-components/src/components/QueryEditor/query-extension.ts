@@ -449,6 +449,9 @@ function intersectRanges(a: Range, b: Range): Range | null {
   return start <= end ? { from: start, to: end } : null;
 }
 
+/** Line-height giving a mark-drawn chip the same box as {@link TagWidget}'s `h-[26px]`. */
+const CHIP_LEADING = 'leading-[24px]';
+
 /** Label characters the grammar admits after `#` (`Tag { "#" $[a-zA-Z0-9_\-]+ }`). */
 const TAG_LABEL_CHAR = /[a-zA-Z0-9_-]/;
 
@@ -464,14 +467,22 @@ const tagMarks = (from: number, to: number, hue: string): { from: number; to: nu
   const { bg: fill, border, surface } = getStyles(hue);
   const marks = [
     // Enclosing border first; `buildQueryDecorations` sorts equal starts widest-first so it nests.
-    { from, to, deco: Decoration.mark({ class: mx('border rounded-xs', border) }) },
+    // `inline-block` + `leading`, NOT the widget's `inline-flex`: these spans wrap live, editable
+    // text, and turning it into an anonymous flex item moves the caret coordinates inside the label.
+    // The chip's height is matched through line-height instead.
+    {
+      from,
+      to,
+      deco: Decoration.mark({ class: mx('inline-block align-middle border rounded-xs', CHIP_LEADING, border) }),
+    },
     { from, to: from + 1, deco: Decoration.mark({ class: mx('px-1 text-black text-xs', fill) }) },
   ];
   if (to > from + 1) {
     marks.push({
       from: from + 1,
       to,
-      deco: Decoration.mark({ class: mx('px-1 text-subdued rounded-r-[3px]', surface) }),
+      // `text-sm` matches the widget's label; without it the in-progress form rendered a size larger.
+      deco: Decoration.mark({ class: mx('px-1 text-subdued text-sm rounded-r-[3px]', surface) }),
     });
   }
 
