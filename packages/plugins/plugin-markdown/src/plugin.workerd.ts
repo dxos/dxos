@@ -4,7 +4,7 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { SkillDefinition, OperationHandler, Schema } from '#capabilities';
+import { OperationHandler, Schema, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 
 // Headless variant registered by workers (e.g. the edge operation-service). The capabilities come
