@@ -206,16 +206,23 @@ is exactly the `FeedOwner` marker this needs. It is not new work:
 So the DISCOVERY half of a feed-generic host is built and shipping. What D6 adds is the cursored-pass
 half.
 
-#### But an annotated ref is not expressible in an input schema
+#### An annotated ref is still not expressible in an input schema — SETTLED 2026-08-14
 
-Checked, and this constrains the design: `Ref.Ref` accepts a concrete `Type`, a relation, a
-`Type.Type`, or the "any object" schema. There is **no annotation-constrained overload** — "a ref to any
-type carrying `FeedAnnotation`" cannot be written. So a generic operation's input must be
-`Ref.Ref(Obj.Unknown)` (precedent: `Collection.objects`) plus a RUNTIME check, which is what
-`hasFeedAnnotation` already does.
+`Ref.Ref` accepts a concrete `Type`, a relation, a `Type.Type`, or the "any object" schema. There is
+**no annotation-constrained overload** — "a ref to any type carrying `FeedAnnotation`" cannot be
+written. A generic operation's input must therefore be `Ref.Ref(Obj.Unknown)` (precedent:
+`Collection.objects`) plus a RUNTIME check.
 
-The trade is concrete: today `Ref.Ref(Mailbox.Mailbox)` validates the referenced type at the operation
-boundary. A generic subject gives that up unless ECHO gains an annotation-constrained ref.
+This was the open question behind option 4 below, and it is now answered: **`Ref.byAnnotation` was
+proposed in PR #12575 and dropped in review.** What that PR landed instead is the resolution half —
+`FeedAnnotation` now carries `{ property: string }` naming the property that holds the feed, plus
+`getFeedRef(obj)` and `isFeedOwnerSchema(schema)`. So a host can resolve any owner's feed without
+hardcoding `.feed` (already used by `operations/cursor.ts`), but it still cannot make the compiler
+enforce the subject at the boundary.
+
+The trade is therefore fixed, not open: today `Ref.Ref(Mailbox.Mailbox)` validates the referenced type
+at the operation boundary; a generic subject gives that up for a runtime guard. Option 1 is the only
+one of the four still standing, and it must be costed with that loss included.
 
 #### Candidates, restated against those facts
 
@@ -227,8 +234,8 @@ boundary. A generic subject gives that up unless ECHO gains an annotation-constr
    declared. Strictly worse than 1 now that the annotation exists.
 3. **The feed alone**, each processor resolving its own subject. Removes the owner from the seam but
    pushes the cursor-anchor problem into every processor, and each would solve it differently.
-4. **Extend ECHO with an annotation-constrained ref**, then use it. The only option that keeps boundary
-   validation. Largest scope, and it is an ECHO change like the aggregate group-key one.
+4. ~~**Extend ECHO with an annotation-constrained ref**, then use it.~~ RULED OUT — proposed as
+   `Ref.byAnnotation` in #12575 and dropped in review. Reviving it means re-opening that decision.
 
 ### The open sub-questions
 

@@ -107,16 +107,24 @@ const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
     >
       <Card.Header>
         <Avatar.Root>
-          <Avatar.Content
-            icon={data.properties.icon}
-            hue={data.properties.hue}
-            hueVariant='transparent'
-            variant='square'
-            size={8}
-            fallback={name}
-          />
-          <Avatar.Label classNames='cursor-pointer'>{name}</Avatar.Label>
-          <Icon icon='ph--caret-right--regular' />
+          {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
+              `Card.Title` are what keep the icon, label, and caret on one row. */}
+          <Card.Block>
+            <Avatar.Content
+              icon={data.properties.icon}
+              hue={data.properties.hue}
+              hueVariant='transparent'
+              variant='square'
+              size={8}
+              fallback={name}
+            />
+          </Card.Block>
+          <Avatar.Label asChild>
+            <Card.Title classNames='cursor-pointer'>{name}</Card.Title>
+          </Avatar.Label>
+          <Card.Block end>
+            <Icon icon='ph--caret-right--regular' />
+          </Card.Block>
         </Avatar.Root>
       </Card.Header>
     </Card.Root>

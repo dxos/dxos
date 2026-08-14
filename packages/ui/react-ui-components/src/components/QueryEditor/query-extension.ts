@@ -42,19 +42,31 @@ export const query = ({ tags }: QueryOptions = {}): Extension => {
 };
 
 /**
- * Decorations
+ * The extension's decorations for a given state.
+ *
+ * Exported as a pure function of `(state, options)` so the atomicity rules — which govern whether a
+ * tag can still be edited — are testable without mounting an `EditorView`.
  */
-const decorations = ({ tags }: QueryOptions): Extension => {
-  const buildDecorations = (state: EditorState) => {
+export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions = {}): DecorationSet => {
+  {
     const hasFocus = state.field(focusField);
     const isInside = (node: SyntaxNodeRef) => {
       const range = intersectRanges(state.selection.main, node);
       return hasFocus && range && (state.selection.main.from > 0 || range.to - range.from > 0);
     };
 
-    const deco = new RangeSetBuilder<Decoration>();
+    // Collected rather than fed straight to a `RangeSetBuilder`, which demands ascending `from`:
+    // the bare-`#` ranges below come from a document scan and interleave with the tree's own.
+    const collected: { from: number; to: number; deco: Decoration }[] = [];
+    const deco = {
+      add: (from: number, to: number, value: Decoration) => collected.push({ from, to, deco: value }),
+    };
+    const tagged: Range[] = [];
     syntaxTree(state).iterate({
       enter: (node) => {
+        if (node.type.id === QueryDSL.Node.Tag) {
+          tagged.push({ from: node.from, to: node.to });
+        }
         switch (node.type.name) {
           case '(':
           case ')': {
@@ -105,14 +117,19 @@ const decorations = ({ tags }: QueryOptions): Extension => {
               const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
               const tag = Tag.findTagByLabel(tags, label);
               const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
-              deco.add(
-                node.from,
-                node.to,
-                Decoration.widget({
-                  widget: new TagWidget(label, hue),
-                  atomic: true,
-                }),
-              );
+              if (isInside(node)) {
+                // Under the caret the text has to stay live and editable, so the chip is painted with
+                // marks over it rather than replacing it. `tagMarks` mirrors `TagWidget` class for
+                // class, so the tag does not change shape as the caret enters or leaves it.
+                for (const mark of tagMarks(node.from, node.to, hue)) {
+                  deco.add(mark.from, mark.to, mark.deco);
+                }
+              } else {
+                // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range that
+                // starts at offset 0 paints before that offset's coordinate and the caret draws to its
+                // right — pressing Home appeared to leave the caret after the tag.
+                deco.add(node.from, node.to, Decoration.replace({ widget: new TagWidget(label, hue), atomic: true }));
+              }
             }
             break;
           }
@@ -173,15 +190,39 @@ const decorations = ({ tags }: QueryOptions): Extension => {
       },
     });
 
-    return deco.finish();
-  };
+    // A `#` with no label yet parses as an error, not a `Tag`, so the tree cannot decorate it — but
+    // the affordance has to appear on the keystroke that opens the tag, not once it is valid.
+    // A lone `#` is an error node, not a `Tag` — the grammar needs a label character — so it gets a
+    // plain highlight until the first one arrives and the chip takes over.
+    for (const range of bareTagRanges(state, tagged)) {
+      collected.push({
+        from: range.from,
+        to: range.to,
+        deco: Decoration.mark({ class: mx('rounded-xs px-0.5', getStyles(getHashHue('')).surface) }),
+      });
+    }
 
+    const builder = new RangeSetBuilder<Decoration>();
+    // Equal starts sort WIDEST first so an enclosing mark (the chip's border) nests the inner ones.
+    collected.sort((a, b) => a.from - b.from || b.to - a.to);
+    for (const { from, to, deco } of collected) {
+      builder.add(from, to, deco);
+    }
+
+    return builder.finish();
+  }
+};
+
+/**
+ * Decorations
+ */
+const decorations = ({ tags }: QueryOptions): Extension => {
   return [
     StateField.define<DecorationSet>({
-      create: (state) => buildDecorations(state),
+      create: (state) => buildQueryDecorations(state, { tags }),
       update: (deco, tr) => {
         if (tr.docChanged || tr.newSelection) {
-          return buildDecorations(tr.state);
+          return buildQueryDecorations(tr.state, { tags });
         }
 
         return deco;
@@ -207,14 +248,53 @@ const decorations = ({ tags }: QueryOptions): Extension => {
 
 const lineHeight = '30px';
 
-/**
- * NOTE: The outer container vertically aligns the inner text with content in the outer div.
- */
+/** The outer box vertically aligns the inner text with content in the outer div. */
+const CHIP_OUTER = 'inline-flex h-[28px] align-middle';
+const CHIP_INNER = 'inline-flex h-[26px] border rounded-xs';
+
 const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
   const inner = Domino.of('span')
-    .classNames(mx('inline-flex h-[26px] border rounded-xs', classNames))
+    .classNames(mx(CHIP_INNER, classNames))
     .append(...children);
-  return Domino.of('span').classNames('inline-flex h-[28px] align-middle').append(inner).root;
+  return Domino.of('span').classNames(CHIP_OUTER).append(inner).root;
+};
+
+/**
+ * A tag chip's parts, keyed by the nesting {@link container} produces.
+ *
+ * Single source for both of the tag's renderings — {@link TagWidget} when the caret is elsewhere,
+ * {@link tagMarks} over live text when it is not. Anything that drifts between them shows up as the
+ * tag changing shape as the caret enters or leaves it, so neither builds its own classes.
+ */
+const chipClasses = (hue: string) => {
+  const { bg, fg, border, surface } = getStyles(hue);
+  return {
+    outer: CHIP_OUTER,
+    inner: mx(CHIP_INNER, border),
+    hash: mx('flex items-center px-1 text-black text-xs', bg),
+    label: mx('flex items-center px-1 text-sm', surface, fg),
+  };
+};
+
+/**
+ * The chip drawn as marks, so the text underneath stays editable.
+ *
+ * Ranges are returned outermost first; `buildQueryDecorations` sorts equal starts widest-first and
+ * `Array.prototype.sort` is stable, so this order is the nesting order.
+ */
+const tagMarks = (from: number, to: number, hue: string): { from: number; to: number; deco: Decoration }[] => {
+  const classes = chipClasses(hue);
+  const marks = [
+    { from, to, deco: Decoration.mark({ class: classes.outer }) },
+    { from, to, deco: Decoration.mark({ class: classes.inner }) },
+    { from, to: from + 1, deco: Decoration.mark({ class: classes.hash }) },
+  ];
+  // A bare `#` has no label yet, and an empty range is not a decoration.
+  if (to > from + 1) {
+    marks.push({ from: from + 1, to, deco: Decoration.mark({ class: classes.label }) });
+  }
+
+  return marks;
 };
 
 /**
@@ -238,7 +318,7 @@ class TypeWidget extends WidgetType {
     return container(
       'border-sky-500',
       Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs bg-sky-500')).text('type'),
-      Domino.of('span').classNames(mx('flex items-center px-1 text-subdued')).text(label),
+      Domino.of('span').classNames(mx('flex items-center px-1 text-description')).text(label),
     );
   }
 }
@@ -259,13 +339,11 @@ class TagWidget extends WidgetType {
   }
 
   override toDOM() {
-    const { bg: fill, border, surface } = getStyles(this._hue);
+    const { hash, label } = chipClasses(this._hue);
     return container(
-      border,
-      Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs', fill)).text('#'),
-      Domino.of('span')
-        .classNames(mx('flex items-center px-1 text-subdued text-sm rounded-r-[3px]', surface))
-        .text(this._str),
+      getStyles(this._hue).border,
+      Domino.of('span').classNames(hash).text('#'),
+      Domino.of('span').classNames(label).text(this._str),
     );
   }
 }
@@ -296,9 +374,9 @@ class ObjectWidget extends WidgetType {
       'border-separator divide-x divide-separator',
       ...this._entries.map(([key, value]) => {
         const keyEl = Domino.of('span')
-          .classNames('flex items-center px-1 text-subdued text-xs bg-modal-surface first:rounded-l-[3px]')
+          .classNames('flex items-center px-1 text-description text-xs bg-modal-surface first:rounded-l-xs')
           .text(key);
-        const valueEl = Domino.of('span').classNames('flex items-center px-1 text-subdued').text(value);
+        const valueEl = Domino.of('span').classNames('flex items-center px-1 text-description').text(value);
         return Domino.of('span').classNames('inline-flex items-stretch').append(keyEl, valueEl);
       }),
     );
@@ -353,9 +431,9 @@ const queryHighlighting = styleTags({
   'Null': t.null,
 
   // Identifiers
+  // NOT `Tag`: it is drawn as a chip, whose own foreground would be fighting a highlight class here.
   'Identifier': t.variableName,
   'PropertyPath': t.propertyName,
-  'Tagname': t.variableName,
 
   // Punctuation
   '{ }': t.brace,
@@ -406,3 +484,29 @@ function intersectRanges(a: Range, b: Range): Range | null {
   const end = Math.min(a.to, b.to);
   return start <= end ? { from: start, to: end } : null;
 }
+
+/** Label characters the grammar admits after `#` (`Tag { "#" $[a-zA-Z0-9_\-]+ }`). */
+const TAG_LABEL_CHAR = /[a-zA-Z0-9_-]/;
+
+/**
+ * Ranges of an in-progress tag — a `#` the parser has not yet accepted as a {@link QueryDSL.Node.Tag},
+ * because the grammar requires at least one label character after it. Skips offsets the tree already
+ * claimed, and any `#` inside a string, where it is content rather than a tag.
+ */
+const bareTagRanges = (state: EditorState, tagged: readonly Range[]): Range[] => {
+  const ranges: Range[] = [];
+  const text = state.sliceDoc();
+  const covered = (index: number) => tagged.some(({ from, to }) => index >= from && index < to);
+  for (let index = text.indexOf('#'); index !== -1; index = text.indexOf('#', index + 1)) {
+    if (covered(index) || syntaxTree(state).resolveInner(index, 1).type.id === QueryDSL.Node.String) {
+      continue;
+    }
+    let end = index + 1;
+    while (end < text.length && TAG_LABEL_CHAR.test(text[end])) {
+      end++;
+    }
+    ranges.push({ from: index, to: end });
+  }
+
+  return ranges;
+};

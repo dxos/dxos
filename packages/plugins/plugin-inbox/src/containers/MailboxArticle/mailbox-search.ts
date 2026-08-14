@@ -65,17 +65,27 @@ export const buildSystemTagSelection = (ids: readonly EntityId[]): Filter.Any =>
  * `threadId IN (SELECT threadId FROM ... WHERE <viewFilter>)` semi-join — so callers see whole
  * threads, not only the directly-matching members.
  *
+ * The result is a UNION of that semi-join with the directly-matching messages, because a message with
+ * no `threadId` satisfies neither side of the semi-join and would otherwise never appear — see the
+ * comment on the union below.
+ *
  * `matchesScope` is the *subquery's* scope — which messages are eligible to qualify a thread — and
  * may differ from the outer query's own scope. For example, the free-text view filter only ever
  * matches feed messages (too complex to also scope free text across the whole space), while a
  * system-tag selection's ids may resolve on either side. Callers apply their own `.from(scopes)` to
  * the returned query (the outer, thread-pulling scope) before continuing the chain
- * (`.orderBy()`/`.aggregate()`/`.limit()`).
+ * (`.orderBy()`/`.aggregate()`/`.limit()`); that scope reaches both arms of the union.
  */
 export const buildThreadSemiJoin = (
   viewFilter: Filter.Any,
   matchesScope: QueryAST.Scope | QueryAST.Scope[],
 ): Query.Query<Message.Message> => {
   const matches = Query.select(viewFilter).from(matchesScope);
-  return Query.select(Filter.type(Message.Message, { threadId: Filter.in(matches.project('threadId')) }));
+  const wholeThreads = Query.select(Filter.type(Message.Message, { threadId: Filter.in(matches.project('threadId')) }));
+  // Unioned with the direct matches because a message with no `threadId` can satisfy neither side of
+  // the semi-join — it has no id to be found by, and it projects nothing into the subquery — so it
+  // would vanish from the list entirely. Drafts, transcriptions and assistant-authored messages all
+  // take that shape. A threadless match therefore stands in for its own thread. Threaded messages
+  // match both arms; the union de-duplicates by id.
+  return Query.all(wholeThreads, Query.select(viewFilter));
 };
