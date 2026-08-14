@@ -20,7 +20,6 @@ import { CrmOperation } from '#types';
  * `DX_CRM_IMAGE_SERVICE_URL` environment variable. A per-space
  * `CrmSettings` object is planned (see PLUGIN.mdl feature F-8).
  */
-// TODO(dmaretskyi): images.dxos.org does not resolve.
 const DEFAULT_IMAGE_SERVICE_URL = EDGE_SERVICE_DEFAULTS[EdgeServiceName.Image];
 
 // SVG is intentionally excluded: inline <script>/event handlers make it a

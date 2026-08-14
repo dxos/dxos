@@ -8,38 +8,14 @@ import { AiService } from '@dxos/ai';
 import { PROGRESS_STATUS_COMPLETE } from '@dxos/app-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Cursor } from '@dxos/link';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
 import { type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import { findOrCreateAnalyzeCursor } from '@dxos/plugin-inbox/operations';
 
-import { InboxOperation, Mailbox } from '#types';
-
-/**
- * Finds the persisted feed-to-feed {@link Cursor} tracking this mailbox's fact-extraction progress
- * (`spec.source` = the mailbox's feed, `spec.target` = the mailbox itself — there is no dedicated
- * "fact consumer" ECHO object, so the mailbox stands in as the association anchor), creating one on
- * first analysis. Persisted so progress survives a reload.
- */
-const findOrCreateFeedCursor = (mailbox: Mailbox.Mailbox) =>
-  Effect.gen(function* () {
-    const feedRef = mailbox.feed;
-    const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
-    const existing = cursors.find(
-      (cursor) =>
-        cursor.spec.kind === 'feed' &&
-        cursor.spec.source.uri === feedRef.uri &&
-        // A foreign-key tag marks another consumer's cursor on this feed (the process pipeline, the
-        // CRM pipeline); adopting one would resume analysis from that consumer's position. Analysis
-        // cursors are the untagged ones.
-        Obj.getMeta(cursor).keys.length === 0,
-    );
-    if (existing) {
-      return existing;
-    }
-    return yield* Database.add(Cursor.makeFeed({ source: feedRef, target: Ref.make(mailbox) }));
-  });
+import { BrainOperation } from '#types';
 
 /**
  * Thin mailbox wrapper over the feed-generic `runFactPipeline` (in `@dxos/pipeline-email`): resolves
@@ -48,18 +24,18 @@ const findOrCreateFeedCursor = (mailbox: Mailbox.Mailbox) =>
  * mailbox-agnostic; only the input shape (`Ref<Mailbox>`) and the feed/cursor lookup are
  * mailbox-specific.
  */
-const handler = InboxOperation.AnalyzeMailbox.pipe(
+const handler = BrainOperation.AnalyzeMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({
       mailbox: mailboxRef,
-      pageSize = InboxOperation.DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE,
+      pageSize = BrainOperation.DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE,
       model,
       provider,
       strict,
     }) {
       const mailbox = yield* Database.load(mailboxRef);
       const feed = yield* Database.load(mailbox.feed);
-      const cursor = yield* findOrCreateFeedCursor(mailbox);
+      const cursor = yield* findOrCreateAnalyzeCursor(mailbox);
       const aiService = yield* AiService.AiService;
 
       // Live progress via trace `status.update` events (`#analyze` key), projected into the runtime
@@ -98,8 +74,8 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       const result = yield* runFactPipeline({
         feed,
         cursor,
-        extract,
         pageSize,
+        extract,
         onProgress: ({ processed, total }) => reportStatus({ current: processed, total }),
       });
       reportStatus({ message: PROGRESS_STATUS_COMPLETE });

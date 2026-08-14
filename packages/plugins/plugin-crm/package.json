@@ -147,9 +147,13 @@
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@effect/vitest": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
   }

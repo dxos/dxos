@@ -5,7 +5,7 @@ _Analysis of how `@dxos/plugin-inbox` could be split into focused domain plugins
 `./apis` wrappers, and a shared card-focused `react-ui-card` UI package._
 
 > Scope: architecture only. A narrower component-level audit (message-header
-> divergence) lives in [`src/components/AUDIT.md`](src/components/AUDIT.md).
+> divergence) lives in [`src/components/AUDIT.md`](../src/components/AUDIT.md).
 
 ---
 
@@ -758,7 +758,7 @@ canonical system tag a message carries renders as a chip alongside its user tags
 `useTags(db)` map and `ConversationStack`'s `useQuery(db, Filter.type(Tag.Tag))` both return the full
 tag set.
 
-**Superseded by the tag-origin design** — see [`Tag.md`](../../core/echo/echo/src/Tag.md) §"Tag
+**Superseded by the tag-origin design** — see [`Tag.md`](../../../core/echo/echo/src/Tag.md) §"Tag
 origin" (decided 2026-08-08). Rather than a local predicate in plugin-inbox, a tag's origin becomes a
 first-class, queryable property derived from the foreign key it already carries: user (no key),
 canonical DXOS (`org.dxos.tag`), or foreign provider (`com.google.gmail`, `org.ietf.jmap`).

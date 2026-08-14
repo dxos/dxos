@@ -13,7 +13,6 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
-import { FactStore } from '@dxos/pipeline-rdf/fact-store';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
@@ -380,10 +379,15 @@ export const ClassifyEmail = Operation.make({
 /** @deprecated Use {@link ExtractContactFromMessage} + the message extractor pipeline instead. */
 export const ExtractContact = Operation.make({
   meta: { key: makeKey('extractContact'), name: 'Extract Contact', icon: 'ph--user--regular' },
-  services: [Capability.Service],
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     db: Database.Database,
     actor: Actor.Actor,
+    /**
+     * Mailbox whose messages from this sender get labelled `important` once the contact exists.
+     * Optional: tagging lives in the mailbox's index, so a caller without one just creates the Person.
+     */
+    mailbox: Schema.optional(Ref.Ref(Mailbox.Mailbox)),
   }),
   output: Schema.Void,
 });
@@ -495,42 +499,6 @@ export const ExtractMailbox = Operation.make({
   }),
 });
 
-/** Default page size for {@link AnalyzeMailbox} fact-store commits. */
-export const DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE = 10;
-
-export const AnalyzeMailbox = Operation.make({
-  meta: {
-    key: makeKey('analyzeMailbox'),
-    name: 'Analyze Mailbox',
-    description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
-    icon: 'ph--brain--regular',
-  },
-  services: [AiService.AiService, Database.Service, FactStore, Trace.TraceService],
-  input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
-      description: 'Mailbox whose feed messages are analyzed.',
-    }),
-    pageSize: Schema.optional(
-      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
-        description: 'Number of messages processed per fact-store commit.',
-      }),
-    ),
-    model: Schema.optional(
-      Schema.String.annotate({ description: 'Extraction model DXN; defaults to the edge Claude model.' }),
-    ),
-    provider: Schema.optional(
-      Schema.String.annotate({ description: 'AI provider id (e.g. ollama) for local extraction.' }),
-    ),
-    strict: Schema.optional(
-      Schema.Boolean.annotate({ description: 'Strict structured output; set false for weak local models.' }),
-    ),
-  }),
-  output: Schema.Struct({
-    processed: Schema.Number,
-    facts: Schema.Number,
-  }),
-});
-
 /**
  * Progress key for a mailbox monitor: the mailbox URI plus a per-pipeline suffix, so the pipelines
  * coexist on one mailbox.
@@ -545,20 +513,20 @@ const createProgressKey = (mailbox: Mailbox.Mailbox, suffix: string) =>
   Obj.getURI(mailbox, { prefer: 'absolute' }).toString() + suffix;
 
 /**
- * Progress-registry key for a mailbox's process-pipeline monitor — the mailbox URI plus `#process`,
- * so it coexists with the `#sync` monitor. `MailboxArticle` and the toolbar action subscribe to it.
+ * Progress-registry key for a mailbox's fact-analysis monitor.
+ *
+ * The operation moved to plugin-brain, but the key stays here with its siblings: it is derived from
+ * the mailbox URI, and every monitor key on a mailbox must be minted the same way or the producer and
+ * the article compute different names and no meter appears.
  */
-export const createProcessProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#process');
-
-/** Progress-registry key for a mailbox's fact-analysis monitor ({@link AnalyzeMailbox}). */
 export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#analyze');
 
 /** Progress-registry key for a mailbox's correspondent-extraction monitor ({@link ExtractCorrespondents}). */
 export const createCorrespondentsProgressKey = (mailbox: Mailbox.Mailbox) =>
   createProgressKey(mailbox, '#correspondents');
 
-/** Progress-registry key for a mailbox's pipeline-cascade monitor ({@link EnrichMailbox}). */
-export const createEnrichProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#enrich');
+/** Progress-registry key for a mailbox's pipeline-cascade monitor ({@link ScanMailbox}). */
+export const createScanProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#scan');
 
 /** Progress-registry key for a mailbox's summarization monitor ({@link SummarizeMailbox}). */
 export const createSummarizeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#summarize');
@@ -608,7 +576,7 @@ export const SummarizeMailbox = Operation.make({
 }).pipe(Operation.idempotent);
 
 /**
- * The cost classes {@link EnrichMailbox} runs, in cascade order. Each tier's output gates the next,
+ * The cost classes {@link ScanMailbox} runs. Each tier's output gates the next,
  * so the ordering is the contract — not a convenience:
  *
  * - `deterministic` — no LLM, no spend: contacts (the known-sender allow-list) and subscriptions.
@@ -623,25 +591,26 @@ export const MailboxTier = Schema.Literals(['deterministic', 'classify', 'summar
 export type MailboxTier = Schema.Schema.Type<typeof MailboxTier>;
 
 /**
- * Cascade order. Each tier consumes what the ones before it wrote, so this order — not the order the
- * caller happens to list — is the one {@link EnrichMailbox} runs in.
+ * Tiers run when the caller names none: the bounded ones (`analyze` walks the whole feed).
+ *
+ * A tier SELECTS which processors run, never their order — that comes from the `after` edges each
+ * processor declares, so a caller listing tiers backwards still gets the cascade order.
  */
-export const MAILBOX_TIER_ORDER: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize', 'analyze'];
+export const DEFAULT_SCAN_MAILBOX_TIERS: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize'];
 
-/** Tiers run when the caller names none: the bounded ones (`analyze` walks the whole feed). */
-export const DEFAULT_ENRICH_MAILBOX_TIERS: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize'];
-
-export const EnrichMailbox = Operation.make({
+export const ScanMailbox = Operation.make({
   meta: {
-    key: makeKey('enrichMailbox'),
-    name: 'Enrich Mailbox',
+    key: makeKey('scanMailbox'),
+    name: 'Scan Mailbox',
     description:
       'Runs the mailbox pipelines in cascade order — deterministic extraction, then cheap LLM classification, then optional per-message analysis.',
     icon: 'ph--stack-simple--regular',
   },
   // Only the orchestrator's own needs: each spawned operation resolves its own services (an AI tier
   // brings its own AiService), so the cascade itself stays runnable where no AI layer exists.
-  services: [Database.Service, Trace.TraceService],
+  // `Capability.Service` is the exception it cannot do without — the processors it runs are read from
+  // a capability, so without it there is no topology to resolve.
+  services: [Capability.Service, Database.Service, Trace.TraceService],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox every tier operates on.',
@@ -685,11 +654,12 @@ export const EnrichMailbox = Operation.make({
     completed: Schema.Number,
     failed: Schema.Number,
     skipped: Schema.Number,
-    /** Per-stage outcome in run order — the spawned operation's own output, or why it did not run. */
+    /** Per-processor outcome in run order — the spawned operation's own output, or why it did not run. */
     stages: Schema.Array(
       Schema.Struct({
         tier: MailboxTier,
-        operation: Schema.String,
+        /** The contributed processor's id — its topology key and its cursor tag. */
+        processor: Schema.String,
         status: Schema.Literals(['completed', 'failed', 'skipped', 'cancelled']),
         output: Schema.optional(Schema.Any),
         error: Schema.optional(Schema.String),
@@ -726,38 +696,15 @@ export const ExtractCorrespondents = Operation.make({
   }),
 }).pipe(Operation.idempotent);
 
-/** Default page size for {@link ProcessMailbox} cursor commits. */
-export const DEFAULT_PROCESS_MAILBOX_PAGE_SIZE = 10;
-
-export const ProcessMailbox = Operation.make({
+/**
+ * Clears one consumer's feed cursor. Generic rather than pipeline-specific: several pipelines keep
+ * their own tagged cursor on the same feed (`classifyMailbox`, …), and each needs a way to start over.
+ */
+export const ResetFeedCursor = Operation.make({
   meta: {
-    key: makeKey('processMailbox'),
-    name: 'Process Mailbox',
-    description:
-      'Runs the cursored processing pipeline over the mailbox feed, resuming after the last processed message.',
-    icon: 'ph--play--regular',
-  },
-  services: [Database.Service, Trace.TraceService],
-  input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
-      description: 'Mailbox whose feed messages are processed.',
-    }),
-    pageSize: Schema.optional(
-      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
-        description: 'Number of messages processed per cursor advance.',
-      }),
-    ),
-  }),
-  output: Schema.Struct({
-    processed: Schema.Number,
-  }),
-}).pipe(Operation.idempotent);
-
-export const ResetProcessCursor = Operation.make({
-  meta: {
-    key: makeKey('resetProcessCursor'),
-    name: 'Reset Process Cursor',
-    description: 'Clears a pipeline cursor so the next run re-processes the whole mailbox feed.',
+    key: makeKey('resetFeedCursor'),
+    name: 'Reset Feed Cursor',
+    description: "Clears a pipeline's cursor so its next run reprocesses the whole mailbox feed.",
     icon: 'ph--arrow-counter-clockwise--regular',
   },
   services: [Database.Service],
@@ -765,11 +712,10 @@ export const ResetProcessCursor = Operation.make({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox whose pipeline cursor is reset.',
     }),
-    cursorId: Schema.optional(
-      Schema.String.annotate({
-        description: "Consumer cursor id to reset (e.g. 'classifyMailbox'); defaults to the process pipeline's.",
-      }),
-    ),
+    // Required: defaulting it silently reset whichever pipeline happened to own the default tag.
+    cursorId: Schema.String.annotate({
+      description: "Consumer cursor id to reset (e.g. 'classifyMailbox').",
+    }),
   }),
   output: Schema.Struct({
     /** False when no cursor existed yet (nothing to reset). */
@@ -900,34 +846,5 @@ export const UnsubscribeSender = Operation.make({
     filtered: Schema.Boolean,
     /** True when a List-Unsubscribe one-click HTTP request was sent successfully. */
     unsubscribed: Schema.Boolean,
-  }),
-});
-
-/** Default number of thread messages included in the {@link GenerateReply} prompt. */
-export const DEFAULT_GENERATE_REPLY_THREAD_LIMIT = 5;
-
-/** Default maximum number of facts included in the {@link GenerateReply} prompt. */
-export const DEFAULT_GENERATE_REPLY_FACT_LIMIT = 20;
-
-export const GenerateReply = Operation.make({
-  meta: {
-    key: makeKey('generateReply'),
-    name: 'Generate Reply',
-    description:
-      'Drafts a reply to an email, grounded on the thread context and facts the space fact store knows about the participants.',
-    icon: 'ph--sparkle--regular',
-  },
-  services: [AiService.AiService, Database.Service, FactStore],
-  input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
-      description: 'Mailbox whose feed holds the thread.',
-    }),
-    message: Schema.Any.annotate({
-      description: 'The message to reply to.',
-    }),
-  }),
-  output: Schema.Struct({
-    subject: Schema.String,
-    body: Schema.String,
   }),
 });
