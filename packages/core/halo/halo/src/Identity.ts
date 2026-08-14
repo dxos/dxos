@@ -6,9 +6,11 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Equal from 'effect/Equal';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { IdentityDid, SpaceId } from '@dxos/keys';
 import { type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -39,6 +41,13 @@ export const Info = Schema.Struct({
 export type Info = typeof Info.Type;
 
 /**
+ * Whether a device is currently reachable. `removed` is terminal — the device was evicted from the
+ * identity rather than merely going offline.
+ */
+export const Presence = Schema.Literals(['online', 'offline', 'removed']);
+export type Presence = typeof Presence.Type;
+
+/**
  * Public view of a device belonging to the local identity. Replaces the legacy `Device` proxy
  * type (`deviceKey` → `key`).
  */
@@ -46,9 +55,16 @@ export const DeviceInfo = Schema.Struct({
   /** Hex-encoded device key. */
   key: Schema.String,
   kind: Schema.optional(DeviceKind),
+  /** User-assigned name, when set. */
   label: Schema.optional(Schema.String),
+  /** Operating system reported by the device (e.g. `macOS`), for naming an unlabelled device. */
+  os: Schema.optional(Schema.String),
+  /** Platform reported by the device (e.g. `Firefox`), for naming an unlabelled device. */
+  platform: Schema.optional(Schema.String),
   /** Whether this device is the local (current) device. */
   current: Schema.Boolean,
+  /** Whether the device is currently reachable. */
+  presence: Schema.optional(Presence),
 });
 export type DeviceInfo = typeof DeviceInfo.Type;
 
@@ -314,6 +330,24 @@ export const devices: Stream.Stream<readonly DeviceInfo[], never, Service> = Str
 export const getDevicesSnapshot: Effect.Effect<readonly DeviceInfo[], never, Service> = Effect.map(Service, (service) =>
   service.getDevicesSnapshot(),
 );
+
+/**
+ * The local identity as an `Atom`, for reactive non-React consumers (app-graph builders and other
+ * Atom-driven code). Seeded from the synchronous snapshot and updated through `subscribe`, so a
+ * reader that evaluates before the first stream tick sees the current identity rather than `none`.
+ *
+ * Keyed by service reference, not structurally: the shape holds streams whose accessors a
+ * structural key would read.
+ */
+export const atom: (service: ServiceApi) => Atom.Atom<Option.Option<Info>> = (() => {
+  const family = Atom.family((service: ServiceApi) =>
+    Atom.make<Option.Option<Info>>((get) => {
+      get.addFinalizer(service.subscribe((identity) => get.setSelf(identity)));
+      return service.getSnapshot();
+    }),
+  );
+  return (service) => family(Equal.byReferenceUnsafe(service));
+})();
 
 /** The signed-in identity as an EDGE/Hub authentication principal (requires {@link Service}). */
 export const getEdgeIdentity: Effect.Effect<Option.Option<EdgeIdentity>, never, Service> = Effect.map(
