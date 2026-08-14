@@ -1,6 +1,6 @@
 # Client–Edge Audit — Tasks
 
-_Resume: run Phase 1 audit (inventory all client→edge communication points)._
+_Resume: Phase 2 — offline verification test in packages/sdk/client, then Phase 3 defaults removal._
 
 ## Phase 1: Inventory client→edge communication points
 
@@ -10,14 +10,17 @@ defaults can be audited against a complete list. Findings live in DESIGN.md.
 
 ### Tasks
 
-- [ ] **Inventory `EdgeHttpClient` / `EdgeClient` constructions and consumers**
-  - Who constructs them, with what URL, and how construction is gated on config.
-- [ ] **Inventory direct `fetch`/`WebSocket`/other network calls in the client stack**
-  - Including boot-time activity (Client.initialize path, worker boot) and
-    telemetry/observability.
-- [ ] **Inventory config plumbing for the edge endpoint**
-  - Every accessor of the edge URL config path and each call site's
-    absent-config behavior (skip / warn / throw).
+- [x] **Inventory `EdgeHttpClient` / `EdgeClient` constructions and consumers** —
+      DESIGN.md §Edge client constructions. Boot path fully URL-gated; three
+      inconsistent absent-URL policies (skip / throw-on-use / invariant).
+- [x] **Inventory direct `fetch`/`WebSocket`/other network calls in the client stack** —
+      DESIGN.md §Direct network call sites. Client stack: zero calls without
+      edge URL; observability has 2 consent-gating bugs (ipdata pre-`disabled` +
+      boot warn, OtelMetrics constructor-started exporter).
+- [x] **Inventory config plumbing for the edge endpoint** —
+      DESIGN.md §Config plumbing & defaults. SDK boot is clean; violations are
+      in @dxos/config (defaultConfig, configPreset, EDGE_SERVICE_DEFAULTS) +
+      scattered `??` fallbacks.
 
 ## Phase 2: Offline config works cleanly
 
