@@ -11,6 +11,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { IdentityDid, SpaceId } from '@dxos/keys';
+import { type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type IdentityError } from './errors';
 import * as Invitation from './Invitation';
@@ -84,6 +85,21 @@ export const Credential = Schema.Struct({
   recovery: Schema.optional(RecoveryInfo),
 });
 export type Credential = typeof Credential.Type;
+
+/**
+ * The signed-in identity in the form EDGE/Hub HTTP and WebSocket clients authenticate with: a DID,
+ * the local device's peer key, and a signer for the verifiable-presentation challenge EDGE answers
+ * `401` with. Structurally the `EdgeIdentity` of `@dxos/edge-client`, declared here so consumers can
+ * call `setIdentity` without depending on `@dxos/client`.
+ */
+export type EdgeIdentity = {
+  /** Identity DID (`did:halo:…`); EDGE keys connections by it. */
+  readonly identityDid: string;
+  /** Hex-encoded key of the local device. */
+  readonly peerKey: string;
+  /** Signs `challenge` into a presentation issued by the identity key. */
+  readonly presentCredentials: (options: { challenge: Uint8Array }) => Promise<Presentation>;
+};
 
 /**
  * Options for a self-issued `ServiceAccess` credential granting the identity access to an
@@ -217,6 +233,12 @@ export interface ServiceApi {
   readonly devices: Stream.Stream<readonly DeviceInfo[]>;
   /** Synchronous snapshot of the local identity's devices, for imperative callers. */
   readonly getDevicesSnapshot: () => readonly DeviceInfo[];
+  /**
+   * The signed-in identity as an EDGE/Hub authentication principal (`Option.none` when no identity
+   * or local device exists). Synchronous because every consumer attaches it inside a React effect or
+   * an identity-change callback; the signing it defers is what is asynchronous.
+   */
+  readonly getEdgeIdentity: () => Option.Option<EdgeIdentity>;
   /** HALO credentials of the local identity; emits the current set immediately. */
   readonly credentials: Stream.Stream<readonly Credential[]>;
   /**
@@ -291,6 +313,12 @@ export const devices: Stream.Stream<readonly DeviceInfo[], never, Service> = Str
 /** Synchronous snapshot of the local identity's devices (requires {@link Service}). */
 export const getDevicesSnapshot: Effect.Effect<readonly DeviceInfo[], never, Service> = Effect.map(Service, (service) =>
   service.getDevicesSnapshot(),
+);
+
+/** The signed-in identity as an EDGE/Hub authentication principal (requires {@link Service}). */
+export const getEdgeIdentity: Effect.Effect<Option.Option<EdgeIdentity>, never, Service> = Effect.map(
+  Service,
+  (service) => service.getEdgeIdentity(),
 );
 
 /** HALO credentials as a current-value stream (requires {@link Service}). */

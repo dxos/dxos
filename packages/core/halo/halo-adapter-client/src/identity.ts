@@ -10,6 +10,7 @@ import * as Stream from 'effect/Stream';
 
 import { type Client } from '@dxos/client';
 import { type RecoverIdentityArgs } from '@dxos/client-protocol';
+import { createEdgeIdentity } from '@dxos/client/edge';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { Identity as HaloIdentity, IdentityError } from '@dxos/halo';
@@ -235,6 +236,14 @@ export const makeIdentityService = (client: Client): Context.Service.Shape<typeo
   // Empty pre-initialization for the same reason `getSnapshot` is `none`: `client.halo` throws
   // before `initialize()`, and the contract for a pre-init read on this surface is silence.
   getDevicesSnapshot: () => (client.initialized ? client.halo.devices.get().map(toDeviceInfo) : []),
+
+  getEdgeIdentity: () => {
+    // `createEdgeIdentity` throws when either is missing; none is the contract on this surface.
+    if (!client.initialized || !client.halo.identity.get() || !client.halo.device) {
+      return Option.none();
+    }
+    return Option.some(createEdgeIdentity(client));
+  },
 
   credentials: streamFromClientObservable(client, () => client.halo.credentials).pipe(
     Stream.map((credentials) => {

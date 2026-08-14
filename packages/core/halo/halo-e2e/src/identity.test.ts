@@ -87,6 +87,33 @@ describe('Identity', () => {
   );
 
   it.effect(
+    'exposes an EDGE identity that signs a presentation over a challenge',
+    Effect.fn(function* ({ expect }) {
+      const identity = Option.getOrThrow(yield* Identity.getSnapshot);
+      const edgeIdentity = Option.getOrThrow(yield* Identity.getEdgeIdentity);
+      expect(edgeIdentity.identityDid).toEqual(identity.did);
+      const devices = yield* currentOf(Identity.devices);
+      expect(edgeIdentity.peerKey).toEqual(devices.find((device) => device.current)?.key);
+
+      // The presentation must carry the challenge, since that is what EDGE verifies it against.
+      const challenge = new Uint8Array([1, 2, 3, 4]);
+      const presentation = yield* Effect.promise(() => edgeIdentity.presentCredentials({ challenge }));
+      expect(presentation.credentials?.length).toBeGreaterThan(0);
+      expect(presentation.proofs?.[0].nonce).toEqual(challenge);
+    }, Effect.provide(makeClientLayer())),
+  );
+
+  it.effect(
+    'has no EDGE identity before one exists',
+    Effect.fn(
+      function* ({ expect }) {
+        expect(Option.isNone(yield* Identity.getEdgeIdentity)).toBe(true);
+      },
+      Effect.provide(makeClientLayer({ identity: false })),
+    ),
+  );
+
+  it.effect(
     'creates a recovery credential and returns a recovery code',
     Effect.fn(function* ({ expect }) {
       const { recoveryCode } = yield* Identity.createRecoveryCredential();
