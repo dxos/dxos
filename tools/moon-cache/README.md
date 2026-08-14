@@ -54,9 +54,11 @@ MOON_REMOTE_HOST= moon run :build
    the OS — 100 GiB on the current 154 GiB disk.
 4. **Release workflows deliberately skip the cache** — `remote-cache: 'false'` on the setup action,
    or a workflow-level `MOON_REMOTE_HOST` where the workflow does not use that action.
-5. **`--access_log_level` defaults to `all`.** At CI volume that's one line per request and will
-   fill the disk within days — it took 8 days to produce 50 GB and exhaust a 154 GiB disk. The unit
-   sets `--access_log_level none`; do not drop it when copying this config elsewhere.
+5. **`--access_log_level` defaults to `all`.** At CI volume that's one line per request: 8 days
+   produced 50 GB of logs, which was enough to consume the headroom left by the 100 GiB cache
+   budget and exhaust the disk. The unit sets `--access_log_level none`; do not drop it when
+   copying this config elsewhere. `rsyslog-logrotate.conf` (below) is the backstop for the next
+   service that logs at this volume without a bound of its own.
 6. **A restart costs about 70 s of downtime.** `bazel-remote` walks every cache file to rebuild its
    in-memory index before it binds 9092/9093, so both ports refuse connections until that finishes
    — moon falls back to a local build for anyone hitting it during that window. Restarts are safe
@@ -94,6 +96,12 @@ Deploying a config change is `scp bazel-remote.service root@…:/etc/systemd/sys
 `systemctl daemon-reload && systemctl restart bazel-remote`. Restarts are safe for the cache
 data — it's on disk and survives — but not instantaneous: see item 6 above for the ~70 s of
 downtime while the index rebuilds.
+
+`rsyslog-logrotate.conf` bounds `/var/log/syslog` — daily rotation, 500 MB max size, 3 generations
+kept — so a future chatty service fills at most a few GB before rotation catches it, rather than
+the whole disk. Deploy with `scp rsyslog-logrotate.conf root@…:/etc/logrotate.d/rsyslog`; nothing
+to reload — `logrotate` reads the file fresh from its daily systemd timer, no service restart
+involved. `logrotate -d /etc/logrotate.d/rsyslog` dry-runs a change before deploying it.
 
 ## Certificates
 
