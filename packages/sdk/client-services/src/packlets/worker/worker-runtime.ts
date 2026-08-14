@@ -217,6 +217,12 @@ export const makeWorkerRuntime = ({
             signalMetadataTags[key] = value;
           },
         });
+
+        // Boot is done: outbound traffic can no longer starve the session handshake the tab is
+        // waiting on. Anchored here rather than inside the host so the gate opens only after the
+        // whole worker start sequence has drained, not just the stack open.
+        log('worker-runtime: boot complete, starting networking');
+        clientServices.startNetworking();
       } catch (err: any) {
         ready.wake(err);
         log.error('starting', err);

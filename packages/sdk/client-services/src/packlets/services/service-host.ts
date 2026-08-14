@@ -12,7 +12,7 @@ import * as Scope from 'effect/Scope';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import { Event, Mutex, Trigger, synchronized } from '@dxos/async';
+import { Event, Mutex, Trigger, scheduleTask, synchronized } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesHandlers,
@@ -161,6 +161,15 @@ export type InitializeOptions = {
 export type ServiceContext = ClientServicesHost;
 
 /**
+ * Grace period between "host booted" and the first edge dial. wa-sqlite runs in-process on the
+ * worker thread, so the dial, its auth-header request, and the replication that follows all contend
+ * with the boot RPCs the tab is waiting on — on a document-heavy profile the session handshake loses
+ * that race and the client reports a connect timeout. Yielding the thread lets the queued handshake
+ * drain first; replication then proceeds behind a live session.
+ */
+const EDGE_NETWORKING_START_DELAY = 300;
+
+/**
  * Shared backend for all client services.
  *
  * Owns the full client stack and its lifecycle: it builds the layer-composed components (keyring,
@@ -204,6 +213,9 @@ export class ClientServicesHost {
 
   // Stack components, resolved from the layer runtime on open. Present after `open` starts.
   #ctx?: Context;
+
+  /** Guards {@link startNetworking} against the worker-runtime and `_openStack` both firing. */
+  #networkingStarted = false;
   #metadataStore?: IMetadataStore;
   #keyring?: KeyringApi;
   #feedStore?: FeedStore<any>;
@@ -421,7 +433,13 @@ export class ClientServicesHost {
     const endpoint = config?.get('runtime.services.edge.url');
     if (endpoint) {
       const clientTag = resolveTelemetryTag(config);
-      this.#edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
+      // Dialing is driven by `startNetworking()` rather than `open()`, so the host controls when
+      // outbound work is allowed to compete with boot.
+      this.#edgeConnection = new EdgeClient(createStubEdgeIdentity(), {
+        socketEndpoint: endpoint,
+        clientTag,
+        deferConnect: true,
+      });
       this.#edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
     }
 
@@ -620,6 +638,32 @@ export class ClientServicesHost {
     this.#statusUpdate.emit();
     const deviceKey = this.#identityManager?.identity?.deviceKey;
     log('opened', { deviceKey });
+  }
+
+  /**
+   * Allows outbound network activity to begin, after a short grace period for queued boot work.
+   * Called by the worker runtime once its start sequence completes, and from `_openStack` as a
+   * fallback for hosts with no external boot signal. Idempotent.
+   *
+   * Only the edge dial needs gating: subduction defers while the socket is not `CONNECTED` and
+   * resumes from its reconnect handler, and feed sync starts from `onReconnected`. Both therefore
+   * follow this gate without their own.
+   */
+  startNetworking(): void {
+    if (this.#networkingStarted || !this.#edgeConnection) {
+      return;
+    }
+    this.#networkingStarted = true;
+    const edgeConnection = this.#edgeConnection;
+    log('scheduling edge networking start', { delay: EDGE_NETWORKING_START_DELAY });
+    scheduleTask(
+      this.#ctx ?? Context.default(),
+      () => {
+        log('starting edge networking');
+        edgeConnection.startNetworking();
+      },
+      EDGE_NETWORKING_START_DELAY,
+    );
   }
 
   @synchronized
@@ -886,6 +930,18 @@ export class ClientServicesHost {
     log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
     log('stack opened');
+
+    // Fallback ONLY for hosts with no external boot signal (node, tests). A worker host calls
+    // `startNetworking()` itself after its start sequence drains, which is strictly later than this
+    // point — firing unconditionally here would dial before the session handshake and latch the
+    // guard, turning the worker's own call into a no-op and defeating the gate. The microtask lets a
+    // worker host, which signals within the same synchronous boot, be observed as already-signalled.
+    queueMicrotask(() => {
+      if (!this.#networkingStarted) {
+        log('no external boot signal; starting networking from the host');
+        this.startNetworking();
+      }
+    });
   }
 
   /**
