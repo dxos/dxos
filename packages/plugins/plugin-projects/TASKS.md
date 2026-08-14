@@ -1,18 +1,21 @@
 # plugin-projects — Tasks
 
-_Resume (2026-08-14, josiah design session, branch `claude/projects-task-sets-modeling-b5rk70`):
-**Milestone 6 DESIGNED, docs-only so far** — task model v2 (uni-directional refs: `TaskSet.tasks`
-flat + `TaskSet.phases` ordered arrays, NEW `Phase` type, `task.phase`/`task.parentTask` many-to-one
-refs, parent edge demoted to cascade-only bookkeeping — third and recorded-why revision of
-containment), project slimming (`artifacts` inlined to a ref array, `routines` field + routine
-parent edge REMOVED in favor of the companion join), outline-first agent rule + phase-aware
-`promote-task` verb (fixes the "`$track` → `taskCreate`" M5 dogfood mapping, which is WRONG under
-two-forms), three-tier routine staleness (source refs auto-disable w/ `disabledReason`; context refs
-flag-only; registry refs immune), and a generic plugin-contributed deletion-guard capability
-(severity gates Continue; one alternative-action per verdict, run-then-recheck-then-delete; typed
-`DeleteGuarded` for agents). All in DESIGN.md §§ "Task model v2", "`Project`", "Routine staleness
-and deletion guards". NO MIGRATIONS assumption carried from M5 — re-confirm before Phase 1 lands.
-Implementation NOT started; phases below._
+_Resume (2026-08-14, josiah design session, branch `claude/projects-task-sets-modeling-b5rk70`,
+PR #12595): **Milestone 6 DESIGNED, docs-only so far** — task model v2 (uni-directional refs:
+`TaskSet.tasks` flat + `TaskSet.milestones` ordered arrays, NEW `Milestone` type (second-pass
+rename from `Phase`; ecosystem term; **replaces `Project.goals` — Goal struct removed**),
+`task.milestone`/`task.parentTask` many-to-one refs, parent edge demoted to cascade-only
+bookkeeping — third and recorded-why revision of containment), project slimming (`artifacts`
+inlined to a ref array, `goals` REMOVED, `routines` field + routine parent edge REMOVED in favor
+of the companion join), outline-first agent rule + milestone-aware `promote-task` verb (fixes the
+"`$track` → `taskCreate`" M5 dogfood mapping, which is WRONG under two-forms), three-tier routine
+staleness (source refs auto-disable w/ `disabledReason`; context refs flag-only; registry refs
+immune), and a generic plugin-contributed deletion-guard capability (severity gates Continue; one
+alternative-action per verdict, run-then-recheck-then-delete; typed `DeleteGuarded` for agents).
+All in DESIGN.md §§ "Task model v2", "`Project`", "Routine staleness and deletion guards".
+SEQUENCING (user): Phases 1–2 (model changes + simplification) FIRST; skills/promotion later;
+routines removal does NOT wait for guards (Phases 4–5 are separate follow-ups). NO MIGRATIONS
+assumption carried from M5 — re-confirm before Phase 1 lands. Implementation NOT started._
 
 _Superseded pointer (2026-08-03): M5 Phases 1+3 + Phase 2 core MERGED as PR #12431; **Phase 4 DXOS SIDE MERGED as PR #12440** 2026-08-03 (McpToolAnnotation + all 12 §7.2 verbs, annotation verified through `Operation.serialize`). Also merged from this branch: #12442 (story rename) and #12444 (doc corrections). The checklist loop is now covered by CI play scripts in `stories-assistant/Chat.stories.tsx` — `WithPlanningScripted` (scripted `update-tasks`, title-keyed upsert does not duplicate) and `WithSubAgentsTest2` (delegation adds an unchecked item, checks it off on sub-agent completion); `WithPlanning`/`WithSubAgentsTest1` are the live `!test` counterparts. Next: Phase 2 remainder (templates scaffold/adopt TaskSet, app-graph task nodes, goals authoring, stories-projects play test); Phase 4 edge projection is the peer agent's. Do NOT pin a worktree in resume pointers — each session works in its harness-assigned worktree. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
 
@@ -385,7 +388,8 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
       with CRUD wired to TaskOperation verbs; storybook smoke 2/2 in Chromium. Candidate second
       consumers: plugin-assistant chat task list (currently checklist-form), kanban adoption.
       REMAINING: templates scaffold/adopt a TaskSet; app-graph task nodes under a project;
-      goals authoring UI; stories-projects play test; kanban adoption (separate PR per §9.2).
+      goals authoring UI (OBSOLETED by M6 — goals removed, milestones replace; becomes milestone
+      authoring); stories-projects play test; kanban adoption (separate PR per §9.2).
 - [~] **Phase 4 — MCP verbs** — DXOS SIDE MERGED 2026-08-03 as PR #12440 (edge side pending). Ownership
   RATIFIED (MILESTONE-5 §7.3): **dxos defines, edge projects**; an edge-only tool is a
   contract defect. Contract in §7.4.
@@ -425,34 +429,43 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
       shared space; goals/tasks mirrored; task-planning skill registry `tasksDxn` once the sync
       spec lands; Claude Desktop demo over the tunnel.
 
-## Milestone 6: task model v2 — uni-directional refs, phases, delete guards
+## Milestone 6: task model v2 — uni-directional refs, milestones, delete guards
 
 Designed 2026-08-14 (josiah × claude, session branch `claude/projects-task-sets-modeling-b5rk70`).
 Design: DESIGN.md §§ "Task model v2", "`Project` (`@dxos/compute`)" (M6 target), "Routine staleness
-and deletion guards". Supersedes M5's parent-edge containment; un-defers M5's `Milestone` as
-`Phase`. Carries the M5 "NO MIGRATIONS (nothing deployed)" assumption — re-confirm at Phase 1.
+and deletion guards". Supersedes M5's parent-edge containment; un-defers M5's `Milestone` under its
+original name — `Milestone` over `Phase` (second pass, same day): ecosystem term, and **milestones
+replace `Project.goals`** (Goal struct removed). Carries the M5 "NO MIGRATIONS (nothing deployed)"
+assumption — re-confirm at Phase 1. **Sequencing (user, 2026-08-14): Phases 1–2 (basic model
+changes + simplification) come first; skill/outline-first/promotion work is deliberately LATER
+(Phase 3); routines are pulled out in Phase 2 WITHOUT waiting for guards — staleness (Phase 4) and
+deletion guards (Phase 5) are separate planned follow-ups.**
 
 ### Phase 1 — task schema v2
 
-- [ ] **`Phase` type** — `org.dxos.type.phase` in `@dxos/types`: name, description?,
-      status? (upcoming|active|done), targetDate?; label/icon annotations; parented to its TaskSet.
-- [ ] **`TaskSet` arrays** — `phases: Ref<Phase>[]` (ordered = phase sequence) +
+- [ ] **`Milestone` type** — `org.dxos.type.milestone` in `@dxos/types`: name, description?
+      (carries "what done means" — absorbs Goal), status? (upcoming|active|done|cancelled;
+      `cancelled` covers Goal's `dropped`), targetDate?; label/icon annotations; parented to its
+      TaskSet.
+- [ ] **`TaskSet` arrays** — `milestones: Ref<Milestone>[]` (ordered = milestone sequence) +
       `tasks: Ref<Task>[]` (ordered, EVERY task flat, incl. sub-tasks); update the docstring that
       currently rejects membership arrays (record the reversal, DESIGN.md has the why).
-- [ ] **`Task` refs** — `phase?: Ref<Phase>` (unset ⇒ backlog; sub-tasks inherit nearest ancestor
-      unless overridden) + `parentTask?: Ref<Task>` (unset ⇒ root; NOT named `parent` — collides
-      with the ECHO parent-edge concept, doc the distinction at the field).
-- [ ] **`TaskOperation` verbs uphold the invariants** — create/update/move/delete write array entry + parent edge together; `task.phase` must resolve within the task's own set; phase-delete
-      sweeps `task.phase` refs; task-delete sweeps the subtree's entries out of `TaskSet.tasks`;
-      new verbs for phase CRUD + reorder (splice `phases`/`tasks` arrays).
-- [ ] **`TaskSetArticle` renders from the flat array** — partition by `phase` (groups ordered by
-      the `phases` array, backlog last/first per design), tree by `parentTask`, per-group order
-      induced from global `tasks` order; tolerant readers (dedupe by id, dangling ref ⇒
+- [ ] **`Task` refs** — `milestone?: Ref<Milestone>` (unset ⇒ backlog; sub-tasks inherit nearest
+      ancestor unless overridden) + `parentTask?: Ref<Task>` (unset ⇒ root; NOT named `parent` —
+      collides with the ECHO parent-edge concept, doc the distinction at the field).
+- [ ] **`TaskOperation` verbs uphold the invariants** — create/update/move/delete write array
+      entry + parent edge together; `task.milestone` must resolve within the task's own set;
+      milestone-delete sweeps `task.milestone` refs; task-delete sweeps the subtree's entries out
+      of `TaskSet.tasks`; new verbs for milestone CRUD + reorder (splice `milestones`/`tasks`
+      arrays).
+- [ ] **`TaskSetArticle` renders from the flat array** — partition by `milestone` (groups ordered
+      by the `milestones` array, backlog last/first per design), tree by `parentTask`, per-group
+      order induced from global `tasks` order; tolerant readers (dedupe by id, dangling ref ⇒
       backlog/root).
-- [ ] **Sync mapping** — linear/github: milestone entities ⇔ `Phase` (foreign keys in `Obj.getMeta`),
-      `issue.milestone`/`Issue.projectMilestone` ⇔ `task.phase`, `Issue.parent`/sub-issues ⇔
-      `task.parentTask` (sub-issue sync is currently absent — this adds it as field copies);
-      membership array reconciliation on upsert/tombstone.
+- [ ] **Sync mapping** — linear/github: milestone entities ⇔ `Milestone` (foreign keys in
+      `Obj.getMeta`), `issue.milestone`/`Issue.projectMilestone` ⇔ `task.milestone`,
+      `Issue.parent`/sub-issues ⇔ `task.parentTask` (sub-issue sync is currently absent — this
+      adds it as field copies); membership array reconciliation on upsert/tombstone.
 - [ ] **Re-confirm NO MIGRATIONS** — nothing deployed still true? If not, this phase gains
       taskSet/task typename migrations before landing.
 
@@ -461,13 +474,18 @@ and deletion guards". Supersedes M5's parent-edge containment; un-defers M5's `M
 - [ ] **`artifacts` → inline `Ref<Obj.Unknown>[]`** — drop the Collection indirection;
       `ProjectSkill.artifact-add/-list` retarget; `ObjectGallery` already takes ref arrays;
       create-object capability stops making a Collection.
+- [ ] **Remove `Project.goals` + the `Goal` struct** — milestones replace goals (DESIGN.md
+      "Naming"); ProjectArticle Goals section (read-only GoalList) retired, milestone sequence
+      renders in its place; M5 "goals authoring UI" item is OBSOLETED (becomes milestone
+      authoring on the TaskSet).
 - [ ] **Remove `Project.routines` + the routine→project parent edge** — `CreateRoutine` handler
       stops parenting/splicing; ProjectArticle drops the routines gallery + its delete handler
       (companion is the only routines surface); templates (`inboxResearch`, `crmProject`) stop
-      pushing the ref; delete-project cascade test updated (routines now survive project deletion —
-      covered by guards/staleness instead).
+      pushing the ref; delete-project cascade test updated (routines now survive project
+      deletion). Lands WITHOUT guards/staleness — the interim strand-on-delete gap is accepted
+      and recorded in DESIGN.md; Phases 4–5 close it separately.
 
-### Phase 3 — outline-first + promote-task
+### Phase 3 — outline-first + promote-task (deliberately after the model changes)
 
 - [ ] **Skill text: outline-first rule** — ProjectSkill + planning skill + MCP code-project skill:
       default writes are outline checklist lines; promote only for assignee / delegation / external
@@ -475,7 +493,8 @@ and deletion guards". Supersedes M5's parent-edge containment; un-defers M5's `M
       MILESTONE-5.md §8 and the skill instructions.
 - [ ] **`promote-task` verb** — outline line → Task in the project's TaskSet (array + parent edge),
       checkbox state → `task.status`, markdown line rewritten with the `echo://` backlink (label
-      follows renames); **phase-aware**: heading find-or-creates a `Phase`, sets `task.phase`.
+      follows renames); **milestone-aware**: heading find-or-creates a `Milestone`, sets
+      `task.milestone`.
 - [ ] **Promotion eval** — extend the checklist-loop coverage: agent promotes a line, human
       completes the Task, checklist line reflects it (the M5 follow-up, now unblocked by the verb).
 - [ ] **Registry-port repair guidance** — re-port `TASKS.md`s that were bulk-minted into Tasks:
@@ -496,7 +515,7 @@ and deletion guards". Supersedes M5's parent-edge containment; un-defers M5's `M
       (`Obj.isDeleted` on resolution); space-level stale-routines list; flag-and-confirm delete
       only, never auto-delete.
 
-### Phase 5 — deletion guards (generic; motivated here, home is app-framework/plugin-space)
+### Phase 5 — deletion guards (generic; motivated here, home is app-framework/plugin-space; separate follow-up, does not gate Phase 2)
 
 - [ ] **Guard capability + contract** — `{ appliesTo, check(objects) => GuardVerdict[] }`;
       verdict = severity (`warn | block`), message, optional subjects, and at most one
@@ -578,5 +597,5 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
       project's existing Tasks/Plan/Milestones plus chat history, so the daily questions stay
       non-redundant and shrink as the model of the user's goals fills in — an agent that re-asks
       what it already knows is the failure mode to design against). Open: where the answers land.
-      Goals authoring is already an open Phase 2 item, so this likely feeds that rather than
-      introducing a new type.
+      UPDATED by M6 (goals removed, milestones replace): the answers' likely home is the TaskSet's
+      milestones (+ the outline for free-form notes) rather than a goals surface or a new type.

@@ -28,10 +28,10 @@ to be one of the core aspects of Composer.
   human by Person ref, agent by DID), syncable (GitHub/Linear mirrors), and queryable.
 - **Structure is uni-directional refs; the parent edge is lifecycle bookkeeping only**
   (REVISED 2026-08-14 — see [Task model v2](#task-model-v2-decided-2026-08-14)): a
-  `TaskSet` enumerates ALL its tasks (flat) and its phases in ordered ref arrays;
-  hierarchy (`task.parentTask`) and phasing (`task.phase`) are many-to-one refs on the
-  task, Linear-shaped. Parent edges are still set — but only for deletion cascade,
-  never as the queryable data model.
+  `TaskSet` enumerates ALL its tasks (flat) and its milestones in ordered ref arrays;
+  hierarchy (`task.parentTask`) and milestone assignment (`task.milestone`) are
+  many-to-one refs on the task, Linear-shaped. Parent edges are still set — but only
+  for deletion cascade, never as the queryable data model.
 - **Delegation is the promotion moment for agents**: only a durable `Task` can be
   delegated to a sub-agent — delegating is exactly when scratch becomes real. There is
   no separate `Plan` type; the conversation's working set IS its outline plus the open
@@ -70,40 +70,40 @@ ref for structure, parent for cascade).
 ```text
 TaskSet (org.dxos.type.taskSet)
    name?, description?, image?         meta.keys: [linear team/project | github repo]
-   phases: Array<Ref<Phase>>           ordered — the phase sequence
-   tasks:  Array<Ref<Task>>            ordered — EVERY task in the set, flat (incl. sub-tasks)
+   milestones: Array<Ref<Milestone>>   ordered — the milestone sequence
+   tasks:      Array<Ref<Task>>        ordered — EVERY task in the set, flat (incl. sub-tasks)
 
-Phase (org.dxos.type.phase — NEW)      meta.keys: [linear/github milestone]
-   name, description?
-   status?: upcoming | active | done
+Milestone (org.dxos.type.milestone — NEW)   meta.keys: [linear/github milestone]
+   name, description?                  description carries "what done means" (absorbs Goal)
+   status?: upcoming | active | done | cancelled
    targetDate?
 
 Task (org.dxos.type.task)
    title, priority?, status?, assignee?, estimate?, description?
-   phase?:      Ref<Phase>             unset ⇒ backlog (sub-tasks: inherit nearest ancestor's)
+   milestone?:  Ref<Milestone>         unset ⇒ backlog (sub-tasks: inherit nearest ancestor's)
    parentTask?: Ref<Task>              unset ⇒ root task; recursion unbounded
 ```
 
-Parent-edge bookkeeping (cascade only): tasks and phases parent to their TaskSet;
+Parent-edge bookkeeping (cascade only): tasks and milestones parent to their TaskSet;
 sub-tasks parent to their parent task. Consequences: deleting a set deletes everything;
-deleting a task deletes its subtree; **deleting a phase never deletes tasks** — the
-delete-phase operation sweeps `task.phase` refs (readers treat a dangling phase ref as
-backlog anyway). Deleting a task requires sweeping its subtree's refs out of
-`TaskSet.tasks` (cascade deletes the objects, not the array entries).
+deleting a task deletes its subtree; **deleting a milestone never deletes tasks** — the
+delete-milestone operation sweeps `task.milestone` refs (readers treat a dangling
+milestone ref as backlog anyway). Deleting a task requires sweeping its subtree's refs
+out of `TaskSet.tasks` (cascade deletes the objects, not the array entries).
 
 ### Why (each of these was decisive)
 
 1. **Enumeration.** "All tasks in the set" is one array read — no tree walk over
-   phases or sub-task recursion. This is the argument that killed both `Phase.tasks`
-   arrays and root-only `tasks` + `subtasks` arrays: each reintroduced recursive
-   enumeration or double-entry membership.
-2. **Single-field moves.** Re-phasing or re-parenting a task is one field write on one
-   object — no paired array splices, so concurrent moves cannot duplicate or lose a
-   task. The exclusivity invariant ("in exactly one phase") holds by construction.
-3. **Ordering.** Array order is canonical order; no fractional-index fields. Phase
-   sequence = `phases` order; per-phase and per-parent task order are induced from the
-   global `tasks` order (one canonical order, views filter it). If per-context manual
-   ordering is ever needed, add Linear-style per-context sort keys then — not pre-paid.
+   milestones or sub-task recursion. This is the argument that killed both
+   `Milestone.tasks` arrays and root-only `tasks` + `subtasks` arrays: each
+   reintroduced recursive enumeration or double-entry membership.
+2. **Single-field moves.** Re-assigning or re-parenting a task is one field write on
+   one object — no paired array splices, so concurrent moves cannot duplicate or lose
+   a task. The exclusivity invariant ("in exactly one milestone") holds by construction.
+3. **Ordering.** Array order is canonical order; no fractional-index fields. Milestone
+   sequence = `milestones` order; per-milestone and per-parent task order are induced
+   from the global `tasks` order (one canonical order, views filter it). If per-context
+   manual ordering is ever needed, add Linear-style per-context sort keys — not pre-paid.
 4. **Schema self-description.** An agent reading the type sees the structure. The
    motivating failure: with no native phasing, agents improvised `[Phase 1]` prefixes
    in task titles.
@@ -112,26 +112,31 @@ backlog anyway). Deleting a task requires sweeping its subtree's refs out of
 6. **Linear-shaped sync.** In both Linear and GitHub the milestone is a per-issue
    pointer to a first-class entity (`Issue.projectMilestone`, `issue.milestone`), and
    sub-issues hang off `Issue.parent` — a sub-issue may carry a different milestone
-   than its parent. `task.phase` and `task.parentTask` sync as field copies; Phase
-   objects carry milestone foreign keys in `Obj.getMeta` (embedded structs could not).
-   The one deliberate divergence from Linear: `TaskSet.tasks`/`phases` are stored
-   arrays where Linear uses indexed reverse lookups + `sortOrder` floats — the arrays
-   are what buy cheap total enumeration and ordering without index machinery.
+   than its parent. `task.milestone` and `task.parentTask` sync as field copies;
+   Milestone objects carry milestone foreign keys in `Obj.getMeta` (embedded structs
+   could not). The one deliberate divergence from Linear: `TaskSet.tasks`/`milestones`
+   are stored arrays where Linear uses indexed reverse lookups + `sortOrder` floats —
+   the arrays are what buy cheap total enumeration and ordering without index machinery.
 
-Derived at view time, never stored: backlog (root tasks with `phase` unset), the tree
-(group by `parentTask`), phase groups (partition by `phase`, order groups by the
-`phases` array), sub-task phase inheritance (nearest ancestor's, unless overridden —
-Linear's behavior).
+Derived at view time, never stored: backlog (root tasks with `milestone` unset), the
+tree (group by `parentTask`), milestone groups (partition by `milestone`, order groups
+by the `milestones` array), sub-task milestone inheritance (nearest ancestor's, unless
+overridden — Linear's behavior).
 
 Invariants live in the `TaskOperation` verbs (the single write path shared by UI and
-agents): array entry + parent edge written together; `task.phase` must point into the
-task's own set's `phases`; delete sweeps refs. Readers stay tolerant (dedupe by id,
-dangling ref ⇒ backlog/root) since concurrent array merges can still double an entry.
+agents): array entry + parent edge written together; `task.milestone` must point into
+the task's own set's `milestones`; delete sweeps refs. Readers stay tolerant (dedupe by
+id, dangling ref ⇒ backlog/root) since concurrent array merges can still double an entry.
 
-**Naming**: `TaskSet` is retained for now. The type's dual role (native container AND
-sync mirror of a Linear team/project or GitHub repo) rules out native-flavored names
-like `Plan`; `Tracker` is the recorded candidate if a rename is ever worth the
-typename churn.
+**Naming** (2026-08-14, second pass): `Milestone`, not `Phase` — it is the ecosystem
+term (Linear and GitHub both call this entity a milestone, so sync maps name-to-name),
+and it **replaces `Project.goals`**: a milestone with a description and status IS a goal
+with tasks attached, so the embedded `Goal` struct (and the `goals` field) is removed
+rather than duplicated. Goal's `dropped` status maps to `cancelled` (matching Task's
+vocabulary). This un-defers M5's `Milestone` under its original name. `TaskSet` itself
+is retained: its dual role (native container AND sync mirror of a Linear team/project
+or GitHub repo) rules out native-flavored names like `Plan`; `Tracker` is the recorded
+candidate if a rename is ever worth the typename churn.
 
 ### Promotion and the outline-first rule
 
@@ -150,9 +155,9 @@ The two-forms model gets teeth for agents:
   create the Task in the project's TaskSet (append to `tasks`, parent-edge to the set),
   carry checkbox state into `task.status`, rewrite the markdown line with the
   `echo://` backlink (label follows renames — the existing convert-to-task contract),
-  and **phase-aware**: a line under a `## <heading>` that corresponds to a phase
-  find-or-creates the `Phase` and sets `task.phase`. The outline's structure seeds the
-  TaskSet's structure lazily, one promotion at a time.
+  and **milestone-aware**: a line under a `## <heading>` that corresponds to a
+  milestone find-or-creates the `Milestone` and sets `task.milestone`. The outline's
+  structure seeds the TaskSet's structure lazily, one promotion at a time.
 
 ## Background: Project, Agent, Chat, AiSession
 
@@ -197,23 +202,23 @@ anything a session needs beyond its feed has to be handed to it explicitly.
 All types relevant to the project/task/plan model in one place. "M5 target" is the Milestone 5
 end-state per [`MILESTONE-5.md`](./MILESTONE-5.md) (Phase 0 decided 2026-08-01); blank = unchanged.
 
-| Type              | Package (today)           | Role                                                             | M5 target                                                                                                |
-| ----------------- | ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `Project`         | `@dxos/compute`           | Umbrella container: instructions, routines, artifacts, chats     | 0.3.0 adds `goals` / `outline` / `taskSet: Ref<TaskSet>` / `plan`; stays in compute                      |
-| `Instructions`    | `@dxos/compute`           | Prompt text + skills + objects + commands                        |                                                                                                          |
-| `Routine`         | `@dxos/compute`           | Triggered automation (instructions or runnable operation)        |                                                                                                          |
-| `Skill`           | `@dxos/compute`           | Toolkit definition bound into sessions                           |                                                                                                          |
-| `ExternalProject` | `@dxos/types`             | Task container (name lies — used natively since #12423)          | **Renamed `TaskSet`** (`org.dxos.type.taskSet@0.2.0`): lightweight, possibly externally synced           |
-| `Task`            | `@dxos/types`             | Work item: title/status/priority/assigned/estimate/project       | 0.2.0: `assignee: Actor` (was `assigned: Ref<Person>`), `taskSet` (was `project`), +`failed`/`cancelled` |
-| `Actor`           | `@dxos/types` (struct)    | Identity shape (`Message.sender`): role/contact/DID/email/name   | Also `Task.assignee` — agents by DID, no `Ref<Agent>` variant                                            |
-| `Person`          | `@dxos/types`             | Contact record; target of `Actor.contact`                        |                                                                                                          |
-| `Phase`           | — (does not exist)        | Phasing span within a TaskSet (≙ Linear/GitHub milestone)        | M6 (un-defers M5's `Milestone`): ECHO type, `task.phase?: Ref<Phase>`, `TaskSet.phases` ordered array    |
-| `Outline`         | `plugin-outliner`         | `{name, content: Ref<Text>}` hierarchical checklist document     | **Moves to `@dxos/types`**; `project` field renamed `taskSet`                                            |
-| `Plan`            | `@dxos/assistant-toolkit` | Conversation working set: embedded tasks driving supervisor loop | `Plan.Task` gains `taskRef?: Ref<Task>` (promotion / write-through)                                      |
-| `Chat`            | `@dxos/assistant-toolkit` | Conversation: feed + `instructions` ref + `plan`                 |                                                                                                          |
-| `Agent`           | `@dxos/assistant-toolkit` | Identity/preset owning no conversation state                     | Assignment target only via DID on `Actor`                                                                |
-| `Collection`      | `@dxos/echo`              | Ordered ref collection (used by `Project.artifacts`)             |                                                                                                          |
-| `Text`            | `@dxos/schema`            | CRDT text (content of `Outline`, documents)                      |                                                                                                          |
+| Type              | Package (today)           | Role                                                                                  | M5 target                                                                                                         |
+| ----------------- | ------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `Project`         | `@dxos/compute`           | Umbrella container: instructions, routines, artifacts, chats                          | 0.3.0 adds `goals` / `outline` / `taskSet: Ref<TaskSet>` / `plan`; stays in compute                               |
+| `Instructions`    | `@dxos/compute`           | Prompt text + skills + objects + commands                                             |                                                                                                                   |
+| `Routine`         | `@dxos/compute`           | Triggered automation (instructions or runnable operation)                             |                                                                                                                   |
+| `Skill`           | `@dxos/compute`           | Toolkit definition bound into sessions                                                |                                                                                                                   |
+| `ExternalProject` | `@dxos/types`             | Task container (name lies — used natively since #12423)                               | **Renamed `TaskSet`** (`org.dxos.type.taskSet@0.2.0`): lightweight, possibly externally synced                    |
+| `Task`            | `@dxos/types`             | Work item: title/status/priority/assigned/estimate/project                            | 0.2.0: `assignee: Actor` (was `assigned: Ref<Person>`), `taskSet` (was `project`), +`failed`/`cancelled`          |
+| `Actor`           | `@dxos/types` (struct)    | Identity shape (`Message.sender`): role/contact/DID/email/name                        | Also `Task.assignee` — agents by DID, no `Ref<Agent>` variant                                                     |
+| `Person`          | `@dxos/types`             | Contact record; target of `Actor.contact`                                             |                                                                                                                   |
+| `Milestone`       | — (does not exist)        | Milestone span within a TaskSet (≙ Linear/GitHub milestone); replaces `Project.goals` | M6 (un-defers M5's `Milestone`): ECHO type, `task.milestone?: Ref<Milestone>`, `TaskSet.milestones` ordered array |
+| `Outline`         | `plugin-outliner`         | `{name, content: Ref<Text>}` hierarchical checklist document                          | **Moves to `@dxos/types`**; `project` field renamed `taskSet`                                                     |
+| `Plan`            | `@dxos/assistant-toolkit` | Conversation working set: embedded tasks driving supervisor loop                      | `Plan.Task` gains `taskRef?: Ref<Task>` (promotion / write-through)                                               |
+| `Chat`            | `@dxos/assistant-toolkit` | Conversation: feed + `instructions` ref + `plan`                                      |                                                                                                                   |
+| `Agent`           | `@dxos/assistant-toolkit` | Identity/preset owning no conversation state                                          | Assignment target only via DID on `Actor`                                                                         |
+| `Collection`      | `@dxos/echo`              | Ordered ref collection (used by `Project.artifacts`)                                  |                                                                                                                   |
+| `Text`            | `@dxos/schema`            | CRDT text (content of `Outline`, documents)                                           |                                                                                                                   |
 
 Plugin ownership after M5: **plugin-tasks** (renamed plugin-outliner) owns the TaskSet/Task/
 Outline surfaces and `TaskOperation.*`; **plugin-projects** owns Project lifecycle, agentic
@@ -221,9 +226,10 @@ wiring, and composition; **plugin-github / plugin-linear** sync into `TaskSet`/`
 foreign keys; **plugin-kanban** adopts the plugin-tasks model.
 
 M6 (task model v2, 2026-08-14) revises this table's M5 targets: `TaskSet` gains
-`phases`/`tasks` arrays and `Task` gains `phase`/`parentTask` refs (see "Task model v2");
-`Project.artifacts` becomes an inline ref array (`Collection` no longer used there);
-`Project.routines` is REMOVED (companion join replaces it — see "Project slimming").
+`milestones`/`tasks` arrays and `Task` gains `milestone`/`parentTask` refs (see "Task
+model v2"); `Project.artifacts` becomes an inline ref array (`Collection` no longer
+used there); `Project.routines` is REMOVED (companion join replaces it) and
+`Project.goals` is REMOVED (milestones replace goals) — see "`Project`" below.
 
 ### `Project` (`@dxos/compute`)
 
@@ -237,36 +243,42 @@ M6 target (project slimming, decided 2026-08-14):
 name?: string
 description?: string
 status?: active | paused | blocked | ended
-goals?: Goal[]                       // embedded {id, text, status} — nothing refs a goal, so no objects
 instructions?: Ref(Instructions)     // owned (Obj.setParent), cascade-delete/clone
 artifacts: Ref(Obj.Unknown)[]        // INLINE ordered ref array — Collection dropped
 outline?: Ref(Outline)               // shared scratch checklist (all project chats write here)
 taskSet?: Ref(TaskSet)               // owned, or adopted synced mirror
 ```
 
-Two fields change:
+Three fields change:
 
 - **`artifacts` inlines.** The `Collection` indirection was never load-bearing:
   `ObjectGallery` already renders plain ref arrays (the routines gallery proved it),
   and `Instructions.objects` is precedent for an inline heterogeneous ref array.
   `ProjectSkill.artifact-add/-list` retarget to the field.
+- **`goals` is REMOVED.** Milestones replace goals: a `Milestone` (name, description =
+  "what done means", status, target date) in the project's TaskSet carries everything
+  the embedded `Goal` struct did, plus the tasks that get it done. One "what done
+  means" surface instead of two. The `Goal` struct and the read-only GoalList section
+  go; the milestone sequence renders in their place.
 - **`routines` is REMOVED.** The array duplicated what already exists: routines
   connect to their project via `instructions.objects` (seeded at creation), and
   `connectedRoutinesQuery` / `RoutineCompanion` discover them through the structural
   reverse-ref index — same as for any other object. The ProjectArticle routines
   gallery goes with it; routines surface in the project's companion only. The
   routine's parent edge to the project also goes: deleting a project no longer
-  cascades its routines — cleanup is handled by the deletion-guard + staleness
-  mechanism below, deliberately preferring the canonical routine model over a
-  project-shaped special case.
+  cascades its routines. **Sequencing (2026-08-14):** the removal lands FIRST, without
+  waiting for the deletion-guard/staleness machinery below — those are planned
+  follow-ups tracked separately, and the interim (deleting a project silently strands
+  its routines, discoverable only via the companion of a deleted object or the
+  routines list) is accepted; preferring the canonical routine model over a
+  project-shaped special case is worth the window.
 
 The resulting line: **refs for what the project owns and orders (instructions,
 artifacts, outline, taskSet); queries for what accumulates around it (chats by parent
 edge, routines by companion join, agents via their chats).** Chats stay parent-edge
 attached — numerous, append-only, naturally time-ordered, so a ref array would be a
 CRDT hot spot with no ordering benefit; this is the recorded justification for the one
-deviation from schema-visible structure. `goals` stays embedded because nothing
-references a goal from outside (the same test that made `Phase` an object).
+deviation from schema-visible structure.
 
 The type lives in `@dxos/compute` (next to Instructions, Skill, Trigger) so
 brain/inbox/EDGE-side code can reference it without a plugin dependency.
@@ -521,6 +533,10 @@ project no longer cleans up its routines. Rather than special-casing projects, t
 solved by two generic mechanisms: routines referencing deleted objects is a common
 problem (any object a routine watches or binds can be deleted), and deletion needing a
 second look is a common problem (any type can have dependents worth surfacing).
+
+**Sequencing (2026-08-14):** neither mechanism gates the routines-field removal. Both
+are planned follow-ups (M6 Phases 4–5), addressed separately after the basic model
+changes land; the interim gap is accepted and recorded in "`Project`" above.
 
 ### Staleness: three tiers by ref class
 
