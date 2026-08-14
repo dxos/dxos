@@ -87,6 +87,13 @@ the new store + tag.
 
 ## Reviewer follow-ups (not blocking this PR)
 
+- [x] **Strip provider transport metadata from committed fixtures** — recorded parts carried the raw
+      Anthropic HTTP envelopes (`request` on `response-metadata`, `response` on `finish`): account and
+      trace identifiers (`anthropic-organization-id`, `anthropic-workspace-id`, `cf-ray`, `request-id`,
+      `traceparent`/`b3`) plus per-request rate-limit state, none of which replay reads. Dropped at the
+      store-write boundary in `LanguageModelFixture` and rewritten in place across the 77 affected
+      records by `tools/codemods/strip-model-fixture-transport.mjs`. Hashes key on parameters + prompt,
+      so no fixture moved and no regeneration was needed.
 - [ ] **`query` tool `in`-example bug** (`assistant-toolkit .../database/operations/definitions.ts`) — the description's example shows nested object refs (`{"/": "echo://…"}`) for `in`, but the param decodes only plain URI strings, so the model copies the wrong shape and the call fails (recorded faithfully in the database-skill fixtures). Needs its own PR: fixing the description changes the hashed tool parameters and invalidates fixtures across every toolkit suite, so it must land with a coordinated regen.
 - [ ] **`toolChoice as any` / `params.tools as never[]`** (`LanguageModelFixture.ts` record path) — external `@effect/ai` generic-variance at the untyped-tool-list → typed-`Toolkit` boundary; only runs under `DX_UPDATE_MODEL_FIXTURES`. A true source fix means reconstructing tool types from the stored JSON schemas.
 
