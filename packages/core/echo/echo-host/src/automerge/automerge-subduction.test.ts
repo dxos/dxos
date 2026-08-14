@@ -522,4 +522,54 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
     expect(storage.writeOps).toBe(0);
     expect(storage.readOps).toBeGreaterThan(0);
   });
+
+  // Same restart shape as above, but with a `signer` — this activates
+  // `SubductionSource` (the subduction-specific document source used in
+  // production, distinct from classical automerge-repo's own storage
+  // subsystem exercised by the test above). `entry.knownHashes` /
+  // `entry.lastSavedHeads` start empty every process; if they are not
+  // seeded from the `persistedCommitHashes`/`persistedFragmentHashes` disk
+  // scan, the first `#save()` after reattaching a document re-persists its
+  // entire already-on-disk history.
+  test('repo restart reloads documents via subduction without extra writes', async ({ expect }) => {
+    const signer = MemorySigner.generate();
+    const storage = new CountingStorageAdapter(new MemoryStorageAdapter());
+    const urls: AutomergeUrl[] = [];
+
+    {
+      const repo = new Repo({
+        network: [],
+        storage,
+        signer,
+      });
+      for (let index = 0; index < 20; index++) {
+        const handle = repo.create<{ index: number }>({ index });
+        urls.push(handle.url);
+      }
+      await repo.flush();
+      await sleep(200);
+      await repo.shutdown();
+    }
+
+    expect(storage.writeOps).toBeGreaterThan(0);
+    storage.resetCounters();
+
+    {
+      const repo = new Repo({
+        network: [],
+        storage,
+        signer,
+      });
+      for (const url of urls) {
+        const handle = await repo.find<{ index: number }>(url);
+        await handle.whenReady(['ready']);
+        expect(handle.doc()?.index).toBeDefined();
+      }
+      await sleep(200);
+      await repo.shutdown();
+    }
+
+    expect(storage.writeOps).toBe(0);
+    expect(storage.readOps).toBeGreaterThan(0);
+  });
 });
