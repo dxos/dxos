@@ -11,6 +11,7 @@ export default defineConfig({
     'plugin': 'src/plugin.tsx',
     'plugin.workerd': 'src/plugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
+    'capabilities.workerd': 'src/capabilities/workerd.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
     'meta': 'src/meta.ts',

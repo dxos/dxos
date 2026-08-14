@@ -12,6 +12,7 @@ export default defineConfig({
     'plugin.node': 'src/plugin.node.ts',
     'plugin.workerd': 'src/plugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
+    'capabilities.workerd': 'src/capabilities/workerd.ts',
     'meta': 'src/meta.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
