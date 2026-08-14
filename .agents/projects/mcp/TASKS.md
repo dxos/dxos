@@ -28,9 +28,11 @@ changes what a model sees lives in the shared package or it is a bug.
       and the shared server instructions on `initialize`.
 - [x] plugin-projects + plugin-tasks added to the CLI plugin set (and to the default profile), so
       the annotated operations are in the registry the command projects.
-- [ ] **Edge consumes the package** — `mcp-space-service` keeps OAuth, grants, bindings and the
-      trace feed, and deletes its copy of the projection. Code is written (966 lines deleted); blocked
-      on a `@dxos/mcp-server` build to install. Acceptance: edge's 92-test suite stays green with the
+- [x] **Edge consumes the package** (2026-08-14, edge#888) — `mcp-space-service` keeps OAuth,
+      grants, bindings and the trace feed; its copy of the projection is gone (966 lines deleted,
+      66 added) and `callOperation`'s trace-sink flush became the gateway's invoke. Verified
+      against the pkg.pr.new build of `26cadff6`: worker builds, workerd suite **90 passed**
+      (the ledger's "92" was stale — no test files changed). Acceptance: edge's 92-test suite stays green with the
       package as the sole source of shape.
 - [ ] **Fidelity check in CI** — one test running the same registry fixture through both hosts
       (edge worker + `dx mcp serve`), asserting identical `tools/list`, `prompts/list` and
@@ -38,7 +40,50 @@ changes what a model sees lives in the shared package or it is a bug.
 - [ ] **Registry construction shared** — `dx mcp serve` reads the CLI's enabled plugins;
       operation-service assembles its own list plus base types. Factor one assembly so both hosts
       register the same operations, skills and types.
-- [ ] **Watch/reload** — `dx mcp serve` under CLI dev mode; today an edit still needs a restart.
+- [ ] **Watch/reload** — see Milestone 7; today an edit still needs a restart.
+
+## Milestone 7 — third-party plugins and reload (design: [DESIGN.md](./DESIGN.md) §2-3)
+
+A shipped `dx` must load plugins it was not compiled with, and those plugins' operations and
+skills must reach the MCP surface. The MCP half is already done: the gateway reads
+`Capabilities.OperationHandler` and `AppCapabilities.SkillDefinition`, so an enabled plugin
+projects with no further work. The browser has the rest of the system (manifest, URL loader,
+shared-scope import map, registry publish); this milestone is its node/bun half.
+
+### Plugin loading
+
+- [ ] **Shared scope at startup** — register `DEFAULT_PACKAGES` through `Bun.plugin`'s module
+      registry so a plugin's bare specifiers resolve to the host's already-loaded instances.
+      Proven to work inside a compiled binary, and to win over a copy in the plugin's own
+      `node_modules` (DESIGN §2.1). Generate the list from the same source the Vite plugin reads —
+      two contracts would drift.
+- [ ] **`dx plugin add <url|name>`** — fetch manifest, download assets under
+      `~/.config/dx/plugins/<id>/`, import, validate `meta`, register. `enable/disable/list`
+      already exist but resolve only against compiled-in plugins.
+- [ ] **Installed-remote persistence** — `plugins/<profile>.yml` records enabled ids; the
+      `RemotePluginView` records (id, url, version) that live in `localStorage` in the browser need
+      a file-backed equivalent.
+- [ ] **Decide isolation** (DESIGN §2.3) — third-party code runs in-process with the user's HALO
+      keys, and MCP lets an external agent invoke it. Decide before third-party plugins ship:
+      trusted-publisher-and-explicit-enable, or a worker boundary (which would also solve reload).
+
+### Reload, stage 1 — our own dev loop
+
+- [ ] **`dx mcp serve --watch`** — supervise a child process, restart on change. The stdio session
+      dies with the process, so the client reconnects per edit; acceptable for our own loop.
+      `moon run cli:dev` already runs `dx` from source, so this is a supervisor plus a watcher.
+
+### Reload, stage 2 — external plugin authors
+
+- [ ] **`--dev-plugin <manifest-url>`** — the CLI equivalent of the browser's `devEntry` dev
+      manifest: re-import on change with a cache-busting query, rebuild the projected layer, emit
+      `tools/list_changed` / `prompts/list_changed` (already emitted at startup, already acted on
+      by clients).
+- [ ] **Upstream: tool/prompt removal in `McpServer`** — it exposes `addTool`/`addPrompt` only, so
+      a changed surface cannot replace the old one without rebuilding the server layer under the
+      live transport.
+- [ ] **Idempotent (or per-load scoped) type registration** — re-importing a plugin that registers
+      ECHO types throws "Schema version already registered".
 
 ## Milestone 1 — local round-trip (current)
 
