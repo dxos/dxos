@@ -92,3 +92,34 @@ export const sort = <T extends Node>(nodes: readonly T[]): Sorted<T> => {
 
   return { ordered, excluded };
 };
+
+/**
+ * Every node that transitively declares `after` on `id` — the set a failure of `id` invalidates.
+ *
+ * This is what makes a failure cost only what actually consumed the failed output. Aborting by
+ * position instead (everything later in the run order) strands processors that never depended on it:
+ * `subscriptions` has no edge to `classify`, so a classification failure has no bearing on it.
+ *
+ * `id` itself is not included — the caller already knows it failed and reports it as `failed`, not
+ * `skipped`.
+ */
+export const descendants = <T extends Node>(nodes: readonly T[], id: string): ReadonlySet<string> => {
+  const blocked = new Set<string>();
+  // Fixed point rather than a single pass: a node's dependency may only become blocked later in the
+  // list, and edges are declared in whatever order contributors happen to arrive in.
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const node of nodes) {
+      if (node.id === id || blocked.has(node.id)) {
+        continue;
+      }
+      if ((node.after ?? []).some((dep) => dep === id || blocked.has(dep))) {
+        blocked.add(node.id);
+        changed = true;
+      }
+    }
+  }
+
+  return blocked;
+};

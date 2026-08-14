@@ -290,6 +290,38 @@ describe('ScanMailbox cascade', () => {
   );
 
   it.effect(
+    'a failure blocks only its descendants, leaving independent branches to run',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { mailbox } = yield* seedMailbox();
+
+        // `classify` fails here (no usable key in this environment). `subscriptions` declares no edge
+        // to it, so it must still run — blocking by run POSITION would have stranded it purely for
+        // sitting later in the list, which is the whole point of taking the order from the DAG.
+        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+          mailbox: Ref.make(mailbox),
+          me: ME,
+          tiers: ['deterministic', 'classify', 'summarize'],
+        });
+
+        const byProcessor = new Map(result.stages.map((stage) => [stage.processor, stage]));
+        expect(byProcessor.get('classify')?.status).toBe('failed');
+        expect(byProcessor.get('contacts')?.status).toBe('completed');
+        expect(byProcessor.get('subscriptions')?.status).toBe('completed');
+        // summarize declares after: ['contacts', 'classify'], so it IS a descendant.
+        expect(byProcessor.get('summarize')).toMatchObject({
+          status: 'skipped',
+          error: "upstream 'classify' failed",
+        });
+        expect(result.completed).toBe(2);
+        expect(result.failed).toBe(1);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'runs a processor contributed by another plugin, in its position rather than its contribution order',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -374,13 +406,16 @@ describe('ScanMailbox cascade', () => {
   );
 
   it.effect(
-    'stops the cascade when a stage genuinely fails, reporting the untried stages',
+    'a tier filter drops the edges that ran through the filtered-out processor',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { mailbox } = yield* seedMailbox();
 
-        // A real failure rather than an absent resolver (here: the client rejects the request), so
-        // everything behind it must not run against the stale gate.
+        // `analyze` declares after: ['summarize'], but `summarize` is not among the selected tiers, so
+        // that edge points at an absent processor and is ignored — leaving `analyze` with no path to
+        // `classify`. It therefore RUNS despite the classification failure, and skips on its own unmet
+        // precondition instead. Sharp but correct: a processor the caller excluded cannot constrain
+        // anything, and `analyze` never consumed classification in the first place.
         const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
@@ -392,7 +427,7 @@ describe('ScanMailbox cascade', () => {
         expect(result.stages.at(-1)).toMatchObject({
           tier: 'analyze',
           status: 'skipped',
-          error: 'upstream stage failed',
+          error: '@dxos/plugin-inbox/testing/MissingService unavailable',
         });
       },
       Effect.provide(makeTestLayer(withAnalyze)),

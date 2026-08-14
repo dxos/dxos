@@ -51,6 +51,7 @@ type StageResult = {
  *
  * Each spawned operation keeps its own cursor, batch cap, idempotency and services, so this handler
  * adds no pipeline logic — it decides what runs, in what order, and what to do when a stage fails.
+ * A failure invalidates only that processor's DESCENDANTS in the topology; independent branches run.
  */
 const handler = InboxOperation.ScanMailbox.pipe(
   Operation.withHandler(
@@ -118,9 +119,17 @@ const handler = InboxOperation.ScanMailbox.pipe(
       reportStatus({ current: 0, total: stages.length });
 
       const results: StageResult[] = [];
+      /** Processors invalidated by an upstream failure, and why. */
+      const blocked = new Map<string, string>();
       let index = 0;
       for (const stage of stages) {
         index += 1;
+        const blockedReason = blocked.get(stage.processor);
+        if (blockedReason) {
+          results.push({ tier: stage.tier, processor: stage.processor, status: 'skipped', error: blockedReason });
+          reportStatus({ current: index, message: stage.processor });
+          continue;
+        }
         if (signal.aborted) {
           // Remaining stages are reported rather than dropped: a half-run cascade must be legible.
           results.push({ tier: stage.tier, processor: stage.processor, status: 'cancelled' });
@@ -161,17 +170,12 @@ const handler = InboxOperation.ScanMailbox.pipe(
           log.warn('scan: stage failed', { processor: stage.processor, error });
           results.push({ tier: stage.tier, processor: stage.processor, status: 'failed', error });
           if (!continueOnError) {
-            // Everything downstream consumes this stage's output; running it anyway would produce
-            // results computed against a stale gate, which is worse than not running at all.
-            for (const remaining of stages.slice(index)) {
-              results.push({
-                tier: remaining.tier,
-                processor: remaining.processor,
-                status: 'skipped',
-                error: 'upstream stage failed',
-              });
+            // Only what actually consumed this output is invalidated. Blocking by run POSITION instead
+            // would strand processors that never depended on it — `subscriptions` declares no edge to
+            // `classify`, so a classification failure has no bearing on it.
+            for (const id of Topology.descendants(ordered, stage.processor)) {
+              blocked.set(id, `upstream '${stage.processor}' failed`);
             }
-            break;
           }
         }
         reportStatus({ current: index });

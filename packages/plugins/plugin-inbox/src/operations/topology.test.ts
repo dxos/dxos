@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type Node, sort } from './topology';
+import { type Node, descendants, sort } from './topology';
 
 const ids = (nodes: readonly Node[]) => nodes.map((node) => node.id);
 
@@ -92,5 +92,39 @@ describe('processor topology', () => {
 
   test('handles an empty contribution set', () => {
     expect(sort([])).toEqual({ ordered: [], excluded: [] });
+  });
+
+  describe('descendants', () => {
+    const CASCADE: Node[] = [
+      { id: 'contacts' },
+      { id: 'subscriptions' },
+      { id: 'classify', after: ['contacts'] },
+      { id: 'crm', after: ['contacts'] },
+      { id: 'summarize', after: ['contacts', 'classify'] },
+      { id: 'analyze', after: ['summarize'] },
+    ];
+
+    test('collects the transitive closure, not just direct dependents', () => {
+      expect([...descendants(CASCADE, 'contacts')].sort()).toEqual(['analyze', 'classify', 'crm', 'summarize']);
+    });
+
+    test('leaves independent branches alone', () => {
+      // The point of the DAG: `subscriptions` declares no edge to `classify`, so a classification
+      // failure has no bearing on it. Aborting by run position would have stranded it.
+      expect([...descendants(CASCADE, 'classify')].sort()).toEqual(['analyze', 'summarize']);
+      expect(descendants(CASCADE, 'subscriptions').size).toBe(0);
+    });
+
+    test('excludes the failed node itself', () => {
+      expect(descendants(CASCADE, 'contacts').has('contacts')).toBe(false);
+    });
+
+    test('a leaf blocks nothing', () => {
+      expect(descendants(CASCADE, 'analyze').size).toBe(0);
+    });
+
+    test('an unknown id blocks nothing', () => {
+      expect(descendants(CASCADE, 'notAProcessor').size).toBe(0);
+    });
   });
 });
