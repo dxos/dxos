@@ -21,29 +21,6 @@ import * as EdgeTriggerManager from './EdgeTriggerManager';
 
 const SPACE_ID = SpaceId.random();
 
-const notReplicatedError = () => new EdgeCallFailedError({ message: 'HTTP code 404: Not Found.' });
-
-const identityNotAssociatedError = () =>
-  new EdgeCallFailedError({
-    message: 'Identity is not associated with an account.',
-    data: { type: 'identity_not_associated_with_account' },
-  });
-
-/**
- * Force-runs a trigger through a manager backed by `edgeClient`, on a forked fiber so the caller
- * can advance the `TestClock` across the retry backoff.
- */
-const forkInvoke = (edgeClient: EdgeHttpClient) =>
-  Effect.gen(function* () {
-    const manager = yield* RemoteTriggerManager.Service;
-    const trigger = Trigger.make({ enabled: true, remote: true, spec: Trigger.specTimer('*/5 * * * *') });
-    yield* manager.invokeTrigger({ trigger, event: { tick: 0 } });
-  }).pipe(
-    Effect.provide(EdgeTriggerManager.fromEdgeClient(edgeClient, SPACE_ID)),
-    Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
-    Effect.forkChild,
-  );
-
 describe('EdgeTriggerManager', () => {
   it.effect('retries a force-run that races the trigger replicating to edge', () =>
     Effect.gen(function* () {
@@ -99,3 +76,26 @@ describe('EdgeTriggerManager', () => {
     }),
   );
 });
+
+const notReplicatedError = () => new EdgeCallFailedError({ message: 'HTTP code 404: Not Found.' });
+
+const identityNotAssociatedError = () =>
+  new EdgeCallFailedError({
+    message: 'Identity is not associated with an account.',
+    data: { type: 'identity_not_associated_with_account' },
+  });
+
+/**
+ * Force-runs a trigger through a manager backed by `edgeClient`, on a forked fiber so the caller
+ * can advance the `TestClock` across the retry backoff.
+ */
+const forkInvoke = (edgeClient: EdgeHttpClient) =>
+  Effect.gen(function* () {
+    const manager = yield* RemoteTriggerManager.Service;
+    const trigger = Trigger.make({ enabled: true, remote: true, spec: Trigger.specTimer('*/5 * * * *') });
+    yield* manager.invokeTrigger({ trigger, event: { tick: 0 } });
+  }).pipe(
+    Effect.provide(EdgeTriggerManager.fromEdgeClient(edgeClient, SPACE_ID)),
+    Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
+    Effect.forkChild,
+  );
