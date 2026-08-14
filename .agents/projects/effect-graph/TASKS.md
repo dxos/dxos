@@ -211,7 +211,17 @@ Gate before Phase 9. Requested 2026-08-13.
           `99ac23f1` reaches the delete path, most likely the `_json`/`toTree` move or the `_edges`
           ordering feeding `removeNodeImpl`'s edge enumeration.
 
-          2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
+          **FIXED: `delete a collection`** — `_connections` reads each child's own atom again, with an
+      equality cutoff on the resolved list. Perf unaffected.
+
+      **`deletion undo` fails at the DELETE step (line 93), not the undo.** Expects 0, gets 3 on a
+      three-level nest where the two-level case now passes: the orphan cascade stops at depth 1.
+      `removeEdgeImpl`'s orphan branch calls `removeNodesImpl(graph, [endpoint])` with `edges`
+      defaulting to **false**. Passing `true` there was TRIED and made no difference (unit tests stay
+      green, e2e unchanged), so it is not the cause and was reverted — do not retry it. The depth-1
+      cascade observation still stands; the mechanism is elsewhere.
+
+      2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
              consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
              `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
              console error. NOTE `8ff86d48` does not build in isolation — it removed `Graph.initialize`
