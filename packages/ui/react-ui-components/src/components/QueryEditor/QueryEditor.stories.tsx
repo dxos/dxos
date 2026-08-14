@@ -23,35 +23,37 @@ const createTags = (): Tag.Map => ({
   tag_3: Tag.make({ label: 'New' }),
 });
 
+const DefaultStory = (args: QueryEditorProps) => {
+  const { space } = useClientStory();
+  const [filter, setFilter] = useState<Filter.Any>();
+  // Create tags and builder at render time to avoid Storybook serialization issues.
+  const tags = useMemo(() => args.tags ?? createTags(), [args.tags]);
+
+  // The editor parses the DSL itself; a story that rebuilt the filter here would be exercising its
+  // own `QueryBuilder` rather than the component's.
+  const handleFilterChange = useCallback<NonNullable<QueryEditorProps['onFilterChange']>>(
+    ({ filter }) => setFilter(filter),
+    [],
+  );
+
+  return (
+    <div className='flex flex-col gap-2'>
+      <Toolbar.Root>
+        <QueryEditor {...args} db={space?.db} tags={tags} onFilterChange={handleFilterChange} />
+      </Toolbar.Root>
+
+      <JsonHighlighter data={filter} classNames='text-xs' />
+    </div>
+  );
+};
+
 const meta = {
   title: 'ui/react-ui-components/QueryEditor',
   component: QueryEditor,
-  render: (args: QueryEditorProps) => {
-    const { space } = useClientStory();
-    const [filter, setFilter] = useState<Filter.Any>();
-    // Create tags and builder at render time to avoid Storybook serialization issues.
-    const tags = useMemo(() => args.tags ?? createTags(), [args.tags]);
-
-    // The editor parses the DSL itself; a story that rebuilt the filter here would be exercising its
-    // own `QueryBuilder` rather than the component's.
-    const handleFilterChange = useCallback<NonNullable<QueryEditorProps['onFilterChange']>>(
-      ({ filter }) => setFilter(filter),
-      [],
-    );
-
-    return (
-      <div className='flex flex-col gap-2'>
-        <Toolbar.Root>
-          <QueryEditor {...args} db={space?.db} tags={tags} onFilterChange={handleFilterChange} />
-        </Toolbar.Root>
-
-        <JsonHighlighter data={filter} classNames='text-xs' />
-      </div>
-    );
-  },
+  render: (args: QueryEditorProps) => <DefaultStory {...args} />,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column', classNames: 'p-2', scroll: true }),
+    withLayout({ layout: 'column' }),
     withClientProvider({
       types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
       createIdentity: true,

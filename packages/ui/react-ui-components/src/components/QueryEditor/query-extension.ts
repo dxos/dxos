@@ -122,17 +122,17 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
               // swallow their next keystroke; by the time the terminating space exists the caret has
               // already moved past the tag, so the chip never sits under it. Backspace then removes
               // the tag whole, which is how a chip should behave.
-              deco.add(
-                node.from,
-                node.to,
-                isTerminated(state, node.to)
-                  ? // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range
-                    // that starts at offset 0 paints before that offset's coordinate and the caret
-                    // draws to its right — pressing Home appeared to leave the caret after the tag.
-                    // `replace` states that the range becomes the chip, which resolves the boundary.
-                    Decoration.replace({ widget: new TagWidget(label, hue), atomic: true })
-                  : Decoration.mark({ class: mx('rounded-xs px-0.5', getStyles(hue).surface) }),
-              );
+              if (isTerminated(state, node.to)) {
+                // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range
+                // that starts at offset 0 paints before that offset's coordinate and the caret draws
+                // to its right — pressing Home appeared to leave the caret after the tag. `replace`
+                // states that the range becomes the chip, which resolves the boundary.
+                deco.add(node.from, node.to, Decoration.replace({ widget: new TagWidget(label, hue), atomic: true }));
+              } else {
+                for (const mark of tagMarks(node.from, node.to, hue)) {
+                  deco.add(mark.from, mark.to, mark.deco);
+                }
+              }
             }
             break;
           }
@@ -196,16 +196,16 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
     // A `#` with no label yet parses as an error, not a `Tag`, so the tree cannot decorate it — but
     // the affordance has to appear on the keystroke that opens the tag, not once it is valid.
     for (const range of bareTagRanges(state, tagged)) {
-      collected.push({
-        from: range.from,
-        to: range.to,
-        deco: Decoration.mark({ class: mx('rounded-xs px-0.5', getStyles(getHashHue('')).surface) }),
-      });
+      const label = state.sliceDoc(range.from + 1, range.to);
+      const tag = Tag.findTagByLabel(tags, label);
+      // Resolved the same way as a complete tag, so the colour does not jump when the parser starts
+      // accepting the label.
+      collected.push(...tagMarks(range.from, range.to, tag?.hue ?? getHashHue(tag?.id ?? label)));
     }
 
     const builder = new RangeSetBuilder<Decoration>();
-    // Widgets and marks can start at the same offset; `startSide` keeps that pairing stable.
-    collected.sort((a, b) => a.from - b.from || a.to - b.to);
+    // Equal starts sort WIDEST first so an enclosing mark (the chip's border) nests the inner ones.
+    collected.sort((a, b) => a.from - b.from || b.to - a.to);
     for (const { from, to, deco } of collected) {
       builder.add(from, to, deco);
     }
@@ -451,6 +451,32 @@ function intersectRanges(a: Range, b: Range): Range | null {
 
 /** Label characters the grammar admits after `#` (`Tag { "#" $[a-zA-Z0-9_\-]+ }`). */
 const TAG_LABEL_CHAR = /[a-zA-Z0-9_-]/;
+
+/**
+ * Marks drawing an UNFINISHED tag as the chip it is about to become.
+ *
+ * A widget cannot serve here: replacing the range would make the label uneditable mid-word, which is
+ * the whole reason an unterminated tag stays non-atomic. So the chip's two-part shape — `#` badge,
+ * then label — is painted over the live characters instead, matching {@link TagWidget} so the tag does
+ * not visibly change form when the terminating space finally arrives.
+ */
+const tagMarks = (from: number, to: number, hue: string): { from: number; to: number; deco: Decoration }[] => {
+  const { bg: fill, border, surface } = getStyles(hue);
+  const marks = [
+    // Enclosing border first; `buildQueryDecorations` sorts equal starts widest-first so it nests.
+    { from, to, deco: Decoration.mark({ class: mx('border rounded-xs', border) }) },
+    { from, to: from + 1, deco: Decoration.mark({ class: mx('px-1 text-black text-xs', fill) }) },
+  ];
+  if (to > from + 1) {
+    marks.push({
+      from: from + 1,
+      to,
+      deco: Decoration.mark({ class: mx('px-1 text-subdued rounded-r-[3px]', surface) }),
+    });
+  }
+
+  return marks;
+};
 
 /**
  * Whether a token is closed off by whitespace — what separates a tag the user has finished from one

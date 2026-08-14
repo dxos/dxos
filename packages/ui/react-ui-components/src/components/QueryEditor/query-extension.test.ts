@@ -79,6 +79,15 @@ describe('tag atomicity', () => {
     expect(ranges[0]).toMatchObject({ from: 0, to: 10 });
   });
 
+  test('an unterminated tag is painted as the chip it will become', () => {
+    // Same two-part shape as `TagWidget` — enclosing border, `#` badge, then label — so the tag does
+    // not visibly change form when the terminating space arrives.
+    // Iteration order is the RangeSet's own (by offset), not insertion order, so compare as a set.
+    const ranges = decorationsOf('#important');
+    expect(ranges.map(({ from, to }) => `${from}-${to}`).sort()).toEqual(['0-1', '0-10', '1-10'].sort());
+    expect(ranges.every((range) => !range.atomic)).toBe(true);
+  });
+
   test('a hash inside a string is not treated as a tag', () => {
     const ranges = decorationsOf('"# not a tag"');
     expect(ranges.filter((range) => range.from === 1)).toHaveLength(0);

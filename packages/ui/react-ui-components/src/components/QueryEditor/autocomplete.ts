@@ -12,6 +12,13 @@ export type CompletionOptions = {
 };
 
 /**
+ * Tag labels as they must appear in the document. Selecting a completion REPLACES the whole trigger
+ * range, `#` included, and inserts the item verbatim — so an unprefixed label would silently drop the
+ * `#` and leave text that no longer parses as a tag.
+ */
+const tagCompletions = (tags: Tag.Map): string[] => Object.values(tags).map((tag) => `#${tag.label}`);
+
+/**
  * Whether the caret sits in a tag the user is still typing: a `#` at the start of the current word,
  * with only label characters between it and `pos`.
  */
@@ -34,7 +41,7 @@ export const completions = ({ db, tags }: CompletionOptions) => {
     // A `#` with no label yet is an error node, not a `TagFilter` — the grammar needs a label
     // character before it accepts one — so the tree cannot answer for the keystroke that opens a tag.
     if (tags && isTypingTag(text, pos)) {
-      return Object.values(tags).map((tag) => tag.label);
+      return tagCompletions(tags);
     }
 
     switch (node.parent?.type.id) {
@@ -54,10 +61,9 @@ export const completions = ({ db, tags }: CompletionOptions) => {
         break;
       }
 
-      // TODO(burdon): Trigger on #.
       case QueryDSL.Node.TagFilter: {
         if (tags) {
-          return Object.values(tags).map((tag) => tag.label);
+          return tagCompletions(tags);
         }
 
         break;
