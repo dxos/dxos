@@ -297,7 +297,7 @@ export class ChatCompletionsClient extends Context.Service<
  * result messages are mapped to the OpenAI function-calling convention which
  * Ollama also accepts.
  */
-const promptToMessages = (prompt: Prompt.Prompt): ChatMessage[] => {
+const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat): ChatMessage[] => {
   const messages: ChatMessage[] = [];
 
   for (const message of prompt.content) {
@@ -331,7 +331,7 @@ const promptToMessages = (prompt: Prompt.Prompt): ChatMessage[] => {
             type: 'function',
             function: {
               name: part.name,
-              arguments: encodeToolParams(part),
+              arguments: encodeToolParams(part, apiFormat),
             },
           });
         }
@@ -363,7 +363,30 @@ const promptToMessages = (prompt: Prompt.Prompt): ChatMessage[] => {
   return messages;
 };
 
-const encodeToolParams = (part: Prompt.ToolCallPart): string => {
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * Ollama decodes `tool_calls[].function.arguments` into a map and rejects the whole request with 400
+ * if it is a string, whereas OpenAI specifies exactly that string — so the encoding follows the
+ * format rather than the value. Only requests carrying a prior tool call hit this, which is why it
+ * surfaces as the follow-up turn failing rather than the first one.
+ */
+const encodeToolParams = (part: Prompt.ToolCallPart, apiFormat: ApiFormat): string | Record<string, unknown> => {
+  if (apiFormat === 'ollama') {
+    if (isRecord(part.params)) {
+      return part.params;
+    }
+    // A string reaches here when the model streamed raw JSON; one that does not parse to an object
+    // has no map form, and an empty map is what Ollama can still decode.
+    try {
+      const parsed = typeof part.params === 'string' ? Tool.unsafeSecureJsonParse(part.params) : undefined;
+      return isRecord(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
   if (typeof part.params === 'string') {
     return part.params;
   }
@@ -635,7 +658,7 @@ export const make = (model: string) =>
         Effect.gen(function* () {
           const idGen = yield* IdGenerator.IdGenerator;
 
-          const messages = promptToMessages(options.prompt);
+          const messages = promptToMessages(options.prompt, config.apiFormat);
           const jsonFormat = options.responseFormat.type === 'json';
           const tools = toolsToRequest(options.tools);
           const requestBody = buildRequestBody(model, messages, false, jsonFormat, config.apiFormat, tools);
@@ -705,7 +728,7 @@ export const make = (model: string) =>
           Effect.gen(function* () {
             const idGen = yield* IdGenerator.IdGenerator;
 
-            const messages = promptToMessages(options.prompt);
+            const messages = promptToMessages(options.prompt, config.apiFormat);
             const jsonFormat = options.responseFormat.type === 'json';
             const tools = toolsToRequest(options.tools);
             const requestBody = buildRequestBody(model, messages, true, jsonFormat, config.apiFormat, tools);
