@@ -889,7 +889,19 @@ describe('query api', () => {
 
         expect(query.ast).toMatchObject({
           type: 'aggregate',
-          aggregates: [{ name: 'email', kind: 'group', property: 'email' }],
+          aggregates: [{ name: 'email', kind: 'group', properties: ['email'] }],
+        });
+        Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
+      });
+
+      test('group by a coalesce chain carries the whole chain in one entry', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).aggregate({
+          email: Aggregate.group({ coalesce: ['email', 'name'] }),
+        });
+
+        expect(query.ast).toMatchObject({
+          type: 'aggregate',
+          aggregates: [{ name: 'email', kind: 'group', properties: ['email', 'name'] }],
         });
         Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
       });
@@ -903,8 +915,8 @@ describe('query api', () => {
         expect(query.ast).toMatchObject({
           type: 'aggregate',
           aggregates: [
-            { name: 'name', kind: 'group', property: 'name' },
-            { name: 'email', kind: 'group', property: 'email' },
+            { name: 'name', kind: 'group', properties: ['name'] },
+            { name: 'email', kind: 'group', properties: ['email'] },
           ],
         });
         Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
@@ -948,7 +960,7 @@ describe('query api', () => {
         expect(query.ast).toMatchObject({
           type: 'aggregate',
           aggregates: [
-            { name: 'email', kind: 'group', property: 'email' },
+            { name: 'email', kind: 'group', properties: ['email'] },
             { name: 'items', kind: 'items', limit: 20 },
           ],
         });
@@ -964,7 +976,7 @@ describe('query api', () => {
         expect(query.ast).toMatchObject({
           type: 'aggregate',
           aggregates: [
-            { name: 'email', kind: 'group', property: 'email' },
+            { name: 'email', kind: 'group', properties: ['email'] },
             {
               name: 'items',
               kind: 'items',
@@ -988,7 +1000,7 @@ describe('query api', () => {
         expect(query.ast).toMatchObject({
           type: 'aggregate',
           aggregates: [
-            { name: 'email', kind: 'group', property: 'email' },
+            { name: 'email', kind: 'group', properties: ['email'] },
             { name: 'latest', kind: 'max', property: 'name' },
             { name: 'earliest', kind: 'min', property: 'name' },
             { name: 'total', kind: 'count' },

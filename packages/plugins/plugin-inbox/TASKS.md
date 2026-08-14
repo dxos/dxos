@@ -207,6 +207,28 @@ can be recorded there without a schema change. The Gmail sync mapper
 - Draft-reply benchmark + illocution (speech-act) classification: `packages/stories/stories-brain` (`pipelines/draft.ts`, `pipelines/questions.ts`).
 - Sync stats + body-part coverage: `operations/google/gmail/sync.ts`.
 
+## Messages without a `threadId`
+
+Drafts, transcriptions and assistant-authored messages carry no `threadId` (`Schema.optional` on
+`Message`, and no plugin-inbox creation site sets one); only synced Gmail/JMAP mail has a
+server-assigned id.
+
+### Tasks
+
+- [x] Conversation grouping keys on `threadId ?? id` — `Aggregate.group({ coalesce: [...] })`, added
+      to `@dxos/echo` for this (AST `group` entries now carry a `properties` fallback chain; `id`
+      resolves to the entity id). Each threadless message forms its own group, so the `items` preview
+      cap (`MAILBOX_THREAD_PREVIEW_COUNT` = 4) can no longer truncate a pool of unrelated messages.
+      Removed the null-group split in `MailboxArticle.tsx`.
+- [ ] **Threadless messages never reach the list at all** (blocks the above from being observable).
+      `buildThreadSemiJoin` (`containers/MailboxArticle/mailbox-search.ts`) wraps every view filter in
+      `Filter.type(Message, { threadId: Filter.in(matches.project('threadId')) })`, and a message with
+      no `threadId` can never satisfy it — in conversation **and** flat mode. Measured with the
+      `GroupedWithoutThreads` story (`threads: 0`, 20 messages): 0 tiles rendered, before and after the
+      grouping fix. Fix direction: union the semi-join with the directly-matching messages, so a
+      threadless match stands in for its own thread; needs care with the outer `.from(scopes)` (the
+      subquery's scope differs from the outer one) and with paging over the union.
+
 ## Refactoring
 
 See [`AUDIT.md`](AUDIT.md) for the full decomposition plan (mail stays as plugin-inbox;
