@@ -22,17 +22,16 @@ access, which is what makes the browser work. A package with several stores keep
 
 Each store owns its history table, since several packages share one physical database:
 
-| Package                                    | History tables                                                                                        |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| `core/echo/feed`                           | `feed_migrations`                                                                                     |
-| `core/echo/index-core`                     | `entity_meta_migrations`, `fts_index_migrations`, `reverse_ref_migrations`, `index_cursor_migrations` |
-| `core/echo/echo-host`                      | `space_state_migrations`, `automerge_heads_migrations`, `automerge_chunks_migrations`                 |
-| `sdk/client-services`                      | `metadata_migrations`, `hypercore_files_migrations`                                                   |
-| `core/halo/keyring`                        | `keyring_migrations`                                                                                  |
-| `core/mesh/teleport-extension-object-sync` | `blob_store_migrations`                                                                               |
-| `core/compute/crawler`                     | `state_store_migrations`, `agent_registry_migrations`                                                 |
-| `core/compute/pipeline-rdf`                | `rdf_migrations`                                                                                      |
-| `core/compute/pipeline-discord`            | `message_migrations`, `question_migrations`, `extracted_question_migrations`                          |
+| Package                         | History tables                                                                                        |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `core/echo/feed`                | `feed_migrations`                                                                                     |
+| `core/echo/index-core`          | `entity_meta_migrations`, `fts_index_migrations`, `reverse_ref_migrations`, `index_cursor_migrations` |
+| `core/echo/echo-host`           | `space_state_migrations`, `automerge_heads_migrations`, `automerge_chunks_migrations`                 |
+| `sdk/client-services`           | `metadata_migrations`, `hypercore_files_migrations`                                                   |
+| `core/halo/keyring`             | `keyring_migrations`                                                                                  |
+| `core/compute/crawler`          | `state_store_migrations`, `agent_registry_migrations`                                                 |
+| `core/compute/pipeline-rdf`     | `rdf_migrations`                                                                                      |
+| `core/compute/pipeline-discord` | `message_migrations`, `question_migrations`, `extracted_question_migrations`                          |
 
 Two properties of the library are accepted rather than worked around, and both are discipline
 rules a manifest diff must catch:
