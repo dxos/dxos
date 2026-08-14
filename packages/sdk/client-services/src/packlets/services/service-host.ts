@@ -12,7 +12,7 @@ import * as Scope from 'effect/Scope';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import { Event, Mutex, Trigger, scheduleTask, synchronized } from '@dxos/async';
+import { Event, Mutex, Trigger, synchronized } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesHandlers,
@@ -141,6 +141,13 @@ export type ClientServicesHostProps = {
   connectionLog?: boolean;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
+  /**
+   * Start edge networking as soon as the stack is open. Set `false` when the embedder drives it via
+   * {@link ClientServicesHost.startNetworking} — the worker does, so the dial cannot compete with
+   * the boot RPCs the tab is waiting on.
+   * @default true
+   */
+  autoConnect?: boolean;
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction>;
   runtimeProps?: ServiceContextRuntimeProps;
 };
@@ -159,15 +166,6 @@ export type InitializeOptions = {
 // Alias for consumers (tests, devtools, diagnostics) that referred to the former `ServiceContext`
 // orchestrator; its lifecycle and API now live on {@link ClientServicesHost} directly.
 export type ServiceContext = ClientServicesHost;
-
-/**
- * Grace period between "host booted" and the first edge dial. wa-sqlite runs in-process on the
- * worker thread, so the dial, its auth-header request, and the replication that follows all contend
- * with the boot RPCs the tab is waiting on — on a document-heavy profile the session handshake loses
- * that race and the client reports a connect timeout. Yielding the thread lets the queued handshake
- * drain first; replication then proceeds behind a live session.
- */
-const EDGE_NETWORKING_START_DELAY = 300;
 
 /**
  * Shared backend for all client services.
@@ -214,8 +212,11 @@ export class ClientServicesHost {
   // Stack components, resolved from the layer runtime on open. Present after `open` starts.
   #ctx?: Context;
 
-  /** Guards {@link startNetworking} against the worker-runtime and `_openStack` both firing. */
+  /** Guards {@link startNetworking} so repeated calls cannot start two connection loops. */
   #networkingStarted = false;
+
+  /** See {@link ClientServicesHostProps.autoConnect}. */
+  readonly #autoConnect: boolean;
   #metadataStore?: IMetadataStore;
   #keyring?: KeyringApi;
   #feedStore?: FeedStore<any>;
@@ -246,10 +247,12 @@ export class ClientServicesHost {
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
     callbacks,
+    autoConnect = true,
     runtime,
     runtimeProps,
   }: ClientServicesHostProps) {
     this.#callbacks = callbacks;
+    this.#autoConnect = autoConnect;
     this.#runtime = runtime;
     this.#runtimeProps = runtimeProps ?? {};
 
@@ -641,9 +644,9 @@ export class ClientServicesHost {
   }
 
   /**
-   * Allows outbound network activity to begin, after a short grace period for queued boot work.
-   * Called by the worker runtime once its start sequence completes, and from `_openStack` as a
-   * fallback for hosts with no external boot signal. Idempotent.
+   * Allows outbound network activity to begin. Idempotent. Called automatically when the stack opens
+   * unless {@link ClientServicesHostProps.autoConnect} is `false`, in which case the embedder decides
+   * when connecting is safe (and owns any delay).
    *
    * Only the edge dial needs gating: subduction defers while the socket is not `CONNECTED` and
    * resumes from its reconnect handler, and feed sync starts from `onReconnected`. Both therefore
@@ -654,16 +657,8 @@ export class ClientServicesHost {
       return;
     }
     this.#networkingStarted = true;
-    const edgeConnection = this.#edgeConnection;
-    log('scheduling edge networking start', { delay: EDGE_NETWORKING_START_DELAY });
-    scheduleTask(
-      this.#ctx ?? Context.default(),
-      () => {
-        log('starting edge networking');
-        edgeConnection.startNetworking();
-      },
-      EDGE_NETWORKING_START_DELAY,
-    );
+    log('starting edge networking');
+    this.#edgeConnection.startNetworking();
   }
 
   @synchronized
@@ -931,17 +926,9 @@ export class ClientServicesHost {
 
     log('stack opened');
 
-    // Fallback ONLY for hosts with no external boot signal (node, tests). A worker host calls
-    // `startNetworking()` itself after its start sequence drains, which is strictly later than this
-    // point — firing unconditionally here would dial before the session handshake and latch the
-    // guard, turning the worker's own call into a no-op and defeating the gate. The microtask lets a
-    // worker host, which signals within the same synchronous boot, be observed as already-signalled.
-    queueMicrotask(() => {
-      if (!this.#networkingStarted) {
-        log('no external boot signal; starting networking from the host');
-        this.startNetworking();
-      }
-    });
+    if (this.#autoConnect) {
+      this.startNetworking();
+    }
   }
 
   /**
