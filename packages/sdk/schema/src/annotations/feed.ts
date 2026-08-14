@@ -12,7 +12,6 @@ import { createAnnotationHelper } from '@dxos/echo/internal';
  * `Ref<Feed>`. Carrying the property name (rather than a bare `true`) is what lets a generic host
  * resolve the feed without hardcoding `.feed` — see {@link getFeedRef}.
  */
-// TODO(burdon): Should reference the property name?
 export const FeedAnnotationId = '@dxos/schema/annotation/Feed';
 
 export type FeedAnnotationValue = {
