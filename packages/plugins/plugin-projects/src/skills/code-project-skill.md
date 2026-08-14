@@ -110,8 +110,8 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
   own a task set; if `projectGet` shows none (a project created some other way), bootstrap one
   before recording tasks: `createObject { typename: 'org.dxos.type.taskSet', properties: { name:
 'Tasks' }, spaceId }`, then attach it with `updateObject { id: <project-id>, properties: {
-taskSet: {"/": "echo:///<task-set-id>"} } }`. If the bootstrap fails, say so — do **not** claim a task
-  was recorded.
+taskSet: {"/": "echo:///<task-set-id>"} }, spaceId }`. If the bootstrap fails, say so — do **not**
+  claim a task was recorded.
 - **Outline** — the free-text scratch surface (`outlineGet`/`outlineUpdate`). Keep a line
   starting `Resume:` holding the single next action, and a `Design: {"/": "echo:///<doc-id>"}` line
   pointing at the design document.
