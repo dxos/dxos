@@ -107,9 +107,9 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
         // instead, since `:` is a completion delimiter so the word under the caret is the typename.
         // The explicit key stays, for re-opening a dismissed menu.
         trigger={['#']}
-        activateOnTyping
-        // `type:` offers every typename before a character is typed; without this the menu waits for
-        // one, since an empty token otherwise suppresses it.
+        // NOT `activateOnTyping`: that opens the menu on every word character, and the popover takes
+        // focus each keystroke while returning nothing for most positions. `:` is the only delimiter
+        // with a list behind it, so the typename menu opens there and nowhere else.
         activateOnDelimiters={[':']}
         triggerKey='Ctrl-Space'
         getMenu={getMenu}
