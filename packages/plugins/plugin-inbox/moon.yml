@@ -14,7 +14,7 @@ tasks:
       pnpm exec dx-trace-imports
       --export ./InboxPlugin
       --to "@dxos/react-ui"
-      --conditions workerd,worker,node
+      --conditions workerd,worker
       --fail-on present
     deps:
       - dx-trace-imports:build

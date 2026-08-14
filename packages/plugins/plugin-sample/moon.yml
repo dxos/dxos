@@ -12,7 +12,7 @@ tasks:
       pnpm exec dx-trace-imports
       --export ./SamplePlugin
       --to "{react,react-dom}"
-      --conditions workerd,worker,node
+      --conditions workerd,worker
       --fail-on present
     deps:
       - dx-trace-imports:build

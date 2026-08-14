@@ -14,6 +14,7 @@ export default defineConfig({
     'skills': 'src/skills/index.ts',
     'sync': 'src/sync/index.ts',
     'capabilities': 'src/capabilities/index.ts',
+    'capabilities.workerd': 'src/capabilities/workerd.ts',
     'capabilities/node': 'src/capabilities/node.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
