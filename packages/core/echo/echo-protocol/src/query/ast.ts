@@ -459,11 +459,12 @@ const GroupAggregateGroup_ = Schema.Struct({
   name: Schema.String,
   kind: Schema.Literal('group'),
   /**
-   * Non-empty fallback chain: the first property holding a scalar value supplies this key component
-   * (`a ?? b`), so a single entry is the plain property form. Composite keys come from multiple
-   * `group` entries, never from this list.
+   * Fallback chain: the first property holding a scalar value supplies this key component (`a ?? b`),
+   * so a single entry is the plain property form. Composite keys come from multiple `group` entries,
+   * never from this list. Non-empty — an empty chain has no key to read and would silently degrade
+   * to a single `null`-keyed group.
    */
-  properties: Schema.Array(Schema.String),
+  properties: Schema.NonEmptyArray(Schema.String),
 });
 const GroupAggregateMax_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('max'), property: Schema.String });
 const GroupAggregateMin_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('min'), property: Schema.String });

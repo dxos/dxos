@@ -904,6 +904,11 @@ describe('query api', () => {
           aggregates: [{ name: 'email', kind: 'group', properties: ['email', 'name'] }],
         });
         Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
+
+        // An empty chain has no key to read, so it is rejected at the type level (and by the AST
+        // schema, which declares `properties` non-empty) rather than degrading to one `null` group.
+        // @ts-expect-error - `coalesce` requires at least one property.
+        Aggregate.group({ coalesce: [] });
       });
 
       test('group by multiple properties forms a composite key', () => {

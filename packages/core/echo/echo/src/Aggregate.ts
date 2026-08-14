@@ -17,7 +17,7 @@ import type * as Query from './Query';
  * unused optional fields to guard against at read sites).
  */
 export type Spec =
-  | { kind: 'group'; properties: readonly string[] }
+  | { kind: 'group'; properties: readonly [string, ...string[]] }
   | { kind: 'max'; property: string }
   | { kind: 'min'; property: string }
   | { kind: 'items'; limit?: number; order?: readonly QueryAST.Order[] }
@@ -77,8 +77,10 @@ class AggregateClass<T, V> implements Aggregate<T, V> {
  */
 export const group: {
   <T, K extends keyof T & string>(property: K): Aggregate<T, T[K] | null>;
-  <T, const K extends readonly (keyof T & string)[]>(key: { coalesce: K }): Aggregate<T, T[K[number]] | null>;
-} = (key: string | { coalesce: readonly string[] }): Any =>
+  <T, const K extends readonly [keyof T & string, ...(keyof T & string)[]]>(key: {
+    coalesce: K;
+  }): Aggregate<T, T[K[number]] | null>;
+} = (key: string | { coalesce: readonly [string, ...string[]] }): Any =>
   new AggregateClass({ kind: 'group', properties: typeof key === 'string' ? [key] : key.coalesce });
 
 /**
