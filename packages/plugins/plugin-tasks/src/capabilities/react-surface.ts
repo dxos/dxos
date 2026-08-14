@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
-        id: 'article.task-set',
+        id: 'article.taskSet',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, TaskSet.TaskSet),
           AppSurface.object(AppSurface.Section, TaskSet.TaskSet),
