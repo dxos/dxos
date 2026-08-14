@@ -548,19 +548,22 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
         {/* Summary row: avatar (col 1) | title (col 2) | date + star (col 3) | menu (col 4). */}
         {/* `db` (not `getContact`): a conversation holds few messages, so a query per tile is
             affordable here — unlike the virtualized mailbox list, which resolves the whole page at once. */}
-        {/* Avatar centred on the title's FIRST line, the same idiom as the mailbox card's `h-8` block:
-            the row is `items-start` (the title clamps to two lines), so centring against the whole
-            block would leave the avatar hanging below the name it belongs to. `1lh` at the title's own
-            size keeps the alignment correct whatever the theme sets `text-lg` to, and `py-1` matches
-            the title column so both start from the same origin. */}
-        <div className='px-2 py-1 text-lg flex items-center h-[1lh]'>
-          <ContactAvatar
-            actor={target.sender}
-            role='from'
-            db={db}
-            size={MESSAGE_AVATAR_SIZE}
-            onContactCreate={onContactCreate}
-          />
+        {/* Avatar centred on the title's FIRST line — the row is `items-start` (the title clamps to
+            two lines), so centring against the whole block would leave the avatar hanging below the
+            name it belongs to. The nesting mirrors the title column's own box: `py-1` on the OUTER
+            element, then an unpadded `1lh` line box to centre within. Putting both on one element
+            fails, because `h-[1lh]` is border-box and the padding then eats into the line height,
+            leaving the avatar high by exactly that padding. */}
+        <div className='px-2 py-1 text-lg'>
+          <div className='flex items-center h-[1lh]'>
+            <ContactAvatar
+              actor={target.sender}
+              role='from'
+              db={db}
+              size={MESSAGE_AVATAR_SIZE}
+              onContactCreate={onContactCreate}
+            />
+          </div>
         </div>
 
         <div className='col-start-2 flex flex-col py-1'>

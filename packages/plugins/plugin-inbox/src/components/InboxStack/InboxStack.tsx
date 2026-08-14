@@ -509,6 +509,8 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
       messages,
       total,
       starredAtom,
+      inboxAtom,
+      enableArchive,
       enableIgnoreSender,
       enableCreateTopic,
       searchQuery,
@@ -520,6 +522,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
     // `messages` is already the capped preview; `total` (when larger) is the full thread size.
     const remaining = total !== undefined ? total - messages.length : 0;
     const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
+    const inInbox = useAtomValue(inboxAtom ?? NOT_STARRED_ATOM);
     const { subject } = getMessageProps(latest, new Date());
     const { setCurrentId, setSelected } = useMosaicContainer('ConversationTile');
 
@@ -570,6 +573,17 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
           menuItems={
             onAction
               ? [
+                  // Acts on the latest message, as the star does — the conversation is represented by
+                  // it everywhere else in this tile.
+                  ...(enableArchive
+                    ? [
+                        {
+                          label: inInbox ? 'Archive' : 'Move to Inbox',
+                          icon: inInbox ? 'ph--archive--regular' : 'ph--tray--regular',
+                          onClick: () => onAction({ type: 'archive', messageId: latest.id }),
+                        },
+                      ]
+                    : []),
                   ...(enableIgnoreSender && latest.sender?.email
                     ? [
                         {
@@ -659,9 +673,12 @@ const ConversationMessageRow = ({
         <ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />
       </Card.Block>
       <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
-        <button type='button' className='flex items-center justify-between w-full h-8 text-start text-sm'>
+        <button type='button' className='flex items-center w-full h-8 text-start text-sm'>
           {from && <span className='truncate'>{from}</span>}
-          <span className='text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
+          {/* `ml-auto` rather than `justify-between` on the row: a message whose sender carries
+              neither name nor address renders no name at all, and `justify-between` would then treat
+              the date as the only child and pull it to the start. */}
+          <span className='ml-auto pis-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
         </button>
 
         {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
