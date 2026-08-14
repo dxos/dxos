@@ -238,28 +238,40 @@ an `Atom.family` that pins one atom, one deep-cloned value, one ECHO
 subscription and the family key **per distinct key ever read**. Full mechanism,
 cost model, and the complete site catalog: ATOMS-AUDIT.md.
 
-- [ ] **R1. Give the app registry a `defaultIdleTTL`.**
-      `plugin-manager.ts:312` builds it with a bare `Registry.make()` — no TTL,
-      so an unsubscribed atom is swept on the next scheduled task. That
-      aggressiveness is why the sites below reached for `keepAlive` in the first
-      place. Enables R2; do it first.
-- [ ] **R2. Drop `keepAlive` from derived families.** Band A1
-      (`echo/internal/Obj/atoms.ts`, 8 families keyed by live ECHO objects —
-      the largest single site, and it also blocks Phase 2's doc-handle eviction
-      and feeds Phase 4's churn), then B1–B4 and C.
-- [ ] **R3. Pin containers, not keys.** For genuinely stateful sites —
-      `app-graph/graph.ts` `_node`/`_edges`, navtree `itemAtomFamily`,
-      attention backends — hold values in an owner-controlled `Map` and pin one
-      notification atom. Resolves the standing `removeNodeImpl` TODO.
-- [ ] **R4. Fix per-mount sites.** `react-ui-menu/Menu.tsx:53` and
-      `plugin-sheet/useToolbarState.ts:21` mint a pinned atom per component
-      mount via `useMemo`.
-- [ ] **R5. Lint rule** for `keepAlive` inside `Atom.family` / `useMemo`, once
-      R2 has landed and the remainder are the intentional ones.
-- [ ] **Measure.** Registry census in `plugin-debug`'s stats panel
-      (`AtomRegistry.getNodes()`, bucketed by `keepAlive` and label prefix),
-      run against the Phase 1 mailbox scenario before/after each remedy. The
-      audit's bands are modelled from a per-node cost table, not observed.
+Bounding plan (work items W1–W7, full detail in ATOMS-AUDIT.md): atom
+lifetime is bounded by subscribers plus a short idle TTL, and the family's
+weak keying releases keys once the registry stops pinning. For ECHO this
+yields atom-lifetime ⊆ object-lifetime and inverts the pin — atoms stop
+holding subscriptions on unwatched objects, moving residency responsibility
+upstream to ECHO. **App-graph (`graph.ts` `_node`/`_edges`) is excluded —
+being handled independently.**
+
+- [ ] **W1. TTL groundwork.** `defaultIdleTTL` (~5 s) on the `PluginManager`
+      registry (`plugin-manager.ts:312` is a bare `Registry.make()`); lifecycle
+      regression test via `AtomRegistry.getNodes()`. First — enables the rest.
+- [ ] **W2. ECHO families.** Drop `keepAlive` from all 11 (`Obj/atoms.ts` ×8,
+      `Annotation/atoms.ts` ×2, `Ref/atoms.ts` ×1); add per-family
+      `Atom.setIdleTTL` + `withLabel`; leak test; audit one-shot
+      `registry.get` consumers. Unblocks Phase 2 doc-handle eviction —
+      residency policy becomes ECHO's follow-up.
+- [ ] **W3. Attention/view-state containers.** `LocalBackend` un-pin (storage
+      is the store); `MemoryBackend`/`AttentionManager` hold values in their
+      existing `Map`s, one pinned notify atom per owner; prune ids on
+      `update()`.
+- [ ] **W4. Mechanical removals.** `TagIndex` (3), `StateMap`, magazine (5),
+      navtree hook families (5, plus hoist out of `useMemo` to stop per-mount
+      stranding), navtree `itemAtomFamily` (map-backed like W3), native-fs
+      generation counters.
+- [ ] **W5. Per-mount swaps.** `Menu.tsx:53`, `useToolbarState.ts:21`:
+      `keepAlive` → `useAtomMount` (value lives exactly as long as the
+      component).
+- [ ] **W6. Singleton value bounds.** `companionChatCacheAtom`: evict entries
+      when the companion closes, or LRU-cap; review `AiContext._objects`
+      against census data.
+- [ ] **W7. Guardrails + verify.** Lint rule for `keepAlive` inside
+      `Atom.family`/`useMemo` (allowlist Band D); registry census in
+      `plugin-debug`'s stats panel; mailbox scenario before W2 and after each
+      item; `soak.mjs` for RSS. The audit's bands are modelled, not observed.
 
 ## Deferred
 

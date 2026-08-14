@@ -278,48 +278,182 @@ mistaken for gaps: all of `graph-builder.ts`, `graph.ts` `_connections` /
 
 ---
 
-## Remedies
+## Bounding plan
 
-### R1. Give the app registry a `defaultIdleTTL` — do this first
+Work items to bound every site above **except A2 (app-graph)**, which is being
+addressed independently. Each item is independently landable; W1 goes first
+because it makes every later removal a cache-policy tweak instead of a
+behaviour change. Both mechanisms the plan relies on already exist upstream —
+`Atom.setIdleTTL` (per-atom TTL, honoured by any registry; `Atom.ts:213`) and
+`useAtomMount` (`@effect/atom-react/Hooks.ts:225`, pins an atom for exactly a
+component's lifetime) — so no Effect changes are needed.
 
-`PluginManager` builds the app-wide registry with a bare
-`Registry.make()` (`plugin-manager.ts:312`), i.e. **no idle TTL**: a
-non-`keepAlive` atom is swept on the very next scheduled task after its last
-subscriber leaves (`scheduleNodeRemoval`, 0 ms). That aggressiveness is _the
-reason_ every site above reached for `keepAlive` — several say so in their
-comments verbatim.
+### The lifetime model
 
-For contrast, `@effect/atom-react`'s default context registry uses
-`defaultIdleTTL: 400`.
+One rule decides every item below: **an atom's lifetime is bounded by its
+subscribers, plus a short idle TTL; the family's weak keying does the rest.**
+Once the registry stops pinning an atom, the only strong references are its
+active subscribers. When the last one leaves and the TTL lapses, the node is
+swept, the atom becomes collectable, the family's `FinalizationRegistry` drops
+the entry — and the key (for ECHO, the object proxy) is released with it.
 
-Setting a TTL (30–60 s is a reasonable starting point) converts "pinned forever"
-into "cached for a while" and makes removing `keepAlive` a safe, mechanical
-change everywhere else. Without it, each removal is a behaviour change to argue
-about individually. **This is the enabling change for R2.**
+For the ECHO families this yields exactly "atom bounded to the life of the
+object", by subset: a subscriber implies the object is rendered, so
+atom-lifetime ⊆ object-lifetime — and it **inverts the pin**. Today atoms hold
+live `Obj.subscribe` handles on objects nobody is watching, so the atom layer
+is what keeps object cores (and their doc handles) resident. After W2, a swept
+atom holds nothing, and object residency becomes ECHO's decision alone — the
+onus moves upstream to ECHO to bound how many objects it keeps materialized
+(the Phase 2 doc-handle-eviction item, currently blocked by these very
+subscriptions).
 
-### R2. Remove `keepAlive` from every derived family
+The alternative reading — cache the atom as long as ECHO holds the object,
+evict the two together — would need a registry eviction API that does not
+exist. Subscriber-bounding is a strict subset of that lifetime and needs no
+upstream change; if a cache tied to object residency ever proves necessary,
+that is an Effect feature request, not something to emulate with `keepAlive`.
 
-Bands A1, B1–B4, C. No state is lost: the value is re-derivable from ECHO, an
-index, storage, or another atom. Mechanical, per-file, independently landable.
+### W1. TTL groundwork — first, small
 
-### R3. Pin containers, not keys
+The reason every site reached for `keepAlive` is that an un-pinned atom is
+swept on the **very next scheduled task** after its last subscriber leaves
+(`scheduleNodeRemoval`, 0 ms — `plugin-manager.ts:312` builds the app registry
+with a bare `Registry.make()`, no `defaultIdleTTL`; `@effect/atom-react`'s
+default context registry uses 400 ms).
 
-For the genuinely stateful sites — `graph.ts` `_node`/`_edges`, navtree
-`itemAtomFamily`, `MemoryBackend`, `Attention._map` — hold values in a plain
-`Map` that the owner controls and can delete from, and pin **one** atom for
-change notification. Bounded pinned count: 1 per owner instead of 1 per key.
-Resolves the `removeNodeImpl` TODO as a by-product.
+- Set `defaultIdleTTL` on the `PluginManager` registry. Start at ~5 s: long
+  enough to span remounts, tab switches within a deck, and virtualized-list
+  scroll jitter; short enough that scrolled-past state drains promptly.
+- Hot derived families that want a longer cache set their own
+  `Atom.setIdleTTL` per family (W2 does this for ECHO) — package-local, and
+  independent of which registry hosts the atom.
+- Add a lifecycle regression test against `AtomRegistry.getNodes()`:
+  subscribe → unsubscribe → clock advance → node gone; and (under
+  `--expose-gc`) family key released.
 
-### R4. Fix the per-mount sites
+### W2. ECHO atom families — the big one
 
-`Menu.tsx:53` and `useToolbarState.ts:21`: drop `keepAlive`, or scope the atom
-to a provider that disposes. Two-line changes.
+Scope: `echo/src/internal/Obj/atoms.ts` (8 families),
+`internal/Annotation/atoms.ts` (2), `internal/Ref/atoms.ts` (1).
 
-### R5. Lint rule
+- Remove `.pipe(Atom.keepAlive)` from all eleven; add
+  `Atom.setIdleTTL(ECHO_ATOM_TTL)` (~5–30 s, one shared constant) so a
+  re-render or quick navigation re-attaches to the cached node instead of
+  re-cloning.
+- Rebuild semantics are already correct: every family's `read` re-subscribes
+  from scratch and registers an `addFinalizer` unsubscribe, so sweep → later
+  re-read is a clean rebuild. `refWithReactiveFamily` (line 129) has run
+  un-pinned all along — the existence proof.
+- Audit the non-React consumers: `grep` for one-shot `registry.get(Obj.atom…)`
+  reads (graph builders, tools). Each such read builds and sweeps a node; the
+  TTL amortizes repeats. None should need pinning — if one does, it pins on
+  its own side with `registry.mount`, not in the family.
+- Add `withLabel` to each family while touching them, so the census (below)
+  attributes per family.
+- Tests: existing `echo-react` `useObject` suite, `proxy-identity.test.ts`,
+  `entity-hash.test.ts`, plus a new leak test — render N objects, unmount,
+  advance TTL, assert registry node count returns to baseline.
+- Record the unblocked follow-up in Phase 2: with atoms no longer holding
+  subscriptions on unwatched objects, ECHO can evict object cores/doc handles
+  by residency policy (LRU over materialized cores, or eviction on space
+  close). That work is ECHO's, not the atom layer's; this item just removes
+  the structural blocker.
 
-`Atom.keepAlive` inside an `Atom.family` callback, or inside a `useMemo`, is
-almost always wrong. Worth a rule alongside `dxos-subpath-imports` once R2 has
-landed and the remaining sites are the intentional ones.
+Risk: a consumer that relied on a pinned atom's value surviving with zero
+subscribers (write-then-read-later through the registry). The ECHO families
+are read-only derivations, so none should exist; the leak test plus a mailbox
+smoke run is the check.
+
+### W3. Attention / view-state backends — container pattern
+
+Scope: `react-ui-attention` — `MemoryBackend`, `LocalBackend`
+(`core/backends.ts:25`, `:94`), `AttentionManager._getAtom`
+(`types/Attention.ts:89`).
+
+These are stateful (the comments are right that a swept atom would drop
+session state), but they already own a strong `Map` — so the fix is to make
+the **map** the store and stop pinning per-key atoms:
+
+- `LocalBackend`: derived — `localStorage` is the store. Drop `keepAlive`; the
+  atom's read seeds from storage (it already does), sweep loses nothing.
+- `MemoryBackend`: keep values in a plain `Map<string, value>`; atoms become
+  un-pinned reads over the map, writes update the map then the atom. One
+  pinned notify atom per backend instance, not one per key. On-demand reads by
+  agent tools (the scenario the current comment defends) read the map.
+- `AttentionManager`: same conversion, plus prune — `update()` sees the full
+  current id set, so entries for ids no longer in the DOM can be deleted
+  instead of accumulating for the session.
+
+Bounded result: pinned atoms per backend = 1, map entries prunable by owner.
+
+### W4. Derived families in SDK and plugins — mechanical removals
+
+All value-recomputable, no container needed; drop `keepAlive`, W1's TTL covers
+re-render continuity:
+
+- `sdk/schema/src/TagIndex.ts` — 3 families (also stops N dead subscribers
+  recomputing on every tag mutation).
+- `sdk/schema/src/StateMap.ts` — `sliceFamily`.
+- `plugin-magazine/src/atoms/` — 5 families; brings them in line with
+  `magazine-posts.ts`, which is already un-pinned.
+- `plugin-navtree/src/hooks/useNavTreeModel.ts` — 5 families. Also fix the
+  per-mount multiplication: the families are created inside `useMemo`, so each
+  remount strands the previous generation. Either hoist to module-level
+  families keyed by `graph` (nested `Atom.family`), or accept that once
+  un-pinned the stranded generation is collectable and leave the `useMemo`.
+  Prefer the hoist — it also restores cross-remount cache hits.
+- `plugin-navtree/src/capabilities/state.ts` `itemAtomFamily` — stateful, but
+  `backingState` (a plain `Map`) is already the store and reads already seed
+  from it; un-pin the family and route writes through map-then-atom, same
+  shape as W3.
+- `plugin-native-filesystem` `markdownBindingGeneration` (both copies) —
+  generation counters; a swept counter restarting at 0 is still a change
+  signal, so un-pinning is safe.
+
+### W5. Per-mount atoms — swap `keepAlive` for `useAtomMount`
+
+Scope: `react-ui-menu/Menu.tsx:53`, `plugin-sheet/useToolbarState.ts:21`.
+
+Replace `useMemo(() => Atom.make(…).pipe(Atom.keepAlive), [])` with the same
+`useMemo` minus `keepAlive`, plus `useAtomMount(atom)`. The mount holds a
+listener for exactly the component's lifetime — the menu-items map survives
+while the provider is mounted even when no menu content is open (the case
+`keepAlive` was defending against), and is swept after unmount + TTL instead
+of never. If more sites with this shape appear, extract a
+`useSessionAtom(make)` helper.
+
+### W6. Growing singletons — bound the value, not the atom
+
+`plugin-assistant/capabilities/state.ts:28` `companionChatCacheAtom`: the atom
+is a legitimate singleton, but its value is a `Record<string, Obj.Unknown>`
+that grows per companion chat and pins ECHO objects. Evict the entry when its
+companion closes (deck state already knows), or cap with LRU semantics. Keeps
+the existing TODO about serialization/hydration intact. Same review for
+`AiContext._objects` if session-scoped growth shows up in the census.
+
+### W7. Guardrails and verification
+
+- Lint rule (alongside `dxos-subpath-imports`): flag `Atom.keepAlive` inside
+  an `Atom.family` callback or a `useMemo`; allowlist the Band D sites.
+- Registry census in `plugin-debug`'s stats panel (see below); run the Phase 1
+  mailbox scenario before W2 and after each item; `scripts/memory/soak.mjs`
+  for the RSS trend.
+
+### Sequencing
+
+| Order | Item                      | Size | Depends on  |
+| ----- | ------------------------- | ---- | ----------- |
+| 1     | W1 TTL groundwork         | S    | —           |
+| 2     | W2 ECHO families          | M    | W1          |
+| 3     | W4 mechanical removals    | S–M  | W1          |
+| 4     | W5 per-mount swaps        | S    | W1          |
+| 5     | W3 attention containers   | M    | W1          |
+| 6     | W6 singleton value bounds | S    | census data |
+| 7     | W7 lint + census          | S–M  | W2 landed   |
+
+W2–W5 are parallelizable once W1 lands. A2 (app-graph `_node`/`_edges`) is
+deliberately absent — being handled independently; its container-pattern shape
+is sketched in the site entry above if useful there.
 
 ## Measuring this
 
