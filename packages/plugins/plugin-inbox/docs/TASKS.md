@@ -215,8 +215,15 @@ Committed, unpushed. This is the PR to open first.
       ordered list across page boundaries).
 - [x] **Open an attachment in its own plank** — `Row.Attachments` is presentational today; needs a click
       handler, the attachment ref resolved to its Blob/object DXN, and a surface for that type.
-- [ ] **Mailbox card: rows showing the inbox message count** — read `inbox`-tag membership from the tag
-      index (a reactive atom), never a feed scan. Settle which counts earn a row.
+- [ ] **Mailbox card: rows showing the inbox message count** — NOT as ready as it was filed. Two
+      findings: (1) there is NO `cardContent` surface registered for `Mailbox` at all, so this is a new
+      surface rather than rows added to an existing card; and (2) the task's own "settle which counts
+      earn a row" is an unanswered design question — inbox / starred / important / unread / total are
+      all candidates and the card has room for two or three.
+      The DATA side is trivial and matches the constraint: `TagIndex.taggedIdsAtom(tagIndex, tagId)`
+      already returns a reactive `Atom<readonly EntityId[]>`, so a count is its `.length` — no feed
+      scan, exactly as specified. Deliberately not built ahead of the design decision, since an unused
+      helper would be dead code.
 - [x] **`useCardHover` target-change regression test** — the hook is exported from `Row.tsx` and
       rendered, since the behaviour is a dependency-array property rather than extractable logic.
       Needed `happy-dom` in `react-ui-card`'s vite config (it ran bare node) and
