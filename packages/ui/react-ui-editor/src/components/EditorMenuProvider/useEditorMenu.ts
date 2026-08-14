@@ -31,7 +31,7 @@ export type UseEditorMenuProps = {
    */
   searchTriggers?: string[];
   getMenu?: (context: GetMenuContext) => MaybePromise<EditorMenuGroup[]>;
-} & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder' | 'activateOnTyping'>;
+} & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder' | 'activateOnTyping' | 'activateOnDelimiters'>;
 
 export type UseEditorMenu = {
   groupsRef: RefObject<EditorMenuGroup[]>;
@@ -66,6 +66,7 @@ export const useEditorMenu = ({
   triggerKey,
   placeholder,
   activateOnTyping,
+  activateOnDelimiters,
   filter = true,
   searchTriggers,
   getMenu,
@@ -229,6 +230,7 @@ export const useEditorMenu = ({
       triggerKey,
       placeholder,
       activateOnTyping,
+      activateOnDelimiters,
       onClose: ({ view }) => handleOpenChange({ view, open: false }),
       onEnter: ({ view }) => {
         if (currentRef.current) {
@@ -255,6 +257,7 @@ export const useEditorMenu = ({
     serializedSearchTriggers,
     placeholder,
     activateOnTyping,
+    activateOnDelimiters,
   ]);
 
   return {

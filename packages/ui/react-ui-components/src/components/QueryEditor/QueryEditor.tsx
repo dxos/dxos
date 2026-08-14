@@ -108,6 +108,9 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
         // The explicit key stays, for re-opening a dismissed menu.
         trigger={['#']}
         activateOnTyping
+        // `type:` offers every typename before a character is typed; without this the menu waits for
+        // one, since an empty token otherwise suppresses it.
+        activateOnDelimiters={[':']}
         triggerKey='Ctrl-Space'
         getMenu={getMenu}
       >

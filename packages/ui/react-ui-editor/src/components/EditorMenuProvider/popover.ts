@@ -31,6 +31,13 @@ export type PopoverOptions = {
    */
   activateOnTyping?: boolean;
 
+  /**
+   * Delimiters after which an EMPTY token still opens the menu — `type:` offering every typename,
+   * say. Opt-in per consumer because the empty-token guard is load-bearing elsewhere: `RefEditor`
+   * uses `activateOnTyping` with no trigger, where an empty query would match every object.
+   */
+  activateOnDelimiters?: string[];
+
   // Trigger update.
   onTextChange?: (event: { view: EditorView; pos: number; text: string; trigger?: string }) => void;
   onClose?: (event: { view: EditorView }) => void;
@@ -117,7 +124,7 @@ const popoverAutoActivate = (options: PopoverOptions) =>
     const before = line.text.slice(0, selection.head - line.from);
     const idx = getLastIndexOf(before, options.delimiters ?? DELIMITERS);
     const token = before.slice(idx + 1);
-    if (token.length === 0) {
+    if (token.length === 0 && !(options.activateOnDelimiters ?? []).includes(before[idx])) {
       return;
     }
     view.dispatch({
