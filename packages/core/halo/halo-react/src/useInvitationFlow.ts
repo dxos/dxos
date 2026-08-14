@@ -24,12 +24,8 @@ export type InvitationFlowState = {
 const INITIAL: InvitationFlowState = { event: undefined, code: undefined };
 
 /**
- * Tracks one invitation flow — the {@link Invitation.Flow} returned by `Identity.share`/`join` or
- * `Space.share`/`join` — for rendering. Replaces subscribing to the client's
- * `CancellableInvitationObservable`. Reactive: re-renders on every lifecycle event. Drive the flow
- * through the `Invitation` verbs (`authenticate` / `cancel`).
- *
- * The flow's streams and effects carry no service requirement, so this needs no `HaloProvider`.
+ * Tracks one {@link Invitation.Flow} for rendering, re-rendering on each lifecycle event. Needs no
+ * `HaloProvider`: a flow's streams and effects carry no service requirement.
  */
 export const useInvitationFlow = (flow?: Invitation.Flow): InvitationFlowState => {
   const atom = useMemo(

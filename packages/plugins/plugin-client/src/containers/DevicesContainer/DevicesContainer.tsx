@@ -121,23 +121,33 @@ const DeviceInvitation = (props: Pick<DeviceInvitationProps, 'createInvitationUr
   const client = useClient();
   const [identityService] = useCapabilities(ClientCapabilities.IdentityService);
   const [flow, setFlow] = useState<Invitation.Flow>();
+  // Latched before the share resolves, so a second click cannot open a second live invitation.
+  const [pending, setPending] = useState(false);
 
   const onInvitationCreate = useCallback(() => {
-    if (!identityService) {
+    if (!identityService || pending || flow) {
       return;
     }
-    void EffectEx.runPromise(identityService.share()).then(async (flow) => {
-      // Playwright reads this line off the console to drive the device-invitation flows.
-      if (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
-        log.info(JSON.stringify({ invitationCode: await EffectEx.runPromise(flow.code) }));
-      }
-      setFlow(flow);
-    });
-  }, [client, identityService]);
+    setPending(true);
+    void EffectEx.runPromise(identityService.share())
+      .then(async (created) => {
+        // Playwright reads this line off the console to drive the device-invitation flows.
+        if (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
+          log.info(JSON.stringify({ invitationCode: await EffectEx.runPromise(created.code) }));
+        }
+        setFlow(created);
+      })
+      .catch((err) => log.catch(err))
+      .finally(() => setPending(false));
+  }, [client, identityService, pending, flow]);
 
   const onInvitationDone = useCallback(() => {
+    // Cancel before dropping the handle: clearing local state alone leaves the host side listening.
+    if (flow) {
+      void EffectEx.runPromise(flow.cancel()).catch((err) => log.catch(err));
+    }
     setFlow(undefined);
-  }, []);
+  }, [flow]);
 
   if (flow) {
     return <DeviceInvitationImpl {...props} {...{ flow, onInvitationCreate, onInvitationDone }} />;
@@ -155,8 +165,10 @@ const DeviceInvitationImpl = ({
   const { event, code } = useInvitationFlow(flow);
   const url = code && createInvitationUrl(code);
 
+  // Every terminal event returns to the creation view; parking on the completion icon would strand
+  // a failed or cancelled invitation with no way to retry.
   useEffect(() => {
-    if (event?._tag === 'success') {
+    if (event && (event._tag === 'success' || event._tag === 'cancelled' || event._tag === 'error')) {
       onInvitationDone();
     }
   }, [event?._tag]);

@@ -19,13 +19,13 @@ import { NotebookArticle, ScriptArticle, ScriptSettings } from '#containers';
 import { useCompiler } from '#hooks';
 import { Notebook, ScriptCapabilities, Settings } from '#types';
 
-/** Hub service the beta capability is granted against. */
 const HUB_SERVER_NAME = 'hub.dxos.network';
 
 export type ScriptSettingsSurfaceProps = {
   subject: AppCapabilities.Settings;
 };
 
+/** Hub authentication is a write, so it is dispatched as an operation rather than mapped as props. */
 export const ScriptSettingsSurface = ({ subject }: ScriptSettingsSurfaceProps) => {
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
   const { invokePromise } = useOperationInvoker();

@@ -3,7 +3,7 @@
 '@dxos/plugin-client': minor
 ---
 
-Completes the HALO consumer-migration surface: no plugin reaches for `@dxos/client` to do HALO work any more.
+Completes the HALO consumer-migration surface: no plugin reaches for `@dxos/client` to do HALO work anymore.
 
 - **`useInvitationFlow(flow)`** (`@dxos/halo-react`) renders any `Invitation.Flow` — its latest lifecycle event plus the shareable code — replacing a subscription to the client's `CancellableInvitationObservable`. The code is re-emitted with each event so a rendered QR and the flow state cannot tear.
 - **`Identity.DeviceInfo` gained `presence`, `os`, `platform`, and a populated `kind`**, which is what a device list needs to show status, name, and icon. `@dxos/shell`'s `DeviceListItem` now accepts the structural `ShellDevice` that `DeviceInfo` satisfies, so a HALO-backed caller renders it directly; shell's own client-backed `DeviceList` maps through the newly exported `toShellDevice`.

@@ -223,7 +223,7 @@ Missing API 7 (ECHO React bindings), not on HALO.
 - **HALO imperative singleton tier: complete** except the EDGE-auth (3) and
   script/onboarding cases.
 - **HALO tier COMPLETE: Missing APIs 1–6 are all DONE.** No plugin reaches for
-  `@dxos/client` to do HALO work any more. What remains in the plugins is the
+  `@dxos/client` to do HALO work anymore. What remains in the plugins is the
   non-HALO set: ECHO (7), space-invitation UI (8), config/mesh/services (9), and the
   test harness (10) — plus two deliberate boundaries, the CLI `src/commands/**`
   (which construct the client) and plugin-client's own client provider. The

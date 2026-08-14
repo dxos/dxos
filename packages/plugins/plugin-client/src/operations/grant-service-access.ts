@@ -9,11 +9,7 @@ import { Identity } from '@dxos/halo';
 
 import { GrantServiceAccess } from './definitions';
 
-/**
- * Writes a self-issued `ServiceAccess` credential admitting this identity to an EDGE/Hub service.
- * An operation rather than a direct service call so a component can grant access without holding
- * the client's credential-write surface.
- */
+/** An operation so a component can grant access without holding a credential-write surface. */
 const handler: Operation.WithHandler<typeof GrantServiceAccess> = GrantServiceAccess.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ serverName, capabilities }) {

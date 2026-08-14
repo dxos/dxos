@@ -12,7 +12,7 @@ import { describe } from 'vitest';
 import { Identity } from '@dxos/halo';
 import { PublicKey, SpaceId } from '@dxos/keys';
 
-import { currentOf, makeClientLayer } from './testing';
+import { currentOf, makeClientLayer, pollUntil } from './testing';
 
 describe('Identity', () => {
   it.effect(
@@ -64,9 +64,20 @@ describe('Identity', () => {
       // Registry.get, not a subscription: a reader evaluating before the first stream tick must
       // still see the existing identity.
       const registry = Registry.make();
-      expect(Option.getOrThrow(registry.get(Identity.atom(service))).did).toEqual(identity.did);
+      const atom = Identity.atom(service);
+      expect(Option.getOrThrow(registry.get(atom)).did).toEqual(identity.did);
       // Same service, same atom — the family is keyed by reference.
-      expect(Identity.atom(service)).toBe(Identity.atom(service));
+      expect(Identity.atom(service)).toBe(atom);
+
+      // Subscribe, then mutate: the seed alone would satisfy the assertions above.
+      const seen: (string | undefined)[] = [];
+      const unsubscribe = registry.subscribe(atom, (value) => seen.push(Option.getOrUndefined(value)?.displayName));
+      yield* Identity.updateProfile({ displayName: 'renamed' });
+      yield* pollUntil(
+        Effect.sync(() => seen),
+        (values) => values.includes('renamed'),
+      );
+      unsubscribe();
     }, Effect.provide(makeClientLayer())),
   );
 
