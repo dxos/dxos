@@ -268,6 +268,22 @@ const remapStoredResponse = (
 };
 
 /**
+ * Drops the provider's request and response headers before a conversation is persisted.
+ *
+ * The store is committed to git, and those headers carry the account's `anthropic-organization-id`
+ * and `anthropic-workspace-id` alongside per-run `request-id`, tracing (`traceparent`, `b3`,
+ * `cf-ray`) and rate-limit values — none of which replay reads, and the last of which would churn
+ * every fixture on regeneration. The surrounding `method`/`url`/`status` stay: they describe the
+ * call rather than the caller. Headers are emptied rather than removed so the part keeps its shape.
+ */
+const responseWithoutProviderHeaders = (response: readonly unknown[]): readonly unknown[] =>
+  response.map((part) =>
+    deepMapValues(part, (value, recurse, key) =>
+      key === 'headers' && value !== null && typeof value === 'object' && !Array.isArray(value) ? {} : recurse(value),
+    ),
+  );
+
+/**
  * Internal seams exposed for unit testing the dynamic-value matching/substitution logic.
  * Not part of the public API.
  */
@@ -283,6 +299,8 @@ export const __testing = {
     livePrompt: unknown,
     patterns: readonly RegExp[],
   ): readonly unknown[] => remapStoredResponse(storedPrompt, storedResponse, livePrompt, buildDynamicMatcher(patterns)),
+  /** Empties the provider headers a conversation would otherwise carry into the committed store. */
+  responseWithoutProviderHeaders,
 };
 
 //
@@ -718,7 +736,10 @@ class FixtureStore {
       const dir = await this.#dir();
       await mkdir(dir, { recursive: true });
       const file = join(dir, `${await hashKey(matchKey(conversation, this.#dynamicMatcher))}.json`);
-      await writeFile(file, encodeConversation(conversation));
+      await writeFile(
+        file,
+        encodeConversation({ ...conversation, response: responseWithoutProviderHeaders(conversation.response) }),
+      );
     });
   }
 

@@ -186,6 +186,50 @@ describe('memoization', () => {
   );
 });
 
+describe('provider header redaction', () => {
+  const { __testing } = LanguageModelFixture;
+
+  // Shape of the `response-metadata` part the Anthropic provider emits: the account's org/workspace
+  // ids and per-run request/trace values, none of which replay reads.
+  const responseWithHeaders = [
+    {
+      type: 'response-metadata',
+      id: 'msg_011CdzaqKmwDeguw',
+      request: {
+        method: 'POST',
+        url: 'https://api.anthropic.com/v1/messages',
+        headers: { 'x-api-key': '<redacted>', 'traceparent': '00-fc2a0415-f42136e9-01' },
+      },
+      response: {
+        status: 200,
+        headers: { 'anthropic-organization-id': 'e9974f42', 'anthropic-workspace-id': 'wrkspc_013' },
+      },
+    },
+  ];
+
+  test('the persisted response carries no provider headers', ({ expect }) => {
+    const redacted = __testing.responseWithoutProviderHeaders(responseWithHeaders);
+    expect(JSON.stringify(redacted)).not.toContain('anthropic-organization-id');
+    expect(JSON.stringify(redacted)).not.toContain('anthropic-workspace-id');
+    expect(JSON.stringify(redacted)).not.toContain('traceparent');
+  });
+
+  test('the surrounding call metadata survives, so the part keeps its shape', ({ expect }) => {
+    const [part] = __testing.responseWithoutProviderHeaders(responseWithHeaders);
+    expect(part).toEqual({
+      type: 'response-metadata',
+      id: 'msg_011CdzaqKmwDeguw',
+      request: { method: 'POST', url: 'https://api.anthropic.com/v1/messages', headers: {} },
+      response: { status: 200, headers: {} },
+    });
+  });
+
+  test('a part without headers is left alone', ({ expect }) => {
+    const parts = [{ type: 'text-delta', id: 'x', delta: 'hello' }];
+    expect(__testing.responseWithoutProviderHeaders(parts)).toEqual(parts);
+  });
+});
+
 describe('dynamic value matching', () => {
   const { SPACE_ID_PATTERN, ENTITY_ID_PATTERN, ISO_TIMESTAMP_PATTERN, UUID_PATTERN, __testing } = LanguageModelFixture;
 
