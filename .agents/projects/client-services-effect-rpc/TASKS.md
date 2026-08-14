@@ -17,11 +17,17 @@ stray `plans/worker-package/` docs) and park the rest. See DESIGN.md "Open quest
       — PR #12127, merged 2026-07-09. 13 client services, generated `RpcGroup` definitions
       (`scripts/gen-service-rpcs.ts`), custom `RpcClient.Protocol`/`RpcServer.Protocol` over
       `RpcPort` in `@dxos/rpc/effect-rpc.ts`.
-- [x] **Migrate `dxos.iframe.WorkerService` (tab→worker control) off protobuf** — changeset
-      `962c8cd`; served via effect-rpc `WorkerService` in `@dxos/protocols/rpc` over the app
-      `MessagePort`.
+- [x] **Migrate `dxos.iframe.WorkerService` (tab→worker control) off protobuf** — PR #12204;
+      served via effect-rpc `WorkerService` in `@dxos/protocols/rpc` over the app `MessagePort`.
+- [x] **Fix the shell↔app client-services connection**, broken by #12127's migration — PR #12191;
+      `Client` now re-serves to the shell iframe over effect-rpc instead of the removed protobuf
+      peer. Distinct from `AppService`/`ShellService` below (the iframe's own control protocol,
+      still protobuf).
 - [x] **Remove legacy protobuf byte-transport providers** (`fromSocket`, `fromAgent`,
-      `AgentClientServiceProvider`) — changeset `f15c632`.
+      `AgentClientServiceProvider`) — PR #12206.
+- [x] **Drop the dead `descriptors`/`ServiceRegistry` proto-bundle surface** — PR #12201 (prep,
+      no consumers). PR #12190 (JSDoc parity pass) documents why full deletion wasn't yet safe
+      at that point.
 - [ ] **`dxos.mesh.bridge.BridgeService` (WebRTC transport bridge)** — still protobuf, no
       migration started. Deliberate/retained, not scheduled.
 - [ ] **`dxos.iframe.AppService`/`ShellService` (shell↔app iframe transport)** — still
