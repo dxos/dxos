@@ -99,6 +99,22 @@ export const CreateAgent = Operation.make({
   output: Schema.Void,
 });
 
+export const GrantServiceAccess = Operation.make({
+  meta: {
+    key: makeKey('grantServiceAccess'),
+    name: 'Grant Service Access',
+    icon: 'ph--key--regular',
+  },
+  services: [Identity.Service],
+  input: Schema.Struct({
+    /** Target server name (e.g. `hub.dxos.network`). */
+    serverName: Schema.String,
+    /** Capabilities to grant (e.g. `['composer:beta']`). */
+    capabilities: Schema.Array(Schema.String),
+  }),
+  output: Schema.Void,
+});
+
 export const CreateRecoveryCode = Operation.make({
   meta: {
     key: makeKey('createRecoveryCode'),
