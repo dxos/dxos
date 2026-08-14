@@ -3,7 +3,7 @@
 //
 
 import { type Extension, Prec } from '@codemirror/state';
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
 
 import { type BuildResult, QueryBuilder } from '@dxos/echo-query';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -68,6 +68,19 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
       [onChange, onFilterChange, builder],
     );
 
+    // Keyed on the tag map's CONTENTS, not its identity: callers rebuild the map each render, and
+    // `useTextEditor` destroys and recreates the view whenever `extensions` changes — so depending on
+    // the object blurred the editor on every keystroke.
+    const tagsKey = useMemo(
+      () =>
+        Object.values(tags ?? {})
+          .map((tag) => `${tag.id}:${tag.label}:${tag.hue ?? ''}`)
+          .join(),
+      [tags],
+    );
+    const tagsRef = useRef(tags);
+    tagsRef.current = tags;
+
     const { themeMode } = useThemeContext();
     const extensions = useMemo<Extension[]>(
       () => [
@@ -81,7 +94,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
           bracketMatching: false,
         }),
         createThemeExtensions({ themeMode, slots: { scroller: { className: 'scrollbar-none' } } }),
-        query({ tags }),
+        query({ tags: tagsRef.current }),
         Prec.highest(
           keymap.of([
             {
@@ -94,7 +107,8 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
           ]),
         ),
       ],
-      [readonly, themeMode, tags, t],
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [readonly, themeMode, tagsKey],
     );
 
     return (

@@ -322,7 +322,7 @@ class TypeWidget extends WidgetType {
     return container(
       'border-sky-500',
       Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs bg-sky-500')).text('type'),
-      Domino.of('span').classNames(mx('flex items-center px-1 text-subdued')).text(label),
+      Domino.of('span').classNames(mx('flex items-center px-1 text-description')).text(label),
     );
   }
 }
@@ -347,7 +347,7 @@ class TagWidget extends WidgetType {
     return container(
       border,
       Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs', fill)).text('#'),
-      Domino.of('span').classNames(mx('flex items-center px-1 text-subdued text-sm', surface)).text(this._str),
+      Domino.of('span').classNames(mx('flex items-center px-1 text-sm', surface)).text(this._str),
     );
   }
 }
@@ -378,9 +378,9 @@ class ObjectWidget extends WidgetType {
       'border-separator divide-x divide-separator',
       ...this._entries.map(([key, value]) => {
         const keyEl = Domino.of('span')
-          .classNames('flex items-center px-1 text-subdued text-xs bg-modal-surface first:rounded-l-xs')
+          .classNames('flex items-center px-1 text-description text-xs bg-modal-surface first:rounded-l-xs')
           .text(key);
-        const valueEl = Domino.of('span').classNames('flex items-center px-1 text-subdued').text(value);
+        const valueEl = Domino.of('span').classNames('flex items-center px-1 text-description').text(value);
         return Domino.of('span').classNames('inline-flex items-stretch').append(keyEl, valueEl);
       }),
     );
