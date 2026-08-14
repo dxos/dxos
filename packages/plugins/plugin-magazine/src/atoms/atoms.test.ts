@@ -9,8 +9,8 @@ import { Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { StateMap, TagIndex } from '@dxos/schema';
 
-import * as Magazine from '../types/Magazine';
-import * as Subscription from '../types/Subscription';
+import { Magazine, Subscription } from '#types';
+
 import { postCurationAtom } from './post-curation';
 import { postDisplayAtom } from './post-display';
 import { postReadAtom } from './post-read';

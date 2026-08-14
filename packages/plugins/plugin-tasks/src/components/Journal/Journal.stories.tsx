@@ -13,9 +13,8 @@ import { Text as TextType } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 
 import { translations } from '#translations';
+import { Journal, TasksUtil } from '#types';
 
-import * as Journal from '../../types/Journal';
-import * as TasksUtil from '../../types/TasksUtil';
 import { Journal as JournalComponent } from './Journal';
 
 const DefaultJournalStory = () => {

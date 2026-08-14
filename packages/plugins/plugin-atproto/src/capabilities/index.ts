@@ -8,8 +8,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import * as AtprotoCapabilities from '../types/AtprotoCapabilities';
-import * as AtprotoEvents from '../types/AtprotoEvents';
+import { AtprotoCapabilities, AtprotoEvents } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const AtprotoConnector = Capability.lazyModule(
@@ -29,3 +28,4 @@ export const RepoLayer = Capability.lazyModule(
   },
   () => import('./repo-layer'),
 );
+export const Schema = AppCapability.schema(() => import('./schema'));

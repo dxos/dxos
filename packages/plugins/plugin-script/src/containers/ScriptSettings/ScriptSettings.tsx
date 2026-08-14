@@ -9,8 +9,7 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-
-import * as Settings from '../../types/Settings';
+import { Settings } from '#types';
 
 export type ScriptSettingsProps = AppSurface.SettingsProps<
   Settings.Settings,

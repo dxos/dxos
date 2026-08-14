@@ -19,6 +19,7 @@ export default defineConfig({
     CrmEvents: 'src/types/CrmEvents.ts',
     CrmOperation: 'src/types/CrmOperation.ts',
     ProfileOf: 'src/types/ProfileOf.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true },

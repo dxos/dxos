@@ -8,7 +8,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Key } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 
-import * as AssistantEvents from '../types/AssistantEvents';
+import { AssistantEvents } from '#types';
 
 export type UseChatServicesProps = {
   id?: Key.SpaceId;

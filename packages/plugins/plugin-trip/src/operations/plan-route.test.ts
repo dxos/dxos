@@ -6,19 +6,16 @@ import * as Effect from 'effect/Effect';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Database } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
+import { Booking, Routing, Segment, Trip, TripCapabilities } from '#types';
+
 import { fakeRoutingService } from '../testing/routing';
-import * as Booking from '../types/Booking';
-import * as Routing from '../types/Routing';
-import * as Segment from '../types/Segment';
-import * as Trip from '../types/Trip';
-import * as TripCapabilities from '../types/TripCapabilities';
 import planRouteHandler from './plan-route';
 
 const capabilityService = (service?: Routing.RoutingService) => {

@@ -16,10 +16,9 @@ import { useTranslation } from '@dxos/react-ui';
 import { type ChatEvent, ChatPrompt } from '#components';
 import { useChatProcessor, useChatServices, usePresets } from '#hooks';
 import { meta } from '#meta';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
 import { getChatPath } from '../../paths';
-import * as AssistantCapabilities from '../../types/AssistantCapabilities';
-import * as AssistantOperation from '../../types/AssistantOperation';
 
 type SpaceScopedProps = {
   space?: Space;

@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 
+import { ConnectorCoordination } from '#types';
+
 import { OAUTH_REDIRECT_PATH } from '../constants';
-import * as ConnectorCoordination from '../types/ConnectorCoordination';
 
 /**
  * Startup module that finalizes redirect-flow OAuth callbacks.

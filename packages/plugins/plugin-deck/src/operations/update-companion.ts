@@ -11,8 +11,9 @@ import * as Operation from '@dxos/compute/Operation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Attention } from '@dxos/react-ui-attention';
 
-import * as DeckCapabilities from '../types/DeckCapabilities';
-import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, resolveCompanionAnchor, resolveCompanionPlank } from '../util';
+import { CompanionViewState, DeckCapabilities } from '#types';
+
+import { resolveCompanionAnchor, resolveCompanionPlank } from '../util';
 import { addCompanionPlank, updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = LayoutOperation.UpdateCompanion.pipe(
@@ -48,7 +49,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
         // Merge so a variant change preserves the persisted split sizes.
         const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
         const variant = Attention.getLinkedVariant(input.subject);
-        viewState.update(companionAspect, COMPANION_VIEW_STATE_CONTEXT, (prev) => ({ ...prev, variant }));
+        viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({ ...prev, variant }));
 
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, { companionPlanks: addCompanionPlank(state, plankId) }),

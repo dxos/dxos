@@ -6,8 +6,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
+import * as Node from '@dxos/app-graph/Node';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Node } from '@dxos/plugin-graph';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useTranslation } from '@dxos/react-ui';
 import {
@@ -18,8 +18,8 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
+import { SimpleLayoutCapabilities } from '#types';
 
-import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
 import { createCompanionActions } from './actions';
 import { useSimpleLayoutState } from './useSimpleLayoutState';
 

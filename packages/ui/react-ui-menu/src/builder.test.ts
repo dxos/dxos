@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Node } from '@dxos/app-graph';
+import * as Node from '@dxos/app-graph/Node';
 
 import { MenuBuilder } from './builder';
 import { MenuSeparatorType } from './types';

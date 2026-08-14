@@ -8,8 +8,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 
+import { Markdown } from '#types';
+
 import { getMarkdownAnchorText } from '../model/selection';
-import * as Markdown from '../types/Markdown';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

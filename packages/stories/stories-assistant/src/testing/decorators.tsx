@@ -8,10 +8,10 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
-import { CapabilityManager } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
 import { type WithPluginManagerOptions, activateDemandGatedModules } from '@dxos/app-framework/testing';
@@ -25,6 +25,7 @@ import {
   Agent,
   AgentHandlers,
   AgentSkill,
+  Chat,
   DelegationHandlers,
   DelegationSkill,
   PlanningHandlers,
@@ -47,23 +48,23 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as ClientOptions from '@dxos/plugin-client/ClientOptions';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { type Client, Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -165,10 +166,10 @@ const buildPluginManagerOptions = ({
     // that surfaces like TracePanel read via `useAtomCapability(AssistantCapabilities.Settings)`.
     plugins: [
       ...corePlugins(),
-      ClientPlugin({
+      ClientPlugin.make({
         types: [
           AccessToken.AccessToken,
-          Assistant.Chat,
+          Chat.Chat,
           Collection.Collection,
           Outline.Outline,
           Task.Task,
@@ -224,15 +225,15 @@ const buildPluginManagerOptions = ({
       }),
 
       // User plugins.
-      PreviewPlugin(),
-      RoutinePlugin(),
-      AssistantPlugin(
+      PreviewPlugin.make(),
+      RoutinePlugin.make(),
+      AssistantPlugin.make(
         scripted ? { aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(scripted) } : {},
       ),
-      TranscriptionPlugin(),
+      TranscriptionPlugin.make(),
 
       // Test-specific.
-      StorybookPlugin({}),
+      StorybookPlugin.make({}),
       StoryPlugin({ onChatCreated, createAgent, layoutAtom, layoutHolder }),
       ...plugins,
     ],
@@ -321,7 +322,7 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   // Reactive: the chat is created asynchronously (module.setup on SpacesReady), and skill
   // definitions may all be contributed before this mounts — a one-shot query that finds no chat
   // would never re-run, leaving the chat without its story-declared skills.
-  const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
+  const chats = useQuery(space?.db, Filter.type(Chat.Chat));
 
   useAsyncEffect(async () => {
     if (!space) {
@@ -435,7 +436,7 @@ type CreateAgentOptions = {
 };
 
 type StoryPluginOptions = {
-  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContext.Binder }) => Promise<void>;
+  onChatCreated?: (props: { space: Space; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
 
   /**
    * If set, the story creates an Agent (with its own Chat) instead of a standalone Chat.

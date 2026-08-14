@@ -8,9 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import * as ObservabilityCapabilities from '../types/ObservabilityCapabilities';
-import * as ObservabilityEvents from '../types/ObservabilityEvents';
-import * as ObservabilityOptions from '../types/ObservabilityOptions';
+import { ObservabilityCapabilities, ObservabilityEvents, ObservabilityOptions } from '#types';
 
 export const ClientReady = Capability.lazyModule(
   'ClientReady',

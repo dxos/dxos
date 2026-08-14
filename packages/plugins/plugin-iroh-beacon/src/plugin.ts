@@ -3,7 +3,23 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { meta } from './meta';
+import { BeaconServiceModule, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
 
-export const IrohBeaconPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const IrohBeaconPlugin = Plugin.define(meta).pipe(
+  // Beacon service: creates transport + starts broadcasting.
+  Plugin.addModule(BeaconServiceModule),
+
+  // Status indicator surface.
+  Plugin.addModule(ReactSurface),
+
+  // Translations.
+  Plugin.addModule(AppCapability.translations(translations)),
+
+  Plugin.make,
+);
+
+export default IrohBeaconPlugin;

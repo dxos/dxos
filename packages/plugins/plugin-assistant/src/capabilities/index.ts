@@ -16,8 +16,7 @@ import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as AssistantCapabilities from '../types/AssistantCapabilities';
-import * as AssistantEvents from '../types/AssistantEvents';
+import { AssistantCapabilities, AssistantEvents } from '#types';
 
 export const AgentHydrator = Capability.lazyModule(
   'AgentHydrator',
@@ -41,6 +40,7 @@ export const AutomationTemplates = Capability.lazyModule(
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./automation-templates'),
 );
+export const Schema = AppCapability.schema(() => import('./schema-defs'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
   provides: [RoutineCapabilities.AgentDelegationStrategy],
 });

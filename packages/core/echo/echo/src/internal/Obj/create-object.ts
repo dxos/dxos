@@ -8,7 +8,7 @@ import { EntityId } from '@dxos/keys';
 
 import type * as Type from '../../Type';
 import { getSchemaURI, getTypeAnnotation, setTypename } from '../Annotation';
-import { defineHiddenProperty } from '../common/proxy';
+import { attachTypedJsonSerializer, defineHiddenProperty } from '../common/proxy';
 import {
   EntityKind,
   KindId,
@@ -29,7 +29,6 @@ import {
   getObjectEchoUri,
 } from '../Entity';
 import { attachedTypedObjectInspector } from './inspect';
-import { attachTypedJsonSerializer } from './json-serializer';
 
 // Omits the brand slots — those get stamped on the instance by the entity
 // handler (KindId via setKind, SchemaKindId derived in the proxy `get` trap

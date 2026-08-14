@@ -9,7 +9,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 
 import { type DecodedAutomergePrimaryValue } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-import { getObjectCore } from './echo-handler';
+import { getObjectCore } from './echo-object-utils';
 import { isEchoObject } from './echo-object-utils';
 import { getEchoDatabase } from './echo-proxy-target';
 

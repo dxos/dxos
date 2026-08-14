@@ -15,14 +15,13 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { SpacePlugin } from '#plugin';
-
-import { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
 
 describe('SpaceOperation.Create', () => {
   // `updateSpace` commits the preference on the host, so what can fail afterwards is only the local
   // snapshot catching up; the space must come back regardless, since the preference converges on its own.
   test('a failing edge replication preference does not fail the create', async ({ expect }) => {
-    const harness = await createComposerTestApp({ plugins: [ClientPlugin({}), SpacePlugin({})] });
+    const harness = await createComposerTestApp({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });
     await using _harness = harness;
 
     const client = harness.get(ClientCapabilities.Client);

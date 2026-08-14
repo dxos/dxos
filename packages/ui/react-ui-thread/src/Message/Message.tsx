@@ -31,9 +31,10 @@ import { createBasicExtensions, createThemeExtensions, keymap, listener } from '
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 import { hexToEmoji, hexToHue, isTruthy } from '@dxos/util';
 
+import { translationKey } from '#translations';
+
 import { command } from '../command';
 import { useThreadContext } from '../context';
-import { translationKey } from '../translations';
 import { type MessageMetadata } from '../types';
 
 const avatarSize = 7;

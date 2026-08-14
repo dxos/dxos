@@ -15,8 +15,9 @@ import { initializeBundler } from '@dxos/edge-compute/bundler';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
+import { ScriptCapabilities } from '#types';
+
 import { Compiler } from '../compiler';
-import * as ScriptCapabilities from '../types/ScriptCapabilities';
 
 // TODO(burdon): Document.
 const SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a175935.r2.dev/dev/';

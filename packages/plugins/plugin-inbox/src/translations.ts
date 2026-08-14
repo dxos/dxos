@@ -9,9 +9,7 @@ import { translations as componentsTranslations } from '@dxos/react-ui-component
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import * as Calendar from './types/Calendar';
-import * as Mailbox from './types/Mailbox';
+import { Calendar, Mailbox } from '#types';
 
 export const translations = [
   {
@@ -170,6 +168,8 @@ export const translations = [
         'send-email-success.title': 'Message sent',
         'send-email-error.title': 'Failed to send email',
         'draft-message.title': 'Draft',
+        'conversation-summary.title': 'Summary',
+        'summary-provenance.label': '{{model}} · {{age}}',
         'delete-draft-button.label': 'Delete draft',
         'send-as-email.label': 'Send as email',
 

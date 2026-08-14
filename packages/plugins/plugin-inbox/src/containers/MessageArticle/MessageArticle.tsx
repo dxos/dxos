@@ -12,7 +12,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useManager } from '@dxos/react-ui-attention';
 import { DraftMessage, Message as MessageType } from '@dxos/types';
@@ -25,12 +25,9 @@ import {
   keyOf,
   messageViewModeAspect,
 } from '#components';
+import { InboxCapabilities, InboxOperation, Mailbox, Settings } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
-import type * as Settings from '../../types/Settings';
 import { dedupeSupersededDrafts, orderThreadItems } from '../../util';
 
 /** Used when the inbox Settings capability isn't installed, so the image toggle is still readable. */
@@ -106,6 +103,10 @@ export const MessageArticle = ({
       : Query.select(Filter.nothing()),
   ) as MessageType.Message[];
   const summaries = useMemo(() => Mailbox.summaryIndex(annotations), [annotations]);
+  const conversationSummary = useMemo(
+    () => Mailbox.conversationSummary(messages, annotations),
+    [messages, annotations],
+  );
 
   // Reorder for display so a reply draft sits directly after the message it answers, rather than at the
   // bottom (the connector delivers everything in chronological order).
@@ -222,6 +223,7 @@ export const MessageArticle = ({
       attendableId={toolbarAttendableId}
       items={orderedMessages}
       summaries={summaries}
+      conversationSummary={conversationSummary}
       mailbox={mailbox}
       companion={!!companionTo}
       options={optionsAtom}

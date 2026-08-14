@@ -16,17 +16,18 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
+import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { translations as threadTranslations } from '@dxos/plugin-thread/translations';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import { BlueskyPlugin } from '../BlueskyPlugin';
+import { BlueskyPlugin } from '#plugin';
+import { translations } from '#translations';
+import { BlueskyChannel, makeBlueskyChannel } from '#types';
+
 import { ATPROTO_BACKEND_KIND } from '../constants';
-import { translations } from '../translations';
-import { BlueskyChannel, makeBlueskyChannel } from '../types';
 
 /** Public Bluesky handle whose author feed is displayed by the demo channel. */
 const DEMO_HANDLE = 'bsky.app';
@@ -53,7 +54,7 @@ const meta = {
       capabilities: [Capability.contribute(AppCapabilities.Schema, types)],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types,
           config: new Config({
             runtime: {
@@ -85,7 +86,7 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
-        ThreadPlugin(),
+        ThreadPlugin.make(),
         BlueskyPlugin(),
       ],
     }),

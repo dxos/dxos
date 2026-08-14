@@ -6,7 +6,8 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
-import * as Ibkr from '../types/Ibkr';
+import { Ibkr } from '#types';
+
 import { extractFundamentalsFromEdgar } from './extract-edgar-fundamentals';
 
 const factsFixture = readFileSync(

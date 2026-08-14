@@ -24,8 +24,9 @@ import { ambientSyncServices, seedMailboxBinding, seedSenderOrganizations } from
 import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
+import { type JmapDataset, JmapMailApi } from '#services';
+
 import { JMAP_DOMAIN, JMAP_MAIL_CONNECTOR_ID } from '../../../constants';
-import { type JmapDataset, JmapMailApi } from '../../../services';
 import { generateJmapDataset } from '../../../testing/jmap-fixtures';
 import { jmapSyncTestServices, runJmapSync } from '../../../testing/sync-fixture';
 import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';

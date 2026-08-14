@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckSchema } from '#types';
 
 export type SidebarState = DeckSchema.StoredDeckState['sidebarState'];
 

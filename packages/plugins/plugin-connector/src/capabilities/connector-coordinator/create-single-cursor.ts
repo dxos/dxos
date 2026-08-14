@@ -10,7 +10,8 @@ import { invariant } from '@dxos/invariant';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
+
 import {
   checkTargetAccount,
   ensureSyncTrigger,

@@ -97,9 +97,6 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
       "path": "../plugin-inbox"
     },
     {
@@ -110,6 +107,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-tasks"
     },
     {
       "path": "../plugin-testing"

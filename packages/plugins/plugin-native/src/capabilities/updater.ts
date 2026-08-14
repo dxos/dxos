@@ -18,10 +18,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
+import { NativeCapabilities, Update } from '#types';
 
 import { TAURI_LOCALHOST_PORT } from '../constants';
-import * as NativeCapabilities from '../types/NativeCapabilities';
-import type * as Update from '../types/Update';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 

@@ -7,8 +7,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    VideoPlugin: 'src/VideoPlugin.tsx',
-    plugin: 'src/plugin.ts',
+    VideoPlugin: 'src/VideoPlugin.ts',
+    plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
@@ -18,6 +18,7 @@ export default defineConfig({
     Video: 'src/types/Video.ts',
     VideoEvents: 'src/types/VideoEvents.ts',
     VideoOperation: 'src/types/VideoOperation.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

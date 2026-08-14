@@ -13,8 +13,8 @@ import { log } from '@dxos/log';
 import { type Text } from '@dxos/schema';
 
 import { meta } from '#meta';
+import { NativeFilesystemCapabilities } from '#types';
 
-import * as NativeFilesystemCapabilities from '../../types/NativeFilesystemCapabilities';
 import { refreshWorkspace } from '../../util';
 import type { DirectoryWatcher } from './directory-watcher';
 import type { MarkdownDocuments } from './markdown-documents';

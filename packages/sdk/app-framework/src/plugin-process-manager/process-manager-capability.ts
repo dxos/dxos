@@ -50,6 +50,40 @@ import { layerIdb } from './idb-key-value-store';
 //    (the plugin system manages its lifecycle).
 //
 
+/**
+ * Trace sink over the LIVE contribution list, so a sink contributed after the runtime was built (an
+ * on-demand module, like plugin-progress's adapter) still observes writes. Instances are cached per
+ * factory, since a sink may hold state across writes and must not be rebuilt underneath itself.
+ */
+export const makeDynamicTraceSink = (
+  getFactories: () => readonly Capabilities.TraceSinkFactory[],
+  resolver: ServiceResolver.ServiceResolver,
+): Trace.Sink => {
+  const instances = new Map<Capabilities.TraceSinkFactory, Trace.Sink>();
+  const resolve = (): Trace.Sink[] => {
+    const sinks: Trace.Sink[] = [];
+    for (const factory of getFactories()) {
+      const existing = instances.get(factory);
+      if (existing) {
+        sinks.push(existing);
+        continue;
+      }
+      try {
+        const sink = factory({ resolver });
+        instances.set(factory, sink);
+        sinks.push(sink);
+      } catch (err) {
+        // One factory that cannot build must not cost the sinks behind it their messages.
+        log.warn('trace sink factory failed', { err });
+      }
+    }
+    return sinks;
+  };
+
+  // `mergeSinks` per write, for its guarantee that one throwing sink cannot break the chain.
+  return { write: (message) => Trace.mergeSinks(resolve()).write(message) };
+};
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
@@ -86,11 +120,10 @@ export default Capability.makeModule(
       },
     );
     yield* Effect.addFinalizer(() => Effect.sync(cancelLayerSpecWatch));
-    const traceSinkFactories = traceSinkContributions.get();
     // Optional swarm-backed remote trace source (DX-1125); first contribution wins, else empty.
     const remoteTraceMonitors = remoteTraceMonitorContributions.get();
 
-    log.info('setup process manager', { traceSinkFactories });
+    log.info('setup process manager', { traceSinks: traceSinkContributions.get().length });
 
     // Forward reference to `ProcessManager.ProcessManagerService`. The runtime
     // that owns the manager depends transitively on `ServiceResolver` (which is
@@ -137,8 +170,7 @@ export default Capability.makeModule(
     // reactive view over contributions is complete at boot — no demand pull on a miss.
     const handlerSet = OperationHandlerSet.reactive(atomRegistry, operationHandlerContributions.atom);
 
-    const traceSinks = traceSinkFactories.map((factory) => factory({ resolver: serviceResolver }));
-    const mergedTraceSink = Trace.mergeSinks(traceSinks);
+    const mergedTraceSink = makeDynamicTraceSink(() => traceSinkContributions.get(), serviceResolver);
 
     // Base services required by ProcessManager and the operation invoker.
     // Sensible defaults are provided here; plugins that want alternative

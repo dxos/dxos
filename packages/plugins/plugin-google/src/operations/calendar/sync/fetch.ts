@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { type GoogleCalendar } from '../../../apis';
-import { GoogleCalendarApi, type GoogleCalendarApiError, type GoogleCalendarApiService } from '../../../services';
+import { type GoogleCalendar } from '#apis';
+import { GoogleCalendarApi, type GoogleCalendarApiError, type GoogleCalendarApiService } from '#services';
 
 export type FetchEventsOptions = {
   syncBackDays: number;

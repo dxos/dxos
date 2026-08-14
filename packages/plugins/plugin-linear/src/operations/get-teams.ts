@@ -8,8 +8,9 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
+import { LinearOperation } from '#types';
+
 import { LinearApi } from '../services';
-import * as LinearOperation from '../types/LinearOperation';
 
 /**
  * Discovery only — list Linear teams reachable from the connection's token.

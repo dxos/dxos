@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Operation from '@dxos/compute/Operation';
 
-import * as AssistantCapabilities from '../types/AssistantCapabilities';
-import * as AssistantOperation from '../types/AssistantOperation';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.ToggleTracePanelDebug> =
   AssistantOperation.ToggleTracePanelDebug.pipe(

@@ -13,7 +13,7 @@ import { Doc } from '@dxos/echo-doc';
 import { revertHunk } from '@dxos/ui-editor/headless';
 import { Branch } from '@dxos/versioning';
 
-import * as Markdown from '../types/Markdown';
+import { Markdown } from '#types';
 
 /**
  * Reject an individual change from `branch` at an anchored region — revert that hunk on the author's

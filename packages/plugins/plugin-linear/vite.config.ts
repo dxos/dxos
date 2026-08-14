@@ -15,6 +15,7 @@ export default defineConfig({
     translations: 'src/translations.ts',
     LinearEvents: 'src/types/LinearEvents.ts',
     LinearOperation: 'src/types/LinearOperation.ts',
+    types: 'src/types/index.ts',
   },
   test: { node: true },
 });

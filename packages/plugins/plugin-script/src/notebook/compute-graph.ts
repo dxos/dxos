@@ -7,7 +7,8 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { log } from '@dxos/log';
 
-import type * as Notebook from '../types/Notebook';
+import { Notebook } from '#types';
+
 import { evalScript } from './eval';
 import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
 

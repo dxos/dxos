@@ -8,10 +8,10 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import * as Video from '../types/Video';
+import { Video } from '#types';
 
 /** Input schema for creating a Video; types the `props` passed to createObject and drives the create form. */
 const CreateVideoSchema = Schema.Struct({

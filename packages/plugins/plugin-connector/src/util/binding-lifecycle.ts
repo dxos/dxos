@@ -12,9 +12,10 @@ import { Database, Filter, Obj, Query, type Ref } from '@dxos/echo';
 import { type AccessToken, type Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
+import { meta } from '#meta';
+import { ConnectorSpec } from '#types';
+
 import { TargetAccountMismatchError } from '../errors';
-import { meta } from '../meta';
-import * as ConnectorSpec from '../types/ConnectorSpec';
 import { isCursorForConnection } from './cursor-predicates';
 import { findOrphanedBindingsForTarget } from './find-binding';
 import { ensureSyncTrigger } from './sync-routine';

@@ -100,7 +100,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Organization.Organization, Person.Person, HasConnection.HasConnection],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

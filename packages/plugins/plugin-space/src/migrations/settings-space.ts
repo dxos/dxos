@@ -10,7 +10,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Expando } from '@dxos/schema';
 
-import * as SpaceSchema from '../types/SpaceSchema';
+import { SpaceSchema } from '#types';
 
 /**
  * Move app configuration out of the legacy personal space and into the settings space: the

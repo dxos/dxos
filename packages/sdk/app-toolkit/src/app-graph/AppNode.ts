@@ -10,7 +10,7 @@ export type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Node } from '@dxos/app-graph';
+import * as Node from '@dxos/app-graph/Node';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
 import { Attention } from '@dxos/react-ui-attention/types';

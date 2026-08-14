@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 
+import { IbkrOperation } from '#types';
+
 import { parseTrades } from '../services';
-import * as IbkrOperation from '../types/IbkrOperation';
 import { latestReport } from './feed';
 
 const lastWeekCutoff = (): string => {

@@ -4,7 +4,7 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type Node } from '@dxos/app-graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { createComment } from '../../review/comments';

@@ -40,14 +40,19 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/BookmarksPlugin.tsx",
-      "types": "./dist/types/src/BookmarksPlugin.d.ts",
-      "default": "./dist/lib/BookmarksPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -57,16 +62,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./Bookmark": {
       "source": "./src/types/Bookmark.ts",
       "types": "./dist/types/src/types/Bookmark.d.ts",
@@ -82,7 +83,11 @@
       "types": "./dist/types/src/types/BookmarksEvents.d.ts",
       "import": "./dist/lib/BookmarksEvents.mjs"
     },
-    "./package.json": "./package.json"
+    "./BookmarksPlugin": {
+      "source": "./src/BookmarksPlugin.ts",
+      "types": "./dist/types/src/BookmarksPlugin.d.ts",
+      "import": "./dist/lib/BookmarksPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

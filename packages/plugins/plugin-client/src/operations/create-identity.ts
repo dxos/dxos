@@ -12,8 +12,8 @@ import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import * as ClientCapabilities from '../types/ClientCapabilities';
-import * as ClientEvents from '../types/ClientEvents';
+import { ClientCapabilities, ClientEvents } from '#types';
+
 import { CreateIdentity } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pipe(

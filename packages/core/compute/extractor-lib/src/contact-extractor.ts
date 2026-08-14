@@ -9,6 +9,7 @@ import { type ExtractInput, type ExtractResult, type MatchResult, type ObjectExt
 import { Message } from '@dxos/types';
 
 import { buildContactGraph } from './contact';
+import { isAutomatedSender, senderSignals } from './selection';
 
 export const TEMPLATE_ID = 'org.dxos.extractor.contact';
 
@@ -29,8 +30,17 @@ export const extractContact = ({ db, source }: ExtractInput): Effect.Effect<Extr
   Effect.gen(function* () {
     // `dispatch` may invoke an explicitly-selected extractor without `match()`, so guard a
     // sender-less message rather than crashing in `buildContactGraph`.
-    const sender = (source as Message.Message).sender;
+    const message = source as Message.Message;
+    const sender = message.sender;
     if (!sender) {
+      return { created: [], updated: [], relations: [] };
+    }
+
+    // A machine is never a contact. Only the deny half of the contact gate applies here: this
+    // extractor runs per message, so it has no outbound/known-organization evidence to satisfy the
+    // full allow-list — but running with NO gate at all (as it did) turned every `no-reply@`,
+    // `mailer-daemon@` and `invoice+statements+acct_…@stripe.com` sender in a mailbox into a Person.
+    if (isAutomatedSender(sender.email, senderSignals(message))) {
       return { created: [], updated: [], relations: [] };
     }
     const { contact, organization } = yield* buildContactGraph(sender, db);

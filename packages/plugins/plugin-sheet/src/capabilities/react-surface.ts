@@ -11,8 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 
 import { RangeList, SheetArticle } from '#containers';
-
-import * as Sheet from '../types/Sheet';
+import { Sheet } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

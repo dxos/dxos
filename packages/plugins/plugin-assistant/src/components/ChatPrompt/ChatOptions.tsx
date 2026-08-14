@@ -16,9 +16,7 @@ import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
 import { meta } from '#meta';
-
-import * as Assistant from '../../types/Assistant';
-import * as AssistantPreset from '../../types/AssistantPreset';
+import { Assistant, AssistantPreset } from '#types';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',

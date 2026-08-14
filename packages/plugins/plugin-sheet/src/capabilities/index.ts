@@ -12,8 +12,7 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as SheetCapabilities from '../types/SheetCapabilities';
-import * as SheetEvents from '../types/SheetEvents';
+import { SheetCapabilities, SheetEvents } from '#types';
 
 // Ordering-only: registers the sort comparator once the app graph exists; the body reads
 // nothing else.
@@ -53,6 +52,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties', 'org.dxos.role.section'],
 });
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SheetState = Capability.lazyModule(
   'SheetState',
   { provides: [SheetCapabilities.GridInstances], activatesOn: SheetEvents.Start },

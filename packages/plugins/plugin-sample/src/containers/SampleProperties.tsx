@@ -16,9 +16,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-
-import type * as SampleItem from '../types/SampleItem';
-import * as SampleOperation from '../types/SampleOperation';
+import { SampleItem, SampleOperation } from '#types';
 
 export type SamplePropertiesProps = {
   subject: SampleItem.SampleItem;

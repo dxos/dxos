@@ -7,8 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as ConnectorEvents from '../types/ConnectorEvents';
-import * as ConnectorSpec from '../types/ConnectorSpec';
+import { ConnectorEvents, ConnectorSpec } from '#types';
 
 export * from './connector-coordinator';
 
@@ -25,3 +24,4 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const Schema = AppCapability.schema(() => import('./schema'));

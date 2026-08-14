@@ -6,8 +6,7 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-
-import * as Video from './types/Video';
+import { Video } from '#types';
 
 export const translations = [
   {

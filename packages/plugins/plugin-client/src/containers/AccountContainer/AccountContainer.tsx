@@ -13,10 +13,10 @@ import { Button, Icon, IconButton, Input, Message, useAsyncEffect, useTranslatio
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+import { ClientCapabilities } from '#types';
 
 import { RESET_DIALOG } from '../../constants';
 import { useAccountUrl, useHubHttpClient } from '../../hooks';
-import * as ClientCapabilities from '../../types/ClientCapabilities';
 
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
 

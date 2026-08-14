@@ -9,7 +9,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
-import * as RoutineCapabilities from '../types/RoutineCapabilities';
+import { RoutineCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const Commands = AppCapability.commands(() => import('./commands'));

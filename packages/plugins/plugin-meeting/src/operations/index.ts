@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as MeetingOperation from '../types/MeetingOperation';
+import { MeetingOperation } from '#types';
 
 export const MeetingOperationHandlerSet = OperationHandlerSet.lazy([
   MeetingOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),

@@ -260,13 +260,7 @@ export type AddNewPropertyProps = {
  * Finds a target object schema by its pointer and adds a new property definition.
  * @returns The modified rootSchema.
  */
-export function addProperty({
-  root,
-  path,
-  name,
-  schema: schema,
-  optional,
-}: AddNewPropertyProps): JsonSchema.JsonSchema {
+export function addProperty({ root, path, name, schema, optional }: AddNewPropertyProps): JsonSchema.JsonSchema {
   const callback: ContextualVisitorCallback = (parent, context) => {
     // Check if the current schema is the target schema.
     if (context.path === path) {

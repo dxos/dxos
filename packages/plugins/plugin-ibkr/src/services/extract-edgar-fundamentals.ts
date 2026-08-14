@@ -6,13 +6,14 @@ import * as Option from 'effect/Option';
 
 import { SchemaAST } from '@dxos/effect';
 
+import { Ibkr } from '#types';
+
 import {
   EdgarAdditionalFactsAnnotation,
   EdgarAsOfConceptsAnnotation,
   EdgarFieldAnnotation,
   type EdgarFieldSource,
 } from '../annotations';
-import type * as Ibkr from '../types/Ibkr';
 
 type EdgarFact = {
   end: string;

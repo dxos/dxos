@@ -22,10 +22,9 @@ import { Listbox } from '@dxos/react-ui-list';
 import { useSpeechRecognition } from '@dxos/react-ui-transcription';
 
 import { Mic } from '#components';
+import { createStoryDecorators } from '#testing';
 import { translations } from '#translations';
-
-import { createStoryDecorators } from '../testing';
-import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
+import { TranscriptionCapabilities } from '#types';
 
 // Stable session key for the Mic button; any non-editor id works (the editor driver ignores it).
 const DOC_ID = 'keyword-detection';

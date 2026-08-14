@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
 import { ContentBlock } from '@dxos/types';
 
-import * as FileOperation from '../types/FileOperation';
+import { FileOperation } from '#types';
 
 const BASE64_CHUNK_SIZE = 0x8000;
 

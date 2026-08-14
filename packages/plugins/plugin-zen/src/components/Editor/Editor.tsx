@@ -8,7 +8,7 @@ import { Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { Form, omitId } from '@dxos/react-ui-form';
 
-import type * as Dream from '../../types/Dream';
+import { Dream } from '#types';
 
 export type EditorProps = {
   dream: Dream.Dream;

@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Organization, type Person } from '@dxos/types';
 
-import * as ProfileOf from '../types/ProfileOf';
+import { ProfileOf } from '#types';
 
 /** One profile document section; empty bodies render as a heading the user/agent fills in. */
 export type ProfileSection = {

@@ -10,9 +10,9 @@ import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+import { type BeaconPeer } from '#types';
 
 import { BeaconCapabilities } from '../capabilities/beacon-service';
-import { type BeaconPeer } from '../types';
 
 /** Status bar icon with popover showing live beacon peer list. */
 export const BeaconStatusIndicator = () => {

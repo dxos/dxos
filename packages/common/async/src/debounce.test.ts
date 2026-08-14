@@ -2,13 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { debounce, throttle } from './debounce';
-import { sleep } from './timeout';
+
+// Fake timers keep the throttle/debounce windows deterministic instead of racing a real wall-clock delay.
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('throttle', () => {
-  test('throttles function calls', async () => {
+  test('throttles function calls', () => {
     let count = 0;
     const fn = throttle(() => count++, 100);
 
@@ -21,14 +29,14 @@ describe('throttle', () => {
     expect(count).toBe(1);
 
     // Wait for throttle window to pass.
-    await sleep(150);
+    vi.advanceTimersByTime(150);
 
     // Next call should execute.
     fn();
     expect(count).toBe(2);
   });
 
-  test('passes arguments to throttled function', async () => {
+  test('passes arguments to throttled function', () => {
     let lastArgs: any[] = [];
     const fn = throttle((...args: any[]) => {
       lastArgs = args;
@@ -41,12 +49,12 @@ describe('throttle', () => {
     fn('different', 456);
     expect(lastArgs).toEqual(['test', 123]); // Should not update.
 
-    await sleep(150);
+    vi.advanceTimersByTime(150);
     fn('new', 789);
     expect(lastArgs).toEqual(['new', 789]);
   });
 
-  test('handles multiple rapid calls', async () => {
+  test('handles multiple rapid calls', () => {
     let count = 0;
     const fn = throttle(() => count++, 100);
 
@@ -56,7 +64,7 @@ describe('throttle', () => {
     }
     expect(count).toBe(1); // Only first call should execute.
 
-    await sleep(150);
+    vi.advanceTimersByTime(150);
     expect(count).toBe(1); // Still only one execution.
 
     fn();
@@ -65,7 +73,7 @@ describe('throttle', () => {
 });
 
 describe('debounce', () => {
-  test('debounces function calls', async () => {
+  test('debounces function calls', () => {
     let count = 0;
     const fn = debounce(() => count++, 100);
 
@@ -78,11 +86,11 @@ describe('debounce', () => {
     expect(count).toBe(0);
 
     // Wait for debounce window to pass.
-    await sleep(150);
+    vi.advanceTimersByTime(150);
     expect(count).toBe(1); // Only the last call should execute.
   });
 
-  test('passes arguments to debounced function', async () => {
+  test('passes arguments to debounced function', () => {
     let lastArgs: any[] = [];
     const fn = debounce((...args: any[]) => {
       lastArgs = args;
@@ -95,11 +103,11 @@ describe('debounce', () => {
     fn('different', 456);
     expect(lastArgs).toEqual([]); // Should not execute immediately.
 
-    await sleep(150);
+    vi.advanceTimersByTime(150);
     expect(lastArgs).toEqual(['different', 456]); // Should execute with last args.
   });
 
-  test('handles multiple rapid calls', async () => {
+  test('handles multiple rapid calls', () => {
     let count = 0;
     const fn = debounce(() => count++, 100);
 
@@ -109,7 +117,7 @@ describe('debounce', () => {
     }
     expect(count).toBe(0); // Should not execute immediately.
 
-    await sleep(150);
+    vi.advanceTimersByTime(150);
     expect(count).toBe(1); // Should execute only once after wait.
   });
 });

@@ -12,8 +12,8 @@ import { SchemaEx } from '@dxos/effect';
 import { Position } from '@dxos/util';
 
 import { KanbanArticle, KanbanProperties } from '#containers';
+import { Kanban } from '#types';
 
-import * as Kanban from '../types/Kanban';
 import { PivotColumnAnnotationId } from '../types/KanbanSchema';
 import { PivotColumnField } from './PivotColumnField';
 

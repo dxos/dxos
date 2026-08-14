@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Keyboard, nestKeyboardContext } from '@dxos/keyboard';
 
-import * as AttentionCapabilities from '../types/AttentionCapabilities';
+import { AttentionCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

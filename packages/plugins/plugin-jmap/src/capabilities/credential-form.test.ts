@@ -5,7 +5,8 @@
 import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Jmap } from '../apis';
+import { Jmap } from '#apis';
+
 import { JMAP_DEFAULT_HOST } from '../constants';
 import { buildJmapCredential, jmapCredentialForm } from './credential-form';
 

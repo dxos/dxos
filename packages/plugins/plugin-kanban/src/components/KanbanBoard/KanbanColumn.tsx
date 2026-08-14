@@ -8,9 +8,8 @@ import type { Obj } from '@dxos/echo';
 import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
 import { useKanbanItemEventHandler } from '#hooks';
+import { KanbanConstants, KanbanLayout } from '#types';
 
-import * as KanbanConstants from '../../types/KanbanConstants';
-import * as KanbanLayout from '../../types/KanbanLayout';
 import { type KanbanColumnProps, useKanbanBoard } from './context';
 
 export { type KanbanColumnProps };

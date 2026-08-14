@@ -7,8 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as ThreadCapabilities from '../types/ThreadCapabilities';
-import * as ThreadEvents from '../types/ThreadEvents';
+import { ThreadCapabilities, ThreadEvents } from '#types';
 
 // The graph builder reads the call manager OPTIONALLY (reactive atom with an absence guard),
 // so no spec-level require: a hard cross-plugin require would fail this plugin whenever
@@ -26,3 +25,4 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
+export const Schema = AppCapability.schema(() => import('./schema'));

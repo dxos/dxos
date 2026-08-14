@@ -97,7 +97,7 @@ export const Default: Story = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           config: makeConfig(),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -116,7 +116,7 @@ export const WithDownloadLogs: Story = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           config: makeConfig(),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -136,7 +136,7 @@ export const FeedbackUnavailable: Story = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           config: makeConfig(),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

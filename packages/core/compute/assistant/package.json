@@ -23,10 +23,40 @@
       "types": "./dist/types/src/extraction/index.d.ts",
       "import": "./dist/lib/extraction.mjs"
     },
+    "./AiContext": {
+      "source": "./src/session/AiContext.ts",
+      "types": "./dist/types/src/session/AiContext.d.ts",
+      "import": "./dist/lib/session/AiContext.mjs"
+    },
+    "./AiRequest": {
+      "source": "./src/request/AiRequest.ts",
+      "types": "./dist/types/src/request/AiRequest.d.ts",
+      "import": "./dist/lib/request/AiRequest.mjs"
+    },
+    "./AiSession": {
+      "source": "./src/session/AiSession.ts",
+      "types": "./dist/types/src/session/AiSession.d.ts",
+      "import": "./dist/lib/session/AiSession.mjs"
+    },
     "./ExecutionGraph": {
       "source": "./src/util/execution-graph.ts",
       "types": "./dist/types/src/util/execution-graph.d.ts",
       "import": "./dist/lib/ExecutionGraph.mjs"
+    },
+    "./Harness": {
+      "source": "./src/session/Harness.ts",
+      "types": "./dist/types/src/session/Harness.d.ts",
+      "import": "./dist/lib/session/Harness.mjs"
+    },
+    "./SessionLink": {
+      "source": "./src/session/SessionLink.ts",
+      "types": "./dist/types/src/session/SessionLink.d.ts",
+      "import": "./dist/lib/session/SessionLink.mjs"
+    },
+    "./SkillHooks": {
+      "source": "./src/session/SkillHooks.ts",
+      "types": "./dist/types/src/session/SkillHooks.d.ts",
+      "import": "./dist/lib/session/SkillHooks.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

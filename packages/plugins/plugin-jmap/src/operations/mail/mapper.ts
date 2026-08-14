@@ -9,7 +9,8 @@ import { type Resolver, resolve } from '@dxos/extractor';
 import { log } from '@dxos/log';
 import { ContentBlock, Message, Person } from '@dxos/types';
 
-import { JmapMail } from '../../apis';
+import { JmapMail } from '#apis';
+
 import { JMAP_DOMAIN } from '../../constants';
 
 /**

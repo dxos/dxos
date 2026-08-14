@@ -16,10 +16,9 @@ import { Position } from '@dxos/util';
 
 import { DebugStatus, LogStatus, StatsPanel, Wireframe } from '#containers';
 import { meta } from '#meta';
+import { DebugNodes, DebugSurface } from '#types';
 
 import { DebugCapabilities } from '../types/Debug';
-import * as DebugNodes from '../types/DebugNodes';
-import * as DebugSurface from '../types/DebugSurface';
 import {
   DebugSettingsSurface,
   LoggerSurface,

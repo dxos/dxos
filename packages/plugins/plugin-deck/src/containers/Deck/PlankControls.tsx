@@ -9,8 +9,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+import { DeckOperation } from '#types';
 
-import type * as DeckOperation from '../../types/DeckOperation';
 import { type PlankCapabilities } from './useDeckPlank';
 
 export type PlankControlHandler = (event: DeckOperation.PartAdjustment) => void;

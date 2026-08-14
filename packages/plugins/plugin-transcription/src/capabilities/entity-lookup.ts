@@ -9,7 +9,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type EntityLookup, makeDatabaseLookup } from '@dxos/pipeline-transcription';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
+import { TranscriptionCapabilities } from '#types';
 
 /**
  * Contributes an {@link EntityLookup} backed by the default space's full-text index. Resolved lazily

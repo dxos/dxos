@@ -9,8 +9,8 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -21,8 +21,7 @@ import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 
 import { TldrawBuilder } from '#model';
-
-import * as Tldraw from './types/Tldraw';
+import { Tldraw } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
 

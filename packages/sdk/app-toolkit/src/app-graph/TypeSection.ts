@@ -8,7 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { GraphBuilder, Node } from '@dxos/app-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { Annotation, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

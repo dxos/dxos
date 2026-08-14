@@ -8,8 +8,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import type * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
+import { ConnectorSpec } from '#types';
+
 import { ConnectionSyncError } from '../errors';
-import * as ConnectorSpec from '../types/ConnectorSpec';
 import { findLiveBindingForTarget } from './find-binding';
 import { syncBinding } from './sync-binding';
 

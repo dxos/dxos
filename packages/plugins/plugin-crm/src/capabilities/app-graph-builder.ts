@@ -7,12 +7,13 @@ import * as Option from 'effect/Option';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Annotation, Filter, Type } from '@dxos/echo';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { type Space } from '@dxos/react-client/echo';
 import { Organization, Person } from '@dxos/types';
 

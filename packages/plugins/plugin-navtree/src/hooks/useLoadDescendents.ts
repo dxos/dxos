@@ -4,9 +4,9 @@
 
 import { useEffect } from 'react';
 
-import { type Node } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import type * as Node from '@dxos/app-graph/Node';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph } from '@dxos/plugin-graph';
 
 /**
  * Expands a root node in the app graph.
@@ -18,6 +18,6 @@ export const useLoadDescendents = (root?: Node.Node) => {
       return;
     }
 
-    Graph.expand(graph, root.id, 'child');
+    Graph.expandSync(graph, root.id, 'child');
   }, [graph, root]);
 };

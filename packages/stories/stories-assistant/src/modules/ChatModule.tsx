@@ -6,6 +6,7 @@ import React from 'react';
 
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { Chat as ChatSchema } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
@@ -25,7 +26,7 @@ export const ChatModule = () => {
 const ChatModuleContainer = ({ space }: { space: Space }) => {
   const { preset, ...chatProps } = usePresets({});
 
-  const chats = useQuery(space.db, Filter.type(Assistant.Chat));
+  const chats = useQuery(space.db, Filter.type(ChatSchema.Chat));
   const chat = chats.at(-1);
 
   const registry = useRegistry();

@@ -12,8 +12,7 @@ import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
 import { MarkdownEditor, MarkdownEditorProvider } from '#components';
-
-import * as Markdown from '../../types/Markdown';
+import { Markdown } from '#types';
 
 export type EditableMarkdownCardProps = { subject: Markdown.Document | Text.Text };
 

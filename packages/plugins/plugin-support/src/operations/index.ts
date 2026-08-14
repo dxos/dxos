@@ -5,8 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as HelpOperation from '../types/HelpOperation';
-import * as SupportOperation from '../types/SupportOperation';
+import { HelpOperation, SupportOperation } from '#types';
 
 export const SupportOperationHandlerSet = OperationHandlerSet.lazy([
   SupportOperation.CaptureUserFeedback.pipe(Operation.lazyHandler(() => import('./capture-feedback'))),

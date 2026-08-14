@@ -5,7 +5,7 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import * as PaymentsCapabilities from '../types/PaymentsCapabilities';
+import { PaymentsCapabilities } from '#types';
 
 export const Settings = AppCapability.settings(() => import('./settings'), {
   activatesOn: ActivationEvents.Idle,

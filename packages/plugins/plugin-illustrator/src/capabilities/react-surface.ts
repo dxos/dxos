@@ -10,8 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { DrawingArticle, DrawingCard } from '#containers';
-
-import * as Drawing from '../types/Drawing';
+import { Drawing } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

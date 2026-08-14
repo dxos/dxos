@@ -8,8 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 
-import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
-import * as NativeFilesystemOperation from '../types/NativeFilesystemOperation';
+import { NativeFilesystemCapabilities, NativeFilesystemOperation } from '#types';
 
 export default NativeFilesystemOperation.CloseDirectory.pipe(
   Operation.withHandler(

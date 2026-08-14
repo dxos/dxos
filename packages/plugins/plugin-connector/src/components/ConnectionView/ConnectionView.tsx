@@ -12,9 +12,8 @@ import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Empty } from '@dxos/react-ui-list';
 
+import { type TestConnectionStatus } from '#hooks';
 import { meta } from '#meta';
-
-import { type TestConnectionStatus } from '../../hooks';
 
 // The action section uses Form's `settings` variant purely for its labeled-row chrome
 // (action-mode `Form.Row`s); there are no fields to bind, so the schema is empty.

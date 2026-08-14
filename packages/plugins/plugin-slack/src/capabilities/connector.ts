@@ -12,9 +12,10 @@ import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
+import { SlackOperation } from '#types';
+
 import { SLACK_SCOPES, SLACK_SOURCE } from '../constants';
 import { SlackApi } from '../services';
-import * as SlackOperation from '../types/SlackOperation';
 
 /**
  * Service-specific token-created hook for Slack.

@@ -9,7 +9,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import * as SlackOperation from '../types/SlackOperation';
+import { SlackOperation } from '#types';
+
 import { findOrCreateChannelForTarget } from './sync';
 
 /**

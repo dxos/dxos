@@ -10,8 +10,9 @@ import { invariant } from '@dxos/invariant';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
+import { ConnectorSpec } from '#types';
+
 import { type TargetAccountMismatchError } from '../errors';
-import * as ConnectorSpec from '../types/ConnectorSpec';
 import { isTargetAccountMismatch, prepareTargetBinding } from './binding-lifecycle';
 import { ensureSyncTrigger } from './sync-routine';
 import { connectorIdsForTarget } from './target-connectors';
