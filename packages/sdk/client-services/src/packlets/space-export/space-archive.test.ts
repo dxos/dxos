@@ -37,6 +37,7 @@ describe('SpaceArchive', () => {
 
         expect(archive.filename).toContain(spaceId);
         expect(archive.contents).toBeInstanceOf(Uint8Array);
+        expect(archive.format).toBe(SpacesService.SpaceArchiveFormat.enums.BINARY);
 
         const extracted = await extractSpaceArchive(archive);
         expect(extracted.metadata.version).toBe(SpaceArchiveVersion.V1);

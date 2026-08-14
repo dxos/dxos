@@ -57,7 +57,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   }
 
   ['DevtoolsHost.getConfig'](): Effect.Effect<DevtoolsHost.GetConfigResponse, Error> {
-    return Effect.sync(() => ({ config: JSON.stringify(this.params.config.values) })); // 😨
+    return Effect.sync(() => ({ config: JSON.stringify(this.params.config.values) }));
   }
 
   ['DevtoolsHost.getStorageInfo'](): Effect.Effect<DevtoolsHost.StorageInfo, Error> {
