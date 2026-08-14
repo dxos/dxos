@@ -99,4 +99,10 @@ service FeedService {
   rpc DeleteFromFeed(DeleteFromFeedRequest) returns (google.protobuf.Empty);
   rpc SyncFeed(SyncFeedRequest) returns (google.protobuf.Empty);
   rpc GetSyncState(GetSyncStateRequest) returns (GetSyncStateResponse);
+  /// Pushes a new sync-state snapshot whenever the feed backlog changes, replacing polling.
+  /// NOTE: `../FeedService.ts` hand-authors its Effect schemas rather than using generated
+  /// `protoMessage(...)` wrappers (like `QueryService.ts` -- see its file header for why: routing
+  /// large JSON-string payloads through the protobuf codec corrupts them). This entry documents
+  /// the contract only; do not regenerate `FeedService.ts` from this file.
+  rpc SubscribeSyncState(GetSyncStateRequest) returns (stream GetSyncStateResponse);
 }

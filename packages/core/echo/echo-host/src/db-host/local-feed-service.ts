@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as EffectStream from 'effect/Stream';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { type ObjectJSON } from '@dxos/echo/internal';
-import { RuntimeProvider } from '@dxos/effect';
+import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
@@ -152,6 +153,34 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     });
   }
 
+  /**
+   * Pushes a fresh snapshot on subscribe, then again whenever {@link FeedStore.onNewBlocks} fires
+   * and the recomputed state actually differs from the last one sent -- replacing the client's
+   * previous poll loop with a real subscription. `onNewBlocks` is unscoped (fires for any space's
+   * writes), so every active subscription recomputes on each signal; the equality check keeps that
+   * cheap re-check from re-emitting when nothing relevant to this request's scope changed.
+   */
+  ['FeedService.subscribeSyncState'](request: GetSyncStateRequest): EffectStream.Stream<GetSyncStateResponse, Error> {
+    return EffectEx.streamFromEmitter<GetSyncStateResponse, Error>((emit) => {
+      const ctx = Context.default();
+      let last: GetSyncStateResponse | undefined;
+      const push = async () => {
+        try {
+          const next = await this.#getSyncStateImpl(request);
+          if (!last || syncStateResponseChanged(last, next)) {
+            last = next;
+            emit.single(next);
+          }
+        } catch (err) {
+          emit.fail(err as Error);
+        }
+      };
+      void push();
+      this.#feedStore.onNewBlocks.on(ctx, () => void push());
+      return Effect.promise(() => ctx.dispose());
+    });
+  }
+
   #getSyncStateImpl(request: GetSyncStateRequest): Promise<GetSyncStateResponse> {
     const ctx = Context.default();
     if (this.#getSyncState) {
@@ -192,3 +221,24 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     );
   }
 }
+
+/**
+ * Assumes both responses enumerate namespaces in the same order -- true for both `#getSyncState`
+ * paths, which always iterate the same fixed `namespaces` list for a given request.
+ */
+const syncStateResponseChanged = (before: GetSyncStateResponse, after: GetSyncStateResponse): boolean => {
+  const beforeNamespaces = before.namespaces ?? [];
+  const afterNamespaces = after.namespaces ?? [];
+  if (beforeNamespaces.length !== afterNamespaces.length) {
+    return true;
+  }
+  return beforeNamespaces.some((namespaceState, index) => {
+    const other = afterNamespaces[index];
+    return (
+      namespaceState.namespace !== other.namespace ||
+      namespaceState.blocksToPull !== other.blocksToPull ||
+      namespaceState.blocksToPush !== other.blocksToPush ||
+      namespaceState.totalBlocks !== other.totalBlocks
+    );
+  });
+};

@@ -104,17 +104,30 @@ fixed the same way.
 - [x] **S3. Each open space polls sync state at 2 s.**
       `echo-client/src/proxy-db/database.ts` (`FEED_SYNC_POLL_INTERVAL`):
       aggregates block backlog across namespaces via a real per-namespace
-      `FeedService.getSyncState` RPC (SQLite `COUNT(*)` server-side) — not a
-      local aggregation, so R1 doesn't apply here either; started
+      `FeedService.getSyncState` RPC (SQLite `COUNT(*)` server-side); started
       unconditionally per open space by `plugin-client`'s
-      `space-replication-progress.ts`. **Fixed (R2, no-change backoff):**
-      `subscribeToSyncState`'s `pollFeeds` now self-reschedules with a delay
-      that doubles (capped at 15 s) while `blocksToPull`/`blocksToPush`/
-      `totalBlocks` stay unchanged, and resets to `FEED_SYNC_POLL_INTERVAL` on
-      any observed delta. Noted but not fixed here: `space-replication-progress.ts`
-      re-subscribes per space on every `client.spaces` emission with no
-      de-dupe, which can spawn duplicate pollers per space over a session —
-      worth its own follow-up.
+      `space-replication-progress.ts`. **Superseded by a real streaming RPC
+      (R1, not R2):** initial no-change-backoff polling (landed in #12561) has
+      been replaced by `FeedService.subscribeSyncState`, a genuine
+      `stream: true` RPC — `LocalFeedServiceImpl` (`echo-host`) pushes a fresh
+      snapshot on subscribe and again whenever `FeedStore.onNewBlocks` fires
+      and the recomputed state actually differs; `DatabaseImpl.subscribeToSyncState`
+      consumes it via `subscribeStream` instead of any client-side timer.
+      `onNewBlocks` fires on local writes too (`appendLocal` delegates to
+      `append`, which emits it), so this covers both push and pull backlog
+      changes (local writes and completed sync pulls); the freshness ceiling
+      is `FeedSyncer`'s own internal poll cadence against EDGE (5-10 s,
+      unrelated/pre-existing — the remote-availability leg genuinely can't be
+      push-based without a further sync-protocol change, out of scope here).
+      Verified end-to-end in `echo-host/src/db-host/feed-service.test.ts`
+      (initial snapshot + a second push after a local write, direct against
+      `LocalFeedServiceImpl` — the higher-level `EchoTestBuilder` topology
+      stubs `getSyncState` to always-empty when no `FeedSyncer` is wired, so a
+      client-level test can't observe real backlog values). Noted but not
+      fixed here: `space-replication-progress.ts` re-subscribes per space on
+      every `client.spaces` emission with no de-dupe, which can spawn
+      duplicate subscriptions per space over a session — worth its own
+      follow-up. Separate PR from the initial S1-S4 pass (#12561).
 - [x] **S4. Query re-execution amplifies every tick.** `echo-host`'s
       `QueryService._executeQueries` re-runs each dirty reactive query per
       invalidation hint; the loops above generate hints, which is what turns
