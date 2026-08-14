@@ -554,9 +554,13 @@ function CardAction({
   onClick,
 }: CardActionProps) {
   const { tx } = useThemeContext();
+  // Resolved once so the guard and the content cannot disagree: the guard used `||` while the content
+  // used `??`, so a falsy-but-valid `leading` (0, '', false) rendered nothing at all. Also drops a
+  // non-null assertion on `icon`.
+  const gutter = leading ?? (icon ? <Icon icon={icon} size={4} /> : undefined);
   return (
     <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
-      {(leading || icon) && <CardBlock>{leading ?? <Icon icon={icon!} size={4} />}</CardBlock>}
+      {gutter !== undefined && <CardBlock>{gutter}</CardBlock>}
       <span className={tx('card.action-content', {})}>
         <span className={tx('card.action-label', {})}>{label}</span>
         {annotation && <span className={tx('card.action-annotation', {})}>{annotation}</span>}

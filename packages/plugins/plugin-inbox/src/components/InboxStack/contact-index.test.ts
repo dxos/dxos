@@ -27,14 +27,6 @@ describe('buildContactIndex', () => {
     await builder.close();
   });
 
-  const seed = async () => {
-    const { db } = await builder.createDatabase({ types: [Person.Person] });
-    db.add(Person.make({ fullName: 'Ada Lovelace', emails: [{ value: 'ada@example.com' }] }));
-    db.add(Person.make({ fullName: 'Alan Turing', emails: [{ value: 'Alan@Example.com' }] }));
-    await db.flush({ indexes: true });
-    return db;
-  };
-
   test('indexes every seeded Person by address', async ({ expect }) => {
     const db = await seed();
     const people = await db.query(Filter.type(Person.Person)).run();
@@ -70,4 +62,12 @@ describe('buildContactIndex', () => {
 
     expect(buildContactIndex(people).size).toBe(0);
   });
+
+  const seed = async () => {
+    const { db } = await builder.createDatabase({ types: [Person.Person] });
+    db.add(Person.make({ fullName: 'Ada Lovelace', emails: [{ value: 'ada@example.com' }] }));
+    db.add(Person.make({ fullName: 'Alan Turing', emails: [{ value: 'Alan@Example.com' }] }));
+    await db.flush({ indexes: true });
+    return db;
+  };
 });

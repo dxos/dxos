@@ -189,14 +189,13 @@ export const MessageArticle = ({
             icon: action.icon,
             onSelect: () => {
               // Sequential: a composite's later steps (the image pass) depend on what the earlier ones
-              // wrote, so they must not race.
-              void invocations
-                .reduce(
-                  (previous, { operation, input }) =>
-                    previous.then(() => invoker.invokePromise(operation, input, { spaceId: db.spaceId })),
-                  Promise.resolve() as Promise<unknown>,
-                )
-                .catch((err) => log.warn('sender action failed', { id: action.id, err }));
+              // wrote, so they must not race. A plain loop rather than a `reduce` over promises — the
+              // ordering is the point, and the reduce spelled it obscurely.
+              void (async () => {
+                for (const { operation, input } of invocations) {
+                  await invoker.invokePromise(operation, input, { spaceId: db.spaceId });
+                }
+              })().catch((err) => log.warn('sender action failed', { id: action.id, err }));
             },
           },
         ];
