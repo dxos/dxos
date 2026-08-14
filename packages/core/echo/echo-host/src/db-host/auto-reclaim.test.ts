@@ -108,7 +108,9 @@ const setup = async () => {
 };
 
 describe('automatic reclamation', () => {
-  test('wipes a document when its link leaves the space directory', async () => {
+  // Skipped while `AUTOMATIC_GARBAGE_COLLECTION` is off in `echo-host.ts` — the current reachability
+  // pass is too expensive to run on every directory update, so no wipe is scheduled.
+  test.skip('wipes a document when its link leaves the space directory', async () => {
     const { host, spaceId, countChunks, createRoot, linkObject, unlink } = await setup();
 
     const root = await createRoot();
@@ -152,7 +154,8 @@ describe('automatic reclamation', () => {
     expect(await countChunks(holder)).toBeGreaterThan(0);
   });
 
-  test('wipes the retired root and its documents when a new epoch root is applied', async () => {
+  // Skipped for the same reason as above: epoch retirement no longer schedules a reclaim pass.
+  test.skip('wipes the retired root and its documents when a new epoch root is applied', async () => {
     const { host, spaceId, countChunks, createRoot, linkObject } = await setup();
 
     const oldRoot = await createRoot();
