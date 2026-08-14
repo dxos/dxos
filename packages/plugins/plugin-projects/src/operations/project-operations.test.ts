@@ -85,6 +85,23 @@ describe('project operations', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  it.effect('status round-trips through update, list, and get', () =>
+    Effect.gen(function* () {
+      const project = yield* Database.add(Project.make({ name: 'Spring Blend' }));
+      yield* Database.flush();
+
+      const { project: snapshot } = yield* updateProject.handler({ project: Ref.make(project), status: 'blocked' });
+      expect(project.status).toBe('blocked');
+      expect((snapshot as { status?: string }).status).toBe('blocked');
+
+      const listed = yield* listProjects.handler({});
+      expect(listed.projects[0]).toMatchObject({ name: 'Spring Blend', status: 'blocked' });
+
+      const detail = yield* getProject.handler({ project: Ref.make(project) });
+      expect(detail.status).toBe('blocked');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('update-project patches only the provided fields and replaces goals wholesale', () =>
     Effect.gen(function* () {
       const project = yield* Database.add(

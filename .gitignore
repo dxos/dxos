@@ -240,3 +240,7 @@ node_modules
 
 # Agentic-review: finalize keeps only REVIEW.md + RESOLUTION.md per run
 # (STAGING.md / groups.json / groups/ are deleted on finalize).
+
+# Icon-copy artifact: a misconfigured asset step writes phosphor SVGs to a literal
+# "dummy-non-existing-folder" rather than skipping. Generated output, never sources.
+dummy-non-existing-folder/

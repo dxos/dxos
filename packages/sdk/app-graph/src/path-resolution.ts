@@ -39,6 +39,17 @@ export type ResolvedPair = {
   nodeId: string;
 };
 
+/**
+ * One pair's outcome. Exactly one of `nodeId`/`candidateId` is set — `candidateId` is the id the node
+ * *would* have, so callers can keep addressing an unresolved pair by what it asked for. A pair with
+ * no candidate at all (an unknown key) is `null`.
+ */
+export type PairResolution = {
+  pairIndex: number;
+  nodeId?: string;
+  candidateId?: string;
+};
+
 /** The graph-path representation of a node, the reverse of a `UrlPair` (`id` is absent for singleton keys). */
 export type RepresentedNode = {
   key: string;
@@ -198,7 +209,7 @@ const resolveKeyId = async (
   extensions: ReadonlyArray<KeyedExtension>,
   id: string,
   wait?: Duration.Input,
-): Promise<string | null> => {
+): Promise<{ nodeId?: string; candidateId?: string }> => {
   // 1. Static segments: an exact candidate, no search (type sections, database/inbox objects, etc.).
   const idSegments = id.split(builder.urlGrammar.tailSeparator);
   const candidateIds: string[] = extensions
@@ -224,22 +235,26 @@ const resolveKeyId = async (
   for (const candidateId of candidateIds) {
     const resolved = await materializeCandidate(builder, candidateId);
     if (resolved) {
-      return resolved;
+      return { nodeId: resolved };
     }
   }
+  // Highest precedence, so it is the id this pair would have had; reported whether or not the wait
+  // below succeeds, so an unresolved pair still names the node it was asking for.
+  const candidateId = candidateIds[0];
   if (wait === undefined || candidateIds.length === 0) {
-    return null;
+    return { candidateId };
   }
 
   // One deadline for the pair, raced across every candidate — per-candidate waits run serially, so
   // N key-sharing extensions would multiply the caller's bound by N. Dynamic candidates wait too:
   // they name the recursive shapes (nested collections) whose containers are the slowest to
   // materialize, which is exactly what the wait exists for.
-  return EffectEx.runPromise(
+  const waited = await EffectEx.runPromise(
     Effect.raceAll(
-      candidateIds.map((candidateId) => Graph.waitFor(builder.graph, candidateId).pipe(Effect.as(candidateId))),
+      candidateIds.map((candidate) => Graph.waitFor(builder.graph, candidate).pipe(Effect.as(candidate))),
     ).pipe(Effect.timeoutOrElse({ duration: wait, orElse: () => Effect.succeed<string | null>(null) })),
   );
+  return waited ? { nodeId: waited } : { candidateId };
 };
 
 /**
@@ -267,10 +282,10 @@ const resolveUrlAsync = async (
   builder: GraphBuilder.GraphBuilder,
   parsed: { workspace: string; pairs: ReadonlyArray<UrlPair> },
   options?: ResolveUrlOptions,
-): Promise<Array<ResolvedPair | null>> => {
+): Promise<Array<PairResolution | null>> => {
   const keyTable = buildKeyTable(builder);
   const allExtensions = builder.getExtensions();
-  const results: Array<ResolvedPair | null> = parsed.pairs.map(() => null);
+  const results: Array<PairResolution | null> = parsed.pairs.map(() => null);
 
   // The chain partitions into `[item, linked*]` groups: a linked pair resolves against the
   // preceding ITEM, and item pairs resolve against the workspace base, so groups are independent.
@@ -286,7 +301,7 @@ const resolveUrlAsync = async (
     }
   });
 
-  const resolveItem = async (pairIndex: number): Promise<string | null> => {
+  const resolveItem = async (pairIndex: number): Promise<{ nodeId?: string; candidateId?: string } | null> => {
     const pair = parsed.pairs[pairIndex];
     const extensionIdList = keyTable.get(pair.key);
     if (!extensionIdList || extensionIdList.length === 0) {
@@ -320,11 +335,16 @@ const resolveUrlAsync = async (
       const headPair = parsed.pairs[headIndex];
       // A leading linked pair has no item to attach to (groups only start with one when the chain
       // opens with it), so it resolves to nothing rather than against a stale base.
-      const headNodeId = headPair.key === builder.urlGrammar.linkedKey ? null : await resolveItem(headIndex);
-      results[headIndex] = headNodeId ? { pairIndex: headIndex, nodeId: headNodeId } : null;
+      const head = headPair.key === builder.urlGrammar.linkedKey ? null : await resolveItem(headIndex);
+      const headNodeId = head?.nodeId;
+      results[headIndex] = head?.nodeId
+        ? { pairIndex: headIndex, nodeId: head.nodeId }
+        : head?.candidateId
+          ? { pairIndex: headIndex, candidateId: head.candidateId }
+          : null;
 
       // Linked pairs attach to this group's item, and to each other in order.
-      let lastItemNodeId = headNodeId ?? undefined;
+      let lastItemNodeId = headNodeId;
       for (const pairIndex of linkedIndexes) {
         const pair = parsed.pairs[pairIndex];
         const nodeId = lastItemNodeId && pair.id ? await resolveLinked(builder, lastItemNodeId, pair.id) : null;
@@ -359,7 +379,7 @@ export const resolveUrl = (
   builder: GraphBuilder.GraphBuilder,
   parsed: { workspace: string; pairs: ReadonlyArray<UrlPair> },
   options?: ResolveUrlOptions,
-): Effect.Effect<Array<ResolvedPair | null>> => Effect.promise(() => resolveUrlAsync(builder, parsed, options));
+): Effect.Effect<Array<PairResolution | null>> => Effect.promise(() => resolveUrlAsync(builder, parsed, options));
 
 /**
  * Reverse-map a graph node id back to its `(key, id?, workspace)` representation, the inverse of
