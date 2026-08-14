@@ -177,14 +177,14 @@ Independent of each other; some sites may want none, one, or several.
   landed (no more per-tick DB query), but the tick itself still fires at a
   fixed 1 Hz — "no timer while idle" is not yet implemented.
 - [x] **R2. No-change backoff.** Widen the interval while a poll keeps
-  returning nothing (e.g. 1 s → 5 s → 30 s), reset on change or local
-  write. Interim fix for S2 and S3 while a real streaming RPC was out of
-  scope; both have since been upgraded past it (see below), so this
-  remedy is fully superseded — kept `[x]` as a record of what shipped
-  first, not as an open remedy.
-  **Superseded for S2 and S3**: both were upgraded from backoff to a real
-  streaming RPC (`FeedService.subscribeFeed`, `FeedService.subscribeSyncState`)
-  — see their entries above; R2 no longer applies to either.
+      returning nothing (e.g. 1 s → 5 s → 30 s), reset on change or local
+      write. Interim fix for S2 and S3 while a real streaming RPC was out of
+      scope; both have since been upgraded past it (see below), so this
+      remedy is fully superseded — kept `[x]` as a record of what shipped
+      first, not as an open remedy.
+      **Superseded for S2 and S3**: both were upgraded from backoff to a real
+      streaming RPC (`FeedService.subscribeFeed`, `FeedService.subscribeSyncState`)
+      — see their entries above; R2 no longer applies to either.
 - [x] **R3. Coordinated scheduling.** One scheduler batching all due work into
       a single round-trip instead of N independent timers. Moot for S2 and
       S3 now that both push independently instead of polling on any
@@ -200,7 +200,7 @@ Independent of each other; some sites may want none, one, or several.
       change, so an idle tab does no work at all. Still open: what S2 and S3
       shipped is push from the local `echo-host` to the client
       (`FeedStore.onNewBlocks` → a streaming RPC), which eliminates client-side
-      polling entirely, but the *pull* leg — EDGE notifying `echo-host` of
+      polling entirely, but the _pull_ leg — EDGE notifying `echo-host` of
       remote changes, rather than `FeedSyncer`'s own poll cadence against it —
       is the larger, still-unimplemented half of this remedy. Lands with
       feed-live-objects stage 4 rather than here.
