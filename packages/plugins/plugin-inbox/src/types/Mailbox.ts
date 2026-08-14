@@ -139,7 +139,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
      */
     subscriptions: Schema.Array(Subscription).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
-    FeedAnnotation.set(true),
+    FeedAnnotation.set({ property: 'feed' }),
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
     /**
      * Reading a mailbox is a chain: the message replaces the message plank rather than growing the
