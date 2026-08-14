@@ -449,9 +449,6 @@ function intersectRanges(a: Range, b: Range): Range | null {
   return start <= end ? { from: start, to: end } : null;
 }
 
-/** Line-height giving a mark-drawn chip the same box as {@link TagWidget}'s `h-[26px]`. */
-const CHIP_LEADING = 'leading-[24px]';
-
 /** Label characters the grammar admits after `#` (`Tag { "#" $[a-zA-Z0-9_\-]+ }`). */
 const TAG_LABEL_CHAR = /[a-zA-Z0-9_-]/;
 
@@ -466,23 +463,24 @@ const TAG_LABEL_CHAR = /[a-zA-Z0-9_-]/;
 const tagMarks = (from: number, to: number, hue: string): { from: number; to: number; deco: Decoration }[] => {
   const { bg: fill, border, surface } = getStyles(hue);
   const marks = [
-    // Enclosing border first; `buildQueryDecorations` sorts equal starts widest-first so it nests.
-    // `inline-block` + `leading`, NOT the widget's `inline-flex`: these spans wrap live, editable
-    // text, and turning it into an anonymous flex item moves the caret coordinates inside the label.
-    // The chip's height is matched through line-height instead.
+    // Enclosing chip first; `buildQueryDecorations` sorts equal starts widest-first so it nests.
+    // These classes MIRROR `container()` and `TagWidget.toDOM` exactly — the two forms are the same
+    // chip, and anything that drifts here shows up as the tag changing shape under the caret when the
+    // terminating space arrives. `tag-parity.test.ts` renders both and compares them part-for-part.
     {
       from,
       to,
-      deco: Decoration.mark({ class: mx('inline-block align-middle border rounded-xs', CHIP_LEADING, border) }),
+      deco: Decoration.mark({ class: mx('inline-flex h-[26px] border rounded-xs', border) }),
     },
-    { from, to: from + 1, deco: Decoration.mark({ class: mx('px-1 text-black text-xs', fill) }) },
+    { from, to: from + 1, deco: Decoration.mark({ class: mx('flex items-center px-1 text-black text-xs', fill) }) },
   ];
   if (to > from + 1) {
     marks.push({
       from: from + 1,
       to,
-      // `text-sm` matches the widget's label; without it the in-progress form rendered a size larger.
-      deco: Decoration.mark({ class: mx('px-1 text-subdued text-sm rounded-r-[3px]', surface) }),
+      deco: Decoration.mark({
+        class: mx('flex items-center px-1 text-subdued text-sm rounded-r-[3px]', surface),
+      }),
     });
   }
 

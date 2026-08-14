@@ -24,24 +24,18 @@ const chipClasses = (doc: string): string[][] => {
 };
 
 /**
- * A tag being typed is drawn with marks over live text; a finished one is a widget. They must read as
- * the same chip, so the parts that carry its APPEARANCE — fill, surface, border, padding, type scale —
- * have to agree. Layout classes are excluded deliberately: the widget lays its parts out with flex,
- * which the mark form cannot use without moving the caret inside editable text.
+ * A tag being typed is drawn with marks over live text; a finished one is a widget replacing it. They
+ * are the same chip, so every class must agree — nothing is excluded. A drift here shows up as the tag
+ * changing shape under the caret the moment the terminating space arrives.
  */
 describe('tag chip parity', () => {
-  const LAYOUT = new Set(['inline-flex', 'inline-block', 'flex', 'items-center', 'align-middle', 'leading-[24px]']);
-  const appearance = (classes: string[]) => classes.filter((name) => !LAYOUT.has(name) && !/^h-\[/.test(name));
-
   test('the finished and in-progress forms have the same three parts', () => {
     expect(chipClasses('#important ')).toHaveLength(3);
     expect(chipClasses('#important')).toHaveLength(3);
   });
 
-  test('every part carries identical appearance classes', () => {
-    const finished = chipClasses('#important ').map(appearance);
-    const typing = chipClasses('#important').map(appearance);
-    expect(typing).toEqual(finished);
+  test('every part carries identical classes, layout included', () => {
+    expect(chipClasses('#important')).toEqual(chipClasses('#important '));
   });
 
   test('the hue is shared, so the colour does not jump on the terminating space', () => {
