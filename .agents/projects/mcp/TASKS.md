@@ -6,7 +6,8 @@ Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-d
 
 The tool-surface work-stream moved to the edge repo's `mcp-operations` project
 (`edge:.agents/projects/mcp-operations/{DESIGN,TASKS}.md`); its Phase 2b is the dxos-side work
-below.
+below. Dxos-side decisions — the two-host contract, third-party CLI plugins, and the two reload
+stages — are in [DESIGN.md](./DESIGN.md); the loop design stays in the superpowers spec above.
 
 ## Milestone 6 — `dx mcp serve`, the local twin of the MCP server (mcp-operations Phase 2b)
 
@@ -15,7 +16,7 @@ reconnect) and gives plugin authors a surface with no edge at all. Fidelity cont
 (mcp-operations DESIGN §0.5): deltas from the deployed server are host-layer only — anything that
 changes what a model sees lives in the shared package or it is a bug.
 
-- [x] **`@dxos/mcp-projection`** — the projection extracted out of `mcp-space-service/src/mcp/`:
+- [x] **`@dxos/mcp-server`** — the projection extracted out of `mcp-space-service/src/mcp/`:
       annotated operations as tools, opted-in skills as prompts, `skillLoad`, name/collision
       rules, ref widening, and the wire response passes. Hosts supply a `Gateway` (reach the
       registry, invoke an operation, name the session's spaces) and a transport; nothing else
@@ -28,8 +29,8 @@ changes what a model sees lives in the shared package or it is a bug.
 - [x] plugin-projects + plugin-tasks added to the CLI plugin set (and to the default profile), so
       the annotated operations are in the registry the command projects.
 - [ ] **Edge consumes the package** — `mcp-space-service` keeps OAuth, grants, bindings and the
-      trace feed, and deletes its copy of the projection. Blocked on `@dxos/mcp-projection`
-      publishing (pkg.pr.new pin bump). Acceptance: edge's 92-test suite stays green with the
+      trace feed, and deletes its copy of the projection. Code is written (966 lines deleted); blocked
+      on a `@dxos/mcp-server` build to install. Acceptance: edge's 92-test suite stays green with the
       package as the sole source of shape.
 - [ ] **Fidelity check in CI** — one test running the same registry fixture through both hosts
       (edge worker + `dx mcp serve`), asserting identical `tools/list`, `prompts/list` and

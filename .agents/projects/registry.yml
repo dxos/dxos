@@ -94,7 +94,7 @@ projects:
     created: 2026-07-31
     summary: Claude ⇔ MCP ⇔ EDGE ⇔ Composer loop — local edge+mcp miniflare stack, composer sync, document round-trip; end goal is the task-planning skill using Composer documents for DESIGN/TASKS.
     tasks: .agents/projects/mcp/TASKS.md
-    design: agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md
+    design: .agents/projects/mcp/DESIGN.md
     specs:
       - edge:packages/services/mcp-space-service/DESIGN.md (auth + spaces + milestones M6-M9)
       - agents/superpowers/specs/2026-08-01-task-plugin-reconciliation-design.md (RESOLVED)
