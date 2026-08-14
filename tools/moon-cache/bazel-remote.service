@@ -16,6 +16,7 @@ ExecStart=/usr/local/bin/bazel-remote \
   --tls_key_file /etc/bazel-remote/server.key \
   --tls_ca_file /etc/bazel-remote/ca.pem \
   --min_tls_version 1.2 \
+  --access_log_level none \
   --enable_endpoint_metrics
 Restart=always
 RestartSec=2

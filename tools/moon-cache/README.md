@@ -51,9 +51,16 @@ MOON_REMOTE_HOST= moon run :build
    change is a full cold build regardless of which cache is configured.
 3. **Disk is bounded by `--max_size 100`** (GiB), enforced as an LRU: `bazel-remote` evicts the
    least recently used blobs rather than filling the disk. Size it under the volume with room for
-   the OS — 100 GiB on the current 154 GB disk.
+   the OS — 100 GiB on the current 154 GiB disk.
 4. **Release workflows deliberately skip the cache** — `remote-cache: 'false'` on the setup action,
    or a workflow-level `MOON_REMOTE_HOST` where the workflow does not use that action.
+5. **`--access_log_level` defaults to `all`.** At CI volume that's one line per request and will
+   fill the disk within days — it took 8 days to produce 50 GB and exhaust a 154 GiB disk. The unit
+   sets `--access_log_level none`; do not drop it when copying this config elsewhere.
+6. **A restart costs about 70 s of downtime.** `bazel-remote` walks every cache file to rebuild its
+   in-memory index before it binds 9092/9093, so both ports refuse connections until that finishes
+   — moon falls back to a local build for anyone hitting it during that window. Restarts are safe
+   for the data (below), just not instantaneous.
 
 ## The server
 
@@ -84,8 +91,9 @@ ssh root@cache.dxos.network 'systemctl status bazel-remote; journalctl -u bazel-
 ```
 
 Deploying a config change is `scp bazel-remote.service root@…:/etc/systemd/system/` then
-`systemctl daemon-reload && systemctl restart bazel-remote`. Restarts are safe — the cache is on
-disk and survives.
+`systemctl daemon-reload && systemctl restart bazel-remote`. Restarts are safe for the cache
+data — it's on disk and survives — but not instantaneous: see item 6 above for the ~70 s of
+downtime while the index rebuilds.
 
 ## Certificates
 
