@@ -1,16 +1,20 @@
 # stories-brain research tasks
 
-_Resume: PR #12553 MERGED 2026-08-13 (squash `9c86066e45`) — progress meters, contact affordances and
-whole-conversation summaries. Work since then is on `claude/suspicious-wilson-a54e74`, rebased onto the
-squash so it carries only its own commits, and is NOT yet pushed or in a PR: Inbox + Starred navtree
-folders (`325ce3a76d`), archive/restore from the conversation menu (`3714d50f53`), and the recipients
-row with an icon and bare addresses (`9e814ba263`). DECIDED: archive is the `inbox` tag coming OFF, not
-an `archived` tag — Gmail's INBOX is a label and JMAP's inbox is a role, so `SystemTags.toggleTag`
-covers both directions and no filter-complement operator is needed anywhere. Next action: archive on
-the mailbox message TILE menu (`InboxStack.tsx:396`, beside `Ignore sender`), then avatar/name
-alignment in the mailbox message card, then the `useContactLookup` defect. NOT VERIFIED IN THE APP —
-the navtree folders typecheck and test but have never been seen rendering; Composer boots only after a
-`pnpm install` fixes a Vite dep-scan failure on `@dxos/vendor-hyperformula`. Uncommitted: none._
+_Resume: **This is the umbrella work-stream; the inbox SURFACE work lives in the child ledger**
+`packages/plugins/plugin-inbox/docs/TASKS.md` (registry project `inbox-surface`) — see the MOVED note
+below, and do not add surface work here. THIS file keeps the model-ladder / FINDINGS / Topics research
+it was created for: 42 open items.
+
+Child-ledger status as of 2026-08-14: **PR #12555 is in the merge queue** (auto-merge, squash, 84
+commits) carrying Phases 0-5 — virtual folders, archive, sender enrichment, and the processor topology
+(contributed passes, DAG ordering, per-processor cursor tags, `AnalyzeMailbox`/`GenerateReply` moved to
+plugin-brain). Two ECHO changes are spawned and awaiting review, and they gate the rest: computed
+aggregate group keys, and annotation-constrained refs.
+
+NOTHING in those 84 commits has been verified in a running app. The 27-step plan in
+`packages/plugins/plugin-inbox/docs/TESTING.md` needs a WARM browser — an automation browser starts
+with an empty OPFS and trips the fixed 30s startup budget at `useApp.tsx:236`, which is a cold-profile
+problem, not a worktree or code one. Uncommitted: none._
 
 ## MOVED: the inbox surface work now lives in `packages/plugins/plugin-inbox/docs/TASKS.md`
 
