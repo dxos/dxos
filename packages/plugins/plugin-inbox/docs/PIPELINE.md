@@ -1,7 +1,8 @@
 # Mailbox pipelines
 
 How mail gets into a mailbox and what runs over it afterwards. Sibling docs: [`PLAN.md`](PLAN.md)
-(product plan), [`TASKS.md`](TASKS.md) (ledger), [`AUDIT.md`](AUDIT.md) (component/test index).
+(product plan), [`TASKS.md`](TASKS.md) (ledger), [`TESTING.md`](TESTING.md) (manual test plan),
+[`AUDIT.md`](AUDIT.md) (component/test index).
 
 **Status:** D1–D3 and D5 built; D4 and D6 outstanding. See [Open](#open).
 
