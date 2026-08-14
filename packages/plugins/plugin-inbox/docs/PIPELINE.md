@@ -158,25 +158,75 @@ Both moves changed a released DXN, so routines bound to the old keys are orphane
 deliberately, pre-1.0. Note the changesets are `minor`, not `major`: at 0.x a breaking change rides
 the minor, and `major` would cut 1.0.0 across the whole fixed publish group.
 
-**D6 — Generalize off `Mailbox`.** NOT BUILT, and weaker than first written. It also now carries a
-deferred question: whether a processor can fan out over N subjects (the plugin-projects trio needs one
-invocation per Project) and what cursor identity that implies — per-(processor, subject) rather than
-per-processor. Deferred here deliberately, because D6 has to answer "what is the subject of a pass"
-regardless. The abstraction is "a
-durable feed plus N independently-cursored consumers contributed by plugins", and the parts that
-matter are already generic: `topology.ts` knows only `{id, after}`, `precondition.ts` knows only
-`Cause`s, and a feed cursor's `target` is already an untyped association anchor. What is mailbox-typed
-is the `MailboxProcessor` subject and `tier`, `ScanMailbox`'s input and progress key, and
-`findOrCreateFeedCursor`, which takes a `Mailbox` only to read `mailbox.feed`. The open question is
-what replaces the subject: a structural `{ feed: Ref<Feed> }`, a `FeedOwner` annotation, or passing
-the `Feed` and letting each processor resolve its own.
+**D6 — Generalize off `Mailbox`.** NOT BUILT, and the least settled of the six. In one line: make the
+Scan half run contributed, independently-cursored **processors** over any feed, not just a mailbox's.
 
-CORRECTION: the plugin-projects trio was cited here as the second instance. It is not — all three read
-`mailbox.feed`, so they need no generalization and could be contributed as `MailboxProcessor`s today.
-That is the cheaper move hiding behind D6: it puts them in the DAG and gives three of the seven
-cursorless consumers a cursor. The only genuine second instance is transcription, which owns its own
-`Feed` — but its `messageEnricher` runs BEFORE a message is written, a write-time seam closer to
-sync's inline stages than to a cursored read-time pass, so it may want the other half's shape.
+### What is already generic
+
+Three of the five pieces need no work, which is why the remaining scope is smaller than "generalize
+the host" sounds:
+
+| Piece                             | State                                                        |
+| --------------------------------- | ------------------------------------------------------------ |
+| `operations/topology.ts`          | generic — knows only `{ id, after }`                         |
+| `operations/precondition.ts`      | generic — knows only `Cause`s                                |
+| `Cursor` itself                   | generic — `target` is already an untyped association anchor  |
+| the **host** (`ScanMailbox`)      | mailbox-typed — input, progress key, progress label, logging |
+| the **seam** (`MailboxProcessor`) | mailbox-typed — subject param and `tier`                     |
+
+### The subject is the feed's OWNER, not the feed
+
+This is the part that is easy to get wrong, and it decides the shape of everything else. A feed cursor
+is not identified by the feed alone:
+
+```ts
+spec: { kind: 'feed', source: mailbox.feed, target: Ref.make(mailbox) }
+```
+
+The **source** is the feed; the **target** is the Mailbox. There is no dedicated "consumer" ECHO
+object, so the owner stands in as the association anchor — which means a processor's watermark is
+identified by `(feed, owner, processor id)`, not by the feed. The host needs the owner for more than
+the cursor: the progress key derives from the owner's URI, the progress label from its `name`, and the
+run log from its URI.
+
+So "run passes against feeds" understates the problem. The real question is **what plays the owner's
+role** once it is not a Mailbox. Candidates:
+
+1. **Structural** — any object with `feed: Ref<Feed>`. Smallest change, no schema work, and `Calendar`,
+   `Chat`, `Transcript`, commerce `Search`, magazine `Subscription` and `Ibkr` all satisfy it today.
+   Gives no place to hang a display name or per-subject policy beyond what is already on the object.
+2. **Annotated** — a `FeedOwner` annotation on the schema, so a type opts in. More ceremony; makes the
+   set of valid subjects explicit and discoverable rather than accidental.
+3. **The feed alone**, with each processor resolving its own subject. Removes the owner from the seam
+   but pushes the cursor-anchor problem into every processor, and every one would solve it differently.
+
+### The open sub-questions
+
+- **Fan-out.** `createInvocation` returns ONE invocation. The plugin-projects trio needs one per
+  Project over the same mailbox feed, so D6 must decide whether a processor may cover N subjects.
+- **Cursor identity under fan-out.** If it may, the tag can no longer be the processor id alone — it
+  becomes `(processor id, subject id)`, or every subject shares one watermark and they silently skip
+  each other's work. This is the same failure the tags exist to prevent.
+- **Tiers.** `MailboxTier` is mail-shaped cost language (`deterministic`/`classify`/`summarize`/
+  `analyze`). A generic host either keeps tiers as an opaque per-host vocabulary or drops them and
+  relies on the edges alone.
+
+### There is no second consumer yet
+
+Worth stating plainly, because it was mis-stated earlier in this document. Eight types own a feed —
+`Mailbox`, `Calendar`, `Chat`, `Transcript`, commerce `Search`, magazine `Subscription`, `Ibkr`,
+`TriggerEvent` — but **none except `Mailbox` has a cursored consumer**: no `Cursor.makeFeed` or
+`findOrCreateFeedCursor` appears in magazine, ibkr, assistant-toolkit or commerce, and nothing scans
+the calendar feed.
+
+The plugin-projects trio was cited here as the existing second instance and is not one: all three read
+`mailbox.feed`, so they need no generalization at all — what they need is fan-out. The nearest genuine
+candidate is transcription, which owns its own `Feed`, but its `messageEnricher` runs BEFORE a message
+is written — a write-time seam structurally closer to the sync half's inline stages than to a cursored
+read-time pass.
+
+So D6 is not "generalize for the second instance". It is "build the abstraction on spec, or wait".
+That is a build-vs-defer decision, not a design detail, and it is the one to settle first.
 
 ## Fixed along the way
 

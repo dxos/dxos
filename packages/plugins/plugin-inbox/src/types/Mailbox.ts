@@ -25,7 +25,6 @@ export enum MessageState {
   SPAM = 3,
 }
 
-/** Mailbox object schema. */
 /**
  * A message filter — an exclusion rule applied across the mailbox UI, sync, and analysis. Kept
  * intentionally small; expected to grow (subject, labels, date, …), so match logic lives in the
@@ -48,6 +47,7 @@ export const Subscription = Schema.Struct({
 });
 export interface Subscription extends Schema.Schema.Type<typeof Subscription> {}
 
+/** Mailbox object schema. */
 export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.mailbox', '0.1.0'))(
   Schema.Struct({
     /** Display name; falls back to the bound account's address when absent. */
