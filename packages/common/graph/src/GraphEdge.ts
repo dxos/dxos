@@ -33,14 +33,14 @@ export type Of<Data = any> = Specialize<Base, { data: Data }>;
 // contain — '_' is legal in all of them.
 const SEPARATOR = '\u0001';
 
-const KEY_REGEX = /^[^\u0001]+$/;
+const isValidKey = (key: string): boolean => key.length > 0 && !key.includes(SEPARATOR);
 
 /** The `relation` distinguishes parallel edges between a pair; it is not the edge `type`. */
 type Meta = { source: string; target: string; relation?: string };
 
 export const createId = ({ source, target, relation }: Meta): string => {
-  invariant(KEY_REGEX.test(source), `invalid source: ${source}`);
-  invariant(KEY_REGEX.test(target), `invalid target: ${target}`);
+  invariant(isValidKey(source), `invalid source: ${source}`);
+  invariant(isValidKey(target), `invalid target: ${target}`);
   return [source, relation, target].join(SEPARATOR);
 };
 
