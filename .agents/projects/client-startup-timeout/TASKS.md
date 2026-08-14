@@ -1,8 +1,11 @@
 # Client Startup Timeout — Tasks
 
-_Resume: diagnosis complete from the user's NDJSON log; nothing implemented yet.
-Blocked on one question — where the "existing subduction patch" for unnecessary
-startup writes lives (Phase 0). Uncommitted: this project scaffold._
+_Resume: Phase 0 RESOLVED 2026-08-14 — the "existing subduction patch" never
+existed; the real fix is upstream `automerge/automerge-repo#712`, now ported
+into our pinned `.40` dist patch and verified (commit/fragment re-persist on
+boot is zero). Two follow-ons found: the same defect in a second cache
+(`#lastRemoteHeads`, Phase 0), and idle index churn that is now the dominant
+boot SQL cost (Phase 2b). Phase 3 is specced but not implemented._
 
 Root cause, timeline, and measurements: DESIGN.md.
 
@@ -11,15 +14,20 @@ subduction hydration, misses the client's flat 15 s connect deadline, and the
 two sides deadlock so no retry succeeds. System Error dialog on every load.
 Scales with document count (~1,700 docs on the reporting profile).
 
-## Phase 0: Confirm prior art — blocked on user
+## Phase 0: Confirm prior art — RESOLVED 2026-08-14
 
-- [ ] Locate the existing subduction patch that mitigates unnecessary startup
-      writes. Searched and not found: both files in `patches/`, `git log --all`,
-      `SqliteStorageAdapter.save()`, upstream `2.6.0-subduction.47`. See
-      DESIGN.md §Open question. Need a PR number, branch, or file path.
-- [ ] Once located, re-check the captured log against it — does it apply to the
-      read path (2,650 reads in the stall window) or only writes (478)?
-- [ ] Decide on the two leads: rebase the 556-line dist patch `.40` → `.47`, and
+- [x] Locate the existing subduction patch. **It never existed** — every
+      historical `automerge-repo` patch back to PR #10752 leaves the save path
+      untouched. The false lead was PR #12064, which tests a plain `Repo` with
+      no `initSubduction` and so never exercises `SubductionSource`.
+- [x] Port the real fix (upstream `automerge/automerge-repo#712`) into the
+      pinned `.40` dist patch — mirror the disk hash scan into `knownHashes`.
+      Verified: commit/fragment re-persist on boot is now zero.
+- [ ] Same defect, second cache: bulk-seed `#lastRemoteHeads` from one
+      `remote-heads` prefix scan at source construction. Currently 515 writes
+      against 0 reads of that family per boot, and ~93% are for documents that
+      never attach — so the per-attach replay cannot cover them.
+- [ ] Decide on the deferred leads: rebase the dist patch `.40` → `.47`, and
       land the `automerge-subduction` 0.16.1 bump from
       `origin/claude/sweet-goldberg-twtikd`.
 
@@ -50,12 +58,80 @@ and is independent of any hydration work.
 - [ ] Re-measure against the same profile: target the stall well under the
       connect deadline.
 
-## Phase 3: Defer hydration behind the handshake
+## Phase 2b: Idle index churn — 79% of boot SQL time
 
-- [ ] Worker answers the tab's session handshake before subduction hydration
-      starts; hydration and sync proceed behind a live session.
+Measured in `oo7c99`: 68 index passes, **all reporting zero work**, costing 272
+`indexCursor` reads (245.0 ms) + 136 full-table `automerge_heads` scans
+(131.2 ms). Rate is flat at ~4/s and continues after all replication stops.
+Details and call paths: DESIGN.md §"Idle index churn".
+
+- [ ] Find what schedules the passes. Not the `done === false` re-entry (every
+      pass reports `done: true`) and not replication (rate is flat through
+      seconds with zero subduction/feed messages). Remaining candidates:
+      `documentsSaved`, `feedStore.onNewBlocks`.
+- [ ] Reconcile with the `memory-usage` project's "Phase 4 idle churn (~51 SQL/s
+      from four loops)" — likely the same loop; fix once.
+- [x] Hoist the source read out of the per-index loop — DONE. Cursors are
+      per-index so `getChangedObjects` itself cannot be shared, but its expensive
+      part (the `automerge_heads` full scan) is cursor-independent, so it is now
+      captured once per pass. Cursor reads are also batched into one statement
+      per source. Measured on a real boot: `indexCursor` 4 → **2** per run and
+      `automerge_heads` 2 → **1** per run, with the batched query returning
+      2024 rows (1012 docs × 2 indexes), confirming the partition.
+- [x] Instrument why each run fires — DONE. The completion line now carries
+      `reasons` (a multiset, since `DeferredTask` coalesces), `durationMs`, and
+      `invalidates`. First capture answers Phase 2b's open question:
+      `{"rpc-update-indexes":1}` with `invalidates: false`, i.e. the **tab drives
+      indexing over RPC** and a zero-work run does _not_ re-invalidate — so the
+      loop is not self-sustaining through invalidation. Needs a fully-loaded
+      session to confirm the ~4/s cadence.
+- [ ] Cache document heads across passes in `AutomergeDataSource` (invalidated on
+      `documentsSaved`) — the pass-scoped snapshot above only shares within one
+      pass. Deliberately not done: a longer-lived cache is only safe if
+      `documentsSaved` is the sole path by which heads change, which is unverified
+      and would silently drop index updates if wrong.
+- [ ] Replace the O(N) scan + JS diff with an anti-join against `indexCursor`
+      carrying a real `LIMIT` — the current `break` after `limit` saves nothing
+      because the SQL is unbounded.
+
+## Phase 3: Defer network activity behind the handshake
+
+Spec: DESIGN.md §"Spec: begin network activity only after boot". **Deferred to a
+follow-up PR** — implemented once and reverted to keep this PR scoped; the
+working diff is preserved at
+`.agents/projects/client-startup-timeout/defer-networking.patch` (edge-client `deferConnect` +
+`startNetworking()`, host-owned 300 ms delay, worker-runtime anchor, feed-syncer
+eager-poll gate). Re-apply rather than re-deriving.
+
+Verified while implementing: only the edge dial needs an explicit gate.
+Subduction already returns early while the socket is not `CONNECTED`
+([echo-edge-subduction-replicator.ts:265](../../../packages/core/echo/echo-host/src/edge/echo-edge-subduction-replicator.ts))
+and resumes from `_handleReconnect`; feed sync re-schedules its poll/push from
+`onReconnected`. The one leak is `FeedSyncer._open`'s unconditional initial
+`pollTask.schedule()`, which parks on the send-ready trigger until the socket
+appears — hence the gate in the saved patch.
+
+Also note `EdgeConnection` is implemented twice — `EdgeClient` and
+`TestEdgeConnection` (`packages/core/mesh/messaging/src/testing/test-edge-mesh.ts`)
+— so adding an interface member breaks `messaging:build` until the double is
+updated.
+
+- [ ] Add a worker-runtime-owned `bootGate`, resolved after the session
+      handshake completes; bind it to the runtime's lifetime so a second tab
+      against a warm worker is not gated again.
+- [ ] Await it in every outbound initiator: subduction connection managers
+      (`SubductionConnections.manageConnection`, `AdapterConnections.addAdapter`),
+      the edge WebSocket connect, and feed sync's first pull. Local hydration is
+      explicitly out of scope (Phase 2 owns that).
+- [ ] Bound it: resolve on the earlier of handshake-complete or a ~5 s ceiling,
+      and unconditionally on handshake _failure_ so a broken tab cannot leave
+      the worker offline. Log which arm fired.
+- [ ] Verify against a single-`i` fresh-boot `app.log`: first
+      `received subduction batch` / edge-connect strictly after
+      `worker-session opened`.
 - [ ] Confirm the edge WebSocket connect is no longer starved (it landed at
-      24.231 only because the thread freed at 23.707).
+      24.231 only because the thread freed at 23.707), and measure
+      handshake→first-batch to show no time-to-first-sync regression.
 
 ## Phase 4: Independent cleanups
 

@@ -56,6 +56,13 @@ import { LocalFeedServiceImpl } from './local-feed-service';
 import { QueryServiceImpl } from './query-service';
 import { type SpaceDocumentListUpdatedEvent, SpaceStateManager } from './space-state-manager';
 
+/**
+ * Every path that can start an indexing run. Logged on each run so an idle-churn loop is
+ * attributable from `app.log` alone — the counts are otherwise indistinguishable between a
+ * data-driven pass and a self-sustaining invalidation cycle.
+ */
+export type IndexRunReason = 'open' | 'feed-blocks' | 'documents-saved' | 'batch-continuation' | 'rpc-update-indexes';
+
 export type EchoHostProps = {
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
@@ -128,6 +135,14 @@ export class EchoHost extends Resource {
   private readonly _feedDataSource: FeedDataSource;
 
   private _updateIndexes!: DeferredTask;
+
+  /**
+   * Why the pending index run was scheduled, counted per reason. `DeferredTask` coalesces
+   * overlapping `schedule()` calls into one run, so attributing a run needs the full multiset of
+   * reasons that accumulated before it started — a single "last caller" field would misattribute
+   * every coalesced run.
+   */
+  private readonly _pendingIndexReasons = new Map<IndexRunReason, number>();
 
   private _feedService: FeedService.Handlers;
 
@@ -309,7 +324,7 @@ export class EchoHost extends Resource {
     await this._spaceStateManager.open(ctx);
     log('echo-host: space state manager opened');
     this._feedStore.onNewBlocks.on(this._ctx, () => {
-      this._updateIndexes.schedule();
+      this.#scheduleIndexRun('feed-blocks');
     });
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
@@ -339,9 +354,9 @@ export class EchoHost extends Resource {
       }
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
-      this._updateIndexes.schedule();
+      this.#scheduleIndexRun('documents-saved');
     });
-    this._updateIndexes.schedule();
+    this.#scheduleIndexRun('open');
     log('echo-host: open complete');
   }
 
@@ -386,6 +401,7 @@ export class EchoHost extends Resource {
       return;
     }
     do {
+      this.#noteIndexRunReason('rpc-update-indexes');
       await this._updateIndexes.runBlocking();
       if (this._ctx.disposed) {
         return;
@@ -859,6 +875,23 @@ export class EchoHost extends Resource {
     return this.openSpaceRoot(this._ctx, spaceId);
   }
 
+  /** Records why a run is wanted without scheduling it — for callers that drive the task directly. */
+  #noteIndexRunReason(reason: IndexRunReason): void {
+    this._pendingIndexReasons.set(reason, (this._pendingIndexReasons.get(reason) ?? 0) + 1);
+  }
+
+  #scheduleIndexRun(reason: IndexRunReason): void {
+    this.#noteIndexRunReason(reason);
+    this._updateIndexes.schedule();
+  }
+
+  /** Drains the pending reasons so each run reports only the requests that produced it. */
+  #takeIndexRunReasons(): Record<string, number> {
+    const reasons = Object.fromEntries(this._pendingIndexReasons);
+    this._pendingIndexReasons.clear();
+    return reasons;
+  }
+
   private _runUpdateIndexes = async (): Promise<void> => {
     if (this._ctx.disposed || !this.isOpen) {
       // Signal the `updateIndexes` RPC handler's `do-while` loop to exit
@@ -867,6 +900,9 @@ export class EchoHost extends Resource {
       this._indexesUpToDate = true;
       return;
     }
+
+    const reasons = this.#takeIndexRunReasons();
+    const startedAt = performance.now();
 
     try {
       const combinedResult = _makeEmptyMergedResult();
@@ -915,7 +951,13 @@ export class EchoHost extends Resource {
         });
       }
 
+      const hint = hintFromIndexingResult(combinedResult);
       log.verbose('indexEngine update completed', {
+        reasons,
+        durationMs: performance.now() - startedAt,
+        // A run that indexed nothing yet still invalidates queries is the signature of a
+        // self-sustaining invalidation loop, so record whether this run re-armed its own trigger.
+        invalidates: !!hint,
         updated: combinedResult.updated,
         done: combinedResult.done,
         spaces: combinedResult.spaces.size,
@@ -927,12 +969,11 @@ export class EchoHost extends Resource {
       await sleep(1);
       if (!combinedResult.done) {
         this._indexesUpToDate = false;
-        this._updateIndexes!.schedule();
+        this.#scheduleIndexRun('batch-continuation');
       } else {
         this._indexesUpToDate = true;
       }
       // Invalidate queries after index update — the indexer is the sole invalidation source.
-      const hint = hintFromIndexingResult(combinedResult);
       if (hint) {
         this._queryService.invalidateQueries(hint);
       }

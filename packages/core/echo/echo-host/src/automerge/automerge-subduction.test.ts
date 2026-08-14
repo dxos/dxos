@@ -29,8 +29,6 @@ import { beforeAll, describe, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { createRepo, shutdownRepo } from './subduction-test-utils';
-
 class AsyncQueue<T> {
   private _items: T[] = [];
   private _waiters: ((item: T) => void)[] = [];
