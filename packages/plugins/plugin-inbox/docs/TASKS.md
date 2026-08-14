@@ -395,6 +395,28 @@ server-assigned id.
 
 ---
 
+## Enhance pipeline: compose it from the existing stages (tracked 2026-08-14)
+
+_Tracked verbatim from the user: "use created stages for enhance pipeline". The stages exist; what
+"enhance" names does not — see the open question below before building anything._
+
+### Tasks
+
+- [ ] **Assemble the enhance pipeline out of the stages already written**, rather than new ad-hoc
+      logic. What exists today: `pipeline-email`'s `summarizeStage`, `extractContactsStage`,
+      `statsStage` and `extractFactsStage`, assembled by `EmailPipeline.run`
+      ([`pipeline.ts`](../../../core/compute/pipeline-email/src/pipeline.ts)); plugin-inbox's own
+      `on-arrival-extractors` stage ([`on-arrival.ts`](../src/util/on-arrival.ts)); and the
+      `EmailFactPipeline` / topics variants alongside them.
+- [ ] **OPEN QUESTION — name the target.** There is no "enhance" pipeline, stage, or operation in the
+      repo today (`rg -i enhance` over `packages/` finds nothing relevant), so this is either a new
+      composition to be defined or another name for the Phase 2 enrichment path
+      (`ResearchPerson`/`ResearchOrganization` + `EnrichImages`). Settle which before scoping; the
+      answer decides whether this belongs under Phase 2 or as its own processor in the Phase 5
+      topology.
+
+---
+
 ## BLOCKER: storybook startup times out for a COLD BROWSER PROFILE (diagnosed 2026-08-13)
 
 Every plugin-manager story dies with `Startup timed out after 30000ms` (`useApp.tsx:236`) when driven
