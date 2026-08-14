@@ -47,9 +47,8 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
 const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
 
-// wasm-bindgen packages that publish both a bundler entry (`browser` condition, `.wasm` imported as
-// a module) and a base64 entry (default condition, `initSync`). Only the latter is free of
-// top-level await.
+// Only these packages' default-condition entry is free of top-level await; the `browser` one imports
+// `.wasm` as a module.
 const SYNC_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-subduction'];
 
 /**
@@ -67,8 +66,7 @@ const syncWasmInit = (): PluginOption => {
   return {
     name: 'dxos-sync-wasm-init',
     enforce: 'pre',
-    // Dev only: the base64 entry inlines the wasm bytes, which costs ~33% over the binary in a
-    // production bundle, and the failure needs vite's module-per-file dev graph to bite.
+    // The base64 entry costs ~33% over the binary, which a production bundle must not pay.
     apply: 'serve',
     resolveId: {
       order: 'pre',
@@ -134,11 +132,8 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   importSource({
     include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
   }),
-  // WebKit — Safari and the Tauri WKWebView — evaluates a module before its own dependencies when
-  // the graph is reached by concurrent dynamic imports and contains top-level await, so a binding
-  // first reached that way reads as an uninitialized `const` ("Cannot access 'x' before
-  // initialization"). The plugin manager activates modules concurrently, so the only lever is the
-  // top-level await.
+  // WebKit evaluates a module before its dependencies when a graph reached by concurrent dynamic
+  // imports contains top-level await, leaving bindings in TDZ.
   syncWasmInit(),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
