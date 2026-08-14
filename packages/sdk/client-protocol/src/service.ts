@@ -3,16 +3,17 @@
 //
 
 import { type Event } from '@dxos/async';
+import type { RequestOptions, Stream } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols/proto';
 import type {
-  ContactsService,
   DevicesService,
-  EdgeAgentService,
   FeedService,
   IdentityService,
   InvitationsService,
   LoggingService,
   NetworkService,
+  QueryAgentStatusResponse,
+  QueryEdgeStatusResponse,
   SpacesService,
   SystemService,
 } from '@dxos/protocols/proto/dxos/client/services';
@@ -30,6 +31,19 @@ export type { FeedService } from '@dxos/protocols/proto/dxos/client/services';
 // NOTE: Should contain client/proxy dependencies only.
 //
 
+/**
+ * Promise/{@link Stream} shaped deprecated surface for `EdgeAgentService`, hand-derived from the
+ * effect-rpc definition in `@dxos/protocols/rpc` now that its protobuf `service {}` block is gone
+ * (the message types it still returns, `QueryEdgeStatusResponse`/`QueryAgentStatusResponse`, are
+ * shared and remain in `.proto`). Matches the codec-protobuf-generated shape it replaces exactly,
+ * so existing consumers (`client.services.services.EdgeAgentService`) are unaffected.
+ */
+export interface EdgeAgentServicePromise {
+  createAgent: (request: void, options?: RequestOptions) => Promise<void>;
+  queryEdgeStatus: (request: void, options?: RequestOptions) => Stream<QueryEdgeStatusResponse>;
+  queryAgentStatus: (request: void, options?: RequestOptions) => Stream<QueryAgentStatusResponse>;
+}
+
 export type ClientServices = {
   SystemService: SystemService;
   NetworkService: NetworkService;
@@ -44,8 +58,7 @@ export type ClientServices = {
   QueryService: QueryService;
   FeedService: FeedService;
 
-  ContactsService: ContactsService;
-  EdgeAgentService: EdgeAgentService;
+  EdgeAgentService: EdgeAgentServicePromise;
 
   // TODO(burdon): Deprecated.
   DevtoolsHost: DevtoolsHost;

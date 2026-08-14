@@ -31,8 +31,6 @@ const SERVICES = [
   { key: 'DataService', fqn: 'dxos.echo.service.DataService' },
   { key: 'QueryService', fqn: 'dxos.echo.query.QueryService' },
   { key: 'FeedService', fqn: 'dxos.client.services.FeedService' },
-  { key: 'ContactsService', fqn: 'dxos.client.services.ContactsService' },
-  { key: 'EdgeAgentService', fqn: 'dxos.client.services.EdgeAgentService' },
   { key: 'DevtoolsHost', fqn: 'dxos.devtools.host.DevtoolsHost' },
 ] as const;
 

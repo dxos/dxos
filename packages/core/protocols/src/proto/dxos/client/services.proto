@@ -259,11 +259,6 @@ message ContactBook {
   repeated Contact contacts = 1;
 }
 
-service ContactsService {
-  rpc GetContacts(google.protobuf.Empty) returns (ContactBook);
-  rpc QueryContacts(google.protobuf.Empty) returns (stream ContactBook);
-}
-
 //
 // Data Spaces
 // TODO(burdon): Move to dxos.echo? Or rename dxos.echo => dxos.database?
@@ -623,12 +618,6 @@ service NetworkService {
   rpc SubscribeSwarmState(SubscribeSwarmStateRequest) returns (stream dxos.edge.messenger.SwarmResponse);
   rpc SendMessage(dxos.edge.signal.Message) returns (google.protobuf.Empty);
   rpc SubscribeMessages(dxos.edge.messenger.Peer) returns (stream dxos.edge.signal.Message);
-}
-
-service EdgeAgentService {
-  rpc QueryEdgeStatus(google.protobuf.Empty) returns (stream QueryEdgeStatusResponse);
-  rpc CreateAgent(google.protobuf.Empty) returns (google.protobuf.Empty);
-  rpc QueryAgentStatus(google.protobuf.Empty) returns (stream QueryAgentStatusResponse);
 }
 
 message EdgeStatus {

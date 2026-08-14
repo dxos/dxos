@@ -1,15 +1,22 @@
 # client-services protobuf → effect-rpc conversion — Tasks
 
-_Resume: All three sub-efforts audited from git/GitHub history + current source, no code
-changed this session. Transport seam (PR #12127) and internal service architecture
-(PR #12214) are DONE and verified against `main` source. Payload-schema inlining +
-native-MessagePort transport work stalled uncommitted-to-main on `dm/worker-package`
-(last touch 2026-07-10) — that branch is now badly diverged from `main` and was never
-opened as a PR. Next action: decide with the user whether to (a) resume the
-`dm/worker-package` line by re-deriving its commits against current `main`, (b) call the
-conversion done at the transport-seam level and close this out, or (c) just do the low-risk
-doc cleanup (reconcile client-services/TASKS.md, close-or-update PR #12193, relocate the
-stray `plans/worker-package/` docs) and park the rest. See DESIGN.md "Open questions"._
+_Resume: Transport seam (PR #12127) and internal service architecture (PR #12214) audited
+DONE against `main` source. Phase 4 (protobuf-removal pass, this session) IMPLEMENTED for
+the 2 smallest services (`ContactsService`, `EdgeAgentService`) — proto `service {}` blocks
+deleted, `gen-service-rpcs.ts` SERVICES list trimmed, `@dxos/client-protocol`'s deprecated
+`ClientServices` type re-sourced off a hand-written `EdgeAgentServicePromise` instead of the
+now-gone proto interface (`ContactsService` entry dropped outright — zero consumers).
+VERIFIED: `protocols`/`client-protocol`/`client-services`/`client`/`devtools`/`react-client`/
+`shell`/`plugin-client`/`plugin-space`/`proto-guard` build clean; `protocols`/`client-protocol`
+tests green; `client-services` tests green (164 passed) except one pre-existing flake
+(`feed-syncer.test.ts` "requestPoll triggers best-effort pull", unrelated to this change —
+passes in isolation, fails only under full-suite parallelism); lint clean; changeset added
+(`@dxos/protocols` minor). Remaining 11 services NOT yet done — see Phase 4 below for the
+order-of-work plan; each needs real schema inlining (unlike the two done, which had none) and
+is a bigger lift. Payload-schema inlining + native-MessagePort transport work from
+`dm/worker-package` (last touch 2026-07-10) remains stalled/unmerged, badly diverged from
+`main`, never opened as a PR — separate from this pass, not attempted here (see item 3 below
+and DESIGN.md's scope note on why item 4 deliberately excludes it)._
 
 ## Phase 1: RPC transport seam (protobuf peer → effect-rpc)
 
@@ -88,6 +95,34 @@ no clean rebase path — reviving this means re-deriving the relevant commits ag
 - [ ] **Relocate or delete stray plan docs** — `plans/worker-package/*.md` landed on `main` via
       an unrelated PR #12516 squash artifact; per repo convention these belong under
       `agents/superpowers/{specs,plans}/` or this project's directory, not a root `plans/` folder.
+
+## Phase 4: Protobuf-removal pass (this session) — see DESIGN.md §4 for the full spec
+
+Finishes item 3 by deleting the now-dead protobuf `service {}` blocks for the 13 migrated
+client services (message types stay; `BridgeService`/`AppService`/`ShellService` untouched).
+One service at a time, build+test verified before the next:
+
+- [x] **`ContactsService`, `EdgeAgentService`** — no inlining needed (both were already
+      all-`protoMessage` per `service-rpc-schemas.md`'s table). Proto `service {}` blocks
+      deleted from `dxos/client/services.proto`; `gen-service-rpcs.ts` SERVICES entries
+      removed; `@dxos/client-protocol`'s `service.ts` `ClientServices` type fixed
+      (`EdgeAgentServicePromise` hand-written to match the deleted proto interface exactly —
+      the real unblocking work, since `client.services.services.EdgeAgentService` is actively
+      used by `plugin-client`/`plugin-space`/`shell`/`devtools`/several e2e tests;
+      `ContactsService` entry dropped, confirmed zero consumers via repo-wide grep).
+- [ ] **`DevicesService`, `NetworkService`, `InvitationsService`** — small, real inlining
+      needed per the spec's table.
+- [ ] **`IdentityService`, `SystemService`, `LoggingService`, `FeedService`** — medium.
+- [ ] **`SpacesService`, `DataService`** — large; `DataService` has substitution-typed fields
+      (`SpaceSyncState` embeds `Timeframe`) that must stay `protoMessage`.
+- [ ] **`DevtoolsHost`** — largest, most `protoMessage`-retained; do last.
+- [ ] **`QueryService`** — no schema inlining needed (spec's table: "— (all shared)"); only
+      the `.proto` `service {}` block itself is removable.
+- [ ] **Every remaining service**, once its proto block is gone: check whether
+      `@dxos/client-protocol`'s `ClientServices` type still imports that service's Promise-shaped
+      interface from proto, and replace it the same way — this is the recurring blocker (Contacts/
+      EdgeAgent hit it, the other 11 will too, several with real active consumers to check via grep
+      for `services.services.<ServiceName>` before assuming zero-consumer removal is safe).
 
 ### References
 
