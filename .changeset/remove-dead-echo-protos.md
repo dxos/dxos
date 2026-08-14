@@ -1,6 +1,5 @@
 ---
 '@dxos/protocols': minor
-'@dxos/client-services': minor
 ---
 
 Delete four more protobuf definitions confirmed to be entirely dead: `value.proto` (`Value`/`Stats`,
