@@ -484,10 +484,15 @@ export class Client {
     log('client._open: connecting echo client to service...');
     // The effect-rpc client nests every service under its key, so the same `rpc` surface satisfies
     // each per-service Client (DataService.Client, etc.).
+    const edgeIndexClient = this._edgeHttpClient;
     this._echoClient.connectToService({
       dataService: this._services.rpc,
       queryService: this._services.rpc,
       feedService: this._services.rpc,
+      // `db.sync({ indexed: true })` has no transport of its own; give it one when EDGE is configured.
+      remoteIndexSync: edgeIndexClient && {
+        awaitIndexed: (spaceId, request) => edgeIndexClient.awaitIndexed(Context.default(), spaceId, request),
+      },
       runtime: this._effectRuntime,
     });
     log('client._open: opening echo client...');

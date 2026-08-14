@@ -14,7 +14,7 @@ import { type DataService, type FeedService, type QueryService } from '@dxos/pro
 
 import { type BranchStore } from '../core-db';
 import { HypergraphImpl } from '../hypergraph';
-import { DatabaseImpl } from '../proxy-db';
+import { DatabaseImpl, type RemoteIndexSync } from '../proxy-db';
 import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider';
 
 export type EchoClientProps = {};
@@ -23,6 +23,9 @@ export type ConnectToServiceProps = {
   dataService: DataService.Client;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
+
+  /** Barrier for `db.sync({ indexed: true })`. Absent when the client has no EDGE configured. */
+  remoteIndexSync?: RemoteIndexSync;
 
   /** Runtime used to run effect-rpc service calls at Promise/callback boundaries. */
   runtime?: EffectContext.Context<never>;
@@ -70,6 +73,7 @@ export class EchoClient extends Resource {
   private _dataService: DataService.Client | undefined = undefined;
   private _queryService: QueryService.Client | undefined = undefined;
   private _feedService: FeedService.Client | undefined = undefined;
+  private _remoteIndexSync: RemoteIndexSync | undefined = undefined;
   private _runtime: EffectContext.Context<never> = EffectContext.empty();
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
@@ -94,11 +98,12 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, feedService, runtime }: ConnectToServiceProps): this {
+  connectToService({ dataService, queryService, feedService, remoteIndexSync, runtime }: ConnectToServiceProps): this {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
     this._feedService = feedService;
+    this._remoteIndexSync = remoteIndexSync;
     this._runtime = runtime ?? EffectContext.empty();
     return this;
   }
@@ -155,6 +160,7 @@ export class EchoClient extends Resource {
       dataService: this._dataService!,
       queryService: this._queryService!,
       feedService: this._feedService,
+      remoteIndexSync: this._remoteIndexSync,
       runtime: this._runtime,
       graph: this._graph,
       spaceId,

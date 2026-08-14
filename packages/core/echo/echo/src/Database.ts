@@ -103,6 +103,34 @@ export type FlushOptions = {
   updates?: boolean;
 };
 
+export type SyncOptions = {
+  /**
+   * Peer to sync with. Only EDGE is addressable today.
+   * @default 'edge'
+   */
+  to?: 'edge';
+
+  /**
+   * Entities whose documents must be synced. Omit for the whole space — cheap only for small
+   * spaces, since it waits on every document.
+   */
+  entities?: readonly URI.URI[];
+
+  /**
+   * Also wait until the remote has *indexed* the synced documents. Required before asking EDGE to
+   * act on a just-written object, because EDGE resolves objects through index queries — a trigger
+   * force-run right after its trigger was created is reported as "not found" otherwise (DX-1153).
+   * @default false
+   */
+  indexed?: boolean;
+
+  /**
+   * Budget for the whole wait, in milliseconds.
+   * @default 30000
+   */
+  timeout?: number;
+};
+
 /**
  * A caller-owned, writable **independent instance** of one object bound to one branch: a distinct
  * object instance (not a UI surface), separate from the device-global canonical object.
@@ -207,6 +235,12 @@ export interface Database extends Queryable {
    * Optionaly waits for changes to be propagated to indexes and event handlers.
    */
   flush(opts?: FlushOptions): Promise<void>;
+
+  /**
+   * Wait until this peer's writes are durable on the remote.
+   * @see {@link SyncOptions}
+   */
+  sync(options?: SyncOptions): Promise<void>;
 
   //
   // Branching. A branch is a writable alternate timeline of an object subtree (same object ids,
@@ -507,6 +541,27 @@ export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Eff
 export const flush = (opts?: FlushOptions) =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.flush(opts)))).pipe(
     Effect.withSpan('Database.flush'),
+  );
+
+/**
+ * Waits until this peer's writes are durable — and optionally indexed — on the remote.
+ * @see {@link Database.sync}
+ */
+export const sync = (options?: SyncOptions): Effect.Effect<void, Err.SyncTimeoutError, Service> =>
+  Service.pipe(
+    Effect.flatMap(({ db }) =>
+      Effect.tryPromise({
+        try: () => db.sync(options),
+        // Only the timeout is actionable; anything else is a defect.
+        catch: (error) => {
+          if (error instanceof Err.SyncTimeoutError) {
+            return error;
+          }
+          throw error;
+        },
+      }),
+    ),
+    Effect.withSpan('Database.sync'),
   );
 
 /**

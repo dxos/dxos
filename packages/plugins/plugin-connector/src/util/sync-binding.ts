@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, type Key, Ref } from '@dxos/echo';
+import { Database, type Key, Obj, Ref } from '@dxos/echo';
 import { type Cursor } from '@dxos/link';
 
 import { ConnectorSpec } from '#types';
@@ -44,6 +44,18 @@ export const syncBinding = ({
       // TODO(wittjosiah): Invokes the sync once; nothing drives `Operation.runAgain()` continuation
       //   without a trigger, so a capped run's remaining batches are not synced here.
       return yield* Operation.invoke(sync.operation, { binding: Ref.make(cursor) }, { spaceId }).pipe(Effect.asVoid);
+    }
+
+    if (sync.remote) {
+      // EDGE dispatches a remote trigger by resolving it through an index query, so a trigger created
+      // moments ago (the first sync of a new connection) is reported as "not found" unless EDGE has
+      // both replicated and indexed it first (DX-1153). The barrier is best-effort: an exhausted
+      // budget (or a peer with no EDGE transport at all) still leaves the force-run worth attempting,
+      // and failing the sync outright would be a worse outcome than the race it guards against.
+      yield* Database.sync({ to: 'edge', entities: [Obj.getURI(trigger)], indexed: true }).pipe(
+        Effect.tapError((error) => Effect.logWarning('sync barrier did not complete; running trigger anyway', error)),
+        Effect.ignore,
+      );
     }
 
     yield* fireSyncTrigger(trigger).pipe(Effect.provide(syncTriggerMonitorLayer(spaceId)));

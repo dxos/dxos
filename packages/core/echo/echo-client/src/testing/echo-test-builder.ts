@@ -30,7 +30,7 @@ import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
 import { type BranchStore } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
+import { type EchoDatabase, type RemoteIndexSync } from '../proxy-db';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -198,7 +198,7 @@ export class EchoTestPeer extends Resource {
    * Bridges the host's effect-rpc Handlers to the effect-rpc client surface in-process (no wire),
    * and connects the given client. The bridged clients live on {@link _serviceScope}.
    */
-  private async _connectServices(client: EchoClient): Promise<void> {
+  private async _connectServices(client: EchoClient, remoteIndexSync?: RemoteIndexSync): Promise<void> {
     invariant(this._serviceScope, 'Service scope not initialized');
     const [dataService, queryService, feedService] = await EffectEx.runPromise(
       Effect.all([
@@ -207,7 +207,7 @@ export class EchoTestPeer extends Resource {
         makeInProcessClient(FeedService.Rpcs, this._echoHost.feedService),
       ]).pipe(Effect.provideService(Scope.Scope, this._serviceScope)),
     );
-    client.connectToService({ dataService, queryService, feedService });
+    client.connectToService({ dataService, queryService, feedService, remoteIndexSync });
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -271,11 +271,11 @@ export class EchoTestPeer extends Resource {
     await this.open();
   }
 
-  async createClient(): Promise<EchoClient> {
+  async createClient({ remoteIndexSync }: { remoteIndexSync?: RemoteIndexSync } = {}): Promise<EchoClient> {
     const client = new EchoClient();
     await client.graph.registry.add(this._types);
     this._clients.add(client);
-    await this._connectServices(client);
+    await this._connectServices(client, remoteIndexSync);
     await client.open();
     return client;
   }

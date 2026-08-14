@@ -463,6 +463,23 @@ export class EdgeHttpClient extends BaseHttpClient {
     });
   }
 
+  /**
+   * Waits until EDGE has replicated and indexed the given documents, so a subsequent call that
+   * resolves objects through an index query sees them (DX-1153). `documents` maps documentId to the
+   * heads the caller requires; EDGE answers `{ indexed: false, pending }` on its own timeout rather
+   * than failing, so the caller decides between retrying and proceeding.
+   */
+  public async awaitIndexed(
+    ctx: Context,
+    spaceId: SpaceId,
+    request: { documents: Record<string, string[]>; timeoutMs?: number },
+  ): Promise<{ indexed: boolean; pending: string[] }> {
+    return this._call(ctx, new URL(`/spaces/${spaceId}/indexer/await`, this.baseUrl), {
+      method: 'POST',
+      body: request,
+    });
+  }
+
   //
   // Triggers
   //
