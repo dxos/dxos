@@ -16,9 +16,29 @@ import { DXOS_VERSION } from '@dxos/client';
 import { log } from '@dxos/log';
 import { Gateway, Server } from '@dxos/mcp-server';
 
+import { DiscoveryToolkit, discoveryHandlers } from './discovery-tools';
 import { makeGateway } from './gateway';
+import { ObjectToolkit, objectHandlers } from './object-tools';
+import { SpaceToolkit, spaceHandlers } from './space-tools';
 
 const SERVER_NAME = 'DXOS Spaces';
+
+/**
+ * Names of the statically-defined tools; projected operations must not collide with them.
+ * Task and project verbs are deliberately absent — they arrive via the annotation projection.
+ */
+const STATIC_TOOL_NAMES = [
+  'whoami',
+  'listSpaces',
+  'createObject',
+  'getObject',
+  'updateObject',
+  'deleteObject',
+  'queryObjects',
+  'listPlugins',
+  'listTypes',
+  'listOperations',
+] as const;
 
 export const serve = Command.make(
   'serve',
@@ -34,9 +54,19 @@ export const serve = Command.make(
     // stdout carries the protocol, so progress goes to the log (stderr).
     log.info('serving MCP over stdio', { spaces: gateway.spaceIds.length });
 
+    const staticToolkits = Layer.mergeAll(
+      McpServer.toolkit(SpaceToolkit).pipe(Layer.provide(SpaceToolkit.toLayer(spaceHandlers(gateway)))),
+      McpServer.toolkit(ObjectToolkit).pipe(Layer.provide(ObjectToolkit.toLayer(objectHandlers(gateway)))),
+      McpServer.toolkit(DiscoveryToolkit).pipe(Layer.provide(DiscoveryToolkit.toLayer(discoveryHandlers(gateway)))),
+    );
+
     yield* Layer.launch(
-      Server.layer().pipe(
-        Layer.provide(Layer.succeed(Gateway.Service, gateway)),
+      Layer.mergeAll(
+        Server.layer({ reservedToolNames: STATIC_TOOL_NAMES }).pipe(
+          Layer.provide(Layer.succeed(Gateway.Service, gateway)),
+        ),
+        staticToolkits,
+      ).pipe(
         Layer.provide(
           McpServer.layerStdio({
             name: SERVER_NAME,

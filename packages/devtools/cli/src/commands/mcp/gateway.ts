@@ -11,11 +11,11 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { ClientService } from '@dxos/client';
+import { type Client, ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Gateway } from '@dxos/mcp-server';
@@ -25,7 +25,21 @@ import { ProjectOperationHandlerSet } from '@dxos/plugin-projects/operations';
 import { CodeProjectSkillDefinition } from '@dxos/plugin-projects/skills';
 import { TasksOperationHandlerSet } from '@dxos/plugin-tasks/operations';
 
-import { chatLayer } from '../../util';
+import { chatLayer, operationHandlers, types } from '../../util';
+
+/**
+ * What the static toolkits need beyond the seam: the gateway answers for the registry, but
+ * `whoami`/`listSpaces` read the live client and `listPlugins`/`listTypes` report what this host
+ * assembled, neither of which a `Gateway` describes.
+ */
+export type LocalGateway = Gateway.Shape & {
+  readonly client: Client;
+  readonly plugins: readonly PluginRecord[];
+  readonly types: readonly TypeRecord[];
+};
+
+export type PluginRecord = { readonly key: string; readonly name?: string };
+export type TypeRecord = { readonly typename: string; readonly version: string };
 
 /**
  * The local MCP gateway: the registry the CLI already runs operations against, presented in the
@@ -36,15 +50,20 @@ import { chatLayer } from '../../util';
 export const makeGateway = Effect.fn(function* () {
   const client = yield* ClientService;
   const capabilities = yield* Capability.Service;
+  const manager = yield* Capability.get(Capabilities.PluginManager);
+  const active = new Set(manager.getActive());
   // Captured so an invocation can erase its own requirements: the tool handlers this gateway
   // backs are invoked by the MCP server layer, which knows nothing of the CLI's services.
   const ambient = yield* Effect.context<ClientService>();
 
   // The project and task verbs are the annotated ones, so a registry without them projects nothing
   // worth calling; their sets are registered directly for the reason the import above states —
-  // the same trade EDGE's operation-service makes for the mail handler sets.
+  // the same trade EDGE's operation-service makes for the mail handler sets. `operationHandlers`
+  // brings the rest the CLI already curates for chat, including the `database.*` handlers the
+  // object tools invoke.
   const handlerSet = OperationHandlerSet.merge(
     ...capabilities.getAll(Capabilities.OperationHandler),
+    operationHandlers,
     ProjectOperationHandlerSet,
     TasksOperationHandlerSet,
   );
@@ -59,7 +78,17 @@ export const makeGateway = Effect.fn(function* () {
     .map((space) => space.id);
 
   return {
+    client,
     spaceIds,
+
+    // Only active plugins contribute capabilities, so an inactive one would be listed as a source
+    // of operations that the registry does not carry.
+    plugins: manager
+      .getPlugins()
+      .filter((plugin) => plugin.modules.some((module) => active.has(module.id)))
+      .map((plugin) => ({ key: plugin.meta.profile.key, name: plugin.meta.profile.name })),
+
+    types: types.map((entity) => ({ typename: Type.getTypename(entity), version: Type.getVersion(entity) })),
 
     listOperations: Effect.sync(() => serializableHandlers(handlers).map((record) => Obj.toJSON(record))),
 
@@ -79,7 +108,7 @@ export const makeGateway = Effect.fn(function* () {
     ),
 
     invokeOperation: (request) => invoke({ handlerSet, handlers, ambient }, request),
-  } satisfies Gateway.Shape;
+  } satisfies LocalGateway;
 });
 
 /**

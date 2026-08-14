@@ -34,6 +34,22 @@ const REQUESTS = [
   { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'skillLoad', arguments: { skill: SKILL } } },
   { jsonrpc: '2.0', id: 5, method: 'prompts/get', params: { name: SKILL, arguments: {} } },
   { jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'skillLoad', arguments: { skill: 'noSuchSkill' } } },
+  { jsonrpc: '2.0', id: 7, method: 'tools/call', params: { name: 'listTypes', arguments: {} } },
+  { jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'whoami', arguments: {} } },
+];
+
+/** The host-local toolkits, named as EDGE names them; see the TODOs on each `*-tools.ts`. */
+const STATIC_TOOLS = [
+  'whoami',
+  'listSpaces',
+  'createObject',
+  'getObject',
+  'updateObject',
+  'deleteObject',
+  'queryObjects',
+  'listPlugins',
+  'listTypes',
+  'listOperations',
 ];
 
 type Response = { id?: number; result?: any };
@@ -96,7 +112,7 @@ describe('dx mcp serve', () => {
   // assertions, so one session answers every request and each test reads its own reply.
   let responses: Map<number, Response>;
   beforeAll(async () => {
-    responses = await runSession([1, 2, 3, 4, 5, 6], 90_000);
+    responses = await runSession([1, 2, 3, 4, 5, 6, 7, 8], 90_000);
   }, 120_000);
 
   test('serves the projected surface over a real MCP session', ({ expect }) => {
@@ -147,5 +163,26 @@ describe('dx mcp serve', () => {
     expect(failure.isError).to.be.true;
     expect(failure.content[0].text).to.include('noSuchSkill');
     expect(failure.content[0].text).to.include(SKILL);
+  });
+
+  // The host-local half of the surface. Without it a client sees only the projected verbs, and the
+  // ones an agent reaches for first — whoami, listSpaces, the object CRUD — are simply absent.
+  test('serves the static toolkits alongside the projected operations', ({ expect }) => {
+    const names: string[] = responses.get(2)!.result.tools.map((tool: { name: string }) => tool.name);
+    for (const tool of STATIC_TOOLS) {
+      expect(names, `${tool} is advertised`).to.include(tool);
+    }
+
+    const types = JSON.parse(responses.get(7)!.result.content[0].text).types;
+    expect(types).to.be.an('array').with.length.greaterThan(0);
+    expect(types.map((type: { typename: string }) => type.typename)).to.include('org.dxos.type.task');
+  });
+
+  // This profile has no identity, which is the interesting case: the tool has to say so as a tool
+  // failure the model can act on rather than crashing the session.
+  test('reports a missing identity as a tool failure', ({ expect }) => {
+    const failure = responses.get(8)!.result;
+    expect(failure.isError).to.be.true;
+    expect(failure.content[0].text).to.include('dx account login');
   });
 });
