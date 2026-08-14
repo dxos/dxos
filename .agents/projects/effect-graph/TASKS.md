@@ -258,6 +258,28 @@ Gate before Phase 9. Requested 2026-08-13.
       `_scheduleDirtyFlush`, and the equality cutoff added to `_connections`, are the two places a
       notification can be swallowed.
 
+      **THE REMAINING BUG IS RENAME, AND IT IS NOW A 25-SECOND PROBE.** `probe-rename.spec.ts` in this
+      folder creates one collection, renames it and prints the row labels. Copy it to
+      `packages/apps/composer-app/src/playwright/` and run it — no need for the full spec:
+
+      - baseline `4ed7683d`: `["Click to open\nRenamed A\nMore actions"]`  ✅
+      - this branch:          `["Click to open\nNew collection\nMore actions"]`  ❌
+
+      That single failure explains all three remaining specs: `re-order` and `drag` rename two
+      collections and then locate them *by name*, so the drag times out in `boundingBox` looking for
+      "Collection 1"; `deletion undo` is the one that still needs its own look.
+
+      Established about rename by instrumentation, so do not re-derive: the menu opens, exactly one
+      `spacePlugin.renameObject` item is found and focused, Enter opens the popover, the input fills
+      (value confirmed `Renamed A`), Enter closes the popover — and **no console output or page error
+      is produced at any point**. So the interaction completes end to end and the label never changes.
+      Row-render latency is 200-500 ms and is NOT the cause (measured separately).
+
+      Next: determine whether the write reaches ECHO. Either the popover's submit writes to a stale
+      object captured in the action closure, or it writes correctly and the connector's
+      `get(Obj.labelAtom(object))` subscription no longer re-runs. Instrumenting
+      `AppNode.makeObject`'s label read is the fastest way to tell those apart.
+
       2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
              consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
              `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
