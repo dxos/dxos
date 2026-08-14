@@ -15,10 +15,12 @@
   "imports": {
     "#capabilities": {
       "source": {
+        "workerd": "./src/capabilities/workerd.ts",
         "node": "./src/capabilities/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
@@ -186,6 +188,11 @@
       "source": "./src/types/SystemTags.ts",
       "types": "./dist/types/src/types/SystemTags.d.ts",
       "import": "./dist/lib/SystemTags.mjs"
+    },
+    "./ReplyGeneration": {
+      "source": "./src/types/ReplyGeneration.ts",
+      "types": "./dist/types/src/types/ReplyGeneration.d.ts",
+      "import": "./dist/lib/types/ReplyGeneration.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -231,9 +238,6 @@
     "dx.config.ts",
     "src"
   ],
-  "scripts": {
-    "import-mbox": "vite-node ./scripts/import-mbox-space.ts --"
-  },
   "dependencies": {
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
@@ -262,7 +266,6 @@
     "@dxos/markdown": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-email": "workspace:*",
-    "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
@@ -293,12 +296,10 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
-    "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-progress": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -308,11 +309,9 @@
     "@dxos/ui-types": "workspace:*",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
-    "@types/mailparser": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
-    "mailparser": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"

@@ -10,5 +10,6 @@ export default defineConfig({
     translations: 'src/translations.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  // `happy-dom`, not bare node: the Row hook tests render, matching react-ui's setup.
+  test: { node: { environment: 'happy-dom' }, storybook: true },
 });

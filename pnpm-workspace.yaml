@@ -80,13 +80,15 @@ catalog:
   '@dnd-kit/utilities': ^3.2.0
   '@dxos/client': ^0.8.3
   '@dxos/echo': ^0.8.3
+  '@dxos/link': ^0.11.1
   '@dxos/log': ^0.10.0
+  '@dxos/pipeline-email': ^0.11.1
   '@dxos/ui-types': ^0.9.0
   '@dxos/wa-sqlite': ^0.2.1
-  '@effect/atom-react': 4.0.0-rc.108
   '@effect-rx/rx-react': ^0.42.4
   '@effect/ai-anthropic': 4.0.0-rc.108
   '@effect/ai-openai': 4.0.0-rc.108
+  '@effect/atom-react': 4.0.0-rc.108
   '@effect/language-service': ^0.86.4
   '@effect/opentelemetry': 4.0.0-rc.108
   '@effect/platform-browser': 4.0.0-rc.108
@@ -835,3 +837,4 @@ trustPolicyExclude:
   - ua-parser-js@1.0.41
   - graphql@15.10.2
   - langium@3.3.1
+  - cytoscape@3.34.1

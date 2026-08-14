@@ -702,7 +702,6 @@ export class DataSpaceManager extends Resource {
           log('before space close', { space: space.key });
         },
       },
-      cache: metadata.cache,
       tags: metadata.tags,
       edgeConnection: this._edgeConnection,
       edgeHttpClient: this._edgeHttpClient,

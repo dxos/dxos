@@ -22,7 +22,6 @@ import "dxos/keys.proto";
 import "dxos/mesh/signal.proto";
 import "dxos/mesh/presence.proto";
 import "dxos/mesh/teleport/gossip.proto";
-import "dxos/value.proto";
 
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
 
@@ -38,33 +37,6 @@ package dxos.client.services;
 enum SystemStatus {
   INACTIVE = 0;
   ACTIVE = 1;
-}
-
-message UpdateStatusRequest {
-  SystemStatus status = 1;
-}
-
-message QueryStatusRequest {
-  optional int32 interval = 1;
-}
-
-message QueryStatusResponse {
-  SystemStatus status = 1;
-}
-
-message GetDiagnosticsRequest {
-  enum KEY_OPTION {
-    NONE = 0;
-    TRUNCATE = 1;
-    HUMANIZE = 2;
-  }
-
-  optional KEY_OPTION keys = 1;
-}
-
-message GetDiagnosticsResponse {
-  google.protobuf.Timestamp timestamp = 1;
-  google.protobuf.Struct diagnostics = 2;
 }
 
 message Platform {
@@ -92,30 +64,6 @@ message Platform {
   optional google.protobuf.Struct memory = 7;
 }
 //
-// System
-//
-
-service SystemService {
-  /// Get the static config of the client.
-  rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
-
-  /// Get the diagnostics snapshot.
-  rpc GetDiagnostics(GetDiagnosticsRequest) returns (GetDiagnosticsResponse);
-
-  /// Update the status of the client. Used to re-activate an inactive client.
-  rpc UpdateStatus(UpdateStatusRequest) returns (google.protobuf.Empty);
-
-  /// Stream the status of the client.
-  rpc QueryStatus(QueryStatusRequest) returns (stream QueryStatusResponse);
-
-  /// Reset the client.
-  rpc Reset(google.protobuf.Empty) returns (google.protobuf.Empty);
-
-  /// Get platform Information
-  rpc GetPlatform(google.protobuf.Empty) returns (Platform);
-}
-
-//
 // Halo
 //
 
@@ -124,12 +72,6 @@ message Identity {
   dxos.keys.PublicKey identity_key = 1;
   optional dxos.keys.PublicKey space_key = 2;
   optional halo.credentials.ProfileDocument profile = 3;
-}
-
-message RequestRecoveryChallengeResponse {
-  dxos.keys.PublicKey device_key = 1;
-  dxos.keys.PublicKey control_feed_key = 2;
-  string challenge = 3;
 }
 
 message RecoverIdentityRequest {
@@ -150,66 +92,6 @@ message RecoverIdentityRequest {
     /// One-time proof minted by edge kms-service after a successful OAuth recovery flow.
     string recovery_proof = 4;
   }
-}
-
-message RecoveryCredentialData {
-  /// Recovery key used to validate recovery challenge signature.
-  dxos.keys.PublicKey recovery_key = 1;
-
-  /// Public key used to identify the recovery key.
-  dxos.keys.PublicKey lookup_key = 2;
-
-  /// Algorithm used to generate the recovery key.
-  string algorithm = 3;
-
-  /// User-visible name, without which credentials are told apart only by issuance date.
-  optional string label = 4;
-
-  /// How the recovery key is held.
-  optional dxos.halo.credentials.IdentityRecovery.Kind kind = 5;
-}
-
-message CreateRecoveryCredentialRequest {
-  /// If not provided, a new key will be generated.
-  optional RecoveryCredentialData data = 1;
-}
-
-message CreateRecoveryCredentialResponse {
-  optional string recovery_code = 1;
-}
-
-message RevokeRecoveryCredentialRequest {
-  /// Lookup key of the credential to revoke.
-  dxos.keys.PublicKey lookup_key = 1;
-}
-
-message QueryIdentityResponse {
-  optional Identity identity = 1;
-}
-
-message SignPresentationRequest {
-  dxos.halo.credentials.Presentation presentation = 1;
-  optional bytes nonce = 2;
-}
-
-message CreateIdentityRequest {
-  optional halo.credentials.ProfileDocument profile = 1;
-
-  reserved 2; // Removed use_automerge flag.
-  optional halo.credentials.DeviceProfileDocument device_profile = 3;
-}
-
-// TODO(wittjosiah): Align pluralization with other services.
-service IdentityService {
-  rpc CreateIdentity(CreateIdentityRequest) returns (Identity);
-  rpc RequestRecoveryChallenge(google.protobuf.Empty) returns (RequestRecoveryChallengeResponse);
-  rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
-  rpc CreateRecoveryCredential(CreateRecoveryCredentialRequest) returns (CreateRecoveryCredentialResponse);
-  rpc RevokeRecoveryCredential(RevokeRecoveryCredentialRequest) returns (google.protobuf.Empty);
-  rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
-  rpc UpdateProfile(halo.credentials.ProfileDocument) returns (Identity);
-  rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);
-  rpc CreateAuthCredential(google.protobuf.Empty) returns (dxos.halo.credentials.Credential);
 }
 
 //
@@ -236,15 +118,6 @@ message Device {
   PresenceState presence = 4;
 }
 
-message QueryDevicesResponse {
-  repeated Device devices = 1;
-}
-
-service DevicesService {
-  rpc UpdateDevice(halo.credentials.DeviceProfileDocument) returns (Device);
-  rpc QueryDevices(google.protobuf.Empty) returns (stream QueryDevicesResponse);
-}
-
 //
 // Contacts
 //
@@ -257,11 +130,6 @@ message Contact {
 
 message ContactBook {
   repeated Contact contacts = 1;
-}
-
-service ContactsService {
-  rpc GetContacts(google.protobuf.Empty) returns (ContactBook);
-  rpc QueryContacts(google.protobuf.Empty) returns (stream ContactBook);
 }
 
 //
@@ -353,7 +221,6 @@ message Space {
   repeated SpaceMember members = 10;
   optional dxos.keys.PublicKey creator = 11;
 
-  optional dxos.echo.metadata.SpaceCache cache = 20;
   Metrics metrics = 21;
 }
 
@@ -526,20 +393,6 @@ service SpacesService {
 //  optional dxos.keys.PrivateKey private_key = 2;
 //}
 
-message AcceptInvitationRequest {
-  Invitation invitation = 1;
-  optional dxos.halo.credentials.DeviceProfileDocument device_profile = 2;
-}
-
-message AuthenticationRequest {
-  string invitation_id = 1;
-  string auth_code = 2;
-}
-
-message CancelInvitationRequest {
-  string invitation_id = 1;
-}
-
 message InvitationMethod {
   oneof kind {
     Invitation created = 1;
@@ -572,14 +425,6 @@ message LoadPersistentInvitationsResponse {
   repeated Invitation invitations = 1;
 }
 
-service InvitationsService {
-  rpc CreateInvitation(Invitation) returns (stream Invitation);
-  rpc AcceptInvitation(AcceptInvitationRequest) returns (stream Invitation);
-  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
-  rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
-  rpc QueryInvitations(google.protobuf.Empty) returns (stream QueryInvitationsResponse);
-}
-
 //
 // MESH
 //
@@ -600,35 +445,6 @@ message NetworkStatus {
   ConnectionState swarm = 1;
   repeated Signal signaling = 2;
   repeated dxos.devtools.swarm.SwarmInfo connection_info = 3;
-}
-
-message UpdateConfigRequest {
-  ConnectionState swarm = 1;
-}
-
-message SubscribeSwarmStateRequest {
-  dxos.keys.PublicKey topic = 1;
-}
-
-// TODO(burdon): Widen API (too heavy for single feature: e.g., status).
-service NetworkService {
-  rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
-  rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
-  rpc JoinSwarm(dxos.edge.signal.JoinRequest) returns (google.protobuf.Empty);
-  rpc LeaveSwarm(dxos.edge.signal.LeaveRequest) returns (google.protobuf.Empty);
-  /**
-   * Query the swarm state without joining it.
-   */ 
-  rpc QuerySwarm(dxos.edge.signal.QueryRequest) returns (dxos.edge.messenger.SwarmResponse);
-  rpc SubscribeSwarmState(SubscribeSwarmStateRequest) returns (stream dxos.edge.messenger.SwarmResponse);
-  rpc SendMessage(dxos.edge.signal.Message) returns (google.protobuf.Empty);
-  rpc SubscribeMessages(dxos.edge.messenger.Peer) returns (stream dxos.edge.signal.Message);
-}
-
-service EdgeAgentService {
-  rpc QueryEdgeStatus(google.protobuf.Empty) returns (stream QueryEdgeStatusResponse);
-  rpc CreateAgent(google.protobuf.Empty) returns (google.protobuf.Empty);
-  rpc QueryAgentStatus(google.protobuf.Empty) returns (stream QueryAgentStatusResponse);
 }
 
 message EdgeStatus {

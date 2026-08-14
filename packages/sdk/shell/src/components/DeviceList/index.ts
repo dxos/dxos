@@ -5,3 +5,4 @@
 export * from './DeviceList';
 export * from './DeviceListItem';
 export type * from './DeviceListProps';
+export * from './toShellDevice';

@@ -11,7 +11,6 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
-import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { MetadataStore } from '../metadata';
 import { valueEncoding } from '../pipeline';
@@ -27,7 +26,6 @@ describe('identity/identity-manager', () => {
     storage?: Storage;
   } = {}) => {
     const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
-    const blobStore = new BlobStore(storage.createDirectory('blobs'));
 
     const keyring = new Keyring(storage.createDirectory('keyring'));
     const feedStore = new FeedStore<FeedMessage>({
@@ -49,7 +47,6 @@ describe('identity/identity-manager', () => {
     const spaceManager = new SpaceManager({
       feedStore,
       networkManager,
-      blobStore,
       metadataStore,
     });
     const identityManager = new IdentityManager({ metadataStore, keyring, feedStore, spaceManager });

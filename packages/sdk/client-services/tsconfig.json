@@ -109,9 +109,6 @@
       "path": "../../core/mesh/teleport-extension-gossip"
     },
     {
-      "path": "../../core/mesh/teleport-extension-object-sync"
-    },
-    {
       "path": "../../core/mesh/teleport-extension-replicator"
     },
     {

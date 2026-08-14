@@ -7,10 +7,11 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   FactStore,
-  MailboxAction,
+  MailboxProcessor,
   OperationHandler,
   ProjectTemplates,
   ReactSurface,
+  ReplyGenerator,
   Settings,
   SkillDefinition,
 } from '#capabilities';
@@ -41,7 +42,8 @@ export const BrainPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Settings),
   // Injects the `Analyze` action into plugin-inbox's mailbox toolbar menu (fact analysis is owned by
   // brain); reads the settings atom live at invoke time. Shares the atom with the Settings module.
-  Plugin.addModule(MailboxAction),
+  Plugin.addModule(MailboxProcessor),
+  Plugin.addModule(ReplyGenerator),
   // Contributes the "Mailbox Facts" project template: a scheduled AnalyzeMailbox routine plus
   // brain-skill chats, scoped to one project.
   Plugin.addModule(ProjectTemplates),

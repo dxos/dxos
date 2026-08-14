@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -12,6 +13,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ConnectionState } from '@dxos/client/mesh';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import { Identity } from '@dxos/halo';
 
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
@@ -23,6 +25,7 @@ export default Capability.makeModule(
     // the connector may evaluate before the client module finishes activating (dependency
     // modules contribute individually, not batched per wave) and re-evaluates when it lands.
     const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
+    const identityServiceAtom = yield* Capability.atom(ClientCapabilities.IdentityService);
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'root',
       match: GraphNodeMatcher.whenRoot,
@@ -50,7 +53,8 @@ export default Capability.makeModule(
           if (!client) {
             return [];
           }
-          const identity = get(CreateAtom.fromObservable(client.halo.identity));
+          const [identityService] = get(identityServiceAtom);
+          const identity = identityService ? Option.getOrUndefined(get(Identity.atom(identityService))) : undefined;
           const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
           // Account, invitations, and usage are all hub-service reads; without a hub URL there is
           // no `HubHttpClient` capability and those panels render empty shells forever.
@@ -66,9 +70,9 @@ export default Capability.makeModule(
                 disposition: 'user-account',
                 testId: 'clientPlugin.account',
                 // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
-                userId: identity?.identityKey.toHex(),
-                hue: identity?.profile?.data?.hue,
-                emoji: identity?.profile?.data?.emoji,
+                userId: identity?.identityKey,
+                hue: identity?.data?.hue,
+                emoji: identity?.data?.emoji,
                 status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
               },
               nodes: [

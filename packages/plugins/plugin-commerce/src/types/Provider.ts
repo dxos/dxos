@@ -8,7 +8,9 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Annotation, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-export const SKILL_KEY = 'org.dxos.plugin.commerce/skill/provider';
+// Dotted, not slash-separated: the key is an NSID, and `DXN_SPEC_REGEXP` rejects slashes — the old
+// form made `Skill.registryURI` fall back to a bare URI for this skill alone.
+export const SKILL_KEY = 'org.dxos.plugin.commerce.skill.provider';
 
 /** Binds a request parameter to a search-schema field, with an optional transform hint. */
 export const FieldBinding = Schema.Struct({

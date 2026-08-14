@@ -15,6 +15,7 @@ import { RedeemPasskey } from './definitions';
 import { RecoverIdentity } from './definitions';
 import { OpenUsage } from './definitions';
 import { JoinIdentity } from './definitions';
+import { GrantServiceAccess } from './definitions';
 import { CreateRecoveryCode } from './definitions';
 import { CreatePasskey } from './definitions';
 import { CreateIdentity } from './definitions';
@@ -27,6 +28,7 @@ export const ClientOperationHandlerSet = OperationHandlerSet.lazy([
   CreateIdentity.pipe(Operation.lazyHandler(() => import('./create-identity'))),
   CreatePasskey.pipe(Operation.lazyHandler(() => import('./create-passkey'))),
   CreateRecoveryCode.pipe(Operation.lazyHandler(() => import('./create-recovery-code'))),
+  GrantServiceAccess.pipe(Operation.lazyHandler(() => import('./grant-service-access'))),
   JoinIdentity.pipe(Operation.lazyHandler(() => import('./join-identity'))),
   OpenUsage.pipe(Operation.lazyHandler(() => import('./open-usage'))),
   RecoverIdentity.pipe(Operation.lazyHandler(() => import('./recover-identity'))),

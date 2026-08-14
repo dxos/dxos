@@ -29,7 +29,7 @@ import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
-import { type QueryStatusResponse, SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpacesService, SystemService } from '@dxos/protocols/rpc';
 
@@ -142,7 +142,7 @@ describe('client services effect-rpc', () => {
   test('streaming call round trip', async ({ expect }) => {
     const proxy = await setup(() => ({
       SystemService: mockService<SystemService.Handlers>({
-        ['SystemService.queryStatus']: (): Stream.Stream<QueryStatusResponse, Error> =>
+        ['SystemService.queryStatus']: (): Stream.Stream<SystemService.QueryStatusResponse, Error> =>
           Stream.fromIterable([{ status: SystemStatus.INACTIVE }, { status: SystemStatus.ACTIVE }]),
       }),
     }));
@@ -154,7 +154,7 @@ describe('client services effect-rpc', () => {
   test('stream errors propagate to the consumer', async ({ expect }) => {
     const proxy = await setup(() => ({
       SystemService: mockService<SystemService.Handlers>({
-        ['SystemService.queryStatus']: (): Stream.Stream<QueryStatusResponse, Error> =>
+        ['SystemService.queryStatus']: (): Stream.Stream<SystemService.QueryStatusResponse, Error> =>
           Stream.make({ status: SystemStatus.ACTIVE }).pipe(Stream.concat(Stream.fail(new Error('stream failed')))),
       }),
     }));
@@ -252,7 +252,7 @@ describe('client services effect-rpc', () => {
       SystemService: mockService<SystemService.Handlers>({
         ['SystemService.getConfig']: () =>
           Effect.succeed({ runtime: { client: { remoteSource: 'https://example.com' } } }),
-        ['SystemService.queryStatus']: (): Stream.Stream<QueryStatusResponse, Error> =>
+        ['SystemService.queryStatus']: (): Stream.Stream<SystemService.QueryStatusResponse, Error> =>
           Stream.make({ status: SystemStatus.ACTIVE }),
       }),
     }));
