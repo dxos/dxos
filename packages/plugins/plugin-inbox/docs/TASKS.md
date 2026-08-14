@@ -471,6 +471,14 @@ generalize now with mailbox as instance #1.
       compute — moving it to a processor that runs where those services exist is exactly this work.
       NOTE before assuming a shared substrate: only 4 of the 12 pipelines have an internal
       `@dxos/pipeline` chain at all; the other 8 are plain loops.
+- [ ] **Retire `ExtractMailbox` once on-arrival extraction is restored** — it is `@deprecated`, but
+      still LIVE: `MailboxArticle.tsx:584` → `useMailboxExtractorActions` renders a menu item per
+      registered `ObjectExtractor` and invokes it, and two extractors ship. Its stated successor
+      (`onArrivalExtractors`) is commented OUT of the sync chain because it reaches
+      `Capability.Service` and invokes `ExtractMessage`, neither available off-host under edge compute
+      — so removing it now would delete a working feature with nothing behind it. Remove the operation,
+      the hook and the menu items together once the successor runs as a processor (D6). MEANWHILE the
+      `@deprecated` tag is misleading, since it points at a replacement that does not run.
 - [ ] **Give the seven cursorless consumers a cursor** — mechanical now that a processor id is also its
       cursor tag, but each needs its own call on whether feed position or derived-state replacement is
       the right idempotency story (`ExtractSubscriptions` replaces wholesale; `SummarizeMailbox` skips
