@@ -43,12 +43,16 @@ changes what a model sees lives in the shared package or it is a bug.
 - [ ] **Fidelity check in CI** — one test running the same registry fixture through both hosts
       (edge worker + `dx mcp serve`), asserting identical `tools/list`, `prompts/list` and
       `skillLoad`. The contract enforced, not documented.
-- [ ] **Static toolkits → plugin operations** — `whoami`, `listSpaces`, the object CRUD and the
-      discovery tools are hand-written twice, once per host (TODOs in
+- [ ] **Static tool descriptors shared** (do this first) — the two hosts' `Tool.make` blocks are
+      byte-identical; only the handlers genuinely differ. Moving the descriptors into the package
+      deletes every existing copy and makes an unannotated tool impossible, with no dependency on
+      the operations work. The annotation drift this already caused is the argument: DESIGN §1.1.
+- [ ] **Static toolkits → plugin operations** — then the handlers. `whoami`, `listSpaces`, the
+      object CRUD and the discovery tools are hand-written twice (TODOs in
       `cli/src/commands/mcp/{space,object,discovery}-tools.ts` and edge's `src/mcp/*-tools.ts`).
       Contributed as annotated operations they would project through `@dxos/mcp-server` like the
-      project and task verbs, and both copies would be deleted. The object tools are the easy half
-      — they already only wrap `database.*` operations.
+      project and task verbs. The object tools are the easy half — both hosts already only wrap
+      `database.*` operations, differing in the invoke seam alone.
 - [ ] **Space visibility factored out** — which spaces a session may target is decided twice and
       differently: the CLI filters `client.spaces` through `AppSpace.isVisibleSpace`, while edge's
       `space-tools.ts` hard-codes its own `SETTINGS_SPACE_TAG` constant plus `withoutHaloSpace` /

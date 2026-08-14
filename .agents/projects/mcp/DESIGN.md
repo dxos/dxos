@@ -27,8 +27,22 @@ host-layer difference:
 - **The static toolkits.** `whoami`, `listSpaces`, the object CRUD and the discovery tools have no
   operation behind them, so each host hand-writes a toolkit. They are copies (the CLI's were ported
   from edge's), which means a change to any of their shapes has to be made twice and nothing
-  detects a miss. The route out is the one the project and task verbs already take: contribute them
-  as annotated operations from a plugin, and both hosts project them.
+  detects a miss — which is exactly what happened: the CLI gained safety annotations and edge went
+  on advertising every one of its reads as destructive until someone diffed the two.
+
+  The duplication is not evenly spread, and that decides the cheapest fix. The **descriptors** —
+  name, description, parameter and result schemas, annotations — are byte-identical between the two
+  hosts. The **handlers** are not, and legitimately so: object CRUD differs only in the invoke seam
+  (service binding vs in-process) and is ~95% the same code, but `space-tools` fans out three RPCs
+  with a concurrency cap on edge where the CLI reads synchronously off a live client, and
+  `discovery-tools` reads operation-service where the CLI reads the capability manager.
+
+  So there are two routes, and the first does not block on the second. **Share the descriptors,
+  keep per-host handlers**: it deletes every copy that exists today and makes an unannotated tool
+  impossible, without waiting on any operations work. **Then** contribute them as annotated
+  operations from a plugin, the route the project and task verbs already take, which removes the
+  hand-written handlers too.
+
 - **Space visibility.** Both hosts implement "never surface the HALO space or the settings space as
   a target", and neither shares an implementation: the CLI filters `client.spaces` through
   `AppSpace.isVisibleSpace` (which reads space tags), while edge re-declares `SETTINGS_SPACE_TAG`
