@@ -24,7 +24,7 @@ in `src/commands/plugin-defs.ts` and lives in the plugin package — e.g. `dx re
 
 ## Serve as an MCP server
 
-`dx mcp serve` exposes this profile's spaces to an MCP client over stdio — the local twin of the
+`dx mcp serve` exposes your spaces to an MCP client over stdio — the local twin of the
 deployed server at `mcp.dxos.org`. Both are hosts over the same `@dxos/mcp-server` package, so the
 tools, prompts and `skillLoad` output are identical; what differs is host-layer only (no OAuth here,
 and operations run in-process). Annotated operations project as tools and opted-in skills as prompts,
@@ -38,16 +38,17 @@ Two things follow from stdio and are worth knowing before you debug it:
   profile it starts with (HALO and settings spaces excluded). Point a client at it only if you would
   give that client your identity.
 
-Run it directly to check it starts — it will sit waiting for a client, which is correct:
+The setup below assumes `dx` is installed globally and on your `PATH`:
 
 ```bash
-DX_PROFILE=main dx mcp serve
+npm i -g @dxos/cli
+dx mcp serve   # sits waiting for a client, which is correct — Ctrl-C out
 ```
 
 ### Claude Code
 
 ```bash
-claude mcp add dxos --scope user --env DX_PROFILE=main -- dx mcp serve
+claude mcp add dxos --scope user -- dx mcp serve
 claude mcp list   # dxos: dx mcp serve - ✓ Connected
 ```
 
@@ -66,8 +67,7 @@ Settings → Developer → Edit Config, or edit the file directly
   "mcpServers": {
     "dxos": {
       "command": "/absolute/path/to/dx",
-      "args": ["mcp", "serve"],
-      "env": { "DX_PROFILE": "main" }
+      "args": ["mcp", "serve"]
     }
   }
 }
@@ -75,14 +75,42 @@ Settings → Developer → Edit Config, or edit the file directly
 
 Restart Claude Desktop; the tools appear under the connector menu and skills as slash commands.
 
-Use an **absolute** `command` and set `DX_PROFILE` in `env`: a GUI app is not launched from your
-shell, so it inherits neither your `PATH` nor your exported profile. `which dx` gives the path for an
-npm install; from source it is `packages/devtools/cli/bin/dx`, which needs no build step.
+`command` must be **absolute** — `which dx` gives the path. A GUI app is not launched from your
+shell, so it does not inherit your `PATH` and a bare `dx` will not resolve.
 
 ### Other clients
 
 Anything speaking MCP over stdio works — the command is `dx mcp serve` with no arguments.
 `src/commands/mcp/serve.test.ts` drives a raw session over a pipe if you want the wire shape.
+
+### Choosing a profile
+
+`dx mcp serve` serves whichever profile it starts with, so a client wired to it sees that profile's
+identity and spaces. Set `DX_PROFILE` if the default is not the one you want:
+
+```bash
+claude mcp add dxos --scope user --env DX_PROFILE=main -- dx mcp serve
+```
+
+```json
+{ "mcpServers": { "dxos": { "command": "…", "args": ["mcp", "serve"], "env": { "DX_PROFILE": "main" } } } }
+```
+
+Set it in the client's `env` rather than exporting it: neither client is launched from your shell, so
+an exported variable does not reach the server.
+
+### Running from source
+
+`bin/dx` runs the CLI from source with no build step, so a rebuilt tree is picked up on the client's
+next connection. Substitute its absolute path for `dx` everywhere above — the wrapper resolves the
+repo relative to itself, so it works from any directory:
+
+```bash
+claude mcp add dxos-dev -- /path/to/dxos/packages/devtools/cli/bin/dx mcp serve
+```
+
+Register it under a distinct name if you also have the released `dx` configured; two servers offering
+the same tool names leave the client to disambiguate.
 
 ## Release
 
