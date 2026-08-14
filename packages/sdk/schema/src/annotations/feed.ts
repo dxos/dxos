@@ -3,23 +3,22 @@
 //
 
 import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
-import { createAnnotationHelper } from '@dxos/echo/internal';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 
 /**
  * Identifies a schema as an object that owns a canonical feed, naming the property that holds the
  * `Ref<Feed>`. Carrying the property name (rather than a bare `true`) is what lets a generic host
  * resolve the feed without hardcoding `.feed` — see {@link getFeedRef}.
  */
-export const FeedAnnotationId = '@dxos/schema/annotation/Feed';
-
-export type FeedAnnotationValue = {
-  /** Name of the property holding the canonical `Ref<Feed>`. */
-  property: string;
-};
-
-export const FeedAnnotation = createAnnotationHelper<FeedAnnotationValue>(FeedAnnotationId);
+export const FeedAnnotation = Annotation.make({
+  id: 'org.dxos.annotation.feed',
+  schema: Schema.Struct({
+    /** Name of the property holding the canonical `Ref<Feed>`. */
+    property: Schema.String,
+  }),
+});
 
 /** @returns True if the schema is annotated as a feed owner. */
 export const isFeedOwnerSchema = (schema: Type.AnyEntity): boolean =>
