@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { IdentityDid } from '@dxos/keys';
+import { IdentityDid, SpaceId } from '@dxos/keys';
 
 import { type IdentityError } from './errors';
 import * as Invitation from './Invitation';
@@ -97,12 +97,63 @@ export type ServiceAccessOptions = {
 };
 
 /**
- * Recovery credential presented to re-admit a device to an existing identity.
+ * A key held outside HALO (a passkey) to register as a recovery credential. The WebAuthn ceremony
+ * stays at the call site; only the credential write moves here. `label` and `kind` describe the
+ * external key, so they are meaningful only alongside it.
+ */
+export type ExternalRecoveryKey = {
+  /** Hex-encoded public key that will sign the recovery challenge. */
+  readonly recoveryKey: string;
+  /** Hex-encoded public handle used to look up (and revoke) this credential. */
+  readonly lookupKey: string;
+  /** Signature algorithm of `recoveryKey` (e.g. `ES256`, `ED25519`). */
+  readonly algorithm: string;
+  /** User-visible name; without it credentials are told apart only by issuance date. */
+  readonly label?: string;
+  readonly kind?: RecoveryKind;
+};
+
+/**
+ * A recovery credential to write. Omit `externalKey` to have HALO generate the key and return a
+ * recovery code.
+ */
+export type RecoveryCredentialOptions = {
+  readonly externalKey?: ExternalRecoveryKey;
+};
+
+/**
+ * Challenge a recovery key must sign to re-admit a device. Held by the caller across the signing
+ * ceremony and handed back through {@link RecoverArgs}.
+ */
+export const RecoveryChallenge = Schema.Struct({
+  /** Hex-encoded key of the device being admitted. */
+  deviceKey: Schema.String,
+  /** Hex-encoded control-feed key the admission is written to. */
+  controlFeedKey: Schema.String,
+  /** Base64-encoded challenge bytes. */
+  challenge: Schema.String,
+});
+export type RecoveryChallenge = typeof RecoveryChallenge.Type;
+
+/**
+ * Recovery credential presented to re-admit a device to an existing identity. The `passkey` variant
+ * carries a WebAuthn assertion over a {@link RecoveryChallenge}; `clientDataJson` and
+ * `authenticatorData` are required to verify an authenticator signature.
  */
 export type RecoverArgs =
   | { readonly recoveryCode: string }
   | { readonly token: string }
-  | { readonly recoveryProof: string };
+  | { readonly recoveryProof: string }
+  | {
+      readonly passkey: {
+        readonly challenge: RecoveryChallenge;
+        /** Hex-encoded lookup key of the credential being presented. */
+        readonly lookupKey: string;
+        readonly signature: Uint8Array;
+        readonly clientDataJson?: Uint8Array;
+        readonly authenticatorData?: Uint8Array;
+      };
+    };
 
 /**
  * Identity and device management, plus device invitations. `share`/`join` construct
@@ -133,9 +184,30 @@ export interface ServiceApi {
    */
   readonly subscribe: (callback: (identity: Option.Option<Info>) => void) => () => void;
   /** Create the local identity (and its first device). */
-  readonly create: (options?: { displayName?: string; deviceLabel?: string }) => Effect.Effect<Info, IdentityError>;
+  readonly create: (options?: {
+    displayName?: string;
+    data?: Record<string, unknown>;
+    deviceLabel?: string;
+  }) => Effect.Effect<Info, IdentityError>;
+  /**
+   * Id of the identity's personal (HALO) space — where its credentials live. `Option.none` when no
+   * identity exists. Derived asynchronously from the identity key, hence a verb rather than a field
+   * on {@link Info}.
+   */
+  readonly personalSpaceId: Effect.Effect<Option.Option<SpaceId>, IdentityError>;
   /** Re-admit this device to an existing identity via a recovery credential. */
   readonly recover: (args: RecoverArgs) => Effect.Effect<Info, IdentityError>;
+  /**
+   * Write a recovery credential for this identity. Returns the generated recovery code when HALO
+   * generated the key; nothing when an external key (passkey) was registered.
+   */
+  readonly createRecoveryCredential: (
+    options?: RecoveryCredentialOptions,
+  ) => Effect.Effect<{ recoveryCode?: string }, IdentityError>;
+  /** Request the challenge a recovery key must sign to admit this device. */
+  readonly requestRecoveryChallenge: Effect.Effect<RecoveryChallenge, IdentityError>;
+  /** Revoke a recovery credential by its hex-encoded lookup key. */
+  readonly revokeRecoveryCredential: (lookupKey: string) => Effect.Effect<void, IdentityError>;
   /** Update the identity profile. */
   readonly updateProfile: (profile: {
     displayName?: string;
@@ -175,12 +247,35 @@ export const getSnapshot: Effect.Effect<Option.Option<Info>, never, Service> = E
 /** Create the local identity (requires {@link Service}). */
 export const create = (options?: {
   displayName?: string;
+  data?: Record<string, unknown>;
   deviceLabel?: string;
 }): Effect.Effect<Info, IdentityError, Service> => Effect.flatMap(Service, (service) => service.create(options));
+
+/** Id of the identity's personal (HALO) space (requires {@link Service}). */
+export const personalSpaceId: Effect.Effect<Option.Option<SpaceId>, IdentityError, Service> = Effect.flatMap(
+  Service,
+  (service) => service.personalSpaceId,
+);
 
 /** Re-admit this device via a recovery credential (requires {@link Service}). */
 export const recover = (args: RecoverArgs): Effect.Effect<Info, IdentityError, Service> =>
   Effect.flatMap(Service, (service) => service.recover(args));
+
+/** Write a recovery credential (requires {@link Service}). */
+export const createRecoveryCredential = (
+  options?: RecoveryCredentialOptions,
+): Effect.Effect<{ recoveryCode?: string }, IdentityError, Service> =>
+  Effect.flatMap(Service, (service) => service.createRecoveryCredential(options));
+
+/** Request a recovery challenge for this device (requires {@link Service}). */
+export const requestRecoveryChallenge: Effect.Effect<RecoveryChallenge, IdentityError, Service> = Effect.flatMap(
+  Service,
+  (service) => service.requestRecoveryChallenge,
+);
+
+/** Revoke a recovery credential by lookup key (requires {@link Service}). */
+export const revokeRecoveryCredential = (lookupKey: string): Effect.Effect<void, IdentityError, Service> =>
+  Effect.flatMap(Service, (service) => service.revokeRecoveryCredential(lookupKey));
 
 /** Update the identity profile (requires {@link Service}). */
 export const updateProfile = (profile: {
