@@ -6,6 +6,7 @@ import react from '@vitejs/plugin-react';
 import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { type ConfigEnv, type PluginOption, defineConfig, searchForWorkspaceRoot } from 'vite';
@@ -45,6 +46,47 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
 const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
+
+// wasm-bindgen packages that publish both a bundler entry (`browser` condition, `.wasm` imported as
+// a module) and a base64 entry (default condition, `initSync`). Only the latter is free of
+// top-level await.
+const SYNC_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-subduction'];
+
+/**
+ * Resolves {@link SYNC_WASM_PACKAGES} without the `browser` condition, selecting their
+ * synchronous-init entrypoints so no top-level await enters the module graph.
+ */
+// TODO(wittjosiah): Remove the need for this rather than waiting on a WebKit fix — either the
+//  automerge wasm packages stop requiring top-level await, or our bundling and dependencies change
+//  so the TDZ is unreachable. Only `serve` needs it, but the Tauri app renders in a WebKit web
+//  view, so that covers dev there too.
+const syncWasmInit = (): PluginOption => {
+  // `browser` is deliberately absent; the rest mirrors what vite would apply for the client.
+  const resolver = new ResolverFactory({ conditionNames: ['source', 'import', 'module', 'default'] });
+
+  return {
+    name: 'dxos-sync-wasm-init',
+    enforce: 'pre',
+    // Dev only: the base64 entry inlines the wasm bytes, which costs ~33% over the binary in a
+    // production bundle, and the failure needs vite's module-per-file dev graph to bite.
+    apply: 'serve',
+    resolveId: {
+      order: 'pre',
+      handler: (source, importer) => {
+        // Subpaths too: `./slim` re-exports the same wasm glue as the package root, so redirecting
+        // only the root would split the two across separate wasm instances and leave the signer
+        // that `/slim` hands out uninitialized.
+        const matched = SYNC_WASM_PACKAGES.some((pkg) => source === pkg || source.startsWith(`${pkg}/`));
+        if (!importer || !matched) {
+          return null;
+        }
+
+        const resolved = resolver.sync(path.dirname(importer), source);
+        return resolved.error || !resolved.path ? null : resolved.path;
+      },
+    },
+  };
+};
 
 /**
  * Transpile targets for oxc (dev) and Rolldown (build).
@@ -92,6 +134,12 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   importSource({
     include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
   }),
+  // WebKit — Safari and the Tauri WKWebView — evaluates a module before its own dependencies when
+  // the graph is reached by concurrent dynamic imports and contains top-level await, so a binding
+  // first reached that way reads as an uninitialized `const` ("Cannot access 'x' before
+  // initialization"). The plugin manager activates modules concurrently, so the only lever is the
+  // top-level await.
+  syncWasmInit(),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
   wasm(),
@@ -229,7 +277,10 @@ export default defineConfig((env) => ({
     },
   },
   optimizeDeps: {
-    exclude: ['@dxos/wa-sqlite'],
+    // The wasm packages `syncWasmInit` redirects must not be pre-bundled: the optimizer resolves
+    // with its own pipeline (the `browser` condition, so the bundler entry) and importers would
+    // land on that chunk's top-level await regardless of what the plugin resolves.
+    exclude: ['@dxos/wa-sqlite', ...SYNC_WASM_PACKAGES],
     // The full set of dep entrypoints the app reaches, so vite's optimize-deps phase pre-bundles
     // them up front rather than discovering them mid-load (when a dynamic import unwraps a new
     // subpath), which forces a full page reload with the "Discovered new dependencies" banner —
