@@ -1,5 +1,5 @@
 ---
-'@dxos/plugin-inbox': major
+'@dxos/plugin-inbox': minor
 ---
 
 `AnalyzeMailbox` moved from `InboxOperation` to `BrainOperation`, alongside the `FactStore` layer and

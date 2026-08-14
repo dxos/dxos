@@ -1,5 +1,5 @@
 ---
-'@dxos/plugin-inbox': major
+'@dxos/plugin-inbox': minor
 ---
 
 `GenerateReply` moved from `InboxOperation` to `BrainOperation`, so **its DXN changed**. Reply
