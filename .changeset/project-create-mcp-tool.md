@@ -9,4 +9,4 @@
 
 The entries a headless host imports directly (`./operations`, and plugin-projects' `./skills`) are now guarded against React reaching them, closing the gap that made those imports a silent liability.
 
-Fixes two guards that passed without checking anything: `dx-trace-imports --to` takes one glob, and both the repeated-flag and comma-separated forms silently match nothing, so plugin-jmap's and plugin-google's headless constraints were unenforced. Both now use the brace form and pass for real.
+`dx-trace-imports` accepts repeated `--export` and `--to`, so one guard covers every entry a headless host imports. Repeating either flag previously stringified the array into a value matching nothing; `--to` failed silently, which is how plugin-jmap's and plugin-google's headless constraints went unenforced.
