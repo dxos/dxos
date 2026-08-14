@@ -11,7 +11,7 @@ Phase 4 summarization and the `useBlobUrl` coverage gap._
 Registry project: **`mailbox-pipeline`** (renamed from `inbox-surface` 2026-08-14 — the work outgrew
 the name; it is now the pipeline architecture as much as the surface over it).
 
-Split out of `packages/stories/stories-brain/TASKS.md` on 2026-08-13: that ledger is the model-ladder /
+Split out of `packages/stories/stories-brain/docs/TASKS.md` on 2026-08-13: that ledger is the model-ladder /
 FINDINGS research harness, this one is the mailbox pipeline and its surface. The ~40 older Topics /
 FINDINGS / model-routing items deliberately stayed behind.
 
