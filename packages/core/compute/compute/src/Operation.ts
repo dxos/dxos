@@ -683,14 +683,19 @@ export const McpToolAnnotation = Annotation.make({
  * Pipeable combinator that opts an operation into MCP projection. Apply at the definition site:
  * `Operation.make({ ... }).pipe(Operation.mcpTool({ name: 'taskComplete', safety: 'write' }))`.
  *
- * `skill` takes the governing skill's `Skill.Definition`, so the annotation can only ever name a
- * skill that actually ships; the key's final segment is what persists — the coordinate the MCP
- * surface uses for both the prompt and `skillLoad`.
+ * `skill` takes the governing skill's `Skill.Definition`, so the annotation cannot name a skill
+ * that does not ship. A bare key is accepted for the case the definition cannot be imported —
+ * where doing so would close a plugin dependency cycle, the trade plugin-projects' `skills/keys.ts`
+ * documents for artifact skills. Either way the key's final segment is what persists: the
+ * coordinate the MCP surface uses for both the prompt and `skillLoad`.
  */
-export const mcpTool = ({ skill, ...props }: Omit<McpTool, 'skill'> & { skill?: Skill.Definition }) =>
+export const mcpTool = ({
+  skill,
+  ...props
+}: Omit<McpTool, 'skill'> & { skill?: Skill.Definition | DXN.Name<string> }) =>
   annotate(McpToolAnnotation, {
     ...props,
-    ...(skill == null ? {} : { skill: skill.key.split('.').at(-1) }),
+    ...(skill == null ? {} : { skill: (typeof skill === 'string' ? skill : skill.key).split('.').at(-1) }),
   });
 
 /**

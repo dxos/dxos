@@ -29,6 +29,10 @@ const make = () =>
       'or phases, will outlive one session, when the user asks for a plan or progress, on any /codeProject verb, ' +
       "or when asked to set up, bind or configure this repo's project space (/codeProject setup).",
     agentCanEnable: true,
+    // The workflow is written for the MCP surface — its verbs are the projected tools — so it is
+    // the one skill that opts in. Skills written for the in-app chat runtime assume tools an MCP
+    // client does not have and stay unprojected until their authors say otherwise.
+    mcpPrompt: true,
     instructions: {
       source: Ref.make(Text.make({ content: instructions })),
     },

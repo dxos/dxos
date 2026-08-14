@@ -15463,9 +15463,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-projects':
-        specifier: workspace:*
-        version: link:../plugin-projects
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
