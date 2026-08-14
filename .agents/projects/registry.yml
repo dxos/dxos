@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: client-edge-audit
+    status: active
+    user: mykola
+    host: mac
+    created: 2026-08-14
+    summary: 'Audit every client→edge communication point (EdgeHttpClient, EdgeClient, ad-hoc fetch/WebSocket) and make the client run cleanly offline — with no edge endpoint in config the database works, no network activity, no warnings/errors, and no code path defaults an edge endpoint.'
+    tasks: .agents/projects/client-edge-audit/TASKS.md
+    design: .agents/projects/client-edge-audit/DESIGN.md
+    prs: []
+    resume: 'Project created; run Phase 1 audit (inventory all client→edge communication points).'
   - name: client-startup-timeout
     status: active
     user: jdw
