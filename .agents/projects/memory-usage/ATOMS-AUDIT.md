@@ -411,6 +411,15 @@ residency policy there is exactly one lifetime knob and the atoms inherit it.
   automatically. That work is ECHO's; this item removes the structural
   blocker and deliberately leaves residency as ECHO's single knob.
 
+Deliberate semantic change, landed with W2: entity atoms are keyed by proxy
+identity rather than by entity id (`Hash`/`Equal` on the proxy prototype key by
+`id` — `typed-handler.ts:217-228`). Two live objects sharing an id — a clone
+with `retainId`, or a branch binding — previously collapsed to one atom, so the
+second object was handed an atom subscribed to the first and its updates never
+arrived. That is the failure `proxy-identity.test.ts` was written for, fixed
+there for branch bindings by making them unequal; proxy keying fixes the class.
+Pinned by a test in `atom-memo.test.ts`.
+
 Risks: (a) a consumer relying on a pinned value surviving with zero
 subscribers — the ECHO families are read-only derivations, so none should
 exist; the lifecycle test plus a mailbox smoke run is the check. (b) Today's

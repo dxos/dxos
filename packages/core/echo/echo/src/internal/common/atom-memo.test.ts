@@ -28,6 +28,17 @@ describe('entity atom memoization', () => {
     expect(Obj.atom(makePerson('Alice'))).not.toBe(Obj.atom(makePerson('Alice')));
   });
 
+  test('two live objects sharing an id get their own atoms', ({ expect }) => {
+    // Keying by the proxy rather than by the entity id: each object carries its own subscription, so
+    // neither is handed an atom watching an object it does not hold. Under id keying the second
+    // object received the first's atom and its updates never arrived — the same failure
+    // `proxy-identity.test.ts` records for branch bindings.
+    const person = makePerson('Alice');
+    const sameId = Obj.clone(person, { retainId: true });
+    expect(sameId.id).toBe(person.id);
+    expect(Obj.atom(person)).not.toBe(Obj.atom(sameId));
+  });
+
   test('property atoms are per object and per key', ({ expect }) => {
     const person = makePerson('Alice');
     expect(Obj.atomProperty(person, 'name')).toBe(Obj.atomProperty(person, 'name'));
