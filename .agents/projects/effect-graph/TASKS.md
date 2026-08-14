@@ -139,17 +139,31 @@ Gate before Phase 9. Requested 2026-08-13.
 - [ ] **Repo-wide dependent test sweep** — every package in the `@dxos/graph` / `@dxos/app-graph`
       dependent closure (41 direct dependents, plus the transitive app/plugin set) must be green,
       not just the packages touched by the refactor.
-- [ ] **Composer e2e — 4 `collections.spec.ts` failures, UNATTRIBUTED.** Bisect so far (each cycle =
-      rebuild `composer-app:bundle-e2e` + run the spec, ~8 min): - Failure mode: `deleteObject(0)` completes without error — the trace shows the actions menu
-      opening, `spacePlugin.deleteObject` found, focused, Enter pressed — and nothing happens. No
-      console error. The object count stays where it was. - The one passing spec (`create collection`) is the only one that never opens an item actions
-      menu; all four failures do. - CLEARED: the orphan-check change; the incremental adjacency maps; `addEdgeImpl` + the
-      `sortEdges` Set membership (reverted together). The whole perf pass is exonerated. - CLEARED: the `origin/main` merge — the pre-merge tip `fd8084de` fails identically. - NOT ESTABLISHED: whether the baseline `4ed7683d` passes _in this sandbox_. `git checkout
-    <sha> -- .` leaves renamed/added files behind so the tree does not build, and a worktree is
-      forbidden by the repo non-negotiables. Until that runs, "this is our regression" rests on
-      the report that e2e is green on main in CI, not on a local A/B. - Next: get a baseline run on a checkout where worktrees are available, then bisect the split
-      (`a973a66f`) and the consolidation (`23198521`), which are the only untested regions left. - Graph-level repros written for the cascade, action expansion, position ordering and
-      re-order all pass (`expansion.test.ts`) — the bug is not visible at that layer.
+- [ ] **Composer e2e — 4 `collections.spec.ts` failures, localized to TWO separate regressions.**
+      Baseline `4ed7683d` passes 5/5 here, so these are ours. Harness: `ab.sh <sha>` in this folder —
+      overlaying an old commit without first deleting the file-set difference does not build, which is
+      what blocked the baseline run for several cycles.
+
+      A/B at `23198521` (the consolidation) splits the failure: 2 failed, 3 passed.
+
+      1. **Drag / re-order broke at the consolidation** (`re-order collections`, `drag object into
+         collection`). Sibling order in app-graph is carried by *edge insertion order* —
+         `sortEdgesImpl` removes and re-adds a relation's edges — and `_connections` reads it back
+         through `model.neighborsAtom`. Prime suspect: `EffectGraph.removeEdge` not preserving
+         iteration order across remove+re-add. Verify at the `GraphModel` level by asserting
+         `outgoing()` order after a remove+re-add cycle.
+      2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
+         consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
+         `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
+         console error. NOTE `8ff86d48` does not build in isolation — it removed `Graph.initialize`
+         while `plugin-space/spaces-ready.ts` still called it, and that call site was only fixed
+         during the main merge; patch that line to A/B across it.
+
+      CLEARED, each by revert + rebuild + rerun: the orphan check; the incremental adjacency maps;
+      `addEdgeImpl` + the `sortEdges` Set membership; and the `origin/main` merge (the pre-merge tip
+      `fd8084de` fails identically). Graph-level repros for the cascade, action expansion, position
+      ordering and re-order all pass (`expansion.test.ts`) — neither bug is visible at that layer.
+
 - [ ] **Composer e2e** — run the Composer e2e suite; the builder/expansion path is only exercised
       end-to-end there (navtree expansion, URL resolution, deck routing).
 - [x] **Benchmarks as skipped tests** — `packages/sdk/app-graph/src/bench.test.ts`, 10 timings
