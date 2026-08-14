@@ -60,7 +60,7 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget }: Connecto
       return undefined;
     }
     const nextGraph = Graph.make({ registry });
-    nextGraph.pipe(Graph.addNodes([{ id: NODE_ID, type: NODE_ID, data: null, properties: {}, actions }]));
+    Graph.addNodes(nextGraph, [{ id: NODE_ID, type: NODE_ID, data: null, properties: {}, actions }]);
     return nextGraph;
   }, [registry, connectorIds, db, existingTarget, allConnectors, allConnections]);
 

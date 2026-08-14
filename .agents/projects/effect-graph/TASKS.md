@@ -272,6 +272,23 @@ ids — via the new `_onReleaseRelation` hook, so the relation re-expands on nex
 - [ ] **Decide where the policy lives** — `@dxos/graph` (generic, e.g. `evict(policy)`), app-graph,
       or the app/plugin layer that knows what a workspace is.
 
+## Phase 10: dissolve the Graph wrapper
+
+Requested 2026-08-14. Staged; stage 1 landed.
+
+- [x] **Stage 1 — de-boilerplate `graph.ts`** (1490 -> 1013 lines). Every operation lost its curried
+      overload and its `*Impl` indirection: seventeen dual-signature dispatch blocks, the parallel
+      impl layer, and six atom-accessor mirrors are gone; each op is one direct function taking the
+      graph first, and the class methods read their own state. Call-site sweeps (13 sites in
+      `graph.test.ts`; `plugin-onboarding`, `plugin-assistant` ConnectorAuthMenu, `react-ui-menu`
+      hooks + test generator) rewrote `graph.pipe(Graph.op(...), ...)` chains as sequential direct
+      calls. Suites 180 passed, collections e2e 5/5, repo build clean.
+- [ ] **Stage 2 — relocate `GraphImpl` behind the Store port.** The remaining file is the app store
+      (~450 lines: model handle, six derived atom families, expansion bookkeeping, pins), the op
+      bodies, and the type vocabulary. Moving the store out needs a three-way module split
+      (types / store / ops) to break the import cycle between the ops and the class, plus
+      export-map updates — its own verified change, not an increment on stage 1.
+
 ## Phase 6: app-graph reconciliation
 
 Investigated 2026-08-13 (spike-verified) — full findings in DESIGN.md §app-graph reconciliation.

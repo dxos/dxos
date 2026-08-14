@@ -84,14 +84,12 @@ export const createNestedActionsResolver = (props?: {
   const actionGroups = createActions({ type: AppGraphNode.ActionGroupType, ...groupParams });
   actionGroups.forEach((group) => {
     const actions = createActions(params);
-    graph.pipe(
-      Graph.addNodes([group as AppGraphNode.NodeArg<any>, ...(actions as AppGraphNode.NodeArg<any>[])]),
-      Graph.addEdges([
-        { source: 'root', target: group.id, relation: 'child' },
-        ...actions.map((action) => ({ source: group.id, target: action.id, relation: 'child' })),
-      ]),
-      Graph.expandSync(group.id, 'child'),
-    );
+    Graph.addNodes(graph, [group as AppGraphNode.NodeArg<any>, ...(actions as AppGraphNode.NodeArg<any>[])]);
+    Graph.addEdges(graph, [
+      { source: 'root', target: group.id, relation: 'child' },
+      ...actions.map((action) => ({ source: group.id, target: action.id, relation: 'child' })),
+    ]);
+    Graph.expandSync(graph, group.id, 'child');
   });
   const items: MenuItemsAccessor = (group?: MenuItemGroup) =>
     graph.connections(group?.id ?? GraphNode.RootId, 'child') as Atom.Atom<MenuItem[] | null>;

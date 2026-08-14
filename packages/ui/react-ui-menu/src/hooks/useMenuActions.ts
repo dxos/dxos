@@ -34,10 +34,8 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
   // which would trigger atom state updates in other components (setState-in-render React warning).
   const graph = useMemo(() => {
     const newGraph = Graph.make({ registry });
-    newGraph.pipe(
-      Graph.addNodes(menuGraphProps.nodes as AppGraphNode.NodeArg<any>[]),
-      Graph.addEdges(menuGraphProps.edges),
-    );
+    Graph.addNodes(newGraph, menuGraphProps.nodes as AppGraphNode.NodeArg<any>[]);
+    Graph.addEdges(newGraph, menuGraphProps.edges);
     return newGraph;
   }, [registry, menuGraphProps]);
 

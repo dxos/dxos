@@ -105,9 +105,9 @@ const ToolbarStory = () => {
       allConnections,
     });
     const nextGraph = Graph.make({ registry });
-    nextGraph.pipe(
-      Graph.addNodes([{ id: TOOLBAR_NODE_ID, type: 'story/toolbar-target', data: null, properties: {}, actions }]),
-    );
+    Graph.addNodes(nextGraph, [
+      { id: TOOLBAR_NODE_ID, type: 'story/toolbar-target', data: null, properties: {}, actions },
+    ]);
     return nextGraph;
   }, [registry, space, target, allConnectors, allConnections]);
 

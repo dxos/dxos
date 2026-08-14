@@ -50,7 +50,7 @@ describe('Graph', () => {
   test('add node curried', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
-    const result = graph.pipe(Graph.addNode({ id: EXAMPLE_ID, type: EXAMPLE_TYPE }));
+    const result = Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
     expect(result).toEqual(graph);
     const node = registry.get(graph.node(EXAMPLE_ID));
     assert.ok(Option.isSome(node));
@@ -147,7 +147,7 @@ describe('Graph', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
     Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
-    const result = graph.pipe(Graph.removeNode(EXAMPLE_ID));
+    const result = Graph.removeNode(graph, EXAMPLE_ID);
     expect(result).toEqual(graph);
     const node = registry.get(graph.node(EXAMPLE_ID));
     assert.ok(Option.isNone(node));
@@ -293,7 +293,7 @@ describe('Graph', () => {
     Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
     Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'child' });
-    const result = graph.pipe(Graph.removeEdge({ source: exampleId(1), target: exampleId(2), relation: 'child' }));
+    const result = Graph.removeEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'child' });
     expect(result).toEqual(graph);
     const edges = registry.get(graph.edges(exampleId(1)));
     expect(edges[CHILD_INBOUND_RELATION_KEY]).toBeUndefined();
@@ -370,11 +370,9 @@ describe('Graph', () => {
     });
     onTestFinished(() => cancel());
 
-    graph.pipe(
-      Graph.addNode({ id: exampleId(1), type: EXAMPLE_TYPE }),
-      Graph.addNode({ id: exampleId(2), type: EXAMPLE_TYPE }),
-      Graph.addEdge({ source: exampleId(1), target: exampleId(2), relation: 'child' }),
-    );
+    Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
+    Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'child' });
 
     expect(count).toEqual(0);
     const children = registry.get(childrenKey);
@@ -408,10 +406,8 @@ describe('Graph', () => {
 
     // Batching the edge and node updates fires a single update.
     Atom.batch(() => {
-      graph.pipe(
-        Graph.addEdge({ source: exampleId(1), target: exampleId(6), relation: 'child' }),
-        Graph.addNode({ id: exampleId(6), type: EXAMPLE_TYPE }),
-      );
+      Graph.addEdge(graph, { source: exampleId(1), target: exampleId(6), relation: 'child' });
+      Graph.addNode(graph, { id: exampleId(6), type: EXAMPLE_TYPE });
     });
     expect(count).toEqual(5);
   });
@@ -518,7 +514,7 @@ describe('Graph', () => {
       ],
     });
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'child' });
-    const path = graph.pipe(Graph.getPath({ target: exampleId(2) }));
+    const path = Graph.getPath(graph, { target: exampleId(2) });
     expect(path.pipe(Option.getOrNull)).to.deep.equal(['root', exampleId(1), exampleId(2)]);
   });
 
@@ -688,15 +684,13 @@ describe('Graph', () => {
       Graph.addNode(graph, { id: 'test2', type: 'test' });
       Graph.addEdge(graph, { source: 'test1', target: 'test2', relation: 'child' });
       const nodes: string[] = [];
-      graph.pipe(
-        Graph.traverse({
-          source: GraphNode.RootId,
-          relation: 'child',
-          visitor: (node, _path) => {
-            nodes.push(node.id);
-          },
-        }),
-      );
+      Graph.traverse(graph, {
+        source: GraphNode.RootId,
+        relation: 'child',
+        visitor: (node, _path) => {
+          nodes.push(node.id);
+        },
+      });
       expect(nodes).to.deep.equal(['root', 'test1', 'test2']);
     });
   });
@@ -704,12 +698,10 @@ describe('Graph', () => {
   test('add nodes curried', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
-    const result = graph.pipe(
-      Graph.addNodes([
-        { id: exampleId(1), type: EXAMPLE_TYPE },
-        { id: exampleId(2), type: EXAMPLE_TYPE },
-      ]),
-    );
+    const result = Graph.addNodes(graph, [
+      { id: exampleId(1), type: EXAMPLE_TYPE },
+      { id: exampleId(2), type: EXAMPLE_TYPE },
+    ]);
     expect(result).toEqual(graph);
     const node1 = registry.get(graph.node(exampleId(1)));
     const node2 = registry.get(graph.node(exampleId(2)));
@@ -725,12 +717,10 @@ describe('Graph', () => {
     Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
     Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
     Graph.addNode(graph, { id: exampleId(3), type: EXAMPLE_TYPE });
-    const result = graph.pipe(
-      Graph.addEdges([
-        { source: exampleId(1), target: exampleId(2), relation: 'child' },
-        { source: exampleId(1), target: exampleId(3), relation: 'child' },
-      ]),
-    );
+    const result = Graph.addEdges(graph, [
+      { source: exampleId(1), target: exampleId(2), relation: 'child' },
+      { source: exampleId(1), target: exampleId(3), relation: 'child' },
+    ]);
     expect(result).toEqual(graph);
     const edges = registry.get(graph.edges(exampleId(1)));
     expect(edges[CHILD_RELATION_KEY]).to.have.length(2);
@@ -743,7 +733,7 @@ describe('Graph', () => {
     const graph = Graph.make({ registry });
     Graph.addNode(graph, { id: exampleId(1), type: EXAMPLE_TYPE });
     Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
-    const result = graph.pipe(Graph.removeNodes([exampleId(1), exampleId(2)]));
+    const result = Graph.removeNodes(graph, [exampleId(1), exampleId(2)]);
     expect(result).toEqual(graph);
     const node1 = registry.get(graph.node(exampleId(1)));
     const node2 = registry.get(graph.node(exampleId(2)));
@@ -759,12 +749,10 @@ describe('Graph', () => {
     Graph.addNode(graph, { id: exampleId(3), type: EXAMPLE_TYPE });
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'child' });
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(3), relation: 'child' });
-    const result = graph.pipe(
-      Graph.removeEdges([
-        { source: exampleId(1), target: exampleId(2), relation: 'child' },
-        { source: exampleId(1), target: exampleId(3), relation: 'child' },
-      ]),
-    );
+    const result = Graph.removeEdges(graph, [
+      { source: exampleId(1), target: exampleId(2), relation: 'child' },
+      { source: exampleId(1), target: exampleId(3), relation: 'child' },
+    ]);
     expect(result).toEqual(graph);
     const edges = registry.get(graph.edges(exampleId(1)));
     expect(edges[CHILD_RELATION_KEY]).to.have.length(0);
@@ -785,7 +773,7 @@ describe('Graph', () => {
         },
       }),
     );
-    await graph.pipe(Graph.expandSync(GraphNode.RootId, 'child'));
+    await Graph.expandSync(graph, GraphNode.RootId, 'child');
     expect(expandCalled).to.be.true;
   });
 
@@ -865,7 +853,7 @@ describe('Graph', () => {
       type: Node.RootType,
       nodes: [{ id: exampleId(1), type: EXAMPLE_TYPE }],
     });
-    const path = await graph.pipe(Graph.waitForPath({ target: exampleId(1) }, { timeout: 1000 }));
+    const path = await Graph.waitForPath(graph, { target: exampleId(1) }, { timeout: 1000 });
     expect(path).to.deep.equal(['root', exampleId(1)]);
   });
 });

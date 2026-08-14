@@ -75,12 +75,14 @@ export default Capability.makeModule(
       // Eagerly expand the graph so the exemplar space's content is visible in the navtree
       // as soon as the user opens it, without waiting for a lazy expansion pass.
       const exemplarSpace = client.spaces.get().find((space) => space.tags.includes(AppSpace.EXEMPLAR_SPACE_TAG));
-      graph.pipe(Graph.expandSync(GraphNode.RootId, 'child'), Graph.expandSync(defaultSpace.id, 'child'));
+      Graph.expandSync(graph, GraphNode.RootId, 'child');
+      Graph.expandSync(graph, defaultSpace.id, 'child');
       if (exemplarSpace) {
-        graph.pipe(Graph.expandSync(exemplarSpace.id, 'child'));
+        Graph.expandSync(graph, exemplarSpace.id, 'child');
       }
     } else {
-      graph.pipe(Graph.expandSync(GraphNode.RootId, 'child'), Graph.expandSync(defaultSpace.id, 'child'));
+      Graph.expandSync(graph, GraphNode.RootId, 'child');
+      Graph.expandSync(graph, defaultSpace.id, 'child');
     }
 
     const homePath = GraphPath.getSpaceHomePath(defaultSpace.id);
