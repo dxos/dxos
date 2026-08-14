@@ -15,15 +15,6 @@ import { type FeedStore } from '@dxos/feed';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import {
-  type DeleteFromFeedRequest,
-  type FeedQueryResult,
-  type GetSyncStateRequest,
-  type GetSyncStateResponse,
-  type InsertIntoFeedRequest,
-  type QueryFeedRequest,
-  type SyncFeedRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedService } from '@dxos/protocols/rpc';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
@@ -33,15 +24,18 @@ import type { SqlTransaction } from '@dxos/sql-sqlite';
 export class LocalFeedServiceImpl implements FeedService.Handlers {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   #feedStore: FeedStore;
-  #syncFeed?: (ctx: Context, request: SyncFeedRequest) => Promise<void>;
-  #getSyncState?: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
+  #syncFeed?: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
+  #getSyncState?: (ctx: Context, request: FeedService.GetSyncStateRequest) => Promise<FeedService.GetSyncStateResponse>;
 
   'constructor'(
     runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
     feedStore: FeedStore,
     options?: {
-      syncFeed?: (ctx: Context, request: SyncFeedRequest) => Promise<void>;
-      getSyncState?: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
+      syncFeed?: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
+      getSyncState?: (
+        ctx: Context,
+        request: FeedService.GetSyncStateRequest,
+      ) => Promise<FeedService.GetSyncStateResponse>;
     },
   ) {
     this.#runtime = runtime;
@@ -50,7 +44,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     this.#getSyncState = options?.getSyncState;
   }
 
-  ['FeedService.queryFeed'](request: QueryFeedRequest): Effect.Effect<FeedQueryResult, Error> {
+  ['FeedService.queryFeed'](request: FeedService.QueryFeedRequest): Effect.Effect<FeedService.FeedQueryResult, Error> {
     return Effect.tryPromise({
       try: async () => {
         const { query } = request;
@@ -71,7 +65,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
               JSON.stringify(EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON),
             );
 
-            return Function.identity<FeedQueryResult>({
+            return Function.identity<FeedService.FeedQueryResult>({
               objects,
               nextCursor: result.nextCursor,
               prevCursor: '',
@@ -83,7 +77,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     });
   }
 
-  ['FeedService.insertIntoFeed'](request: InsertIntoFeedRequest): Effect.Effect<void, Error> {
+  ['FeedService.insertIntoFeed'](request: FeedService.InsertIntoFeedRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         const { subspaceTag, spaceId, feedId, objects } = request;
@@ -110,7 +104,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     });
   }
 
-  ['FeedService.deleteFromFeed'](request: DeleteFromFeedRequest): Effect.Effect<void, Error> {
+  ['FeedService.deleteFromFeed'](request: FeedService.DeleteFromFeedRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         const { subspaceTag, spaceId, feedId, objectIds } = request;
@@ -137,7 +131,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     });
   }
 
-  ['FeedService.syncFeed'](request: SyncFeedRequest): Effect.Effect<void, Error> {
+  ['FeedService.syncFeed'](request: FeedService.SyncFeedRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         await this.#syncFeed?.(Context.default(), request);
@@ -146,7 +140,9 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     });
   }
 
-  ['FeedService.getSyncState'](request: GetSyncStateRequest): Effect.Effect<GetSyncStateResponse, Error> {
+  ['FeedService.getSyncState'](
+    request: FeedService.GetSyncStateRequest,
+  ): Effect.Effect<FeedService.GetSyncStateResponse, Error> {
     return Effect.tryPromise({
       try: () => this.#getSyncStateImpl(request),
       catch: (error) => error as Error,
@@ -157,10 +153,12 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
    * `onNewBlocks` is unscoped (fires for any space's writes), so every active subscription
    * recomputes on each signal regardless of relevance.
    */
-  ['FeedService.subscribeSyncState'](request: GetSyncStateRequest): EffectStream.Stream<GetSyncStateResponse, Error> {
-    return EffectEx.streamFromEmitter<GetSyncStateResponse, Error>((emit) => {
+  ['FeedService.subscribeSyncState'](
+    request: FeedService.GetSyncStateRequest,
+  ): EffectStream.Stream<FeedService.GetSyncStateResponse, Error> {
+    return EffectEx.streamFromEmitter<FeedService.GetSyncStateResponse, Error>((emit) => {
       const ctx = Context.default();
-      let last: GetSyncStateResponse | undefined;
+      let last: FeedService.GetSyncStateResponse | undefined;
       // Coalesced, not concurrent: an `onNewBlocks` signal that arrives mid-recomputation only
       // marks `dirty` rather than starting a second overlapping read, so a slow recomputation can
       // never finish after (and thus emit over) a faster, later one.
@@ -193,7 +191,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     });
   }
 
-  #getSyncStateImpl(request: GetSyncStateRequest): Promise<GetSyncStateResponse> {
+  #getSyncStateImpl(request: FeedService.GetSyncStateRequest): Promise<FeedService.GetSyncStateResponse> {
     const ctx = Context.default();
     if (this.#getSyncState) {
       return this.#getSyncState(ctx, request);
@@ -238,7 +236,10 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
  * Assumes both responses enumerate namespaces in the same order -- true for both `#getSyncState`
  * paths, which always iterate the same fixed `namespaces` list for a given request.
  */
-const syncStateResponseChanged = (before: GetSyncStateResponse, after: GetSyncStateResponse): boolean => {
+const syncStateResponseChanged = (
+  before: FeedService.GetSyncStateResponse,
+  after: FeedService.GetSyncStateResponse,
+): boolean => {
   const beforeNamespaces = before.namespaces ?? [];
   const afterNamespaces = after.namespaces ?? [];
   if (beforeNamespaces.length !== afterNamespaces.length) {

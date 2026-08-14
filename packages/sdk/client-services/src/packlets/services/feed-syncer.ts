@@ -22,7 +22,6 @@ import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import type { GetSyncStateRequest, GetSyncStateResponse } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 import { bufferToArray } from '@dxos/util';
 
@@ -254,7 +253,10 @@ export class FeedSyncer extends Resource {
    * Returns per-namespace queue sync backlog for a space.
    * `blocksToPull` and `blocksToPush` of 0 mean caught up for that namespace.
    */
-  async getSyncState(ctx: Context, request: GetSyncStateRequest): Promise<GetSyncStateResponse> {
+  async getSyncState(
+    ctx: Context,
+    request: FeedProtocol.GetSyncStateRequest,
+  ): Promise<FeedProtocol.GetSyncStateResponse> {
     const spaceId = request.spaceId as SpaceId;
     invariant(SpaceId.isValid(spaceId));
     const namespaces =

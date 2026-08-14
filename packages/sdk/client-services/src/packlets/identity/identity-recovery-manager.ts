@@ -22,11 +22,9 @@ import {
   type RecoverIdentityResponseBody,
 } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
-import {
-  type CreateRecoveryCredentialRequest,
-  type RecoverIdentityRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { type RecoverIdentityRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential, IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type IdentityService } from '@dxos/protocols/rpc';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 
@@ -61,7 +59,7 @@ export class EdgeIdentityRecoveryManager {
 
   public async createRecoveryCredential({
     data,
-  }: CreateRecoveryCredentialRequest): Promise<{ recoveryCode: string | undefined }> {
+  }: IdentityService.CreateRecoveryCredentialRequest): Promise<{ recoveryCode: string | undefined }> {
     const identity = this._identityProvider();
     invariant(identity);
 
