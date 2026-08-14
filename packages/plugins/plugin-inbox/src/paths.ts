@@ -14,6 +14,9 @@ const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = Gra
 /** Well-known local segment names (private — use the path helpers below). */
 const Segments = {
   mailboxes: 'mailboxes',
+  inbox: 'inbox',
+  starred: 'starred',
+  important: 'important',
   allMail: 'all-mail',
   sent: 'sent',
   drafts: 'drafts',
@@ -30,6 +33,15 @@ export const getMailboxesPath = (spaceId: string): string =>
 /** Canonical qualified path to a specific mailbox within a space. */
 export const getMailboxPath = (spaceId: string, mailboxId: string): string =>
   `${getMailboxesPath(spaceId)}/${mailboxId}`;
+
+/** Canonical segment ID for the "Inbox" child node. */
+export const getInboxId = (): string => Segments.inbox;
+
+/** Canonical segment ID for the "Starred" child node. */
+export const getStarredId = (): string => Segments.starred;
+
+/** Canonical segment ID for the "Important" child node. */
+export const getImportantId = (): string => Segments.important;
 
 /** Canonical segment ID for the "All Mail" (unfiltered) child node. */
 export const getAllMailId = (): string => Segments.allMail;
@@ -50,6 +62,17 @@ export const getMailboxDraftsPath = (spaceId: string, mailboxId: string): string
 /** Appends a feed-object child id to a parent path as a plain child segment (message/event planks are
  * ordinary hidden children of their mailbox/calendar, not linked companions). */
 export const getFeedObjectPath = (parentPath: string, childId: string): string => `${parentPath}/${childId}`;
+
+/**
+ * Canonical qualified path to one of a message's attachments. Keyed by INDEX because an attachment has
+ * no identity of its own — it is an entry in `message.attachments`, not an object.
+ */
+export const getMailboxAttachmentPath = (
+  spaceId: string,
+  mailboxId: string,
+  messageId: string,
+  index: number,
+): string => `${getMailboxMessagePath(spaceId, mailboxId, messageId)}/attachment-${index}`;
 
 /** Canonical qualified path to a message within a mailbox. */
 export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messageId: string): string =>

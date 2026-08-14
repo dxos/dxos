@@ -23,11 +23,16 @@ export const DEFAULT_DELAY_DURATION = 700;
 export const TOOLTIP_OPEN = 'tooltip.open';
 export const TOOLTIP_NAME = 'Tooltip';
 
+export type TooltipStateAttribute = 'closed' | 'delayed-open' | 'instant-open';
+
+/**
+ * The half of the tooltip context that never changes identity, so that the triggers consuming it — every
+ * one in the app, since a single provider serves them all — do not re-render on each pointer-enter.
+ */
 export type TooltipContextValue = {
   contentId: string;
-  open: boolean;
-  stateAttribute: 'closed' | 'delayed-open' | 'instant-open';
-  trigger: TooltipTriggerElement | null;
+  /** Open state as a ref, so a trigger's event handlers can read it without subscribing to it. */
+  isOpenRef: RefObject<boolean>;
   onTriggerChange(trigger: TooltipTriggerElement | null, content?: ReactNode, side?: TooltipSide): void;
   onTriggerEnter(): void;
   onTriggerLeave(): void;
@@ -38,4 +43,14 @@ export type TooltipContextValue = {
   disableHoverableContent: boolean;
 };
 
+/** The half that changes as the pointer moves, consumed only by the single content the provider renders. */
+export type TooltipVolatileContextValue = {
+  open: boolean;
+  stateAttribute: TooltipStateAttribute;
+  trigger: TooltipTriggerElement | null;
+};
+
 export const [TooltipContextProvider, useTooltipContext] = createTooltipContext<TooltipContextValue>(TOOLTIP_NAME);
+
+export const [TooltipVolatileContextProvider, useTooltipVolatileContext] =
+  createTooltipContext<TooltipVolatileContextValue>(TOOLTIP_NAME);

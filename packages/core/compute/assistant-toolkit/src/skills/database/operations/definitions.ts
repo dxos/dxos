@@ -38,7 +38,7 @@ export const Query = Operation.make({
       <example description="All tasks related to Cyberdyne and Bob">
         {
           "typename": "org.dxos.type.task",
-          "text": "cyberdyne bob",
+          "text": "cyberdyne bob"
         }
       </example>
 
@@ -46,14 +46,14 @@ export const Query = Operation.make({
         {
           "typename": "org.dxos.type.document",
           "text": "financial report Q1 2026",
-          "includeContent": true
+          "includeContent": true,
           "limit": 3
         }
       </example>
 
       <example description="Emails from specific mailboxes">
         {
-          "in": [{"/" : "echo:///YYYYYY"}, {"/" : "echo:///XXXXXXX"}],
+          "in": ["echo:///YYYYYY", "echo:///XXXXXXX"],
           "typename": "org.dxos.type.email",
           "includeContent": true,
           "limit": 20
@@ -135,7 +135,8 @@ export const ObjectCreate = Operation.make({
       Creates a new object of any type and adds it to the current space.
       When a type has its own create tool (e.g. the markdown skill creates documents), prefer that
       tool — it builds the object's owned parts correctly. Use this one for types that have none.
-      Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
+      Get the full JSON Schema from the schema-list tool (pass \`typenames: [typename]\`) and ensure
+      that the data matches the corresponding schema.
       References are provided in the following format: { "/": "echo:..." }.
       Reference examples: { "/": "echo:///01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
     `,
@@ -224,11 +225,28 @@ export const SchemaList = Operation.make({
     name: 'List schemas',
     icon: 'ph--list--regular',
     description: trim`
-      Lists schemas definitions.
+      Lists schema definitions registered in the space.
+
+      By default (no typenames) returns a lightweight summary for every type: typename, kind,
+      name, description, and field names. This is cheap and safe to call often.
+
+      Putting every type's full JSON Schema into context at once wastes a lot of it. To get the
+      full JSON Schema for specific types, call again with \`typenames\` set to only the typenames
+      you actually need (from the summary call) — e.g. right before creating or updating an object
+      of that type.
     `,
   },
   input: Schema.Struct({
     limit: Schema.optional(Schema.Number),
+    typenames: Schema.optional(
+      Schema.Array(Schema.String).annotate({
+        description: trim`
+          Return the full JSON Schema only for these typenames, instead of the default summary.
+          Get the typenames from a prior summary call (no typenames set).
+        `,
+        example: ['org.dxos.type.task'],
+      }),
+    ),
   }),
   output: Schema.Array(Schema.Unknown),
   services: [Database.Service],
@@ -279,7 +297,8 @@ export const RelationCreate = Operation.make({
     icon: 'ph--arrows-merge--regular',
     description: trim`
       Creates a new relation and adds it to the current space.
-      Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
+      Get the full JSON Schema from the schema-list tool (pass \`typenames: [typename]\`) and ensure
+      that the data matches the corresponding schema.
     `,
   },
   input: Schema.Struct({

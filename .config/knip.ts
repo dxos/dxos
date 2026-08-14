@@ -106,6 +106,9 @@ const configuredDependencies = (dir: string, names: string[]): string[] => {
   const sources = globSync([
     `${dir}/*.config.{ts,mts,cts,js,mjs,cjs}`,
     `${dir}/.storybook/*.{ts,mts,mjs}`,
+    // A list too long to inline lives beside the config it feeds (composer-app's generated
+    // `optimizeDeps.include`), and the names in it are load-bearing all the same.
+    `${dir}/src/vite/*.{ts,mts}`,
     // Ambient `declare module` shims: knip skips declaration files, so an `import ... from 'pkg'`
     // inside one is invisible to it even though the types would not resolve without the package.
     `${dir}/src/**/*.d.ts`,

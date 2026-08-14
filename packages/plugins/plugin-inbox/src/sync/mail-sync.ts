@@ -107,17 +107,17 @@ export type MailSyncSource = {
    */
   readonly nextToken?: () => string | undefined;
   /**
-   * The already-committed feed foreign ids this run's reconcile branch targets (JMAP `updated`, Gmail
-   * label-change message ids). The harness resolves *only* these to EntityIds (see
-   * `Cursor.LayerOptions.reconcileFilter`) rather than scanning the whole feed.
-   */
-  readonly reconcileForeignIds?: readonly string[];
-  /**
    * Whether the provider has more delta beyond the chunk fetched this run. When true the harness requests
    * a durable `runAgain()` so reconciliation is bounded per run and resumed from the advanced token —
    * the same budget/re-run treatment additions already get.
    */
   readonly hasMoreDelta?: () => boolean;
+  /**
+   * The already-committed feed foreign ids this run's reconcile branch targets (JMAP `updated`, Gmail
+   * label-change message ids). The harness resolves *only* these to EntityIds (see
+   * `Cursor.LayerOptions.reconcileFilter`) rather than scanning the whole feed.
+   */
+  readonly reconcileForeignIds?: readonly string[];
 };
 
 /** Resolved run context the harness hands a provider's {@link MailSyncProviderService.prepare}. */
@@ -176,7 +176,11 @@ export const reconcileToChanges = (
           return undefined;
         }
         return item._tag === 'delete'
-          ? ({ _tag: 'delete', foreignId: item.foreignId, entityId } satisfies EmailStage.Change)
+          ? ({
+              _tag: 'delete',
+              foreignId: item.foreignId,
+              entityId,
+            } satisfies EmailStage.Change)
           : ({
               _tag: 'retag',
               foreignId: item.foreignId,

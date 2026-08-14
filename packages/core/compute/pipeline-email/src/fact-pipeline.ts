@@ -79,10 +79,10 @@ export const EmailFactPipeline = {
 export const runFactPipeline = (options: {
   readonly feed: Feed.Feed;
   readonly cursor: Cursor.Cursor;
-  readonly extract: FactExtractor;
   readonly pageSize: number;
   /** In-flight parallelism for the per-message extraction stage (defaults to 1 = serial). */
   readonly concurrency?: number;
+  readonly extract: FactExtractor;
   /**
    * Called once at run start (`processed: 0`) and after each committed page — the live-progress seam
    * (e.g. a UI meter). `total` is the exact pending count: both dedup predicates (cursor prefilter,

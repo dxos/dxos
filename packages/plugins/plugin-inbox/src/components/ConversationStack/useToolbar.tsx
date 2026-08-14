@@ -24,6 +24,14 @@ export type UseMessageToolbarActionsProps = {
   onForward?: () => void;
   /** Generates an AI reply draft grounded on thread context and known facts. */
   onAiReply?: () => void;
+  /** Whether the message currently carries the `inbox` tag; picks the archive action's direction. */
+  inInbox?: boolean;
+  /** Toggles the message's `inbox` tag — archiving when it is in the inbox, restoring when it is not. */
+  onArchive?: () => void;
+  /** Creates a tracking Project from this message. */
+  onCreateProject?: () => void;
+  /** Contributed sender-scoped actions (research), already bound to this message's sender. */
+  senderActions?: readonly { id: string; label: string; icon?: string; onSelect: () => void }[];
 };
 
 /**
@@ -41,6 +49,10 @@ export const useMessageActions = ({
   onReplyAll,
   onForward,
   onAiReply,
+  inInbox,
+  onArchive,
+  onCreateProject,
+  senderActions = [],
 }: UseMessageToolbarActionsProps) => {
   return useMenuBuilder(
     (get) =>
@@ -101,9 +113,63 @@ export const useMessageActions = ({
               );
             }
 
+            // Message-disposition section (Gmail's grouping): archive and delete both take the message
+            // out of the reading flow, so they share a section rather than sitting at opposite ends.
+            // Archive is one toggle of the `inbox` tag — label and icon follow current membership.
+            if (onArchive || onDelete) {
+              if (onReply || onForward || onAiReply) {
+                builder.separator('line');
+              }
+              if (onArchive) {
+                builder.action(
+                  'archive',
+                  {
+                    label: inInbox
+                      ? ['message-toolbar-archive.menu', { ns: meta.profile.key }]
+                      : ['message-toolbar-move-to-inbox.menu', { ns: meta.profile.key }],
+                    icon: inInbox ? 'ph--archive--regular' : 'ph--tray--regular',
+                    testId: 'inbox.message.archive',
+                  },
+                  onArchive,
+                );
+              }
+              if (onDelete) {
+                deleteAction(builder, { ns: meta.profile.key, labelKey: 'message-toolbar-delete.menu', onDelete });
+              }
+            }
+
+            // Derive-something-from-this-message actions. Grouped with the contributed extractors
+            // because they are the same gesture: turn this message into another object.
+            if (onCreateProject || extractActions.length > 0 || senderActions.length > 0) {
+              builder.separator('line');
+            }
+            if (onCreateProject) {
+              builder.action(
+                'create-project',
+                {
+                  label: ['message-toolbar-create-project.menu', { ns: meta.profile.key }],
+                  icon: 'ph--stack--regular',
+                  testId: 'inbox.message.createProject',
+                },
+                onCreateProject,
+              );
+            }
+
+            // Sender-scoped actions contributed by other plugins (plugin-crm's research).
+            for (const item of senderActions) {
+              builder.action(
+                `sender-${item.id}`,
+                {
+                  label: item.label,
+                  icon: item.icon ?? 'ph--sparkle--regular',
+                  testId: `inbox.message.sender.${item.id}`,
+                },
+                item.onSelect,
+              );
+            }
+
             // Extraction actions (trips, people, …) contributed for this message.
             if (extractActions.length > 0) {
-              builder.separator('line');
               for (const item of extractActions) {
                 builder.action(
                   `extract-${item.id}`,
@@ -122,16 +188,24 @@ export const useMessageActions = ({
               openGroup({ ns: meta.profile.key, labelKey: 'message-toolbar-open.menu', onOpen })(builder);
             }
             builder.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, rootId: 'more' }));
-
-            // Destructive.
-            if (onDelete) {
-              builder.separator('line');
-              deleteAction(builder, { ns: meta.profile.key, labelKey: 'message-toolbar-delete.menu', onDelete });
-            }
           },
           'inbox.message.more',
         )
         .build(),
-    [graph, nodeId, extractActions, onOpen, onReply, onReplyAll, onForward, onAiReply, onDelete],
+    [
+      graph,
+      nodeId,
+      extractActions,
+      onOpen,
+      onReply,
+      onReplyAll,
+      onForward,
+      onAiReply,
+      inInbox,
+      onArchive,
+      onCreateProject,
+      senderActions,
+      onDelete,
+    ],
   );
 };
