@@ -77,7 +77,7 @@ export default Capability.makeModule(
 
       // Research on the object's own node, so any surface showing a Person/Organization (the record
       // article's toolbar, the nav-tree context menu) offers it without depending on plugin-crm.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'crmResearch',
         match: (node): Option.Option<ResearchSubject> => {
           if (Obj.instanceOf(Person.Person, node.data)) {
