@@ -72,7 +72,9 @@ export const CreateObject = Tool.make('createObject', {
     object: Schema.Unknown.annotate({ description: 'The created object, including its id.' }),
   }),
   failure: Server.ToolFailure,
-});
+})
+  .annotate(Tool.Readonly, false)
+  .annotate(Tool.Destructive, false);
 
 export const GetObject = Tool.make('getObject', {
   description: 'Loads an object by id and returns its content (a point-in-time snapshot).',
@@ -83,7 +85,9 @@ export const GetObject = Tool.make('getObject', {
   }),
   success: Schema.Struct({ object: Schema.Unknown }),
   failure: Server.ToolFailure,
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false);
 
 export const UpdateObject = Tool.make('updateObject', {
   description:
@@ -105,7 +109,9 @@ export const UpdateObject = Tool.make('updateObject', {
     newContent: Schema.optional(Schema.String).annotate({ description: 'The text content after edits.' }),
   }),
   failure: Server.ToolFailure,
-});
+})
+  .annotate(Tool.Readonly, false)
+  .annotate(Tool.Destructive, false);
 
 export const DeleteObject = Tool.make('deleteObject', {
   description: 'Deletes an object from the space.',
@@ -115,7 +121,9 @@ export const DeleteObject = Tool.make('deleteObject', {
   }),
   success: Schema.Struct({ deleted: Schema.Boolean }),
   failure: Server.ToolFailure,
-});
+})
+  .annotate(Tool.Readonly, false)
+  .annotate(Tool.Destructive, true);
 
 export const QueryObjects = Tool.make('queryObjects', {
   description:
@@ -139,7 +147,9 @@ export const QueryObjects = Tool.make('queryObjects', {
   }),
   success: Schema.Struct({ results: Schema.Array(Schema.Unknown) }),
   failure: Server.ToolFailure,
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false);
 
 export const ObjectToolkit = Toolkit.make(CreateObject, GetObject, UpdateObject, DeleteObject, QueryObjects);
 

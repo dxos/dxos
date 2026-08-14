@@ -46,7 +46,9 @@ export const WhoAmI = Tool.make('whoami', {
     }),
   }),
   failure: Server.ToolFailure,
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false);
 
 export const ListSpaces = Tool.make('listSpaces', {
   description:
@@ -56,7 +58,9 @@ export const ListSpaces = Tool.make('listSpaces', {
   parameters: Schema.Struct({}),
   success: Schema.Struct({ spaces: Schema.Array(SpaceInfo) }),
   failure: Server.ToolFailure,
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false);
 
 export const SpaceToolkit = Toolkit.make(WhoAmI, ListSpaces);
 

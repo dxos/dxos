@@ -58,6 +58,9 @@ export const SkillLoad = Tool.make('skillLoad', {
   failure: ToolFailure,
 })
   .annotate(Tool.Readonly, true)
+  // Set explicitly: a client defaults an unset `destructiveHint` to true, which a read-only tool
+  // then advertises alongside `readOnlyHint` as a contradiction.
+  .annotate(Tool.Destructive, false)
   .annotate(Tool.Idempotent, true);
 
 export const SkillToolkit = Toolkit.make(SkillLoad);

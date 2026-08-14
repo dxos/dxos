@@ -178,6 +178,24 @@ describe('dx mcp serve', () => {
     expect(types.map((type: { typename: string }) => type.typename)).to.include('org.dxos.type.task');
   });
 
+  // A client renders these as the tool's safety badge, and an unset `destructiveHint` defaults to
+  // true — so a read tool that annotates nothing shows up as destructive.
+  test('advertises safety hints, with no read-only tool marked destructive', ({ expect }) => {
+    const tools: { name: string; annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean } }[] =
+      responses.get(2)!.result.tools;
+    for (const tool of tools) {
+      expect(tool.annotations?.destructiveHint, `${tool.name} destructiveHint`).to.be.a('boolean');
+      if (tool.annotations?.readOnlyHint) {
+        expect(tool.annotations.destructiveHint, `${tool.name} is read-only yet destructive`).to.be.false;
+      }
+    }
+
+    const byName = new Map(tools.map((tool) => [tool.name, tool.annotations]));
+    expect(byName.get('whoami')?.readOnlyHint).to.be.true;
+    expect(byName.get('deleteObject')?.destructiveHint).to.be.true;
+    expect(byName.get('createObject')?.destructiveHint).to.be.false;
+  });
+
   // This profile has no identity, which is the interesting case: the tool has to say so as a tool
   // failure the model can act on rather than crashing the session.
   test('reports a missing identity as a tool failure', ({ expect }) => {

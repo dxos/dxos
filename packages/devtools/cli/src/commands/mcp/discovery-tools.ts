@@ -33,7 +33,9 @@ export const ListPlugins = Tool.make('listPlugins', {
     ),
   }),
   failure: Server.ToolFailure,
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false);
 
 export const ListTypes = Tool.make('listTypes', {
   description:
@@ -49,7 +51,9 @@ export const ListTypes = Tool.make('listTypes', {
     ),
   }),
   failure: Server.ToolFailure,
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false);
 
 export const ListOperations = Tool.make('listOperations', {
   description: 'Lists the operations registered on the operation service.',
@@ -65,7 +69,9 @@ export const ListOperations = Tool.make('listOperations', {
     ),
   }),
   failure: Server.ToolFailure,
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false);
 
 export const DiscoveryToolkit = Toolkit.make(ListPlugins, ListTypes, ListOperations);
 
