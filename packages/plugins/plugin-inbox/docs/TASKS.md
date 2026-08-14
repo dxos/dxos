@@ -409,10 +409,17 @@ generalize now with mailbox as instance #1.
       `after: ['summarize']` pointing at an absent node, so it is ignored and `analyze` runs despite the
       classification failure. Sharp but correct — a processor the caller excluded cannot constrain
       anything, and `analyze` never consumed classification. 6 topology tests + 2 cascade tests.
-- [ ] **Contribute the plugin-projects trio as `MailboxProcessor`s** — cheaper than D6 and was hiding
-      behind it. `UpdateProjectTasks`, `UpdateTravelLog` and `UpdateInvestorLog` all read
-      `mailbox.feed`, so they need NO generalization; contributing them puts them in the DAG and gives
-      three of the seven cursorless consumers a cursor. Do this before D6.
+- [ ] **BLOCKED — contribute the plugin-projects trio as `MailboxProcessor`s.** My earlier claim that
+      they "need no generalization" was too quick. They do read `mailbox.feed`, but all three take
+      BOTH a `project` and a `mailbox` ref, and `createInvocation(mailbox, options)` has no slot for a
+      Project. Two deeper problems follow:
+      (a) one processor would have to fan out to N projects, but `createInvocation` returns ONE
+      invocation (unlike `SenderAction.createInvocations`, which returns a list); and
+      (b) worse, cursor identity is per-PROCESSOR while these need per-(processor, project) — a single
+      `projects` tag would share one watermark across every project on the mailbox.
+      So they are arguably correct as project routines: they are per-project derivations, not passes
+      everyone wants. NEEDS A DECISION: leave them as routines, widen the seam to return a list plus a
+      composite cursor key, or model project-scoped passes as their own thing.
 - [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6) — WEAKER than first written.
       The parts that matter are already generic (`topology.ts` knows only `{id, after}`,
       `precondition.ts` only `Cause`s, a feed cursor's `target` is already untyped). Mailbox-typed:
@@ -422,6 +429,21 @@ generalize now with mailbox as instance #1.
       `Feed`. CORRECTION: the projects trio was cited as the second instance and is not (see above);
       the only genuine one is transcription, whose `messageEnricher` is a WRITE-time seam closer to
       sync's inline stages than to a cursored read-time pass — so it may want the other half's shape.
+- [ ] **Retire `ExtractMailbox` once on-arrival extraction is restored** — it is `@deprecated`, but
+      still LIVE: `MailboxArticle.tsx:584` → `useMailboxExtractorActions` renders a menu item per
+      registered `ObjectExtractor` and invokes it, and two extractors ship. Its stated successor
+      (`onArrivalExtractors`) is commented OUT of the sync chain because it reaches
+      `Capability.Service` and invokes `ExtractMessage`, neither available off-host under edge compute
+      — so removing it now would delete a working feature with nothing behind it. Remove the operation,
+      the hook and the menu items together once the successor runs as a processor (D6). MEANWHILE the
+      `@deprecated` tag is misleading, since it points at a replacement that does not run.
+- [ ] **Give a cursor to the consumers that should have one** — NOT all seven, correcting the earlier
+      entry. Checked each: `ExtractSubscriptions` must NOT get one (it replaces derived state
+      wholesale, so it has to see every message; a cursor would corrupt the aggregate).
+      `SummarizeMailbox` already skips by newest-thread-id, so adding feed position risks double-skip.
+      `ExtractCorrespondents` is the clear win — it re-derives over the whole feed every run and the
+      identity index already makes it idempotent, so a cursor is pure saving. The projects trio is
+      blocked on the item above. Real scope: ONE, maybe two.
 - [ ] **Retire `ExtractMailbox` once on-arrival extraction is restored** — it is `@deprecated`, but
       still LIVE: `MailboxArticle.tsx:584` → `useMailboxExtractorActions` renders a menu item per
       registered `ObjectExtractor` and invokes it, and two extractors ship. Its stated successor
