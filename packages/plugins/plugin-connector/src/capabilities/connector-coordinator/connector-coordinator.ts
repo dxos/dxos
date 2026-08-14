@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { type CapabilityManager } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { createEdgeIdentity } from '@dxos/client/edge';
@@ -23,7 +23,7 @@ import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';

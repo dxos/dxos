@@ -11,7 +11,7 @@ import * as Routine from '@dxos/compute/Routine';
 import { Database, type Key, Obj, Ref, Type } from '@dxos/echo';
 import { type Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { ConnectorSpec } from '#types';
 

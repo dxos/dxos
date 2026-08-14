@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type CapabilityManager } from '@dxos/app-framework';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';

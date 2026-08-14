@@ -14,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import { SyncTemplateId, findBindingForTarget } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
 // (which exports this file), so going through the barrel would create a module cycle.
