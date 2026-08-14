@@ -238,22 +238,28 @@ an `Atom.family` that pins one atom, one deep-cloned value, one ECHO
 subscription and the family key **per distinct key ever read**. Full mechanism,
 cost model, and the complete site catalog: ATOMS-AUDIT.md.
 
-Bounding plan (work items W1–W7, full detail in ATOMS-AUDIT.md): atom
-lifetime is bounded by subscribers plus a short idle TTL, and the family's
-weak keying releases keys once the registry stops pinning. For ECHO this
-yields atom-lifetime ⊆ object-lifetime and inverts the pin — atoms stop
-holding subscriptions on unwatched objects, moving residency responsibility
-upstream to ECHO. **App-graph (`graph.ts` `_node`/`_edges`) is excluded —
-being handled independently.**
+Bounding plan (work items W1–W7, full detail incl. prior-art survey in
+ATOMS-AUDIT.md): ECHO atoms become **proxy-bounded** — `WeakMap<proxy, atom>`
+families, atom lifetime = entity-proxy lifetime, no atom-level TTL, so ECHO's
+future object-residency policy is the single lifetime knob (decided
+2026-08-14). Everything else becomes subscriber-bounded plus a short idle TTL,
+with per-key state in owner-controlled containers. **App-graph (`graph.ts`
+`_node`/`_edges`) is excluded — being handled independently.**
 
-- [ ] **W1. TTL groundwork.** `defaultIdleTTL` (~5 s) on the `PluginManager`
-      registry (`plugin-manager.ts:312` is a bare `Registry.make()`); lifecycle
-      regression test via `AtomRegistry.getNodes()`. First — enables the rest.
-- [ ] **W2. ECHO families.** Drop `keepAlive` from all 11 (`Obj/atoms.ts` ×8,
-      `Annotation/atoms.ts` ×2, `Ref/atoms.ts` ×1); add per-family
-      `Atom.setIdleTTL` + `withLabel`; leak test; audit one-shot
-      `registry.get` consumers. Unblocks Phase 2 doc-handle eviction —
-      residency policy becomes ECHO's follow-up.
+- [ ] **W1. TTL groundwork.** `defaultIdleTTL` (~5 s render-churn grace, not a
+      residency policy) on the `PluginManager` registry — and on every other
+      bare `Registry.make()` (`RegistryProvider` does not default it);
+      lifecycle regression test via `AtomRegistry.getNodes()`. Sharp edges:
+      `setIdleTTL(0)` = remove immediately; `setIdleTTL(Infinity)` =
+      `keepAlive`. First — enables the rest.
+- [ ] **W2. ECHO families → proxy-bounded.** Entity-keyed families become
+      `WeakMap<Entity, Atom>` (ephemeron-sound; proxy identity already
+      canonical per `proxy-identity.test.ts`); inner property/annotation maps
+      hang off the entry; ref-keyed families keep `Atom.family` (URI
+      Equal/Hash — fresh wrapper per read) minus `keepAlive`. No `setIdleTTL`
+      — avoids a second residency layer under ECHO's future object TTL. Drop
+      `keepAlive` from all 11; `withLabel`; GC test under `--expose-gc`.
+      Unblocks Phase 2 doc-handle eviction — residency stays ECHO's knob.
 - [ ] **W3. Attention/view-state containers.** `LocalBackend` un-pin (storage
       is the store); `MemoryBackend`/`AttentionManager` hold values in their
       existing `Map`s, one pinned notify atom per owner; prune ids on

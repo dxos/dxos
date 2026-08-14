@@ -290,28 +290,39 @@ component's lifetime) — so no Effect changes are needed.
 
 ### The lifetime model
 
-One rule decides every item below: **an atom's lifetime is bounded by its
-subscribers, plus a short idle TTL; the family's weak keying does the rest.**
-Once the registry stops pinning an atom, the only strong references are its
-active subscribers. When the last one leaves and the TTL lapses, the node is
-swept, the atom becomes collectable, the family's `FinalizationRegistry` drops
-the entry — and the key (for ECHO, the object proxy) is released with it.
+Two models, chosen by whether the atom's key is a live domain object:
 
-For the ECHO families this yields exactly "atom bounded to the life of the
-object", by subset: a subscriber implies the object is rendered, so
-atom-lifetime ⊆ object-lifetime — and it **inverts the pin**. Today atoms hold
-live `Obj.subscribe` handles on objects nobody is watching, so the atom layer
-is what keeps object cores (and their doc handles) resident. After W2, a swept
-atom holds nothing, and object residency becomes ECHO's decision alone — the
-onus moves upstream to ECHO to bound how many objects it keeps materialized
-(the Phase 2 doc-handle-eviction item, currently blocked by these very
-subscriptions).
+**ECHO atoms are proxy-bounded.** The atom's identity lives exactly as long as
+the entity proxy that keys it: the family map becomes a
+`WeakMap<proxy, atom>`, so the entry (and the atom) is collected with the
+proxy and never independently pinned. Ephemeron semantics make this sound —
+the atom's read closure strongly references the proxy, but a WeakMap value
+referencing its own key does not keep the key alive. This is Jotai's model
+verbatim (state in a WeakMap keyed by the atom object; lifetime = reference
+reachability), chosen there deliberately over subscriber-eviction. The point
+of proxy-bounding here: ECHO will eventually need its own residency policy
+(idle TTL / LRU over materialized objects), and atom lifetime must simply
+follow it — one knob, not two stacked TTLs. When ECHO evicts a proxy, its
+atoms, snapshots, and family entries all become garbage with zero
+coordination.
 
-The alternative reading — cache the atom as long as ECHO holds the object,
-evict the two together — would need a registry eviction API that does not
-exist. Subscriber-bounding is a strict subset of that lifetime and needs no
-upstream change; if a cache tied to object residency ever proves necessary,
-that is an Effect feature request, not something to emulate with `keepAlive`.
+One consequence is forced, not chosen: `keepAlive` must still go, because a
+pinned registry node → atom → read closure → proxy is a strong chain that
+would prevent the very GC the scheme is built on. So the split within an ECHO
+atom is: **identity and mapping are proxy-bounded; the registry node (cached
+snapshot + live `Obj.subscribe`) is subscriber-bounded** — swept when
+unobserved, rebuilt on the next read. "Keep the atom while the proxy lives"
+holds for the atom; the snapshot re-clones on re-observe. ECHO atoms set **no
+per-atom TTL** — the registry's small default grace (W1) covers render churn,
+and residency is ECHO's knob alone.
+
+**Everything else is subscriber-bounded plus a short idle TTL.** Once the
+registry stops pinning an atom, the only strong references are its active
+subscribers; when the last leaves and the TTL lapses, the node is swept, the
+atom becomes collectable, and `Atom.family`'s `FinalizationRegistry` drops the
+entry and its key. This is the industry-consensus model for derived data
+(see Prior art below) and the library's own intent — the README documents
+auto-dispose as the default and `keepAlive` as the exception.
 
 ### W1. TTL groundwork — first, small
 
@@ -321,48 +332,92 @@ swept on the **very next scheduled task** after its last subscriber leaves
 with a bare `Registry.make()`, no `defaultIdleTTL`; `@effect/atom-react`'s
 default context registry uses 400 ms).
 
-- Set `defaultIdleTTL` on the `PluginManager` registry. Start at ~5 s: long
-  enough to span remounts, tab switches within a deck, and virtualized-list
-  scroll jitter; short enough that scrolled-past state drains promptly.
-- Hot derived families that want a longer cache set their own
-  `Atom.setIdleTTL` per family (W2 does this for ECHO) — package-local, and
-  independent of which registry hosts the atom.
+- Set `defaultIdleTTL` on the `PluginManager` registry. Start at ~5 s. Two
+  sizing inputs from prior art: TanStack Query defaults its equivalent
+  (`gcTime`) to 5 minutes for back-navigation warmth, while Recoil's Suspense
+  experience shows the grace window is **correctness margin, not just cache
+  warmth** — consumers that read before they subscribe (async transitions,
+  suspended renders) need it. 5 s covers the correctness cases and remount
+  churn; raise it later only if the census shows re-derivation churn, and
+  treat it as a render-churn grace, never a residency policy.
+- Audit **every** registry construction, not just plugin-manager —
+  `RegistryProvider` does _not_ default the TTL (only the default context
+  registry gets 400 ms), so `Registry.make()` calls in `graph.ts`,
+  `graph-builder.ts`, `AiContext.ts`, `migrations.ts`, projections, and tests
+  each need an explicit value or a shared constructor.
+- Two upstream sharp edges to encode in the helper/docs:
+  `setIdleTTL(0)` means "remove immediately, no grace" (it disables even the
+  registry default), and `setIdleTTL(Infinity)` _is_ `keepAlive`.
+- Hot derived families that want a longer cache than the registry default set
+  their own `Atom.setIdleTTL` per family — package-local, and independent of
+  which registry hosts the atom. (ECHO deliberately does not — see W2.)
 - Add a lifecycle regression test against `AtomRegistry.getNodes()`:
   subscribe → unsubscribe → clock advance → node gone; and (under
   `--expose-gc`) family key released.
 
-### W2. ECHO atom families — the big one
+### W2. ECHO atom families — proxy-bounded via WeakMap
 
 Scope: `echo/src/internal/Obj/atoms.ts` (8 families),
 `internal/Annotation/atoms.ts` (2), `internal/Ref/atoms.ts` (1).
 
-- Remove `.pipe(Atom.keepAlive)` from all eleven; add
-  `Atom.setIdleTTL(ECHO_ATOM_TTL)` (~5–30 s, one shared constant) so a
-  re-render or quick navigation re-attaches to the cached node instead of
-  re-cloning.
-- Rebuild semantics are already correct: every family's `read` re-subscribes
-  from scratch and registers an `addFinalizer` unsubscribe, so sweep → later
-  re-read is a clean rebuild. `refWithReactiveFamily` (line 129) has run
-  un-pinned all along — the existence proof.
-- Audit the non-React consumers: `grep` for one-shot `registry.get(Obj.atom…)`
-  reads (graph builders, tools). Each such read builds and sweeps a node; the
-  TTL amortizes repeats. None should need pinning — if one does, it pins on
-  its own side with `registry.mount`, not in the family.
-- Add `withLabel` to each family while touching them, so the census (below)
-  attributes per family.
-- Tests: existing `echo-react` `useObject` suite, `proxy-identity.test.ts`,
-  `entity-hash.test.ts`, plus a new leak test — render N objects, unmount,
-  advance TTL, assert registry node count returns to baseline.
-- Record the unblocked follow-up in Phase 2: with atoms no longer holding
-  subscriptions on unwatched objects, ECHO can evict object cores/doc handles
-  by residency policy (LRU over materialized cores, or eviction on space
-  close). That work is ECHO's, not the atom layer's; this item just removes
-  the structural blocker.
+Direction (decided 2026-08-14): tie atom lifetime to the **entity proxy's**
+lifetime, not to subscribers-plus-TTL, so that when ECHO grows its own object
+residency policy there is exactly one lifetime knob and the atoms inherit it.
 
-Risk: a consumer that relied on a pinned atom's value surviving with zero
-subscribers (write-then-read-later through the registry). The ECHO families
-are read-only derivations, so none should exist; the leak test plus a mailbox
-smoke run is the check.
+- **Entity-keyed families** (`objectFamily`, `objectWithReactiveFamily`,
+  `entityFamily`, `relationFamily`, `labelAtomFamily`, `annotationFamily`
+  outer, `propertyFamily` outer): replace `Atom.family` with a per-family
+  `WeakMap<Entity, Atom>`. Entry lifetime = proxy reachability; no
+  `FinalizationRegistry`, no TTL, no `keepAlive`. Proxy identity is already
+  canonical per object (`proxy-identity.test.ts` asserts exactly this), so
+  WeakMap-by-identity preserves current family semantics.
+- **Inner keying** (property name, annotation): a plain `Map` hung off the
+  WeakMap entry — bounded by schema keys, dies with the proxy. This also
+  fixes the documented hazard that a nested `Atom.family` intermediate is
+  only weakly held and can be collected out from under mounted leaf atoms
+  (see the comment in `plugin-magazine/atoms/magazine-posts.ts`).
+- **Ref-keyed families** (`refFamily`, `refSimpleFamily`, `refPropertyFamily`
+  outer) cannot be WeakMap-keyed: `RefImpl` mints a fresh wrapper per
+  property read, so instance identity is useless — they memoize by
+  `Equal`/`Hash` over the URI today. Keep `Atom.family` for these, minus
+  `keepAlive`; entries self-clean via the `FinalizationRegistry` once the
+  atom is unobserved and collected. The resolved-target leg already delegates
+  to the object families, which are proxy-bounded.
+- Remove `.pipe(Atom.keepAlive)` from all eleven; **no `setIdleTTL`
+  replacement** — the registry's small default grace (W1) covers render
+  churn, and adding an atom-level TTL would create the second residency layer
+  this design exists to avoid.
+- Registry-node behaviour after the change: the node (cached snapshot + live
+  `Obj.subscribe`) is swept when unobserved and rebuilt on the next read —
+  already-correct semantics, since every family's `read` re-subscribes from
+  scratch and registers an `addFinalizer` unsubscribe.
+  `refWithReactiveFamily` (line 129) has run un-pinned all along — the
+  existence proof.
+- Audit the non-React consumers: `grep` for one-shot `registry.get(Obj.atom…)`
+  reads (graph builders, tools). Each read rebuilds and sweeps a node; the W1
+  grace amortizes repeats. A consumer that genuinely reads intermittently
+  without subscribing pins on its own side (`registry.mount` /
+  `useAtomMount`), never in the family.
+- Add `withLabel` to each family while touching them, so the census attributes
+  per family.
+- Tests: existing `echo-react` `useObject` suite, `proxy-identity.test.ts`,
+  `entity-hash.test.ts`; a node-lifecycle test (subscribe → unsubscribe →
+  grace → node gone); and a GC test under `--expose-gc` — drop all references
+  to a proxy, collect, assert the WeakMap entry and atom are gone.
+- Record the unblocked follow-up in Phase 2: with neither the registry nor the
+  family holding proxies or subscriptions on unwatched objects, ECHO can
+  evict object cores/doc handles by residency policy (idle TTL or LRU over
+  materialized objects, eviction on space close) and the atom layer follows
+  automatically. That work is ECHO's; this item removes the structural
+  blocker and deliberately leaves residency as ECHO's single knob.
+
+Risks: (a) a consumer relying on a pinned value surviving with zero
+subscribers — the ECHO families are read-only derivations, so none should
+exist; the lifecycle test plus a mailbox smoke run is the check. (b) Today's
+entity manager may hold proxies strongly for the space's lifetime — in that
+case atoms now scale with ECHO's working set (strictly better than "every
+object ever rendered", equal at worst), and the ceiling drops when ECHO's
+residency policy lands.
 
 ### W3. Attention / view-state backends — container pattern
 
@@ -454,6 +509,75 @@ the existing TODO about serialization/hydration intact. Same review for
 W2–W5 are parallelizable once W1 lands. A2 (app-graph `_node`/`_edges`) is
 deliberately absent — being handled independently; its container-pattern shape
 is sketched in the site entry above if useful there.
+
+## Prior art
+
+Survey of how other reactive-state systems manage derived-value lifetime
+(researched 2026-08-14), against this plan's three mechanisms: proxy-bounded
+ECHO atoms, subscriber+TTL for other derived atoms, owner containers for
+per-key state.
+
+| System                | Lifetime model                                                   | Eviction trigger          |
+| --------------------- | ---------------------------------------------------------------- | ------------------------- |
+| Jotai                 | reference-bounded: store state in `WeakMap` keyed by atom object | key unreachable → GC      |
+| TanStack Query        | observer-refcount + `gcTime` (default 5 min)                     | zero observers + TTL      |
+| MobX computed         | suspends at zero observers                                       | unobserved (TTL 0)        |
+| TC39 Signals proposal | unwatched computeds are plain-GC-able by design                  | unreachable / unwatched   |
+| Solid / Vue           | scope-owned (owner tree / `effectScope`)                         | scope disposal            |
+| Relay / Apollo        | refcounted `retain`/`release` over a normalized store            | refcount 0 (+ LRU buffer) |
+| Recoil                | keep-all by default; scoped retention never shipped              | — (archived)              |
+| Zedux                 | subscriber refcount + native per-atom `ttl`                      | zero subscribers + TTL    |
+
+What it confirms:
+
+- **The keepAlive-in-family pattern is a recognized anti-pattern by name.**
+  MobX's `computed({ keepAlive: true })` — same flag, same semantics — is
+  called an anti-pattern in its own docs for exactly this leak. Jotai's
+  `atomFamily` docs state "unless you explicitly remove unused params, this
+  leads to memory leaks" and prescribe TTL eviction (`setShouldRemove` with a
+  `createdAt` cutoff). Recoil is the terminal case: `atomFamily` hard-coded
+  `keep-all`, selector caches retained every value ever computed (#366,
+  #1064), memory was an explicitly cited migration driver, and the scoped
+  retention system built to fix it (`retainedBy: 'components'`, retention
+  zones, `useRetain`) stayed flag-gated and unshipped until the repo was
+  archived. Its lesson, in its own source comments: **a keep-forever default
+  cannot be retrofitted — collectable must be the default and pinning the
+  explicit opt-in**, which is what this plan (and W7's lint rule) enforces.
+- **Proxy-bounding for ECHO is Jotai's model.** Jotai deliberately abandoned
+  subscriber-count eviction ("that was troublesome" — values resetting
+  between subscriptions surprised users) in favour of reference-bounded GC
+  via WeakMap. W2 keys the WeakMap by the domain object instead of the atom
+  config — same mechanism, same ephemeron soundness argument.
+- **Subscriber+TTL for the rest is the consensus for derived/query data.**
+  TanStack Query (renamed `cacheTime` → `gcTime` because users misread it),
+  MobX suspension, the TC39 signals proposal's stated design goal, and Zedux's
+  native `ttl` all converge on it. Both systems that added a grace mechanism
+  bound it (5 min / 10-query buffer) — never infinite.
+- **The grace window is correctness margin, not just warmth.** Recoil's
+  Suspense integration needed a hard-coded 120 s retention timeout because
+  consumers read before they subscribe; a `useRetain`-style explicit pin
+  (ours: `registry.mount` / `useAtomMount`) is the escape hatch for
+  intermittent readers.
+- **Owner containers for per-key state is standard.** Jotai's atoms-in-atom
+  pattern, effect-atom's own `ScopedAtom`, and fluent users in the wild
+  (ghui: one pinned `Record` cache atom + un-pinned family members) all match
+  W3/W4's owner-Map shape. Vue/Solid reach the same end via scope ownership.
+- **It matches this library's intent, and upstream will not do it for us.**
+  effect-atom's README documents auto-dispose as the default and `keepAlive`
+  as the exception; `Atom.family` is documented as identity memoization, not
+  caching; Effect's own `AtomRpc.queryFamily` applies no `keepAlive` by
+  default (per-query opt-in `timeToLive` → `setIdleTTL`/`keepAlive`). A
+  ref-counted-family proposal was closed _not planned_ (effect-smol #2310),
+  and no registry eviction API exists or is discussed — the WeakMap/owner-Map
+  designs avoid needing one.
+
+Key sources: mobx.js.org/computeds.html · tanstack.com/query/latest/docs/framework/react/guides/caching ·
+github.com/tc39/proposal-signals · jotai.org/docs/utilities/family ·
+jotai.org/docs/guides/core-internals · github.com/pmndrs/jotai/discussions/2312 ·
+github.com/facebookexperimental/Recoil/issues/366 ·
+recoiljs.org/docs/api-reference/core/selector (cachePolicy_UNSTABLE) ·
+github.com/Omnistac/zedux/discussions/159 · github.com/tim-smart/effect-atom ·
+github.com/Effect-TS/effect-smol/issues/2310
 
 ## Measuring this
 
