@@ -4,7 +4,13 @@
 
 import { type MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
-import { type Contact, type Device, type Identity, type Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  type Contact,
+  type Device,
+  type Identity,
+  type Invitation,
+  type RecoverIdentityRequest,
+} from '@dxos/protocols/proto/dxos/client/services';
 import {
   type Credential,
   type DeviceProfileDocument,
@@ -13,6 +19,16 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type AuthenticatingInvitation, type CancellableInvitation } from './invitations';
+
+/**
+ * Ways to re-admit a device to an existing identity. `external` presents a signature from a key
+ * held outside HALO (a passkey) over a challenge from `IdentityService.requestRecoveryChallenge`.
+ */
+export type RecoverIdentityArgs =
+  | { recoveryCode: string }
+  | { recoveryProof: string }
+  | { token: string }
+  | { external: RecoverIdentityRequest.ExternalSignature };
 
 /**
  * TODO(burdon): Public API (move comments here).
@@ -26,7 +42,7 @@ export interface Halo {
   get credentials(): MulticastObservable<Credential[]>;
 
   createIdentity(options?: ProfileDocument, deviceProfile?: DeviceProfileDocument): Promise<Identity>;
-  recoverIdentity(args: { recoveryCode: string } | { recoveryProof: string } | { token: string }): Promise<Identity>;
+  recoverIdentity(args: RecoverIdentityArgs): Promise<Identity>;
   updateProfile(profile: ProfileDocument): Promise<Identity>;
 
   share(options?: Partial<Invitation>): CancellableInvitation;

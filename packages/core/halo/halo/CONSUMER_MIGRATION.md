@@ -39,9 +39,13 @@ with an agreed disposition:
    or `.internal`. The heavy `space.db.*` / `space.internal.*` usage is ECHO,
    not HALO, and belongs on the `@dxos/echo` `Database` service keyed by
    `SpaceId`. This is not folded into HALO. See API_AUDIT.md §3.6.
-3. **Deferred verbs — planned, not yet defined.** Credentials
-   (`halo.queryCredentials` / `writeCredentials`), recovery-credential
-   _creation_ (`createRecoveryCredential` / `requestRecoveryChallenge`), EDGE
+3. **Deferred verbs — recovery landed, the rest pending.** Recovery is done:
+   `Identity.createRecoveryCredential`, `requestRecoveryChallenge`,
+   `revokeRecoveryCredential`, and the `passkey` variant of `Identity.recover`
+   cover credential creation, revocation, and passkey login (the WebAuthn
+   ceremony stays at the call site). Credential _writes_ are otherwise limited to
+   `grantServiceAccess`, and an exhaustive credential _query_ (as opposed to the
+   `credentials` stream, which sees only what the client has loaded), EDGE
    `createEdgeIdentity` / attestation, and device _update_ will be added as
    `Identity`-service verbs in a follow-up. Consumers of those stay on the
    client until then.
@@ -336,7 +340,7 @@ Drive an individual `Invitation.Flow` through the flow verbs (`Invitation.events
 | --------------------------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------ |
 | `useCredentials`                                                                              | no service verb yet                  | credential verbs added to `Identity` (the other HALO hooks now live in `@dxos/halo-react`) |
 | `space.db` / `space.crud` / `space.properties` / `space.internal.*` (except edge replication) | ECHO, not HALO                       | migrate to the `@dxos/echo` `Database` service keyed by `SpaceId`                          |
-| `halo.queryCredentials` / `writeCredentials`; recovery-credential _creation_                  | deferred verb                        | credential + recovery verbs added to `Identity`                                            |
+| `halo.queryCredentials` (exhaustive read) / `writeCredentials` beyond `grantServiceAccess`    | deferred verb                        | a credential query verb; recovery verbs have landed on `Identity`                          |
 | `createEdgeIdentity` / EDGE attestation                                                       | deferred verb                        | EDGE verbs added to `Identity`                                                             |
 | device _update_                                                                               | deferred verb                        | `Identity` device-update verb added                                                        |
 | `space.internal.migrate`                                                                      | intentionally out of scope           | (revisit if needed)                                                                        |
