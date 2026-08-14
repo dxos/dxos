@@ -13,7 +13,6 @@ import { STORAGE_VERSION } from '@dxos/protocols';
 import {
   type Device,
   type Identity,
-  type Metrics,
   type NetworkStatus,
   type Platform,
   SpaceMember,
@@ -22,6 +21,7 @@ import {
 import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type LoggingService } from '@dxos/protocols/rpc';
 
 import { DXOS_VERSION } from '../../version';
 import { type ServiceContext } from '../services';
@@ -50,7 +50,7 @@ export type Diagnostics = {
     networkStatus?: NetworkStatus;
     swarms?: SwarmInfo[];
     feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
-    metrics?: Metrics;
+    metrics?: LoggingService.Metrics;
     storage?: { file: string; count: number }[];
   };
 };
