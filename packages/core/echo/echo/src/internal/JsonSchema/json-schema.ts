@@ -472,7 +472,9 @@ const refToEffectSchema = (root: any): Schema.Codec<any, any> => {
   const targetSchemaDXN = DXN.tryMake(ref);
   invariant(targetSchemaDXN, `Expected a type DXN, got: ${ref}`);
 
-  return createEchoReferenceSchema(ref, DXN.getName(targetSchemaDXN), reference.schemaVersion);
+  return createEchoReferenceSchema(ref, DXN.getName(targetSchemaDXN), reference.schemaVersion, {
+    annotationId: reference.annotation,
+  });
 };
 
 //
