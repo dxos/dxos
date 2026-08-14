@@ -6,37 +6,66 @@ import { type Event } from '@dxos/async';
 import type { RequestOptions, Stream } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols/proto';
 import type {
-  DevicesService,
-  FeedService,
-  IdentityService,
-  InvitationsService,
-  LoggingService,
-  NetworkService,
+  Device,
+  Identity,
+  Invitation,
+  LogEntry,
+  NetworkStatus,
+  Platform,
   QueryAgentStatusResponse,
   QueryEdgeStatusResponse,
+  QueryInvitationsResponse,
+  QueryLogsRequest,
+  RecoverIdentityRequest,
   SpacesService,
-  SystemService,
 } from '@dxos/protocols/proto/dxos/client/services';
+import type { Config } from '@dxos/protocols/proto/dxos/config';
 import type { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
-import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import type { IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import type {
+  QueryRequest as EchoQueryRequest,
+  QueryResponse as EchoQueryResponse,
+} from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import type { SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import type {
+  QueryRequest as EdgeQueryRequest,
+  JoinRequest,
+  LeaveRequest,
+  Message,
+} from '@dxos/protocols/proto/dxos/edge/signal';
+import type {
+  Credential,
+  DeviceProfileDocument,
+  Presentation,
+  ProfileDocument,
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 import type { AppService, ShellService } from '@dxos/protocols/proto/dxos/iframe';
+import type {
+  DevicesService as RpcDevicesService,
+  FeedService as RpcFeedService,
+  IdentityService as RpcIdentityService,
+  InvitationsService as RpcInvitationsService,
+  LoggingService as RpcLoggingService,
+  NetworkService as RpcNetworkService,
+  SystemService as RpcSystemService,
+} from '@dxos/protocols/rpc';
 import { type ServiceBundle } from '@dxos/rpc';
 
 import { type ClientServicesRpc } from './service-rpc';
-
-export type { FeedService } from '@dxos/protocols/proto/dxos/client/services';
 
 //
 // NOTE: Should contain client/proxy dependencies only.
 //
 
 /**
- * Promise/{@link Stream} shaped deprecated surface for `EdgeAgentService`, hand-derived from the
- * effect-rpc definition in `@dxos/protocols/rpc` now that its protobuf `service {}` block is gone
- * (the message types it still returns, `QueryEdgeStatusResponse`/`QueryAgentStatusResponse`, are
- * shared and remain in `.proto`). Matches the codec-protobuf-generated shape it replaces exactly,
- * so existing consumers (`client.services.services.EdgeAgentService`) are unaffected.
+ * Promise/{@link Stream} shaped deprecated surfaces for the client services whose protobuf
+ * `service {}` block has been deleted (their payloads now serve entirely over effect-rpc — see
+ * `@dxos/protocols/rpc`). Each interface is hand-derived to match the codec-protobuf-generated
+ * shape it replaces exactly, so existing `client.services.services.<Name>` consumers are
+ * unaffected. Message types that are still shared outside the RPC boundary (and so remain
+ * `protoMessage`-encoded in `.proto`) are imported from there; the rest come from the effect-rpc
+ * definitions in `@dxos/protocols/rpc`.
  */
 export interface EdgeAgentServicePromise {
   createAgent: (request: void, options?: RequestOptions) => Promise<void>;
@@ -44,19 +73,120 @@ export interface EdgeAgentServicePromise {
   queryAgentStatus: (request: void, options?: RequestOptions) => Stream<QueryAgentStatusResponse>;
 }
 
-export type ClientServices = {
-  SystemService: SystemService;
-  NetworkService: NetworkService;
-  LoggingService: LoggingService;
+export interface DevicesServicePromise {
+  updateDevice: (request: DeviceProfileDocument, options?: RequestOptions) => Promise<Device>;
+  queryDevices: (request: void, options?: RequestOptions) => Stream<RpcDevicesService.QueryDevicesResponse>;
+}
 
-  IdentityService: IdentityService;
-  InvitationsService: InvitationsService;
-  DevicesService: DevicesService;
+export interface FeedServicePromise {
+  queryFeed: (
+    request: RpcFeedService.QueryFeedRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcFeedService.FeedQueryResult>;
+  insertIntoFeed: (request: RpcFeedService.InsertIntoFeedRequest, options?: RequestOptions) => Promise<void>;
+  deleteFromFeed: (request: RpcFeedService.DeleteFromFeedRequest, options?: RequestOptions) => Promise<void>;
+  syncFeed: (request: RpcFeedService.SyncFeedRequest, options?: RequestOptions) => Promise<void>;
+  getSyncState: (
+    request: RpcFeedService.GetSyncStateRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcFeedService.GetSyncStateResponse>;
+}
+
+export interface IdentityServicePromise {
+  createIdentity: (request: RpcIdentityService.CreateIdentityRequest, options?: RequestOptions) => Promise<Identity>;
+  requestRecoveryChallenge: (
+    request: void,
+    options?: RequestOptions,
+  ) => Promise<RpcIdentityService.RequestRecoveryChallengeResponse>;
+  recoverIdentity: (request: RecoverIdentityRequest, options?: RequestOptions) => Promise<Identity>;
+  createRecoveryCredential: (
+    request: RpcIdentityService.CreateRecoveryCredentialRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcIdentityService.CreateRecoveryCredentialResponse>;
+  revokeRecoveryCredential: (
+    request: RpcIdentityService.RevokeRecoveryCredentialRequest,
+    options?: RequestOptions,
+  ) => Promise<void>;
+  queryIdentity: (request: void, options?: RequestOptions) => Stream<RpcIdentityService.QueryIdentityResponse>;
+  updateProfile: (request: ProfileDocument, options?: RequestOptions) => Promise<Identity>;
+  signPresentation: (
+    request: RpcIdentityService.SignPresentationRequest,
+    options?: RequestOptions,
+  ) => Promise<Presentation>;
+  createAuthCredential: (request: void, options?: RequestOptions) => Promise<Credential>;
+}
+
+export interface InvitationsServicePromise {
+  createInvitation: (request: Invitation, options?: RequestOptions) => Stream<Invitation>;
+  acceptInvitation: (
+    request: RpcInvitationsService.AcceptInvitationRequest,
+    options?: RequestOptions,
+  ) => Stream<Invitation>;
+  authenticate: (request: RpcInvitationsService.AuthenticationRequest, options?: RequestOptions) => Promise<void>;
+  cancelInvitation: (request: RpcInvitationsService.CancelInvitationRequest, options?: RequestOptions) => Promise<void>;
+  queryInvitations: (request: void, options?: RequestOptions) => Stream<QueryInvitationsResponse>;
+}
+
+export interface LoggingServicePromise {
+  controlMetrics: (
+    request: RpcLoggingService.ControlMetricsRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcLoggingService.ControlMetricsResponse>;
+  queryMetrics: (
+    request: RpcLoggingService.QueryMetricsRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcLoggingService.QueryMetricsResponse>;
+  queryLogs: (request: QueryLogsRequest, options?: RequestOptions) => Stream<LogEntry>;
+}
+
+export interface NetworkServicePromise {
+  updateConfig: (request: RpcNetworkService.UpdateConfigRequest, options?: RequestOptions) => Promise<void>;
+  queryStatus: (request: void, options?: RequestOptions) => Stream<NetworkStatus>;
+  joinSwarm: (request: JoinRequest, options?: RequestOptions) => Promise<void>;
+  leaveSwarm: (request: LeaveRequest, options?: RequestOptions) => Promise<void>;
+  querySwarm: (request: EdgeQueryRequest, options?: RequestOptions) => Promise<SwarmResponse>;
+  subscribeSwarmState: (
+    request: RpcNetworkService.SubscribeSwarmStateRequest,
+    options?: RequestOptions,
+  ) => Stream<SwarmResponse>;
+  sendMessage: (request: Message, options?: RequestOptions) => Promise<void>;
+  subscribeMessages: (request: RpcNetworkService.SubscribeMessagesRequest, options?: RequestOptions) => Stream<Message>;
+}
+
+export interface SystemServicePromise {
+  getConfig: (request: void, options?: RequestOptions) => Promise<Config>;
+  getDiagnostics: (
+    request: RpcSystemService.GetDiagnosticsRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcSystemService.GetDiagnosticsResponse>;
+  updateStatus: (request: RpcSystemService.UpdateStatusRequest, options?: RequestOptions) => Promise<void>;
+  queryStatus: (
+    request: RpcSystemService.QueryStatusRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcSystemService.QueryStatusResponse>;
+  reset: (request: void, options?: RequestOptions) => Promise<void>;
+  getPlatform: (request: void, options?: RequestOptions) => Promise<Platform>;
+}
+
+export interface QueryServicePromise {
+  setConfig: (request: IndexConfig, options?: RequestOptions) => Promise<void>;
+  execQuery: (request: EchoQueryRequest, options?: RequestOptions) => Stream<EchoQueryResponse>;
+  reindex: (request: void, options?: RequestOptions) => Promise<void>;
+}
+
+export type ClientServices = {
+  SystemService: SystemServicePromise;
+  NetworkService: NetworkServicePromise;
+  LoggingService: LoggingServicePromise;
+
+  IdentityService: IdentityServicePromise;
+  InvitationsService: InvitationsServicePromise;
+  DevicesService: DevicesServicePromise;
   SpacesService: SpacesService;
 
   DataService: DataService;
-  QueryService: QueryService;
-  FeedService: FeedService;
+  QueryService: QueryServicePromise;
+  FeedService: FeedServicePromise;
 
   EdgeAgentService: EdgeAgentServicePromise;
 

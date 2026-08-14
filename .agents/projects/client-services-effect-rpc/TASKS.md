@@ -1,22 +1,40 @@
 # client-services protobuf → effect-rpc conversion — Tasks
 
 _Resume: Transport seam (PR #12127) and internal service architecture (PR #12214) audited
-DONE against `main` source. Phase 4 (protobuf-removal pass, this session) IMPLEMENTED for
-the 2 smallest services (`ContactsService`, `EdgeAgentService`) — proto `service {}` blocks
-deleted, `gen-service-rpcs.ts` SERVICES list trimmed, `@dxos/client-protocol`'s deprecated
-`ClientServices` type re-sourced off a hand-written `EdgeAgentServicePromise` instead of the
-now-gone proto interface (`ContactsService` entry dropped outright — zero consumers).
-VERIFIED: `protocols`/`client-protocol`/`client-services`/`client`/`devtools`/`react-client`/
-`shell`/`plugin-client`/`plugin-space`/`proto-guard` build clean; `protocols`/`client-protocol`
-tests green; `client-services` tests green (164 passed) except one pre-existing flake
-(`feed-syncer.test.ts` "requestPoll triggers best-effort pull", unrelated to this change —
-passes in isolation, fails only under full-suite parallelism); lint clean; changeset added
-(`@dxos/protocols` minor). Remaining 11 services NOT yet done — see Phase 4 below for the
-order-of-work plan; each needs real schema inlining (unlike the two done, which had none) and
-is a bigger lift. Payload-schema inlining + native-MessagePort transport work from
-`dm/worker-package` (last touch 2026-07-10) remains stalled/unmerged, badly diverged from
-`main`, never opened as a PR — separate from this pass, not attempted here (see item 3 below
-and DESIGN.md's scope note on why item 4 deliberately excludes it)._
+DONE against `main` source. Phase 4 (protobuf-removal pass) now IMPLEMENTED for 9 of 13
+services — `ContactsService`, `EdgeAgentService`, `DevicesService`, `NetworkService`,
+`InvitationsService`, `IdentityService`, `SystemService`, `LoggingService`, `FeedService` —
+plus the `service {}` block only (message types kept, all shared) for `QueryService`. Each
+service's proto `service {}` block and now-orphaned request/response messages were deleted
+from `.proto`; `gen-service-rpcs.ts`'s SERVICES list trimmed to the 3 remaining
+proto-generated services (`SpacesService`, `DataService`, `DevtoolsHost`);
+`@dxos/client-protocol`'s deprecated `ClientServices` type re-sourced off hand-written
+Promise/Stream interfaces (`EdgeAgentServicePromise`, `DevicesServicePromise`,
+`FeedServicePromise`, `IdentityServicePromise`, `InvitationsServicePromise`,
+`LoggingServicePromise`, `NetworkServicePromise`, `SystemServicePromise`,
+`QueryServicePromise`) sourced either from the still-live proto modules (types still shared
+outside the RPC boundary) or from the effect-rpc namespaces in `@dxos/protocols/rpc`
+(`ContactsService` entry dropped outright — zero consumers). One entire file,
+`dxos/client/feed.proto`, was deleted (fully orphaned); `dxos/client/logging.proto` had its
+imports pruned to match. `NetworkService.ts` gained one genuinely-new inline schema
+(`SubscribeMessagesRequest`, moved off `dxos.edge.signal.SubscribeMessagesRequest`, which is
+now deleted from `edge/signal.proto` since nothing else referenced it). Two additional host
+implementations beyond `client-services` needed fixing to the new `FeedService.` namespace
+types: `echo-host`'s `echo-host.ts`/`local-feed-service.ts`. `plugin-calls` needed a new
+`@dxos/client-protocol` dependency to pick up `ClientServices['NetworkService']`.
+VERIFIED: `protocols`/`client-protocol`/`client-services`/`client`/`echo-host`/`devtools`/
+`react-client`/`shell`/`plugin-client`/`plugin-space`/`plugin-calls`/`client-e2e`/
+`observability`/`blade-runner`/`stories-inbox` build and lint clean; `protocols`/
+`client-protocol`/`client-services`/`client`/`echo-host`/`plugin-calls` tests green — the two
+`client:test` failures seen under full-suite parallelism (`dedicated-worker-client-services.test.ts`
+"connect client", "two clients share coordinator") are a pre-existing tight-timeout
+(1-2s) flake, confirmed passing in isolation (7/7, unrelated to this change), same pattern as
+the earlier `feed-syncer.test.ts` flake found in the first round. Remaining 3 services
+(`SpacesService`, `DataService`, `DevtoolsHost`) deliberately deferred — largest, most
+`protoMessage`-retained, not attempted this round. Payload-schema inlining + native-MessagePort
+transport work from `dm/worker-package` (last touch 2026-07-10) remains stalled/unmerged,
+badly diverged from `main`, never opened as a PR — separate from this pass, not attempted here
+(see item 3 below and DESIGN.md's scope note on why item 4 deliberately excludes it)._
 
 ## Phase 1: RPC transport seam (protobuf peer → effect-rpc)
 
@@ -110,19 +128,31 @@ One service at a time, build+test verified before the next:
       the real unblocking work, since `client.services.services.EdgeAgentService` is actively
       used by `plugin-client`/`plugin-space`/`shell`/`devtools`/several e2e tests;
       `ContactsService` entry dropped, confirmed zero consumers via repo-wide grep).
-- [ ] **`DevicesService`, `NetworkService`, `InvitationsService`** — small, real inlining
-      needed per the spec's table.
-- [ ] **`IdentityService`, `SystemService`, `LoggingService`, `FeedService`** — medium.
+- [x] **`DevicesService`, `NetworkService`, `InvitationsService`** — done. `NetworkService`
+      needed one genuinely new inline schema (`SubscribeMessagesRequest`, replacing the
+      `dxos.edge.signal.SubscribeMessagesRequest` it borrowed, now deleted from
+      `edge/signal.proto` since nothing else referenced it). `plugin-calls` needed a new
+      `@dxos/client-protocol` dependency to reach `ClientServices['NetworkService']`
+      (`call-swarm-synchronizer.ts`).
+- [x] **`IdentityService`, `SystemService`, `LoggingService`, `FeedService`** — done.
+      `dxos/client/feed.proto` was fully orphaned and deleted outright;
+      `dxos/client/logging.proto` had its `Metrics`/`ControlMetrics*`/`QueryMetrics*` messages
+      and now-unused imports removed. `FeedProtocol.ts`'s re-export source moved from
+      proto-gen to `FeedService.ts`. Two host implementations beyond `client-services` needed
+      redirecting to `FeedService.`-namespaced types: `echo-host`'s `echo-host.ts` and
+      `local-feed-service.ts` (a second, independent `FeedService.Handlers` implementation).
 - [ ] **`SpacesService`, `DataService`** — large; `DataService` has substitution-typed fields
-      (`SpaceSyncState` embeds `Timeframe`) that must stay `protoMessage`.
-- [ ] **`DevtoolsHost`** — largest, most `protoMessage`-retained; do last.
-- [ ] **`QueryService`** — no schema inlining needed (spec's table: "— (all shared)"); only
-      the `.proto` `service {}` block itself is removable.
-- [ ] **Every remaining service**, once its proto block is gone: check whether
-      `@dxos/client-protocol`'s `ClientServices` type still imports that service's Promise-shaped
-      interface from proto, and replace it the same way — this is the recurring blocker (Contacts/
-      EdgeAgent hit it, the other 11 will too, several with real active consumers to check via grep
-      for `services.services.<ServiceName>` before assuming zero-consumer removal is safe).
+      (`SpaceSyncState` embeds `Timeframe`) that must stay `protoMessage`. Deferred.
+- [ ] **`DevtoolsHost`** — largest, most `protoMessage`-retained; do last. Deferred.
+- [x] **`QueryService`** — no schema inlining needed (spec's table: "— (all shared)"); only
+      the `.proto` `service {}` block itself removed from `echo/query.proto`. All message
+      types (`QueryRequest`, `QueryResult`, `QueryResponse`, `QueryReactivity`, `Heads`) kept —
+      confirmed heavily used outside the RPC boundary (echo-client, echo-host, edge-client,
+      functions-runtime-cloudflare).
+- [x] **Every service above, once its proto block was gone**: checked whether
+      `@dxos/client-protocol`'s `ClientServices` type still imported that service's
+      Promise-shaped interface from proto, and replaced it — this was the recurring blocker.
+      Remaining for `SpacesService`/`DataService`/`DevtoolsHost` when their turn comes.
 
 ### References
 

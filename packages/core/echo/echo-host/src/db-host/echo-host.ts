@@ -26,11 +26,6 @@ import { invariant } from '@dxos/invariant';
 import { type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
-import type {
-  GetSyncStateRequest,
-  GetSyncStateResponse,
-  SyncFeedRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
@@ -82,12 +77,12 @@ export type FeedSyncHandlers = {
   /**
    * Callback to run blocking feed sync.
    */
-  syncFeed: (ctx: Context, request: SyncFeedRequest) => Promise<void>;
+  syncFeed: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
 
   /**
    * Callback to read feed sync backlog per namespace.
    */
-  getSyncState: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
+  getSyncState: (ctx: Context, request: FeedService.GetSyncStateRequest) => Promise<FeedService.GetSyncStateResponse>;
 };
 
 /**
@@ -138,8 +133,8 @@ export class EchoHost extends Resource {
 
   // Feed sync handlers are wired lazily via `setFeedSyncHandlers` to break the construction-time
   // cycle with the FeedSyncer, which itself depends on `this.feedStore`.
-  #syncFeed?: (ctx: Context, request: SyncFeedRequest) => Promise<void>;
-  #getSyncState?: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
+  #syncFeed?: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
+  #getSyncState?: (ctx: Context, request: FeedService.GetSyncStateRequest) => Promise<FeedService.GetSyncStateResponse>;
 
   constructor({
     peerIdProvider,
