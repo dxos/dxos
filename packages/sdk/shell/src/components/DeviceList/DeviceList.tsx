@@ -12,6 +12,7 @@ import { getSize, mx } from '@dxos/ui-theme';
 import { translationKey } from '../../translations';
 import { DeviceListItem } from './DeviceListItem';
 import { type AgentFormProps, type DeviceListProps } from './DeviceListProps';
+import { toShellDevice } from './toShellDevice';
 
 export const DeviceList = ({
   devices,
@@ -34,7 +35,7 @@ export const DeviceList = ({
               return (
                 <DeviceListItem
                   key={device.deviceKey.toHex()}
-                  device={device}
+                  device={toShellDevice(device)}
                   onClickEdit={() => onClickEdit?.(device)}
                   {...{ onClickReset, onClickRecover, onClickJoinExisting, connectionState, onAgentDestroy }}
                 />

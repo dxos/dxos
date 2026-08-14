@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { type Identity, type Invitation } from '@dxos/halo';
+import { useDevices, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { useClient, useMulticastObservable } from '@dxos/react-client';
-import { type Device, useDevices } from '@dxos/react-client/halo';
-import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import { useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Button, Clipboard, Icon, IconButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -20,7 +21,7 @@ import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
-import { ClientOptions } from '#types';
+import { ClientCapabilities, ClientOptions } from '#types';
 
 export type DevicesContainerProps = Pick<ClientOptions.ClientPluginOptions, 'identityTestActions'> & {
   createInvitationUrl?: (invitationCode: string) => string;
@@ -58,12 +59,8 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
                   <h3 className='text-lg mb-2'>{t('devices.label', { ns: meta.profile.key })}</h3>
                   <Listbox.Root>
                     <Listbox.Content aria-label={t('devices.label', { ns: meta.profile.key })}>
-                      {devices.map((device: Device) => (
-                        <DeviceListItem
-                          key={device.deviceKey.toHex()}
-                          device={device}
-                          connectionState={connectionState}
-                        />
+                      {devices.map((device: Identity.DeviceInfo) => (
+                        <DeviceListItem key={device.key} device={device} connectionState={connectionState} />
                       ))}
                     </Listbox.Content>
                   </Listbox.Root>
@@ -112,84 +109,85 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
 };
 
 type DeviceInvitationProps = {
-  invitation?: CancellableInvitationObservable;
+  flow?: Invitation.Flow;
   createInvitationUrl: (invitationCode: string) => string;
   onInvitationDone: () => void;
   onInvitationCreate: () => void;
 };
 
 const DeviceInvitation = (props: Pick<DeviceInvitationProps, 'createInvitationUrl'>) => {
+  // `client.config` only — the network status above keeps this container on the client regardless
+  // (Missing API 9). The gate matters: an invitation code in a production console is a live secret.
   const client = useClient();
-  const [invitation, setInvitation] = useState<CancellableInvitationObservable>();
+  const [identityService] = useCapabilities(ClientCapabilities.IdentityService);
+  const [flow, setFlow] = useState<Invitation.Flow>();
 
   const onInvitationCreate = useCallback(() => {
-    const invitation = client.halo.share();
-    if (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
-      const subscription = invitation.subscribe((invitation: Invitation) => {
-        const invitationCode = InvitationEncoder.encode(invitation);
-        if (invitation.state === Invitation.State.CONNECTING) {
-          log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
-          subscription.unsubscribe();
-        }
-      });
+    if (!identityService) {
+      return;
     }
-    setInvitation(invitation);
-  }, [client]);
+    void Effect.runPromise(identityService.share()).then(async (flow) => {
+      // Playwright reads this line off the console to drive the device-invitation flows.
+      if (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
+        log.info(JSON.stringify({ invitationCode: await Effect.runPromise(flow.code) }));
+      }
+      setFlow(flow);
+    });
+  }, [client, identityService]);
 
   const onInvitationDone = useCallback(() => {
-    setInvitation(undefined);
+    setFlow(undefined);
   }, []);
 
-  if (invitation) {
-    return <DeviceInvitationImpl {...props} {...{ invitation, onInvitationCreate, onInvitationDone }} />;
+  if (flow) {
+    return <DeviceInvitationImpl {...props} {...{ flow, onInvitationCreate, onInvitationDone }} />;
   } else {
     return <InvitationSection {...props} {...{ onInvitationCreate, onInvitationDone }} />;
   }
 };
 
 const DeviceInvitationImpl = ({
-  invitation: invitationObservable,
+  flow,
   createInvitationUrl,
   onInvitationDone,
   onInvitationCreate,
 }: DeviceInvitationProps) => {
-  const invitation = useMulticastObservable(invitationObservable!);
-  const url = createInvitationUrl(InvitationEncoder.encode(invitation));
+  const { event, code } = useInvitationFlow(flow);
+  const url = code && createInvitationUrl(code);
 
   useEffect(() => {
-    if (invitation.state >= Invitation.State.SUCCESS) {
+    if (event?._tag === 'success') {
       onInvitationDone();
     }
-  }, [invitation.state]);
+  }, [event?._tag]);
 
-  return <InvitationSection {...invitation} {...{ url, onInvitationDone, onInvitationCreate }} />;
+  return <InvitationSection {...{ event, invitationId: flow?.id, url, onInvitationDone, onInvitationCreate }} />;
 };
 
 type InvitationComponentProps = Partial<
-  Pick<Invitation, 'authCode' | 'invitationId'> &
-    Pick<DeviceInvitationProps, 'onInvitationDone' | 'onInvitationCreate'> & {
-      state: number;
-      url: string;
-    }
+  Pick<DeviceInvitationProps, 'onInvitationDone' | 'onInvitationCreate'> & {
+    event: Invitation.Event;
+    invitationId: string;
+    url: string;
+  }
 >;
 
 const InvitationSection = ({
-  state = -1,
-  authCode,
+  event,
   invitationId = 'never',
   url = 'never',
   onInvitationDone = () => {},
   onInvitationCreate = () => {},
 }: InvitationComponentProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const activeView =
-    state < 0
-      ? 'init'
-      : state >= Invitation.State.CANCELLED
-        ? 'complete'
-        : state >= Invitation.State.READY_FOR_AUTHENTICATION && authCode
-          ? 'auth-code'
-          : 'qr-code';
+  const authCode = event?._tag === 'readyForAuthentication' ? event.authCode : undefined;
+  const activeView = !event
+    ? 'init'
+    : event._tag === 'cancelled' || event._tag === 'error' || event._tag === 'success'
+      ? 'complete'
+      : authCode
+        ? 'auth-code'
+        : 'qr-code';
 
   return activeView === 'init' ? (
     <>
@@ -197,7 +195,7 @@ const InvitationSection = ({
       <IconButton
         icon='ph--plus--regular'
         label={t('create-device-invitation.label')}
-        disabled={state >= 0}
+        disabled={!!event}
         classNames='w-full'
         data-testid='devicesContainer.createInvitation'
         onClick={onInvitationCreate}
@@ -210,7 +208,7 @@ const InvitationSection = ({
           {/* This view intentionally left blank while conditionally rendering the viewport. */}
         </Viewport.View>
         <Viewport.View id='complete'>
-          <InvitationComplete statusValue={state} />
+          <InvitationComplete succeeded={event?._tag === 'success'} />
         </Viewport.View>
         <Viewport.View id='auth-code'>
           <InvitationAuthCode id={invitationId} code={authCode ?? 'never'} onCancel={onInvitationDone} />
@@ -282,8 +280,8 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
   );
 };
 
-const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
-  return statusValue > 0 ? (
+const InvitationComplete = ({ succeeded }: { succeeded: boolean }) => {
+  return succeeded ? (
     <Icon icon='ph--check--regular' size={6} classNames='m-1.5' />
   ) : (
     <Icon icon='ph--x--regular' size={6} classNames='m-1.5' />
