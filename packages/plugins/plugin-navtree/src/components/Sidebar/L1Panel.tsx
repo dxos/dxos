@@ -5,8 +5,8 @@
 import * as Option from 'effect/Option';
 import React, { memo, useCallback, useMemo } from 'react';
 
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as Graph from '@dxos/app-graph/Graph';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
@@ -114,9 +114,9 @@ const useIsActivatedWorkspace = (id: string): boolean => {
   const edges = useEdges(graph, id);
 
   return useMemo(() => {
-    const childIds = edges[Graph.relationKey('child')] ?? [];
+    const childIds = edges[AppGraph.relationKey('child')] ?? [];
     return childIds.some((childId) => {
-      const child = Graph.getNode(graph, childId);
+      const child = AppGraph.getNode(graph, childId);
       if (Option.isNone(child)) {
         return false;
       }

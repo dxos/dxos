@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as Graph from '@dxos/app-graph/Graph';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -263,7 +263,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralState = get(ephemeralAtom);
 
         const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
-        const parentNode = Option.getOrUndefined(Graph.getNode(appGraph.graph, parentId));
+        const parentNode = Option.getOrUndefined(AppGraph.getNode(appGraph.graph, parentId));
         const parentCollection =
           parentNode && Obj.instanceOf(Collection.Collection, parentNode.data) ? parentNode.data : undefined;
 

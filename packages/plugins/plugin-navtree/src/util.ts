@@ -2,25 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as Graph from '@dxos/app-graph/Graph';
 import { isNonNullable } from '@dxos/util';
 
 import { NavTreeNode } from '#types';
 
 export const getParent = (
-  graph: Graph.ReadableGraph,
+  graph: AppGraph.ReadableGraph,
   node: NavTreeNode.NavTreeItemGraphNode,
   path: string[],
 ): NavTreeNode.NavTreeItemGraphNode | undefined => {
   const parentId = path[path.length - 2];
-  return Graph.getConnections(graph, node.id, AppGraphNode.childRelation('inbound')).find(
+  return AppGraph.getConnections(graph, node.id, AppGraphNode.childRelation('inbound')).find(
     (n: AppGraphNode.Node) => n.id === parentId,
   ) as NavTreeNode.NavTreeItemGraphNode | undefined;
 };
 
 export const getPersistenceParent = (
-  graph: Graph.ReadableGraph,
+  graph: AppGraph.ReadableGraph,
   node: NavTreeNode.NavTreeItemGraphNode,
   path: string[],
   persistenceClass: string,
@@ -34,7 +34,7 @@ export const getPersistenceParent = (
 };
 
 export const resolveMigrationOperation = (
-  graph: Graph.ReadableGraph,
+  graph: AppGraph.ReadableGraph,
   activeNode: NavTreeNode.NavTreeItemGraphNode,
   destinationPath: string[],
   destinationRelatedNode?: NavTreeNode.NavTreeItemGraphNode,
@@ -75,11 +75,11 @@ export const sortActions = (actions: AppGraphNode.Action[]): AppGraphNode.Action
   });
 
 export const getChildren = (
-  graph: Graph.ReadableGraph,
+  graph: AppGraph.ReadableGraph,
   node: NavTreeNode.NavTreeItemGraphNode,
   path: readonly string[] = [],
 ): NavTreeNode.NavTreeItemGraphNode[] => {
-  return Graph.getConnections(graph, node.id, 'child')
+  return AppGraph.getConnections(graph, node.id, 'child')
     .map((n: AppGraphNode.Node) => {
       // Break cycles.
       const nextPath = [...path, node.id];

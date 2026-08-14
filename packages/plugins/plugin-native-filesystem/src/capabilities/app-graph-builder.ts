@@ -7,10 +7,10 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
-import * as Graph from '@dxos/app-graph/Graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -213,7 +213,7 @@ export default Capability.makeModule(
               let onRearrange = workspaceRearrangeCache.get(workspace.id);
               if (!onRearrange && graph && spacesOrder) {
                 onRearrange = (nextOrder) => {
-                  Graph.sortEdges(
+                  AppGraph.sortEdges(
                     graph,
                     GraphNode.RootId,
                     'outbound',

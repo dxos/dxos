@@ -7,8 +7,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useContext, useEffect } from 'react';
 
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as Graph from '@dxos/app-graph/Graph';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { random } from '@dxos/random';
 
@@ -80,16 +80,16 @@ export const createNestedActionsResolver = (props?: {
   registry?: Registry.AtomRegistry;
 }) => {
   const { groupParams, params, registry } = props ?? {};
-  const graph = Graph.make({ ...(registry && { registry }) });
+  const graph = AppGraph.make({ ...(registry && { registry }) });
   const actionGroups = createActions({ type: AppGraphNode.ActionGroupType, ...groupParams });
   actionGroups.forEach((group) => {
     const actions = createActions(params);
-    Graph.addNodes(graph, [group as AppGraphNode.NodeArg<any>, ...(actions as AppGraphNode.NodeArg<any>[])]);
-    Graph.addEdges(graph, [
+    AppGraph.addNodes(graph, [group as AppGraphNode.NodeArg<any>, ...(actions as AppGraphNode.NodeArg<any>[])]);
+    AppGraph.addEdges(graph, [
       { source: 'root', target: group.id, relation: 'child' },
       ...actions.map((action) => ({ source: group.id, target: action.id, relation: 'child' })),
     ]);
-    Graph.expandSync(graph, group.id, 'child');
+    AppGraph.expandSync(graph, group.id, 'child');
   });
   const items: MenuItemsAccessor = (group?: MenuItemGroup) =>
     graph.connections(group?.id ?? GraphNode.RootId, 'child') as Atom.Atom<MenuItem[] | null>;

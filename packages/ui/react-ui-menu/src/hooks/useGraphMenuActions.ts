@@ -5,8 +5,8 @@
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
+import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import type * as Graph from '@dxos/app-graph/Graph';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
 import { applyPresentation } from '../presentation';
@@ -85,7 +85,7 @@ export const buildGraphMenu = (
  *   related: org.dxos.react-ui-menu.toolbarMenu
  */
 export const graphActions = (
-  graph: Graph.ReadableGraph | undefined,
+  graph: AppGraph.ReadableGraph | undefined,
   get: Atom.AtomContext,
   nodeId: string | undefined,
   options?: GraphMenuOptions,
@@ -97,7 +97,7 @@ export const graphActions = (
  * the graph offers for this object" toolbar/menu. Compose with hand-built items via {@link graphActions}.
  */
 export const useGraphMenuActions = (
-  graph: Graph.ReadableGraph | undefined,
+  graph: AppGraph.ReadableGraph | undefined,
   nodeId: string | undefined,
   options?: GraphMenuOptions,
 ): MenuActions => {

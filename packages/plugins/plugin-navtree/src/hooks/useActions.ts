@@ -4,8 +4,8 @@
 
 import { useMemo } from 'react';
 
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as Graph from '@dxos/app-graph/Graph';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
 import { applyPresentation } from '@dxos/react-ui-menu';
@@ -45,7 +45,7 @@ export const useActions = (node: AppGraphNode.Node): NavTreeNode.FlattenedAction
 
         acc.actions.push(arg);
         if (!AppGraphNode.isAction(arg)) {
-          const actionGroup = Graph.getActions(graph, arg.id);
+          const actionGroup = AppGraph.getActions(graph, arg.id);
           acc.groupedActions[arg.id] = actionGroup;
         }
         return acc;

@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
-import * as Graph from '@dxos/app-graph/Graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -340,7 +340,7 @@ const constructSpaceNode = ({
   space: Space;
   navigable?: boolean;
   namesCache?: Record<string, string>;
-  graph?: Graph.ExpandableGraph;
+  graph?: AppGraph.ExpandableGraph;
   spacesOrder?: Obj.Any;
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
@@ -350,7 +350,7 @@ const constructSpaceNode = ({
     onRearrange = spaceRearrangeCache.get(space.id);
     if (!onRearrange) {
       onRearrange = (nextOrder: Space[]) => {
-        Graph.sortEdges(
+        AppGraph.sortEdges(
           graph,
           GraphNode.RootId,
           'outbound',

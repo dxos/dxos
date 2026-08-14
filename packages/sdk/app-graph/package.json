@@ -28,6 +28,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AppGraph": {
+      "source": "./src/AppGraph.ts",
+      "types": "./dist/types/src/AppGraph.d.ts",
+      "import": "./dist/lib/AppGraph.mjs"
+    },
     "./AppGraphBuilder": {
       "source": "./src/AppGraphBuilder.ts",
       "types": "./dist/types/src/AppGraphBuilder.d.ts",
@@ -42,11 +47,6 @@
       "source": "./src/atoms.ts",
       "types": "./dist/types/src/atoms.d.ts",
       "import": "./dist/lib/atoms.mjs"
-    },
-    "./Graph": {
-      "source": "./src/AppGraph.ts",
-      "types": "./dist/types/src/AppGraph.d.ts",
-      "import": "./dist/lib/AppGraph.mjs"
     },
     "./PathResolution": {
       "source": "./src/path-resolution.ts",

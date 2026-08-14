@@ -5,8 +5,8 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as Graph from '@dxos/app-graph/Graph';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
@@ -71,7 +71,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   const runAction = useActionRunner();
   const breakpoint = useBreakpoints();
   const node = useNode(graph, id);
-  // Subscribe reactively to the node's actions: they are loaded asynchronously by `Graph.expand`
+  // Subscribe reactively to the node's actions: they are loaded asynchronously by `AppGraph.expand`
   // below, and the node atom does not re-emit when action edges arrive, so a one-shot read would
   // leave a freshly-created plank's sigil menu empty until an unrelated re-render.
   const actions = useActions(graph, node?.id);
@@ -107,7 +107,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       if (node) {
-        void Graph.expandSync(graph, node.id, 'child');
+        void AppGraph.expandSync(graph, node.id, 'child');
       }
     });
 

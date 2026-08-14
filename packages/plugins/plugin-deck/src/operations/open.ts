@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -148,7 +148,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // the documents it contains rather than a plank showing the collection itself.
         const seeded = resolveSeededPlanks({
           initial: resolveDeckSpec(
-            input.subject[0] ? Option.getOrUndefined(Graph.getNode(graph, input.subject[0])) : undefined,
+            input.subject[0] ? Option.getOrUndefined(AppGraph.getNode(graph, input.subject[0])) : undefined,
           )?.initial,
           addBesideOrigin,
           children: input.subject.length === 1 && input.subject[0] ? openableChildren(graph, input.subject[0]) : [],
@@ -162,7 +162,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             ? resolveLevelOpen({
                 active: deck.active,
                 plankNames: deck.plankNames,
-                spec: resolveDeckSpec(Option.getOrUndefined(Graph.getNode(graph, input.root))),
+                spec: resolveDeckSpec(Option.getOrUndefined(AppGraph.getNode(graph, input.root))),
                 root: input.root,
                 level: input.level,
                 subjectId: input.subject[0],
@@ -225,7 +225,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         }
 
         for (const subjectId of newlyOpen) {
-          const typename = Option.match(Graph.getNode(graph, subjectId), {
+          const typename = Option.match(AppGraph.getNode(graph, subjectId), {
             onNone: () => undefined,
             onSome: (node) => {
               const active = node.data;

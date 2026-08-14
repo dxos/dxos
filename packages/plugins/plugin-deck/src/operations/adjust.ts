@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
@@ -66,9 +66,9 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         // agree. `UpdateCompanion` (tab switch) overrides it thereafter.
         if (!deck.companionPlanks.includes(input.id)) {
           const companions = Function.pipe(
-            Graph.getNode(graph, input.id),
+            AppGraph.getNode(graph, input.id),
             Option.map((node) =>
-              Graph.getConnections(graph, node.id, 'child')
+              AppGraph.getConnections(graph, node.id, 'child')
                 .filter((n) => n.type === DeckSchema.PLANK_COMPANION_TYPE)
                 .toSorted((a, b) =>
                   Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),

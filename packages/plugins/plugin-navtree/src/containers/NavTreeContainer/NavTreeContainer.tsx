@@ -11,8 +11,8 @@ import * as Fiber from 'effect/Fiber';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as Graph from '@dxos/app-graph/Graph';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
@@ -40,8 +40,8 @@ const NavTreeItemEnd = ({ node, open }: { node: AppGraphNode.Node; open: boolean
   return <Surface.Surface type={AppSurface.NavtreeItemEnd} data={data} limit={1} />;
 };
 
-const getItems = (graph: Graph.ReadableGraph, node?: AppGraphNode.Node, disposition?: string) => {
-  return Graph.getConnections(graph, node?.id ?? GraphNode.RootId, 'child').filter((node) =>
+const getItems = (graph: AppGraph.ReadableGraph, node?: AppGraphNode.Node, disposition?: string) => {
+  return AppGraph.getConnections(graph, node?.id ?? GraphNode.RootId, 'child').filter((node) =>
     filterItems(node, disposition),
   );
 };
@@ -81,14 +81,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       ({ item: { id }, path, open }: { item: AppGraphNode.Node; path: string[]; open: boolean }) => {
         // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
         setItem(path, 'open', open);
-        Graph.expandSync(graph, id, 'child');
+        AppGraph.expandSync(graph, id, 'child');
       },
       [graph, setItem],
     );
 
     const handleTabChange = useCallback(
       (node: NavTreeNode.NavTreeItemGraphNode) => {
-        Graph.expandSync(graph, node.id, 'child');
+        AppGraph.expandSync(graph, node.id, 'child');
 
         const {
           tab: activeTab,
@@ -152,7 +152,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         }
 
         if (AppGraphNode.isAction(node)) {
-          const [parent] = Graph.getConnections(graph, node.id, AppGraphNode.childRelation('inbound'));
+          const [parent] = AppGraph.getConnections(graph, node.id, AppGraphNode.childRelation('inbound'));
           if (parent) {
             void runAction(node, { parent, path, caller: NAV_TREE_ITEM });
           }
@@ -174,7 +174,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id });
         }
 
-        const defaultAction = Graph.getActions(graph, node.id).find((action) =>
+        const defaultAction = AppGraph.getActions(graph, node.id).find((action) =>
           AppGraphNode.hasDisposition(action, 'default'),
         );
         if (AppGraphNode.isAction(defaultAction)) {
@@ -250,7 +250,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       });
     }, [graph]);
 
-    // Group nodes are always expanded and have no toggle, so they never trigger Graph.expand through
+    // Group nodes are always expanded and have no toggle, so they never trigger AppGraph.expand through
     // user interaction. Watch the workspace's children reactively and mark any group nodes as open
     // so the state machinery treats them consistently with regular open nodes (including on next load).
     const workspaceChildren = useAtomValue(graph.connections(tab, 'child'));
@@ -258,7 +258,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       for (const child of workspaceChildren) {
         if (AppGraphNode.hasDisposition(child, 'group')) {
           setItem([GraphNode.RootId, tab, child.id], 'open', true);
-          Graph.expandSync(graph, child.id, 'child');
+          AppGraph.expandSync(graph, child.id, 'child');
         }
       }
     }, [workspaceChildren, tab, setItem, graph]);
@@ -277,7 +277,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       ({ item }: { item: AppGraphNode.Node }) => {
         interruptHoverExpand();
         hoverExpandRef.current = Effect.runFork(
-          Effect.sleep(HOVER_SETTLE_DELAY).pipe(Effect.andThen(Graph.expand(graph, item.id, 'child'))),
+          Effect.sleep(HOVER_SETTLE_DELAY).pipe(Effect.andThen(AppGraph.expand(graph, item.id, 'child'))),
         );
       },
       [graph, interruptHoverExpand],
@@ -315,7 +315,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       <NavTreeContext.Provider value={navTreeContextValue}>
         <NavTree
           id={GraphNode.RootId}
-          root={Graph.getRoot(graph)}
+          root={AppGraph.getRoot(graph)}
           tab={tab}
           open={layout.sidebarOpen}
           ref={forwardedRef}

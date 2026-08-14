@@ -7,7 +7,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Filter, Key, Query, Scope } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { EID } from '@dxos/keys';
@@ -36,10 +36,10 @@ export type ExistenceChecker = (echoUri: EID.EID) => Effect.Effect<boolean>;
  * Expand a qualified graph path by expanding each ancestor prefix.
  * This triggers graph connectors to populate child nodes at each level.
  */
-export const expandPath = (graph: Graph.ExpandableGraph, qualifiedId: string): void => {
+export const expandPath = (graph: AppGraph.ExpandableGraph, qualifiedId: string): void => {
   const prefixes = Attention.expandAttendableId(qualifiedId);
   for (const prefix of prefixes) {
-    Graph.expandSync(graph, prefix, 'child');
+    AppGraph.expandSync(graph, prefix, 'child');
   }
 };
 
@@ -55,7 +55,7 @@ export const expandPath = (graph: Graph.ExpandableGraph, qualifiedId: string): v
  * checker is available, a resolved EID is trusted.
  */
 export const validateNavigationTarget = (params: {
-  graph: Graph.ExpandableGraph;
+  graph: AppGraph.ExpandableGraph;
   subjectId: string;
   checkLocalExistence?: ExistenceChecker;
   checkRemoteExistence?: ExistenceChecker;
@@ -70,13 +70,13 @@ export const validateNavigationTarget = (params: {
   // Fast path: the target is already a node in the local graph, so it needs no expansion to be
   // confirmed. Checking before expanding keeps a click on an already-rendered node (the nav tree, a
   // breadcrumb) from re-expanding every ancestor and churning the graph on every navigation.
-  if (Option.isSome(Graph.getNode(graph, subjectId))) {
+  if (Option.isSome(AppGraph.getNode(graph, subjectId))) {
     return Effect.succeed(subjectId);
   }
 
   // Not present: expand the path to trigger the loads that may materialize it.
   expandPath(graph, subjectId);
-  if (Option.isSome(Graph.getNode(graph, subjectId))) {
+  if (Option.isSome(AppGraph.getNode(graph, subjectId))) {
     return Effect.succeed(subjectId);
   }
 

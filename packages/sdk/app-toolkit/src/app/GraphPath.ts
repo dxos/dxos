@@ -6,7 +6,7 @@
 
 import * as Option from 'effect/Option';
 
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Key, Obj, Type } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';
@@ -167,14 +167,14 @@ export const getCollectionObjectPath = (collectionQualifiedId: string, objectId:
  * path's workspace actually being a known node, so an arbitrary SpaceId-shaped substring in an
  * unrelated string can't be mistaken for a valid target.
  */
-export const tryGetEid = (graph: Graph.ExpandableGraph, qualifiedId: string): Option.Option<EID.EID> => {
+export const tryGetEid = (graph: AppGraph.ExpandableGraph, qualifiedId: string): Option.Option<EID.EID> => {
   const spaceId = getSpaceIdFromPath(qualifiedId);
   const segments = qualifiedId.split('/');
   const objectId = segments[segments.length - 1];
   if (!spaceId || !objectId || !Key.EntityId.isValid(objectId)) {
     return Option.none();
   }
-  if (Option.isNone(Graph.getNode(graph, getSpacePath(spaceId)))) {
+  if (Option.isNone(AppGraph.getNode(graph, getSpacePath(spaceId)))) {
     return Option.none();
   }
   return Option.some(EID.make({ spaceId, entityId: objectId as Key.EntityId }));
@@ -188,9 +188,9 @@ export const tryGetEid = (graph: Graph.ExpandableGraph, qualifiedId: string): Op
  * addressed by a view discriminator (`sent`, `drafts`) carries its object id in an interior segment,
  * so an existence check that demands the terminal one 404s it.
  */
-export const tryGetEidCandidates = (graph: Graph.ExpandableGraph, qualifiedId: string): EID.EID[] => {
+export const tryGetEidCandidates = (graph: AppGraph.ExpandableGraph, qualifiedId: string): EID.EID[] => {
   const spaceId = getSpaceIdFromPath(qualifiedId);
-  if (!spaceId || Option.isNone(Graph.getNode(graph, getSpacePath(spaceId)))) {
+  if (!spaceId || Option.isNone(AppGraph.getNode(graph, getSpacePath(spaceId)))) {
     return [];
   }
   const segments = qualifiedId.split('/');

@@ -8,7 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
@@ -67,7 +67,7 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
 
   const onBack = useCallback(() => {
     if (state.active) {
-      const isWorkspace = Graph.getNode(graph, state.active).pipe(
+      const isWorkspace = AppGraph.getNode(graph, state.active).pipe(
         Option.map((node) => node.properties.disposition === 'workspace'),
         Option.getOrElse(() => false),
       );

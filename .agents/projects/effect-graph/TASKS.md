@@ -274,7 +274,7 @@ ids — via the new `_onReleaseRelation` hook, so the relation re-expands on nex
 
 ## Phase 10: dissolve the Graph wrapper
 
-Requested 2026-08-14. Staged; stage 1 landed.
+Requested 2026-08-14. Done — `graph.ts` no longer exists.
 
 - [x] **Stage 1 — de-boilerplate `graph.ts`** (1490 -> 1013 lines). Every operation lost its curried
       overload and its `*Impl` indirection: seventeen dual-signature dispatch blocks, the parallel
@@ -283,11 +283,14 @@ Requested 2026-08-14. Staged; stage 1 landed.
       `graph.test.ts`; `plugin-onboarding`, `plugin-assistant` ConnectorAuthMenu, `react-ui-menu`
       hooks + test generator) rewrote `graph.pipe(Graph.op(...), ...)` chains as sequential direct
       calls. Suites 180 passed, collections e2e 5/5, repo build clean.
-- [ ] **Stage 2 — relocate `GraphImpl` behind the Store port.** The remaining file is the app store
-      (~450 lines: model handle, six derived atom families, expansion bookkeeping, pins), the op
-      bodies, and the type vocabulary. Moving the store out needs a three-way module split
-      (types / store / ops) to break the import cycle between the ops and the class, plus
-      export-map updates — its own verified change, not an increment on stage 1.
+- [x] **Stage 2 — retire `graph.ts`.** Split three ways (types / store / ops) to break the ops↔class
+      import cycle, then merged back into one `AppGraph.ts`: a single module has no cycle to break,
+      and the split cost three files to buy nothing a section divider does not. The subpath and the
+      barrel namespace moved with it — `@dxos/app-graph/Graph` → `/AppGraph`, `export * as Graph` →
+      `* as AppGraph` — swept across 44 consumer files. `GraphTypeId`'s `Symbol.for` key keeps its
+      old string: it is a uniqueness token, and changing it would break cross-version brand checks.
+      Repo build clean, 180 app-graph/graph tests, react-ui-menu 29 browser tests, collections e2e
+      5/5, knip and lint clean.
 
 ## Phase 6: app-graph reconciliation
 

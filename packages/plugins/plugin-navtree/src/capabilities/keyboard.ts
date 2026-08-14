@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as Graph from '@dxos/app-graph/Graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { debounce } from '@dxos/async';
 import * as GraphNode from '@dxos/graph/GraphNode';
@@ -51,7 +51,7 @@ export default Capability.makeModule(
     };
 
     const syncBindings = () => {
-      Graph.traverse(graph, { relation: ['child', 'action'], visitor });
+      AppGraph.traverse(graph, { relation: ['child', 'action'], visitor });
     };
 
     const eventHandler = debounce(syncBindings, 500);

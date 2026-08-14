@@ -11,8 +11,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as Graph from '@dxos/app-graph/Graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -197,7 +197,7 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   // Story renders surfaces directly (no deck), so expand graph actions for the doc node.
   useEffect(() => {
     if (attendableId) {
-      void Graph.expandSync(graph, attendableId, 'action');
+      void AppGraph.expandSync(graph, attendableId, 'action');
     }
   }, [graph, attendableId]);
 

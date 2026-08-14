@@ -7,8 +7,8 @@ import * as Record from 'effect/Record';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as Graph from '@dxos/app-graph/Graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
@@ -57,7 +57,7 @@ export default Capability.makeModule(
     );
 
     // await builder.initialize();
-    void Graph.expandSync(builder.graph, GraphNode.RootId, 'child');
+    void AppGraph.expandSync(builder.graph, GraphNode.RootId, 'child');
 
     setupDevtools(builder.graph);
 
@@ -72,7 +72,7 @@ export default Capability.makeModule(
 );
 
 // Expose the graph to the window for debugging.
-const setupDevtools = (graph: Graph.ExpandableGraph) => {
+const setupDevtools = (graph: AppGraph.ExpandableGraph) => {
   (globalThis as any).composer ??= {};
   (globalThis as any).composer.graph = graph;
 };
