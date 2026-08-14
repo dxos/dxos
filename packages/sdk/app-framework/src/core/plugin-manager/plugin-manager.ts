@@ -48,7 +48,7 @@ import * as Semaphore from 'effect/Semaphore';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { EffectEx, makeAtomRegistry } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import type * as ActivationEvent from '../activation-event';
@@ -63,6 +63,7 @@ import { ManagerState } from './manager-state';
 import {
   type ActivationMessage,
   DEFAULT_ACTIVATION_TIMEOUT,
+  DEFAULT_ATOM_IDLE_TTL,
   DEFAULT_LOAD_TIMEOUT,
   type PluginFailure,
   PluginInitializationError,
@@ -121,6 +122,12 @@ export type ManagerOptions = {
    * Defaults to 30 seconds; pass `Duration.infinity` to disable.
    */
   loadTimeout?: Duration.Input;
+  /**
+   * Grace period before an atom with no subscribers is swept from the registry, applied when this
+   * manager creates its own. See {@link DEFAULT_ATOM_IDLE_TTL} for how it is sized; pass
+   * `Duration.zero` to sweep as soon as the last subscriber leaves.
+   */
+  atomIdleTTL?: Duration.Input;
   /**
    * Maximum time allowed for a single module's `activate()` Effect to settle.
    * Modules that exceed this fail with {@link PluginTimeoutError}; the owning
@@ -302,6 +309,7 @@ class ManagerImpl implements PluginManager {
     onRemove,
     loadTimeout = DEFAULT_LOAD_TIMEOUT,
     activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
+    atomIdleTTL = DEFAULT_ATOM_IDLE_TTL,
   }: ManagerOptions) {
     // Core plugins are derived from `meta.tags.includes('system')`; the set is
     // a snapshot of the initial `plugins` array (later `add()` calls do not
@@ -309,7 +317,7 @@ class ManagerImpl implements PluginManager {
     const core: string[] = plugins
       .filter(({ meta }) => meta.profile.tags?.includes('system'))
       .map(({ meta }) => meta.profile.key);
-    this.registry = registry ?? makeAtomRegistry();
+    this.registry = registry ?? Registry.make({ defaultIdleTTL: Duration.toMillis(atomIdleTTL) });
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
     });

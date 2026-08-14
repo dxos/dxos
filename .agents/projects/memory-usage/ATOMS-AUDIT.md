@@ -332,7 +332,9 @@ swept on the **very next scheduled task** after its last subscriber leaves
 with a bare `Registry.make()`, no `defaultIdleTTL`; `@effect/atom-react`'s
 default context registry uses 400 ms).
 
-- Set `defaultIdleTTL` on the `PluginManager` registry. Start at ~5 s. Two
+- Set `defaultIdleTTL` where the app's registry is created — `PluginManager`,
+  as an option beside its existing `loadTimeout`/`activationTimeout` defaults,
+  rather than behind a wrapper constructor. Start at ~5 s. Two
   sizing inputs from prior art: TanStack Query defaults its equivalent
   (`gcTime`) to 5 minutes for back-navigation warmth, while Recoil's Suspense
   experience shows the grace window is **correctness margin, not just cache
@@ -340,11 +342,17 @@ default context registry uses 400 ms).
   suspended renders) need it. 5 s covers the correctness cases and remount
   churn; raise it later only if the census shows re-derivation churn, and
   treat it as a render-churn grace, never a residency policy.
-- Audit **every** registry construction, not just plugin-manager —
-  `RegistryProvider` does _not_ default the TTL (only the default context
-  registry gets 400 ms), so `Registry.make()` calls in `graph.ts`,
-  `graph-builder.ts`, `AiContext.ts`, `migrations.ts`, projections, and tests
-  each need an explicit value or a shared constructor.
+- Know that `RegistryProvider` does _not_ default the TTL (only the default
+  context registry gets 400 ms). The remaining `Registry.make()` calls —
+  `graph.ts`, `graph-builder.ts`, `AiContext.ts`, `migrations.ts`,
+  projections, tests — are per-instance fallbacks used when no registry is
+  passed; the app always passes the manager's, so they keep the bare
+  constructor.
+- Expect at least one atom that _asserts_ rather than caches to break under a
+  grace period: retained past its last reader, it is rebuilt by whatever
+  batches stale nodes (app-graph's dirty flush rebuilds all of them, `lazy` or
+  not) after its source is gone, throwing where no caller can catch it.
+  `Atom.setIdleTTL(0)` opts those out — `_nodeOrThrow` and `_json` needed it.
 - Two upstream sharp edges to encode in the helper/docs:
   `setIdleTTL(0)` means "remove immediately, no grace" (it disables even the
   registry default), and `setIdleTTL(Infinity)` _is_ `keepAlive`.

@@ -246,18 +246,22 @@ future object-residency policy is the single lifetime knob (decided
 with per-key state in owner-controlled containers. **App-graph (`graph.ts`
 `_node`/`_edges`) is excluded — being handled independently.**
 
-- [x] **W1. TTL groundwork.** `makeAtomRegistry` in `@dxos/effect`
-      (`atom-registry.ts`) applies `DEFAULT_ATOM_IDLE_TTL` (5 s render-churn
-      grace, explicitly not a residency policy) and documents the two upstream
-      sharp edges — `setIdleTTL(0)` removes immediately (disabling the default
-      rather than inheriting it) and `setIdleTTL(Infinity)` is `keepAlive`.
-      Wired at the six production `Registry.make()` sites: `plugin-manager`,
-      `app-graph` graph + graph-builder (×2 incl. the traversal helper),
-      `AiContext`, `projection`, assistant `processor`. Left alone:
-      `sdk/migrations` and `common/graph` (no `@dxos/effect` edge; singleton
-      atoms only), plus test/story decorators. 5 lifecycle tests in
-      `atom-registry.test.ts` over `AtomRegistry.getNodes()`, including the
-      bare-registry sweep-immediately case this constructor exists to avoid.
+- [x] **W1. TTL groundwork.** `DEFAULT_ATOM_IDLE_TTL` (5 s) lives with the
+      manager's other defaults in `manager-types.ts` and is applied where the
+      app's registry is actually created — `PluginManager`, via an
+      `atomIdleTTL` option alongside `loadTimeout`/`activationTimeout`. A
+      render-churn grace, explicitly not a residency policy. Other
+      `Registry.make()` sites are per-instance fallbacks for tests and
+      storybook and keep the bare constructor; the app always passes the
+      manager's registry. 4 lifecycle tests in `plugin-manager.test.ts` over
+      `AtomRegistry.getNodes()`. Sharp edges recorded in the option's doc:
+      `setIdleTTL(0)` removes immediately (disabling the default rather than
+      inheriting it), `setIdleTTL(Infinity)` is `keepAlive`.
+      Follow-on: `app-graph`'s `_nodeOrThrow` and `_json` take
+      `Atom.setIdleTTL(0)` — they assert rather than cache, and the builder's
+      dirty-flush batch rebuilds every stale node regardless of `lazy`, so a
+      node retained past its last reader throws after `removeNode` empties it,
+      where no caller can catch it. Caught by plugin-navtree's storybook run.
 - [x] **W2. ECHO families → proxy-bounded.** `memoizePerEntity` /
       `memoizePerEntityKey` (`internal/common/atom-memo.ts`) replace
       `Atom.family` for the 8 entity-keyed families across `Obj/atoms.ts` and
