@@ -22,7 +22,6 @@ import "dxos/keys.proto";
 import "dxos/mesh/signal.proto";
 import "dxos/mesh/presence.proto";
 import "dxos/mesh/teleport/gossip.proto";
-import "dxos/value.proto";
 
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
 
@@ -222,7 +221,6 @@ message Space {
   repeated SpaceMember members = 10;
   optional dxos.keys.PublicKey creator = 11;
 
-  optional dxos.echo.metadata.SpaceCache cache = 20;
   Metrics metrics = 21;
 }
 

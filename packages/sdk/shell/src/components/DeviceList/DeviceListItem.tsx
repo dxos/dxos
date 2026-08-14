@@ -5,14 +5,23 @@
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { Device, DeviceKind, DeviceType } from '@dxos/react-client/halo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { Avatar, Button, DropdownMenu, Icon, Tag, type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import { keyToFallback } from '@dxos/util';
+import { hexToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-import { type AgentFormProps, type DeviceListItemProps } from './DeviceListProps';
+import { type AgentFormProps, type DeviceListItemProps, type ShellDevice } from './DeviceListProps';
+
+/** Icon per device kind; an unreported kind falls back to the key-derived emoji. */
+const KIND_ICONS: Record<NonNullable<ShellDevice['kind']>, string> = {
+  'unknown': 'ph--devices--regular',
+  'browser': 'ph--compass--regular',
+  'native': 'ph--desktop--regular',
+  'mobile': 'ph--device-mobile--regular',
+  'agent': 'ph--drone--regular',
+  'agent-managed': 'ph--database--regular',
+};
 
 export const DeviceListItem = forwardRef<
   HTMLLIElement,
@@ -36,16 +45,18 @@ export const DeviceListItem = forwardRef<
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
-    const fallbackValue = keyToFallback(device.deviceKey);
+    const fallbackValue = hexToFallback(device.key);
     const labelId = useId('identityListItem__label');
-    const displayName = device.profile
-      ? t('device-name.placeholder', { os: device.profile.os, platform: device.profile.platform })
-      : generateName(device.deviceKey.toHex());
-    const isCurrent = device.kind === DeviceKind.CURRENT;
+    const displayName =
+      device.label ??
+      (device.os || device.platform
+        ? t('device-name.placeholder', { os: device.os, platform: device.platform })
+        : generateName(device.key));
+    const isCurrent = device.current;
     return (
       <Listbox.Item
         {...props}
-        id={device.deviceKey.toHex()}
+        id={device.key}
         classNames={['flex gap-2 items-center my-2', classNames]}
         data-testid={`device-list-item${isCurrent ? '-current' : ''}`}
         ref={forwardedRef}
@@ -55,29 +66,14 @@ export const DeviceListItem = forwardRef<
             status={
               isCurrent && connectionState === ConnectionState.OFFLINE
                 ? 'error'
-                : device.presence === Device.PresenceState.ONLINE
+                : device.presence === 'online'
                   ? 'active'
                   : 'inactive'
             }
             hue={fallbackValue.hue}
             variant='square'
             classNames='place-self-center'
-            {...(device.profile?.type
-              ? {
-                  icon:
-                    device.profile.type === DeviceType.AGENT_MANAGED
-                      ? 'ph--database--regular'
-                      : device.profile.type === DeviceType.BROWSER
-                        ? 'ph--compass--regular'
-                        : device.profile.type === DeviceType.NATIVE
-                          ? 'ph--desktop--regular'
-                          : [DeviceType.AGENT, DeviceType.AGENT_MANAGED].includes(device.profile.type)
-                            ? 'ph--drone--regular'
-                            : device.profile.type === DeviceType.MOBILE
-                              ? 'ph--device-mobile--regular'
-                              : 'ph--devices--regular',
-                }
-              : { fallback: fallbackValue.emoji })}
+            {...(device.kind ? { icon: KIND_ICONS[device.kind] } : { fallback: fallbackValue.emoji })}
           />
           <Avatar.Label classNames='flex-1 text-sm truncate'>{displayName}</Avatar.Label>
           {isCurrent && <Tag color='primary'>{t('current-device-tag.label')}</Tag>}
@@ -102,7 +98,7 @@ export const DeviceListItem = forwardRef<
               </Tooltip.Portal>
             </Tooltip.Root>
           )} */}
-          {device.kind === DeviceKind.CURRENT && (onClickJoinExisting || onClickRecover || onClickReset) && (
+          {isCurrent && (onClickJoinExisting || onClickRecover || onClickReset) && (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <Button

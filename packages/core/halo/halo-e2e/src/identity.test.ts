@@ -6,12 +6,13 @@ import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe } from 'vitest';
 
 import { Identity } from '@dxos/halo';
 import { PublicKey, SpaceId } from '@dxos/keys';
 
-import { currentOf, makeClientLayer } from './testing';
+import { currentOf, makeClientLayer, pollUntil } from './testing';
 
 describe('Identity', () => {
   it.effect(
@@ -42,6 +43,42 @@ describe('Identity', () => {
       },
       Effect.provide(makeClientLayer({ identity: false })),
     ),
+  );
+
+  it.effect(
+    'reports the local device as present, with a kind a device list can render',
+    Effect.fn(function* ({ expect }) {
+      const devices = yield* currentOf(Identity.devices);
+      const current = devices.find((device) => device.current);
+      expect(current?.presence).toEqual('online');
+      // A kind is what selects the list icon; without it the UI falls back to a key-derived emoji.
+      expect(current?.kind).toBeTypeOf('string');
+    }, Effect.provide(makeClientLayer())),
+  );
+
+  it.effect(
+    'exposes the identity as an atom seeded with the current value',
+    Effect.fn(function* ({ expect }) {
+      const service = yield* Identity.Service;
+      const identity = Option.getOrThrow(yield* Identity.getSnapshot);
+      // Registry.get, not a subscription: a reader evaluating before the first stream tick must
+      // still see the existing identity.
+      const registry = Registry.make();
+      const atom = Identity.atom(service);
+      expect(Option.getOrThrow(registry.get(atom)).did).toEqual(identity.did);
+      // Same service, same atom — the family is keyed by reference.
+      expect(Identity.atom(service)).toBe(atom);
+
+      // Subscribe, then mutate: the seed alone would satisfy the assertions above.
+      const seen: (string | undefined)[] = [];
+      const unsubscribe = registry.subscribe(atom, (value) => seen.push(Option.getOrUndefined(value)?.displayName));
+      yield* Identity.updateProfile({ displayName: 'renamed' });
+      yield* pollUntil(
+        Effect.sync(() => seen),
+        (values) => values.includes('renamed'),
+      );
+      unsubscribe();
+    }, Effect.provide(makeClientLayer())),
   );
 
   it.effect(
@@ -81,6 +118,33 @@ describe('Identity', () => {
         yield* Identity.create({ displayName: 'test-user' });
         const spaceId = yield* Identity.personalSpaceId;
         expect(SpaceId.isValid(Option.getOrThrow(spaceId))).toBe(true);
+      },
+      Effect.provide(makeClientLayer({ identity: false })),
+    ),
+  );
+
+  it.effect(
+    'exposes an EDGE identity that signs a presentation over a challenge',
+    Effect.fn(function* ({ expect }) {
+      const identity = Option.getOrThrow(yield* Identity.getSnapshot);
+      const edgeIdentity = Option.getOrThrow(yield* Identity.getEdgeIdentity);
+      expect(edgeIdentity.identityDid).toEqual(identity.did);
+      const devices = yield* currentOf(Identity.devices);
+      expect(edgeIdentity.peerKey).toEqual(devices.find((device) => device.current)?.key);
+
+      // The presentation must carry the challenge, since that is what EDGE verifies it against.
+      const challenge = new Uint8Array([1, 2, 3, 4]);
+      const presentation = yield* Effect.promise(() => edgeIdentity.presentCredentials({ challenge }));
+      expect(presentation.credentials?.length).toBeGreaterThan(0);
+      expect(presentation.proofs?.[0].nonce).toEqual(challenge);
+    }, Effect.provide(makeClientLayer())),
+  );
+
+  it.effect(
+    'has no EDGE identity before one exists',
+    Effect.fn(
+      function* ({ expect }) {
+        expect(Option.isNone(yield* Identity.getEdgeIdentity)).toBe(true);
       },
       Effect.provide(makeClientLayer({ identity: false })),
     ),

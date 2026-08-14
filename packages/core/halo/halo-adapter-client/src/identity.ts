@@ -10,6 +10,7 @@ import * as Stream from 'effect/Stream';
 
 import { type Client } from '@dxos/client';
 import { type RecoverIdentityArgs } from '@dxos/client-protocol';
+import { createEdgeIdentity } from '@dxos/client/edge';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { Identity as HaloIdentity, IdentityError } from '@dxos/halo';
@@ -18,9 +19,10 @@ import { type TypedMessage } from '@dxos/protocols/proto';
 import {
   type Device as ClientDevice,
   type Identity as ClientIdentity,
+  Device,
   DeviceKind,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential, IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, DeviceType, IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexSet } from '@dxos/util';
 
 import { makeFlow, streamFromClientObservable, toShareOptions } from './util';
@@ -32,10 +34,29 @@ const toInfo = (identity: ClientIdentity): HaloIdentity.Info => ({
   data: identity.profile?.data,
 });
 
+const DEVICE_KINDS: Record<DeviceType, HaloIdentity.DeviceKind> = {
+  [DeviceType.UNKNOWN]: 'unknown',
+  [DeviceType.BROWSER]: 'browser',
+  [DeviceType.NATIVE]: 'native',
+  [DeviceType.MOBILE]: 'mobile',
+  [DeviceType.AGENT]: 'agent',
+  [DeviceType.AGENT_MANAGED]: 'agent-managed',
+};
+
+const PRESENCE: Record<Device.PresenceState, HaloIdentity.Presence> = {
+  [Device.PresenceState.ONLINE]: 'online',
+  [Device.PresenceState.OFFLINE]: 'offline',
+  [Device.PresenceState.REMOVED]: 'removed',
+};
+
 const toDeviceInfo = (device: ClientDevice): HaloIdentity.DeviceInfo => ({
   key: device.deviceKey.toHex(),
+  kind: device.profile?.type !== undefined ? DEVICE_KINDS[device.profile.type] : undefined,
   label: device.profile?.label,
+  os: device.profile?.os,
+  platform: device.profile?.platform,
   current: device.kind === DeviceKind.CURRENT,
+  presence: PRESENCE[device.presence],
 });
 
 const RECOVERY_KINDS: Record<IdentityRecovery.Kind, HaloIdentity.RecoveryKind> = {
@@ -235,6 +256,14 @@ export const makeIdentityService = (client: Client): Context.Service.Shape<typeo
   // Empty pre-initialization for the same reason `getSnapshot` is `none`: `client.halo` throws
   // before `initialize()`, and the contract for a pre-init read on this surface is silence.
   getDevicesSnapshot: () => (client.initialized ? client.halo.devices.get().map(toDeviceInfo) : []),
+
+  getEdgeIdentity: () => {
+    // `createEdgeIdentity` throws when either is missing; none is the contract on this surface.
+    if (!client.initialized || !client.halo.identity.get() || !client.halo.device) {
+      return Option.none();
+    }
+    return Option.some(createEdgeIdentity(client));
+  },
 
   credentials: streamFromClientObservable(client, () => client.halo.credentials).pipe(
     Stream.map((credentials) => {
