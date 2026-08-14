@@ -200,7 +200,25 @@ Committed, unpushed. This is the PR to open first.
       line) — an 8px drop. Now `px-2 py-1 text-lg flex items-center h-[1lh]`, which centres on line one
       whatever the theme sets `text-lg` to, rather than pinning a pixel value.
       NOT VERIFIED VISUALLY (storybook blocker) — reasoned from the box model. Added as manual step E6.
-- [ ] **Messages without `threadId` are silently truncated to 4** — DIAGNOSED, needs a decision.
+- [x] **Messages without `threadId` are silently truncated to 4** — FIXED in ECHO + the view (PR #12574),
+      but see the follow-on blocker below: the symptom was never observable, because such messages never
+      reach the mailbox query at all.
+      `Aggregate.group` now takes a fallback chain — `Aggregate.group({ coalesce: ['threadId', 'id'] })`,
+      where `id` resolves to the entity id — so each threadless message forms its own group and the
+      preview cap cannot truncate a pool of unrelated messages. The null-group split in `MailboxArticle`
+      is gone. AST breaking change: a `group` entry carries `properties` (a non-empty chain) instead of
+      `property`.
+- [ ] **Threadless messages never reach the list at all** — the real blocker, found while fixing the
+      above. `buildThreadSemiJoin` (`containers/MailboxArticle/mailbox-search.ts`) wraps every view
+      filter in `Filter.type(Message, { threadId: Filter.in(matches.project('threadId')) })`, which a
+      message with no `threadId` can never satisfy — in conversation AND flat mode. Measured with the
+      `GroupedWithoutThreads` story (`threads: 0`, 20 messages): **0 tiles**, before and after the
+      grouping fix (verified by reverting the fix and re-running). That story is checked in as a
+      documented empty render and turns green — 20 rows — once this is fixed.
+      FIX DIRECTION: union the semi-join with the directly-matching messages, so a threadless match
+      stands in for its own thread. Care needed with the outer `.from(scopes)` (the subquery's scope
+      differs from the outer one) and with paging over the union.
+- [x] **Messages without `threadId` — original diagnosis** (kept for context).
       Not the conversation view: it is `MailboxArticle`'s aggregate. `Aggregate.group('threadId')` puts
       EVERY threadless message into one `null`-key group, and the items aggregate caps that group at
       `MAILBOX_THREAD_PREVIEW_COUNT` (**4**). Line 217 then splits `entry.items` into
