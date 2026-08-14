@@ -197,7 +197,7 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   // Story renders surfaces directly (no deck), so expand graph actions for the doc node.
   useEffect(() => {
     if (attendableId) {
-      void Graph.expand(graph, attendableId, 'action');
+      void Graph.expandSync(graph, attendableId, 'action');
     }
   }, [graph, attendableId]);
 

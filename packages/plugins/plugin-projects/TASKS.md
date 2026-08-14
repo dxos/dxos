@@ -469,3 +469,12 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
 - [ ] **Consider merging plugin-routine into plugin-projects** — boundary is thin post-Routine-move.
 - [ ] **Editor.View accent focus defaults** — removed on this branch; NotebookCell opted back in; audit remaining call sites if focus affordances look off elsewhere.
 - [ ] **Test gaps** — live-AI chat-binding story (instructions/skills actually reach the system prompt); Playwright e2e create-project → article → companion chat; Project.test.ts contextBindings objects assertion is count-only; commands.ts redundant Enter keymap cleanup.
+- [ ] **Daily goals/priorities agent** (requested 2026-08-13) — an agent that asks the user a few
+      questions each day about goals and priorities, and answers questions from current knowledge.
+      Two separable halves: the SCHEDULE (a daily routine/trigger running the question loop and
+      writing the answers back into the project) and the KNOWLEDGE side (answering from the
+      project's existing Tasks/Plan/Milestones plus chat history, so the daily questions stay
+      non-redundant and shrink as the model of the user's goals fills in — an agent that re-asks
+      what it already knows is the failure mode to design against). Open: where the answers land.
+      Goals authoring is already an open Phase 2 item, so this likely feeds that rather than
+      introducing a new type.

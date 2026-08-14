@@ -68,17 +68,21 @@ Work the 42 curated `unresolved` findings from `.agents/reviews/50877ea571/RESOL
       Trigger); mesh (teleport balancer/framer, rpc, network-manager rtc → `expect.poll`).
 - [x] Changeset + `stories-assistant` direct dep on `@dxos/assistant-toolkit` (knip fix).
 
-### Remaining — no-sleep-in-test (17), left `unresolved` (forcing them risks flakiness)
+### no-sleep-in-test (17) → `ignored` (PR #12554 follow-up)
 
-- [ ] **Auto-save / debounced persistence** — need to subscribe to the host "saved" event
+Per owner decision, the 17 remaining sleep findings are marked `ignored` in `RESOLUTION.md`
+rather than forced — a naive rewrite would introduce the flakiness the rule guards against.
+Categorized for a future revisit (each needs an exposed completion signal or is a defensible idiom):
+
+- [x] **Auto-save / debounced persistence** — would need to subscribe to the host "saved" event
       (`automerge-host.ts:188`) instead of the no-flush sleep. Ids: 1420, 1803 (echo-client
       repo-proxy/database), 1986, 2092, 2107, 2159 (echo-host automerge-repo/subduction/documents-synchronizer).
-- [ ] **Trivial-assertion + processing wait** — 2158 (documents-synchronizer; assertion is `>= 0`, always true).
-- [ ] **Loader-discovery wait** — 1512 (echo-client strong-deps-stall; `sleep(200)` recurs 6× to let a
+- [x] **Trivial-assertion + processing wait** — 2158 (documents-synchronizer; assertion is `>= 0`, always true).
+- [x] **Loader-discovery wait** — 1512 (echo-client strong-deps-stall; `sleep(200)` recurs 6× to let a
       link change round-trip before the loader probes; needs a loader-state signal / query subscription).
-- [ ] **Microtask phase-sequencing** — 2136 (collection-synchronizer; setup phases have no exposed signal).
-- [ ] **Close-while-reading races** — 279, 281 (feed-store; needs FeedQueue close-event semantics).
-- [ ] **Ordering-dependent** — 3376 (blade-runner readable-muxer pushStream spacing).
-- [ ] **Negative assertions** (sleep defensible; `expect.poll` would be wrong) + heavy e2e —
+- [x] **Microtask phase-sequencing** — 2136 (collection-synchronizer; setup phases have no exposed signal).
+- [x] **Close-while-reading races** — 279, 281 (feed-store; needs FeedQueue close-event semantics).
+- [x] **Ordering-dependent** — 3376 (blade-runner readable-muxer pushStream spacing).
+- [x] **Negative assertions** (sleep defensible; `expect.poll` would be wrong) + heavy e2e —
       4538 (invitations-handler), 4450 (client-e2e), 4580 (client-services pipeline), 4776 (client edge-recovery).
-- [ ] **CI-excluded sync-e2e** — 3626 (plugin-inbox; ECHO query subscription; `sync-e2e` tag excluded from CI).
+- [x] **CI-excluded sync-e2e** — 3626 (plugin-inbox; ECHO query subscription; `sync-e2e` tag excluded from CI).

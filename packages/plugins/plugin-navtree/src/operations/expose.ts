@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Expose> = LayoutOper
       const prefixes = Attention.expandAttendableId(subject);
 
       for (const qualifiedId of prefixes) {
-        Graph.expand(graph, qualifiedId, 'child');
+        Graph.expandSync(graph, qualifiedId, 'child');
 
         const treePath = prefixes.slice(0, prefixes.indexOf(qualifiedId) + 1);
         const state = getItem(treePath);

@@ -17,6 +17,7 @@ import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations'
 import { InboxCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const IdentitySpecs = Capability.lazyModule(
@@ -33,6 +34,11 @@ export const SummarizeExtractor = Capability.inlineModule(
   'summarize-extractor',
   { provides: [InboxCapabilities.ObjectExtractor] },
   () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)]),
+);
+export const MailboxProcessors = Capability.lazyModule(
+  'MailboxProcessors',
+  { provides: [InboxCapabilities.MailboxProcessor] },
+  () => import('./mailbox-processors'),
 );
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',

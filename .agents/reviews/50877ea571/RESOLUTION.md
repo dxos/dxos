@@ -280,9 +280,9 @@
 - 50877ea571-276 - ignored - no-casts - packages/common/feed-store/src/feed-factory.ts:43
 - 50877ea571-277 - ignored - no-casts - packages/common/feed-store/src/feed-queue.browser.test.ts:23
 - 50877ea571-278 - ignored - no-casts - packages/common/feed-store/src/feed-queue.browser.test.ts:31
-- 50877ea571-279 - unresolved - no-sleep-in-test - packages/common/feed-store/src/feed-queue.browser.test.ts:35
+- 50877ea571-279 - ignored - no-sleep-in-test - packages/common/feed-store/src/feed-queue.browser.test.ts:35
 - 50877ea571-280 - ignored - no-casts - packages/common/feed-store/src/feed-queue.test.ts:38
-- 50877ea571-281 - unresolved - no-sleep-in-test - packages/common/feed-store/src/feed-queue.test.ts:50
+- 50877ea571-281 - ignored - no-sleep-in-test - packages/common/feed-store/src/feed-queue.test.ts:50
 - 50877ea571-282 - ignored - no-casts - packages/common/feed-store/src/feed-queue.test.ts:75
 - 50877ea571-283 - ignored - no-casts - packages/common/feed-store/src/feed-queue.test.ts:113
 - 50877ea571-284 - ignored - no-casts - packages/common/feed-store/src/feed-queue.test.ts:164
@@ -1421,7 +1421,7 @@
 - 50877ea571-1417 - ignored - no-casts - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:112:28
 - 50877ea571-1418 - ignored - no-casts - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:134:29
 - 50877ea571-1419 - ignored - no-casts - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:135:33
-- 50877ea571-1420 - unresolved - no-sleep-in-test - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:233
+- 50877ea571-1420 - ignored - no-sleep-in-test - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:233
 - 50877ea571-1421 - ignored - no-casts - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:234:29
 - 50877ea571-1422 - ignored - no-casts - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:269:29
 - 50877ea571-1423 - ignored - no-casts - packages/core/echo/echo-client/src/automerge/repo-proxy.test.ts:297:106
@@ -1513,7 +1513,7 @@
 - 50877ea571-1509 - ignored - no-casts - packages/core/echo/echo-client/src/core-db/object-core.ts:554:39
 - 50877ea571-1510 - ignored - no-casts - packages/core/echo/echo-client/src/core-db/object-core.ts:555:43
 - 50877ea571-1511 - ignored - no-casts - packages/core/echo/echo-client/src/core-db/object-core.ts:566:46
-- 50877ea571-1512 - unresolved - no-sleep-in-test - packages/core/echo/echo-client/src/core-db/strong-deps-stall.test.ts:93
+- 50877ea571-1512 - ignored - no-sleep-in-test - packages/core/echo/echo-client/src/core-db/strong-deps-stall.test.ts:93
 - 50877ea571-1513 - ignored - no-casts - packages/core/echo/echo-client/src/core-db/strong-deps-stall.test.ts:114:19
 - 50877ea571-1514 - ignored - no-casts - packages/core/echo/echo-client/src/core-db/strong-deps-stall.test.ts:287:42
 - 50877ea571-1515 - ignored - no-casts - packages/core/echo/echo-client/src/core-db/strong-deps-stall.test.ts:316:20
@@ -1804,7 +1804,7 @@
 - 50877ea571-1800 - ignored - no-casts - packages/core/echo/echo-client/src/proxy-db/add-type.test.ts:55:34
 - 50877ea571-1801 - ignored - no-casts - packages/core/echo/echo-client/src/proxy-db/add-type.test.ts:62:48
 - 50877ea571-1802 - ignored - no-casts - packages/core/echo/echo-client/src/proxy-db/database.test.ts:73:27
-- 50877ea571-1803 - unresolved - no-sleep-in-test - packages/core/echo/echo-client/src/proxy-db/database.test.ts:78
+- 50877ea571-1803 - ignored - no-sleep-in-test - packages/core/echo/echo-client/src/proxy-db/database.test.ts:78
 - 50877ea571-1804 - ignored - no-casts - packages/core/echo/echo-client/src/proxy-db/database.test.ts:197:27
 - 50877ea571-1805 - ignored - no-casts - packages/core/echo/echo-client/src/proxy-db/database.test.ts:235:44
 - 50877ea571-1806 - ignored - no-casts - packages/core/echo/echo-client/src/proxy-db/database.test.ts:262:31
@@ -1987,7 +1987,7 @@
 - 50877ea571-1983 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:398:29
 - 50877ea571-1984 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:464:25
 - 50877ea571-1985 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:467:25
-- 50877ea571-1986 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:795
+- 50877ea571-1986 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-host-subduction.test.ts:795
 - 50877ea571-1987 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:27:41
 - 50877ea571-1988 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:28:25
 - 50877ea571-1989 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-host.test.ts:32:24
@@ -2093,7 +2093,7 @@
 - 50877ea571-2089 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:511:47
 - 50877ea571-2090 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:516:46
 - 50877ea571-2091 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:517:34
-- 50877ea571-2092 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:520
+- 50877ea571-2092 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:520
 - 50877ea571-2093 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:525:46
 - 50877ea571-2094 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:526:34
 - 50877ea571-2095 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:535:36
@@ -2108,7 +2108,7 @@
 - 50877ea571-2104 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:627:29
 - 50877ea571-2105 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:643:29
 - 50877ea571-2106 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:670:29
-- 50877ea571-2107 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:674
+- 50877ea571-2107 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:674
 - 50877ea571-2108 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:704:29
 - 50877ea571-2109 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:710:56
 - 50877ea571-2110 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:711:38
@@ -2137,7 +2137,7 @@
 - 50877ea571-2133 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:1008:41
 - 50877ea571-2134 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:1009:41
 - 50877ea571-2135 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/automerge-repo.test.ts:1013:55
-- 50877ea571-2136 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/collection-synchronizer.test.ts:106
+- 50877ea571-2136 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/automerge/collection-synchronizer.test.ts:106
 - 50877ea571-2137 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/echo-data-monitor.ts:119:52
 - 50877ea571-2138 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/echo-network-adapter.test.ts:30:34
 - 50877ea571-2139 - ignored - no-casts - packages/core/echo/echo-host/src/automerge/echo-network-adapter.test.ts:40:41
@@ -2159,8 +2159,8 @@
 - 50877ea571-2155 - ignored - no-casts - packages/core/echo/echo-host/src/db-host/automerge-data-source.test.ts:155:65
 - 50877ea571-2156 - ignored - no-casts - packages/core/echo/echo-host/src/db-host/automerge-metrics.ts:18:46
 - 50877ea571-2157 - ignored - no-casts - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:80:25
-- 50877ea571-2158 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:111
-- 50877ea571-2159 - unresolved - no-sleep-in-test - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:142
+- 50877ea571-2158 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:111
+- 50877ea571-2159 - ignored - no-sleep-in-test - packages/core/echo/echo-host/src/db-host/documents-synchronizer.test.ts:142
 - 50877ea571-2160 - ignored - no-casts - packages/core/echo/echo-host/src/db-host/documents-synchronizer.ts:100:37
 - 50877ea571-2161 - ignored - no-casts - packages/core/echo/echo-host/src/db-host/documents-synchronizer.ts:165:31
 - 50877ea571-2162 - ignored - no-casts - packages/core/echo/echo-host/src/db-host/documents-synchronizer.ts:201:27
@@ -3377,7 +3377,7 @@
 - 50877ea571-3373 - ignored - no-casts - packages/e2e/blade-runner/src/tracing/perfetto-events.ts:24:17
 - 50877ea571-3374 - ignored - no-casts - packages/e2e/blade-runner/src/tracing/perfetto-events.ts:137:21
 - 50877ea571-3375 - ignored - no-casts - packages/e2e/blade-runner/src/tracing/perfetto-events.ts:142:23
-- 50877ea571-3376 - unresolved - no-sleep-in-test - packages/e2e/blade-runner/src/tracing/readable-muxer.node.test.ts:30
+- 50877ea571-3376 - ignored - no-sleep-in-test - packages/e2e/blade-runner/src/tracing/readable-muxer.node.test.ts:30
 - 50877ea571-3377 - ignored - no-casts - packages/e2e/proto-guard/src/generate-snapshot.ts:79:33
 - 50877ea571-3378 - ignored - no-casts - packages/e2e/proto-guard/src/snapshots-registry.ts:51:62
 - 50877ea571-3379 - ignored - no-casts - packages/experimental/discord-bot/src/bot.ts:89:25
@@ -3627,7 +3627,7 @@
 - 50877ea571-3623 - ignored - no-casts - packages/plugins/plugin-inbox/src/operations/mail/google/sync/mapper.test.ts:210:40
 - 50877ea571-3624 - ignored - no-casts - packages/plugins/plugin-inbox/src/operations/mail/google/sync/mapper.test.ts:219:32
 - 50877ea571-3625 - ignored - no-casts - packages/plugins/plugin-inbox/src/operations/mail/google/sync/mapper.test.ts:222:40
-- 50877ea571-3626 - unresolved - no-sleep-in-test - packages/plugins/plugin-inbox/src/operations/mail/google/sync/sync-e2e.test.ts:268
+- 50877ea571-3626 - ignored - no-sleep-in-test - packages/plugins/plugin-inbox/src/operations/mail/google/sync/sync-e2e.test.ts:268
 - 50877ea571-3627 - ignored - no-casts - packages/plugins/plugin-inbox/src/testing/email-processor.ts:89:15
 - 50877ea571-3628 - ignored - no-casts - packages/plugins/plugin-inbox/src/testing/gmail-fixtures.test.ts:60:62
 - 50877ea571-3629 - ignored - no-casts - packages/plugins/plugin-inbox/src/testing/gmail-fixtures.test.ts:61:42
@@ -4451,7 +4451,7 @@
 - 50877ea571-4447 - ignored - no-casts - packages/sdk/client-e2e/src/indexing.test.ts:330
 - 50877ea571-4448 - ignored - no-casts - packages/sdk/client-e2e/src/indexing.test.ts:331
 - 50877ea571-4449 - ignored - no-casts - packages/sdk/client-e2e/src/invitations.test.ts:62
-- 50877ea571-4450 - unresolved - no-sleep-in-test - packages/sdk/client-e2e/src/invitations.test.ts:63
+- 50877ea571-4450 - ignored - no-sleep-in-test - packages/sdk/client-e2e/src/invitations.test.ts:63
 - 50877ea571-4451 - ignored - no-casts - packages/sdk/client-e2e/src/invitations.test.ts:65
 - 50877ea571-4452 - ignored - no-casts - packages/sdk/client-e2e/src/invitations.test.ts:67
 - 50877ea571-4453 - ignored - no-casts - packages/sdk/client-e2e/src/invitations.test.ts:68
@@ -4539,7 +4539,7 @@
 - 50877ea571-4535 - ignored - no-casts - packages/sdk/client-services/src/packlets/invitations/invitation-state.ts:26
 - 50877ea571-4536 - ignored - no-casts - packages/sdk/client-services/src/packlets/invitations/invitation-state.ts:64
 - 50877ea571-4537 - ignored - no-casts - packages/sdk/client-services/src/packlets/invitations/invitation-state.ts:78
-- 50877ea571-4538 - unresolved - no-sleep-in-test - packages/sdk/client-services/src/packlets/invitations/invitations-handler.test.ts:56
+- 50877ea571-4538 - ignored - no-sleep-in-test - packages/sdk/client-services/src/packlets/invitations/invitations-handler.test.ts:56
 - 50877ea571-4539 - ignored - no-casts - packages/sdk/client-services/src/packlets/invitations/invitations-handler.test.ts:146
 - 50877ea571-4540 - ignored - no-casts - packages/sdk/client-services/src/packlets/invitations/invitations-handler.test.ts:238
 - 50877ea571-4541 - ignored - no-casts - packages/sdk/client-services/src/packlets/invitations/invitations-handler.test.ts:317
@@ -4581,7 +4581,7 @@
 - 50877ea571-4577 - ignored - no-casts - packages/sdk/client-services/src/packlets/pipeline/pipeline-stress.test.ts:180
 - 50877ea571-4578 - ignored - no-casts - packages/sdk/client-services/src/packlets/pipeline/pipeline-stress.test.ts:223
 - 50877ea571-4579 - ignored - no-casts - packages/sdk/client-services/src/packlets/pipeline/pipeline.test.ts:49
-- 50877ea571-4580 - unresolved - no-sleep-in-test - packages/sdk/client-services/src/packlets/pipeline/pipeline.test.ts:131
+- 50877ea571-4580 - ignored - no-sleep-in-test - packages/sdk/client-services/src/packlets/pipeline/pipeline.test.ts:131
 - 50877ea571-4581 - ignored - no-casts - packages/sdk/client-services/src/packlets/pipeline/pipeline.ts:227
 - 50877ea571-4582 - ignored - no-casts - packages/sdk/client-services/src/packlets/pipeline/pipeline.ts:254
 - 50877ea571-4583 - ignored - no-casts - packages/sdk/client-services/src/packlets/pipeline/pipeline.ts:289
@@ -4777,7 +4777,7 @@
 - 50877ea571-4773 - ignored - no-casts - packages/sdk/client/src/testing/test-builder.ts:178
 - 50877ea571-4774 - ignored - no-casts - packages/sdk/client/src/testing/test-builder.ts:199
 - 50877ea571-4775 - ignored - no-casts - packages/sdk/client/test/e2e/edge-recovery.test.ts:70
-- 50877ea571-4776 - unresolved - no-sleep-in-test - packages/sdk/client/test/e2e/edge-recovery.test.ts:72
+- 50877ea571-4776 - ignored - no-sleep-in-test - packages/sdk/client/test/e2e/edge-recovery.test.ts:72
 - 50877ea571-4777 - ignored - no-casts - packages/sdk/client/test/e2e/edge-recovery.test.ts:75
 - 50877ea571-4778 - ignored - no-casts - packages/sdk/client/test/e2e/edge-recovery.test.ts:108
 - 50877ea571-4779 - ignored - no-casts - packages/sdk/client/test/e2e/edge-recovery.test.ts:126

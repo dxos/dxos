@@ -16,6 +16,8 @@ import { Actor, type Person, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 
+import { CODE_PROJECT_SKILL_KEY } from './skill-keys';
+
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
@@ -51,7 +53,7 @@ export const CreateTask = Operation.make({
   output: Schema.Struct({
     task: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'taskCreate', safety: 'write', aspect: 'tasks' }));
+}).pipe(Operation.mcpTool({ name: 'taskCreate', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
 
 export const UpdateTask = Operation.make({
   meta: {
@@ -76,7 +78,7 @@ export const UpdateTask = Operation.make({
   output: Schema.Struct({
     task: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'taskUpdate', safety: 'write', aspect: 'tasks' }));
+}).pipe(Operation.mcpTool({ name: 'taskUpdate', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
 
 export const CompleteTask = Operation.make({
   meta: {
@@ -95,7 +97,7 @@ export const CompleteTask = Operation.make({
   output: Schema.Struct({
     task: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'taskComplete', safety: 'write', aspect: 'tasks' }));
+}).pipe(Operation.mcpTool({ name: 'taskComplete', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
 
 export const AssignTask = Operation.make({
   meta: {
@@ -115,7 +117,7 @@ export const AssignTask = Operation.make({
   output: Schema.Struct({
     task: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'taskAssign', safety: 'write', aspect: 'tasks' }));
+}).pipe(Operation.mcpTool({ name: 'taskAssign', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
 
 /** Opaque forward cursor; currently an encoded offset, so the wire shape survives a key-cursor swap. */
 export const TaskCursor = Schema.String;
@@ -149,4 +151,4 @@ export const ListTasks = Operation.make({
     /** Present when more results remain; pass back as `after`. */
     nextCursor: Schema.optional(TaskCursor),
   }),
-}).pipe(Operation.mcpTool({ name: 'taskList', safety: 'read', aspect: 'tasks' }));
+}).pipe(Operation.mcpTool({ name: 'taskList', safety: 'read', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));

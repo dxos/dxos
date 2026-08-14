@@ -30,6 +30,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./history-graph'), {
   name: 'HistoryGraph',
 });
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',

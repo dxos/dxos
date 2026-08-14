@@ -23,6 +23,10 @@ export const Goal = Schema.Struct({
 
 export type Goal = Schema.Schema.Type<typeof Goal>;
 
+/** Work-stream lifecycle state; complements per-goal {@link Goal} status. */
+export const ProjectStatus = Schema.Literals(['active', 'paused', 'blocked', 'ended']);
+export type ProjectStatus = Schema.Schema.Type<typeof ProjectStatus>;
+
 /**
  * A user-facing container for interactive, long-running work: instructions (skills + commands),
  * routines, artifacts, and AI chat sessions in project context. Successor to `Topic`.
@@ -32,6 +36,9 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
   Schema.Struct({
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
+
+    /** Work-stream lifecycle state; complements per-goal `Goal.status`. */
+    status: Schema.optional(ProjectStatus),
 
     /** Owned agent instructions (created + parented at the plugin layer). */
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true))),

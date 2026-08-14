@@ -35,6 +35,7 @@ export const RecordingSession = Capability.lazyModule(
   { provides: [TranscriptionCapabilities.RecordingSession] },
   () => import('./recording-session'),
 );
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const TranscriptionDriver = AppCapability.reactContext(() => import('./transcription-driver'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const TextContent = AppCapability.textContent(() => import('./text-content'), {

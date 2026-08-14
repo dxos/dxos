@@ -54,7 +54,7 @@ export const Query = Operation.make({
       <example description="All tasks related to Cyberdyne and Bob">
         {
           "typename": "org.dxos.type.task",
-          "text": "cyberdyne bob",
+          "text": "cyberdyne bob"
         }
       </example>
 
@@ -62,14 +62,14 @@ export const Query = Operation.make({
         {
           "typename": "org.dxos.type.document",
           "text": "financial report Q1 2026",
-          "includeContent": true
+          "includeContent": true,
           "limit": 3
         }
       </example>
 
       <example description="Emails from specific mailboxes">
         {
-          "in": [{"/" : "echo:///YYYYYY"}, {"/" : "echo:///XXXXXXX"}],
+          "in": ["echo:///YYYYYY", "echo:///XXXXXXX"],
           "typename": "org.dxos.type.email",
           "includeContent": true,
           "limit": 20

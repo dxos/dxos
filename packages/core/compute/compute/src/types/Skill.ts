@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
@@ -132,15 +133,45 @@ export const make: {
       key: [DXN.Name<T>] extends [never] ? `Invalid DXN name "${T}": final segment must be camelCase (no hyphens)` : T;
       version?: string;
       name: string;
+      /** Opt into MCP projection; see {@link McpPromptAnnotation}. Stored in meta, not as a field. */
+      mcpPrompt?: boolean;
     } & Partial<Skill>,
   ): Skill;
-} = ({ key, version, tools = [], instructions = Template.make(), ...props }) =>
-  Obj.make(Skill, {
-    [Obj.Meta]: { key, version },
+} = ({ key, version, mcpPrompt, tools = [], instructions = Template.make(), ...props }) => {
+  const annotations: Annotation.Dictionary = {};
+  if (mcpPrompt !== undefined) {
+    Annotation.setDictionary(annotations, McpPromptAnnotation, mcpPrompt);
+  }
+  return Obj.make(Skill, {
+    [Obj.Meta]: { key, version, annotations },
     tools,
     instructions,
     ...props,
   });
+};
+
+/**
+ * Annotation opting a skill into MCP projection: it becomes a prompt and is loadable by name
+ * through the server's `skillLoad` tool.
+ *
+ * Opt-in, for the same reason {@link Operation.McpToolAnnotation} is. A skill written for an
+ * in-app chat runtime assumes tools that an MCP client does not have — instructing an external
+ * agent to call an operation that was never projected, or to enable another skill through
+ * machinery MCP does not expose. Only the author can judge whether the workflow still holds when
+ * the available surface is the MCP one, so the projection asks rather than assumes. Absent ⇒ the
+ * skill stays internal to hosts that resolve skills directly.
+ *
+ * Rides in the object's meta rather than on `Definition`, so it survives into a persisted skill —
+ * `Definition` is a build-time factory type and cannot describe a skill stored in a space.
+ */
+export const McpPromptAnnotation = Annotation.make({
+  id: 'org.dxos.skill.mcp-prompt',
+  schema: Schema.Boolean,
+});
+
+/** Whether the skill opted into MCP projection; see {@link McpPromptAnnotation}. */
+export const isMcpPrompt = (skill: Skill): boolean =>
+  Annotation.get(skill, McpPromptAnnotation).pipe(Option.getOrElse(() => false));
 
 /**
  * Get the registry key for a skill.

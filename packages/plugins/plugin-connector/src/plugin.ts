@@ -13,6 +13,7 @@ import {
   OAuthRedirect,
   OperationHandler,
   ReactSurface,
+  Schema,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -24,7 +25,7 @@ export const ConnectorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(BuiltinConnectors),

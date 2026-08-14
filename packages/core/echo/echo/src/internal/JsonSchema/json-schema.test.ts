@@ -830,6 +830,31 @@ describe('reference', () => {
     });
   });
 
+  test('widened reference node still decodes as a reference', () => {
+    // A wire boundary (e.g. the MCP tool-schema projection) may widen a reference with the
+    // structural keywords so schema-unaware consumers see an object. Decoding must still match the
+    // sentinel before the generic object branch, or the reference rebuilds as a plain struct.
+    const widened = {
+      $id: '/schemas/echo/ref',
+      $ref: '/schemas/echo/ref',
+      type: 'object',
+      properties: { '/': { type: 'string' } },
+      required: ['/'],
+      reference: {
+        schema: {
+          $ref: 'dxn:com.example.type.person',
+        },
+        schemaVersion: '0.1.0',
+      },
+    } as JsonSchemaType;
+    const deserializedSchema = toEffectSchema(widened);
+    const refAst = getReferenceAst(deserializedSchema.ast);
+    expect(refAst).toEqual({
+      typename: Type.getTypename(TestSchema.Person),
+      version: Type.getVersion(TestSchema.Person),
+    });
+  });
+
   test('empty struct round-trips as TypeLiteral', () => {
     const schema = Schema.Struct({});
     const jsonSchema = toJsonSchema(schema);

@@ -72,8 +72,14 @@ export abstract class BaseHttpClient {
   protected readonly _clientTag: string | undefined;
   protected readonly _apiKey: string | undefined;
   protected _edgeIdentity: EdgeIdentity | undefined;
-  /** Auth header cached until next 401. */
+  /** Auth header cached until it goes stale (see `_authHeaderIsStale`) or a 401 replaces it. */
   protected _authHeader: string | undefined;
+  /** When the current `_authHeader` was signed; with the TTL below it decides proactive refresh. */
+  private _authAcquiredAt: number | undefined;
+  /** Last TTL `/auth` advertised — a server constant, so 401-minted headers reuse it. */
+  private _authTtlMs: number | undefined;
+  /** Single-flight guard so concurrent requests with a stale header share one `/auth` round trip. */
+  private _authPrefetch: Promise<void> | undefined;
 
   constructor(baseUrl: string, options?: BaseHttpClientOptions) {
     this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
@@ -90,6 +96,10 @@ export abstract class BaseHttpClient {
     if (this._edgeIdentity?.identityDid !== identity.identityDid || this._edgeIdentity?.peerKey !== identity.peerKey) {
       this._edgeIdentity = identity;
       this._authHeader = undefined;
+      this._authAcquiredAt = undefined;
+      // Drop any in-flight prefetch: it authenticates the previous identity, and awaiting it
+      // would commit that identity's header for requests now belonging to the new one.
+      this._authPrefetch = undefined;
     }
   }
 
@@ -109,7 +119,7 @@ export abstract class BaseHttpClient {
     while (true) {
       let processingError: EdgeCallFailedError | undefined = undefined;
       try {
-        if (!this._authHeader && args.auth && !this._apiKey) {
+        if (args.auth && !this._apiKey && (!this._authHeader || this._authHeaderIsStale())) {
           await this._prefetchAuthHeader();
         }
 
@@ -196,7 +206,7 @@ export abstract class BaseHttpClient {
     while (true) {
       let processingError: EdgeCallFailedError | undefined;
       try {
-        if (!this._authHeader && args.auth && !this._apiKey) {
+        if (args.auth && !this._apiKey && (!this._authHeader || this._authHeaderIsStale())) {
           await this._prefetchAuthHeader();
         }
 
@@ -250,15 +260,46 @@ export abstract class BaseHttpClient {
    * unauthenticated, falling back to the 401-and-retry path below. That fallback is what keeps
    * this working against servers whose `/auth` only issues a challenge by rejecting.
    */
-  private async _prefetchAuthHeader(): Promise<void> {
-    if (!this._edgeIdentity) {
+  private _prefetchAuthHeader(): Promise<void> {
+    return (this._authPrefetch ??= this._prefetchAuthHeaderOnce().finally(() => {
+      this._authPrefetch = undefined;
+    }));
+  }
+
+  private async _prefetchAuthHeaderOnce(): Promise<void> {
+    const identity = this._edgeIdentity;
+    if (!identity) {
       log.verbose('auth prefetch skipped: no identity set');
       return;
     }
-    const presentation = await authenticateViaChallengeEndpoint(this._baseUrl, this._edgeIdentity);
-    if (presentation) {
-      this._authHeader = encodeAuthHeader(presentation);
+    const authentication = await authenticateViaChallengeEndpoint(this._baseUrl, identity);
+    // `setIdentity` may have swapped identities while the challenge round trip was in flight;
+    // committing then would send the new identity's requests signed as the old one.
+    if (authentication && this._edgeIdentity === identity) {
+      this._authHeader = encodeAuthHeader(authentication.presentation);
+      this._recordAuthAcquired(authentication.expiresInMs);
     }
+  }
+
+  /** Stale means past the proactive-refresh point, not necessarily rejected yet. */
+  private _authHeaderIsStale(): boolean {
+    if (this._authAcquiredAt === undefined || this._authTtlMs === undefined) {
+      return false;
+    }
+    // Refresh a margin ahead of expiry, floored at half the TTL so tiny windows still refresh.
+    const refreshAfterMs = Math.max(this._authTtlMs - AUTH_REFRESH_MARGIN_MS, Math.floor(this._authTtlMs / 2));
+    return Date.now() - this._authAcquiredAt >= refreshAfterMs;
+  }
+
+  /**
+   * Record when the current header was signed and the TTL advertised beside its challenge — only
+   * originals; the refresh point is derived at read time. Without an advertised TTL (older
+   * servers, the 401-minted path) the last known one is reused; if none was ever advertised the
+   * header lives until a 401, exactly as before proactive refresh existed.
+   */
+  private _recordAuthAcquired(expiresInMs: number | undefined): void {
+    this._authAcquiredAt = Date.now();
+    this._authTtlMs = expiresInMs ?? this._authTtlMs;
   }
 
   protected async _handleUnauthorized(response: Response): Promise<string> {
@@ -271,9 +312,14 @@ export abstract class BaseHttpClient {
       throw await EdgeCallFailedError.fromHttpFailure(response);
     }
     const challenge = await handleAuthChallenge(response, this._edgeIdentity);
+    // The fresh header starts a new window; the 401 body carries no TTL, so the last one applies.
+    this._recordAuthAcquired(undefined);
     return encodeAuthHeader(challenge);
   }
 }
+
+/** Refresh the cached auth header this long before its advertised expiry, absorbing request latency and clock skew. */
+const AUTH_REFRESH_MARGIN_MS = 30_000;
 
 /**
  * Whether a response carries a VerifiablePresentation challenge we can actually answer.
