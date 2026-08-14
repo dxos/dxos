@@ -8,8 +8,6 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { Timeframe } from '@dxos/timeframe';
 
 import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
@@ -66,7 +64,6 @@ describe('space/space-protocol', () => {
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: async () => false, // Reject everyone.
       },
-      blobStore: new BlobStore(createStorage({ type: StorageType.RAM }).createDirectory()),
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,
@@ -85,7 +82,6 @@ describe('space/space-protocol', () => {
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
-      blobStore: new BlobStore(createStorage({ type: StorageType.RAM }).createDirectory()),
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,

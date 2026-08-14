@@ -51,9 +51,18 @@ MOON_REMOTE_HOST= moon run :build
    change is a full cold build regardless of which cache is configured.
 3. **Disk is bounded by `--max_size 100`** (GiB), enforced as an LRU: `bazel-remote` evicts the
    least recently used blobs rather than filling the disk. Size it under the volume with room for
-   the OS — 100 GiB on the current 154 GB disk.
+   the OS — 100 GiB on the current 154 GiB disk.
 4. **Release workflows deliberately skip the cache** — `remote-cache: 'false'` on the setup action,
    or a workflow-level `MOON_REMOTE_HOST` where the workflow does not use that action.
+5. **`--access_log_level` defaults to `all`.** At CI volume that's one line per request: 8 days
+   produced 50 GB of logs, which was enough to consume the headroom left by the 100 GiB cache
+   budget and exhaust the disk. The unit sets `--access_log_level none`; do not drop it when
+   copying this config elsewhere. `rsyslog-logrotate.conf` (below) is the backstop for the next
+   service that logs at this volume without a bound of its own.
+6. **A restart costs about 70 s of downtime.** `bazel-remote` walks every cache file to rebuild its
+   in-memory index before it binds 9092/9093, so both ports refuse connections until that finishes
+   — moon falls back to a local build for anyone hitting it during that window. Restarts are safe
+   for the data (below), just not instantaneous.
 
 ## The server
 
@@ -62,7 +71,7 @@ MOON_REMOTE_HOST= moon run :build
 | host | `cache.dxos.network` -> 64.225.13.237 (DigitalOcean NYC3) |
 | service | `bazel-remote` v2.5.0, systemd unit `bazel-remote` |
 | ports | 9092 gRPC, 9093 HTTPS (metrics + `/status`) |
-| storage | `/var/cache/moon`, zstd, 100 GB LRU |
+| storage | `/var/cache/moon`, zstd, 100 GiB LRU |
 | certificates | `/etc/bazel-remote/{server.pem,server.key,ca.pem}` |
 
 `--tls_ca_file` is what makes it mTLS. Without it the cache would be world-readable and
@@ -84,8 +93,22 @@ ssh root@cache.dxos.network 'systemctl status bazel-remote; journalctl -u bazel-
 ```
 
 Deploying a config change is `scp bazel-remote.service root@…:/etc/systemd/system/` then
-`systemctl daemon-reload && systemctl restart bazel-remote`. Restarts are safe — the cache is on
-disk and survives.
+`systemctl daemon-reload && systemctl restart bazel-remote`. Restarts are safe for the cache
+data — it's on disk and survives — but not instantaneous: see item 6 above for the ~70 s of
+downtime while the index rebuilds.
+
+`rsyslog-logrotate.conf` bounds the six paths rsyslog writes on this box (`syslog`, `mail.log`,
+`kern.log`, `auth.log`, `user.log`, `cron.log`) — daily rotation, 500 MB max size, 3 generations
+kept — so a future chatty service fills at most a few GB before rotation catches it, rather than
+the whole disk. Deploy with `scp rsyslog-logrotate.conf root@…:/etc/logrotate.d/rsyslog`; nothing
+to reload — `logrotate` reads the file fresh from its daily systemd timer, no service restart
+involved. Run `logrotate -d /etc/logrotate.d/rsyslog` after deploying — it names every file it
+plans to rotate, so a path missing from the config (and therefore left unbounded) shows up
+immediately.
+
+This file is a dpkg conffile owned by the `rsyslog` package, so `apt upgrade`'d rsyslog will
+prompt about the local modification; `apt.systemd.daily` runs unattended-upgrades here, which
+keeps the local version by default, so this is a footnote, not a risk.
 
 ## Certificates
 

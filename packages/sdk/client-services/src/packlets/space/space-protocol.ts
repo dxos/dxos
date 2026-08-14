@@ -18,7 +18,6 @@ import {
 } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type MuxerStats, Teleport } from '@dxos/teleport';
-import { type BlobStoreApi, BlobSync } from '@dxos/teleport-extension-object-sync';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { type AsyncCallback, CallbackCollection, ComplexMap } from '@dxos/util';
 
@@ -40,8 +39,6 @@ export type SpaceProtocolOptions = {
   swarmIdentity: SwarmIdentity;
   networkManager: SwarmNetworkManager;
 
-  blobStore: BlobStoreApi;
-
   onFeed?: (feed: FeedWrapper<FeedMessage>) => Promise<void>;
 
   /**
@@ -62,8 +59,6 @@ export class SpaceProtocol {
   private readonly _swarmIdentity: SwarmIdentity;
   private readonly _onSessionAuth?: (session: Teleport) => void;
   private readonly _onAuthFailure?: (session: Teleport) => void;
-
-  public readonly blobSync: BlobSync;
 
   private readonly _disableP2pReplication: boolean;
 
@@ -104,7 +99,6 @@ export class SpaceProtocol {
     networkManager,
     onSessionAuth,
     onAuthFailure,
-    blobStore,
     disableP2pReplication,
   }: SpaceProtocolOptions) {
     this._spaceKey = topic;
@@ -112,7 +106,6 @@ export class SpaceProtocol {
     this._swarmIdentity = swarmIdentity;
     this._onSessionAuth = onSessionAuth;
     this._onAuthFailure = onAuthFailure;
-    this.blobSync = new BlobSync({ blobStore });
 
     // Space swarm topic contract (DX-1125): the SpaceId bytes (first 20 bytes of SHA-256(spaceKey)).
     // Both peers and the edge must derive the identical swarm key; SpaceId is the only derivation
@@ -144,8 +137,6 @@ export class SpaceProtocol {
     // TODO(burdon): Document why empty buffer.
     const credentials = await this._swarmIdentity.credentialProvider(Buffer.from(''));
 
-    await this.blobSync.open();
-
     log('starting...');
     const topic = await this._topic;
     this._connection = await this._networkManager.joinSwarm(ctx, {
@@ -163,8 +154,6 @@ export class SpaceProtocol {
   }
 
   async stop(ctx: Context): Promise<void> {
-    await this.blobSync.close();
-
     if (this._connection) {
       log('stopping...');
       await this._connection.close(ctx);
@@ -179,7 +168,6 @@ export class SpaceProtocol {
         swarmIdentity: this._swarmIdentity,
         onSessionAuth: this._onSessionAuth,
         onAuthFailure: this._onAuthFailure,
-        blobSync: this.blobSync,
         disableP2pReplication: this._disableP2pReplication,
       });
       this._sessions.set(wireProps.remotePeerId, session);
@@ -196,8 +184,6 @@ export class SpaceProtocol {
 export type SpaceProtocolSessionProps = {
   wireProps: WireProtocolProps;
   swarmIdentity: SwarmIdentity;
-
-  blobSync: BlobSync;
 
   /**
    * Called when new session is authenticated.
@@ -229,7 +215,6 @@ export class SpaceProtocolSession implements WireProtocol {
   private readonly _onSessionAuth?: (session: Teleport) => void;
   private readonly _onAuthFailure?: (session: Teleport) => void;
   private readonly _swarmIdentity: SwarmIdentity;
-  private readonly _blobSync: BlobSync;
 
   private readonly _teleport: Teleport;
 
@@ -253,14 +238,12 @@ export class SpaceProtocolSession implements WireProtocol {
     swarmIdentity,
     onSessionAuth,
     onAuthFailure,
-    blobSync,
     disableP2pReplication,
   }: SpaceProtocolSessionProps) {
     this._wireProps = wireProps;
     this._swarmIdentity = swarmIdentity;
     this._onSessionAuth = onSessionAuth;
     this._onAuthFailure = onAuthFailure;
-    this._blobSync = blobSync;
 
     this._teleport = new Teleport(wireProps);
 
@@ -294,7 +277,6 @@ export class SpaceProtocolSession implements WireProtocol {
     if (!this._disableP2pReplication) {
       this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
     }
-    this._teleport.addExtension('dxos.mesh.teleport.blobsync', this._blobSync.createExtension());
   }
 
   async close(): Promise<void> {

@@ -26,7 +26,6 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
   AdmittedFeed,
   type Credential,
@@ -79,7 +78,6 @@ export type DataSpaceProps = {
   echoHost: EchoHost;
   signingContext: SigningContext;
   callbacks?: DataSpaceCallbacks;
-  cache?: SpaceCache;
   tags?: string[];
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
@@ -105,7 +103,6 @@ export class DataSpace {
   private readonly _signingContext: SigningContext;
   private readonly _notarizationPlugin: NotarizationPlugin;
   private readonly _callbacks: DataSpaceCallbacks;
-  private readonly _cache?: SpaceCache = undefined;
   private readonly _echoHost: EchoHost;
   private readonly _edgeFeedReplicator?: EdgeFeedReplicator = undefined;
 
@@ -165,7 +162,6 @@ export class DataSpace {
       authTimeout: AUTH_TIMEOUT,
     });
 
-    this._cache = params.cache;
     this.tags = params.tags ?? [];
 
     if (params.edgeConnection && params.edgeFeatures?.feedReplicator) {
@@ -203,10 +199,6 @@ export class DataSpace {
 
   get notarizationPlugin() {
     return this._notarizationPlugin;
-  }
-
-  get cache() {
-    return this._cache;
   }
 
   /** Membership policy from the genesis credential, defaults to INVITE. */

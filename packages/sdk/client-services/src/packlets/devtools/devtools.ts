@@ -16,7 +16,6 @@ import {
   type EnableDebugLoggingResponse,
   type Event,
   type ExportSqliteDatabaseResponse,
-  type GetBlobsResponse,
   type GetConfigResponse,
   type GetNetworkPeersRequest,
   type GetNetworkPeersResponse,
@@ -102,15 +101,6 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
           usageQuota: navigatorInfo?.quota ?? 0,
         };
       },
-      catch: (error) => error as Error,
-    });
-  }
-
-  ['DevtoolsHost.getBlobs'](): Effect.Effect<GetBlobsResponse, Error> {
-    return Effect.tryPromise({
-      try: async () => ({
-        blobs: await this.params.context.blobStore.list(),
-      }),
       catch: (error) => error as Error,
     });
   }

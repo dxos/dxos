@@ -18,7 +18,6 @@ import "dxos/keys.proto";
 import "dxos/mesh/signal.proto";
 import "dxos/mesh/presence.proto";
 import "dxos/mesh/teleport/gossip.proto";
-import "dxos/value.proto";
 
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
 

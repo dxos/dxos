@@ -6,6 +6,7 @@ import { Event, MulticastObservable, type Observable, PushStream, Trigger } from
 import {
   AuthenticatingInvitation,
   CancellableInvitation,
+  type ClientServices,
   InvitationEncoder,
   type Invitations,
 } from '@dxos/client-protocol';
@@ -14,12 +15,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  type IdentityService,
-  Invitation,
-  type InvitationsService,
-  QueryInvitationsResponse,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { RPC_TIMEOUT } from '../common';
@@ -62,8 +58,8 @@ export class InvitationsProxy implements Invitations {
   private _opened = false;
 
   constructor(
-    private readonly _invitationsService: InvitationsService,
-    private readonly _identityService: IdentityService | undefined,
+    private readonly _invitationsService: ClientServices['InvitationsService'],
+    private readonly _identityService: ClientServices['IdentityService'] | undefined,
     private readonly _getInvitationContext: () => Partial<Invitation> & Pick<Invitation, 'kind'>,
   ) {}
 
