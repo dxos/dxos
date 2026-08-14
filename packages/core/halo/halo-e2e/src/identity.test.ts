@@ -9,6 +9,7 @@ import * as Stream from 'effect/Stream';
 import { describe } from 'vitest';
 
 import { Identity } from '@dxos/halo';
+import { PublicKey, SpaceId } from '@dxos/keys';
 
 import { currentOf, makeClientLayer } from './testing';
 
@@ -69,6 +70,54 @@ describe('Identity', () => {
       },
       Effect.provide(makeClientLayer({ identity: false })),
     ),
+  );
+
+  it.effect(
+    'no personal space id before creation, one after',
+    Effect.fn(
+      function* ({ expect }) {
+        expect(Option.isNone(yield* Identity.personalSpaceId)).toBe(true);
+
+        yield* Identity.create({ displayName: 'test-user' });
+        const spaceId = yield* Identity.personalSpaceId;
+        expect(SpaceId.isValid(Option.getOrThrow(spaceId))).toBe(true);
+      },
+      Effect.provide(makeClientLayer({ identity: false })),
+    ),
+  );
+
+  it.effect(
+    'creates a recovery credential and returns a recovery code',
+    Effect.fn(function* ({ expect }) {
+      const { recoveryCode } = yield* Identity.createRecoveryCredential();
+      expect(recoveryCode).toBeTypeOf('string');
+    }, Effect.provide(makeClientLayer())),
+  );
+
+  it.effect(
+    'registers an external recovery key and revokes it by lookup key',
+    Effect.fn(function* ({ expect }) {
+      const lookupKey = PublicKey.random().toHex();
+      const result = yield* Identity.createRecoveryCredential({
+        externalKey: {
+          recoveryKey: PublicKey.random().toHex(),
+          lookupKey,
+          algorithm: 'ED25519',
+          label: 'Passkey on Linux',
+          kind: 'passkey',
+        },
+      });
+      // No code: the key came from the caller, so there is no seed phrase to hand back.
+      expect(result.recoveryCode).toBeUndefined();
+
+      // Client services refuse to revoke the last un-revoked credential, so add a second one.
+      yield* Identity.createRecoveryCredential();
+      yield* Identity.revokeRecoveryCredential(lookupKey);
+
+      // Revocation resolving only for a registered key is what proves the lookup key round-tripped.
+      const unknown = yield* Effect.result(Identity.revokeRecoveryCredential(PublicKey.random().toHex()));
+      expect(unknown._tag).toEqual('Failure');
+    }, Effect.provide(makeClientLayer())),
   );
 
   it.effect(
