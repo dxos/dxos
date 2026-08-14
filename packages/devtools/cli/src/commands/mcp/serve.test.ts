@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, test } from '@effect/vitest';
+import { beforeAll, describe, test } from '@effect/vitest';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -18,6 +18,9 @@ import { dxBin } from '../../testing';
  * server exits with the stream rather than answering.
  */
 
+/** The one skill the CLI's registry opts in as a prompt; both halves of the round trip name it. */
+const SKILL = 'codeProject';
+
 const REQUESTS = [
   {
     jsonrpc: '2.0',
@@ -28,6 +31,9 @@ const REQUESTS = [
   { jsonrpc: '2.0', method: 'notifications/initialized' },
   { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} },
   { jsonrpc: '2.0', id: 3, method: 'prompts/list', params: {} },
+  { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'skillLoad', arguments: { skill: SKILL } } },
+  { jsonrpc: '2.0', id: 5, method: 'prompts/get', params: { name: SKILL, arguments: {} } },
+  { jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'skillLoad', arguments: { skill: 'noSuchSkill' } } },
 ];
 
 type Response = { id?: number; result?: any };
@@ -86,11 +92,14 @@ const runSession = (awaitedIds: number[], timeout: number): Promise<Map<number, 
   });
 
 describe('dx mcp serve', () => {
-  // Boots a client, activates plugins and reads the operation registry, so it runs well past the
-  // default per-test budget.
-  test('serves the projected surface over a real MCP session', { timeout: 120_000 }, async ({ expect }) => {
-    const responses = await runSession([1, 2, 3], 90_000);
+  // Booting a client, activating plugins and reading the operation registry costs far more than the
+  // assertions, so one session answers every request and each test reads its own reply.
+  let responses: Map<number, Response>;
+  beforeAll(async () => {
+    responses = await runSession([1, 2, 3, 4, 5, 6], 90_000);
+  }, 120_000);
 
+  test('serves the projected surface over a real MCP session', ({ expect }) => {
     const initialize = responses.get(1)!.result;
     expect(initialize.serverInfo.name).to.equal('DXOS Spaces');
     // The shared server instructions, applied by the projection's response passes over stdio.
@@ -114,6 +123,29 @@ describe('dx mcp serve', () => {
     expect(taskSet).to.not.have.property('anyOf');
 
     const prompts: { name: string }[] = responses.get(3)!.result.prompts;
-    expect(prompts.map((prompt) => prompt.name)).to.include('codeProject');
+    expect(prompts.map((prompt) => prompt.name)).to.include(SKILL);
+  });
+
+  // SEP-2640's contract: a skill reaches the model either way, so a client without prompt support
+  // loses nothing. Asserted on this host because only a live session exercises both paths at once.
+  test('serves the same skill through skillLoad and prompts/get', ({ expect }) => {
+    const loaded = JSON.parse(responses.get(4)!.result.content[0].text);
+    expect(loaded.name).to.equal(SKILL);
+    expect(loaded.key).to.equal('org.dxos.plugin.projects.skill.codeProject');
+    expect(loaded.instructions).to.be.a('string').and.to.have.length.greaterThan(0);
+
+    const messages: { role: string; content: { type: string; text: string } }[] = responses.get(5)!.result.messages;
+    expect(messages).to.have.length(1);
+    expect(messages[0].role).to.equal('user');
+    expect(messages[0].content.text).to.equal(loaded.instructions);
+  });
+
+  // A model recovers from a tool result and cannot see a protocol error, so an unknown name has to
+  // come back as `isError` with the names it could have used.
+  test('reports an unknown skill as a tool failure, not a protocol error', ({ expect }) => {
+    const failure = responses.get(6)!.result;
+    expect(failure.isError).to.be.true;
+    expect(failure.content[0].text).to.include('noSuchSkill');
+    expect(failure.content[0].text).to.include(SKILL);
   });
 });

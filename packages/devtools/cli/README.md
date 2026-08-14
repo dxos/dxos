@@ -22,6 +22,68 @@ DX_DEBUG=debug ./bin/dx chat
 in `src/commands/plugin-defs.ts` and lives in the plugin package — e.g. `dx registry publish` is
 `packages/plugins/plugin-registry/src/commands/registry/`. Run `dx --help` for the merged topic list.
 
+## Serve as an MCP server
+
+`dx mcp serve` exposes this profile's spaces to an MCP client over stdio — the local twin of the
+deployed server at `mcp.dxos.org`. Both are hosts over the same `@dxos/mcp-server` package, so the
+tools, prompts and `skillLoad` output are identical; what differs is host-layer only (no OAuth here,
+and operations run in-process). Annotated operations project as tools and opted-in skills as prompts,
+so a plugin you enable shows up without touching this command.
+
+Two things follow from stdio and are worth knowing before you debug it:
+
+- **stdout is the protocol.** Logs go to stderr, so `DX_DEBUG=debug` is safe to leave on; anything a
+  command prints to stdout is not.
+- **The server is unauthenticated and runs as you.** It reads and writes every visible space in the
+  profile it starts with (HALO and settings spaces excluded). Point a client at it only if you would
+  give that client your identity.
+
+Run it directly to check it starts — it will sit waiting for a client, which is correct:
+
+```bash
+DX_PROFILE=main dx mcp serve
+```
+
+### Claude Code
+
+```bash
+claude mcp add dxos --scope user --env DX_PROFILE=main -- dx mcp serve
+claude mcp list   # dxos: dx mcp serve - ✓ Connected
+```
+
+`--scope user` makes it available in every project; drop it for the current project only, or use
+`--scope project` to write a checked-in `.mcp.json` for the whole team. Remove with
+`claude mcp remove dxos`.
+
+### Claude Desktop
+
+Settings → Developer → Edit Config, or edit the file directly
+(`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS,
+`%APPDATA%\Claude\claude_desktop_config.json` on Windows):
+
+```json
+{
+  "mcpServers": {
+    "dxos": {
+      "command": "/absolute/path/to/dx",
+      "args": ["mcp", "serve"],
+      "env": { "DX_PROFILE": "main" }
+    }
+  }
+}
+```
+
+Restart Claude Desktop; the tools appear under the connector menu and skills as slash commands.
+
+Use an **absolute** `command` and set `DX_PROFILE` in `env`: a GUI app is not launched from your
+shell, so it inherits neither your `PATH` nor your exported profile. `which dx` gives the path for an
+npm install; from source it is `packages/devtools/cli/bin/dx`, which needs no build step.
+
+### Other clients
+
+Anything speaking MCP over stdio works — the command is `dx mcp serve` with no arguments.
+`src/commands/mcp/serve.test.ts` drives a raw session over a pipe if you want the wire shape.
+
 ## Release
 
 ```bash
