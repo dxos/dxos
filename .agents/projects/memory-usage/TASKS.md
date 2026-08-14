@@ -127,7 +127,14 @@ fixed the same way.
       fixed here: `space-replication-progress.ts` re-subscribes per space on
       every `client.spaces` emission with no de-dupe, which can spawn
       duplicate subscriptions per space over a session — worth its own
-      follow-up. Separate PR from the initial S1-S4 pass (#12561).
+      follow-up. Also noted: `FeedStore.onNewBlocks` is unscoped (fires for
+      any space's write), so every active `subscribeSyncState` subscription
+      recomputes its own namespace counts on each signal regardless of
+      relevance — still cheaper than the fixed-interval poll it replaced
+      (which recomputed unconditionally every 2 s), but a per-space-scoped
+      event would cut it further; needs a `FeedStore` change, not just this
+      RPC, so left as a follow-up alongside the de-dupe note above. Separate
+      PR from the initial S1-S4 pass (#12561).
 - [x] **S4. Query re-execution amplifies every tick.** `echo-host`'s
       `QueryService._executeQueries` re-runs each dirty reactive query per
       invalidation hint; the loops above generate hints, which is what turns
