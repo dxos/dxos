@@ -38,7 +38,7 @@ export const Query = Operation.make({
       <example description="All tasks related to Cyberdyne and Bob">
         {
           "typename": "org.dxos.type.task",
-          "text": "cyberdyne bob",
+          "text": "cyberdyne bob"
         }
       </example>
 

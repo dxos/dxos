@@ -97,7 +97,10 @@ the new store + tag.
 - [x] **`query` tool `in`-example bug** (`assistant-toolkit .../database/operations/definitions.ts`) — the
       description's example showed nested object refs (`{"/": "echo://…"}`) for `in`, but the param decodes
       only plain URI strings, so the model copied the wrong shape and burned a retry on every scoped query.
-      Example rewritten to URI strings (and the adjacent "Financial report" example's missing comma fixed).
+      Example rewritten to URI strings. All three JSON examples in the description are now valid: the
+      "Financial report" one was missing a comma and the "Cyberdyne" one had a trailing comma (the latter
+      caught by CodeRabbit on #12576). A repo-wide sweep of `<example>` blocks under `src/skills/**` finds
+      no other malformed one.
       The database-skill suite was regenerated with `DX_UPDATE_MODEL_FIXTURES=1`; all 54 pre-change records
       are stale and deleted (replay is green on the 52 new ones alone), and no fixture now records an
       `Expected string at ["in"][0]` retry.
