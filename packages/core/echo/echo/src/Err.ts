@@ -96,3 +96,15 @@ export class GetReactiveError extends BaseError.extend(
     super({ context: { reason: options.reason, snapshotId: options.snapshotId }, ...options });
   }
 }
+
+/**
+ * Thrown when {@link Database.sync} exhausts its budget before the remote caught up.
+ *
+ * `pending` names what is still behind — document ids when the index wait timed out, empty when the
+ * replication wait did.
+ */
+export class SyncTimeoutError extends BaseError.extend('SyncTimeoutError', 'Timed out waiting for sync') {
+  constructor(context: { timeout: number; pending: readonly string[] }, options?: BaseErrorOptions) {
+    super({ context, ...options });
+  }
+}

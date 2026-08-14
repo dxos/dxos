@@ -15,6 +15,7 @@ import {
   type Blob,
   Database,
   Entity,
+  Err,
   Feed,
   Filter,
   JsonSchema,
@@ -174,6 +175,19 @@ export interface EchoDatabase extends Database.Database {
  */
 export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = Database.BranchBinding<T>;
 
+/**
+ * Remote-index barrier used by {@link EchoDatabase.sync} with `indexed: true`.
+ *
+ * Injected rather than reached for, because the database layer has no EDGE transport of its own —
+ * `@dxos/client` supplies an adapter over `EdgeHttpClient` when an EDGE URL is configured.
+ */
+export interface RemoteIndexSync {
+  awaitIndexed(
+    spaceId: SpaceId,
+    request: { documents: Record<string, string[]>; timeoutMs: number },
+  ): Promise<{ indexed: boolean; pending: string[] }>;
+}
+
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
@@ -184,6 +198,9 @@ export type EchoDatabaseProps = {
 
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
+
+  /** Barrier for `sync({ indexed: true })`. Absent when the client has no EDGE configured. */
+  remoteIndexSync?: RemoteIndexSync;
 
   /**
    * Run a reactive query for dynamic schemas.
@@ -218,6 +235,9 @@ const FEED_SYNC_POLL_INTERVAL = 2_000;
  * same backlog, and resets to {@link FEED_SYNC_POLL_INTERVAL} the moment it changes.
  */
 const MAX_FEED_SYNC_POLL_INTERVAL = 15_000;
+
+/** Default budget for {@link DatabaseImpl.sync}. */
+const DEFAULT_SYNC_TIMEOUT = 30_000;
 
 const feedSyncStateChanged = (before: SpaceFeedSyncState, after: SpaceFeedSyncState): boolean =>
   before.blocksToPull !== after.blocksToPull ||
@@ -281,6 +301,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    */
   #feedService: FeedService.Client | undefined;
 
+  /** Barrier for `sync({ indexed: true })`; absent when no EDGE is configured. */
+  readonly #remoteIndexSync: RemoteIndexSync | undefined;
+
   /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
   readonly #runtime: EffectContext.Context<never>;
 
@@ -297,6 +320,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._preloadSchemaOnOpen = params.preloadSchemaOnOpen ?? true;
     this._hypergraph = params.graph;
     this.#feedService = params.feedService;
+    this.#remoteIndexSync = params.remoteIndexSync;
     this.#runtime = params.runtime;
 
     this._entityManager = new EntityManager({
@@ -721,6 +745,57 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   async flush(opts?: Database.FlushOptions): Promise<void> {
     await this._entityManager.flush(opts);
     await Promise.all([...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()));
+  }
+
+  async sync({ entities, indexed = false, timeout = DEFAULT_SYNC_TIMEOUT }: Database.SyncOptions = {}): Promise<void> {
+    const deadline = Date.now() + timeout;
+    // Local writes must be durable before their heads can mean anything to a remote.
+    await this.flush({ disk: true, indexes: false });
+
+    const { heads } = await this._entityManager.getDocumentHeads();
+    const scoped = entities ? this.#scopeHeadsToEntities(heads, entities) : heads;
+    await this._entityManager.waitUntilHeadsReplicated({ heads: scoped });
+
+    if (!indexed) {
+      return;
+    }
+    if (!this.#remoteIndexSync) {
+      // Nothing can observe remote indexing from here; a caller that asked for it must not be told
+      // it happened.
+      throw new Err.SyncTimeoutError({ timeout, pending: Object.keys(scoped) });
+    }
+
+    // Each EDGE call caps its own wait, so loop until this call's own budget is spent.
+    let pending = Object.keys(scoped);
+    while (Date.now() < deadline) {
+      const result = await this.#remoteIndexSync.awaitIndexed(this.spaceId, {
+        documents: scoped,
+        timeoutMs: deadline - Date.now(),
+      });
+      if (result.indexed) {
+        return;
+      }
+      pending = result.pending;
+    }
+    throw new Err.SyncTimeoutError({ timeout, pending });
+  }
+
+  /**
+   * Narrows a space-wide heads map to the documents that hold the given entities. Entities whose
+   * document cannot be resolved (not loaded locally) are skipped rather than widening the wait back
+   * to the whole space — the caller asked about specific entities.
+   */
+  #scopeHeadsToEntities(heads: Record<string, string[]>, entities: readonly URI.URI[]): Record<string, string[]> {
+    const scoped: Record<string, string[]> = {};
+    for (const uri of entities) {
+      const eid = EID.tryParse(uri);
+      const objectId = eid && EID.getEntityId(eid);
+      const documentId = objectId && this._entityManager.getObjectCoreById(objectId)?.docHandle?.documentId;
+      if (documentId && heads[documentId]) {
+        scoped[documentId] = heads[documentId];
+      }
+    }
+    return scoped;
   }
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
