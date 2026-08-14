@@ -21,7 +21,6 @@ import { Ref } from '@dxos/echo';
 import { type EdgeTriggerStatus } from '@dxos/edge-client';
 import { EID, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeCallFailedError } from '@dxos/protocols';
 
 import { createEdgeClient } from './edge-client';
 
@@ -31,20 +30,15 @@ type EdgeClient = ReturnType<typeof createEdgeClient>;
 const POLL_INTERVAL = Duration.seconds(15);
 
 /**
- * Backoff for a force-run that reaches EDGE before the trigger object has replicated there
+ * Backoff for a force-run that reaches EDGE before the client's state has caught up there
  * (~31s total across 5 retries): a trigger created client-side is force-run immediately by the UI,
- * so the first attempt can lose the race with replication.
+ * so the first attempt can lose the race — against replication of the trigger itself (rejected as
+ * not found) or against the identity being associated with an account. Every failure is retried
+ * rather than a specific code, since EDGE spells these races several ways.
  *
  * TODO(dmaretskyi): Remove once the client can await replication of the trigger to EDGE.
  */
 const REPLICATION_BACKOFF = Schedule.exponential(Duration.seconds(1), 2).pipe(Schedule.upTo({ times: 5 }));
-
-/**
- * Whether EDGE rejected the force-run because it does not know the trigger yet — a 404 from the
- * dispatcher route, however it is spelled (bare HTTP failure or a JSON error envelope).
- */
-const isTriggerNotReplicated = (error: unknown): boolean =>
-  error instanceof EdgeCallFailedError && /(HTTP code 404|not found)/i.test(error.message);
 
 /**
  * EDGE implementation of {@link RemoteTriggerManager.Service}.
@@ -109,13 +103,9 @@ const make = (
           catch: (error) => error,
         }).pipe(
           Effect.tapError((error) =>
-            isTriggerNotReplicated(error)
-              ? Effect.sync(() =>
-                  log('trigger not yet replicated to edge; retrying', { triggerId: options.trigger.id }),
-                )
-              : Effect.void,
+            Effect.sync(() => log.warn('edge force-run failed; retrying', { triggerId: options.trigger.id, error })),
           ),
-          Effect.retry({ schedule: REPLICATION_BACKOFF, while: isTriggerNotReplicated }),
+          Effect.retry({ schedule: REPLICATION_BACKOFF }),
           Effect.asVoid,
           Effect.orDie,
           Effect.tap(() => refresh),

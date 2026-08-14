@@ -23,6 +23,12 @@ const SPACE_ID = SpaceId.random();
 
 const notReplicatedError = () => new EdgeCallFailedError({ message: 'HTTP code 404: Not Found.' });
 
+const identityNotAssociatedError = () =>
+  new EdgeCallFailedError({
+    message: 'Identity is not associated with an account.',
+    data: { type: 'identity_not_associated_with_account' },
+  });
+
 /**
  * Force-runs a trigger through a manager backed by `edgeClient`, on a forked fiber so the caller
  * can advance the `TestClock` across the retry backoff.
@@ -59,7 +65,24 @@ describe('EdgeTriggerManager', () => {
     }),
   );
 
-  it.effect('does not retry a failure unrelated to replication', () =>
+  it.effect('retries a force-run rejected while the identity is not yet known to edge', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const forceRun = vi
+        .spyOn(edgeClient, 'forceRunCronTrigger')
+        .mockRejectedValueOnce(identityNotAssociatedError())
+        .mockResolvedValue(undefined);
+
+      const fiber = yield* forkInvoke(edgeClient);
+      yield* TestClock.adjust('5 seconds');
+
+      expect(Exit.isSuccess(yield* Effect.exit(Fiber.join(fiber)))).toBe(true);
+      expect(forceRun).toHaveBeenCalledTimes(2);
+    }),
+  );
+
+  it.effect('gives up once the backoff is exhausted', () =>
     Effect.gen(function* () {
       const edgeClient = new EdgeHttpClient('https://edge.example.com');
       vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
@@ -68,10 +91,11 @@ describe('EdgeTriggerManager', () => {
         .mockRejectedValue(new EdgeCallFailedError({ message: 'HTTP code 500: Internal Server Error.' }));
 
       const fiber = yield* forkInvoke(edgeClient);
-      yield* TestClock.adjust('60 seconds');
+      yield* TestClock.adjust('120 seconds');
 
       expect(Exit.isFailure(yield* Effect.exit(Fiber.join(fiber)))).toBe(true);
-      expect(forceRun).toHaveBeenCalledTimes(1);
+      // The initial attempt plus the five scheduled retries.
+      expect(forceRun).toHaveBeenCalledTimes(6);
     }),
   );
 });
