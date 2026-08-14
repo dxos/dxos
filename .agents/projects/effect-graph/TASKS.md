@@ -292,7 +292,22 @@ Gate before Phase 9. Requested 2026-08-13.
       it should differ, but if `properties` arrives already merged the check can see no change and
       skip building a new node, leaving `_node(id)` unfired and every downstream cutoff satisfied.
 
-      Read by inspection since then, and both look correct: `addNodeImpl` compares
+      **CORRECTION — the store path IS at fault, measured not inspected.** `globalThis.composer.graph`
+      is exposed by plugin-graph's `setupDevtools`, so the live graph can be read from the page with
+      `page.evaluate` (`g._registry.get(g.connections(id, 'child'))`). After a rename:
+
+      ```
+      PROBE graph : <id> => ["object-name.placeholder",{...,"defaultValue":"New item"}]   <- OLD label
+      PROBE render: ["Click to open\nNew collection\nMore actions"]                       <- render is faithful
+      ```
+
+      The graph node's `properties.label` is never updated. So the render layer is NOT the culprit,
+      and the break is between the flush (which runs, with the correct new node) and the stored node:
+      `Graph.addNodes` -> `addNodeImpl` -> `_setNode`. Read `addNodeImpl`'s
+      `propertiesChanged` check with real values logged — the inspection below concluded it was fine
+      and that conclusion is now known to be wrong.
+
+      Superseded inspection (kept because it names the exact lines to instrument): `addNodeImpl` compares
       `existing.properties[key] !== properties[key]` (old label is an array, new is a string, so it
       differs), builds a fresh node and calls `_setNode` + `onNodeChanged`; `_setNode` calls
       `model.setNode({ id, data })`, a new wrapper every time, so `nodeAtom` -> `_node` ->
