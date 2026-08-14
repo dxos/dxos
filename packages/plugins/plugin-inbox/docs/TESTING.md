@@ -72,6 +72,11 @@ Setup: storybook against the `@dxos/fixtures` mailbox corpus (391 real messages)
 - [ ] **E4** — Move between two avatars quickly. No stale card opens for the avatar you left (the
       `useCardHover` cleanup — the case with no regression test yet).
 - [ ] **E5** — The avatar column does not resize as the create button appears.
+- [ ] **E6** — In the CONVERSATION view, the sender avatar is vertically centred on the sender's NAME,
+      not on the whole title block. Check a message whose title wraps to two lines: the avatar must
+      stay level with the first line, not drift to the middle. (The mailbox card was already correct;
+      only the conversation view changed. UNVERIFIED — the fix is reasoned from the box model, not
+      seen.)
 
 ### F. Row story star
 

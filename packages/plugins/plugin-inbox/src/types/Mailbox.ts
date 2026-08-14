@@ -15,7 +15,7 @@ import { Message } from '@dxos/types';
 
 export const SKILL_KEY = 'org.dxos.skill.inbox';
 
-// TOOD(burdon): Factor out Message/Email utils.
+// TOOD(burdon): Factor out Message/Email utils with tests.
 
 // TODO(burdon): Implement as labels?
 export enum MessageState {
@@ -139,17 +139,21 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
      */
     subscriptions: Schema.Array(Subscription).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
+    FeedAnnotation.set(true),
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
-    // Reading a mailbox is a chain: the message replaces the message plank rather than growing the
-    // deck, and picking a different message drops the attachment that belonged to the last one.
+    /**
+     * Reading a mailbox is a chain: the message replaces the message plank rather than growing the
+     * deck, and picking a different message drops the attachment that belonged to the last one.
+     */
     AppAnnotation.DeckAnnotation.set({
       levels: [{ key: 'mailbox' }, { key: 'message' }, { key: 'attachment' }],
     }),
-    FeedAnnotation.set(true),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
-    // Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
-    // Providers are resolved from the registry (any connector whose `sync.targetTypename` is this
-    // type), so a mail provider registers itself rather than being named here.
+    /**
+     * Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
+     * Providers are resolved from the registry (any connector whose `sync.targetTypename` is this
+     * type), so a mail provider registers itself rather than being named here.
+     */
     ConnectorAnnotations.ConnectorAuthAnnotation.set({
       connectorIds: connectorIdsForTarget,
       bindTarget: true,
@@ -224,6 +228,7 @@ export const recordExtraction = (mailbox: Mailbox, messageId: string, objectIds:
   if (objectIds.length === 0) {
     return;
   }
+
   Obj.update(mailbox, (mailbox) => {
     if (!mailbox.extracted) {
       mailbox.extracted = {};
@@ -264,6 +269,7 @@ export const buildMessageTagsIndex = (mailbox: Mailbox | Obj.Snapshot<Mailbox>):
       (index[messageId] ??= []).push(uri);
     }
   }
+
   return index;
 };
 
@@ -512,6 +518,7 @@ export const conversationSummary = (
     if (newest && Date.parse(annotation.created) <= Date.parse(newest.created)) {
       continue;
     }
+
     const model = annotation.properties?.model;
     newest = {
       summary,

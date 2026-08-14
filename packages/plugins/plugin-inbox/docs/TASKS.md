@@ -185,9 +185,14 @@ Committed, unpushed. This is the PR to open first.
       NOTE a related trap found while fixing the ConversationStack story: a bare
       `space.db.query(Filter.type(Message.Message))` does NOT see feed messages, so any seeding derived
       that way silently produces nothing. Worth checking the same in this story's `items`.
-- [ ] **Avatar not aligned with the actor's name** — both surfaces (conversation view AND the mailbox
-      message card). Note `Card.theme.ts`'s `subgrid` carries `items-center`, which is the alignment
-      rule to look at before the row gap.
+- [x] **Avatar not aligned with the actor's name** — HALF was already fixed: the mailbox card wraps
+      its avatar in `Card.Block classNames='h-8 items-center'`, matching the name line, with a comment
+      explaining that centring over the whole two-line row left it hanging below the name. The
+      conversation view still centred against the whole block. Arithmetic before the fix: avatar centre
+      at 26px (8px `p-2` + half of 36px), title first line at ~18px (4px `py-1` + half a `text-lg`
+      line) — an 8px drop. Now `px-2 py-1 text-lg flex items-center h-[1lh]`, which centres on line one
+      whatever the theme sets `text-lg` to, rather than pinning a pixel value.
+      NOT VERIFIED VISUALLY (storybook blocker) — reasoned from the box model. Added as manual step E6.
 - [ ] **Messages without `threadId` are silently truncated to 4** — DIAGNOSED, needs a decision.
       Not the conversation view: it is `MailboxArticle`'s aggregate. `Aggregate.group('threadId')` puts
       EVERY threadless message into one `null`-key group, and the items aggregate caps that group at
