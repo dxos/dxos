@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 //
-// Regenerates `src/internal/icon.ts` from the DXOS mark.
+// Regenerates `src/internal/icon-data.ts` from the DXOS mark.
 //
 // The mark is embedded as base64 rather than served from an asset binding: it is ~2KB, and an HTTP
 // host must serve it from its own origin, because the MCP specification tells clients to verify
@@ -21,7 +21,7 @@ const require = createRequire(import.meta.url);
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO_ROOT = resolve(PACKAGE_ROOT, '../../../..');
 const SOURCE_SVG = join(REPO_ROOT, 'packages/ui/brand/assets/icons/dxos.svg');
-const OUTPUT = join(PACKAGE_ROOT, 'src/internal/icon.ts');
+const OUTPUT = join(PACKAGE_ROOT, 'src/internal/icon-data.ts');
 const SIZE = 96;
 
 // sharp is not a dependency of this package; resolve it from the workspace store when present.

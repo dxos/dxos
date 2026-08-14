@@ -18,6 +18,7 @@ import { log } from '@dxos/log';
 import * as Gateway from './Gateway';
 export { ToolFailure, type ToolFailureCode, failure } from './internal/failure';
 import { ToolFailure, failure } from './internal/failure';
+import * as iconInternal from './internal/icon';
 import * as identityInternal from './internal/identity';
 import * as Projection from './internal/projection';
 import * as spaceInternal from './internal/space';
@@ -353,7 +354,7 @@ export const refEnvelope = (id: string): { '/': string } => ({ '/': id });
 //
 
 export const identity = identityInternal.identity;
-export const icons = identityInternal.icons;
-export const iconResponse = identityInternal.iconResponse;
-export const ICON_LIGHT_PATH = identityInternal.ICON_LIGHT_PATH;
-export const ICON_DARK_PATH = identityInternal.ICON_DARK_PATH;
+export const icons = iconInternal.icons;
+export const iconResponse = iconInternal.iconResponse;
+export const ICON_LIGHT_PATH = iconInternal.ICON_LIGHT_PATH;
+export const ICON_DARK_PATH = iconInternal.ICON_DARK_PATH;
