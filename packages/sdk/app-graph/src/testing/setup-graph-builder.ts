@@ -30,7 +30,7 @@ export const setupGraphBuilder = ({ registry = Registry.make(), extensions }: Se
       GraphBuilder.addExtension(builder, nextExtensions);
     },
     expand: async (id: string, relation: Node.RelationInput = 'child') => {
-      Graph.expand(graph, id, relation);
+      Graph.expandSync(graph, id, relation);
       await GraphBuilder.flush(builder);
     },
     flush: () => GraphBuilder.flush(builder),

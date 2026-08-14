@@ -19,7 +19,7 @@ import { scheduleTask, yieldOrContinue } from '#scheduler';
 
 import * as Node from './AppGraphNode';
 import * as Graph from './graph';
-import { nodeArgsUnchanged, normalizeRelation } from './util';
+import { nodeArgsUnchanged, normalizeRelation, withLabel } from './util';
 
 //
 // Extension Types
@@ -262,7 +262,7 @@ export class GraphBuilder extends Builder.GraphBuilder<
     // TODO(wittjosiah): Remove. This is for backwards compatibility.
     const decoded = Graph.relationFromKey(relation);
     if (decoded.kind === 'child' && decoded.direction === 'outbound') {
-      Graph.expand(this.graph, id, 'action');
+      Graph.expandSync(this.graph, id, 'action');
     }
   }
 }
@@ -405,19 +405,19 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
   const connector =
     _connector &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _connector(node).pipe(Atom.withLabel(`graph-builder:_connector:${id}`)),
+      _connector(node).pipe(withLabel(`graph-builder:_connector:${id}`)),
     );
 
   const actionGroups =
     _actionGroups &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _actionGroups(node).pipe(Atom.withLabel(`graph-builder:_actionGroups:${id}`)),
+      _actionGroups(node).pipe(withLabel(`graph-builder:_actionGroups:${id}`)),
     );
 
   const actions =
     _actions &&
     Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
-      _actions(node).pipe(Atom.withLabel(`graph-builder:_actions:${id}`)),
+      _actions(node).pipe(withLabel(`graph-builder:_actions:${id}`)),
     );
 
   const extensions = [
@@ -435,7 +435,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
                 log.warn('Error in connector', { id: getId('connector'), node, error });
                 return [];
               }
-            }).pipe(Atom.withLabel(`graph-builder:connector:${id}`)),
+            }).pipe(withLabel(`graph-builder:connector:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -456,7 +456,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
                 log.warn('Error in actionGroups', { id: getId('actionGroups'), node, error });
                 return [];
               }
-            }).pipe(Atom.withLabel(`graph-builder:connector:actionGroups:${id}`)),
+            }).pipe(withLabel(`graph-builder:connector:actionGroups:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,
@@ -473,7 +473,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
                 log.warn('Error in actions', { id: getId('actions'), node, error });
                 return [];
               }
-            }).pipe(Atom.withLabel(`graph-builder:connector:actions:${id}`)),
+            }).pipe(withLabel(`graph-builder:connector:actions:${id}`)),
           ),
         } satisfies BuilderExtension)
       : undefined,

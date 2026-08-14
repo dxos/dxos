@@ -15,6 +15,7 @@ import {
   MarkdownState,
   OperationHandler,
   ReactSurface,
+  Schema,
   SkillDefinition,
   UndoMappings,
 } from '#capabilities';
@@ -27,7 +28,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(UndoMappings),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations([...translations, ...editorTranslations])),
   Plugin.addModule(MarkdownSettings),

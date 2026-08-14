@@ -22,7 +22,8 @@ import * as Graph from './graph';
 //
 // Written against the public API only, so the same file runs against a pre-refactor checkout with
 // the import block above rewritten to `./graph`, `./graph-builder`, `./node` (where `RootId` lived
-// on the app node module). That is how the before/after table in the project DESIGN.md was taken.
+// on the app node module) and `expandSync` renamed back to `expand`. That is how the before/after
+// table in the project DESIGN.md was taken.
 //
 
 const ROOT = GraphNode.RootId;
@@ -96,7 +97,7 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
       `expand ${WIDE} nodes`,
       `${WIDE} nodes`,
       async ({ builder, graph }) => {
-        Graph.expand(graph, ROOT, 'child');
+        Graph.expandSync(graph, ROOT, 'child');
         await GraphBuilder.flush(builder);
       },
       { prepare: () => setup(() => Atom.make(nodes)) },
@@ -108,7 +109,7 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
     const { registry, builder, graph } = setup(() =>
       Atom.make((get) => nodeArgs(WIDE).map((node) => ({ ...node, data: node.data + get(state) }))),
     );
-    Graph.expand(graph, ROOT, 'child');
+    Graph.expandSync(graph, ROOT, 'child');
     await GraphBuilder.flush(builder);
 
     await measure(`${UPDATES} connector updates @ ${WIDE} nodes`, `${UPDATES} flushes`, async () => {
@@ -124,7 +125,7 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
     const { registry, builder, graph } = setup(() =>
       Atom.make((get) => nodeArgs(WIDE).map((node) => ({ ...node, data: node.data + get(state) }))),
     );
-    Graph.expand(graph, ROOT, 'child');
+    Graph.expandSync(graph, ROOT, 'child');
     await GraphBuilder.flush(builder);
 
     // Mount a slice of the graph, as a rendered nav tree would.
@@ -148,10 +149,10 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
       `expand ${PARENTS}x${CHILDREN} tree`,
       `${PARENTS * CHILDREN} nodes`,
       async ({ builder, graph }) => {
-        Graph.expand(graph, ROOT, 'child');
+        Graph.expandSync(graph, ROOT, 'child');
         await GraphBuilder.flush(builder);
         for (const parent of nodeArgs(PARENTS, 'p')) {
-          Graph.expand(graph, `${ROOT}/${parent.id}`, 'child');
+          Graph.expandSync(graph, `${ROOT}/${parent.id}`, 'child');
         }
         await GraphBuilder.flush(builder);
       },
@@ -162,7 +163,7 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
   test('read: connections and node atoms', async () => {
     const nodes = nodeArgs(WIDE);
     const { registry, builder, graph } = setup(() => Atom.make(nodes));
-    Graph.expand(graph, ROOT, 'child');
+    Graph.expandSync(graph, ROOT, 'child');
     await GraphBuilder.flush(builder);
     const ids = registry.get(graph.connections(ROOT, 'child')).map(({ id }) => id);
 
@@ -187,10 +188,10 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
 
   test('traverse and path', async () => {
     const { builder, graph } = setup(treeConnector);
-    Graph.expand(graph, ROOT, 'child');
+    Graph.expandSync(graph, ROOT, 'child');
     await GraphBuilder.flush(builder);
     for (const parent of nodeArgs(PARENTS, 'p')) {
-      Graph.expand(graph, `${ROOT}/${parent.id}`, 'child');
+      Graph.expandSync(graph, `${ROOT}/${parent.id}`, 'child');
     }
     await GraphBuilder.flush(builder);
 
@@ -217,7 +218,7 @@ describe.skip('app-graph benchmark', { timeout: 300_000 }, () => {
         prepare: async () => {
           const state = Atom.make(nodeArgs(WIDE)).pipe(Atom.keepAlive);
           const { registry, builder, graph } = setup(() => Atom.make((get) => get(state)));
-          Graph.expand(graph, ROOT, 'child');
+          Graph.expandSync(graph, ROOT, 'child');
           await GraphBuilder.flush(builder);
           return { registry, builder, state };
         },

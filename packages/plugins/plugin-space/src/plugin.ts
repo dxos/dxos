@@ -19,6 +19,7 @@ import {
   ReactRoot,
   ReactSurface,
   Repair,
+  Schema,
   SpaceSettings,
   SpacesReady,
   SpaceState,
@@ -39,7 +40,7 @@ export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).p
   Plugin.addModule(NavigationTargetResolver),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactRoot),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(SpaceSettings),
   Plugin.addModule(
     AppCapability.translations([...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations]),

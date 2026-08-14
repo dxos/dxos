@@ -8,7 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { meta } from '#meta';
 
 export const PipelinePlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(AppCapability.schema(() => import('./capabilities/schema'))),
   Plugin.make,
 );
 

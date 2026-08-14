@@ -5,6 +5,9 @@
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -27,6 +30,9 @@ import { filterItems, getParent, resolveMigrationOperation } from '../../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
+
+/** How long the cursor must rest on a row before it is prefetched; long enough that merely crossing it does not. */
+const HOVER_SETTLE_DELAY = Duration.millis(150);
 
 // TODO(wittjosiah): Avoid using Surface within the navtree, prefer declarative data flow.
 const NavTreeItemEnd = ({ node, open }: { node: AppGraphNode.Node; open: boolean }) => {
@@ -75,14 +81,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       ({ item: { id }, path, open }: { item: AppGraphNode.Node; path: string[]; open: boolean }) => {
         // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
         setItem(path, 'open', open);
-        Graph.expand(graph, id, 'child');
+        Graph.expandSync(graph, id, 'child');
       },
       [graph, setItem],
     );
 
     const handleTabChange = useCallback(
       (node: NavTreeNode.NavTreeItemGraphNode) => {
-        Graph.expand(graph, node.id, 'child');
+        Graph.expandSync(graph, node.id, 'child');
 
         const {
           tab: activeTab,
@@ -252,14 +258,29 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       for (const child of workspaceChildren) {
         if (AppGraphNode.hasDisposition(child, 'group')) {
           setItem([GraphNode.RootId, tab, child.id], 'open', true);
-          Graph.expand(graph, child.id, 'child');
+          Graph.expandSync(graph, child.id, 'child');
         }
       }
     }, [workspaceChildren, tab, setItem, graph]);
 
+    // Prefetching a hovered row is speculative, so it waits out the cursor rather than racing it: a sweep
+    // should only pay for the row the cursor stops on.
+    const hoverExpandRef = useRef<Fiber.Fiber<void> | undefined>(undefined);
+    const interruptHoverExpand = useCallback(() => {
+      if (hoverExpandRef.current) {
+        void Effect.runFork(Fiber.interrupt(hoverExpandRef.current));
+        hoverExpandRef.current = undefined;
+      }
+    }, []);
+    useEffect(() => interruptHoverExpand, [interruptHoverExpand]);
     const onItemHover = useCallback(
-      ({ item }: { item: AppGraphNode.Node }) => Graph.expand(graph, item.id, 'child'),
-      [graph],
+      ({ item }: { item: AppGraphNode.Node }) => {
+        interruptHoverExpand();
+        hoverExpandRef.current = Effect.runFork(
+          Effect.sleep(HOVER_SETTLE_DELAY).pipe(Effect.andThen(Graph.expand(graph, item.id, 'child'))),
+        );
+      },
+      [graph, interruptHoverExpand],
     );
 
     const navTreeContextValue = useMemo(

@@ -5,7 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { ChannelBackend } from '#capabilities';
+import { ChannelBackend, Schema } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -14,7 +14,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const FreeqPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   // Single module contributes both the connection manager and the channel backend
   // (see channel-backend.ts) — same-wave modules cannot `waitFor` each other's contributions.
   Plugin.addModule(ChannelBackend),

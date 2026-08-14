@@ -3,13 +3,13 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AppGraphBuilder,
   HistoryGraph,
   OperationHandler,
   ReviewState,
+  Schema,
   SkillDefinition,
   UndoMappings,
 } from '#capabilities';
@@ -22,7 +22,7 @@ export const ReviewPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(UndoMappings),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.make,
 );
 

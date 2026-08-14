@@ -13,6 +13,7 @@ import {
   OnTypeAdded,
   OperationHandler,
   ReactSurface,
+  Schema,
   SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -26,7 +27,7 @@ export const TablePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CommentConfig),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations([...translations, ...formTranslations, ...tableTranslations])),
   Plugin.addModule(OnTypeAdded),

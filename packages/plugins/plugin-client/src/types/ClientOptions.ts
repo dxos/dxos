@@ -9,6 +9,13 @@ import { type Client, type ClientOptions } from '@dxos/client';
 
 export type ClientPluginOptions = ClientOptions & {
   /**
+   * A client to adopt instead of constructing one, so a host can start `initialize()` at entry
+   * rather than when activation reaches this lazily-imported module. `@synchronized`, so the
+   * plugin's own call joins it; lifecycle stays with the plugin, which destroys it on teardown.
+   */
+  client?: Client;
+
+  /**
    * Whether the navigation handler consumes invitation codes from URL query params.
    * Disable when another plugin (e.g. plugin-onboarding) owns the invitation URL flow.
    * @default true

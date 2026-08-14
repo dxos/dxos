@@ -5,7 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { AppGraphBuilder, AtprotoConnector, ReactSurface, RepoLayer } from '#capabilities';
+import { AppGraphBuilder, AtprotoConnector, ReactSurface, RepoLayer, Schema } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -14,7 +14,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const AtprotoPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(AppCapability.schema(() => import('./schema'))),
+  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AtprotoConnector),
   Plugin.addModule(RepoLayer),

@@ -9,6 +9,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Graph from '@dxos/app-graph/Graph';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
 import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Empty, Tree } from '@dxos/react-ui-list';
@@ -24,10 +25,17 @@ import { useNavTreeContext } from '../NavTreeContext';
 import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns';
 
 /**
- * Delay before the unavailable-workspace message appears: a workspace whose space is still loading has
- * no graph node yet and materializes into a real panel on its own, so it must not flash during that window.
+ * Delay before the unavailable-workspace message appears, timed from the last change to the set of
+ * space workspaces rather than from mount, so it lands only once that set has held still.
  */
 const RENDER_DELAY = '1s';
+
+/**
+ * Width held for the item-end slot, whose surface resolves after the tree has painted: a
+ * `min-content` track would start collapsed and re-truncate every label when it lands. Sized to
+ * what fills it, an `AttentionGlyph` (`w-3`) inset by `mx-1`.
+ */
+const ITEM_END_SIZE = '1.25rem';
 
 export type L1PanelProps = {
   open?: boolean;
@@ -36,6 +44,12 @@ export type L1PanelProps = {
   id: string;
   /** Absent when the workspace is not in the graph; the panel then renders the unavailable message. */
   item?: AppGraphNode.Node;
+  /**
+   * Identity of the set of space workspaces, which the unavailable message is a claim about. Empty
+   * means not-loaded-yet rather than nothing-to-show, since every identity ends up with at least a
+   * settings space.
+   */
+  spaces?: string;
   isCurrent: boolean;
   onBack?: () => void;
 };
@@ -45,11 +59,14 @@ export type L1PanelProps = {
  * longer exists, or persisted deck state pointing at one after a profile switch — the panel body is the
  * unavailable-workspace message, so the sidebar is never blank.
  */
-const L1PanelInner = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps) => {
+const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.profile.key);
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
+  // Needs a published space list to make the claim against, and a workspace actually being asked
+  // for — the sentinel deck means none has resolved yet.
+  const reportUnavailable = !!spaces && id !== DeckSchema.DEFAULT_DECK_ID;
 
   return (
     <Tabs.Panel
@@ -75,13 +92,17 @@ const L1PanelInner = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps)
         (item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
-          <Empty
-            label={t('workspace-unavailable.description')}
-            // Second grid row, so the message clears the rail exactly as the tree does, and hugging its
-            // top rather than stretching to the row's full height.
-            classNames='row-start-2 self-start animate-fade-in'
-            style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
-          />
+          reportUnavailable && (
+            <Empty
+              // Spaces publish one at a time, so remounting restarts the delay until they stop.
+              key={spaces}
+              label={t('workspace-unavailable.description')}
+              // Second grid row, so the message clears the rail exactly as the tree does, and
+              // hugging its top rather than stretching to the row's full height.
+              classNames='row-start-2 self-start animate-fade-in'
+              style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
+            />
+          )
         ))}
     </Tabs.Panel>
   );
@@ -127,7 +148,7 @@ const L1PanelContent = ({
             path={path}
             levelOffset={5}
             draggable
-            gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]'
+            gridTemplateColumns={`[tree-row-start] minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
             renderColumns={NavTreeItemColumns}
             blockInstruction={navTreeContext.blockInstruction}
             canDrop={navTreeContext.canDrop}
@@ -157,7 +178,9 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
   return (
     <div
       data-tauri-drag-region
-      className='grid grid-cols-[28px_1fr_min-content_min-content] w-full items-center dx-app-drag dx-density-lg'
+      className='grid w-full items-center dx-app-drag dx-density-lg'
+      // Same late item-end surface as the tree rows below, so the header holds the slot too.
+      style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
     >
       {backCapableWorkspace ? (
         <IconButton

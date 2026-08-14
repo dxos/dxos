@@ -90,7 +90,7 @@ export const createNestedActionsResolver = (props?: {
         { source: 'root', target: group.id, relation: 'child' },
         ...actions.map((action) => ({ source: group.id, target: action.id, relation: 'child' })),
       ]),
-      Graph.expand(group.id, 'child'),
+      Graph.expandSync(group.id, 'child'),
     );
   });
   const items: MenuItemsAccessor = (group?: MenuItemGroup) =>

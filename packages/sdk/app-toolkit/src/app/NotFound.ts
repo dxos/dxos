@@ -40,7 +40,7 @@ export type ExistenceChecker = (echoUri: EID.EID) => Effect.Effect<boolean>;
 export const expandPath = (graph: Graph.ExpandableGraph, qualifiedId: string): void => {
   const prefixes = Attention.expandAttendableId(qualifiedId);
   for (const prefix of prefixes) {
-    Graph.expand(graph, prefix, 'child');
+    Graph.expandSync(graph, prefix, 'child');
   }
 };
 

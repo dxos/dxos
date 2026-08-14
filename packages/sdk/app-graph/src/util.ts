@@ -2,7 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Atom from 'effect/unstable/reactivity/Atom';
+
 import * as Node from './AppGraphNode';
+
+/**
+ * `Atom.withLabel` captures and formats a stack trace on every call, and the graph labels an atom per node,
+ * per connection key, and per extension, so one expansion costs hundreds of captures on the main thread —
+ * hence opt-in, and only under the dev server.
+ */
+const ATOM_LABELS = Boolean(import.meta.env?.DEV) && import.meta.env?.VITE_ATOM_LABELS === 'true';
+
+/** {@link Atom.withLabel}, reduced to a pass-through wherever labels are not collected. */
+export const withLabel: (name: string) => <A extends Atom.Atom<any>>(self: A) => A = ATOM_LABELS
+  ? Atom.withLabel
+  : () => (self) => self;
 
 // PRIMARY separates top-level components (e.g., node ID from relation) in compound string keys used within the app-graph package.
 const PRIMARY = '\u0001';
