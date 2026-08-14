@@ -1,6 +1,6 @@
-# @dxos/mcp-projection
+# @dxos/mcp-server
 
-Projection of the operation registry onto an MCP tool and prompt surface.
+The DXOS MCP server: the tool and prompt surface projected from the operation registry.
 
 Everything that decides what a model sees — which operations become tools, their names, schemas
 and descriptions, which skills become prompts, and the server instructions — lives here, so every
@@ -11,7 +11,7 @@ transport; nothing else about the surface is theirs to decide.
 ## Installation
 
 ```bash
-pnpm i @dxos/mcp-projection
+pnpm i @dxos/mcp-server
 ```
 
 ## DXOS Resources

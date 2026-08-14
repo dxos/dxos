@@ -14,10 +14,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import { DXOS_VERSION } from '@dxos/client';
 import { log } from '@dxos/log';
-import { Gateway, Server } from '@dxos/mcp-projection';
+import { Gateway, Server, Stdio } from '@dxos/mcp-server';
 
 import { makeGateway } from './gateway';
-import { stdioLayer } from './stdio';
 
 const SERVER_NAME = 'DXOS Spaces';
 
@@ -45,7 +44,7 @@ export const serve = Command.make(
             protocols: [McpProtocol.v2025_06_18],
           }),
         ),
-        Layer.provide(stdioLayer),
+        Layer.provide(Stdio.layer),
       ),
     );
   }),

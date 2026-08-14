@@ -48,4 +48,4 @@ export type Shape = {
  * world, and the whole of what a host supplies. Reaching the registry over a Cloudflare service
  * binding or through an in-process plugin manager is a host concern; what the model sees is not.
  */
-export class Service extends Context.Service<Service, Shape>()('@dxos/mcp-projection/Gateway') {}
+export class Service extends Context.Service<Service, Shape>()('@dxos/mcp-server/Gateway') {}

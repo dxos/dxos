@@ -18,7 +18,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Obj } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Gateway, GatewayError, Snapshot, errorMessage } from '@dxos/mcp-projection';
+import { type Gateway, GatewayError, Snapshot, errorMessage } from '@dxos/mcp-server';
 // Narrow subpath imports: these plugins declare React surfaces, and a bundler follows the dynamic
 // import behind a lazy capability, so activating them would pull React into the CLI binary.
 import { ProjectOperationHandlerSet } from '@dxos/plugin-projects/operations';

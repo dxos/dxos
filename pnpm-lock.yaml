@@ -5086,7 +5086,7 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
 
-  packages/core/compute/mcp-projection:
+  packages/core/compute/mcp-server:
     dependencies:
       '@dxos/echo':
         specifier: workspace:*
@@ -6625,9 +6625,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/mcp-projection':
+      '@dxos/mcp-server':
         specifier: workspace:*
-        version: link:../../core/compute/mcp-projection
+        version: link:../../core/compute/mcp-server
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant

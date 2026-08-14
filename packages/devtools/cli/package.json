@@ -39,7 +39,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/mcp-projection": "workspace:*",
+    "@dxos/mcp-server": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

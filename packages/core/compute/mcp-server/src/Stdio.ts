@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as Sink from 'effect/Sink';
 import * as Stdio from 'effect/Stdio';
 
-import { Wire } from '@dxos/mcp-projection';
+import * as Wire from './Wire';
 
 /**
  * Platform stdio with the projection's response passes applied to every outgoing message.
@@ -17,7 +17,7 @@ import { Wire } from '@dxos/mcp-projection';
  * of a transport. EDGE applies them to the HTTP body; here they run over the NDJSON line before it
  * reaches stdout, which keeps the two hosts advertising the same tools.
  */
-export const stdioLayer = Layer.effect(
+export const layer = Layer.effect(
   Stdio.Stdio,
   Effect.map(Stdio.Stdio, (stdio) =>
     Stdio.make({

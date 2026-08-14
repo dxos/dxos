@@ -62,7 +62,7 @@
       "path": "../../core/compute/edge-compute"
     },
     {
-      "path": "../../core/compute/mcp-projection"
+      "path": "../../core/compute/mcp-server"
     },
     {
       "path": "../../core/echo/echo"
