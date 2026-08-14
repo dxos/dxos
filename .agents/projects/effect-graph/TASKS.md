@@ -165,14 +165,27 @@ Gate before Phase 9. Requested 2026-08-13.
       declared a `resolver:`, so both the function and its call site were genuinely dead. Removing
       them cannot be the behaviour change.
 
-      **Next suspect: `99ac23f1`** ("generalize neighbourhood and tree views into the core"). It is
-      the only remaining commit in the region with runtime semantics for app-graph: `_connections`
-      moved onto `model.neighborsAtom` and `_json` onto `model.toTree`. `neighbors()` deliberately
-      *skips edges whose other endpoint is a placeholder* — and app-graph relies on placeholder nodes
-      for tombstones and for edges that arrive before their endpoint. If a node the navtree needs is
-      momentarily a placeholder, its connections silently vanish, which matches a menu that renders
-      but acts on nothing. A/B it with the same two build patches; if it passes, the culprit is
-      `6e3e2cd3` (decorator injection) by elimination.
+      **CULPRIT: `99ac23f1`** ("generalize neighbourhood and tree views into the core") — A/B fails
+      4/5 there, against 2/5 at its parent `23198521`. It is the commit that turns the drag-only
+      failure into the full four.
+
+      The visible semantic change in its diff, and the place to start:
+
+      ```diff
+      -      for (const edge of sortByOrder(this._model.outgoing(id))) {
+      +      for (const edge of this._model.outgoing(id)) {
+      -      for (const edge of sortByOrder(this._model.incoming(id))) {
+      +      for (const edge of this._model.incoming(id)) {
+      ```
+
+      `_edges` stopped ordering by the edge's `data.order`, and `_connections` moved from
+      `get(this._edges(id))` + `get(this._node(childId))` per child onto `model.neighborsAtom`, which
+      returns raw adjacency order and reads `.data` non-reactively. Two candidate consequences, both
+      worth checking directly: (a) `data.order` is now vestigial — sort survives only because
+      `sortEdgesImpl` re-inserts edges, verified working at HEAD, so any path that sets `order`
+      without re-inserting silently loses its ordering; (b) the per-child `get(this._node(id))`
+      dependency is gone, so a child whose app-level `data` changes without a model version bump no
+      longer invalidates the parent's connections.
 
       2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
          consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
