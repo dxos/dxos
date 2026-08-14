@@ -1,12 +1,17 @@
 # Manual Testing Plan
 
 Everything built across Phases 0-5 is verified by build, lint and unit tests only. These are the steps
-that convert that into "seen working". None have been run, with one exception noted in F.
+that convert that into "seen working".
 
-**Run these in a warm browser** against the storybook on :9009. An automation browser starts with an
-empty OPFS, pays a full ECHO init, and trips the fixed 30s startup budget at `useApp.tsx:236` — see
-the blocker section in [`TASKS.md`](TASKS.md). Nothing is wrong with the code; the profile is the
-variable.
+**Status: run on 2026-08-14** against the user's live Composer (`localhost:5173`, a real Gmail-synced
+mailbox — 358 inbox / 24 important / 11 sent / 3 starred), driven through the agent debug port rather
+than by hand. Per-step verdicts are inline below; the run's findings and what it says about automating
+this are in [Results](#results-2026-08-14) and [Automating this](#automating-this-via-the-debug-port).
+
+**If running by hand, use a warm browser.** An automation browser starts with an empty OPFS, pays a
+full ECHO init, and trips the fixed 30s startup budget at `useApp.tsx:236` — see the blocker section in
+[`TASKS.md`](TASKS.md). Nothing is wrong with the code; the profile is the variable. The debug-port
+route below sidesteps this entirely, because it attaches to a browser that is already warm.
 
 Work them in order: B through E all need the mailbox rendering, which A establishes.
 
