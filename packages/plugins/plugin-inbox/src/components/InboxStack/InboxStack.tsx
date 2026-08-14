@@ -21,6 +21,7 @@ import { useVisibleTags } from '#hooks';
 import { getMessageBodyText, getMessageProps } from '../../util';
 import { buildContactIndex } from './contact-index';
 import { isMessageGroup } from './is-message-group';
+import { buildTileMenuItems } from './tile-menu';
 
 export type InboxStackAction =
   // `newPlank` when the gesture asked for its own plank (meta/ctrl click) rather than reusing the
@@ -402,35 +403,19 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
     [message, searchQuery],
   );
 
-  const menuItems = useMemo(() => {
-    if (!onAction) {
-      return undefined;
-    }
-    const items = [];
-    // Archive is the `inbox` tag coming off, so the same entry restores a message that lacks it.
-    if (enableArchive) {
-      items.push({
-        label: inInbox ? 'Archive' : 'Move to Inbox',
-        icon: inInbox ? 'ph--archive--regular' : 'ph--tray--regular',
-        onClick: () => onAction({ type: 'archive', messageId: message.id }),
-      });
-    }
-    if (enableIgnoreSender && message.sender?.email) {
-      items.push({
-        label: 'Ignore sender',
-        icon: 'ph--prohibit--regular',
-        onClick: () => onAction({ type: 'ignore-sender', messageId: message.id }),
-      });
-    }
-    if (enableCreateTopic) {
-      items.push({
-        label: 'Create Project',
-        icon: 'ph--stack--regular',
-        onClick: () => onAction({ type: 'create-topic', messageId: message.id }),
-      });
-    }
-    return items.length > 0 ? items : undefined;
-  }, [enableArchive, inInbox, enableIgnoreSender, enableCreateTopic, onAction, message.sender?.email, message.id]);
+  const menuItems = useMemo(
+    () =>
+      buildTileMenuItems({
+        messageId: message.id,
+        senderEmail: message.sender?.email,
+        inInbox,
+        enableArchive,
+        enableIgnoreSender,
+        enableCreateTopic,
+        onAction,
+      }),
+    [enableArchive, inInbox, enableIgnoreSender, enableCreateTopic, onAction, message.sender?.email, message.id],
+  );
 
   return (
     <CardTile.Root
@@ -570,41 +555,17 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
       >
         <CardTile.Header
           menu
-          menuItems={
-            onAction
-              ? [
-                  // Acts on the latest message, as the star does — the conversation is represented by
-                  // it everywhere else in this tile.
-                  ...(enableArchive
-                    ? [
-                        {
-                          label: inInbox ? 'Archive' : 'Move to Inbox',
-                          icon: inInbox ? 'ph--archive--regular' : 'ph--tray--regular',
-                          onClick: () => onAction({ type: 'archive', messageId: latest.id }),
-                        },
-                      ]
-                    : []),
-                  ...(enableIgnoreSender && latest.sender?.email
-                    ? [
-                        {
-                          label: 'Ignore sender',
-                          icon: 'ph--prohibit--regular',
-                          onClick: () => onAction({ type: 'ignore-sender', messageId: latest.id }),
-                        },
-                      ]
-                    : []),
-                  ...(enableCreateTopic
-                    ? [
-                        {
-                          label: 'Create Project',
-                          icon: 'ph--stack--regular',
-                          onClick: () => onAction({ type: 'create-topic', messageId: latest.id }),
-                        },
-                      ]
-                    : []),
-                ]
-              : undefined
-          }
+          // Acts on the latest message, as the star does — the conversation is represented by it
+          // everywhere else in this tile.
+          menuItems={buildTileMenuItems({
+            messageId: latest.id,
+            senderEmail: latest.sender?.email,
+            inInbox,
+            enableArchive,
+            enableIgnoreSender,
+            enableCreateTopic,
+            onAction,
+          })}
           starred={starred}
           onToggleStar={onAction ? handleToggleStar : undefined}
           title={<span className='grow truncate font-medium'>{subject}</span>}
