@@ -77,7 +77,6 @@ import {
 } from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { type BlobStoreApi, BlobStoreApiService } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
@@ -206,7 +205,6 @@ export class ClientServicesHost {
   // Stack components, resolved from the layer runtime on open. Present after `open` starts.
   #ctx?: Context;
   #metadataStore?: IMetadataStore;
-  #blobStore?: BlobStoreApi;
   #keyring?: KeyringApi;
   #feedStore?: FeedStore<any>;
   #spaceManager?: SpaceManager;
@@ -328,10 +326,6 @@ export class ClientServicesHost {
 
   get metadataStore(): IMetadataStore {
     return this.#metadataStore ?? failUndefined();
-  }
-
-  get blobStore(): BlobStoreApi {
-    return this.#blobStore ?? failUndefined();
   }
 
   get recoveryManager(): EdgeIdentityRecoveryManager {
@@ -508,7 +502,6 @@ export class ClientServicesHost {
       Effect.all({
         // Components.
         metadataStore: IMetadataStoreService,
-        blobStore: BlobStoreApiService,
         keyring: KeyringApiService,
         feedStore: FeedStoreService,
         spaceManager: SpaceManagerService,
@@ -540,7 +533,6 @@ export class ClientServicesHost {
     );
 
     this.#metadataStore = resolved.metadataStore;
-    this.#blobStore = resolved.blobStore;
     this.#keyring = resolved.keyring;
     this.#feedStore = resolved.feedStore;
     this.#spaceManager = resolved.spaceManager;
@@ -667,9 +659,6 @@ export class ClientServicesHost {
         // Echo metadata + large space data.
         yield* sql`DELETE FROM space_metadata`;
         yield* sql`DELETE FROM space_large`;
-        // Blob store.
-        yield* sql`DELETE FROM blobs_meta`;
-        yield* sql`DELETE FROM blobs_data`;
         // Keyring.
         yield* sql`DELETE FROM keyring`;
         // Automerge chunks + heads.

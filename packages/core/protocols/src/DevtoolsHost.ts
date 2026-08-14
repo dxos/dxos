@@ -235,10 +235,6 @@ export class Rpcs extends RpcGroup.make(
     payload: ResetStorageRequest,
     error: serviceError,
   }),
-  Rpc.make('getBlobs', {
-    success: protoMessage('dxos.devtools.host.GetBlobsResponse'),
-    error: serviceError,
-  }),
   Rpc.make('getSnapshots', {
     success: protoMessage('dxos.devtools.host.GetSnapshotsResponse'),
     error: serviceError,
