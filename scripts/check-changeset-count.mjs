@@ -32,7 +32,8 @@ const WAIVER = /^\s*#\s*multiple-changesets\s*:\s*(?<reason>\S.*?)\s*$/;
 const sh = (cmd) => execSync(cmd, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 const lines = (output) => output.split('\n').filter(Boolean);
 
-const isChangeset = (file) => /^\.changeset\/[^/]+\.md$/.test(file) && !file.endsWith('README.md');
+// Only the exact README is not a changeset — `featureREADME.md` is one, and Changesets reads it as one.
+const isChangeset = (file) => /^\.changeset\/[^/]+\.md$/.test(file) && file !== '.changeset/README.md';
 
 // Front matter is the block between the first two `---` fences; a `#` below it is a markdown heading.
 const frontMatter = (source) => {
