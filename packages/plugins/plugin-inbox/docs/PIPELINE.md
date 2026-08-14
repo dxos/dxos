@@ -15,6 +15,12 @@ service (`MailSyncProvider`) because exactly **one** provider is active per oper
 `Context.Tag` models. Scan needs **N** processors active at once from different plugins, which a tag
 cannot express, so it is a capability contribution (`InboxCapabilities.MailboxProcessor`).
 
+A third seam covers one-shot operations a surface invokes rather than the cascade running:
+`ReplyGenerator` and `MailSendOperation` each contribute **one** operation typed against a contract
+plugin-inbox owns (`ReplyGeneration`, `MailSend`). Pick by what is being contributed — a single
+implementation resolved at runtime (service), a set the cascade runs (processor), or one operation a
+surface calls (contract capability).
+
 `sync/mail-sync.ts` is a provider-agnostic harness owning everything not provider-specific:
 binding/mailbox/feed loads, window resolution, the dedup → cap → process → commit pipeline, progress,
 cancellation and stats. plugin-google and plugin-jmap each contribute only a layer.
@@ -60,7 +66,8 @@ stream merge, `»` a `Stream.grouped` page, and the last element of each chain i
 Everything with a processor id runs from the Scan cascade. The sync pair runs from the Sync toolbar
 action or a routine; `AnalyzeMailbox` is also reachable from brain's "Mailbox Facts" routine; the
 projects trio run from project routines. Per-message one-shots (`ExtractMessage`,
-`CreateProjectFromMessage`, `UnsubscribeSender`, `GenerateReply`, …) are not pipelines.
+`CreateProjectFromMessage`, `UnsubscribeSender`, …) are not pipelines; neither is `GenerateReply`,
+which plugin-brain contributes through `ReplyGenerator` for the message surfaces to call.
 
 ```
 Mailbox
@@ -131,7 +138,7 @@ reshuffled between runs would make cursor behaviour irreproducible.
 so a failing processor strands whatever sits behind it even when nothing connects them. Intended: a
 failed processor fails its descendants; independent branches continue.
 
-**D5 — Analysis and the CRM pipeline belong to their owners.** BUILT. plugin-brain contributes the
+**D5 — An operation belongs to the plugin that owns what it needs.** BUILT. plugin-brain contributes the
 `analyze` processor **and** the `FactStore` layer it needs, so a deployment without brain has no
 analyze pass rather than one that dies resolving a service nobody provided — the missing-`FactStore`
 case is structurally impossible, not merely handled. `AnalyzeMailbox` itself moved to `BrainOperation`,
@@ -139,11 +146,16 @@ which **changed its DXN**; that key was released, so a routine bound to the old 
 (accepted deliberately, pre-1.0). plugin-crm's cursored pipeline became the `crm` processor declared
 `after: ['contacts']`, consuming inbox's contact extraction instead of competing with it.
 
-`GenerateReply` followed for the same reason, and with it plugin-inbox's `@dxos/pipeline-rdf`
-dependency. That one could not move wholesale — two inbox containers invoke it directly, so relocating
-the operation would have inverted the plugin dependency — so it reaches them through
-`InboxCapabilities.ReplyGenerator`, typed against a shared `ReplyGeneration` contract. The AI-reply
-affordance is now absent when nothing is contributed, rather than offered and failing.
+`GenerateReply` followed for the same reason, taking plugin-inbox's `@dxos/pipeline-rdf` dependency
+with it — inbox now has none. It could not move wholesale: two inbox containers invoke it directly, so
+relocating the operation alone would have inverted the plugin dependency. Hence the third seam above.
+Two consequences worth keeping: the AI-reply affordance is now absent when nothing is contributed
+rather than offered and failing, and the contract means a contributor cannot supply an operation the
+surfaces cannot call.
+
+Both moves changed a released DXN, so routines bound to the old keys are orphaned — accepted
+deliberately, pre-1.0. Note the changesets are `minor`, not `major`: at 0.x a breaking change rides
+the minor, and `major` would cut 1.0.0 across the whole fixed publish group.
 
 **D6 — Generalize off `Mailbox`.** NOT BUILT. The abstraction is "a durable feed plus N
 independently-cursored consumers contributed by plugins"; nothing in it is mail-specific. Candidates:
