@@ -11,15 +11,8 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi } from '@dxos/keyring';
 import {
-  type CreateIdentityRequest,
-  type CreateRecoveryCredentialRequest,
-  type CreateRecoveryCredentialResponse,
   type Identity as IdentityProto,
-  type QueryIdentityResponse,
   type RecoverIdentityRequest,
-  type RequestRecoveryChallengeResponse,
-  type RevokeRecoveryCredentialRequest,
-  type SignPresentationRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type IdentityService } from '@dxos/protocols/rpc';
@@ -39,7 +32,9 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     super();
   }
 
-  ['IdentityService.createIdentity'](request: CreateIdentityRequest): Effect.Effect<IdentityProto, Error> {
+  ['IdentityService.createIdentity'](
+    request: IdentityService.CreateIdentityRequest,
+  ): Effect.Effect<IdentityProto, Error> {
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();
@@ -50,8 +45,8 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     });
   }
 
-  ['IdentityService.queryIdentity'](): EffectStream.Stream<QueryIdentityResponse, Error> {
-    return EffectEx.streamFromEmitter<QueryIdentityResponse, Error>((emit) => {
+  ['IdentityService.queryIdentity'](): EffectStream.Stream<IdentityService.QueryIdentityResponse, Error> {
+    return EffectEx.streamFromEmitter<IdentityService.QueryIdentityResponse, Error>((emit) => {
       // Omit `identity` entirely when absent: an explicit `undefined` would still drive the optional
       // protobuf codec, which dereferences the missing message and throws.
       const emitNext = () => {
@@ -78,22 +73,27 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
   }
 
   ['IdentityService.createRecoveryCredential'](
-    request: CreateRecoveryCredentialRequest,
-  ): Effect.Effect<CreateRecoveryCredentialResponse, Error> {
+    request: IdentityService.CreateRecoveryCredentialRequest,
+  ): Effect.Effect<IdentityService.CreateRecoveryCredentialResponse, Error> {
     return Effect.tryPromise({
       try: async () => this._recoveryManager.createRecoveryCredential(request),
       catch: (error) => error as Error,
     });
   }
 
-  ['IdentityService.revokeRecoveryCredential'](request: RevokeRecoveryCredentialRequest): Effect.Effect<void, Error> {
+  ['IdentityService.revokeRecoveryCredential'](
+    request: IdentityService.RevokeRecoveryCredentialRequest,
+  ): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => this._recoveryManager.revokeRecoveryCredential(request),
       catch: (error) => error as Error,
     });
   }
 
-  ['IdentityService.requestRecoveryChallenge'](): Effect.Effect<RequestRecoveryChallengeResponse, Error> {
+  ['IdentityService.requestRecoveryChallenge'](): Effect.Effect<
+    IdentityService.RequestRecoveryChallengeResponse,
+    Error
+  > {
     return Effect.tryPromise({
       try: async () => this._recoveryManager.requestRecoveryChallenge(Context.default()),
       catch: (error) => error as Error,
@@ -123,7 +123,9 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
   }
 
   // TODO(burdon): Rename createPresentation?
-  ['IdentityService.signPresentation'](request: SignPresentationRequest): Effect.Effect<Presentation, Error> {
+  ['IdentityService.signPresentation'](
+    request: IdentityService.SignPresentationRequest,
+  ): Effect.Effect<Presentation, Error> {
     return Effect.tryPromise({
       try: async () => {
         const { presentation, nonce } = request;

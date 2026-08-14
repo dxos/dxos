@@ -27,7 +27,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Database, Entity, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj, Query, QueryResult, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
@@ -263,6 +263,22 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
   private _triggers: Trigger.Trigger[] = [];
 
   /**
+   * Live query over `Trigger` objects, subscribed once in {@link start} so the trigger list stays
+   * current reactively. While set, {@link _fetchTriggers} reads {@link QueryResult.results}
+   * directly instead of re-querying the database, so the natural-time poll loop no longer issues a
+   * fresh `Filter.type(Trigger)` query on every tick.
+   */
+  #triggerQuery: QueryResult.QueryResult<Trigger.Trigger> | undefined;
+  #triggerQueryUnsubscribe: (() => void) | undefined;
+
+  /**
+   * Fiber forked by the trigger-query subscription callback to run {@link refreshTriggers}
+   * reactively. Tracked so {@link stop} (and the natural-time-processing failure path) can
+   * interrupt an in-flight refresh instead of letting it repopulate state after shutdown.
+   */
+  #pendingRefreshFiber: Fiber.Fiber<void, never> | undefined;
+
+  /**
    * Unified runtime state for every trigger kind: cron schedule, failure cooldown, and pending
    * {@link RunAgainError} retries. Keyed by trigger id.
    */
@@ -374,20 +390,26 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 
       // Start natural time processing if enabled
       if (this.timeControl === 'natural') {
+        yield* this.#subscribeToTriggers();
         this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(
-          Effect.tapCause((cause) => {
-            const error = EffectEx.causeToError(cause);
-            log.error('trigger dispatcher error', { error });
-            this._running = false;
-            registry.update(
-              this._state,
-              Struct.evolve({
-                enabled: () => false,
-                errors: (errors) => [...errors, error].slice(-MAX_TRACKED_ERRORS),
-              }),
-            );
-            return Effect.void;
-          }),
+          Effect.tapCause((cause) =>
+            Effect.gen({ self: this }, function* () {
+              const error = EffectEx.causeToError(cause);
+              log.error('trigger dispatcher error', { error });
+              this._running = false;
+              this._timerFiber = undefined;
+              registry.update(
+                this._state,
+                Struct.evolve({
+                  enabled: () => false,
+                  errors: (errors) => [...errors, error].slice(-MAX_TRACKED_ERRORS),
+                }),
+              );
+              // A crash bypasses `stop()` (`_running` is already false, so a later `stop()` call
+              // would no-op) — tear the subscription down here so it doesn't outlive the dispatcher.
+              yield* this.#teardownTriggerSubscription();
+            }),
+          ),
           Effect.forkDetach,
         );
       } else {
@@ -417,6 +439,9 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         yield* Fiber.interrupt(this._timerFiber);
         this._timerFiber = undefined;
       }
+
+      // Stop the reactive trigger query subscription.
+      yield* this.#teardownTriggerSubscription();
 
       // Clear runtime state for all triggers.
       this._runtimeState.clear();
@@ -909,12 +934,64 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 
   private _fetchTriggers = () =>
     Effect.gen({ self: this }, function* () {
+      // The local dispatcher only runs triggers that are not explicitly routed to edge.
+      if (this.#triggerQuery) {
+        // `#subscribeToTriggers` keeps this query current reactively — reuse its cached results
+        // instead of issuing a fresh database query on every poll tick.
+        return this.#triggerQuery.results.filter((t) => !t.remote);
+      }
       const objects = yield* Database.query(
         Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerDispatcher.fetchTriggers'),
       ).run;
-      // The local dispatcher only runs triggers that are not explicitly routed to edge.
       return objects.filter((t) => !t.remote);
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
+
+  /**
+   * Subscribe once to a live `Trigger` query so trigger objects update reactively as they change,
+   * replacing the previous behavior of re-querying the database for the full trigger list on every
+   * natural-time poll tick (~1/s), the dominant contributor to `TriggerDispatcher`'s idle-time SQL
+   * churn. Torn down in {@link #teardownTriggerSubscription}.
+   */
+  #subscribeToTriggers = (): Effect.Effect<void> =>
+    Effect.gen({ self: this }, function* () {
+      const queryResult = yield* Database.query(
+        Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerDispatcher.watchTriggers'),
+      );
+      this.#triggerQuery = queryResult;
+      this.#triggerQueryUnsubscribe = queryResult.subscribe(
+        () => {
+          // Tracked so a subsequent `#teardownTriggerSubscription` can interrupt this fiber —
+          // otherwise a refresh forked just before shutdown could still complete afterward, see
+          // `this.#triggerQuery` as already cleared, fall back to a fresh one-shot query, and
+          // repopulate trigger state after the dispatcher has stopped.
+          this.#pendingRefreshFiber = Effect.runFork(
+            this.refreshTriggers().pipe(
+              Effect.tapCause((cause) =>
+                Effect.sync(() => log.error('failed to refresh triggers', { error: EffectEx.causeToError(cause) })),
+              ),
+            ),
+          );
+        },
+        { fire: true },
+      );
+    }).pipe(Effect.provide(this._services));
+
+  /**
+   * Unsubscribe from the live trigger query and interrupt any refresh it forked, so neither can
+   * repopulate trigger state after the dispatcher has stopped — called from both {@link stop} and
+   * the natural-time-processing failure path in {@link start} (a crash bypasses `stop()` since it
+   * sets `_running` to `false` directly).
+   */
+  #teardownTriggerSubscription = (): Effect.Effect<void> =>
+    Effect.gen({ self: this }, function* () {
+      this.#triggerQueryUnsubscribe?.();
+      this.#triggerQueryUnsubscribe = undefined;
+      this.#triggerQuery = undefined;
+      if (this.#pendingRefreshFiber) {
+        yield* Fiber.interrupt(this.#pendingRefreshFiber);
+        this.#pendingRefreshFiber = undefined;
+      }
+    });
 
   private _startNaturalTimeProcessing = (): Effect.Effect<void> =>
     Effect.gen({ self: this }, function* () {

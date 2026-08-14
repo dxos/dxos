@@ -181,6 +181,30 @@ export const tryGetEid = (graph: Graph.ExpandableGraph, qualifiedId: string): Op
 };
 
 /**
+ * Every ECHO object a qualified path could be asking about, terminal segment first.
+ *
+ * The weaker question than {@link tryGetEid}'s "which object IS this node", which must stay strictly
+ * terminal because it backs plank dedup — two views of one object are deliberately two planks. A node
+ * addressed by a view discriminator (`sent`, `drafts`) carries its object id in an interior segment,
+ * so an existence check that demands the terminal one 404s it.
+ */
+export const tryGetEidCandidates = (graph: Graph.ExpandableGraph, qualifiedId: string): EID.EID[] => {
+  const spaceId = getSpaceIdFromPath(qualifiedId);
+  if (!spaceId || Option.isNone(Graph.getNode(graph, getSpacePath(spaceId)))) {
+    return [];
+  }
+  const segments = qualifiedId.split('/');
+  const candidates: EID.EID[] = [];
+  for (let index = segments.length - 1; index >= 0; index--) {
+    const segment = segments[index];
+    if (Key.EntityId.isValid(segment)) {
+      candidates.push(EID.make({ spaceId, entityId: segment }));
+    }
+  }
+  return candidates;
+};
+
+/**
  * Canonical qualified path to the custom type section node directly under a space.
  * This is the path used by sections created with {@link createTypeSectionExtension}.
  * Distinct from {@link getTypePath} which navigates to the plugin-space database subtree.

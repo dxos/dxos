@@ -7,7 +7,6 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 
 import "dxos/client/invitation.proto";
-import "dxos/echo/model/document.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
@@ -47,11 +46,6 @@ message LargeSpaceMetadata {
   optional ControlPipelineSnapshot control_pipeline_snapshot = 1;
 }
 
-message SpaceCache {
-  /// Properties snapshot.
-  optional dxos.echo.model.document.ObjectSnapshot properties = 1;
-}
-
 // TODO(dmaretskyi): Cleanup numbering.
 message SpaceMetadata {
   /// Space key.
@@ -79,8 +73,6 @@ message SpaceMetadata {
 
   // Latest data timeframe reached while processing space messages.
   optional timeframe.TimeframeVector data_timeframe = 5;
-
-  optional SpaceCache cache = 9;
 
   optional EdgeReplicationSetting edge_replication = 11;
 }

@@ -22,7 +22,7 @@ export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.
     // items, so their tag associations live in this child `TagIndex` rather than in object meta.
     tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
   }).pipe(
-    FeedAnnotation.set(true),
+    FeedAnnotation.set({ property: 'feed' }),
     Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
     // Offer "Connect" in the calendar toolbar; bind the calendar as the new connection's sync target.

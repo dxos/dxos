@@ -42,6 +42,13 @@ export type MessengerConfig = {
   disableAuth?: boolean;
   /** Sent as `X-DXOS-Client-Tag` on the WebSocket upgrade (Node/`ws` only; ignored in browsers). */
   clientTag?: string;
+  /**
+   * When set, `open()` does not dial; the owner must call {@link EdgeClient.startNetworking}. Lets a
+   * host that shares this thread with latency-sensitive work decide when connecting is safe — the
+   * policy (and any delay) belongs to that owner, not here. Reconnects are unaffected.
+   * @default false (dial on open)
+   */
+  deferConnect?: boolean;
 };
 
 export interface EdgeConnection extends Required<Lifecycle> {
@@ -53,6 +60,8 @@ export interface EdgeConnection extends Required<Lifecycle> {
   get isOpen(): boolean;
   get status(): EdgeStatus;
   setIdentity(identity: EdgeIdentity): void;
+  /** Begins dialing. Required only when constructed with `deferConnect`; otherwise a no-op repeat. */
+  startNetworking(): void;
   send(ctx: Context, message: Message): Promise<void>;
   onMessage(listener: MessageListener): () => void;
   /**
@@ -88,6 +97,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
   });
 
   private readonly _messageListeners = new Set<MessageListener>();
+
+  /** Guards {@link startNetworking} so the connection loop is only ever started once. */
+  private _networkingStarted = false;
   private readonly _reconnectListeners = new Set<ReconnectListener>();
   private readonly _baseWsUrl: string;
   private readonly _baseHttpUrl: string;
@@ -204,13 +216,29 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   /**
+   * Begins dialing (and keeps reconnecting). Idempotent, so an owner that calls it explicitly and a
+   * later `open()` cannot start two connection loops. Returns without waiting for the socket.
+   */
+  startNetworking(): void {
+    if (this._networkingStarted) {
+      return;
+    }
+    this._networkingStarted = true;
+    this._persistentLifecycle.open().catch((err) => {
+      log.warn('Error while opening connection', { err });
+    });
+  }
+
+  /**
    * Open connection to messaging service.
    */
   protected override async _open(): Promise<void> {
     log('opening...', { info: this.info });
-    this._persistentLifecycle.open().catch((err) => {
-      log.warn('Error while opening connection', { err });
-    });
+    if (this._config.deferConnect) {
+      log('deferring connection until startNetworking');
+    } else {
+      this.startNetworking();
+    }
 
     // Notify about status changes (rtt, rate counters).
     scheduleTaskInterval(
@@ -356,9 +384,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * that predate the challenge endpoint.
    */
   private async _createAuthHeader(path: string): Promise<string | undefined> {
-    const presentation = await authenticateViaChallengeEndpoint(this._baseHttpUrl, this._identity);
-    if (presentation) {
-      return encodePresentationWsAuthHeader(presentation);
+    const authentication = await authenticateViaChallengeEndpoint(this._baseHttpUrl, this._identity);
+    if (authentication) {
+      return encodePresentationWsAuthHeader(authentication.presentation);
     }
 
     const response = await fetch(new URL(path, this._baseHttpUrl), { method: 'GET' });

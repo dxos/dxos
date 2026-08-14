@@ -4,13 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { createEdgeIdentity } from '@dxos/client/edge';
 import * as Credential from '@dxos/compute/Credential';
 import type * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -233,6 +233,7 @@ const finalizePendingEntry = (
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
+    const identityService = yield* ClientCapabilities.IdentityService;
     const invoker = yield* Capabilities.OperationInvoker;
     const serviceResolver = yield* Capabilities.ServiceResolver;
     const pluginContext = yield* Capability.Service;
@@ -243,7 +244,9 @@ export default Capability.makeModule(
         const edgeUrl = client.config.values.runtime?.services?.edge?.url;
         invariant(edgeUrl, 'EDGE services not configured.');
         const next = new EdgeHttpClient(edgeUrl);
-        next.setIdentity(createEdgeIdentity(client));
+        const edgeIdentity = identityService.getEdgeIdentity();
+        invariant(Option.isSome(edgeIdentity), 'Identity not available.');
+        next.setIdentity(edgeIdentity.value);
         cachedEdgeClient = next;
       }
       return cachedEdgeClient;

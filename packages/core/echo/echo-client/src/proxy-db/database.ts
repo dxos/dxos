@@ -45,7 +45,7 @@ import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { runServiceCall } from '@dxos/protocols';
+import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 import { defaultMap } from '@dxos/util';
@@ -209,9 +209,25 @@ type SpaceFeedSyncState = Pick<Database.SyncState, 'blocksToPull' | 'blocksToPus
 const EMPTY_FEED_SYNC_STATE: SpaceFeedSyncState = { blocksToPull: '0', blocksToPush: '0', totalBlocks: '0' };
 
 /**
- * Poll interval for feed block backlog, which has no change stream.
+ * Sums per-namespace feed block backlog counts into the space-wide totals tracked by
+ * {@link SpaceFeedSyncState}. Shared by the one-shot {@link DatabaseImpl.getSyncState} and the
+ * streaming {@link DatabaseImpl.subscribeToSyncState}.
  */
-const FEED_SYNC_POLL_INTERVAL = 2_000;
+const aggregateFeedSyncState = (response: FeedService.GetSyncStateResponse): SpaceFeedSyncState => {
+  let blocksToPull = 0n;
+  let blocksToPush = 0n;
+  let totalBlocks = 0n;
+  for (const namespace of response.namespaces ?? []) {
+    blocksToPull += BigInt(namespace.blocksToPull);
+    blocksToPush += BigInt(namespace.blocksToPush);
+    totalBlocks += BigInt(namespace.totalBlocks);
+  }
+  return {
+    blocksToPull: String(blocksToPull),
+    blocksToPush: String(blocksToPush),
+    totalBlocks: String(totalBlocks),
+  };
+};
 
 /**
  * Selects the peer to report the automerge backlog against: the explicit `peerId` when given,
@@ -762,7 +778,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   subscribeToSyncState(cb: (state: Database.SyncState) => void, options?: Database.GetSyncStateOptions): CleanupFn {
     const ctx = Context.default();
-    let cancelled = false;
     let automerge: SpaceSyncState = { peers: [] };
     let feeds: SpaceFeedSyncState = EMPTY_FEED_SYNC_STATE;
     const emit = () => cb(combineSyncState(automerge, feeds, this.spaceId, options?.peerId));
@@ -775,35 +790,25 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    // Feed blocks have no change stream, so poll the backend.
-    let pollInFlight = false;
-    const pollFeeds = async () => {
-      // Skip overlapping ticks so a slow RPC can't emit stale state after a newer poll.
-      if (pollInFlight) {
-        return;
-      }
-      pollInFlight = true;
-      try {
-        const next = await this.#getSpaceFeedSyncState();
-        if (!cancelled) {
-          feeds = next;
-          emit();
-        }
-      } catch (error) {
-        // Keep the previous feeds state on failure rather than leaving an unhandled rejection.
-        if (!cancelled) {
-          log.warn('failed to poll feed sync state', { error });
-        }
-      } finally {
-        pollInFlight = false;
-      }
-    };
-    void pollFeeds();
-    const timer = setInterval(() => void pollFeeds(), FEED_SYNC_POLL_INTERVAL);
-    ctx.onDispose(() => {
-      cancelled = true;
-      clearInterval(timer);
-    });
+    if (this.#feedService) {
+      ctx.onDispose(
+        subscribeStream(
+          this.#runtime,
+          this.#feedService['FeedService.subscribeSyncState']({ spaceId: this.spaceId, namespaces: [] }),
+          {
+            onData: (response) => {
+              feeds = aggregateFeedSyncState(response);
+              emit();
+            },
+            onError: (error) => {
+              if (!(error instanceof RpcClosedError)) {
+                log.warn('feed sync state stream failed', { error });
+              }
+            },
+          },
+        ),
+      );
+    }
 
     return () => {
       void ctx.dispose();
@@ -821,19 +826,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       this.#runtime,
       this.#feedService['FeedService.getSyncState']({ spaceId: this.spaceId, namespaces: [] }),
     );
-    let blocksToPull = 0n;
-    let blocksToPush = 0n;
-    let totalBlocks = 0n;
-    for (const namespace of response.namespaces ?? []) {
-      blocksToPull += BigInt(namespace.blocksToPull);
-      blocksToPush += BigInt(namespace.blocksToPush);
-      totalBlocks += BigInt(namespace.totalBlocks);
-    }
-    return {
-      blocksToPull: String(blocksToPull),
-      blocksToPush: String(blocksToPush),
-      totalBlocks: String(totalBlocks),
-    };
+    return aggregateFeedSyncState(response);
   }
 
   getAllObjectIds(): string[] {

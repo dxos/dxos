@@ -125,6 +125,60 @@ describe('SqliteStorageAdapter', () => {
       ['test', '2'],
     ]);
   });
+
+  // The range bounds are anchored on the separator, so a prefix selects whole segments only. A
+  // bounds anchored on the prefix itself would degrade to a raw string-prefix match and return these
+  // siblings — a different document's chunks. The key layout is protocol, so pin the boundary.
+  test('loadRange matches whole segments, not string prefixes', async () => {
+    const adapter = await setup();
+    const target = ['sub', 'doc1'];
+    const siblings = [
+      ['sub', 'doc1X'], // segment merely starts with the same text
+      ['sub', 'doc12'], // digit continuation, sorts above the separator
+      ['sub', 'doc1!'], // '!' (0x21) sorts below the separator
+      ['sub', 'doc2'], // unrelated segment
+    ];
+    await adapter.save([...target, 'chunk'], bufferToArray(Buffer.from('wanted')));
+    for (const sibling of siblings) {
+      await adapter.save([...sibling, 'chunk'], bufferToArray(Buffer.from(sibling.join('/'))));
+    }
+
+    const range = await adapter.loadRange(target);
+    expect(range.map((chunk) => chunk.key)).toEqual([[...target, 'chunk']]);
+  });
+
+  // `loadRange` must also return a key stored at exactly the queried prefix — the production
+  // `subduction-ids-<sid>` records are shaped that way, and dropping the equality branch in favour of
+  // a pure descendant range would silently stop finding them.
+  test('loadRange includes a key stored at exactly the prefix', async () => {
+    const adapter = await setup();
+    await adapter.save(['sub', 'ids'], bufferToArray(Buffer.from('exact')));
+    await adapter.save(['sub', 'ids', 'child'], bufferToArray(Buffer.from('child')));
+
+    const range = await adapter.loadRange(['sub', 'ids']);
+    expect(range.map((chunk) => chunk.key)).toEqual([
+      ['sub', 'ids'],
+      ['sub', 'ids', 'child'],
+    ]);
+    expect(range.map((chunk) => Buffer.from(chunk.data!).toString())).toEqual(['exact', 'child']);
+  });
+
+  test('loadRange handles an empty trailing segment', async () => {
+    const adapter = await setup();
+    await adapter.save(['sub', 'doc', ''], bufferToArray(Buffer.from('empty')));
+    expect((await adapter.loadRange(['sub', 'doc'])).map((chunk) => chunk.key)).toEqual([['sub', 'doc', '']]);
+  });
+
+  test('removeRange deletes whole segments only, including the exact prefix', async () => {
+    const adapter = await setup();
+    await adapter.save(['sub', 'doc1'], bufferToArray(Buffer.from('exact')));
+    await adapter.save(['sub', 'doc1', 'chunk'], bufferToArray(Buffer.from('child')));
+    await adapter.save(['sub', 'doc1X', 'chunk'], bufferToArray(Buffer.from('sibling')));
+
+    await adapter.removeRange(['sub', 'doc1']);
+    expect(await adapter.loadRange(['sub', 'doc1'])).toEqual([]);
+    expect((await adapter.loadRange(['sub', 'doc1X'])).length).toBe(1);
+  });
 });
 
 describe('SqliteHeadsStore', () => {

@@ -20,6 +20,8 @@ import type { URI } from '@dxos/keys';
 
 import { type NoHandlerError, RunAgainError } from './errors';
 import type { Operation } from './index';
+// Type-only, so the module cycle (`Skill` imports this module) never exists in emitted code.
+import type * as Skill from './types/Skill';
 
 /**
  * Schema type that accepts any Encoded form but requires no Context.
@@ -648,8 +650,25 @@ export const McpTool = Schema$.Struct({
    * `write` mutates space data, `destructive` deletes or is otherwise irreversible.
    */
   safety: Schema$.Literals(['read', 'write', 'destructive']),
-  /** Aspect/toolset, for server-side filtering (e.g. `/mcp?toolsets=tasks`). */
+  /**
+   * Aspect/toolset, for server-side filtering (e.g. `/mcp?toolsets=tasks`).
+   *
+   * TODO(wittjosiah): Remove? Nothing reads it — the MCP projection decodes the field and drops it,
+   * and no toolset filtering exists. Not an MCP concept either: the specification's tool definition
+   * has no grouping field, so this would stay a server-side convention.
+   */
   aspect: Schema$.optional(Schema$.String),
+  /**
+   * Prompt name of the skill whose workflow this tool belongs to (a skill key's final segment,
+   * e.g. `codeProject`) — derived by {@link mcpTool} from the governing skill's `Definition`;
+   * never written by hand. The MCP projection appends a load-the-skill-first pointer to the tool's
+   * description and serves the skill body through its `skillLoad` tool, so a model discovers the
+   * workflow from the tool it is about to call — progressive disclosure in the direction of the
+   * MCP "Skills over MCP" extension (SEP-2640), whose hosts likewise expose a model-invocable
+   * skill-loading tool keyed by skill name. MCP prompts cannot serve this purpose: the spec makes
+   * them user-controlled, so a model can never fetch one on its own.
+   */
+  skill: Schema$.optional(Schema$.String),
 });
 export type McpTool = Schema$.Schema.Type<typeof McpTool>;
 
@@ -669,8 +688,21 @@ export const McpToolAnnotation = Annotation.make({
 /**
  * Pipeable combinator that opts an operation into MCP projection. Apply at the definition site:
  * `Operation.make({ ... }).pipe(Operation.mcpTool({ name: 'taskComplete', safety: 'write' }))`.
+ *
+ * `skill` takes the governing skill's `Skill.Definition`, so the annotation cannot name a skill
+ * that does not ship. A bare key is accepted for the case the definition cannot be imported —
+ * where doing so would close a plugin dependency cycle, the trade plugin-projects' `skills/keys.ts`
+ * documents for artifact skills. Either way the key's final segment is what persists: the
+ * coordinate the MCP surface uses for both the prompt and `skillLoad`.
  */
-export const mcpTool = (props: McpTool) => annotate(McpToolAnnotation, props);
+export const mcpTool = ({
+  skill,
+  ...props
+}: Omit<McpTool, 'skill'> & { skill?: Skill.Definition | DXN.Name<string> }) =>
+  annotate(McpToolAnnotation, {
+    ...props,
+    ...(skill == null ? {} : { skill: (typeof skill === 'string' ? skill : skill.key).split('.').at(-1) }),
+  });
 
 /**
  * Returns the MCP projection descriptor when the operation is annotated for it, else undefined.
