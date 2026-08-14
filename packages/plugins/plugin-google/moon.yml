@@ -11,8 +11,7 @@ tasks:
     command: >-
       pnpm exec dx-trace-imports
       --export ./GooglePlugin
-      --to "@dxos/react-ui"
-      --to react
+      --to "{@dxos/react-ui,react}"
       --conditions workerd,worker
       --fail-on present
     deps:
