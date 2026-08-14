@@ -221,6 +221,31 @@ Gate before Phase 9. Requested 2026-08-13.
       green, e2e unchanged), so it is not the cause and was reverted — do not retry it. The depth-1
       cascade observation still stands; the mechanism is elsewhere.
 
+      **ROOT CAUSE OF THE REMAINING THREE (probed 2026-08-14).** A throwaway spec that creates two
+      collections and prints the navtree rows shows:
+
+      ```
+      BEFORE: ["Click to open\nNew collection"]                      <- two created, one rendered
+      AFTER : ["...New collection\nMore actions", "...New collection"]  <- second appears only later
+      ```
+
+      **A newly created sibling does not appear in the navtree until a later, unrelated interaction
+      forces a refresh.** That is the whole remaining bug, and it explains all three specs without
+      needing separate causes: `re-order` and `drag` rename by row index, so with only one row
+      rendered the rename lands on the wrong object and `Collection 1` never exists (the drag then
+      times out in `boundingBox`, which is the error you see); `deletion undo` counts three nested
+      rows that were never all present.
+
+      It is an *addition* notification gap — the mirror of the removal gap already fixed in
+      `_connections`. Ruled out at the graph level, each with a direct script (all pass, so do not
+      re-test these): emission-order reordering, `properties.label` updates on an existing node,
+      inbound `getConnections` (what `getParent` uses), and `sortEdges` round-trips.
+
+      Next: the flush clearly happens (the row shows up eventually), so look at *when subscribers are
+      notified* rather than at whether the write lands — the `Atom.batch` wrapping in
+      `_scheduleDirtyFlush`, and the equality cutoff added to `_connections`, are the two places a
+      notification can be swallowed.
+
       2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
              consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
              `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
