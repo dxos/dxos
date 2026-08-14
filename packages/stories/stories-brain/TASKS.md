@@ -1,7 +1,7 @@
 # stories-brain research tasks
 
 _Resume: **This is the umbrella work-stream; the inbox SURFACE work lives in the child ledger**
-`packages/plugins/plugin-inbox/docs/TASKS.md` (registry project `inbox-surface`) — see the MOVED note
+`packages/plugins/plugin-inbox/docs/TASKS.md` (registry project `mailbox-pipeline`) — see the MOVED note
 below, and do not add surface work here. THIS file keeps the model-ladder / FINDINGS / Topics research
 it was created for: 42 open items.
 
@@ -18,7 +18,7 @@ problem, not a worktree or code one. Uncommitted: none._
 
 ## MOVED: the inbox surface work now lives in `packages/plugins/plugin-inbox/docs/TASKS.md`
 
-Split 2026-08-13. That ledger (registry project `inbox-surface`) owns the inbox product surface —
+Split 2026-08-13. That ledger (registry project `mailbox-pipeline`) owns the mailbox pipeline and the surface over it —
 folders, message actions, contact affordances, summarization UI — structured as PHASES THAT MAP ONTO
 PRs, plus a manual test plan. THIS file keeps the model-ladder / FINDINGS / Topics research it was
 created for. Do not add inbox surface work here.

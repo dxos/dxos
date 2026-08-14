@@ -8,9 +8,12 @@ computed group keys (spawned, running) unblocks the threadId truncation, and ann
 refs (spawned) unblocks D6's boundary validation; both await Dima's approval. Unblocked meanwhile:
 Phase 4 summarization and the `useBlobUrl` coverage gap._
 
+Registry project: **`mailbox-pipeline`** (renamed from `inbox-surface` 2026-08-14 — the work outgrew
+the name; it is now the pipeline architecture as much as the surface over it).
+
 Split out of `packages/stories/stories-brain/TASKS.md` on 2026-08-13: that ledger is the model-ladder /
-FINDINGS research harness, this one is the inbox product surface. The ~40 older Topics / FINDINGS /
-model-routing items deliberately stayed behind.
+FINDINGS research harness, this one is the mailbox pipeline and its surface. The ~40 older Topics /
+FINDINGS / model-routing items deliberately stayed behind.
 
 **Phases map to PRs.** One phase = one PR. Do not start a phase before its predecessor is open.
 
