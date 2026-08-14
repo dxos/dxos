@@ -190,15 +190,45 @@ the cursor: the progress key derives from the owner's URI, the progress label fr
 run log from its URI.
 
 So "run passes against feeds" understates the problem. The real question is **what plays the owner's
-role** once it is not a Mailbox. Candidates:
+role** once it is not a Mailbox — and half the answer already exists.
 
-1. **Structural** — any object with `feed: Ref<Feed>`. Smallest change, no schema work, and `Calendar`,
-   `Chat`, `Transcript`, commerce `Search`, magazine `Subscription` and `Ibkr` all satisfy it today.
-   Gives no place to hang a display name or per-subject policy beyond what is already on the object.
-2. **Annotated** — a `FeedOwner` annotation on the schema, so a type opts in. More ceremony; makes the
-   set of valid subjects explicit and discoverable rather than accidental.
-3. **The feed alone**, with each processor resolving its own subject. Removes the owner from the seam
-   but pushes the cursor-anchor problem into every processor, and every one would solve it differently.
+#### `FeedAnnotation` is the marker, and it is already in use
+
+`@dxos/schema`'s `FeedAnnotation` ("identifies a schema as an object with a canonical feed reference")
+is exactly the `FeedOwner` marker this needs. It is not new work:
+
+- **Set by** `Mailbox`, `Calendar`, magazine `Subscription`.
+- **Read by** three consumers that already discover feed owners generically:
+  `plugin-routine`'s `selectFeed` (queries the schema registry for annotated types, then their objects,
+  then resolves each `feed`), assistant-toolkit's `hasFeedAnnotation`, and plugin-assistant's
+  `AgentProperties`.
+
+So the DISCOVERY half of a feed-generic host is built and shipping. What D6 adds is the cursored-pass
+half.
+
+#### But an annotated ref is not expressible in an input schema
+
+Checked, and this constrains the design: `Ref.Ref` accepts a concrete `Type`, a relation, a
+`Type.Type`, or the "any object" schema. There is **no annotation-constrained overload** — "a ref to any
+type carrying `FeedAnnotation`" cannot be written. So a generic operation's input must be
+`Ref.Ref(Obj.Unknown)` (precedent: `Collection.objects`) plus a RUNTIME check, which is what
+`hasFeedAnnotation` already does.
+
+The trade is concrete: today `Ref.Ref(Mailbox.Mailbox)` validates the referenced type at the operation
+boundary. A generic subject gives that up unless ECHO gains an annotation-constrained ref.
+
+#### Candidates, restated against those facts
+
+1. **Annotated subject** (`FeedAnnotation` + `Ref.Ref(Obj.Unknown)` + a runtime guard). Reuses the
+   existing marker and its three consumers; makes the valid set explicit and discoverable. COST: loses
+   boundary type-validation, moving it to a runtime error inside the handler.
+2. **Structural** — any object with `feed: Ref<Feed>`. No schema work at the value level, but the input
+   schema problem is identical (still `Obj.Unknown`), and the valid set becomes accidental rather than
+   declared. Strictly worse than 1 now that the annotation exists.
+3. **The feed alone**, each processor resolving its own subject. Removes the owner from the seam but
+   pushes the cursor-anchor problem into every processor, and each would solve it differently.
+4. **Extend ECHO with an annotation-constrained ref**, then use it. The only option that keeps boundary
+   validation. Largest scope, and it is an ECHO change like the aggregate group-key one.
 
 ### The open sub-questions
 
@@ -215,9 +245,14 @@ role** once it is not a Mailbox. Candidates:
 
 Worth stating plainly, because it was mis-stated earlier in this document. Eight types own a feed —
 `Mailbox`, `Calendar`, `Chat`, `Transcript`, commerce `Search`, magazine `Subscription`, `Ibkr`,
-`TriggerEvent` — but **none except `Mailbox` has a cursored consumer**: no `Cursor.makeFeed` or
+`TriggerEvent` — and three of them (`Mailbox`, `Calendar`, magazine `Subscription`) declare it via
+`FeedAnnotation`. But **none except `Mailbox` has a cursored consumer**: no `Cursor.makeFeed` or
 `findOrCreateFeedCursor` appears in magazine, ibkr, assistant-toolkit or commerce, and nothing scans
 the calendar feed.
+
+Note the asymmetry this creates: the generic DISCOVERY of feed owners is already built and used
+(`selectFeed`), while the generic CONSUMPTION of a feed is not. D6 is the second half of a pattern the
+codebase has already started.
 
 The plugin-projects trio was cited here as the existing second instance and is not one: all three read
 `mailbox.feed`, so they need no generalization at all — what they need is fan-out. The nearest genuine
