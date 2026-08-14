@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { EffectEx } from '@dxos/effect';
 import { type Identity, type Invitation } from '@dxos/halo';
 import { useDevices, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
@@ -126,10 +126,10 @@ const DeviceInvitation = (props: Pick<DeviceInvitationProps, 'createInvitationUr
     if (!identityService) {
       return;
     }
-    void Effect.runPromise(identityService.share()).then(async (flow) => {
+    void EffectEx.runPromise(identityService.share()).then(async (flow) => {
       // Playwright reads this line off the console to drive the device-invitation flows.
       if (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
-        log.info(JSON.stringify({ invitationCode: await Effect.runPromise(flow.code) }));
+        log.info(JSON.stringify({ invitationCode: await EffectEx.runPromise(flow.code) }));
       }
       setFlow(flow);
     });
