@@ -134,7 +134,7 @@ export default Capability.makeModule(
       // Always expand the active workspace so its subtree is initialized.
       const layout = registry.get(layoutAtom);
       if (layout.workspace) {
-        Graph.expand(graph, layout.workspace, 'child');
+        Graph.expandSync(graph, layout.workspace, 'child');
       }
 
       // Expand persisted open nodes, skipping inactive workspace tabs.
@@ -147,7 +147,7 @@ export default Capability.makeModule(
         if (!nodeId) {
           continue;
         }
-        Graph.expand(graph, nodeId, 'child');
+        Graph.expandSync(graph, nodeId, 'child');
       }
     }).pipe(Effect.forkDetach);
 
