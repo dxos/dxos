@@ -4,8 +4,9 @@
 
 /**
  * Gap steps, named for the spacing ramp in `ui-theme/src/css/theme/spacing.css`
- * (4/8/12/16/24/32) plus the two semantic form aliases. Numeric Tailwind gaps (`gap-2`, `gap-3`)
- * are deliberately not expressible: an off-ramp `gap-*` literal is what the ramp exists to prevent.
+ * (4/8/12/16/24/32) plus the two semantic form aliases. Numeric Tailwind gaps (`gap-2`, `gap-3`) are
+ * deliberately not members: the union steers callers onto the ramp. It does not fence them — a
+ * `gap-*` literal passed through `classNames` still applies.
  */
 export type Gap = 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'form' | 'form-section';
 

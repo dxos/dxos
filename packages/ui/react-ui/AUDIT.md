@@ -512,8 +512,9 @@ export type FlexProps = {
 
 **`gap` is normalized onto the theme spacing ramp**
 ([`ui-theme/src/css/theme/spacing.css`](../ui-theme/src/css/theme/spacing.css)), which is the point
-of the prop. `Gap` is a closed union whose members emit the theme's own utilities — no numeric
-Tailwind literal is expressible:
+of the prop. `Gap` is a closed union whose members emit the theme's own utilities, so no numeric
+Tailwind literal is expressible **as a `gap` value** (`classNames` stays an unrestricted escape
+hatch — the prop steers the default path, it does not fence the component):
 
 | `gap`            | class                  | var                          |  px | replaces       |
 | ---------------- | ---------------------- | ---------------------------- | --: | -------------- |
