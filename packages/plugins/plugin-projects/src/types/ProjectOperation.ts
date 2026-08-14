@@ -18,6 +18,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
+import { CodeProjectSkillDefinition } from '#skills';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
@@ -41,7 +42,18 @@ export const Create = Operation.make({
     subject: Schema.Array(Schema.String),
     project: Type.getSchema(Project.Project),
   }),
-});
+}).pipe(
+  Operation.mcpTool({
+    name: 'projectCreate',
+    description:
+      'Creates a project and its owned graph: agent instructions, an artifacts collection, and a ' +
+      'task set for its tasks. Returns the project with a `taskSet` reference — pass that reference ' +
+      'to taskCreate to record work against it.',
+    safety: 'write',
+    aspect: 'projects',
+    skill: CodeProjectSkillDefinition,
+  }),
+);
 
 export const CreateChat = Operation.make({
   meta: { key: makeKey('createChat'), name: 'Create Project Chat', icon: 'ph--chat-text--regular' },
