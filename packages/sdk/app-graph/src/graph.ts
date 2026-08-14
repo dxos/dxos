@@ -179,9 +179,56 @@ class GraphImpl implements WritableGraph {
   /** @internal */
   readonly _node = Atom.family<string, Atom.Atom<Option.Option<Node.Node>>>((id) => {
     return Atom.make((get) => Option.fromUndefinedOr(get(this._model.nodeAtom(id))?.data)).pipe(
+      // Eager: a lazy atom defers rebuilding while nothing observes it, so a subscriber attached
+      // before the node exists would never be notified of its arrival.
+      Atom.setLazy(false),
       withLabel(`graph:node:${id}`),
     );
   });
+
+  /**
+   * The node as the model holds it right now.
+   *
+   * Mutations run inside `Atom.batch`, which defers invalidation, so reading {@link Graph._node}
+   * from a write path returns the value from before the batch — a read-merge-write would then
+   * silently undo whatever an earlier write in the same batch had stored.
+   * @internal
+   */
+  _currentNode(id: string): Option.Option<Node.Node> {
+    this._touch(this._node(id));
+    return Option.fromUndefinedOr(this._model.findNode(id)?.data);
+  }
+
+  /**
+   * Reads an atom purely to wire it up. An atom that has only ever been subscribed to has no
+   * parents, so nothing can invalidate it and its subscriber never fires; reading it registers the
+   * dependency chain that makes the next write observable.
+   * @internal
+   */
+  _touch(atom: Atom.Atom<unknown>): void {
+    this._registry.get(atom);
+  }
+
+  /** The outgoing and inbound edges as the model holds them right now; see {@link Graph._currentNode}. @internal */
+  _currentEdges(id: string): Edges {
+    this._touch(this._edges(id));
+    return this._computeEdges(id);
+  }
+
+  /** {@link Graph._currentEdges} without the touch, so the `_edges` atom body does not recurse. */
+  _computeEdges(id: string): Edges {
+    const edges: Edges = {};
+    for (const relation of this._relations.get(id) ?? []) {
+      edges[relation] = [];
+    }
+    for (const edge of this._model.outgoing(id)) {
+      (edges[edge.type] ??= []).push(edge.target);
+    }
+    for (const edge of this._model.incoming(id)) {
+      (edges[inverseKey(edge.type)] ??= []).push(edge.source);
+    }
+    return edges;
+  }
 
   readonly _nodeOrThrow = Atom.family<string, Atom.Atom<Node.Node>>((id) => {
     return Atom.make((get) => {
@@ -194,18 +241,10 @@ class GraphImpl implements WritableGraph {
   readonly _edges = Atom.family<string, Atom.Atom<Edges>>((id) => {
     return Atom.make((get) => {
       get(this._model.version);
-      const edges: Edges = {};
-      for (const relation of this._relations.get(id) ?? []) {
-        edges[relation] = [];
-      }
-      for (const edge of this._model.outgoing(id)) {
-        (edges[edge.type] ??= []).push(edge.target);
-      }
-      for (const edge of this._model.incoming(id)) {
-        (edges[inverseKey(edge.type)] ??= []).push(edge.source);
-      }
-      return edges;
-    }).pipe(Atom.withEquality(edgesEqual), withLabel(`graph:edges:${id}`));
+      return this._computeEdges(id);
+      // Eager, for the same reason as `_node`: the render path observes `_connections`, and a lazy
+      // `_edges` between them swallows the invalidation that a child's arrival or removal produces.
+    }).pipe(Atom.setLazy(false), Atom.withEquality(edgesEqual), withLabel(`graph:edges:${id}`));
   });
 
   // NOTE: Currently the argument to the family needs to be referentially stable for the atom to be referentially stable.
@@ -225,6 +264,7 @@ class GraphImpl implements WritableGraph {
         .filter(Option.isSome)
         .map((node) => node.value),
     ).pipe(
+      Atom.setLazy(false),
       // Depend on each child's own atom so a child's change invalidates this view, but cut off on the
       // resolved list: without this a no-op re-add re-allocates the Options and notifies spuriously.
       Atom.withEquality(
@@ -800,7 +840,7 @@ const expandSyncImpl = <T extends ExpandableGraph | WritableGraph>(
   const internal = getInternal(graph);
   const normalizedRelation = normalizeRelation(relation);
   const key = primaryKey(id, relationKey(normalizedRelation));
-  const nodeOpt = internal._registry.get(internal._node(id));
+  const nodeOpt = internal._currentNode(id);
   if (Option.isNone(nodeOpt)) {
     // Node not yet in graph: record expand to run when the node is added.
     internal._pendingExpands.add(key);
@@ -886,7 +926,7 @@ const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
   order: string[],
 ): T => {
   const internal = getInternal(graph);
-  const edges = internal._registry.get(internal._edges(id));
+  const edges = internal._currentEdges(id);
   const relationId = relationKey(relation);
   const current = edges[relationId] ?? [];
   // Set membership, not `includes`: both filters run over the whole relation, and a connector
@@ -990,7 +1030,7 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
   } = nodeArg as Node.NodeArg<any> & {
     _actionContext?: Node.ActionContext;
   };
-  const existingNode = internal._registry.get(internal._node(id));
+  const existingNode = internal._currentNode(id);
   Option.match(existingNode, {
     onSome: (existing) => {
       const typeChanged = existing.type !== type;
@@ -1131,7 +1171,7 @@ const removeNodeImpl = <T extends WritableGraph>(graph: T, id: string, edges = f
   // TODO(wittjosiah): Reset expanded and initialized flags?
 
   if (edges) {
-    const nodeEdges = internal._registry.get(internal._edges(id));
+    const nodeEdges = internal._currentEdges(id);
     const edgesToRemove: Edge[] = [];
     for (const [relationKeyValue, relatedIds] of Object.entries(nodeEdges)) {
       const relation = relationFromKey(relationKeyValue);

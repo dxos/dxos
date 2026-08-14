@@ -146,194 +146,182 @@ Gate before Phase 9. Requested 2026-08-13.
 
       A/B at `23198521` (the consolidation) splits the failure: 2 failed, 3 passed.
 
-          1. **Drag / re-order broke at the consolidation** (`re-order collections`, `drag object into
-             collection`). Sibling order in app-graph is carried by *edge insertion order* —
-             `sortEdgesImpl` removes and re-adds a relation's edges — and `_connections` reads it back
-             through `model.neighborsAtom`. **Ordering is verified CORRECT at HEAD** — a direct
-             `Graph.sortEdges` round-trip over four siblings returns the requested order twice running —
-             so the incremental adjacency (`Map`-keyed, order-preserving) landed later already fixed that
-             era's bug, and the drag specs now fail for the same cause as deletion. Treat this as one
-             remaining regression, not two.
-          **Narrowed to `23198521` … `8ff86d48`.** A/B at `8ff86d48` (resolver removal) fails 4/5, so
-          the GraphBuilder split `a86d7718` is EXONERATED. A/B at `23198521` fails only the drag pair, so
-          deletion broke in between. Both intermediate commits need build patches to A/B: remove the
-          `Graph.initialize` call in `plugin-space/spaces-ready.ts`, and make `GraphNodeMatcher`'s
-          `whenRoot`/`whenId`/`whenNodeType` generic in `TNode`.
+                      1. **Drag / re-order broke at the consolidation** (`re-order collections`, `drag object into
+                         collection`). Sibling order in app-graph is carried by *edge insertion order* —
+                         `sortEdgesImpl` removes and re-adds a relation's edges — and `_connections` reads it back
+                         through `model.neighborsAtom`. **Ordering is verified CORRECT at HEAD** — a direct
+                         `Graph.sortEdges` round-trip over four siblings returns the requested order twice running —
+                         so the incremental adjacency (`Map`-keyed, order-preserving) landed later already fixed that
+                         era's bug, and the drag specs now fail for the same cause as deletion. Treat this as one
+                         remaining regression, not two.
+                      **Narrowed to `23198521` … `8ff86d48`.** A/B at `8ff86d48` (resolver removal) fails 4/5, so
+                      the GraphBuilder split `a86d7718` is EXONERATED. A/B at `23198521` fails only the drag pair, so
+                      deletion broke in between. Both intermediate commits need build patches to A/B: remove the
+                      `Graph.initialize` call in `plugin-space/spaces-ready.ts`, and make `GraphNodeMatcher`'s
+                      `whenRoot`/`whenId`/`whenNodeType` generic in `TNode`.
 
-          **`8ff86d48` is NOT the cause** — checked rather than assumed: `initializeImpl` only added the
-          id to `_initialized` and awaited `_onInitialize`, which fired resolver extensions. Nothing
-          declared a `resolver:`, so both the function and its call site were genuinely dead. Removing
-          them cannot be the behaviour change.
+                      **`8ff86d48` is NOT the cause** — checked rather than assumed: `initializeImpl` only added the
+                      id to `_initialized` and awaited `_onInitialize`, which fired resolver extensions. Nothing
+                      declared a `resolver:`, so both the function and its call site were genuinely dead. Removing
+                      them cannot be the behaviour change.
 
-          **CULPRIT: `99ac23f1`** ("generalize neighbourhood and tree views into the core") — A/B fails
-          4/5 there, against 2/5 at its parent `23198521`. It is the commit that turns the drag-only
-          failure into the full four.
+                      **CULPRIT: `99ac23f1`** ("generalize neighbourhood and tree views into the core") — A/B fails
+                      4/5 there, against 2/5 at its parent `23198521`. It is the commit that turns the drag-only
+                      failure into the full four.
 
-          The visible semantic change in its diff, and the place to start:
+                      The visible semantic change in its diff, and the place to start:
 
-          ```diff
-          -      for (const edge of sortByOrder(this._model.outgoing(id))) {
-          +      for (const edge of this._model.outgoing(id)) {
-          -      for (const edge of sortByOrder(this._model.incoming(id))) {
-          +      for (const edge of this._model.incoming(id)) {
-          ```
+                      ```diff
+                      -      for (const edge of sortByOrder(this._model.outgoing(id))) {
+                      +      for (const edge of this._model.outgoing(id)) {
+                      -      for (const edge of sortByOrder(this._model.incoming(id))) {
+                      +      for (const edge of this._model.incoming(id)) {
+                      ```
 
-          `_edges` stopped ordering by the edge's `data.order`, and `_connections` moved from
-          `get(this._edges(id))` + `get(this._node(childId))` per child onto `model.neighborsAtom`, which
-          returns raw adjacency order and reads `.data` non-reactively. Two candidate consequences, both
-          worth checking directly: (a) `data.order` is now vestigial — sort survives only because
-          `sortEdgesImpl` re-inserts edges, verified working at HEAD, so any path that sets `order`
-          without re-inserting silently loses its ordering; (b) the per-child `get(this._node(id))`
-          dependency is gone, so a child whose app-level `data` changes without a model version bump no
-          longer invalidates the parent's connections.
+                      `_edges` stopped ordering by the edge's `data.order`, and `_connections` moved from
+                      `get(this._edges(id))` + `get(this._node(childId))` per child onto `model.neighborsAtom`, which
+                      returns raw adjacency order and reads `.data` non-reactively. Two candidate consequences, both
+                      worth checking directly: (a) `data.order` is now vestigial — sort survives only because
+                      `sortEdgesImpl` re-inserts edges, verified working at HEAD, so any path that sets `order`
+                      without re-inserting silently loses its ordering; (b) the per-child `get(this._node(id))`
+                      dependency is gone, so a child whose app-level `data` changes without a model version bump no
+                      longer invalidates the parent's connections.
 
-          **Fix attempt 1, reverted — but it narrowed the mechanism.** Restoring `sortByOrder` is
-          meaningless at HEAD: `GraphEdge` no longer carries `data` at all, since ordering moved to pure
-          insertion order (verified working). So candidate (a) is dead. Restoring the per-child
-          `get(this._node(childId))` dependency in `_connections` builds and leaves 119/120 green but
-          **fails `graph.test.ts > Graph > connections updates`** — so the two forms genuinely differ in
-          notification behaviour, which is direct evidence for candidate (b). The fix is therefore not a
-          straight revert: keep the `neighborsAtom` read (it is what makes the view cheap) and work out
-          whether the missing per-child dependency, or the notification count that test pins, is the
-          correct semantics. Start by reading that test's expectation against both forms.
+                      **Fix attempt 1, reverted — but it narrowed the mechanism.** Restoring `sortByOrder` is
+                      meaningless at HEAD: `GraphEdge` no longer carries `data` at all, since ordering moved to pure
+                      insertion order (verified working). So candidate (a) is dead. Restoring the per-child
+                      `get(this._node(childId))` dependency in `_connections` builds and leaves 119/120 green but
+                      **fails `graph.test.ts > Graph > connections updates`** — so the two forms genuinely differ in
+                      notification behaviour, which is direct evidence for candidate (b). The fix is therefore not a
+                      straight revert: keep the `neighborsAtom` read (it is what makes the view cheap) and work out
+                      whether the missing per-child dependency, or the notification count that test pins, is the
+                      correct semantics. Start by reading that test's expectation against both forms.
 
-          **Candidate (b) is now weak too.** `graph.test.ts > Graph > connections updates` asserts that
-          updating an existing child fires exactly one update and a no-op re-add fires none. HEAD's
-          `neighborsAtom` form passes it; the restored per-child form fails it by *over*-firing (each
-          recompute builds a fresh `Option`, so there is no equality cutoff). So HEAD's reactivity is the
-          stricter and more correct of the two — the missing dependency is not obviously the bug.
+                      **Candidate (b) is now weak too.** `graph.test.ts > Graph > connections updates` asserts that
+                      updating an existing child fires exactly one update and a no-op re-add fires none. HEAD's
+                      `neighborsAtom` form passes it; the restored per-child form fails it by *over*-firing (each
+                      recompute builds a fresh `Option`, so there is no equality cutoff). So HEAD's reactivity is the
+                      stricter and more correct of the two — the missing dependency is not obviously the bug.
 
-          **What is left, and it is concrete:** at `99ac23f1` the edge type still had `data.order`, so
-          dropping `sortByOrder` there genuinely broke ordering at that commit. Ordering was only made
-          correct again later, by accident, when the incremental adjacency made insertion order
-          authoritative. That accounts for the drag pair. It does NOT yet account for the two deletion
-          specs, which is the piece still unexplained — and the next thing to isolate is what else in
-          `99ac23f1` reaches the delete path, most likely the `_json`/`toTree` move or the `_edges`
-          ordering feeding `removeNodeImpl`'s edge enumeration.
+                      **What is left, and it is concrete:** at `99ac23f1` the edge type still had `data.order`, so
+                      dropping `sortByOrder` there genuinely broke ordering at that commit. Ordering was only made
+                      correct again later, by accident, when the incremental adjacency made insertion order
+                      authoritative. That accounts for the drag pair. It does NOT yet account for the two deletion
+                      specs, which is the piece still unexplained — and the next thing to isolate is what else in
+                      `99ac23f1` reaches the delete path, most likely the `_json`/`toTree` move or the `_edges`
+                      ordering feeding `removeNodeImpl`'s edge enumeration.
 
-          **FIXED: `delete a collection`** — `_connections` reads each child's own atom again, with an
-      equality cutoff on the resolved list. Perf unaffected.
+                      **FIXED: `delete a collection`** — `_connections` reads each child's own atom again, with an
+                  equality cutoff on the resolved list. Perf unaffected.
 
-      **`deletion undo` fails at the DELETE step (line 93), not the undo.** Expects 0, gets 3 on a
-      three-level nest where the two-level case now passes: the orphan cascade stops at depth 1.
-      `removeEdgeImpl`'s orphan branch calls `removeNodesImpl(graph, [endpoint])` with `edges`
-      defaulting to **false**. Passing `true` there was TRIED and made no difference (unit tests stay
-      green, e2e unchanged), so it is not the cause and was reverted — do not retry it. The depth-1
-      cascade observation still stands; the mechanism is elsewhere.
+                  **`deletion undo` fails at the DELETE step (line 93), not the undo.** Expects 0, gets 3 on a
+                  three-level nest where the two-level case now passes: the orphan cascade stops at depth 1.
+                  `removeEdgeImpl`'s orphan branch calls `removeNodesImpl(graph, [endpoint])` with `edges`
+                  defaulting to **false**. Passing `true` there was TRIED and made no difference (unit tests stay
+                  green, e2e unchanged), so it is not the cause and was reverted — do not retry it. The depth-1
+                  cascade observation still stands; the mechanism is elsewhere.
 
-      **ROOT CAUSE OF THE REMAINING THREE (probed 2026-08-14).** A throwaway spec that creates two
-      collections and prints the navtree rows shows:
+                  **ROOT CAUSE OF THE REMAINING THREE (probed 2026-08-14).** A throwaway spec that creates two
+                  collections and prints the navtree rows shows:
 
-      ```
-      BEFORE: ["Click to open\nNew collection"]                      <- two created, one rendered
-      AFTER : ["...New collection\nMore actions", "...New collection"]  <- second appears only later
-      ```
+                  ```
+                  BEFORE: ["Click to open\nNew collection"]                      <- two created, one rendered
+                  AFTER : ["...New collection\nMore actions", "...New collection"]  <- second appears only later
+                  ```
 
-      **A newly created sibling does not appear in the navtree until a later, unrelated interaction
-      forces a refresh.** That is the whole remaining bug, and it explains all three specs without
-      needing separate causes: `re-order` and `drag` rename by row index, so with only one row
-      rendered the rename lands on the wrong object and `Collection 1` never exists (the drag then
-      times out in `boundingBox`, which is the error you see); `deletion undo` counts three nested
-      rows that were never all present.
+                  **A newly created sibling does not appear in the navtree until a later, unrelated interaction
+                  forces a refresh.** That is the whole remaining bug, and it explains all three specs without
+                  needing separate causes: `re-order` and `drag` rename by row index, so with only one row
+                  rendered the rename lands on the wrong object and `Collection 1` never exists (the drag then
+                  times out in `boundingBox`, which is the error you see); `deletion undo` counts three nested
+                  rows that were never all present.
 
-      It is an *addition* notification gap — the mirror of the removal gap already fixed in
-      `_connections`. Ruled out at the graph level, each with a direct script (all pass, so do not
-      re-test these): emission-order reordering, `properties.label` updates on an existing node,
-      inbound `getConnections` (what `getParent` uses), and `sortEdges` round-trips.
+                  It is an *addition* notification gap — the mirror of the removal gap already fixed in
+                  `_connections`. Ruled out at the graph level, each with a direct script (all pass, so do not
+                  re-test these): emission-order reordering, `properties.label` updates on an existing node,
+                  inbound `getConnections` (what `getParent` uses), and `sortEdges` round-trips.
 
-      **The graph layer is now fully exonerated.** A mounted-subscriber script (the render path's
-      actual usage, `registry.subscribe(graph.connections(root, 'child'))`) is notified correctly when
-      a sibling is added: `["root/a"] -> ["root/a","root/b"]`, notifications 1 -> 2. Together with the
-      four scripts above, add/remove/reorder/rename all behave correctly at the graph level.
-      `NavTreeContainer.tsx` also matches `origin/main` modulo the namespace renames, so the merge
-      resolution there is faithful.
+                  **The graph layer is now fully exonerated.** A mounted-subscriber script (the render path's
+                  actual usage, `registry.subscribe(graph.connections(root, 'child'))`) is notified correctly when
+                  a sibling is added: `["root/a"] -> ["root/a","root/b"]`, notifications 1 -> 2. Together with the
+                  four scripts above, add/remove/reorder/rename all behave correctly at the graph level.
+                  `NavTreeContainer.tsx` also matches `origin/main` modulo the namespace renames, so the merge
+                  resolution there is faithful.
 
-      That leaves the layer between the graph and the rendered rows as the only place still changed by
-      this branch: `@dxos/app-toolkit`'s `TypeSection` (which builds the collections section and
-      returns its objects as inline `nodes`) and `AppNodeMatcher`, both touched by the matcher split
-      and the `url` -> `meta` rename. Start there, not in `@dxos/graph`.
+                  That leaves the layer between the graph and the rendered rows as the only place still changed by
+                  this branch: `@dxos/app-toolkit`'s `TypeSection` (which builds the collections section and
+                  returns its objects as inline `nodes`) and `AppNodeMatcher`, both touched by the matcher split
+                  and the `url` -> `meta` rename. Start there, not in `@dxos/graph`.
 
-      Superseded note: the flush clearly happens (the row shows up eventually), so look at *when
-      subscribers are notified* rather than at whether the write lands — the `Atom.batch` wrapping in
-      `_scheduleDirtyFlush`, and the equality cutoff added to `_connections`, are the two places a
-      notification can be swallowed.
+                  Superseded note: the flush clearly happens (the row shows up eventually), so look at *when
+                  subscribers are notified* rather than at whether the write lands — the `Atom.batch` wrapping in
+                  `_scheduleDirtyFlush`, and the equality cutoff added to `_connections`, are the two places a
+                  notification can be swallowed.
 
-      **THE REMAINING BUG IS RENAME, AND IT IS NOW A 25-SECOND PROBE.** `probe-rename.spec.ts` in this
-      folder creates one collection, renames it and prints the row labels. Copy it to
-      `packages/apps/composer-app/src/playwright/` and run it — no need for the full spec:
+                  **ROOT CAUSE FOUND AND FIXED (2026-08-14): lazy atoms and stale reads on the write path.**
+                  Two independent defects, both reproduced as unit tests in `app-graph/src/batch.test.ts` and
+                  both A/B-verified failing-before / passing-after.
 
-      - baseline `4ed7683d`: `["Click to open\nRenamed A\nMore actions"]`  ✅
-      - this branch:          `["Click to open\nNew collection\nMore actions"]`  ❌
+                  1. **Stale read inside `Atom.batch`.** A flush applies every connector update inside one
+                     `Atom.batch`. `addNodeImpl` read the node back through `_node(id)`, and inside a batch a
+                     *mounted* atom returns its pre-batch memo. `addNodeImpl` merges onto what it read, so a
+                     second producer of the same node in the same flush merged onto a stale base and undid the
+                     first write — and when the read reported the node absent it rebuilt it from that producer's
+                     properties alone, dropping the label entirely. Fixed by reading the model directly
+                     (`_currentNode` / `_currentEdges`) on all four write paths: `addNodeImpl`,
+                     `sortEdgesImpl`, `removeNodeImpl`, `expandSyncImpl`. Verified in the app: the rename
+                     reaches the rendered row.
 
-      That single failure explains all three remaining specs: `re-order` and `drag` rename two
-      collections and then locate them *by name*, so the drag times out in `boundingBox` looking for
-      "Collection 1"; `deletion undo` is the one that still needs its own look.
+                  2. **A lazy atom nothing has read is inert.** Effect's atoms are lazy: an atom that has only
+                     ever been *subscribed* to has no parents, so nothing can invalidate it and its subscriber
+                     never fires; and an intermediate atom with no active listener chain takes the
+                     `invalidateChildren` + `skipInvalidation` branch and stops propagating. Measured live via
+                     `registry.getNodes()` after adding a second collection:
 
-      Established about rename by instrumentation, so do not re-derive: the menu opens, exactly one
-      `spacePlugin.renameObject` item is found and focused, Enter opens the popover, the input fills
-      (value confirmed `Renamed A`), Enter closes the popover — and **no console output or page error
-      is produced at any point**. So the interaction completes end to end and the label never changes.
-      Row-render latency is 200-500 ms and is NOT the cause (measured separately).
+                     ```
+                     edges      : state=stale listeners=0 lazy=true children=2
+                     connections: state=valid listeners=0 lazy=true parents=2   <- never invalidated
+                     ```
 
-      **INSTRUMENTED RESULT (do not re-derive).** Logging `AppNode.makeObject`'s label read and the
-      builder's flush guard shows, in order, after the rename:
+                     `_edges` was invalidated and never rebuilt, so `_connections` kept a stale value with no
+                     notification — the row did not appear. A single top-level `registry.get(graph.edges(...))`
+                     repaired it, which is what the old `registry.get(_edges(id))` on the write path had been
+                     doing accidentally; removing those reads in (1) is what regressed `delete a collection`.
+                     Fixed deliberately: `_node`, `_edges` and `_connections` are `Atom.setLazy(false)`, and
+                     `_currentNode`/`_currentEdges` touch their atom through `Graph._touch` so the dependency
+                     chain is wired.
 
-      ```
-      DXPROBE makeObject <id> "Renamed A"          <- ECHO write landed, labelAtom fired, connector re-ran
-      DXPROBE flush .../collections|childoutbound  <- flush NOT skipped; renamed node reaches the store
-      PROBE labels: ["...New collection..."]        <- row still shows the old label
-      ```
+                  Result: composer `collections.spec.ts` goes 4 failed -> 3 failed; `delete a collection`
+                  passes, and `re-order collections` now gets past both renames (it fails later, in the drag's
+                  `boundingBox`) instead of never finding the second row.
 
-      So everything above the store is correct: write, subscription, connector re-run, change
-      detection, flush. The break is at or below `Graph.addNodes` -> `addNodeImpl` -> `_setNode` ->
-      notification, or in the navtree's render. `addNodeImpl` computes `propertiesChanged` as
-      `Object.keys(properties).some((key) => existing.properties[key] !== properties[key])` — check
-      that first: if the label is compared by reference and the two values are an array vs a string
-      it should differ, but if `properties` arrives already merged the check can see no change and
-      skip building a new node, leaving `_node(id)` unfired and every downstream cutoff satisfied.
+                  Dead ends, measured — do NOT retry:
+                  - Removing the `Atom.batch` in `_scheduleDirtyFlush`: makes it strictly worse (5 failed,
+                    `create collection` itself breaks).
+                  - Removing the `Atom.withEquality` cutoffs on `_edges` and `_connections`: no change (4 failed).
+                  - Nothing throws inside the flush; an `unhandledrejection`/`error` listener records zero.
 
-      **CORRECTION — the store path IS at fault, measured not inspected.** `globalThis.composer.graph`
-      is exposed by plugin-graph's `setupDevtools`, so the live graph can be read from the page with
-      `page.evaluate` (`g._registry.get(g.connections(id, 'child'))`). After a rename:
+                  **REMAINING: 3 specs, and they are now a drag/drop problem, not a graph-notification one.**
+                  `re-order collections` and `drag object into collection` both fail inside the drag helper
+                  after the rows are present and correctly named; `deletion undo restores collection` still
+                  fails at the DELETE step (line 93) expecting 0 rows and getting 3, on a three-level nest
+                  where the two-level case now passes — the orphan cascade stops short of the deepest level.
+                  Start with `removeEdgeImpl`'s orphan branch and the `mosaic` drag e2e (which exercises drag
+                  without collections, so it separates drag from graph).
 
-      ```
-      PROBE graph : <id> => ["object-name.placeholder",{...,"defaultValue":"New item"}]   <- OLD label
-      PROBE render: ["Click to open\nNew collection\nMore actions"]                       <- render is faithful
-      ```
+                  2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
+                         consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
+                         `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
+                         console error. NOTE `8ff86d48` does not build in isolation — it removed `Graph.initialize`
+                         while `plugin-space/spaces-ready.ts` still called it, and that call site was only fixed
+                         during the main merge; patch that line to A/B across it. `6e3e2cd3` does not build in
+                         isolation either (the `GraphNodeMatcher` type-erasure defect fixed during the merge), so
+                         expect to patch one or two files per step when bisecting this region.
 
-      The graph node's `properties.label` is never updated. So the render layer is NOT the culprit,
-      and the break is between the flush (which runs, with the correct new node) and the stored node:
-      `Graph.addNodes` -> `addNodeImpl` -> `_setNode`. Read `addNodeImpl`'s
-      `propertiesChanged` check with real values logged — the inspection below concluded it was fine
-      and that conclusion is now known to be wrong.
-
-      Superseded inspection (kept because it names the exact lines to instrument): `addNodeImpl` compares
-      `existing.properties[key] !== properties[key]` (old label is an array, new is a string, so it
-      differs), builds a fresh node and calls `_setNode` + `onNodeChanged`; `_setNode` calls
-      `model.setNode({ id, data })`, a new wrapper every time, so `nodeAtom` -> `_node` ->
-      `_connections` should each fire. A standalone script confirms a label change DOES propagate
-      through `graph.connections`. So the store path is not obviously at fault either, and the
-      render layer (`useNavTreeModel` / `react-ui-list` item memoization) is the last unexamined
-      link. Instrument there next: log the label the row component actually receives.
-
-      Superseded: determine whether the write reaches ECHO. Either the popover's submit writes to a stale
-      object captured in the action closure, or it writes correctly and the connector's
-      `get(Obj.labelAtom(object))` subscription no longer re-runs. Instrumenting
-      `AppNode.makeObject`'s label read is the fastest way to tell those apart.
-
-      2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
-             consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
-             `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
-             console error. NOTE `8ff86d48` does not build in isolation — it removed `Graph.initialize`
-             while `plugin-space/spaces-ready.ts` still called it, and that call site was only fixed
-             during the main merge; patch that line to A/B across it. `6e3e2cd3` does not build in
-             isolation either (the `GraphNodeMatcher` type-erasure defect fixed during the merge), so
-             expect to patch one or two files per step when bisecting this region.
-
-          CLEARED, each by revert + rebuild + rerun: the orphan check; the incremental adjacency maps;
-          `addEdgeImpl` + the `sortEdges` Set membership; and the `origin/main` merge (the pre-merge tip
-          `fd8084de` fails identically). Graph-level repros for the cascade, action expansion, position
-          ordering and re-order all pass (`expansion.test.ts`) — neither bug is visible at that layer.
+                      CLEARED, each by revert + rebuild + rerun: the orphan check; the incremental adjacency maps;
+                      `addEdgeImpl` + the `sortEdges` Set membership; and the `origin/main` merge (the pre-merge tip
+                      `fd8084de` fails identically). Graph-level repros for the cascade, action expansion, position
+                      ordering and re-order all pass (`expansion.test.ts`) — neither bug is visible at that layer.
 
 - [ ] **Composer e2e** — run the Composer e2e suite; the builder/expansion path is only exercised
       end-to-end there (navtree expansion, URL resolution, deck routing).
