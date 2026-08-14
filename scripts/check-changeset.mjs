@@ -91,7 +91,10 @@ const isPublishableSource = (file) => {
 };
 
 const touchedPublishable = changedFiles.filter(isPublishableSource);
-const hasChangeset = changedFiles.some((file) => /^\.changeset\/.+\.md$/.test(file) && file !== '.changeset/README.md');
+// A single path segment, matching what Changesets actually reads — a nested file is not a changeset.
+const hasChangeset = changedFiles.some(
+  (file) => /^\.changeset\/[^/]+\.md$/.test(file) && file !== '.changeset/README.md',
+);
 
 if (touchedPublishable.length === 0) {
   console.log('OK: no publishable source changed; changeset not required.');
