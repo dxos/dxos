@@ -5984,6 +5984,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
@@ -12606,12 +12609,15 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-client':
+      '@dxos/plugin-client':
         specifier: workspace:*
-        version: link:../../sdk/react-client
+        version: link:../plugin-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui

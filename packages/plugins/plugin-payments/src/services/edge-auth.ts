@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Client } from '@dxos/client';
-import { createEdgeIdentity } from '@dxos/client/edge';
 import { encodeAuthHeader, handleAuthChallenge } from '@dxos/edge-client';
+import { type Identity } from '@dxos/halo';
 
 //
 // VP-auth handshake against an arbitrary edge URL.
@@ -14,7 +13,7 @@ import { encodeAuthHeader, handleAuthChallenge } from '@dxos/edge-client';
 // handshake internally via the protected `_handleUnauthorized`, but it is hard-wired to the configured
 // edge URL and the method is not public. Because payments-service runs at a *different* URL we cannot
 // reuse `createEdgeHttpClient` as-is, so we reproduce the (small) handshake from the public primitives:
-//   - `createEdgeIdentity(client)` -> an `EdgeIdentity` that can `presentCredentials({ challenge })`.
+//   - `Identity.getEdgeIdentity()` -> an `EdgeIdentity` that can `presentCredentials({ challenge })`.
 //   - `handleAuthChallenge(response, identity)` -> signs the 401 challenge, returns the encoded presentation.
 //   - `encodeAuthHeader(presentation)` -> the `VerifiablePresentation pb;base64,<...>` header value.
 //
@@ -25,10 +24,9 @@ import { encodeAuthHeader, handleAuthChallenge } from '@dxos/edge-client';
 
 /**
  * Performs the edge VP-auth challenge/response against `baseUrl` and returns the value for the
- * `Authorization` header. The connected identity must be available on the client.
+ * `Authorization` header.
  */
-export const getEdgeAuthHeader = async (client: Client, baseUrl: string): Promise<string> => {
-  const identity = createEdgeIdentity(client);
+export const getEdgeAuthHeader = async (identity: Identity.EdgeIdentity, baseUrl: string): Promise<string> => {
   const response = await fetch(new URL('/auth', baseUrl));
   if (response.status !== 401) {
     throw new Error(`Expected 401 challenge from ${baseUrl}/auth, got ${response.status}.`);
@@ -42,10 +40,10 @@ export const getEdgeAuthHeader = async (client: Client, baseUrl: string): Promis
  * *base* fetch for the x402 payment wrapper so that, on the 402 retry, both `Authorization` (edge) and
  * `X-PAYMENT` (x402) headers are present — they are distinct headers and do not conflict.
  */
-export const createEdgeAuthedFetch = (client: Client, baseUrl: string): typeof globalThis.fetch => {
+export const createEdgeAuthedFetch = (identity: Identity.EdgeIdentity, baseUrl: string): typeof globalThis.fetch => {
   let authHeader: string | undefined;
   return (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    authHeader ??= await getEdgeAuthHeader(client, baseUrl);
+    authHeader ??= await getEdgeAuthHeader(identity, baseUrl);
     // Carry x402's payment header from the retry (v2 uses `payment-signature`) plus Authorization.
     // @x402/fetch builds the retry Request by copying headers off the 402 response, so skip the
     // response-only CORS headers (access-control-*) it drags in — they aren't valid request headers
