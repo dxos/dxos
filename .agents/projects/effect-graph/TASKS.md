@@ -197,6 +197,20 @@ Gate before Phase 9. Requested 2026-08-13.
       whether the missing per-child dependency, or the notification count that test pins, is the
       correct semantics. Start by reading that test's expectation against both forms.
 
+      **Candidate (b) is now weak too.** `graph.test.ts > Graph > connections updates` asserts that
+      updating an existing child fires exactly one update and a no-op re-add fires none. HEAD's
+      `neighborsAtom` form passes it; the restored per-child form fails it by *over*-firing (each
+      recompute builds a fresh `Option`, so there is no equality cutoff). So HEAD's reactivity is the
+      stricter and more correct of the two — the missing dependency is not obviously the bug.
+
+      **What is left, and it is concrete:** at `99ac23f1` the edge type still had `data.order`, so
+      dropping `sortByOrder` there genuinely broke ordering at that commit. Ordering was only made
+      correct again later, by accident, when the incremental adjacency made insertion order
+      authoritative. That accounts for the drag pair. It does NOT yet account for the two deletion
+      specs, which is the piece still unexplained — and the next thing to isolate is what else in
+      `99ac23f1` reaches the delete path, most likely the `_json`/`toTree` move or the `_edges`
+      ordering feeding `removeNodeImpl`'s edge enumeration.
+
       2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
          consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
          `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
