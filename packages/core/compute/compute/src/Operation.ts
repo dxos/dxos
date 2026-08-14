@@ -21,7 +21,7 @@ import type { URI } from '@dxos/keys';
 import { type NoHandlerError, RunAgainError } from './errors';
 import type { Operation } from './index';
 // Type-only, so the module cycle (`Skill` imports this module) never exists in emitted code.
-import type { Definition as SkillDefinition } from './types/Skill';
+import type * as Skill from './types/Skill';
 
 /**
  * Schema type that accepts any Encoded form but requires no Context.
@@ -687,7 +687,7 @@ export const McpToolAnnotation = Annotation.make({
  * skill that actually ships; the key's final segment is what persists — the coordinate the MCP
  * surface uses for both the prompt and `skillLoad`.
  */
-export const mcpTool = ({ skill, ...props }: Omit<McpTool, 'skill'> & { skill?: SkillDefinition }) =>
+export const mcpTool = ({ skill, ...props }: Omit<McpTool, 'skill'> & { skill?: Skill.Definition }) =>
   annotate(McpToolAnnotation, {
     ...props,
     ...(skill == null ? {} : { skill: skill.key.split('.').at(-1) }),
