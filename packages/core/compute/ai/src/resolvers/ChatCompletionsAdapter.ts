@@ -367,18 +367,15 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
- * Ollama decodes `tool_calls[].function.arguments` into a map and rejects the whole request with 400
- * if it is a string, whereas OpenAI specifies exactly that string — so the encoding follows the
- * format rather than the value. Only requests carrying a prior tool call hit this, which is why it
- * surfaces as the follow-up turn failing rather than the first one.
+ * Ollama decodes `tool_calls[].function.arguments` into a map and rejects a string with 400, while
+ * OpenAI specifies that string — so the encoding follows the format rather than the value.
  */
 const encodeToolParams = (part: Prompt.ToolCallPart, apiFormat: ApiFormat): string | Record<string, unknown> => {
   if (apiFormat === 'ollama') {
     if (isRecord(part.params)) {
       return part.params;
     }
-    // A string reaches here when the model streamed raw JSON; one that does not parse to an object
-    // has no map form, and an empty map is what Ollama can still decode.
+    // An empty map, since a string that does not parse to an object has no map form.
     try {
       const parsed = typeof part.params === 'string' ? Tool.unsafeSecureJsonParse(part.params) : undefined;
       return isRecord(parsed) ? parsed : {};

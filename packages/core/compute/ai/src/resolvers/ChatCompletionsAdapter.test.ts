@@ -129,7 +129,7 @@ const captureRequestBody = (apiFormat: ChatCompletionsAdapter.ApiFormat, capture
   return ChatCompletionsAdapter.layer('test-model').pipe(Layer.provide(clientLayer));
 };
 
-/** A turn that already carries a tool call — the shape that made Ollama reject the follow-up request. */
+/** A turn that already carries a tool call, so the request includes an assistant `tool_calls` entry. */
 const promptWithToolCall = [
   { role: 'user' as const, content: [{ type: 'text' as const, text: 'look it up' }] },
   {
@@ -145,8 +145,7 @@ const promptWithToolCall = [
 ];
 
 describe('tool call encoding', () => {
-  // Ollama decodes `arguments` into a map; a JSON string fails request decoding with 400, which only
-  // shows up on the turn after a tool call.
+  // Ollama decodes `arguments` into a map and rejects a JSON string with 400.
   it.effect(
     'Ollama receives tool call arguments as an object',
     Effect.fn(function* (_) {
