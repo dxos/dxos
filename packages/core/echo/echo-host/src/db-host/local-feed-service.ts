@@ -46,35 +46,51 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
 
   ['FeedService.queryFeed'](request: FeedService.QueryFeedRequest): Effect.Effect<FeedService.FeedQueryResult, Error> {
     return Effect.tryPromise({
-      try: async () => {
-        const { query } = request;
-        invariant(query, 'query is required');
-        const { spaceId, feedIds } = query;
-        return RuntimeProvider.runPromise(this.#runtime)(
-          Effect.gen({ self: this }, function* () {
-            const result = yield* this.#feedStore.query({
-              requestId: crypto.randomUUID(),
-              feedNamespace: request.query.feedNamespace || FeedProtocol.WellKnownNamespaces.data,
-              spaceId: spaceId! as SpaceId,
-              query: { feedIds: feedIds ?? [] },
-              cursor: query.after ? FeedProtocol.FeedCursor.make(query.after) : undefined,
-              limit: query.limit,
-            });
-
-            const objects = result.blocks.map((block: FeedProtocol.Block) =>
-              JSON.stringify(EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON),
-            );
-
-            return Function.identity<FeedService.FeedQueryResult>({
-              objects,
-              nextCursor: result.nextCursor,
-              prevCursor: '',
-            });
-          }),
-        );
-      },
+      try: () => this.#queryFeedImpl(request),
       catch: (error) => error as Error,
     });
+  }
+
+  /**
+   * Pushes a fresh query snapshot on subscribe, then again whenever {@link FeedStore.onNewBlocks}
+   * fires and the recomputed snapshot actually differs from the last one sent -- replacing the
+   * client's previous poll loop with a real subscription. Unlike `subscribeSyncState`'s small
+   * aggregate payload, this recomputation re-fetches the feed's full object set on every signal, so
+   * suppressing unchanged snapshots server-side (rather than leaving dedup to the client) matters
+   * more here.
+   */
+  ['FeedService.subscribeFeed'](
+    request: FeedService.QueryFeedRequest,
+  ): EffectStream.Stream<FeedService.FeedQueryResult, Error> {
+    return this.#recomputeOnNewBlocks(() => this.#queryFeedImpl(request), feedQueryResultChanged);
+  }
+
+  async #queryFeedImpl(request: FeedService.QueryFeedRequest): Promise<FeedService.FeedQueryResult> {
+    const { query } = request;
+    invariant(query, 'query is required');
+    const { spaceId, feedIds } = query;
+    return RuntimeProvider.runPromise(this.#runtime)(
+      Effect.gen({ self: this }, function* () {
+        const result = yield* this.#feedStore.query({
+          requestId: crypto.randomUUID(),
+          feedNamespace: request.query.feedNamespace || FeedProtocol.WellKnownNamespaces.data,
+          spaceId: spaceId! as SpaceId,
+          query: { feedIds: feedIds ?? [] },
+          cursor: query.after ? FeedProtocol.FeedCursor.make(query.after) : undefined,
+          limit: query.limit,
+        });
+
+        const objects = result.blocks.map((block: FeedProtocol.Block) =>
+          JSON.stringify(EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON),
+        );
+
+        return Function.identity<FeedService.FeedQueryResult>({
+          objects,
+          nextCursor: result.nextCursor,
+          prevCursor: '',
+        });
+      }),
+    );
   }
 
   ['FeedService.insertIntoFeed'](request: FeedService.InsertIntoFeedRequest): Effect.Effect<void, Error> {
@@ -156,12 +172,23 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
   ['FeedService.subscribeSyncState'](
     request: FeedService.GetSyncStateRequest,
   ): EffectStream.Stream<FeedService.GetSyncStateResponse, Error> {
-    return EffectEx.streamFromEmitter<FeedService.GetSyncStateResponse, Error>((emit) => {
+    return this.#recomputeOnNewBlocks(() => this.#getSyncStateImpl(request), syncStateResponseChanged);
+  }
+
+  /**
+   * Shared by every `subscribeX` RPC: pushes `compute()`'s result on subscribe, then again whenever
+   * {@link FeedStore.onNewBlocks} fires and `changed` says the recomputed value actually differs from
+   * the last one sent. Coalesced, not concurrent -- an `onNewBlocks` signal that arrives
+   * mid-recomputation only marks `dirty` rather than starting a second overlapping read, so a slow
+   * recomputation can never finish after (and thus emit over) a faster, later one.
+   */
+  #recomputeOnNewBlocks<T>(
+    compute: () => Promise<T>,
+    changed: (before: T, after: T) => boolean,
+  ): EffectStream.Stream<T, Error> {
+    return EffectEx.streamFromEmitter<T, Error>((emit) => {
       const ctx = Context.default();
-      let last: FeedService.GetSyncStateResponse | undefined;
-      // Coalesced, not concurrent: an `onNewBlocks` signal that arrives mid-recomputation only
-      // marks `dirty` rather than starting a second overlapping read, so a slow recomputation can
-      // never finish after (and thus emit over) a faster, later one.
+      let last: T | undefined;
       let running = false;
       let dirty = false;
       const recompute = async () => {
@@ -173,8 +200,8 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
         try {
           do {
             dirty = false;
-            const next = await this.#getSyncStateImpl(request);
-            if (!last || syncStateResponseChanged(last, next)) {
+            const next = await compute();
+            if (!last || changed(last, next)) {
               last = next;
               emit.single(next);
             }
@@ -254,4 +281,21 @@ const syncStateResponseChanged = (
       namespaceState.totalBlocks !== other.totalBlocks
     );
   });
+};
+
+/**
+ * String equality on the encoded objects (not a decoded/semantic diff) plus cursors -- cheap, and
+ * exact enough: a feed only grows via new blocks, so any real content change shows up as an
+ * appended or altered entry in `objects`, or a moved cursor.
+ */
+const feedQueryResultChanged = (before: FeedService.FeedQueryResult, after: FeedService.FeedQueryResult): boolean => {
+  if (before.nextCursor !== after.nextCursor || before.prevCursor !== after.prevCursor) {
+    return true;
+  }
+  const beforeObjects = before.objects ?? [];
+  const afterObjects = after.objects ?? [];
+  if (beforeObjects.length !== afterObjects.length) {
+    return true;
+  }
+  return beforeObjects.some((object, index) => object !== afterObjects[index]);
 };

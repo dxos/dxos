@@ -1,6 +1,6 @@
 # Composer Memory Usage — Tasks
 
-_Resume: Phase 4 idle-churn sites S1-S4 fixed/investigated (see below), opened as a separate PR from #12505. Remedies section (R1-R6) and Sequencing still open — verify decommit with `scripts/memory/soak.mjs` once the PR lands. Phase 3 continues opportunistically. Uncommitted: none._
+_Resume: Phase 4 idle-churn sites S1-S4 fixed/investigated (see below). S1 landed in #12561 (trigger-list subscription); S3 upgraded from backoff to a real streaming RPC in #12580; S2 likewise upgraded from backoff to a real streaming RPC in this pass. Sequencing still open — verify decommit with `scripts/memory/soak.mjs` once this lands. Phase 3 continues opportunistically. Uncommitted: none._
 
 **Target: 300–400 MB resting footprint for an idle tab, 500 MB ceiling.**
 Composition model and measurement rules: DESIGN.md. Industry comparison:
@@ -90,17 +90,29 @@ fixed the same way.
       riskier change to feed/subscription trigger semantics, left as a
       follow-up if further gains are wanted.
 - [x] **S2. Every subscribed feed polls at 1 Hz.**
-      `echo-client/src/feed/feed-handle.ts` (`POLLING_INTERVAL`,
-      `beginPolling`): one timer and one refresh RPC per feed handle, so cost
-      scales with feeds open (a mailbox is the common case). No server push
-      exists (`FeedService` has no subscribe/watch RPC — confirmed via
-      `packages/core/protocols/src/FeedService.ts`), so R1 doesn't apply; R6
-      (real push) stays deferred to `feed-live-objects`. **Fixed (R2, no-change
-      backoff):** `beginPolling` now doubles the poll delay (capped at 30 s)
-      each tick that finds no object-set change, and resets to
-      `POLLING_INTERVAL` the moment a poll observes one. R4 (visibility
-      gating) was considered but deferred — orthogonal, applies to all four
-      sites, better done as one pass.
+      `echo-client/src/feed/feed-handle.ts` (`beginPolling`): one timer and one
+      refresh RPC per feed handle, so cost scales with feeds open (a mailbox
+      is the common case). **Superseded by a real streaming RPC (R1, not
+      R2):** the initial no-change-backoff polling (landed in #12561) has been
+      replaced by `FeedService.subscribeFeed`, a genuine `stream: true` RPC —
+      `LocalFeedServiceImpl` (`echo-host`) pushes a fresh query snapshot on
+      subscribe and again whenever `FeedStore.onNewBlocks` fires and the
+      recomputed snapshot actually differs (string-compared against the last
+      one sent, since this payload is real object content rather than
+      `subscribeSyncState`'s small aggregate count — suppressing unchanged
+      snapshots server-side matters more here); `FeedHandle.beginPolling`
+      consumes it via `subscribeStream` instead of any client-side timer, and
+      shares the same decode/upsert/diff logic as the still-present one-shot
+      `refresh()` path. The two `subscribeX` RPCs' identical
+      recompute-on-`onNewBlocks`-and-coalesce logic is factored into
+      `LocalFeedServiceImpl#recomputeOnNewBlocks`, parameterized by a compute
+      function and a change comparator. Verified end-to-end in
+      `echo-host/src/db-host/feed-service.test.ts` (initial snapshot + a
+      second push after a local write). R4 (visibility gating) was considered
+      but deferred — orthogonal, applies to all four sites, better done as one
+      pass. Same `onNewBlocks`-is-unscoped caveat as S3 applies here too (see
+      the S3 entry's note) — this subscription also recomputes on any space's
+      write, not just its own.
 - [x] **S3. Each open space polls sync state at 2 s.**
       `echo-client/src/proxy-db/database.ts` (`FEED_SYNC_POLL_INTERVAL`):
       aggregates block backlog across namespaces via a real per-namespace
@@ -164,19 +176,19 @@ Independent of each other; some sites may want none, one, or several.
   clock changes. Partially done for S1: the trigger-list subscription
   landed (no more per-tick DB query), but the tick itself still fires at a
   fixed 1 Hz — "no timer while idle" is not yet implemented.
-- [~] **R2. No-change backoff.** Widen the interval while a poll keeps
-  returning nothing (e.g. 1 s → 5 s → 30 s), reset on change or local
-  write. Fits S2 and S3. Costs staleness after a quiet period, so pair it
-  with an explicit refresh on user action. Done for `FeedHandle` polling
-  (capped 30 s), resetting to the fast interval on a real change or a
-  failed read (a failure can't tell us the feed is actually quiet).
-  **Superseded for S3**: space sync-state polling was upgraded from
-  backoff to a real streaming RPC (`FeedService.subscribeSyncState`) —
-  see the S3 entry above; R2 no longer applies there.
-- [ ] **R3. Coordinated scheduling.** One scheduler batching all due work into
-      a single round-trip instead of N independent timers. Fits S2 and S3
-      together; the win is fewer wakeups and fewer payloads, not a longer
-      interval.
+- [x] **R2. No-change backoff.** Widen the interval while a poll keeps
+      returning nothing (e.g. 1 s → 5 s → 30 s), reset on change or local
+      write. Interim fix for S2 and S3 while a real streaming RPC was out of
+      scope; both have since been upgraded past it (see below), so this
+      remedy is fully superseded — kept `[x]` as a record of what shipped
+      first, not as an open remedy.
+      **Superseded for S2 and S3**: both were upgraded from backoff to a real
+      streaming RPC (`FeedService.subscribeFeed`, `FeedService.subscribeSyncState`)
+      — see their entries above; R2 no longer applies to either.
+- [x] **R3. Coordinated scheduling.** One scheduler batching all due work into
+      a single round-trip instead of N independent timers. Moot for S2 and
+      S3 now that both push independently instead of polling on any
+      schedule — there's no timer left to coordinate.
 - [ ] **R4. Visibility gating.** Pause or stretch while `document.hidden`,
       resume on `visibilitychange`. Applies to every site, and is the cheapest
       change, but only helps background tabs. Note the client worker keeps
@@ -185,8 +197,13 @@ Independent of each other; some sites may want none, one, or several.
       shapes so a tick re-runs fewer queries. Addresses S4 without changing any
       timer.
 - [ ] **R6. Push over poll.** A persistent connection where EDGE notifies on
-      change, so an idle tab does no work at all. Supersedes R1–R3 for S2 and
-      S3. Lands with feed-live-objects stage 4 rather than here.
+      change, so an idle tab does no work at all. Still open: what S2 and S3
+      shipped is push from the local `echo-host` to the client
+      (`FeedStore.onNewBlocks` → a streaming RPC), which eliminates client-side
+      polling entirely, but the _pull_ leg — EDGE notifying `echo-host` of
+      remote changes, rather than `FeedSyncer`'s own poll cadence against it —
+      is the larger, still-unimplemented half of this remedy. Lands with
+      feed-live-objects stage 4 rather than here.
 
 ### Sequencing
 
