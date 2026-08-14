@@ -292,6 +292,15 @@ Gate before Phase 9. Requested 2026-08-13.
       it should differ, but if `properties` arrives already merged the check can see no change and
       skip building a new node, leaving `_node(id)` unfired and every downstream cutoff satisfied.
 
+      Read by inspection since then, and both look correct: `addNodeImpl` compares
+      `existing.properties[key] !== properties[key]` (old label is an array, new is a string, so it
+      differs), builds a fresh node and calls `_setNode` + `onNodeChanged`; `_setNode` calls
+      `model.setNode({ id, data })`, a new wrapper every time, so `nodeAtom` -> `_node` ->
+      `_connections` should each fire. A standalone script confirms a label change DOES propagate
+      through `graph.connections`. So the store path is not obviously at fault either, and the
+      render layer (`useNavTreeModel` / `react-ui-list` item memoization) is the last unexamined
+      link. Instrument there next: log the label the row component actually receives.
+
       Superseded: determine whether the write reaches ECHO. Either the popover's submit writes to a stale
       object captured in the action closure, or it writes correctly and the connector's
       `get(Obj.labelAtom(object))` subscription no longer re-runs. Instrumenting
