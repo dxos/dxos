@@ -2825,6 +2825,9 @@ importers:
       jsdom:
         specifier: 'catalog:'
         version: 29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0)
+      oxc-resolver:
+        specifier: 'catalog:'
+        version: 11.19.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
       pwa-asset-generator:
         specifier: 'catalog:'
         version: 6.4.0
