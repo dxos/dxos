@@ -64,7 +64,7 @@ export const anySubstitutions = {
         };
       }
       const codec = schema.tryGetCodecForType(value.type_url);
-      let data = codec.decode(value.value);
+      let data = codec.decode(value.value ?? new Uint8Array());
 
       if (value.type_url === 'google.protobuf.Struct') {
         data = structSubstitutions['google.protobuf.Struct'].decode(data);

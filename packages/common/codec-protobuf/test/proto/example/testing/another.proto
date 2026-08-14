@@ -9,3 +9,5 @@ package example.testing.another;
 message AnotherMessage {
   string foo = 1;
 }
+
+message EmptyMessage {}
