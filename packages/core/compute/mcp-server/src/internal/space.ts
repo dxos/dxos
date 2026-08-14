@@ -2,14 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SpaceId } from '@dxos/keys';
 
-import { type ToolFailure, failure } from './errors';
+import { type ToolFailure, failure } from '../errors';
 
 export const idParameter = Schema.optional(Schema.String).annotate({
   // The default exists so a read is cheap to issue, not so a write can skip choosing. It is

@@ -18,7 +18,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Obj } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Gateway, GatewayError, Snapshot, errorMessage } from '@dxos/mcp-server';
+import { Gateway, GatewayError, errorMessage } from '@dxos/mcp-server';
 // Narrow subpath imports: these plugins declare React surfaces, and a bundler follows the dynamic
 // import behind a lazy capability, so activating them would pull React into the CLI binary.
 import { ProjectOperationHandlerSet } from '@dxos/plugin-projects/operations';
@@ -139,7 +139,7 @@ const invoke = (
     // reference resolves against the database the call targets.
     const decoded = yield* Schema.decodeUnknownEffect(handler.input)(input);
     const output = yield* operations.invoke(handler, decoded);
-    return Snapshot.entities(output);
+    return Gateway.snapshot(output);
   }).pipe(
     Effect.provide(
       // The space is baked into the layer, so it is built per call rather than once per server;

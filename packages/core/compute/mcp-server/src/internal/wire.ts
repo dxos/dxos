@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 /**
  * Response passes applied to outgoing JSON-RPC messages.
  *
@@ -185,4 +183,38 @@ const resolveAmbiguousAnyOf = (node: unknown, seen: Set<unknown>): boolean => {
     }
   }
   return changed;
+};
+
+const decoder = new TextDecoder();
+
+/**
+ * Normalizes one NDJSON line, returning the original chunk when nothing changed so an untouched
+ * message is never re-serialized. A batch arrives as an array, each element a message in its own
+ * right.
+ */
+export const normalizeLine = (chunk: string | Uint8Array): string | Uint8Array => {
+  const text = typeof chunk === 'string' ? chunk : decoder.decode(chunk);
+  const normalized = normalizeText(text);
+  return normalized == null ? chunk : `${normalized}\n`;
+};
+
+/** Normalizes a JSON-RPC payload, returning `undefined` when it is unrecognized or unchanged. */
+export const normalizeText = (
+  text: string,
+  options: { readonly serverInfo?: Record<string, unknown>; readonly instructions?: string } = {},
+): string | undefined => {
+  const trimmed = text.trim();
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
+    return undefined;
+  }
+  try {
+    const message = JSON.parse(trimmed);
+    const changed = Array.isArray(message)
+      ? message.map((entry) => normalize(entry, options)).some(Boolean)
+      : normalize(message, options);
+    return changed ? JSON.stringify(message) : undefined;
+  } catch {
+    // Not a message we recognise; the caller passes the original through rather than corrupting it.
+    return undefined;
+  }
 };

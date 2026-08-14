@@ -7,6 +7,8 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as Sink from 'effect/Sink';
+import * as EffectStdio from 'effect/Stdio';
 import * as McpServer from 'effect/unstable/ai/McpServer';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
@@ -15,8 +17,9 @@ import { log } from '@dxos/log';
 
 import { ToolFailure, failure } from './errors';
 import * as Gateway from './Gateway';
+import * as spaceInternal from './internal/space';
+import * as wireInternal from './internal/wire';
 import * as Projection from './Projection';
-import * as Space from './Space';
 
 /**
  * Model-invocable skill loading.
@@ -172,7 +175,7 @@ export const makeTool = (operation: Projection.ProjectedOperation) =>
     description: operation.description,
     parameters: Schema.Struct({
       ...operation.parameters,
-      ...('spaceId' in operation.parameters ? {} : { spaceId: Space.idParameter }),
+      ...('spaceId' in operation.parameters ? {} : { spaceId: spaceInternal.idParameter }),
     }),
     success: Schema.Record(Schema.String, Schema.Unknown),
     failure: ToolFailure,
@@ -199,14 +202,16 @@ export const makeHandler =
       // The space is resolved after encoding, because the wire form is where a reference argument
       // states which space it belongs to.
       Effect.flatMap((input) =>
-        Space.resolveId(gateway.spaceIds, (spaceId as string | undefined) ?? Space.hintFromInput(input)).pipe(
-          Effect.flatMap((resolvedSpaceId) =>
-            gateway.invokeOperation({ key: operation.key, input, spaceId: resolvedSpaceId }).pipe(
-              Effect.mapError((error) => failure('operation_failed', `${operation.key} failed: ${error.message}`)),
-              Effect.map((output) => Space.qualifyRefs(output, resolvedSpaceId)),
+        spaceInternal
+          .resolveId(gateway.spaceIds, (spaceId as string | undefined) ?? spaceInternal.hintFromInput(input))
+          .pipe(
+            Effect.flatMap((resolvedSpaceId) =>
+              gateway.invokeOperation({ key: operation.key, input, spaceId: resolvedSpaceId }).pipe(
+                Effect.mapError((error) => failure('operation_failed', `${operation.key} failed: ${error.message}`)),
+                Effect.map((output) => spaceInternal.qualifyRefs(output, resolvedSpaceId)),
+              ),
             ),
           ),
-        ),
       ),
       Effect.map((output) =>
         output !== null && typeof output === 'object' && !Array.isArray(output)
@@ -260,3 +265,58 @@ export const layer = ({ reservedToolNames = [], reservedPromptNames = [] }: Laye
       ...(skills.length > 0 ? [promptsLayer(skills)] : []),
     );
   }).pipe(Layer.unwrap);
+
+//
+// Transports.
+//
+// The response passes belong to the surface, not to a transport — every host runs the same ones or
+// its clients disagree about what this server offers — so each transport applies them on the way
+// out rather than leaving it to the caller.
+//
+
+/**
+ * Platform stdio with the response passes applied to every outgoing message.
+ *
+ * Wraps whatever `Stdio` the runtime provides, so a host installs it beneath `McpServer.layerStdio`
+ * and needs to know nothing about the passes.
+ */
+export const stdio: Layer.Layer<EffectStdio.Stdio, never, EffectStdio.Stdio> = Layer.effect(
+  EffectStdio.Stdio,
+  Effect.map(EffectStdio.Stdio, (stdio) =>
+    EffectStdio.make({
+      ...stdio,
+      stdout: (options) => Sink.mapInput(stdio.stdout(options), wireInternal.normalizeLine),
+    }),
+  ),
+);
+
+/**
+ * The same passes over an HTTP response body, for a host that owns its own transport
+ * (`McpServer.layerHttp` behind a worker's fetch handler).
+ *
+ * `serverInfo` is merged into the `initialize` result: the MCP `Implementation` may carry `title`,
+ * `websiteUrl` and `icons`, and `McpServer` offers no way to supply them.
+ */
+export const normalizeResponse = async (
+  response: Response,
+  options: { readonly serverInfo?: Record<string, unknown> } = {},
+): Promise<Response> => {
+  if (!response.headers.get('content-type')?.includes('application/json')) {
+    return response;
+  }
+  const text = await response.text();
+  const normalized = wireInternal.normalizeText(text, options);
+  return new Response(normalized ?? text, { status: response.status, headers: response.headers });
+};
+
+//
+// Helpers for host-authored tools.
+//
+// A host that still hand-writes a verb (EDGE's object/space/discovery toolkits, until the gateway
+// covers them) needs the conventions the projected tools follow, or the two disagree about which
+// space a call targets.
+//
+
+export const spaceIdParameter = spaceInternal.idParameter;
+export const resolveSpaceId = spaceInternal.resolveId;
+export const qualifyRefs = spaceInternal.qualifyRefs;

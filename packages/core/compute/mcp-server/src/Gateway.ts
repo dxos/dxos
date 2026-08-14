@@ -8,6 +8,7 @@ import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
 import type { GatewayError } from './errors';
+import * as snapshotInternal from './internal/snapshot';
 
 /**
  * An operation registry record in wire form: `Obj.toJSON` of a `PersistentOperation`, i.e. meta as
@@ -49,3 +50,10 @@ export type Shape = {
  * binding or through an in-process plugin manager is a host concern; what the model sees is not.
  */
 export class Service extends Context.Service<Service, Shape>()('@dxos/mcp-server/Gateway') {}
+
+/**
+ * Replaces live ECHO entities in an operation's result with wire snapshots — what every gateway
+ * must return, whatever it invoked. An operation returning a live object is right in-process, but a
+ * proxy carries none of its properties through JSON.
+ */
+export const snapshot = snapshotInternal.entities;
