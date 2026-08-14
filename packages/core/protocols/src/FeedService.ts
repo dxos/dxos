@@ -165,6 +165,16 @@ export class Rpcs extends RpcGroup.make(
     success: GetSyncStateResponse,
     error: serviceError,
   }),
+  /**
+   * Pushes a new sync-state snapshot whenever the feed backlog changes, so a client can subscribe
+   * instead of polling {@link getSyncState} on a timer.
+   */
+  Rpc.make('subscribeSyncState', {
+    payload: GetSyncStateRequest,
+    success: GetSyncStateResponse,
+    error: serviceError,
+    stream: true,
+  }),
 ).prefix('FeedService.') {}
 
 export interface Client extends RpcClient.RpcClient<RpcGroup.Rpcs<typeof Rpcs>> {}
