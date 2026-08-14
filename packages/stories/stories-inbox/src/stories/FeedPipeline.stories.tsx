@@ -26,6 +26,7 @@ import { log } from '@dxos/log';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
+import * as BrainOperation from '@dxos/plugin-brain/BrainOperation';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
@@ -341,7 +342,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         // Fact analysis against local Ollama; the in-memory FactStore is not ECHO-reactive, so the
         // count is polled while the run commits per page, then refreshed once at the end.
         id: 'analyze',
-        label: 'InboxOperation.AnalyzeMailbox',
+        label: 'BrainOperation.AnalyzeMailbox',
         run: async () => {
           const refresh = async () => {
             const stored = await EffectEx.runPromise(
@@ -355,7 +356,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
           const timer = setInterval(() => void refresh(), 500);
           try {
             return await invoker.invokePromise(
-              InboxOperation.AnalyzeMailbox,
+              BrainOperation.AnalyzeMailbox,
               {
                 mailbox: Ref.make(mailbox),
                 model: OLLAMA_MODEL,
