@@ -77,9 +77,6 @@ describe('buildThreadSemiJoin', () => {
     return { builder, feed };
   };
 
-  /** The semi-join arm of the union (the other arm is the bare view filter). */
-  const semiJoinArm = (query: ReturnType<typeof buildThreadSemiJoin>): any => (query.ast as any).queries[0];
-
   test('wraps a view filter in the whole-thread semi-join over the given matches scope', async () => {
     const { builder, feed } = await setup();
     try {
@@ -201,7 +198,7 @@ describe('buildThreadSemiJoin (results)', () => {
     const fixture = await setup();
     try {
       const t1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
-      const standalone = message('two', '2020-01-02T00:00:00.000Z'); // no threadId (draft/transcription/assistant)
+      const standalone = message('two', '2020-01-02T00:00:00.000Z'); // No threadId (draft/transcription/assistant).
       await append(fixture, [t1, standalone]);
 
       // `threadId IN (…)` can never admit the threadless row, so the union's direct-match arm is the
@@ -240,3 +237,6 @@ describe('buildThreadSemiJoin (results)', () => {
     }
   });
 });
+
+/** The semi-join arm of the union (the other arm is the bare view filter). */
+const semiJoinArm = (query: ReturnType<typeof buildThreadSemiJoin>): any => (query.ast as any).queries[0];

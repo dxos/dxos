@@ -40,7 +40,8 @@ export const completions = ({ db, tags }: CompletionOptions) => {
 
     // A `#` with no label yet is an error node, not a `TagFilter` — the grammar needs a label
     // character before it accepts one — so the tree cannot answer for the keystroke that opens a tag.
-    if (tags && isTypingTag(text, pos)) {
+    // Inside a string it is content, so the tree is still what settles that.
+    if (tags && isTypingTag(text, pos) && node.type.id !== QueryDSL.Node.String) {
       return tagCompletions(tags);
     }
 

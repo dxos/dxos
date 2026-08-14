@@ -3,7 +3,8 @@
 _Resume: **#12555 MERGED. #12574 and #12575 (the two ECHO changes) MERGED.** Current PR is **#12577**
 (green, `CLEAN`, not auto-merged — awaiting a call on whether to land it). The 27-step plan in
 [`TESTING.md`](TESTING.md) HAS now been run, against a live Gmail-synced mailbox over the agent debug
-port: 12 passed, 2 failed and are fixed, 12 unreachable. Threadless messages now reach the list, and
+port: 12 passed, 2 failed and are fixed, 1 was a stale expectation in the plan itself, 12 yielded no
+verdict. Threadless messages now reach the list, and
 the cursor layer is no longer mailbox-typed. **D6 is deliberately NOT built** — `Ref.byAnnotation` was
 dropped in review on #12575, so a generic subject loses boundary validation, and there is still no
 second cursored consumer; see the D6 entry in Phase 5 for the recommendation. Unblocked and unclaimed:
@@ -558,6 +559,6 @@ generalize now with mailbox as instance #1.
 
 Moved to [`TESTING.md`](TESTING.md) — 27 steps across sections A–F. **Run 2026-08-14** against a live
 Gmail-synced mailbox over the agent debug port: 12 passed, 2 failed (both fixed in #12577), 1 was a
-stale expectation in the plan itself, and 12 were unreachable. That file also carries an evaluation of
+stale expectation in the plan itself, and 12 yielded no verdict. That file also carries an evaluation of
 what the debug port is and is not the right tool for.
 See the blocker above for why an automation browser cannot execute them and a warm browser can.

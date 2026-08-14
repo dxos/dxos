@@ -233,10 +233,23 @@ export const MailboxArticle = ({
   // Show the empty-mailbox panel only once the query has settled with nothing, never mid-load.
   const showEmptyState = !loading && messages.length === 0;
 
-  const handleClear = useCallback(() => {
-    setFilterText(filterProp ?? '');
-    setFilter(builder.build(filterProp ?? '').filter);
-  }, [filterProp, builder]);
+  // Text set from here rather than typed raises no editor event, so the parse the editor normally
+  // hands back has to be done here — otherwise `filter` (which gates Save) keeps describing the
+  // previous text.
+  const applyFilterText = useCallback(
+    (text: string) => {
+      setFilterText(text);
+      setFilter(builder.build(text).filter);
+    },
+    [builder],
+  );
+
+  // Read by `select-tag`, which appends to the current text from a handler that must not be rebuilt
+  // on every keystroke.
+  const filterTextRef = useRef(filterText);
+  filterTextRef.current = filterText;
+
+  const handleClear = useCallback(() => applyFilterText(filterProp ?? ''), [filterProp, applyFilterText]);
 
   const handleNavigate = useCallback(
     (messageId: string, newPlank = false) => {
@@ -333,15 +346,12 @@ export const MailboxArticle = ({
         }
 
         case 'select-tag': {
-          setFilterText((prevFilterText) => {
-            // Check if tag already exists.
-            const tags = prevFilterText.split(/\s+/).filter(Boolean);
-            if (tags.at(-1)?.toLowerCase() === '#' + action.label.toLowerCase()) {
-              return prevFilterText;
-            } else {
-              return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
-            }
-          });
+          const previous = filterTextRef.current;
+          // Check if tag already exists.
+          const tags = previous.split(/\s+/).filter(Boolean);
+          if (tags.at(-1)?.toLowerCase() !== '#' + action.label.toLowerCase()) {
+            applyFilterText([previous.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ');
+          }
           filterEditorRef.current?.focus();
           break;
         }
@@ -358,7 +368,7 @@ export const MailboxArticle = ({
         }
       }
     },
-    [db, id, mailbox, messages, invokePromise, showItem, handleNavigate],
+    [db, id, mailbox, messages, invokePromise, showItem, handleNavigate, applyFilterText],
   );
 
   const handleSaveFilter = useCallback(() => {

@@ -3,9 +3,9 @@
 Everything built across Phases 0-5 is verified by build, lint and unit tests only. These are the steps
 that convert that into "seen working".
 
-**Status: run on 2026-08-14** against the user's live Composer (`localhost:5173`, a real Gmail-synced
-mailbox — 358 inbox / 24 important / 11 sent / 3 starred), driven through the agent debug port rather
-than by hand. Per-step verdicts are inline below; the run's findings and what it says about automating
+**Status: run on 2026-08-14** against a live Composer (`localhost:5173`) holding a real Gmail-synced
+mailbox, driven through the agent debug port rather than by hand. Folder sizes are quoted below only
+where a verdict turns on them; addresses and display names are redacted. Per-step verdicts are inline below; the run's findings and what it says about automating
 this are in [Results](#results-2026-08-14) and [Automating this](#automating-this-via-the-debug-port).
 
 **If running by hand, use a warm browser.** An automation browser starts with an empty OPFS, pays a
@@ -64,8 +64,8 @@ Setup: storybook against the `@dxos/fixtures` mailbox corpus (391 real messages)
 - [x] **D1** — Expand a message with a To header. Expect a row whose first column carries the standard
       person AVATAR for a single recipient (the generic glyph was replaced), or a `ph--users--regular`
       group icon when there are several, aligned with the tags/attachments rows.
-- [x] **D2** — The row shows ONLY the address — `rich@braneframe.com`,
-      never `"RICHARD S. BURDON" <rich@braneframe.com>`.
+- [x] **D2** — The row shows ONLY the address — `someone@example.com`,
+      never `"SOME ONE" <someone@example.com>`.
 - [ ] **D3** — A multi-recipient header renders each address comma-separated.
 - [ ] **D4** — A message with no To header renders NO row (not an empty one).
 
@@ -82,10 +82,10 @@ Setup: storybook against the `@dxos/fixtures` mailbox corpus (391 real messages)
 - [x] **E6** — In the CONVERSATION view, the sender avatar is vertically centred on the sender's NAME,
       not on the whole title block. Check a message whose title wraps to two lines: the avatar must
       stay level with the first line, not drift to the middle. **FAILED as written and is now fixed** —
-      the mailbox card was NOT already correct either. Root cause was not the wrapper at all:
-      `dx-avatar` is `display: contents` and its frame is `inline-flex`, so in a block wrapper the frame
-      sat on the text baseline and the line box added descender space beneath it. Fixed in
-      `react-ui-card`'s `ContactAvatar` by making that wrapper a grid container. Verified by
+      the mailbox card was NOT already correct either. The offset comes from the two together:
+      `dx-avatar` is `display: contents` and its frame is `inline-flex`, so inside `ContactAvatar`'s
+      block wrapper the frame sat on the text baseline and the line box added descender space beneath
+      it. Fixed by making that wrapper a grid container in `react-ui-card`. Verified by
       measurement: conversation −8px → 0, tile −3px → 0.
 
 ### F. Row story star
@@ -97,8 +97,9 @@ Setup: storybook against the `@dxos/fixtures` mailbox corpus (391 real messages)
 
 ## Results (2026-08-14)
 
-Run against the live Composer over the debug port. 12 of 27 steps passed outright, 2 failed, 1 is a
-stale expectation in this document, and 12 were not reachable — see the table.
+Run against the live Composer over the debug port. Of 27 steps, 12 passed outright, 2 failed, 1 was a
+stale expectation in this document (A1, since corrected above), and 12 did not yield a verdict —
+partial, blocked, not run, unreachable in this mailbox, or inconclusive. See the table.
 
 | Step   | Verdict          | Note                                                                                                                             |
 | ------ | ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
@@ -113,7 +114,7 @@ stale expectation in this document, and 12 were not reachable — see the table.
 | B6, B7 | not run          | Plank-closing behaviour.                                                                                                         |
 | C1     | **FAIL → fixed** | Archive was missing entirely. `ConversationTile` never destructured `enableArchive`, and every live tile is a conversation tile. |
 | C2-C4  | blocked          | By C1. Re-run now that it is fixed.                                                                                              |
-| D1, D2 | pass             | Person avatar in the gutter; `"RICHARD S. BURDON" <rich@…>` renders as the bare address.                                         |
+| D1, D2 | pass             | Person avatar in the gutter; a `"DISPLAY NAME" <addr>` header renders as the bare address.                                       |
 | D3, D4 | unreachable      | No multi-recipient and no missing-`To` message among 47 harvested. `parseAddressList` already unit-tests both shapes.            |
 | E1     | unreachable      | The space holds zero `Person` objects, so no contact can resolve.                                                                |
 | E2     | inconclusive     | The reveal is CSS `:hover`, which a synthetic event cannot trigger.                                                              |

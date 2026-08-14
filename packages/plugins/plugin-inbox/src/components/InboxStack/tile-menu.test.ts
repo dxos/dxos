@@ -13,8 +13,6 @@ import { buildTileMenuItems } from './tile-menu';
  */
 describe('buildTileMenuItems', () => {
   const base = { messageId: 'm1', senderEmail: 'a@b.com', inInbox: true, onAction: vi.fn() };
-  const labels = (options: Parameters<typeof buildTileMenuItems>[0]) =>
-    buildTileMenuItems(options)?.map(({ label }) => label);
 
   test('returns undefined without a handler', () => {
     expect(buildTileMenuItems({ ...base, onAction: undefined, enableArchive: true })).toBeUndefined();
@@ -61,3 +59,6 @@ describe('buildTileMenuItems', () => {
     ]);
   });
 });
+
+const labels = (options: Parameters<typeof buildTileMenuItems>[0]) =>
+  buildTileMenuItems(options)?.map(({ label }) => label);

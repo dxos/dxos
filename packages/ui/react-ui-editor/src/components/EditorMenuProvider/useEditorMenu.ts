@@ -222,8 +222,12 @@ export const useEditorMenu = ({
     });
   }, []);
 
+  // Array props are compared by CONTENT, not identity: a caller writing `trigger={['#']}` inline
+  // hands over a new array every render, and a changed extension destroys and recreates the view —
+  // blurring the editor mid-keystroke.
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
   const serializedSearchTriggers = searchTriggers?.join(',');
+  const serializedDelimiters = activateOnDelimiters?.join(',');
   const extension = useMemo<Extension>(() => {
     return popover({
       trigger,
@@ -255,9 +259,9 @@ export const useEditorMenu = ({
     updateGroups,
     serializedTrigger,
     serializedSearchTriggers,
+    serializedDelimiters,
     placeholder,
     activateOnTyping,
-    activateOnDelimiters,
   ]);
 
   return {

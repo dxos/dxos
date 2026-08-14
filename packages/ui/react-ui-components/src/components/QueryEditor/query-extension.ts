@@ -3,14 +3,7 @@
 //
 
 import { HighlightStyle, LanguageSupport, LRLanguage, syntaxHighlighting, syntaxTree } from '@codemirror/language';
-import {
-  EditorSelection,
-  EditorState,
-  type Extension,
-  RangeSetBuilder,
-  StateField,
-  type TransactionSpec,
-} from '@codemirror/state';
+import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
 import { styleTags, tags as t } from '@lezer/highlight';
@@ -27,55 +20,12 @@ export type QueryOptions = {
 };
 
 /**
- * Keeps a single trailing space on the document, and the caret in front of it.
- *
- * This is what lets a tag have ONE rendered form. A tag is decorated as a chip once whitespace
- * terminates it; without a guaranteed terminator the last tag in the query never qualified, so it had
- * to be drawn a second way — over live text — and the two forms then had to be kept identical by hand.
- * Guaranteeing the terminator removes the second form rather than maintaining it.
- *
- * The space is invisible to callers: {@link queryText} trims it before anything reads the value.
- */
-const trailingSpace = (): Extension => [
-  EditorState.transactionFilter.of((tr) => {
-    const doc = tr.newDoc;
-    const end = doc.length;
-    const missing = end === 0 || doc.sliceString(end - 1, end) !== ' ';
-    // Clamp the caret in front of the terminator, so it is never stranded mid-document by typing
-    // past it. Runs whether or not this transaction is the one appending it.
-    const limit = missing ? end : end - 1;
-    const head = tr.newSelection.main.head;
-    const spec: TransactionSpec[] = [tr];
-    if (missing) {
-      spec.push({ changes: { from: end, insert: ' ' }, sequential: true });
-    }
-    if (head > limit) {
-      spec.push({ selection: EditorSelection.cursor(limit), sequential: true });
-    }
-
-    return spec.length === 1 ? tr : spec;
-  }),
-];
-
-/** The document's meaningful text, without the terminator {@link trailingSpace} maintains. */
-export const queryText = (doc: string): string => (doc.endsWith(' ') ? doc.slice(0, -1) : doc);
-
-/**
- * A caller's value as the document must hold it.
- *
- * `trailingSpace` is a transaction filter, and the initial state is not a transaction — so a seeded
- * value (the mailbox's `#inbox`, say) would render as raw text until the first keystroke without this.
- */
-export const queryDoc = (value = ''): string => (value.endsWith(' ') ? value : `${value} `);
-
-/**
  * Create a CodeMirror extension for the query language with syntax highlighting.
  */
 export const query = ({ tags }: QueryOptions = {}): Extension => {
   return [
     new LanguageSupport(queryLanguage),
     syntaxHighlighting(queryHighlightStyle),
-    trailingSpace(),
     decorations({ tags }),
     typeahead({
       onComplete: ({ line }: CompletionContext) => {
@@ -167,12 +117,19 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
               const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
               const tag = Tag.findTagByLabel(tags, label);
               const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
-              // Always the chip: `trailingSpace` guarantees a terminator, so a complete tag is never
-              // left unterminated and needs no second rendering.
-              // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range that
-              // starts at offset 0 paints before that offset's coordinate and the caret draws to its
-              // right — pressing Home appeared to leave the caret after the tag.
-              deco.add(node.from, node.to, Decoration.replace({ widget: new TagWidget(label, hue), atomic: true }));
+              if (isInside(node)) {
+                // Under the caret the text has to stay live and editable, so the chip is painted with
+                // marks over it rather than replacing it. `tagMarks` mirrors `TagWidget` class for
+                // class, so the tag does not change shape as the caret enters or leaves it.
+                for (const mark of tagMarks(node.from, node.to, hue)) {
+                  deco.add(mark.from, mark.to, mark.deco);
+                }
+              } else {
+                // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range that
+                // starts at offset 0 paints before that offset's coordinate and the caret draws to its
+                // right — pressing Home appeared to leave the caret after the tag.
+                deco.add(node.from, node.to, Decoration.replace({ widget: new TagWidget(label, hue), atomic: true }));
+              }
             }
             break;
           }
@@ -291,14 +248,53 @@ const decorations = ({ tags }: QueryOptions): Extension => {
 
 const lineHeight = '30px';
 
-/**
- * NOTE: The outer container vertically aligns the inner text with content in the outer div.
- */
+/** The outer box vertically aligns the inner text with content in the outer div. */
+const CHIP_OUTER = 'inline-flex h-[28px] align-middle';
+const CHIP_INNER = 'inline-flex h-[26px] border rounded-xs';
+
 const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
   const inner = Domino.of('span')
-    .classNames(mx('inline-flex h-[26px] border rounded-xs', classNames))
+    .classNames(mx(CHIP_INNER, classNames))
     .append(...children);
-  return Domino.of('span').classNames('inline-flex h-[28px] align-middle').append(inner).root;
+  return Domino.of('span').classNames(CHIP_OUTER).append(inner).root;
+};
+
+/**
+ * A tag chip's parts, keyed by the nesting {@link container} produces.
+ *
+ * Single source for both of the tag's renderings — {@link TagWidget} when the caret is elsewhere,
+ * {@link tagMarks} over live text when it is not. Anything that drifts between them shows up as the
+ * tag changing shape as the caret enters or leaves it, so neither builds its own classes.
+ */
+const chipClasses = (hue: string) => {
+  const { bg, fg, border, surface } = getStyles(hue);
+  return {
+    outer: CHIP_OUTER,
+    inner: mx(CHIP_INNER, border),
+    hash: mx('flex items-center px-1 text-black text-xs', bg),
+    label: mx('flex items-center px-1 text-sm', surface, fg),
+  };
+};
+
+/**
+ * The chip drawn as marks, so the text underneath stays editable.
+ *
+ * Ranges are returned outermost first; `buildQueryDecorations` sorts equal starts widest-first and
+ * `Array.prototype.sort` is stable, so this order is the nesting order.
+ */
+const tagMarks = (from: number, to: number, hue: string): { from: number; to: number; deco: Decoration }[] => {
+  const classes = chipClasses(hue);
+  const marks = [
+    { from, to, deco: Decoration.mark({ class: classes.outer }) },
+    { from, to, deco: Decoration.mark({ class: classes.inner }) },
+    { from, to: from + 1, deco: Decoration.mark({ class: classes.hash }) },
+  ];
+  // A bare `#` has no label yet, and an empty range is not a decoration.
+  if (to > from + 1) {
+    marks.push({ from: from + 1, to, deco: Decoration.mark({ class: classes.label }) });
+  }
+
+  return marks;
 };
 
 /**
@@ -343,11 +339,11 @@ class TagWidget extends WidgetType {
   }
 
   override toDOM() {
-    const { bg: fill, border, surface } = getStyles(this._hue);
+    const { hash, label } = chipClasses(this._hue);
     return container(
-      border,
-      Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs', fill)).text('#'),
-      Domino.of('span').classNames(mx('flex items-center px-1 text-sm', surface)).text(this._str),
+      getStyles(this._hue).border,
+      Domino.of('span').classNames(hash).text('#'),
+      Domino.of('span').classNames(label).text(this._str),
     );
   }
 }
@@ -435,9 +431,9 @@ const queryHighlighting = styleTags({
   'Null': t.null,
 
   // Identifiers
+  // NOT `Tag`: it is drawn as a chip, whose own foreground would be fighting a highlight class here.
   'Identifier': t.variableName,
   'PropertyPath': t.propertyName,
-  'Tagname': t.variableName,
 
   // Punctuation
   '{ }': t.brace,

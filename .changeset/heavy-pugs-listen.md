@@ -1,11 +1,6 @@
 ---
 '@dxos/echo': minor
-'@dxos/react-ui-card': minor
-'@dxos/react-ui-form': minor
 '@dxos/plugin-inbox': minor
-'@dxos/plugin-deck': minor
-'@dxos/plugin-explorer': minor
-'@dxos/react-ui-components': minor
 ---
 
 Fix defects found by driving the mailbox against real data.

@@ -25,10 +25,8 @@ export type TileMenuOptions = {
 };
 
 /**
- * The overflow-menu entries shared by both mailbox tiles.
- *
- * Shared rather than built per tile: they were built independently, and the conversation tile — the
- * only kind a threaded mailbox actually renders — silently omitted Archive as a result.
+ * The overflow-menu entries shared by both mailbox tiles, so neither can silently omit an entry the
+ * other offers.
  */
 export const buildTileMenuItems = ({
   messageId,

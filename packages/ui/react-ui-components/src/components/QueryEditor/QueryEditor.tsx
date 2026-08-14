@@ -20,7 +20,7 @@ import { createBasicExtensions, createThemeExtensions, keymap } from '@dxos/ui-e
 import { translationKey } from '#translations';
 
 import { type CompletionOptions, completions } from './autocomplete';
-import { query, queryDoc, queryText } from './query-extension';
+import { query } from './query-extension';
 
 export type QueryEditorProps = ThemedClassName<
   {
@@ -57,12 +57,9 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     const builder = useMemo(() => (onFilterChange ? new QueryBuilder(tags) : undefined), [onFilterChange, tags]);
     const handleChange = useCallback(
       (doc: string) => {
-        // The editor keeps a trailing space so every tag is terminated and renders as a chip; that is
-        // an internal affordance, so callers never see it.
-        const text = queryText(doc);
-        onChange?.(text);
+        onChange?.(doc);
         if (builder) {
-          onFilterChange?.(builder.build(text));
+          onFilterChange?.(builder.build(doc));
         }
       },
       [onChange, onFilterChange, builder],
@@ -128,7 +125,11 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
         triggerKey='Ctrl-Space'
         getMenu={getMenu}
       >
-        <Editor.View {...props} initialValue={queryDoc(value)} onChange={handleChange} selectionEnd />
+        {/* `value` as well as `initialValue`: the seed creates the document, and the controlled prop
+            syncs it when a caller rewrites the query itself (the mailbox's tag menu appends `#tag`).
+            That sync is annotated `initialSync`, so it raises no `onChange` — a caller driving the
+            text owns the parsed filter for that update. */}
+        <Editor.View {...props} initialValue={value} value={value} onChange={handleChange} selectionEnd />
       </Editor.Root>
     );
   },

@@ -14,9 +14,6 @@ const tags: Tag.Map = {
   tag_2: Tag.make({ label: 'investor' }),
 };
 
-const optionsAt = (doc: string, pos = doc.length) =>
-  completions({ tags })({ state: EditorState.create({ doc }), pos, text: doc });
-
 /**
  * Selecting a completion replaces the WHOLE trigger range — the `#` included — and inserts the item
  * verbatim, so an unprefixed label would drop the `#` and leave text that no longer parses as a tag.
@@ -37,4 +34,13 @@ describe('tag completions', () => {
   test('are not offered away from a tag', () => {
     expect(optionsAt('type:')).not.toContain('#important');
   });
+
+  // Only once the string is closed: until then the parser recovers by reading the `"` as an error and
+  // `#imp` as a real tag, so the tree has no string to resolve into.
+  test('are not offered inside a closed string, where `#` is content', () => {
+    expect(optionsAt('{ title: "#imp" }', 14)).toEqual([]);
+  });
 });
+
+const optionsAt = (doc: string, pos = doc.length) =>
+  completions({ tags })({ state: EditorState.create({ doc }), pos, text: doc });
