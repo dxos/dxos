@@ -16,7 +16,9 @@ tasks:
     command: >-
       pnpm exec dx-trace-imports
       --export ./operations
-      --to "{@dxos/react-ui,react,react-dom}"
+      --to "@dxos/react-ui"
+      --to react
+      --to react-dom
       --conditions workerd,worker
       --fail-on present
     deps:

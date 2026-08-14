@@ -6,33 +6,18 @@ tags:
   - ts-test-storybook
   - storybook
 tasks:
-  # The edge operation-service imports these entries directly rather than activating the plugin —
-  # its React surfaces cannot load in a worker bundle — so they are the seam that headless host
-  # depends on. Keep them UI-free: a leak here breaks that host at build time, far from this
-  # package, with an error naming neither.
   check-module-structure:
-    # Handler set registered by the headless host.
+    # The edge operation-service imports these entries directly rather than activating the plugin —
+    # its React surfaces cannot load in a worker bundle — so they are the seam that headless host
+    # depends on: `./operations` for the handler set, `./skills` for the codeProject skill
+    # definition. Keep them UI-free: a leak here breaks that host at build time, far from here.
     command: >-
       pnpm exec dx-trace-imports
       --export ./operations
-      --to "{@dxos/react-ui,react,react-dom}"
-      --conditions workerd,worker
-      --fail-on present
-    deps:
-      - dx-trace-imports:build
-      - build
-    inputs:
-      - tsconfig.json
-      - '@group(production)'
-      - /pnpm-lock.yaml
-    options:
-      timeout: 60
-  check-module-structure-skills:
-    # codeProject skill definition, registered by the headless host and projected as an MCP prompt.
-    command: >-
-      pnpm exec dx-trace-imports
       --export ./skills
-      --to "{@dxos/react-ui,react,react-dom}"
+      --to "@dxos/react-ui"
+      --to react
+      --to react-dom
       --conditions workerd,worker
       --fail-on present
     deps:
