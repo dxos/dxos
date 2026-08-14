@@ -126,7 +126,11 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
                 node.from,
                 node.to,
                 isTerminated(state, node.to)
-                  ? Decoration.widget({ widget: new TagWidget(label, hue), atomic: true })
+                  ? // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range
+                    // that starts at offset 0 paints before that offset's coordinate and the caret
+                    // draws to its right — pressing Home appeared to leave the caret after the tag.
+                    // `replace` states that the range becomes the chip, which resolves the boundary.
+                    Decoration.replace({ widget: new TagWidget(label, hue), atomic: true })
                   : Decoration.mark({ class: mx('rounded-xs px-0.5', getStyles(hue).surface) }),
               );
             }
