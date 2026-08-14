@@ -158,7 +158,11 @@ Both moves changed a released DXN, so routines bound to the old keys are orphane
 deliberately, pre-1.0. Note the changesets are `minor`, not `major`: at 0.x a breaking change rides
 the minor, and `major` would cut 1.0.0 across the whole fixed publish group.
 
-**D6 — Generalize off `Mailbox`.** NOT BUILT, and weaker than first written. The abstraction is "a
+**D6 — Generalize off `Mailbox`.** NOT BUILT, and weaker than first written. It also now carries a
+deferred question: whether a processor can fan out over N subjects (the plugin-projects trio needs one
+invocation per Project) and what cursor identity that implies — per-(processor, subject) rather than
+per-processor. Deferred here deliberately, because D6 has to answer "what is the subject of a pass"
+regardless. The abstraction is "a
 durable feed plus N independently-cursored consumers contributed by plugins", and the parts that
 matter are already generic: `topology.ts` knows only `{id, after}`, `precondition.ts` knows only
 `Cause`s, and a feed cursor's `target` is already an untyped association anchor. What is mailbox-typed

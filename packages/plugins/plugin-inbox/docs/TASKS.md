@@ -200,10 +200,13 @@ Committed, unpushed. This is the PR to open first.
       do not.
       NO CHEAP FIX. `Aggregate.group` takes a plain property name, so `threadId ?? id` is not
       expressible; the items limit is per-aggregate, so it cannot differ for the null group; and
-      raising it inflates every real thread's preview payload. Options: (a) extend ECHO's aggregate to
-      accept a computed group key; (b) derive a `threadId` at write time (`deriveThreadId` already
-      exists in pipeline-email) so the null group never forms — does not fix existing data;
-      (c) select threadless messages in a separate paginated query and merge in the view.
+      raising it inflates every real thread's preview payload.
+      DECIDED 2026-08-14: extend ECHO's aggregate to accept a COMPUTED GROUP KEY, so the key can be
+      `threadId ?? id` and each threadless message becomes its own group — the cap then never bites.
+      Fixes every current and future consumer and works on existing data, at the cost of a query-planner
+      change in `@dxos/echo` rather than a plugin fix. Rejected: deriving a threadId at write time (does
+      not fix existing data) and a second paginated query in the view (merging two sources into one
+      ordered list across page boundaries).
 - [x] **Open an attachment in its own plank** — `Row.Attachments` is presentational today; needs a click
       handler, the attachment ref resolved to its Blob/object DXN, and a surface for that type.
 - [ ] **Mailbox card: rows showing the inbox message count** — read `inbox`-tag membership from the tag
@@ -424,17 +427,14 @@ generalize now with mailbox as instance #1.
       `after: ['summarize']` pointing at an absent node, so it is ignored and `analyze` runs despite the
       classification failure. Sharp but correct — a processor the caller excluded cannot constrain
       anything, and `analyze` never consumed classification. 6 topology tests + 2 cascade tests.
-- [ ] **BLOCKED — contribute the plugin-projects trio as `MailboxProcessor`s.** My earlier claim that
-      they "need no generalization" was too quick. They do read `mailbox.feed`, but all three take
-      BOTH a `project` and a `mailbox` ref, and `createInvocation(mailbox, options)` has no slot for a
-      Project. Two deeper problems follow:
-      (a) one processor would have to fan out to N projects, but `createInvocation` returns ONE
-      invocation (unlike `SenderAction.createInvocations`, which returns a list); and
-      (b) worse, cursor identity is per-PROCESSOR while these need per-(processor, project) — a single
-      `projects` tag would share one watermark across every project on the mailbox.
-      So they are arguably correct as project routines: they are per-project derivations, not passes
-      everyone wants. NEEDS A DECISION: leave them as routines, widen the seam to return a list plus a
-      composite cursor key, or model project-scoped passes as their own thing.
+- [ ] **DEFERRED TO D6 — the plugin-projects trio as processors.** They read `mailbox.feed`, but all
+      three take BOTH a `project` and a `mailbox` ref, and `createInvocation(mailbox, options)` has no
+      slot for a Project and returns ONE invocation rather than a list. The blocking problem is cursor
+      identity: a processor's id IS its cursor tag, but these need per-(processor, project) — one
+      `projects` tag across three projects on a mailbox means they share a watermark and silently skip
+      each other, the same class of bug as the untagged analysis cursor.
+      DECIDED 2026-08-14: do not decide this in isolation. D6 has to answer "what is the subject of a
+      pass" regardless, and fan-out plus composite cursor keys are better settled with that context.
 - [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6) — WEAKER than first written.
       The parts that matter are already generic (`topology.ts` knows only `{id, after}`,
       `precondition.ts` only `Cause`s, a feed cursor's `target` is already untyped). Mailbox-typed:
@@ -476,5 +476,5 @@ generalize now with mailbox as instance #1.
 
 ## Manual test plan
 
-Moved to [`TESTING.md`](TESTING.md) — 26 steps across sections A–F, none run. See the blocker above
-for why an automation browser cannot execute them and a warm browser can.
+Moved to [`TESTING.md`](TESTING.md) — 26 steps across sections A–F, none run.
+See the blocker above for why an automation browser cannot execute them and a warm browser can.

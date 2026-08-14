@@ -236,9 +236,6 @@
     "dx.config.ts",
     "src"
   ],
-  "scripts": {
-    "import-mbox": "vite-node ./scripts/import-mbox-space.ts --"
-  },
   "dependencies": {
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",

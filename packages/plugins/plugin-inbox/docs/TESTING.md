@@ -1,4 +1,4 @@
-# plugin-inbox — manual test plan
+# Manual Testing Plan
 
 Everything built across Phases 0-5 is verified by build, lint and unit tests only. These are the steps
 that convert that into "seen working". None have been run, with one exception noted in F.
@@ -57,8 +57,8 @@ Setup: storybook against the `@dxos/fixtures` mailbox corpus (391 real messages)
 - [ ] **D1** — Expand a message with a To header. Expect a row whose first column carries the standard
       person AVATAR for a single recipient (the generic glyph was replaced), or a `ph--users--regular`
       group icon when there are several, aligned with the tags/attachments rows.
-- [ ] **D2** — The row shows ONLY the address — `rich@braneframe.com`, never `"RICHARD S. BURDON"
-<rich@braneframe.com>`.
+- [ ] **D2** — The row shows ONLY the address — `rich@braneframe.com`,
+      never `"RICHARD S. BURDON" <rich@braneframe.com>`.
 - [ ] **D3** — A multi-recipient header renders each address comma-separated.
 - [ ] **D4** — A message with no To header renders NO row (not an empty one).
 
