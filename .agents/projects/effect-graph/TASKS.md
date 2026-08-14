@@ -149,15 +149,19 @@ Gate before Phase 9. Requested 2026-08-13.
       1. **Drag / re-order broke at the consolidation** (`re-order collections`, `drag object into
          collection`). Sibling order in app-graph is carried by *edge insertion order* —
          `sortEdgesImpl` removes and re-adds a relation's edges — and `_connections` reads it back
-         through `model.neighborsAtom`. Prime suspect: `EffectGraph.removeEdge` not preserving
-         iteration order across remove+re-add. Verify at the `GraphModel` level by asserting
-         `outgoing()` order after a remove+re-add cycle.
+         through `model.neighborsAtom`. **Ordering is verified CORRECT at HEAD** — a direct
+         `Graph.sortEdges` round-trip over four siblings returns the requested order twice running —
+         so the incremental adjacency (`Map`-keyed, order-preserving) landed later already fixed that
+         era's bug, and the drag specs now fail for the same cause as deletion. Treat this as one
+         remaining regression, not two.
       2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
          consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
          `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
          console error. NOTE `8ff86d48` does not build in isolation — it removed `Graph.initialize`
          while `plugin-space/spaces-ready.ts` still called it, and that call site was only fixed
-         during the main merge; patch that line to A/B across it.
+         during the main merge; patch that line to A/B across it. `6e3e2cd3` does not build in
+         isolation either (the `GraphNodeMatcher` type-erasure defect fixed during the merge), so
+         expect to patch one or two files per step when bisecting this region.
 
       CLEARED, each by revert + rebuild + rerun: the orphan check; the incremental adjacency maps;
       `addEdgeImpl` + the `sortEdges` Set membership; and the `origin/main` merge (the pre-merge tip
