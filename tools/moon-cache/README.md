@@ -97,11 +97,18 @@ Deploying a config change is `scp bazel-remote.service root@…:/etc/systemd/sys
 data — it's on disk and survives — but not instantaneous: see item 6 above for the ~70 s of
 downtime while the index rebuilds.
 
-`rsyslog-logrotate.conf` bounds `/var/log/syslog` — daily rotation, 500 MB max size, 3 generations
+`rsyslog-logrotate.conf` bounds the six paths rsyslog writes on this box (`syslog`, `mail.log`,
+`kern.log`, `auth.log`, `user.log`, `cron.log`) — daily rotation, 500 MB max size, 3 generations
 kept — so a future chatty service fills at most a few GB before rotation catches it, rather than
 the whole disk. Deploy with `scp rsyslog-logrotate.conf root@…:/etc/logrotate.d/rsyslog`; nothing
 to reload — `logrotate` reads the file fresh from its daily systemd timer, no service restart
-involved. `logrotate -d /etc/logrotate.d/rsyslog` dry-runs a change before deploying it.
+involved. Run `logrotate -d /etc/logrotate.d/rsyslog` after deploying — it names every file it
+plans to rotate, so a path missing from the config (and therefore left unbounded) shows up
+immediately.
+
+This file is a dpkg conffile owned by the `rsyslog` package, so `apt upgrade`'d rsyslog will
+prompt about the local modification; `apt.systemd.daily` runs unattended-upgrades here, which
+keeps the local version by default, so this is a footnote, not a risk.
 
 ## Certificates
 
