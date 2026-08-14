@@ -54,12 +54,17 @@ test.describe('Chat', () => {
     // Polled over one derived state rather than asserted step by step: a request that never reaches
     // the service leaves the thread empty and surfaces the reason in a toast, so folding the toast,
     // the echoed prompt and the reply into a single value reports which of them actually happened
-    // instead of a bare "expected substring" timeout.
+    // instead of a bare "expected substring" timeout. The toast is latched because it auto-dismisses
+    // after 20s — polling for it live would report the post-dismissal state and lose the reason.
+    let failure: string | undefined;
     await expect
       .poll(
         async () => {
-          if (await assistant.error.isVisible()) {
-            return `request failed: ${await assistant.error.innerText()}`;
+          if (!failure && (await assistant.error.isVisible())) {
+            failure = await assistant.error.innerText();
+          }
+          if (failure) {
+            return `request failed: ${failure}`;
           }
           const thread = await assistant.thread.innerText();
           if (REPLY.test(thread)) {

@@ -8,6 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Resource, addResources, translator } from '@dxos/i18n';
+import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
@@ -28,8 +29,12 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
     const translationsAtom = yield* Capability.atom(AppCapabilities.Translations);
 
-    // Static resources owned by the theme plugin and the embedding app.
+    // Static resources owned by the theme plugin and the embedding app. `@dxos/react-ui` owns its
+    // own namespace and contributes no plugin of its own, so this is the only place its resources
+    // are registered — without them every primitive that resolves a label (Toast, Message, Toolbar,
+    // Card) renders the raw key, e.g. `toolbar-close.label` on a toast's close button.
     addResources([
+      ...reactUiTranslations,
       ...translations,
       ...resourceExtensions,
       ...(appName ? [{ 'en-US': { [osTranslations]: { 'current-app.name': appName } } }] : []),

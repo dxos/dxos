@@ -69,6 +69,10 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 // require is multi-arity, so it orders within a round but never blocks across rounds. A resolver
 // contributed in a later round is therefore invisible, leaving the AI service permanently holding
 // only the empty fallback resolver and failing every request with `AiModelNotAvailableError`.
+// TODO(burdon): Consider deferring these past startup again — they pull the Anthropic and OpenAI
+//   client bindings into the startup wave for a user who may never open a chat. Doing so needs the
+//   AI service to read the resolver collection lazily (per request) rather than snapshotting it,
+//   since the LayerSpec snapshot is what makes a late contribution invisible.
 export const EdgeModelResolver = Capability.lazyModule(
   'EdgeModelResolver',
   { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
