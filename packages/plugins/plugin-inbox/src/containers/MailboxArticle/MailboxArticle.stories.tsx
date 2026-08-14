@@ -540,6 +540,20 @@ export const Paging: Story = {
   },
 };
 
+// KNOWN GAP — renders an EMPTY list, deliberately: `threads: 0` seeds messages with no `threadId`
+// (as drafts, transcriptions and assistant-authored messages are), and `buildThreadSemiJoin`'s
+// `threadId IN (SELECT threadId FROM <matches>)` can never match a message that has none, so they
+// never reach the list in either mode. The conversation grouping downstream is already fixed (its
+// key falls back to the message id, giving each its own row); this story turns green — 20 rows — the
+// moment the semi-join also admits directly-matching threadless messages.
+export const GroupedWithoutThreads: Story = {
+  args: {
+    count: 20,
+    conversations: true,
+    threads: 0,
+  },
+};
+
 export const PagingGrouped: Story = {
   args: {
     count: 50,
