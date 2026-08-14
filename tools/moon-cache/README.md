@@ -71,7 +71,7 @@ MOON_REMOTE_HOST= moon run :build
 | host | `cache.dxos.network` -> 64.225.13.237 (DigitalOcean NYC3) |
 | service | `bazel-remote` v2.5.0, systemd unit `bazel-remote` |
 | ports | 9092 gRPC, 9093 HTTPS (metrics + `/status`) |
-| storage | `/var/cache/moon`, zstd, 100 GB LRU |
+| storage | `/var/cache/moon`, zstd, 100 GiB LRU |
 | certificates | `/etc/bazel-remote/{server.pem,server.key,ca.pem}` |
 
 `--tls_ca_file` is what makes it mTLS. Without it the cache would be world-readable and
