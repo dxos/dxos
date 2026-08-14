@@ -6,9 +6,11 @@ import { type Event } from '@dxos/async';
 import type { RequestOptions, Stream } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols/proto';
 import type {
+  CreateEpochResponse,
   Device,
   Identity,
   Invitation,
+  JoinSpaceResponse,
   LogEntry,
   NetworkStatus,
   Platform,
@@ -16,8 +18,9 @@ import type {
   QueryEdgeStatusResponse,
   QueryInvitationsResponse,
   QueryLogsRequest,
+  QuerySpacesResponse,
   RecoverIdentityRequest,
-  SpacesService,
+  Space,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { Config } from '@dxos/protocols/proto/dxos/config';
 import type {
@@ -47,6 +50,7 @@ import type {
   ProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import type { AppService, ShellService } from '@dxos/protocols/proto/dxos/iframe';
+import type { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import type {
   DataService as RpcDataService,
   DevicesService as RpcDevicesService,
@@ -56,6 +60,7 @@ import type {
   InvitationsService as RpcInvitationsService,
   LoggingService as RpcLoggingService,
   NetworkService as RpcNetworkService,
+  SpacesService as RpcSpacesService,
   SystemService as RpcSystemService,
 } from '@dxos/protocols/rpc';
 import { type ServiceBundle } from '@dxos/rpc';
@@ -293,6 +298,34 @@ export interface DevtoolsHostPromise {
   ) => Promise<RpcDevtoolsHost.RunSqliteQueryResponse>;
 }
 
+export interface SpacesServicePromise {
+  createSpace: (request: RpcSpacesService.CreateSpaceRequest, options?: RequestOptions) => Promise<Space>;
+  updateSpace: (request: RpcSpacesService.UpdateSpaceRequest, options?: RequestOptions) => Promise<void>;
+  querySpaces: (request: void, options?: RequestOptions) => Stream<QuerySpacesResponse>;
+  updateMemberRole: (request: RpcSpacesService.UpdateMemberRoleRequest, options?: RequestOptions) => Promise<void>;
+  admitContact: (request: RpcSpacesService.AdmitContactRequest, options?: RequestOptions) => Promise<void>;
+  joinBySpaceKey: (
+    request: RpcSpacesService.JoinBySpaceKeyRequest,
+    options?: RequestOptions,
+  ) => Promise<JoinSpaceResponse>;
+  postMessage: (request: RpcSpacesService.PostMessageRequest, options?: RequestOptions) => Promise<void>;
+  subscribeMessages: (
+    request: RpcSpacesService.SubscribeMessagesRequest,
+    options?: RequestOptions,
+  ) => Stream<GossipMessage>;
+  writeCredentials: (request: RpcSpacesService.WriteCredentialsRequest, options?: RequestOptions) => Promise<void>;
+  queryCredentials: (request: RpcSpacesService.QueryCredentialsRequest, options?: RequestOptions) => Stream<Credential>;
+  createEpoch: (request: RpcSpacesService.CreateEpochRequest, options?: RequestOptions) => Promise<CreateEpochResponse>;
+  exportSpace: (
+    request: RpcSpacesService.ExportSpaceRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcSpacesService.ExportSpaceResponse>;
+  importSpace: (
+    request: RpcSpacesService.ImportSpaceRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcSpacesService.ImportSpaceResponse>;
+}
+
 export type ClientServices = {
   SystemService: SystemServicePromise;
   NetworkService: NetworkServicePromise;
@@ -301,7 +334,7 @@ export type ClientServices = {
   IdentityService: IdentityServicePromise;
   InvitationsService: InvitationsServicePromise;
   DevicesService: DevicesServicePromise;
-  SpacesService: SpacesService;
+  SpacesService: SpacesServicePromise;
 
   DataService: DataServicePromise;
   QueryService: QueryServicePromise;

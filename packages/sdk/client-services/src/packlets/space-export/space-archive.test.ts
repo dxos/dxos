@@ -13,7 +13,7 @@ import {
   SpaceArchiveFileStructure,
   SpaceArchiveVersion,
 } from '@dxos/protocols';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 
 import { detectSpaceArchiveFormat } from './archive-format';
 import { buildDatabaseDirectoryFromObjects, readSerializedSpaceArchive } from './serialized-space-reader';
@@ -293,34 +293,34 @@ describe('SpaceArchive', () => {
   describe('detectSpaceArchiveFormat', () => {
     test('detects JSON via .dx.json extension', () => {
       const format = detectSpaceArchiveFormat({ filename: 'space.dx.json', contents: new Uint8Array() });
-      expect(format).toBe(SpaceArchive.Format.JSON);
+      expect(format).toBe(SpacesService.SpaceArchiveFormat.enums.JSON);
     });
 
     test('detects JSON via .json extension', () => {
       const format = detectSpaceArchiveFormat({ filename: 'backup.json', contents: new Uint8Array() });
-      expect(format).toBe(SpaceArchive.Format.JSON);
+      expect(format).toBe(SpacesService.SpaceArchiveFormat.enums.JSON);
     });
 
     test('detects BINARY via .tar extension', () => {
       const format = detectSpaceArchiveFormat({ filename: 'space.tar', contents: new Uint8Array() });
-      expect(format).toBe(SpaceArchive.Format.BINARY);
+      expect(format).toBe(SpacesService.SpaceArchiveFormat.enums.BINARY);
     });
 
     test('detects BINARY via .tar.gz extension', () => {
       const format = detectSpaceArchiveFormat({ filename: 'space.tar.gz', contents: new Uint8Array() });
-      expect(format).toBe(SpaceArchive.Format.BINARY);
+      expect(format).toBe(SpacesService.SpaceArchiveFormat.enums.BINARY);
     });
 
     test('falls back to JSON via leading { byte', () => {
       const contents = new TextEncoder().encode('{"version":1}');
       const format = detectSpaceArchiveFormat({ filename: 'unknown', contents });
-      expect(format).toBe(SpaceArchive.Format.JSON);
+      expect(format).toBe(SpacesService.SpaceArchiveFormat.enums.JSON);
     });
 
     test('skips leading whitespace before sniffing', () => {
       const contents = new TextEncoder().encode('  \n\t{"version":1}');
       const format = detectSpaceArchiveFormat({ filename: 'unknown', contents });
-      expect(format).toBe(SpaceArchive.Format.JSON);
+      expect(format).toBe(SpacesService.SpaceArchiveFormat.enums.JSON);
     });
 
     test('falls back to BINARY on non-JSON bytes', () => {
@@ -328,7 +328,7 @@ describe('SpaceArchive', () => {
         filename: 'unknown',
         contents: new Uint8Array([0x00, 0x01, 0x02]),
       });
-      expect(format).toBe(SpaceArchive.Format.BINARY);
+      expect(format).toBe(SpacesService.SpaceArchiveFormat.enums.BINARY);
     });
   });
 
@@ -339,10 +339,10 @@ describe('SpaceArchive', () => {
         objects: [],
       };
       const contents = new TextEncoder().encode(JSON.stringify(serialized));
-      const archive: SpaceArchive = {
+      const archive: SpacesService.SpaceArchive = {
         filename: 'test.dx.json',
         contents,
-        format: SpaceArchive.Format.JSON,
+        format: SpacesService.SpaceArchiveFormat.enums.JSON,
       };
       const result = readSerializedSpaceArchive(archive);
       expect(result.version).toBe(1);
@@ -355,7 +355,7 @@ describe('SpaceArchive', () => {
         readSerializedSpaceArchive({
           filename: 'bad.json',
           contents: bogus,
-          format: SpaceArchive.Format.JSON,
+          format: SpacesService.SpaceArchiveFormat.enums.JSON,
         }),
       ).toThrow();
     });

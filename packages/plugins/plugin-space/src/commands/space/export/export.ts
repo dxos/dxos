@@ -23,7 +23,7 @@ import {
   withTimeout,
 } from '@dxos/cli-util';
 import { type Key } from '@dxos/echo';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 
 import { SpaceNotReadyError } from '../../../errors';
 
@@ -60,8 +60,8 @@ export const handler = Effect.fn(function* ({ spaceId, output, format }: ExportA
   const archive = yield* Effect.tryPromise(() =>
     space.internal.export({
       format: Match.value(format).pipe(
-        Match.when('binary', () => SpaceArchive.Format.BINARY),
-        Match.when('json', () => SpaceArchive.Format.JSON),
+        Match.when('binary', () => SpacesService.SpaceArchiveFormat.enums.BINARY),
+        Match.when('json', () => SpacesService.SpaceArchiveFormat.enums.JSON),
         Match.exhaustive,
       ),
     }),
