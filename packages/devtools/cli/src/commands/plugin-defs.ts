@@ -11,12 +11,10 @@ import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as ObservabilityPlugin from '@dxos/plugin-observability/ObservabilityPlugin';
-import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 
 export type PluginConfig = {
   config?: Config;
@@ -30,9 +28,6 @@ export const getDefaults = (): string[] => [
   SamplePlugin.meta.profile.key,
   InboxPlugin.meta.profile.key,
   MarkdownPlugin.meta.profile.key,
-  // Their operations carry the MCP annotation, so `dx mcp serve` has a surface out of the box.
-  ProjectsPlugin.meta.profile.key,
-  TasksPlugin.meta.profile.key,
 ];
 
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
@@ -47,11 +42,9 @@ export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
     // TODO(wittjosiah): Align browser and node variant option types for ObservabilityPlugin.
     ObservabilityPlugin.make({} as any),
     ProcessManagerPlugin(),
-    ProjectsPlugin.make(),
     RegistryPlugin.make(),
     RoutinePlugin.make(),
     SamplePlugin.make(),
     SpacePlugin.make({}),
-    TasksPlugin.make(),
   ];
 };

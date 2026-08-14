@@ -19,6 +19,11 @@ import { Obj } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Gateway, GatewayError, Snapshot, errorMessage } from '@dxos/mcp-projection';
+// Narrow subpath imports: these plugins declare React surfaces, and a bundler follows the dynamic
+// import behind a lazy capability, so activating them would pull React into the CLI binary.
+import { ProjectOperationHandlerSet } from '@dxos/plugin-projects/operations';
+import { CodeProjectSkillDefinition } from '@dxos/plugin-projects/skills';
+import { TasksOperationHandlerSet } from '@dxos/plugin-tasks/operations';
 
 import { chatLayer } from '../../util';
 
@@ -35,9 +40,16 @@ export const makeGateway = Effect.fn(function* () {
   // backs are invoked by the MCP server layer, which knows nothing of the CLI's services.
   const ambient = yield* Effect.context<ClientService>();
 
-  const handlerSet = OperationHandlerSet.merge(...capabilities.getAll(Capabilities.OperationHandler));
+  // The project and task verbs are the annotated ones, so a registry without them projects nothing
+  // worth calling; their sets are registered directly for the reason the import above states —
+  // the same trade EDGE's operation-service makes for the mail handler sets.
+  const handlerSet = OperationHandlerSet.merge(
+    ...capabilities.getAll(Capabilities.OperationHandler),
+    ProjectOperationHandlerSet,
+    TasksOperationHandlerSet,
+  );
   const handlers = yield* handlerSet.handlers;
-  const skills = capabilities.getAll(AppCapabilities.SkillDefinition);
+  const skills = dedupeByKey([...capabilities.getAll(AppCapabilities.SkillDefinition), CodeProjectSkillDefinition]);
 
   // Same visibility rule as EDGE: the HALO space and the settings space hold identity and app
   // config, never user data, so neither surfaces as a space a tool may target.
@@ -92,6 +104,19 @@ const serializableHandlers = (
 
 /** Operation keys travel with or without the `dxn:` prefix; compare them stripped. */
 const normalizeKey = (key: string): string => key.replace(/^dxn:/, '');
+
+/** A skill contributed both by an activated plugin and by direct import must project once. */
+const dedupeByKey = <T extends { readonly key: unknown }>(definitions: readonly T[]): T[] => {
+  const seen = new Set<string>();
+  return definitions.filter((definition) => {
+    const key = String(definition.key);
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
 
 type InvocationContext = {
   readonly handlerSet: OperationHandlerSet.OperationHandlerSet;
