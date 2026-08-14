@@ -7,8 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Config } from './config';
 import { EdgeServiceName, getEdgeServiceEndpoint } from './edge-services';
 
-// Absent config must mean "no edge" — edge-service lookup never injects an endpoint.
-// (configPreset is exempt by decision: calling the preset factory is itself an explicit opt-in.)
+// Unconfigured lookups must never inject an endpoint (configPreset is exempt: calling the factory is the opt-in).
 describe('no default endpoints', () => {
   test('getEdgeServiceEndpoint returns undefined when unconfigured', () => {
     expect(getEdgeServiceEndpoint(new Config(), EdgeServiceName.Calls)).toBeUndefined();

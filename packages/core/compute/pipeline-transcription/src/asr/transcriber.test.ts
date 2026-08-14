@@ -105,12 +105,19 @@ describe('alignWhisperSegments', () => {
 
 describe('Transcriber transport validation', () => {
   test('open() rejects before recording when no transport is configured', async ({ expect }) => {
+    let started = false;
     const transcriber = new Transcriber({
       config: { transcribeAfterChunksAmount: 50, prefixBufferChunksAmount: 10 },
-      recorder: stubRecorder(),
+      recorder: {
+        ...stubRecorder(),
+        start: async () => {
+          started = true;
+        },
+      },
       onSegments: async () => {},
     });
     await expect(transcriber.open()).rejects.toThrow(/Transcription endpoint is not configured/);
+    expect(started).toBe(false);
   });
 
   test('open() succeeds with a transcribe fn and no endpoint', async ({ expect }) => {
