@@ -20,7 +20,14 @@ import type {
   SpacesService,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { Config } from '@dxos/protocols/proto/dxos/config';
-import type { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
+import type {
+  GetSpaceSnapshotResponse,
+  SaveSpaceSnapshotResponse,
+  SignalResponse,
+  SubscribeToFeedBlocksResponse,
+  SubscribeToMetadataResponse,
+  SubscribeToSpacesResponse,
+} from '@dxos/protocols/proto/dxos/devtools/host';
 import type { IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import type {
   QueryRequest as EchoQueryRequest,
@@ -43,6 +50,7 @@ import type { AppService, ShellService } from '@dxos/protocols/proto/dxos/iframe
 import type {
   DataService as RpcDataService,
   DevicesService as RpcDevicesService,
+  DevtoolsHost as RpcDevtoolsHost,
   FeedService as RpcFeedService,
   IdentityService as RpcIdentityService,
   InvitationsService as RpcInvitationsService,
@@ -210,6 +218,81 @@ export interface DataServicePromise {
   ) => Promise<RpcDataService.GarbageCollectionReport>;
 }
 
+export interface DevtoolsHostPromise {
+  events: (request: void, options?: RequestOptions) => Stream<RpcDevtoolsHost.Event>;
+  getConfig: (request: void, options?: RequestOptions) => Promise<RpcDevtoolsHost.GetConfigResponse>;
+  getStorageInfo: (request: void, options?: RequestOptions) => Promise<RpcDevtoolsHost.StorageInfo>;
+  resetStorage: (request: RpcDevtoolsHost.ResetStorageRequest, options?: RequestOptions) => Promise<void>;
+  getSnapshots: (request: void, options?: RequestOptions) => Promise<RpcDevtoolsHost.GetSnapshotsResponse>;
+  enableDebugLogging: (
+    request: RpcDevtoolsHost.EnableDebugLoggingRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDevtoolsHost.EnableDebugLoggingResponse>;
+  disableDebugLogging: (
+    request: RpcDevtoolsHost.EnableDebugLoggingRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDevtoolsHost.EnableDebugLoggingResponse>;
+  subscribeToKeyringKeys: (
+    request: RpcDevtoolsHost.SubscribeToKeyringKeysRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToKeyringKeysResponse>;
+  subscribeToCredentialMessages: (
+    request: RpcDevtoolsHost.SubscribeToCredentialMessagesRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToCredentialMessagesResponse>;
+  subscribeToSpaces: (
+    request: RpcDevtoolsHost.SubscribeToSpacesRequest,
+    options?: RequestOptions,
+  ) => Stream<SubscribeToSpacesResponse>;
+  subscribeToItems: (
+    request: RpcDevtoolsHost.SubscribeToItemsRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToItemsResponse>;
+  subscribeToFeeds: (
+    request: RpcDevtoolsHost.SubscribeToFeedsRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToFeedsResponse>;
+  subscribeToFeedBlocks: (
+    request: RpcDevtoolsHost.SubscribeToFeedBlocksRequest,
+    options?: RequestOptions,
+  ) => Stream<SubscribeToFeedBlocksResponse>;
+  subscribeToMetadata: (request: void, options?: RequestOptions) => Stream<SubscribeToMetadataResponse>;
+  getSpaceSnapshot: (
+    request: RpcDevtoolsHost.GetSpaceSnapshotRequest,
+    options?: RequestOptions,
+  ) => Promise<GetSpaceSnapshotResponse>;
+  saveSpaceSnapshot: (
+    request: RpcDevtoolsHost.SaveSpaceSnapshotRequest,
+    options?: RequestOptions,
+  ) => Promise<SaveSpaceSnapshotResponse>;
+  clearSnapshots: (request: RpcDevtoolsHost.ClearSnapshotsRequest, options?: RequestOptions) => Promise<void>;
+  getNetworkPeers: (
+    request: RpcDevtoolsHost.GetNetworkPeersRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDevtoolsHost.GetNetworkPeersResponse>;
+  subscribeToNetworkTopics: (
+    request: void,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToNetworkTopicsResponse>;
+  subscribeToSignalStatus: (
+    request: void,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToSignalStatusResponse>;
+  subscribeToSignal: (request: void, options?: RequestOptions) => Stream<SignalResponse>;
+  subscribeToSwarmInfo: (
+    request: RpcDevtoolsHost.SubscribeToSwarmInfoRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToSwarmInfoResponse>;
+  exportSqliteDatabase: (
+    request: void,
+    options?: RequestOptions,
+  ) => Promise<RpcDevtoolsHost.ExportSqliteDatabaseResponse>;
+  runSqliteQuery: (
+    request: RpcDevtoolsHost.RunSqliteQueryRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDevtoolsHost.RunSqliteQueryResponse>;
+}
+
 export type ClientServices = {
   SystemService: SystemServicePromise;
   NetworkService: NetworkServicePromise;
@@ -227,7 +310,7 @@ export type ClientServices = {
   EdgeAgentService: EdgeAgentServicePromise;
 
   // TODO(burdon): Deprecated.
-  DevtoolsHost: DevtoolsHost;
+  DevtoolsHost: DevtoolsHostPromise;
 };
 
 /**
