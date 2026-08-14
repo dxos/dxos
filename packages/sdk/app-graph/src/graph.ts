@@ -179,9 +179,12 @@ class GraphImpl implements WritableGraph {
   /** @internal */
   readonly _node = Atom.family<string, Atom.Atom<Option.Option<Node.Node>>>((id) => {
     return Atom.make((get) => Option.fromUndefinedOr(get(this._model.nodeAtom(id))?.data)).pipe(
-      // Eager: a lazy atom defers rebuilding while nothing observes it, so a subscriber attached
-      // before the node exists would never be notified of its arrival.
-      Atom.setLazy(false),
+      // Cut off on the payload: `Option.some` allocates a fresh wrapper on every recompute, so
+      // without this a version bump notifies subscribers of nodes it did not touch.
+      Atom.withEquality(
+        (a: Option.Option<Node.Node>, b: Option.Option<Node.Node>) =>
+          Option.getOrUndefined(a) === Option.getOrUndefined(b),
+      ),
       withLabel(`graph:node:${id}`),
     );
   });
@@ -189,13 +192,13 @@ class GraphImpl implements WritableGraph {
   /**
    * The node as the model holds it right now.
    *
-   * Mutations run inside `Atom.batch`, which defers invalidation, so reading {@link Graph._node}
-   * from a write path returns the value from before the batch — a read-merge-write would then
-   * silently undo whatever an earlier write in the same batch had stored.
+   * A flush applies its writes inside {@link batch}, which bumps the version once at the end, so
+   * reading {@link Graph._node} from a write path yields the value from before the batch — and
+   * `addNodeImpl` merges onto what it reads, so that would silently undo an earlier write in the
+   * same flush.
    * @internal
    */
   _currentNode(id: string): Option.Option<Node.Node> {
-    this._touch(this._node(id));
     return Option.fromUndefinedOr(this._model.findNode(id)?.data);
   }
 
@@ -206,7 +209,12 @@ class GraphImpl implements WritableGraph {
    * @internal
    */
   _touch(atom: Atom.Atom<unknown>): void {
-    this._registry.get(atom);
+    // Only atoms someone has already asked for: `subscribe` registers a node without reading, which
+    // is the case that needs wiring, while an atom nobody has referenced has nothing to notify and
+    // materializing one per write would cost a computation per node on every flush.
+    if (this._registry.getNodes().has(atom)) {
+      this._registry.get(atom);
+    }
   }
 
   /** The outgoing and inbound edges as the model holds them right now; see {@link Graph._currentNode}. @internal */
@@ -242,9 +250,7 @@ class GraphImpl implements WritableGraph {
     return Atom.make((get) => {
       get(this._model.version);
       return this._computeEdges(id);
-      // Eager, for the same reason as `_node`: the render path observes `_connections`, and a lazy
-      // `_edges` between them swallows the invalidation that a child's arrival or removal produces.
-    }).pipe(Atom.setLazy(false), Atom.withEquality(edgesEqual), withLabel(`graph:edges:${id}`));
+    }).pipe(Atom.withEquality(edgesEqual), withLabel(`graph:edges:${id}`));
   });
 
   // NOTE: Currently the argument to the family needs to be referentially stable for the atom to be referentially stable.
@@ -264,7 +270,6 @@ class GraphImpl implements WritableGraph {
         .filter(Option.isSome)
         .map((node) => node.value),
     ).pipe(
-      Atom.setLazy(false),
       // Depend on each child's own atom so a child's change invalidates this view, but cut off on the
       // resolved list: without this a no-op re-add re-allocates the Options and notifies spuriously.
       Atom.withEquality(
@@ -359,6 +364,9 @@ class GraphImpl implements WritableGraph {
    */
   _setNode(id: string, node: Option.Option<Node.Node>): void {
     this._model.setNode({ id, data: Option.getOrUndefined(node) });
+    // After the write, so the atom materializes with the value rather than with `none`. Wiring it
+    // up here is what lets a subscriber attached before the node existed hear about its arrival.
+    this._touch(this._node(id));
   }
 
   /** @internal */
@@ -983,10 +991,20 @@ export function sortEdges<T extends ExpandableGraph | WritableGraph>(
 }
 
 /**
+ * Applies `fn`'s writes as a single observable change: the model bumps its version once, so derived
+ * views recompute and notify once for the whole group.
+ */
+export const batch = <T extends WritableGraph, A>(graph: T, fn: () => A): A => getInternal(graph)._model.batch(fn);
+
+/**
  * Implementation helper for addNodes.
  */
 const addNodesImpl = <T extends WritableGraph>(graph: T, nodes: Node.NodeArg<any, Record<string, any>>[]): T => {
-  Atom.batch(() => {
+  // The model's own depth counter, not `Atom.batch`: these calls nest (a node applies its inline
+  // children and edges), and a nested `Atom.batch` leaves the registry in its collect phase after
+  // the inner call returns, so invalidations raised afterwards are gathered and then discarded
+  // without ever being rebuilt. The version atom still bumps once for the whole group.
+  getInternal(graph)._model.batch(() => {
     nodes.map((node) => addNodeImpl(graph, node));
   });
   return graph;
@@ -1131,7 +1149,7 @@ export function addNode<T extends WritableGraph>(
  * Implementation helper for removeNodes.
  */
 const removeNodesImpl = <T extends WritableGraph>(graph: T, ids: string[], edges = false): T => {
-  Atom.batch(() => {
+  getInternal(graph)._model.batch(() => {
     ids.map((id) => removeNodeImpl(graph, id, edges));
   });
   return graph;
@@ -1220,7 +1238,7 @@ export function removeNode<T extends WritableGraph>(
  * Implementation helper for addEdges.
  */
 const addEdgesImpl = <T extends WritableGraph>(graph: T, edges: Edge[]): T => {
-  Atom.batch(() => {
+  getInternal(graph)._model.batch(() => {
     edges.map((edge) => addEdgeImpl(graph, edge));
   });
   return graph;
@@ -1283,7 +1301,7 @@ export function addEdge<T extends WritableGraph>(
  * Implementation helper for removeEdges.
  */
 const removeEdgesImpl = <T extends WritableGraph>(graph: T, edges: Edge[], removeOrphans = false): T => {
-  Atom.batch(() => {
+  getInternal(graph)._model.batch(() => {
     edges.map((edge) => removeEdgeImpl(graph, edge, removeOrphans));
   });
   return graph;

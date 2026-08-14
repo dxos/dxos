@@ -307,6 +307,7 @@ const makeStore = (
     removeEdges: (edges, removeOrphans) => void Graph.removeEdges(graph, edges.map(decode), removeOrphans),
     sortEdges: (id, relation, order) => void Graph.sortEdges(graph, id, Graph.relationFromKey(relation), [...order]),
     setNode: (id, node) => graph._setNode(id, node),
+    batch: (fn) => Graph.batch(graph, fn),
     constructNode: (node) => graph._constructNode(node),
   };
 };

@@ -19,8 +19,9 @@ const label = (registry: Registry.AtomRegistry, graph: Graph.Graph, id: string) 
 
 /**
  * `addNodes` merges onto the node already in the graph, and the builder applies a whole flush inside
- * one `Atom.batch`. Reading the node back through its atom inside that batch yields the value from
- * before the batch, so a second write in the same flush would merge onto — and undo — the first.
+ * one {@link Graph.batch}, which bumps the model's version once at the end. Reading the node back
+ * through its atom inside that batch yields the value from before it, so a second write in the same
+ * flush would merge onto — and undo — the first.
  */
 describe('writes read the graph as of the current mutation', () => {
   test('a second write in the same batch does not undo the first', () => {
@@ -31,7 +32,7 @@ describe('writes read the graph as of the current mutation', () => {
     const cancel = registry.subscribe(graph.node('a'), () => {});
     expect(label(registry, graph, 'a')).to.equal('A');
 
-    Atom.batch(() => {
+    Graph.batch(graph, () => {
       Graph.addNodes(graph, [{ id: 'a', type: TYPE, properties: { label: 'B' } }]);
       // A second producer of the same node, contributing a different property.
       Graph.addNodes(graph, [{ id: 'a', type: TYPE, properties: { icon: 'ph--cube--regular' } }]);
@@ -48,7 +49,7 @@ describe('writes read the graph as of the current mutation', () => {
     const cancel = registry.subscribe(graph.node('a'), () => {});
     expect(registry.get(graph.node('a')).pipe(Option.isNone)).to.be.true;
 
-    Atom.batch(() => {
+    Graph.batch(graph, () => {
       Graph.addNodes(graph, [{ id: 'a', type: TYPE, properties: { label: 'A' } }]);
       Graph.addNodes(graph, [{ id: 'a', type: TYPE, properties: { icon: 'ph--cube--regular' } }]);
     });

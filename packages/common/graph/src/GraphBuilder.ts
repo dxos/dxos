@@ -115,6 +115,16 @@ export interface Store<Node extends NodeLike, Arg extends NodeArgLike, G = unkno
   setNode(id: string, node: Option.Option<Node>): void;
   /** Materialize a node argument into a node without adding it; used by {@link explore}. */
   constructNode(node: Arg): Option.Option<Node>;
+  /**
+   * Applies a group of writes as one observable change, if the store can. A flush touches many
+   * nodes, and without this each write notifies separately.
+   *
+   * Deliberately the store's own mechanism rather than `Atom.batch`: an atom batch defers
+   * invalidation to a rebuild pass that runs only when the outermost batch closes, and a flush
+   * re-enters the registry as connectors resubscribe, which leaves nodes gathered as stale and
+   * then discarded — their dependents keep a stale value and are never notified.
+   */
+  batch?(fn: () => void): void;
 }
 
 /**
@@ -351,11 +361,13 @@ export class GraphBuilder<
           const entries = [...this._dirtyConnectors.entries()];
           this._dirtyConnectors.clear();
 
-          Atom.batch(() => {
+          const apply = () => {
             for (const [key, { nodes, previous }] of entries) {
               this._applyConnectorUpdate(key, nodes, previous);
             }
-          });
+          };
+          // See {@link Store.batch} for why this is the store's mechanism and not `Atom.batch`.
+          this._store.batch ? this._store.batch(apply) : apply();
         }
       });
     }
@@ -603,6 +615,7 @@ const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNode
     setNode: (id, node) =>
       Option.match(node, { onNone: () => model.removeNode(id), onSome: (value) => model.setNode(value) }),
     constructNode: ({ nodes: _, ...node }) => Option.some(node),
+    batch: (fn) => model.batch(fn),
   };
 };
 
