@@ -99,7 +99,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     AppAnnotation.DeckAnnotation.set({
       levels: [{ key: 'mailbox' }, { key: 'message' }, { key: 'attachment' }],
     }),
-    FeedAnnotation.set(true),
+    FeedAnnotation.set({ property: 'feed' }),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
     // Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
     // Providers are resolved from the registry (any connector whose `sync.targetTypename` is this

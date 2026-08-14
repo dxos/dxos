@@ -8,8 +8,8 @@ import * as Option from 'effect/Option';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { FeedAnnotation } from '@dxos/schema';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { getFeedRef } from '@dxos/schema';
 
 import { Agent } from '../../../types';
 import { SyncAutomation } from './definitions';
@@ -32,26 +32,6 @@ const AGENT_TRIGGER_EXTENSION_KEY = 'org.dxos.extension.AgentTrigger';
  * Foreign key {@link AGENT_TRIGGER_TARGET_EXTENSION_KEY} => <dxn string of subscription target>.
  */
 const AGENT_TRIGGER_TARGET_EXTENSION_KEY = 'org.dxos.extension.AgentTriggerTarget';
-
-/** Reads a feed-annotated object's `feed` ref without assuming its schema shape. */
-const getFeedRef = (obj: Obj.Unknown): Ref.Ref<Obj.Unknown> | undefined => {
-  if (!('feed' in obj)) {
-    return undefined;
-  }
-  const candidate = obj.feed;
-  // The target is type-checked after loading (`Obj.instanceOf(Feed.Feed, …)`), so the ref stays untyped here.
-  return Ref.isRef(candidate) ? candidate : undefined;
-};
-
-/** Checks if an object's schema has the FeedAnnotation. */
-const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
-  const type = Obj.getType(obj);
-  if (!type) {
-    return false;
-  }
-  const annotation = FeedAnnotation.get(Type.getSchema(type));
-  return Option.isSome(annotation) && annotation.value === true;
-};
 
 export type AutomationConfig = {
   /** Omitted (vs empty) leaves existing subscription routines untouched. */
@@ -161,7 +141,7 @@ export const syncAgentAutomation = (
       let feedObj: Feed.Feed | undefined;
       if (Obj.instanceOf(Feed.Feed, target)) {
         feedObj = target;
-      } else if (hasFeedAnnotation(target)) {
+      } else {
         const feedRef = getFeedRef(target);
         feedObj = feedRef
           ? Option.getOrUndefined(
