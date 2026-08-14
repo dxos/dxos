@@ -212,6 +212,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "jsdom": "catalog:",
+    "oxc-resolver": "catalog:",
     "pwa-asset-generator": "catalog:",
     "rollup-plugin-visualizer": "catalog:",
     "vite": "catalog:",
