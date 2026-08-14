@@ -1,8 +1,12 @@
 # plugin-inbox — Tasks
 
-_Resume: **PR #12555 OPEN** — Phases 0, 1 and 2 all landed in it (22 commits). Next action: Phase 3, starting
-with the `useContactLookup` defect. NOTHING IS VERIFIED IN A RUNNING APP — see the storybook blocker
-below; the manual test plan (A–F) is written but unrun. Uncommitted: none._
+_Resume: **PR #12555 IS IN THE MERGE QUEUE** (auto-merge enabled, squash; 84 commits, Phases 0-5).
+All three review threads cleared. Working tree clean, nothing unpushed. NOTHING IN THE BRANCH HAS BEEN
+VERIFIED IN A RUNNING APP — the 27-step plan in [`TESTING.md`](TESTING.md) is unrun and needs a WARM
+browser (see the blocker section). Next after the merge lands: the two ECHO chips gate the rest —
+computed group keys (spawned, running) unblocks the threadId truncation, and annotation-constrained
+refs (spawned) unblocks D6's boundary validation; both await Dima's approval. Unblocked meanwhile:
+Phase 4 summarization and the `useBlobUrl` coverage gap._
 
 Split out of `packages/stories/stories-brain/TASKS.md` on 2026-08-13: that ledger is the model-ladder /
 FINDINGS research harness, this one is the inbox product surface. The ~40 older Topics / FINDINGS /
