@@ -104,17 +104,37 @@ fixed the same way.
 - [x] **S3. Each open space polls sync state at 2 s.**
       `echo-client/src/proxy-db/database.ts` (`FEED_SYNC_POLL_INTERVAL`):
       aggregates block backlog across namespaces via a real per-namespace
-      `FeedService.getSyncState` RPC (SQLite `COUNT(*)` server-side) — not a
-      local aggregation, so R1 doesn't apply here either; started
+      `FeedService.getSyncState` RPC (SQLite `COUNT(*)` server-side); started
       unconditionally per open space by `plugin-client`'s
-      `space-replication-progress.ts`. **Fixed (R2, no-change backoff):**
-      `subscribeToSyncState`'s `pollFeeds` now self-reschedules with a delay
-      that doubles (capped at 15 s) while `blocksToPull`/`blocksToPush`/
-      `totalBlocks` stay unchanged, and resets to `FEED_SYNC_POLL_INTERVAL` on
-      any observed delta. Noted but not fixed here: `space-replication-progress.ts`
-      re-subscribes per space on every `client.spaces` emission with no
-      de-dupe, which can spawn duplicate pollers per space over a session —
-      worth its own follow-up.
+      `space-replication-progress.ts`. **Superseded by a real streaming RPC
+      (R1, not R2):** initial no-change-backoff polling (landed in #12561) has
+      been replaced by `FeedService.subscribeSyncState`, a genuine
+      `stream: true` RPC — `LocalFeedServiceImpl` (`echo-host`) pushes a fresh
+      snapshot on subscribe and again whenever `FeedStore.onNewBlocks` fires
+      and the recomputed state actually differs; `DatabaseImpl.subscribeToSyncState`
+      consumes it via `subscribeStream` instead of any client-side timer.
+      `onNewBlocks` fires on local writes too (`appendLocal` delegates to
+      `append`, which emits it), so this covers both push and pull backlog
+      changes (local writes and completed sync pulls); the freshness ceiling
+      is `FeedSyncer`'s own internal poll cadence against EDGE (5-10 s,
+      unrelated/pre-existing — the remote-availability leg genuinely can't be
+      push-based without a further sync-protocol change, out of scope here).
+      Verified end-to-end in `echo-host/src/db-host/feed-service.test.ts`
+      (initial snapshot + a second push after a local write, direct against
+      `LocalFeedServiceImpl` — the higher-level `EchoTestBuilder` topology
+      stubs `getSyncState` to always-empty when no `FeedSyncer` is wired, so a
+      client-level test can't observe real backlog values). Noted but not
+      fixed here: `space-replication-progress.ts` re-subscribes per space on
+      every `client.spaces` emission with no de-dupe, which can spawn
+      duplicate subscriptions per space over a session — worth its own
+      follow-up. Also noted: `FeedStore.onNewBlocks` is unscoped (fires for
+      any space's write), so every active `subscribeSyncState` subscription
+      recomputes its own namespace counts on each signal regardless of
+      relevance — still cheaper than the fixed-interval poll it replaced
+      (which recomputed unconditionally every 2 s), but a per-space-scoped
+      event would cut it further; needs a `FeedStore` change, not just this
+      RPC, so left as a follow-up alongside the de-dupe note above. Separate
+      PR from the initial S1-S4 pass (#12561).
 - [x] **S4. Query re-execution amplifies every tick.** `echo-host`'s
       `QueryService._executeQueries` re-runs each dirty reactive query per
       invalidation hint; the loops above generate hints, which is what turns
@@ -144,14 +164,15 @@ Independent of each other; some sites may want none, one, or several.
   clock changes. Partially done for S1: the trigger-list subscription
   landed (no more per-tick DB query), but the tick itself still fires at a
   fixed 1 Hz — "no timer while idle" is not yet implemented.
-- [x] **R2. No-change backoff.** Widen the interval while a poll keeps
-      returning nothing (e.g. 1 s → 5 s → 30 s), reset on change or local
-      write. Fits S2 and S3. Costs staleness after a quiet period, so pair it
-      with an explicit refresh on user action. Done for both: `FeedHandle`
-      polling (capped 30 s) and space sync-state polling (capped 15 s), each
-      resetting to the fast interval the moment a poll observes a real
-      change — and also on a failed read, since a failure can't tell us the
-      feed/backlog is actually quiet and shouldn't compound the backoff.
+- [~] **R2. No-change backoff.** Widen the interval while a poll keeps
+  returning nothing (e.g. 1 s → 5 s → 30 s), reset on change or local
+  write. Fits S2 and S3. Costs staleness after a quiet period, so pair it
+  with an explicit refresh on user action. Done for `FeedHandle` polling
+  (capped 30 s), resetting to the fast interval on a real change or a
+  failed read (a failure can't tell us the feed is actually quiet).
+  **Superseded for S3**: space sync-state polling was upgraded from
+  backoff to a real streaming RPC (`FeedService.subscribeSyncState`) —
+  see the S3 entry above; R2 no longer applies there.
 - [ ] **R3. Coordinated scheduling.** One scheduler batching all due work into
       a single round-trip instead of N independent timers. Fits S2 and S3
       together; the win is fewer wakeups and fewer payloads, not a longer

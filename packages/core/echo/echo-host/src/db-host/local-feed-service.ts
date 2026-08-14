@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as EffectStream from 'effect/Stream';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { type ObjectJSON } from '@dxos/echo/internal';
-import { RuntimeProvider } from '@dxos/effect';
+import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
@@ -148,6 +149,48 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     });
   }
 
+  /**
+   * `onNewBlocks` is unscoped (fires for any space's writes), so every active subscription
+   * recomputes on each signal regardless of relevance.
+   */
+  ['FeedService.subscribeSyncState'](
+    request: FeedService.GetSyncStateRequest,
+  ): EffectStream.Stream<FeedService.GetSyncStateResponse, Error> {
+    return EffectEx.streamFromEmitter<FeedService.GetSyncStateResponse, Error>((emit) => {
+      const ctx = Context.default();
+      let last: FeedService.GetSyncStateResponse | undefined;
+      // Coalesced, not concurrent: an `onNewBlocks` signal that arrives mid-recomputation only
+      // marks `dirty` rather than starting a second overlapping read, so a slow recomputation can
+      // never finish after (and thus emit over) a faster, later one.
+      let running = false;
+      let dirty = false;
+      const recompute = async () => {
+        if (running) {
+          dirty = true;
+          return;
+        }
+        running = true;
+        try {
+          do {
+            dirty = false;
+            const next = await this.#getSyncStateImpl(request);
+            if (!last || syncStateResponseChanged(last, next)) {
+              last = next;
+              emit.single(next);
+            }
+          } while (dirty);
+        } catch (err) {
+          emit.fail(err as Error);
+        } finally {
+          running = false;
+        }
+      };
+      void recompute();
+      this.#feedStore.onNewBlocks.on(ctx, () => void recompute());
+      return Effect.promise(() => ctx.dispose());
+    });
+  }
+
   #getSyncStateImpl(request: FeedService.GetSyncStateRequest): Promise<FeedService.GetSyncStateResponse> {
     const ctx = Context.default();
     if (this.#getSyncState) {
@@ -188,3 +231,27 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
     );
   }
 }
+
+/**
+ * Assumes both responses enumerate namespaces in the same order -- true for both `#getSyncState`
+ * paths, which always iterate the same fixed `namespaces` list for a given request.
+ */
+const syncStateResponseChanged = (
+  before: FeedService.GetSyncStateResponse,
+  after: FeedService.GetSyncStateResponse,
+): boolean => {
+  const beforeNamespaces = before.namespaces ?? [];
+  const afterNamespaces = after.namespaces ?? [];
+  if (beforeNamespaces.length !== afterNamespaces.length) {
+    return true;
+  }
+  return beforeNamespaces.some((namespaceState, index) => {
+    const other = afterNamespaces[index];
+    return (
+      namespaceState.namespace !== other.namespace ||
+      namespaceState.blocksToPull !== other.blocksToPull ||
+      namespaceState.blocksToPush !== other.blocksToPush ||
+      namespaceState.totalBlocks !== other.totalBlocks
+    );
+  });
+};

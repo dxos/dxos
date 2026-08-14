@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as EffectStream from 'effect/Stream';
 
 import { RuntimeServiceError } from '@dxos/errors';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
@@ -81,5 +82,15 @@ export class FeedServiceImpl implements FeedService.Handlers {
     _request: FeedProtocol.GetSyncStateRequest,
   ): Effect.Effect<FeedProtocol.GetSyncStateResponse, Error> {
     return Effect.succeed({ namespaces: [] });
+  }
+
+  /**
+   * The Cloudflare queue-backed runtime has no sync backlog to report (no-op, matching
+   * {@link FeedServiceImpl."FeedService.getSyncState"}); emits the same empty snapshot once.
+   */
+  ['FeedService.subscribeSyncState'](
+    _request: FeedProtocol.GetSyncStateRequest,
+  ): EffectStream.Stream<FeedProtocol.GetSyncStateResponse, Error> {
+    return EffectStream.succeed<FeedProtocol.GetSyncStateResponse>({ namespaces: [] });
   }
 }
