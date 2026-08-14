@@ -289,24 +289,38 @@ this repo does not unit-test. One entry is worth acting on rather than dismissin
 
 ---
 
-## BLOCKER: storybook startup times out in this worktree (found 2026-08-13)
+## BLOCKER: storybook startup times out for a COLD BROWSER PROFILE (diagnosed 2026-08-13)
 
-Every plugin-manager story on my storybook instance (:9013) dies with
-`Startup timed out after 30000ms` — including `SpaceHomeArticle`, which nothing on this branch touches,
-so it is NOT a regression from this work. Console shows the cause: the ECHO client is slow to come up
-(`slow AM open {duration: 5007ms}` and `Action 'Finding properties for a space' is taking more then
-5,000ms` — the log's own wording), and plugin startup then overruns the budget. Reducing a story's seed count from 100
-to 8 objects did NOT help, so seeding is not the bottleneck.
+Every plugin-manager story dies with `Startup timed out after 30000ms` (`useApp.tsx:236`) when driven
+from an automation browser — including `SpaceHomeArticle`, which nothing on this branch touches, so it
+is NOT a regression from this work.
 
-Consequence: **the manual test plan below cannot be executed from my storybook instance.** Everything on
-this branch is verified by build, lint and unit tests only — with ONE exception: F1 (the Row story star)
-was confirmed headlessly on :9013 by driving the DOM, before this blocker appeared. Headless DOM
-assertions are NOT the same as seeing a surface render, so every other step remains unverified. Same family as the already-tracked "story
-invoker wedge (env)" and the 20s index-query timeouts.
+DIAGNOSIS CORRECTED. The original entry blamed the worktree (vite dep graph, better-sqlite3 under this
+worktree's `node_modules`) and suggested comparing against the user's :9009. That comparison was run
+and ruled the worktree out:
 
-Next steps when someone picks this up: check whether the user's own :9009 instance shows it too (if not,
-it is worktree-local — suspect the vite dep graph or better-sqlite3 under this worktree's node_modules);
-otherwise raise the startup budget in `useApp.tsx:236` only long enough to confirm the app does come up.
+- **:9009 IS this worktree.** `ps` shows the server running from
+  `.claude/worktrees/suspicious-wilson-a54e74/tools/storybook-react/...`, so it already serves this
+  branch's code from these `node_modules`.
+- **The same stories render for the user on :9009**, but time out on :9009 when driven from the
+  automation browser. Same server, same code, same port — different browser profile.
+- Console confirms the cost in both: `slow AM open {duration: 5007ms}` plus a >5s
+  "Finding properties for a space".
+
+So the variable is a COLD profile: an empty OPFS pays a full ECHO init that the fixed 30s plugin
+startup budget cannot absorb. Reloading to warm it did not help within ~40s. Reducing a story's seed
+count 100 → 8 did not help either, consistent with seeding never being the bottleneck.
+
+Consequence: **the manual test plan below cannot be executed from an automation browser.** It CAN be
+executed by the user in their own (warm) browser, which is how it was meant to be walked. Everything on
+this branch is otherwise verified by build, lint and unit tests only — with one exception, F1 (the Row
+story star), confirmed headlessly before this appeared; headless DOM assertions are not the same as
+seeing a surface render.
+
+Next steps: (1) the user walks the plan in their warm browser — no code change needed; or (2) raise the
+budget at `useApp.tsx:236`, which is arguably a real bug rather than a test-harness quirk, since a
+first-run user with an empty OPFS hits exactly this. Same family as the tracked story-invoker wedge and
+the 20s index-query timeouts.
 
 ## Manual test plan
 
