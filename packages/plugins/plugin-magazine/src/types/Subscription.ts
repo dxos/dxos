@@ -111,7 +111,7 @@ export class Subscription extends Type.makeObject<Subscription>(DXN.make('org.dx
   }).pipe(
     LabelAnnotation.set(['name', 'url']),
     Annotation.IconAnnotation.set({ icon: 'ph--rss--regular', hue: 'indigo' }),
-    FeedAnnotation.set(true),
+    FeedAnnotation.set({ property: 'feed' }),
     FactoryAnnotation.set(((values) => makeSubscription(values)) as FactoryFn),
   ),
 ) {}
