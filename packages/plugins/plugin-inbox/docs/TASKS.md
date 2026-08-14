@@ -520,15 +520,20 @@ generalize now with mailbox as instance #1.
       each other, the same class of bug as the untagged analysis cursor.
       DECIDED 2026-08-14: do not decide this in isolation. D6 has to answer "what is the subject of a
       pass" regardless, and fan-out plus composite cursor keys are better settled with that context.
-- [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6) — WEAKER than first written.
-      The parts that matter are already generic (`topology.ts` knows only `{id, after}`,
-      `precondition.ts` only `Cause`s, a feed cursor's `target` is already untyped). Mailbox-typed:
-      the `MailboxProcessor` subject and `tier`, `ScanMailbox`'s input and progress key, and
-      `findOrCreateFeedCursor` (takes a `Mailbox` only to read `mailbox.feed`). Open question is what
-      replaces the subject — structural `{ feed: Ref<Feed> }`, a `FeedOwner` annotation, or passing the
-      `Feed`. CORRECTION: the projects trio was cited as the second instance and is not (see above);
-      the only genuine one is transcription, whose `messageEnricher` is a WRITE-time seam closer to
-      sync's inline stages than to a cursored read-time pass — so it may want the other half's shape.
+- [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6) — WEAKER than first written,
+      and NEEDS A DECISION BEFORE ANY MORE CODE. - DONE (2026-08-14): the cursor layer. `findFeedCursor`/`findOrCreateFeedCursor` now take any
+      `FeedAnnotation`-carrying owner and resolve the feed via `getFeedRef`, so one of the three
+      mailbox-typed couplings is gone. Tested against a Calendar owner. - STILL MAILBOX-TYPED: the `MailboxProcessor` subject and `tier`, and `ScanMailbox`'s input and
+      progress key. Already generic: `topology.ts` (`{id, after}` only), `precondition.ts` (`Cause`s
+      only), and a feed cursor's `target`. - THE DECISION: `Ref.byAnnotation` was dropped in review on #12575, so a generic subject CANNOT
+      be validated at the operation boundary — it must be `Ref.Ref(Obj.Unknown)` plus a runtime guard
+      (see PIPELINE.md, now marked SETTLED). That is a real loss of type safety on the one operation
+      users invoke directly. - AND THERE IS STILL NO SECOND CONSUMER. The projects trio was twice cited and is not one (all
+      three read `mailbox.feed` and need fan-out). The only genuine candidate is transcription, whose
+      `messageEnricher` is a WRITE-time seam closer to sync's inline stages than to a cursored
+      read-time pass — so it likely wants the other half's shape anyway. - RECOMMENDATION: do not build the generic host until a second cursored consumer exists. Trading
+      boundary validation for an abstraction with one implementor is a bad trade. Revisit when
+      transcription or another feed owner actually needs a cursored pass.
 - [ ] **Retire `ExtractMailbox` once on-arrival extraction is restored** — it is `@deprecated`, but
       still LIVE: `MailboxArticle.tsx:584` → `useMailboxExtractorActions` renders a menu item per
       registered `ObjectExtractor` and invokes it, and two extractors ship. Its stated successor
