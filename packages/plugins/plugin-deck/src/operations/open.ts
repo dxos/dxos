@@ -47,7 +47,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
                   return false;
                 }
                 for (const loader of loaders) {
-                  if (yield* loader.load({ spaceId, entityId })) {
+                  // Anything short of a store answering "no" counts as existing: a 404 here replaces
+                  // the plank outright, so an unreachable edge must not be able to trigger one.
+                  if ((yield* loader.load({ spaceId, entityId })) !== 'absent') {
                     return true;
                   }
                 }
