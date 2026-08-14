@@ -8,8 +8,10 @@ import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { errorMessage } from './internal/errors';
 import * as snapshotInternal from './internal/snapshot';
+
+// `Error` below shadows the global, so the instance check names it explicitly.
+const errorMessage = (error: unknown): string => (error instanceof globalThis.Error ? error.message : String(error));
 
 /**
  * Failure of the host's link to the registry — an outage, not an authorship error. Projection
