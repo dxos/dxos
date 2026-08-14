@@ -186,6 +186,11 @@
       "source": "./src/types/SystemTags.ts",
       "types": "./dist/types/src/types/SystemTags.d.ts",
       "import": "./dist/lib/SystemTags.mjs"
+    },
+    "./ReplyGeneration": {
+      "source": "./src/types/ReplyGeneration.ts",
+      "types": "./dist/types/src/types/ReplyGeneration.d.ts",
+      "import": "./dist/lib/types/ReplyGeneration.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -261,7 +266,6 @@
     "@dxos/markdown": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-email": "workspace:*",
-    "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",

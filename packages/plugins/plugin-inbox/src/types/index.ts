@@ -10,6 +10,7 @@ export * as InboxEvents from './InboxEvents';
 export * as InboxOperation from './InboxOperation';
 export * as MailSend from './MailSend';
 export * as Mailbox from './Mailbox';
+export * as ReplyGeneration from './ReplyGeneration';
 export * as Settings from './Settings';
 export * as SyncOptions from './SyncOptions';
 export * as SyncStreamConfig from './SyncStreamConfig';

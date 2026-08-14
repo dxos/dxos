@@ -7,10 +7,8 @@ How mail gets into a mailbox and what runs over it afterwards. Sibling docs: [`P
 
 ## The shape
 
-1. **Sync** — dispatches to the connector bound to the mailbox and **writes** the feed. Mechanical,
-   no LLM.
-2. **Scan** — **reads** the feed through N independent cursors, running processors that plugins
-   contribute.
+1. **Sync** — dispatches to the connector bound to the mailbox and **writes** the feed. Mechanical, no LLM.
+2. **Scan** — **reads** the feed through N independent cursors, running processors that plugins contribute.
 
 Both halves are extensible, by deliberately different mechanisms. Sync's provider is an Effect
 service (`MailSyncProvider`) because exactly **one** provider is active per operation — the shape a
@@ -141,8 +139,11 @@ which **changed its DXN**; that key was released, so a routine bound to the old 
 (accepted deliberately, pre-1.0). plugin-crm's cursored pipeline became the `crm` processor declared
 `after: ['contacts']`, consuming inbox's contact extraction instead of competing with it.
 
-plugin-inbox still depends on `@dxos/pipeline-rdf`: `GenerateReply` also declares `FactStore` and is
-also handled by brain. Moving that one too is what would drop the dependency.
+`GenerateReply` followed for the same reason, and with it plugin-inbox's `@dxos/pipeline-rdf`
+dependency. That one could not move wholesale — two inbox containers invoke it directly, so relocating
+the operation would have inverted the plugin dependency — so it reaches them through
+`InboxCapabilities.ReplyGenerator`, typed against a shared `ReplyGeneration` contract. The AI-reply
+affordance is now absent when nothing is contributed, rather than offered and failing.
 
 **D6 — Generalize off `Mailbox`.** NOT BUILT. The abstraction is "a durable feed plus N
 independently-cursored consumers contributed by plugins"; nothing in it is mail-specific. Candidates:
@@ -163,6 +164,5 @@ the projects trio, transcription, and the commented-out on-arrival extraction.
 
 1. **D4** — failure policy from the edges.
 2. **D6** — feed-generic processor host.
-3. **Move `GenerateReply` to plugin-brain**, dropping `@dxos/pipeline-rdf` from plugin-inbox.
-4. **Give the seven cursorless consumers a cursor** — mechanical now that an id is also a cursor tag,
+3. **Give the seven cursorless consumers a cursor** — mechanical now that an id is also a cursor tag,
    but each needs its own call on whether feed position or derived-state replacement is right.

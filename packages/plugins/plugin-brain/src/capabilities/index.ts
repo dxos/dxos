@@ -41,6 +41,11 @@ export const MailboxProcessor = Capability.lazyModule(
   },
   () => import('./mailbox-processor'),
 );
+export const ReplyGenerator = Capability.lazyModule(
+  'ReplyGenerator',
+  { provides: [InboxCapabilities.ReplyGenerator], activatesOn: InboxEvents.Start },
+  () => import('./reply-generator'),
+);
 export const ProjectTemplates = Capability.lazyModule(
   'ProjectTemplates',
   { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },

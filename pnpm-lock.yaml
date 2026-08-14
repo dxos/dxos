@@ -10948,9 +10948,6 @@ importers:
       '@dxos/pipeline-email':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-email
-      '@dxos/pipeline-rdf':
-        specifier: workspace:*
-        version: link:../../core/compute/pipeline-rdf
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client

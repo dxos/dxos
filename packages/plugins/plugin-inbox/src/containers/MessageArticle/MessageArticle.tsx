@@ -158,6 +158,9 @@ export const MessageArticle = ({
   const runtime = useProcessManagerRuntime();
   const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
   const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
+  // No contributed generator means nothing to invoke, so the AI-reply affordance is omitted rather
+  // than shown and failing.
+  const replyGenerator = useCapabilities(InboxCapabilities.ReplyGenerator)[0];
   const sendOperations = useCapabilities(InboxCapabilities.MailSendOperation);
   const getExtractActions = useCallback(
     (message: Mailbox.MessageLike) => buildExtractActions(message, extractors, invoker),
@@ -248,12 +251,12 @@ export const MessageArticle = ({
   // leaves the user without one.
   const handleAiReply = useCallback(
     async (message: MessageType.Message) => {
-      if (!db || !mailbox) {
+      if (!db || !mailbox || !replyGenerator) {
         return;
       }
       try {
         const result = await invoker.invokePromise(
-          InboxOperation.GenerateReply,
+          replyGenerator.getOperation(),
           { mailbox: Ref.make(mailbox), message },
           { spaceId: db.spaceId },
         );
@@ -269,7 +272,7 @@ export const MessageArticle = ({
         void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', message, mailbox });
       }
     },
-    [db, invoker, mailbox],
+    [db, invoker, mailbox, replyGenerator],
   );
 
   const handleOpen = useCallback(
@@ -332,7 +335,7 @@ export const MessageArticle = ({
       onCollapseAll={onCollapseAll}
       onExpandAll={onExpandAll}
       onContactCreate={handleContactCreate}
-      onAiReply={mailbox ? handleAiReply : undefined}
+      onAiReply={mailbox && replyGenerator ? handleAiReply : undefined}
       onDelete={mailbox ? handleDelete : undefined}
       onOpen={mailbox ? handleOpen : undefined}
       onArchived={mailbox ? handleArchived : undefined}

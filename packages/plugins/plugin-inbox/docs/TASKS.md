@@ -451,9 +451,15 @@ generalize now with mailbox as instance #1.
       errors. In-repo `@dxos` packages take `workspace:*` — the catalog is for external packages only.
       DID NOT drop `@dxos/pipeline-rdf` from plugin-inbox: `GenerateReply` also declares `FactStore`
       and is also handled by brain, so the dependency needs that operation to move too — see below.
-- [ ] **Move `GenerateReply` to plugin-brain** — the last thing holding `@dxos/pipeline-rdf` in
-      plugin-inbox. Same shape as `AnalyzeMailbox`: defined in inbox, handled by brain, needs the
-      FactStore. Its DXN is also released, so it carries the same orphaning question.
+- [x] **Move `GenerateReply` to plugin-brain — plugin-inbox no longer depends on `@dxos/pipeline-rdf`.**
+      Could NOT move wholesale: two inbox containers (`MessageArticle`, `EditMessageArticle`) invoke it
+      directly, so relocating the operation would have inverted the plugin dependency. It goes through
+      a new `InboxCapabilities.ReplyGenerator` typed against a shared `types/ReplyGeneration.ts`
+      contract — the `MailSendOperation` pattern, where inbox owns the contract and a provider
+      contributes an operation matching it. Its DXN changed with the move, same acceptance as
+      `AnalyzeMailbox`. IMPROVEMENT that fell out: the AI-reply affordance is now ABSENT when no
+      generator is contributed, where before it was offered and would fail — `canGenerate` and
+      `onAiReply` are both gated on the contribution.
 - [ ] **Failure policy from the DAG edges** (D4) — buildable now that the topology has landed, but not
       built: `continueOnError` still aborts in LIST order, so a failing `classify` strands whatever
       happens to sit behind it even when nothing connects them. Intended: a failed processor fails its

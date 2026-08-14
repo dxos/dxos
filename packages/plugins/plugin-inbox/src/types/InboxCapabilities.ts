@@ -139,6 +139,32 @@ export type MailboxProcessor = {
 export const MailboxProcessor = Capability.make<MailboxProcessor>()(`${meta.profile.key}.capability.mailboxProcessor`);
 
 /**
+ * The operation that drafts an AI reply, contributed by whichever plugin can ground one.
+ *
+ * A seam rather than a direct call because the generator needs a fact store that only plugin-brain
+ * provides, while the surfaces that offer the affordance are plugin-inbox's — and the dependency runs
+ * brain → inbox. Without a contribution the message surfaces omit the AI-reply affordance entirely,
+ * which is the honest behaviour: there is nothing to invoke.
+ */
+export type ReplyGenerator = {
+  /** Stable id; the first contribution wins if several are present. */
+  id: string;
+  /**
+   * Returns the generator operation, typed against the shared {@link ReplyGeneration} contract so a
+   * contributor cannot supply one the surfaces can't call. A closure rather than a value property, for
+   * the same reason as {@link MailboxAction}: holding an `Operation.Definition` on the capability value
+   * makes the capability atom read recurse.
+   */
+  getOperation: () => import('@dxos/compute').Operation.Definition<
+    import('./ReplyGeneration').Input,
+    import('./ReplyGeneration').Output
+  >;
+};
+
+/** Plugins contribute AI reply generation via this capability (see {@link ReplyGenerator}). */
+export const ReplyGenerator = Capability.make<ReplyGenerator>()(`${meta.profile.key}.capability.replyGenerator`);
+
+/**
  * The send operation a mail provider handles outbound drafts with. Each provider plugin contributes one
  * entry keyed by its `Connector.id`, so the composer routes a draft by its mailbox binding's
  * `Connection.connectorId` without naming any provider.

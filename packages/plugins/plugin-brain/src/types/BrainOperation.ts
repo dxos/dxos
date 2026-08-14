@@ -13,6 +13,7 @@ import { Database, DXN, Ref } from '@dxos/echo';
 import { FactStore } from '@dxos/pipeline-rdf/fact-store';
 import * as RDF from '@dxos/pipeline-rdf/types';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import * as ReplyGeneration from '@dxos/plugin-inbox/ReplyGeneration';
 
 import { meta } from '#meta';
 
@@ -139,3 +140,30 @@ export const SummarizeSubject = Operation.make({
     sources: Schema.Array(Schema.String),
   }),
 }).pipe(Operation.visible);
+
+/** Default number of thread messages included in the {@link GenerateReply} prompt. */
+export const DEFAULT_GENERATE_REPLY_THREAD_LIMIT = 5;
+
+/** Default maximum number of facts included in the {@link GenerateReply} prompt. */
+export const DEFAULT_GENERATE_REPLY_FACT_LIMIT = 20;
+
+/**
+ * Drafts a reply grounded on the thread and the facts the space knows about its participants.
+ *
+ * Lives here rather than in plugin-inbox because it needs the `FactStore` brain owns. The surfaces
+ * that offer it are inbox's, so it reaches them through `InboxCapabilities.ReplyGenerator` — the
+ * dependency runs brain → inbox and a direct call from the surface would invert it.
+ */
+export const GenerateReply = Operation.make({
+  meta: {
+    key: makeKey('generateReply'),
+    name: 'Generate Reply',
+    description:
+      'Drafts a reply to an email, grounded on the thread context and facts the space fact store knows about the participants.',
+    icon: 'ph--sparkle--regular',
+  },
+  services: [AiService.AiService, Database.Service, FactStore],
+  // The shared contract, so a surface can invoke whatever is contributed without naming this plugin.
+  input: ReplyGeneration.Input,
+  output: ReplyGeneration.Output,
+});

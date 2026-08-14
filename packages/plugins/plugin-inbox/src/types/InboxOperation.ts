@@ -13,9 +13,6 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
-// Still needed by `GenerateReply`, whose handler also lives in plugin-brain. Moving that one too is
-// what would let plugin-inbox drop `@dxos/pipeline-rdf` entirely — see D5b in docs/TASKS.md.
-import { FactStore } from '@dxos/pipeline-rdf/fact-store';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
@@ -849,34 +846,5 @@ export const UnsubscribeSender = Operation.make({
     filtered: Schema.Boolean,
     /** True when a List-Unsubscribe one-click HTTP request was sent successfully. */
     unsubscribed: Schema.Boolean,
-  }),
-});
-
-/** Default number of thread messages included in the {@link GenerateReply} prompt. */
-export const DEFAULT_GENERATE_REPLY_THREAD_LIMIT = 5;
-
-/** Default maximum number of facts included in the {@link GenerateReply} prompt. */
-export const DEFAULT_GENERATE_REPLY_FACT_LIMIT = 20;
-
-export const GenerateReply = Operation.make({
-  meta: {
-    key: makeKey('generateReply'),
-    name: 'Generate Reply',
-    description:
-      'Drafts a reply to an email, grounded on the thread context and facts the space fact store knows about the participants.',
-    icon: 'ph--sparkle--regular',
-  },
-  services: [AiService.AiService, Database.Service, FactStore],
-  input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
-      description: 'Mailbox whose feed holds the thread.',
-    }),
-    message: Schema.Any.annotate({
-      description: 'The message to reply to.',
-    }),
-  }),
-  output: Schema.Struct({
-    subject: Schema.String,
-    body: Schema.String,
   }),
 });
