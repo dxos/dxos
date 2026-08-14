@@ -390,20 +390,33 @@ back-to-back on an idle box.
 
 ### Paired result on an idle box (the number that counts)
 
-Two alternating before/after rounds, best of each, after the optimization pass below.
+Two alternating before/after rounds, after the optimization pass below **and** after merging
+`origin/main`, which had independently landed a gate on `Atom.withLabel` (see attribution note).
 
-| operation                         |  before |      after |              |
-| --------------------------------- | ------: | ---------: | ------------ |
-| expand 1000 nodes                 |  512 ms | **341 ms** | 1.50× faster |
-| expand 100x10 tree                |  675 ms | **458 ms** | 1.47× faster |
-| 50 updates @ 200 mounted atoms    |  945 ms |     906 ms | parity       |
-| 50 connector updates @ 1000 nodes |  909 ms |     914 ms | parity       |
-| read `connections()` x1000        | 1.07 ms |    0.99 ms | parity       |
-| read `node()` x1000               | 0.37 ms |    0.40 ms | parity       |
-| `getNode()` x1000                 | 0.37 ms |    0.42 ms | parity       |
-| traverse 1000 nodes               | 3.47 ms |    3.24 ms | parity       |
-| `getPath` root → leaf             | 2.75 ms |    2.64 ms | parity       |
-| remove 1000 nodes                 | 17.2 ms |    22.0 ms | 1.28× slower |
+| operation                         |  before |     after |              |
+| --------------------------------- | ------: | --------: | ------------ |
+| expand 1000 nodes                 |  513 ms | **42 ms** | 12× faster   |
+| expand 100x10 tree                |  668 ms | **40 ms** | 16× faster   |
+| 50 connector updates @ 1000 nodes |  895 ms |    847 ms | 1.06× faster |
+| 50 updates @ 200 mounted atoms    |  946 ms |    854 ms | 1.11× faster |
+| read `connections()` x1000        | 0.89 ms |   0.86 ms | parity       |
+| read `node()` x1000               | 0.37 ms |   0.27 ms | parity       |
+| `getNode()` x1000                 | 0.35 ms |   0.36 ms | parity       |
+| traverse 1000 nodes               | 3.35 ms |   3.34 ms | parity       |
+| `getPath` root → leaf             | 2.38 ms |   2.57 ms | parity       |
+| remove 1000 nodes                 | 15.5 ms |   17.4 ms | 1.12× slower |
+
+**Attribution.** Most of the expansion win is NOT this refactor. `Atom.withLabel` captures and formats
+a stack trace on every call, and both trees label an atom per node, per connection key and per
+extension — so expanding 1000 nodes cost ~500 ms of stack captures. `origin/main` gated labels behind
+`import.meta.env.DEV && VITE_ATOM_LABELS` (#12562); the pre-refactor baseline predates that gate and
+still pays it, and would see the same win if it were applied there. Read the table as "the tree we
+ship beats the tree we replaced", not as a claim about the consolidation alone. The consolidation's
+own contribution is the pass below, which moved it from behind to parity-or-better before the merge:
+expansion 1.5×, everything else at parity.
+
+An intermediate paired run, pre-merge, is the honest measure of the refactor in isolation:
+expand 512→341 ms, tree 675→458 ms, updates and reads at parity, removal 17.2→22.0 ms.
 
 ### Reconciling this with the Phase-6 spike
 
@@ -461,8 +474,7 @@ version-keyed `_edges` view _inside_ the flush, so deferring the bump feeds it s
 
 ### Still open
 
-Removal is ~1.28× slower than pre-refactor (17.2 ms → 22.0 ms for 1000 nodes; ~5 ms absolute).
-Profiling it points at `Atom.withLabel`, which calls `new Error().stack` on every invocation and is
-applied inside `Atom.family` factories — 15% of that path, plus the 9% `defaultPrepareStackTrace`
-under it. Both trees pay it (14 call sites before, 13 after), so it is not a regression, but gating
-labels behind a debug flag would likely close the gap outright. Tracked in TASKS.md.
+Removal is ~1.12× slower than pre-refactor (15.5 ms → 17.4 ms for 1000 nodes; ~2 ms absolute). The
+`Atom.withLabel` cost that profiling pointed at is now gated (merged from main), which closed most of
+the earlier 1.28× gap; what remains is the structural work `EffectGraph.removeNode` does that a
+tombstone write to a sharded atom did not. Tracked in TASKS.md, low priority at this magnitude.

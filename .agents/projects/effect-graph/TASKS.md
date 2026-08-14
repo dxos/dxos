@@ -156,12 +156,13 @@ Gate before Phase 9. Requested 2026-08-13.
       schema encoder; `addEdgeImpl` building the source's whole edge record per edge; `includes`
       scans inside filters in `sortEdgesImpl` and `_applyConnectorUpdate` (both predate the
       refactor); a per-edge `log`. See DESIGN §Before/after benchmarks.
-- [ ] **Close the removal gap** — 17.2 ms → 22.0 ms for 1000 nodes. Profile points at
-      `Atom.withLabel`, which calls `new Error().stack` per invocation inside `Atom.family`
-      factories (15% of the path, plus 9% in `defaultPrepareStackTrace`). Both trees pay it, so it
-      is not a regression — but gating labels behind a debug flag would likely close the gap. Needs
-      a home for the helper: `@dxos/util` has no `effect` dependency, so it would be a new tiny
-      module in `@dxos/graph` that `@dxos/app-graph` also imports.
+- [x] **Merged `origin/main`** (8 commits), taking its `Atom.withLabel` gate and its
+      `expand` (Effect, idle-scheduled) / `expandSync` split. The label gate is what the removal
+      profile had pointed at, and it turned out to dominate expansion too: 513 ms → 42 ms for 1000
+      nodes. `@dxos/graph/GraphBuilder` carries its own copy of the gate, since it cannot import
+      app-graph's back across the dependency edge.
+- [ ] **Residual removal gap** — 15.5 ms → 17.4 ms for 1000 nodes, ~2 ms. What is left is
+      `EffectGraph.removeNode`'s structural work versus a tombstone write. Low priority.
 - [ ] **Revisit flush-level batching** — one `model.batch` per flush measured slower AND is unsafe
       today (`sortEdgesImpl` reads the version-keyed `_edges` view mid-flush, so a deferred bump
       feeds it stale state). Would need the flush-internal reads off the version-keyed views first.
