@@ -233,13 +233,14 @@ export const MailboxArticle = ({
   // Show the empty-mailbox panel only once the query has settled with nothing, never mid-load.
   const showEmptyState = !loading && messages.length === 0;
 
-  // Text set from here rather than typed raises no editor event, so the parse the editor normally
-  // hands back has to be done here — otherwise `filter` (which gates Save) keeps describing the
-  // previous text.
+  // Text set from here rather than typed reaches the editor imperatively — a controlled `value` would
+  // race fast typing — and raises no editor event, so the parse the editor normally hands back has to
+  // be done here too, or `filter` (which gates Save) keeps describing the previous text.
   const applyFilterText = useCallback(
     (text: string) => {
       setFilterText(text);
       setFilter(builder.build(text).filter);
+      filterEditorRef.current?.setText(text);
     },
     [builder],
   );

@@ -125,11 +125,11 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
         triggerKey='Ctrl-Space'
         getMenu={getMenu}
       >
-        {/* `value` as well as `initialValue`: the seed creates the document, and the controlled prop
-            syncs it when a caller rewrites the query itself (the mailbox's tag menu appends `#tag`).
-            That sync is annotated `initialSync`, so it raises no `onChange` — a caller driving the
-            text owns the parsed filter for that update. */}
-        <Editor.View {...props} initialValue={value} value={value} onChange={handleChange} selectionEnd />
+        {/* `initialValue`, never the controlled `value`: the sync effect behind `value` compares the
+            prop against the document a frame later, and a caller whose state trails fast typing then
+            rewrites the document back to the older text, dropping characters. A caller rewriting the
+            query itself does it through `EditorController.setText`. */}
+        <Editor.View {...props} initialValue={value} onChange={handleChange} selectionEnd />
       </Editor.Root>
     );
   },
