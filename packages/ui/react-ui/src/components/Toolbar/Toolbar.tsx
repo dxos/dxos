@@ -46,9 +46,11 @@ const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
     return (
       <ToolbarPrimitive.Root
         {...rest}
-        // Only pass role when explicitly set; radix provides role="toolbar" by default and
-        // spreading an undefined `role` would erase it. `role='none'` drops the default.
-        {...(role && role !== 'none' ? { role } : null)}
+        // Radix sets role="toolbar" before spreading props, so an undefined `role` erases it —
+        // omit the key entirely in that case. Every role the caller does set is forwarded,
+        // `role='none'` included: dropping it would leave the default in place and silently
+        // invert the caller's intent.
+        {...(role !== undefined && { role })}
         orientation={orientation}
         data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
         className={tx('toolbar.root', { density, disabled, layoutManaged }, className)}
