@@ -13,7 +13,6 @@ import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import { type GetSyncStateResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { LocalFeedServiceImpl } from './local-feed-service';
@@ -185,9 +184,7 @@ describe('LocalFeedServiceImpl', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  // `it.live` (not `it.effect`): the delayed write below needs `Effect.sleep` to elapse on the
-  // real clock, not `it.effect`'s virtual TestClock, which never advances on its own.
-  it.live('subscribeSyncState pushes an initial snapshot, then another on a local write', () =>
+  it.effect('subscribeSyncState pushes an initial snapshot, then another on a local write', () =>
     Effect.scoped(
       Effect.gen(function* () {
         const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });
@@ -198,38 +195,31 @@ describe('LocalFeedServiceImpl', () => {
         const spaceId = SpaceId.random();
         const feedId = EntityId.random();
 
-        // Fires the local write once the stream below is subscribed; the second emission proves
-        // the push came from `FeedStore.onNewBlocks`, not a fixed initial-snapshot pair.
-        yield* Effect.gen(function* () {
-          yield* Effect.sleep(20);
-          yield* service['FeedService.insertIntoFeed']({
-            subspaceTag: FeedProtocol.WellKnownNamespaces.data,
-            spaceId,
-            feedId,
-            objects: [JSON.stringify({ id: 'obj1', data: 'test1' })],
-          });
-        }).pipe(Effect.forkScoped);
+        // A scoped pull, rather than a timing-based delay before the write, guarantees the
+        // initial snapshot is consumed before the write fires -- so the second pull can only
+        // resolve from the write's `FeedStore.onNewBlocks` signal, never from a race.
+        const pull = yield* EffectStream.toPull(service['FeedService.subscribeSyncState']({ spaceId }));
 
-        const received: GetSyncStateResponse[] = yield* service['FeedService.subscribeSyncState']({ spaceId }).pipe(
-          EffectStream.take(2),
-          EffectStream.runFold(
-            () => [] as GetSyncStateResponse[],
-            (acc, response) => [...acc, response],
-          ),
-        );
-
-        expect(received).toHaveLength(2);
-        const initialDataState = received[0].namespaces?.find(
+        const [initial] = yield* pull;
+        const initialDataState = initial.namespaces?.find(
           (entry) => entry.namespace === FeedProtocol.WellKnownNamespaces.data,
         );
         expect(initialDataState?.totalBlocks).toBe('0');
 
-        const nextDataState = received[1].namespaces?.find(
+        yield* service['FeedService.insertIntoFeed']({
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+          spaceId,
+          feedId,
+          objects: [JSON.stringify({ id: 'obj1', data: 'test1' })],
+        });
+
+        const [next] = yield* pull;
+        const nextDataState = next.namespaces?.find(
           (entry) => entry.namespace === FeedProtocol.WellKnownNamespaces.data,
         );
         expect(nextDataState?.blocksToPush).toBe('1');
         expect(nextDataState?.totalBlocks).toBe('1');
-      }),
-    ).pipe(Effect.provide(TestLayer)),
+      }).pipe(Effect.provide(TestLayer)),
+    ),
   );
 });

@@ -157,14 +157,15 @@ Independent of each other; some sites may want none, one, or several.
   clock changes. Partially done for S1: the trigger-list subscription
   landed (no more per-tick DB query), but the tick itself still fires at a
   fixed 1 Hz — "no timer while idle" is not yet implemented.
-- [x] **R2. No-change backoff.** Widen the interval while a poll keeps
-      returning nothing (e.g. 1 s → 5 s → 30 s), reset on change or local
-      write. Fits S2 and S3. Costs staleness after a quiet period, so pair it
-      with an explicit refresh on user action. Done for both: `FeedHandle`
-      polling (capped 30 s) and space sync-state polling (capped 15 s), each
-      resetting to the fast interval the moment a poll observes a real
-      change — and also on a failed read, since a failure can't tell us the
-      feed/backlog is actually quiet and shouldn't compound the backoff.
+- [~] **R2. No-change backoff.** Widen the interval while a poll keeps
+  returning nothing (e.g. 1 s → 5 s → 30 s), reset on change or local
+  write. Fits S2 and S3. Costs staleness after a quiet period, so pair it
+  with an explicit refresh on user action. Done for `FeedHandle` polling
+  (capped 30 s), resetting to the fast interval on a real change or a
+  failed read (a failure can't tell us the feed is actually quiet).
+  **Superseded for S3**: space sync-state polling was upgraded from
+  backoff to a real streaming RPC (`FeedService.subscribeSyncState`) —
+  see the S3 entry above; R2 no longer applies there.
 - [ ] **R3. Coordinated scheduling.** One scheduler batching all due work into
       a single round-trip instead of N independent timers. Fits S2 and S3
       together; the win is fewer wakeups and fewer payloads, not a longer

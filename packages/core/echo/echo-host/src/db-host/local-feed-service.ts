@@ -154,29 +154,41 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
   }
 
   /**
-   * Pushes a fresh snapshot on subscribe, then again whenever {@link FeedStore.onNewBlocks} fires
-   * and the recomputed state actually differs from the last one sent -- replacing the client's
-   * previous poll loop with a real subscription. `onNewBlocks` is unscoped (fires for any space's
-   * writes), so every active subscription recomputes on each signal; the equality check keeps that
-   * cheap re-check from re-emitting when nothing relevant to this request's scope changed.
+   * `onNewBlocks` is unscoped (fires for any space's writes), so every active subscription
+   * recomputes on each signal regardless of relevance.
    */
   ['FeedService.subscribeSyncState'](request: GetSyncStateRequest): EffectStream.Stream<GetSyncStateResponse, Error> {
     return EffectEx.streamFromEmitter<GetSyncStateResponse, Error>((emit) => {
       const ctx = Context.default();
       let last: GetSyncStateResponse | undefined;
-      const push = async () => {
+      // Coalesced, not concurrent: an `onNewBlocks` signal that arrives mid-recomputation only
+      // marks `dirty` rather than starting a second overlapping read, so a slow recomputation can
+      // never finish after (and thus emit over) a faster, later one.
+      let running = false;
+      let dirty = false;
+      const recompute = async () => {
+        if (running) {
+          dirty = true;
+          return;
+        }
+        running = true;
         try {
-          const next = await this.#getSyncStateImpl(request);
-          if (!last || syncStateResponseChanged(last, next)) {
-            last = next;
-            emit.single(next);
-          }
+          do {
+            dirty = false;
+            const next = await this.#getSyncStateImpl(request);
+            if (!last || syncStateResponseChanged(last, next)) {
+              last = next;
+              emit.single(next);
+            }
+          } while (dirty);
         } catch (err) {
           emit.fail(err as Error);
+        } finally {
+          running = false;
         }
       };
-      void push();
-      this.#feedStore.onNewBlocks.on(ctx, () => void push());
+      void recompute();
+      this.#feedStore.onNewBlocks.on(ctx, () => void recompute());
       return Effect.promise(() => ctx.dispose());
     });
   }

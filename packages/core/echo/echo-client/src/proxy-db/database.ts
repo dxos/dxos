@@ -790,8 +790,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    // Feed blocks used to have no change stream, so this polled the backend; the server now
-    // pushes a fresh snapshot whenever the backlog actually changes (`FeedService.subscribeSyncState`).
     if (this.#feedService) {
       ctx.onDispose(
         subscribeStream(
