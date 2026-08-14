@@ -64,15 +64,10 @@ export const CompanionChatProvisioner = Capability.lazyModule(
   () => import('./companion-chat-provisioner'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-// Both resolvers activate on `Startup`, not `AssistantEvents.Start`: `AiService` is a LayerSpec, and
-// the process manager snapshots LayerSpec contributions once during startup — its `AiModelResolver`
-// require is multi-arity, so it orders within a round but never blocks across rounds. A resolver
-// contributed in a later round is therefore invisible, leaving the AI service permanently holding
-// only the empty fallback resolver and failing every request with `AiModelNotAvailableError`.
-// TODO(burdon): Consider deferring these past startup again — they pull the Anthropic and OpenAI
-//   client bindings into the startup wave for a user who may never open a chat. Doing so needs the
-//   AI service to read the resolver collection lazily (per request) rather than snapshotting it,
-//   since the LayerSpec snapshot is what makes a late contribution invisible.
+// Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
+// require once during startup, so a resolver contributed in a later round is invisible to it.
+// TODO(burdon): Defer past startup again so a user who never opens a chat does not pay for the
+//   provider client bindings; needs the AI service to read resolvers per request, not snapshot them.
 export const EdgeModelResolver = Capability.lazyModule(
   'EdgeModelResolver',
   { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },

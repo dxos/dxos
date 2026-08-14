@@ -18,14 +18,18 @@ export class Assistant {
     return page.getByTestId('deck.plank').filter({ has: page.getByTestId('assistant.thread') });
   }
 
-  constructor(private readonly _locator: Locator) {}
+  readonly #locator: Locator;
+
+  constructor(locator: Locator) {
+    this.#locator = locator;
+  }
 
   /**
    * The prompt's CodeMirror surface. `assistant.prompt` marks the composer's root group; the
    * editable text is the editor content inside it.
    */
   get prompt(): Locator {
-    return this._locator.getByTestId('assistant.prompt').locator('.cm-content');
+    return this.#locator.getByTestId('assistant.prompt').locator('.cm-content');
   }
 
   /**
@@ -33,7 +37,7 @@ export class Assistant {
    * of message elements, so assertions read its text rather than count nodes.
    */
   get thread(): Locator {
-    return this._locator.getByTestId('assistant.thread').locator('.cm-content');
+    return this.#locator.getByTestId('assistant.thread').locator('.cm-content');
   }
 
   /**
@@ -41,7 +45,7 @@ export class Assistant {
    * Rendered in a portal at the document root, so it is located from the page rather than the plank.
    */
   get error(): Locator {
-    return this._locator.page().getByTestId('assistant.error');
+    return this.#locator.page().getByTestId('assistant.error');
   }
 
   /**

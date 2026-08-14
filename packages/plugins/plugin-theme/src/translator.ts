@@ -29,10 +29,8 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
     const translationsAtom = yield* Capability.atom(AppCapabilities.Translations);
 
-    // Static resources owned by the theme plugin and the embedding app. `@dxos/react-ui` owns its
-    // own namespace and contributes no plugin of its own, so this is the only place its resources
-    // are registered — without them every primitive that resolves a label (Toast, Message, Toolbar,
-    // Card) renders the raw key, e.g. `toolbar-close.label` on a toast's close button.
+    // Static resources owned by the theme plugin and the embedding app. `@dxos/react-ui` contributes
+    // no plugin of its own, so its resources are registered here or its primitives render raw keys.
     addResources([
       ...reactUiTranslations,
       ...translations,
