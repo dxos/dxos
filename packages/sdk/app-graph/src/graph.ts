@@ -9,7 +9,7 @@ import * as Pipeable from 'effect/Pipeable';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { Event, Trigger } from '@dxos/async';
+import { type CleanupFn, Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
@@ -203,27 +203,40 @@ class GraphImpl implements WritableGraph {
   }
 
   /**
-   * Reads an atom purely to wire it up. An atom that has only ever been subscribed to has no
-   * parents, so nothing can invalidate it and its subscriber never fires; reading it registers the
-   * dependency chain that makes the next write observable.
+   * One mount per node in the graph, keeping its atoms alive for as long as the node is.
+   *
+   * The atoms are views over the model, so a dropped atom loses no data — but it does lose its
+   * registry wiring: a family re-creates the atom on the next call, subscribers of the old identity
+   * are stranded, and an atom that has only ever been subscribed to has no parents, so nothing can
+   * invalidate it. The original design pinned every graph atom with `Atom.keepAlive` for the same
+   * reason; a mount is the revocable form — {@link release} cancels it, the registry drops the
+   * atom's node, and the family's weak memoization lets the atom itself be collected.
    * @internal
    */
-  _touch(atom: Atom.Atom<unknown>): void {
-    // Only atoms someone has already asked for: `subscribe` registers a node without reading, which
-    // is the case that needs wiring, while an atom nobody has referenced has nothing to notify and
-    // materializing one per write would cost a computation per node on every flush.
-    if (this._registry.getNodes().has(atom)) {
-      this._registry.get(atom);
+  readonly _pins = new Map<string, CleanupFn>();
+
+  /** @internal */
+  _pin(id: string): void {
+    if (!this._pins.has(id)) {
+      this._pins.set(id, this._registry.mount(this._node(id)));
+    }
+  }
+
+  /** @internal */
+  _unpin(id: string): void {
+    const cancel = this._pins.get(id);
+    if (cancel) {
+      this._pins.delete(id);
+      cancel();
     }
   }
 
   /** The outgoing and inbound edges as the model holds them right now; see {@link Graph._currentNode}. @internal */
   _currentEdges(id: string): Edges {
-    this._touch(this._edges(id));
     return this._computeEdges(id);
   }
 
-  /** {@link Graph._currentEdges} without the touch, so the `_edges` atom body does not recurse. */
+  /** {@link Graph._currentEdges}; separate so the `_edges` atom body reads it without indirection. */
   _computeEdges(id: string): Edges {
     const edges: Edges = {};
     for (const relation of this._relations.get(id) ?? []) {
@@ -364,9 +377,8 @@ class GraphImpl implements WritableGraph {
    */
   _setNode(id: string, node: Option.Option<Node.Node>): void {
     this._model.setNode({ id, data: Option.getOrUndefined(node) });
-    // After the write, so the atom materializes with the value rather than with `none`. Wiring it
-    // up here is what lets a subscriber attached before the node existed hear about its arrival.
-    this._touch(this._node(id));
+    // After the write, so the atom materializes with the value rather than with `none`.
+    this._pin(id);
   }
 
   /** @internal */
@@ -1009,6 +1021,7 @@ export const release = <T extends WritableGraph>(graph: T, ids: readonly string[
   const internal = getInternal(graph);
   internal._model.batch(() => {
     for (const id of ids) {
+      internal._unpin(id);
       internal._relations.delete(id);
       releaseExpansion(internal, id);
     }

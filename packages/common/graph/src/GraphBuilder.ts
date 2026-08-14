@@ -551,7 +551,9 @@ export class ModelGraphBuilder<Meta = unknown> extends GraphBuilder<ModelNode, M
         children: (node) => node.nodes ?? [],
         map: (node, fn) => ({ ...node, nodes: node.nodes?.map(fn) }),
       },
-      store: (hooks, registry) => modelStore(model ?? GraphModel.make({ registry }), hooks),
+      // The default model retains its node atoms: builder graphs are consumed through atoms, and a
+      // view dropped between reads strands its subscribers. `release` is the reclamation path.
+      store: (hooks, registry) => modelStore(model ?? GraphModel.make({ registry, retainAtoms: true }), hooks),
     });
     if (!this.graph.findNode(rootId)) {
       this.graph.addNode({ id: rootId });

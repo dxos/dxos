@@ -53,6 +53,13 @@ export type Options<Node extends GraphNode.Any, Edge extends GraphEdge.Any> = {
    * transaction (e.g. `Obj.update` for an ECHO-backed graph).
    */
   change?: GraphChangeFunction;
+  /**
+   * Keep each node's atom mounted for as long as the node is in the graph, so a view of a node is
+   * never dropped and re-created between reads. {@link AbstractGraphModel.release} cancels the
+   * mount, which is what lets the registry drop the atom and the family's weak memoization collect
+   * it. Off by default — a model consumed imperatively pays for the atoms without reading them.
+   */
+  retainAtoms?: boolean;
 };
 
 /**
@@ -112,8 +119,12 @@ export abstract class AbstractGraphModel<
   readonly #edgeAtoms: (id: string) => Atom.Atom<Edge | undefined>;
   readonly #neighborAtoms: (key: string) => Atom.Atom<Node[]>;
 
-  constructor({ registry, graph, change }: Options<Node, Edge> = {}) {
+  /** One mount per node while it is in the graph; `undefined` when retention is off. See {@link Options.retainAtoms}. */
+  readonly #pins?: Map<string, () => void>;
+
+  constructor({ registry, graph, change, retainAtoms }: Options<Node, Edge> = {}) {
     this.#registry = registry ?? Registry.make();
+    this.#pins = retainAtoms ? new Map() : undefined;
     this.#version = Atom.make(0).pipe(Atom.keepAlive);
     // Priming before any subscriber attaches; a first read of an observed-but-uninitialized atom
     // notifies in addition to the write that follows it.
@@ -563,6 +574,7 @@ export abstract class AbstractGraphModel<
         this.#nodeIndex.delete(id);
         this.#outgoing.delete(id);
         this.#incoming.delete(id);
+        this.#unpin(id);
         this.#mirrorMutate((mirror) => removeInPlace(mirror.nodes, (candidate) => candidate.id === id));
       }
 
@@ -1003,9 +1015,20 @@ export abstract class AbstractGraphModel<
     if (index === undefined) {
       index = EffectGraph.addNode(this.#graph, { id, value: Option.none<Node>() });
       this.#nodeIndex.set(id, index);
+      if (this.#pins && !this.#pins.has(id)) {
+        this.#pins.set(id, this.#registry.mount(this.#nodeAtoms(id)));
+      }
     }
 
     return index;
+  }
+
+  #unpin(id: string): void {
+    const cancel = this.#pins?.get(id);
+    if (cancel) {
+      this.#pins!.delete(id);
+      cancel();
+    }
   }
 
   #unlinkEdge(edge: Edge): void {
@@ -1025,6 +1048,8 @@ export abstract class AbstractGraphModel<
    * Discards the working graph wholesale, which also drops placeholders left by removals.
    */
   #resetWorking(): void {
+    this.#pins?.forEach((cancel) => cancel());
+    this.#pins?.clear();
     this.#graph = EffectGraph.beginMutation(EffectGraph.directed<Slot<Node>, Edge>());
     this.#nodeIndex.clear();
     this.#edgeIndex.clear();
