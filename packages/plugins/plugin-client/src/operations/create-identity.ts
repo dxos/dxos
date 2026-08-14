@@ -8,7 +8,6 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { EffectEx } from '@dxos/effect';
 import { Identity } from '@dxos/halo';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
@@ -24,7 +23,7 @@ const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pip
       // Boot-waterfall milestone: the identity exists from here (first-run path).
       performance.mark('milestone:identity-created');
       const spaceId = yield* Identity.personalSpaceId;
-      yield* Effect.promise(() => EffectEx.runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
+      yield* manager.activate(ClientEvents.IdentityCreated);
       yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
       return {
         identityDid: identity.did,

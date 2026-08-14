@@ -1,7 +1,5 @@
 ---
 '@dxos/halo': minor
-'@dxos/halo-adapter-client': minor
-'@dxos/client-protocol': minor
 '@dxos/plugin-client': minor
 ---
 
