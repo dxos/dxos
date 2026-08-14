@@ -13,7 +13,7 @@ import * as AiError from 'effect/unstable/ai/AiError';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { type AiService, Model, type OpaqueToolkit } from '@dxos/ai';
+import { AiModelNotAvailableError, type AiService, Model, type OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import {
   AiContext,
@@ -137,10 +137,31 @@ const describeAiError = (err: AiError.AiError): string =>
   ('description' in err.reason ? err.reason.description : undefined) ?? err.message;
 
 /**
+ * Matches an {@link AiModelNotAvailableError} in error text. Like the quota case, the typed error
+ * does not always survive the agent-process boundary — the failure is rendered with `Cause.pretty`,
+ * which drops nested causes — so detection also reads the message it stringifies to.
+ */
+const MODEL_UNAVAILABLE_PATTERN = /AI Model not available:\s*(\S+?):?(?=\s|$)/i;
+
+/** The displayable text of a failure, which reaches the chat either typed or already stringified. */
+const errorText = (err: unknown): string => (typeof err === 'string' ? err : err instanceof Error ? err.message : '');
+
+/** The model of a model-unavailable rejection, by typed context or message text. */
+const unavailableModel = (err: unknown): string | undefined => {
+  const typed = findInCause(err, AiModelNotAvailableError.is);
+  if (typed) {
+    return String(typed.context.model);
+  }
+  return errorText(err).match(MODEL_UNAVAILABLE_PATTERN)?.[1];
+};
+
+/**
  * Maps a failure from the agent fiber to an error suitable for display.
  * An over-quota (HTTP 429) rejection is surfaced as an actionable usage-limit message; the typed
  * {@link UsageQuotaExceededError} only survives on the direct path, so {@link isQuotaError} also
  * recognizes the stringified 429 the chat receives across the agent-process boundary.
+ * A model the configured provider does not serve names that model, since the fix is to pick another
+ * one in settings.
  * Other {@link AiError}s originate from the AI service and are actionable by the user
  * (e.g., "model 'x' not found", "Connection refused"), so their detail is propagated.
  * Any other failure is treated as an internal/unexpected error and reported generically
@@ -150,6 +171,11 @@ export const parseError = (err: unknown): Error => {
   const quotaError = findInCause(err, UsageQuotaExceededError.is);
   if (quotaError || isQuotaError(err)) {
     return new AiUsageQuotaError(quotaError?.message?.trim() || QUOTA_EXCEEDED_MESSAGE, { cause: err });
+  }
+
+  const model = unavailableModel(err);
+  if (model) {
+    return new Error(`The model is not available: ${model}`, { cause: err });
   }
 
   let message: string | undefined;
