@@ -3,7 +3,14 @@
 //
 
 import { HighlightStyle, LanguageSupport, LRLanguage, syntaxHighlighting, syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
+import {
+  EditorSelection,
+  EditorState,
+  type Extension,
+  RangeSetBuilder,
+  StateField,
+  type TransactionSpec,
+} from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
 import { styleTags, tags as t } from '@lezer/highlight';
@@ -20,12 +27,55 @@ export type QueryOptions = {
 };
 
 /**
+ * Keeps a single trailing space on the document, and the caret in front of it.
+ *
+ * This is what lets a tag have ONE rendered form. A tag is decorated as a chip once whitespace
+ * terminates it; without a guaranteed terminator the last tag in the query never qualified, so it had
+ * to be drawn a second way — over live text — and the two forms then had to be kept identical by hand.
+ * Guaranteeing the terminator removes the second form rather than maintaining it.
+ *
+ * The space is invisible to callers: {@link queryText} trims it before anything reads the value.
+ */
+const trailingSpace = (): Extension => [
+  EditorState.transactionFilter.of((tr) => {
+    const doc = tr.newDoc;
+    const end = doc.length;
+    const missing = end === 0 || doc.sliceString(end - 1, end) !== ' ';
+    // Clamp the caret in front of the terminator, so it is never stranded mid-document by typing
+    // past it. Runs whether or not this transaction is the one appending it.
+    const limit = missing ? end : end - 1;
+    const head = tr.newSelection.main.head;
+    const spec: TransactionSpec[] = [tr];
+    if (missing) {
+      spec.push({ changes: { from: end, insert: ' ' }, sequential: true });
+    }
+    if (head > limit) {
+      spec.push({ selection: EditorSelection.cursor(limit), sequential: true });
+    }
+
+    return spec.length === 1 ? tr : spec;
+  }),
+];
+
+/** The document's meaningful text, without the terminator {@link trailingSpace} maintains. */
+export const queryText = (doc: string): string => (doc.endsWith(' ') ? doc.slice(0, -1) : doc);
+
+/**
+ * A caller's value as the document must hold it.
+ *
+ * `trailingSpace` is a transaction filter, and the initial state is not a transaction — so a seeded
+ * value (the mailbox's `#inbox`, say) would render as raw text until the first keystroke without this.
+ */
+export const queryDoc = (value = ''): string => (value.endsWith(' ') ? value : `${value} `);
+
+/**
  * Create a CodeMirror extension for the query language with syntax highlighting.
  */
 export const query = ({ tags }: QueryOptions = {}): Extension => {
   return [
     new LanguageSupport(queryLanguage),
     syntaxHighlighting(queryHighlightStyle),
+    trailingSpace(),
     decorations({ tags }),
     typeahead({
       onComplete: ({ line }: CompletionContext) => {
@@ -117,22 +167,12 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
               const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
               const tag = Tag.findTagByLabel(tags, label);
               const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
-              // Atomic only once the tag is TERMINATED by whitespace. An atomic range cannot be
-              // edited character-by-character, so covering a label the user is still typing would
-              // swallow their next keystroke; by the time the terminating space exists the caret has
-              // already moved past the tag, so the chip never sits under it. Backspace then removes
-              // the tag whole, which is how a chip should behave.
-              if (isTerminated(state, node.to)) {
-                // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range
-                // that starts at offset 0 paints before that offset's coordinate and the caret draws
-                // to its right — pressing Home appeared to leave the caret after the tag. `replace`
-                // states that the range becomes the chip, which resolves the boundary.
-                deco.add(node.from, node.to, Decoration.replace({ widget: new TagWidget(label, hue), atomic: true }));
-              } else {
-                for (const mark of tagMarks(node.from, node.to, hue)) {
-                  deco.add(mark.from, mark.to, mark.deco);
-                }
-              }
+              // Always the chip: `trailingSpace` guarantees a terminator, so a complete tag is never
+              // left unterminated and needs no second rendering.
+              // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range that
+              // starts at offset 0 paints before that offset's coordinate and the caret draws to its
+              // right — pressing Home appeared to leave the caret after the tag.
+              deco.add(node.from, node.to, Decoration.replace({ widget: new TagWidget(label, hue), atomic: true }));
             }
             break;
           }
@@ -195,12 +235,14 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
 
     // A `#` with no label yet parses as an error, not a `Tag`, so the tree cannot decorate it — but
     // the affordance has to appear on the keystroke that opens the tag, not once it is valid.
+    // A lone `#` is an error node, not a `Tag` — the grammar needs a label character — so it gets a
+    // plain highlight until the first one arrives and the chip takes over.
     for (const range of bareTagRanges(state, tagged)) {
-      const label = state.sliceDoc(range.from + 1, range.to);
-      const tag = Tag.findTagByLabel(tags, label);
-      // Resolved the same way as a complete tag, so the colour does not jump when the parser starts
-      // accepting the label.
-      collected.push(...tagMarks(range.from, range.to, tag?.hue ?? getHashHue(tag?.id ?? label)));
+      collected.push({
+        from: range.from,
+        to: range.to,
+        deco: Decoration.mark({ class: mx('rounded-xs px-0.5', getStyles(getHashHue('')).surface) }),
+      });
     }
 
     const builder = new RangeSetBuilder<Decoration>();
@@ -305,9 +347,7 @@ class TagWidget extends WidgetType {
     return container(
       border,
       Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs', fill)).text('#'),
-      Domino.of('span')
-        .classNames(mx('flex items-center px-1 text-subdued text-sm rounded-r-[3px]', surface))
-        .text(this._str),
+      Domino.of('span').classNames(mx('flex items-center px-1 text-subdued text-sm', surface)).text(this._str),
     );
   }
 }
@@ -338,7 +378,7 @@ class ObjectWidget extends WidgetType {
       'border-separator divide-x divide-separator',
       ...this._entries.map(([key, value]) => {
         const keyEl = Domino.of('span')
-          .classNames('flex items-center px-1 text-subdued text-xs bg-modal-surface first:rounded-l-[3px]')
+          .classNames('flex items-center px-1 text-subdued text-xs bg-modal-surface first:rounded-l-xs')
           .text(key);
         const valueEl = Domino.of('span').classNames('flex items-center px-1 text-subdued').text(value);
         return Domino.of('span').classNames('inline-flex items-stretch').append(keyEl, valueEl);
@@ -451,51 +491,6 @@ function intersectRanges(a: Range, b: Range): Range | null {
 
 /** Label characters the grammar admits after `#` (`Tag { "#" $[a-zA-Z0-9_\-]+ }`). */
 const TAG_LABEL_CHAR = /[a-zA-Z0-9_-]/;
-
-/**
- * Marks drawing an UNFINISHED tag as the chip it is about to become.
- *
- * A widget cannot serve here: replacing the range would make the label uneditable mid-word, which is
- * the whole reason an unterminated tag stays non-atomic. So the chip's two-part shape — `#` badge,
- * then label — is painted over the live characters instead, matching {@link TagWidget} so the tag does
- * not visibly change form when the terminating space finally arrives.
- */
-const tagMarks = (from: number, to: number, hue: string): { from: number; to: number; deco: Decoration }[] => {
-  const { bg: fill, border, surface } = getStyles(hue);
-  const marks = [
-    // Enclosing chip first; `buildQueryDecorations` sorts equal starts widest-first so it nests.
-    // These classes MIRROR `container()` and `TagWidget.toDOM` exactly — the two forms are the same
-    // chip, and anything that drifts here shows up as the tag changing shape under the caret when the
-    // terminating space arrives. `tag-parity.test.ts` renders both and compares them part-for-part.
-    {
-      from,
-      to,
-      deco: Decoration.mark({ class: mx('inline-flex h-[26px] border rounded-xs', border) }),
-    },
-    { from, to: from + 1, deco: Decoration.mark({ class: mx('flex items-center px-1 text-black text-xs', fill) }) },
-  ];
-  if (to > from + 1) {
-    marks.push({
-      from: from + 1,
-      to,
-      deco: Decoration.mark({
-        class: mx('flex items-center px-1 text-subdued text-sm rounded-r-[3px]', surface),
-      }),
-    });
-  }
-
-  return marks;
-};
-
-/**
- * Whether a token is closed off by whitespace — what separates a tag the user has finished from one
- * they are still typing, and so whether its decoration may be atomic.
- *
- * The end of the document deliberately does NOT terminate: that is exactly where the caret sits while
- * a label is being typed, and going atomic there would swallow the next keystroke.
- */
-const isTerminated = (state: EditorState, to: number): boolean =>
-  to < state.doc.length && /\s/.test(state.sliceDoc(to, to + 1));
 
 /**
  * Ranges of an in-progress tag — a `#` the parser has not yet accepted as a {@link QueryDSL.Node.Tag},

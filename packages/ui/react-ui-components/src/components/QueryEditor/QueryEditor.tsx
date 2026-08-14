@@ -20,7 +20,7 @@ import { createBasicExtensions, createThemeExtensions, keymap } from '@dxos/ui-e
 import { translationKey } from '#translations';
 
 import { type CompletionOptions, completions } from './autocomplete';
-import { query } from './query-extension';
+import { query, queryDoc, queryText } from './query-extension';
 
 export type QueryEditorProps = ThemedClassName<
   {
@@ -56,7 +56,10 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     // twice.
     const builder = useMemo(() => (onFilterChange ? new QueryBuilder(tags) : undefined), [onFilterChange, tags]);
     const handleChange = useCallback(
-      (text: string) => {
+      (doc: string) => {
+        // The editor keeps a trailing space so every tag is terminated and renders as a chip; that is
+        // an internal affordance, so callers never see it.
+        const text = queryText(doc);
         onChange?.(text);
         if (builder) {
           onFilterChange?.(builder.build(text));
@@ -108,7 +111,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
         triggerKey='Ctrl-Space'
         getMenu={getMenu}
       >
-        <Editor.View {...props} initialValue={value} onChange={handleChange} selectionEnd />
+        <Editor.View {...props} initialValue={queryDoc(value)} onChange={handleChange} selectionEnd />
       </Editor.Root>
     );
   },

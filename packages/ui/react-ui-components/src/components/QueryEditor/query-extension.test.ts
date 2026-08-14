@@ -3,22 +3,38 @@
 //
 
 import { EditorSelection, EditorState } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { describe, expect, test } from 'vitest';
 
 import { Tag } from '@dxos/echo';
 
-import { buildQueryDecorations, query } from './query-extension';
+import { buildQueryDecorations, query, queryDoc, queryText } from './query-extension';
 
 const tags: Tag.Map = { tag_1: Tag.make({ label: 'important' }) };
 
-/** The state the extension decorates, with the caret at `head` (end of document by default). */
-const stateOf = (doc: string, head = doc.length) =>
-  EditorState.create({ doc, selection: EditorSelection.cursor(head), extensions: [query({ tags })] });
+/** A mounted view, which is what applies the transaction filter. */
+const viewOf = (doc: string) => {
+  const parent = document.createElement('div');
+  document.body.appendChild(parent);
+  return new EditorView({ state: EditorState.create({ doc, extensions: [query({ tags })] }), parent });
+};
+
+/** Types `text` one character at a time, as a user would. */
+const type = (view: EditorView, text: string) => {
+  for (const char of text) {
+    const { head } = view.state.selection.main;
+    view.dispatch({ changes: { from: head, insert: char }, selection: EditorSelection.cursor(head + 1) });
+  }
+};
 
 const decorationsOf = (doc: string, head?: number) => {
-  const set = buildQueryDecorations(stateOf(doc, head), { tags });
+  const state = EditorState.create({
+    doc,
+    selection: EditorSelection.cursor(head ?? doc.length),
+    extensions: [query({ tags })],
+  });
   const ranges: { from: number; to: number; atomic: boolean }[] = [];
-  const cursor = set.iter();
+  const cursor = buildQueryDecorations(state, { tags }).iter();
   while (cursor.value) {
     ranges.push({ from: cursor.from, to: cursor.to, atomic: !!cursor.value.spec.atomic });
     cursor.next();
@@ -28,68 +44,74 @@ const decorationsOf = (doc: string, head?: number) => {
 };
 
 /**
- * Decorations are fed to a `RangeSetBuilder`, which throws on an out-of-order range. The bare-`#`
- * ranges come from a document scan rather than the syntax tree, so they interleave with the tree's
- * own and have to be sorted before being added — this is the guard for that.
+ * The document always ends in a space. That is what gives a tag ONE rendered form: a tag is a chip
+ * once whitespace terminates it, and without a guaranteed terminator the last tag in the query never
+ * qualified, so it had to be drawn a second way over live text.
  */
-describe('buildQueryDecorations', () => {
-  test.each([
-    ['', 'empty'],
-    ['#', 'a bare hash'],
-    ['#imp', 'a partial tag'],
-    ['#important ', 'a terminated tag'],
-    ['#a #b #c', 'several tags'],
-    ['type:org.dxos.Person AND #important', 'a tag following another filter'],
-    ['{ name: "x" } #tag', 'an object literal before a tag'],
-    ['"# not a tag" #real', 'a hash inside a string'],
-  ])('builds over %j (%s)', (doc) => {
-    expect(() => decorationsOf(doc)).not.toThrow();
+describe('trailing space', () => {
+  test('is present from mount, since the filter cannot see the initial state', () => {
+    // A seeded value (the mailbox's `#inbox`) would otherwise render as raw text until first edited.
+    expect(queryDoc('#inbox')).toBe('#inbox ');
+    expect(queryDoc('')).toBe(' ');
+    expect(queryDoc('#inbox ')).toBe('#inbox ');
+  });
+
+  test('is appended as the user types, and never doubled', () => {
+    const view = viewOf('');
+    type(view, '#important');
+    expect(view.state.doc.toString()).toBe('#important ');
+    view.destroy();
+  });
+
+  test('the caret stays in front of it', () => {
+    const view = viewOf('');
+    type(view, '#important');
+    expect(view.state.selection.main.head).toBe(10);
+    view.destroy();
+  });
+
+  test('typing a space of your own does not accumulate two', () => {
+    const view = viewOf('');
+    type(view, '#a b');
+    expect(view.state.doc.toString()).toBe('#a b ');
+    view.destroy();
+  });
+
+  test('is trimmed off the value callers see', () => {
+    expect(queryText('#important ')).toBe('#important');
+    expect(queryText('')).toBe('');
   });
 });
 
 /**
- * An atomic range cannot be edited character-by-character, so it may only cover a tag the user has
- * FINISHED. Applying it while the label is still being typed swallows the next keystroke — which is
- * what the previous unconditional `atomic: true` did.
+ * Decorations are fed to a `RangeSetBuilder`, which throws on an out-of-order range. The bare-`#`
+ * ranges come from a document scan rather than the syntax tree, so they interleave with the tree's
+ * own and have to be sorted before being added.
  */
-describe('tag atomicity', () => {
-  const atomic = (doc: string, head?: number) => decorationsOf(doc, head).filter((range) => range.atomic);
-
-  test('an unterminated tag is decorated but not atomic', () => {
-    // Still being typed: no trailing space yet, so the label must stay editable.
-    const ranges = decorationsOf('#import');
-    expect(ranges).not.toHaveLength(0);
-    expect(atomic('#import')).toHaveLength(0);
+describe('buildQueryDecorations', () => {
+  test.each([
+    [' ', 'empty'],
+    ['# ', 'a bare hash'],
+    ['#important ', 'a tag'],
+    ['#a #b #c ', 'several tags'],
+    ['type:org.dxos.Person AND #important ', 'a tag following another filter'],
+    ['{ name: "x" } #tag ', 'an object literal before a tag'],
+    ['"# not a tag" #real ', 'a hash inside a string'],
+  ])('builds over %j (%s)', (doc) => {
+    expect(() => decorationsOf(doc)).not.toThrow();
   });
 
-  test('a bare hash is decorated as soon as it is typed, and is never atomic', () => {
-    const ranges = decorationsOf('#');
-    expect(ranges.some((range) => range.from === 0 && range.to === 1)).toBe(true);
-    expect(atomic('#')).toHaveLength(0);
+  test('a complete tag is a single atomic chip', () => {
+    const ranges = decorationsOf('#important ');
+    expect(ranges).toMatchObject([{ from: 0, to: 10, atomic: true }]);
   });
 
-  test('a tag terminated by a space becomes atomic', () => {
-    expect(atomic('#important ')).toHaveLength(1);
-  });
-
-  test('a tag terminated by a following term is atomic', () => {
-    // Termination is whitespace, not end-of-input: the first tag here is finished, the second is not.
-    const ranges = atomic('#important #part');
-    expect(ranges).toHaveLength(1);
-    expect(ranges[0]).toMatchObject({ from: 0, to: 10 });
-  });
-
-  test('an unterminated tag is painted as the chip it will become', () => {
-    // Same two-part shape as `TagWidget` — enclosing border, `#` badge, then label — so the tag does
-    // not visibly change form when the terminating space arrives.
-    // Iteration order is the RangeSet's own (by offset), not insertion order, so compare as a set.
-    const ranges = decorationsOf('#important');
-    expect(ranges.map(({ from, to }) => `${from}-${to}`).sort()).toEqual(['0-1', '0-10', '1-10'].sort());
-    expect(ranges.every((range) => !range.atomic)).toBe(true);
+  test('a bare hash is highlighted but not yet a chip', () => {
+    const ranges = decorationsOf('# ');
+    expect(ranges).toMatchObject([{ from: 0, to: 1, atomic: false }]);
   });
 
   test('a hash inside a string is not treated as a tag', () => {
-    const ranges = decorationsOf('"# not a tag"');
-    expect(ranges.filter((range) => range.from === 1)).toHaveLength(0);
+    expect(decorationsOf('"# not a tag" ').filter((range) => range.from === 1)).toHaveLength(0);
   });
 });
