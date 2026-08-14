@@ -525,22 +525,13 @@ generalize now with mailbox as instance #1.
       `ExtractCorrespondents` is the clear win — it re-derives over the whole feed every run and the
       identity index already makes it idempotent, so a cursor is pure saving. The projects trio is
       blocked on the item above. Real scope: ONE, maybe two.
-- [ ] **Retire `ExtractMailbox` once on-arrival extraction is restored** — it is `@deprecated`, but
-      still LIVE: `MailboxArticle.tsx:584` → `useMailboxExtractorActions` renders a menu item per
-      registered `ObjectExtractor` and invokes it, and two extractors ship. Its stated successor
-      (`onArrivalExtractors`) is commented OUT of the sync chain because it reaches
-      `Capability.Service` and invokes `ExtractMessage`, neither available off-host under edge compute
-      — so removing it now would delete a working feature with nothing behind it. Remove the operation,
-      the hook and the menu items together once the successor runs as a processor (D6). MEANWHILE the
-      `@deprecated` tag is misleading, since it points at a replacement that does not run.
-- [ ] **Give the seven cursorless consumers a cursor** — mechanical now that a processor id is also its
-      cursor tag, but each needs its own call on whether feed position or derived-state replacement is
-      the right idempotency story (`ExtractSubscriptions` replaces wholesale; `SummarizeMailbox` skips
-      by newest thread id).
 
 ---
 
 ## Manual test plan
 
-Moved to [`TESTING.md`](TESTING.md) — 26 steps across sections A–F, none run.
+Moved to [`TESTING.md`](TESTING.md) — 27 steps across sections A–F. **Run 2026-08-14** against a live
+Gmail-synced mailbox over the agent debug port: 12 passed, 2 failed (both fixed in #12577), 1 was a
+stale expectation in the plan itself, and 12 were unreachable. That file also carries an evaluation of
+what the debug port is and is not the right tool for.
 See the blocker above for why an automation browser cannot execute them and a warm browser can.
