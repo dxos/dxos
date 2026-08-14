@@ -3280,4 +3280,88 @@ describe('PluginManager', () => {
       }),
     );
   });
+  describe('startup independence', () => {
+    it.effect('ready does not wait for a wave a startup module fired from a forked fiber', () =>
+      Effect.gen(function* () {
+        // The client's shape: `activate` returns immediately and forks work that dispatches a
+        // follow-on event mid-startup, while the rest of the wave is still loading.
+        const slowGate = yield* Latch.make(false);
+        const triggerGate = yield* Latch.make(false);
+        const followerGate = yield* Latch.make(false);
+
+        const Follower = Plugin.define(
+          Plugin.makeMeta({ key: DXN.make('org.dxos.test.follower'), name: 'Follower' }),
+        ).pipe(
+          Plugin.addModule({
+            activatesOn: CountEvent,
+            id: 'Follower',
+            provides: [MultiNumber],
+            activate: () =>
+              Effect.gen(function* () {
+                yield* followerGate.await;
+                return [Capability.contribute(MultiNumber, { number: 1 })];
+              }),
+          }),
+          Plugin.make,
+        );
+
+        const Test = Plugin.define(testMeta).pipe(
+          // Keeps the startup wave in flight while the forked fiber below fires its event.
+          Plugin.addModule({
+            activatesOn: ActivationEvents.Startup,
+            id: 'Slow',
+            provides: [Number],
+            activate: () =>
+              Effect.gen(function* () {
+                yield* slowGate.await;
+                return [Capability.contribute(Number, { number: 0 })];
+              }),
+          }),
+          Plugin.addModule({
+            activatesOn: ActivationEvents.Startup,
+            id: 'Trigger',
+            provides: [String],
+            activate: () =>
+              Effect.gen(function* () {
+                yield* Effect.forkDetach(
+                  Effect.gen(function* () {
+                    yield* triggerGate.await;
+                    yield* Plugin.activate(CountEvent);
+                  }),
+                );
+                return [Capability.contribute(String, { string: 'ready' })];
+              }),
+          }),
+          Plugin.make,
+        );
+
+        plugins = [Test(), Follower()];
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins,
+          enabled: [testMeta.profile.key, 'org.dxos.test.follower'],
+        });
+
+        const startFiber = yield* Effect.forkChild(manager.activate(ActivationEvents.Startup));
+        yield* advance(Duration.millis(100));
+
+        // Fire the follow-on wave while startup is still waiting on its own slow module.
+        yield* triggerGate.open;
+        yield* advance(Duration.millis(100));
+
+        // Startup's own modules are now all done; only the follow-on wave is outstanding.
+        yield* slowGate.open;
+        yield* advance(Duration.millis(100));
+
+        assert.strictEqual(manager.capabilities.getAll(MultiNumber).length, 0);
+        assert.isTrue(manager.getEventsFired().includes(ActivationEvent.eventKey(ActivationEvents.Startup)));
+        assert.deepStrictEqual(manager.capabilities.get(String), { string: 'ready' });
+
+        yield* followerGate.open;
+        yield* Fiber.join(startFiber);
+        yield* advance(Duration.millis(100));
+        assert.strictEqual(manager.capabilities.getAll(MultiNumber).length, 1);
+      }),
+    );
+  });
 });

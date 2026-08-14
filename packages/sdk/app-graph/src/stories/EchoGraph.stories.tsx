@@ -104,9 +104,9 @@ const createGraph = (client: Client, registry: Registry.AtomRegistry): Graph.Exp
   GraphBuilder.addExtension(builder, objectBuilderExtension);
   const graph = builder.graph;
   graph.onNodeChanged.on(({ id }) => {
-    Graph.expand(graph, id, 'child');
+    Graph.expandSync(graph, id, 'child');
   });
-  Graph.expand(graph, Node.RootId, 'child');
+  Graph.expandSync(graph, Node.RootId, 'child');
   (window as any).graph = graph;
   return graph;
 };

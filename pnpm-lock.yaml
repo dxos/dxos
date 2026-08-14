@@ -13080,6 +13080,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-tasks':
+        specifier: workspace:*
+        version: link:../plugin-tasks
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing

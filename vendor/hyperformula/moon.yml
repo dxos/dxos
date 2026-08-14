@@ -4,6 +4,9 @@ language: typescript
 tags:
   - vendor
   - pack
+  # Publishes no `source` condition, so every consumer resolves it to dist — including vite's
+  # dependency scan, which aborts wholesale on a single unresolvable import.
+  - dist-runtime
 workspace:
   inheritedTasks:
     exclude:

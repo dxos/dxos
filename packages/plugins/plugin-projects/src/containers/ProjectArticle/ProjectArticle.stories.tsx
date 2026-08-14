@@ -16,6 +16,8 @@ import { Collection, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
+import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
+import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
@@ -23,12 +25,14 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Text } from '@dxos/schema';
+import { Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
 import { ProjectArticle } from './ProjectArticle';
 
 const PROJECT_NAME = 'Project 1';
+const TASK_TITLE = 'Ship the tasks section';
 
 /**
  * Seed a project with the same owned-object graph the create-object capability builds: an owned
@@ -40,9 +44,12 @@ const seedProject = (space: Space) => {
   Obj.setParent(instructions, project);
   const artifacts = Collection.make();
   Obj.setParent(artifacts, project);
+  const taskSet = TaskSet.make({ name: 'Tasks' });
+  Obj.setParent(taskSet, project);
   Obj.update(project, (project) => {
     project.instructions = Ref.make(instructions);
     project.artifacts = Ref.make(artifacts);
+    project.taskSet = Ref.make(taskSet);
   });
 
   const routine = space.db.add(Routine.make({ name: 'Daily Digest' }));
@@ -51,6 +58,10 @@ const seedProject = (space: Space) => {
   });
 
   space.db.add(project);
+
+  // Parented after the cascade so the task lands in the persisted task set.
+  const task = space.db.add(Task.make({ title: TASK_TITLE, status: 'todo' }));
+  Obj.setParent(task, taskSet);
 };
 
 const DefaultStory = () => {
@@ -73,6 +84,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
+        TasksPlugin.make(),
         ClientPlugin.make({
           types: [
             Project.Project,
@@ -81,6 +93,8 @@ const meta = {
             Routine.Routine,
             Skill.Skill,
             Text.Text,
+            TaskSet.TaskSet,
+            Task.Task,
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -98,7 +112,13 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...translations, ...reactUiTranslations, ...formTranslations, ...routineTranslations],
+    translations: [
+      ...translations,
+      ...reactUiTranslations,
+      ...formTranslations,
+      ...routineTranslations,
+      ...tasksTranslations,
+    ],
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -121,5 +141,11 @@ export const Default: Story = {
     await expect(canvas.findByText('Routines', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.findByText('Artifacts', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.findByText('Daily Digest', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    // Tasks: the section heading renders AND plugin-tasks' TaskSet section surface resolves into it.
+    // The task title is the load-bearing assertion — an invalid surface id is dropped silently, so
+    // the heading alone renders over an empty section.
+    await expect(canvas.findByText('Tasks', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };

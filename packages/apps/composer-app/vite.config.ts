@@ -26,6 +26,7 @@ import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 import { bootChunking } from './src/vite/boot-chunking';
+import { optimizeDepsInclude } from './src/vite/optimize-deps';
 import { traceBootLeak } from './src/vite/trace-boot-leak';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
@@ -229,96 +230,27 @@ export default defineConfig((env) => ({
   },
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite'],
-    // List deeply-imported dep entrypoints so vite's optimize-deps phase
-    // pre-bundles them up front. Without this, vite discovers them mid-load
-    // (when a dynamic import unwraps a new subpath), which forces a full page
-    // reload with the "Discovered new dependencies" banner — ~10 s of wasted
-    // dev time per discovery cycle and the most common cause of HMR appearing
-    // to hang. The pre-bundle cost is amortized after the first `vite serve`.
+    // The full set of dep entrypoints the app reaches, so vite's optimize-deps phase pre-bundles
+    // them up front rather than discovering them mid-load (when a dynamic import unwraps a new
+    // subpath), which forces a full page reload with the "Discovered new dependencies" banner —
+    // ~10 s of wasted dev time per cycle and the most common cause of HMR appearing to hang.
     //
-    // IMPORTANT: every entry must be resolvable from this app's root. If even
-    // one is not, vite aborts the *entire* dependency scan ("Failed to run
-    // dependency scan. Skipping dependency pre-bundling.") and pre-bundles
-    // nothing — worse than an empty list. Several entries below (@automerge/*,
-    // @atlaskit/pragmatic-drag-and-drop*, @effect/ai*, @opentelemetry/*,
-    // xstate, @xstate/react, react-qr-rounded) are only transitive deps of
-    // `@dxos/*` packages; they are listed as direct deps of composer-app in
-    // package.json *specifically* so they resolve from root and can be
-    // pre-bundled here — each one was observed triggering a mid-session
-    // "discovered new dependencies" reload before being added.
-    include: [
-      // React.
-      'react',
-      'react-dom',
-      'react/jsx-runtime',
-      // Effect (with subpath imports).
-      'effect',
-      'effect/Effect',
-      'effect/Array',
-      'effect/Ref',
-      'effect/Option',
-      'effect/Cause',
-      'effect/Exit',
-      'effect/Layer',
-      'effect/Runtime',
-      'effect/Fiber',
-      'effect/Deferred',
-      'effect/Function',
-      'effect/HashSet',
-      'effect/PubSub',
-      'effect/Schema',
-      'effect/Context',
-      'effect/Stream',
-      'effect/Console',
-      '@effect/platform',
-      '@effect/platform-browser',
-      // Effect Atom (reactive state; always loaded, triggered a mid-session reload before being listed).
-      '@effect/atom-react',
-      // Effect AI (absorbed into the core train under `effect/unstable/ai`).
-      '@effect/ai-anthropic',
-      '@effect/ai-anthropic/AnthropicClient',
-      '@effect/ai-anthropic/AnthropicLanguageModel',
-      '@effect/ai-anthropic/AnthropicTool',
-      '@effect/ai-openai',
-      '@effect/ai-openai/OpenAiClient',
-      '@effect/ai-openai/OpenAiLanguageModel',
-      // Automerge (CRDT; deeply imported via @dxos/echo).
-      '@automerge/automerge',
-      '@automerge/automerge-repo',
-      // OpenTelemetry (loaded eagerly via @dxos/observability).
-      '@opentelemetry/api',
-      '@opentelemetry/api-logs',
-      '@opentelemetry/exporter-logs-otlp-http',
-      '@opentelemetry/exporter-metrics-otlp-http',
-      '@opentelemetry/sdk-logs',
-      '@opentelemetry/sdk-metrics',
-      // XState + QR (HALO invitation flow via @dxos/shell).
-      'xstate',
-      '@xstate/react',
-      'react-qr-rounded',
-      // Atlaskit drag-and-drop (mosaic / dnd).
-      '@atlaskit/pragmatic-drag-and-drop',
-      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
-      // CodeMirror (many files in HAR).
-      'codemirror',
-      '@codemirror/state',
-      '@codemirror/view',
-      '@codemirror/language',
-      '@codemirror/commands',
-      '@codemirror/autocomplete',
-      '@codemirror/lang-javascript',
-      '@codemirror/lang-json',
-      '@codemirror/lang-markdown',
-      '@codemirror/theme-one-dark',
-      // Radix (many requests in HAR).
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu',
-      '@radix-ui/react-tooltip',
-      '@radix-ui/react-scroll-area',
-      '@radix-ui/react-popover',
-      '@radix-ui/react-slot',
-      '@radix-ui/react-context-menu',
-    ],
+    // The list is static rather than left to the `entries` scan below because vite runs that scan
+    // only when there is no valid optimizer cache: once a cache exists it is trusted wholesale, so
+    // a cache built by a session that never opened a given plugin stays permanently short of that
+    // plugin's deps and re-optimizes on first use, session after session. `include` is part of the
+    // cache's config hash, so regenerating this list also invalidates the cache it feeds.
+    //
+    // Regenerate with `moon run composer-app:gen-optimize-deps`.
+    //
+    // Entries must resolve from this app's root, which is why deps reached only through `@dxos/*`
+    // packages (@automerge/*, @atlaskit/pragmatic-drag-and-drop*, @opentelemetry/*, xstate, …) are
+    // also listed as direct deps of composer-app in package.json. An entry that stops resolving
+    // costs a warning per start, not a failed scan.
+    //
+    // `DX_PLUGIN_SET=minimal` keeps the scan instead: the list covers the full registry, and
+    // pre-bundling all of it is the cost that mode exists to avoid.
+    include: isMinimalPluginSet ? undefined : optimizeDepsInclude,
     // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
     // to `internal.html` / `devtools.html` / `reset.html` don't trip a
     // "discovered new dependencies" reload mid-session.
@@ -327,10 +259,10 @@ export default defineConfig((env) => ({
     // are loaded via `await import(...)` at runtime so their bare-module
     // imports aren't reachable from the static graph rooted at `index.html` —
     // Vite would discover them mid-session and trigger a re-optimize + full
-    // page reload per plugin family. Walking the entries at startup makes the
-    // first optimize-deps pass discover all transitive deps. Production
-    // bundling is unaffected: Rolldown still emits a separate chunk per
-    // dynamic import.
+    // page reload per plugin family. Walking the entries at startup catches
+    // whatever `include` above has drifted away from, and is what
+    // `gen-optimize-deps` regenerates that list from. Production bundling is
+    // unaffected: Rolldown still emits a separate chunk per dynamic import.
     entries: [
       './index.html',
       './internal.html',

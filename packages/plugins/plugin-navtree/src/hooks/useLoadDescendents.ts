@@ -18,6 +18,6 @@ export const useLoadDescendents = (root?: Node.Node) => {
       return;
     }
 
-    Graph.expand(graph, root.id, 'child');
+    Graph.expandSync(graph, root.id, 'child');
   }, [graph, root]);
 };
