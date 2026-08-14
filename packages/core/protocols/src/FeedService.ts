@@ -148,6 +148,16 @@ export class Rpcs extends RpcGroup.make(
     success: FeedQueryResult,
     error: serviceError,
   }),
+  /**
+   * Pushes a new query snapshot whenever the feed's contents change, so a client can subscribe
+   * instead of polling {@link queryFeed} on a timer.
+   */
+  Rpc.make('subscribeFeed', {
+    payload: QueryFeedRequest,
+    success: FeedQueryResult,
+    error: serviceError,
+    stream: true,
+  }),
   Rpc.make('insertIntoFeed', {
     payload: InsertIntoFeedRequest,
     error: serviceError,

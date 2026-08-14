@@ -222,4 +222,40 @@ describe('LocalFeedServiceImpl', () => {
       }).pipe(Effect.provide(TestLayer)),
     ),
   );
+
+  it.effect('subscribeFeed pushes an initial snapshot, then another on a local write', () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
+        const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+        const service = new LocalFeedServiceImpl(runtime, feedStore);
+        yield* feedStore.migrate();
+
+        const spaceId = SpaceId.random();
+        const feedId = EntityId.random();
+        const object1 = { id: 'obj1', data: 'test1' };
+
+        // A scoped pull, rather than a timing-based delay before the write, guarantees the
+        // initial snapshot is consumed before the write fires -- so the second pull can only
+        // resolve from the write's `FeedStore.onNewBlocks` signal, never from a race.
+        const pull = yield* EffectStream.toPull(
+          service['FeedService.subscribeFeed']({ query: { spaceId, feedIds: [feedId] } }),
+        );
+
+        const [initial] = yield* pull;
+        expect(initial.objects).toHaveLength(0);
+
+        yield* service['FeedService.insertIntoFeed']({
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+          spaceId,
+          feedId,
+          objects: [JSON.stringify(object1)],
+        });
+
+        const [next] = yield* pull;
+        expect(next.objects).toHaveLength(1);
+        expect(JSON.parse(next.objects![0])).toMatchObject(object1);
+      }).pipe(Effect.provide(TestLayer)),
+    ),
+  );
 });

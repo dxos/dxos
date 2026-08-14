@@ -41,6 +41,16 @@ export class FeedServiceImpl implements FeedService.Handlers {
     });
   }
 
+  /**
+   * The queue-backed store has no change-notification mechanism in this runtime, so this pushes a
+   * single snapshot (the same one `queryFeed` would return) rather than live updates.
+   */
+  ['FeedService.subscribeFeed'](
+    request: FeedProtocol.QueryFeedRequest,
+  ): EffectStream.Stream<FeedProtocol.QueryResult, Error> {
+    return EffectStream.fromEffect(this['FeedService.queryFeed'](request));
+  }
+
   ['FeedService.insertIntoFeed'](request: FeedProtocol.InsertIntoFeedRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
