@@ -187,6 +187,16 @@ Gate before Phase 9. Requested 2026-08-13.
       dependency is gone, so a child whose app-level `data` changes without a model version bump no
       longer invalidates the parent's connections.
 
+      **Fix attempt 1, reverted — but it narrowed the mechanism.** Restoring `sortByOrder` is
+      meaningless at HEAD: `GraphEdge` no longer carries `data` at all, since ordering moved to pure
+      insertion order (verified working). So candidate (a) is dead. Restoring the per-child
+      `get(this._node(childId))` dependency in `_connections` builds and leaves 119/120 green but
+      **fails `graph.test.ts > Graph > connections updates`** — so the two forms genuinely differ in
+      notification behaviour, which is direct evidence for candidate (b). The fix is therefore not a
+      straight revert: keep the `neighborsAtom` read (it is what makes the view cheap) and work out
+      whether the missing per-child dependency, or the notification count that test pins, is the
+      correct semantics. Start by reading that test's expectation against both forms.
+
       2. **Deletion broke later** — `delete a collection` and `deletion undo` still pass at the
          consolidation. Bisect region: `99ac23f1` … `a86d7718`. Failure mode: the actions menu opens,
          `spacePlugin.deleteObject` is found, focused and receives Enter, and nothing happens, with no
