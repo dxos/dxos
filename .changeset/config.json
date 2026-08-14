@@ -107,6 +107,7 @@
       "@dxos/log-store-idb",
       "@dxos/markdown",
       "@dxos/mcp-client",
+      "@dxos/mcp-projection",
       "@dxos/merkle-search-tree",
       "@dxos/messaging",
       "@dxos/migrations",

@@ -5086,6 +5086,28 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
 
+  packages/core/compute/mcp-projection:
+    dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      effect:
+        specifier: 4.0.0-rc.108
+        version: 4.0.0-rc.108
+    devDependencies:
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+
   packages/core/compute/nlp:
     dependencies:
       '@dxos/ai':

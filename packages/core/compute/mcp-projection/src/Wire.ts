@@ -1,0 +1,188 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// @import-as-namespace
+
+/**
+ * Response passes applied to outgoing JSON-RPC messages.
+ *
+ * They correct what `McpServer` renders, so they belong to the surface rather than to a host:
+ * every host runs them over its own transport (HTTP body, stdio line) or its clients disagree
+ * about what this server offers. Each pass mutates the parsed message in place and reports whether
+ * it changed anything, so a host can skip re-serializing an untouched message.
+ */
+
+/**
+ * Server-level usage guidance, sent as `InitializeResult.instructions` — the field the MCP schema
+ * defines as "Instructions describing how to use the server and its features … MAY be added to the
+ * system prompt". It is the one server text a client loads before any tool is selected (Claude
+ * Code injects it at session start and truncates at 2KB), and the MCP guidance reserves it for
+ * cross-tool rules that no single tool description can carry
+ * (https://blog.modelcontextprotocol.io/posts/2025-11-03-using-server-instructions/).
+ *
+ * Deliberately fixed and generic: the plugin ecosystem behind this server is open-ended, so
+ * per-plugin or per-skill fragments would grow without bound and truncate silently. Plugin- and
+ * project-specific guidance lives in skills; the only thing stated here is the *convention* by
+ * which a model finds them — a tool description names its skill, `skillLoad` fetches it.
+ */
+export const SERVER_INSTRUCTIONS = [
+  'Tools on this server read and write objects in DXOS spaces (collaborative databases).',
+  'Every write targets exactly one space. Pass spaceId explicitly on writes, taking it from the ' +
+    "caller's instructions, a repo/project configuration, or a reference already in hand — when " +
+    'spaceId is omitted the server falls back to an arbitrary session default, which is not an ' +
+    'inferred choice; never guess a space from its name.',
+  'References between objects travel as {"/": "echo://<spaceId>/<objectId>"} envelopes. Pass ' +
+    'references back exactly as you received them.',
+  "Some tools belong to larger workflows described by skills. When a tool's description names a " +
+    'skill, call skillLoad with that name and follow the returned instructions before first using ' +
+    'the tool. Skills are also offered to users as prompts (slash commands); skillLoad brings the ' +
+    'same text into context without user action.',
+].join('\n');
+
+/**
+ * Ensures every advertised tool declares an object input schema.
+ *
+ * Effect renders a *parameterless* tool's schema as `{ anyOf: [{type: 'object'}, {type: 'array'}] }`,
+ * which carries no top-level `type`. MCP clients validate that field and reject the entire
+ * `tools/list` response over it — "expected object" at `tools[N].inputSchema.type` — so a single
+ * parameterless tool takes every other tool down with it and the server appears to expose nothing.
+ *
+ * Only the empty case is rewritten: a schema that already declares `type: 'object'`, or that
+ * carries `properties`, is left exactly as it is.
+ */
+export const normalizeToolSchemas = (message: unknown): boolean => {
+  let rewritten = false;
+  for (const tool of toolsOf(message)) {
+    const schema = tool?.inputSchema;
+    if (schema != null && schema.type !== 'object' && schema.properties == null) {
+      tool.inputSchema = { type: 'object', properties: {}, additionalProperties: false };
+      rewritten = true;
+    }
+  }
+  return rewritten;
+};
+
+/**
+ * Narrows the advertised shape of ref-valued parameters to their structured (object) branch.
+ *
+ * TODO(wittjosiah): Handle upstream. A reference is an object on the wire, so ECHO's own JSON
+ * Schema could say so — `collapseEchoRef` in `@dxos/echo` strips exactly the `type`/`properties`/
+ * `required` a schema-unaware consumer needs, and restoring them there would make this pass (and
+ * `Projection.tolerateStringifiedRefs`, whose widening produces the ambiguity in the first place)
+ * unnecessary. Not done now because it is a breaking change: that output is what gets persisted
+ * into stored schemas, and an older reader matches the generic `type === 'object'` branch before
+ * the reference sentinel, so it would silently rebuild a reference as a plain `{ '/': string }`
+ * struct — a wrong decode, not a loud failure.
+ *
+ * `tolerateStringifiedRefs` widens a ref-valued parameter to also accept the envelope as a JSON
+ * *string*, by unioning the real schema with a string-decode transform. Effect's schema-to-JSON
+ * encoder renders that union as `anyOf: [<fully-typed object>, {type: 'string'}]` with no
+ * top-level `type` — the same "expected object" shape {@link normalizeToolSchemas} fixes for whole
+ * tool schemas, one level into `properties`. A client that keys off `type` before deciding whether
+ * an argument is structured JSON sends the envelope as a string, which is exactly the failure
+ * `tolerateStringifiedRefs` exists to route around; without this, the fallback would only ever be
+ * reached by *accident*. The `anyOf` is dropped rather than kept alongside a hoisted `type` — the
+ * two would contradict each other under strict JSON Schema evaluation. Nothing is lost: the server
+ * still decodes a JSON-stringified envelope on the way in regardless of what is advertised here.
+ */
+export const narrowRefSchemas = (message: unknown): boolean => {
+  let narrowed = false;
+  for (const tool of toolsOf(message)) {
+    narrowed = resolveAmbiguousAnyOf(tool?.inputSchema, new Set()) || narrowed;
+  }
+  return narrowed;
+};
+
+/**
+ * Attaches display metadata and server instructions to an `initialize` result.
+ *
+ * `serverInfo` is an MCP `Implementation`, which the specification allows to carry `title`,
+ * `websiteUrl` and `icons`, and the result may carry top-level `instructions` — but
+ * `McpServer`'s layers accept only `{ name, version }` and offer no way to supply any of them.
+ * Rather than fork the library, the fields are merged into the response on the way out.
+ */
+export const decorateInitialize = (
+  message: unknown,
+  options: { readonly serverInfo?: Record<string, unknown>; readonly instructions?: string } = {},
+): boolean => {
+  const result = resultOf(message);
+  if (result?.serverInfo == null) {
+    return false;
+  }
+  result.serverInfo = { ...(result.serverInfo as Record<string, unknown>), ...(options.serverInfo ?? {}) };
+  result.instructions ??= options.instructions ?? SERVER_INSTRUCTIONS;
+  return true;
+};
+
+/** Runs every response pass in order; returns whether the message changed. */
+export const normalize = (
+  message: unknown,
+  options: { readonly serverInfo?: Record<string, unknown>; readonly instructions?: string } = {},
+): boolean => {
+  const normalized = normalizeToolSchemas(message);
+  const narrowed = narrowRefSchemas(message);
+  const decorated = decorateInitialize(message, options);
+  return normalized || narrowed || decorated;
+};
+
+const resultOf = (message: unknown): Record<string, any> | undefined => {
+  const result = (message as Record<string, any>)?.result;
+  return result != null && typeof result === 'object' ? result : undefined;
+};
+
+const toolsOf = (message: unknown): Array<Record<string, any>> => {
+  const tools = resultOf(message)?.tools;
+  return Array.isArray(tools) ? tools : [];
+};
+
+/**
+ * Whether this JSON Schema node is exactly the shape `tolerateStringifiedRefs` produces: a bare
+ * `anyOf` of the real (object) schema alongside a JSON-encoded-string fallback, with no top-level
+ * `type` for a client that reads that keyword without evaluating every branch.
+ */
+const findAmbiguousObjectBranch = (node: Record<string, unknown>): Record<string, unknown> | undefined => {
+  if (node.type != null || !Array.isArray(node.anyOf)) {
+    return undefined;
+  }
+  const objectBranches = node.anyOf.filter(
+    (branch: unknown) =>
+      branch != null &&
+      typeof branch === 'object' &&
+      (branch as Record<string, unknown>).type === 'object' &&
+      (branch as Record<string, unknown>).properties != null,
+  );
+  return objectBranches.length === 1 ? (objectBranches[0] as Record<string, unknown>) : undefined;
+};
+
+const resolveAmbiguousAnyOf = (node: unknown, seen: Set<unknown>): boolean => {
+  if (node == null || typeof node !== 'object' || seen.has(node)) {
+    return false;
+  }
+  seen.add(node);
+  const record = node as Record<string, unknown>;
+
+  const objectBranch = findAmbiguousObjectBranch(record);
+  let changed = false;
+  if (objectBranch != null) {
+    delete record.anyOf;
+    Object.assign(record, objectBranch);
+    changed = true;
+  }
+  if (record.properties != null && typeof record.properties === 'object') {
+    for (const property of Object.values(record.properties as Record<string, unknown>)) {
+      changed = resolveAmbiguousAnyOf(property, seen) || changed;
+    }
+  }
+  if (record.items != null) {
+    changed = resolveAmbiguousAnyOf(record.items, seen) || changed;
+  }
+  for (const composition of [record.allOf, record.anyOf, record.oneOf]) {
+    if (Array.isArray(composition)) {
+      for (const branch of composition) {
+        changed = resolveAmbiguousAnyOf(branch, seen) || changed;
+      }
+    }
+  }
+  return changed;
+};

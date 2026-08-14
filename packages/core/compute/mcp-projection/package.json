@@ -1,0 +1,40 @@
+{
+  "name": "@dxos/mcp-projection",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Projection of the operation registry onto an MCP tool and prompt surface.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/compute": "workspace:*",
+    "@dxos/effect": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {}
+}
