@@ -484,8 +484,9 @@ and deletion guards". Supersedes M5's parent-edge containment; un-defers M5's `M
 
 ### Phase 4 — routine staleness
 
-- [ ] **`Trigger.disabledReason?`** — structured `{ kind: 'stale-dependency' | 'failure' | 'user',
-    ref?, at }` beside `enabled`; distinct from the transient failure cooldown.
+- [ ] **`Trigger.disabledReason?`** — structured reason beside `enabled` — kind
+      (`'stale-dependency' | 'failure' | 'user'`) plus optional offending `ref` and `at`;
+      distinct from the transient failure cooldown.
 - [ ] **Dispatcher pre-flight** — resolve source refs (spec.feed / cursor target / subscription
       scope) before fire; tombstoned ⇒ persist disable + reason (lazy disable is accepted — no
       deletion watcher).
@@ -498,8 +499,8 @@ and deletion guards". Supersedes M5's parent-edge containment; un-defers M5's `M
 ### Phase 5 — deletion guards (generic; motivated here, home is app-framework/plugin-space)
 
 - [ ] **Guard capability + contract** — `{ appliesTo, check(objects) => GuardVerdict[] }`;
-      `GuardVerdict = { severity: warn|block, message, subjects?, alternative?: { label, operation,
-    input } }` (max one alternative); batch semantics (full deletion set, one card).
+      verdict = severity (`warn | block`), message, optional subjects, and at most one
+      `alternative: { label, operation, input }`; batch semantics (full deletion set, one card).
 - [ ] **Delete-flow integration** — no verdicts ⇒ today's frictionless path; card composes all
       verdicts, Continue iff no block; alternative = run operation → re-run guards → complete the
       delete automatically (re-check authorizes, not the click).
