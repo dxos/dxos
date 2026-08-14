@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { TranscriptionCapabilities } from '#types';
@@ -31,6 +32,7 @@ export default Capability.makeModule(
       const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
       const transcriptionManager = new TranscriptionManagerImpl({
         edgeClient: client.edge.http,
+        transcriptionEndpoint: getEdgeServiceEndpoint(client.config, EdgeServiceName.Transcription),
         messageEnricher,
         registry,
       });

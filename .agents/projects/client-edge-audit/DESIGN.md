@@ -116,13 +116,13 @@ connections). Inventory:
 **Boot-time dials that are NOT edge-gated (observability; fire in Composer
 before/around `Client.initialize()`, main thread + dedicated worker):**
 
-| Site | Endpoint | Gate | Issue |
-| --- | --- | --- | --- |
-| [ip-data.ts:59](packages/sdk/observability/src/providers/ip-data.ts) | `https://api.ipdata.co` | `DX_IPDATA_API_KEY` present | **Runs before/independent of the `disabled` check**; `log.warn` at every boot when the key is absent — a spurious offline warning |
-| [posthog/extension.ts:103](packages/sdk/observability/src/extensions/posthog/extension.ts) | `DX_POSTHOG_API_HOST` (`/flags` + `/e` on init) | apiKey + host present | `initialize()` has no `disabled` check; composer's `POSTHOG_DISABLED_CONFIG` only suppresses autocapture |
-| [otel/metrics.ts:25](packages/sdk/observability/src/extensions/otel/metrics.ts) | `${DX_OTEL_ENDPOINT}/v1/metrics` every 60s | endpoint + `metrics: true` | **Exporter starts in the constructor, bypassing `if (disabled)` in `extension.ts:154`** |
-| otel traces/logs | `${DX_OTEL_ENDPOINT}/v1/{traces,logs}` | endpoint + `!disabled` | correctly gated |
-| [plugin-manifest.ts:115](packages/sdk/app-framework/src/core/plugin-manifest.ts) | persisted remote-plugin URLs | localStorage entries (empty by default) | fine |
+| Site                                                                                       | Endpoint                                        | Gate                                    | Issue                                                                                                                             |
+| ------------------------------------------------------------------------------------------ | ----------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| [ip-data.ts:59](packages/sdk/observability/src/providers/ip-data.ts)                       | `https://api.ipdata.co`                         | `DX_IPDATA_API_KEY` present             | **Runs before/independent of the `disabled` check**; `log.warn` at every boot when the key is absent — a spurious offline warning |
+| [posthog/extension.ts:103](packages/sdk/observability/src/extensions/posthog/extension.ts) | `DX_POSTHOG_API_HOST` (`/flags` + `/e` on init) | apiKey + host present                   | `initialize()` has no `disabled` check; composer's `POSTHOG_DISABLED_CONFIG` only suppresses autocapture                          |
+| [otel/metrics.ts:25](packages/sdk/observability/src/extensions/otel/metrics.ts)            | `${DX_OTEL_ENDPOINT}/v1/metrics` every 60s      | endpoint + `metrics: true`              | **Exporter starts in the constructor, bypassing `if (disabled)` in `extension.ts:154`**                                           |
+| otel traces/logs                                                                           | `${DX_OTEL_ENDPOINT}/v1/{traces,logs}`          | endpoint + `!disabled`                  | correctly gated                                                                                                                   |
+| [plugin-manifest.ts:115](packages/sdk/app-framework/src/core/plugin-manifest.ts)           | persisted remote-plugin URLs                    | localStorage entries (empty by default) | fine                                                                                                                              |
 
 PR #12585 context: it defers only the edge dial (worker sets `autoConnect:
 false`, dials 300ms post-boot); `fromHost`/CLI/Node still dial on stack open
@@ -158,14 +158,14 @@ backend, plugin-client hub client).
 
 **Defaults that violate goal 3 (SDK code):**
 
-| Site | Default | Severity |
-| --- | --- | --- |
-| [config-service.ts:30](packages/sdk/config/src/config-service.ts) `defaultConfig` | `edge.url: wss://dxos.network/` + ICE + IPFS; `ConfigService.load()` **writes it to `~/.config/dx/profile/<name>.yml`** on first run | High — materializes production edge without consent (CLI path) |
-| [edge-services.ts:27](packages/sdk/config/src/edge-services.ts) `EDGE_SERVICE_DEFAULTS` | 6 production endpoints (calls, transcription, image, discord, cors-proxy, introspect); `getEdgeServiceEndpoint` returns `config ?? DEFAULT` typed `string` — absence is unrepresentable | High — 7 consumers silently inherit production |
-| [preset.ts:41](packages/sdk/config/src/preset.ts) `configPreset` | zero-arg default `edge = 'main'` → `https://main.dxos.network` | Medium — exported SDK API; current consumers are tests/e2e |
-| [config-service.ts:17](packages/sdk/config/src/config-service.ts) `memoryConfig` | all 4 `edgeFeatures: true` with no URL | Low — flags without endpoint |
-| Loose fallbacks | CLI hub `?? 'https://hub.dxos.network'` (×2), [devtools.ts:224](packages/sdk/client/src/devtools/devtools.ts) `?? 'https://halo.dxos.org'`, GptRealtime + plugin-wnfs `?? 'http://localhost:8787'`, plugin-script `?? ''` (×3, masks absence) | Medium |
-| Standalone literals | [cors-proxy.ts:9](packages/core/mesh/edge-client/src/cors-proxy.ts) `https://cors.dxos.network`; [service/Image.ts:22](packages/core/mesh/edge-client/src/service/Image.ts) image-service default; plugin-video transcription endpoint; plugin-code introspect MCP; deprecated `DEFAULT_VAULT_URL` (no readers); assistant-toolkit discord/browser skill URLs | Medium — feature-time, not boot |
+| Site                                                                                    | Default                                                                                                                                                                                                                                                                                                                                                       | Severity                                                       |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| [config-service.ts:30](packages/sdk/config/src/config-service.ts) `defaultConfig`       | `edge.url: wss://dxos.network/` + ICE + IPFS; `ConfigService.load()` **writes it to `~/.config/dx/profile/<name>.yml`** on first run                                                                                                                                                                                                                          | High — materializes production edge without consent (CLI path) |
+| [edge-services.ts:27](packages/sdk/config/src/edge-services.ts) `EDGE_SERVICE_DEFAULTS` | 6 production endpoints (calls, transcription, image, discord, cors-proxy, introspect); `getEdgeServiceEndpoint` returns `config ?? DEFAULT` typed `string` — absence is unrepresentable                                                                                                                                                                       | High — 7 consumers silently inherit production                 |
+| [preset.ts:41](packages/sdk/config/src/preset.ts) `configPreset`                        | zero-arg default `edge = 'main'` → `https://main.dxos.network`                                                                                                                                                                                                                                                                                                | Medium — exported SDK API; current consumers are tests/e2e     |
+| [config-service.ts:17](packages/sdk/config/src/config-service.ts) `memoryConfig`        | all 4 `edgeFeatures: true` with no URL                                                                                                                                                                                                                                                                                                                        | Low — flags without endpoint                                   |
+| Loose fallbacks                                                                         | CLI hub `?? 'https://hub.dxos.network'` (×2), [devtools.ts:224](packages/sdk/client/src/devtools/devtools.ts) `?? 'https://halo.dxos.org'`, GptRealtime + plugin-wnfs `?? 'http://localhost:8787'`, plugin-script `?? ''` (×3, masks absence)                                                                                                                 | Medium                                                         |
+| Standalone literals                                                                     | [cors-proxy.ts:9](packages/core/mesh/edge-client/src/cors-proxy.ts) `https://cors.dxos.network`; [service/Image.ts:22](packages/core/mesh/edge-client/src/service/Image.ts) image-service default; plugin-video transcription endpoint; plugin-code introspect MCP; deprecated `DEFAULT_VAULT_URL` (no readers); assistant-toolkit discord/browser skill URLs | Medium — feature-time, not boot                                |
 
 **Not violations (bundled config is clean):** `@dxos/config` ships no
 defaults.yml/envs-map.yml; browser `Defaults()`/`Envs()`/`Local()` read
@@ -180,4 +180,26 @@ which Composer reads first — an invisible override channel, not a default.
 
 ## Decisions
 
-_None yet._
+1. **Absent edge config is silent and clean at boot.** No warnings, no errors,
+   no network. Edge-dependent features fail at **use** time with a clear,
+   named-config-path error (invariant / typed `Error` / `Effect.fail`), or
+   render an explicit "not configured" state for UI surfaces. Boot-reachable
+   paths never throw and never warn.
+2. **`@dxos/config` ships zero endpoints.** `defaultConfig` carries features +
+   storage only (the CLI's first-run profile is endpoint-free); `configPreset`
+   emits a service section only for environments the caller names
+   (omit-when-unset, no implicit `main`); `EDGE_SERVICE_DEFAULTS` is deleted and
+   `getEdgeServiceEndpoint` returns `string | undefined` so absence is
+   representable. Pinned by `no-default-endpoints.test.ts`.
+3. **Apps opt in via their own dx.yml** — that is the acceptable channel for
+   production endpoints (composer-app now also carries `introspect`). App
+   config ≠ SDK default.
+4. **Test-only literals are acceptable** (mock base URLs, the env-gated
+   image-service e2e that deliberately targets the production worker).
+5. **Offline invariant is pinned by a test** —
+   `packages/sdk/client/src/client/client-offline.test.ts` boots a client on an
+   empty `Config`, round-trips the database, and asserts zero network calls
+   (fetch/WebSocket/isomorphic-ws intercepted) and zero WARN+ log entries.
+6. **Explicit CLI choices stay** — `dx profile create` environment templates
+   and `--host` option defaults are user-invoked selections, not silent
+   fallbacks; they are documented in TASKS.md Phase 4 for visibility only.

@@ -12,15 +12,15 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 import path from 'node:path';
 
 import { CommandConfig } from '@dxos/cli-util';
-import { ConfigService } from '@dxos/client';
 import { withRetry } from '@dxos/edge-client';
+
+import { hubBaseUrl } from '../../util';
 
 export const list = Command.make(
   'list',
   {},
   Effect.fn(function* () {
-    const config = yield* ConfigService;
-    const baseUrl = config.values?.runtime?.services?.hub?.url ?? 'https://hub.dxos.network';
+    const baseUrl = yield* hubBaseUrl;
     const url = path.join(baseUrl, '/api/waitlist');
     if (yield* CommandConfig.isVerbose) {
       yield* Effect.log(`Calling: ${url}`);

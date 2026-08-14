@@ -40,6 +40,12 @@ export type TranscriptionManagerOptions = {
   registry: Registry.AtomRegistry;
 
   /**
+   * Transcription service base URL (`runtime.services.edgeServices: transcription`).
+   * Transcription fails with a clear error when absent — there is no built-in endpoint.
+   */
+  transcriptionEndpoint?: string;
+
+  /**
    * Enrich the message before it is written to the transcription feed.
    */
   messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
@@ -52,6 +58,7 @@ export type TranscriptionManagerOptions = {
  */
 export class TranscriptionManagerImpl extends Resource implements TranscriptionCapabilities.TranscriptionManager {
   private readonly _edgeClient: EdgeHttpClient;
+  private readonly _transcriptionEndpoint?: string;
   private readonly _messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
   private readonly _registry: Registry.AtomRegistry;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
@@ -65,6 +72,7 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
   constructor(options: TranscriptionManagerOptions) {
     super();
     this._edgeClient = options.edgeClient;
+    this._transcriptionEndpoint = options.transcriptionEndpoint;
     this._messageEnricher = options.messageEnricher;
     this._registry = options.registry;
   }
@@ -154,6 +162,7 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
         config: {
           transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
           prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
+          endpoint: this._transcriptionEndpoint,
         },
         recorder: this._mediaRecorder,
         onSegments: (segments) => this._onSegments(segments),

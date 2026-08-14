@@ -5,7 +5,6 @@
 import { WaveFile } from 'wavefile';
 
 import { DeferredTask, Trigger, synchronized } from '@dxos/async';
-import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
@@ -62,8 +61,8 @@ export type TranscribeConfig = {
   prefixBufferChunksAmount: number;
 
   /**
-   * Override the transcription endpoint base URL.
-   * Defaults to the DXOS calls service.
+   * Transcription endpoint base URL (`runtime.services.edgeServices: transcription`).
+   * Required for the built-in HTTP transport; only optional when a `transcribe` fn is provided.
    */
   endpoint?: string;
 };
@@ -242,7 +241,10 @@ export class Transcriber extends Resource {
       segments = await this._transcribeFn(audio);
     } else {
       // TODO(burdon): Create separate endpoint?
-      const endpoint = this._config.endpoint ?? EDGE_SERVICE_DEFAULTS[EdgeServiceName.Transcription];
+      const endpoint = this._config.endpoint;
+      if (!endpoint) {
+        throw new Error('Transcription endpoint is not configured (runtime.services.edgeServices: transcription).');
+      }
       this._transcribeAbort = new AbortController();
       let response: Response;
       try {

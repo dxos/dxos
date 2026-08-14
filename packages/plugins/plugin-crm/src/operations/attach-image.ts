@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy';
 import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
@@ -13,14 +12,6 @@ import { log } from '@dxos/log';
 import { Organization, Person } from '@dxos/types';
 
 import { CrmOperation } from '#types';
-
-/**
- * Default image service base URL. Overridable per-invocation via the
- * `imageServiceUrl` input, or in the runtime environment via the
- * `DX_CRM_IMAGE_SERVICE_URL` environment variable. A per-space
- * `CrmSettings` object is planned (see PLUGIN.mdl feature F-8).
- */
-const DEFAULT_IMAGE_SERVICE_URL = EDGE_SERVICE_DEFAULTS[EdgeServiceName.Image];
 
 // SVG is intentionally excluded: inline <script>/event handlers make it a
 // stored-XSS risk for any downstream surface that renders the image via
@@ -131,12 +122,14 @@ const filenameFromUrl = (url: string): string => {
   return 'image.jpg';
 };
 
-const getImageServiceUrl = (override?: string): string => {
+// No built-in endpoint: comes from the `imageServiceUrl` input or the `DX_CRM_IMAGE_SERVICE_URL`
+// env var; a per-space `CrmSettings` object is planned (see PLUGIN.mdl feature F-8).
+const getImageServiceUrl = (override?: string): string | undefined => {
   if (override && override.length > 0) {
     return override;
   }
   const fromEnv = typeof process !== 'undefined' && process.env ? process.env.DX_CRM_IMAGE_SERVICE_URL : undefined;
-  return fromEnv && fromEnv.length > 0 ? fromEnv : DEFAULT_IMAGE_SERVICE_URL;
+  return fromEnv && fromEnv.length > 0 ? fromEnv : undefined;
 };
 
 /**
@@ -186,6 +179,11 @@ export const attachImageToSubject = ({
 }): Effect.Effect<string, Error> =>
   Effect.gen(function* () {
     const serviceUrl = getImageServiceUrl(imageServiceUrl);
+    if (!serviceUrl) {
+      return yield* Effect.fail(
+        new Error('Image service endpoint is not configured (imageServiceUrl input or DX_CRM_IMAGE_SERVICE_URL).'),
+      );
+    }
 
     const validatedSource = yield* Effect.try({
       try: () => validateExternalUrl(url),

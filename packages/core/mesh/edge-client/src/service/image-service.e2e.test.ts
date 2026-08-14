@@ -9,9 +9,9 @@ import { EffectEx } from '@dxos/effect';
 import { EdgeServiceClient } from './edge-service';
 import * as Image from './Image';
 
-// Live end-to-end checks against the shared Composer image service (the Cloudflare
-// Worker at DEFAULT_IMAGE_SERVICE_URL). These hit the public network, so they are
-// gated behind DX_RUN_IMAGE_SERVICE_E2E and skipped in CI by default.
+// Live end-to-end checks against the shared Composer image service (the production
+// Cloudflare Worker). These hit the public network, so they are gated behind
+// DX_RUN_IMAGE_SERVICE_E2E and skipped in CI by default.
 //
 //   DX_RUN_IMAGE_SERVICE_E2E=1 moon run edge-client:test -- image-service.e2e.test.ts
 //
@@ -19,7 +19,7 @@ import * as Image from './Image';
 
 // Require an explicit opt-in value so `DX_RUN_IMAGE_SERVICE_E2E=0` doesn't run live tests.
 const ENABLED = /^(1|true)$/i.test(process.env.DX_RUN_IMAGE_SERVICE_E2E ?? '');
-const SERVICE_URL = process.env.DX_IMAGE_SERVICE_URL ?? Image.DEFAULT_IMAGE_SERVICE_URL;
+const SERVICE_URL = process.env.DX_IMAGE_SERVICE_URL ?? 'https://image-service-main.dxos.workers.dev';
 
 // 32x32 RGB gradient PNG. The worker decodes + resizes the upload, so it rejects
 // degenerate inputs (a 1x1 PNG yields a 422); a real raster of modest dimensions

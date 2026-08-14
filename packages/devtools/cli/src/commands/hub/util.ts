@@ -17,9 +17,13 @@ import { type EdgeEnvelope } from '@dxos/protocols';
 
 export class HubApiError extends BaseError.extend('HubApiError', 'Hub API error') {}
 
-const hubBaseUrl = Effect.gen(function* () {
+export const hubBaseUrl = Effect.gen(function* () {
   const config = yield* ConfigService;
-  return config.values?.runtime?.services?.hub?.url ?? 'https://hub.dxos.network';
+  const url = config.values?.runtime?.services?.hub?.url;
+  if (!url) {
+    return yield* Effect.fail(new HubApiError({ message: 'Hub URL is not configured (runtime.services.hub.url).' }));
+  }
+  return url;
 });
 
 /**

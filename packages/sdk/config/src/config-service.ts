@@ -27,6 +27,8 @@ export const memoryConfig = new Config({
   },
 });
 
+// Deliberately endpoint-free: `ConfigService.load` materializes this to disk on first run, and an
+// absent `runtime.services` must mean "no edge" rather than a silently-defaulted production endpoint.
 export const defaultConfig = new Config({
   runtime: {
     client: {
@@ -38,20 +40,6 @@ export const defaultConfig = new Config({
       },
       storage: {
         persistent: true,
-      },
-    },
-    services: {
-      edge: {
-        url: 'wss://dxos.network/',
-      },
-      iceProviders: [
-        {
-          urls: 'https://dxos.network/ice',
-        },
-      ],
-      ipfs: {
-        server: 'https://api.ipfs.dxos.network/api/v0',
-        gateway: 'https://gateway.ipfs.dxos.network/ipfs',
       },
     },
   },
