@@ -26,9 +26,13 @@ describe('SchemaList', () => {
         const schemas = yield* Operation.invoke(SchemaList, {});
 
         const rows = yield* Schema.decodeUnknownEffect(
-          Schema.Array(Schema.Struct({ typename: Schema.String, kind: Schema.String, fields: Schema.Array(Schema.String) })),
+          Schema.Array(
+            Schema.Struct({ typename: Schema.String, kind: Schema.String, fields: Schema.Array(Schema.String) }),
+          ),
         )(schemas);
         const typenames = rows.map((row) => row.typename);
+        const person = rows.find((row) => row.typename === Type.getTypename(Person.Person));
+        expect(person?.fields).toContain('fullName');
         expect(typenames).toContain(Type.getTypename(Organization.Organization));
         expect(typenames).toContain(Type.getTypename(Person.Person));
         // Skill and Feed are on the handler's exclusion list, which keeps them out of the agent's context.
