@@ -48,20 +48,20 @@ watermark and silently skip each other's work.
 **Processor** is the contributed id; `—` means the pipeline is not a contributed processor. `⋈` is a
 stream merge, `»` a `Stream.grouped` page, and the last element of each chain is the sink.
 
-| Pipeline (owner)                | Processor       | Tier          | Cost               | Cursor                   | Stages                                                                                                                       |
-| ------------------------------- | --------------- | ------------- | ------------------ | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| `GoogleMailSync` (google)       | —               | sync          | none               | `Cursor.ExternalCursor`  | `dedup` → bound → `decode` ⋈ `reconcile` → attachments → contacts → drafts → `collect-stats` → commit-unit » `Cursor.commit` |
-| `JmapSync` (jmap)               | —               | sync          | none               | `Cursor.ExternalCursor`  | same harness (`sync/mail-sync.ts`)                                                                                           |
-| `ExtractCorrespondents` (inbox) | `contacts`      | deterministic | none               | none — identity index    | `build-contact` ⇒ add Organization / Person                                                                                  |
-| `ExtractSubscriptions` (inbox)  | `subscriptions` | deterministic | none               | none — replaces state    | `extract-unsubscribe` » 50 ⇒ aggregate per sender                                                                            |
-| `ClassifyMailbox` (inbox)       | `classify`      | classify      | cheap LLM, ≤100    | tagged `classifyMailbox` | » page → `classify` ⇒ advance per LLM page                                                                                   |
-| `ProcessMailbox` (crm)          | `crm`           | classify      | LLM (optional)     | tagged                   | none — plain paged loop                                                                                                      |
-| `SummarizeMailbox` (inbox)      | `summarize`     | summarize     | 1 call/msg, ≤50    | none — newest thread id  | none — loop over threads                                                                                                     |
-| `AnalyzeMailbox` (brain)        | `analyze`       | analyze       | 1 call/msg, no cap | tagged `analyzeMailbox`  | `facts-dedup` → `extract-facts-unit` → `facts-log` » page ⇒ `putFacts` + advance                                             |
-| `UpdateProjectTasks` (projects) | —               | —             | none               | none — whole feed        | none — filter + regenerate                                                                                                   |
-| `UpdateTravelLog` (projects)    | —               | —             | none               | none — whole feed        | none — filter + regenerate                                                                                                   |
-| `UpdateInvestorLog` (projects)  | —               | —             | LLM                | none — whole feed        | none — filter + regenerate                                                                                                   |
-| `ExtractMailbox` (inbox)        | —               | —             | LLM                | none                     | none — `@deprecated`                                                                                                         |
+| Plugin          | Operation               | Processor       | Tier          | Cost               | Cursor                   | Stages                                                                                                                       |
+| --------------- | ----------------------- | --------------- | ------------- | ------------------ | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| plugin-google   | `GoogleMailSync`        | —               | sync          | none               | `Cursor.ExternalCursor`  | `dedup` → bound → `decode` ⋈ `reconcile` → attachments → contacts → drafts → `collect-stats` → commit-unit » `Cursor.commit` |
+| plugin-jmap     | `JmapSync`              | —               | sync          | none               | `Cursor.ExternalCursor`  | same harness (`sync/mail-sync.ts`)                                                                                           |
+| plugin-inbox    | `ExtractCorrespondents` | `contacts`      | deterministic | none               | none — identity index    | `build-contact` ⇒ add Organization / Person                                                                                  |
+| plugin-inbox    | `ExtractSubscriptions`  | `subscriptions` | deterministic | none               | none — replaces state    | `extract-unsubscribe` » 50 ⇒ aggregate per sender                                                                            |
+| plugin-inbox    | `ClassifyMailbox`       | `classify`      | classify      | cheap LLM, ≤100    | tagged `classifyMailbox` | » page → `classify` ⇒ advance per LLM page                                                                                   |
+| plugin-crm      | `ProcessMailbox`        | `crm`           | classify      | LLM (optional)     | tagged                   | none — plain paged loop                                                                                                      |
+| plugin-inbox    | `SummarizeMailbox`      | `summarize`     | summarize     | 1 call/msg, ≤50    | none — newest thread id  | none — loop over threads                                                                                                     |
+| plugin-brain    | `AnalyzeMailbox`        | `analyze`       | analyze       | 1 call/msg, no cap | tagged `analyzeMailbox`  | `facts-dedup` → `extract-facts-unit` → `facts-log` » page ⇒ `putFacts` + advance                                             |
+| plugin-projects | `UpdateProjectTasks`    | —               | —             | none               | none — whole feed        | none — filter + regenerate                                                                                                   |
+| plugin-projects | `UpdateTravelLog`       | —               | —             | none               | none — whole feed        | none — filter + regenerate                                                                                                   |
+| plugin-projects | `UpdateInvestorLog`     | —               | —             | LLM                | none — whole feed        | none — filter + regenerate                                                                                                   |
+| plugin-inbox    | `ExtractMailbox`        | —               | —             | LLM                | none                     | none — `@deprecated`                                                                                                         |
 
 Everything with a processor id runs from the Scan cascade. The sync pair runs from the Sync toolbar
 action or a routine; `AnalyzeMailbox` is also reachable from brain's "Mailbox Facts" routine; the
@@ -157,9 +157,21 @@ Both moves changed a released DXN, so routines bound to the old keys are orphane
 deliberately, pre-1.0. Note the changesets are `minor`, not `major`: at 0.x a breaking change rides
 the minor, and `major` would cut 1.0.0 across the whole fixed publish group.
 
-**D6 — Generalize off `Mailbox`.** NOT BUILT. The abstraction is "a durable feed plus N
-independently-cursored consumers contributed by plugins"; nothing in it is mail-specific. Candidates:
-the projects trio, transcription, and the commented-out on-arrival extraction.
+**D6 — Generalize off `Mailbox`.** NOT BUILT, and weaker than first written. The abstraction is "a
+durable feed plus N independently-cursored consumers contributed by plugins", and the parts that
+matter are already generic: `topology.ts` knows only `{id, after}`, `precondition.ts` knows only
+`Cause`s, and a feed cursor's `target` is already an untyped association anchor. What is mailbox-typed
+is the `MailboxProcessor` subject and `tier`, `ScanMailbox`'s input and progress key, and
+`findOrCreateFeedCursor`, which takes a `Mailbox` only to read `mailbox.feed`. The open question is
+what replaces the subject: a structural `{ feed: Ref<Feed> }`, a `FeedOwner` annotation, or passing
+the `Feed` and letting each processor resolve its own.
+
+CORRECTION: the plugin-projects trio was cited here as the second instance. It is not — all three read
+`mailbox.feed`, so they need no generalization and could be contributed as `MailboxProcessor`s today.
+That is the cheaper move hiding behind D6: it puts them in the DAG and gives three of the seven
+cursorless consumers a cursor. The only genuine second instance is transcription, which owns its own
+`Feed` — but its `messageEnricher` runs BEFORE a message is written, a write-time seam closer to
+sync's inline stages than to a cursored read-time pass, so it may want the other half's shape.
 
 ## Fixed along the way
 

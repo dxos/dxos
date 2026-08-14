@@ -464,13 +464,19 @@ generalize now with mailbox as instance #1.
       built: `continueOnError` still aborts in LIST order, so a failing `classify` strands whatever
       happens to sit behind it even when nothing connects them. Intended: a failed processor fails its
       descendants, independent branches continue.
-- [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6). Second instance already exists
-      (plugin-projects' three whole-feed pipelines); transcription is a third. FOURTH candidate found
-      while documenting the stages: `onArrivalExtractors` is commented OUT of the sync chain because it
-      reaches `Capability.Service` and invokes `ExtractMessage`, neither available off-host under edge
-      compute — moving it to a processor that runs where those services exist is exactly this work.
-      NOTE before assuming a shared substrate: only 4 of the 12 pipelines have an internal
-      `@dxos/pipeline` chain at all; the other 8 are plain loops.
+- [ ] **Contribute the plugin-projects trio as `MailboxProcessor`s** — cheaper than D6 and was hiding
+      behind it. `UpdateProjectTasks`, `UpdateTravelLog` and `UpdateInvestorLog` all read
+      `mailbox.feed`, so they need NO generalization; contributing them puts them in the DAG and gives
+      three of the seven cursorless consumers a cursor. Do this before D6.
+- [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6) — WEAKER than first written.
+      The parts that matter are already generic (`topology.ts` knows only `{id, after}`,
+      `precondition.ts` only `Cause`s, a feed cursor's `target` is already untyped). Mailbox-typed:
+      the `MailboxProcessor` subject and `tier`, `ScanMailbox`'s input and progress key, and
+      `findOrCreateFeedCursor` (takes a `Mailbox` only to read `mailbox.feed`). Open question is what
+      replaces the subject — structural `{ feed: Ref<Feed> }`, a `FeedOwner` annotation, or passing the
+      `Feed`. CORRECTION: the projects trio was cited as the second instance and is not (see above);
+      the only genuine one is transcription, whose `messageEnricher` is a WRITE-time seam closer to
+      sync's inline stages than to a cursored read-time pass — so it may want the other half's shape.
 - [ ] **Retire `ExtractMailbox` once on-arrival extraction is restored** — it is `@deprecated`, but
       still LIVE: `MailboxArticle.tsx:584` → `useMailboxExtractorActions` renders a menu item per
       registered `ObjectExtractor` and invokes it, and two extractors ship. Its stated successor
