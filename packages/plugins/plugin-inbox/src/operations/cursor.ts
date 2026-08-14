@@ -5,10 +5,19 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
+import { getFeedRef } from '@dxos/schema';
 
 import { meta } from '#meta';
 import { Mailbox } from '#types';
+
+/**
+ * Any object whose schema carries `FeedAnnotation`. The feed is resolved through the property the
+ * annotation names, never by reading `.feed`, so these helpers work for a Calendar or a magazine
+ * Subscription as readily as for a Mailbox.
+ */
+export type FeedOwner = Obj.Any;
 
 /** Foreign-key tag isolating this plugin's cursors from other feed consumers (DXN-conformant). */
 export const FEED_CURSOR_KEY_SOURCE = meta.profile.key;
@@ -20,11 +29,15 @@ const isConsumerCursor = (cursor: Cursor.Cursor, feedUri: string, id: string): b
   cursor.spec.source.uri === feedUri &&
   Obj.getKeys(cursor, FEED_CURSOR_KEY_SOURCE).some((key) => key.id === id);
 
-/** Finds the persisted cursor tagged for the given consumer id on this mailbox's feed, if any. */
-export const findFeedCursor = (mailbox: Mailbox.Mailbox, id: string) =>
+/** Finds the persisted cursor tagged for the given consumer id on this owner's feed, if any. */
+export const findFeedCursor = (owner: FeedOwner, id: string) =>
   Effect.gen(function* () {
+    const feed = getFeedRef(owner);
+    if (!feed) {
+      return undefined;
+    }
     const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
-    return cursors.find((cursor) => isConsumerCursor(cursor, mailbox.feed.uri, id));
+    return cursors.find((cursor) => isConsumerCursor(cursor, feed.uri, id));
   });
 
 /**
@@ -35,15 +48,19 @@ export const findFeedCursor = (mailbox: Mailbox.Mailbox, id: string) =>
  * `id` is required: it used to default to the process pipeline's tag, which meant a caller that forgot
  * to pass one silently shared that pipeline's cursor.
  */
-export const findOrCreateFeedCursor = (mailbox: Mailbox.Mailbox, id: string) =>
+export const findOrCreateFeedCursor = (owner: FeedOwner, id: string) =>
   Effect.gen(function* () {
-    const existing = yield* findFeedCursor(mailbox, id);
+    const existing = yield* findFeedCursor(owner, id);
     if (existing) {
       return existing;
     }
+    const feed = getFeedRef(owner);
+    // A caller reaching here with no feed means the subject's schema is missing `FeedAnnotation` (or
+    // names a property that holds no ref) — a schema defect, not a runtime condition to recover from.
+    invariant(feed, 'feed owner has no resolvable feed reference');
     return yield* Database.add(
       Cursor.make({
-        spec: { kind: 'feed', source: mailbox.feed, target: Ref.make(mailbox) },
+        spec: { kind: 'feed', source: feed, target: Ref.make(owner) },
         [Obj.Meta]: { keys: [{ source: FEED_CURSOR_KEY_SOURCE, id }] },
       }),
     );

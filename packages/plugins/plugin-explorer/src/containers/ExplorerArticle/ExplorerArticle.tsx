@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Filter, Obj, type View } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
 import { useObject } from '@dxos/echo-react';
 import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
@@ -27,12 +26,9 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
   const db = view && Obj.getDatabase(view);
   const model = useGraphModel(db, filter);
 
-  const builder = useMemo(() => new QueryBuilder(), []);
-  const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
-    (value) => {
-      setFilter(builder.build(value).filter);
-    },
-    [builder],
+  const handleFilterChange = useCallback<NonNullable<QueryEditorProps['onFilterChange']>>(
+    ({ filter }) => setFilter(filter),
+    [],
   );
 
   const [selected, setSelected] = useState<ExplorerArticleVariant>(isVariant(variant) ? variant : 'force');
@@ -93,7 +89,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
       {showToolbar && (
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <QueryEditor db={db} onChange={handleChange} />
+            <QueryEditor db={db} onFilterChange={handleFilterChange} />
             <Toolbar.ToggleGroup type='single' value={selected} onValueChange={handleVariantChange}>
               {VARIANTS.map(({ value, icon, label }) => (
                 <Toolbar.ToggleGroupItem key={value} value={value} aria-label={label} title={label}>

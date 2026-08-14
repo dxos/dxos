@@ -10005,9 +10005,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-query':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-query
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
