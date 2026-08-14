@@ -57,22 +57,22 @@ const storyGraphBuilders = () =>
   Effect.runSync(
     Effect.all([
       GraphBuilder.createExtension({
-        id: 'story-record-actions',
+        id: 'storyRecordActions',
         match: (node) =>
           Obj.instanceOf(Organization.Organization, node.data) ? Option.some(node.data) : Option.none(),
         actions: () =>
           Effect.succeed([
             {
-              id: 'story-enrich',
+              id: 'storyResearch',
               data: Effect.fnUntraced(function* () {
                 log.info('enrich invoked');
               }),
               properties: {
-                label: 'Enrich',
+                label: 'Research',
                 icon: 'ph--sparkle--regular',
                 disposition: ['toolbar', 'list-item'],
                 presentation: { toolbar: { variant: 'primary', iconOnly: false } },
-                testId: 'story.record.enrich',
+                testId: 'story.record.research',
               },
             },
           ]),
