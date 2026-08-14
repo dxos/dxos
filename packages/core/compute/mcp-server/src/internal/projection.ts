@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as SchemaGetter from 'effect/SchemaGetter';
@@ -12,7 +10,7 @@ import * as SchemaIssue from 'effect/SchemaIssue';
 import { JsonSchema } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import type * as Gateway from './Gateway';
+import type * as Gateway from '../Gateway';
 
 /**
  * Annotation id under which `Operation.mcpTool` persists the projection descriptor.

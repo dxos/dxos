@@ -18,7 +18,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Obj } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Gateway, GatewayError, errorMessage } from '@dxos/mcp-server';
+import { Gateway } from '@dxos/mcp-server';
 // Narrow subpath imports: these plugins declare React surfaces, and a bundler follows the dynamic
 // import behind a lazy capability, so activating them would pull React into the CLI binary.
 import { ProjectOperationHandlerSet } from '@dxos/plugin-projects/operations';
@@ -127,11 +127,11 @@ type InvocationContext = {
 const invoke = (
   { handlerSet, handlers, ambient }: InvocationContext,
   { key, input, spaceId }: Gateway.InvokeRequest,
-): Effect.Effect<unknown, GatewayError> =>
+): Effect.Effect<unknown, Gateway.Error> =>
   Effect.gen(function* () {
     const handler = handlers.find((candidate) => normalizeKey(String(candidate.meta.key)) === normalizeKey(key));
     if (!handler) {
-      return yield* Effect.fail(new GatewayError({ message: `Operation not found: ${key}` }));
+      return yield* Effect.fail(Gateway.error(`Operation not found: ${key}`));
     }
 
     const operations = yield* Operation.Service;
@@ -147,7 +147,7 @@ const invoke = (
       chatLayer({ provider: 'edge', spaceId: spaceIdOption(spaceId), functions: handlerSet }),
     ),
     Effect.provideContext(ambient),
-    Effect.mapError((error) => new GatewayError({ message: errorMessage(error) })),
+    Effect.mapError(Gateway.error),
   );
 
 const spaceIdOption = (spaceId: string | undefined): Option.Option<SpaceId> =>

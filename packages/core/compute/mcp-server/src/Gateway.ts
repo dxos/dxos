@@ -6,9 +6,22 @@
 
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
-import type { GatewayError } from './errors';
+import { errorMessage } from './internal/errors';
 import * as snapshotInternal from './internal/snapshot';
+
+/**
+ * Failure of the host's link to the registry — an outage, not an authorship error. Projection
+ * degrades to the static surface on this; `skillLoad` reports it, so "unknown skill" always means
+ * the name was wrong.
+ */
+export class Error extends Schema.TaggedError<Error>('GatewayError')('GatewayError', {
+  message: Schema.String,
+}) {}
+
+/** Builds a {@link Error} from anything thrown, so hosts do not each unwrap causes their own way. */
+export const error = (cause: unknown): Error => new Error({ message: errorMessage(cause) });
 
 /**
  * An operation registry record in wire form: `Obj.toJSON` of a `PersistentOperation`, i.e. meta as
@@ -34,9 +47,9 @@ export type InvokeRequest = {
 };
 
 export type Shape = {
-  readonly listOperations: Effect.Effect<readonly OperationRecord[], GatewayError>;
-  readonly listSkills: Effect.Effect<readonly SkillRecord[], GatewayError>;
-  readonly invokeOperation: (request: InvokeRequest) => Effect.Effect<unknown, GatewayError>;
+  readonly listOperations: Effect.Effect<readonly OperationRecord[], Error>;
+  readonly listSkills: Effect.Effect<readonly SkillRecord[], Error>;
+  readonly invokeOperation: (request: InvokeRequest) => Effect.Effect<unknown, Error>;
   /**
    * Spaces this session may address; the first is the fallback when a call omits `spaceId`.
    * Empty means unrestricted, which only a host without a grant model (e.g. the local CLI) sets.

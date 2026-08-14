@@ -15,11 +15,12 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { log } from '@dxos/log';
 
-import { ToolFailure, failure } from './errors';
 import * as Gateway from './Gateway';
+export { ToolFailure, type ToolFailureCode, failure } from './internal/failure';
+import { ToolFailure, failure } from './internal/failure';
+import * as Projection from './internal/projection';
 import * as spaceInternal from './internal/space';
 import * as wireInternal from './internal/wire';
-import * as Projection from './Projection';
 
 /**
  * Model-invocable skill loading.

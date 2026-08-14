@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import * as Projection from './Projection';
+import * as Projection from './projection';
 
 const REF_SCHEMA = {
   $id: '/schemas/echo/ref',

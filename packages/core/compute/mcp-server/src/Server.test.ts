@@ -9,9 +9,8 @@ import { describe, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 
-import { GatewayError, type ToolFailure } from './errors';
 import * as Gateway from './Gateway';
-import * as Projection from './Projection';
+import * as Projection from './internal/projection';
 import * as Server from './Server';
 
 const SPACE_A = SpaceId.random();
@@ -33,7 +32,7 @@ const testGateway = ({
   outage?: boolean;
 } = {}): { gateway: Gateway.Shape; invocations: Invocation[] } => {
   const invocations: Invocation[] = [];
-  const fail = Effect.fail(new GatewayError({ message: 'registry unavailable' }));
+  const fail = Effect.fail(new Gateway.Error({ message: 'registry unavailable' }));
   return {
     invocations,
     gateway: {
@@ -159,14 +158,14 @@ describe('Server', () => {
   });
 });
 
-const failureOf = <A>(result: Result.Result<A, ToolFailure>): ToolFailure => {
+const failureOf = <A>(result: Result.Result<A, Server.ToolFailure>): Server.ToolFailure => {
   if (result._tag !== 'Failure') {
     throw new Error(`Expected a failure, got: ${JSON.stringify(result.success)}`);
   }
   return result.failure;
 };
 
-const successOf = <A>(result: Result.Result<A, ToolFailure>): A => {
+const successOf = <A>(result: Result.Result<A, Server.ToolFailure>): A => {
   if (result._tag !== 'Success') {
     throw new Error(`Expected a success, got: ${result.failure.message}`);
   }
