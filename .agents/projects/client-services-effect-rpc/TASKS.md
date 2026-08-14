@@ -141,8 +141,8 @@ One service at a time, build+test verified before the next:
 - [x] **`DataService`** — inlined `BatchedDocumentUpdates` and `SpaceSyncState` (the latter's
       `PeerState` nested type kept as a type-only `namespace` member, since a value-exporting
       namespace can't merge with an outer `const` of the same name). `dxos/echo/service.proto`
-      was fully orphaned once these landed and was deleted outright; the dead `service
-      DataService {}` block went with it. 10 consumer files across `echo-client`, `echo-host`,
+      was fully orphaned once these landed and was deleted outright; the dead
+      `service DataService {}` block went with it. 10 consumer files across `echo-client`, `echo-host`,
       `functions-runtime-cloudflare`, and `client`/`client-protocol` redirected from the deleted
       proto module to `@dxos/protocols/rpc`'s `DataService` namespace.
 - [x] **`DevtoolsHost`** — inlined 5 previously-`protoMessage` messages (`Event`, `StorageInfo`,
@@ -159,8 +159,8 @@ One service at a time, build+test verified before the next:
       `dxos/rpc.proto`) were removed. 12 consumer files across `client-services`'s devtools/
       diagnostics packlets and `devtools` panels/hooks redirected.
 - [x] **`SpacesService`** — no new inlining needed (all 15 request/response payloads were
-      already hand-inlined by an earlier pass); the orphaned proto bodies and the dead `service
-      SpacesService {}` block (plus several already-dead imports predating this pass:
+      already hand-inlined by an earlier pass); the orphaned proto bodies and the dead
+      `service SpacesService {}` block (plus several already-dead imports predating this pass:
       `google/protobuf/empty.proto`, `dxos/config.proto`, `dxos/edge/messenger.proto`,
       `dxos/edge/signal.proto`) were never cleaned up until now. `services.proto` kept only
       `Space`, `QuerySpacesResponse`, `JoinSpaceResponse`, `CreateEpochResponse`,
@@ -168,7 +168,7 @@ One service at a time, build+test verified before the next:
       project: 20 consumer files (client, client-services, client-protocol,
       halo-adapter-client, migrations, devtools, plugin-space, plugin-google,
       plugin-onboarding, proto-guard, client-e2e) referenced the deleted `SpaceArchive`/
-      `CreateEpochRequest.Migration`/etc. types, including several accessing enum *values*
+      `CreateEpochRequest.Migration`/etc. types, including several accessing enum _values_
       (`SpaceArchive.Format.BINARY`, `CreateEpochRequest.Migration.X`) — which don't carry over
       directly, since `Schema.Enum({...})`'s members live under `.enums.X`, not as direct
       properties (confirmed via the effect source: `Enum<A>` only exposes `{ enums: A }`, no
