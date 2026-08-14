@@ -110,6 +110,16 @@ jobs:
       - name: Check changeset bump levels
         run: pnpm run check-changeset-bumps
 
+      # A changeset is a changelog entry, so a PR is normally one file however many packages or commits
+      # it touched; the rare multi-entry PR waives this in the changeset's front matter. Counting is
+      # diff-based, hence `pull_request` only: on `main` `.changeset/` holds every unreleased entry, and
+      # a `merge_group` batches several PRs that each legitimately carry their own.
+      - name: Check changeset count
+        if: github.event_name == 'pull_request'
+        env:
+          CHANGESET_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: pnpm run check-changeset-count
+
       - name: Check version files in sync
         # version.ts (DXOS_VERSION) + tauri.conf.json are derived from their package versions by
         # sync-versions.mjs during release; fail the PR if a committed copy drifts out of sync.
