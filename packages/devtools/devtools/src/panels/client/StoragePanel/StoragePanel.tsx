@@ -7,18 +7,15 @@ import React, { type FC, type ReactNode, useEffect, useMemo, useState } from 're
 
 import { log } from '@dxos/log';
 import {
-  type GetBlobsResponse,
   type GetSnapshotsResponse,
   type StorageInfo,
   type StoredSnapshotInfo,
   type SubscribeToFeedsResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
-import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
-import { PublicKey, useClient } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { DropdownMenu, Icon, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
-import { BitField } from '@dxos/util';
 
 import { Bitbar, JsonView } from '../../../components';
 
@@ -28,10 +25,6 @@ type SelectionValue =
   | {
       kind: 'feed';
       feed: SubscribeToFeedsResponse.Feed;
-    }
-  | {
-      kind: 'blob';
-      blob: BlobMeta;
     }
   | {
       kind: 'snapshot';
@@ -49,7 +42,6 @@ const getInfoTree = (
   storageInfo: StorageInfo,
   feedInfo: SubscribeToFeedsResponse,
   snapshots: StoredSnapshotInfo[],
-  blobs: BlobMeta[],
 ): Node[] => [
   {
     id: 'origin',
@@ -80,19 +72,6 @@ const getInfoTree = (
             })),
           },
           {
-            id: 'blobs',
-            iconName: 'ph--files--regular',
-            Element: <TreeItemText primary='blobs' secondary={blobs.length} />,
-            items: blobs.map((blob) => ({
-              id: PublicKey.from(blob.id).toHex(),
-              iconName: 'ph--file-archive--regular',
-              Element: (
-                <TreeItemText primary={PublicKey.from(blob.id).truncate()} secondary={bytes.format(blob.length)} />
-              ),
-              value: { kind: 'blob', blob },
-            })),
-          },
-          {
             id: 'snapshots',
             iconName: 'ph--bookmarks--regular',
             Element: <TreeItemText primary='snapshots' secondary={snapshots.length} />,
@@ -114,7 +93,6 @@ export const StoragePanel = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [storageInfo, setStorageInfo] = useState<StorageInfo | undefined>();
   const [snapshotInfo, setSnapshotInfo] = useState<GetSnapshotsResponse | undefined>();
-  const [blobsInfo, setBlobsInfo] = useState<GetBlobsResponse | undefined>();
   const feeds = useStream(() => devtoolsHost.subscribeToFeeds({}), {}, []);
   const client = useClient();
   const services = client.services.services;
@@ -130,7 +108,6 @@ export const StoragePanel = () => {
 
     let storageInfo: StorageInfo | undefined;
     let snapshotInfo: GetSnapshotsResponse | undefined;
-    let blobsInfo: GetBlobsResponse | undefined;
 
     try {
       storageInfo = await devtoolsHost.getStorageInfo();
@@ -146,14 +123,6 @@ export const StoragePanel = () => {
       retry = true;
     }
 
-    try {
-      blobsInfo = await devtoolsHost.getBlobs();
-    } catch (err) {
-      log.catch(err);
-      retry = true;
-    }
-
-    setBlobsInfo(blobsInfo);
     setStorageInfo(storageInfo);
     setSnapshotInfo(snapshotInfo);
     setIsRefreshing(false);
@@ -176,9 +145,8 @@ export const StoragePanel = () => {
         },
         feeds,
         snapshotInfo?.snapshots ?? [],
-        blobsInfo?.blobs ?? [],
       ),
-    [storageInfo, snapshotInfo, blobsInfo],
+    [storageInfo, snapshotInfo],
   );
 
   useEffect(() => {
@@ -240,18 +208,6 @@ export const StoragePanel = () => {
         {selectedValue && (
           <ScrollArea.Root thin>
             <ScrollArea.Viewport classNames='divide-y divide-subdued-separator'>
-              {selectedValue.kind === 'blob' && (
-                <>
-                  <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>
-                  <Bitbar
-                    value={selectedValue.blob.bitfield ?? new Uint8Array()}
-                    length={Math.ceil(selectedValue.blob.length / selectedValue.blob.chunkSize)}
-                    className='m-2'
-                  />
-                  <JsonView data={selectedValue.blob} />
-                </>
-              )}
-
               {selectedValue.kind === 'feed' && (
                 <>
                   <Bitbar
@@ -267,17 +223,6 @@ export const StoragePanel = () => {
         )}
       </Panel.Content>
     </Panel.Root>
-  );
-};
-
-const calculateBlobProgress = (blob: BlobMeta) => {
-  if (blob.state === BlobMeta.State.FULLY_PRESENT) {
-    return 1;
-  }
-
-  return (
-    BitField.count(blob.bitfield ?? new Uint8Array(), 0, (blob.bitfield?.length ?? 0) * 8) /
-    Math.ceil(blob.length / blob.chunkSize)
   );
 };
 

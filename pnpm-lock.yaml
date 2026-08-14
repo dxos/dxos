@@ -1771,7 +1771,7 @@ pnpmfileChecksum: sha256-cQVl+jrEHH0V4IgNkydwSKNmLoShP2mLkufXFXEHIjU=
 
 patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.40':
-    hash: 8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f
+    hash: c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7
     path: patches/@automerge__automerge-repo@2.6.0-subduction.40.patch
   '@automerge/automerge-subduction@0.16.0':
     hash: 6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669
@@ -2198,7 +2198,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f)
+        version: 2.6.0-subduction.40(patch_hash=c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7)
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../../packages/common/keys
@@ -2271,7 +2271,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f)
+        version: 2.6.0-subduction.40(patch_hash=c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7)
       '@codemirror/autocomplete':
         specifier: 'catalog:'
         version: 6.20.3
@@ -5428,7 +5428,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f)
+        version: 2.6.0-subduction.40(patch_hash=c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -5622,7 +5622,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f)
+        version: 2.6.0-subduction.40(patch_hash=c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7)
       '@automerge/automerge-subduction':
         specifier: 0.16.0
         version: 0.16.0(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)
@@ -5984,6 +5984,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
@@ -5996,6 +5999,12 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../../sdk/client-protocol
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../echo/echo-protocol
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -6415,51 +6424,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-
-  packages/core/mesh/teleport-extension-object-sync:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../../common/context
-      '@dxos/crypto':
-        specifier: workspace:*
-        version: link:../../../common/crypto
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
-      '@dxos/random-access-storage':
-        specifier: workspace:*
-        version: link:../../../common/random-access-storage
-      '@dxos/sql-sqlite':
-        specifier: workspace:*
-        version: link:../../../common/sql-sqlite
-      '@dxos/teleport':
-        specifier: workspace:*
-        version: link:../teleport
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      effect:
-        specifier: 4.0.0-rc.108
-        version: 4.0.0-rc.108
 
   packages/core/mesh/teleport-extension-replicator:
     dependencies:
@@ -7119,7 +7083,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f)
+        version: 2.6.0-subduction.40(patch_hash=c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7)
       '@automerge/automerge-repo-storage-indexeddb':
         specifier: 'catalog:'
         version: 2.6.0-subduction.40
@@ -8296,6 +8260,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -8617,9 +8584,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-protocol
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -12600,12 +12564,15 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-client':
+      '@dxos/plugin-client':
         specifier: workspace:*
-        version: link:../../sdk/react-client
+        version: link:../plugin-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -17304,7 +17271,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f)
+        version: 2.6.0-subduction.40(patch_hash=c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -17524,7 +17491,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f)
+        version: 2.6.0-subduction.40(patch_hash=c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -17615,9 +17582,6 @@ importers:
       '@dxos/teleport-extension-gossip':
         specifier: workspace:*
         version: link:../../core/mesh/teleport-extension-gossip
-      '@dxos/teleport-extension-object-sync':
-        specifier: workspace:*
-        version: link:../../core/mesh/teleport-extension-object-sync
       '@dxos/teleport-extension-replicator':
         specifier: workspace:*
         version: link:../../core/mesh/teleport-extension-replicator
@@ -17779,7 +17743,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f)
+        version: 2.6.0-subduction.40(patch_hash=c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7)
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -42353,13 +42317,13 @@ snapshots:
 
   '@automerge/automerge-repo-storage-indexeddb@2.6.0-subduction.40':
     dependencies:
-      '@automerge/automerge-repo': 2.6.0-subduction.40(patch_hash=8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f)
+      '@automerge/automerge-repo': 2.6.0-subduction.40(patch_hash=c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo@2.6.0-subduction.40(patch_hash=8cd6db9d844bab3504922ed53ef950e9cad96023d2412016448304e8cc2ddc5f)':
+  '@automerge/automerge-repo@2.6.0-subduction.40(patch_hash=c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7)':
     dependencies:
       '@automerge/automerge': 3.3.0-fragments.2
       '@automerge/automerge-subduction': 0.16.0(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)

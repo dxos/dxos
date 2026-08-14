@@ -837,3 +837,4 @@ trustPolicyExclude:
   - ua-parser-js@1.0.41
   - graphql@15.10.2
   - langium@3.3.1
+  - cytoscape@3.34.1

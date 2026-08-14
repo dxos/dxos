@@ -13,6 +13,7 @@ import {
   EncodedReference,
   type EntityPropPath,
   EntityStructure,
+  PROPERTY_ID,
   type QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
@@ -124,6 +125,15 @@ const QueryItem = Object.freeze({
   },
 
   /**
+   * Reads a top-level property for the `aggregate` clause, resolving `id` to the entity id — every
+   * object exposes `id` through the API, but documents don't store it in their data (see
+   * `PROPERTY_ID` handling in the echo handler), so a group key falling back to `id` would otherwise
+   * collapse every keyless member into the shared `null` group.
+   */
+  getAggregateProperty: (item: QueryItem, property: string): unknown =>
+    property === PROPERTY_ID ? item.objectId : QueryItem.getProperty(item, [property]),
+
+  /**
    * Computes the composite group key for this item from the aggregate's `group`-kind entries, keyed
    * by result field name. No `group` entries yields `{}` — a single group over the whole input.
    */
@@ -131,7 +141,9 @@ const QueryItem = Object.freeze({
     const key: GroupKeyValue = {};
     for (const aggregate of aggregates) {
       if (aggregate.kind === 'group') {
-        key[aggregate.name] = GroupBy.coerceKeyComponent(QueryItem.getProperty(item, [aggregate.property]));
+        key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) =>
+          QueryItem.getAggregateProperty(item, property),
+        );
       }
     }
     return key;
@@ -1587,7 +1599,7 @@ export class QueryExecutor extends Resource {
       partitioned,
       (item) => GroupBy.serializeGroupKey(item.groupKey!),
       step.aggregates,
-      (item, property) => QueryItem.getProperty(item, [property]),
+      (item, property) => QueryItem.getAggregateProperty(item, property),
       (a, b, order) => this._compareByOrder(a, b, order),
     );
 

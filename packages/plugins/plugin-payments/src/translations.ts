@@ -18,6 +18,7 @@ export const translations = [
         'buy-premium.label': 'Buy premium (x402)',
         'buy-credits.label': 'Buy 100 credits (Stripe)',
         'no-payments-url.message': 'Set the payments service URL in settings first.',
+        'no-identity.message': 'Sign in before purchasing.',
         'no-wallet.message': 'No injected EVM wallet (window.ethereum) detected.',
         'pending.label': 'Working…',
         'result.label': 'Result',

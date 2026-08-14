@@ -25,6 +25,12 @@
       "path": "../../../sdk/client"
     },
     {
+      "path": "../../../sdk/client-protocol"
+    },
+    {
+      "path": "../../echo/echo-protocol"
+    },
+    {
       "path": "../../protocols"
     },
     {

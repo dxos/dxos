@@ -191,7 +191,11 @@ export const MailboxArticle = ({
       ? conversations
         ? source
             .aggregate({
-              threadId: Aggregate.group('threadId'),
+              // Falling back to the message id keeps every threadless message (drafts,
+              // transcriptions, assistant-authored) its own conversation; grouping on `threadId`
+              // alone pools them all under the `null` key, where `items`' preview cap would silently
+              // drop all but the first few.
+              threadId: Aggregate.group({ coalesce: ['threadId', 'id'] }),
               lastMessageAt: Aggregate.max('created'),
               count: Aggregate.count(),
               items: Aggregate.items({
@@ -206,18 +210,16 @@ export const MailboxArticle = ({
   );
 
   // The aggregate query already orders threads (by latest message) and their members (newest-first),
-  // so entries map straight to stack items. Messages without a `threadId` share the aggregate's
-  // single `null`-key group; split them back into singleton conversations at that group's position.
-  // A thread's preview is capped at `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
+  // and its group key falls back to the message id, so a threadless message arrives as its own
+  // one-member group — entries map straight to stack items. A thread's preview is capped at
+  // `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
   const items = useMemo<InboxStackItem[]>(() => {
     const result: InboxStackItem[] = [];
     for (const entry of pagination.items) {
-      if (!isThreadGroup(entry)) {
-        result.push(entry);
-      } else if (entry.threadId == null) {
-        result.push(...entry.items.map((message) => ({ id: message.id, messages: [message] })));
-      } else {
+      if (isThreadGroup(entry)) {
         result.push({ id: entry.threadId, messages: entry.items, total: entry.count });
+      } else {
+        result.push(entry);
       }
     }
     return applyPostFilters(result, mailbox, searchQuery);
@@ -444,7 +446,8 @@ MailboxArticle.displayName = 'MailboxArticle';
 
 /** One thread's worth of results from the conversation-aggregated message query (see the query above). */
 type ThreadGroup = {
-  threadId: string | null | undefined;
+  /** The thread's id, or the message's own id for a message that carries no `threadId`. */
+  threadId: string;
   lastMessageAt: string | null;
   count: number;
   /** Capped preview (see `MAILBOX_THREAD_PREVIEW_COUNT`); `count` carries the full thread size. */

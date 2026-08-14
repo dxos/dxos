@@ -29,7 +29,6 @@ import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { FeedProtocol } from '@dxos/protocols';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SqlTransaction } from '@dxos/sql-sqlite';
-import { BlobStoreApiService, SqliteBlobStore, SqliteBlobStoreLayer } from '@dxos/teleport-extension-object-sync';
 
 import { EdgeAgentManagerLayer, EdgeAgentManagerService } from '../agents';
 import {
@@ -113,7 +112,6 @@ export type ServiceContextStackContext =
   | CrossDeviceSpaceSynchronizerService
   | SigningContextProviderService
   | IMetadataStoreService
-  | BlobStoreApiService
   | FeedStoreService
   | StorageMigrationService;
 
@@ -206,7 +204,6 @@ const storageMigrationLayer = Layer.effect(
     return Effect.all(
       [
         new SqliteMetadataStore({ runtime }).migrate,
-        new SqliteBlobStore({ runtime }).migrate,
         new SqliteKeyring({ runtime }).migrate,
         new SqliteStorage({ runtime }).migrate,
       ],
@@ -223,7 +220,6 @@ const storageLayer = Layer.empty.pipe(
   Layer.provideMerge(FeedFactoryLayer({ hypercore: { valueEncoding, stats: true } })),
   Layer.provideMerge(FeedStorageDirectoryLayer()),
   Layer.provideMerge(SqliteMetadataStoreLayer()),
-  Layer.provideMerge(SqliteBlobStoreLayer()),
   Layer.provideMerge(SqliteKeyringLayer()),
   Layer.provideMerge(SqliteStorageLayer()),
   Layer.provideMerge(storageMigrationLayer),

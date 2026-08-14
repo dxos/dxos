@@ -105,14 +105,14 @@ export const CreateRecoveryCode = Operation.make({
     name: 'Create Recovery Code',
     icon: 'ph--key--regular',
   },
-  services: [Capability.Service],
+  services: [Capability.Service, Identity.Service],
   input: Schema.Void,
   output: Schema.Void,
 });
 
 export const CreatePasskey = Operation.make({
   meta: { key: makeKey('createPasskey'), name: 'Create Passkey', icon: 'ph--key--regular' },
-  services: [Capability.Service],
+  services: [Capability.Service, Identity.Service],
   input: Schema.Void,
   output: Schema.Void,
 });
@@ -123,7 +123,7 @@ export const RevokeRecoveryCredential = Operation.make({
     name: 'Revoke Recovery Credential',
     icon: 'ph--key--regular',
   },
-  services: [Capability.Service],
+  services: [Capability.Service, Identity.Service],
   input: Schema.Struct({
     /**
      * Lookup key of the credential to revoke, as hex. Constrained to a full key because
@@ -137,14 +137,14 @@ export const RevokeRecoveryCredential = Operation.make({
 
 export const RedeemPasskey = Operation.make({
   meta: { key: makeKey('redeemPasskey'), name: 'Redeem Passkey', icon: 'ph--key--regular' },
-  services: [Capability.Service],
+  services: [Capability.Service, Identity.Service],
   input: Schema.Void,
   output: Schema.Void,
 });
 
 export const RedeemToken = Operation.make({
   meta: { key: makeKey('redeemToken'), name: 'Redeem Token', icon: 'ph--lock--regular' },
-  services: [Capability.Service],
+  services: [Capability.Service, Identity.Service],
   input: Schema.Struct({
     token: Schema.String,
   }),

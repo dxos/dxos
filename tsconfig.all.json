@@ -865,9 +865,6 @@
       "path": "packages/core/mesh/teleport-extension-gossip/tsconfig.json"
     },
     {
-      "path": "packages/core/mesh/teleport-extension-object-sync/tsconfig.json"
-    },
-    {
       "path": "packages/core/mesh/teleport-extension-replicator/tsconfig.json"
     },
     {
