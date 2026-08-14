@@ -35,6 +35,11 @@ export const SummarizeExtractor = Capability.inlineModule(
   { provides: [InboxCapabilities.ObjectExtractor] },
   () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)]),
 );
+export const MailboxProcessors = Capability.lazyModule(
+  'MailboxProcessors',
+  { provides: [InboxCapabilities.MailboxProcessor] },
+  () => import('./mailbox-processors'),
+);
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },

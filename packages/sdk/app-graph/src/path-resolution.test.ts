@@ -269,6 +269,30 @@ describe('path-resolution', () => {
       expect(results).toEqual([null]);
     });
 
+    // The id a plank keeps when its node never arrives.
+    test('a known key with no matching node reports the candidate it attempted', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      const results = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'doc', id: 'missingDoc', workspace: WORKSPACE_A }],
+        }),
+      );
+      expect(results).toEqual([{ pairIndex: 0, candidateId: `${Node.RootId}/${WORKSPACE_A}/missingDoc` }]);
+    });
+
+    // Leaking it would make every caller disambiguate a field it cannot use.
+    test('a resolved pair reports no candidate', async ({ expect }) => {
+      const builder = buildTestBuilder();
+      const [resolved] = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'doc', id: 'docA', workspace: WORKSPACE_A }],
+        }),
+      );
+      expect(resolved?.candidateId).toBeUndefined();
+    });
+
     test('resolves a nested node via a declared static urlPath template', async ({ expect }) => {
       const builder = buildTestBuilder();
       const results = await EffectEx.runPromise(
@@ -288,7 +312,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'sectioned', id: 'secDocA', workspace: WORKSPACE_A }],
         }),
       );
-      invariant(resolved, 'expected the pair to resolve');
+      invariant(resolved?.nodeId, 'expected the pair to resolve');
       const represented = PathResolution.representNode(builder, resolved.nodeId);
       expect(Option.getOrThrow(represented)).toEqual({ key: 'sectioned', id: 'secDocA', workspace: WORKSPACE_A });
     });
@@ -327,7 +351,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'nested', id: `${SUBGROUP_ID}+nestedDocA`, workspace: WORKSPACE_A }],
         }),
       );
-      invariant(resolved, 'expected the pair to resolve');
+      invariant(resolved?.nodeId, 'expected the pair to resolve');
       const represented = PathResolution.representNode(builder, resolved.nodeId);
       expect(Option.getOrThrow(represented)).toEqual({
         key: 'nested',
@@ -355,7 +379,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'home', workspace: WORKSPACE_A }],
         }),
       );
-      invariant(resolved, 'expected the id-less pair to resolve');
+      invariant(resolved?.nodeId, 'expected the id-less pair to resolve');
       const represented = PathResolution.representNode(builder, resolved.nodeId);
       expect(Option.getOrThrow(represented)).toEqual({ key: 'home', workspace: WORKSPACE_A });
     });
@@ -371,7 +395,7 @@ describe('path-resolution', () => {
       expect(results).toEqual([{ pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/dynDocA` }]);
     });
 
-    test('a resolver candidate that does not exist resolves to null', async ({ expect }) => {
+    test('a resolver candidate that does not exist does not resolve', async ({ expect }) => {
       const builder = buildTestBuilder();
       const results = await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
@@ -379,7 +403,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'dyn', id: 'missing', workspace: WORKSPACE_A }],
         }),
       );
-      expect(results).toEqual([null]);
+      expect(results).toEqual([{ pairIndex: 0, candidateId: `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/missing` }]);
     });
 
     test('a key shared by two extensions resolves nodes produced by either', async ({ expect }) => {
@@ -406,7 +430,7 @@ describe('path-resolution', () => {
           { wait: () => '200 millis' },
         ),
       );
-      expect(results).toEqual([null]);
+      expect(results).toEqual([{ pairIndex: 0, candidateId: `${Node.RootId}/${WORKSPACE_A}/neverArrives` }]);
       expect(Date.now() - started).toBeLessThan(400);
     });
 
@@ -423,7 +447,7 @@ describe('path-resolution', () => {
           { wait: () => '200 millis' },
         ),
       );
-      expect(results).toEqual([null]);
+      expect(results).toEqual([{ pairIndex: 0, candidateId: `${Node.RootId}/${WORKSPACE_A}/${GROUP_ID}/missing` }]);
       expect(Date.now() - started).toBeGreaterThanOrEqual(150);
     });
   });
@@ -437,7 +461,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'doc', id: 'docA', workspace: WORKSPACE_A }],
         }),
       );
-      invariant(resolved, 'expected the pair to resolve');
+      invariant(resolved?.nodeId, 'expected the pair to resolve');
       const represented = PathResolution.representNode(builder, resolved.nodeId);
       expect(Option.getOrThrow(represented)).toEqual({ key: 'doc', id: 'docA', workspace: WORKSPACE_A });
     });
@@ -454,7 +478,7 @@ describe('path-resolution', () => {
         }),
       );
       const companion = results[1];
-      invariant(companion, 'expected the companion to resolve');
+      invariant(companion?.nodeId, 'expected the companion to resolve');
       const represented = PathResolution.representNode(builder, companion.nodeId);
       expect(Option.getOrThrow(represented)).toEqual({ key: 'companion', id: 'comments', workspace: WORKSPACE_A });
     });
@@ -467,7 +491,7 @@ describe('path-resolution', () => {
           pairs: [{ key: 'inline', id: 'inlineDocA', workspace: WORKSPACE_A }],
         }),
       );
-      invariant(resolved, 'expected the inline child to resolve');
+      invariant(resolved?.nodeId, 'expected the inline child to resolve');
       const represented = PathResolution.representNode(builder, resolved.nodeId);
       expect(Option.getOrThrow(represented)).toEqual({ key: 'inline', id: 'inlineDocA', workspace: WORKSPACE_A });
     });

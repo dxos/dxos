@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { type Database, Filter, Obj } from '@dxos/echo';
+import { type Database, Filter } from '@dxos/echo';
 import { type PaginationResult, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { Card, Icon, ScrollArea } from '@dxos/react-ui';
@@ -19,6 +19,7 @@ import { type Actor, type Message, Person } from '@dxos/types';
 import { useVisibleTags } from '#hooks';
 
 import { getMessageBodyText, getMessageProps } from '../../util';
+import { buildContactIndex } from './contact-index';
 import { isMessageGroup } from './is-message-group';
 
 export type InboxStackAction =
@@ -29,6 +30,7 @@ export type InboxStackAction =
   | { type: 'select'; messageId: string }
   | { type: 'select-tag'; label: string }
   | { type: 'star'; messageId: string }
+  | { type: 'archive'; messageId: string }
   | { type: 'ignore-sender'; messageId: string }
   | { type: 'create-topic'; messageId: string }
   | { type: 'save'; filter: string };
@@ -61,8 +63,11 @@ export type InboxStackItem = Message.Message | MessageGroup;
 /** Per-message tag chip atom family; each tile subscribes to just its own message's tags. */
 export type MessageTagsFamily = (messageId: string) => Atom.Atom<InboxStackTag[]>;
 
+/** Per-message boolean-membership atom family; each tile subscribes to only its own state. */
+export type MembershipFamily = (messageId: string) => Atom.Atom<boolean>;
+
 /** Per-message starred atom family; each tile subscribes to just its own star state. */
-export type StarredFamily = (messageId: string) => Atom.Atom<boolean>;
+export type StarredFamily = MembershipFamily;
 
 const EMPTY_TAGS_ATOM = Atom.make((): InboxStackTag[] => []);
 
@@ -78,16 +83,7 @@ const useContactLookup = (db?: Database.Database) => {
     if (!db) {
       return undefined;
     }
-    const byEmail = new Map<string, EID.EID>();
-    for (const person of people) {
-      const eid = EID.tryParse(Obj.getURI(person).toString());
-      if (!eid) {
-        continue;
-      }
-      for (const email of person.emails ?? []) {
-        byEmail.set(email.value.toLowerCase(), eid);
-      }
-    }
+    const byEmail = buildContactIndex(people);
     return (actor: Actor.Actor) => (actor.email ? byEmail.get(actor.email.toLowerCase()) : undefined);
   }, [db, people]);
 };
@@ -104,6 +100,11 @@ export type InboxStackProps = {
   /** Per-message starred atom family; each tile subscribes to only its own star state. */
   starredAtom?: StarredFamily;
   /**
+   * Per-message `inbox`-membership atom family. Drives the archive menu item's direction — archiving
+   * is that tag coming off, so the same entry restores a message that no longer carries it.
+   */
+  inboxAtom?: MembershipFamily;
+  /**
    * When `messages` is a lazily-loaded window (see `usePagination`), drives loading more
    * older messages as the user scrolls toward the loaded end. Accepts `usePagination`'s full
    * result directly (its `items` field is unused here) so callers can pass it through without
@@ -112,6 +113,8 @@ export type InboxStackProps = {
   pagination?: PaginationResult<unknown>;
   /** Renders a spinner after the last item while a page loads (at the top when the list is empty). */
   loading?: boolean;
+  /** Show the archive / move-to-inbox tile menu item. Off by default (only the mailbox handles `archive`). */
+  enableArchive?: boolean;
   /**
    * Show the "Ignore sender" tile menu item. Off by default — only the mailbox view handles the
    * `ignore-sender` action, so other consumers (e.g. drafts) must not render a no-op menu item.
@@ -142,8 +145,10 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
       currentId,
       selectedIds,
       starredAtom,
+      inboxAtom,
       pagination,
       loading,
+      enableArchive,
       enableIgnoreSender,
       enableCreateTopic,
       searchQuery,
@@ -168,6 +173,8 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                   total: item.total,
                   // Conversations show the latest message; star reflects/toggles that message.
                   starredAtom: starredAtom?.(item.messages[0]?.id),
+                  inboxAtom: inboxAtom?.(item.messages[0]?.id),
+                  enableArchive,
                   enableIgnoreSender,
                   enableCreateTopic,
                   searchQuery,
@@ -179,6 +186,8 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                   message: item,
                   tagsAtom: tagsAtom?.(item.id),
                   starredAtom: starredAtom?.(item.id),
+                  inboxAtom: inboxAtom?.(item.id),
+                  enableArchive,
                   enableIgnoreSender,
                   enableCreateTopic,
                   searchQuery,
@@ -191,6 +200,8 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
         items,
         tagsAtom,
         starredAtom,
+        inboxAtom,
+        enableArchive,
         enableIgnoreSender,
         enableCreateTopic,
         searchQuery,
@@ -328,6 +339,8 @@ type MessageTileData = {
   message: Message.Message;
   tagsAtom?: Atom.Atom<InboxStackTag[]>;
   starredAtom?: Atom.Atom<boolean>;
+  inboxAtom?: Atom.Atom<boolean>;
+  enableArchive?: boolean;
   enableIgnoreSender?: boolean;
   enableCreateTopic?: boolean;
   /** Active mailbox search term; when set, the tile renders a highlighted best-match snippet. */
@@ -345,6 +358,8 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
     message,
     tagsAtom,
     starredAtom,
+    inboxAtom,
+    enableArchive,
     enableIgnoreSender,
     enableCreateTopic,
     searchQuery,
@@ -356,6 +371,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
   const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
   const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
+  const inInbox = useAtomValue(inboxAtom ?? NOT_STARRED_ATOM);
   const messageTags = useVisibleTags(tags);
 
   // Click / Enter commit both current and selection. Arrow keys only move
@@ -391,6 +407,14 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       return undefined;
     }
     const items = [];
+    // Archive is the `inbox` tag coming off, so the same entry restores a message that lacks it.
+    if (enableArchive) {
+      items.push({
+        label: inInbox ? 'Archive' : 'Move to Inbox',
+        icon: inInbox ? 'ph--archive--regular' : 'ph--tray--regular',
+        onClick: () => onAction({ type: 'archive', messageId: message.id }),
+      });
+    }
     if (enableIgnoreSender && message.sender?.email) {
       items.push({
         label: 'Ignore sender',
@@ -406,7 +430,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       });
     }
     return items.length > 0 ? items : undefined;
-  }, [enableIgnoreSender, enableCreateTopic, onAction, message.sender?.email, message.id]);
+  }, [enableArchive, inInbox, enableIgnoreSender, enableCreateTopic, onAction, message.sender?.email, message.id]);
 
   return (
     <CardTile.Root
@@ -464,6 +488,8 @@ type ConversationTileData = {
   /** Full thread size when `messages` is a capped preview; drives the "+N more" affordance. */
   total?: number;
   starredAtom?: Atom.Atom<boolean>;
+  inboxAtom?: Atom.Atom<boolean>;
+  enableArchive?: boolean;
   enableIgnoreSender?: boolean;
   enableCreateTopic?: boolean;
   /** Active mailbox search term; when set, each message's snippet renders a highlighted best-match. */

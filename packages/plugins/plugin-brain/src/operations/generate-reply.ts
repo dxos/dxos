@@ -11,15 +11,16 @@ import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { FactStore, type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { DraftMessage, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { BrainOperation } from '#types';
+
 /** Raised when the LLM reply generation fails (provider error or timeout). */
 export class GenerateReplyError extends Data.TaggedClass('GenerateReplyError')<{ cause: unknown }> {}
 
-const handler: Operation.WithHandler<typeof InboxOperation.GenerateReply> = InboxOperation.GenerateReply.pipe(
+const handler: Operation.WithHandler<typeof BrainOperation.GenerateReply> = BrainOperation.GenerateReply.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ mailbox: mailboxRef, message }) {
       const mailbox = yield* Database.load(mailboxRef);
@@ -113,7 +114,7 @@ export const generateReply = (options: {
     const thread = messages
       .filter((candidate) => normalizeSubject(candidate.properties?.subject) === subjectKey)
       .sort((left, right) => Date.parse(left.created) - Date.parse(right.created))
-      .slice(-InboxOperation.DEFAULT_GENERATE_REPLY_THREAD_LIMIT);
+      .slice(-BrainOperation.DEFAULT_GENERATE_REPLY_THREAD_LIMIT);
     const threadText = (thread.length > 0 ? thread : [message])
       .map((entry) => `From: ${entry.sender.name ?? entry.sender.email ?? 'unknown'}\n${Message.extractText(entry)}`)
       .join('\n---\n');
@@ -133,7 +134,7 @@ export const generateReply = (options: {
         factsById.set(fact.id, fact);
       }
     }
-    const facts = [...factsById.values()].slice(0, InboxOperation.DEFAULT_GENERATE_REPLY_FACT_LIMIT);
+    const facts = [...factsById.values()].slice(0, BrainOperation.DEFAULT_GENERATE_REPLY_FACT_LIMIT);
 
     const prompt = generatePrompt({
       thread: threadText,

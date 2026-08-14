@@ -14,6 +14,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
 import { type Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, getDebugName, isNonNullable } from '@dxos/util';
 
@@ -774,8 +775,10 @@ export const flush = (builder: GraphBuilder): Promise<void> => {
  * @param params.actions A function to add actions to the graph based on a connection to an existing node.
  * @param params.actionGroups A function to add action groups to the graph based on a connection to an existing node.
  */
-export type CreateExtensionRawOptions = {
-  id: string;
+export type CreateExtensionRawOptions<Id extends string = string> = {
+  id: [DXN.Path<Id>] extends [never]
+    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
+    : Id;
   relation?: Node.RelationInput;
   position?: Position.Position;
   url?: UrlBinding;
@@ -786,23 +789,11 @@ export type CreateExtensionRawOptions = {
 };
 
 /**
- * Whether a graph extension local ID follows NSID conventions: the final
- * dot-separated segment must be camelCase (letters and digits only, starting
- * with a letter — no hyphens or underscores). This mirrors the rule enforced
- * when the id is appended to a plugin's NSID to form a full DXN path.
- *
- * An extension with an invalid id is dropped rather than rejected, so a single
- * malformed contribution cannot crash plugin activation.
- *
- * @example Valid:   'about', 'devtools', 'integrationsSection'
- * @example Invalid: 'integration-article', 'plugin-spec'
- */
-const isValidLocalId = (id: string): boolean => /^[a-zA-Z][a-zA-Z0-9]*$/.test(id.split('.').pop() ?? '');
-
-/**
  * Create a graph builder extension (low-level API that works directly with Atoms).
  */
-export const createExtensionRaw = (extension: CreateExtensionRawOptions): BuilderExtension[] => {
+export const createExtensionRaw = <const Id extends string = string>(
+  extension: CreateExtensionRawOptions<Id>,
+): BuilderExtension[] => {
   const {
     id,
     position,
@@ -813,9 +804,9 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
     actions: _actions,
     actionGroups: _actionGroups,
   } = extension;
-  if (!isValidLocalId(id)) {
+  if (!DXN.isValidPath(id)) {
     log.warn(
-      'dropping graph extension with invalid id; the final segment must be camelCase (no hyphens or underscores)',
+      'dropping graph extension with invalid id; the final segment must be camelCase — letters and digits, starting with a letter',
       {
         id,
       },
@@ -922,8 +913,10 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
  * Effects may defect — defects are caught, logged, and the extension returns empty results.
  * Use Effect.orDie on any failable effects inside callbacks.
  */
-export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
-  id: string;
+export type CreateExtensionOptions<TMatched = Node.Node, R = never, Id extends string = string> = {
+  id: [DXN.Path<Id>] extends [never]
+    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
+    : Id;
   match: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TMatched>;
   actions?: (
     matched: TMatched,
@@ -969,8 +962,8 @@ const runEffectSyncWithFallback = <T, R>(
  * Create a graph builder extension with simplified API.
  * Returns an Effect to allow callbacks to access services via dependency injection.
  */
-export const createExtension = <TMatched = Node.Node, R = never>(
-  options: CreateExtensionOptions<TMatched, R>,
+export const createExtension = <TMatched = Node.Node, R = never, const Id extends string = string>(
+  options: CreateExtensionOptions<TMatched, R, Id>,
 ): Effect.Effect<BuilderExtension[], never, R> =>
   Effect.map(Effect.context<R>(), (context) => {
     const { id, match, actions, actionGroups, connector, resolver, relation, position, url } = options;
@@ -1077,8 +1070,14 @@ const createConnectorWithRuntime = <TData, R>(
  * All callbacks must return Effects for dependency injection.
  * Effects may fail - errors are caught, logged, and the extension returns empty results.
  */
-export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity, R = never> = {
-  id: string;
+export type CreateTypeExtensionOptions<
+  T extends Type.AnyEntity = Type.AnyEntity,
+  R = never,
+  Id extends string = string,
+> = {
+  id: [DXN.Path<Id>] extends [never]
+    ? `Invalid id "${Id}": final segment must be camelCase — letters and digits, starting with a letter`
+    : Id;
   type: T;
   actions?: (
     object: Type.InstanceType<T>,
@@ -1098,11 +1097,13 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
  * The entity type is inferred from the schema type and works for both object and relation schemas.
  * Returns an Effect to allow callbacks to access services via dependency injection.
  */
-export const createTypeExtension = <T extends Type.AnyEntity, R = never>(
-  options: CreateTypeExtensionOptions<T, R>,
+export const createTypeExtension = <T extends Type.AnyEntity, R = never, const Id extends string = string>(
+  options: CreateTypeExtensionOptions<T, R, Id>,
 ): Effect.Effect<BuilderExtension[], never, R> => {
   const { id, type, actions, actionGroups, connector, relation, position } = options;
-  return createExtension<Type.InstanceType<T>, R>({
+  // `string` for the id: this forwards an already-validated value, so re-checking it here would
+  // reject the `Id` type parameter's error branch rather than the caller's literal.
+  return createExtension<Type.InstanceType<T>, R, string>({
     id,
     match: NodeMatcher.whenEchoType(type),
     actions,

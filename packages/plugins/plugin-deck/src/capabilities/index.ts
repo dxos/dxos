@@ -68,6 +68,7 @@ export const UrlHandler = Capability.lazyModule(
       AppCapabilities.NavigationTargetLoader,
       Capabilities.AtomRegistry,
       DeckCapabilities.State,
+      DeckCapabilities.EphemeralState,
       DeckCapabilities.Settings,
       AppCapabilities.AppGraph,
       AttentionCapabilities.ViewState,

@@ -90,14 +90,13 @@ export const MailboxArticle = ({
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
-  // Gmail sync (`#sync`), the process pipeline (`#process`) and the enrichment cascade (`#enrich`)
+  // Gmail sync (`#sync`), the process pipeline (`#process`) and the scan cascade (`#scan`)
   // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
   // first — it is the one that changes what the list contains rather than what is known about it.
   const syncProgress = useProgressMonitor(createSyncProgressKey(mailbox));
-  const processProgress = useProgressMonitor(InboxOperation.createProcessProgressKey(mailbox));
-  const enrichProgress = useProgressMonitor(InboxOperation.createEnrichProgressKey(mailbox));
+  const scanProgress = useProgressMonitor(InboxOperation.createScanProgressKey(mailbox));
   const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
-  const progress = [syncProgress, processProgress, enrichProgress].find(isActive);
+  const progress = [syncProgress, scanProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 
@@ -116,6 +115,10 @@ export const MailboxArticle = ({
   // Starred messages drive the per-tile star toggle; starred state also lives under the tag index.
   const starredUri = useSystemTagUri(db, 'starred');
   const starredAtom = useMemo(() => SystemTags.tagAtom(tagIndex, starredUri), [tagIndex, starredUri]);
+
+  // Inbox membership drives the tile menu's archive direction; archiving is this tag coming off.
+  const inboxUri = useSystemTagUri(db, 'inbox');
+  const inboxAtom = useMemo(() => SystemTags.tagAtom(tagIndex, inboxUri), [tagIndex, inboxUri]);
 
   // This view's canonical system tag, resolved by id (`undefined` until sync/first draft creates it).
   const systemTagUri = useSystemTagUri(db, systemTag);
@@ -284,6 +287,16 @@ export const MailboxArticle = ({
           break;
         }
 
+        case 'archive': {
+          const message = messages.find((message) => message.id === action.messageId);
+          if (message && db) {
+            void Effect.runFork(
+              SystemTags.toggleTag(mailbox, message, 'inbox').pipe(Effect.provide(Database.layer(db))),
+            );
+          }
+          break;
+        }
+
         case 'ignore-sender': {
           const message = messages.find((message) => message.id === action.messageId);
           const email = message?.sender?.email;
@@ -403,8 +416,10 @@ export const MailboxArticle = ({
             currentId={currentId}
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
+            inboxAtom={inboxAtom}
             pagination={pagination}
             loading={loading}
+            enableArchive
             enableIgnoreSender
             enableCreateTopic
             searchQuery={searchQuery}
