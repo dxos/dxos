@@ -26,7 +26,6 @@ import type {
   QueryRequest as EchoQueryRequest,
   QueryResponse as EchoQueryResponse,
 } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import type { SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import type {
   QueryRequest as EdgeQueryRequest,
@@ -42,6 +41,7 @@ import type {
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import type { AppService, ShellService } from '@dxos/protocols/proto/dxos/iframe';
 import type {
+  DataService as RpcDataService,
   DevicesService as RpcDevicesService,
   FeedService as RpcFeedService,
   IdentityService as RpcIdentityService,
@@ -174,6 +174,42 @@ export interface QueryServicePromise {
   reindex: (request: void, options?: RequestOptions) => Promise<void>;
 }
 
+export interface DataServicePromise {
+  subscribe: (
+    request: RpcDataService.SubscribeRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDataService.BatchedDocumentUpdates>;
+  updateSubscription: (request: RpcDataService.UpdateSubscriptionRequest, options?: RequestOptions) => Promise<void>;
+  createDocument: (
+    request: RpcDataService.CreateDocumentRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDataService.CreateDocumentResponse>;
+  update: (request: RpcDataService.UpdateRequest, options?: RequestOptions) => Promise<void>;
+  flush: (request: RpcDataService.FlushRequest, options?: RequestOptions) => Promise<void>;
+  getDocumentHeads: (
+    request: RpcDataService.GetDocumentHeadsRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDataService.GetDocumentHeadsResponse>;
+  waitUntilHeadsReplicated: (
+    request: RpcDataService.WaitUntilHeadsReplicatedRequest,
+    options?: RequestOptions,
+  ) => Promise<void>;
+  reIndexHeads: (request: RpcDataService.ReIndexHeadsRequest, options?: RequestOptions) => Promise<void>;
+  updateIndexes: (request: void, options?: RequestOptions) => Promise<void>;
+  subscribeSpaceSyncState: (
+    request: RpcDataService.GetSpaceSyncStateRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDataService.SpaceSyncState>;
+  stats: (
+    request: RpcDataService.DatabaseStatsRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDataService.DatabaseStats>;
+  runGarbageCollection: (
+    request: RpcDataService.RunGarbageCollectionRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDataService.GarbageCollectionReport>;
+}
+
 export type ClientServices = {
   SystemService: SystemServicePromise;
   NetworkService: NetworkServicePromise;
@@ -184,7 +220,7 @@ export type ClientServices = {
   DevicesService: DevicesServicePromise;
   SpacesService: SpacesService;
 
-  DataService: DataService;
+  DataService: DataServicePromise;
   QueryService: QueryServicePromise;
   FeedService: FeedServicePromise;
 
