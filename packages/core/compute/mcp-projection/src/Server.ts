@@ -118,7 +118,7 @@ export const loadOperations = (
     Effect.map((operations) => Projection.projectOperations(operations, reservedNames)),
     Effect.catch((error) => {
       log.warn('operation registry unavailable; serving static tools only', { error: error.message });
-      return Effect.succeed([] as Projection.ProjectedOperation[]);
+      return Effect.succeed<Projection.ProjectedOperation[]>([]);
     }),
   );
 
@@ -130,7 +130,7 @@ export const loadSkills = (
     Effect.map((skills) => Projection.projectSkills(skills, reservedNames)),
     Effect.catch((error) => {
       log.warn('skill registry unavailable; serving static prompts only', { error: error.message });
-      return Effect.succeed([] as Projection.ProjectedSkill[]);
+      return Effect.succeed<Projection.ProjectedSkill[]>([]);
     }),
   );
 
@@ -147,7 +147,9 @@ export const toolsLayer = (
   projected: readonly Projection.ProjectedOperation[],
 ): Layer.Layer<never, never, Gateway.Service> => {
   const tools = projected.map(makeTool);
-  // The toolkit is assembled from runtime data, so the per-tool type information is erased.
+  // A toolkit assembled from runtime data has no per-tool type information to keep, so the casts
+  // through this function restate what the registry cannot prove: the handler record matches the
+  // toolkit built from the same list, one entry per projected operation.
   const toolkit = Toolkit.make(...(tools as any[]));
   const handlers = toolkit.toLayer(
     Effect.gen(function* () {
@@ -192,7 +194,7 @@ export const makeHandler =
               failure('invalid_request', `${operation.toolName} input did not encode: ${String(error)}`),
             ),
           )
-        : Effect.succeed(decodedInput as unknown);
+        : Effect.succeed<unknown>(decodedInput);
     return encodeInput.pipe(
       // The space is resolved after encoding, because the wire form is where a reference argument
       // states which space it belongs to.

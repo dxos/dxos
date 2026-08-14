@@ -4,6 +4,41 @@ Goal: task-planning skill working with Composer so DESIGN and TASKS are Composer
 over the loop Claude ⇔ MCP ⇔ EDGE ⇔ Composer.
 Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md](../../../agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md)
 
+The tool-surface work-stream moved to the edge repo's `mcp-operations` project
+(`edge:.agents/projects/mcp-operations/{DESIGN,TASKS}.md`); its Phase 2b is the dxos-side work
+below.
+
+## Milestone 6 — `dx mcp serve`, the local twin of the MCP server (mcp-operations Phase 2b)
+
+Kills the per-edit bridge toll (dxos build → publish → edge install → worker restart → MCP
+reconnect) and gives plugin authors a surface with no edge at all. Fidelity contract
+(mcp-operations DESIGN §0.5): deltas from the deployed server are host-layer only — anything that
+changes what a model sees lives in the shared package or it is a bug.
+
+- [x] **`@dxos/mcp-projection`** — the projection extracted out of `mcp-space-service/src/mcp/`:
+      annotated operations as tools, opted-in skills as prompts, `skillLoad`, name/collision
+      rules, ref widening, and the wire response passes. Hosts supply a `Gateway` (reach the
+      registry, invoke an operation, name the session's spaces) and a transport; nothing else
+      about the surface is theirs. 32 unit tests, including a parity test that fails if the
+      annotation id drifts from `Operation.McpToolAnnotation`.
+- [x] **`dx mcp serve`** — stdio host over the CLI's own plugin registry. Verified live against a
+      real MCP handshake: 12 tools (project/task/outline verbs + `skillLoad`), `codeProject` as a
+      prompt, `skillLoad` returning the skill body, ref parameters narrowed to their object shape,
+      and the shared server instructions on `initialize`.
+- [x] plugin-projects + plugin-tasks added to the CLI plugin set (and to the default profile), so
+      the annotated operations are in the registry the command projects.
+- [ ] **Edge consumes the package** — `mcp-space-service` keeps OAuth, grants, bindings and the
+      trace feed, and deletes its copy of the projection. Blocked on `@dxos/mcp-projection`
+      publishing (pkg.pr.new pin bump). Acceptance: edge's 92-test suite stays green with the
+      package as the sole source of shape.
+- [ ] **Fidelity check in CI** — one test running the same registry fixture through both hosts
+      (edge worker + `dx mcp serve`), asserting identical `tools/list`, `prompts/list` and
+      `skillLoad`. The contract enforced, not documented.
+- [ ] **Registry construction shared** — `dx mcp serve` reads the CLI's enabled plugins;
+      operation-service assembles its own list plus base types. Factor one assembly so both hosts
+      register the same operations, skills and types.
+- [ ] **Watch/reload** — `dx mcp serve` under CLI dev mode; today an edit still needs a restart.
+
 ## Milestone 1 — local round-trip (current)
 
 - [x] Leg 1: composer dev server syncing with local edge (ws 101, agents/create 200, live queue-replicator traffic)

@@ -198,6 +198,7 @@ export const projectOperations = (
   reservedNames: readonly string[],
 ): ProjectedOperation[] => {
   const projected: ProjectedOperation[] = [];
+  // Records are JSON off the wire; each field is checked below rather than trusted from a type.
   for (const record of operations as Array<Record<string, any>>) {
     const meta = record?.['@meta'];
     const rawKey: unknown = meta?.key;

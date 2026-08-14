@@ -6625,6 +6625,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/mcp-projection':
+        specifier: workspace:*
+        version: link:../../core/compute/mcp-projection
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
@@ -6661,6 +6664,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../../plugins/plugin-observability
+      '@dxos/plugin-projects':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-projects
       '@dxos/plugin-registry':
         specifier: workspace:*
         version: link:../../plugins/plugin-registry
@@ -6682,6 +6688,9 @@ importers:
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../plugins/plugin-table
+      '@dxos/plugin-tasks':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-tasks
       '@dxos/plugin-transcription':
         specifier: workspace:*
         version: link:../../plugins/plugin-transcription
