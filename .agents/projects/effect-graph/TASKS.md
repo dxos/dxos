@@ -145,7 +145,7 @@ Gate before Phase 9. Requested 2026-08-13.
       console error. The object count stays where it was. - The one passing spec (`create collection`) is the only one that never opens an item actions
       menu; all four failures do. - CLEARED: the orphan-check change; the incremental adjacency maps; `addEdgeImpl` + the
       `sortEdges` Set membership (reverted together). The whole perf pass is exonerated. - CLEARED: the `origin/main` merge — the pre-merge tip `fd8084de` fails identically. - NOT ESTABLISHED: whether the baseline `4ed7683d` passes _in this sandbox_. `git checkout
-      <sha> -- .` leaves renamed/added files behind so the tree does not build, and a worktree is
+    <sha> -- .` leaves renamed/added files behind so the tree does not build, and a worktree is
       forbidden by the repo non-negotiables. Until that runs, "this is our regression" rests on
       the report that e2e is green on main in CI, not on a local A/B. - Next: get a baseline run on a checkout where worktrees are available, then bisect the split
       (`a973a66f`) and the consolidation (`23198521`), which are the only untested regions left. - Graph-level repros written for the cascade, action expansion, position ordering and
