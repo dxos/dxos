@@ -322,6 +322,119 @@ budget at `useApp.tsx:236`, which is arguably a real bug rather than a test-harn
 first-run user with an empty OPFS hits exactly this. Same family as the tracked story-invoker wedge and
 the 20s index-query timeouts.
 
+## Phase 5: Processor topology (design agreed 2026-08-13)
+
+Design + full analysis: [`PIPELINE.md`](PIPELINE.md). Decisions settled with the user: capability
+contribution (not an Effect service), Kafka-Streams naming (`Processor` / `Topology`, since
+`Pipeline` and `Stage` are taken by `@dxos/pipeline` at a finer granularity), a DAG for ordering so
+it can be surfaced to the user for reordering via tooling, failure policy derived from the DAG, and
+generalize now with mailbox as instance #1.
+
+### Tasks
+
+- [x] **Uniform precondition gate** — REPRODUCED FIRST, then fixed. The failing test confirmed the
+      inference exactly: `ServiceNotAvailable: Service not available: @dxos/pipeline-rdf/FactStore` →
+      `completed: 2, failed: 1, skipped: 0`. `unmetPrecondition` (new `operations/precondition.ts`)
+      now recognises any `ServiceNotAvailableError` and reports `skipped` with the tag named; the two
+      AI flavours keep their own wording, since users experience "the assistant is not up" as one
+      thing rather than a missing tag. Uniform over the tag rather than per-stage: the soft set is not
+      a property of the stage, it is whatever the deployment did not contribute, and `Database`/`Trace`
+      cannot be missing (the cascade could not have spawned). Matched structurally with a message
+      fallback, not by class — the error is flattened crossing the invocation boundary, which is why
+      `ai-gate.ts` was already written that way. 7 tests; the workaround at `scan-mailbox.test.ts:166`
+      is gone and that test now exercises BOTH precondition flavours in one run, each tier naming its
+      own reason instead of inheriting the first one's.
+- [x] **Tag `AnalyzeMailbox`'s cursor with an explicit id** — `ANALYZE_CURSOR_KEY_ID`, via a new
+      `findOrCreateAnalyzeCursor` in `operations/cursor.ts`; the ad-hoc finder inside
+      `analyze-mailbox.ts` is gone, so all cursor identity now lives in one module. The **adoption**
+      is the part that makes it shippable: a legacy untagged cursor is tagged IN PLACE rather than
+      replaced, since creating a fresh one would re-analyze the whole feed at one LLM call per
+      message. 4 tests, and the adoption branch was mutation-checked — stubbing it out fails exactly
+      the two tests that cover it, so neither is vacuous. `analyze-mailbox.test.ts` seeds untagged
+      cursors and still passes, which exercises the migration path in situ. Delete the adoption branch
+      once no untagged cursors remain in the wild.
+- [x] **`MailboxProcessor` capability + topology resolution** — `ScanMailbox` now reads its passes
+      from `InboxCapabilities.MailboxProcessor` and orders them by the `after` edges each declares.
+      plugin-inbox contributes its own five through the SAME seam (`capabilities/mailbox-processors.ts`),
+      so there is no privileged built-in path to drift from the contributed one. - `operations/topology.ts` is pure and ECHO-free: unknown `after` ids ignored (optional
+      dependency whose plugin is absent), duplicate ids keep the first (ids are cursor tags, so
+      sharing one shares a watermark), a cycle excludes only what it blocks and every member names
+      the whole cycle. Ties resolve to contribution order — a topology that reshuffled between runs
+      would make cursor behaviour irreproducible. 10 tests. - FEASIBILITY CHECKED FIRST: `Capability.Service` really is reachable from an operation —
+      `process-manager-capability.ts:138` provides it explicitly "so that operations declaring
+      `services: [Capability.Service]` (and friends)" resolve, including the routine/trigger path. - GOTCHA that cost a cycle: providing `Capability.Service` via `Effect.provideService` on the
+      test effect does NOT work. The operation runtime resolves declared services through the
+      `ServiceResolver`, not the caller's Effect context, so it must go through
+      `AssistantTestLayer`'s `extraServices` (precedent: `plugin-tldraw/src/variant.test.ts:30`). - `stages[].operation` → `stages[].processor`, carrying the processor id rather than the
+      operation DXN. Free to rename because the cascade's changeset is still pending. - `MAILBOX_TIER_ORDER` deleted — a tier selects WHICH processors run, the edges decide order. - 2 tests cover the seam itself: a third-party processor contributed FIRST but declared
+      `after: ['subscriptions']` runs last (so ordering is the topology, not contribution order), and
+      a contributor shipping a cycle costs only itself while everything else still runs.
+- [x] **Ownership move, part 1 (D5a)** — plugin-brain now contributes the `analyze` PROCESSOR
+      (`capabilities/mailbox-processor.ts`) alongside the `FactStore` layer it needs, so a deployment
+      without brain has no analyze pass rather than one that dies resolving a service nobody provided:
+      the missing-`FactStore` case is now structurally impossible, with the uniform gate as backstop.
+      plugin-crm's cursored pipeline became the `crm` processor declared `after: ['contacts']`,
+      consuming inbox's contact extraction instead of competing with it. Both menu items are gone;
+      `Find images` stays, being space-wide rather than a feed pass. The scan tests declare their own
+      analyze processor now — contributing it WITHOUT a FactStore is precisely the misconfiguration
+      the gate absorbs, so the test exercises the mechanism instead of a real accident.
+- [x] **Ownership move, part 2 (D5b)** — the `AnalyzeMailbox` DEFINITION moved to `BrainOperation`,
+      changing its DXN. That key was RELEASED (landed 2026-07-10 in #12153), so a routine bound to
+      `org.dxos.plugin.inbox.operation.analyzeMailbox` is orphaned — accepted deliberately, pre-1.0.
+      The handler, its test, and the page-size constant moved with it; brain gained `@dxos/pipeline-email`
+      and `@dxos/link`. `createAnalyzeProgressKey` STAYED in inbox: every monitor key on a mailbox must
+      be minted the same way or producer and article compute different names and no meter appears. The
+      feed-cursor helpers are now exported from `@dxos/plugin-inbox/operations`, since a contributed
+      processor keeps its cursor on a feed inbox owns.
+      MISTAKE WORTH REMEMBERING: `pnpm add --save-catalog` for the two new deps pinned brain to the
+      PUBLISHED `@dxos/pipeline-rdf@0.11.1`, not the workspace source, which surfaced as duplicate-type
+      errors. In-repo `@dxos` packages take `workspace:*` — the catalog is for external packages only.
+      DID NOT drop `@dxos/pipeline-rdf` from plugin-inbox: `GenerateReply` also declares `FactStore`
+      and is also handled by brain, so the dependency needs that operation to move too — see below.
+- [x] **Move `GenerateReply` to plugin-brain — plugin-inbox no longer depends on `@dxos/pipeline-rdf`.**
+      Could NOT move wholesale: two inbox containers (`MessageArticle`, `EditMessageArticle`) invoke it
+      directly, so relocating the operation would have inverted the plugin dependency. It goes through
+      a new `InboxCapabilities.ReplyGenerator` typed against a shared `types/ReplyGeneration.ts`
+      contract — the `MailSendOperation` pattern, where inbox owns the contract and a provider
+      contributes an operation matching it. Its DXN changed with the move, same acceptance as
+      `AnalyzeMailbox`. IMPROVEMENT that fell out: the AI-reply affordance is now ABSENT when no
+      generator is contributed, where before it was offered and would fail — `canGenerate` and
+      `onAiReply` are both gated on the contribution.
+- [x] **Failure policy from the DAG edges** (D4) — `Topology.descendants` walks the transitive closure
+      of a failed processor and the cascade blocks exactly that set, naming the upstream in each
+      reason. Independent branches run: `subscriptions` declares no edge to `classify`, so a
+      classification failure no longer strands it for merely sitting later in the list.
+      SEMANTIC PINNED BY TEST: a `tiers` filter DROPS the edges that ran through a filtered-out
+      processor. Selecting `['deterministic','classify','analyze']` leaves `analyze`'s
+      `after: ['summarize']` pointing at an absent node, so it is ignored and `analyze` runs despite the
+      classification failure. Sharp but correct — a processor the caller excluded cannot constrain
+      anything, and `analyze` never consumed classification. 6 topology tests + 2 cascade tests.
+- [ ] **Contribute the plugin-projects trio as `MailboxProcessor`s** — cheaper than D6 and was hiding
+      behind it. `UpdateProjectTasks`, `UpdateTravelLog` and `UpdateInvestorLog` all read
+      `mailbox.feed`, so they need NO generalization; contributing them puts them in the DAG and gives
+      three of the seven cursorless consumers a cursor. Do this before D6.
+- [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6) — WEAKER than first written.
+      The parts that matter are already generic (`topology.ts` knows only `{id, after}`,
+      `precondition.ts` only `Cause`s, a feed cursor's `target` is already untyped). Mailbox-typed:
+      the `MailboxProcessor` subject and `tier`, `ScanMailbox`'s input and progress key, and
+      `findOrCreateFeedCursor` (takes a `Mailbox` only to read `mailbox.feed`). Open question is what
+      replaces the subject — structural `{ feed: Ref<Feed> }`, a `FeedOwner` annotation, or passing the
+      `Feed`. CORRECTION: the projects trio was cited as the second instance and is not (see above);
+      the only genuine one is transcription, whose `messageEnricher` is a WRITE-time seam closer to
+      sync's inline stages than to a cursored read-time pass — so it may want the other half's shape.
+- [ ] **Retire `ExtractMailbox` once on-arrival extraction is restored** — it is `@deprecated`, but
+      still LIVE: `MailboxArticle.tsx:584` → `useMailboxExtractorActions` renders a menu item per
+      registered `ObjectExtractor` and invokes it, and two extractors ship. Its stated successor
+      (`onArrivalExtractors`) is commented OUT of the sync chain because it reaches
+      `Capability.Service` and invokes `ExtractMessage`, neither available off-host under edge compute
+      — so removing it now would delete a working feature with nothing behind it. Remove the operation,
+      the hook and the menu items together once the successor runs as a processor (D6). MEANWHILE the
+      `@deprecated` tag is misleading, since it points at a replacement that does not run.
+- [ ] **Give the seven cursorless consumers a cursor** — mechanical now that a processor id is also its
+      cursor tag, but each needs its own call on whether feed position or derived-state replacement is
+      the right idempotency story (`ExtractSubscriptions` replaces wholesale; `SummarizeMailbox` skips
+      by newest thread id).
+
 ---
 
 ## Manual test plan
