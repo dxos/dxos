@@ -11,7 +11,7 @@ export default defineConfig({
     'testing': 'src/testing/index.ts',
     'scheduler.browser': 'src/scheduler.browser.ts',
     'atoms': 'src/atoms.ts',
-    'graph': 'src/graph.ts',
+    'AppGraph': 'src/AppGraph.ts',
     'AppGraphBuilder': 'src/AppGraphBuilder.ts',
     'AppGraphNode': 'src/AppGraphNode.ts',
     'path-resolution': 'src/path-resolution.ts',

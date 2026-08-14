@@ -9,8 +9,8 @@ import { afterAll, describe, test } from 'vitest';
 
 import * as GraphNode from '@dxos/graph/GraphNode';
 
+import * as Graph from './AppGraph';
 import * as GraphBuilder from './AppGraphBuilder';
-import * as Graph from './graph';
 
 //
 // Timings for the operations the app graph does on the render path. Skipped by default — these

@@ -13,7 +13,8 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import { failedInvariant, invariant } from '@dxos/invariant';
 
 import * as Node from './AppGraphNode';
-import type { BaseGraph, Edges, Graph, GraphProps, WritableGraph } from './graph';
+import { GraphKind, GraphTypeId } from './AppGraphTypes';
+import type { BaseGraph, Edges, Graph, GraphProps, WritableGraph } from './AppGraphTypes';
 import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, withLabel } from './util';
 
 //
@@ -21,18 +22,6 @@ import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryPar
 // bookkeeping. Internal to the package — `graph.ts` re-exports the public pieces, so the public
 // module carries only the vocabulary and the operations.
 //
-
-/**
- * Identifier denoting a Graph.
- */
-export const GraphTypeId: unique symbol = Symbol.for('@dxos/app-graph/Graph');
-export type GraphTypeId = typeof GraphTypeId;
-
-/**
- * Identifier for the graph kind discriminator.
- */
-export const GraphKind: unique symbol = Symbol.for('@dxos/app-graph/GraphKind');
-export type GraphKind = typeof GraphKind;
 
 const graphSymbol = Symbol('graph');
 

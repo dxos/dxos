@@ -18,8 +18,8 @@ import { Position, isNonNullable } from '@dxos/util';
 
 import { scheduleTask, yieldOrContinue } from '#scheduler';
 
+import * as Graph from './AppGraph';
 import * as Node from './AppGraphNode';
-import * as Graph from './graph';
 import { nodeArgsUnchanged, normalizeRelation, withLabel } from './util';
 
 //

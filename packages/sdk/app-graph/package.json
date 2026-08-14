@@ -44,9 +44,9 @@
       "import": "./dist/lib/atoms.mjs"
     },
     "./Graph": {
-      "source": "./src/graph.ts",
-      "types": "./dist/types/src/graph.d.ts",
-      "import": "./dist/lib/graph.mjs"
+      "source": "./src/AppGraph.ts",
+      "types": "./dist/types/src/AppGraph.d.ts",
+      "import": "./dist/lib/AppGraph.mjs"
     },
     "./PathResolution": {
       "source": "./src/path-resolution.ts",

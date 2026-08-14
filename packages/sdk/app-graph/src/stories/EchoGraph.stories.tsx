@@ -23,9 +23,9 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';
 
+import * as Graph from '../AppGraph';
 import * as GraphBuilder from '../AppGraphBuilder';
 import * as CreateAtom from '../atoms';
-import * as Graph from '../graph';
 import { JsonTree } from './Tree';
 
 const DEFAULT_PERIOD = 500;
