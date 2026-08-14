@@ -230,6 +230,37 @@ state, much of it built at module-init time (Effect contexts, schema classes).
 - [ ] Measure what schema/layer construction contributes at boot.
 - [ ] Assess whether that construction can be deferred to first use.
 
+## Phase 7: Atom `keepAlive` retention
+
+Every `Atom.keepAlive` atom is pinned in the registry for the tab's lifetime —
+`canBeRemoved` is permanently false, so idle-TTL eviction never applies. Inside
+an `Atom.family` that pins one atom, one deep-cloned value, one ECHO
+subscription and the family key **per distinct key ever read**. Full mechanism,
+cost model, and the complete site catalog: ATOMS-AUDIT.md.
+
+- [ ] **R1. Give the app registry a `defaultIdleTTL`.**
+      `plugin-manager.ts:312` builds it with a bare `Registry.make()` — no TTL,
+      so an unsubscribed atom is swept on the next scheduled task. That
+      aggressiveness is why the sites below reached for `keepAlive` in the first
+      place. Enables R2; do it first.
+- [ ] **R2. Drop `keepAlive` from derived families.** Band A1
+      (`echo/internal/Obj/atoms.ts`, 8 families keyed by live ECHO objects —
+      the largest single site, and it also blocks Phase 2's doc-handle eviction
+      and feeds Phase 4's churn), then B1–B4 and C.
+- [ ] **R3. Pin containers, not keys.** For genuinely stateful sites —
+      `app-graph/graph.ts` `_node`/`_edges`, navtree `itemAtomFamily`,
+      attention backends — hold values in an owner-controlled `Map` and pin one
+      notification atom. Resolves the standing `removeNodeImpl` TODO.
+- [ ] **R4. Fix per-mount sites.** `react-ui-menu/Menu.tsx:53` and
+      `plugin-sheet/useToolbarState.ts:21` mint a pinned atom per component
+      mount via `useMemo`.
+- [ ] **R5. Lint rule** for `keepAlive` inside `Atom.family` / `useMemo`, once
+      R2 has landed and the remainder are the intentional ones.
+- [ ] **Measure.** Registry census in `plugin-debug`'s stats panel
+      (`AtomRegistry.getNodes()`, bucketed by `keepAlive` and label prefix),
+      run against the Phase 1 mailbox scenario before/after each remedy. The
+      audit's bands are modelled from a per-node cost table, not observed.
+
 ## Deferred
 
 - Perf-timeline gating and a CI regression guard (2026-08-06). The findings
@@ -239,6 +270,7 @@ state, much of it built at module-init time (Effect contexts, schema classes).
 
 - DESIGN.md — composition model, findings, measurement rules.
 - RESEARCH.md — industry norms, postmortems, strategy playbook.
+- ATOMS-AUDIT.md — `Atom.keepAlive` retention mechanism and site catalog.
 - Linear DX-1148 — feed/query payload retention.
 - `.agents/projects/feed-live-objects/DESIGN.md` — push-over-poll roadmap.
 - `.agents/projects/startup-latency/DESIGN.md` — demand-driven activation.
