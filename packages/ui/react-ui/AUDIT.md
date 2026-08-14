@@ -22,7 +22,7 @@ was the gap.
 ## Method
 
 - **Scope:** `packages/plugins/*/src/containers/**/*.tsx`, excluding `*.stories.tsx` and
-  `*.test.tsx` — **269 files across 67 plugins**.
+  `*.test.tsx` — **270 files across 67 plugins**.
 - **Extraction:** TypeScript AST walk (`ts.isJsxElement` / `ts.isJsxSelfClosingElement`), keeping
   every element whose tag name is an HTML tag. Each occurrence records tag, all JSX attributes and
   their values, spreads, child tags, and source position. String-literal and expression `className`
@@ -39,7 +39,7 @@ was the gap.
 
 | Measure                                                |  Before |   After |
 | ------------------------------------------------------ | ------: | ------: |
-| Container files scanned                                |     269 |     269 |
+| Container files scanned                                |     269 |     270 |
 | Files containing at least one raw DOM element          |     113 |  **98** |
 | Plugins containing at least one raw DOM element        |      46 |  **44** |
 | Raw DOM elements                                       |     455 | **328** |
