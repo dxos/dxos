@@ -598,8 +598,19 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
       `TRASH` stays out; deletion is not a tag. Verify whether `users.messages.modify` accepts `SPAM`
       in `addLabelIds` — if not, the reverse map needs a binding descriptor (`label` vs `operation`)
       rather than a bare `tagUri → labelId`.
-- [ ] **Live round-trip test** — env-gated on `GOOGLE_ACCESS_TOKEN`, both directions against a real
-      account.
+- [ ] **Live round-trip test** — both directions against a real account. BLOCKED on choosing a
+      dedicated disposable account. This test WRITES labels, so `GOOGLE_ACCESS_TOKEN` alone must not
+      arm it: that variable already exists for the read-only `sync-e2e.test.ts`, and reusing it would
+      silently turn an existing read-only setup into one that mutates mail. Needs a second explicit
+      opt-in naming the account, a `getProfile().emailAddress` assertion that FAILS (not skips) on
+      mismatch, operation only on messages the test itself created, and cleanup in a `finally`
+      restoring original `labelIds`.
+- [ ] **Push insert-time local tags** — a tag written by local logic during a run (known-sender
+      `important`, on-arrival extractors) is NOT the same as a tag the pull wrote, though both land
+      before the heads capture. Left in the base it strands forever: it sits in both `base` and
+      `local` from the next run on, so no diff ever emits it. Separate them with a per-run base
+      overlay seeding each newly-inserted message from the `labelIds` just fetched — provider labels
+      land in the base (no push), locally-added tags do not (push). In-memory, nothing persisted.
 
 ### Open
 

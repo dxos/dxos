@@ -110,6 +110,12 @@ Capturing immediately after the pull commits and immediately before the push has
 the pull's writes are already in `nextHeads`, and anything the user does after that instant is the
 next run's business.
 
+One thing this ordering does _not_ resolve on its own: a tag written by **local logic** during the
+same window — the known-sender rule, an on-arrival extractor — is also inside `nextHeads`, and would
+be stranded if left there unpushed. The per-run base overlay for newly-inserted messages is what
+separates those from the pull's own writes; see
+[Pipeline-applied tags](#pipeline-applied-tags-push-too--and-spam-has-no-mapping-yet).
+
 ### Worked example
 
 1. Run N: Gmail reports message A as `[INBOX, STARRED]`; local gets `inbox` + `starred`; heads `H1`
@@ -147,9 +153,33 @@ motivating case.
 
 Eligibility is by tag, not by actor. Anything that applies an eligible canonical tag _between_ syncs
 therefore pushes on the next run — notably `ClassifyMailbox` applying `spam` / `promotions` /
-`updates`, and any extractor that reaches for a canonical tag. Tags applied _during_ a run (the
-known-sender `important` rule in the Gmail provider) do **not** push, because they land before
-`nextHeads` is captured and are part of the next base by construction.
+`updates`, and any extractor that reaches for a canonical tag.
+
+Tags applied _during_ a run need care, because two different things happen there and only one of them
+must stay local:
+
+1. **Tags the pull wrote**, mirroring what the provider already has. These must never push — they
+   came from there.
+2. **Tags local logic wrote at insert time**, which the provider has never seen: the known-sender
+   `important` rule in the Gmail provider, and any on-arrival extractor. These _are_ local intent and
+   must push, by the same reasoning that makes `ClassifyMailbox`'s output push.
+
+Both land before `nextHeads` is captured, so "written during the run" cannot separate them — and
+treating the whole class as non-pushing would strand (2) permanently: it would sit in `base` and
+`local` from the next run onward, so no diff would ever emit it.
+
+The separation is available without tracking actors, because the run knows each new message's remote
+state exactly — the `labelIds` it just fetched. So **a message inserted this run enters the diff with
+its base seeded from that remote state**, not from its post-commit local state:
+
+| Tag on a newly-inserted message | In seeded base? | Result   |
+| ------------------------------- | --------------- | -------- |
+| From the provider's `labelIds`  | yes             | no push  |
+| Added locally at insert time    | no              | **push** |
+
+Mechanically, `base` is the heads snapshot overlaid with `{ newMessageId: remoteTagsAtFetch }` for
+this run's inserts. The overlay is per-run and in-memory — nothing extra is persisted — and it exists
+only because a brand-new message has no history in the heads snapshot to diff against.
 
 **DECIDED: classifier output pushes.** A classification the user can see in Composer should be the
 same classification their mail client shows; a local-only verdict is the confusing case, not the
@@ -356,15 +386,31 @@ TDD, in this order. Each layer is a gate for the next.
 2. **Mock-provider sync tests** (`sync.test.ts` alongside the existing suite) — seed a mailbox via
    `seedGmailBinding`, sync, toggle a tag locally, sync again, assert the mock recorded the expected
    `batchModify`. Then the reverse: mutate the mock's label state, sync, assert the local `TagIndex`.
-   Then the conflict case, and a crash-between-push-and-heads case asserting convergence.
+   Then the conflict case, a crash-between-push-and-heads case asserting convergence, and the
+   insert-time case: a locally-added tag on a newly-synced message pushes, while the provider's own
+   labels on that same message do not.
 3. **Heads-resolution test** — persist heads, mutate, assert `Obj.getVersion` returns the pre-mutation
    set; and an unresolvable-heads case asserting the base-less reconcile pushes the additive half and
    emits no removal in either direction.
-4. **Live Gmail test**, env-gated on `GOOGLE_ACCESS_TOKEN` (the gate `sync-e2e.test.ts` already
-   uses). Round trip both directions against a real account: change a label through the Gmail API,
-   sync, assert local tags; toggle locally, sync, read the label back through the API. This is also
-   where `SPAM`'s binding is settled — assert whether `modify` accepts it in `addLabelIds` before the
-   Gmail push path is written against the assumption that it does.
+4. **Live Gmail test.** Writes labels to a real mailbox, so it is gated harder than the read-only
+   suites and must not run against anyone's primary account:
+
+   - **A dedicated, disposable test account**, recorded in the doc before the test is written — never
+     a personal or shared working mailbox.
+   - **Two gates, not one.** `GOOGLE_ACCESS_TOKEN` alone must not arm it — that variable already
+     exists for the read-only `sync-e2e.test.ts`, so reusing it would silently turn an existing
+     read-only setup into one that mutates mail. Require a second, explicit opt-in naming the
+     account, and assert `getProfile().emailAddress` equals it before the first write. Mismatch fails
+     the test rather than skipping, so a mis-pointed token is loud.
+   - **Only messages the test itself created**, identified by a marker it sends, never by a query
+     over existing mail.
+   - **Cleanup in a `finally`** restoring each touched message's original `labelIds`, so a mid-test
+     failure does not leave the account modified.
+
+   With those in place: round trip both directions — change a label through the Gmail API, sync,
+   assert local tags; toggle locally, sync, read the label back through the API. This is also where
+   `SPAM`'s binding is settled: assert whether `modify` accepts it in `addLabelIds` before the Gmail
+   push path is written against the assumption that it does.
 
 ## Open decisions
 
@@ -385,5 +431,7 @@ TDD, in this order. Each layer is a gate for the next.
    resurrection case is observed in practice rather than pre-emptively.
 
 3. **JMAP in this change or a follow-up** — assumed follow-up.
-4. **Live-test account** — which Gmail account the gated test runs against, and whether the token
-   carries `gmail.modify`.
+4. **Live-test account** — **blocks step 4 of the test plan.** Which disposable Gmail account the
+   test writes to, the name of its opt-in variable, and whether that token carries `gmail.modify`.
+   The safety gates are specified above; the account itself is a human decision and must be recorded
+   here before the test is written.
