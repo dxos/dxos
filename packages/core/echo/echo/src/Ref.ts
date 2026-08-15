@@ -71,34 +71,6 @@ export const Ref: {
   <S extends internal.UnknownTypeSchema<any, any>>(schema: S): RefSchema<Schema.Schema.Type<S> & Obj.Unknown>;
 } = refInternal.Ref as any;
 
-/**
- * Factory function to create a Ref schema constrained by an ANNOTATION on the target's schema
- * rather than by a concrete type: "a ref to any type carrying X".
- *
- * Use this when a schema names a capability instead of a type -- e.g. an operation whose input is
- * "an object that owns a feed" rather than a `Mailbox`. The alternative, `Ref.Ref(Obj.Unknown)`
- * plus a guard inside the handler, gives up validation at the boundary entirely.
- *
- * Validation is best-effort by necessity. References are validated synchronously (an operation
- * input boundary runs `Schema.decodeUnknownSync`), so only a target already in the working set can
- * be inspected; a reference whose target is not loaded is accepted rather than rejected, since it
- * cannot be proven to violate the constraint. Handlers that must be certain should re-check after
- * loading the target.
- *
- * @example
- * ```ts
- * const AnalyzeFeed = Operation.make({
- *   input: Schema.Struct({
- *     // Accepts a Mailbox, a Calendar, a Subscription -- anything annotated as a feed owner.
- *     owner: Ref.byAnnotation(FeedAnnotationId),
- *   }),
- *   // ...
- * });
- * ```
- */
-export const byAnnotation: <T extends Entity.Unknown = Obj.Unknown>(annotationId: string) => RefSchema<T> =
-  refInternal.Ref.byAnnotation;
-
 export const Array = refInternal.RefArray;
 
 /**
