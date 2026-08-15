@@ -15,7 +15,7 @@ import { useObject, useObjects } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Icon, Panel, useTranslation } from '@dxos/react-ui';
+import { Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -39,8 +39,8 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
 
 /**
  * Article surface for a {@link Project}: one form-styled body (header fields, the owned instructions
- * sub-form, and card galleries of the linked routines and artifacts). `Form.Viewport` owns the scroll
- * and gutter so fields stay inset from the panel edges.
+ * sub-form, the task-set section, and a card gallery of the project's artifacts). `Form.Viewport`
+ * owns the scroll and gutter so fields stay inset from the panel edges.
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -52,7 +52,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // The sub-editor mutates the instructions in place, so unwrap the snapshot back to the live entity.
   const [instructionsSnapshot] = useObject(project.instructions);
   const instructions = Obj.getReactiveOrUndefined(instructionsSnapshot);
-  const [artifacts] = useObject(project.artifacts);
   // The Tasks section embeds plugin-tasks' section surface for the linked TaskSet (never its
   // components — the boundary is surfaces/operations only).
   const [taskSetSnapshot] = useObject(project.taskSet);
@@ -76,22 +75,12 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, attendableId],
   );
 
-  // Deletes the object and splices it out of the artifacts collection, closing any open plank —
-  // `RemoveObjects` does all three, given the collection as its target.
-  const artifactsCollection = Obj.getReactiveOrUndefined(artifacts);
+  // Artifacts are listed on the project itself, not filed in a collection, so `RemoveObjects` gets
+  // no target (it only accepts a `Collection`) and the ref is spliced out here.
   const handleDeleteArtifact = useCallback(
     (object: Obj.Unknown) => {
-      void invokePromise(SpaceOperation.RemoveObjects, { objects: [object], target: artifactsCollection });
-    },
-    [invokePromise, artifactsCollection],
-  );
-
-  // Routines are owned by the project but filed in no collection, so `RemoveObjects` needs no target;
-  // the `routines` ref is spliced here since the cascade only follows parent edges.
-  const handleDeleteRoutine = useCallback(
-    (object: Obj.Unknown) => {
       updateProject((project) => {
-        project.routines = project.routines.filter((routineRef) => routineRef.target?.id !== object.id);
+        project.artifacts = project.artifacts.filter((artifactRef) => artifactRef.target?.id !== object.id);
       });
       void invokePromise(SpaceOperation.RemoveObjects, { objects: [object] });
     },
@@ -139,24 +128,14 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   </Form.Section>
                 )}
 
-                {(project.goals?.length ?? 0) > 0 && (
-                  <Form.Section title={t('goals.label')}>
-                    <GoalList goals={project.goals ?? []} />
-                  </Form.Section>
-                )}
-
                 {taskSet && (
                   <Form.Section title={t('tasks.label')}>
                     <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
                   </Form.Section>
                 )}
 
-                <Form.Section title={t('routines.label')}>
-                  <ObjectGallery refs={project.routines} onOpen={handleOpen} onDelete={handleDeleteRoutine} />
-                </Form.Section>
-
                 <Form.Section title={t('artifacts.label')}>
-                  <ObjectGallery refs={artifacts?.objects ?? []} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                  <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
                 </Form.Section>
               </Form.Content>
             </Form.Viewport>
@@ -168,37 +147,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 };
 
 ProjectArticle.displayName = 'ProjectArticle';
-
-/**
- * Read-only view of the project's goals (what done means). Goals are authored by agents and MCP
- * verbs; in-article authoring is a follow-up.
- */
-const GoalList = ({ goals }: { goals: ReadonlyArray<Project.Goal> }) => {
-  return (
-    <div role='list' className='flex flex-col gap-1'>
-      {goals.map((goal) => (
-        <div key={goal.id} role='listitem' className='flex items-center gap-2 min-w-0'>
-          <Icon
-            icon={
-              goal.status === 'met'
-                ? 'ph--check--regular'
-                : goal.status === 'dropped'
-                  ? 'ph--minus--regular'
-                  : 'ph--circle--regular'
-            }
-            classNames={
-              goal.status === 'met' ? 'text-success-text' : goal.status === 'dropped' ? 'text-subdued' : undefined
-            }
-            size={4}
-          />
-          <span className={goal.status === 'dropped' ? 'line-through text-subdued truncate' : 'truncate'}>
-            {goal.text}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
 
 /**
  * The toolbar's own actions. Deliberately not spliced from the app graph: toolbar and navtree
@@ -248,8 +196,8 @@ type ObjectGalleryProps = {
 };
 
 /**
- * A project's linked objects (routines or artifacts) as clickable cards. Unresolved refs are omitted
- * until their target loads.
+ * A project's linked objects (its artifacts) as clickable cards. Unresolved refs are omitted until
+ * their target loads.
  */
 const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
   // Resolve reactively: on a cold load the targets are not yet in memory, and reading `.target`

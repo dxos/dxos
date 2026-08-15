@@ -10,9 +10,8 @@ import { expect, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
-import * as Routine from '@dxos/compute/Routine';
 import * as Skill from '@dxos/compute/Skill';
-import { Collection, Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
@@ -33,35 +32,34 @@ import { ProjectArticle } from './ProjectArticle';
 
 const PROJECT_NAME = 'Project 1';
 const TASK_TITLE = 'Ship the tasks section';
+const ARTIFACT_TITLE = 'Design Notes';
 
 /**
  * Seed a project with the same owned-object graph the create-object capability builds: an owned
- * Instructions document and an owned artifacts Collection, plus one linked (non-owned) Routine.
+ * Instructions document and task set, plus one referenced (non-owned) artifact.
  */
 const seedProject = (space: Space) => {
   const project = Project.make({ name: PROJECT_NAME, description: 'Track the plugin-projects milestone.' });
   const instructions = Instructions.make({ text: 'You are an assistant focused on this project.' });
   Obj.setParent(instructions, project);
-  const artifacts = Collection.make();
-  Obj.setParent(artifacts, project);
   const taskSet = TaskSet.make({ name: 'Tasks' });
   Obj.setParent(taskSet, project);
+  const artifact = space.db.add(Text.make({ name: ARTIFACT_TITLE, content: 'Notes.' }));
   Obj.update(project, (project) => {
     project.instructions = Ref.make(instructions);
-    project.artifacts = Ref.make(artifacts);
+    project.artifacts = [Ref.make(artifact)];
     project.taskSet = Ref.make(taskSet);
-  });
-
-  const routine = space.db.add(Routine.make({ name: 'Daily Digest' }));
-  Obj.update(project, (project) => {
-    project.routines = [...project.routines, Ref.make(routine)];
   });
 
   space.db.add(project);
 
-  // Parented after the cascade so the task lands in the persisted task set.
+  // Added after the cascade so the task lands in the persisted task set; membership is the set's
+  // `tasks` array, with the parent edge alongside for deletion cascade.
   const task = space.db.add(Task.make({ title: TASK_TITLE, status: 'todo' }));
   Obj.setParent(task, taskSet);
+  Obj.update(taskSet, (taskSet) => {
+    taskSet.tasks = [Ref.make(task)];
+  });
 };
 
 const DefaultStory = () => {
@@ -86,16 +84,7 @@ const meta = {
         ...corePlugins(),
         TasksPlugin.make(),
         ClientPlugin.make({
-          types: [
-            Project.Project,
-            Instructions.Instructions,
-            Collection.Collection,
-            Routine.Routine,
-            Skill.Skill,
-            Text.Text,
-            TaskSet.TaskSet,
-            Task.Task,
-          ],
+          types: [Project.Project, Instructions.Instructions, Skill.Skill, Text.Text, TaskSet.TaskSet, Task.Task],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
@@ -137,10 +126,9 @@ export const Default: Story = {
     // Instructions: the owned Instructions markdown editor mounts.
     await waitFor(() => expect(canvasElement.querySelector('.cm-editor')).toBeTruthy(), { timeout: 10_000 });
 
-    // Routines / Artifacts: section headings render, and the seeded routine's label resolves.
-    await expect(canvas.findByText('Routines', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    // Artifacts: the section heading renders, and the seeded artifact's label resolves.
     await expect(canvas.findByText('Artifacts', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.findByText('Daily Digest', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText(ARTIFACT_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     // Tasks: the section heading renders AND plugin-tasks' TaskSet section surface resolves into it.
     // The task title is the load-bearing assertion — an invalid surface id is dropped silently, so

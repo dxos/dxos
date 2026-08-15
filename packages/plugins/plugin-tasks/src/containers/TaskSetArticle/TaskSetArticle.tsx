@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { Fragment, useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { Ref } from '@dxos/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { TaskList, type TaskPatch, type TaskStatus } from '@dxos/react-ui-task';
-import { Task, type TaskSet } from '@dxos/types';
+import { type Milestone, type Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { TaskOperation } from '#types';
@@ -19,8 +19,11 @@ import { TaskOperation } from '#types';
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 
 /**
- * Status-grouped list of a task set's root tasks (children by the ECHO parent edge). CRUD flows
- * through the {@link TaskOperation} verbs so the article and external agents share one write path.
+ * A task set's root tasks, grouped by milestone and then by status. Membership and order come from
+ * the set's `tasks` array, so the view is a partition of one list rather than a tree walk; a set
+ * with no milestones renders as a single flat list. CRUD flows through the {@link TaskOperation}
+ * verbs so the article and external agents share one write path — the verbs are what keep the
+ * array, the milestone refs, and the lifecycle parent edges consistent.
  */
 export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -29,15 +32,29 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const spaceId = space?.id;
   const { invokePromise } = useOperationInvoker();
 
-  const children = useQuery(space?.db, Query.select(Filter.id(taskSet.id)).children());
-  const tasks = useMemo(
-    () => children.filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child)),
-    [children],
-  );
+  const tasks = useMemo(() => TaskSet.resolveTasks(taskSet), [taskSet.tasks]);
+  const milestones = useMemo(() => TaskSet.resolveMilestones(taskSet), [taskSet.milestones]);
+  // Only root tasks are listed: a sub-task appears under its parent, and the flat array holds both.
+  const roots = useMemo(() => TaskSet.rootTasks(tasks), [tasks]);
+
+  const groups = useMemo(() => {
+    const backlog = TaskSet.backlogTasks(roots);
+    const milestoneGroups = milestones.map((milestone) => ({
+      milestone,
+      tasks: TaskSet.tasksForMilestone(roots, milestone),
+      progress: TaskSet.milestoneProgress(tasks, milestone),
+    }));
+    return { backlog, milestoneGroups };
+  }, [roots, tasks, milestones]);
 
   const statusLabel = useCallback((status: TaskStatus) => t(`task-status.${status}.label`), [t]);
   const handleCreate = useCallback(
-    (title: string) => void invokePromise(TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), title }, { spaceId }),
+    (title: string, milestone?: Milestone.Milestone) =>
+      void invokePromise(
+        TaskOperation.CreateTask,
+        { taskSet: Ref.make(taskSet), title, milestone: milestone ? Ref.make(milestone) : undefined },
+        { spaceId },
+      ),
     [invokePromise, taskSet, spaceId],
   );
   const handleUpdate = useCallback(
@@ -45,27 +62,52 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       void invokePromise(TaskOperation.UpdateTask, { task: Ref.make(task), ...patch }, { spaceId }),
     [invokePromise, spaceId],
   );
+  // Deleting through the verb (not `db.remove`) is what sweeps the task and its sub-tasks out of
+  // the set's `tasks` array; the cascade alone would leave the refs behind.
   const handleDelete = useCallback(
-    (task: Task.Task) => {
-      space?.db.remove(task);
-    },
-    [space],
+    (task: Task.Task) => void invokePromise(TaskOperation.DeleteTask, { task: Ref.make(task) }, { spaceId }),
+    [invokePromise, spaceId],
   );
 
-  const content = (
-    <TaskList.Root
-      tasks={tasks}
-      statusLabel={statusLabel}
-      onTaskCreate={handleCreate}
-      onTaskUpdate={handleUpdate}
-      onTaskDelete={handleDelete}
-    >
-      <TaskList.Viewport>
-        <TaskList.Content />
-      </TaskList.Viewport>
-      <TaskList.Create placeholder={t('task-create.placeholder')} />
-    </TaskList.Root>
-  );
+  const content =
+    groups.milestoneGroups.length === 0 ? (
+      <TaskGroup
+        tasks={groups.backlog}
+        statusLabel={statusLabel}
+        placeholder={t('task-create.placeholder')}
+        onCreate={handleCreate}
+        onUpdate={handleUpdate}
+        onDelete={handleDelete}
+      />
+    ) : (
+      <>
+        {groups.milestoneGroups.map(({ milestone, tasks: milestoneTasks, progress }) => (
+          <Fragment key={milestone.id}>
+            <h2 className='flex items-baseline gap-2 mlb-2 pli-3 text-sm font-medium text-subdued'>
+              <span className='text-baseText'>{milestone.name}</span>
+              <span>{t('milestone-progress.label', { done: progress.done, total: progress.total })}</span>
+            </h2>
+            <TaskGroup
+              tasks={milestoneTasks}
+              statusLabel={statusLabel}
+              placeholder={t('task-create.placeholder')}
+              onCreate={(title) => handleCreate(title, milestone)}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+            />
+          </Fragment>
+        ))}
+        <h2 className='mlb-2 pli-3 text-sm font-medium text-subdued'>{t('backlog.label')}</h2>
+        <TaskGroup
+          tasks={groups.backlog}
+          statusLabel={statusLabel}
+          placeholder={t('task-create.placeholder')}
+          onCreate={handleCreate}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
+        />
+      </>
+    );
 
   // Embedded as a section (e.g. the ProjectArticle Tasks section): the host owns scroll and
   // chrome, so render the bare list — a nested Panel/scroll root would collapse width.
@@ -84,3 +126,28 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 };
 
 TaskSetArticle.displayName = 'TaskSetArticle';
+
+type TaskGroupProps = {
+  tasks: readonly Task.Task[];
+  statusLabel: (status: TaskStatus) => string;
+  placeholder: string;
+  onCreate: (title: string) => void;
+  onUpdate: (task: Task.Task, patch: TaskPatch) => void;
+  onDelete: (task: Task.Task) => void;
+};
+
+/** One milestone's (or the backlog's) tasks, status-grouped, with its own create row. */
+const TaskGroup = ({ tasks, statusLabel, placeholder, onCreate, onUpdate, onDelete }: TaskGroupProps) => (
+  <TaskList.Root
+    tasks={tasks}
+    statusLabel={statusLabel}
+    onTaskCreate={onCreate}
+    onTaskUpdate={onUpdate}
+    onTaskDelete={onDelete}
+  >
+    <TaskList.Viewport>
+      <TaskList.Content />
+    </TaskList.Viewport>
+    <TaskList.Create placeholder={placeholder} />
+  </TaskList.Root>
+);

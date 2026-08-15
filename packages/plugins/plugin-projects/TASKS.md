@@ -1,21 +1,24 @@
 # plugin-projects — Tasks
 
-_Resume (2026-08-14, josiah design session, branch `claude/projects-task-sets-modeling-b5rk70`,
-PR #12595): **Milestone 6 DESIGNED, docs-only so far** — task model v2 (uni-directional refs:
-`TaskSet.tasks` flat + `TaskSet.milestones` ordered arrays, NEW `Milestone` type (second-pass
-rename from `Phase`; ecosystem term; **replaces `Project.goals` — Goal struct removed**),
-`task.milestone`/`task.parentTask` many-to-one refs, parent edge demoted to cascade-only
-bookkeeping — third and recorded-why revision of containment), project slimming (`artifacts`
-inlined to a ref array, `goals` REMOVED, `routines` field + routine parent edge REMOVED in favor
-of the companion join), outline-first agent rule + milestone-aware `promote-task` verb (fixes the
-"`$track` → `taskCreate`" M5 dogfood mapping, which is WRONG under two-forms), three-tier routine
-staleness (source refs auto-disable w/ `disabledReason`; context refs flag-only; registry refs
-immune), and a generic plugin-contributed deletion-guard capability (severity gates Continue; one
-alternative-action per verdict, run-then-recheck-then-delete; typed `DeleteGuarded` for agents).
-All in DESIGN.md §§ "Task model v2", "`Project`", "Routine staleness and deletion guards".
-SEQUENCING (user): Phases 1–2 (model changes + simplification) FIRST; skills/promotion later;
-routines removal does NOT wait for guards (Phases 4–5 are separate follow-ups). NO MIGRATIONS
-assumption carried from M5 — re-confirm before Phase 1 lands. Implementation NOT started._
+_Resume (2026-08-15, branch `claude/projects-task-sets-modeling-b5rk70`, PR #12595):
+**M6 Phases 1–2 IMPLEMENTED** (design + code). Task model v2 is live: `Milestone`
+(`org.dxos.type.milestone@0.1.0`, no status — progress derived), `TaskSet@0.3.0` with required
+ordered `tasks` (flat, sub-tasks included) + `milestones` arrays and derived-view helpers,
+`Task@0.3.0` with `milestone`/`parentTask` refs, `Project@0.4.0` with inline `artifacts` and NO
+`goals`/`routines`. Eight new/reworked task verbs (taskDelete/taskMove + milestone CRUD/Move/List)
+enforce the cross-object invariants; linear+github now mirror remote milestones. Full repo build
+green; affected-package tests green (types 28, plugin-tasks 29, plugin-projects 28,
+assistant-toolkit 71, linear 18, github 13, crm 15, brain 18, space 54). Exemplar fixture
+regenerated at the new versions.
+GOTCHAS worth remembering: (1) a suspended optional schema (`Task.parentTask`) rejects
+`= undefined` — clear with `delete`; (2) `db.add` cascades over refs, NOT parent edges; (3)
+compare refs by entity id parsed off the URI (`EID.tryParse` + `getEntityId`), never `.target`,
+since stored refs are local while `Obj.getURI` is space-qualified, and `Ref.hasEntityId` matches
+local refs only.
+NEXT: Phase 3 (outline-first skill rule + `promote-task`), then Phases 4–5 (routine staleness,
+deletion guards). Deferred within Phases 1–2: nested sub-task rendering in `react-ui-task`,
+milestone authoring UI, and sub-issue → `parentTask` sync (needs new API fetching in both
+connectors)._
 
 _Superseded pointer (2026-08-03): M5 Phases 1+3 + Phase 2 core MERGED as PR #12431; **Phase 4 DXOS SIDE MERGED as PR #12440** 2026-08-03 (McpToolAnnotation + all 12 §7.2 verbs, annotation verified through `Operation.serialize`). Also merged from this branch: #12442 (story rename) and #12444 (doc corrections). The checklist loop is now covered by CI play scripts in `stories-assistant/Chat.stories.tsx` — `WithPlanningScripted` (scripted `update-tasks`, title-keyed upsert does not duplicate) and `WithSubAgentsTest2` (delegation adds an unchecked item, checks it off on sub-agent completion); `WithPlanning`/`WithSubAgentsTest1` are the live `!test` counterparts. Next: Phase 2 remainder (templates scaffold/adopt TaskSet, app-graph task nodes, goals authoring, stories-projects play test); Phase 4 edge projection is the peer agent's. Do NOT pin a worktree in resume pointers — each session works in its harness-assigned worktree. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
 
@@ -443,47 +446,61 @@ deletion guards (Phase 5) are separate planned follow-ups.**
 
 ### Phase 1 — task schema v2
 
-- [ ] **`Milestone` type** — `org.dxos.type.milestone` in `@dxos/types`: name, description?
-      (carries "what done means" — absorbs Goal), targetDate?; NO stored status — progress is a
-      computed % complete from its tasks (done over non-cancelled; Goal's "met" = 100%, "dropped" =
-      delete the milestone); label/icon annotations; parented to its TaskSet.
-- [ ] **`TaskSet` arrays** — `milestones: Ref<Milestone>[]` (ordered = milestone sequence) +
-      `tasks: Ref<Task>[]` (ordered, EVERY task flat, incl. sub-tasks); update the docstring that
-      currently rejects membership arrays (record the reversal, DESIGN.md has the why).
-- [ ] **`Task` refs** — `milestone?: Ref<Milestone>` (unset ⇒ backlog; sub-tasks inherit nearest
-      ancestor unless overridden) + `parentTask?: Ref<Task>` (unset ⇒ root; NOT named `parent` —
-      collides with the ECHO parent-edge concept, doc the distinction at the field).
-- [ ] **`TaskOperation` verbs uphold the invariants** — create/update/move/delete write array
-      entry + parent edge together; `task.milestone` must resolve within the task's own set;
-      milestone-delete sweeps `task.milestone` refs; task-delete sweeps the subtree's entries out
-      of `TaskSet.tasks`; new verbs for milestone CRUD + reorder (splice `milestones`/`tasks`
-      arrays).
-- [ ] **`TaskSetArticle` renders from the flat array** — partition by `milestone` (groups ordered
-      by the `milestones` array, backlog last/first per design), tree by `parentTask`, per-group
-      order induced from global `tasks` order; tolerant readers (dedupe by id, dangling ref ⇒
-      backlog/root).
-- [ ] **Sync mapping** — linear/github: milestone entities ⇔ `Milestone` (foreign keys in
-      `Obj.getMeta`), `issue.milestone`/`Issue.projectMilestone` ⇔ `task.milestone`,
-      `Issue.parent`/sub-issues ⇔ `task.parentTask` (sub-issue sync is currently absent — this
-      adds it as field copies); membership array reconciliation on upsert/tombstone.
-- [ ] **Re-confirm NO MIGRATIONS** — nothing deployed still true? If not, this phase gains
-      taskSet/task typename migrations before landing.
+- [x] **`Milestone` type** — `org.dxos.type.milestone@0.1.0` in `@dxos/types`: name, description?
+      (carries "what done means" — absorbs Goal), targetDate? (`Format.DateOnly`); NO stored status.
+      Registered in plugin-space `capabilities/schema.ts` + `schema.node.ts` + `schema.workerd.ts`
+      and plugin-tasks `schema.workerd.ts`.
+- [x] **`TaskSet` arrays** — `0.2.0 → 0.3.0`; `milestones`/`tasks` required ordered arrays, docstring
+      rewritten. Derived views live on the same module (`resolveTasks`, `resolveMilestones`,
+      `rootTasks`, `subTasks`, `effectiveMilestoneId`, `tasksForMilestone`, `backlogTasks`,
+      `milestoneProgress`) and compare **entity ids parsed off ref URIs**, never `.target`, so they
+      work on React snapshots too. Covered by `TaskSet.test.ts` (7 tests).
+- [x] **`Task` refs** — `0.2.0 → 0.3.0`; `milestone?` + `parentTask?` (self-ref via
+      `Schema.suspend`). PITFALL: a suspended optional schema rejects an `undefined` assignment —
+      clear these fields with `delete`, not `= undefined`.
+- [x] **`TaskOperation` verbs uphold the invariants** — shared `operations/task-set-membership.ts`
+      (findTaskSet/findMilestoneTaskSet via the reverse-ref index, addTaskToSet, addMilestoneToSet,
+      collectSubtree, removeTasksFromSet, reorder, refEntityId). NEW verbs: `taskDelete`, `taskMove`,
+      `milestoneCreate`/`Update`/`Delete`/`Move`/`List`. `taskCreate` gained `parentTask` (renamed
+      from `parent`) + `milestone`; `taskUpdate` gained nullable `milestone`/`parentTask` (null =
+      backlog / promote to root) and refuses a re-parent into the task's own subtree.
+- [x] **`TaskSetArticle` renders from the flat array** — milestone sections (with derived
+      `done/total`) then Backlog; a set with no milestones renders as one flat list, as before.
+      Delete now routes through `taskDelete` rather than `db.remove`, which is what sweeps the
+      array. NOT DONE: sub-tasks are still not rendered nested (root tasks only, matching the
+      previous behavior) — `react-ui-task`'s `TaskList` is flat; nesting is a follow-up.
+- [x] **Sync mapping** — linear/github: milestones now mirror as `Milestone` objects keyed by
+      foreign key (both API layers extended to fetch them), `task.milestone` set from the remote
+      issue and cleared on remote unassignment, membership reconciled through a shared
+      `setTaskContainer` (idempotent; moves strip the ref from the old set). Remote milestone
+      status is deliberately dropped — progress is derived.
+      NOT DONE: **sub-issues → `task.parentTask` is not wired** — neither API layer fetches
+      hierarchy (Linear needs `parent { id }` on the issues query; GitHub needs the `sub_issues`
+      endpoint). Tracked as a follow-up.
+- [x] **Re-confirm NO MIGRATIONS** — carried forward from M5; no migrations written. Versions
+      bumped: taskSet `0.3.0`, task `0.3.0`, milestone `0.1.0`, project `0.4.0`. The onboarding
+      exemplar fixture was regenerated (`pnpm run build-exemplar`) so it carries the new versions
+      plus two milestones. **Re-confirm with the user before this lands if anything has deployed.**
 
 ### Phase 2 — project slimming
 
-- [ ] **`artifacts` → inline `Ref<Obj.Unknown>[]`** — drop the Collection indirection;
-      `ProjectSkill.artifact-add/-list` retarget; `ObjectGallery` already takes ref arrays;
-      create-object capability stops making a Collection.
-- [ ] **Remove `Project.goals` + the `Goal` struct** — milestones replace goals (DESIGN.md
-      "Naming"); ProjectArticle Goals section (read-only GoalList) retired, milestone sequence
-      renders in its place; M5 "goals authoring UI" item is OBSOLETED (becomes milestone
-      authoring on the TaskSet).
-- [ ] **Remove `Project.routines` + the routine→project parent edge** — `CreateRoutine` handler
-      stops parenting/splicing; ProjectArticle drops the routines gallery + its delete handler
-      (companion is the only routines surface); templates (`inboxResearch`, `crmProject`) stop
-      pushing the ref; delete-project cascade test updated (routines now survive project
-      deletion). Lands WITHOUT guards/staleness — the interim strand-on-delete gap is accepted
-      and recorded in DESIGN.md; Phases 4–5 close it separately.
+- [x] **`artifacts` → inline `Ref<Obj.Unknown>[]`** — Collection indirection dropped everywhere
+      (skill add/list, scaffold, ProjectArticle, get-project, mailbox helpers, stories/evals).
+      `handleDeleteArtifact` splices the array itself and calls `RemoveObjects` with no target,
+      because that param must be a `Collection` and there no longer is one.
+- [x] **Remove `Project.goals` + the `Goal` struct** — GoalList + Goals section deleted,
+      `goals.label` removed, `goalCount`/`goals` dropped from the projectList/projectGet/
+      projectUpdate MCP verbs. Milestones render through the TaskSet's Tasks section.
+      NOT DONE: a dedicated milestone **authoring** UI (create/rename/reorder from the article) —
+      milestones are currently authored through the verbs; carried forward from the obsoleted
+      "goals authoring UI" item.
+- [x] **Remove `Project.routines` + the routine→project parent edge** — done in CreateRoutine,
+      ProjectArticle (gallery + handler gone), and all five templates.
+      **Trap found while doing it:** `db.add` cascades over **refs**, not parent edges, so with
+      both removed nothing in the project's graph reached a template-scaffolded routine and
+      `db.add(project)` silently dropped it. Every template now persists its routine explicitly.
+      Tests flipped to assert routines SURVIVE project deletion (`delete-project.test.ts`,
+      `inbox-research.test.ts`), with comments marking that deliberate and pointing at Phases 4–5.
 
 ### Phase 3 — outline-first + promote-task (deliberately after the model changes)
 

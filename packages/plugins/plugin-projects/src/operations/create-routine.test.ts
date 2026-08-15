@@ -8,7 +8,7 @@ import { ProjectSkill } from '@dxos/assistant-toolkit';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
-import { Collection, Ref } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 
@@ -28,7 +28,7 @@ describe('seedProjectScope', () => {
 
   const setup = async () => {
     const { db } = await builder.createDatabase({
-      types: [Project.Project, Instructions.Instructions, Collection.Collection, Text.Text],
+      types: [Project.Project, Instructions.Instructions, Text.Text],
     });
     return db;
   };

@@ -49,7 +49,7 @@ checks it off). **Open gap:** promotion is still delegation-only — there is no
 except by delegating it. Human convert-to-task is the only other path. (Verb specced
 2026-08-14 — see "Promotion and the outline-first rule" below; tracked as M6 Phase 3.)
 
-## Task model v2 (decided 2026-08-14)
+## Task model v2 (decided 2026-08-14, implemented 2026-08-15)
 
 Third revision of task containment (backref plan → parent edge in M5 → this), so the
 rationale is recorded in full. Decided in design session (josiah × claude), session
@@ -128,6 +128,20 @@ Invariants live in the `TaskOperation` verbs (the single write path shared by UI
 agents): array entry + parent edge written together; `task.milestone` must point into
 the task's own set's `milestones`; delete sweeps refs. Readers stay tolerant (dedupe by
 id, dangling ref ⇒ backlog/root) since concurrent array merges can still double an entry.
+
+Three things the implementation had to discover, recorded so the next change does not
+rediscover them:
+
+- **`db.add` cascades over refs, not parent edges.** Dropping both the `routines` ref and the
+  routine's parent edge left template-scaffolded routines unreachable from the project's graph,
+  so adding the project silently dropped them; they are now persisted explicitly.
+- **A suspended optional schema rejects an `undefined` assignment.** `Task.parentTask` is
+  self-referential (`Schema.suspend`), so clearing it needs `delete`, not `= undefined`.
+- **Compare refs by entity id parsed off the URI**, never by dereferencing: a stored ref is
+  local (`echo:///<id>`) while `Obj.getURI` on the object is space-qualified, so string equality
+  between the two silently fails — which is also why `Ref.hasEntityId` (local-only) is not a
+  general-purpose comparison. The derived-view helpers use `EID.tryParse` + `getEntityId`, which
+  is what lets them run against React snapshots whose refs carry no resolver.
 
 **Naming** (2026-08-14, second pass): `Milestone`, not `Phase` — it is the ecosystem
 term (Linear and GitHub both call this entity a milestone, so sync maps name-to-name),

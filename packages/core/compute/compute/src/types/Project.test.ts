@@ -17,10 +17,10 @@ const TestObject = Type.makeObject(DXN.make('org.dxos.type.testObject', '0.1.0')
 describe('Project', () => {
   test('typename, version, and defaults', ({ expect }) => {
     expect(Type.getTypename(Project.Project)).toBe('org.dxos.type.project');
-    expect(Type.getVersion(Project.Project)).toBe('0.3.0');
+    expect(Type.getVersion(Project.Project)).toBe('0.4.0');
     const project = Project.make({ name: 'test' });
     expect(Obj.instanceOf(Project.Project, project)).toBe(true);
-    expect(project.routines).toEqual([]);
+    expect(project.artifacts).toEqual([]);
   });
 
   test('contextBindings exposes skills and objects, not the instructions object itself', ({ expect }) => {

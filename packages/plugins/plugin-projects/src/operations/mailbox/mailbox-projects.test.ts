@@ -10,7 +10,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Collection, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -28,7 +28,6 @@ import updateTravelLog from './update-travel-log';
 const testLayer = () =>
   TestDatabaseLayer({
     types: [
-      Collection.Collection,
       Feed.Feed,
       Instructions.Instructions,
       Mailbox.Mailbox,
@@ -75,9 +74,8 @@ const seed = Effect.fnUntraced(function* (messages: MessageProps[]) {
 
 /** The markdown content of the single artifact document with the given name. */
 const artifactContent = Effect.fnUntraced(function* (project: Project.Project, name: string) {
-  const artifacts = yield* Database.load(project.artifacts!);
   const documents: Markdown.Document[] = [];
-  for (const ref of artifacts.objects) {
+  for (const ref of project.artifacts) {
     const object = yield* Effect.promise(() => ref.load());
     if (Obj.instanceOf(Markdown.Document, object) && object.name === name) {
       documents.push(object);
@@ -223,10 +221,12 @@ describe('mailbox project pipelines', () => {
       const project = projects.find((candidate) => candidate.id === result.projectId);
       expect(project?.name).toBe('Kirkconsult — Requests');
 
-      // The tracking routine: owned by the project, runnable-bound, feed-triggered, disabled.
+      // The tracking routine: a standalone object (the project neither owns nor lists it),
+      // runnable-bound, feed-triggered, disabled.
       invariant(project);
-      expect(project.routines).toHaveLength(1);
-      const routine = yield* Effect.promise(() => project.routines[0].load());
+      const routines = yield* Database.query(Filter.type(Routine.Routine)).run;
+      expect(routines).toHaveLength(1);
+      const routine = routines[0];
       expect(routine.spec?.kind).toBe('runnable');
       expect(routine.triggers).toHaveLength(1);
       const trigger = yield* Effect.promise(() => routine.triggers[0].load());
@@ -269,7 +269,7 @@ describe('mailbox project pipelines', () => {
       const project = projects.find((candidate) => candidate.id === result.projectId);
       expect(project?.name).toBe('Nicole — Threads');
       invariant(project);
-      const routine = yield* Effect.promise(() => project.routines[0].load());
+      const [routine] = yield* Database.query(Filter.type(Routine.Routine)).run;
       // Compared against the operation's own key, so renaming the operation moves this assertion
       // with it rather than leaving a stale string behind.
       expect(routine.spec?.kind === 'runnable' && routine.spec.runnable.uri.toString()).toContain(

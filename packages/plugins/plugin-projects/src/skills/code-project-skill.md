@@ -2,8 +2,8 @@
 
 ## Overview
 
-A **project** is a work-stream — one coherent effort with its own goals, task ledger, and design
-record — stored as objects in a DXOS ECHO space: a project object, an owned task set, an outline
+A **project** is a work-stream — one coherent effort with its own milestones, task ledger, and
+design record — stored as objects in a DXOS ECHO space: a project object, an owned task set, an outline
 (the scratch checklist), and design documents filed as artifacts. The space is the durable,
 shared source of truth: state survives context resets and new sessions, is visible live in
 Composer, and is shared with other agents and humans working the same stream.
@@ -83,7 +83,7 @@ fresh binding is only a pointer, so the first `projectCreate` is what puts anyth
 
 Every object reference passed into a tool is an envelope wrapping an **`echo:` URI**, not a bare
 string and not a bare object id: `{"/": "echo:///<objectId>"}`. `projectGet`'s `project`,
-`taskCreate`'s `taskSet`, `taskUpdate`'s `task`, `taskCreate`'s `parent` etc. all take this shape.
+`taskCreate`'s `taskSet`, `taskUpdate`'s `task`, `taskCreate`'s `milestone` etc. all take this shape.
 
 The URI forms, exactly:
 
@@ -103,10 +103,15 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
 ## The shape of a project
 
 - **Project object** — `name`; `status` (`active`|`paused`|`blocked`|`ended`); `description`
-  (the one-line summary); `goals` (what done means, each `open`|`met`|`dropped`).
-- **Task set** — the ledger. Phases are parent tasks (`taskCreate` with no `parent`); individual
-  work items are sub-tasks (`taskCreate` with `parent: {"/": "echo:///<phase-task-id>"}`). Task `status`
-  is `todo`|`in-progress`|`done`|`failed`|`cancelled`. Projects made by `projectCreate` always
+  (the one-line summary).
+- **Milestones** — what done means, one ordered span of work per phase of the effort, in the task set
+  (`milestoneCreate` / `milestoneUpdate` / `milestoneMove` / `milestoneDelete` / `milestoneList`).
+  A milestone carries `name`, `description` (what done means for it), and an optional `targetDate`;
+  it stores **no status** — `milestoneList` derives `done`/`total` from the tasks filed under it, so
+  progress can never disagree with the work.
+- **Task set** — the ledger. Milestone membership is the task's `milestone` (`taskCreate` with
+  `milestone: {"/": "echo:///<milestone-id>"}`; omit it for the backlog); sub-tasks use `parentTask`.
+  Task `status` is `todo`|`in-progress`|`done`|`failed`|`cancelled`. Projects made by `projectCreate` always
   own a task set; if `projectGet` shows none (a project created some other way), bootstrap one
   before recording tasks: `createObject { typename: 'org.dxos.type.taskSet', properties: { name:
 'Tasks' }, spaceId }`, then attach it with `updateObject { id: <project-id>, properties: {
@@ -143,19 +148,22 @@ taskSet: {"/": "echo:///<task-set-id>"} }, spaceId }`. If the bootstrap fails, s
 - **`/codeProject new <name>`** — `projectCreate { name, spaceId }`, then
   `projectUpdate { project: {"/": "echo:///<id>"}, status: 'active', description: '<one-line summary>',
 spaceId }`. Report the new project id.
-- **`/codeProject tasks`** — `taskList { project: {"/": "echo:///<id>"}, includeSubtasks: true, spaceId }` for
-  the active project; render phases (parent tasks) with their sub-tasks and statuses.
+- **`/codeProject tasks`** — `milestoneList { project: {"/": "echo:///<id>"}, spaceId }` plus
+  `taskList { project: {"/": "echo:///<id>"}, includeSubtasks: true, spaceId }` for the active
+  project; render each milestone with its derived done/total and the tasks filed under it.
 - **`/codeProject track <text>`** — `taskCreate` on the active project's task set (`taskSet` ref
   from `projectGet`; bootstrap one first if missing — see "The shape of a project"). If the text
-  names a phase, create it under that phase's parent task; otherwise ask which phase if the
-  project has several — never guess silently.
+  names a milestone, pass that milestone's ref; otherwise ask which milestone if the project has
+  several — never guess silently.
 - **`/codeProject hydrate`** — checkpoint before stopping or handing off:
   1. Reconcile task statuses: `taskUpdate`/`taskComplete` every task whose real state has
      moved; leave a short `description` note on anything left `in-progress` (what's blocked,
      what's next).
   2. Refresh the resume pointer: `outlineUpdate` the `Resume:` line to the single next action.
-  3. Update `projectUpdate.goals` if goals were met/dropped/added, and `status` if the
-     work-stream's state changed.
+  3. Reconcile the milestone sequence: `milestoneCreate` anything newly scoped, `milestoneUpdate`
+     a description or target date that moved, `milestoneDelete` what was dropped (its tasks fall
+     back to the backlog). A milestone has no status to set — completing its tasks is what closes
+     it. Update `projectUpdate.status` if the work-stream's state changed.
   4. Push durable _why_ (decisions, findings) into the design document, not the outline — the
      outline is scratch, the document is the record.
   5. Confirm the checkpoint in one short block (done / in-progress / next).
@@ -165,7 +173,7 @@ spaceId }`. Report the new project id.
 - **`/codeProject resume`** — reload at the start of a session:
   1. `projectList { spaceId }` to discover projects. If one was named, match it; otherwise pick
      the single `active` project, or ask which when several are `active` — never guess.
-  2. `projectGet { project: {"/": "echo:///<id>"}, spaceId }`, then
+  2. `projectGet { project: {"/": "echo:///<id>"}, spaceId }`, then `milestoneList` and
      `taskList { project: {"/": "echo:///<id>"}, includeSubtasks: true, spaceId }`; read the outline's
      `Resume:` line.
   3. Report a concise state: done / in-progress / **next action**. Continue with the next
@@ -191,7 +199,7 @@ spaceId }`. Report the new project id.
 | Binding a space the user did not name (even the only one listed)   | Offer setup, list spaces by name, and bind only on an explicit answer.                       |
 | Passing a bare id, or `echo://<id>`, where a ref is expected       | Refs wrap an `echo:` URI: `{"/": "echo:///<id>"}`. Two slashes means a space, not an object. |
 | Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.   |
-| Flat task list with no phase grouping                              | Create one parent task per phase; individual tasks are sub-tasks with `parent` set.          |
+| Flat task list with no milestone grouping                          | Create one milestone per phase; file each task under it with `taskCreate`'s `milestone`.     |
 | Leaving task status stale after work lands                         | `taskUpdate`/`taskComplete` in the same turn the work completes, not batched at the end.     |
 | Losing the resume pointer                                          | `outlineUpdate` the `Resume:` line at every checkpoint, not just at the very end.            |
 | Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.               |

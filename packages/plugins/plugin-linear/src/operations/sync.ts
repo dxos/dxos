@@ -10,11 +10,11 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 const { mergeField, snapshotField } = ConnectorSync;
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Task, TaskSet } from '@dxos/types';
+import { Milestone, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { LinearOperation } from '#types';
@@ -107,6 +107,33 @@ const findByForeignId = <T>(type: Type.AnyEntity, id: string) =>
     return results.length > 0 ? (results[0] as T) : undefined;
   });
 
+/**
+ * Move a task into `container`. Membership and order are the `TaskSet.tasks` array; the ECHO parent
+ * edge is set alongside only so deletion cascades, so both are written together. Idempotent —
+ * sync runs repeatedly and must never append a second ref for a task already in the set.
+ */
+const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Task, container: TaskSet.TaskSet) {
+  if (container.tasks.some(Ref.hasEntityId(task.id))) {
+    return;
+  }
+  // The reverse-ref index, not `Obj.getParent`: the array states membership, the parent edge does not.
+  const previous = yield* Database.query(
+    Query.select(Filter.id(task.id)).referencedBy(TaskSet.TaskSet, 'tasks'),
+  ).run.pipe(Effect.orElseSucceed(() => []));
+  for (const set of previous) {
+    if (set.id === container.id) {
+      continue;
+    }
+    Obj.update(set, (set) => {
+      set.tasks = set.tasks.filter((ref) => !Ref.hasEntityId(task.id)(ref));
+    });
+  }
+  Obj.update(container, (container) => {
+    container.tasks = [...container.tasks, Ref.make(task)];
+  });
+  Obj.setParent(task, container);
+});
+
 const sinceFromOptions = (options: LinearOperation.SyncOptions | undefined): string | undefined => {
   const days = options?.maxDaysBack;
   if (typeof days !== 'number' || days <= 0) {
@@ -164,7 +191,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
     return { project: existing, created: false };
   }
 
-  const created = Obj.make(TaskSet.TaskSet, {
+  const created = TaskSet.make({
     [Obj.Meta]: { keys: [fkFor(remote.id)] },
     name: remote.name,
     description: remote.description ?? undefined,
@@ -175,16 +202,55 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
 });
 
 /**
+ * Pull a Linear project milestone into ECHO. Milestones are mirrored remote-wins without a
+ * snapshot merge — they are pull-only (nothing here pushes milestone edits back), so there is no
+ * local side for a three-way merge to protect.
+ */
+export const upsertMilestone = Effect.fn('upsertMilestone')(function* (
+  taskSet: TaskSet.TaskSet,
+  remote: LinearApi.ProjectMilestone,
+) {
+  const name = remote.name;
+  const description = remote.description ?? undefined;
+  // Linear's own milestone status is deliberately not mapped: `Milestone` derives progress from its
+  // tasks, so a stored status could contradict the work it contains.
+  const targetDate = remote.targetDate ?? undefined;
+
+  const existing = yield* findByForeignId<Milestone.Milestone>(Milestone.Milestone, remote.id);
+  const milestone =
+    existing ??
+    (yield* Database.add(Milestone.make({ [Obj.Meta]: { keys: [fkFor(remote.id)] }, name, description, targetDate })));
+  if (existing) {
+    Obj.update(existing, (existing) => {
+      existing.name = name;
+      existing.description = description;
+      existing.targetDate = targetDate;
+    });
+  }
+  // Sequence is the `milestones` array; the parent edge only carries deletion cascade.
+  if (!taskSet.milestones.some(Ref.hasEntityId(milestone.id))) {
+    Obj.update(taskSet, (taskSet) => {
+      taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
+    });
+    Obj.setParent(milestone, taskSet);
+  }
+  return milestone;
+});
+
+/**
  * Pull a Linear issue into ECHO as a Task. Same merge shape as
  * {@link upsertProject}, against snapshot fields {title, description, status,
- * priority, estimate}. The Task → Project ref is wired on create and
- * refreshed if the issue's project changes; assignees are intentionally not
- * synced.
+ * priority, estimate}. Set membership is wired on create and re-wired if the
+ * issue's project changes; assignees are intentionally not synced.
+ *
+ * `milestone` is the local mirror of `issue.projectMilestone`, mirrored remote-wins outside the
+ * snapshot merge (nothing pushes milestone edits back, so there is no local side to protect).
  */
 export const upsertTask = Effect.fn('upsertTask')(function* (
   binding: Cursor.ExternalCursor,
   issue: LinearApi.Issue,
   project: TaskSet.TaskSet | undefined,
+  milestone?: Milestone.Milestone,
 ) {
   const status = LinearApi.stateTypeToTaskStatus(issue.state.type);
   const priority = LinearApi.priorityNumberToTaskPriority(issue.priority);
@@ -253,10 +319,18 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
       if (writeEstimate) {
         existing.estimate = estimateResult.value;
       }
+      if (milestone) {
+        if (existing.milestone?.target?.id !== milestone.id) {
+          existing.milestone = Ref.make(milestone);
+        }
+        // Clear only when Linear itself reports no milestone; a merely unresolved one would
+        // otherwise wipe a perfectly good local assignment.
+      } else if (issue.projectMilestone == null && existing.milestone !== undefined) {
+        existing.milestone = undefined;
+      }
     });
-    // Containment is the ECHO parent edge; re-parent when the issue moved projects.
-    if (project && Obj.getParent(existing)?.id !== project.id) {
-      Obj.setParent(existing, project);
+    if (project) {
+      yield* setTaskContainer(existing, project);
     }
     Cursor.writeSnapshot(binding, issue.id, remoteFields);
     return { task: existing, created: false };
@@ -269,10 +343,11 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
     status,
     priority,
     estimate: issue.estimate ?? undefined,
+    milestone: milestone ? Ref.make(milestone) : undefined,
   });
   const persisted = yield* Database.add(created);
   if (project) {
-    Obj.setParent(persisted, project);
+    yield* setTaskContainer(persisted, project);
   }
   Cursor.writeSnapshot(binding, issue.id, remoteFields);
   return { task: persisted, created: true };
@@ -500,6 +575,9 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
               const projects = yield* LinearApi.fetchTeamProjects(remoteTeam.id);
               const projectByRemoteId = new Map<string, TaskSet.TaskSet>();
               const remoteProjectsById = new Map<string, LinearApi.Project>();
+              // Flat across projects: Linear milestone ids are globally unique, so one map resolves
+              // `issue.projectMilestone` without knowing which project the issue sits in.
+              const milestoneByRemoteId = new Map<string, Milestone.Milestone>();
               let pulledProjects = 0;
               for (const project of projects) {
                 const { project: local, created } = yield* upsertProject(binding, project);
@@ -507,6 +585,10 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
                 remoteProjectsById.set(project.id, project);
                 if (created) {
                   pulledProjects++;
+                }
+                const milestones = yield* LinearApi.fetchProjectMilestones(project.id);
+                for (const milestone of milestones) {
+                  milestoneByRemoteId.set(milestone.id, yield* upsertMilestone(local, milestone));
                 }
               }
 
@@ -516,7 +598,10 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
               let pulledTasks = 0;
               for (const issue of issues) {
                 const project = issue.project ? projectByRemoteId.get(issue.project.id) : undefined;
-                const { created } = yield* upsertTask(binding, issue, project);
+                const milestone = issue.projectMilestone
+                  ? milestoneByRemoteId.get(issue.projectMilestone.id)
+                  : undefined;
+                const { created } = yield* upsertTask(binding, issue, project, milestone);
                 remoteIssuesById.set(issue.id, issue);
                 if (created) {
                   pulledTasks++;

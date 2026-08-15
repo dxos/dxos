@@ -8,7 +8,7 @@ import { Chat } from '@dxos/assistant-toolkit';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
-import { Collection, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 
@@ -31,26 +31,15 @@ describe('deleting a project', () => {
 
   const setup = async () => {
     const { db } = await builder.createDatabase({
-      types: [
-        Project.Project,
-        Instructions.Instructions,
-        Collection.Collection,
-        Chat.Chat,
-        Feed.Feed,
-        Text.Text,
-        Routine.Routine,
-      ],
+      types: [Project.Project, Instructions.Instructions, Chat.Chat, Feed.Feed, Text.Text, Routine.Routine],
     });
 
-    // Mirrors the create-object capability: owned instructions + owned artifacts collection.
+    // Mirrors the create-object capability: owned instructions, artifacts listed by ref.
     const project = db.add(Project.make({ name: 'Test' }));
     const instructions = Instructions.make({ name: 'Instructions', text: 'Focus on this project.' });
     Obj.setParent(instructions, project);
-    const artifacts = Collection.make();
-    Obj.setParent(artifacts, project);
     Obj.update(project, (project) => {
       project.instructions = Ref.make(instructions);
-      project.artifacts = Ref.make(artifacts);
     });
 
     // Mirrors ProjectOperation.CreateChat: the chat is owned by the parent edge, not a ref field.
@@ -58,15 +47,12 @@ describe('deleting a project', () => {
     const chat = db.add(Chat.make({ name: 'Chat', feed: Ref.make(feed) }));
     Obj.setParent(chat, project);
 
-    // Mirrors ProjectOperation.CreateRoutine: owned by the parent edge AND linked for gallery order.
+    // Mirrors ProjectOperation.CreateRoutine: neither owned nor referenced — the routine reaches its
+    // project only through its own instructions.
     const routine = db.add(Routine.make({ name: 'Routine', triggers: [] }));
-    Obj.setParent(routine, project);
-    Obj.update(project, (project) => {
-      project.routines = [...project.routines, Ref.make(routine)];
-    });
     await db.flush();
 
-    return { db, project, instructions, artifacts, chat, routine };
+    return { db, project, instructions, chat, routine };
   };
 
   type TestDatabase = Awaited<ReturnType<typeof setup>>['db'];
@@ -97,28 +83,37 @@ describe('deleting a project', () => {
     return descendants;
   };
 
-  test('the owned instructions, artifacts collection, chats and routines are removed with it', async ({ expect }) => {
+  test('the owned instructions and chats are removed with it', async ({ expect }) => {
     const { db, project } = await setup();
     expect(await countOf(db, Filter.type(Project.Project))).toEqual(1);
     expect(await countOf(db, Filter.type(Instructions.Instructions))).toEqual(1);
-    expect(await countOf(db, Filter.type(Collection.Collection))).toEqual(1);
     expect(await countOf(db, Filter.type(Chat.Chat))).toEqual(1);
-    expect(await countOf(db, Filter.type(Routine.Routine))).toEqual(1);
 
     db.remove(project);
     await db.flush();
 
     expect(await countOf(db, Filter.type(Project.Project))).toEqual(0);
     expect(await countOf(db, Filter.type(Instructions.Instructions))).toEqual(0);
-    expect(await countOf(db, Filter.type(Collection.Collection))).toEqual(0);
     expect(await countOf(db, Filter.type(Chat.Chat))).toEqual(0);
-    expect(await countOf(db, Filter.type(Routine.Routine))).toEqual(0);
+  });
+
+  // Deliberate: `Project.routines` and the routine→project parent edge are gone, so a routine is a
+  // standalone object connected only by its instructions. Sweeping up the routines a deleted project
+  // strands is the separate deletion-guard/staleness work, not a cascade.
+  test('connected routines survive it', async ({ expect }) => {
+    const { db, project } = await setup();
+    expect(await countOf(db, Filter.type(Routine.Routine))).toEqual(1);
+
+    db.remove(project);
+    await db.flush();
+
+    expect(await countOf(db, Filter.type(Routine.Routine))).toEqual(1);
   });
 
   test('owned descendants are reachable transitively before removal, so their planks can be closed', async ({
     expect,
   }) => {
-    const { db, project, chat, instructions, artifacts, routine } = await setup();
+    const { db, project, chat, instructions } = await setup();
 
     // Mirrors the walk `RemoveObjects` runs to decide which planks to close. Passing only the project
     // would leave the chat's plank open on a removed object; stopping at one level would miss the
@@ -126,8 +121,6 @@ describe('deleting a project', () => {
     const descendantIds = await collectDescendantIds(db, project);
     expect(descendantIds).toContain(chat.id);
     expect(descendantIds).toContain(instructions.id);
-    expect(descendantIds).toContain(artifacts.id);
-    expect(descendantIds).toContain(routine.id);
 
     const textId = instructions.text.target?.id;
     expect(textId).toBeTruthy();
@@ -135,11 +128,11 @@ describe('deleting a project', () => {
   });
 
   test('artifacts are NOT removed with it — they are referenced, not owned', async ({ expect }) => {
-    const { db, project, artifacts } = await setup();
-    // An artifact is filed into the collection by ref; its parent stays wherever it was created.
+    const { db, project } = await setup();
+    // An artifact is listed on the project by ref; its parent stays wherever it was created.
     const artifact = db.add(Feed.make());
-    Obj.update(artifacts, (artifacts) => {
-      artifacts.objects.push(Ref.make(artifact));
+    Obj.update(project, (project) => {
+      project.artifacts = [...project.artifacts, Ref.make(artifact)];
     });
     await db.flush();
 

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { makeRoutine } from '@dxos/plugin-routine';
@@ -89,12 +89,10 @@ export const inboxResearch: ProjectCapabilities.Template = {
           concurrency: 1,
         }),
       });
-      // Owned by the project (cascade-deletes with it) AND linked, so it shows in the article's
-      // routines gallery like a toolbar-created routine.
-      Obj.setParent(routine, project);
-      Obj.update(project, (project) => {
-        project.routines = [...project.routines, Ref.make(routine)];
-      });
+      // Persisted here rather than reached through the returned project: the routine connects to its
+      // project only through its own `instructions.objects`, so nothing in the project's ref graph
+      // would carry it into the database.
+      yield* Database.add(routine);
 
       return project;
     }),

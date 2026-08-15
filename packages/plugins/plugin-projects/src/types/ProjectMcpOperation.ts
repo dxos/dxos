@@ -33,8 +33,7 @@ export const ListProjects = Operation.make({
   meta: {
     key: makeKey('projectList'),
     name: 'List Projects',
-    description:
-      'List the projects in the space: id, name, status, description, goal count, and whether a task set is linked.',
+    description: 'List the projects in the space: id, name, status, description, and whether a task set is linked.',
     icon: 'ph--list-bullets--regular',
   },
   services: [Database.Service],
@@ -51,7 +50,6 @@ export const ListProjects = Operation.make({
         status: Schema.optional(Project.ProjectStatus),
         description: Schema.optional(Schema.String),
         hasTaskSet: Schema.Boolean,
-        goalCount: Schema.Number,
       }),
     ),
   }),
@@ -63,8 +61,7 @@ export const GetProject = Operation.make({
   meta: {
     key: makeKey('projectGet'),
     name: 'Get Project',
-    description:
-      'Read a project in full: status, goals, task-set summary (open/total per set), outline, and artifacts.',
+    description: 'Read a project in full: status, task-set summary (open/total per set), outline, and artifacts.',
     icon: 'ph--info--regular',
   },
   services: [Database.Service],
@@ -76,7 +73,6 @@ export const GetProject = Operation.make({
     name: Schema.optional(Schema.String),
     status: Schema.optional(Project.ProjectStatus),
     description: Schema.optional(Schema.String),
-    goals: Schema.Array(Project.Goal),
     taskSet: Schema.optional(
       Schema.Struct({
         id: Schema.String,
@@ -97,7 +93,7 @@ export const UpdateProject = Operation.make({
   meta: {
     key: makeKey('projectUpdate'),
     name: 'Update Project',
-    description: 'Patch a project: name, status, description, or the goals list (what done means).',
+    description: 'Patch a project: name, status, or description.',
     icon: 'ph--pencil-simple--regular',
   },
   services: [Database.Service],
@@ -106,8 +102,6 @@ export const UpdateProject = Operation.make({
     name: Schema.optional(Schema.String),
     status: Schema.optional(Project.ProjectStatus),
     description: Schema.optional(Schema.String),
-    /** Replaces the goals list wholesale; omit to leave goals untouched. */
-    goals: Schema.optional(Schema.Array(Project.Goal)),
   }),
   // JSON snapshot, not a live object — see MILESTONE-5.md §7.4.
   output: Schema.Struct({

@@ -56,14 +56,9 @@ const handler: Operation.WithHandler<typeof ProjectOperation.CreateRoutine> = Pr
         seedProjectScope(yield* Database.load(instructionsRef));
       }
 
-      // Owned AND linked, like template starter routines: the parent edge makes the routine (and its
-      // owned trigger) cascade-delete with the project, while the ref keeps gallery order — the
-      // Routines section lists by type query, so ownership does not hide it there.
-      Obj.setParent(object, project);
-      Obj.update(project, (project) => {
-        project.routines = [...project.routines, Ref.make(object)];
-      });
-
+      // Neither owned nor listed on the project: the routine reaches its project solely through its
+      // own `instructions.objects`, which is the edge `connectedRoutinesQuery` discovers, so the
+      // routine companion surfaces it the same way it does for every other object.
       yield* Database.flush();
       yield* Operation.invoke(LayoutOperation.Open, { subject: [...subject] });
       return { routine: object };

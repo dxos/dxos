@@ -4,7 +4,7 @@
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
-import { Collection, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -21,9 +21,9 @@ export type ScaffoldProjectProps = {
 
 /**
  * Builds the standard in-memory Project graph: the project plus its owned Instructions (named so
- * chat context chips read sensibly) and owned artifacts Collection, all parented so a single
- * `Database.add` cascade persists them and deletion cascades back. Shared by the blank template and
- * domain templates, which pass their own instructions text/skills/objects.
+ * chat context chips read sensibly) and task set, all parented so a single `Database.add` cascade
+ * persists them and deletion cascades back. Shared by the blank template and domain templates,
+ * which pass their own instructions text/skills/objects.
  */
 export const scaffoldProject = ({ name, description, text, ...instructionsProps }: ScaffoldProjectProps = {}) => {
   const project = Project.make({ name: name ?? '', description });
@@ -33,15 +33,12 @@ export const scaffoldProject = ({ name, description, text, ...instructionsProps 
     ...instructionsProps,
   });
   Obj.setParent(instructions, project);
-  const artifacts = Collection.make();
-  Obj.setParent(artifacts, project);
   // Every project owns a task set from the start: tasks are parented to it, so the ledger exists
   // before the first task rather than being created ad hoc on first use.
   const tasks = TaskSet.make({ name: 'Tasks' });
   Obj.setParent(tasks, project);
   Obj.update(project, (project) => {
     project.instructions = Ref.make(instructions);
-    project.artifacts = Ref.make(artifacts);
     project.taskSet = Ref.make(tasks);
   });
   return project;
