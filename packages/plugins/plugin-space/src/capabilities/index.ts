@@ -25,8 +25,12 @@ import { makeCreateInvitationUrl } from './helpers';
 export * from './app-graph-builder';
 export { makeCreateObjectEntryForDatabaseType } from '../util';
 
-export const Commands = AppCapability.commands(() => import('./commands'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const Commands = AppCapability.commands(() => import('./commands'), {
+  environments: ['browser', 'node'],
+});
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: ['browser', 'node'],
+});
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
@@ -34,6 +38,7 @@ export const IdentityCreated = Capability.lazyModule(
     provides: [SpaceCapabilities.DefaultSpace],
     // Runtime event: the default space is created when a local identity is created, not at startup.
     activatesOn: ClientEvents.IdentityCreated,
+    environments: ['browser', 'node'],
   },
   () => import('./identity-created'),
 );
@@ -42,7 +47,9 @@ export type { NavigationHandlerOptions } from './navigation-handler';
 export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
   requires: [ClientCapabilities.Client],
 });
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  environments: ['browser', 'node', 'workerd'],
+});
 export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
@@ -68,7 +75,10 @@ export const Repair = Capability.lazyModule(
   },
   () => import('./repair'),
 );
-export const Schema = AppCapability.schema(() => import('./schema'));
+// Headless environments load the reduced list via ./overrides.node.ts / ./overrides.workerd.ts.
+export const Schema = AppCapability.schema(() => import('./schema'), {
+  environments: ['browser', 'node', 'workerd'],
+});
 export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SpaceCapabilities.SettingsAtom],
 });
@@ -101,6 +111,7 @@ export const SpaceState = Capability.lazyModule(
   () => import('./state'),
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
+  environments: ['browser', 'node'],
   provides: [SpaceOperationConfig],
   props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),

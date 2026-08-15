@@ -7,6 +7,27 @@ tags:
   - pack
   - storybook
 tasks:
+  # Generates the headless `#capabilities` barrels (src/capabilities/gen/, gitignored) from the
+  # `environments` annotations in src/capabilities/index.ts, and syncs the package.json
+  # `#capabilities` condition map.
+  prebuild:
+    command: pnpm exec dx-gen-barrels
+    deps:
+      - app-framework:compile-gen-barrels
+    inputs:
+      - src/capabilities/index.ts
+      - package.json
+    outputs:
+      - src/capabilities/gen
+  build:
+    deps:
+      - prebuild
+  test:
+    deps:
+      - prebuild
+  lint:
+    deps:
+      - prebuild
   check-module-structure:
     # Fail when the ./plugin export pulls in `@dxos/react-ui`. The plugin entry must
     # remain UI-free under workerd so it can load in non-DOM environments.

@@ -14,9 +14,9 @@ single canonical entry + generated stub barrels).
 
 ## Phase 1 — decision + framework groundwork
 
-- [ ] User sign-off on O2 (vs conservative O3) and on DESIGN.md §6 open questions
-- [ ] `environments` field on `ModuleSpec`/maker options (metadata only, no behavior)
-- [ ] Keep/clean the `Plugin.addModule(undefined)` skip (landed in spike commit) + unit test for the skip path
+- [x] User sign-off on O2 (Josiah, 2026-08-15: "let's move forward with implementing phase 1 and 2"); §6 Q1 (stale schema lists) and Q2 (inbox lazy→inline) remain open for migration
+- [x] `environments` field on `ModuleSpec`/`Module`/`MakerOptions` + value-based AppCapability helpers (schema, translations, pluginAsset, commands)
+- [x] `Plugin.addModule(undefined)` skip + unit tests (skip path, metadata carriage)
 
 ## Phase 2 — generator productization
 
@@ -28,18 +28,18 @@ distributed binary (pattern must work for out-of-repo plugin authors), following
 `compile-plugin`/`./vite-plugin` precedent in that package. No CI freshness check needed —
 the task graph owns it (echo-query `prebuild-lezer` is the template).
 
-- [ ] Promote `spikes/generate.mjs` to a `dx-gen-barrels` binary compiled and published with `@dxos/app-framework` (bin entry + compile task like `compile-plugin`), driven by `environments` annotations instead of the reverse-engineered matrix
-- [ ] Same shipped tool sets up the package.json `imports`/`exports` maps (`#plugin`/`#capabilities` conditions, subpath exports) from the annotations — replaces reliance on internal toolbox/codemorph for plugin export wiring; decide whether it owns the vite entry list too (in-repo) or leaves bundling to composerPlugin (out-of-repo)
-- [ ] Emit headless barrels + stubs with `// GENERATED` headers; overrides splice (escape hatch)
-- [ ] `prebuild` task wiring: per-plugin `prebuild` with declared outputs; `build` deps on `prebuild`; `^:prebuild` as the default dep in `.moon/tasks/tag-ts-test*.yml` (replacing `^:build` as the source-reading direction lands)
-- [ ] Emit into `src/capabilities/gen/` and point the `#capabilities` source conditions there; one repo-wide `gen/` gitignore pattern (echo-query `src/parser/gen/` layout)
+- [x] `dx-gen-barrels` in `@dxos/app-framework` (`src/gen-barrels/`, `compile-gen-barrels` moon task via dx-compile, `bin/dx-gen-barrels.mjs`); annotation-driven AST slicing; `typescript` resolved at runtime from the target package/workspace (no runtime dependency added)
+- [x] Tool syncs the package.json `#capabilities` condition map (source → `gen/` paths, normalized dist conditions) — `#plugin`/exports/vite-entry ownership remains a follow-up
+- [x] Headless barrels + stubs with GENERATED headers; `overrides.<env>.ts` splice (spliced as re-exports, exercised by plugin-space's Schema)
+- [x] `prebuild` task wiring: per-plugin `prebuild` with declared outputs + build/test/lint deps; optional `^:prebuild` dep added to `.moon/tasks/tag-ts-test{,-storybook,-workerd}.yml` (alongside `^:build` until the source-reading direction removes it)
+- [x] Emit into `src/capabilities/gen/`; repo-wide `**/src/capabilities/gen/` gitignore
 - [ ] Fresh-clone/non-moon entrypoints: ensure `DX_SOURCE=1` bun and bare vitest/IDE runs have a documented `moon run :prebuild` path (or wrapper-script trigger)
-- [ ] `pkg-lint`: run `import-source-missing` after prebuild or exempt declared prebuild outputs; verify `pack` tarballs include generated barrels
-- [ ] pkg-lint rule: annotations ⇒ matching `#capabilities` conditions exist
+- [x] `pkg-lint`: `import-source-missing` exempts `/gen/` source paths (task graph owns their existence); `pack` → `build` → `prebuild` covers tarballs
+- [ ] pkg-lint rule: annotations ⇒ matching `#capabilities` conditions exist (superseded in part by the tool writing the map itself)
 
 ## Phase 3 — migration (mechanical, incremental; spike commits are the template)
 
-- [ ] Annotate + collapse the 2 spiked plugins onto the generator (replace hand-written stub barrels with generated ones)
+- [x] Annotate + collapse the 2 spiked plugins onto the generator: hand-written stub barrels deleted, `environments` annotations in canonical barrels, prebuild tasks wired, space's byte-identical `schema.node/workerd` merged into `schema.headless.ts` behind `overrides.{node,workerd}.ts`, vestigial `#capabilities/node` subpath removed. Note: regeneration intentionally fixed space's node-barrel drift (`OperationHandler` back on Startup wave, `UndoMappings` maker form restored)
 - [ ] Sweep remaining 34 plugins; delete `plugin.node.ts`/`plugin.workerd.ts`, collapse `#plugin` conditions, prune vite entries
 - [ ] Merge byte-identical `schema.node.ts`/`schema.workerd.ts` → `schema.headless.ts`; surface the 4 stale schema lists for a human call
 - [ ] Fix the `OperationHandler` Startup→Idle drift in space/client/routine node barrels (regeneration does this; verify boot behavior)

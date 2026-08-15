@@ -2,4 +2,4 @@
 '@dxos/app-framework': minor
 ---
 
-`Plugin.addModule` now accepts and skips `undefined`, so headless capability barrels can stub excluded modules and a single canonical plugin entry can serve browser, node, and workerd environments.
+Single-entry plugin authoring: `Plugin.addModule` skips `undefined` (headless barrels stub excluded modules), module specs and makers accept an `environments` annotation, and the package ships a `dx-gen-barrels` bin that generates the per-environment `#capabilities` barrels (`src/capabilities/gen/`) and syncs the package.json condition map from those annotations.
