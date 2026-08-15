@@ -164,3 +164,18 @@ export const WithSidecar: Story = {
     await expect(end?.denials, 'the SDK reported no permission denials').toBeGreaterThan(0);
   },
 };
+
+/**
+ * The interactive console: type a prompt and the Claude Agent SDK answers, with tool calls and
+ * denials surfaced inline. Same host as {@link WithSidecar}, driven by hand instead of a play
+ * function — no ECHO, so it also renders turns the Chat surface cannot (see TASKS.md, M3b).
+ *
+ * Needs the host mounted in the dev server:
+ * `DX_AGENT_CWD=<dir> pnpm --filter @dxos/storybook-react exec storybook dev --port 9016`
+ */
+export const Console: Story = {
+  decorators: createDecorators({ onInit: captureSpace }),
+  args: {
+    layout: [[StoryRole.Agent], [StoryRole.Logging]],
+  },
+};

@@ -2,15 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Client } from '@dxos/agent-claude/client';
 import { Icon, IconButton, Input, Panel } from '@dxos/react-ui';
 import { ContentBlock } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
-
-import { storyParameters } from '../testing';
 
 type Turn = {
   role: 'user' | 'assistant' | 'tool';
@@ -52,15 +49,23 @@ const blockClass = (block: ContentBlock.Any): string => {
 /**
  * A prompt box wired straight to the Claude Agent SDK host.
  *
- * Renders the projected `ContentBlock`s directly rather than going through the assistant's Chat
- * surface, which reads a processor's in-memory state and does not show externally-produced turns.
+ * Renders the projected `ContentBlock`s directly rather than through the assistant's Chat surface,
+ * which reads a processor's in-memory state and so cannot show an externally produced turn. Needs
+ * the host mounted in the dev server — see `DX_AGENT_CWD` in `.storybook/main.ts`.
  */
-const AgentConsole = () => {
+export const AgentModule = () => {
   const [prompt, setPrompt] = useState('Read agent-fixture.md and tell me the MAGIC_TOKEN.');
   const [turns, setTurns] = useState<Turn[]>([]);
   const [session, setSession] = useState<string>();
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string>();
+  const scroller = useRef<HTMLDivElement>(null);
+
+  // Stick to the newest turn as blocks stream in; a transcript that has to be scrolled by hand
+  // hides the answer behind the tool calls that produced it.
+  useEffect(() => {
+    scroller.current?.scrollTo({ top: scroller.current.scrollHeight });
+  }, [turns, running]);
 
   const send = useCallback(
     async (fork = false) => {
@@ -94,7 +99,7 @@ const AgentConsole = () => {
 
   return (
     <Panel.Root classNames='absolute inset-0 flex flex-col gap-2 p-2'>
-      <div className='flex-1 min-bs-0 overflow-y-auto p-2'>
+      <div ref={scroller} className='flex-1 min-bs-0 overflow-y-auto p-2'>
         <div className='flex flex-col gap-3'>
           {turns.map((turn, index) => (
             <div key={index} className='flex flex-col gap-1'>
@@ -141,21 +146,3 @@ const AgentConsole = () => {
     </Panel.Root>
   );
 };
-
-const meta: Meta<typeof AgentConsole> = {
-  title: 'stories/stories-assistant/AgentConsole',
-  render: AgentConsole,
-  parameters: storyParameters,
-  // Drives the real SDK; `manual` keeps it out of a default `test-storybook` run.
-  tags: ['manual'],
-};
-
-export default meta;
-
-type Story = StoryObj<typeof AgentConsole>;
-
-/**
- * Type a prompt and the Claude Agent SDK answers, via the sidecar mounted in this dev server
- * (`DX_AGENT_CWD` must be set). `Fork` branches the conversation from the current session.
- */
-export const Default: Story = {};
