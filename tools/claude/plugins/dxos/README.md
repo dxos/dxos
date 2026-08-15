@@ -1,4 +1,4 @@
-# `dx` — project tracking for coding agents
+# `dxos` — project tracking for coding agents
 
 Durable, resumable project and task tracking. A committed **registry** of
 work-streams, a **`TASKS.md` ledger** per project, and one command to drive them.
