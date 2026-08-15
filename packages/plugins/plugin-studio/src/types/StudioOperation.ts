@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
@@ -33,7 +34,7 @@ export const Generate = Operation.make({
     name: 'Generate',
     description: 'Generate variants for an Artifact from its prompt.',
     icon: 'ph--sparkle--regular',
-    tags: [Operation.Tag.Agent],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     artifact: Ref.Ref(Artifact.Artifact).annotate({

@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
@@ -30,7 +31,7 @@ const FUNCTION_FORMAT = trim`
     meta: {
       key: DXN.make('org.dxos.script.myFunction'),
       name: 'My Function',
-      tags: [Operation.Tag.System],
+      tags: [OperationTag.System],
     },
     input: Schema.Struct({
       city: Schema.String.annotate({ description: 'City name' }),
@@ -101,7 +102,7 @@ export const Create = Operation.make({
     name: 'Create',
     description: `Creates a new function with TypeScript source code and adds it to the space. ${FUNCTION_FORMAT} ${AVAILABLE_PACKAGES}`,
     icon: 'ph--code--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     name: Schema.String.annotate({
@@ -126,7 +127,7 @@ export const Read = Operation.make({
     name: 'Read',
     description: 'Reads the source code and metadata of a function.',
     icon: 'ph--file-text--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -159,7 +160,7 @@ export const Update = Operation.make({
     name: 'Update',
     description: `Updates the source code or metadata of a function. ${FUNCTION_FORMAT}`,
     icon: 'ph--pencil--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -185,7 +186,7 @@ export const Delete = Operation.make({
     name: 'Delete',
     description: 'Deletes a function and its source from the space.',
     icon: 'ph--trash--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -200,7 +201,7 @@ export const Deploy = Operation.make({
     name: 'Deploy',
     description: `Deploys a function to the Edge runtime. The function source must follow the required format: a single export default of Operation.pipe(Operation.withHandler(Effect.fn(function* (...) { ... }))). See the Create operation description for a full example.`,
     icon: 'ph--rocket-launch--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -220,7 +221,7 @@ export const Invoke = Operation.make({
     name: 'Invoke',
     description: 'Invokes a deployed Edge function with the given payload.',
     icon: 'ph--play--regular',
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -263,7 +264,7 @@ export const InspectInvocations = Operation.make({
     name: 'InspectInvocations',
     description: 'Queries the invocation trace feed for a function, returning its invocation history.',
     icon: 'ph--magnifying-glass--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -306,7 +307,7 @@ export const QueryDeployedFunctions = Operation.make({
     name: 'QueryDeployedFunctions',
     description: 'Lists all functions deployed to the EDGE runtime. Use InstallFunction to add one to the space.',
     icon: 'ph--list--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Void,
   output: Schema.Struct({
@@ -324,7 +325,7 @@ export const InstallFunction = Operation.make({
     description:
       'Installs a deployed EDGE function into the current space by key. The returned function ID can be passed directly to Invoke.',
     icon: 'ph--download--regular',
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     key: Schema.String.annotate({

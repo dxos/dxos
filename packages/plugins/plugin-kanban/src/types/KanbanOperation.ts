@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Type, View } from '@dxos/echo';
 
@@ -27,7 +28,7 @@ export const DeleteCardField = Operation.make({
     key: makeKey('deleteCardField'),
     name: 'Delete Card Field',
     icon: 'ph--minus-circle--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -44,7 +45,7 @@ export const DeleteCardOutput = Schema.Struct({
 export type DeleteCardOutput = Schema.Schema.Type<typeof DeleteCardOutput>;
 
 export const DeleteCard = Operation.make({
-  meta: { key: makeKey('deleteCard'), name: 'Delete Card', icon: 'ph--trash--regular', tags: [Operation.Tag.Edit] },
+  meta: { key: makeKey('deleteCard'), name: 'Delete Card', icon: 'ph--trash--regular', tags: [OperationTag.Database] },
   input: Schema.Struct({
     card: Schema.Any,
   }),
@@ -56,7 +57,7 @@ export const RestoreCardField = Operation.make({
     key: makeKey('restoreCardField'),
     name: 'Restore Card Field',
     icon: 'ph--clock-counter-clockwise--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -73,7 +74,7 @@ export const RestoreCard = Operation.make({
     key: makeKey('restoreCard'),
     name: 'Restore Card',
     icon: 'ph--clock-counter-clockwise--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     card: Schema.Any.annotate({ description: 'The card to restore.' }),

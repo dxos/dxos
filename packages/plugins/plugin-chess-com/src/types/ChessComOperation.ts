@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
@@ -22,7 +23,7 @@ export const ClearSyncedGames = Operation.make({
     name: 'Clear Synced Games',
     description: 'Remove all synced games from the Chess.com account feed.',
     icon: 'ph--trash--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -40,7 +41,7 @@ export const SyncGames = Operation.make({
     name: 'Sync Games',
     description: 'Sync archived Chess.com games into the account feed.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
+    tags: [OperationTag.Connector],
   },
   services: [Database.Service],
   input: Schema.Struct({

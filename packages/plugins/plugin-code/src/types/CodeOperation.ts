@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
@@ -18,7 +19,7 @@ export const VerifySpec = Operation.make({
     name: 'Verify Spec',
     description: 'Lints and structurally validates a DEUS spec.',
     icon: 'ph--check-circle--regular',
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     spec: Ref.Ref(Spec.Spec).annotate({ description: 'The Spec to verify.' }),
@@ -36,7 +37,7 @@ export const RunBuildAgent = Operation.make({
     name: 'Run Build Agent',
     description: 'Dispatches a build of a CodeProject via the EDGE build service.',
     icon: 'ph--lightning--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     project: Ref.Ref(CodeProject.CodeProject).annotate({
@@ -60,7 +61,7 @@ export const ListFiles = Operation.make({
     name: 'List Files',
     description: 'List the source files in a CodeProject.',
     icon: 'ph--list--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     project: Ref.Ref(CodeProject.CodeProject).annotate({
@@ -79,7 +80,7 @@ export const ReadFile = Operation.make({
     name: 'Read File',
     description: 'Read the content of a single source file in a CodeProject.',
     icon: 'ph--file-text--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     project: Ref.Ref(CodeProject.CodeProject).annotate({
@@ -103,7 +104,7 @@ export const WriteFile = Operation.make({
     description:
       'Create or overwrite a source file in a CodeProject. Whole-file write; use for new files or full rewrites.',
     icon: 'ph--pencil--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     project: Ref.Ref(CodeProject.CodeProject).annotate({
@@ -129,7 +130,7 @@ export const DeleteFile = Operation.make({
     name: 'Delete File',
     description: 'Remove a source file from a CodeProject.',
     icon: 'ph--trash--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     project: Ref.Ref(CodeProject.CodeProject).annotate({
@@ -152,7 +153,7 @@ export const ScaffoldProject = Operation.make({
     name: 'Scaffold Project',
     description: 'Seed a CodeProject with a minimal Composer plugin scaffold (package.json, src/plugin.ts, README.md).',
     icon: 'ph--folder-plus--regular',
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     project: Ref.Ref(CodeProject.CodeProject).annotate({
@@ -178,7 +179,7 @@ export const HelloWorld = Operation.make({
       'Sanity-check operation: writes (or overwrites) a single `src/hello.ts` file containing a Hello World program. ' +
       'Useful for end-to-end verification that the agent can manipulate the file abstraction.',
     icon: 'ph--hand-waving--regular',
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     project: Ref.Ref(CodeProject.CodeProject).annotate({
@@ -198,7 +199,7 @@ export const ResetProject = Operation.make({
     name: 'Reset Project',
     description: 'Delete every source file in a CodeProject. Destructive; intended for testing.',
     icon: 'ph--arrow-counter-clockwise--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     project: Ref.Ref(CodeProject.CodeProject).annotate({
@@ -233,7 +234,7 @@ export const BuildProject = Operation.make({
       "Compile the project's TypeScript sources in-browser. Returns language-service diagnostics plus the " +
       'emitted JavaScript for the entry file (src/hello.ts if present, else src/plugin.ts).',
     icon: 'ph--lightning--regular',
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     project: Ref.Ref(CodeProject.CodeProject).annotate({
@@ -256,7 +257,7 @@ export const RunBuild = Operation.make({
       'Build the project and, on a clean build, execute the emitted entry script inside a console-capturing ' +
       'sandbox. Captures console.log/warn to stdout and console.error plus thrown errors to stderr.',
     icon: 'ph--play--regular',
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     project: Ref.Ref(CodeProject.CodeProject).annotate({

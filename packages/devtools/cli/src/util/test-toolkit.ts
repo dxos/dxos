@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -34,7 +35,7 @@ const Random = Operation.make({
     key: DXN.make('com.example.function.random'),
     name: 'random',
     description: 'Gets a random number.',
-    tags: [Operation.Tag.System],
+    tags: [OperationTag.System],
   },
   input: Schema.Void,
   output: Schema.Struct({

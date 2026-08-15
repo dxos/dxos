@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -20,7 +21,7 @@ export const RunInstructions = Operation.make({
     name: 'Run Instructions',
     description: 'Agentic worker that executes a provided prompt using skills and tools.',
     icon: 'ph--brain--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     instructions: Ref.Ref(Instructions.Instructions),

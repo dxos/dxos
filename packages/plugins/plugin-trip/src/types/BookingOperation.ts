@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -27,7 +28,7 @@ export const SearchBookings = Operation.make({
     name: 'Search Bookings',
     description: 'Search for flights (and other bookings) across the enabled booking providers.',
     icon: 'ph--magnifying-glass--regular',
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     query: BookingSearch.SearchQuery,

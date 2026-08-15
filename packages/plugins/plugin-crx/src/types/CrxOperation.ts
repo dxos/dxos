@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN } from '@dxos/echo';
 
@@ -26,7 +27,7 @@ export const AddPersonFromSnapshot = Operation.make({
     name: 'Add person',
     description: 'Create a person from a page snapshot.',
     icon: 'ph--user--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   input,
   output,
@@ -38,7 +39,7 @@ export const AddOrganizationFromSnapshot = Operation.make({
     name: 'Add organization',
     description: 'Create an organization from a page snapshot.',
     icon: 'ph--building-office--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   input,
   output,
@@ -50,7 +51,7 @@ export const AddNoteFromSnapshot = Operation.make({
     name: 'Add note',
     description: 'Create a markdown note from a page snapshot.',
     icon: 'ph--note--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   input,
   output,

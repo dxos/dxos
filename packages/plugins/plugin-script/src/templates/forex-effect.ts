@@ -9,6 +9,7 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -17,7 +18,7 @@ const ForexEffect = Operation.make({
     key: DXN.make('org.dxos.script.forexEffect'),
     name: 'Forex Effect',
     description: 'Returns the exchange rate between two currencies.',
-    tags: [Operation.Tag.System],
+    tags: [OperationTag.System],
   },
   input: Schema.Struct({
     from: Schema.String.annotate({ description: 'The source currency' }),

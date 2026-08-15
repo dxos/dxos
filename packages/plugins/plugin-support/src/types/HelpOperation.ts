@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -19,7 +20,7 @@ export const Start = Operation.make({
     key: makeKey('startWelcomeTour'),
     name: 'Start welcome tour',
     icon: 'ph--question--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Layout],
   },
   services: [Capability.Service],
   input: Schema.Void,
@@ -36,7 +37,7 @@ export const HideWelcome = Operation.make({
     key: makeKey('hideWelcome'),
     name: 'Hide Welcome',
     icon: 'ph--eye-slash--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Layout],
   },
   services: [Capability.Service],
   input: Schema.Void,

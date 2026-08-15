@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
@@ -32,7 +33,7 @@ export const Create = Operation.make({
     key: makeKey('create'),
     name: 'Create Project',
     icon: 'ph--stack--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
@@ -65,7 +66,7 @@ export const CreateChat = Operation.make({
     key: makeKey('createChat'),
     name: 'Create Project Chat',
     icon: 'ph--chat-text--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
@@ -81,7 +82,7 @@ export const CreateRoutine = Operation.make({
     key: makeKey('createRoutine'),
     name: 'Create Project Routine',
     icon: 'ph--lightning--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Automation],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
@@ -105,7 +106,7 @@ export const UpdateProjectTasks = Operation.make({
     description:
       "Tracks requests from the given senders as tasks in the project's task set (one task per message, idempotent).",
     icon: 'ph--check-square-offset--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -130,7 +131,7 @@ export const UpdateTravelLog = Operation.make({
     description:
       "Regenerates the project's Travel Bookings document from the travel-service messages in the mailbox feed.",
     icon: 'ph--airplane-tilt--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -151,7 +152,7 @@ export const UpdateInvestorLog = Operation.make({
     description:
       "Extracts contacts for investor-domain senders and regenerates the project's Investor Conversations document (one section per thread, optional LLM summaries).",
     icon: 'ph--handshake--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [AiService.AiService, Database.Service],
   input: Schema.Struct({
@@ -203,7 +204,7 @@ export const CreateTrackingProject = Operation.make({
     description:
       "Creates a project that follows a message's sender (or their whole domain): scaffolds the project, wires a feed-triggered routine binding the chosen pipeline, and backfills from the existing feed.",
     icon: 'ph--stack-plus--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({

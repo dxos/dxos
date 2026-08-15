@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Type, View } from '@dxos/echo';
 import * as SpaceForm from '@dxos/plugin-space/SpaceForm';
@@ -35,7 +36,7 @@ export const OnTypeAdded = Operation.make({
     key: makeKey('onTypeAdded'),
     name: 'On Type Added',
     icon: 'ph--table--regular',
-    tags: [Operation.Tag.System],
+    tags: [OperationTag.System],
   },
   input: Schema.Struct({
     db: Database.Database,
@@ -46,7 +47,7 @@ export const OnTypeAdded = Operation.make({
 });
 
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Table', icon: 'ph--table--regular', tags: [Operation.Tag.Edit] },
+  meta: { key: makeKey('create'), name: 'Create Table', icon: 'ph--table--regular', tags: [OperationTag.Database] },
   input: Schema.Struct({
     db: Database.Database,
   }).mapFields(Struct.assign(CreateTableSchema.fields)),
@@ -57,7 +58,7 @@ export const Create = Operation.make({
 
 // TODO(wittjosiah): This appears to be unused.
 export const AddRow = Operation.make({
-  meta: { key: makeKey('addRow'), name: 'Add Row', icon: 'ph--plus--regular', tags: [Operation.Tag.Edit] },
+  meta: { key: makeKey('addRow'), name: 'Add Row', icon: 'ph--plus--regular', tags: [OperationTag.Database] },
   input: Schema.Struct({
     view: Type.getSchema(View.View),
     data: Schema.Any,
@@ -81,7 +82,7 @@ export const ExportRows = Operation.make({
     name: 'Export Rows',
     description: 'Exports table rows as CSV, JSON (.dx.json), or XML.',
     icon: 'ph--export--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     format: Schema.Literals(['csv', 'json', 'xml']),

@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -29,7 +30,7 @@ export const RenderPage = Operation.make({
     name: 'Render Page',
     description: 'Fetches a page, rendering it via the browser extension when available.',
     icon: 'ph--browser--regular',
-    tags: [Operation.Tag.Sync],
+    tags: [OperationTag.Connector],
   },
   input: Schema.Struct({
     url: Schema.String,
@@ -47,7 +48,7 @@ export const RunProviderSearch = Operation.make({
     name: 'Run Provider Search',
     description: 'Executes one provider template against a search, appending new results to its feed.',
     icon: 'ph--play--regular',
-    tags: [Operation.Tag.Sync],
+    tags: [OperationTag.Connector],
   },
   input: Schema.Struct({
     search: Ref.Ref(Search),
@@ -65,7 +66,7 @@ export const RunSearch = Operation.make({
     name: 'Run Search',
     description: 'Runs all enabled providers for a search and links the results.',
     icon: 'ph--shopping-cart--regular',
-    tags: [Operation.Tag.Sync],
+    tags: [OperationTag.Connector],
   },
   input: Schema.Struct({ search: Ref.Ref(Search) }),
   output: Schema.Void,
@@ -79,7 +80,7 @@ export const AnalyzeProvider = Operation.make({
     name: 'Analyze Provider',
     description: "Fetches the provider's vendor site and returns the page source for the agent to inspect.",
     icon: 'ph--brain--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({ provider: Ref.Ref(Provider) }),
   output: Schema.String,
@@ -93,7 +94,7 @@ export const GenerateProviderTemplate = Operation.make({
     name: 'Generate Provider Template',
     description: 'Runs the provider skill agent to analyze the site and populate the search template.',
     icon: 'ph--sparkle--regular',
-    tags: [Operation.Tag.Agent],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({ provider: Ref.Ref(Provider) }),
   output: Ref.Ref(Provider),
@@ -107,7 +108,7 @@ export const SetProviderTemplate = Operation.make({
     name: 'Set Provider Template',
     description: 'Persists the derived search schema, request mapping, and result mapping onto a provider.',
     icon: 'ph--floppy-disk--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     provider: Ref.Ref(Provider),

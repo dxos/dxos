@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -19,7 +20,7 @@ export const Open = Operation.make({
     name: 'Open Settings',
     description: 'Open the settings panel.',
     icon: 'ph--gear--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Navigation],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -34,7 +35,7 @@ export const OpenPluginRegistry = Operation.make({
     name: 'Open Plugin Registry',
     description: 'Open the plugin registry.',
     icon: 'ph--plugs--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Layout],
   },
   services: [Capability.Service],
   input: Schema.Void,

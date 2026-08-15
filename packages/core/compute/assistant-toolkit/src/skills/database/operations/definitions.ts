@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import { Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
@@ -60,7 +61,7 @@ export const Query = Operation.make({
         }
       </example>
     `,
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     in: Schema.optional(
@@ -119,7 +120,7 @@ export const Load = Operation.make({
       When use see a reference ({ '/': 'echo:...' }), you can call this function to load the object.
       Note that returned data is only a snapshot in time, and might have changed since the object was last loaded.
     `,
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     refs: Schema.Array(Ref.Ref(Obj.Unknown)),
@@ -142,7 +143,7 @@ export const ObjectCreate = Operation.make({
       References are provided in the following format: { "/": "echo:..." }.
       Reference examples: { "/": "echo:///01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
     `,
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     typename: Schema.String.annotate({
@@ -171,7 +172,7 @@ export const ObjectUpdate = Operation.make({
       References are provided in the following format: { "/": "echo:..." }.
       Reference examples: { "/": "echo:///01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
     `,
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     obj: Ref.Ref(Obj.Unknown),
@@ -189,7 +190,7 @@ export const ObjectDelete = Operation.make({
       Deletes the object.
     `,
     icon: 'ph--trash--regular',
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     obj: Ref.Ref(Obj.Unknown),
@@ -207,7 +208,7 @@ export const SchemaAdd = Operation.make({
       Adds a schema to the space.
       The name will be used when displayed to the user.
     `,
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     name: Schema.String,
@@ -241,7 +242,7 @@ export const SchemaList = Operation.make({
       you actually need (from the summary call) — e.g. right before creating or updating an object
       of that type.
     `,
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     limit: Schema.optional(Schema.Number),
@@ -268,7 +269,7 @@ export const ContextAdd = Operation.make({
       Adds the object to the chat context.
       Use this it for objects that are useful long-term for the conversation.
     `,
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     obj: Ref.Ref(Obj.Unknown).annotate({
@@ -288,7 +289,7 @@ export const ContextRemove = Operation.make({
       Removes the object from the chat context.
       Use this it for objects that are no longer useful for the conversation.
     `,
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     obj: Ref.Ref(Obj.Unknown).annotate({
@@ -309,7 +310,7 @@ export const RelationCreate = Operation.make({
       Get the full JSON Schema from the schema-list tool (pass \`typenames: [typename]\`) and ensure
       that the data matches the corresponding schema.
     `,
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     typename: Schema.String,
@@ -331,7 +332,7 @@ export const RelationDelete = Operation.make({
       Deletes the relation.
     `,
     icon: 'ph--trash--regular',
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     rel: Ref.Ref(Relation.Unknown),
@@ -350,7 +351,7 @@ export const TagAdd = Operation.make({
       Tags are objects of type ${Type.getTypename(Tag.Tag)}.
       You must search database for available tags, or create a new one.
     `,
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     tag: Ref.Ref(Tag.Tag),
@@ -369,7 +370,7 @@ export const TagRemove = Operation.make({
       Removes a tag from an object.
       Tags are objects of type ${Type.getTypename(Tag.Tag)}.
     `,
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     tag: Ref.Ref(Tag.Tag),

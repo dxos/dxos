@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -23,7 +24,7 @@ export const Create = Operation.make({
     key: makeKey('create'),
     name: 'Create Meeting',
     icon: 'ph--video-camera--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -42,7 +43,7 @@ export const SetActive = Operation.make({
     key: makeKey('setActive'),
     name: 'Set Active Meeting',
     icon: 'ph--video-camera--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -58,7 +59,7 @@ export const HandlePayload = Operation.make({
     key: makeKey('handlePayload'),
     name: 'Handle Meeting Payload',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.System],
+    tags: [OperationTag.System],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -75,7 +76,7 @@ export const Summarize = Operation.make({
     key: makeKey('summarize'),
     name: 'Summarize Meeting',
     icon: 'ph--text-align-left--regular',
-    tags: [Operation.Tag.Agent],
+    tags: [OperationTag.Assistant],
   },
   services: [Capability.Service],
   input: Schema.Struct({

@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -17,7 +18,7 @@ export const QueryMemories = Operation.make({
     description:
       'Search for stored memories using full-text search. Returns memories matching the query terms. Use this to recall previously saved knowledge, facts, or preferences.',
     icon: 'ph--brain--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     text: Schema.optional(
@@ -44,7 +45,7 @@ export const SaveMemory = Operation.make({
     description:
       'Saves a new memory to the database. Use this to persist knowledge, facts, preferences, or any information that should be remembered across conversations.',
     icon: 'ph--brain--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     title: Schema.String.annotate({
@@ -65,7 +66,7 @@ export const DeleteMemory = Operation.make({
     name: 'Delete memory',
     description: 'Deletes a memory from the database. Use this to remove outdated or incorrect memories.',
     icon: 'ph--trash--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     memory: Ref.Ref(Memory),

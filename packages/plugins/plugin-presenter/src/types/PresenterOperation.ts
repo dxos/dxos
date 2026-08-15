@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, DXN, Type } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -20,7 +21,7 @@ export const TogglePresentation = Operation.make({
     key: makeKey('togglePresentation'),
     name: 'Toggle Presentation',
     icon: 'ph--presentation--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Layout],
   },
   services: [Capability.Service],
   input: Schema.Struct({

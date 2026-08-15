@@ -13,6 +13,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -33,7 +34,7 @@ const Commentary = Operation.make({
     key: DXN.make('org.dxos.function.chess.commentary'),
     name: 'Commentary',
     description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     game: Game.GameRef(Chess.State).annotate({

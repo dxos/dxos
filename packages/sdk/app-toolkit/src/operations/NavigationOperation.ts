@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, URI } from '@dxos/keys';
 
@@ -45,7 +46,7 @@ export const ResolveNavigationTargets = Operation.make({
     description:
       "Resolve a navigation path for the Open operation. Pass an object's URI (its DXN, e.g. a context object's <dxn>) as the query uri to resolve that object to its navigation target, or omit the query to list pages that can be navigated to. Targets are ordered best-first; pass the first target's path to Open.",
     icon: 'ph--compass--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Navigation],
   },
   services: [Capability.Service],
   input: Schema.Struct({

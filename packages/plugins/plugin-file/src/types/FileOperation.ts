@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref, Type } from '@dxos/echo';
 import { ContentBlock, File } from '@dxos/types';
@@ -19,7 +20,7 @@ import * as FileCapabilities from './FileCapabilities';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create File', icon: 'ph--file--regular', tags: [Operation.Tag.Edit] },
+  meta: { key: makeKey('create'), name: 'Create File', icon: 'ph--file--regular', tags: [OperationTag.Database] },
   services: [Capability.Service],
   input: FileCapabilities.FileAction.CreateFileSchema.mapFields(Struct.assign({ db: Database.Database })),
   output: Schema.Struct({
@@ -34,7 +35,7 @@ export const Read = Operation.make({
     description:
       'Reads the contents of a file and returns them as a File content block (data URL for inline files, original URL for external files).',
     icon: 'ph--file-arrow-down--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     file: Ref.Ref(File.File).annotate({

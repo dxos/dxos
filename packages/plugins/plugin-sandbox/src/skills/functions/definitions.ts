@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
@@ -23,7 +24,7 @@ export const CreateSandbox = Operation.make({
     description:
       'Creates a new sandbox environment in the current space. The sandbox is a persistent isolated container.',
     icon: 'ph--terminal--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     name: Schema.optional(Schema.String).annotate({
@@ -47,7 +48,7 @@ export const Exec = Operation.make({
     name: 'Exec',
     description: 'Runs a shell command in the sandbox and returns stdout, stderr, and exit code.',
     icon: 'ph--terminal-window--regular',
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     sandbox: SandboxRef,
@@ -80,7 +81,7 @@ export const UploadFile = Operation.make({
     name: 'UploadFile',
     description: 'Uploads a file from ECHO into the sandbox filesystem.',
     icon: 'ph--upload--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     sandbox: SandboxRef,
@@ -105,7 +106,7 @@ export const DownloadFile = Operation.make({
     name: 'DownloadFile',
     description: 'Downloads a file from the sandbox filesystem into ECHO.',
     icon: 'ph--download--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     sandbox: SandboxRef,

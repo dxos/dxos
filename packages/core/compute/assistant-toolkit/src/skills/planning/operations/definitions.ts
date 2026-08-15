@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import { Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
@@ -27,7 +28,7 @@ export const UpdateTasks = Operation.make({
     name: 'Update tasks',
     description: INSTRUCTIONS,
     icon: 'ph--check-square-offset--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     tasks: Schema.Array(ChecklistTask),
@@ -41,7 +42,7 @@ export const PlanReminder = Operation.make({
     key: DXN.make('org.dxos.function.planning.planReminder'),
     name: 'Plan reminder',
     description: 'Reminds the agent to continue when its plan still has incomplete tasks.',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({}),
   output: Schema.Void,

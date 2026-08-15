@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, DXN, Type } from '@dxos/echo';
 
@@ -17,7 +18,7 @@ export const Create = Operation.make({
     key: DXN.make(`${COLLECTION_OPERATION}.create`),
     name: 'Create Collection',
     icon: 'ph--folder--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Capability.Service],
   input: Schema.Struct({

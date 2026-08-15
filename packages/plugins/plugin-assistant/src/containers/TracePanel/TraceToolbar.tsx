@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { Icon, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Combobox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -17,16 +17,24 @@ export type TraceToolbarProps = {
   /** Every tag offered, in menu order (see `availableOperationTags`). */
   available: readonly string[];
   onSelectedChange: (tags: readonly string[]) => void;
+  /** Whether the live process tree is shown above the timeline. */
+  processTree: boolean;
+  onProcessTreeChange: (processTree: boolean) => void;
 };
 
 /**
  * Trace panel toolbar.
  *
- * The filter is deliberately reticent: the trigger is a bare funnel, so the default view reads as
- * "the trace" rather than "a filtered trace", and the current selection only appears once the user
- * asks for it.
+ * Both controls are deliberately reticent: bare icons, no visible state, so the default view reads
+ * as "the trace" rather than "a filtered trace". What is on only shows once the user asks.
  */
-export const TraceToolbar = ({ selected, available, onSelectedChange }: TraceToolbarProps) => {
+export const TraceToolbar = ({
+  selected,
+  available,
+  onSelectedChange,
+  processTree,
+  onProcessTreeChange,
+}: TraceToolbarProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [query, setQuery] = useState('');
   const label = (tag: string) => t(`trace-tag-${tag}.label`, { defaultValue: tag });
@@ -36,11 +44,29 @@ export const TraceToolbar = ({ selected, available, onSelectedChange }: TraceToo
   );
 
   return (
-    <Toolbar.Root density='sm' classNames='justify-end border-be border-subdued-separator'>
+    <Toolbar.Root density='sm' classNames='border-be border-subdued-separator'>
+      <Toolbar.Toggle
+        variant='ghost'
+        pressed={processTree}
+        onPressedChange={onProcessTreeChange}
+        aria-label={t('trace-processes.menu')}
+        data-testid='tracePanel.processes'
+      >
+        <Icon icon='ph--tree-structure--regular' size={4} />
+      </Toolbar.Toggle>
+
+      <div role='none' className='grow' />
+
       <Combobox.Root multiple value={selected} onValueChange={onSelectedChange}>
         {/* The toolbar owns the control's metrics, so the trigger is one of its own icon buttons. */}
         <Combobox.Trigger asChild>
-          <Toolbar.IconButton iconOnly variant='ghost' icon='ph--funnel--regular' label={t('trace-filter.menu')} />
+          <Toolbar.IconButton
+            iconOnly
+            variant='ghost'
+            icon='ph--funnel--regular'
+            label={t('trace-filter.menu')}
+            data-testid='tracePanel.filter'
+          />
         </Combobox.Trigger>
         {/* Portalled: rendered inline, the popover is clipped by the panel's grid and scroll areas.
             The portal also cuts it off from the panel's density, so it carries its own. */}

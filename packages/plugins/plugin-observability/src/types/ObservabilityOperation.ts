@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -20,7 +21,7 @@ export const Toggle = Operation.make({
     name: 'Toggle Observability',
     description: 'Toggle observability on or off.',
     icon: 'ph--eye--regular',
-    tags: [Operation.Tag.UI, Operation.Tag.System],
+    tags: [OperationTag.Layout, OperationTag.System],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -35,7 +36,7 @@ export const SendEvent = Operation.make({
     name: 'Send Event',
     description: 'Send an observability event.',
     icon: 'ph--broadcast--regular',
-    tags: [Operation.Tag.System],
+    tags: [OperationTag.System],
   },
   services: [Capability.Service],
   input: Schema.Struct({

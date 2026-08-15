@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -13,7 +14,7 @@ const Forex = Operation.make({
     key: DXN.make('org.dxos.script.forex'),
     name: 'Forex',
     description: 'Returns the exchange rate between two currencies.',
-    tags: [Operation.Tag.System],
+    tags: [OperationTag.System],
   },
   input: Schema.Struct({
     from: Schema.String.annotate({ description: 'The source currency' }),

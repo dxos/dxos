@@ -6,6 +6,7 @@ import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj } from '@dxos/echo';
 import * as Chess from '@dxos/plugin-chess/Chess';
@@ -17,7 +18,7 @@ const ChessBot = Operation.make({
     key: DXN.make('org.dxos.script.chessBot'),
     name: 'Chess Bot',
     description: 'Plays a random move in a chess game.',
-    tags: [Operation.Tag.System],
+    tags: [OperationTag.System],
   },
   input: Schema.Struct({
     game: Game.GameRef(Chess.State).annotate({

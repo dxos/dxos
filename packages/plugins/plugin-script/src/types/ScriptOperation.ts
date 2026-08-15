@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
 import { Database, DXN, Type } from '@dxos/echo';
@@ -31,7 +32,12 @@ export const NotebookProps = Schema.Struct({
 });
 
 export const CreateScript = Operation.make({
-  meta: { key: makeKey('createScript'), name: 'Create Script', icon: 'ph--code--regular', tags: [Operation.Tag.Edit] },
+  meta: {
+    key: makeKey('createScript'),
+    name: 'Create Script',
+    icon: 'ph--code--regular',
+    tags: [OperationTag.Database],
+  },
   input: ScriptProps.mapFields(
     Struct.assign({
       db: Database.Database,

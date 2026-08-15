@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
@@ -185,7 +186,7 @@ export const QueryComposerLogs = Operation.make({
       - RPC noise excluded, plain text output:
         { "filters": ["debug,!rpc"], "format": "pretty", "limit": 100 }
     `,
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: QueryComposerLogsInput,
   output: QueryComposerLogsOutput,

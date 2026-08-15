@@ -33,50 +33,6 @@ export const DefinitionTypeId = '~@dxos/operation/OperationDefinition' as const;
 export type DefinitionTypeId = typeof DefinitionTypeId;
 
 /**
- * Well-known operation tags.
- *
- * Tags classify what an operation *is*, so consumers can select a useful subset of the hundreds of
- * operations the runtime invokes (the trace panel filters on them). An operation may carry several;
- * the classification is deliberately coarse — a tag answers "would someone watching the system want
- * to see this?", not "which plugin owns it".
- */
-export const Tag = {
-  /** Layout, navigation, dialogs, popovers, toasts, selection, view toggles. */
-  UI: 'ui',
-  /** Direct user edits to objects, fields, rows, or cards. */
-  Edit: 'edit',
-  /** Read-only lookups, listings, and remote target discovery. */
-  Query: 'query',
-  /** Space and membership lifecycle. */
-  Space: 'space',
-  /** Identity, devices, credentials, and service access. */
-  Identity: 'identity',
-  /** Synchronization with an external service. */
-  Sync: 'sync',
-  /** Agentic or model-driven work (research, summarize, classify, extract, generate). */
-  Agent: 'agent',
-  /** Triggers, routines, schedules, and alarms. */
-  Automation: 'automation',
-  /** Exposed to the AI as a tool, so an invocation is something the agent chose to do. */
-  Tool: 'tool',
-  /** Internal plumbing, debug affordances, and samples. */
-  System: 'system',
-} as const;
-
-/**
- * A well-known {@link Tag} or a caller-defined one. The union keeps completion on the known tags
- * without closing the set — plugins may introduce their own.
- */
-export type Tag = (typeof Tag)[keyof typeof Tag] | (string & {});
-
-/**
- * Tags shown by default in consumers that filter on them (the trace panel).
- * The excluded tags — {@link Tag.UI}, {@link Tag.Edit}, {@link Tag.Query}, {@link Tag.System} — are
- * the high-volume, low-signal ones: they fire on every keystroke, navigation, and agent lookup.
- */
-export const DEFAULT_TAGS: readonly Tag[] = [Tag.Space, Tag.Identity, Tag.Sync, Tag.Agent, Tag.Automation, Tag.Tool];
-
-/**
  * Serializable definition of an Operation.
  * Contains schema and metadata, but no runtime logic.
  */
@@ -100,10 +56,11 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
      */
     readonly icon?: string;
     /**
-     * Coarse classification of the operation. See {@link Tag} for the well-known vocabulary.
-     * Carried onto the operation's trace events so consumers can filter without a registry lookup.
+     * Coarse classification of the operation, carried onto its trace events so consumers can filter
+     * without a registry lookup. Deliberately untyped here — the vocabulary is the app's, not the
+     * runtime's; `@dxos/app-toolkit/OperationTag` holds the common set.
      */
-    readonly tags?: readonly Tag[];
+    readonly tags?: readonly string[];
     /**
      * Deployment ID for remote invocation.
      * Assigned by the EDGE function service when deployed.

@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref, Type } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
@@ -29,7 +30,7 @@ export const SyncConnection = Operation.make({
     name: 'Sync Connection',
     description: 'Runs the sync operation for all sync bindings of a connection.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
+    tags: [OperationTag.Connector],
   },
   input: Schema.Struct({
     connection: Ref.Ref(Connection.Connection),
@@ -49,7 +50,7 @@ export const CreateConnection = Operation.make({
     name: 'Create Connection',
     description: 'Creates a new Connection bound to an existing AccessToken.',
     icon: 'ph--plugs-connected--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     accessToken: Ref.Ref(AccessToken.AccessToken).annotate({

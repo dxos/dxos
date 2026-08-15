@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -16,7 +17,7 @@ export const AgentRules = Operation.make({
     name: 'Agent rules',
     description: 'Gets the rules for creating an agent.',
     icon: 'ph--book-open--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({}),
   output: Schema.String,
@@ -28,7 +29,7 @@ export const CreateAgent = Operation.make({
     name: 'Create agent',
     description: 'Creates a new agent.',
     icon: 'ph--brain--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     name: Schema.String.annotate({
@@ -57,7 +58,7 @@ export const SyncAutomation = Operation.make({
     description:
       'Compiles the agent automation config (subscriptions, optional cron) into Routines that relay events onto the agent session. Recreates everything, so call with the FULL desired config after any change; enabled is copied from the agent onto every trigger.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync, Operation.Tag.Agent, Operation.Tag.Automation, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Connector],
   },
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({

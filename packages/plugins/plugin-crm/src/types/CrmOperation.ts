@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
@@ -32,7 +33,7 @@ export const AttachImage = Operation.make({
       Use this after you have already identified a candidate avatar, logo, or
       photograph for a Person or Organization via web research.
     `,
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     subject: Ref.Ref(Obj.Unknown).annotate({
@@ -70,7 +71,7 @@ export const EnrichImages = Operation.make({
       Finds every Person and Organization without an image and attaches an avatar (Gravatar) or
       logo (domain logo service) where one exists.
     `,
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     limit: Schema.optional(
@@ -112,7 +113,7 @@ export const ResearchPerson = Operation.make({
       relation. The document is a structured skeleton pre-filled from known data; extend its
       sections with researched content rather than creating a separate document.
     `,
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     subject: Ref.Ref(Person.Person).annotate({
@@ -144,7 +145,7 @@ export const ResearchOrganization = Operation.make({
       relation. The document is a structured skeleton pre-filled from known data; extend its
       sections with researched content rather than creating a separate document.
     `,
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     subject: Ref.Ref(Organization.Organization).annotate({
@@ -184,7 +185,7 @@ export const ProcessMailbox = Operation.make({
       mailbox's message feed: repeated runs re-examine at most the messages at the cursor boundary
       and never create duplicates.
     `,
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotate({

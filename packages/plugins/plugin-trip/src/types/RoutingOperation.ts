@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -27,7 +28,7 @@ export const PlanRoute = Operation.make({
     name: 'Plan route',
     description: 'Compute driving routes between the cities on the trip’s road segments.',
     icon: 'ph--path--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   // The Trip is passed as the live ECHO object (validated/narrowed in the handler).
   input: Schema.Struct({

@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -19,7 +20,7 @@ export const OpenDirectory = Operation.make({
     key: makeKey('openDirectory'),
     name: 'Open Folder',
     icon: 'ph--folder-open--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Database],
   },
   services: [Capability.Service],
   input: Schema.Void,
@@ -27,7 +28,12 @@ export const OpenDirectory = Operation.make({
 });
 
 export const CloseDirectory = Operation.make({
-  meta: { key: makeKey('closeDirectory'), name: 'Close Folder', icon: 'ph--folder--regular', tags: [Operation.Tag.UI] },
+  meta: {
+    key: makeKey('closeDirectory'),
+    name: 'Close Folder',
+    icon: 'ph--folder--regular',
+    tags: [OperationTag.Database],
+  },
   services: [Capability.Service],
   input: Schema.Struct({ id: Schema.String }),
   output: Schema.Void,
@@ -38,7 +44,7 @@ export const RefreshDirectory = Operation.make({
     key: makeKey('refreshDirectory'),
     name: 'Refresh Folder',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Capability.Service],
   input: Schema.Struct({ id: Schema.String }),

@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Chat from '@dxos/assistant-toolkit/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -30,7 +31,7 @@ export const CreateTriggerFromTemplate = Operation.make({
     key: makeKey('createTriggerFromTemplate'),
     name: 'Create Trigger From Template',
     icon: 'ph--lightning--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Automation],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -50,7 +51,7 @@ export const CreateRoutine = Operation.make({
     key: makeKey('createAutomation'),
     name: 'Create Routine',
     icon: 'ph--lightning--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Automation],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -71,7 +72,7 @@ export const RunPromptInNewChat = Operation.make({
     key: makeKey('runPromptInNewChat'),
     name: 'Run Prompt In New Chat',
     icon: 'ph--chat-text--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Automation],
+    tags: [OperationTag.Assistant],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -102,7 +103,7 @@ export const RunRoutine = Operation.make({
     key: makeKey('runAutomation'),
     name: 'Run Routine',
     icon: 'ph--play--regular',
-    tags: [Operation.Tag.Automation],
+    tags: [OperationTag.Assistant],
   },
   services: [Capability.Service, Trigger.TriggerMonitorService],
   input: Schema.Struct({

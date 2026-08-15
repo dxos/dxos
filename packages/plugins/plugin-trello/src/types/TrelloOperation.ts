@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 import {
@@ -37,7 +38,7 @@ export const GetTrelloBoards = Operation.make({
     name: 'Get Trello Boards',
     description: 'List Trello boards reachable from a connection without materializing local Kanbans.',
     icon: 'ph--kanban--regular',
-    tags: [Operation.Tag.Query],
+    tags: [OperationTag.Database],
   },
   input: ConnectorSpec.GetSyncTargetsInput,
   output: ConnectorSpec.GetSyncTargetsOutput,
@@ -59,7 +60,7 @@ export const MaterializeTrelloTarget = Operation.make({
     name: 'Materialize Trello Target',
     description: 'Create the empty local Kanban bound to a selected Trello board.',
     icon: 'ph--kanban--regular',
-    tags: [Operation.Tag.Sync],
+    tags: [OperationTag.Connector],
   },
   input: ConnectorSpec.MaterializeTargetInput,
   output: ConnectorSpec.MaterializeTargetOutput,
@@ -79,7 +80,7 @@ export const SyncTrelloBoard = Operation.make({
     name: 'Sync Trello Board',
     description: 'Reconcile cards for the Trello board bound by a sync cursor.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
+    tags: [OperationTag.Connector],
   },
   input: Schema.Struct({
     binding: Ref.Ref(Cursor.Cursor),

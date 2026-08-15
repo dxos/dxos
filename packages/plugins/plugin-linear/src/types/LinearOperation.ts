@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
@@ -30,7 +31,7 @@ export const GetLinearTeams = Operation.make({
     name: 'Get Linear Teams',
     description: 'List Linear teams reachable from a connection without materializing local objects.',
     icon: 'ph--users--regular',
-    tags: [Operation.Tag.Query],
+    tags: [OperationTag.Database],
   },
   input: ConnectorSpec.GetSyncTargetsInput,
   output: ConnectorSpec.GetSyncTargetsOutput,
@@ -49,7 +50,7 @@ export const MaterializeLinearTarget = Operation.make({
     name: 'Materialize Linear Target',
     description: 'Create the empty local root Project bound to a selected Linear team.',
     icon: 'ph--users--regular',
-    tags: [Operation.Tag.Sync],
+    tags: [OperationTag.Connector],
   },
   input: ConnectorSpec.MaterializeTargetInput,
   output: ConnectorSpec.MaterializeTargetOutput,
@@ -85,7 +86,7 @@ export const SyncLinearTeams = Operation.make({
     name: 'Sync Linear Teams',
     description: 'Reconcile one Linear team binding — projects and issues.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
+    tags: [OperationTag.Connector],
   },
   input: Schema.Struct({
     binding: Ref.Ref(Cursor.Cursor),

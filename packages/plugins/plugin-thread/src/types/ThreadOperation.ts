@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Key, Type } from '@dxos/echo';
 // Person is referenced in Actor.Actor's inferred type; importing it allows TypeScript to name
@@ -23,7 +24,7 @@ export const CreateChannel = Operation.make({
     key: makeKey('createChannel'),
     name: 'Create Channel',
     icon: 'ph--hash--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -44,7 +45,7 @@ export const AppendChannelMessage = Operation.make({
     key: makeKey('appendChannelMessage'),
     name: 'Append Channel Message',
     icon: 'ph--chat-text--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   // Note: Database.Service is provided inside the handler from space.db, not at the
   // operation level — the runtime can't fulfill it without a space context.

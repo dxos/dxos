@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
@@ -17,7 +18,7 @@ export const Fetch = Operation.make({
       Fetches the content of a web page and returns the HTML. 
       Use this to get the content of a web page.
     `,
-    tags: [Operation.Tag.Sync, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Connector],
   },
   input: Schema.Struct({
     url: Schema.String.annotate({

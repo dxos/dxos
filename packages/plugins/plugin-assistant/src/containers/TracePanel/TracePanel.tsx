@@ -44,6 +44,13 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       (tags: readonly string[]) => updateSettings((settings) => ({ ...settings, traceOperationTags: [...tags] })),
       [updateSettings],
     );
+    // Hidden by default: the tree is a live view of this runtime's processes, useful when debugging
+    // one but noise beside the trace the panel is named for.
+    const processTree = settings.traceProcessTree ?? false;
+    const handleProcessTreeChange = useCallback(
+      (traceProcessTree: boolean) => updateSettings((settings) => ({ ...settings, traceProcessTree })),
+      [updateSettings],
+    );
 
     // `useDeferredValue` batches update bursts, works together with `React.memo`.
     // See the comment in `ProcessTreeContainer` for more details.
@@ -84,6 +91,16 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     );
 
     const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
+    // Toolbar, then the optional process tree, the timeline, and the optional detail pane. Spelled
+    // out rather than composed: Tailwind only generates classes it can see whole in the source.
+    const showDetail = !tracePanelDebug && selectedCommit !== undefined;
+    const gridRows = processTree
+      ? showDetail
+        ? 'grid-rows-[min-content_minmax(0,160px)_1fr_minmax(0,206px)]'
+        : 'grid-rows-[min-content_minmax(0,160px)_1fr]'
+      : showDetail
+        ? 'grid-rows-[min-content_1fr_minmax(0,206px)]'
+        : 'grid-rows-[min-content_1fr]';
     const handleCommitSelect = useCallback(
       (commit: Commit | undefined) => {
         setSelectedCommit(commit);
@@ -118,18 +135,21 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       <div
         {...composableProps(props, {
           ...attentionAttrs,
-          classNames: mx(
-            'h-full grid divide-y divide-subdued-separator',
-            !tracePanelDebug && selectedCommit
-              ? 'grid-rows-[min-content_minmax(0,160px)_1fr_minmax(0,206px)]'
-              : 'grid-rows-[min-content_minmax(0,160px)_1fr]',
-          ),
+          classNames: mx('h-full grid divide-y divide-subdued-separator', gridRows),
         })}
         ref={forwardedRef}
       >
-        <TraceToolbar selected={operationTags} available={availableTags} onSelectedChange={handleOperationTagsChange} />
+        <TraceToolbar
+          selected={operationTags}
+          available={availableTags}
+          onSelectedChange={handleOperationTagsChange}
+          processTree={processTree}
+          onProcessTreeChange={handleProcessTreeChange}
+        />
 
-        <ProcessTreeContainer onProcessSelect={handleProcessSelect} onProcessTerminate={onProcessTerminate} />
+        {processTree && (
+          <ProcessTreeContainer onProcessSelect={handleProcessSelect} onProcessTerminate={onProcessTerminate} />
+        )}
 
         <ScrollContainer.Root pin>
           <ScrollContainer.Content thin>

@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
@@ -31,7 +32,7 @@ export const QueryWorld = Operation.make({
     name: 'Query world',
     description: 'Returns the current state of the voxel world including all voxels, grid dimensions, and block size.',
     icon: 'ph--cube--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotate({
@@ -61,7 +62,7 @@ export const AddVoxels = Operation.make({
     name: 'Add voxels',
     description: 'Adds one or more voxels to the world at specified coordinates with a given hue.',
     icon: 'ph--plus--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotate({
@@ -83,7 +84,7 @@ export const RemoveVoxels = Operation.make({
     name: 'Remove voxels',
     description: 'Removes voxels at specified coordinates from the world.',
     icon: 'ph--minus--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotate({
@@ -105,7 +106,7 @@ export const GenerateShape = Operation.make({
     name: 'Generate shape',
     description: `Generates a 3D shape made of voxels at the given origin. Available shapes: ${MODEL_TYPES.join(', ')}.`,
     icon: 'ph--cube--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotate({

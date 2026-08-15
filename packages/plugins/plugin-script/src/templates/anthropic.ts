@@ -8,6 +8,7 @@ import * as Stream from 'effect/Stream';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -16,7 +17,7 @@ const Anthropic = Operation.make({
     key: DXN.make('org.dxos.script.anthropic'),
     name: 'Anthropic Chat',
     description: 'Chat with Anthropic',
-    tags: [Operation.Tag.System],
+    tags: [OperationTag.System],
   },
   input: Schema.Struct({
     message: Schema.String,

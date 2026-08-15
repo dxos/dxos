@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -21,7 +22,7 @@ export const ArtifactAdd = Operation.make({
       project's context, so the project owns it and it appears in the project's artifacts list.
       Adding the same object twice is a no-op.
     `,
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     project: Ref.Ref(Project.Project).annotate({
@@ -52,7 +53,7 @@ export const ArtifactList = Operation.make({
       Use this to find what the project already holds before searching the whole space; load an
       artifact's content with the load tool when needed.
     `,
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     project: Ref.Ref(Project.Project).annotate({

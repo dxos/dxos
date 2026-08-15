@@ -8,6 +8,7 @@ import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 import { Selection } from '@dxos/react-ui-attention/types';
@@ -26,7 +27,7 @@ export const UpdateSidebar = Operation.make({
     name: 'Update Sidebar',
     description: 'Update the sidebar state.',
     icon: 'ph--sidebar--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Layout],
   },
   executionMode: 'sync',
   services: [Capability.Service],
@@ -49,7 +50,7 @@ export const UpdateComplementary = Operation.make({
     name: 'Update Complementary Sidebar',
     description: 'Update the complementary sidebar state.',
     icon: 'ph--sidebar--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Layout],
   },
   executionMode: 'sync',
   services: [Capability.Service],
@@ -76,7 +77,7 @@ export const UpdateDialog = Operation.make({
     name: 'Update Dialog',
     description: 'Open, close, or update the dialog.',
     icon: 'ph--app-window--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Layout],
   },
   executionMode: 'sync',
   services: [Capability.Service],
@@ -163,7 +164,7 @@ export const UpdatePopover = Operation.make({
     name: 'Update Popover',
     description: 'Open, close, or update a popover.',
     icon: 'ph--chat-text--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Layout],
   },
   executionMode: 'sync',
   services: [Capability.Service],
@@ -244,7 +245,7 @@ export const AddToast = Operation.make({
     name: 'Add Toast',
     description: 'Add a toast notification.',
     icon: 'ph--broadcast--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Layout],
   },
   executionMode: 'sync',
   services: [Capability.Service],
@@ -262,7 +263,7 @@ export const SwitchWorkspace = Operation.make({
     name: 'Switch Workspace',
     description: 'Switch to a different workspace.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Navigation],
   },
   executionMode: 'sync',
   services: [Capability.Service],
@@ -278,7 +279,7 @@ export const RevertWorkspace = Operation.make({
     name: 'Revert Workspace',
     description: 'Revert to the previous workspace.',
     icon: 'ph--clock-counter-clockwise--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Navigation],
   },
   executionMode: 'sync',
   services: [Capability.Service],
@@ -298,7 +299,7 @@ export const Open = Operation.make({
     name: 'Open',
     description: 'Open items in the main content area. Takes navigation paths as subjects.',
     icon: 'ph--arrow-square-out--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Navigation],
   },
   executionMode: 'sync',
   services: [Capability.Service],
@@ -374,7 +375,7 @@ export const Close = Operation.make({
     name: 'Close',
     description: 'Close items in the main content area.',
     icon: 'ph--x--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Navigation],
   },
   executionMode: 'sync',
   services: [Capability.Service],
@@ -390,7 +391,7 @@ export const Set = Operation.make({
     name: 'Set',
     description: 'Override items in the main content area.',
     icon: 'ph--layout--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Navigation],
   },
   executionMode: 'sync',
   services: [Capability.Service],
@@ -410,7 +411,7 @@ export const ScrollIntoView = Operation.make({
     name: 'Scroll Into View',
     description: 'Scroll an item into view.',
     icon: 'ph--eye--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Navigation],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -427,7 +428,7 @@ export const Expose = Operation.make({
     name: 'Expose',
     description: 'Expose an item in the navigation area.',
     icon: 'ph--eye--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Navigation],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -446,7 +447,7 @@ export const UpdateCompanion = Operation.make({
     name: 'Update Companion',
     description: 'Update the companion plank for a primary plank.',
     icon: 'ph--sidebar--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Layout],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -472,7 +473,7 @@ export const Select = Operation.make({
     name: 'Select',
     description: 'Select items in an attention context.',
     icon: 'ph--check--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Navigation],
   },
   services: [Capability.Service],
   input: Schema.Struct({

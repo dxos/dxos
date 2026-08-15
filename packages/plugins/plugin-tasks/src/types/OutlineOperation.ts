@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -23,7 +24,7 @@ export const CreateOutline = Operation.make({
     key: makeKey('createOutline'),
     name: 'Create Outline',
     icon: 'ph--list-bullets--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -38,7 +39,7 @@ export const ConvertToTask = Operation.make({
     key: makeKey('convertToTask'),
     name: 'Convert to Task',
     icon: 'ph--check-circle--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -55,7 +56,7 @@ export const QuickJournalEntry = Operation.make({
     key: makeKey('quickEntry'),
     name: 'Quick Journal Entry',
     icon: 'ph--pencil--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -74,7 +75,7 @@ export const GetOutline = Operation.make({
     name: 'Get Outline',
     description: "Read an outline's checklist markdown and its parsed items.",
     icon: 'ph--list-checks--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -95,7 +96,7 @@ export const UpdateOutline = Operation.make({
     description:
       'Update an outline: upsert checklist items by title (preserving position and surrounding prose), or replace the markdown wholesale.',
     icon: 'ph--pencil-simple--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({

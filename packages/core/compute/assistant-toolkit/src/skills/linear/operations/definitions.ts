@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
@@ -15,7 +16,7 @@ export const SyncIssues = Operation.make({
     name: 'Linear',
     description: 'Sync issues from Linear.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Connector],
   },
   input: Schema.Struct({
     team: Schema.String.annotate({

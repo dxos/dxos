@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import * as PageAction from '@dxos/plugin-crx/PageAction';
@@ -20,7 +21,7 @@ export const AddFromSnapshot = Operation.make({
     name: 'Add bookmark',
     description: 'Save a web page snapshot as a bookmark.',
     icon: 'ph--bookmark-simple--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     snapshot: PageAction.Snapshot,
@@ -41,7 +42,7 @@ export const Summarize = Operation.make({
     name: 'Summarize Bookmark',
     description: 'Summarizes the bookmarked page and links the summary.',
     icon: 'ph--text-align-left--regular',
-    tags: [Operation.Tag.Agent],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     bookmark: Ref.Ref(Bookmark.Bookmark).annotate({ description: 'The bookmark to summarize.' }),

@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import * as Game from '@dxos/plugin-game/Game';
@@ -19,7 +20,7 @@ export const Move = Operation.make({
     name: 'Move',
     description: 'Makes a move in the given chess game.',
     icon: 'ph--play--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     game: Game.GameRef(Chess.State).annotate({
@@ -44,7 +45,7 @@ export const Play = Operation.make({
     name: 'Play',
     description: 'Uses the chess engine to play the next move.',
     icon: 'ph--play--regular',
-    tags: [Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     game: Game.GameRef(Chess.State).annotate({
@@ -72,7 +73,7 @@ export const Print = Operation.make({
     name: 'Print game',
     description: 'Prints the chess game to ASCII.',
     icon: 'ph--clipboard-text--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     pgn: Schema.optional(
@@ -98,7 +99,7 @@ export const RebuildPositionIndex = Operation.make({
     name: 'Rebuild Position Index',
     description: 'Scans chess games and updates the player review position index.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({

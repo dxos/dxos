@@ -9,6 +9,7 @@ import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { DXN } from '@dxos/keys';
@@ -21,7 +22,7 @@ export const createPluginId = (id: string): DXN.DXN => DXN.make(`org.dxos.test.g
 
 export const createAlertOperation = (id: DXN.DXN) =>
   Operation.make({
-    meta: { key: DXN.make(`${DXN.getName(id)}.operation.alert`), name: 'Alert', tags: [Operation.Tag.Edit] },
+    meta: { key: DXN.make(`${DXN.getName(id)}.operation.alert`), name: 'Alert', tags: [OperationTag.Database] },
     input: Schema.Void,
     output: Schema.Void,
   });

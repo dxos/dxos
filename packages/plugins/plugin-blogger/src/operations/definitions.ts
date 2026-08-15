@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -30,7 +31,7 @@ export const AddPublication = Operation.make({
     name: 'Add Publication',
     description: 'Create a new blog publication.',
     icon: 'ph--books--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     name: Schema.optional(Schema.String).annotate({ description: 'The publication name.' }),
@@ -49,7 +50,7 @@ export const AddPost = Operation.make({
     name: 'Add Post',
     description: 'Create a new post and add it to a publication.',
     icon: 'ph--article--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     publication: Ref.Ref(Blog.Publication).annotate({ description: 'The publication to add the post to.' }),
@@ -79,7 +80,7 @@ export const SyncPosts = Operation.make({
     name: 'Sync Posts',
     description: 'Bidirectionally sync a publication’s posts with its external publisher.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
+    tags: [OperationTag.Connector],
   },
   input: Schema.Struct({
     publication: Ref.Ref(Blog.Publication).annotate({ description: 'The publication whose posts to sync.' }),

@@ -473,9 +473,10 @@ export const OperationStart = EventType('operation.start', {
     /** Phosphor icon identifier in `ph--<name>--<variant>` format. */
     icon: Schema.optional(Schema.String),
     /**
-     * Operation tags (`Operation.Tag`), denormalized from the definition so consumers can filter a
-     * historical trace without resolving the operation registry — which may no longer hold the
-     * definition, and cannot be consulted synchronously while rendering.
+     * Operation tags (`@dxos/app-toolkit/OperationTag` holds the common vocabulary), denormalized
+     * from the definition so consumers can filter a historical trace without resolving the
+     * operation registry — which may no longer hold the definition, and cannot be consulted
+     * synchronously while rendering.
      */
     tags: Schema.optional(Schema.Array(Schema.String)),
   }),
@@ -493,7 +494,7 @@ export const OperationEnd = EventType('operation.end', {
     name: Schema.optional(Schema.String),
     /** Phosphor icon identifier in `ph--<name>--<variant>` format. */
     icon: Schema.optional(Schema.String),
-    /** Operation tags (`Operation.Tag`). See {@link OperationStart}. */
+    /** Operation tags. See {@link OperationStart}. */
     tags: Schema.optional(Schema.Array(Schema.String)),
     /** Outcome of the operation. */
     outcome: Schema.Literals(['success', 'failure']),

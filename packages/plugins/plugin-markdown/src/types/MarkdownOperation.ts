@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { trim } from '@dxos/util';
@@ -40,7 +41,7 @@ export const Create = Operation.make({
     name: 'Create',
     description: 'Creates a new markdown document and adds it to the space.',
     icon: 'ph--file-text--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     name: Schema.String,
@@ -59,7 +60,7 @@ export const CreateMarkdown = Operation.make({
     key: makeKey('create'),
     name: 'Create Markdown Document',
     icon: 'ph--file-text--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -77,7 +78,7 @@ export const Open = Operation.make({
     name: 'Open',
     description: 'Opens and reads the contents of a new markdown document.',
     icon: 'ph--arrow-square-out--regular',
-    tags: [Operation.Tag.UI, Operation.Tag.Tool],
+    tags: [OperationTag.Navigation, OperationTag.Assistant],
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotate({
@@ -97,7 +98,7 @@ export const GetSelection = Operation.make({
     description:
       "Returns the user's current text selection in the markdown document as anchor/text pairs (empty when nothing is selected).",
     icon: 'ph--selection--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     doc: Schema.optional(
@@ -125,7 +126,7 @@ export const ScrollToAnchor = Operation.make({
     key: makeKey('scrollToAnchor'),
     name: 'Scroll To Anchor',
     icon: 'ph--anchor-simple--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Navigation],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -142,7 +143,7 @@ export const CreateCheckpoint = Operation.make({
     name: 'Create Checkpoint',
     description: 'Records a named checkpoint of the current document content that can be viewed or restored later.',
     icon: 'ph--bookmark-simple--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotate({ description: 'The document to checkpoint.' }),
@@ -164,7 +165,7 @@ export const CreateBranch = Operation.make({
       by passing the returned branch id as branchId, then merge it back for review.
     `,
     icon: 'ph--git-branch--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotate({ description: 'The document to branch.' }),
@@ -187,7 +188,7 @@ export const SuggestEdit = Operation.make({
       unlike a named draft branch, a suggestion branch is space-visible and labelled by its author.
     `,
     icon: 'ph--pencil-simple--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotate({ description: 'The document to suggest edits on.' }),
@@ -216,7 +217,7 @@ export const MergeBranch = Operation.make({
       conflicting hunks are left in the text with git-style markers).
     `,
     icon: 'ph--git-merge--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotate({ description: 'The document that owns the branch.' }),
@@ -235,7 +236,7 @@ export const GetHistory = Operation.make({
     name: 'Get History',
     description: 'Lists the checkpoints and branches of a document.',
     icon: 'ph--clock-counter-clockwise--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotate({ description: 'The document to inspect.' }),
@@ -257,7 +258,7 @@ export const Update = Operation.make({
       Applies a set of edits to the markdown document.
     `,
     icon: 'ph--pencil-simple--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({
     // Any text-bearing document (an object holding a `content: Ref(Text)`), not only

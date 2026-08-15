@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import { SpaceSchema } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref, Type } from '@dxos/echo';
@@ -24,7 +25,7 @@ export const Create = Operation.make({
     key: makeKey('create'),
     name: 'Create Transcript',
     icon: 'ph--microphone--regular',
-    tags: [Operation.Tag.Edit],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -56,7 +57,7 @@ export const Open = Operation.make({
     name: 'Open',
     description: 'Opens and reads the contents of a transcription object.',
     icon: 'ph--folder-open--regular',
-    tags: [Operation.Tag.UI, Operation.Tag.Tool],
+    tags: [OperationTag.Navigation, OperationTag.Assistant],
   },
   input: Schema.Struct({
     transcript: Ref.Ref(Transcript.Transcript).annotate({
@@ -75,7 +76,7 @@ export const Summarize = Operation.make({
     name: 'Summarize',
     description: 'Summarize a transcript of a meeting.',
     icon: 'ph--text-align-left--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     transcript: Schema.String.annotate({
@@ -99,7 +100,7 @@ export const EnrichMessage = Operation.make({
     name: 'Enrich Transcript Message',
     description: 'Extract proper nouns from a transcript message and link them to objects in the space.',
     icon: 'ph--text-t--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     message: Type.getSchema(Message.Message),
@@ -130,7 +131,7 @@ export const SentenceNormalization = Operation.make({
     name: 'Sentence Normalization',
     description: 'Post process of transcription for sentence normalization',
     icon: 'ph--text-t--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: SentenceNormalizationInput,
   output: SentenceNormalizationOutput,

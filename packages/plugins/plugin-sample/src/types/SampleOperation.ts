@@ -10,6 +10,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -28,7 +29,7 @@ export const CreateSampleItem = Operation.make({
     key: makeKey('createSampleItem'),
     name: 'Create Sample Item',
     icon: 'ph--plus--regular',
-    tags: [Operation.Tag.System],
+    tags: [OperationTag.System],
   },
   input: Schema.Struct({
     name: Schema.optional(Schema.String).annotate({ description: 'Display name for the item.' }),
@@ -43,7 +44,7 @@ export const Randomize = Operation.make({
     key: makeKey('randomize'),
     name: 'Randomize Sample Item',
     icon: 'ph--shuffle--regular',
-    tags: [Operation.Tag.System],
+    tags: [OperationTag.System],
   },
   input: Schema.Struct({
     item: Schema.Any.annotate({ description: 'The SampleItem to randomize.' }),
@@ -56,7 +57,7 @@ export const UpdateStatus = Operation.make({
     key: makeKey('updateStatus'),
     name: 'Update Status',
     icon: 'ph--pencil--regular',
-    tags: [Operation.Tag.System],
+    tags: [OperationTag.System],
   },
   input: Schema.Struct({
     item: Schema.Any.annotate({ description: 'The SampleItem to update.' }),

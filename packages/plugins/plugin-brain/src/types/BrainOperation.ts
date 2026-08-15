@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Ref } from '@dxos/echo';
@@ -36,7 +37,7 @@ export const AnalyzeMailbox = Operation.make({
     name: 'Analyze Mailbox',
     description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
     icon: 'ph--brain--regular',
-    tags: [Operation.Tag.Agent],
+    tags: [OperationTag.Assistant],
   },
   services: [AiService.AiService, Database.Service, FactStore, Trace.TraceService],
   input: Schema.Struct({
@@ -90,7 +91,7 @@ export const QueryFacts = Operation.make({
     description:
       'Queries the space fact store (a semantic index of subject-predicate-object facts extracted from user content) with structured filters.',
     icon: 'ph--brain--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   services: [FactStore],
   input: Schema.Struct({
@@ -125,7 +126,7 @@ export const SummarizeSubject = Operation.make({
     description:
       'Composes a grounded summary of everything the space fact store knows about a subject (person, organization, topic), citing fact ids.',
     icon: 'ph--brain--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   services: [FactStore, AiService.AiService],
   input: Schema.Struct({
@@ -164,7 +165,7 @@ export const GenerateReply = Operation.make({
     description:
       'Drafts a reply to an email, grounded on the thread context and facts the space fact store knows about the participants.',
     icon: 'ph--sparkle--regular',
-    tags: [Operation.Tag.Agent],
+    tags: [OperationTag.Assistant],
   },
   services: [AiService.AiService, Database.Service, FactStore],
   // The shared contract, so a surface can invoke whatever is contributed without naming this plugin.

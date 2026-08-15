@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -18,7 +19,7 @@ export const OpenSearch = Operation.make({
     key: makeKey('openSearch'),
     name: 'Open Search',
     icon: 'ph--magnifying-glass--regular',
-    tags: [Operation.Tag.UI],
+    tags: [OperationTag.Layout],
   },
   input: Schema.Void,
   output: Schema.Void,

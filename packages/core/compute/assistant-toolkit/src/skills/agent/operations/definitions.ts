@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import { Harness } from '@dxos/assistant';
 import { AgentService } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
@@ -20,7 +21,7 @@ export const Relay = Operation.make({
     name: 'Agent Relay',
     description: 'Qualifies a subscription event with a cheap model and forwards it onto the durable agent session.',
     icon: 'ph--funnel--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Automation, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({
     /** The chat whose durable session receives the event (carries feed, instructions, and agent). */
@@ -41,7 +42,7 @@ export const GetContext = Operation.make({
     name: 'Get Agent Context',
     description: 'Get the context of an agent.',
     icon: 'ph--info--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Agent, Operation.Tag.Tool],
+    tags: [OperationTag.Assistant, OperationTag.Database],
   },
   input: Schema.Struct({}),
   output: Schema.Struct({
