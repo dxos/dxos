@@ -47,10 +47,11 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
 ## Phase 3 — migration (mechanical, incremental; spike commits are the template)
 
 - [x] Annotate + collapse the 2 spiked plugins onto the generator: hand-written stub barrels deleted, `environments` annotations in canonical barrels, prebuild tasks wired, space's byte-identical `schema.node/workerd` merged into `schema.headless.ts` behind `overrides.{node,workerd}.ts`, vestigial `#capabilities/node` subpath removed. Note: regeneration intentionally fixed space's node-barrel drift (`OperationHandler` back on Startup wave, `UndoMappings` maker form restored)
-- [ ] Sweep remaining 34 plugins; delete `plugin.node.ts`/`plugin.workerd.ts`, collapse `#plugin` conditions, prune vite entries
-- [ ] Merge byte-identical `schema.node.ts`/`schema.workerd.ts` → `schema.headless.ts`; surface the 4 stale schema lists for a human call
-- [ ] Fix the `OperationHandler` Startup→Idle drift in space/client/routine node barrels (regeneration does this; verify boot behavior)
-- [ ] Resolve inbox lazy→inline workerd conversion (keep via override or revert)
+- [x] Sweep remaining 34 plugins; delete `plugin.node.ts`/`plugin.workerd.ts`, collapse `#plugin` conditions, prune vite entries — all 34 converted (parallel agent batches + 4 handled directly: plugin-review/script/sheet/thread), zero plugins remain on the old variant pattern (verified by repo-wide scan)
+- [x] Merge byte-identical `schema.node.ts`/`schema.workerd.ts` → `schema.headless.ts`; surface the 4 stale schema lists for a human call — no `schema.node.ts`/`schema.workerd.ts` files remain anywhere in `packages/plugins`
+- [x] Fix the `OperationHandler` Startup→Idle drift in space/client/routine node barrels (regeneration does this; verify boot behavior) — space fixed in the Phase 3 spike; client and routine fixed during the sweep (both verified via `plugin.test.ts`'s "modules activate on the expected events")
+- [x] Resolve inbox lazy→inline workerd conversion (keep via override or revert) — inbox's canonical barrel carries `environments` annotations directly with `overrides.node.ts`/`overrides.workerd.ts` for the schema-list divergence; no lazy→inline conversion was needed
+- [x] Found and fixed a generator gap: plugins with zero `environments`-annotated modules for an environment produced no `gen/<env>.ts` barrel, leaving that `#capabilities` condition unconditioned and falling through to the dangerous default (full browser barrel, React included) under node/workerd resolution. Fixed the generator to treat an `overrides.<env>.ts` marker file's presence as a signal to still emit a stubbed barrel (plugin-map-solid, plugin-wnfs, plugin-debug, plugin-devtools all needed the marker); separately found and fixed several plugins whose package.json `#capabilities` was stale/unconditioned despite having real `environments` annotations (plugin-assistant, plugin-game, plugin-illustrator, plugin-observability, plugin-chess-com) — re-running `dx-plugin gen` after rebuilding the CLI resynced all of them. A repo-wide scan across all 90 plugin packages confirms zero remaining gaps.
 
 ## Phase 4 — hardening
 
