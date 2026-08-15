@@ -24,7 +24,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Text } from '@dxos/schema';
-import { Task, TaskSet } from '@dxos/types';
+import { Milestone, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -33,6 +33,15 @@ import { ProjectArticle } from './ProjectArticle';
 const PROJECT_NAME = 'Project 1';
 const TASK_TITLE = 'Ship the tasks section';
 const ARTIFACT_TITLE = 'Design Notes';
+const MILESTONE_NAME = 'Beta';
+
+/**
+ * The seeded graph, kept so a play function can mutate the source objects and assert the article
+ * re-renders. The article is fed a live subject by the surface, so proving that a change to a
+ * *referenced* object (a task's title, a new member of `taskSet.tasks`, a new artifact ref) reaches
+ * the DOM is the only way to catch a section that resolved once and then went inert.
+ */
+let seeded: { space: Space; project: Project.Project; taskSet: TaskSet.TaskSet } | undefined;
 
 /**
  * Seed a project with the same owned-object graph the create-object capability builds: an owned
@@ -60,6 +69,18 @@ const seedProject = (space: Space) => {
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [Ref.make(task)];
   });
+
+  seeded = { space, project, taskSet };
+};
+
+/** Adds a task to the set the way the verbs do — array membership plus the lifecycle parent edge. */
+const addTask = (space: Space, taskSet: TaskSet.TaskSet, title: string, milestone?: Milestone.Milestone) => {
+  const task = space.db.add(Task.make({ title, status: 'todo', milestone: milestone && Ref.make(milestone) }));
+  Obj.setParent(task, taskSet);
+  Obj.update(taskSet, (taskSet) => {
+    taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
+  });
+  return task;
 };
 
 const DefaultStory = () => {
@@ -84,7 +105,15 @@ const meta = {
         ...corePlugins(),
         TasksPlugin.make(),
         ClientPlugin.make({
-          types: [Project.Project, Instructions.Instructions, Skill.Skill, Text.Text, TaskSet.TaskSet, Task.Task],
+          types: [
+            Project.Project,
+            Instructions.Instructions,
+            Skill.Skill,
+            Text.Text,
+            TaskSet.TaskSet,
+            Task.Task,
+            Milestone.Milestone,
+          ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
@@ -135,5 +164,77 @@ export const Default: Story = {
     // the heading alone renders over an empty section.
     await expect(canvas.findByText('Tasks', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
+/**
+ * Every section stays live after its first paint. Each step below mutates the seeded objects the
+ * way the operation verbs do and asserts the DOM follows — the failure this guards against is a
+ * section that resolves once and then goes inert, which is how the previous parent-edge model
+ * behaved (`Query.children()` never re-emitted on a member's property change).
+ */
+export const Updates: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a project.');
+    }
+    const { space, project, taskSet } = context;
+
+    // 1. A member's own property change: renaming a task must reach its row.
+    const RENAMED = 'Renamed in place';
+    const [first] = TaskSet.resolveTasks(taskSet);
+    Obj.update(first, (first) => {
+      first.title = RENAMED;
+    });
+    await expect(canvas.findByText(RENAMED, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(canvas.queryByText(TASK_TITLE)).toBeNull(), { timeout: 10_000 });
+
+    // 2. Membership change: a task appended to `taskSet.tasks` must appear.
+    const ADDED_TASK = 'Added after mount';
+    addTask(space, taskSet, ADDED_TASK);
+    await expect(canvas.findByText(ADDED_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    // 3. Milestones regroup the list: a new milestone plus a task filed under it renders its own
+    //    heading with derived progress (0/1), and the unfiled tasks fall to the Backlog.
+    const milestone = space.db.add(Milestone.make({ name: MILESTONE_NAME }));
+    Obj.setParent(milestone, taskSet);
+    Obj.update(taskSet, (taskSet) => {
+      taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
+    });
+    const MILESTONE_TASK = 'Filed under the milestone';
+    addTask(space, taskSet, MILESTONE_TASK, milestone);
+    await expect(canvas.findByText(MILESTONE_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('0/1', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('Backlog', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    // 4. Progress is derived, so completing the milestone's task moves the counter with no write
+    //    to the milestone itself.
+    const milestoneTask = TaskSet.resolveTasks(taskSet).at(-1);
+    if (!milestoneTask) {
+      throw new Error('Expected the milestone task to resolve.');
+    }
+    Obj.update(milestoneTask, (milestoneTask) => {
+      milestoneTask.status = 'done';
+    });
+    await expect(canvas.findByText('1/1', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    // 5. Artifacts are an inline ref array on the project now, so appending a ref must add a card.
+    const ADDED_ARTIFACT = 'Added artifact';
+    const artifact = space.db.add(Text.make({ name: ADDED_ARTIFACT, content: 'More notes.' }));
+    Obj.update(project, (project) => {
+      project.artifacts = [...project.artifacts, Ref.make(artifact)];
+    });
+    await expect(canvas.findByText(ADDED_ARTIFACT, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    // 6. And removing the ref must drop the card — the delete path splices this array rather than
+    //    going through a collection.
+    Obj.update(project, (project) => {
+      project.artifacts = project.artifacts.filter((ref) => ref.target?.id !== artifact.id);
+    });
+    await waitFor(() => expect(canvas.queryByText(ADDED_ARTIFACT)).toBeNull(), { timeout: 10_000 });
+    await expect(canvas.findByText(ARTIFACT_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };

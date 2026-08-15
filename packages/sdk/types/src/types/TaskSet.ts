@@ -79,13 +79,17 @@ const refId = <T extends Obj.Unknown>(ref: Ref.Ref<T> | undefined): string | und
  * The set's tasks in array order, dropping unresolved refs and de-duplicating by id — concurrent
  * edits can merge a ref into the array twice, and a reader must not show the task twice.
  */
-export const resolveTasks = (taskSet: TaskSet): Task.Task[] => dedupe(taskSet.tasks.map((ref) => ref.target));
+export const resolveTasks = (taskSet: TaskSet): Task.Task[] => dedupeById(taskSet.tasks.map((ref) => ref.target));
 
 /** The set's milestones in sequence, dropping unresolved refs and de-duplicating by id. */
 export const resolveMilestones = (taskSet: TaskSet): Milestone.Milestone[] =>
-  dedupe(taskSet.milestones.map((ref) => ref.target));
+  dedupeById(taskSet.milestones.map((ref) => ref.target));
 
-const dedupe = <T extends Obj.Unknown>(objects: ReadonlyArray<T | undefined>): T[] => {
+/**
+ * Drops unresolved entries and de-duplicates by id. Exported because a React caller resolves the
+ * arrays itself (`useObjects`, so membership changes re-render) and still needs the same cleanup.
+ */
+export const dedupeById = <T extends Obj.Unknown>(objects: ReadonlyArray<T | undefined>): T[] => {
   const seen = new Set<string>();
   const result: T[] = [];
   for (const object of objects) {

@@ -6,7 +6,8 @@ import React, { Fragment, useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { useObject, useObjects } from '@dxos/echo-react';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -32,8 +33,21 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const spaceId = space?.id;
   const { invokePromise } = useOperationInvoker();
 
-  const tasks = useMemo(() => TaskSet.resolveTasks(taskSet), [taskSet.tasks]);
-  const milestones = useMemo(() => TaskSet.resolveMilestones(taskSet), [taskSet.milestones]);
+  // Subscribe to the set, then resolve its refs, rather than reading `taskSet.tasks[i].target`
+  // directly: without the subscription a task appended to the array never re-renders (only the
+  // rows already mounted stay live), and refs read off the resulting snapshot carry no resolver,
+  // so their `.target` is undefined even once loaded.
+  const [taskSetSnapshot] = useObject(taskSet);
+  const taskSnapshots = useObjects(taskSetSnapshot?.tasks ?? []);
+  const milestoneSnapshots = useObjects(taskSetSnapshot?.milestones ?? []);
+  const tasks = useMemo(
+    () => TaskSet.dedupeById(taskSnapshots.map((snapshot) => Obj.getReactiveOrUndefined(snapshot))),
+    [taskSnapshots],
+  );
+  const milestones = useMemo(
+    () => TaskSet.dedupeById(milestoneSnapshots.map((snapshot) => Obj.getReactiveOrUndefined(snapshot))),
+    [milestoneSnapshots],
+  );
   // Only root tasks are listed: a sub-task appears under its parent, and the flat array holds both.
   const roots = useMemo(() => TaskSet.rootTasks(tasks), [tasks]);
 
