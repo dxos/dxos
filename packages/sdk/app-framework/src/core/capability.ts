@@ -629,9 +629,19 @@ export type MakerOptions<
  * event-mode on it unless the call site declares its own `activatesOn`. This is how a capability
  * owner makes the well-behaved activation the default for every provider (e.g. operation
  * handlers park until an operation is invoked) — startup is not assumed.
+ *
+ * `defaults.environments` does the same for the runtime axis: a capability family that is headless
+ * by construction (schema, operation handlers) declares every environment once here rather than
+ * making each of ~36 plugins repeat the annotation — an omission that silently drops the module
+ * from the generated headless barrels. A UI-bound family leaves it unset, keeping browser-only the
+ * default. The call site's own `environments` still wins.
  */
 export const moduleMaker =
-  <C extends AnyTag>(defaultName: string, capability: C, defaults?: { activatesOn?: ActivationEvent.Events }) =>
+  <C extends AnyTag>(
+    defaultName: string,
+    capability: C,
+    defaults?: { activatesOn?: ActivationEvent.Events; environments?: readonly Environment[] },
+  ) =>
   <
     Props = void,
     Options = Props,
@@ -652,7 +662,7 @@ export const moduleMaker =
         provides: [capability, ...extra],
         activatesOn: options?.activatesOn ?? defaults?.activatesOn,
         props: options?.props,
-        environments: options?.environments,
+        environments: options?.environments ?? defaults?.environments,
       },
       loader,
     );
