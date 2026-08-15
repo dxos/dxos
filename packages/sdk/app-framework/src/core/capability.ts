@@ -487,7 +487,17 @@ export interface Module<Options = void> {
   readonly requires?: readonly AnyTag[];
   readonly provides: readonly AnyTag[];
   readonly activatesOn?: ActivationEvent.Events;
+  readonly environments?: readonly Environment[];
 }
+
+/**
+ * Environments a module can be flagged for via {@link ModuleSpec}'s `environments`.
+ * Omitted means browser-only — headless availability is opt-in per module. The annotation
+ * must be a literal array at the authoring site: barrel generation reads it statically
+ * (headless barrels are emitted per environment, since bundlers follow lazy loaders), so a
+ * computed value would be invisible to the generator.
+ */
+export type Environment = 'browser' | 'node' | 'workerd';
 
 /**
  * Spec shared by {@link lazyModule} and {@link inlineModule}: the requires/provides
@@ -501,6 +511,8 @@ type ModuleSpec<Provides extends readonly AnyTag[], Requires extends readonly An
   readonly activatesOn?: ActivationEvent.Events;
   /** Maps plugin options to the body's props; omit when they coincide. */
   readonly props?: (options: Options) => Props;
+  /** Environments this module is flagged for (literal array); omitted means browser-only. */
+  readonly environments?: readonly Environment[];
 };
 
 /**
@@ -548,6 +560,7 @@ export const lazyModule = <
     requires: spec.requires,
     provides: spec.provides,
     activatesOn: spec.activatesOn,
+    environments: spec.environments,
   });
 };
 
@@ -580,6 +593,7 @@ export const inlineModule = <
     requires: spec.requires,
     provides: spec.provides,
     activatesOn: spec.activatesOn,
+    environments: spec.environments,
   });
 };
 
@@ -602,6 +616,8 @@ export type MakerOptions<
   activatesOn?: ActivationEvent.Events;
   /** Maps plugin options to the body's props; omit when they coincide. */
   props?: (options: Options) => Props;
+  /** Environments this module is flagged for (literal array); omitted means browser-only. */
+  environments?: readonly Environment[];
 };
 
 /**
@@ -636,6 +652,7 @@ export const moduleMaker =
         provides: [capability, ...extra],
         activatesOn: options?.activatesOn ?? defaults?.activatesOn,
         props: options?.props,
+        environments: options?.environments,
       },
       loader,
     );
