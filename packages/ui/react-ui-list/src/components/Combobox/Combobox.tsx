@@ -12,6 +12,10 @@
 // `<Combobox.Item>` children. For fuzzy / search-domain filtering,
 // pair with `useSearchListResults` from `@dxos/react-ui-search`.
 //
+// `Content` renders in place: wrap it in `Portal` whenever the trigger sits
+// inside a clipping container (a toolbar, a scroll area, a plank), or the
+// popover opens invisibly and the trigger reads as dead.
+//
 // https://www.w3.org/WAI/ARIA/apg/patterns/combobox
 
 import { createContext } from '@radix-ui/react-context';

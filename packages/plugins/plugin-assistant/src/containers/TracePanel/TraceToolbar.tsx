@@ -41,20 +41,23 @@ export const TraceToolbar = ({ selected, available, onSelectedChange }: TraceToo
         <Combobox.Trigger variant='ghost' aria-label={t('trace-filter.menu')}>
           <Icon icon='ph--funnel--regular' size={4} />
         </Combobox.Trigger>
-        <Combobox.Content>
-          <Combobox.Input
-            placeholder={t('trace-filter.placeholder')}
-            value={query}
-            onValueChange={setQuery}
-            autoFocus
-          />
-          <Combobox.List>
-            {filtered.map((tag) => (
-              <Combobox.Item key={tag} value={tag} label={label(tag)} icon={tagIcon(tag)} />
-            ))}
-          </Combobox.List>
-          <Combobox.Arrow />
-        </Combobox.Content>
+        {/* Portalled: rendered inline, the popover is clipped by the panel's grid and scroll areas. */}
+        <Combobox.Portal>
+          <Combobox.Content>
+            <Combobox.Input
+              placeholder={t('trace-filter.placeholder')}
+              value={query}
+              onValueChange={setQuery}
+              autoFocus
+            />
+            <Combobox.List>
+              {filtered.map((tag) => (
+                <Combobox.Item key={tag} value={tag} label={label(tag)} icon={tagIcon(tag)} />
+              ))}
+            </Combobox.List>
+            <Combobox.Arrow />
+          </Combobox.Content>
+        </Combobox.Portal>
       </Combobox.Root>
     </Toolbar.Root>
   );

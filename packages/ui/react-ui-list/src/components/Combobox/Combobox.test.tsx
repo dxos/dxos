@@ -4,9 +4,12 @@
 
 import { composeStories } from '@storybook/react-vite';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
+import React, { useState } from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
+import { ThemeProvider, Toolbar, defaultTx } from '@dxos/react-ui';
+
+import { Combobox } from './Combobox';
 import * as stories from './Combobox.stories';
 
 const { Default, Multiple } = composeStories(stories);
@@ -73,6 +76,43 @@ describe('Combobox', () => {
       for (const label of chosen) {
         expect(trigger).toHaveTextContent(label);
       }
+    });
+  });
+
+  // `Content` renders in place, so a trigger inside a clipping container (a toolbar, a scroll area)
+  // needs `Portal` — without it the popover opens but is invisible, which reads as a dead trigger.
+  describe('portal', () => {
+    const InToolbar = ({ portal }: { portal: boolean }) => {
+      const [values, setValues] = useState<readonly string[]>([]);
+      const content = (
+        <Combobox.Content>
+          <Combobox.List>
+            <Combobox.Item value='a' label='Alpha' />
+          </Combobox.List>
+        </Combobox.Content>
+      );
+      return (
+        <ThemeProvider tx={defaultTx} themeMode='dark'>
+          <Toolbar.Root>
+            <Combobox.Root multiple value={values} onValueChange={setValues}>
+              <Combobox.Trigger>trigger</Combobox.Trigger>
+              {portal ? <Combobox.Portal>{content}</Combobox.Portal> : content}
+            </Combobox.Root>
+          </Toolbar.Root>
+        </ThemeProvider>
+      );
+    };
+
+    test('unportalled content renders inside the clipping container', () => {
+      render(<InToolbar portal={false} />);
+      fireEvent.click(screen.getByRole('combobox'));
+      expect(screen.getByRole('listbox').closest('[role="toolbar"]')).not.toBeNull();
+    });
+
+    test('portalled content escapes it', () => {
+      render(<InToolbar portal />);
+      fireEvent.click(screen.getByRole('combobox'));
+      expect(screen.getByRole('listbox').closest('[role="toolbar"]')).toBeNull();
     });
   });
 
