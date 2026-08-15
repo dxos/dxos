@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
 import { Client } from '@dxos/agent-claude/client';
-import { Icon, IconButton, Input, Panel, ScrollArea } from '@dxos/react-ui';
+import { Icon, IconButton, Input, Panel } from '@dxos/react-ui';
 import { ContentBlock } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -94,24 +94,22 @@ const AgentConsole = () => {
 
   return (
     <Panel.Root classNames='absolute inset-0 flex flex-col gap-2 p-2'>
-      <ScrollArea.Root classNames='flex-1 min-bs-0'>
-        <ScrollArea.Viewport classNames='p-2'>
-          <div className='flex flex-col gap-3'>
-            {turns.map((turn, index) => (
-              <div key={index} className='flex flex-col gap-1'>
-                <div className='text-xs text-description uppercase'>{turn.role}</div>
-                {turn.blocks.map((block, blockIndex) => (
-                  <div key={blockIndex} className={mx('whitespace-pre-wrap text-sm', blockClass(block))}>
-                    {blockText(block)}
-                  </div>
-                ))}
-              </div>
-            ))}
-            {running && <div className='text-sm text-description'>running…</div>}
-            {error && <div className='text-sm text-errorText'>{error}</div>}
-          </div>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      <div className='flex-1 min-bs-0 overflow-y-auto p-2'>
+        <div className='flex flex-col gap-3'>
+          {turns.map((turn, index) => (
+            <div key={index} className='flex flex-col gap-1'>
+              <div className='text-xs text-description uppercase'>{turn.role}</div>
+              {turn.blocks.map((block, blockIndex) => (
+                <div key={blockIndex} className={mx('whitespace-pre-wrap text-sm', blockClass(block))}>
+                  {blockText(block)}
+                </div>
+              ))}
+            </div>
+          ))}
+          {running && <div className='text-sm text-description'>running…</div>}
+          {error && <div className='text-sm text-errorText'>{error}</div>}
+        </div>
+      </div>
 
       <div className='flex gap-2 items-center shrink-0'>
         <Input.Root>
