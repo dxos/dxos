@@ -21,7 +21,7 @@ single canonical entry + generated stub barrels).
 ## Phase 2 — generator productization
 
 Naming (Josiah, 2026-08-15): the bin is `dx-plugin` — the plugin-authoring CLI shipped with
-@dxos/app-framework; generation runs as `dx-plugin prebuild`, future tooling (exports/#plugin
+@dxos/app-framework; generation runs as `dx-plugin gen`, future tooling (exports/#plugin
 sync, scaffolding) becomes subcommands. Common task definitions live in the `composer-plugin`
 moon tag (.moon/tasks/tag-composer-plugin.yml) so plugins don't repeat prebuild/build/test/lint
 wiring.
