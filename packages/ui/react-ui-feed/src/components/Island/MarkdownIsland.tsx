@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
+import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import React, { memo, useEffect, useMemo, useRef } from 'react';
+import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   type XmlWidgetRegistry,
   createBasicExtensions,
@@ -39,6 +38,8 @@ export type MarkdownIslandProps = {
  */
 export const MarkdownIsland = memo(({ text, editable = false, registry, hits }: MarkdownIslandProps) => {
   const { themeMode } = useThemeContext();
+  const [view, setView] = useState<EditorView | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const extensions = useMemo<Extension[]>(
     () =>
@@ -55,7 +56,28 @@ export const MarkdownIsland = memo(({ text, editable = false, registry, hits }: 
     [editable, themeMode, registry],
   );
 
-  const { parentRef, view } = useTextEditor(() => ({ initialValue: text, extensions }), [extensions]);
+  // Deliberately NOT `useTextEditor`, which builds the view in a passive effect — i.e. after paint.
+  // The virtualizer measures each row as it mounts, so a row whose document does not exist yet
+  // measures at chrome height and then grows, shifting every row below it. Constructing the view in
+  // the layout phase gives the row its real height before the first paint, so it is measured once.
+  const initialTextRef = useRef(text);
+  useLayoutEffect(() => {
+    const parent = rootRef.current;
+    if (!parent) {
+      return;
+    }
+
+    const instance = new EditorView({
+      parent,
+      state: EditorState.create({ doc: initialTextRef.current, extensions }),
+    });
+    setView(instance);
+
+    return () => {
+      instance.destroy();
+      setView(null);
+    };
+  }, [extensions]);
 
   // The document belongs to the model, not the view: a message whose text changes is reconciled
   // rather than remounted, so the virtualizer's measurement for this row survives the update.
@@ -67,6 +89,7 @@ export const MarkdownIsland = memo(({ text, editable = false, registry, hits }: 
 
     const previous = currentRef.current;
     currentRef.current = text;
+    initialTextRef.current = text;
     // A streaming tail only ever extends: dispatch the delta so CodeMirror keeps scroll position and
     // decorations instead of rebuilding the document on every frame.
     view.dispatch(
@@ -80,7 +103,7 @@ export const MarkdownIsland = memo(({ text, editable = false, registry, hits }: 
     view?.dispatch({ effects: setHighlights.of(hits ?? []) });
   }, [view, hits]);
 
-  return <div ref={parentRef} />;
+  return <div ref={rootRef} />;
 });
 
 MarkdownIsland.displayName = 'MarkdownIsland';
