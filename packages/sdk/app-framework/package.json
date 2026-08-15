@@ -78,6 +78,11 @@
       "types": "./dist/types/src/common/Role.d.ts",
       "import": "./dist/lib/common/Role.mjs"
     },
+    "./SharedPackages": {
+      "source": "./src/vite-plugin/packages.ts",
+      "types": "./dist/types/src/vite-plugin/packages.d.ts",
+      "import": "./dist/lib/vite-plugin/packages.mjs"
+    },
     "./UndoMapping": {
       "source": "./src/plugin-process-manager/history/undo-mapping.ts",
       "types": "./dist/types/src/plugin-process-manager/history/undo-mapping.d.ts",

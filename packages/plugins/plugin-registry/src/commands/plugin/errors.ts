@@ -21,6 +21,17 @@ export class PluginNotFoundError extends BaseError.extend('PluginNotFoundError',
   }
 }
 
+/** The named plugin is compiled into the binary, so there is nothing to uninstall. */
+export class PluginNotRemovableError extends BaseError.extend('PluginNotRemovableError', 'Plugin cannot be removed') {
+  constructor(id: string, options?: Omit<BaseErrorOptions, 'context'>) {
+    super({
+      message: `Cannot remove "${id}": it ships with this CLI. Run \`dx plugin disable ${id}\` to turn it off instead.`,
+      context: { id },
+      ...options,
+    });
+  }
+}
+
 /** The named plugin is pinned on by the host and cannot be turned off. */
 export class CorePluginError extends BaseError.extend('CorePluginError', 'Plugin is required') {
   constructor(id: string, options?: Omit<BaseErrorOptions, 'context'>) {

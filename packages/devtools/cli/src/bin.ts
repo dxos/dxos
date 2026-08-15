@@ -19,12 +19,12 @@ import { unrefTimeout } from '@dxos/async';
 import { ConfigService, DXOS_VERSION } from '@dxos/client';
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
-import { loadEnabledPlugins } from '@dxos/plugin-registry';
+import { isRecordEnabled, loadPlugins, makeInstalledPlugins } from '@dxos/plugin-registry';
 
 import { admin, chat, commandConfigLayer, debug, dx, fn, hub, mailbox, mcp, reflect, repl, reset } from './commands';
 import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
 import { setDispatcher } from './dispatcher';
-import { installStderrFilter } from './util';
+import { installStderrFilter, registerSharedScope } from './util';
 
 // Filter background `warnAfterTimeout` chatter out of stderr for the lifetime
 // of the process. The warnings come from eager space initialisation in
@@ -84,8 +84,14 @@ const program = Effect.gen(function* () {
   const isLabs = DXEnv.get(DXEnv.LABS) === 'true';
   // `undefined` means the profile has never been configured; an empty array means the user
   // turned everything optional off, which must not be re-seeded with the defaults.
-  const savedEnabled = yield* loadEnabledPlugins({ profile });
-  const enabled = savedEnabled ?? getDefaults({ isLabs });
+  const records = yield* loadPlugins({ profile });
+  const enabled = records?.filter(isRecordEnabled).map((record) => record.id) ?? getDefaults({ isLabs });
+  // Third-party installs register as lazy stubs built from the metadata cached at install time, so
+  // a `dx` invocation imports a plugin's code only once something enables it.
+  const installed = makeInstalledPlugins(records ?? []);
+  // Must precede any plugin import so a third-party plugin's bare specifiers resolve to the host's
+  // module instances rather than its own copies.
+  registerSharedScope({ enabled: installed.length > 0 });
 
   const { command, layer: pluginLayer } = yield* createCliApp({
     rootCommand: dx,
@@ -108,7 +114,7 @@ const program = Effect.gen(function* () {
       hub,
       reflect,
     ],
-    plugins: getPlugins({ config }),
+    plugins: [...getPlugins({ config }), ...installed],
     enabled,
     core: getCore(),
   });

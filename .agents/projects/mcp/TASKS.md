@@ -102,30 +102,41 @@ reads as though disabling does not exist. DESIGN §2.3.
 
 ### Plugin loading
 
-- [ ] **Shared scope at startup** — register `DEFAULT_PACKAGES` through `Bun.plugin`'s module
-      registry so a plugin's bare specifiers resolve to the host's already-loaded instances.
-      Proven to work inside a compiled binary, and to win over a copy in the plugin's own
-      `node_modules` (DESIGN §2.1). Generate the list from the same source the Vite plugin reads —
-      two contracts would drift.
-- [ ] **`dx plugin add <url|name>`** — fetch manifest, download assets under
-      `~/.config/dx/plugins/<id>/`, register from the manifest, enable by default (`--no-enable`
-      stops at install). Prints the resolved NSID, since the user typed a locator and every other
-      verb takes an id. Rejects an id already claimed by a compiled-in plugin, as
-      `UrlLoader.make` does in the browser. DESIGN §2.4.
-- [ ] **Register without importing** — `add` builds a `Plugin.lazy` stub from the manifest, with the
-      dynamic import as its loader. The manifest carries the whole `Config2.Plugin` meta (`key`,
-      `name`, `tags`, `dependsOn`), so a catalog entry needs no module evaluation and `enable` becomes the
-      one point where third-party code first runs. Deliberately unlike the browser, where
-      `UrlLoader.preload` imports every persisted remote entry at boot. DESIGN §2.3.
-- [ ] **Installed-remote persistence, one file** — `plugins/<profile>.yml` becomes a list of
-      records (`id`, `enabled`, plus `url`/`version`/integrity for remotes) rather than the bare
-      `string[]` of enabled ids; the browser's separate `localStorage` `RemotePluginView` list is a
-      storage artifact, not a design worth copying. **Decode must be a union that still accepts the
-      legacy `string[]`** — `loadEnabledPlugins` swallows a decode failure into `[]` and `bin.ts`
-      then falls back to `getDefaults()`, so a bare schema bump silently resets every profile.
-- [ ] **Never crash on a dangling enabled id** — an enabled entry with no installed record hits
-      `createCliApp`'s default `pluginLoader` invariant and kills every command until the user
-      edits YAML. Record a failure, skip the entry, keep running.
+- [~] **Shared scope at startup** (2026-08-15, PR #12606) — implemented as a `Bun.plugin`
+  `onResolve` hook over `DEFAULT_PACKAGES`, read from the new `@dxos/app-framework/SharedPackages`
+  export so the CLI and the Vite plugin share one list. Two corrections to DESIGN §2.1's plan
+  fell out of building it: (1) `build.module` registers **exact specifiers**, which cannot cover
+  the subpaths that are nearly every real import (`@dxos/app-framework/Plugin`), so `onResolve`
+  with a filter is the mechanism; (2) a factory that imports its own specifier **recurses into
+  the hook** and hangs every `dx` command, not just plugin loading — resolution has to hand back
+  a path, never an import. Gated on there being an installed plugin. **NOT yet effective for a
+  copied install**: bun auto-installs an unresolvable bare specifier from its own cache before
+  the hook is consulted, so a plugin under `plugins/<id>/` still loads its own `@dxos/*` copy
+  (repro below). Linked installs resolve correctly because they sit inside a node_modules tree.
+- [x] **`dx plugin add` / `remove`** (2026-08-15, PR #12606) — `add <url>` fetches the manifest and
+      snapshots the assets under `plugins/<id>/` via a staging directory (a half-downloaded install
+      the loader would later import is worse than none); `add --dev <path>` reads a directory in
+      place, falling back to its `dx.config.ts` when there is no built manifest. Enables by default,
+      `--no-enable` stops at install, prints the resolved NSID, and refuses an id a builtin already
+      claims unless `--dev`. `remove` deletes a copy or forgets a link by record kind and refuses a
+      compiled-in plugin, pointing at `disable`. The two unbuilt cells (snapshot-from-path,
+      live-from-URL) are refused with a message rather than half-implemented. 10 subprocess tests
+      against a fixture plugin, including a real loopback manifest fetch + asset download.
+- [x] **Register without importing** (2026-08-15, PR #12606) — the record caches the plugin's
+      `Config2.Plugin` meta at install time, and startup builds a `Plugin.lazy` stub from it, so a
+      `dx` invocation evaluates a plugin's module only once something enables it. Deliberately
+      unlike the browser, where `UrlLoader.preload` imports every persisted remote entry at boot.
+- [x] **Installed-remote persistence, one file** (2026-08-15, PR #12606) — `plugins/<profile>.yml`
+      now holds `{ plugins: [{ id, enabled, source, meta }] }`, decoded as a union that still
+      accepts the legacy bare `string[]` (without it, a decode failure falls through to the defaults
+      and silently discards the user's choices). `source` is `copy` or `link` — copy versus
+      reference is the distinction that decides what `remove` does.
+- [x] **Never crash on a broken install** (2026-08-15, PR #12606) — the manager resolves lazy
+      plugins inside its initialization chain, so a failed import became a `PluginInitializationError`
+      that killed _every_ `dx` command, including the `plugin list` and `plugin remove` needed to
+      recover. A failed import now degrades to a plugin contributing nothing, and `plugin list`
+      reports it as `failed` with the underlying message. Regression test moves a linked checkout
+      out from under its record.
 - [x] **`plugin list` shows both axes** (2026-08-15, PR #12606) — installed / enabled / core plus
       any load-or-activation failure, in text and `--json`, replacing the collapsed status string;
       `--enabled` filters to the active set. `enable`/`disable` also became idempotent and now fail

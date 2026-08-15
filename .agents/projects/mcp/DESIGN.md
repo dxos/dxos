@@ -88,6 +88,24 @@ Measured on bun 1.3.11, in a compiled single-file executable (the shape `dx` shi
 So bun's runtime module registry is the node-side analogue of the browser's import map, and
 `DEFAULT_PACKAGES` stays the one contract both hosts honor.
 
+**Three corrections from building it** (2026-08-15, from source rather than a compiled binary):
+
+1. `build.module` registers **exact specifiers**. Nearly every real import is a subpath —
+   `@dxos/app-framework/Plugin`, never the barrel — so a bare-specifier registry leaves the
+   imports that matter resolving to the plugin's own copy. `Bun.plugin`'s `onResolve` with a filter
+   covers a package and all its subpaths, and is what the CLI now uses.
+2. A factory that imports its own specifier **recurses into the hook**. `build.module` intercepts
+   every import of that specifier, the host's included, so the naive
+   `build.module(spec, () => import(spec))` hung the CLI before it ran any command — not just
+   plugin loading. The hook must return a resolved path and never import.
+3. **Bun auto-install wins the race for a copied plugin.** A plugin under `plugins/<id>/` has no
+   `node_modules` above it, and bun resolves its bare `@dxos/*` imports out of its own install
+   cache before the hook is consulted — so the copy loads a _published_ `@dxos/app-framework` that
+   then fails on its own `effect/Context` import. A linked install resolves correctly because it
+   sits inside a node_modules tree. Closing this is the remaining blocker for URL installs, and it
+   is the point where the compiled-binary measurement in this section needs redoing: the auto-install
+   path may not exist in a standalone executable, which would make the same hook sufficient there.
+
 ### 2.2 What the CLI needs
 
 - `dx plugin add <url|name>` — fetch manifest, download assets under `~/.config/dx/plugins/<id>/`,
