@@ -18,7 +18,9 @@ import { SpaceOperation } from '#types';
 const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = SpaceOperation.RemoveObjects.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
+      // Optional: a headless host (edge operation-service, `dx mcp serve`) has a capability manager
+      // but contributes no layout, and removal must still unlink and delete there.
+      const layout = yield* Capabilities.getAtomValueOption(AppCapabilities.Layout);
       const entities = input.objects;
 
       const space = getSpace(entities[0] as Obj.Unknown);
@@ -43,9 +45,13 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       // too — a project's chats are the live case. Collected before the removal, while the parent
       // edges still resolve; a plank left pointing at a removed object cannot be closed by the user.
       const descendantIds = yield* collectOwnedDescendantIds(entities);
-      const wasActive = [...entities.map((entity) => entity.id), ...descendantIds]
-        .map((id) => layout.active.find((graphId) => graphId.endsWith(id)))
-        .filter(isNonNullable);
+      const wasActive = Option.match(layout, {
+        onNone: () => [],
+        onSome: (layout) =>
+          [...entities.map((entity) => entity.id), ...descendantIds]
+            .map((id) => layout.active.find((graphId) => graphId.endsWith(id)))
+            .filter(isNonNullable),
+      });
 
       for (const entity of entities) {
         if (Obj.instanceOf(Collection.Collection, parentCollection)) {

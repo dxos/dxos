@@ -8,6 +8,7 @@ export * as SpaceCapabilities from './SpaceCapabilities';
 export * as SpaceCapability from './SpaceCapability';
 export * as SpaceEvents from './SpaceEvents';
 export * as SpaceForm from './SpaceForm';
+export * as SpaceObjectOperation from './SpaceObjectOperation';
 export * as SpaceOperation from './SpaceOperation';
 export * as SpaceSchema from './SpaceSchema';
 export * as SpaceSurface from './SpaceSurface';

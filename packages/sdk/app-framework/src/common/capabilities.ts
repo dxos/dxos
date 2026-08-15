@@ -7,6 +7,7 @@ import type * as Exit$ from 'effect/Exit';
 import type * as Fiber$ from 'effect/Fiber';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
+import * as Option from 'effect/Option';
 import type * as Command$ from 'effect/unstable/cli/Command';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
@@ -302,6 +303,25 @@ export const getAtomValue = <T>(
   });
 
 /**
+ * Get the current value of an atom capability, or `Option.none()` when either the registry or the
+ * atom itself is uncontributed.
+ *
+ * For operations that run on both the app and a headless host (the edge operation-service, `dx mcp
+ * serve`): those hosts have a capability manager but activate no UI plugins, so {@link getAtomValue}
+ * fails on capabilities like `Layout` that only the app contributes.
+ *
+ * @example const layout = yield* Capabilities.getAtomValueOption(AppCapabilities.Layout);
+ */
+export const getAtomValueOption = <T>(
+  atomCapability: Capability$.InterfaceDef<Atom.Atom<T>>,
+): Effect.Effect<Option.Option<T>, never, Capability$.Service> =>
+  Effect.gen(function* () {
+    const registry = yield* Capability$.getOption(AtomRegistry);
+    const atom = yield* Capability$.getOption(atomCapability);
+    return Option.map(Option.all([registry, atom]), ([registry, atom]) => registry.get(atom));
+  });
+
+/**
  * Update an atom capability value (requires writable atom).
  * @example yield* Capabilities.updateAtomValue(CommentCapabilities.Settings, (s) => ({ ...s, foo: true }));
  */
@@ -313,6 +333,24 @@ export const updateAtomValue = <T>(
     const registry = yield* Capability$.get(AtomRegistry);
     const atom = yield* Capability$.get(atomCapability);
     registry.set(atom, fn(registry.get(atom)));
+  });
+
+/**
+ * Update an atom capability value if it is contributed, else do nothing.
+ *
+ * The write counterpart to {@link getAtomValueOption}, for operations whose atom write is UI
+ * bookkeeping (progress flags, ephemeral state) that a headless host has no consumer for.
+ *
+ * @example yield* Capabilities.updateAtomValueOption(SpaceCapabilities.EphemeralState, (s) => ({ ...s, busy: true }));
+ */
+export const updateAtomValueOption = <T>(
+  atomCapability: Capability$.InterfaceDef<Atom.Writable<T>>,
+  fn: (current: T) => T,
+): Effect.Effect<void, never, Capability$.Service> =>
+  Effect.gen(function* () {
+    const registry = yield* Capability$.getOption(AtomRegistry);
+    const atom = yield* Capability$.getOption(atomCapability);
+    Option.map(Option.all([registry, atom]), ([registry, atom]) => registry.set(atom, fn(registry.get(atom))));
   });
 
 /**
