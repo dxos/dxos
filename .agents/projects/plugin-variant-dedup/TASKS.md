@@ -20,14 +20,17 @@ single canonical entry + generated stub barrels).
 
 ## Phase 2 — generator productization
 
-Decision (Josiah, 2026-08-15): generation runs in the plugin's `prebuild` moon task with
-declared `outputs`; generated barrels are gitignored, not committed. Source-reading
-app/test tasks depend on the prebuild closure of their dependency graph (echo-query
-`prebuild-lezer` is the template). No CI freshness check needed — the task graph owns it.
+Decisions (Josiah, 2026-08-15): generation runs in the plugin's `prebuild` moon task with
+declared `outputs`; generated barrels are gitignored, not committed; `test` depends on
+`^:prebuild` (dependency packages' generated sources must exist), defaulted in the shared
+test tags rather than per-plugin; the generator ships with `@dxos/app-framework` as a
+distributed binary (pattern must work for out-of-repo plugin authors), following the
+`compile-plugin`/`./vite-plugin` precedent in that package. No CI freshness check needed —
+the task graph owns it (echo-query `prebuild-lezer` is the template).
 
-- [ ] Promote `spikes/generate.mjs` to a real tool (`tools/` package or toolbox command), driven by `environments` annotations instead of the reverse-engineered matrix
+- [ ] Promote `spikes/generate.mjs` to a `dx-gen-barrels` binary compiled and published with `@dxos/app-framework` (bin entry + compile task like `compile-plugin`), driven by `environments` annotations instead of the reverse-engineered matrix
 - [ ] Emit headless barrels + stubs with `// GENERATED` headers; overrides splice (escape hatch)
-- [ ] `prebuild` task wiring (tag or per-plugin): `build`/`test` dep on `prebuild`; app serve/test tasks dep on `^:prebuild` closure; gitignore the generated barrel paths
+- [ ] `prebuild` task wiring: per-plugin `prebuild` with declared outputs; `build` deps on `prebuild`; `^:prebuild` as the default dep in `.moon/tasks/tag-ts-test*.yml` (replacing `^:build` as the source-reading direction lands); gitignore the generated barrel paths
 - [ ] Fresh-clone/non-moon entrypoints: ensure `DX_SOURCE=1` bun and bare vitest/IDE runs have a documented `moon run :prebuild` path (or wrapper-script trigger)
 - [ ] `pkg-lint`: run `import-source-missing` after prebuild or exempt declared prebuild outputs; verify `pack` tarballs include generated barrels
 - [ ] pkg-lint rule: annotations ⇒ matching `#capabilities` conditions exist

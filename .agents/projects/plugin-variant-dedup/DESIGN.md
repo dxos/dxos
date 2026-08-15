@@ -163,16 +163,25 @@ statements regardless of `sideEffects` (which is why O2's canonical entry stays 
    `ModuleSpec` / maker options in the canonical `capabilities/index.ts` — the single
    source of truth. Default: `['browser']` (headless is opt-in, matching the existing
    "only add a variant the plugin genuinely supports" rule).
-3. **Generator** (productize `spikes/generate.mjs`, e.g. `tools/dx-gen-barrels`): emits
-   `capabilities/node.ts` / `capabilities/workerd.ts` (subset + stubs + `// GENERATED`
-   header). Runs as the plugin's `prebuild` moon task with declared `outputs`, and the
-   generated barrels are **gitignored, not committed** (decision: Josiah, 2026-08-15 —
-   supersedes the earlier committed-files + CI-freshness-check sketch). `build` and `test`
-   depend on `prebuild`, and source-reading app/test tasks depend on the prebuild closure
-   of their dependency graph — the same shape as `echo-query`'s `prebuild-lezer`
-   (`src/parser/gen/*` via task `outputs`), aligned with the direction of apps reading from
-   source rather than depending on full builds. The task graph is the freshness guarantee,
-   so no separate CI check is needed and generated diffs never appear in review.
+3. **Generator**: productize `spikes/generate.mjs` and **ship it with
+   `@dxos/app-framework` as a distributed binary** (e.g. `bin: dx-gen-barrels`), not
+   monorepo-internal tooling — if stub-barrel generation is the plugin authoring pattern,
+   out-of-repo plugin authors need it from the published package. Precedent in the same
+   package: the composer vite plugin is compiled to `dist/plugin` by the `compile-plugin`
+   task and exported at `./vite-plugin`; the generator follows that shape plus a `bin`
+   entry (decision: Josiah, 2026-08-15). It emits `capabilities/node.ts` /
+   `capabilities/workerd.ts` (subset + stubs + `// GENERATED` header). Runs as the
+   plugin's `prebuild` moon task with declared `outputs`, and the generated barrels are
+   **gitignored, not committed** (decision: Josiah, 2026-08-15 — supersedes the earlier
+   committed-files + CI-freshness-check sketch). `build` depends on `prebuild`, and
+   `test` depends on **`^:prebuild`** so every dependency package's generated sources
+   exist too — set as the default in the shared test tags
+   (`.moon/tasks/tag-ts-test*.yml`, which today carry `^:build`; the source-reading
+   direction replaces that with the prebuild closure) rather than per-plugin moon.yml.
+   Same shape as `echo-query`'s `prebuild-lezer` (`src/parser/gen/*` via task
+   `outputs`), aligned with apps reading from source rather than depending on full
+   builds. The task graph is the freshness guarantee, so no separate CI check is needed
+   and generated diffs never appear in review.
    Follow-ups this creates: (a) non-moon entrypoints (bare `vitest`/IDE runners,
    `DX_SOURCE=1` bun) need the barrels present — run `moon run :prebuild` once on a fresh
    clone, or have the wrapper scripts trigger it; (b) `pkg-lint`'s `import-source-missing`
