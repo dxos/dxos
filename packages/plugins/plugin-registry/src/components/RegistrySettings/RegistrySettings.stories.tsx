@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -24,6 +24,8 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+const onRejoin = fn();
 
 export const Default: Story = {
   args: {
@@ -61,16 +63,21 @@ export const RejoinPrompt: Story = {
     onEnableDev: async () => {},
     onDisableDev: async () => {},
     pluginScopeLocal: true,
-    onPluginScopeLocalChange: () => {},
+    onPluginScopeLocalChange: onRejoin,
   },
   play: async () => {
+    onRejoin.mockClear();
     const body = within(document.body);
 
     const scopeSwitch = await body.findByTestId('registrySettings.pluginScope', undefined, { timeout: 10_000 });
     await expect(scopeSwitch).toBeChecked();
 
+    // Flipping it off is the rejoin direction, so it must prompt rather than act.
     await userEvent.click(scopeSwitch);
     const confirm = await body.findByTestId('registrySettings.pluginScope.confirm', undefined, { timeout: 10_000 });
-    await expect(confirm).toBeInTheDocument();
+    await expect(onRejoin).not.toHaveBeenCalled();
+
+    await userEvent.click(confirm);
+    await expect(onRejoin).toHaveBeenCalledWith(false);
   },
 };
