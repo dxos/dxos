@@ -1,0 +1,19 @@
+{
+  "name": "dxos",
+  "owner": {
+    "name": "DXOS",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "plugins": [
+    {
+      "name": "dxos-project",
+      "source": "./tools/claude/plugins/dxos-project",
+      "description": "Durable, resumable project and task tracking for coding agents: a committed registry of work-streams plus a TASKS.md ledger per project, driven by one /dxos-project:project command.",
+      "version": "0.1.0",
+      "author": {
+        "name": "DXOS"
+      }
+    }
+  ],
+  "description": "Claude Code plugins published by DXOS."
+}

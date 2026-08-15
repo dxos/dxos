@@ -12,9 +12,10 @@ import { type Client } from '@dxos/client';
 import { type Space as ClientSpace, SpaceState } from '@dxos/client/echo';
 import { Space as HaloSpace, SpaceError } from '@dxos/halo';
 import { IdentityDid, type SpaceId } from '@dxos/keys';
-import { SpaceArchive, type SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { type SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SpaceMember as HaloSpaceMember, MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpacesService } from '@dxos/protocols/rpc';
 
 import {
   fromAccess,
@@ -210,7 +211,9 @@ export const makeSpaceService = (client: Client): Context.Service.Shape<typeof H
   import: (archive, options) =>
     Effect.tryPromise({
       try: async () => {
-        const format = archive.filename.endsWith('.json') ? SpaceArchive.Format.JSON : SpaceArchive.Format.BINARY;
+        const format = archive.filename.endsWith('.json')
+          ? SpacesService.SpaceArchiveFormat.enums.JSON
+          : SpacesService.SpaceArchiveFormat.enums.BINARY;
         const space = await client.spaces.import(
           { filename: archive.filename, contents: archive.contents, format },
           options?.tags !== undefined ? { tags: [...options.tags] } : undefined,

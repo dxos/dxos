@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, CardIconSlot, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
 import { Card, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -55,7 +55,9 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
       <Card.Root ref={cardRef} classNames={classNames}>
         <Card.Header>
           <Card.Block>
-            <Icon icon={icon} />
+            <CardIconSlot subject={subject}>
+              <Icon icon={icon} />
+            </CardIconSlot>
           </Card.Block>
           <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
           <Card.Block end>

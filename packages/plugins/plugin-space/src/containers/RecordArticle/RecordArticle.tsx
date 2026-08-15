@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useAppGraph, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, CardIconSlot, useAppGraph, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Card, Flex, Icon, IconButton, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
@@ -63,7 +63,9 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
             <Card.Root fullWidth>
               <Card.Header>
                 <Card.Block>
-                  <Icon icon={icon} />
+                  <CardIconSlot subject={subject}>
+                    <Icon icon={icon} />
+                  </CardIconSlot>
                 </Card.Block>
                 <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
               </Card.Header>
@@ -89,7 +91,10 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                 </Input.Root>
                 {/* The masonry's own gutter would inset these cards relative to the record card above,
                     which shares this column — the scroll padding is the article's to own, not theirs. */}
-                <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined}>
+                {/* `centered={false}` on the ROOT, which is column alignment — distinct from
+                    `Content`'s prop of the same name below (ScrollArea's scrollbar padding). Centred
+                    columns drift right of the record card above them, which shares this column. */}
+                <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined} centered={false}>
                   <Masonry.Content padding={false} centered={false}>
                     <Masonry.Viewport items={related} />
                   </Masonry.Content>
@@ -107,6 +112,7 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
   const { t } = useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
+
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
   const [cardRef, pivotId] = useCardPivot();
   const menuItems = useObjectMenuItems(subject, pivotId);

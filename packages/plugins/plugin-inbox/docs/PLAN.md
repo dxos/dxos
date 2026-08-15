@@ -121,7 +121,7 @@ _Added 2026-08-12. The sections above are the mosaic/focus refactor; this is a s
 ## Where we are
 
 Six pipelines exist as operations, each cursored/idempotent, unit-tested, and driveable from the
-`FeedPipeline` storybook workbench — but **none is reachable by a user**:
+`MailboxAnalyze` storybook workbench — but **none is reachable by a user**:
 
 | operation                   | cost          | what it does                                                             |
 | --------------------------- | ------------- | ------------------------------------------------------------------------ |
@@ -219,7 +219,7 @@ Each layer earned its place empirically:
    a unit test can pin without a database, and what survives refactors of the runtime around it.
 2. **Node test**: idempotency, the gate, and failure degradation. LLM stages record a **model
    fixture** (committed under `.store/conversations`) so CI replays them offline with no key.
-3. **Workbench action** in `FeedPipeline`, plus a play test whenever the pipeline has cursor
+3. **Workbench action** in `MailboxAnalyze`, plus a play test whenever the pipeline has cursor
    semantics (run → re-run is a no-op → reset → re-run).
 4. **Product affordance last** — menu action, article surface, or project routine.
 5. **Update `AUDIT.md`** at each step; it is the index that keeps the test surface legible.

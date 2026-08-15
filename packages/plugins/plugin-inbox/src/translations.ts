@@ -64,8 +64,8 @@ export const translations = [
         'sync-mailbox.label': 'Sync',
         'empty-mailbox.message': 'Mailbox empty',
 
-        'scan-mailbox.label': 'Scan',
-        'stop-scan-mailbox.label': 'Stop',
+        'analyze-mailbox.label': 'Analyze',
+        'stop-analyze-mailbox.label': 'Stop',
         'sync-calendar.label': 'Sync calendar',
         'empty-calendar.message': 'Calendar empty',
 

@@ -5,7 +5,7 @@
 import React, { type KeyboardEventHandler, useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Card, Icon, useTranslation } from '@dxos/react-ui';
@@ -58,7 +58,9 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
     >
       <Card.Header>
         <Card.Block>
-          <Icon icon={icon} />
+          <CardIconSlot subject={object}>
+            <Icon icon={icon} />
+          </CardIconSlot>
         </Card.Block>
         <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
         {onDelete && (

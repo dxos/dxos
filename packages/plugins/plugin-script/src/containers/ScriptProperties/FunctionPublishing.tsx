@@ -12,7 +12,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Button, Clipboard, Flex, Message, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Flex, Banner, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { kebabize } from '@dxos/util';
 
@@ -99,11 +99,11 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
 
       {!githubToken && (
         <Flex column classNames='py-form-gap'>
-          <Message.Root valence='info'>
-            <Message.Content>
-              <Message.Title>{t('no-github-token.label')}</Message.Title>
-            </Message.Content>
-          </Message.Root>
+          <Banner.Root valence='info'>
+            <Banner.Content>
+              <Banner.Title>{t('no-github-token.label')}</Banner.Title>
+            </Banner.Content>
+          </Banner.Root>
           <Flex classNames='pt-form-gap'>
             <Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button>
           </Flex>

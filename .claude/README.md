@@ -70,10 +70,10 @@ stdout as context the agent reads. Every other event needs
 | `~/.claude/hooks/guard-branch.sh`, `deny-git-worktree-add.sh`                                                     | `PreToolUse(Bash)`        | deny           | derived                                   |
 | `~/.claude/hooks/guard-worktree.sh` + [repo copy](./hooks/guard-worktree.sh)                                      | `PreToolUse(Edit\|Write)` | deny           | derived                                   |
 | [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)   | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode`    |
-| [`hooks/track.sh`](./hooks/track.sh)                                                                              | `UserPromptSubmit`        | agent          | persisted `.agents/projects/registry.yml` |
+| `dx` plugin → `hooks/track.sh` ([tools/claude/plugins/dxos-project](../tools/claude/plugins/dxos-project))                            | `UserPromptSubmit`        | agent          | persisted, backend-resolved (registry)    |
 | [`AGENTS.md`](../AGENTS.md) (+ `CLAUDE.md` / `GEMINI.md` symlinks), [`CLAUDE.md`](./CLAUDE.md)                    | —                         | agent          | static                                    |
-| `skills/` → `../.agents/skills/` (26)                                                                             | —                         | agent          | on demand                                 |
-| [`agents/`](./agents) (2), [`commands/`](./commands) (1)                                                          | —                         | agent          | on demand                                 |
+| `skills/` → `../.agents/skills/` (25)                                                                             | —                         | agent          | on demand                                 |
+| [`agents/`](./agents) (2), [`commands/`](./commands) (2)                                                          | —                         | agent          | on demand                                 |
 
 The guards exist as **both** a global `~/.claude/` copy and a repo copy. That is
 deliberate, not duplication-by-accident: the harness sometimes instantiates the
@@ -147,7 +147,7 @@ A sentinel is a **marker typed inside a normal message** that a
 | Marker                          | Hook                                 | Effect                                                     |
 | ------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
 | `/mode terse` / `/mode normal`  | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (see aliases below)            |
-| `/project VERB [ARGS]`          | [`hooks/track.sh`](./hooks/track.sh) | task-planning: list / new / end / track / hydrate / resume  |
+| `/dxos-project:project VERB [ARGS]`       | `dx` plugin (see below)              | task-planning: list / tasks / new / end / track / hydrate / resume |
 
 They exist because a hook can act on them **before the model runs**, which makes
 the state change deterministic rather than dependent on the agent complying.
@@ -235,6 +235,6 @@ until invoked, then large. Treat their size as a cost — see the note in §A.
 ### References
 
 - Hook event + JSON reference: https://code.claude.com/docs/en/hooks
-- Task-planning workflow: `.agents/skills/task-planning/SKILL.md`
+- Task-planning workflow: `tools/claude/plugins/dxos-project/skills/task-planning/SKILL.md`
 - Design rationale for the per-turn injection model:
   `.agents/projects/agent-directives/DESIGN.md`

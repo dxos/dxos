@@ -74,9 +74,9 @@ A type error in a file your change never touched is usually an unbuilt dependenc
 ## One checkout, no worktrees
 
 The repo lives at `/home/user/<repo>` on a harness-assigned `claude/…` branch. There are no
-worktrees, so `AGENTS.md`'s `branch == claude/<worktree-dir-name>` pairing cannot hold — the
-directory is the repo name and the branch is something else. That is expected; do not try to fix it.
-The rule that survives is the important one: never create or switch branches or worktrees.
+worktrees — the directory is the repo name and the branch is something else. As in a local
+session, the directory and branch names are not expected to match; do not try to fix it. The
+rule that survives is the important one: never create or switch branches or worktrees.
 
 ## The container is ephemeral
 

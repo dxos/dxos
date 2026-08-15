@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { Flex, Message, Select, Separator, useTranslation } from '@dxos/react-ui';
+import { Flex, Banner, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Empty } from '@dxos/react-ui-list';
 import { trim } from '@dxos/util';
@@ -179,15 +179,15 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
 
   if (services.length === 0) {
     return (
-      <Message.Root valence='info'>
-        <Message.Content classNames='m-form-padding'>
-          <Message.Title>{t('booking.no-providers.message')}</Message.Title>
-          <Message.Body classNames='flex flex-col py-1 gap-2'>
+      <Banner.Root valence='info'>
+        <Banner.Content classNames='m-form-padding'>
+          <Banner.Title>{t('booking.no-providers.message')}</Banner.Title>
+          <Banner.Body classNames='flex flex-col py-1 gap-2'>
             <span>{t('booking.enable-providers.message')}</span>
             <PluginRegistryButton />
-          </Message.Body>
-        </Message.Content>
-      </Message.Root>
+          </Banner.Body>
+        </Banner.Content>
+      </Banner.Root>
     );
   }
 

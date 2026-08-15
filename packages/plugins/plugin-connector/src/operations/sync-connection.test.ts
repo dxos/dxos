@@ -48,7 +48,7 @@ describe('SyncConnection', () => {
   /** Trigger ids force-run through the monitor. */
   const fired: string[] = [];
 
-  // Stand-in for a connector's `sync.operation` (e.g. `InboxOperation.GoogleMailSync`): same
+  // Stand-in for a connector's `sync.operation` (e.g. `GoogleOperation.GoogleMailSync`): same
   // `{ binding }` input every real connector's sync declares.
   const TestSync = Operation.make({
     meta: { key: DXN.make('org.dxos.test.syncConnection.sync'), name: 'Test Sync' },

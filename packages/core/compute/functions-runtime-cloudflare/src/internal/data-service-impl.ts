@@ -12,38 +12,28 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
-import {
-  type BatchedDocumentUpdates,
-  type CreateDocumentRequest,
-  type CreateDocumentResponse,
-  type FlushRequest,
-  type GetDocumentHeadsRequest,
-  type GetDocumentHeadsResponse,
-  type GetSpaceSyncStateRequest,
-  type ReIndexHeadsRequest,
-  type SpaceSyncState,
-  type SubscribeRequest,
-  type UpdateRequest,
-  type UpdateSubscriptionRequest,
-  type WaitUntilHeadsReplicatedRequest,
-} from '@dxos/protocols/proto/dxos/echo/service';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { copyUint8Array } from './utils';
 
 export class DataServiceImpl implements DataService.Handlers {
-  private 'dataSubscriptions' = new Map<string, { spaceId: SpaceId; next: (msg: BatchedDocumentUpdates) => void }>();
+  private 'dataSubscriptions' = new Map<
+    string,
+    { spaceId: SpaceId; next: (msg: DataService.BatchedDocumentUpdates) => void }
+  >();
 
   'constructor'(
     private _executionContext: EdgeFunctionEnv.TraceContext,
     private _dataService: EdgeFunctionEnv.DataService,
   ) {}
 
-  ['DataService.subscribe'](request: SubscribeRequest): EffectStream.Stream<BatchedDocumentUpdates, Error> {
-    return EffectEx.streamFromEmitter<BatchedDocumentUpdates, Error>((emit) => {
+  ['DataService.subscribe'](
+    request: DataService.SubscribeRequest,
+  ): EffectStream.Stream<DataService.BatchedDocumentUpdates, Error> {
+    return EffectEx.streamFromEmitter<DataService.BatchedDocumentUpdates, Error>((emit) => {
       try {
         invariant(SpaceId.isValid(request.spaceId));
-        const next = (msg: BatchedDocumentUpdates) => {
+        const next = (msg: DataService.BatchedDocumentUpdates) => {
           void emit.single(msg);
         };
         this.dataSubscriptions.set(request.subscriptionId, { spaceId: request.spaceId, next });
@@ -59,7 +49,7 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.updateSubscription'](request: UpdateSubscriptionRequest): Effect.Effect<void, Error> {
+  ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         const sub =
@@ -98,7 +88,9 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.createDocument'](request: CreateDocumentRequest): Effect.Effect<CreateDocumentResponse, Error> {
+  ['DataService.createDocument'](
+    request: DataService.CreateDocumentRequest,
+  ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
         invariant(SpaceId.isValid(request.spaceId));
@@ -113,7 +105,7 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.update'](request: UpdateRequest): Effect.Effect<void, Error> {
+  ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         const sub =
@@ -151,13 +143,13 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.flush'](_request: FlushRequest): Effect.Effect<void, Error> {
+  ['DataService.flush'](_request: DataService.FlushRequest): Effect.Effect<void, Error> {
     return Effect.void;
   }
 
   ['DataService.subscribeSpaceSyncState'](
-    _request: GetSpaceSyncStateRequest,
-  ): EffectStream.Stream<SpaceSyncState, Error> {
+    _request: DataService.GetSpaceSyncStateRequest,
+  ): EffectStream.Stream<DataService.SpaceSyncState, Error> {
     return EffectStream.fail(
       new NotImplementedError({
         message: 'subscribeSpaceSyncState is not implemented.',
@@ -165,7 +157,9 @@ export class DataServiceImpl implements DataService.Handlers {
     );
   }
 
-  ['DataService.getDocumentHeads'](_request: GetDocumentHeadsRequest): Effect.Effect<GetDocumentHeadsResponse, Error> {
+  ['DataService.getDocumentHeads'](
+    _request: DataService.GetDocumentHeadsRequest,
+  ): Effect.Effect<DataService.GetDocumentHeadsResponse, Error> {
     return Effect.fail(
       new NotImplementedError({
         message: 'getDocumentHeads is not implemented.',
@@ -173,7 +167,7 @@ export class DataServiceImpl implements DataService.Handlers {
     );
   }
 
-  ['DataService.reIndexHeads'](_request: ReIndexHeadsRequest): Effect.Effect<void, Error> {
+  ['DataService.reIndexHeads'](_request: DataService.ReIndexHeadsRequest): Effect.Effect<void, Error> {
     return Effect.fail(
       new NotImplementedError({
         message: 'reIndexHeads is not implemented.',
@@ -186,7 +180,9 @@ export class DataServiceImpl implements DataService.Handlers {
     return Effect.void;
   }
 
-  ['DataService.waitUntilHeadsReplicated'](_request: WaitUntilHeadsReplicatedRequest): Effect.Effect<void, Error> {
+  ['DataService.waitUntilHeadsReplicated'](
+    _request: DataService.WaitUntilHeadsReplicatedRequest,
+  ): Effect.Effect<void, Error> {
     return Effect.fail(
       new NotImplementedError({
         message: 'waitUntilHeadsReplicated is not implemented.',

@@ -35,6 +35,8 @@ export default defineConfig({
     'Settings': 'src/types/Settings.ts',
     'DraftEvent': 'src/types/DraftEvent.ts',
     'SystemTags': 'src/types/SystemTags.ts',
+    'MailSend': 'src/types/MailSend.ts',
+    'ReplyGeneration': 'src/types/ReplyGeneration.ts',
     'types': 'src/types/index.ts',
   },
   jsx: 'react',
