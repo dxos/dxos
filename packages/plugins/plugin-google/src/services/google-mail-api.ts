@@ -169,6 +169,12 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
     // Per-message label state, mutable so a test can assert what a tag push actually wrote and so a
     // later `getMessage` reflects it. Seeded from the fixture; the fixture itself stays immutable.
     const labelsById = new Map(dataset.messages.map((message) => [message.id, [...(message.labelIds ?? [])]]));
+    // Steps appended by writes made THROUGH the mock, so a push becomes visible to a later
+    // `history.list` exactly as it does at Gmail, which records a client's own label write in the
+    // account's history (verified live). Without this the mock cannot exercise the echo at all, and
+    // the ordering rule that absorbs it would be covered only by the live suite.
+    const pushedHistory: GmailHistoryStep[] = [];
+    let nextHistoryId = dataset.historyId;
     const applyLabels = (
       messageIds: readonly string[],
       {
@@ -186,6 +192,18 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
         }
         labelsById.set(id, next);
       }
+      if (nextHistoryId === undefined || messageIds.length === 0) {
+        return;
+      }
+      const startHistoryId = nextHistoryId;
+      nextHistoryId = String(Number.parseInt(startHistoryId, 10) + 1);
+      pushedHistory.push({
+        startHistoryId,
+        historyId: nextHistoryId,
+        labelsAdded: addLabelIds.length > 0 ? messageIds.map((id) => ({ id, labelIds: addLabelIds })) : undefined,
+        labelsRemoved:
+          removeLabelIds.length > 0 ? messageIds.map((id) => ({ id, labelIds: removeLabelIds })) : undefined,
+      });
     };
     /** The fixture message with its current (possibly pushed-to) labels. */
     const withLabels = (message: GoogleMail.Message): GoogleMail.Message => ({
@@ -224,7 +242,9 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
             ? Effect.succeed(withLabels(message))
             : Effect.die(new Error(`mock GoogleMailApi: message not in dataset: ${messageId}`));
         },
-        getProfile: () => Effect.succeed({ historyId: dataset.historyId }),
+        // The mailbox's CURRENT id, which advances as pushes are recorded — a fresh capture after a
+        // push must not hand back a position that predates it.
+        getProfile: () => Effect.succeed({ historyId: nextHistoryId }),
         // Chains the history-log steps from `startHistoryId` into one record per step (Gmail returns a
         // record per change-batch), then returns one bounded page (honoring `maxResults`). `historyId` is
         // the mailbox's *current* record on every page (Gmail semantics). An unknown/evicted id (no chain
@@ -232,7 +252,7 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
         // retention window.
         listHistory: (_userId, options) =>
           Effect.gen(function* () {
-            const latest = dataset.historyId;
+            const latest = nextHistoryId;
             const records: {
               id: string;
               messagesAdded: { message: { id: string } }[];
@@ -241,7 +261,7 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
             }[] = [];
             let chain = options.startHistoryId;
             let matched = latest !== undefined && options.startHistoryId === latest;
-            for (const step of dataset.historyLog ?? []) {
+            for (const step of [...(dataset.historyLog ?? []), ...pushedHistory]) {
               if (step.startHistoryId === chain) {
                 matched = true;
                 records.push({

@@ -266,6 +266,44 @@ describe('gmail tag push', () => {
     // The base did not advance, so the next run re-derives the same diff rather than losing the star.
     expect(tagHeadsOf(binding)).toEqual(baseAfterPull);
   });
+
+  /**
+   * Gmail records a client's own label write in the account history, so the run AFTER a push sees its
+   * own change come back as a delta (verified live against a real account). The ordering rule absorbs
+   * it: the tag is already in the base by then, so all three sides agree and nothing is emitted.
+   *
+   * The mock appends a history step for every write made through it, which is what lets this be a unit
+   * test rather than something only the live suite can prove. Get the ordering wrong and this loops
+   * forever, pushing the same tag on every run.
+   */
+  test('the provider echoing our own push back produces no second push', async ({ expect }) => {
+    const dataset = {
+      ...generateGmailDataset({ count: 2, seed: 81, start: subDays(now, 6), end: subDays(now, 2) }),
+      historyId: '1000',
+    };
+    const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
+    const { layer, pushes } = recordingApi(dataset);
+    const services = Layer.mergeAll(layer, ambientSyncServices(db));
+
+    await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
+
+    const target = dataset.messages[0];
+    const message = await feedMessageFor(db, mailbox, target.id);
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const starred = await Tag.findOrCreate(db, { key: SystemTags.systemTagKey('starred'), label: 'Starred' });
+    Tagging.set(message, Obj.getURI(starred).toString(), { index: tagIndex });
+    await db.flush({ indexes: true });
+
+    // Run 2 pushes the star; the mock records a history step for it, exactly as Gmail would.
+    await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
+    expect(pushes).toHaveLength(1);
+
+    // Run 3 reads that step as an incoming delta — the echo. Nothing further may be pushed, and the
+    // tag must survive rather than being reconciled away.
+    await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
+    expect(pushes).toHaveLength(1);
+    expect(TagIndex.bind(tagIndex).tags(message.id)).toContain(Obj.getURI(starred).toString());
+  });
 });
 
 describe('gmail tag push — the reconciliation base', () => {
