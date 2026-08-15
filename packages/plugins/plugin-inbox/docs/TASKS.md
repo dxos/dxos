@@ -27,12 +27,15 @@ cascade runner calls its plan entries _passes_ rather than overloading "stage"; 
 polls once a minute instead of once a second and refuses a cron finer than its own tick; the Research
 action now runs the agent that fills the profile skeleton it creates.
 
-**D6 is NOT built and NOT closed** — it is scheduled: the standing instruction (2026-08-14) is to
-revive it once the two ECHO chips are approved. One of those, `Ref.byAnnotation`, was dropped on
-purpose in #12575, **restored by accident** when #12577 merged commits predating the drop, and dropped
-again for good in #12612 — it is not on `main`, and the D6 design no longer waits on it (a runtime
-guard was always required regardless). The independent argument
-against building at all is unchanged: still no second cursored consumer.
+**D6 is BUILT (2026-08-15) — and it was not the thing it was named after.** Framed as "generalize off
+`Mailbox`" it had no second consumer and every costing said wait. The real defect was that
+`findOrCreateFeedCursor` took one object playing two roles: the feed's OWNER and the cursor's SUBJECT.
+Splitting them is D6. `isConsumerCursor` now matches on `spec.target` — which was the entirety of the
+"cursor identity" problem PIPELINE.md called blocking and specified a composite key for; the write side
+already stored the target and the predicate ignored it. `createInvocation` became `createInvocations`,
+so a processor can cover N subjects. First consumer: `syncProjectTasks`, one cursor per Project over a
+shared mailbox feed. No `Ref.byAnnotation` (dropped for good in #12612), no generic feed host, no
+change to `AnalyzeMailbox`'s input.
 
 Unresolved: the mailbox empty-panel flicker's root cause is still unknown (`Deferred` masks it, and the
 `!feed` fix committed in `f107a7314c` did not work); the CRM agent wiring has never been observed
@@ -644,14 +647,19 @@ generalize now with mailbox as instance #1.
       `after: ['summarize']` pointing at an absent node, so it is ignored and `analyze` runs despite the
       classification failure. Sharp but correct — a processor the caller excluded cannot constrain
       anything, and `analyze` never consumed classification. 6 topology tests + 2 cascade tests.
-- [ ] **DEFERRED TO D6 — the plugin-projects trio as processors.** They read `mailbox.feed`, but all
-      three take BOTH a `project` and a `mailbox` ref, and `createInvocation(mailbox, options)` has no
-      slot for a Project and returns ONE invocation rather than a list. The blocking problem is cursor
-      identity: a processor's id IS its cursor tag, but these need per-(processor, project) — one
-      `projects` tag across three projects on a mailbox means they share a watermark and silently skip
-      each other, the same class of bug as the untagged analysis cursor.
-      DECIDED 2026-08-14: do not decide this in isolation. D6 has to answer "what is the subject of a
-      pass" regardless, and fan-out plus composite cursor keys are better settled with that context.
+- [x] **RESOLVED 2026-08-15 — the plugin-projects trio, and the entry above was wrong about them.**
+      They were filed as needing fan-out. They ALREADY fan out: `CreateTrackingProject` gives each
+      tracking Project its own routine and trigger with per-project senders, so the fan-out arrives
+      through the routine layer rather than the processor seam. What they actually lacked was cursors
+      — every run re-queried the whole feed.
+      And only ONE of the three should have one. `syncProjectTasks` upserts tasks keyed by message id,
+      so a cursor is pure saving; it now keeps one per Project (subject = the Project, source = the
+      mailbox's feed). `update-travel-log` and `update-investor-log` REGENERATE their document from the
+      whole feed — travel-log's own comment says it is "idempotent without a cursor" — so a cursor would
+      corrupt what they derive. Same call, same reasoning, as `ExtractSubscriptions`.
+      Converting them to contributed processors was NOT done: it would buy only the cascade's ordering
+      and failure semantics, which nothing has asked for, and would cost them their independent
+      triggers.
 - [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6) — WEAKER than first written,
       and NEEDS A DECISION BEFORE ANY MORE CODE. - DONE (2026-08-14): the cursor layer. `findFeedCursor`/`findOrCreateFeedCursor` now take any
       `FeedAnnotation`-carrying owner and resolve the feed via `getFeedRef`, so one of the three

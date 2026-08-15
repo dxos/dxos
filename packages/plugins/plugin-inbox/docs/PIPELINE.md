@@ -4,7 +4,7 @@ How mail gets into a mailbox and what runs over it afterwards. Sibling docs: [`P
 (product plan), [`TASKS.md`](TASKS.md) (ledger), [`TESTING.md`](TESTING.md) (manual test plan),
 [`AUDIT.md`](AUDIT.md) (component/test index).
 
-**Status:** D1–D3 and D5 built; D4 and D6 outstanding. See [Open](#open).
+**Status:** D1–D3, D5 and D6 built; D4 outstanding. See [Open](#open).
 
 ## The shape
 
@@ -190,8 +190,32 @@ Both moves changed a released DXN, so routines bound to the old keys are orphane
 deliberately, pre-1.0. Note the changesets are `minor`, not `major`: at 0.x a breaking change rides
 the minor, and `major` would cut 1.0.0 across the whole fixed publish group.
 
-**D6 — Generalize off `Mailbox`.** NOT BUILT, and the least settled of the six. In one line: make the
-Analyze half run contributed, independently-cursored **processors** over any feed, not just a mailbox's.
+**D6 — BUILT 2026-08-15, and not as it was framed.** It was written as "generalize off `Mailbox`",
+which is why it stayed open so long: framed that way it had one implementor and no second consumer, so
+every costing said wait.
+
+The actual defect was narrower and real. `findOrCreateFeedCursor` took ONE object playing two roles —
+the feed's **owner** and the cursor's **subject**. They coincide for a mailbox scanned once; they do
+not for a pass scoped to something narrower over a shared feed. Splitting the two parameters is D6,
+and it is driven by a consumer that exists rather than by the prospect of one.
+
+What shipped:
+
+1. `findFeedCursor` / `findOrCreateFeedCursor` take `subject`, defaulting to the owner — so every
+   pre-existing call site is unchanged.
+2. `isConsumerCursor` now matches on `spec.target`. **This was the whole of the "cursor identity"
+   problem this document called blocking and specified a composite `(processor id, subject id)` key
+   for.** No key format was needed: the write side already stored the target and the predicate simply
+   ignored it.
+3. `createInvocation` → `createInvocations`, returning `{ subject?, operation, input }[]`. Invocations
+   keep the contributing processor's id, so the `after` edges and descendant blocking are untouched.
+4. First consumer: `plugin-projects`' `syncProjectTasks` keeps a cursor per Project over the shared
+   mailbox feed, replacing a full-feed rescan per project per run.
+
+What it did NOT need, against the four candidates below: `Ref.byAnnotation` (dropped twice, and it
+never removed the runtime guard it was meant to replace), a generic feed host, a change to
+`AnalyzeMailbox`'s own `Ref.Ref(Mailbox)` input, or any `MailboxTier` rework. The analysis below is
+kept because it records what was considered and why the cheaper answer was not obvious.
 
 ### What is already generic
 
@@ -281,16 +305,15 @@ decision will silently undo it on merge, and nothing warns.
    removed the runtime guard it was meant to replace (see above), so option 1 loses nothing by
    comparison. Reviving it means re-opening a decision two reviews have now made.
 
-### The open sub-questions
+### The sub-questions, as answered
 
-- **Fan-out.** `createInvocation` returns ONE invocation. The plugin-projects trio needs one per
-  Project over the same mailbox feed, so D6 must decide whether a processor may cover N subjects.
-- **Cursor identity under fan-out.** If it may, the tag can no longer be the processor id alone — it
-  becomes `(processor id, subject id)`, or every subject shares one watermark and they silently skip
-  each other's work. This is the same failure the tags exist to prevent.
-- **Tiers.** `MailboxTier` is mail-shaped cost language (`deterministic`/`classify`/`summarize`/
-  `analyze`). A generic host either keeps tiers as an opaque per-host vocabulary or drops them and
-  relies on the edges alone.
+- **Fan-out.** ANSWERED: yes, a processor may cover N subjects — `createInvocations` returns a list.
+  An empty list reports as skipped rather than vanishing, since a pass that found nothing must stay
+  distinguishable from one that was never contributed.
+- **Cursor identity under fan-out.** ANSWERED, and more cheaply than predicted: the tag stays the
+  processor id, and the SUBJECT joins the cursor's identity through `spec.target`. No composite key.
+- **Tiers.** Untouched, and no longer blocking anything: `MailboxTier` stays an opaque per-host
+  vocabulary. Nothing forces the question while there is one host to disagree with it.
 
 ### There is no second consumer yet
 
@@ -311,24 +334,16 @@ candidate is transcription, which owns its own `Feed`, but its `messageEnricher`
 is written — a write-time seam structurally closer to the sync half's inline stages than to a cursored
 read-time pass.
 
-So D6 is not "generalize for the second instance". It is "build the abstraction on spec, or wait".
+So D6 was not "generalize for the second instance" — and in the end it was neither. What shipped is
+not an abstraction over feeds at all: it is a correction to what identifies a cursor, which the
+projects pipeline needed regardless of whether anything is ever generic. The generic host remains
+unbuilt, and still has no second consumer asking for it.
 
-**STILL OPEN — the user's call, and it was made once already.** On 2026-08-14 the instruction was
-"land the current PR and then revive these tasks once the chips are approved by dima", the chips being
-the two ECHO changes D6 waits on. So D6 is scheduled work, not an open question, and nothing in this
-document should read as closing it.
-
-The two arguments that remain, both for the user to weigh rather than for this document to settle:
-
-- **The primitive's status is unresolved**, not missing. `Ref.byAnnotation` is on `main` but got there
-  by a merge that undid a deliberate review decision (see above). Adjudicate that first — building D6
-  on top of it would entrench the accident.
-- **There is still no second cursored consumer**, which is the argument against building it at all,
-  and is independent of the primitive.
-
-What is already generic: the cursor layer (`findFeedCursor` / `findOrCreateFeedCursor` take any
-`FeedAnnotation`-carrying owner). What is still mailbox-typed: the `MailboxProcessor` subject, its
-`tier`, and `AnalyzeMailbox`'s input and progress key. See the D6 entry in [`TASKS.md`](TASKS.md).
+**What is still mailbox-typed, deliberately.** `AnalyzeMailbox`'s input stays `Ref.Ref(Mailbox)` — it
+is the operation users invoke directly, and it loses real boundary validation for nothing. So do its
+progress key and `MailboxTier`. Generic-ness belongs at the PROCESSOR seam, where a pass declares its
+own subject; the host's public boundary is not the same question, and conflating them is what made D6
+look bigger than it was. See the D6 entry in [`TASKS.md`](TASKS.md).
 
 ## Fixed along the way
 
@@ -344,6 +359,10 @@ What is already generic: the cursor layer (`findFeedCursor` / `findOrCreateFeedC
 ## Open
 
 1. **D4** — failure policy from the edges.
-2. **D6** — feed-generic processor host.
-3. **Give the seven cursorless consumers a cursor** — mechanical now that an id is also a cursor tag,
-   but each needs its own call on whether feed position or derived-state replacement is right.
+2. **Give the remaining cursorless consumers a cursor** — mechanical now that a cursor is identified by
+   `(feed, subject, tag)`, but each needs its own call on whether feed position or derived-state
+   replacement is right. Settled so far: `syncProjectTasks` YES (2026-08-15, per-project);
+   `ExtractSubscriptions`, `update-travel-log` and `update-investor-log` NO — all three regenerate
+   derived state from the whole feed, so a cursor would corrupt what they produce.
+3. **A feed-generic host** — the residue of D6 as originally framed. Still unbuilt and still without a
+   second consumer asking for it; the cursor correction that D6 turned out to be did not require it.
