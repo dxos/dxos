@@ -179,7 +179,7 @@ no `@dxos/assistant` surface at all.
 
 ---
 
-## 3. The `react-ui-chat` / `react-ui-thread` / `ConversationStack` tension
+## 3. Five thread scenarios, four packages, one missing engine
 
 The existing packages are split by **who is talking** (AI / human / email / machine) rather than by
 **what the component is** (composer vs renderer). That is the wrong axis, and it is why the same two
