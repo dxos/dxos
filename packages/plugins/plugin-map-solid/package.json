@@ -20,8 +20,8 @@
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/neutral/capabilities/gen/workerd.mjs",
-      "node": "./dist/lib/neutral/capabilities/gen/node.mjs",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/neutral/capabilities/index.mjs"
     },
     "#components": {
