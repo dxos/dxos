@@ -614,8 +614,8 @@ generalize now with mailbox as instance #1.
       each other, the same class of bug as the untagged analysis cursor.
       DECIDED 2026-08-14: do not decide this in isolation. D6 has to answer "what is the subject of a
       pass" regardless, and fan-out plus composite cursor keys are better settled with that context.
-- [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6) — WEAKER than first written,
-      and NEEDS A DECISION BEFORE ANY MORE CODE. - DONE (2026-08-14): the cursor layer. `findFeedCursor`/`findOrCreateFeedCursor` now take any
+- [x] **DECIDED 2026-08-15 — do NOT generalize off `Mailbox` yet** (D6). The decision is closed; the
+      generic host is deliberately unbuilt. - DONE (2026-08-14): the cursor layer. `findFeedCursor`/`findOrCreateFeedCursor` now take any
       `FeedAnnotation`-carrying owner and resolve the feed via `getFeedRef`, so one of the three
       mailbox-typed couplings is gone. Tested against a Calendar owner. - STILL MAILBOX-TYPED: the `MailboxProcessor` subject and `tier`, and `AnalyzeMailbox`'s input and
       progress key. Already generic: `topology.ts` (`{id, after}` only), `precondition.ts` (`Cause`s
@@ -625,9 +625,10 @@ generalize now with mailbox as instance #1.
       users invoke directly. - AND THERE IS STILL NO SECOND CONSUMER. The projects trio was twice cited and is not one (all
       three read `mailbox.feed` and need fan-out). The only genuine candidate is transcription, whose
       `messageEnricher` is a WRITE-time seam closer to sync's inline stages than to a cursored
-      read-time pass — so it likely wants the other half's shape anyway. - RECOMMENDATION: do not build the generic host until a second cursored consumer exists. Trading
-      boundary validation for an abstraction with one implementor is a bad trade. Revisit when
-      transcription or another feed owner actually needs a cursored pass.
+      read-time pass — so it likely wants the other half's shape anyway. - OUTCOME: wait. Trading boundary validation for an abstraction with one implementor is a bad
+      trade. Reopen when a second cursored consumer actually exists — transcription or another feed
+      owner needing a cursored pass — and reopen `Ref.byAnnotation` with it, since that is what the
+      generic subject was waiting on. PIPELINE.md records the same verdict.
 - [ ] **Retire `ExtractMailbox` once on-arrival extraction is restored** — it is `@deprecated`, but
       still LIVE: `MailboxArticle.tsx:584` → `useMailboxExtractorActions` renders a menu item per
       registered `ObjectExtractor` and invokes it, and two extractors ship. Its stated successor
