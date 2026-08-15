@@ -60,6 +60,22 @@ import {
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
 const ResetDialog = lazy(() => import('./components').then((module) => ({ default: module.ResetDialog })));
 
+/**
+ * Startup deadline override, in SECONDS (`VITE_DX_STARTUP_TIMEOUT=2`).
+ *
+ * Exists to exercise the deadline itself: shortening it does not fake a stall, it moves the line
+ * that startup has genuinely not crossed yet, so the real path runs with real work behind it. Dev
+ * only — in production the deadline is fatal, and a shorter one would just fail a boot sooner.
+ * Seconds rather than milliseconds because it is typed by hand.
+ */
+const startupTimeout = (() => {
+  if (!import.meta.env.DEV) {
+    return undefined;
+  }
+  const seconds = Number(import.meta.env.VITE_DX_STARTUP_TIMEOUT);
+  return Number.isFinite(seconds) && seconds > 0 ? seconds * 1_000 : undefined;
+})();
+
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
 
@@ -70,6 +86,8 @@ declare global {
 
   interface ImportMetaEnv {
     DEV: string;
+    /** Startup deadline override in SECONDS, dev only — see `startupTimeout` below. */
+    VITE_DX_STARTUP_TIMEOUT?: string;
   }
 
   // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
@@ -567,6 +585,9 @@ const main = async () => {
       // so the gap between `Startup` activated and `<Placeholder>` dismissed is at least 2× debounce.
       // The boot loader covers the pre-React phase, so we don't need a longer fade to hide a flash.
       debounce: 200,
+      // Shortened only to exercise the deadline (`VITE_DX_STARTUP_TIMEOUT=2` puts the loader's
+      // stalled offer two seconds in). `undefined` leaves `useApp` on its own 30s default.
+      timeout: startupTimeout,
     });
 
     // Rendered instead of `App`, not thrown: `Main` sits above the app-level error boundary, so a

@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+
+import { GoogleOperation } from '#types';
 
 import { GMAIL_CONNECTOR_ID } from '../constants';
 
@@ -15,7 +16,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(InboxCapabilities.MailSendOperation, {
       connectorId: GMAIL_CONNECTOR_ID,
-      getOperation: () => InboxOperation.GmailSend,
+      getOperation: () => GoogleOperation.GmailSend,
     });
   }),
 );

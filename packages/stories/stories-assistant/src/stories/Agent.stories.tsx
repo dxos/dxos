@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import React from 'react';
 import { expect, within } from 'storybook/test';
 
 import { Client } from '@dxos/agent-claude/client';
@@ -13,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { StoryRole, getChatProcessor } from '../modules';
+import { AgentModule, StoryRole, getChatProcessor } from '../modules';
 import { ModuleContainer, createDecorators, storyParameters } from '../testing';
 
 /**
@@ -171,6 +172,12 @@ export const WithSidecar: Story = {
  *
  * Needs the host mounted in the dev server:
  * `DX_AGENT_CWD=<dir> pnpm --filter @dxos/storybook-react exec storybook dev --port 9016`
+ *
+ * Runs in the test runner but NOT under `storybook dev` where DXOS services are unreachable: the
+ * plugin stack stalls in `SpaceProxy._initializeDb` waiting on EDGE and blows `useApp`'s 30s budget
+ * (`Edge connection closed` on the remote config, `ERR_CONNECTION_REFUSED` on local). {@link Console}
+ * is the variant that opens in a browser. Not caused by the agent host — every client-backed story
+ * here behaves the same.
  */
 export const ConsoleModule: Story = {
   decorators: createDecorators({}),
@@ -182,4 +189,15 @@ export const ConsoleModule: Story = {
     // Resolving the surface is the assertion: the prompt box only exists if the role bound.
     await canvas.findByPlaceholderText('Ask the agent…', undefined, { timeout: 60_000 });
   },
+};
+
+/**
+ * The same console rendered directly, skipping the plugin stack.
+ *
+ * Kept alongside {@link ConsoleModule} because that variant boots the DXOS client, which cannot
+ * finish inside `useApp`'s 30s budget under `storybook dev` (~5s per Automerge doc open). This is
+ * the variant that actually opens in a browser until that is fixed.
+ */
+export const Console: Story = {
+  render: () => <AgentModule />,
 };

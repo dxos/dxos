@@ -5,3 +5,4 @@
 export * from './avatar-name';
 
 export * from './Avatar';
+export * from './ObjectAvatar';

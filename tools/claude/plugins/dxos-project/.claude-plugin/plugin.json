@@ -1,0 +1,12 @@
+{
+  "name": "dxos-project",
+  "displayName": "DXOS Project Tracking",
+  "description": "Durable, resumable project and task tracking for coding agents: a committed registry of work-streams plus a TASKS.md ledger per project, driven by one /dxos-project:project command.",
+  "version": "0.1.0",
+  "author": {
+    "name": "DXOS"
+  },
+  "homepage": "https://github.com/dxos/dxos/tree/main/tools/claude/plugins/dxos-project",
+  "repository": "https://github.com/dxos/dxos",
+  "license": "MIT"
+}

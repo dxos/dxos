@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Message, useTranslation } from '@dxos/react-ui';
+import { Banner, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -35,11 +35,11 @@ export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) =
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Message.Root valence='info'>
-              <Message.Content>
-                <Message.Body>{t('observability.description')}</Message.Body>
-              </Message.Content>
-            </Message.Root>
+            <Banner.Root valence='info'>
+              <Banner.Content>
+                <Banner.Body>{t('observability.description')}</Banner.Body>
+              </Banner.Content>
+            </Banner.Root>
             <Form.FieldSet />
           </Form.Section>
         </Form.Content>
