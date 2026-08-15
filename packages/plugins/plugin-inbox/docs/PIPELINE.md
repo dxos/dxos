@@ -238,23 +238,28 @@ is exactly the `FeedOwner` marker this needs. It is not new work:
 So the DISCOVERY half of a feed-generic host is built and shipping. What D6 adds is the cursored-pass
 half.
 
-#### An annotated ref is still not expressible in an input schema — SETTLED 2026-08-14
+#### An annotated ref — REOPENED 2026-08-15, the earlier entry here was wrong
 
-`Ref.Ref` accepts a concrete `Type`, a relation, a `Type.Type`, or the "any object" schema. There is
-**no annotation-constrained overload** — "a ref to any type carrying `FeedAnnotation`" cannot be
-written. A generic operation's input must therefore be `Ref.Ref(Obj.Unknown)` (precedent:
-`Collection.objects`) plus a RUNTIME check.
+`Ref.Ref` accepts a concrete `Type`, a relation, a `Type.Type`, or the "any object" schema. An
+annotation-constrained overload — "a ref to any type carrying `FeedAnnotation`" — was the missing
+piece, and this section previously recorded it as permanently unavailable. **That is not the state of
+the tree.**
 
-This was the open question behind option 4 below, and it is now answered: **`Ref.byAnnotation` was
-proposed in PR #12575 and dropped in review.** What that PR landed instead is the resolution half —
-`FeedAnnotation` now carries `{ property: string }` naming the property that holds the feed, plus
-`getFeedRef(obj)` and `isFeedOwnerSchema(schema)`. So a host can resolve any owner's feed without
-hardcoding `.feed` (already used by `operations/cursor.ts`), but it still cannot make the compiler
-enforce the subject at the boundary.
+What actually happened, in merge order:
 
-The trade is therefore fixed, not open: today `Ref.Ref(Mailbox.Mailbox)` validates the referenced type
-at the operation boundary; a generic subject gives that up for a runtime guard. Option 1 is the only
-one of the four still standing, and it must be costed with that loss included.
+1. `Ref.byAnnotation` was added on the inbox branch (`b5eba8b43d`, pinned against a real database in
+   `ff5ba58a29`).
+2. **#12575 dropped it** (`eb116fe356`, "drop `Ref.byAnnotation`, keep the `FeedAnnotation` property
+   name"), keeping only the resolution half — `FeedAnnotation` carrying `{ property: string }`, plus
+   `getFeedRef(obj)` and `isFeedOwnerSchema(schema)`, which `operations/cursor.ts` already uses.
+   Merged 2026-08-14T05:24Z.
+3. **#12577 put it back**, because that branch still carried the two commits from step 1 and the merge
+   resurrected them. Merged 2026-08-14T22:46Z.
+
+So `Ref.byAnnotation` **is on `main` today** (`packages/core/echo/echo/src/Ref.ts`, with tests),
+present by accident rather than by decision. A deliberate review outcome was silently reverted by a
+later merge. Until that is adjudicated, do not cost D6 as though the primitive were unavailable — and
+do not cost it as though it were endorsed either.
 
 #### Candidates, restated against those facts
 
@@ -266,8 +271,10 @@ one of the four still standing, and it must be costed with that loss included.
    declared. Strictly worse than 1 now that the annotation exists.
 3. **The feed alone**, each processor resolving its own subject. Removes the owner from the seam but
    pushes the cursor-anchor problem into every processor, and each would solve it differently.
-4. ~~**Extend ECHO with an annotation-constrained ref**, then use it.~~ RULED OUT — proposed as
-   `Ref.byAnnotation` in #12575 and dropped in review. Reviving it means re-opening that decision.
+4. **`Ref.byAnnotation` as the subject** — `owner: Ref.byAnnotation(FeedAnnotationId)`, keeping the
+   constraint at the operation boundary and costing no runtime guard. It is on `main` and tested, so
+   this is a live option again — but it was dropped on purpose in #12575 and only came back by merge,
+   so choosing it means re-affirming it deliberately, not leaning on the accident.
 
 ### The open sub-questions
 
@@ -301,14 +308,22 @@ read-time pass.
 
 So D6 is not "generalize for the second instance". It is "build the abstraction on spec, or wait".
 
-**SETTLED 2026-08-15 — wait.** `Ref.byAnnotation` was dropped in review on #12575, so a generic
-subject cannot be validated at the operation boundary; it would have to be `Ref.Ref(Obj.Unknown)`
-plus a runtime guard, which is a real loss of type safety on the one operation users invoke directly.
-Trading that for an abstraction with one implementor is a bad trade. Revisit when a second cursored
-consumer actually exists. The cursor layer itself is already generic (`findFeedCursor` /
-`findOrCreateFeedCursor` take any `FeedAnnotation`-carrying owner), so only the `MailboxProcessor`
-subject, its `tier`, and `AnalyzeMailbox`'s input and progress key remain mailbox-typed. See the D6
-entry in [`TASKS.md`](TASKS.md).
+**STILL OPEN — the user's call, and it was made once already.** On 2026-08-14 the instruction was
+"land the current PR and then revive these tasks once the chips are approved by dima", the chips being
+the two ECHO changes D6 waits on. So D6 is scheduled work, not an open question, and nothing in this
+document should read as closing it.
+
+The two arguments that remain, both for the user to weigh rather than for this document to settle:
+
+- **The primitive's status is unresolved**, not missing. `Ref.byAnnotation` is on `main` but got there
+  by a merge that undid a deliberate review decision (see above). Adjudicate that first — building D6
+  on top of it would entrench the accident.
+- **There is still no second cursored consumer**, which is the argument against building it at all,
+  and is independent of the primitive.
+
+What is already generic: the cursor layer (`findFeedCursor` / `findOrCreateFeedCursor` take any
+`FeedAnnotation`-carrying owner). What is still mailbox-typed: the `MailboxProcessor` subject, its
+`tier`, and `AnalyzeMailbox`'s input and progress key. See the D6 entry in [`TASKS.md`](TASKS.md).
 
 ## Fixed along the way
 

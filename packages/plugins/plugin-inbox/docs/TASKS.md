@@ -14,9 +14,11 @@ cascade runner calls its plan entries _passes_ rather than overloading "stage"; 
 polls once a minute instead of once a second and refuses a cron finer than its own tick; the Research
 action now runs the agent that fills the profile skeleton it creates.
 
-**D6 is deliberately NOT built** — `Ref.byAnnotation` was dropped in review on #12575, so a generic
-subject loses boundary validation, and there is still no second cursored consumer; PIPELINE.md now
-records this as SETTLED rather than open.
+**D6 is NOT built and NOT closed** — it is scheduled: the standing instruction (2026-08-14) is to
+revive it once the two ECHO chips are approved. One of those, `Ref.byAnnotation`, was dropped on
+purpose in #12575 and then **restored by accident** when #12577 merged commits predating the drop, so
+it sits on `main` today unendorsed. Adjudicate that before building on it. The independent argument
+against building at all is unchanged: still no second cursored consumer.
 
 Unresolved: the mailbox empty-panel flicker's root cause is still unknown (`Deferred` masks it, and the
 `!feed` fix committed in `f107a7314c` did not work); the CRM agent wiring has never been observed
