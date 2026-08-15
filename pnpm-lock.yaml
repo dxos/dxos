@@ -13196,9 +13196,6 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
