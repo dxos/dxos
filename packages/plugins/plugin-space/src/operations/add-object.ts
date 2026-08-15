@@ -7,7 +7,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
@@ -17,7 +17,10 @@ import { SpaceOperation } from '#types';
 const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOperation.AddObject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const target = input.target as any;
+      // A remote caller can only name the target collection by reference; resolve it through the
+      // ref itself rather than `Database.Service`, which the app's call sites give no space to.
+      const targetRef = Ref.isRef(input.target) ? input.target : undefined;
+      const target = (targetRef ? yield* Effect.promise(() => targetRef.load()) : input.target) as any;
       const object = input.object as Obj.Unknown;
       const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
       invariant(db, 'Database not found.');

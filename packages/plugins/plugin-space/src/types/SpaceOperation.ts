@@ -11,7 +11,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import * as Operation from '@dxos/compute/Operation';
-import { Collection, Database, DXN, Entity, Obj, QueryAST, Type, View } from '@dxos/echo';
+import { Collection, Database, DXN, Entity, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { meta } from '#meta';
@@ -150,8 +150,14 @@ export const AddObject = Operation.make({
   },
   input: Schema.Struct({
     object: Obj.Unknown.annotate({ description: 'The object to add.' }),
-    target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]).annotate({
-      description: 'The database or collection to add to.',
+    // A reference is the only form of the three that survives an RPC boundary, so a remote caller
+    // names the target collection that way; in-process callers keep passing the live entity.
+    target: Schema.Union([
+      Database.Database,
+      Type.getSchema(Collection.Collection),
+      Ref.Ref(Collection.Collection),
+    ]).annotate({
+      description: 'The database or collection to add to, or a reference to the collection.',
     }),
     targetNodeId: Schema.optional(
       Schema.String.annotate({ description: 'Qualified graph node ID of the target collection.' }),
