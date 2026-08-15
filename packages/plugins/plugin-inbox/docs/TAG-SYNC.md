@@ -111,15 +111,14 @@ configuration:
   converges rather than being silently dropped.
 
 Excluded: user tags (no origin). A user tag has no provider counterpart, and creating a Gmail label
-for one is a separate feature with its own naming, deletion and collision questions. An unmapped
-system label (read-state, drafts, trash/spam) stays dropped, exactly as `syncLabels` drops it today.
+for one is a separate feature with its own naming, deletion and collision questions.
 
 Note the phrasing in the original request — "only sync tags that have the domain of the provider" —
 resolves to the _union_ above, not to `com.google.gmail.*` alone: the canonical tags carry
 `org.dxos.tag`, and excluding them would leave star and archive unsynced, which is the entire
 motivating case.
 
-### Consequence worth naming: pipeline-applied tags push too
+### Pipeline-applied tags push too — and `spam` has no mapping yet
 
 Eligibility is by tag, not by actor. Anything that applies an eligible canonical tag _between_ syncs
 therefore pushes on the next run — notably `ClassifyMailbox` applying `spam` / `promotions` /
@@ -127,8 +126,40 @@ therefore pushes on the next run — notably `ClassifyMailbox` applying `spam` /
 known-sender `important` rule in the Gmail provider) do **not** push, because they land before
 `nextHeads` is captured and are part of the next base by construction.
 
-Whether classifier output should reach the user's Gmail account is a product call, not a mechanism
-one. See [Open decisions](#open-decisions).
+**DECIDED: classifier output pushes.** A classification the user can see in Composer should be the
+same classification their mail client shows; a local-only verdict is the confusing case, not the
+synced one.
+
+That decision creates work, because the mapping it needs does not exist. `GMAIL_SYSTEM_TAGS` covers
+`STARRED` / `INBOX` / `IMPORTANT` / `SENT` / `CATEGORY_*` and deliberately omits `SPAM` and `TRASH`
+("never synced"). So the canonical `spam` tag — which `ClassifyMailbox` already applies locally — has
+no Gmail counterpart to push to. Two consequences:
+
+1. **Adding `SPAM: 'spam'` to the map is bidirectional.** It is read by `syncLabels` for the pull as
+   well, so Gmail's own spam verdict starts arriving as the canonical `spam` tag. That is almost
+   certainly wanted — the two verdicts should be one tag, which is the whole point of
+   `SystemTags` — but it reverses a documented exclusion, so it is a deliberate change and not a
+   one-line addition. `TRASH` stays out: deletion is not a tag.
+2. **Not every canonical tag pushes through the same call.** `users.messages.modify` refuses to add
+   `TRASH` (that is `messages.trash`), and whether it accepts `SPAM` needs verifying against the live
+   API — the Gmail connector surfaces "mark spam" as its own operation, which hints it may not be a
+   plain label write. So the reverse map cannot be a bare `tagUri → labelId`; it needs a small
+   descriptor:
+
+   ```ts
+   type ProviderTagBinding =
+     | { readonly kind: 'label'; readonly labelId: string }
+     | { readonly kind: 'operation'; readonly apply: 'spam' | 'trash' };
+   ```
+
+   A `label` binding batches into `batchModify` as described above; an `operation` binding calls the
+   dedicated endpoint per message. Verify which bucket `SPAM` falls into in the live test before
+   writing the Gmail side (see [Test plan](#test-plan) step 4) — if `modify` accepts it, the
+   descriptor collapses to the `label` case for everything except trash, which is out of scope
+   anyway.
+
+The same shape covers JMAP when it lands: `$junk` / `$notjunk` are keywords there, so `spam` binds as
+a keyword write rather than a folder move.
 
 ## Why not the alternatives
 
@@ -170,8 +201,10 @@ interface MailSyncProviderService {
 }
 ```
 
-`TagPushOp` is `{ foreignId, addLabelIds, removeLabelIds }` — provider-vocabulary ids, resolved from
-the reverse label map by the harness, so the diff itself stays provider-agnostic.
+`TagPushOp` is `{ foreignId, add, remove }` where each entry is a `ProviderTagBinding` (see
+[the mapping section](#pipeline-applied-tags-push-too--and-spam-has-no-mapping-yet)) resolved from
+the reverse label map by the harness — so the diff itself stays provider-agnostic, and a tag whose
+push needs a dedicated endpoint rather than a label write is expressible.
 
 The diff is a pure module — `(base, local, remote, eligible) → { push, pull }` over plain
 `Map<string, Set<string>>` — with no ECHO, no provider and no Effect in it. That is what makes it
@@ -210,6 +243,10 @@ on first sync.
 service, the `Live` layer, and `GoogleMailApi.mock` — the mock must hold mutable per-message label
 state so a test can assert what was pushed and so a subsequent `listHistory` reflects it.
 
+Add `SPAM: 'spam'` to `GMAIL_SYSTEM_TAGS` and update its doc comment, which currently states that
+`TRASH`/`SPAM` are never synced. Verify whether `modify` accepts `SPAM` in `addLabelIds`; if it does
+not, `spam` binds as an `operation` rather than a `label` and needs the dedicated endpoint.
+
 Scope note: `gmail.modify` is required on the OAuth token. Confirm the connector already requests it
 before the live test.
 
@@ -217,8 +254,8 @@ before the live test.
 `pushTags` and keeps its add-only keyword behaviour; the comment in `jmapReconcile` that defers this
 ("until we write local flags back to the provider") stays accurate until it does.
 
-Trash and spam stay out of scope. `trashMessage` exists but is a distinct operation with distinct
-semantics, not a label diff.
+Trash stays out of scope entirely — deletion is not a tag, `trashMessage` already exists as its own
+operation, and `TRASH` stays absent from the label map.
 
 ## Test plan
 
@@ -235,14 +272,17 @@ TDD, in this order. Each layer is a gate for the next.
    set; and an unresolvable-heads case asserting the re-baseline path pushes nothing.
 4. **Live Gmail test**, env-gated on `GOOGLE_ACCESS_TOKEN` (the gate `sync-e2e.test.ts` already
    uses). Round trip both directions against a real account: change a label through the Gmail API,
-   sync, assert local tags; toggle locally, sync, read the label back through the API.
+   sync, assert local tags; toggle locally, sync, read the label back through the API. This is also
+   where `SPAM`'s binding is settled — assert whether `modify` accepts it in `addLabelIds` before the
+   Gmail push path is written against the assumption that it does.
 
 ## Open decisions
 
-1. **Do pipeline-applied canonical tags push?** `ClassifyMailbox`'s `spam` / `promotions` / `updates`
-   are eligible by the tag rule, so classifier output would reach the user's Gmail account. Options:
-   push them (consistent, and arguably the point of classification), exclude a named subset, or gate
-   on a mailbox option.
+1. ~~**Do pipeline-applied canonical tags push?**~~ **DECIDED 2026-08-15: yes.** A classification the
+   user sees in Composer should be the one their mail client shows. Follow-on work is real, though:
+   `spam` has no Gmail mapping today and `GMAIL_SYSTEM_TAGS` documents `SPAM` as never synced, so
+   adding it is a deliberate bidirectional change — see
+   [the mapping section](#pipeline-applied-tags-push-too--and-spam-has-no-mapping-yet).
 2. **Conflict policy** — remote-wins is assumed above for consistency with `ConnectorSync.mergeField`.
    The alternative worth considering is local-wins for canonical toggles specifically, on the grounds
    that a star the user just applied is a more recent and more explicit act than a delta.

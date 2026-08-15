@@ -580,13 +580,21 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
 - [ ] **Gmail write path** — `modifyMessage` + `batchModify` on `GoogleMailApi`, its `Live` layer, and
       `GoogleMailApi.mock` (the mock needs mutable per-message label state so `listHistory` reflects a
       push). Confirm the connector requests the `gmail.modify` scope.
+- [ ] **Map `spam` onto Gmail's `SPAM`** — `GMAIL_SYSTEM_TAGS` omits it deliberately today ("TRASH/SPAM
+      — never synced"), so `ClassifyMailbox`'s canonical `spam` tag has nothing to push to. Adding it
+      is BIDIRECTIONAL: `syncLabels` reads the same map, so Gmail's own spam verdict starts arriving
+      as the canonical tag — wanted, but a reversal of a documented exclusion, not a one-line edit.
+      `TRASH` stays out; deletion is not a tag. Verify whether `users.messages.modify` accepts `SPAM`
+      in `addLabelIds` — if not, the reverse map needs a binding descriptor (`label` vs `operation`)
+      rather than a bare `tagUri → labelId`.
 - [ ] **Live round-trip test** — env-gated on `GOOGLE_ACCESS_TOKEN`, both directions against a real
       account.
 
 ### Open
 
-- Whether `ClassifyMailbox`'s canonical output (`spam` / `promotions` / `updates`) should push to the
-  user's real Gmail account. Eligibility is by tag, not by actor, so today's rule says yes.
+- ~~Whether `ClassifyMailbox`'s canonical output should push to the user's real Gmail account.~~
+  DECIDED 2026-08-15: it pushes — a classification the user sees in Composer should be the one their
+  mail client shows. See the `spam` mapping task above for the work that decision creates.
 - Conflict policy: remote-wins (consistent with `ConnectorSync.mergeField`) vs local-wins for
   canonical toggles specifically.
 - JMAP assumed to be a follow-up; its add-only keyword comment stays accurate until then.
