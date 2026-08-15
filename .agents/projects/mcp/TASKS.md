@@ -70,13 +70,23 @@ changes what a model sees lives in the shared package or it is a bug.
   - [x] **Phase 2a** — `SpaceObjectOperation` leaf module (compute/echo/keys only) with
         `getObject`, `updateObject`, `queryObjects`. Outputs are named-field objects so a projected
         tool's `structuredContent` is a JSON object.
-  - [ ] **Phase 2b** — `addObject` accepts a serialized envelope beside a live object (rehydrate via
-        `@type` → registry schema → `Obj.make`, minting an id when absent) and a `Ref(Collection)`
-        target defaulting to the space root; `subject` (a graph path) becomes optional.
-        `removeObjects` accepts refs. `createObject` is deliberately NOT added — a detached object
-        cannot survive between two stateless MCP calls, so `addObject` absorbs both.
-  - [ ] **Phase 3** — `Operation.mcpTool` on the five verbs, `serialize.test.ts`, delete
-        `cli/src/commands/mcp/object-tools.ts`; edge's copy follows on the next `@dxos/*` pin bump.
+  - [x] **Phase 2b** — each mutating verb grew a wire-shaped alternative _beside_ its live-entity
+        input rather than replacing it, so no in-process call site changed: `addObject` takes
+        `create` (a `{ '@type', ...props }` draft instantiated against the space's type registry) or
+        `object`, and a `Ref(Collection)` target; `removeObjects` takes `refs` or `objects`. The
+        database comes from `Effect.serviceOption(Database.Service)` — reading the ambient context
+        without declaring it, because declared services resolve eagerly and the app's call sites
+        invoke with no spaceId. `createObject` is deliberately absent: a detached object cannot
+        survive between two stateless MCP calls.
+  - [x] **Phase 3** — all five annotated; `serialize.test.ts` asserts they render as JSON Schema
+        **and** carry the annotation (the risk was `addObject`/`removeObjects`, whose inputs name
+        `Database`/`Collection`/`Entity` — they serialize). `cli/.../object-tools.ts` deleted and
+        `serve.test.ts` now asserts the five arrive by projection over a real MCP session. Edge's
+        copy follows on the next `@dxos/*` pin bump.
+  - [ ] **Retire `database.objectCreate` / `objectDelete`** — blocked on layering, not effort:
+        the Database skill lives in `assistant-toolkit` (core), which cannot depend on plugin-space.
+        Harmless meanwhile — they are unannotated, so they never reach the MCP surface. Moving the
+        skill to a plugin is the fix.
   - [ ] **Deferred** — `expandDepth` on the read verbs. Both toolkits advertise it and no operation
         accepts it, so sending it fails the call today; not advertising it is already an
         improvement. Implement with ref-walking when it earns its place.
