@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useAppGraph, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, CardIconSlot, useAppGraph, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Card, Icon, IconButton, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
@@ -63,7 +63,9 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
             <Card.Root fullWidth>
               <Card.Header>
                 <Card.Block>
-                  <Icon icon={icon} />
+                  <CardIconSlot subject={subject}>
+                    <Icon icon={icon} />
+                  </CardIconSlot>
                 </Card.Block>
                 <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
               </Card.Header>
@@ -110,6 +112,7 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
   const { t } = useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
+
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
   const [cardRef, pivotId] = useCardPivot();
   const menuItems = useObjectMenuItems(subject, pivotId);

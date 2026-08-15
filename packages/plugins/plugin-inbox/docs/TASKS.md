@@ -475,16 +475,23 @@ Raised while driving the live mailbox. Grouped by owner, since half of these are
 - [ ] **Object avatars in cards.** STARTED: `ObjectAvatar` (react-ui-card) resolves picture → initials
       → type glyph for any object, and `TypeArticle`'s tile uses it. Not yet applied to
       `RecordArticle`'s own header, and has no story covering the three-way fallback.
-- [ ] **Initials avatars are all grey — the hue precedence is backwards.** `ObjectAvatar` prefers the
-      type's declared hue over the name-derived one (`iconAnnotation?.hue ?? nameToHue(label)`,
-      `ObjectAvatar.tsx:67`), and both `Person` (`Person.ts:111`) and `Organization`
-      (`Organization.ts:76`) declare `hue: 'neutral'` — so every person and every org renders on the
-      same neutral disc and initials no longer distinguish anyone. The type hue is right for the type
-      GLYPH (the no-label branch) and wrong for INITIALS, which exist to tell two objects apart: the
-      sibling `Avatar` (`Avatar.tsx:29`) uses `nameToHue(label)` unconditionally and is the behaviour
-      being regressed against. Fix is to pick per branch rather than per component — glyph takes the
-      type hue, initials take the name hue — not to change either type's annotation, since `neutral`
-      is correct for the glyph.
+- [x] **A card header's depiction is now contributable per type** (`AppSurface.CardIcon`). Raised as
+      "the avatar colour is wrong" — every person rendered on the same grey disc, because
+      `ObjectAvatar` preferred the type's declared hue and both `Person` and `Organization` declare
+      `hue: 'neutral'`. Flipping that precedence globally was the WRONG fix: the treatment belongs to
+      Person cards, not to every object.
+      DECIDED: a role-scoped Surface, not a type annotation. How an object is depicted depends on the
+      space it gets — a 6-unit card block affords initials or a photograph, a 16px navtree row does
+      not — so an annotation would state one fact for surfaces that legitimately disagree, whereas
+      `CardIcon` says how a type looks IN A CARD and nothing more. Non-card surfaces keep resolving
+      `IconAnnotation` via `Obj.getIcon`.
+      Shipped: the role token; `CardIconSlot` (pairs `Surface.useIsAvailable` with the host's own
+      default as children — unlike `CardContent`, a miss cannot render nothing, and `Surface`'s
+      `fallback` is the error boundary); `ObjectAvatar`'s `initialsHue` prop (`'type'` default, so no
+      existing caller changed); `PersonCardIcon` contributed for `Person` alone; four hosts wired
+      (`TypeArticle`, `RecordArticle`, plugin-projects `ObjectCard`, plugin-deck `Popover`).
+      LEFT OPEN: `PersonCard` still renders the same photo again as a square row in the body, so a
+      Person with a picture now shows it twice. A design call, not a defect — decide and act.
 - [ ] **Icons fall back to the dashed placeholder for lazily-activated types.** A Routine and a
       Markdown document both render `ph--circle-dashed--regular` in the navtree and plank header. Both
       types DO declare `IconAnnotation` (`ph--lightning--regular`, `ph--text-aa--regular`), so this is

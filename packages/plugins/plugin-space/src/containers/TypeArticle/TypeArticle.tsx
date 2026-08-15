@@ -8,11 +8,11 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
-import { Card, Focus, Icon, Panel, useTranslation } from '@dxos/react-ui';
+import { Card, Focus, Panel, useTranslation } from '@dxos/react-ui';
 import { Selection, useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
 import { ObjectAvatar } from '@dxos/react-ui-card';
 import { Empty } from '@dxos/react-ui-list';
@@ -396,10 +396,11 @@ const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) =
       <Card.Root fullWidth classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
         <Card.Header>
           <Card.Block>
-            {/* The object's own picture when it has one (a Person's avatar, an Organization's logo),
-                falling back through its initials to the type glyph — the same three-way choice every
-                card was making, resolved in one place. */}
-            <ObjectAvatar object={live} size={6} fallbackIcon={icon} />
+            {/* A type may contribute its own depiction (plugin-preview gives a Person their face);
+                otherwise the object's picture, its initials, then the type glyph. */}
+            <CardIconSlot subject={live}>
+              <ObjectAvatar object={live} size={6} fallbackIcon={icon} />
+            </CardIconSlot>
           </Card.Block>
           <Card.Title>{label}</Card.Title>
           {menuItems.length > 0 && <Card.Menu items={menuItems} />}

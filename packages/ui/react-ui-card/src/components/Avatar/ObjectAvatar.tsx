@@ -35,6 +35,16 @@ export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClic
   object: Entity.Unknown | Entity.Snapshot;
   /** Fallback glyph when the object has neither a picture nor a label. */
   fallbackIcon?: string;
+  /**
+   * Where the initials take their hue from.
+   *
+   * `type` (the default) uses the schema's declared hue, so every object of a type looks alike — right
+   * for a list you scan by kind. `label` derives it per object, so two people are told apart at a
+   * glance — right where the object IS the identity. A type declaring `neutral` (as `Person` and
+   * `Organization` both do) renders every instance on the same grey disc under `type`, which is
+   * correct for the glyph and useless for initials; that is the choice this names.
+   */
+  initialsHue?: 'type' | 'label';
 };
 
 /**
@@ -46,7 +56,14 @@ export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClic
  * bare type glyph next to a Person whose avatar had already been fetched is the visible symptom.
  * `Obj.getLabel` and `Obj.getIcon` already generalize the other two legs; this adds the first.
  */
-export const ObjectAvatar = ({ object, variant = 'circle', size = 6, fallbackIcon, onClick }: ObjectAvatarProps) => {
+export const ObjectAvatar = ({
+  object,
+  variant = 'circle',
+  size = 6,
+  fallbackIcon,
+  initialsHue = 'type',
+  onClick,
+}: ObjectAvatarProps) => {
   const image = getObjectImage(object);
   const label = Obj.getLabel(object as Obj.Unknown);
   const iconAnnotation = Entity.getIcon(object);
@@ -61,10 +78,8 @@ export const ObjectAvatar = ({ object, variant = 'circle', size = 6, fallbackIco
 
   return (
     <DxAvatar
-      // The type's hue when it declares one, so a Person and an Organization stay visually distinct
-      // even before either has a picture; otherwise derived from the label, which keeps one object
-      // the same colour everywhere it appears.
-      hue={iconAnnotation?.hue ?? nameToHue(label ?? '')}
+      // Either way the derivation is pure, so one object keeps its colour everywhere it appears.
+      hue={initialsHue === 'label' ? nameToHue(label ?? '') : (iconAnnotation?.hue ?? nameToHue(label ?? ''))}
       hueVariant='surface'
       variant={variant}
       size={size}
