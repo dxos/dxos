@@ -21,6 +21,7 @@ import {
 } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
+import { RelatedTypeFilter } from '#components';
 import { useRelatedObjects, useRelatedTypeFilter } from '#hooks';
 import { meta } from '#meta';
 import { SpaceSurface } from '#types';
@@ -45,12 +46,10 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
       ? 'ph--cube--regular'
       : (Obj.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular');
 
-  // The inline section has no toolbar to host the control, so it follows the filter the Related
-  // companion sets for this same record rather than offering one of its own.
-  const { items: related } = useRelatedTypeFilter(
-    useRelatedObjects(db, subject, { references: true, relations: true }),
-    Obj.getURI(subject).toString(),
-  );
+  // Keyed by the record itself rather than by this article, so the filter set here and the one set
+  // in the Related companion are the same filter.
+  const relatedObjects = useRelatedObjects(db, subject, { references: true, relations: true });
+  const { types, items: related, toggle } = useRelatedTypeFilter(relatedObjects, Obj.getURI(subject).toString());
   const singleColumn = related.length === 1;
 
   return (
@@ -85,13 +84,18 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
               <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
             </div>
 
-            {related.length > 0 && (
+            {/* Gated on the unfiltered set: hiding every type must not take the filter away with the
+                cards, leaving no way back. */}
+            {relatedObjects.length > 0 && (
               <div
                 className={mx('dx-expander flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
               >
-                <Input.Root>
-                  <Input.Label>{t('related-objects.label')}</Input.Label>
-                </Input.Root>
+                <div className='flex items-center justify-between gap-2'>
+                  <Input.Root>
+                    <Input.Label>{t('related-objects.label')}</Input.Label>
+                  </Input.Root>
+                  <RelatedTypeFilter types={types} onToggle={toggle} />
+                </div>
                 {/* The masonry's own gutter would inset these cards relative to the record card above,
                     which shares this column — the scroll padding is the article's to own, not theirs. */}
                 <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined}>
