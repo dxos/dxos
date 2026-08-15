@@ -14,4 +14,4 @@ The default audience is community authors building a plugin in their **own repos
 
 ## Install (local marketplace)
 
-Lives at `tools/composer-plugin-dev/` in the dxos monorepo. Add this directory as a local plugin source in `~/.claude/settings.json`, or invoke via `/plugin` after pointing Claude Code at it.
+Lives at `tools/claude/plugins/composer-plugin-dev/` in the dxos monorepo. Add this directory as a local plugin source in `~/.claude/settings.json`, or invoke via `/plugin` after pointing Claude Code at it.
