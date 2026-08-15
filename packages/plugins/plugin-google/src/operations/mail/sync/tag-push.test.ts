@@ -14,7 +14,7 @@ import { Cursor } from '@dxos/link';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { ambientSyncServices, seedMailboxBinding } from '@dxos/plugin-inbox/testing/sync';
-import { TagIndex, Tagging } from '@dxos/schema';
+import { Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { type GmailDataset, GoogleMailApi } from '#services';

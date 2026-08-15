@@ -11,7 +11,7 @@ import { EffectEx } from '@dxos/effect';
 import { type Connection, type Cursor } from '@dxos/link';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { seedMailboxBinding } from '@dxos/plugin-inbox/testing/sync';
-import { TagIndex, Tagging } from '@dxos/schema';
+import { Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants';
