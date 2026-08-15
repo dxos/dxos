@@ -3,28 +3,19 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { CreateObject, ReactSurface, Schema } from '#capabilities';
+import { CreateObject, PluginAsset, ReactSurface, Schema, Translations } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
-
+// Canonical single-entry composition: lists every module once; per-environment filtering happens
+// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
+// as `undefined`, which `Plugin.addModule` skips.
 export const PipelinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
   Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(Translations),
+  Plugin.addModule(PluginAsset),
   Plugin.make,
 );
 

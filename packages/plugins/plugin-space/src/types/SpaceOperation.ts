@@ -12,7 +12,7 @@ import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, DXN, Entity, Obj, QueryAST, Type, View } from '@dxos/echo';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 
 import { meta } from '#meta';
 
@@ -343,7 +343,7 @@ export const ExportSpace = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
-    format: Schema.Enum(SpaceArchive.Format),
+    format: SpacesService.SpaceArchiveFormat,
   }),
   output: Schema.Void,
 });
