@@ -180,7 +180,19 @@ projects:
     tasks: .agents/skills/task-planning/TASKS.md
     design: .agents/skills/task-planning/SKILL.md
     prs: [12174]
-    resume: 'PR #12174 opened. Next: watch the Check workflow to green and address any review comments.'
+    resume: 'PR #12174 MERGED (34d2d1a190) — the $session->$project rename and the numbered pick-to-resume
+      table both shipped. The `$project` SENTINEL this project introduced was subsequently REPLACED by the
+      `/project` slash command in the `agent-directives` project (PR #12463), which also thinned SKILL.md
+      215->186 lines by moving the per-verb enumeration into the hook directives; the ledger''s checked items
+      are history, not current syntax. ONE open task remains (.agents/skills/task-planning/TASKS.md
+      "Follow-ups"): test the skill in a CLEAN repo outside the monorepo — copy SKILL.md in, run a realistic
+      multi-step task, confirm it triggers and produces a well-formed TASKS.md, optionally apply the
+      writing-skills TDD method (baseline pressure scenario without the skill, then with it), and fold any
+      gaps back into SKILL.md. 2026-08-15: fixed a related defect OUTSIDE this project''s scope —
+      ~/.claude/hooks/branch-beacon.sh and session-context.sh asserted `branch == claude/<worktree-dir-name>`,
+      which the harness no longer honours (it names the branch after the originating prompt), so a healthy
+      session got a false BRANCH ALERT every turn; the hooks now test detached HEAD + stub worktrees instead,
+      and AGENTS.md + cloud-sandbox/SKILL.md dropped the same dead claim (commit 1c7999ab29).'
   - name: inbox-test-suite
     status: active
     user: jdw
