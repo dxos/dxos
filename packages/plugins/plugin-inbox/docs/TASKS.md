@@ -170,7 +170,7 @@ Committed, unpushed. This is the PR to open first.
       it survives as `ResetFeedCursor` with a required `cursorId` instead of being removed. Also note
       `CrmOperation.ProcessMailbox` is a different operation and was left alone. The `stories-brain`
       phase that documented building it is marked REMOVED.
-      CI FALLOUT, caught by the PR and fixed: (a) the `FeedPipeline` "Fixture Test" play test drove the
+      CI FALLOUT, caught by the PR and fixed: (a) the `MailboxAnalyze` "Fixture Test" play test drove the
       deleted operation's `execute` button through run → rerun-0 → reset → run, so it lost its subject;
       it is reduced to asserting the fixture corpus loads. (b) The story's action `useState('process')`
       default pointed at the removed action. (c) Cursor coverage went with `process-mailbox.test.ts`

@@ -10,8 +10,6 @@ and storybooks that exercise each. Written 2026-08-15._
 The point of this document is the **gap column**. Counting tests per package says nothing useful —
 plugin-inbox has 33 test files and still has passes nothing drives end to end.
 
----
-
 ## 1. Sync — writes the feed
 
 Provider-agnostic harness in `plugin-inbox/src/sync/mail-sync.ts`; each provider contributes an
@@ -28,16 +26,17 @@ Effect service. Exactly one is active per binding.
 
 ## 2. Analyze — reads the feed through cursors
 
-Contributed `MailboxProcessor` passes, DAG-ordered by declared `after` edges. Host:
+Six contributed `MailboxProcessor` passes, DAG-ordered by declared `after` edges. Host:
 `plugin-inbox/operations/analyze/analyze-mailbox.ts`.
 
-| Pass            | Tier          | Cursored                            | Operation                       | Tests                                                               | Storybook                      | Gap                                                                     |
-| --------------- | ------------- | ----------------------------------- | ------------------------------- | ------------------------------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------- |
-| `contacts`      | deterministic | no                                  | `ExtractCorrespondents`         | `extract-correspondents.test.ts`                                    | none                           | re-derives the whole feed each run; cursor is a clear win and unclaimed |
-| `subscriptions` | deterministic | **deliberately not**                | `ExtractSubscriptions`          | `extract-subscriptions.test.ts`                                     | `SubscriptionsArticle.stories` | replaces derived state wholesale — a cursor would corrupt the aggregate |
-| `classify`      | classify      | **yes**                             | `ClassifyMailbox`               | `classify-mailbox.test.ts` (memoized LLM)                           | none                           | no story drives classification                                          |
-| `summarize`     | summarize     | partial (skips by newest thread id) | `SummarizeMailbox`              | `summarize-mailbox.test.ts` (memoized), `summarize-threads.test.ts` | none                           | adding feed position risks double-skip — see PIPELINE.md                |
-| `analyze`       | analyze       | **yes**                             | `BrainOperation.AnalyzeMailbox` | `analyze-mailbox.test.ts` (memoized)                                | `FactsCompanion.stories`       | contributed by plugin-brain; absent entirely if brain is not installed  |
+| Pass            | Tier          | Cursored                            | Operation                       | Tests                                                               | Storybook                      | Gap                                                                                                                                                                                                                |
+| --------------- | ------------- | ----------------------------------- | ------------------------------- | ------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `contacts`      | deterministic | no                                  | `ExtractCorrespondents`         | `extract-correspondents.test.ts`                                    | none                           | re-derives the whole feed each run; cursor is a clear win and unclaimed                                                                                                                                            |
+| `subscriptions` | deterministic | **deliberately not**                | `ExtractSubscriptions`          | `extract-subscriptions.test.ts`                                     | `SubscriptionsArticle.stories` | replaces derived state wholesale — a cursor would corrupt the aggregate                                                                                                                                            |
+| `classify`      | classify      | **yes**                             | `ClassifyMailbox`               | `classify-mailbox.test.ts` (memoized LLM)                           | none                           | no story drives classification                                                                                                                                                                                     |
+| `summarize`     | summarize     | partial (skips by newest thread id) | `SummarizeMailbox`              | `summarize-mailbox.test.ts` (memoized), `summarize-threads.test.ts` | none                           | adding feed position risks double-skip — see PIPELINE.md                                                                                                                                                           |
+| `analyze`       | analyze       | **yes**                             | `BrainOperation.AnalyzeMailbox` | `analyze-mailbox.test.ts` (memoized)                                | `FactsCompanion.stories`       | contributed by plugin-brain; absent entirely if brain is not installed                                                                                                                                             |
+| `crm`           | classify      | yes (via `ProcessMailbox`)          | `CrmOperation.ProcessMailbox`   | `process-mailbox.test.ts`                                           | `MailboxAnalyze.stories`       | contributed by plugin-crm — **missed by this audit's first pass**, which enumerated processors by grepping the packages that define the seam rather than the whole tree; a contribution point has no such boundary |
 
 Cascade mechanics have their own tests: `topology.test.ts` (ordering, cycles, unknown ids),
 `precondition.test.ts` (missing service = skip, not failure), `analyze-mailbox.test.ts` (descendant
@@ -71,8 +70,6 @@ blocking, tier filters), `cursor.test.ts` (tag + subject isolation).
 | `UpdateInvestorLog`     | deliberately not                  | `mailbox-projects.test.ts` | none                         | same; the LLM summary path is only exercised with `summarize` off |
 | `CreateTrackingProject` | n/a                               | `mailbox-projects.test.ts` | `CreateProjectPanel.stories` | —                                                                 |
 
----
-
 ## What this exposes
 
 1. **Nothing drives a full Sync → Analyze → Research chain.** Every pipeline is tested in isolation
@@ -86,5 +83,9 @@ blocking, tier filters), `cursor.test.ts` (tag + subject isolation).
    `stories-inbox`. JMAP and calendar sync have none.
 4. **Three known-dark paths**: JMAP send (no tests at all), on-arrival extraction (commented out),
    and the CRM research agent (never observed).
+5. **`MailboxAnalyze` (renamed from `FeedPipeline`) is the closest thing to a workbench that exists** —
+   it drives the cascade, every individual pass, the brain and CRM passes, the project pipelines and
+   cursor resets, over four seed variants plus a live OPFS mode. What it does NOT do is sync: it reads
+   a seeded feed, while `MailboxSync` connects and writes one. The join is the actual gap.
 
 These are the inputs to the workbench question — see the companion task.

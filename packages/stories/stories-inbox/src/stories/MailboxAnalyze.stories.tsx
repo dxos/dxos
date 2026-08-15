@@ -614,7 +614,7 @@ const DefaultStory = () => (
 type StoryArgs = { seed: 'fixture' | 'crm' | 'demo' | 'trip' };
 
 const meta = {
-  title: 'stories/stories-inbox/FeedPipeline',
+  title: 'stories/stories-inbox/MailboxAnalyze',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
