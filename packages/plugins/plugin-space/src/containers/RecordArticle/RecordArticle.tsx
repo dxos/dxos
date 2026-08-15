@@ -21,7 +21,7 @@ import {
 } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
-import { useRelatedObjects } from '#hooks';
+import { useRelatedObjects, useRelatedTypeFilter } from '#hooks';
 import { meta } from '#meta';
 import { SpaceSurface } from '#types';
 
@@ -45,7 +45,12 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
       ? 'ph--cube--regular'
       : (Obj.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular');
 
-  const related = useRelatedObjects(db, subject, { references: true, relations: true });
+  // The inline section has no toolbar to host the control, so it follows the filter the Related
+  // companion sets for this same record rather than offering one of its own.
+  const { items: related } = useRelatedTypeFilter(
+    useRelatedObjects(db, subject, { references: true, relations: true }),
+    Obj.getURI(subject).toString(),
+  );
   const singleColumn = related.length === 1;
 
   return (
