@@ -12,7 +12,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Button, Clipboard, Flex, Banner, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Clipboard, Flex, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { kebabize } from '@dxos/util';
 

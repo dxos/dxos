@@ -11,7 +11,7 @@ import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Connection } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Button, Flex, Banner, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Flex, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { Treegrid } from '@dxos/react-ui-list';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type PublishFieldNote } from '@dxos/schema';
