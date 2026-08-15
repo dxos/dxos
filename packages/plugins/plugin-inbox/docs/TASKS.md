@@ -470,6 +470,16 @@ Raised while driving the live mailbox. Grouped by owner, since half of these are
 - [ ] **Object avatars in cards.** STARTED: `ObjectAvatar` (react-ui-card) resolves picture → initials
       → type glyph for any object, and `TypeArticle`'s tile uses it. Not yet applied to
       `RecordArticle`'s own header, and has no story covering the three-way fallback.
+- [ ] **Initials avatars are all grey — the hue precedence is backwards.** `ObjectAvatar` prefers the
+      type's declared hue over the name-derived one (`iconAnnotation?.hue ?? nameToHue(label)`,
+      `ObjectAvatar.tsx:67`), and both `Person` (`Person.ts:111`) and `Organization`
+      (`Organization.ts:76`) declare `hue: 'neutral'` — so every person and every org renders on the
+      same neutral disc and initials no longer distinguish anyone. The type hue is right for the type
+      GLYPH (the no-label branch) and wrong for INITIALS, which exist to tell two objects apart: the
+      sibling `Avatar` (`Avatar.tsx:29`) uses `nameToHue(label)` unconditionally and is the behaviour
+      being regressed against. Fix is to pick per branch rather than per component — glyph takes the
+      type hue, initials take the name hue — not to change either type's annotation, since `neutral`
+      is correct for the glyph.
 - [ ] **Icons fall back to the dashed placeholder for lazily-activated types.** A Routine and a
       Markdown document both render `ph--circle-dashed--regular` in the navtree and plank header. Both
       types DO declare `IconAnnotation` (`ph--lightning--regular`, `ph--text-aa--regular`), so this is
