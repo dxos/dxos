@@ -19,15 +19,15 @@ Related docs (not duplicated here):
 
 ### 1.1 Layers
 
-| #   | Layer               | Key symbols                                                           | Where                                                                                                                                               |
-| --- | ------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Container / surface | `ChatArticle`, `useChatProcessor`, `useChatServices`                  | [`containers/ChatArticle`](../src/containers/ChatArticle/ChatArticle.tsx), [`hooks`](../src/hooks/useChatProcessor.ts)                                |
-| 2   | Chat composite      | `Chat.Root/Toolbar/Thread/Prompt/Minimap/TaskList`, event bus         | [`components/Chat`](../src/components/Chat/Chat.tsx)                                                                                                 |
-| 3   | Processor           | `AiChatProcessor` (atoms: `messages`, `streaming`, `active`, `error`) | [`processor`](../src/processor/processor.ts)                                                                                                         |
-| 4   | Agent process       | `AgentService`, `AgentProcess` (input queue, alarms, delegation)      | [`@dxos/agent-runtime`](../../../core/compute/agent-runtime/src/agent-service)                                                                         |
-| 5   | Session / request   | `AiSession.Session`, `AiRequest.Request`, `AiContext.Binder`          | [`@dxos/assistant`](../../../core/compute/assistant/src)                                                                                               |
-| 6   | Model               | `AiService` → `LanguageModel.streamText` → `AiParser`                 | [`@dxos/ai`](../../../core/compute/ai/src)                                                                                                             |
-| 7   | Document sync       | `MessageSyncer`, `BlockRenderer` (`blockToMarkdown`)                  | [`components/ChatThread/sync`](../src/components/ChatThread/sync/sync.ts), [`registry.tsx`](../src/components/ChatThread/registry.tsx)                |
+| #   | Layer               | Key symbols                                                           | Where                                                                                                                                                     |
+| --- | ------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Container / surface | `ChatArticle`, `useChatProcessor`, `useChatServices`                  | [`containers/ChatArticle`](../src/containers/ChatArticle/ChatArticle.tsx), [`hooks`](../src/hooks/useChatProcessor.ts)                                    |
+| 2   | Chat composite      | `Chat.Root/Toolbar/Thread/Prompt/Minimap/TaskList`, event bus         | [`components/Chat`](../src/components/Chat/Chat.tsx)                                                                                                      |
+| 3   | Processor           | `AiChatProcessor` (atoms: `messages`, `streaming`, `active`, `error`) | [`processor`](../src/processor/processor.ts)                                                                                                              |
+| 4   | Agent process       | `AgentService`, `AgentProcess` (input queue, alarms, delegation)      | [`@dxos/agent-runtime`](../../../core/compute/agent-runtime/src/agent-service)                                                                            |
+| 5   | Session / request   | `AiSession.Session`, `AiRequest.Request`, `AiContext.Binder`          | [`@dxos/assistant`](../../../core/compute/assistant/src)                                                                                                  |
+| 6   | Model               | `AiService` → `LanguageModel.streamText` → `AiParser`                 | [`@dxos/ai`](../../../core/compute/ai/src)                                                                                                                |
+| 7   | Document sync       | `MessageSyncer`, `BlockRenderer` (`blockToMarkdown`)                  | [`components/ChatThread/sync`](../src/components/ChatThread/sync/sync.ts), [`registry.tsx`](../src/components/ChatThread/registry.tsx)                    |
 | 8   | Editor / widgets    | `MarkdownStream`, `xmlTags`, `XmlWidgetRegistry`, widget classes      | [`@dxos/react-ui-markdown`](../../../ui/react-ui-markdown/src/MarkdownStream), [`@dxos/ui-editor` xml](../../../ui/ui-editor/src/extensions/language/xml) |
 
 ### 1.2 Sequence

@@ -7,13 +7,13 @@ lower-level package that can be developed against a **mock processor** — no AI
 That question does not stop at `plugin-assistant`. **Five** scenarios in the repo render a thread of
 messages, across four packages and three plugins:
 
-| Scenario           | Owner                                   | Renderer family      | Storage                     |
-| ------------------ | --------------------------------------- | -------------------- | --------------------------- |
-| AI chat            | `plugin-assistant`                      | document (CodeMirror) | `Feed` (`Chat.feed`)        |
-| human chat         | `react-ui-thread` (via `plugin-thread`) | tile (Mosaic)        | `Feed` (channel backend)    |
-| comments           | `react-ui-thread` (via `plugin-review`) | tile (Mosaic)        | `Thread.messages: Ref[]`    |
-| transcription      | `react-ui-transcription`                | document (CodeMirror) | `Feed` (`Transcript.feed`)  |
-| email conversation | `plugin-inbox/ConversationStack`        | tile (Mosaic)        | ECHO query (mailbox)        |
+| Scenario           | Owner                                   | Renderer family       | Storage                    |
+| ------------------ | --------------------------------------- | --------------------- | -------------------------- |
+| AI chat            | `plugin-assistant`                      | document (CodeMirror) | `Feed` (`Chat.feed`)       |
+| human chat         | `react-ui-thread` (via `plugin-thread`) | tile (Mosaic)         | `Feed` (channel backend)   |
+| comments           | `react-ui-thread` (via `plugin-review`) | tile (Mosaic)         | `Thread.messages: Ref[]`   |
+| transcription      | `react-ui-transcription`                | document (CodeMirror) | `Feed` (`Transcript.feed`) |
+| email conversation | `plugin-inbox/ConversationStack`        | tile (Mosaic)         | ECHO query (mailbox)       |
 
 §3 audits that tension; §4 proposes a split by **role** (composer / tile renderer / document
 renderer) rather than by **speaker** (AI / human / email / machine).
@@ -166,10 +166,10 @@ Everything else is mechanical. These five are the actual design work:
 
 **Point 1 splits into two tiers, and the split decides the phasing.** Consumers read:
 
-| Tier                | Members                                                            | Consumers                                | Types pulled in            |
-| ------------------- | ------------------------------------------------------------------ | ---------------------------------------- | -------------------------- |
-| **A — loop**        | `messages`, `streaming`, `active`, `error`, `mcpErrors` atoms; `request` / `retry` / `cancel` | `Chat.Root`, `ChatPrompt`, `ChatStatus`, `ChatMcpErrors` | `Message.Message`, `Error` |
-| **B — AI context**  | `context` (`AiContext.Binder`), `registry` (`Registry.Registry`), `system`, `conversation` | `ChatOptions`, `ChatReferences` only     | `@dxos/assistant`          |
+| Tier               | Members                                                                                       | Consumers                                                | Types pulled in            |
+| ------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------- |
+| **A — loop**       | `messages`, `streaming`, `active`, `error`, `mcpErrors` atoms; `request` / `retry` / `cancel` | `Chat.Root`, `ChatPrompt`, `ChatStatus`, `ChatMcpErrors` | `Message.Message`, `Error` |
+| **B — AI context** | `context` (`AiContext.Binder`), `registry` (`Registry.Registry`), `system`, `conversation`    | `ChatOptions`, `ChatReferences` only                     | `@dxos/assistant`          |
 
 Tier A is what the mock has to fake, and it needs nothing beyond `@dxos/types`. Tier B is only read
 by the two context/skill chip components inside the prompt. **Deferring tier B keeps `AiContext` out
@@ -217,13 +217,13 @@ plugin-assistant/ChatThread    ChatThread · MessageSyncer · registry · widget
 
 **(a) User input**
 
-| Use case           | Component chain                                                     | Editor base                       | Packages                                                                 |
-| ------------------ | -------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------ |
-| AI chat            | `Chat.Prompt` → `ChatPrompt` → **`ChatEditor`**                       | `Editor.Root` / `Editor.View`     | `plugin-assistant` → `react-ui-chat` → `react-ui-editor`, `ui-editor`     |
-| human chat         | `MessageThread` → `Thread.Textbox` → **`Message.Textbox`**            | `useTextEditor`                   | `plugin-thread` → `react-ui-thread` → `react-ui-editor`, `ui-editor`      |
-| comments           | `CommentThread` → `Thread.Textbox` → **`Message.Textbox`**            | `useTextEditor`                   | `plugin-review` → `react-ui-thread` → `react-ui-editor`, `ui-editor`      |
-| transcription      | **none — audio**: `useAudioTrack` → `useTranscriber` → `MediaStreamRecorder` | n/a                        | `plugin-transcription` → `react-ui-transcription`                         |
-| email conversation | `ConversationStack` → `EditMessage` → **inbox-local `Editor`** (72 LOC) | `useTextEditor`                 | `plugin-inbox` (own component) → `react-ui-editor`, `ui-editor`           |
+| Use case           | Component chain                                                              | Editor base                   | Packages                                                              |
+| ------------------ | ---------------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------- |
+| AI chat            | `Chat.Prompt` → `ChatPrompt` → **`ChatEditor`**                              | `Editor.Root` / `Editor.View` | `plugin-assistant` → `react-ui-chat` → `react-ui-editor`, `ui-editor` |
+| human chat         | `MessageThread` → `Thread.Textbox` → **`Message.Textbox`**                   | `useTextEditor`               | `plugin-thread` → `react-ui-thread` → `react-ui-editor`, `ui-editor`  |
+| comments           | `CommentThread` → `Thread.Textbox` → **`Message.Textbox`**                   | `useTextEditor`               | `plugin-review` → `react-ui-thread` → `react-ui-editor`, `ui-editor`  |
+| transcription      | **none — audio**: `useAudioTrack` → `useTranscriber` → `MediaStreamRecorder` | n/a                           | `plugin-transcription` → `react-ui-transcription`                     |
+| email conversation | `ConversationStack` → `EditMessage` → **inbox-local `Editor`** (72 LOC)      | `useTextEditor`               | `plugin-inbox` (own component) → `react-ui-editor`, `ui-editor`       |
 
 **Three text composers over one editor core** (`ChatEditor`, `Message.Textbox`, inbox `Editor`), each
 with its own submit convention and controller, plus one audio path. Extension packs are split
@@ -234,13 +234,13 @@ of genuine reuse already crossing the boundary is the audio path — `plugin-ass
 
 **(b) Thread / stack of messages**
 
-| Use case           | Render mechanism                                                                | Family | Virtualized | Body dispatch                                | Packages                                                                 |
-| ------------------ | --------------------------------------------------------------------------------- | ------ | ----------- | -------------------------------------------- | ------------------------------------------------------------------------ |
-| AI chat            | `ChatThread` → `MessageSyncer` → **`MarkdownStream`** (one CodeMirror doc, typewriter) | D | CM viewport | `componentRegistry` (`XmlWidgetRegistry`, 11 tags) | `plugin-assistant` → `react-ui-markdown`, `ui-editor`                     |
-| human chat         | `Thread.Messages` → **`Mosaic.VirtualStack`** → `Message.Group` / `Message.Tile`  | T      | ✅ TanStack  | `Message.Body` if-chain (4 block types)      | `plugin-thread` → `react-ui-thread` → `react-ui-mosaic`                   |
-| comments           | `CommentsArticle` → many small `CommentThread` → same `Thread.*` primitives       | T      | ✅ (per thread) | same if-chain                             | `plugin-review` → `react-ui-thread` → `react-ui-mosaic`                   |
-| transcription      | `Transcription` → `TranscriptModel<T>` → **`useTextEditor`** (one CodeMirror doc) | D      | CM viewport | `ChunkRenderer` + `xmlTags` (link-preview)   | `plugin-transcription` → `react-ui-transcription` → `react-ui-editor`     |
-| email conversation | `ConversationStack.Content` → **`Mosaic.Stack`** → `MessageTile` → `MarkdownViewer` / `Html` | T | ❌ **none** | mimeType switch (`text/html` vs markdown) | `plugin-inbox` (own component) → `react-ui-mosaic`, `react-ui-editor`     |
+| Use case           | Render mechanism                                                                             | Family | Virtualized     | Body dispatch                                      | Packages                                                              |
+| ------------------ | -------------------------------------------------------------------------------------------- | ------ | --------------- | -------------------------------------------------- | --------------------------------------------------------------------- |
+| AI chat            | `ChatThread` → `MessageSyncer` → **`MarkdownStream`** (one CodeMirror doc, typewriter)       | D      | CM viewport     | `componentRegistry` (`XmlWidgetRegistry`, 11 tags) | `plugin-assistant` → `react-ui-markdown`, `ui-editor`                 |
+| human chat         | `Thread.Messages` → **`Mosaic.VirtualStack`** → `Message.Group` / `Message.Tile`             | T      | ✅ TanStack     | `Message.Body` if-chain (4 block types)            | `plugin-thread` → `react-ui-thread` → `react-ui-mosaic`               |
+| comments           | `CommentsArticle` → many small `CommentThread` → same `Thread.*` primitives                  | T      | ✅ (per thread) | same if-chain                                      | `plugin-review` → `react-ui-thread` → `react-ui-mosaic`               |
+| transcription      | `Transcription` → `TranscriptModel<T>` → **`useTextEditor`** (one CodeMirror doc)            | D      | CM viewport     | `ChunkRenderer` + `xmlTags` (link-preview)         | `plugin-transcription` → `react-ui-transcription` → `react-ui-editor` |
+| email conversation | `ConversationStack.Content` → **`Mosaic.Stack`** → `MessageTile` → `MarkdownViewer` / `Html` | T      | ❌ **none**     | mimeType switch (`text/html` vs markdown)          | `plugin-inbox` (own component) → `react-ui-mosaic`, `react-ui-editor` |
 
 Storage under all five: `Feed` for AI chat (`Chat.feed`), human chat (channel backend) and
 transcription (`Transcript.feed`); `Thread.messages: Ref<Message>[]` for comments; an ECHO query for
@@ -251,16 +251,16 @@ email. Every one of them is a list of `Message.Message` from `@dxos/types`.
 The seven aspects any message-thread renderer has to answer, and where each of the five stands
 today. ✅ = present, ➖ = absent, ⚠️ = present but constrained.
 
-| Aspect                | AI chat                                             | human chat                                | comments                                    | transcription                            | email                                                    |
-| --------------------- | ---------------------------------------------------- | ----------------------------------------- | ------------------------------------------- | ---------------------------------------- | -------------------------------------------------------- |
-| **virtualization**    | ⚠️ CodeMirror viewport (implicit, one doc)            | ✅ `Mosaic.VirtualStack` (TanStack)        | ➖ `anchors.map(…)` — no virtualization      | ⚠️ CodeMirror viewport                    | ➖ `Mosaic.Stack` — no virtualization                      |
-| **search**            | ➖ not enabled                                        | ➖                                         | ➖                                          | ✅ `createBasicExtensions({ search })`    | ➖                                                        |
-| **select (text)**     | ✅ continuous across messages (one doc)               | ➖ per-message only (each tile is its own CM view) | ➖ per-message only                 | ✅ continuous across the transcript       | ⚠️ within a tile; HTML tiles are plain DOM, markdown are not |
-| **select (messages)** | ➖                                                    | ⚠️ `currentMessageId` (single)             | ⚠️ current thread                            | ➖                                        | ⚠️ current message                                        |
-| **streaming**         | ✅ typewriter + monotonic append (`MessageSyncer`)     | ➖                                         | ➖                                          | ✅ live chunk append (`TranscriptModel`)  | ➖                                                        |
-| **mutability**        | ➖ no edit; rewind/fork instead                        | ✅ author edits own text in place (`onSave`) | ✅ same primitives                          | ➖ read-only                              | ✅ inline reply drafts (`EditMessage`)                     |
-| **renderers**         | markdown + 11 XML widget tags                        | markdown (per-message CM) + 3 block types  | same                                        | markdown + link-preview widget           | **two**: `text/html` → `Html`, else `MarkdownViewer`      |
-| **chrome**            | `<branch>` XML tag in-document → fork / rewind / time | avatar, heading, time, delete, accept, grouping | resolve, delete thread, accept, anchor nav | timestamp gutter                       | avatar, star, details, menu (reply/forward/delete/extract) |
+| Aspect                | AI chat                                               | human chat                                         | comments                                   | transcription                            | email                                                        |
+| --------------------- | ----------------------------------------------------- | -------------------------------------------------- | ------------------------------------------ | ---------------------------------------- | ------------------------------------------------------------ |
+| **virtualization**    | ⚠️ CodeMirror viewport (implicit, one doc)            | ✅ `Mosaic.VirtualStack` (TanStack)                | ➖ `anchors.map(…)` — no virtualization    | ⚠️ CodeMirror viewport                   | ➖ `Mosaic.Stack` — no virtualization                        |
+| **search**            | ➖ not enabled                                        | ➖                                                 | ➖                                         | ✅ `createBasicExtensions({ search })`   | ➖                                                           |
+| **select (text)**     | ✅ continuous across messages (one doc)               | ➖ per-message only (each tile is its own CM view) | ➖ per-message only                        | ✅ continuous across the transcript      | ⚠️ within a tile; HTML tiles are plain DOM, markdown are not |
+| **select (messages)** | ➖                                                    | ⚠️ `currentMessageId` (single)                     | ⚠️ current thread                          | ➖                                       | ⚠️ current message                                           |
+| **streaming**         | ✅ typewriter + monotonic append (`MessageSyncer`)    | ➖                                                 | ➖                                         | ✅ live chunk append (`TranscriptModel`) | ➖                                                           |
+| **mutability**        | ➖ no edit; rewind/fork instead                       | ✅ author edits own text in place (`onSave`)       | ✅ same primitives                         | ➖ read-only                             | ✅ inline reply drafts (`EditMessage`)                       |
+| **renderers**         | markdown + 11 XML widget tags                         | markdown (per-message CM) + 3 block types          | same                                       | markdown + link-preview widget           | **two**: `text/html` → `Html`, else `MarkdownViewer`         |
+| **chrome**            | `<branch>` XML tag in-document → fork / rewind / time | avatar, heading, time, delete, accept, grouping    | resolve, delete thread, accept, anchor nav | timestamp gutter                         | avatar, star, details, menu (reply/forward/delete/extract)   |
 
 Reading the matrix:
 
@@ -277,7 +277,7 @@ Reading the matrix:
    hypothesis is not unproven, it is unmeasured and un-generalized. That materially lowers the risk
    in §3.3 cost 1 and is the first thing the spike should quantify.
 4. **Two selection modes are needed, not one.** Text selection spanning message boundaries (a
-   document-shaped gesture) and selection of *sets of messages* (a list-shaped gesture — for
+   document-shaped gesture) and selection of _sets of messages_ (a list-shaped gesture — for
    forking, extracting, deleting, quoting). No current renderer has the second beyond "the current
    one".
 5. **Email is the only two-renderer scenario** and the reason the island renderer must generalize
@@ -285,14 +285,14 @@ Reading the matrix:
 
 ### 3.1 Aspect 1 — the composer (duplicated; should be unified)
 
-|            | `react-ui-chat` `ChatEditor`                                      | `react-ui-thread` `Message.Textbox`            | `plugin-inbox` `Editor` (72 LOC)     |
-| ---------- | ------------------------------------------------------------------ | ---------------------------------------------- | ------------------------------------ |
-| Base       | `Editor.Root` / `Editor.View`                                      | `useTextEditor`                                | `useTextEditor`                      |
-| Controller | `ChatEditorController` (`getText` / `setText` / `focus` / `view`)  | `MessageTextboxHandle` (`focus` only)          | none (uncontrolled)                  |
-| Submit     | `SubmitOptions.onSubmit(text) => boolean`                          | `keyBindings({ onSend, onClear })`             | caller-supplied keymap               |
-| Chrome     | none (bare editor)                                                 | wrapped in `MessageRoot` (avatar rail)         | none                                 |
-| Token pack | `commands` — `$sentinel` autocomplete                              | `command` — `/slash` + `@mention` highlighting | —                                    |
-| Extras     | `references` (dxn pills), `pendingText` (voice streaming)          | —                                              | —                                    |
+|            | `react-ui-chat` `ChatEditor`                                      | `react-ui-thread` `Message.Textbox`            | `plugin-inbox` `Editor` (72 LOC) |
+| ---------- | ----------------------------------------------------------------- | ---------------------------------------------- | -------------------------------- |
+| Base       | `Editor.Root` / `Editor.View`                                     | `useTextEditor`                                | `useTextEditor`                  |
+| Controller | `ChatEditorController` (`getText` / `setText` / `focus` / `view`) | `MessageTextboxHandle` (`focus` only)          | none (uncontrolled)              |
+| Submit     | `SubmitOptions.onSubmit(text) => boolean`                         | `keyBindings({ onSend, onClear })`             | caller-supplied keymap           |
+| Chrome     | none (bare editor)                                                | wrapped in `MessageRoot` (avatar rail)         | none                             |
+| Token pack | `commands` — `$sentinel` autocomplete                             | `command` — `/slash` + `@mention` highlighting | —                                |
+| Extras     | `references` (dxn pills), `pendingText` (voice streaming)         | —                                              | —                                |
 
 Three CodeMirror composers with three submit conventions and three controller contracts, and the
 divergence is accidental: **nothing about `/slash` + `@mention` is human-only, nothing about
@@ -315,23 +315,23 @@ they fall into two families:
 **Family D — document.** One CodeMirror document, messages rendered to markdown lines and synced
 incrementally.
 
-| | AI chat — `plugin-assistant/ChatThread` | transcription — `react-ui-transcription` |
-| --- | --- | --- |
-| LOC | 499 + 296 sync + 767 widgets | 67 + 203 ext + 229 model |
-| Sync engine | `MessageSyncer` — block-level, append-only, monotonic-extension contract, per-message spans, widget-state side-channel | `TranscriptModel<T extends Chunk>` — **generic** over chunk type, append/update/delete, line-count map, abstracted `ChunkDocument` |
-| Feed → model | `useQuery(feed)` + processor atoms, merged in `Chat.Root` | `useFeedModelAdapter(renderer, useQuery(feed))` |
-| Widgets | `xmlTags` + `XmlWidgetRegistry` (11 tags) | `xmlTags` + `XmlWidgetRegistry` (link-preview) |
-| Chrome | inside the document — `<prompt>` decoration, `<branch>` toolbar tag | CodeMirror gutter (`TimestampMarker`) |
+|              | AI chat — `plugin-assistant/ChatThread`                                                                                | transcription — `react-ui-transcription`                                                                                           |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| LOC          | 499 + 296 sync + 767 widgets                                                                                           | 67 + 203 ext + 229 model                                                                                                           |
+| Sync engine  | `MessageSyncer` — block-level, append-only, monotonic-extension contract, per-message spans, widget-state side-channel | `TranscriptModel<T extends Chunk>` — **generic** over chunk type, append/update/delete, line-count map, abstracted `ChunkDocument` |
+| Feed → model | `useQuery(feed)` + processor atoms, merged in `Chat.Root`                                                              | `useFeedModelAdapter(renderer, useQuery(feed))`                                                                                    |
+| Widgets      | `xmlTags` + `XmlWidgetRegistry` (11 tags)                                                                              | `xmlTags` + `XmlWidgetRegistry` (link-preview)                                                                                     |
+| Chrome       | inside the document — `<prompt>` decoration, `<branch>` toolbar tag                                                    | CodeMirror gutter (`TimestampMarker`)                                                                                              |
 
 **Family T — tile.** A React component per message in a stack.
 
-| | human chat — `react-ui-thread` | comments — `plugin-review` | email — `plugin-inbox` |
-| --- | --- | --- | --- |
-| LOC | 1,673 (shared with comments) | 235 + 565 containers | 1,063 + ~400 |
-| Stack | `Mosaic.VirtualStack` (**virtualized**) | reuses `Thread.*` | `Mosaic.Stack` (**not** virtualized) |
-| Body | `Message.Body` if-chain — text, proposal, change, reference | same | mimeType switch — `text/html` → `Html`, else `MarkdownViewer` |
-| Chrome | avatar rail, heading, time, grouping, dividers | thread frame, resolve/accept controls, anchoring | avatar, heading, star, details, `Menu`, inline draft composer |
-| Host injection | `MessageMetadata` / `ObjectTileComponent` / `MessageCallbacks` | same contracts | own context + injected toolbar/actions |
+|                | human chat — `react-ui-thread`                                 | comments — `plugin-review`                       | email — `plugin-inbox`                                        |
+| -------------- | -------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------- |
+| LOC            | 1,673 (shared with comments)                                   | 235 + 565 containers                             | 1,063 + ~400                                                  |
+| Stack          | `Mosaic.VirtualStack` (**virtualized**)                        | reuses `Thread.*`                                | `Mosaic.Stack` (**not** virtualized)                          |
+| Body           | `Message.Body` if-chain — text, proposal, change, reference    | same                                             | mimeType switch — `text/html` → `Html`, else `MarkdownViewer` |
+| Chrome         | avatar rail, heading, time, grouping, dividers                 | thread frame, resolve/accept controls, anchoring | avatar, heading, star, details, `Menu`, inline draft composer |
+| Host injection | `MessageMetadata` / `ObjectTileComponent` / `MessageCallbacks` | same contracts                                   | own context + injected toolbar/actions                        |
 
 Findings:
 
@@ -441,7 +441,7 @@ collapses into one of them.
 
 **One lever exists.** The engine can set `EditorView.editable.of(false)` on non-focused islands.
 Non-editable CodeMirror is ordinary DOM and native selection spans ordinary DOM freely, so
-cross-island selection works for the read-only case — the common one. Two caveats: an *editable*
+cross-island selection works for the read-only case — the common one. Two caveats: an _editable_
 island (draft, edit-in-place) reintroduces a boundary at its edges; and a native copy then yields the
 **rendered** text rather than the markdown source, because `decorateMarkdown` replaces ranges with
 widgets.
@@ -453,9 +453,9 @@ to reconstruct from the model.
 **So both become model-level operations**, which we can do because the engine owns
 `renderMessage(message) => markdown`:
 
-| | Implementation | Consequence |
-| --- | --- | --- |
-| Copy | track anchor/focus as `(messageId, offset)`; intercept `copy`; slice the model between them | markdown source, includes unmounted messages, DOM-independent |
+|        | Implementation                                                                                                                 | Consequence                                                     |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| Copy   | track anchor/focus as `(messageId, offset)`; intercept `copy`; slice the model between them                                    | markdown source, includes unmounted messages, DOM-independent   |
 | Search | scan the model; hits as `(messageId, offset, length)`; `virtualizer.scrollToIndex` then push a decoration set into that island | reaches unmounted messages **and** content hidden by `viewType` |
 
 **Search is a gain, not a regression.** Only transcription enables CodeMirror search today
@@ -476,7 +476,7 @@ both the `editable: false` lever and a copy interceptor to be complete.
 
 The target is a package where the **chat / thread / tree loop can be developed against a mock
 processor**, consumed from `plugin-assistant`. Getting there also resolves §3's tension, provided
-the packages are re-cut along *what the component is* rather than *who is talking*.
+the packages are re-cut along _what the component is_ rather than _who is talking_.
 
 ```
 plugin-assistant · plugin-thread · plugin-review · plugin-inbox · plugin-transcription
@@ -509,14 +509,14 @@ owning is the stack mechanics.
 
 ### 4.0 Where the engine lives — the candidate packages
 
-| #   | Package                          | Holds today                       | `@dxos` deps                          | Consumers                                            | As engine host                                                                             |
-| --- | -------------------------------- | --------------------------------- | ------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| 1   | `react-ui-chat`                  | ChatEditor, ChatDialog, ChatStatus | no echo                               | plugin-assistant, composer-crx, 2 stories            | forces `react-ui-thread → react-ui-chat`; "thread depends on chat" reads backwards           |
-| 2   | `react-ui-thread`                | Thread/Message tiles, textbox      | echo, types, **mosaic**, editor        | plugin-thread, plugin-review                         | forces `react-ui-chat → react-ui-thread`; also carries human-chat chrome, so not separable   |
-| 3   | `react-ui-markdown`              | MarkdownStream                     | echo, editor, ui                       | **8** incl. react-ui-components, react-ui-form       | closest in spirit ("a markdown document"), already echo+editor; singular-document, needs mosaic |
-| 4   | `react-ui-mosaic`                | Stack / VirtualStack, dnd          | echo, echo-react, menu, search         | **21**                                               | wrong altitude — a layout primitive; `Message`/`ContentBlock` would pollute 21 consumers     |
-| 5   | `react-ui-transcription`         | TranscriptModel, audio capture     | echo, types, av, pipeline              | plugin-assistant, plugin-transcription               | domain-named for audio; wrong home                                                           |
-| 6   | **new `@dxos/react-ui-feed`**    | —                                 | mosaic, list, markdown, editor, echo, types | would be: 1, 2, 5, react-ui-assistant, plugin-inbox | **no backwards edge** — every existing package depends downward into it                      |
+| #   | Package                       | Holds today                        | `@dxos` deps                                | Consumers                                           | As engine host                                                                                  |
+| --- | ----------------------------- | ---------------------------------- | ------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 1   | `react-ui-chat`               | ChatEditor, ChatDialog, ChatStatus | no echo                                     | plugin-assistant, composer-crx, 2 stories           | forces `react-ui-thread → react-ui-chat`; "thread depends on chat" reads backwards              |
+| 2   | `react-ui-thread`             | Thread/Message tiles, textbox      | echo, types, **mosaic**, editor             | plugin-thread, plugin-review                        | forces `react-ui-chat → react-ui-thread`; also carries human-chat chrome, so not separable      |
+| 3   | `react-ui-markdown`           | MarkdownStream                     | echo, editor, ui                            | **8** incl. react-ui-components, react-ui-form      | closest in spirit ("a markdown document"), already echo+editor; singular-document, needs mosaic |
+| 4   | `react-ui-mosaic`             | Stack / VirtualStack, dnd          | echo, echo-react, menu, search              | **21**                                              | wrong altitude — a layout primitive; `Message`/`ContentBlock` would pollute 21 consumers        |
+| 5   | `react-ui-transcription`      | TranscriptModel, audio capture     | echo, types, av, pipeline                   | plugin-assistant, plugin-transcription              | domain-named for audio; wrong home                                                              |
+| 6   | **new `@dxos/react-ui-feed`** | —                                  | mosaic, list, markdown, editor, echo, types | would be: 1, 2, 5, react-ui-assistant, plugin-inbox | **no backwards edge** — every existing package depends downward into it                         |
 
 **Recommended: 6, named `@dxos/react-ui-feed`.** Every existing candidate creates either a backwards
 edge (1, 2) or pollution (4). The name follows the data abstraction rather than a rendering shape:
@@ -533,7 +533,7 @@ Siting the prototype:
    `echo` + `types` + `mosaic` into a package that has none of them — changes that only make sense if
    the engine stays there permanently, which §4.0 argues against.
 3. **`react-ui-thread`.** Closest to the prototype's substrate (it already has `mosaic` + `echo` +
-   per-message editors — see §3.0.1 finding 3), so it is the cheapest place to *measure*. But its
+   per-message editors — see §3.0.1 finding 3), so it is the cheapest place to _measure_. But its
    existing `Thread.*` / `Message.*` API and two consumers would sit alongside the prototype, and
    separating them afterwards is exactly the work option 1 avoids. Reasonable if the goal is only to
    get a scrolling number quickly.
@@ -643,7 +643,7 @@ Arguments against / real costs:
 3. **One package** — dissolve `react-ui-thread` into a single `react-ui-chat` holding both renderers
    and the assistant shell. Cleanest endpoint, largest blast radius (plugin-thread, plugin-review,
    plugin-inbox, plugin-assistant all move at once), and it blocks the tree work behind a renderer
-   convergence that is still an open question. Reasonable as the *destination* after (1) proves the
+   convergence that is still an open question. Reasonable as the _destination_ after (1) proves the
    contracts.
 4. **Reorganise in place (subpath exports only).** Cheapest, but buys nothing structural: the chat
    UI still cannot be rendered without the plugin's capability graph, which is the actual complaint.
@@ -703,7 +703,7 @@ dropped.
 **Track A — the mock-processor loop (the immediate goal)**
 
 1. **Design the `ChatProcessor` port** in the plugin (no move yet): an interface + `AiChatProcessor
-   implements ChatProcessor` + a `MockChatProcessor` in `#testing` driving the atoms from a scripted
+implements ChatProcessor` + a `MockChatProcessor` in `#testing` driving the atoms from a scripted
    message list. Prove it by rewriting `Chat/Error.stories.tsx` against the mock. _Test: existing
    plugin tests + the rewritten story._
 2. **Extract the prompt's actions slot**, moving `ChatOptions` / `ChatReferences` / `ChatActions`
@@ -711,7 +711,7 @@ dropped.
    is verifiable in place before anything moves. _Test: `ChatOptions.stories.tsx`, `SpaceHomePrompt`._
 3. **Move the leaf-most subtree as-is**: `ChatThread` + `sync/` + `registry.tsx` + widgets (minus
    `SurfaceWidget`), with `createComponentRegistry({ extensions })`. A directory move plus an
-   extension point — deliberately *not* a rewrite, since track C may replace the syncer's internals
+   extension point — deliberately _not_ a rewrite, since track C may replace the syncer's internals
    later; the move is cheap either way and the registry survives both outcomes. Its stories and its
    451 LOC of sync tests move with it. _Test: `sync.test.ts`, `tool-widget-state.test.ts`, widget
    stories, `MarkdownStream.stories.tsx`._
