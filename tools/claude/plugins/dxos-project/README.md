@@ -52,12 +52,34 @@ merely mentioned it — including the message asking for it to be replaced.
 
 | Variable              | Default                          | Purpose                                         |
 | --------------------- | -------------------------------- | ----------------------------------------------- |
-| `DX_PROJECT_REGISTRY` | `.agents/projects/registry.yml`  | Registry location, relative to the project root |
-| `DX_PROJECT_BACKEND`  | `file`                           | Where projects are stored                       |
+| `DX_PROJECT_REGISTRY` | `.agents/projects/registry.yml`  | Registry location, relative to the project root (`file` only) |
+| `DX_PROJECT_BACKEND`  | `file`                           | Where projects are stored — `file` or `mcp`     |
+| `DX_PROJECT_SPACE`    | resolved via `listSpaces`        | Space holding the projects (`mcp` only)         |
 
 Every directive ends with a `BACKEND:` line naming the store and how to read or
 write it. The verbs, the command file and the skill are all backend-agnostic —
-which is the seam a future service-backed store plugs into.
+that seam is what lets the store change without touching them.
+
+### `file` (default)
+
+A committed `registry.yml` plus a `TASKS.md` per project. Works in any repo with
+no services running.
+
+### `mcp` — DXOS Composer
+
+Projects become live objects in a Composer space, reached through the MCP tools
+`dx mcp serve` exposes. A registry entry is a `Project`, its ledger is
+`Project.outline` (one markdown document), durable items are `Task` objects under
+the project's TaskSet, and design docs are artifact documents — so the same work
+is editable in Composer and from any machine, without a committed file.
+
+Two rules the directive enforces:
+
+- **No cascade.** If a needed tool is absent, the agent stops rather than writing
+  to `registry.yml`. A write landing in a file the user believes is dead is the
+  divergence this backend exists to prevent.
+- **`new` uses `createObject`.** There is no `projectCreate` over MCP: it resolves
+  a `Capability.Service` that only exists inside the app.
 
 ## Layout
 

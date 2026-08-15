@@ -24,9 +24,15 @@
 # appends one BACKEND line saying HOW to perform it. Swapping the store (e.g. to
 # an MCP server) is a change to that one function — the verbs, the command file
 # and the skill are untouched. Configure with:
-#   DX_PROJECT_BACKEND   file (default) | <future backends>
+#   DX_PROJECT_BACKEND   file (default) | mcp
 #   DX_PROJECT_REGISTRY  path to the registry, relative to the project root
-#                        (default .agents/projects/registry.yml)
+#                        (default .agents/projects/registry.yml) — `file` only
+#   DX_PROJECT_SPACE     space to resolve projects in — `mcp` only; when unset
+#                        the agent resolves it with the `listSpaces` tool
+#
+# The two stores are alternatives, never a cascade: `mcp` refuses to degrade to
+# `file` when a tool is missing, since a write landing in a file the user
+# believes is dead is the divergence the backend exists to prevent.
 
 set -euo pipefail
 
@@ -48,8 +54,11 @@ resolve_backend() {
         printf 'BACKEND: file · `%s` — DOES NOT EXIST YET. For a read verb, say the repo has no project registry and offer to create one with `/dxos-project:project new <name>`; do NOT invent entries. For `new`, create the file with a top-level `projects: []` and `ended: []` before adding the entry.' "$registry"
       fi
       ;;
+    mcp)
+      printf 'BACKEND: mcp · DXOS Composer — the store is a live object graph reached through this session'"'"'s MCP tools, NOT a file. Do not read or write `%s`; if it exists it is a stale mirror. Object mapping: a registry entry IS a `Project`; the project'"'"'s TASKS.md ledger IS `Project.outline`, one markdown document holding the phases and `- [ ]` items; a durable task is a `Task` under the project'"'"'s TaskSet; DESIGN.md and other specs are artifact documents. Tools: `projectList` (list), `projectGet` (bare/resume/status), `projectUpdate` (end, status, pointer), `outlineGet` (tasks/resume), `outlineUpdate` (track, hydrate, checking items off), `taskList`/`taskCreate`/`taskComplete`/`taskAssign` for durable tasks, and `createObject` for `new` — there is no `projectCreate` over MCP, since it resolves a Capability.Service that exists only inside the app. Resolve the space with `listSpaces` unless DX_PROJECT_SPACE names one (%s). If a tool the operation needs is not available in this session, say so and STOP — never silently fall back to the file backend, because a write that lands in a file the user believes is dead is exactly the divergence this backend exists to prevent.' "$registry" "${DX_PROJECT_SPACE:-unset}"
+      ;;
     *)
-      printf 'BACKEND: %s — UNRECOGNISED. Tell the user DX_PROJECT_BACKEND is set to an unsupported value and that only `file` is implemented; do not guess a store.' "$backend"
+      printf 'BACKEND: %s — UNRECOGNISED. Tell the user DX_PROJECT_BACKEND is set to an unsupported value and that only `file` and `mcp` are implemented; do not guess a store.' "$backend"
       ;;
   esac
 }

@@ -1,8 +1,9 @@
 # DXOS Claude Code Plugins — Tasks
 
-_Resume: Phase 2 (Composer MCP backend) is the live work; PR #12618 carries phases 1 + 1b and is
-green. Uncommitted: none. Last: dropped `composer-plugin-dev` from the manifest and ended the
-`task-planning-skill` project, leaving `dxos` publishing exactly one plugin._
+_Resume: Phase 2's `mcp` backend is CODE-COMPLETE but has never touched a running space — next is the
+live round-trip (`dx mcp serve` up, `DX_PROJECT_BACKEND=mcp`, one list → new → track → tasks cycle
+checked in Composer). PR #12618 carries phases 1 + 1b and is green. Uncommitted: none. Last: wired
+`resolve_backend` for `mcp` against the real tool surface and settled the no-cascade rule._
 
 ## Phase 1: Extract into a distributable plugin
 
@@ -92,14 +93,30 @@ and editable outside the agent.
 
 ### Tasks
 
-- [ ] **Implement `resolve_backend` for `mcp`** — emit a `BACKEND:` line naming
-      the MCP tools instead of a file path. The seam exists; this is the fill-in.
-- [ ] **Decide the fallback rule** — what happens when the MCP server is
-      unreachable: fail, or degrade to the file backend. The unrecognised-backend
-      branch already refuses to guess, which is the right default shape.
-- [ ] **Reconcile the two stores** — a repo with an existing
-      `registry.yml` and a Composer workspace needs an import path, or an
-      explicit "one or the other" rule.
+- [x] **Implement `resolve_backend` for `mcp`** — the `BACKEND:` line now names the object mapping
+      and the tools rather than a file path, built against the surface `dx mcp serve` actually
+      exposes: `projectList`/`projectGet`/`projectUpdate`, `outlineGet`/`outlineUpdate`,
+      `taskList`/`taskCreate`/`taskComplete`/`taskAssign`, plus `createObject`. The mapping follows
+      `plugin-projects/MILESTONE-5.md` §8: registry entry = `Project`, TASKS.md = `Project.outline`,
+      checked items = promoted `Task`s, DESIGN.md = an artifact document. `DX_PROJECT_SPACE` names
+      the space; otherwise the agent resolves it with `listSpaces`.
+      **Found while wiring it:** there is no `projectCreate` over MCP — it resolves a
+      `Capability.Service` that exists only inside the app — so `new` goes through the generic
+      `createObject` tool.
+- [x] **Decided the fallback rule** — NO cascade. When a needed tool is absent the agent says so and
+      stops; it never degrades to the file backend. A write landing in a file the user believes is
+      dead is the exact divergence this backend exists to prevent, and a silent fallback would make
+      the two stores disagree without anyone noticing.
+- [x] **Reconciled the two stores** — one or the other, selected by `DX_PROJECT_BACKEND`. Under
+      `mcp` the directive states that `registry.yml` is a stale mirror and must not be read or
+      written, which matches MILESTONE-5.md §8: once the loop is live the repo copy becomes the
+      mirror, not the source.
+- [ ] **Live round-trip** — none of this has touched a running space. Needs `dx mcp serve` (or the
+      edge server) up, `DX_PROJECT_BACKEND=mcp`, and one `/dxos-project:project list` → `new` →
+      `track` → `tasks` cycle checked in Composer. This is the acceptance test in MILESTONE-5.md §8
+      ("readable from both Composer and MCP without divergence").
+- [ ] **Migrate this repo's registry** once the round-trip passes — 34 active projects and their
+      TASKS.md ledgers become Projects + outlines. Needs an import path, not hand-entry.
 
 ### References
 
