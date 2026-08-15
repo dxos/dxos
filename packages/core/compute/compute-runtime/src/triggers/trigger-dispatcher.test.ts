@@ -548,21 +548,23 @@ describe('TriggerDispatcher', () => {
           const dispatcher = yield* TriggerDispatcher;
           yield* dispatcher.start();
 
-          yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'John Doe' })]);
-          yield* Database.flush();
+          // Stopped in a finalizer: a failure below would otherwise leave the detached timer fiber
+          // and the reactive subscriptions running into the next test.
+          yield* Effect.gen(function* () {
+            yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'John Doe' })]);
+            yield* Database.flush();
 
-          // The poll interval is an hour, so anything observed here came from the feed subscription.
-          const registry = yield* Registry.AtomRegistry;
-          let fired = false;
-          for (let attempt = 0; attempt < 100 && !fired; attempt++) {
-            fired = registry.get(dispatcher.state).invocations.some((_) => _.trigger.id === trigger.id);
-            if (!fired) {
-              yield* Effect.sleep(Duration.millis(20));
+            // The poll interval is an hour, so anything observed here came from the feed subscription.
+            const registry = yield* Registry.AtomRegistry;
+            let fired = false;
+            for (let attempt = 0; attempt < 100 && !fired; attempt++) {
+              fired = registry.get(dispatcher.state).invocations.some((_) => _.trigger.id === trigger.id);
+              if (!fired) {
+                yield* Effect.sleep(Duration.millis(20));
+              }
             }
-          }
-          expect(fired).toBe(true);
-
-          yield* dispatcher.stop();
+            expect(fired).toBe(true);
+          }).pipe(Effect.ensuring(dispatcher.stop()));
         },
         Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) })),
       ),

@@ -219,10 +219,12 @@ export class TriggerDispatcher extends Context.Service<
      * Invoke all scheduled triggers who are due.
      * @param opts.kinds - The kinds of triggers to invoke.
      * @param opts.untilExhausted - Invoke until no more triggers are due. By default only one feed/subscription item is processed at a time.
+     * @param opts.triggerIds - Restrict the sweep to these triggers. Defaults to every trigger of the given kinds.
      */
     invokeScheduledTriggers(opts?: {
       kinds?: Trigger.Kind[];
       untilExhausted?: boolean;
+      triggerIds?: readonly string[];
     }): Effect.Effect<TriggerExecutionResult[]>;
 
     /**
@@ -293,6 +295,9 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
    * for one item — the cursor advances only after an invocation completes.
    */
   #reactiveDispatchLock = Semaphore.makeUnsafe(1);
+
+  /** Serializes reconciliation of {@link #reactiveSources}, which spans an await. */
+  #reactiveSourceLock = Semaphore.makeUnsafe(1);
 
   /** Fibers forked by reactive subscriptions, interrupted on teardown. */
   #reactiveDispatchFibers = new Set<Fiber.Fiber<void, never>>();
@@ -599,11 +604,17 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
   private _isRunAgainRequest = (result: Exit.Exit<unknown>): boolean =>
     Exit.isFailure(result) && RunAgainError.is(Cause.squash(result.cause));
 
-  invokeScheduledTriggers = ({ kinds = ['timer', 'feed', 'subscription'], untilExhausted = false } = {}): Effect.Effect<
+  invokeScheduledTriggers = ({
+    kinds = ['timer', 'feed', 'subscription'],
+    untilExhausted = false,
+    triggerIds,
+  }: { kinds?: Trigger.Kind[]; untilExhausted?: boolean; triggerIds?: readonly string[] } = {}): Effect.Effect<
     TriggerExecutionResult[]
   > =>
     Effect.gen({ self: this }, function* () {
       yield* this.refreshTriggers();
+      const selected = triggerIds !== undefined ? new Set(triggerIds) : undefined;
+      const isSelected = (triggerId: string) => selected === undefined || selected.has(triggerId);
       const invocations: TriggerExecutionResult[] = [];
       for (const kind of kinds) {
         switch (kind) {
@@ -613,6 +624,9 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
               const triggersToInvoke: Trigger.Trigger[] = [];
 
               for (const [triggerId, entry] of this._runtimeState.entries()) {
+                if (!isSelected(triggerId)) {
+                  continue;
+                }
                 if (entry.cron && entry.nextExecution && entry.nextExecution <= now) {
                   // Update next execution time using Effect's Cron
                   entry.nextExecution = Cron.next(entry.cron, now);
@@ -643,7 +657,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
           case 'feed': {
             for (const trigger of this._triggers) {
               const spec = trigger.spec;
-              if (spec?.kind !== 'feed') {
+              if (spec?.kind !== 'feed' || !isSelected(trigger.id)) {
                 continue;
               }
               if (this._isInCooldown(trigger.id)) {
@@ -715,7 +729,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
           case 'subscription': {
             for (const trigger of this._triggers) {
               const spec = trigger.spec;
-              if (spec?.kind !== 'subscription') {
+              if (spec?.kind !== 'subscription' || !isSelected(trigger.id)) {
                 continue;
               }
               if (this._isInCooldown(trigger.id)) {
@@ -1010,34 +1024,46 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
    * itself performs, which is what makes a feed source follow its cursor forward.
    */
   #refreshReactiveSources = (): Effect.Effect<void> =>
-    Effect.gen({ self: this }, function* () {
-      const wanted = new Map<string, { key: string; trigger: Trigger.Trigger }>();
-      for (const trigger of this._triggers) {
-        const kind = trigger.spec?.kind;
-        if (!trigger.enabled || (kind !== 'feed' && kind !== 'subscription')) {
-          continue;
+    // Serialized: `refreshTriggers` runs both from the trigger-query callback and from
+    // `invokeScheduledTriggers`, and two interleaved reconciliations would each see a source as
+    // missing, subscribe it, and overwrite the other's entry — leaking the unsubscribe that the
+    // overwrite dropped.
+    this.#reactiveSourceLock.withPermits(1)(
+      Effect.gen({ self: this }, function* () {
+        const wanted = new Map<string, { key: string; trigger: Trigger.Trigger }>();
+        for (const trigger of this._triggers) {
+          const spec = trigger.spec;
+          if (!trigger.enabled || (spec?.kind !== 'feed' && spec?.kind !== 'subscription')) {
+            continue;
+          }
+          // Everything the live query is derived from, so an edit to the trigger's feed reference or
+          // its subscription query replaces the source instead of leaving a stale one watching the
+          // old data.
+          const key =
+            spec.kind === 'feed'
+              ? `feed:${spec.feed?.uri ?? ''}:${Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id ?? ''}`
+              : `subscription:${JSON.stringify(spec.query.ast)}`;
+          wanted.set(trigger.id, { key, trigger });
         }
-        const key = kind === 'feed' ? `feed:${Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id ?? ''}` : 'subscription';
-        wanted.set(trigger.id, { key, trigger });
-      }
 
-      for (const [triggerId, source] of this.#reactiveSources) {
-        if (wanted.get(triggerId)?.key !== source.key) {
-          source.unsubscribe();
-          this.#reactiveSources.delete(triggerId);
+        for (const [triggerId, source] of this.#reactiveSources) {
+          if (wanted.get(triggerId)?.key !== source.key) {
+            source.unsubscribe();
+            this.#reactiveSources.delete(triggerId);
+          }
         }
-      }
 
-      for (const [triggerId, { key, trigger }] of wanted) {
-        if (this.#reactiveSources.has(triggerId)) {
-          continue;
+        for (const [triggerId, { key, trigger }] of wanted) {
+          if (this.#reactiveSources.has(triggerId)) {
+            continue;
+          }
+          const unsubscribe = yield* this.#subscribeToTriggerSource(trigger);
+          if (unsubscribe) {
+            this.#reactiveSources.set(triggerId, { key, unsubscribe });
+          }
         }
-        const unsubscribe = yield* this.#subscribeToTriggerSource(trigger);
-        if (unsubscribe) {
-          this.#reactiveSources.set(triggerId, { key, unsubscribe });
-        }
-      }
-    }).pipe(Effect.provide(this._services));
+      }).pipe(Effect.provide(this._services)),
+    );
 
   /**
    * Subscribe to whatever a non-timer trigger reacts to, dispatching its kind on every change.
@@ -1070,24 +1096,25 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
       }
 
       const kind = spec!.kind as 'feed' | 'subscription';
-      return queryResult.subscribe(() => this.#dispatchReactively(kind), { fire: true });
+      return queryResult.subscribe(() => this.#dispatchReactively(kind, trigger.id), { fire: true });
     }).pipe(Effect.provide(this._services));
 
   /**
-   * Fork a dispatch of one kind, serialized so overlapping wake-ups never invoke a trigger twice
-   * for the same item.
+   * Fork a dispatch of the single trigger whose source fired, serialized so overlapping wake-ups
+   * never invoke a trigger twice for the same item. Scoping it to one trigger keeps one feed
+   * append from re-querying every other trigger of the same kind.
    */
-  #dispatchReactively = (kind: 'feed' | 'subscription'): void => {
+  #dispatchReactively = (kind: 'feed' | 'subscription', triggerId: string): void => {
     // Declared ahead of the fork so the `ensuring` finalizer can drop this fiber from the set.
     let fiber: Fiber.Fiber<void, never>;
     fiber = Effect.runFork(
       this.#reactiveDispatchLock
-        .withPermits(1)(this.invokeScheduledTriggers({ kinds: [kind], untilExhausted: true }))
+        .withPermits(1)(this.invokeScheduledTriggers({ kinds: [kind], triggerIds: [triggerId], untilExhausted: true }))
         .pipe(
           Effect.asVoid,
           Effect.tapCause((cause) =>
             Effect.sync(() =>
-              log.error('reactive trigger dispatch failed', { kind, error: EffectEx.causeToError(cause) }),
+              log.error('reactive trigger dispatch failed', { kind, triggerId, error: EffectEx.causeToError(cause) }),
             ),
           ),
           Effect.catchCause(() => Effect.void),
