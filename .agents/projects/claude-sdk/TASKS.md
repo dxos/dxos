@@ -5,9 +5,10 @@ three existing tree primitives, and the M1 permission posture.
 
 ## Status
 
-M1 landed on branch `claude/tree-conversation-harness-7d9d49` (commits
-`240ee96b48`, `b6f9f9299f`). Live end-to-end run verified via
-`moon run agent-claude:demo`. M2 in progress.
+M1 and M2 landed on branch `claude/tree-conversation-harness-7d9d49` (commits
+`240ee96b48`, `b6f9f9299f`, `4faed14287`). Live end-to-end runs verified via
+`moon run agent-claude:demo` and `moon run stories-assistant:test-storybook-live`.
+NEXT: M3 (permission surface).
 
 ## M1 — one turn, projected (DONE)
 
@@ -20,7 +21,7 @@ M1 landed on branch `claude/tree-conversation-harness-7d9d49` (commits
 - [x] `Host.Session` — `query()` → `Stream<Message, AgentHostError>`.
 - [x] 11 unit tests + live `Demo.test.ts` behind `DX_RUN_LIVE`.
 
-## M2 — story driving the sidecar (IN PROGRESS)
+## M2 — story driving the sidecar (DONE, `4faed14287`)
 
 Decisions (confirmed with burdon 2026-08-15):
 
@@ -39,11 +40,27 @@ Work:
 - [x] External-turn path found: `Chat.feed` is a `Ref<Feed.Feed>`;
       `Feed.append(feed, items, { parent })` appends without going through
       `useChatProcessor`. No plugin-assistant change needed for plumbing.
-- [ ] `Wire` — projected message in transit (ECHO objects are not transferable).
-- [ ] Middleware — NDJSON stream over POST.
-- [ ] `Agent.stories.tsx` — assert text, tool call/result pairing, and a denied
-      call rendering as an error.
-- [ ] Verify with `test-storybook` and report actual output.
+- [x] `Wire` — projected message in transit (ECHO objects are not transferable).
+- [x] Middleware — NDJSON stream over POST, mounted by the vite plugin.
+- [x] `Agent.stories.tsx` — asserts rendered text, `Read` call/result still
+      correlated by name across the transport, and the refused `Bash` call as an
+      errored result counted in `permission_denials`.
+- [x] Verified: `test-storybook-live` 31/31; plain `test-storybook` 8 passed |
+      1 skipped. No `plugin-assistant` change was needed.
+
+M2 gotchas worth remembering:
+
+- The plugin must attach to **every** vitest project — the storybook project's
+  server serves the story to chromium, not the root one.
+- Vite bundles a config file's static imports as CJS `require`, and
+  `@dxos/agent-claude` is ESM-only, so the middleware is imported dynamically
+  inside `configureServer`.
+- **Storybook tags are not vitest tags.** `tags: ['manual']` is inert against
+  `vitest.tags.ts`; the `DX_RUN_MANUAL_TESTS` gate is repeated in
+  `vite.base.config.ts`'s storybook tag config. A *computed* `tags` expression
+  breaks storybook's static indexer outright.
+- `storybook/test`'s `expect` is jest-style and returns a promise — `.to.be.true`
+  type-errors and un-awaited assertions trip `no-floating-promises`.
 
 ## Backlog
 
