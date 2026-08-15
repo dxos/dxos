@@ -4,3 +4,11 @@ tags:
   - ts-vite-build
   - ts-test
   - pack
+tasks:
+  demo:
+    command: 'pnpm exec vitest run src/Demo.test.ts'
+    env:
+      DX_RUN_LIVE: 'true'
+    options:
+      runInCI: false
+      cache: false
