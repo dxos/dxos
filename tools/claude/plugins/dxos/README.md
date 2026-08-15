@@ -5,7 +5,7 @@ work-streams, a **`TASKS.md` ledger** per project, and one command to drive them
 
 The problem it solves: an agent's own todo list is ephemeral. It dies with the
 context window, so the next session starts blind — re-deriving what was done,
-what is in flight, and what comes next. `dx` keeps that state in the repo, where
+what is in flight, and what comes next. `dxos` keeps that state in the repo, where
 both you and the agent can read it weeks later.
 
 ## Install
@@ -85,7 +85,7 @@ Two rules the directive enforces:
 ## Layout
 
 ```
-dx/
+dxos/
 ├── commands/project.md            thin — defers to the injected directive
 ├── hooks/track.sh                 verb dispatch + backend resolver
 ├── hooks/hooks.json               UserPromptSubmit registration
