@@ -71,6 +71,8 @@ export type LoaderStore = {
   phase: Accessor<Phase>;
   /** The abort handler once startup has stalled, or `undefined` while it is within budget. */
   onAbort: Accessor<(() => void) | undefined>;
+  /** Whole seconds since the loader appeared. Ticks only while stalled — see {@link LoaderStore.stalled}. */
+  elapsedSeconds: Accessor<number>;
   /** Apply a status update (append, or replace-in-place for range ticks). */
   pushStatus: (payload: StatusPayload) => void;
   /** Enter host-driven progress with `fraction` ∈ [0, 1]; never regresses. */
@@ -90,6 +92,19 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   // Held as a signal rather than a boolean + prop so the button has the handler directly, and so a
   // second `stalled()` (a re-fired deadline) cannot swap it mid-press.
   const [onAbort, setOnAbort] = createSignal<(() => void) | undefined>(undefined);
+  // Wall-clock from the moment the loader appeared, which is the number the user is actually asking
+  // about ("how long has this been going?"). Only ticked once stalled: a healthy boot has no use for
+  // a second timer, and the count is meaningless until it is long enough to notice.
+  const startedAt = Date.now();
+  const [elapsedSeconds, setElapsedSeconds] = createSignal(0);
+  let elapsedTimer: ReturnType<typeof setInterval> | null = null;
+
+  const stopElapsed = (): void => {
+    if (elapsedTimer != null) {
+      clearInterval(elapsedTimer);
+      elapsedTimer = null;
+    }
+  };
 
   let creepCeiling = STATE_1_ASYMPTOTE;
   let creepRate = STATE_1_RATE;
@@ -143,9 +158,15 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   };
 
   const stalled = (handler: () => void): void => {
+    if (onAbort()) {
+      return;
+    }
     // Updater form, and the handler is the RETURN value: Solid would otherwise call a bare
     // function argument as an updater rather than storing it.
     setOnAbort((current) => current ?? handler);
+    const tick = () => setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000));
+    tick();
+    elapsedTimer ??= setInterval(tick, 1_000);
   };
 
   const ready = (): void => {
@@ -154,11 +175,15 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     setPhase('dismissing');
     // Startup got there in the end; the escape hatch is no longer an offer worth making.
     setOnAbort(undefined);
+    stopElapsed();
   };
 
-  const dispose = (): void => stopCreep();
+  const dispose = (): void => {
+    stopCreep();
+    stopElapsed();
+  };
 
   startCreep();
 
-  return { progress, lines, phase, onAbort, pushStatus, setProgress, stalled, ready, dispose };
+  return { progress, lines, phase, onAbort, elapsedSeconds, pushStatus, setProgress, stalled, ready, dispose };
 };

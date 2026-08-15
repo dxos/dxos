@@ -157,6 +157,19 @@ describe('createLoaderStore', () => {
     store.dispose();
   });
 
+  test('elapsed seconds tick only once stalled', ({ expect }) => {
+    const store = createLoaderStore();
+    // A healthy boot runs no second timer, so the count stays put.
+    vi.advanceTimersByTime(5_000);
+    expect(store.elapsedSeconds()).toBe(0);
+
+    store.stalled(vi.fn());
+    expect(store.elapsedSeconds()).toBe(5);
+    vi.advanceTimersByTime(3_000);
+    expect(store.elapsedSeconds()).toBe(8);
+    store.dispose();
+  });
+
   test('ready withdraws the offer', ({ expect }) => {
     const store = createLoaderStore();
     store.stalled(vi.fn());
