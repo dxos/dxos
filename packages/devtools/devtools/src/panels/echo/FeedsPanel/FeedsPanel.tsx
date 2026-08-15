@@ -8,10 +8,8 @@ import { generateName } from '@dxos/display-name';
 import { Format } from '@dxos/echo/Format';
 import { type PublicKey } from '@dxos/keys';
 import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
-import {
-  type SubscribeToFeedBlocksResponse,
-  type SubscribeToFeedsResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type Space } from '@dxos/react-client/echo';
@@ -146,7 +144,7 @@ const mapToRows = (
 const formatIdentity = (
   client: Client,
   contacts: Contact[],
-  identityInfo: SubscribeToFeedsResponse.FeedOwner | undefined,
+  identityInfo: DevtoolsHost.SubscribeToFeedsResponse.FeedOwner | undefined,
 ): string => {
   if (!identityInfo) {
     return 'unknown';
