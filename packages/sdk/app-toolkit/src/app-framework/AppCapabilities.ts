@@ -190,18 +190,21 @@ export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.cap
  * and in hosts with no client at all (stories, node), settings stay device-local.
  */
 export type SettingsSync = {
-  /** Key of the device this app instance writes overrides for. */
+  /** Key of the device this app instance writes settings for. */
   readonly deviceKey: string;
   /**
-   * This device's override sets, keyed by settings prefix. A key's presence is the override; its
-   * value is the device-local value in effect. Reactive, so settings UI re-renders when a pin here
-   * or an edit on another device changes what is overridden.
+   * Settings prefixes this device writes locally rather than sharing. Reactive, so settings UI
+   * re-renders when the scope changes here or on another device.
    */
-  readonly overrides: Atom.Atom<Record<string, Record<string, any>>>;
-  /** Pin `key` to this device, seeded with the value currently in effect. */
-  pin(prefix: string, key: string): void;
-  /** Release `key` back to the value shared across devices. */
-  unpin(prefix: string, key: string): void;
+  readonly unsynced: Atom.Atom<readonly string[]>;
+  /**
+   * Turn sharing of a prefix on or off for this device.
+   *
+   * Turning it OFF is lossless — nothing visibly changes here and no other device is touched.
+   * Turning it ON discards this device's values and adopts the account's, so callers must confirm
+   * with the user first.
+   */
+  setSynced(prefix: string, synced: boolean): void;
 };
 
 /**

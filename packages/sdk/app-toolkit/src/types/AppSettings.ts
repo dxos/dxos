@@ -19,15 +19,20 @@ export const Values = Schema.Record(Schema.String, Schema.Any);
 /** Values for every namespace, keyed by namespace id. */
 export const Namespaces = Schema.Record(Schema.String, Values);
 
-/** One of the user's devices, and the settings it has pinned locally. */
+/** One of the user's devices, and the settings it keeps to itself. */
 export const Device = Schema.Struct({
-  /** Human-readable device label, for the UI that lists override sets. */
+  /** Human-readable device label, for the UI that attributes override sets. */
   label: Schema.optional(Schema.String),
   /**
-   * Values this device overrides. A key's PRESENCE is the override, not its value — a pinned key
-   * whose value equals the shared one must stay pinned when another device changes the shared one.
+   * Values this device overrides. A key's PRESENCE is the override, not its value — an overridden
+   * key whose value equals the shared one must stay local when another device changes the shared one.
    */
   overrides: Namespaces,
+  /**
+   * Namespaces whose WRITES go to this device's overrides instead of the shared layer. Reads still
+   * layer shared underneath, so a key this device has never written keeps following the account.
+   */
+  unsynced: Schema.Array(Schema.String),
 });
 
 /**
@@ -94,28 +99,32 @@ export type InstalledPlugin = { id: string; url: string; version?: string };
 /** Shape the resolution helpers read. Structural so both the live proxy and a snapshot satisfy it. */
 export type Snapshot = {
   readonly shared: Namespaces;
-  readonly devices: Record<string, { readonly overrides: Namespaces }>;
+  readonly devices: Record<string, { readonly overrides: Namespaces; readonly unsynced?: readonly string[] }>;
 };
 
-/** Values this device has pinned in a namespace. Empty when the device pins nothing. */
+/** Values this device overrides in a namespace. Empty when the device overrides nothing. */
 export const getOverrides = (settings: Snapshot, deviceKey: string, namespace: string): Values =>
   settings.devices[deviceKey]?.overrides[namespace] ?? {};
 
-/** Whether `key` is pinned to a device-local value. */
-export const isPinned = (settings: Snapshot, deviceKey: string, namespace: string, key: string): boolean =>
-  key in getOverrides(settings, deviceKey, namespace);
+/** Namespaces this device writes locally rather than sharing. */
+export const getUnsynced = (settings: Snapshot, deviceKey: string): readonly string[] =>
+  settings.devices[deviceKey]?.unsynced ?? [];
 
-/** Keys pinned to a device-local value in a namespace. */
-export const getPinnedKeys = (settings: Snapshot, deviceKey: string, namespace: string): string[] =>
-  Object.keys(getOverrides(settings, deviceKey, namespace));
+/** Whether edits to `namespace` on this device are shared with the user's other devices. */
+export const isSynced = (settings: Snapshot, deviceKey: string, namespace: string): boolean =>
+  !getUnsynced(settings, deviceKey).includes(namespace);
 
 /**
  * The values in effect on `deviceKey`: `defaults`, overlaid with the shared values, overlaid with
  * this device's overrides.
  *
- * `defaults` carries whatever the store has no opinion on — a plugin's schema defaults, or the
- * device's own state for a plugin no other device has heard of. A key absent from both layers
- * therefore keeps following the device rather than being forced to nothing.
+ * The shared layer is read even for an unsynced namespace — {@link isSynced} governs where writes
+ * GO, not what reads see. That is what keeps an unsynced namespace soft: a key this device has
+ * never written has no override, so it still follows the account.
+ *
+ * `defaults` carries whatever the store has no opinion on — a plugin's schema defaults, or a plugin
+ * no other device has heard of — so such a key follows the device rather than being forced to
+ * nothing.
  */
 export const resolve = (settings: Snapshot, deviceKey: string, namespace: string, defaults?: Values): Values => ({
   ...defaults,
@@ -132,21 +141,26 @@ export const resolve = (settings: Snapshot, deviceKey: string, namespace: string
 /** Mutable view of {@link Snapshot}, as handed to an `Obj.update` callback. */
 export type Draft = {
   shared: Namespaces;
-  devices: Record<string, { label?: string; overrides: Namespaces }>;
+  devices: Record<string, { label?: string; overrides: Namespaces; unsynced: string[] }>;
 };
 
 const namespaceOf = (container: Namespaces, namespace: string): Values => (container[namespace] ??= {});
 
-const deviceOf = (draft: Draft, deviceKey: string) => (draft.devices[deviceKey] ??= { overrides: {} });
+const deviceOf = (draft: Draft, deviceKey: string) => {
+  const device = (draft.devices[deviceKey] ??= { overrides: {}, unsynced: [] });
+  // Entries written before `unsynced` existed lack the field, and every caller below mutates it.
+  device.unsynced ??= [];
+  return device;
+};
 
 /**
- * Write `key` to whichever layer owns it: the device layer when pinned, the shared layer otherwise.
- * This is the routing rule that makes settings shared by default.
+ * Write `key` to whichever layer owns it: this device's overrides when the namespace is unsynced,
+ * the shared layer otherwise. This is the routing rule that makes settings shared by default.
  */
 export const setValue = (draft: Draft, deviceKey: string, namespace: string, key: string, value: unknown): void => {
-  const target = isPinned(draft, deviceKey, namespace, key)
-    ? namespaceOf(deviceOf(draft, deviceKey).overrides, namespace)
-    : namespaceOf(draft.shared, namespace);
+  const target = isSynced(draft, deviceKey, namespace)
+    ? namespaceOf(draft.shared, namespace)
+    : namespaceOf(deviceOf(draft, deviceKey).overrides, namespace);
   target[key] = value;
 };
 
@@ -157,16 +171,35 @@ export const clearValue = (draft: Draft, deviceKey: string, namespace: string, k
 };
 
 /**
- * Pin `key` to this device. `value` is the value currently in effect, seeded into the override so
- * that pinning alone never changes what the user sees.
+ * Turn sharing of a namespace on or off for this device.
+ *
+ * Turning it OFF is lossless and touches no other device: pass `snapshot` (the values in effect
+ * here) to freeze them into the device layer so nothing visibly changes. Omit it to diverge only
+ * from the next write onwards — what the plugin set wants, so plugins enabled elsewhere later still
+ * arrive.
+ *
+ * Turning it ON discards this device's copy and adopts the account's. That is the one lossy
+ * direction, so callers are expected to have confirmed it with the user.
  */
-export const pin = (draft: Draft, deviceKey: string, namespace: string, key: string, value: unknown): void => {
-  namespaceOf(deviceOf(draft, deviceKey).overrides, namespace)[key] = value;
-};
-
-/** Release `key` back to the shared value. */
-export const unpin = (draft: Draft, deviceKey: string, namespace: string, key: string): void => {
-  delete draft.devices[deviceKey]?.overrides[namespace]?.[key];
+export const setSynced = (
+  draft: Draft,
+  deviceKey: string,
+  namespace: string,
+  synced: boolean,
+  snapshot?: Values,
+): void => {
+  const device = deviceOf(draft, deviceKey);
+  if (synced) {
+    device.unsynced = device.unsynced.filter((entry) => entry !== namespace);
+    delete device.overrides[namespace];
+  } else {
+    if (!device.unsynced.includes(namespace)) {
+      device.unsynced = [...device.unsynced, namespace];
+    }
+    if (snapshot) {
+      device.overrides[namespace] = { ...snapshot };
+    }
+  }
 };
 
 /** Record a device's label so override sets can be attributed in the UI. */

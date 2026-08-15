@@ -49,9 +49,7 @@ export default Capability.makeModule(
       store.update((draft) => AppSettings.setDeviceLabel(draft, deviceKey, label));
     }
 
-    const overrides = Atom.make<AppSettings.Namespaces>(settings.devices[deviceKey]?.overrides ?? {}).pipe(
-      Atom.keepAlive,
-    );
+    const unsynced = Atom.make<readonly string[]>(AppSettings.getUnsynced(settings, deviceKey)).pipe(Atom.keepAlive);
 
     const reconcilers: Reconciler[] = [];
     const subscriptions: (() => void)[] = [];
@@ -158,7 +156,7 @@ export default Capability.makeModule(
 
     subscriptions.push(
       Obj.subscribe(settings, () => {
-        registry.set(overrides, { ...(settings.devices[deviceKey]?.overrides ?? {}) });
+        registry.set(unsynced, AppSettings.getUnsynced(settings, deviceKey));
         for (const reconciler of reconcilers) {
           reconciler.pull();
         }
@@ -173,15 +171,18 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.SettingsSync, {
       deviceKey,
-      overrides,
-      // Seeded from the reconciler rather than the store: only it knows the value actually in
-      // effect, which for an untouched key is the plugin's schema default and absent from ECHO.
-      pin: (namespace, key) => {
-        const value = reconcilers.find((reconciler) => reconciler.namespace === namespace)?.current()[key];
-        store.update((draft) => AppSettings.pin(draft, deviceKey, namespace, key, value));
-      },
-      unpin: (namespace, key) => {
-        store.update((draft) => AppSettings.unpin(draft, deviceKey, namespace, key));
+      unsynced,
+      setSynced: (namespace, synced) => {
+        // Whether unsyncing freezes the current values is a property of the namespace, not of the
+        // UI: a plugin's settings freeze so the switch is visibly a no-op, while the plugin set
+        // deliberately does not, so plugins enabled on another device later still arrive here.
+        // Snapshots come from the reconciler — only it knows the value in effect for a key that is
+        // still on its schema default and therefore absent from ECHO.
+        const snapshot =
+          synced || namespace === AppSettings.PLUGINS_NAMESPACE
+            ? undefined
+            : reconcilers.find((reconciler) => reconciler.namespace === namespace)?.current();
+        store.update((draft) => AppSettings.setSynced(draft, deviceKey, namespace, synced, snapshot));
       },
     });
   }),

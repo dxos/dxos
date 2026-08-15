@@ -49,14 +49,16 @@ const makeLocal = (initial: AppSettings.Values, namespace: string = NS) => {
   };
 };
 
-/** Wire both directions the way the sync module does. */
-const bind = (store: ReturnType<typeof makeStore>, local: ReturnType<typeof makeLocal>) => {
-  const reconciler = new Reconciler(store.store, DEVICE, local.binding);
+/** Wire both directions the way the sync module does, for a named device. */
+const bindAs = (store: ReturnType<typeof makeStore>, local: ReturnType<typeof makeLocal>, deviceKey: string) => {
+  const reconciler = new Reconciler(store.store, deviceKey, local.binding);
   reconciler.seed();
   local.subscribe(() => reconciler.push());
   store.subscribe(() => reconciler.pull());
   return reconciler;
 };
+
+const bind = (store: ReturnType<typeof makeStore>, local: ReturnType<typeof makeLocal>) => bindAs(store, local, DEVICE);
 
 describe('Reconciler', () => {
   test('seeding adopts settings this device already had', () => {
@@ -87,12 +89,12 @@ describe('Reconciler', () => {
     expect(store.state.shared[NS]).toEqual({ toolbar: false });
   });
 
-  test('a local edit to a pinned key stays on this device', () => {
+  test('a local edit stays here once the namespace is unsynced', () => {
     const store = makeStore();
     const local = makeLocal({ toolbar: true });
     const reconciler = bind(store, local);
 
-    store.store.update((draft) => AppSettings.pin(draft, DEVICE, NS, 'toolbar', reconciler.current().toolbar));
+    store.store.update((draft) => AppSettings.setSynced(draft, DEVICE, NS, false, reconciler.current()));
     local.set({ toolbar: false });
 
     expect(store.state.shared[NS]).toEqual({ toolbar: true });
@@ -109,13 +111,25 @@ describe('Reconciler', () => {
     expect(local.get()).toEqual({ toolbar: false });
   });
 
-  test('a pinned key ignores a change from another device', () => {
+  test('an unsynced namespace ignores a change to a value it froze', () => {
     const store = makeStore();
     const local = makeLocal({ toolbar: true });
     const reconciler = bind(store, local);
 
-    store.store.update((draft) => AppSettings.pin(draft, DEVICE, NS, 'toolbar', reconciler.current().toolbar));
+    store.store.update((draft) => AppSettings.setSynced(draft, DEVICE, NS, false, reconciler.current()));
     store.store.update((draft) => AppSettings.setValue(draft, 'device-b', NS, 'toolbar', false));
+
+    expect(local.get()).toEqual({ toolbar: true });
+  });
+
+  test('rejoining the account replaces this device’s values', () => {
+    const store = makeStore();
+    const local = makeLocal({ toolbar: true });
+    const reconciler = bind(store, local);
+
+    store.store.update((draft) => AppSettings.setSynced(draft, DEVICE, NS, false, reconciler.current()));
+    local.set({ toolbar: false });
+    store.store.update((draft) => AppSettings.setSynced(draft, DEVICE, NS, true));
 
     expect(local.get()).toEqual({ toolbar: true });
   });
@@ -139,9 +153,7 @@ describe('Reconciler', () => {
     const here = makeLocal({ [markdown]: true, [chess]: false }, AppSettings.PLUGINS_NAMESPACE);
     const there = makeLocal({ [markdown]: true, [chess]: false }, AppSettings.PLUGINS_NAMESPACE);
     bind(store, here);
-    const other = new Reconciler(store.store, 'device-b', there.binding);
-    other.seed();
-    there.subscribe(() => other.push());
+    bindAs(store, there, 'device-b');
 
     // Enabling chess on the other device enables it here too.
     there.set({ [markdown]: true, [chess]: true });
@@ -149,21 +161,22 @@ describe('Reconciler', () => {
     expect(AppSettings.getEnabledPlugins(here.get()).sort()).toEqual([chess, markdown]);
   });
 
-  test('a plugin pinned here ignores the same toggle made elsewhere', () => {
+  test('a device with its own plugin set still receives a plugin enabled elsewhere', () => {
     const markdown = 'org.dxos.plugin.markdown';
     const chess = 'org.dxos.plugin.chess';
+    const sketch = 'org.dxos.plugin.sketch';
     const store = makeStore();
-    const here = makeLocal({ [markdown]: true, [chess]: false }, AppSettings.PLUGINS_NAMESPACE);
-    const there = makeLocal({ [markdown]: true, [chess]: false }, AppSettings.PLUGINS_NAMESPACE);
+    const here = makeLocal({ [markdown]: true, [chess]: true }, AppSettings.PLUGINS_NAMESPACE);
+    const there = makeLocal({ [markdown]: true, [chess]: true }, AppSettings.PLUGINS_NAMESPACE);
     bind(store, here);
-    const other = new Reconciler(store.store, 'device-b', there.binding);
-    other.seed();
-    there.subscribe(() => other.push());
+    bindAs(store, there, 'device-b');
 
-    store.store.update((draft) => AppSettings.pin(draft, DEVICE, AppSettings.PLUGINS_NAMESPACE, chess, false));
-    there.set({ [markdown]: true, [chess]: true });
+    // Soft fork: no snapshot, so only what this device changes afterwards diverges.
+    store.store.update((draft) => AppSettings.setSynced(draft, DEVICE, AppSettings.PLUGINS_NAMESPACE, false));
+    here.set({ [markdown]: true, [chess]: false });
+    there.set({ [markdown]: true, [chess]: true, [sketch]: true });
 
-    expect(AppSettings.getEnabledPlugins(here.get())).toEqual([markdown]);
-    expect(AppSettings.getEnabledPlugins(there.get()).sort()).toEqual([chess, markdown]);
+    expect(AppSettings.getEnabledPlugins(here.get()).sort()).toEqual([markdown, sketch]);
+    expect(AppSettings.getEnabledPlugins(there.get()).sort()).toEqual([chess, markdown, sketch]);
   });
 });

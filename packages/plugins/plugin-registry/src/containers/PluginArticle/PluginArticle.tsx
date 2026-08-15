@@ -3,13 +3,10 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
-import { useOperationInvoker, useOptionalCapability, usePluginManager } from '@dxos/app-framework/ui';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 import { PluginDetail } from '#components';
@@ -23,9 +20,6 @@ import {
   useRemotePluginIds,
   useVersionPicker,
 } from '../../hooks';
-
-/** Stable fallback so the atom hook keeps a constant identity while the sync is unavailable. */
-const emptyOverrides = Atom.make<Record<string, Record<string, any>>>({});
 
 export type PluginArticleProps = { subject: Plugin.Plugin };
 
@@ -55,26 +49,6 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   );
   const isCore = manager.getCore().includes(pluginId);
 
-  // Enablement is shared across the user's devices by default; pinning keeps this device's answer
-  // for this one plugin while every other plugin keeps following the account.
-  const settingsSync = useOptionalCapability(AppCapabilities.SettingsSync);
-  const overrides = useAtomValue(settingsSync?.overrides ?? emptyOverrides);
-  const deviceOverride =
-    settingsSync && !isCore ? pluginId in (overrides[AppSettings.PLUGINS_NAMESPACE] ?? {}) : undefined;
-  const handleDeviceOverrideChange = useCallback(
-    (pinned: boolean) => {
-      if (!settingsSync) {
-        return;
-      }
-
-      if (pinned) {
-        settingsSync.pin(AppSettings.PLUGINS_NAMESPACE, pluginId);
-      } else {
-        settingsSync.unpin(AppSettings.PLUGINS_NAMESPACE, pluginId);
-      }
-    },
-    [settingsSync, pluginId],
-  );
   const canUninstall = isInstalled && !isCore && remotePluginIds.has(pluginId);
   const hasUpdate =
     isInstalled && !!catalogEntry && !!installedVersionTag && installedVersionTag !== catalogEntry.release?.version;
@@ -134,8 +108,6 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
       dependencies={dependencies}
       dependents={dependents}
       failure={failure}
-      deviceOverride={deviceOverride}
-      onDeviceOverrideChange={handleDeviceOverrideChange}
       onOpenSpec={actions.handleOpenSpec}
       onEnabledChange={actions.handleEnableChange}
       onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}

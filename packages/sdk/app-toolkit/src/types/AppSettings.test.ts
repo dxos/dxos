@@ -20,7 +20,7 @@ describe('resolve', () => {
   test('layers defaults, shared and device overrides', () => {
     const settings = draft({
       shared: { [NS]: { toolbar: false, folding: true } },
-      devices: { [DEVICE]: { overrides: { [NS]: { folding: false } } } },
+      devices: { [DEVICE]: { overrides: { [NS]: { folding: false } }, unsynced: [] } },
     });
 
     expect(AppSettings.resolve(settings, DEVICE, NS, { toolbar: true, folding: true, debug: false })).toEqual({
@@ -33,20 +33,19 @@ describe('resolve', () => {
   test('another device is unaffected by an override', () => {
     const settings = draft({
       shared: { [NS]: { toolbar: false } },
-      devices: { [DEVICE]: { overrides: { [NS]: { toolbar: true } } } },
+      devices: { [DEVICE]: { overrides: { [NS]: { toolbar: true } }, unsynced: [] } },
     });
 
     expect(AppSettings.resolve(settings, OTHER, NS)).toEqual({ toolbar: false });
   });
 
-  test('an override pinned to the shared value stays pinned when the shared value changes', () => {
+  test('an override matching the shared value survives a change made elsewhere', () => {
     const settings = draft({
       shared: { [NS]: { toolbar: true } },
-      devices: { [DEVICE]: { overrides: { [NS]: { toolbar: true } } } },
+      devices: { [DEVICE]: { overrides: { [NS]: { toolbar: true } }, unsynced: [] } },
     });
     settings.shared[NS].toolbar = false;
 
-    expect(AppSettings.isPinned(settings, DEVICE, NS, 'toolbar')).toBe(true);
     expect(AppSettings.resolve(settings, DEVICE, NS)).toEqual({ toolbar: true });
     expect(AppSettings.resolve(settings, OTHER, NS)).toEqual({ toolbar: false });
   });
@@ -61,50 +60,96 @@ describe('setValue', () => {
     expect(settings.devices[DEVICE]).toBeUndefined();
   });
 
-  test('writes to the device layer once pinned', () => {
+  test('writes to the device layer once the namespace is unsynced', () => {
     const settings = draft({ shared: { [NS]: { toolbar: true } } });
-    AppSettings.pin(settings, DEVICE, NS, 'toolbar', true);
+    AppSettings.setSynced(settings, DEVICE, NS, false);
     AppSettings.setValue(settings, DEVICE, NS, 'toolbar', false);
 
     expect(settings.shared[NS]).toEqual({ toolbar: true });
     expect(settings.devices[DEVICE].overrides[NS]).toEqual({ toolbar: false });
   });
+});
 
-  test('unpinning restores the shared value', () => {
-    const settings = draft({ shared: { [NS]: { toolbar: true } } });
-    AppSettings.pin(settings, DEVICE, NS, 'toolbar', true);
-    AppSettings.setValue(settings, DEVICE, NS, 'toolbar', false);
-    AppSettings.unpin(settings, DEVICE, NS, 'toolbar');
+describe('setSynced', () => {
+  test('turning sync off with a snapshot changes nothing here and nothing elsewhere', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: false } } });
+    const defaults = { toolbar: true, folding: true };
+    const before = AppSettings.resolve(settings, DEVICE, NS, defaults);
 
-    expect(AppSettings.resolve(settings, DEVICE, NS)).toEqual({ toolbar: true });
-    expect(AppSettings.getPinnedKeys(settings, DEVICE, NS)).toEqual([]);
+    AppSettings.setSynced(settings, DEVICE, NS, false, before);
+
+    expect(AppSettings.resolve(settings, DEVICE, NS, defaults)).toEqual(before);
+    expect(AppSettings.resolve(settings, OTHER, NS, defaults)).toEqual(before);
   });
 
-  test('pinning seeds the value in effect so nothing visibly changes', () => {
-    const settings = draft({ shared: { [NS]: { toolbar: false } } });
-    const before = AppSettings.resolve(settings, DEVICE, NS, { toolbar: true, folding: true });
-    AppSettings.pin(settings, DEVICE, NS, 'folding', before.folding);
+  test('once unsynced, a change made elsewhere no longer lands here', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true } } });
+    AppSettings.setSynced(settings, DEVICE, NS, false, AppSettings.resolve(settings, DEVICE, NS));
 
-    expect(AppSettings.resolve(settings, DEVICE, NS, { toolbar: true, folding: true })).toEqual(before);
+    AppSettings.setValue(settings, OTHER, NS, 'toolbar', false);
+
+    expect(AppSettings.resolve(settings, DEVICE, NS)).toEqual({ toolbar: true });
+    expect(AppSettings.resolve(settings, OTHER, NS)).toEqual({ toolbar: false });
+  });
+
+  test('a key added to the account after unsyncing still arrives', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true } } });
+    AppSettings.setSynced(settings, DEVICE, NS, false, AppSettings.resolve(settings, DEVICE, NS));
+
+    // A plugin update adds a field, set on the other device.
+    AppSettings.setValue(settings, OTHER, NS, 'folding', true);
+
+    expect(AppSettings.resolve(settings, DEVICE, NS)).toEqual({ toolbar: true, folding: true });
+  });
+
+  test('turning sync back on discards this device’s copy and adopts the account', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true } } });
+    AppSettings.setSynced(settings, DEVICE, NS, false, AppSettings.resolve(settings, DEVICE, NS));
+    AppSettings.setValue(settings, DEVICE, NS, 'toolbar', false);
+    expect(AppSettings.resolve(settings, DEVICE, NS)).toEqual({ toolbar: false });
+
+    AppSettings.setSynced(settings, DEVICE, NS, true);
+
+    expect(AppSettings.resolve(settings, DEVICE, NS)).toEqual({ toolbar: true });
+    expect(AppSettings.isSynced(settings, DEVICE, NS)).toBe(true);
+    expect(settings.devices[DEVICE].overrides[NS]).toBeUndefined();
+  });
+
+  test('unsyncing one namespace leaves the others shared', () => {
+    const other = 'org.dxos.plugin.chess';
+    const settings = draft();
+    AppSettings.setSynced(settings, DEVICE, NS, false);
+
+    AppSettings.setValue(settings, DEVICE, NS, 'toolbar', true);
+    AppSettings.setValue(settings, DEVICE, other, 'hints', true);
+
+    expect(settings.devices[DEVICE].overrides).toEqual({ [NS]: { toolbar: true } });
+    expect(settings.shared).toEqual({ [other]: { hints: true } });
+    expect(AppSettings.isSynced(settings, DEVICE, other)).toBe(true);
   });
 });
 
 describe('applyResolved', () => {
-  test('routes each changed key to its owning layer', () => {
+  test('routes changed keys to the layer the namespace writes to', () => {
     const settings = draft({ shared: { [NS]: { toolbar: true, folding: true } } });
-    AppSettings.pin(settings, DEVICE, NS, 'folding', true);
+    AppSettings.setSynced(settings, DEVICE, NS, false);
 
-    const before = AppSettings.resolve(settings, DEVICE, NS);
-    AppSettings.applyResolved(settings, DEVICE, NS, before, { toolbar: false, folding: false });
+    AppSettings.applyResolved(
+      settings,
+      DEVICE,
+      NS,
+      { toolbar: true, folding: true },
+      { toolbar: false, folding: true },
+    );
 
-    expect(settings.shared[NS]).toEqual({ toolbar: false, folding: true });
-    expect(settings.devices[DEVICE].overrides[NS]).toEqual({ folding: false });
+    expect(settings.shared[NS]).toEqual({ toolbar: true, folding: true });
+    expect(settings.devices[DEVICE].overrides[NS]).toEqual({ toolbar: false });
   });
 
   test('a dropped key is cleared from both layers', () => {
     const settings = draft({
       shared: { [NS]: { toolbar: true } },
-      devices: { [DEVICE]: { overrides: { [NS]: { toolbar: false } } } },
+      devices: { [DEVICE]: { overrides: { [NS]: { toolbar: false } }, unsynced: [] } },
     });
 
     AppSettings.applyResolved(settings, DEVICE, NS, { toolbar: false }, {});
@@ -122,8 +167,9 @@ describe('applyResolved', () => {
 });
 
 /**
- * The plugin set is an ordinary namespace whose keys are plugin ids and whose values are booleans,
- * so it needs no bespoke merge — these cover the behaviour that choice buys.
+ * The plugin set is an ordinary namespace whose keys are plugin ids and whose values are booleans.
+ * Unsyncing it is a SOFT fork — the switch changes where this device's decisions are written, and
+ * plugins it never touched keep following the account.
  */
 describe('plugins', () => {
   const PLUGINS = AppSettings.PLUGINS_NAMESPACE;
@@ -162,32 +208,40 @@ describe('plugins', () => {
     expect(enabledOn(settings, OTHER, [SKETCH])).toEqual([CHESS, MARKDOWN]);
   });
 
-  test('a device override disables one plugin locally without affecting others', () => {
+  test('a device using its own plugin set diverges only on what it changes', () => {
     const settings = draft();
     record(settings, DEVICE, [MARKDOWN, CHESS], [MARKDOWN, CHESS]);
-    AppSettings.pin(settings, DEVICE, PLUGINS, CHESS, false);
+
+    // Soft fork: no snapshot, so untouched plugins keep following the account.
+    AppSettings.setSynced(settings, DEVICE, PLUGINS, false);
+    record(settings, DEVICE, [MARKDOWN], [MARKDOWN, CHESS]);
 
     expect(enabledOn(settings, DEVICE)).toEqual([MARKDOWN]);
     expect(enabledOn(settings, OTHER)).toEqual([CHESS, MARKDOWN]);
+    expect(settings.shared[PLUGINS]).toEqual({ [MARKDOWN]: true, [CHESS]: true });
+    expect(settings.devices[DEVICE].overrides[PLUGINS]).toEqual({ [CHESS]: false });
   });
 
-  test('a plugin enabled elsewhere after a device pinned another one still arrives', () => {
+  test('a plugin enabled elsewhere still arrives on a device with its own plugin set', () => {
     const settings = draft();
+    record(settings, DEVICE, [MARKDOWN, CHESS], [MARKDOWN, CHESS]);
+    AppSettings.setSynced(settings, DEVICE, PLUGINS, false);
     record(settings, DEVICE, [MARKDOWN], [MARKDOWN, CHESS]);
-    AppSettings.pin(settings, DEVICE, PLUGINS, CHESS, false);
-    record(settings, OTHER, [MARKDOWN, SKETCH], [MARKDOWN, CHESS, SKETCH]);
+
+    record(settings, OTHER, [MARKDOWN, CHESS, SKETCH], [MARKDOWN, CHESS, SKETCH]);
 
     expect(enabledOn(settings, DEVICE)).toEqual([MARKDOWN, SKETCH]);
   });
 
-  test('toggling a pinned plugin writes only to the device layer', () => {
+  test('rejoining the account restores the shared plugin set', () => {
     const settings = draft();
     record(settings, DEVICE, [MARKDOWN, CHESS], [MARKDOWN, CHESS]);
-    AppSettings.pin(settings, DEVICE, PLUGINS, CHESS, true);
+    AppSettings.setSynced(settings, DEVICE, PLUGINS, false);
     record(settings, DEVICE, [MARKDOWN], [MARKDOWN, CHESS]);
 
-    expect(settings.shared[PLUGINS]).toEqual({ [MARKDOWN]: true, [CHESS]: true });
-    expect(settings.devices[DEVICE].overrides[PLUGINS]).toEqual({ [CHESS]: false });
+    AppSettings.setSynced(settings, DEVICE, PLUGINS, true);
+
+    expect(enabledOn(settings, DEVICE)).toEqual([CHESS, MARKDOWN]);
   });
 
   test('installed remote plugins are shared entry-by-entry', () => {

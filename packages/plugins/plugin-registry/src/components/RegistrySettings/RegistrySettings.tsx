@@ -4,9 +4,10 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import { type AppSurface, useSettingsScope } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { Button, Input, Message, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, Button, Input, Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -41,6 +42,8 @@ export const RegistrySettings = ({
   onDisableDev,
 }: RegistrySettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const pluginScope = useSettingsScope(AppSettings.PLUGINS_NAMESPACE);
+  const [rejoining, setRejoining] = useState(false);
   const [busy, setBusy] = useState(false);
   const enabled = !!settings.devPluginEnabled;
   const url = settings.devPluginUrl ?? '';
@@ -93,6 +96,18 @@ export const RegistrySettings = ({
     <Form.Root variant='settings' readonly={!onSettingsChange} schema={RegistrySettingsSchema} values={settings}>
       <Form.Viewport scroll>
         <Form.Content>
+          {pluginScope.available && (
+            <Form.Section title={t('plugin-registry.label')}>
+              <Form.Row label={t('plugin-scope.label')} description={t('plugin-scope.description')}>
+                <Input.Root>
+                  <Input.Switch
+                    checked={!pluginScope.synced}
+                    onCheckedChange={(local) => (local ? pluginScope.setSynced(false) : setRejoining(true))}
+                  />
+                </Input.Root>
+              </Form.Row>
+            </Form.Section>
+          )}
           <Form.Section title={t('dev-plugin.section.title')}>
             <Message.Root valence='neutral'>
               <Message.Content>
@@ -129,6 +144,33 @@ export const RegistrySettings = ({
           </Form.Section>
         </Form.Content>
       </Form.Viewport>
+      <AlertDialog.Root open={rejoining} onOpenChange={setRejoining}>
+        <AlertDialog.Overlay>
+          <AlertDialog.Content>
+            <AlertDialog.Body>
+              <AlertDialog.Title>{t('plugin-scope.rejoin-dialog.title')}</AlertDialog.Title>
+              <AlertDialog.Description>{t('plugin-scope.rejoin-dialog.description')}</AlertDialog.Description>
+            </AlertDialog.Body>
+            <AlertDialog.ActionBar>
+              <div className='grow' />
+              <AlertDialog.Cancel asChild>
+                <Button>{t('plugin-scope.rejoin-dialog.cancel.label')}</Button>
+              </AlertDialog.Cancel>
+              <AlertDialog.Action asChild>
+                <Button
+                  variant='primary'
+                  onClick={() => {
+                    pluginScope.setSynced(true);
+                    setRejoining(false);
+                  }}
+                >
+                  {t('plugin-scope.rejoin-dialog.confirm.label')}
+                </Button>
+              </AlertDialog.Action>
+            </AlertDialog.ActionBar>
+          </AlertDialog.Content>
+        </AlertDialog.Overlay>
+      </AlertDialog.Root>
     </Form.Root>
   );
 };

@@ -8,8 +8,6 @@ import { usePluginManager, useSettingsState } from '@dxos/app-framework/ui';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Form } from '@dxos/react-ui-form';
 
-import { DeviceOverrides } from './DeviceOverrides';
-
 export type DefaultSettingsProps = {
   subject: AppCapabilities.Settings;
 };
@@ -41,7 +39,6 @@ export const DefaultSettings = ({ subject }: DefaultSettingsProps) => {
           <Form.Section title={title ?? subject.prefix}>
             <Form.FieldSet />
           </Form.Section>
-          <DeviceOverrides subject={subject} />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
