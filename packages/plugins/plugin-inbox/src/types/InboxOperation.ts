@@ -8,12 +8,9 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Connection, Cursor } from '@dxos/link';
-import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -22,23 +19,8 @@ import { Actor, Event, Message, type Person } from '@dxos/types';
 import { meta } from '#meta';
 
 import * as Mailbox from './Mailbox';
-import * as MailSend from './MailSend';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
-export const GetGoogleCalendars = Operation.make({
-  // TODO(wittjosiah): Declaring services here forces DynamicRuntime validation to fail before the handler
-  //   runs because composer's invoker doesn't carry per-space Database. The handler provides
-  //   `Database.layer(db)` itself (same pattern as plugin-trello GetTrelloBoards).
-  meta: {
-    key: makeKey('getGoogleCalendars'),
-    name: 'Get Google Calendars',
-    description: 'Discover Google Calendars reachable from a connection without materializing local Calendars.',
-    icon: 'ph--calendar--regular',
-  },
-  input: ConnectorSpec.GetSyncTargetsInput,
-  output: ConnectorSpec.GetSyncTargetsOutput,
-});
 
 export const AddMailbox = Operation.make({
   meta: { key: makeKey('addMailbox'), name: 'Add Mailbox', icon: 'ph--envelope--regular' },
@@ -109,173 +91,26 @@ export const DraftEmailAndOpen = Operation.make({
   output: Schema.Void,
 });
 
-export const GmailSend = Operation.make({
-  meta: {
-    key: makeKey('googleMailSend'),
-    name: 'Send Gmail',
-    description: 'Send emails via Gmail.',
-    icon: 'ph--paper-plane-tilt--regular',
-  },
-  input: Schema.Struct({
-    userId: Schema.String.pipe(Schema.optional),
-    ...MailSend.Input.fields,
-  }),
-  output: MailSend.Output,
-  services: [Credential.CredentialsService],
-}).pipe(Operation.visible);
-
-export const GoogleMailSync = Operation.make({
-  meta: {
-    key: makeKey('googleMailSync'),
-    name: 'Sync Google Mail',
-    description: 'Sync emails from Gmail to the mailbox feed.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
-    }),
-    userId: Schema.String.pipe(Schema.optional),
-    label: Schema.String.pipe(
-      Schema.annotate({
-        description: 'Gmail label to sync emails from. Defaults to inbox.',
-      }),
-      Schema.optional,
-    ),
-  }),
-  output: Schema.Struct({
-    newMessages: Schema.Number,
-  }),
-  services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
-}).pipe(Operation.visible, Operation.idempotent);
-
 /**
  * Eagerly materializes the local Mailbox bound to a Gmail connection so the sync cursor's target
  * exists before the cursor is created. Gmail is a single-target connector with no remote selection,
  * so a fresh Mailbox is always created; the connection's `accessToken.account` seeds the default name.
  */
-export const MaterializeGmailTarget = Operation.make({
-  meta: {
-    key: makeKey('materializeGmailTarget'),
-    name: 'Materialize Gmail Target',
-    description: 'Create the local Mailbox bound to a Gmail connection.',
-    icon: 'ph--envelope--regular',
-  },
-  input: ConnectorSpec.MaterializeTargetInput,
-  output: ConnectorSpec.MaterializeTargetOutput,
-});
-
-export const JmapSync = Operation.make({
-  meta: {
-    key: makeKey('jmapSync'),
-    name: 'Sync JMAP',
-    description: 'Sync emails from a JMAP server (e.g. Fastmail) to the mailbox feed.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
-    }),
-  }),
-  output: Schema.Struct({
-    newMessages: Schema.Number,
-  }),
-  // Capability (on-arrival extractors), Database (feed I/O), Trace (status) — provided by the invoker;
-  // HTTP client and JMAP credentials are provided by the handler from the connection.
-  services: [Capability.Service, Database.Service, Trace.TraceService],
-}).pipe(Operation.visible, Operation.idempotent);
-
 /**
  * Eagerly materializes the local Mailbox bound to a JMAP connection so the sync cursor's target
  * exists before the cursor is created. JMAP is a single-target connector (the account inbox), so a
  * fresh Mailbox is always created; the connection's `accessToken.account` seeds the default name.
  * Mirrors {@link MaterializeGmailTarget}.
  */
-export const MaterializeJmapTarget = Operation.make({
-  meta: {
-    key: makeKey('materializeJmapTarget'),
-    name: 'Materialize JMAP Target',
-    description: 'Create the local Mailbox bound to a JMAP connection.',
-    icon: 'ph--envelope--regular',
-  },
-  input: ConnectorSpec.MaterializeTargetInput,
-  output: ConnectorSpec.MaterializeTargetOutput,
-});
-
-export const JmapSend = Operation.make({
-  meta: {
-    key: makeKey('jmapSend'),
-    name: 'Send JMAP',
-    description: 'Send an email via a JMAP server.',
-    icon: 'ph--paper-plane-tilt--regular',
-  },
-  input: MailSend.Input,
-  output: MailSend.Output,
-}).pipe(Operation.visible);
-
-export const GoogleCalendarSync = Operation.make({
-  meta: {
-    key: makeKey('googleCalendarSync'),
-    name: 'Sync Google Calendar',
-    description:
-      'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose target is the Calendar to sync.',
-    }),
-    googleCalendarId: Schema.optional(Schema.String),
-    syncBackDays: Schema.optional(Schema.Number),
-    syncForwardDays: Schema.optional(Schema.Number),
-    pageSize: Schema.optional(Schema.Number),
-  }),
-  output: Schema.Struct({
-    newEvents: Schema.Number,
-  }),
-  services: [Database.Service, Credential.CredentialsService],
-}).pipe(Operation.visible);
-
 /**
  * Eagerly materializes the local Calendar for a selected remote Google calendar so the sync
  * cursor's target exists before the cursor is created. Find-or-create keyed on the calendar's
  * foreign key, so re-running for the same remote calendar returns the existing Calendar.
  */
-export const MaterializeCalendarTarget = Operation.make({
-  meta: {
-    key: makeKey('materializeCalendarTarget'),
-    name: 'Materialize Calendar Target',
-    description: 'Create the local Calendar bound to a selected Google calendar.',
-    icon: 'ph--calendar--regular',
-  },
-  input: ConnectorSpec.MaterializeTargetInput,
-  output: ConnectorSpec.MaterializeTargetOutput,
-});
-
 /**
  * Create a single event on Google Calendar (the write counterpart to {@link GoogleCalendarSync}, and
  * the calendar analogue of {@link GmailSend}). Sources credentials from the Integration.
  */
-export const CreateGoogleCalendarEvent = Operation.make({
-  meta: {
-    key: makeKey('createGoogleCalendarEvent'),
-    name: 'Create Google Calendar Event',
-    description: 'Create an event on Google Calendar.',
-    icon: 'ph--calendar-plus--regular',
-  },
-  input: Schema.Struct({
-    event: Type.getSchema(Event.Event),
-    googleCalendarId: Schema.String.annotate({ description: 'Remote Google calendar id.' }),
-    connection: Ref.Ref(Connection.Connection).annotate({
-      description: 'Connection to source Google Calendar credentials from.',
-    }),
-  }),
-  output: Schema.Struct({
-    id: Schema.String.annotate({ description: 'Remote Google event id.' }),
-  }),
-  services: [Credential.CredentialsService],
-}).pipe(Operation.visible);
-
 export const RenameFilter = Operation.make({
   meta: {
     key: makeKey('renameFilter'),
@@ -289,36 +124,6 @@ export const RenameFilter = Operation.make({
   }),
   output: Schema.Void,
 });
-
-export const GetGoogleContactGroups = Operation.make({
-  meta: {
-    key: makeKey('getGoogleContactGroups'),
-    name: 'Get Google Contact Groups',
-    description: 'Discover Google Contact Groups reachable from a connection.',
-    icon: 'ph--users--regular',
-  },
-  input: ConnectorSpec.GetSyncTargetsInput,
-  output: ConnectorSpec.GetSyncTargetsOutput,
-});
-
-export const GoogleContactsSync = Operation.make({
-  meta: {
-    key: makeKey('googleContactsSync'),
-    name: 'Sync Google Contacts',
-    description: 'Sync contacts from a Google Contact group into Person objects in the space.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose externalId is the contact group to sync.',
-    }),
-    pageSize: Schema.optional(Schema.Number),
-  }),
-  output: Schema.Struct({
-    upserted: Schema.Number,
-  }),
-  services: [Database.Service, Credential.CredentialsService],
-}).pipe(Operation.visible);
 
 export const ReadEmail = Operation.make({
   meta: {

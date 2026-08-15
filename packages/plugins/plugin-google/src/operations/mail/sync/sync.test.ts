@@ -18,7 +18,6 @@ import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { createSyncProgressKey } from '@dxos/plugin-inbox/sync';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
@@ -27,6 +26,7 @@ import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
 import { type GmailDataset, GoogleMailApi } from '#services';
+import { GoogleOperation } from '#types';
 
 import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants';
 import { GoogleApiError } from '../../../errors';
@@ -684,7 +684,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
   }, 30_000);
 
   test('GoogleMailSync is marked idempotent for durable-execution retry', ({ expect }) => {
-    expect(Operation.isIdempotent(InboxOperation.GoogleMailSync)).toBe(true);
+    expect(Operation.isIdempotent(GoogleOperation.GoogleMailSync)).toBe(true);
   });
 
   //

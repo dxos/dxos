@@ -26,7 +26,7 @@ import { findSyncTriggerForBinding } from './sync-trigger';
 /** Stands in for a connector's declared `sync.trigger`. */
 const SYNC_SPEC = Trigger.specTimer('*/10 * * * *');
 
-// Stand-in for a connector's `sync.operation` (e.g. `InboxOperation.GoogleMailSync`): takes the same
+// Stand-in for a connector's `sync.operation` (e.g. `GoogleOperation.GoogleMailSync`): takes the same
 // `{ binding: Ref<Cursor> }` shape every real connector's sync declares.
 const TestSync = Operation.make({
   meta: { key: DXN.make('org.dxos.test.sync'), name: 'Test Sync' },
