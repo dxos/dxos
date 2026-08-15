@@ -1,0 +1,488 @@
+[
+  {
+    "plugin": "plugin-markdown",
+    "results": {
+      "node": [
+        {
+          "name": "AnchorResolver",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "AnchorSort",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "CommentConfig",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "CreateObject",
+          "verdict": "EQUIVALENT",
+          "detail": "SpaceCapability.createObject(...)"
+        },
+        {
+          "name": "MarkdownSettings",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "MarkdownState",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "OperationHandler",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.operationHandler(...)"
+        },
+        {
+          "name": "ReactSurface",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "Schema",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.schema(...)"
+        },
+        {
+          "name": "SkillDefinition",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.skillDefinition(...)"
+        },
+        {
+          "name": "UndoMappings",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        }
+      ],
+      "workerd": [
+        {
+          "name": "AnchorResolver",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "AnchorSort",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "CommentConfig",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "CreateObject",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "MarkdownSettings",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "MarkdownState",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "OperationHandler",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.operationHandler(...)"
+        },
+        {
+          "name": "ReactSurface",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "Schema",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.schema(...)"
+        },
+        {
+          "name": "SkillDefinition",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.skillDefinition(...)"
+        },
+        {
+          "name": "UndoMappings",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        }
+      ]
+    }
+  },
+  {
+    "plugin": "plugin-space",
+    "results": {
+      "node": [
+        {
+          "name": "AppGraphBuilder",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "Commands",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.commands(...)"
+        },
+        {
+          "name": "CreateObject",
+          "verdict": "EQUIVALENT",
+          "detail": "SpaceCapability.createObject(...)"
+        },
+        {
+          "name": "IdentityCreated",
+          "verdict": "EQUIVALENT",
+          "detail": "Capability.lazyModule(...)"
+        },
+        {
+          "name": "NavigationHandler",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "NavigationTargetResolver",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "OperationHandler",
+          "verdict": "SPEC_DIVERGES",
+          "detail": "generated: AppCapability.operationHandler(() => import('./operation-handler')) | handwritten: Capability.lazyModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () => import('./operation-handler)"
+        },
+        {
+          "name": "ReactRoot",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "ReactSurface",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "Repair",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "Schema",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "SpaceSettings",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "SpaceState",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "SpacesReady",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "UndoMappings",
+          "verdict": "SPEC_DIVERGES",
+          "detail": "generated: AppCapability.undoMappings(() => import('./undo-mappings'), { provides: [SpaceOperationConfig], props: (options: SpaceSchema.Sp) | handwritten: Capability.lazyModule('UndoMappings', { provides: [Capabilities.UndoMapping, SpaceOperationConfig], props: (options: Space)"
+        }
+      ],
+      "workerd": [
+        {
+          "name": "AppGraphBuilder",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "Commands",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "CreateObject",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "IdentityCreated",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "NavigationHandler",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "NavigationTargetResolver",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "OperationHandler",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.operationHandler(...)"
+        },
+        {
+          "name": "ReactRoot",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "ReactSurface",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "Repair",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "Schema",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "SpaceSettings",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "SpaceState",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "SpacesReady",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "UndoMappings",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        }
+      ]
+    }
+  },
+  {
+    "plugin": "plugin-thread",
+    "results": {
+      "node": [
+        {
+          "name": "AppGraphBuilder",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "ChannelBackendFeed",
+          "verdict": "EQUIVALENT",
+          "detail": "Capability.lazyModule(...)"
+        },
+        {
+          "name": "CreateObject",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "OperationHandler",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.operationHandler(...)"
+        },
+        {
+          "name": "ReactSurface",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "Schema",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.schema(...)"
+        }
+      ],
+      "workerd": [
+        {
+          "name": "AppGraphBuilder",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "ChannelBackendFeed",
+          "verdict": "EQUIVALENT",
+          "detail": "Capability.lazyModule(...)"
+        },
+        {
+          "name": "CreateObject",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "OperationHandler",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.operationHandler(...)"
+        },
+        {
+          "name": "ReactSurface",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "Schema",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.schema(...)"
+        }
+      ]
+    }
+  },
+  {
+    "plugin": "plugin-inbox",
+    "results": {
+      "node": [
+        {
+          "name": "AppGraphBuilder",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "AutomationTemplates",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "ContactExtractor",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "CreateObject",
+          "verdict": "EQUIVALENT",
+          "detail": "SpaceCapability.createObject(...)"
+        },
+        {
+          "name": "IdentitySpecs",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "InboxSettings",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "MailboxProcessors",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "NavigationTargetResolver",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "OperationHandler",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.operationHandler(...)"
+        },
+        {
+          "name": "ReactSurface",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "Schema",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "SkillDefinition",
+          "verdict": "EQUIVALENT",
+          "detail": "AppCapability.skillDefinition(...)"
+        },
+        {
+          "name": "SummarizeExtractor",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        }
+      ],
+      "workerd": [
+        {
+          "name": "AppGraphBuilder",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "AutomationTemplates",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "ContactExtractor",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "CreateObject",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "IdentitySpecs",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "InboxSettings",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "MailboxProcessors",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "NavigationTargetResolver",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "OperationHandler",
+          "verdict": "SPEC_DIVERGES",
+          "detail": "generated: AppCapability.operationHandler(() => import('./operation-handler'), { activatesOn: ActivationEvents.Idle, }) | handwritten: Capability.inlineModule('operation-handler', { provides: [Capabilities.OperationHandler] }, OperationHandlerCapability)"
+        },
+        {
+          "name": "ReactSurface",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "Schema",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "SkillDefinition",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        },
+        {
+          "name": "SummarizeExtractor",
+          "verdict": "GENERATED_ONLY",
+          "detail": "stub not present in handwritten (handwritten just omits it)"
+        }
+      ]
+    }
+  }
+]

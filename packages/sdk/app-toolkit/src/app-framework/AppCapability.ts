@@ -214,11 +214,13 @@ export const anchorSort: Maker<typeof AppCapabilities.AnchorSort> = Capability$.
 /** Module contributing translations. */
 export const translations = (
   resources: Translations.Resource | Translations.Resource[],
-  options?: { name?: string },
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
   const value: Translations.Resource[] = Array.isArray(resources) ? resources : [resources];
-  return Capability$.inlineModule(options?.name ?? 'translations', { provides: [AppCapabilities.Translations] }, () =>
-    Effect.succeed([Capability$.contribute(AppCapabilities.Translations, value)]),
+  return Capability$.inlineModule(
+    options?.name ?? 'translations',
+    { provides: [AppCapabilities.Translations], environments: options?.environments },
+    () => Effect.succeed([Capability$.contribute(AppCapabilities.Translations, value)]),
   );
 };
 
@@ -229,20 +231,18 @@ export const translations = (
  */
 export const schema = (
   types: ReadonlyArray<Type.AnyEntity> | (() => Promise<{ default: ReadonlyArray<Type.AnyEntity> }>),
-  options?: { name?: string },
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
+  const spec = { provides: [AppCapabilities.Schema], environments: options?.environments } as const;
   if (typeof types === 'function') {
     const loader = types;
-    return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(
-      options?.name ?? 'schema',
-      { provides: [AppCapabilities.Schema] },
-      () =>
-        loader().then(({ default: values }) => ({
-          default: () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, values)]),
-        })),
+    return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(options?.name ?? 'schema', spec, () =>
+      loader().then(({ default: values }) => ({
+        default: () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, values)]),
+      })),
     );
   }
-  return Capability$.inlineModule(options?.name ?? 'schema', { provides: [AppCapabilities.Schema] }, () =>
+  return Capability$.inlineModule(options?.name ?? 'schema', spec, () =>
     Effect.succeed([Capability$.contribute(AppCapabilities.Schema, types)]),
   );
 };
@@ -250,11 +250,13 @@ export const schema = (
 /** Module contributing static plugin assets (typically the bundled `PLUGIN.mdl` spec). */
 export const pluginAsset = (
   asset: AppCapabilities.PluginAsset | ReadonlyArray<AppCapabilities.PluginAsset>,
-  options?: { name?: string },
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
   const values: ReadonlyArray<AppCapabilities.PluginAsset> = Array.isArray(asset) ? asset : [asset];
-  return Capability$.inlineModule(options?.name ?? 'plugin-asset', { provides: [AppCapabilities.PluginAsset] }, () =>
-    Effect.succeed([Capability$.contributeAll(AppCapabilities.PluginAsset, values)]),
+  return Capability$.inlineModule(
+    options?.name ?? 'plugin-asset',
+    { provides: [AppCapabilities.PluginAsset], environments: options?.environments },
+    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.PluginAsset, values)]),
   );
 };
 
@@ -274,9 +276,13 @@ export const pluginAsset = (
  */
 export const commands = (
   values: ReadonlyArray<Capabilities.AnyCommand> | (() => Promise<{ default: ReadonlyArray<Capabilities.AnyCommand> }>),
-  options?: { name?: string },
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
-  const spec = { activatesOn: ActivationEvents.CommandsRequested, provides: [Capabilities.Command] } as const;
+  const spec = {
+    activatesOn: ActivationEvents.CommandsRequested,
+    provides: [Capabilities.Command],
+    environments: options?.environments,
+  } as const;
   if (typeof values === 'function') {
     const loader = values;
     return Capability$.lazyModule<readonly [typeof Capabilities.Command]>(options?.name ?? 'cli-commands', spec, () =>

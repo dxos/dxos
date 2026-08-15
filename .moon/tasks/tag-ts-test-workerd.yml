@@ -10,6 +10,11 @@ tasks:
       - node-std:build
       - vite-plugin-import-source:build
       - ^:build
+      # Dependency packages' prebuild-generated sources (e.g. dx-gen-barrels' headless barrels)
+      # must exist before tests resolve them under the source condition; optional because most
+      # projects have no prebuild task.
+      - target: '^:prebuild'
+        optional: true
     inputs:
       - '@group(sources)'
       - /vite.base.config.ts

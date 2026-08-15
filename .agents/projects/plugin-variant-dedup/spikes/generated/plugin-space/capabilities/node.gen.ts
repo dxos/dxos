@@ -1,8 +1,8 @@
 //
-// Copyright 2025 DXOS.org
+// GENERATED — do not edit
+// AST-sliced from src/capabilities/index.ts for the 'node' environment.
 //
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -14,7 +14,9 @@ import { SpaceOperationConfig } from '../operations/helpers';
 import { makeCreateInvitationUrl } from './helpers';
 
 export const Commands = AppCapability.commands(() => import('./commands'));
+
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
@@ -25,19 +27,24 @@ export const IdentityCreated = Capability.lazyModule(
   },
   () => import('./identity-created'),
 );
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
-export const UndoMappings = Capability.lazyModule(
-  'UndoMappings',
-  {
-    provides: [Capabilities.UndoMapping, SpaceOperationConfig],
-    props: (options: SpaceSchema.SpacePluginOptions) => ({
-      createInvitationUrl: makeCreateInvitationUrl(options),
-      observability: options.observability,
-    }),
-  },
-  () => import('./undo-mappings'),
-);
+
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
+  provides: [SpaceOperationConfig],
+  props: (options: SpaceSchema.SpacePluginOptions) => ({
+    createInvitationUrl: makeCreateInvitationUrl(options),
+    observability: options.observability,
+  }),
+});
+
+export const AppGraphBuilder = undefined;
+export const NavigationHandler = undefined;
+export const NavigationTargetResolver = undefined;
+export const ReactRoot = undefined;
+export const ReactSurface = undefined;
+export const Repair = undefined;
+export const Schema = undefined;
+export const SpaceSettings = undefined;
+export const SpaceState = undefined;
+export const SpacesReady = undefined;

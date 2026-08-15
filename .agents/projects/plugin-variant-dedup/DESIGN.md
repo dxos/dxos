@@ -1,0 +1,241 @@
+# Plugin environment-variant dedup — research report
+
+Status: research complete, spikes validated on `plugin-markdown` and `plugin-space` (PR #12610).
+Question: can the hand-maintained browser/node/workerd plugin variants collapse into one
+canonical plugin definition with per-module environment flags, without losing the static
+bundle-hygiene guarantees?
+
+**Answer: yes — recommended mechanism is a single canonical plugin entry plus generated
+per-environment capability barrels with `undefined` stubs (Option O2 below), with the
+generator driven by `environments` annotations on the canonical barrel.** Validated
+end-to-end; the main alternatives were spiked and are invalidated (O4) or rejected with
+evidence (O1, O5). O3 is the conservative fallback using the same annotations.
+
+## 1. Problem, quantified
+
+36 of 98 plugins carry environment variants: ~123 variant-only files, ~2,370 lines, and six
+hand-synced touchpoints per plugin — `plugin.ts`/`plugin.node.ts`/`plugin.workerd.ts`,
+`capabilities/{index,node,workerd}.ts`, sometimes `schema.{node,workerd}.ts`, the
+`package.json` `imports` condition maps, the `vite.config.ts` entry list, and the
+`check-module-structure` moon task.
+
+Demonstrated drift on main (audit: `spikes/matrix.md`, 23 mismatch flags across 35 plugins):
+
+- **Stale headless schema lists** — `schema.node.ts`/`schema.workerd.ts` are hand-copies of
+  `capabilities/schema.ts` and have diverged in 4 plugins: plugin-space (missing `TaskSet`),
+  plugin-inbox (4 of 9 types), plugin-routine and plugin-magazine (missing `Instructions`).
+  In every case the node and workerd copies are byte-identical to each other — the split
+  buys nothing and doubles the drift surface.
+- **Node entries silently resolving the browser barrel** — 7 plugins' `plugin.node.ts`
+  imports `#capabilities` but their `package.json` has no `node` condition for it
+  (assistant, pipeline, debug, devtools, presenter, game, illustrator; game and illustrator
+  do it under workerd too).
+- **Semantic drift between barrels** — a real bug class: plugin-space, plugin-client and
+  plugin-routine's `capabilities/node.ts` re-declare `OperationHandler` with raw
+  `Capability.lazyModule` instead of the `AppCapability.operationHandler` maker; the maker
+  bakes in `activatesOn: Startup`, the raw call defaults to Idle — so the node entrypoint
+  registers boot-path operation handlers a wave late. Also: assistant's module id
+  `'skill-definition'` (workerd) vs `'SkillDefinition'` (index); inbox's workerd barrel
+  converts `OperationHandler` lazy→inline.
+- **Pure boilerplate** — plugin-thread's node/workerd files byte-identical; map-solid and
+  wnfs ship empty no-op variant plugins; plugin-file maps `workerd` → `plugin.node.ts`.
+- **Fan-out cost** — commit `7db68acf` (move Schema capability) touched 210 files and missed
+  exactly the 4 plugins whose schema lives in `schema.node.ts` → the stale lists above.
+- **Test blindness** — `plugin.test.ts` imports `#plugin`, which resolves the _node_ variant
+  under vitest; the browser module list of 33 plugins was never asserted.
+
+## 2. Constraints any mechanism must satisfy
+
+1. **"Lazy defers evaluation, not bundling."** Downstream bundlers (edge operation-service:
+   esbuild with `conditions: ['workerd','worker','browser']`; the `dx` CLI: bun under
+   `node`) follow the dynamic import behind every lazy capability. Filtering must therefore
+   be visible to _static resolution_ — different files per condition — not runtime flags.
+   The enforcement gate (`check-module-structure` → `dx-trace-imports` over built dist) and
+   the env-tests bundle assertion both check static reachability.
+2. **Built plugin entries externalize all non-relative imports** (vite lib mode / rolldown),
+   so `#capabilities` resolution happens in the _consumer's_ bundler via `package.json`
+   `imports` conditions. This is the load-bearing fact behind O2: one built `plugin.mjs`
+   can serve every environment because the per-env difference rides the barrel condition.
+3. **Source-mode consumers bypass the build**: vitest (all pools) and `DX_SOURCE=1` bun
+   prepend the `source` condition and walk raw TS. Any mechanism relying on a build-time
+   transform (defines, DCE) leaves source-mode consumers unfiltered — a hard problem for
+   O4, a non-issue for condition-based file selection.
+4. TypeScript always typechecks against the `types` condition (the browser barrel). Headless
+   barrels are never typechecked against their variant today; a mechanism should not make
+   this worse (O2 keeps it neutral; the generator makes the barrels correct by construction).
+
+## 3. Options considered
+
+### O1 — runtime-only filtering (env tag on module, manager skips)
+
+Rejected on constraint 1, with experimental confirmation: the DCE spike's negative control
+showed `Plugin.addModule(X, { environments: [...] })` is _never_ tree-shakeable — the module
+reference is a used value, and all three environment builds come out byte-identical. Runtime
+tags are still useful metadata, but they cannot provide bundle hygiene.
+
+### O2 — single canonical entry + generated stub barrels ("recommended")
+
+One `plugin.ts` lists every module once. Per-env `#capabilities` barrels become _generated_
+artifacts: for each environment, the generator AST-slices the canonical
+`capabilities/index.ts`, keeping the exact maker-call statements of included modules (with
+only the imports they reference) and emitting `export const X = undefined;` stubs for
+excluded ones. `Plugin.addModule(undefined)` is a no-op (framework change, ~10 lines).
+`#plugin` loses all conditions; `plugin.node.ts`/`plugin.workerd.ts`/vite variant entries
+are deleted.
+
+### O3 — full codegen of today's structure (conservative fallback)
+
+Same `environments` annotations, but the generator emits today's exact artifacts (three
+plugin entries, subset barrels, conditions, vite entries) as checked-in generated files.
+Zero framework/runtime/dist-shape change; keeps all files but machine-owned. Strictly more
+moving parts than O2 for the same authored source; only preferable if collapsing the
+`#plugin` conditions worries out-of-repo consumers (the spike evidence says it should not —
+see §4.1).
+
+### O4 — per-variant builds from one source via define + tree-shaking (invalidated)
+
+Fixture spike (rolldown-vite 8, the repo's own external predicate, both `sideEffects`
+settings): statement-level `if (__DX_BROWSER__)` guards _do_ reliably drop the module
+reference — but under the repo's actual `"sideEffects": true`, the browser-only dynamic
+import chunk (containing `import 'react'`) is still emitted into the headless dist as an
+orphan file; fixing that requires `/* @__PURE__ */` on every maker call or flipping
+`sideEffects`. Worse, constraint 3 is structural: vitest/bun source mode never runs the
+defines, so the workerd vitest pool and the CLI would see unfiltered code. Three builds per
+plugin instead of one, plus annotation discipline, for a result the condition mechanism
+gives for free. Not recommended.
+
+### O5 — consumer-side composition via per-module subpath exports
+
+Rejected without spike: moves the composition duplication into every host, requires
+coordinated changes in the out-of-repo edge repo, and inverts ownership (the plugin should
+own which of its modules run where).
+
+## 4. Spike evidence
+
+### 4.1 S3 — O2 end-to-end on real plugins (committed on this branch)
+
+Applied to **plugin-markdown** (12 modules) and **plugin-space** (17 modules — the messiest
+case: per-env schema lists, `PLUGIN.mdl?raw` asset, inline translations, star-exported
+`AppGraphBuilder`, options-mapped `UndoMappings`). Inline env-varying `addModule` calls
+(translations, pluginAsset) moved into the canonical barrel as `Translations`/`PluginAsset`
+module exports — after which both plugins' entries are env-neutral single files.
+
+All checks green on both plugins:
+
+| Check                                                                                                                  | Result                                                                                                                                  |
+| ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `moon run <p>:build`                                                                                                   | ✓ single `plugin.mjs`, barrel imports externalized                                                                                      |
+| `check-module-structure` (dx-trace-imports, workerd,worker)                                                            | ✓ no react/react-dom/@dxos/react-ui reachable                                                                                           |
+| same trace under `node` conditions                                                                                     | ✓ clean                                                                                                                                 |
+| positive control (browser conditions, `--fail-on missing`)                                                             | ✓ react-ui _is_ reached — the gate is sensitive, not vacuous                                                                            |
+| `moon run <p>:lint`                                                                                                    | ✓ (after switching two relative `./plugin` imports to `#plugin` — the lint rule can finally see the alias now that it is unconditional) |
+| `plugin.test.ts` under vitest (node condition → stub barrel path)                                                      | ✓ modules activate, stubs skipped                                                                                                       |
+| edge-simulation bundle (esbuild, `['workerd','worker','browser']`, `node:*` external — the real edge bundler's config) | ✓ 465 inputs, 31 from plugin-markdown, 0 react                                                                                          |
+
+Note: `@codemirror/state`/`view` do reach the workerd bundle — through
+`OperationHandler → operations → @dxos/ui-editor/headless`, on main as well; pre-existing
+and orthogonal (the repo's policy forbids react/react-dom/@dxos/react-ui only).
+
+### 4.2 S2 — generator prototype + drift audit (`spikes/`)
+
+A ~930-line TypeScript-compiler-API prototype (`audit.mjs`, `generate.mjs`, `compare.mjs`,
+`lib/`) that (a) reverse-engineered the implied environment matrix of all 36 plugins from
+their variant files, and (b) generated headless barrels for markdown/space/thread/inbox
+from the canonical barrel + matrix. Comparison against the handwritten barrels: **20/23
+modules semantically identical**; the 3 divergences are 2 handwritten drift bugs (the
+`OperationHandler` Startup→Idle regression, §1) and 1 deliberate rewrite (inbox workerd's
+lazy→inline conversion) that needs an annotation escape hatch. Handled robustly: attached
+comments, namespace-import trimming, `export * from` indirection, import aliases. So
+annotation-driven generation captures reality, and regeneration _fixes_ the known drift by
+construction.
+
+### 4.3 S1 — bundler DCE fixture (verdict feeding O4)
+
+See §3/O4. Extra findings worth keeping: rolldown folds both statement-level `if`s and
+ternaries over defines reliably; unused _external_ import specifiers are dropped from import
+statements regardless of `sideEffects` (which is why O2's canonical entry stays clean); and
+`sideEffects: true` blocks orphan-chunk pruning unless makers are `@__PURE__`-annotated.
+
+## 5. Recommended design (O2, concrete)
+
+1. **Framework** (done in spike): `Plugin.addModule(undefined)` → no-op.
+2. **Annotation**: `environments?: readonly ('browser' | 'node' | 'workerd')[]` on
+   `ModuleSpec` / maker options in the canonical `capabilities/index.ts` — the single
+   source of truth. Default: `['browser']` (headless is opt-in, matching the existing
+   "only add a variant the plugin genuinely supports" rule).
+3. **Generator**: productize `spikes/generate.mjs` and **ship it with
+   `@dxos/app-framework` as a distributed binary** (e.g. `bin: dx-plugin gen`), not
+   monorepo-internal tooling — if stub-barrel generation is the plugin authoring pattern,
+   out-of-repo plugin authors need it from the published package. Precedent in the same
+   package: the composer vite plugin is compiled to `dist/plugin` by the `compile-plugin`
+   task and exported at `./vite-plugin`; the generator follows that shape plus a `bin`
+   entry (decision: Josiah, 2026-08-15). It emits the headless barrels into a
+   **`gen/` folder** — `src/capabilities/gen/{node,workerd}.ts` (subset + stubs +
+   `// GENERATED` header), with the `#capabilities` source conditions pointing there —
+   so one repo-wide `gen/` gitignore pattern covers every plugin (decision: Josiah,
+   2026-08-15; same layout as `echo-query`'s `src/parser/gen/`). Runs as the plugin's
+   `prebuild` moon task with declared `outputs`, and the generated barrels are
+   **gitignored, not committed** (decision: Josiah, 2026-08-15 — supersedes the earlier
+   committed-files + CI-freshness-check sketch). `build` depends on `prebuild`, and
+   `test` depends on **`^:prebuild`** so every dependency package's generated sources
+   exist too — set as the default in the shared test tags
+   (`.moon/tasks/tag-ts-test*.yml`, which today carry `^:build`; the source-reading
+   direction replaces that with the prebuild closure) rather than per-plugin moon.yml.
+   Same shape as `echo-query`'s `prebuild-lezer` (`src/parser/gen/*` via task
+   `outputs`), aligned with apps reading from source rather than depending on full
+   builds. The task graph is the freshness guarantee, so no separate CI check is needed
+   and generated diffs never appear in review.
+   The shipped tooling also owns **setting up the package.json `imports`/`exports`
+   maps** (decision: Josiah, 2026-08-15) — deriving the `#plugin`/`#capabilities`
+   condition wiring and subpath exports from the same annotations, instead of the
+   internal toolbox/codemorph tooling (which out-of-repo authors don't have, and whose
+   `lintPackageExports` would flatten nested `source` maps if pointed at a plugin).
+   Barrels and condition maps come from one source of truth, so the
+   "missing `node` condition silently resolves the browser barrel" class (7 plugins
+   today) becomes unrepresentable rather than merely linted.
+   Follow-ups this creates: (a) non-moon entrypoints (bare `vitest`/IDE runners,
+   `DX_SOURCE=1` bun) need the barrels present — run `moon run :prebuild` once on a fresh
+   clone, or have the wrapper scripts trigger it; (b) `pkg-lint`'s `import-source-missing`
+   check must run after prebuild or exempt declared prebuild outputs; (c) `pack` must
+   include the generated barrels in the tarball (pack → build → prebuild should give this
+   for free — verify). If a plugin ever needs a node-only module, generate the browser
+   barrel too (canonical index stays authored, all consumed barrels generated); no current
+   plugin needs it for browser, but plugin-connector/plugin-registry's node-only `Commands`
+   land here.
+4. **Escape hatch**: a per-env override file (e.g. `capabilities/workerd.overrides.ts`)
+   whose exports the generator splices in place of the sliced statement — covers inbox's
+   lazy→inline conversion.
+5. **Schema**: collapse `schema.node.ts`/`schema.workerd.ts` (byte-identical everywhere)
+   into one `schema.headless.ts` referenced by both generated barrels; longer term, per-type
+   env annotations in the canonical schema list, generated the same way.
+6. **Deletions per plugin**: `plugin.node.ts`, `plugin.workerd.ts`, the `#plugin`
+   conditions, two vite entries, one schema copy. Repo-wide: ~70 files immediately, ~100
+   after schema/overrides consolidation.
+7. **Guard-rail updates**: keep `check-module-structure` exactly as is (it validated the
+   spike unchanged); extend `pkg-lint` to require that a package with `environments`
+   annotations has matching `#capabilities` conditions (kills the "silently resolves the
+   browser barrel" bug class); fix `toolbox lintPackageExports` which would flatten nested
+   `source` maps if ever pointed at plugins (pre-existing hazard).
+
+Migration is mechanical per plugin (the two spike commits are the template) and incremental
+— collapsed and uncollapsed plugins coexist; consumers see no API change.
+
+## 6. Open questions
+
+1. Whether to fix the 4 stale headless schema lists during migration (regeneration will
+   surface them; the _intended_ headless subsets need a human call — some omissions may be
+   deliberate, e.g. browser-only types).
+2. Whether inbox's lazy→inline workerd conversion is still wanted (it predates the
+   chunk-tolerant edge bundler config) or can revert to the plain sliced form, removing the
+   only override-file user before the escape hatch is even built.
+3. Default-environments policy for makers that are intrinsically headless-safe
+   (`schema`, `operationHandler`, `skillDefinition`) — a per-maker default (e.g. schema
+   defaults to all three) would shrink annotations further but adds magic.
+
+## Artifacts
+
+- Spike commits on this branch: framework change + plugin-markdown, then plugin-space.
+- `spikes/` — generator prototype (`audit.mjs`, `generate.mjs`, `compare.mjs`, `lib/`),
+  drift audit (`matrix.md`), generated barrels + comparison reports for 4 plugins
+  (`generated/`), edge-bundle simulation (`edge-sim.mjs`).
+- PR: #12610 (draft). DCE fixture lives in the session scratchpad only; its verdict is §4.3.

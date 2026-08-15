@@ -125,6 +125,9 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "bin": {
+    "dx-plugin": "./bin/dx-plugin.mjs"
+  },
   "scripts": {
     "typedoc": "typedoc --out typedoc"
   },

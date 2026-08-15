@@ -7,7 +7,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 
+import { translations } from '#translations';
 import { MarkdownCapabilities } from '#types';
 
 // Ordering-only: registers the anchor text resolver once the app graph exists (mirrors the
@@ -23,10 +25,18 @@ export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort')
   requires: [AppCapabilities.AppGraph],
 });
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: ['browser', 'node'],
+});
+export const Schema = AppCapability.schema(() => import('./schema'), {
+  environments: ['browser', 'node', 'workerd'],
+});
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
+  environments: ['browser', 'node', 'workerd'],
+});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  environments: ['browser', 'node', 'workerd'],
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
 });
@@ -41,4 +51,5 @@ export const MarkdownState = Capability.lazyModule(
   },
   () => import('./state'),
 );
+export const Translations = AppCapability.translations([...translations, ...editorTranslations]);
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'));

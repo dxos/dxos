@@ -1,0 +1,59 @@
+# plugin-variant-dedup — tasks
+
+Research phase (PR #12610) — see DESIGN.md for the full report and recommendation (O2:
+single canonical entry + generated stub barrels).
+
+## Phase 0 — research (this PR)
+
+- [x] Map current variant landscape (36 plugins, ~123 files, six sync points; drift audit → `spikes/matrix.md`)
+- [x] Enumerate candidate mechanisms (O1–O5, DESIGN.md §3)
+- [x] S1: bundler DCE fixture — invalidates O4 under `sideEffects: true` + source-mode consumers; negative control proves runtime `environments` opts are never tree-shakeable
+- [x] S2: generator prototype + equivalence comparison (20/23 exact; 2 handwritten bugs; 1 deliberate rewrite → escape hatch)
+- [x] S3: O2 end-to-end on plugin-markdown + plugin-space (build, traces + positive control, lint, check-module-structure, tests, edge-sim bundle — all green)
+- [x] Draft PR with spike commits + report
+
+## Phase 1 — decision + framework groundwork
+
+- [x] User sign-off on O2 (Josiah, 2026-08-15: "let's move forward with implementing phase 1 and 2"); §6 Q1 (stale schema lists) and Q2 (inbox lazy→inline) remain open for migration
+- [x] `environments` field on `ModuleSpec`/`Module`/`MakerOptions` + value-based AppCapability helpers (schema, translations, pluginAsset, commands)
+- [x] `Plugin.addModule(undefined)` skip + unit tests (skip path, metadata carriage)
+
+## Phase 2 — generator productization
+
+Naming (Josiah, 2026-08-15): the bin is `dx-plugin` — the plugin-authoring CLI shipped with
+@dxos/app-framework; generation runs as `dx-plugin gen`, future tooling (exports/#plugin
+sync, scaffolding) becomes subcommands. Common task definitions live in the `composer-plugin`
+moon tag (.moon/tasks/tag-composer-plugin.yml) so plugins don't repeat prebuild/build/test/lint
+wiring.
+
+Decisions (Josiah, 2026-08-15): generation runs in the plugin's `prebuild` moon task with
+declared `outputs`; generated barrels are gitignored, not committed; `test` depends on
+`^:prebuild` (dependency packages' generated sources must exist), defaulted in the shared
+test tags rather than per-plugin; the generator ships with `@dxos/app-framework` as a
+distributed binary (pattern must work for out-of-repo plugin authors), following the
+`compile-plugin`/`./vite-plugin` precedent in that package. No CI freshness check needed —
+the task graph owns it (echo-query `prebuild-lezer` is the template).
+
+- [x] `dx-plugin` in `@dxos/app-framework` (`src/plugin-cli/`, `compile-plugin-cli` moon task via dx-compile, `bin/dx-plugin.mjs`); annotation-driven AST slicing; `typescript` resolved at runtime from the target package/workspace (no runtime dependency added)
+- [x] Tool syncs the package.json `#capabilities` condition map (source → `gen/` paths, normalized dist conditions) — `#plugin`/exports/vite-entry ownership remains a follow-up
+- [x] Headless barrels + stubs with GENERATED headers; `overrides.<env>.ts` splice (spliced as re-exports, exercised by plugin-space's Schema)
+- [x] `prebuild` task wiring: per-plugin `prebuild` with declared outputs + build/test/lint deps; optional `^:prebuild` dep added to `.moon/tasks/tag-ts-test{,-storybook,-workerd}.yml` (alongside `^:build` until the source-reading direction removes it)
+- [x] Emit into `src/capabilities/gen/`; repo-wide `**/src/capabilities/gen/` gitignore
+- [ ] Fresh-clone/non-moon entrypoints: ensure `DX_SOURCE=1` bun and bare vitest/IDE runs have a documented `moon run :prebuild` path (or wrapper-script trigger)
+- [x] `pkg-lint`: `import-source-missing` exempts `/gen/` source paths (task graph owns their existence); `pack` → `build` → `prebuild` covers tarballs
+- [ ] pkg-lint rule: annotations ⇒ matching `#capabilities` conditions exist (superseded in part by the tool writing the map itself)
+- [ ] TODO(wittjosiah): Roll `dx-plugin` into the `dx` cli? Once we stop shipping non-core plugins bundled into the cli it might be light weight enough to support this use case.
+
+## Phase 3 — migration (mechanical, incremental; spike commits are the template)
+
+- [x] Annotate + collapse the 2 spiked plugins onto the generator: hand-written stub barrels deleted, `environments` annotations in canonical barrels, prebuild tasks wired, space's byte-identical `schema.node/workerd` merged into `schema.headless.ts` behind `overrides.{node,workerd}.ts`, vestigial `#capabilities/node` subpath removed. Note: regeneration intentionally fixed space's node-barrel drift (`OperationHandler` back on Startup wave, `UndoMappings` maker form restored)
+- [ ] Sweep remaining 34 plugins; delete `plugin.node.ts`/`plugin.workerd.ts`, collapse `#plugin` conditions, prune vite entries
+- [ ] Merge byte-identical `schema.node.ts`/`schema.workerd.ts` → `schema.headless.ts`; surface the 4 stale schema lists for a human call
+- [ ] Fix the `OperationHandler` Startup→Idle drift in space/client/routine node barrels (regeneration does this; verify boot behavior)
+- [ ] Resolve inbox lazy→inline workerd conversion (keep via override or revert)
+
+## Phase 4 — hardening
+
+- [ ] Extend `check-module-structure` coverage to plugins that lack it but have variants
+- [ ] Fix `toolbox lintPackageExports` nested-`source` flattening hazard
+- [ ] Consider a workerd-pool smoke test that activates one collapsed plugin in the real workers pool
