@@ -7,7 +7,7 @@ import React, {
   type ComponentType,
   type PropsWithChildren,
   type ReactNode,
-  forwardRef,
+  type Ref,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -16,10 +16,9 @@ import React, {
   useState,
 } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { composable, composableProps, setRef } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
 
 import { type MessageRenderer, type SearchHit, defaultRenderer } from '../../model';
 import { type HighlightRange, HtmlIsland, MarkdownIsland } from '../Island';
@@ -39,8 +38,13 @@ export type MessageListController = {
   getRange: () => { startIndex: number; endIndex: number } | null;
 };
 
-export type MessageListProps = ThemedClassName<{
+export type MessageListProps = {
   messages: readonly Message.Message[];
+  /**
+   * Imperative handle for scroll control. Separate from the component's ref, which forwards the
+   * scroll container so the list can be slotted (`asChild`) into a layout part.
+   */
+  controllerRef?: Ref<MessageListController>;
   renderer?: MessageRenderer;
   registry?: XmlWidgetRegistry;
   /** Chrome wrapper; receives the island as `children`. Defaults to a bare frame. */
@@ -58,7 +62,7 @@ export type MessageListProps = ThemedClassName<{
   stickyBottom?: boolean;
   overscan?: number;
   onRangeChange?: (range: { startIndex: number; endIndex: number }) => void;
-}>;
+};
 
 const DefaultChrome = ({ children }: MessageChromeProps) => <>{children}</>;
 
@@ -70,11 +74,11 @@ const DefaultChrome = ({ children }: MessageChromeProps) => <>{children}</>;
  * thread-wide CodeMirror document (shared rendering, no per-message chrome) and a React tile stack
  * (per-message chrome, no shared rendering).
  */
-export const MessageList = forwardRef<MessageListController, MessageListProps>(
+export const MessageList = composable<HTMLDivElement, MessageListProps>(
   (
     {
-      classNames,
       messages,
+      controllerRef,
       renderer = defaultRenderer,
       registry,
       Chrome = DefaultChrome,
@@ -86,10 +90,20 @@ export const MessageList = forwardRef<MessageListController, MessageListProps>(
       stickyBottom = false,
       overscan = 8,
       onRangeChange,
+      ...props
     },
     forwardedRef,
   ) => {
+    // The scroll container is both the virtualizer's measurement root and the component's forwarded
+    // element, so the callback has to serve local state and the consumer's ref.
     const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+    const handleViewportRef = useCallback(
+      (element: HTMLDivElement | null) => {
+        setViewport(element);
+        setRef(forwardedRef, element);
+      },
+      [forwardedRef],
+    );
 
     const virtualizer = useVirtualizer({
       count: messages.length,
@@ -133,7 +147,7 @@ export const MessageList = forwardRef<MessageListController, MessageListProps>(
     }, [stickyBottom, messages.length, virtualizer]);
 
     useImperativeHandle(
-      forwardedRef,
+      controllerRef,
       () => ({
         scrollToIndex: (index, align = 'start') => virtualizer.scrollToIndex(index, { align }),
         scrollToBottom: () => messages.length && virtualizer.scrollToIndex(messages.length - 1, { align: 'end' }),
@@ -171,7 +185,11 @@ export const MessageList = forwardRef<MessageListController, MessageListProps>(
     );
 
     return (
-      <div ref={setViewport} className={mx('relative overflow-y-auto', classNames)} data-testid='feed.viewport'>
+      <div
+        {...composableProps(props, { classNames: 'relative overflow-y-auto' })}
+        data-testid='feed.viewport'
+        ref={handleViewportRef}
+      >
         <div className='relative w-full' style={{ height: virtualizer.getTotalSize() }}>
           {items.map((item) => {
             const message = messages[item.index];

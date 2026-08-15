@@ -181,7 +181,7 @@ const DefaultStory = ({ count, streaming, estimateSize }: StoryProps) => {
 
       <Panel.Content asChild>
         <MessageList
-          ref={controllerRef}
+          controllerRef={controllerRef}
           classNames='dx-document'
           messages={messages}
           Chrome={DemoChrome}
