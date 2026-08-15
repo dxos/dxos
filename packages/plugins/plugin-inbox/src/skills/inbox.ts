@@ -11,10 +11,8 @@ import { InboxOperation, Mailbox } from '#types';
 
 export type InboxSkillOptions = {
   /**
-   * Sync operations of the connectors bound to a Mailbox, resolved by the caller.
-   *
-   * Passed in rather than named here: naming one provider's operation advertised a tool a
-   * deployment without that provider cannot run, and left every other provider's sync invisible.
+   * Sync operations of the connectors bound to a Mailbox, passed in rather than named here so the
+   * skill never advertises a tool the deployment cannot run.
    */
   syncOperations?: readonly Operation.Definition.Any[];
 };

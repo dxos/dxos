@@ -14,18 +14,13 @@ import { CalendarSkill, InboxSendSkill, InboxSkill } from '#skills';
 import { Calendar, InboxCapabilities, Mailbox } from '#types';
 
 /**
- * Contributes the mail/calendar skills, with each provider's tools resolved from what is actually
- * installed rather than named in the skill.
- *
- * Resolution is deferred into `make` (a skill is materialized later than this module activates) so a
- * provider plugin activating after plugin-inbox is still seen; reading eagerly here would silently
- * drop it. `Capability.Service` is what makes that read synchronous.
+ * Contributes the mail/calendar skills, resolving each provider's tools inside `make` so a provider
+ * plugin activating after plugin-inbox is still seen.
  */
 const skillDefinition = () =>
   Effect.gen(function* () {
     const context = yield* Capability.Service;
 
-    /** Sync operations of every connector bound to `typename`. */
     const syncOperations = (typename: string): Operation.Definition.Any[] =>
       context
         .getAll(ConnectorSpec.Connector)

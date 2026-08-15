@@ -17,11 +17,8 @@ import { Event } from '@dxos/types';
 export const make = (props: Parameters<typeof Event.make>[0]): Event.Event => Event.make(props);
 
 /**
- * Whether an event has not yet been synced to any remote calendar.
- *
- * Keyed on the ABSENCE of a foreign key rather than on one provider's: a foreign key is what a sync
- * mapper stamps once the remote accepts the event, so "no key from anyone" is what draft means —
- * checking Google's alone reported every event from any other connector as a perpetual draft.
+ * Whether an event has not yet been synced to any remote calendar — keyed on the absence of ANY
+ * provider's foreign key, since checking one provider's made every other connector's events drafts.
  */
 export const isDraft = (event: Event.Event): boolean => (Obj.getMeta(event).keys?.length ?? 0) === 0;
 
