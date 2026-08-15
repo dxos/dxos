@@ -31,7 +31,7 @@ export const BuiltinConnectors = Capability.lazyModule(
 // `ActivationEvents.CommandsRequested`, fired both by the `dx` CLI at boot and by a browser host
 // when someone opens the devtools terminal — so activating this module in browser too (with its
 // empty list, since there are no browser-safe connector commands) is consistent with that intent.
-export const Commands = AppCapability.commands([], { environments: ['node'] });
+export const Commands = AppCapability.commands([]);
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
   environments: ['node'],
 });
@@ -42,14 +42,11 @@ export const OAuthRedirect = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.formInput'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['node', 'workerd'],
-});
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

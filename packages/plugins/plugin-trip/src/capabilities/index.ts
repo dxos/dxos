@@ -18,9 +18,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
   requires: [AttentionCapabilities.ViewState],
 });
 // Headless environments load the reduced list via ./overrides.node.ts / ./overrides.workerd.ts.
-export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['node', 'workerd'],
-});
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = Capability.inlineModule(
   'SkillDefinition',
   { provides: [AppCapabilities.SkillDefinition] },

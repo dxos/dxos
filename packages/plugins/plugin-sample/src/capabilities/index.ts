@@ -25,7 +25,6 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['node', 'workerd'],
 });
 
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
@@ -42,9 +41,7 @@ export const SampleSettings = AppCapability.settings(() => import('./settings'),
   activatesOn: ActivationEvents.Idle,
   provides: [SampleCapabilities.Settings],
 });
-export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['node', 'workerd'],
-});
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

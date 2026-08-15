@@ -11,7 +11,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { translations as shellTranslations } from '@dxos/shell/react';
+import { translations as shellTranslations } from '@dxos/shell/translations';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -25,9 +25,7 @@ import { makeCreateInvitationUrl } from './helpers';
 export * from './app-graph-builder';
 export { makeCreateObjectEntryForDatabaseType } from '../util';
 
-export const Commands = AppCapability.commands(() => import('./commands'), {
-  environments: ['node'],
-});
+export const Commands = AppCapability.commands(() => import('./commands'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
   environments: ['node'],
 });
@@ -47,9 +45,7 @@ export type { NavigationHandlerOptions } from './navigation-handler';
 export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
   requires: [ClientCapabilities.Client],
 });
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  environments: ['node', 'workerd'],
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
@@ -76,9 +72,7 @@ export const Repair = Capability.lazyModule(
   () => import('./repair'),
 );
 // Headless environments load the reduced list via ./overrides.node.ts / ./overrides.workerd.ts.
-export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['node', 'workerd'],
-});
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SpaceCapabilities.SettingsAtom],
 });

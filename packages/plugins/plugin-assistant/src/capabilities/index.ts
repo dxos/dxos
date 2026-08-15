@@ -35,16 +35,13 @@ export const AgentHydrator = Capability.lazyModule(
 );
 export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-service'), {
   name: 'AgentRuntime',
-  environments: ['node'],
 });
 export const AiContext = AppCapability.layerSpec(() => import('./ai-context'), {
   name: 'AiContext',
-  environments: ['node'],
 });
 export const AiService = AppCapability.layerSpec(() => import('./ai-service'), {
   name: 'AiService',
   requires: [AppCapabilities.AiModelResolver],
-  environments: ['node'],
 });
 export const Connector = Capability.lazyModule(
   'AnthropicConnector',
@@ -59,15 +56,12 @@ export const AutomationTemplates = Capability.lazyModule(
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./automation-templates'),
 );
-export const Schema = AppCapability.schema(() => import('./schema-defs'), {
-  environments: ['node', 'workerd'],
-});
+export const Schema = AppCapability.schema(() => import('./schema-defs'));
 // Workerd loads a reduced declaration via ./overrides.workerd.ts: the workerd entry has no
 // ReactSurface to fire `AssistantEvents.Start` (see the maker's own doc comment), so the skill
 // must register on the framework's idle-default there instead.
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
   provides: [RoutineCapabilities.AgentDelegationStrategy],
-  environments: ['node', 'workerd'],
 });
 export const CompanionChatProvisioner = Capability.lazyModule(
   'CompanionChatProvisioner',
@@ -112,7 +106,6 @@ export const MarkdownExtension = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [

@@ -28,15 +28,9 @@ export const CommentConfig = AppCapability.commentConfig(() => import('./comment
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
   environments: ['node'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['node', 'workerd'],
-});
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['node', 'workerd'],
-});
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  environments: ['node', 'workerd'],
-});
+export const Schema = AppCapability.schema(() => import('./schema'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
 });

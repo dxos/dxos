@@ -4,6 +4,7 @@
 
 import path from 'node:path';
 
+import { type MakerDefaults, makerDefaults } from './maker-defaults';
 import {
   type ExportConst,
   calleeText,
@@ -20,7 +21,10 @@ export type BarrelMember = {
   name: string;
   /** `maker-call` members are module declarations; anything else is a helper/value export. */
   kind: 'maker-call' | 'non-call-initializer';
-  /** Environments parsed from the maker call's `environments: [...]` literal; null means unannotated (browser-only). */
+  /**
+   * Conditions this module is split out for: the call site's own `environments` literal, else the
+   * default its maker family declares. Null means neither applies — no variant carries it.
+   */
   environments: readonly string[] | null;
   /** File the declaration statement actually lives in (may differ from the barrel via re-exports). */
   sourceFile: string;
@@ -31,7 +35,10 @@ export type BarrelMember = {
  * Parses a canonical capabilities barrel into exported-name -> member, resolving one level of
  * `export * from` / `export { X } from` indirection (both occur in real plugin barrels).
  */
-export const parseBarrel = (filePath: string): Map<string, BarrelMember> => {
+export const parseBarrel = (
+  filePath: string,
+  defaults: MakerDefaults = makerDefaults(filePath),
+): Map<string, BarrelMember> => {
   const members = new Map<string, BarrelMember>();
   const sourceFile = parseFile(filePath);
   if (!sourceFile) {
@@ -39,7 +46,7 @@ export const parseBarrel = (filePath: string): Map<string, BarrelMember> => {
   }
 
   for (const entry of topLevelExportConsts(sourceFile)) {
-    members.set(entry.name, describeMember(sourceFile, entry, filePath));
+    members.set(entry.name, describeMember(sourceFile, entry, filePath, defaults));
   }
 
   for (const exp of topLevelExportDeclarations(sourceFile)) {
@@ -73,6 +80,7 @@ const describeMember = (
   sourceFile: import('typescript').SourceFile,
   entry: ExportConst,
   filePath: string,
+  defaults: MakerDefaults,
 ): BarrelMember => {
   const statementText = statementTextWithLeadingComments(sourceFile, entry.statement);
   if (!ts.isCallExpression(entry.initializer)) {
@@ -81,10 +89,30 @@ const describeMember = (
   return {
     name: entry.name,
     kind: 'maker-call',
-    environments: readEnvironments(sourceFile, entry.initializer),
+    environments: resolveEnvironments(sourceFile, entry.initializer, defaults),
     sourceFile: filePath,
     statementText,
   };
+};
+
+/**
+ * A module's conditions: its own `environments` literal if it declares one, else the default its
+ * maker family declares. Only the call site can narrow or widen a family — that is the whole point
+ * of the family default, so a genuine exception stays a one-line annotation at the exception.
+ */
+const resolveEnvironments = (
+  sourceFile: import('typescript').SourceFile,
+  call: import('typescript').CallExpression,
+  defaults: MakerDefaults,
+): readonly string[] | null => {
+  const declared = readEnvironments(sourceFile, call);
+  if (declared) {
+    return declared;
+  }
+  const callee = call.expression;
+  return ts.isPropertyAccessExpression(callee) && ts.isIdentifier(callee.expression)
+    ? defaults.lookup(callee.expression.text, callee.name.text)
+    : null;
 };
 
 /**

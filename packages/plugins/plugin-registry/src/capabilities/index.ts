@@ -21,7 +21,7 @@ export const DevPluginLoader = Capability.lazyModule(
 // `ActivationEvents.CommandsRequested`, fired both by the `dx` CLI at boot and by a browser host
 // when someone opens the devtools terminal — so activating this module in browser too (with its
 // empty list, since there are no browser-safe registry commands) is consistent with that intent.
-export const Commands = AppCapability.commands([], { environments: ['node'] });
+export const Commands = AppCapability.commands([]);
 // `workerd` added (this plugin previously had no workerd-active modules at all): with the
 // three-entry split gone, the canonical `plugin.tsx` always imports `#capabilities`, so if no
 // module here carries a `workerd` annotation the generator never emits `gen/workerd.ts` and a

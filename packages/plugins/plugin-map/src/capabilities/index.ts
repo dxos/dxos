@@ -18,9 +18,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
   requires: [MapCapabilities.MarkerProvider],
   environments: ['node'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['node', 'workerd'],
-});
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
   environments: ['node'],
 });
@@ -34,7 +32,6 @@ export const MarkerProvider = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [

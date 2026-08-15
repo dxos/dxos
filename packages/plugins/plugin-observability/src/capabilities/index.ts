@@ -68,9 +68,7 @@ export const Observability = Capability.inlineModule(
 // Node/workerd load a stubbed handler via ./overrides.<env>.ts: neither host can send real
 // telemetry (see the overrides files for why), so they register a no-op `SendEvent` handler
 // instead of the browser implementation.
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  environments: ['node', 'workerd'],
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });

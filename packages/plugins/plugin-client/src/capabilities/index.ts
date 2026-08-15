@@ -23,7 +23,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 });
 // Node-specific implementation spliced by `dx-plugin gen` (see overrides.node.ts): a node host has
 // the OAuth callback server and filesystem the browser command set omits (`account`, `profile`).
-export const Commands = AppCapability.commands(() => import('./commands'), { environments: ['node'] });
+export const Commands = AppCapability.commands(() => import('./commands'));
 export const HubHttpClient = Capability.lazyModule(
   'HubHttpClient',
   {
@@ -52,7 +52,6 @@ export const Client = Capability.lazyModule(
 );
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), {
   name: 'LayerSpecs',
-  environments: ['node'],
 });
 export const Migrations = Capability.lazyModule(
   'Migrations',
@@ -74,9 +73,7 @@ export const NavigationTargetLoader = Capability.lazyModule(
   { requires: [ClientCapabilities.Client], provides: [AppCapabilities.NavigationTargetLoader] },
   () => import('./navigation-target-loader'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  environments: ['node', 'workerd'],
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],

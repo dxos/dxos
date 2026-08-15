@@ -15,20 +15,15 @@ import { RoutineCapabilities } from '#types';
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   environments: ['node'],
 });
-export const Commands = AppCapability.commands(() => import('./commands'), {
-  environments: ['node'],
-});
+export const Commands = AppCapability.commands(() => import('./commands'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), {
   name: 'LayerSpecs',
   provides: [Capabilities.TraceSink],
-  environments: ['node'],
 });
 // Node uses a hand-built lazyModule (idle activation) via ./overrides.node.ts — see the override
 // file for why it diverges from the maker's Startup default.
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  environments: ['node', 'workerd'],
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
 });
@@ -47,9 +42,7 @@ export const RegistrySync = Capability.lazyModule(
   () => import('./registry-sync'),
 );
 // Headless environments load the reduced list via ./overrides.node.ts / ./overrides.workerd.ts.
-export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['node', 'workerd'],
-});
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const Templates = Capability.lazyModule(
   'Templates',
   { provides: [RoutineCapabilities.Template], environments: ['node', 'workerd'] },

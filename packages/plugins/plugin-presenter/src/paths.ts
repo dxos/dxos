@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 /** Canonical qualified path to the presentation companion node for an object. */
 export const getPresentationPath = (objectPath: string): string =>

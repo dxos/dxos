@@ -16,11 +16,8 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 // calls, so the handler has to be reachable headlessly, not just from the browser surface.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['node', 'workerd'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['node', 'workerd'],
-});
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
