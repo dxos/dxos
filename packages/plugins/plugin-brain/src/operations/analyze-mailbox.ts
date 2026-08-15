@@ -12,8 +12,8 @@ import { Database } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
 import { type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import * as FeedCursor from '@dxos/plugin-inbox/FeedCursor';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
-import { findOrCreateAnalyzeCursor } from '@dxos/plugin-inbox/operations';
 
 import { BrainOperation } from '#types';
 
@@ -35,7 +35,7 @@ const handler = BrainOperation.AnalyzeMailbox.pipe(
     }) {
       const mailbox = yield* Database.load(mailboxRef);
       const feed = yield* Database.load(mailbox.feed);
-      const cursor = yield* findOrCreateAnalyzeCursor(mailbox);
+      const cursor = yield* FeedCursor.findOrCreateAnalyzeCursor(mailbox);
       const aiService = yield* AiService.AiService;
 
       // Live progress via trace `status.update` events (`#analyze` key), projected into the runtime

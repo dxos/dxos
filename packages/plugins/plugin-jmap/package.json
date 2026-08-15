@@ -69,15 +69,15 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
     "./JmapPlugin": {
       "source": "./src/JmapPlugin.ts",
       "types": "./dist/types/src/JmapPlugin.d.ts",
       "import": "./dist/lib/JmapPlugin.mjs"
+    },
+    "./JmapOperationHandlerSet": {
+      "source": "./src/operations/JmapOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/JmapOperationHandlerSet.d.ts",
+      "import": "./dist/lib/JmapOperationHandlerSet.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

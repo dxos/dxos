@@ -8,7 +8,9 @@ import { trim } from '@dxos/util';
 
 import { InboxOperation, Mailbox } from '#types';
 
-const make = () =>
+export const key = Mailbox.SKILL_KEY;
+
+export const make = (): Skill.Skill =>
   Skill.make({
     key: Mailbox.SKILL_KEY,
     name: 'Inbox',
@@ -63,10 +65,3 @@ const make = () =>
       `,
     }),
   });
-
-const skill: Skill.Definition = {
-  key: Mailbox.SKILL_KEY,
-  make,
-};
-
-export default skill;

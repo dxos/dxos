@@ -8,7 +8,9 @@ import { trim } from '@dxos/util';
 
 import { Markdown, MarkdownOperation } from '#types';
 
-const make = () =>
+export const key = Markdown.SKILL_KEY;
+
+export const make = (): Skill.Skill =>
   Skill.make({
     key: Markdown.SKILL_KEY,
     name: 'Markdown',
@@ -58,10 +60,3 @@ const make = () =>
     }),
     agentCanEnable: true,
   });
-
-const skill: Skill.Definition = {
-  key: Markdown.SKILL_KEY,
-  make,
-};
-
-export default skill;

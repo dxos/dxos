@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'GoogleOperationHandlerSet': 'src/operations/GoogleOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'GooglePlugin': 'src/GooglePlugin.ts',
     'apis': 'src/apis/index.ts',

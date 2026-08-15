@@ -37,14 +37,14 @@ import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
 import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { ContactMessageExtractor } from '@dxos/plugin-inbox/operations';
+import * as MessageExtractor from '@dxos/plugin-inbox/MessageExtractor';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
-import { ProjectOperationHandlerSet } from '@dxos/plugin-projects/operations';
 import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
+import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -288,7 +288,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         run: () =>
           invoker.invokePromise(
             InboxOperation.ExtractMailbox,
-            { mailbox: Ref.make(mailbox), extractorId: ContactMessageExtractor.id },
+            { mailbox: Ref.make(mailbox), extractorId: MessageExtractor.ContactMessageExtractor.id },
             { spaceId: space.id },
           ),
       },
@@ -573,7 +573,7 @@ const StoryProcessPlugin = Plugin.define(
   // The mailbox→project pipelines (Projects button) without activating the full ProjectsPlugin.
   Plugin.addModule(
     Capability.inlineModule('ProjectOperationHandlers', { provides: [Capabilities.OperationHandler] }, () =>
-      Effect.succeed([Capability.contribute(Capabilities.OperationHandler, ProjectOperationHandlerSet)]),
+      Effect.succeed([Capability.contribute(Capabilities.OperationHandler, ProjectOperationHandlerSet.handlers)]),
     ),
   ),
   // The assistant Settings capability the TracePanel (Trace/SwarmTrace cells) requires — contributed

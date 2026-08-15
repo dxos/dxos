@@ -81,7 +81,7 @@ const capabilityService = (processors: readonly InboxCapabilities.MailboxProcess
  */
 const makeTestLayer = (processors: readonly InboxCapabilities.MailboxProcessor[] = inboxMailboxProcessors) =>
   AssistantTestLayer({
-    operationHandlers: [InboxOperationHandlerSet, StubHandlerSet],
+    operationHandlers: [InboxOperationHandlerSet.handlers, StubHandlerSet],
     types: [
       Cursor.Cursor,
       Feed.Feed,

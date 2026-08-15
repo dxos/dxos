@@ -8,7 +8,9 @@ import { trim } from '@dxos/util';
 
 const SKILL_KEY = 'org.dxos.skill.kanban';
 
-const make = () =>
+export const key = SKILL_KEY;
+
+export const make = (): Skill.Skill =>
   Skill.make({
     key: SKILL_KEY,
     name: 'Kanban',
@@ -19,10 +21,3 @@ const make = () =>
       `,
     }),
   });
-
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;

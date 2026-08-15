@@ -11,6 +11,6 @@ import { TranscriptionOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, TranscriptionOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, TranscriptionOperationHandlerSet.handlers);
   }),
 );

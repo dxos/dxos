@@ -8,7 +8,9 @@ import { trim } from '@dxos/util';
 
 import { Calendar, InboxOperation } from '#types';
 
-const make = () =>
+export const key = Calendar.SKILL_KEY;
+
+export const make = (): Skill.Skill =>
   Skill.make({
     key: Calendar.SKILL_KEY,
     name: 'Calendar',
@@ -19,10 +21,3 @@ const make = () =>
       `,
     }),
   });
-
-const skill: Skill.Definition = {
-  key: Calendar.SKILL_KEY,
-  make,
-};
-
-export default skill;

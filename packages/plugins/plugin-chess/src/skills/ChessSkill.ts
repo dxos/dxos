@@ -10,7 +10,9 @@ import { Chess, ChessOperation } from '#types';
 
 const operations = [ChessOperation.Move, ChessOperation.Play, ChessOperation.Print];
 
-const make = () =>
+export const key = Chess.SKILL_KEY;
+
+export const make = (): Skill.Skill =>
   Skill.make({
     key: Chess.SKILL_KEY,
     name: 'Chess',
@@ -28,10 +30,3 @@ const make = () =>
       `,
     }),
   });
-
-const skill: Skill.Definition = {
-  key: Chess.SKILL_KEY,
-  make,
-};
-
-export default skill;
