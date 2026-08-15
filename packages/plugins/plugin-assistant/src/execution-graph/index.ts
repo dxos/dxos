@@ -8,9 +8,12 @@ export {
   CommitSelector,
   type ExecutionGraph,
   type ExecutionGraphDetailsMap,
+  UNTAGGED_OPERATION_TAG,
   buildExecutionGraph,
+  collectOperationTags,
   collectProcessActivityLines,
   deriveInFlightActivityLine,
+  operationTagsOf,
 } from './execution-graph';
 export {
   type EphemeralStatusUpdate,
@@ -28,6 +31,7 @@ export {
   type Span,
   type SpanMeta,
   buildSpanTree,
+  filterSpanTree,
   flattenSpanTree,
   isSpanBeginEvent,
   isSpanEndEvent,

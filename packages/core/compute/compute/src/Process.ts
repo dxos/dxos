@@ -378,6 +378,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                 key: op.meta.key,
                 name: op.meta.name,
                 icon: op.meta.icon,
+                tags: op.meta.tags,
               });
               // Emit ephemeral operation input event for live subscribers
               // (history tracker, devtools) without persisting raw input.
@@ -411,6 +412,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                 key: op.meta.key,
                 name: op.meta.name,
                 icon: op.meta.icon,
+                tags: op.meta.tags,
                 outcome: 'success',
               });
             }).pipe(
@@ -425,6 +427,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                     key: op.meta.key,
                     name: op.meta.name,
                     icon: op.meta.icon,
+                    tags: op.meta.tags,
                     outcome: 'failure',
                     error: errorMessage,
                     ...(errorCode ? { errorCode } : {}),

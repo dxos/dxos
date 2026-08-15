@@ -16,6 +16,7 @@ const Anthropic = Operation.make({
     key: DXN.make('org.dxos.script.anthropic'),
     name: 'Anthropic Chat',
     description: 'Chat with Anthropic',
+    tags: [Operation.Tag.System],
   },
   input: Schema.Struct({
     message: Schema.String,

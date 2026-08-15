@@ -13,7 +13,12 @@ import { Collection, DXN, Type } from '@dxos/echo';
 const COLLECTION_OPERATION = 'org.dxos.plugin.collection.operation';
 
 export const Create = Operation.make({
-  meta: { key: DXN.make(`${COLLECTION_OPERATION}.create`), name: 'Create Collection', icon: 'ph--folder--regular' },
+  meta: {
+    key: DXN.make(`${COLLECTION_OPERATION}.create`),
+    name: 'Create Collection',
+    icon: 'ph--folder--regular',
+    tags: [Operation.Tag.Edit],
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),

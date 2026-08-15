@@ -15,7 +15,7 @@ export class Log extends Schema.TaggedClass<Log>()('org.dxos.test.logger.log', {
 }) {}
 
 export const LogOperation = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.logger.log'), name: 'Log' },
+  meta: { key: DXN.make('org.dxos.test.logger.log'), name: 'Log', tags: [Operation.Tag.System] },
   input: Schema.Struct({ message: Schema.String }),
   output: Schema.Void,
 });

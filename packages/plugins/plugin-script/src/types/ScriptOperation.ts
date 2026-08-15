@@ -31,7 +31,7 @@ export const NotebookProps = Schema.Struct({
 });
 
 export const CreateScript = Operation.make({
-  meta: { key: makeKey('createScript'), name: 'Create Script', icon: 'ph--code--regular' },
+  meta: { key: makeKey('createScript'), name: 'Create Script', icon: 'ph--code--regular', tags: [Operation.Tag.Edit] },
   input: ScriptProps.mapFields(
     Struct.assign({
       db: Database.Database,

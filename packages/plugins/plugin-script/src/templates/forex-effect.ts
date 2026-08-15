@@ -17,6 +17,7 @@ const ForexEffect = Operation.make({
     key: DXN.make('org.dxos.script.forexEffect'),
     name: 'Forex Effect',
     description: 'Returns the exchange rate between two currencies.',
+    tags: [Operation.Tag.System],
   },
   input: Schema.Struct({
     from: Schema.String.annotate({ description: 'The source currency' }),

@@ -19,7 +19,7 @@ import { meta } from '#meta';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const CreateChat = Operation.make({
-  meta: { key: makeKey('createChat'), name: 'Create Chat', icon: 'ph--chat-text--regular' },
+  meta: { key: makeKey('createChat'), name: 'Create Chat', icon: 'ph--chat-text--regular', tags: [Operation.Tag.Edit] },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
@@ -42,6 +42,7 @@ export const UpdateChatName = Operation.make({
     key: makeKey('updateChatName'),
     name: 'Update Chat Name',
     icon: 'ph--pencil--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Database.Service, AiService.AiService],
   input: Schema.Struct({
@@ -57,6 +58,7 @@ export const SetCurrentChat = Operation.make({
     key: makeKey('setCurrentChat'),
     name: 'Set Current Chat',
     icon: 'ph--chat-text--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -67,7 +69,13 @@ export const SetCurrentChat = Operation.make({
 });
 
 export const ForkChat = Operation.make({
-  meta: { key: makeKey('forkChat'), name: 'Fork Chat', icon: 'ph--git-branch--regular', skipRegistry: true },
+  meta: {
+    key: makeKey('forkChat'),
+    name: 'Fork Chat',
+    icon: 'ph--git-branch--regular',
+    skipRegistry: true,
+    tags: [Operation.Tag.Edit],
+  },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
@@ -84,6 +92,7 @@ export const EnsureCompanionChat = Operation.make({
     key: makeKey('ensureCompanionChat'),
     name: 'Ensure Companion Chat',
     icon: 'ph--chat-text--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -110,6 +119,7 @@ export const GenerateHomeSuggestions = Operation.make({
     icon: 'ph--sparkle--regular',
     // Internal UI operation — not exposed as an agent tool.
     skipRegistry: true,
+    tags: [Operation.Tag.Agent],
   },
   services: [Capability.Service, AiService.AiService],
   input: Schema.Struct({ db: Database.Database }),
@@ -122,6 +132,7 @@ export const ToggleTracePanelDebug = Operation.make({
     name: 'Toggle trace panel debug',
     description: 'Toggle trace panel between commit graph and raw span tree JSON.',
     icon: 'ph--bug--regular',
+    tags: [Operation.Tag.System],
   },
   services: [Capability.Service],
   input: Schema.Struct({

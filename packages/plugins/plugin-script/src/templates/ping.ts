@@ -12,6 +12,7 @@ const Ping = Operation.make({
   meta: {
     key: DXN.make('org.dxos.script.ping'),
     name: 'Ping',
+    tags: [Operation.Tag.System],
   },
   input: Schema.Any,
   output: Schema.Any,

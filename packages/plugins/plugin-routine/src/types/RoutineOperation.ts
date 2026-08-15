@@ -30,6 +30,7 @@ export const CreateTriggerFromTemplate = Operation.make({
     key: makeKey('createTriggerFromTemplate'),
     name: 'Create Trigger From Template',
     icon: 'ph--lightning--regular',
+    tags: [Operation.Tag.Edit, Operation.Tag.Automation],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -49,6 +50,7 @@ export const CreateRoutine = Operation.make({
     key: makeKey('createAutomation'),
     name: 'Create Routine',
     icon: 'ph--lightning--regular',
+    tags: [Operation.Tag.Edit, Operation.Tag.Automation],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -69,6 +71,7 @@ export const RunPromptInNewChat = Operation.make({
     key: makeKey('runPromptInNewChat'),
     name: 'Run Prompt In New Chat',
     icon: 'ph--chat-text--regular',
+    tags: [Operation.Tag.Agent, Operation.Tag.Automation],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -99,6 +102,7 @@ export const RunRoutine = Operation.make({
     key: makeKey('runAutomation'),
     name: 'Run Routine',
     icon: 'ph--play--regular',
+    tags: [Operation.Tag.Automation],
   },
   services: [Capability.Service, Trigger.TriggerMonitorService],
   input: Schema.Struct({

@@ -33,6 +33,7 @@ export const Generate = Operation.make({
     name: 'Generate',
     description: 'Generate variants for an Artifact from its prompt.',
     icon: 'ph--sparkle--regular',
+    tags: [Operation.Tag.Agent],
   },
   input: Schema.Struct({
     artifact: Ref.Ref(Artifact.Artifact).annotate({

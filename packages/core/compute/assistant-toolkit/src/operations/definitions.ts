@@ -20,6 +20,7 @@ export const RunInstructions = Operation.make({
     name: 'Run Instructions',
     description: 'Agentic worker that executes a provided prompt using skills and tools.',
     icon: 'ph--brain--regular',
+    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     instructions: Ref.Ref(Instructions.Instructions),

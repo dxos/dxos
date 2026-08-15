@@ -31,6 +31,7 @@ export const Create = Operation.make({
     name: 'Create Space',
     description: 'Create a new space.',
     icon: 'ph--plus--regular',
+    tags: [Operation.Tag.Edit, Operation.Tag.Space],
   },
   services: [Capability.Service, Plugin.Service],
   input: SpaceSchemaModule.SpaceForm,
@@ -47,6 +48,7 @@ export const Join = Operation.make({
     name: 'Join Space',
     description: 'Join a space via invitation.',
     icon: 'ph--sign-in--regular',
+    tags: [Operation.Tag.Edit, Operation.Tag.Space],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -62,6 +64,7 @@ export const Open = Operation.make({
     name: 'Open Space',
     description: 'Open a space.',
     icon: 'ph--arrow-square-out--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -76,6 +79,7 @@ export const Close = Operation.make({
     name: 'Close Space',
     description: 'Close a space.',
     icon: 'ph--x-circle--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -90,6 +94,7 @@ export const Delete = Operation.make({
     name: 'Delete Space',
     description: 'Delete a space. The deletion replicates to all of your devices.',
     icon: 'ph--trash--regular',
+    tags: [Operation.Tag.Edit, Operation.Tag.Space],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -104,6 +109,7 @@ export const Share = Operation.make({
     name: 'Share Space',
     description: 'Share a space.',
     icon: 'ph--share-network--regular',
+    tags: [Operation.Tag.Space],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -122,6 +128,7 @@ export const OpenSettings = Operation.make({
     name: 'Open Space Settings',
     description: 'Open space settings.',
     icon: 'ph--gear--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -136,6 +143,7 @@ export const WaitForObject = Operation.make({
     name: 'Wait For Object',
     description: 'Wait for an object to be available.',
     icon: 'ph--clock-countdown--regular',
+    tags: [Operation.Tag.System],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -150,6 +158,7 @@ export const AddObject = Operation.make({
     name: 'Add Object',
     description: 'Add an object to a space.',
     icon: 'ph--plus--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -188,6 +197,7 @@ export const RemoveObjects = Operation.make({
     name: 'Remove Objects',
     description: 'Remove entities (objects, relations, or persisted types) from a space.',
     icon: 'ph--trash--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -210,6 +220,7 @@ export const CollectGarbage = Operation.make({
     name: 'Collect Garbage',
     description: "Permanently reclaim the storage held by a space's deleted objects.",
     icon: 'ph--recycle--regular',
+    tags: [Operation.Tag.Space],
   },
   services: [Database.Service],
   input: Schema.Void,
@@ -232,6 +243,7 @@ export const RemoveAllObjects = Operation.make({
     name: 'Remove All Objects',
     description: 'Permanently remove all objects from a space, preserving the space properties.',
     icon: 'ph--trash--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Database.Service],
   input: Schema.Void,
@@ -255,6 +267,7 @@ export const DeleteField = Operation.make({
     name: 'Delete Field',
     description: 'Delete a field from a view.',
     icon: 'ph--minus-circle--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -270,6 +283,7 @@ export const OpenCreateObject = Operation.make({
     name: 'Open Create Object Dialog',
     description: 'Open the create object dialog.',
     icon: 'ph--plus--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -295,6 +309,7 @@ export const OpenCreateSpace = Operation.make({
     name: 'Open Create Space Dialog',
     description: 'Open the create space dialog.',
     icon: 'ph--plus--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Void,
@@ -307,6 +322,7 @@ export const OpenImportSpace = Operation.make({
     name: 'Open Import Space Dialog',
     description: 'Open the import space dialog to create a new space from a backup.',
     icon: 'ph--download--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Void,
@@ -319,6 +335,7 @@ export const ImportSpace = Operation.make({
     name: 'Import Space',
     description: 'Import a space archive as a new space.',
     icon: 'ph--upload--regular',
+    tags: [Operation.Tag.Space, Operation.Tag.Sync],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -339,6 +356,7 @@ export const ExportSpace = Operation.make({
     name: 'Export Space',
     description: 'Export a space as a backup and download the archive.',
     icon: 'ph--download--regular',
+    tags: [Operation.Tag.Edit, Operation.Tag.Space],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -354,6 +372,7 @@ export const Migrate = Operation.make({
     name: 'Migrate Space',
     description: 'Migrate a space to a new version.',
     icon: 'ph--arrows-clockwise--regular',
+    tags: [Operation.Tag.Space],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -369,6 +388,7 @@ export const Snapshot = Operation.make({
     name: 'Create Snapshot',
     description: 'Create a snapshot of the space.',
     icon: 'ph--camera--regular',
+    tags: [Operation.Tag.Space],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -386,6 +406,7 @@ export const Rename = Operation.make({
     name: 'Rename Space',
     description: 'Rename a space.',
     icon: 'ph--pencil-simple--regular',
+    tags: [Operation.Tag.Edit, Operation.Tag.Space],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -401,6 +422,7 @@ export const RenameObject = Operation.make({
     name: 'Rename Object',
     description: 'Rename an entity (object, relation, or persisted type).',
     icon: 'ph--pencil-simple--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -416,6 +438,7 @@ export const OpenMembers = Operation.make({
     name: 'Open Members',
     description: 'Open the members panel for a space.',
     icon: 'ph--users--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -430,6 +453,7 @@ export const GetShareLink = Operation.make({
     name: 'Get Share Link',
     description: 'Get a shareable link for a space.',
     icon: 'ph--link--regular',
+    tags: [Operation.Tag.Query, Operation.Tag.Space],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -450,6 +474,7 @@ export const AddType = Operation.make({
     name: 'Add Type',
     description: 'Add a type to the space.',
     icon: 'ph--code--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service, Plugin.Service],
   input: Schema.Struct({
@@ -473,6 +498,7 @@ export const AddRelation = Operation.make({
     name: 'Add Relation',
     description: 'Add a relation between objects.',
     icon: 'ph--link--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -496,6 +522,7 @@ export const DuplicateObject = Operation.make({
     name: 'Duplicate Object',
     description: 'Duplicate an object.',
     icon: 'ph--file--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -514,6 +541,7 @@ export const RestoreField = Operation.make({
     name: 'Restore Field',
     description: 'Restore a deleted field to a view.',
     icon: 'ph--clock-counter-clockwise--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -535,6 +563,7 @@ export const RestoreObjects = Operation.make({
     name: 'Restore Objects',
     description: 'Restore deleted entities to a space.',
     icon: 'ph--clock-counter-clockwise--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -569,6 +598,7 @@ export const FindDuplicates = Operation.make({
     name: 'Find Duplicates',
     description: 'Group objects of a type that share an identity key (e.g. an email address).',
     icon: 'ph--copy--regular',
+    tags: [Operation.Tag.Query],
   },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
@@ -586,6 +616,7 @@ export const MergeDuplicates = Operation.make({
     name: 'Merge Duplicates',
     description: 'Merge a duplicate group into a single object.',
     icon: 'ph--arrows-merge--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({

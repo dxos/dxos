@@ -20,6 +20,7 @@ export const DelegateTask = Operation.make({
       the supervisor spawns a background sub-agent. Creates the checklist item if absent.
     `,
     icon: 'ph--share-network--regular',
+    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     title: Schema.String.annotate({

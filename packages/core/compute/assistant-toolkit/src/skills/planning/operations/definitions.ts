@@ -27,6 +27,7 @@ export const UpdateTasks = Operation.make({
     name: 'Update tasks',
     description: INSTRUCTIONS,
     icon: 'ph--check-square-offset--regular',
+    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     tasks: Schema.Array(ChecklistTask),
@@ -40,6 +41,7 @@ export const PlanReminder = Operation.make({
     key: DXN.make('org.dxos.function.planning.planReminder'),
     name: 'Plan reminder',
     description: 'Reminds the agent to continue when its plan still has incomplete tasks.',
+    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
   },
   input: Schema.Struct({}),
   output: Schema.Void,

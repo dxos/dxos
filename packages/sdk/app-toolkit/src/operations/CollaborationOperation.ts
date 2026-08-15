@@ -29,6 +29,7 @@ export const AcceptProposal = Operation.make({
     name: 'Accept Proposal',
     description: 'Accept a proposal from a collaborator.',
     icon: 'ph--check--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -51,6 +52,7 @@ export const AcceptChange = Operation.make({
     name: 'Accept Change',
     description: 'Accept an individual change from a branch.',
     icon: 'ph--check--regular',
+    tags: [Operation.Tag.Edit],
   },
   // The handler operates on the passed `subject` object directly (its ambient database) and requires
   // no injected service, so it is invocable from any context — the UI operation invoker (which lacks
@@ -77,6 +79,7 @@ export const RejectChange = Operation.make({
     name: 'Reject Change',
     description: 'Reject an individual change from a branch.',
     icon: 'ph--x--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [],
   input: Schema.Struct({
@@ -98,6 +101,7 @@ export const RestoreText = Operation.make({
     name: 'Restore Text',
     description: 'Apply a text splice to a document or one of its branches.',
     icon: 'ph--arrow-counter-clockwise--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [],
   input: Schema.Struct({

@@ -19,6 +19,7 @@ export const OpenDirectory = Operation.make({
     key: makeKey('openDirectory'),
     name: 'Open Folder',
     icon: 'ph--folder-open--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Void,
@@ -26,7 +27,7 @@ export const OpenDirectory = Operation.make({
 });
 
 export const CloseDirectory = Operation.make({
-  meta: { key: makeKey('closeDirectory'), name: 'Close Folder', icon: 'ph--folder--regular' },
+  meta: { key: makeKey('closeDirectory'), name: 'Close Folder', icon: 'ph--folder--regular', tags: [Operation.Tag.UI] },
   services: [Capability.Service],
   input: Schema.Struct({ id: Schema.String }),
   output: Schema.Void,
@@ -37,6 +38,7 @@ export const RefreshDirectory = Operation.make({
     key: makeKey('refreshDirectory'),
     name: 'Refresh Folder',
     icon: 'ph--arrows-clockwise--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service],
   input: Schema.Struct({ id: Schema.String }),

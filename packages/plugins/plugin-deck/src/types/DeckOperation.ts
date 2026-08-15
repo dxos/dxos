@@ -33,6 +33,7 @@ export const Adjust = Operation.make({
     name: 'Adjust',
     description: 'Adjust the layout of a plank.',
     icon: 'ph--layout--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -48,6 +49,7 @@ export const UpdatePlankSize = Operation.make({
     name: 'Update Plank Size',
     description: 'Update the size of a plank.',
     icon: 'ph--arrows-out--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -63,6 +65,7 @@ export const ToggleExpose = Operation.make({
     name: 'Toggle Exposé',
     description: 'Show every plank at once as shrunk-to-fit tiles, or return to the deck.',
     icon: 'ph--squares-four--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -78,6 +81,7 @@ export const UpdatePlankSizes = Operation.make({
     name: 'Update Plank Sizes',
     description: 'Update the sizes of several planks at once.',
     icon: 'ph--arrows-out--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({

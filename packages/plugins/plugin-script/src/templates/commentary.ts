@@ -33,6 +33,7 @@ const Commentary = Operation.make({
     key: DXN.make('org.dxos.function.chess.commentary'),
     name: 'Commentary',
     description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
+    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     game: Game.GameRef(Chess.State).annotate({

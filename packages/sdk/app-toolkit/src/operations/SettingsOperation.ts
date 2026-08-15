@@ -19,6 +19,7 @@ export const Open = Operation.make({
     name: 'Open Settings',
     description: 'Open the settings panel.',
     icon: 'ph--gear--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -33,6 +34,7 @@ export const OpenPluginRegistry = Operation.make({
     name: 'Open Plugin Registry',
     description: 'Open the plugin registry.',
     icon: 'ph--plugs--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Void,

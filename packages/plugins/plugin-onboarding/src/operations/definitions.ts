@@ -22,6 +22,7 @@ export const ImportExemplarSpace = Operation.make({
     key: DXN.make(`${ONBOARDING_OPERATION}.importExemplarSpace`),
     name: 'Import Exemplar Space',
     icon: 'ph--potted-plant--regular',
+    tags: [Operation.Tag.Space, Operation.Tag.Identity],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -41,6 +42,7 @@ export const RedeemOAuthRecovery = Operation.make({
     key: DXN.make(`${ONBOARDING_OPERATION}.redeemOAuthRecovery`),
     name: 'Redeem OAuth Recovery',
     icon: 'ph--cloud--regular',
+    tags: [Operation.Tag.Edit, Operation.Tag.Identity],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -66,6 +68,7 @@ export const RegisterOAuthRecovery = Operation.make({
     key: DXN.make(`${ONBOARDING_OPERATION}.registerOAuthRecovery`),
     name: 'Register OAuth Recovery',
     icon: 'ph--cloud--regular',
+    tags: [Operation.Tag.Identity],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -90,6 +93,7 @@ export const CompleteOAuthRegistration = Operation.make({
     key: DXN.make(`${ONBOARDING_OPERATION}.completeOAuthRegistration`),
     name: 'Complete OAuth Registration',
     icon: 'ph--cloud--regular',
+    tags: [Operation.Tag.Edit, Operation.Tag.Identity],
   },
   services: [Capability.Service],
   input: Schema.Struct({

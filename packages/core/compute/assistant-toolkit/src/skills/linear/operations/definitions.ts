@@ -15,6 +15,7 @@ export const SyncIssues = Operation.make({
     name: 'Linear',
     description: 'Sync issues from Linear.',
     icon: 'ph--arrows-clockwise--regular',
+    tags: [Operation.Tag.Sync, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     team: Schema.String.annotate({

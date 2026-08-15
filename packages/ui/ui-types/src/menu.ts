@@ -57,9 +57,13 @@ export type PlainMenuItemGroupProperties = MenuItemChrome & {
 /** Dropdown trigger opening a menu of child actions. */
 export type DropdownMenuItemGroupProperties = MenuItemChrome & {
   variant: 'dropdownMenu';
-  /** Used with `applyActive` to track the selected child. */
-  selectCardinality?: 'single';
-  value?: string;
+  /**
+   * Used with `applyActive` to track the selected child. A `'multiple'` group renders its children
+   * as checkboxes and stays open across toggles, so several can be set in one visit — the shape a
+   * filter needs.
+   */
+  selectCardinality?: 'single' | 'multiple';
+  value?: string | string[];
   icon: string;
   /**
    * Whether the dropdown trigger shows a trailing caret. Defaults to `true`.

@@ -185,6 +185,7 @@ export const QueryComposerLogs = Operation.make({
       - RPC noise excluded, plain text output:
         { "filters": ["debug,!rpc"], "format": "pretty", "limit": 100 }
     `,
+    tags: [Operation.Tag.Query, Operation.Tag.Tool],
   },
   input: QueryComposerLogsInput,
   output: QueryComposerLogsOutput,

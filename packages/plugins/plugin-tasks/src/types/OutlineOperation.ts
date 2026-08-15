@@ -23,6 +23,7 @@ export const CreateOutline = Operation.make({
     key: makeKey('createOutline'),
     name: 'Create Outline',
     icon: 'ph--list-bullets--regular',
+    tags: [Operation.Tag.Edit],
   },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -37,6 +38,7 @@ export const ConvertToTask = Operation.make({
     key: makeKey('convertToTask'),
     name: 'Convert to Task',
     icon: 'ph--check-circle--regular',
+    tags: [Operation.Tag.Edit],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -49,7 +51,12 @@ export const ConvertToTask = Operation.make({
 });
 
 export const QuickJournalEntry = Operation.make({
-  meta: { key: makeKey('quickEntry'), name: 'Quick Journal Entry', icon: 'ph--pencil--regular' },
+  meta: {
+    key: makeKey('quickEntry'),
+    name: 'Quick Journal Entry',
+    icon: 'ph--pencil--regular',
+    tags: [Operation.Tag.Edit],
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     text: Schema.String,
@@ -67,6 +74,7 @@ export const GetOutline = Operation.make({
     name: 'Get Outline',
     description: "Read an outline's checklist markdown and its parsed items.",
     icon: 'ph--list-checks--regular',
+    tags: [Operation.Tag.Query, Operation.Tag.Tool],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -87,6 +95,7 @@ export const UpdateOutline = Operation.make({
     description:
       'Update an outline: upsert checklist items by title (preserving position and surrounding prose), or replace the markdown wholesale.',
     icon: 'ph--pencil-simple--regular',
+    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
   },
   services: [Database.Service],
   input: Schema.Struct({

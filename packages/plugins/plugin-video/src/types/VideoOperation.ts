@@ -35,6 +35,7 @@ export const Transcribe = Operation.make({
     name: 'Transcribe Video',
     description: 'Transcribes a video via the EDGE transcription service and links the transcript.',
     icon: 'ph--subtitles--regular',
+    tags: [Operation.Tag.Agent],
   },
   input: Schema.Struct({
     video: Ref.Ref(Video.Video).annotate({ description: 'The video to transcribe.' }),
@@ -58,6 +59,7 @@ export const Summarize = Operation.make({
     name: 'Summarize Video',
     description: "Summarizes the video's transcript and links the summary.",
     icon: 'ph--text-align-left--regular',
+    tags: [Operation.Tag.Agent],
   },
   input: Schema.Struct({
     video: Ref.Ref(Video.Video).annotate({ description: 'The video whose transcript to summarize.' }),
@@ -81,6 +83,7 @@ export const FetchTranscript = Operation.make({
     name: 'Fetch Video Transcript',
     description: "Loads a video's published caption tracks and links the transcript.",
     icon: 'ph--closed-captioning--regular',
+    tags: [Operation.Tag.Sync],
   },
   input: Schema.Struct({
     video: Ref.Ref(Video.Video).annotate({ description: 'The video to fetch the transcript for.' }),
@@ -105,6 +108,7 @@ export const FetchDescription = Operation.make({
     name: 'Fetch Video Description',
     description: "Loads a video's watch page via the CRX proxy and extracts the full description.",
     icon: 'ph--text-align-left--regular',
+    tags: [Operation.Tag.Sync],
   },
   input: Schema.Struct({
     video: Ref.Ref(Video.Video).annotate({ description: 'The video to fetch the description for.' }),

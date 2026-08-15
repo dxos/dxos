@@ -20,6 +20,7 @@ export const TogglePresentation = Operation.make({
     key: makeKey('togglePresentation'),
     name: 'Toggle Presentation',
     icon: 'ph--presentation--regular',
+    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({

@@ -26,6 +26,7 @@ export const SyncPortfolioReport = Operation.make({
     name: 'Sync IBKR portfolio',
     description: 'Fetch the latest Interactive Brokers Flex report and store it for offline reads.',
     icon: 'ph--arrows-clockwise--regular',
+    tags: [Operation.Tag.Sync, Operation.Tag.Tool],
   },
   input: Schema.Struct({}),
   output: Schema.Struct({
@@ -44,6 +45,7 @@ export const ImportPortfolioReport = Operation.make({
     name: 'Import IBKR report',
     description: 'Store a raw Interactive Brokers Flex report XML for offline reads, without calling IBKR.',
     icon: 'ph--upload-simple--regular',
+    tags: [Operation.Tag.Sync, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     /** Raw Flex Web Service `<FlexQueryResponse>` document. */
@@ -65,6 +67,7 @@ export const GetPortfolio = Operation.make({
     name: 'Get IBKR portfolio',
     description: 'Read the current Interactive Brokers open positions and cash balances from the latest sync.',
     icon: 'ph--chart-pie--regular',
+    tags: [Operation.Tag.Query, Operation.Tag.Tool],
   },
   input: Schema.Struct({}),
   output: Schema.Struct({
@@ -82,6 +85,7 @@ export const GetTrades = Operation.make({
     name: 'Get IBKR trades',
     description: 'Read the Interactive Brokers trade history from the latest sync.',
     icon: 'ph--receipt--regular',
+    tags: [Operation.Tag.Query, Operation.Tag.Tool],
   },
   input: Schema.Struct({}),
   output: Schema.Struct({
@@ -98,6 +102,7 @@ export const MaterializeInstrument = Operation.make({
     name: 'Materialize instrument',
     description: 'Find or create a tradable Instrument keyed by ticker/exchange foreign id (idempotent).',
     icon: 'ph--chart-line-up--regular',
+    tags: [Operation.Tag.Sync, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     key: ForeignKey,
@@ -121,6 +126,7 @@ export const GetInstrumentFundamentals = Operation.make({
     name: 'Get instrument fundamentals',
     description: 'Fetch filing-based fundamentals for a tradable Instrument from SEC EDGAR company facts.',
     icon: 'ph--chart-bar--regular',
+    tags: [Operation.Tag.Query, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     instrument: Ref.Ref(Ibkr.Instrument),
@@ -136,6 +142,7 @@ export const SyncLots = Operation.make({
     name: 'Sync IBKR lots',
     description: 'Materialize tax lots from the latest stored Flex report as child Lot objects on the portfolio.',
     icon: 'ph--stack--regular',
+    tags: [Operation.Tag.Sync, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     account: Ref.Ref(Ibkr.Portfolio),
