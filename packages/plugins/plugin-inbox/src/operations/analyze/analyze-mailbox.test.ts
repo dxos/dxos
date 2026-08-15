@@ -53,7 +53,7 @@ const analyzeProcessor: InboxCapabilities.MailboxProcessor = {
   id: 'analyze',
   tier: 'analyze',
   after: ['summarize'],
-  createInvocation: (mailbox) => ({ operation: StubOperation, input: { mailbox: Ref.make(mailbox) } }),
+  createInvocations: (mailbox) => [{ operation: StubOperation, input: { mailbox: Ref.make(mailbox) } }],
 };
 
 /**
@@ -344,10 +344,12 @@ describe('AnalyzeMailbox cascade', () => {
             id: 'thirdParty',
             tier: 'deterministic',
             after: ['subscriptions'],
-            createInvocation: (mailbox) => ({
-              operation: InboxOperation.ExtractSubscriptions,
-              input: { mailbox: Ref.make(mailbox) },
-            }),
+            createInvocations: (mailbox) => [
+              {
+                operation: InboxOperation.ExtractSubscriptions,
+                input: { mailbox: Ref.make(mailbox) },
+              },
+            ],
           },
           ...inboxMailboxProcessors.filter((processor) => processor.tier === 'deterministic'),
         ]),
@@ -385,19 +387,23 @@ describe('AnalyzeMailbox cascade', () => {
             id: 'x',
             tier: 'deterministic',
             after: ['y'],
-            createInvocation: (mailbox) => ({
-              operation: InboxOperation.ExtractSubscriptions,
-              input: { mailbox: Ref.make(mailbox) },
-            }),
+            createInvocations: (mailbox) => [
+              {
+                operation: InboxOperation.ExtractSubscriptions,
+                input: { mailbox: Ref.make(mailbox) },
+              },
+            ],
           },
           {
             id: 'y',
             tier: 'deterministic',
             after: ['x'],
-            createInvocation: (mailbox) => ({
-              operation: InboxOperation.ExtractSubscriptions,
-              input: { mailbox: Ref.make(mailbox) },
-            }),
+            createInvocations: (mailbox) => [
+              {
+                operation: InboxOperation.ExtractSubscriptions,
+                input: { mailbox: Ref.make(mailbox) },
+              },
+            ],
           },
         ]),
       ),

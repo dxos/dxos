@@ -26,6 +26,8 @@ const NEVER: Effect.Effect<unknown, unknown, Operation.Service> = Effect.void;
 type Pass = {
   readonly tier: InboxOperation.MailboxTier;
   readonly processor: string;
+  /** URI of what this run is about, when the processor covers more than the mailbox itself. */
+  readonly subject?: string;
   /** Reason the pass cannot run (reported as `skipped` rather than attempted). */
   readonly skip?: string;
   readonly run: Effect.Effect<unknown, unknown, Operation.Service>;
@@ -102,15 +104,25 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
         // A processor the topology could not place is reported, never dropped: silence here would look
         // exactly like a pass that ran and found nothing.
         ...excluded.map(({ node, reason }) => ({ tier: node.tier, processor: node.id, skip: reason, run: NEVER })),
-        ...ordered.map((processor) => {
-          const invocation = processor.createInvocation(mailbox, options);
-          return 'skip' in invocation
-            ? { tier: processor.tier, processor: processor.id, skip: invocation.skip, run: NEVER }
-            : {
-                tier: processor.tier,
-                processor: processor.id,
-                run: Operation.invoke(invocation.operation, invocation.input),
-              };
+        // `flatMap`, because a processor may cover several subjects — one Project's view of a shared
+        // feed, say — and each is a separately-cursored run. They keep the contributing processor's
+        // id so the `after` edges and the failure blocking below still speak in processor terms; only
+        // the reported subject differs.
+        ...ordered.flatMap((processor): Pass[] => {
+          const invocations = processor.createInvocations(mailbox, options);
+          if ('skip' in invocations) {
+            return [{ tier: processor.tier, processor: processor.id, skip: invocations.skip, run: NEVER }];
+          }
+          // An empty list is a processor that found nothing to run — reported, not silently absent.
+          if (invocations.length === 0) {
+            return [{ tier: processor.tier, processor: processor.id, skip: 'no subjects', run: NEVER }];
+          }
+          return invocations.map(({ subject, operation, input }) => ({
+            tier: processor.tier,
+            processor: processor.id,
+            subject: subject ? Obj.getURI(subject) : undefined,
+            run: Operation.invoke(operation, input),
+          }));
         }),
       ];
 
