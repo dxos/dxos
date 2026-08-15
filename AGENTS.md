@@ -190,6 +190,33 @@ Deeper conventions:
   see [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
   for when to add one, which package to name, and bump levels.
 
+## Handing an agent a credential
+
+Put it in **`.secrets/`** at the repo root — never in the chat. Pasting a token into a
+prompt writes it to the transcript permanently; a file can be deleted.
+
+- `.secrets/` is gitignored at every depth and holds no tracked files.
+- **The user creates the file** (agents cannot sign in or complete an OAuth consent) and
+  names the path in chat. One file per credential, `chmod 600`, `key=value` lines.
+- **The agent deletes it** when the task that needed it is done, and revokes the grant if
+  the credential was minted for that task alone.
+- Prefer a credential that can be renewed over one that expires mid-task: an OAuth access
+  token lasts an hour, so a long task needs the refresh token **plus** the `client_id` and
+  `client_secret` it was minted under — a refresh token alone cannot be exchanged.
+- Never echo a credential's value back into chat, a log, a commit message, or an error
+  report. Read it, use it, delete it.
+
+Example (Gmail, for the live tag-sync test — see `packages/plugins/plugin-inbox/docs/TAG-SYNC.md`):
+
+```bash
+cat > .secrets/gmail.env <<'EOF'
+client_id=...
+client_secret=...
+refresh_token=...
+EOF
+chmod 600 .secrets/gmail.env
+```
+
 ## Where things live
 
 - **Cloud sandbox / Claude Code on the web** — hooks that don't run, missing tooling, and the

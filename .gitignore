@@ -170,7 +170,12 @@ profiles/
 # Bot temp files
 dxos-tmp
 build
+
+# Credentials the user hands to an agent for a task (see AGENTS.md "Handing an agent a
+# credential"). Ignored at every depth, and never committed even with `git add -f`.
 .secrets
+.secrets/
+**/.secrets/
 
 # Custom git hooks
 .husky/post-applypatch
