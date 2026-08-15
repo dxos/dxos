@@ -3,16 +3,17 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { PreviewPopover, ReactSurface, Schema } from '#capabilities';
+import { PreviewPopover, ReactSurface, Schema, Translations } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
+// Canonical single-entry composition: lists every module once; per-environment filtering happens
+// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
+// as `undefined`, which `Plugin.addModule` skips.
 export const PreviewPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Translations),
   Plugin.addModule(PreviewPopover),
   Plugin.make,
 );
