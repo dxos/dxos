@@ -5,7 +5,14 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, Schema } from '#capabilities';
+import {
+  AppGraphBuilder,
+  CreateObject,
+  NavigationTargetResolver,
+  OperationHandler,
+  ReactSurface,
+  Schema,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -15,6 +22,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const StudioPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
+  Plugin.addModule(NavigationTargetResolver),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),

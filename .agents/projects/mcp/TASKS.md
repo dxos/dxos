@@ -121,11 +121,13 @@ changes what a model sees lives in the shared package or it is a bug.
       operations themselves do not change. Open question first — whether the invoker consults
       mappings on every invocation path or only app-side ones; if the latter, this trades one
       asymmetry for another.
-- [ ] **plugin-studio navigation regression** — `getArtifactsPath` was removed with `addObject`'s
-      navigation output, and unlike the type-section cases `findTypeSectionPath` cannot replace it:
-      studio's url binding ends in the studio segment, not a typename. Artifacts now navigate to
-      their database-subtree path. Fix: plugin-studio contributes its own
-      `AppCapabilities.NavigationTargetResolver`.
+- [x] **plugin-studio navigation regression** — closed. `getArtifactsPath` was removed with
+      `addObject`'s navigation output, and unlike the type-section cases `findTypeSectionPath` could
+      not replace it: studio's url binding ends in the studio segment, not a typename. plugin-studio
+      now contributes its own `AppCapabilities.NavigationTargetResolver`, resolving an Artifact to
+      its child path under the virtual Artifacts node at `Position.first` (the Studio section lists
+      every Artifact in the space regardless of collection membership, so it outranks the generic
+      collection/database answers). `paths.test.ts` pins the path composition.
 - [ ] **Space visibility factored out** — which spaces a session may target is decided twice and
       differently: the CLI filters `client.spaces` through `AppSpace.isVisibleSpace`, while edge's
       `space-tools.ts` hard-codes its own `SETTINGS_SPACE_TAG` constant plus `withoutHaloSpace` /
