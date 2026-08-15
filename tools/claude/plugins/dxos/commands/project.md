@@ -6,7 +6,7 @@ allowed-tools: Bash, Read, Edit, Write, Glob, Grep
 
 Arguments: `$ARGUMENTS`
 
-`hooks/track.sh` runs on `UserPromptSubmit`, which carries the raw `/dxos-project:project …`
+`hooks/track.sh` runs on `UserPromptSubmit`, which carries the raw `/dxos:project …`
 text and fires before this expansion reaches you, so **a `TASK-PLANNING …`
 directive for this invocation is already in your context.** Follow that directive
 — it is the authoritative one, generated from the verb you were actually given.
