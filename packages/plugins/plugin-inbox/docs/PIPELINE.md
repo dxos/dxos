@@ -4,8 +4,7 @@ How mail gets into a mailbox and what runs over it afterwards. Sibling docs: [`P
 (product plan), [`TASKS.md`](TASKS.md) (ledger), [`TESTING.md`](TESTING.md) (manual test plan),
 [`AUDIT.md`](AUDIT.md) (component/test index).
 
-**Status:** D1–D3 and D5 built; D4 outstanding; **D6 settled as "wait"** — not built, and not to be
-built until a second cursored consumer exists. See [Open](#open).
+**Status:** D1–D3 and D5 built; D4 and D6 outstanding. See [Open](#open).
 
 ## The shape
 
@@ -325,5 +324,6 @@ entry in [`TASKS.md`](TASKS.md).
 ## Open
 
 1. **D4** — failure policy from the edges.
-2. **Give the seven cursorless consumers a cursor** — mechanical now that an id is also a cursor tag,
+2. **D6** — feed-generic processor host.
+3. **Give the seven cursorless consumers a cursor** — mechanical now that an id is also a cursor tag,
    but each needs its own call on whether feed position or derived-state replacement is right.
