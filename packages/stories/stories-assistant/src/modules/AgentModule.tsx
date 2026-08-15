@@ -98,7 +98,7 @@ export const AgentModule = () => {
   );
 
   return (
-    <Panel.Root classNames='absolute inset-0 flex flex-col gap-2 p-2'>
+    <Panel.Root classNames='bs-full is-full min-bs-0 min-is-0 flex flex-col gap-2 p-2 overflow-hidden'>
       <div ref={scroller} className='flex-1 min-bs-0 overflow-y-auto p-2'>
         <div className='flex flex-col gap-3'>
           {turns.map((turn, index) => (
@@ -119,6 +119,7 @@ export const AgentModule = () => {
       <div className='flex gap-2 items-center shrink-0'>
         <Input.Root>
           <Input.TextInput
+            classNames='flex-1 min-is-0'
             placeholder='Ask the agent…'
             value={prompt}
             disabled={running}
@@ -131,14 +132,21 @@ export const AgentModule = () => {
             }}
           />
         </Input.Root>
-        <IconButton icon='ph--paper-plane-right--regular' label='Send' disabled={running} onClick={() => void send()} />
         <IconButton
+          classNames='shrink-0'
+          icon='ph--paper-plane-right--regular'
+          label='Send'
+          disabled={running}
+          onClick={() => void send()}
+        />
+        <IconButton
+          classNames='shrink-0'
           icon='ph--git-branch--regular'
           label='Fork'
           disabled={running || !session}
           onClick={() => void send(true)}
         />
-        <div className='text-xs text-description flex items-center gap-1'>
+        <div className='shrink-0 text-xs text-description flex items-center gap-1'>
           <Icon icon='ph--identification-badge--regular' size={4} />
           {session ? session.slice(0, 8) : 'new'}
         </div>

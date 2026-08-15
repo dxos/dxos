@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import React from 'react';
 import { expect } from 'storybook/test';
 
 import { Client } from '@dxos/agent-claude/client';
@@ -13,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { StoryRole, getChatProcessor } from '../modules';
+import { AgentModule, StoryRole, getChatProcessor } from '../modules';
 import { ModuleContainer, createDecorators, storyParameters } from '../testing';
 
 /**
@@ -174,8 +175,9 @@ export const WithSidecar: Story = {
  * `DX_AGENT_CWD=<dir> pnpm --filter @dxos/storybook-react exec storybook dev --port 9016`
  */
 export const Console: Story = {
-  decorators: createDecorators({ onInit: captureSpace }),
-  args: {
-    layout: [[StoryRole.Agent], [StoryRole.Logging]],
-  },
+  // Rendered directly rather than through `ModuleContainer`: the console needs no space, and the
+  // plugin stack every other variant boots currently fails to start under `storybook dev` (the same
+  // stories pass in the test runner). `AgentModule` is registered under `StoryRole.Agent` all the
+  // same, so it composes into a module layout wherever that path works.
+  render: () => <AgentModule />,
 };

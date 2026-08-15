@@ -79,3 +79,5 @@ export const moduleSurfaces: Surface.Definition[] = [
 ];
 
 export { getChatProcessor } from './ChatModule';
+
+export { AgentModule } from './AgentModule';
