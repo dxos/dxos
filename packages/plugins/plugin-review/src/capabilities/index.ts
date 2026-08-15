@@ -9,9 +9,15 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
+import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 
+import { meta } from '#meta';
 import type { ReviewPluginOptions } from '#plugin';
+import { translations } from '#translations';
 import { AgentIdentity, CommentCapabilities, ReviewCapabilities, ReviewEvents } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AgentIdentityModule = Capability.inlineModule(
   'agent-identity',
@@ -26,12 +32,19 @@ export const AgentRunner = Capability.lazyModule(
   { provides: [CommentCapabilities.AgentRunner], activatesOn: ReviewEvents.Start },
   () => import('./agent-runner'),
 );
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  environments: ['browser', 'node'],
+});
 export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./history-graph'), {
   name: 'HistoryGraph',
+  environments: ['browser', 'node'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const Schema = AppCapability.schema(() => import('./schema'), {
+  environments: ['browser', 'node', 'workerd'],
+});
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
+  environments: ['browser', 'node'],
+});
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
   // OperationInvoker/AtomRegistry are ambient. `CommentCapabilities.State` is declared because the
@@ -56,6 +69,7 @@ export const MarkdownBinding = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
+  environments: ['browser', 'node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
@@ -78,9 +92,21 @@ export const CommentState = Capability.lazyModule(
 );
 export const ReviewState = Capability.lazyModule(
   'ReviewState',
-  { provides: [ReviewCapabilities.ReviewRenderPolicy], activatesOn: ReviewEvents.Start },
+  {
+    provides: [ReviewCapabilities.ReviewRenderPolicy],
+    activatesOn: ReviewEvents.Start,
+    environments: ['browser', 'node'],
+  },
   () => import('./review-state'),
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
   activatesOn: ReviewEvents.Start,
+  environments: ['browser', 'node'],
+});
+export const Translations = AppCapability.translations([...translations, ...threadTranslations]);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
 });

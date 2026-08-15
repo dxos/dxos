@@ -46,9 +46,9 @@ import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { EditorView } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
+import { ReviewPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { ReviewPlugin } from '../plugin';
 import {
   type ReviewScenario,
   ReviewStoryLayout,
