@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useAppGraph, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Entity, Obj, Type } from '@dxos/echo';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { Obj, Type } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Card, Icon, IconButton, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
   type ActionExecutor,
@@ -21,7 +21,7 @@ import {
 } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
-import { RelatedTypeFilter } from '#components';
+import { RelatedObjectCard, RelatedTypeFilter } from '#components';
 import { useRelatedObjects, useRelatedTypeFilter } from '#hooks';
 import { meta } from '#meta';
 import { SpaceSurface } from '#types';
@@ -96,7 +96,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                 <RelatedTypeFilter classNames='self-start' types={types} onToggle={toggle} />
                 {/* The masonry's own gutter would inset these cards relative to the record card above,
                     which shares this column — the scroll padding is the article's to own, not theirs. */}
-                <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined}>
+                <Masonry.Root Tile={RelatedObjectCard} columns={singleColumn ? 1 : undefined}>
                   <Masonry.Content padding={false} centered={false}>
                     <Masonry.Viewport items={related} />
                   </Masonry.Content>
@@ -109,43 +109,6 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
     </Panel.Root>
   );
 };
-
-const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; classNames?: string }) => {
-  const { t } = useTranslation(meta.profile.key);
-  const data = useMemo(() => ({ subject }), [subject]);
-  const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
-  // The card menu renders in a portal; resolve the origin plank from the card element instead.
-  const [cardRef, pivotId] = useCardPivot();
-  const menuItems = useObjectMenuItems(subject, pivotId);
-
-  return (
-    <Menu.Root>
-      <Card.Root ref={cardRef} classNames={classNames}>
-        <Card.Header>
-          <Card.Block>
-            <Icon icon={icon} />
-          </Card.Block>
-          <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
-          <Card.Block end>
-            <Menu.Trigger asChild disabled={!menuItems?.length}>
-              <IconButton
-                iconOnly
-                variant='ghost'
-                icon='ph--dots-three-vertical--regular'
-                label={t('more-actions.label')}
-              />
-            </Menu.Trigger>
-            <Menu.Content items={menuItems} />
-          </Card.Block>
-        </Card.Header>
-        <Card.Body>
-          <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
-        </Card.Body>
-      </Card.Root>
-    </Menu.Root>
-  );
-};
-
 //
 // Hooks
 //
