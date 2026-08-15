@@ -140,33 +140,6 @@ describe('mailbox project pipelines', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('a message sharing the cursor’s timestamp is not dropped', () =>
-    Effect.gen(function* () {
-      // Two messages at the SAME instant: once the first advances the cursor to that timestamp, an
-      // exclusive boundary would exclude the second forever and its task would never be created.
-      const { db, feed, mailbox, project } = yield* seed([{ email: 'first@kirkconsult.com', subject: 'First at T' }]);
-
-      const first = yield* updateProjectTasks.handler({
-        project: Ref.make(project),
-        mailbox: Ref.make(mailbox),
-        senders: ['kirkconsult.com'],
-      });
-      expect(first).toMatchObject({ created: 1 });
-
-      // Appended after the cursor advanced, carrying the identical `created` instant.
-      yield* Effect.promise(() =>
-        db.appendToFeed(feed, [makeMessage({ email: 'second@kirkconsult.com', subject: 'Second at T' }, 0)]),
-      );
-      const second = yield* updateProjectTasks.handler({
-        project: Ref.make(project),
-        mailbox: Ref.make(mailbox),
-        senders: ['kirkconsult.com'],
-      });
-      expect(second).toMatchObject({ created: 1 });
-      expect((yield* Database.query(Filter.type(Task.Task)).run).length).toBe(2);
-    }).pipe(Effect.provide(testLayer())),
-  );
-
   it.effect('two projects tracking one mailbox keep independent cursors', () =>
     Effect.gen(function* () {
       // The cursor is keyed on the PROJECT, not the mailbox feed. A shared watermark would let

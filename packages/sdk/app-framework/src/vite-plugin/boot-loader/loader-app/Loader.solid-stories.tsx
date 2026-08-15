@@ -42,7 +42,6 @@ export const Default: Story = {
         setTimeout(() => store.setProgress(0.4), 900),
         setTimeout(() => store.pushStatus({ humanized: 'Activating Observability: react-surface' }), 1_400),
         setTimeout(() => store.setProgress(0.8), 1_900),
-        setTimeout(() => store.ready(), 2_400),
       ];
       onCleanup(() => timers.forEach(clearTimeout));
     });

@@ -1,7 +1,6 @@
 ---
 '@dxos/plugin-inbox': minor
 '@dxos/app-toolkit': minor
-'@dxos/react-ui': minor
 '@dxos/react-ui-card': minor
 ---
 
@@ -31,8 +30,3 @@ affords initials or a photograph where a 16px navtree row does not, so non-card 
 resolving `IconAnnotation` through `Obj.getIcon`. `ObjectAvatar` now derives its initials' hue from the
 object's label rather than its type, since a type declaring a single hue put every instance on the same
 disc; it is no longer a card's default depiction, only what a type opts into.
-
-**`@dxos/react-ui` breaking:** `Message` is renamed to `Banner` — `Message.Root`/`Content`/`Title` are
-now `Banner.*`, the `message.*` theme keys are `banner.*`, and the `Callout` alias is removed. A new
-`Deferred` holds a fallback back until a pending state has lasted `delay`, then keeps it for at least
-`minDuration`, so a momentary empty state is never rendered as the answer.
