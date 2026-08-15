@@ -75,28 +75,26 @@ export const filterProcesses = (
   });
 };
 
+/** The operation tags carried by a process list. */
+export const collectProcessTags = (
+  processes: readonly Process.Info[],
+  tagsByKey: ReadonlyMap<string, readonly string[]>,
+): string[] => processes.flatMap((process) => [...(tagsByKey.get(process.key) ?? [])]);
+
 /**
- * Tags the filter offers: those carried by the processes on screen, plus anything currently
- * selected so a selection stays visible and therefore clearable.
+ * Orders the tags the filter offers.
  *
- * Deliberately NOT the full `OperationTag` vocabulary — offering a tag no listed process carries
- * presents a toggle that cannot change what is on screen.
+ * The caller passes only tags it has actually observed — not the `OperationTag` vocabulary, and not
+ * the current selection. Offering an unobserved tag presents a toggle that provably cannot change
+ * what is on screen; a selected tag that is absent needs no escape hatch either, since it filters
+ * nothing while absent and reappears (already checked, so clearable) the moment it does.
  *
  * Ordered by `OperationTag.all` so the list reads consistently as processes come and go. Tags
  * outside the common vocabulary (a plugin may coin its own) sort after these, alphabetically, and
  * `untagged` sorts last — it is a fallback, not a category.
  */
-export const availableOperationTags = (
-  processes: readonly Process.Info[],
-  tagsByKey: ReadonlyMap<string, readonly string[]>,
-  selected: readonly string[],
-): string[] => {
-  const tags = new Set(selected);
-  for (const process of processes) {
-    for (const tag of tagsByKey.get(process.key) ?? []) {
-      tags.add(tag);
-    }
-  }
+export const availableOperationTags = (seen: Iterable<string>): string[] => {
+  const tags = new Set(seen);
   const rank = (tag: string): number => {
     if (tag === UNTAGGED_OPERATION_TAG) {
       return OperationTag.all.length + 1;

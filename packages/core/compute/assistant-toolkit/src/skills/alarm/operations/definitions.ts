@@ -50,7 +50,7 @@ export const GetCurrentDate = Operation.make({
     name: 'Get current date',
     icon: 'ph--clock--regular',
     description: 'Get the current date and time as an ISO-8601 string.',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Assistant],
   },
   input: Schema.Struct({}),
   output: Schema.String,

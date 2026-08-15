@@ -30,6 +30,7 @@ import { AssistantCapabilities } from '#types';
 import {
   DEFAULT_OPERATION_TAGS,
   availableOperationTags,
+  collectProcessTags,
   filterProcesses,
   operationTagsByProcessKey,
 } from './trace-filter';
@@ -82,14 +83,12 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       };
     }, [traceMessages]);
 
-    // The filter classifies processes by the operation each one runs, so it offers only the tags
-    // the listed processes actually carry — see `./trace-filter`.
+    // The filter classifies processes by the operation each one runs, so it offers only tags that
+    // have actually turned up — see `./trace-filter`.
     const processes = useMonitoredProcesses();
     const tagsByKey = useOperationTagsByProcessKey();
-    const availableTags = useMemo(
-      () => availableOperationTags(processes, tagsByKey, operationTags),
-      [processes, tagsByKey, operationTags],
-    );
+    const seenTags = useSeenOperationTags(processes, tagsByKey);
+    const availableTags = useMemo(() => availableOperationTags(seenTags), [seenTags]);
     const visibleProcesses = useMemo(
       () => filterProcesses(processes, tagsByKey, operationTags),
       [processes, tagsByKey, operationTags],
@@ -278,6 +277,31 @@ const useMonitoredProcesses = (): readonly Process.Info[] => {
   );
   return useDeferredValue(processes);
 };
+
+/**
+ * Every operation tag observed since the panel mounted.
+ *
+ * Accumulated rather than read off the current process list: processes come and go constantly, and
+ * an option that blinks out of the menu as its last process retires is worse than a stale one. A
+ * tag that has never turned up is still never offered.
+ */
+const useSeenOperationTags = (
+  processes: readonly Process.Info[],
+  tagsByKey: ReadonlyMap<string, readonly string[]>,
+): ReadonlySet<string> => {
+  const [seen, setSeen] = useState<ReadonlySet<string>>(EMPTY_TAGS);
+  useEffect(() => {
+    const observed = collectProcessTags(processes, tagsByKey);
+    if (observed.every((tag) => seen.has(tag))) {
+      return;
+    }
+    setSeen(new Set([...seen, ...observed]));
+  }, [processes, tagsByKey, seen]);
+  return seen;
+};
+
+/** Stable ref, so an empty vocabulary doesn't re-sort the menu on every render. */
+const EMPTY_TAGS: ReadonlySet<string> = new Set();
 
 /**
  * Operation tags indexed by process key, drawn from every contributed handler set.

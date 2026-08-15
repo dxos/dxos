@@ -14,6 +14,7 @@ import {
   DEFAULT_OPERATION_TAGS,
   UNTAGGED_OPERATION_TAG,
   availableOperationTags,
+  collectProcessTags,
   filterProcesses,
   operationTagsByProcessKey,
 } from './trace-filter';
@@ -89,47 +90,50 @@ describe('filterProcesses', () => {
   });
 });
 
+describe('collectProcessTags', () => {
+  test('reports the tags the listed processes carry', ({ expect }) => {
+    const processes = [process('org.dxos.operation.run'), process('org.dxos.operation.query')];
+    expect(new Set(collectProcessTags(processes, tagsByKey))).toEqual(
+      new Set([OperationTag.Assistant, OperationTag.Database]),
+    );
+  });
+
+  test('reports nothing for a process that is not an operation', ({ expect }) => {
+    expect(collectProcessTags([process('org.dxos.agent')], tagsByKey)).toEqual([]);
+  });
+
+  test('reports the untagged pseudo-tag for an operation declaring none', ({ expect }) => {
+    expect(collectProcessTags([process('org.dxos.operation.legacy')], tagsByKey)).toEqual([UNTAGGED_OPERATION_TAG]);
+  });
+});
+
 describe('availableOperationTags', () => {
-  test('offers nothing when no process is listed and nothing is selected', ({ expect }) => {
-    expect(availableOperationTags([], tagsByKey, [])).toEqual([]);
+  test('offers nothing when nothing has been seen', ({ expect }) => {
+    expect(availableOperationTags([])).toEqual([]);
   });
 
-  test('offers only what the listed processes carry, not the whole vocabulary', ({ expect }) => {
-    expect(availableOperationTags([process('org.dxos.operation.query')], tagsByKey, [])).toEqual([
-      OperationTag.Database,
-    ]);
+  test('offers only what has been seen, not the whole vocabulary', ({ expect }) => {
+    expect(availableOperationTags([OperationTag.Database])).toEqual([OperationTag.Database]);
   });
 
-  test('ignores processes that are not operations', ({ expect }) => {
-    expect(availableOperationTags([process('org.dxos.agent')], tagsByKey, [])).toEqual([]);
+  test('does NOT offer a selected tag that has never been seen', ({ expect }) => {
+    // The default selection is assistant + connector; neither may show until something carries it.
+    expect(availableOperationTags([OperationTag.Database])).not.toContain(OperationTag.Assistant);
+    expect(availableOperationTags([OperationTag.Database])).not.toContain(OperationTag.Connector);
   });
 
   test('orders known tags by the vocabulary and sorts untagged last', ({ expect }) => {
-    const tags = availableOperationTags(
-      [process('org.dxos.operation.legacy'), process('org.dxos.operation.query'), process('org.dxos.operation.run')],
-      tagsByKey,
-      [],
-    );
+    const tags = availableOperationTags([UNTAGGED_OPERATION_TAG, OperationTag.Database, OperationTag.Assistant]);
     expect(tags).toEqual([OperationTag.Assistant, OperationTag.Database, UNTAGGED_OPERATION_TAG]);
   });
 
-  test('includes a selected tag no listed process carries, so it can be cleared', ({ expect }) => {
-    expect(availableOperationTags([], tagsByKey, ['custom'])).toContain('custom');
-  });
-
   test('sorts unknown tags after the vocabulary, alphabetically', ({ expect }) => {
-    const tags = availableOperationTags([], tagsByKey, [
-      'zebra',
-      'custom',
-      OperationTag.System,
-      UNTAGGED_OPERATION_TAG,
-    ]);
+    const tags = availableOperationTags(['zebra', 'custom', OperationTag.System, UNTAGGED_OPERATION_TAG]);
     expect(tags).toEqual([OperationTag.System, 'custom', 'zebra', UNTAGGED_OPERATION_TAG]);
   });
 
   test('does not duplicate tags', ({ expect }) => {
-    const processes = [process('org.dxos.operation.sync'), process('org.dxos.operation.query')];
-    const tags = availableOperationTags(processes, tagsByKey, [OperationTag.Database]);
-    expect(tags.filter((tag) => tag === OperationTag.Database)).toHaveLength(1);
+    const tags = availableOperationTags([OperationTag.Database, OperationTag.Database]);
+    expect(tags).toEqual([OperationTag.Database]);
   });
 });
