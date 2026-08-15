@@ -155,6 +155,18 @@ Committed, unpushed. This is the PR to open first.
 
 ### Tasks
 
+- [ ] **Filtered mailbox results float instead of anchoring to the top** (reported 2026-08-15, with a
+      screenshot). With a filter applied in the mailbox toolbar (`# inbox patrick`), the two matching
+      conversations render roughly a third of the way down the pane with a large empty band above
+      them, rather than sitting at the top of the list as they do unfiltered.
+      Start at `components/InboxStack/InboxStack.tsx` and the scroll container in
+      `containers/MailboxArticle`. Two candidates worth separating before fixing: (a) the virtualizer
+      or scroll container keeping the offset/spacer sizing of the UNFILTERED list, so the shortened
+      result set paints at the old scroll position — expect it to correct itself on scroll or resize,
+      which would confirm it; (b) a centring layout rule (`place-items-center` / `items-center`) that
+      only becomes visible once the content no longer fills the viewport. (a) is the more likely and
+      the more serious: it would mean any filter that shrinks the list leaves dead space.
+
 - [x] **Person rows should use the `Row.Person` avatar, not a `ph--user--regular` icon** (requested
       2026-08-13) — everywhere a card row represents a person, the generic user glyph should be the
       standard avatar treatment. Includes the recipients row added this session, the "Related Contacts"
