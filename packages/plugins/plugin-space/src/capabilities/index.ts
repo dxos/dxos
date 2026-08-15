@@ -85,6 +85,7 @@ export const SpacesReady = Capability.lazyModule(
   },
   () => import('./spaces-ready'),
 );
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const SpaceState = Capability.lazyModule(
   'SpaceState',
   {

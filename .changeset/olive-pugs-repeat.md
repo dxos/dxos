@@ -1,5 +1,6 @@
 ---
 '@dxos/app-framework': minor
+'@dxos/cli': minor
 '@dxos/app-toolkit': minor
 '@dxos/assistant-toolkit': minor
 '@dxos/plugin-connector': minor
@@ -25,6 +26,18 @@ no longer invoke `ObservabilityOperation.SendEvent` themselves, `SpacePlugin`'s 
 option now decides whether the mappings are registered, and `SpaceOperationConfig.observability` is
 removed as a result.
 
-The `connectors` skill moves from `@dxos/assistant-toolkit` to `@dxos/plugin-connector`, which owns
-the connectors it tells the model to prompt for. Import `ConnectorsSkill` from
-`@dxos/plugin-connector`; enabling ConnectorPlugin now contributes it.
+Skills move to the plugins that own their subject. `@dxos/plugin-connector` now owns the
+`connectors` skill (import `ConnectorsSkill` from it; enabling ConnectorPlugin contributes it), and
+`@dxos/plugin-space` owns the **Database** skill — object CRUD over the projected verbs, exported as
+`DatabaseSkill` from `@dxos/plugin-space/skills`.
+
+`@dxos/assistant-toolkit`'s own `DatabaseSkill` keeps its key but drops the five operations
+plugin-space now covers (`objectCreate`, `objectDelete`, `objectUpdate`, `query`, `load`) and is
+renamed **Database schema** for what remains: schemas, relations, tags and chat-context binding. Two
+capabilities moved onto the plugin-space verbs with the operations: `queryObjects` gained `in` (scope
+results to objects reachable from the given ones — how queue-backed mail is addressed), and
+`getObject` became `getObjects`, taking an array so a batch of references resolves in one call.
+
+The `discord` and `linear` skills are removed. Both advertised a tool whose handler set was
+registered nowhere, so invoking either failed at runtime; plugin-discord and plugin-linear already
+own connector-based sync for those services.

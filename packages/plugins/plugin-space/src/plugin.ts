@@ -21,6 +21,7 @@ import {
   ReactSurface,
   Repair,
   Schema,
+  SkillDefinition,
   SpaceSettings,
   SpacesReady,
   SpaceState,
@@ -42,6 +43,7 @@ export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).p
   Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactRoot),
   Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(SpaceSettings),
   Plugin.addModule(
     AppCapability.translations([...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations]),

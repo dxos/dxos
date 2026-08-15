@@ -30,21 +30,24 @@ const typenameParameter = Schema.String.annotate({
   example: 'org.dxos.type.task',
 });
 
-export const GetObject = Operation.make({
+export const GetObjects = Operation.make({
   meta: {
-    key: makeKey('getObject'),
-    name: 'Get Object',
-    description: 'Read an object by reference and return its content as a point-in-time snapshot.',
+    key: makeKey('getObjects'),
+    name: 'Get Objects',
+    description:
+      'Read objects and relations by reference, returning their content as a point-in-time snapshot. ' +
+      'Resolves a reference seen in another object, in the `{ "/": "echo:..." }` envelope form. ' +
+      'Batched: pass every reference to read in one call.',
     icon: 'ph--file-magnifying-glass--regular',
   },
   services: [Database.Service],
   input: Schema.Struct({
-    object: Ref.Ref(Obj.Unknown),
+    objects: Schema.Array(Ref.Ref(Obj.Unknown)),
   }),
   output: Schema.Struct({
-    object: Schema.Unknown,
+    objects: Schema.Array(Schema.Unknown),
   }),
-}).pipe(Operation.mcpTool({ name: 'getObject', safety: 'read', aspect: 'space' }));
+}).pipe(Operation.mcpTool({ name: 'getObjects', safety: 'read', aspect: 'space' }));
 
 export const UpdateObject = Operation.make({
   meta: {
@@ -76,6 +79,11 @@ export const QueryObjects = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
+    in: Schema.optional(Schema.Array(Ref.Ref(Obj.Unknown))).annotate({
+      description:
+        'Restrict results to objects reachable from these ones (transitively) — a feed, a collection, ' +
+        "a mailbox's feed. Queue-backed content is addressed this way.",
+    }),
     typename: Schema.optional(typenameParameter),
     text: Schema.optional(Schema.String).annotate({ description: 'Full-text search terms.' }),
     includeContent: Schema.optional(Schema.Boolean).annotate({

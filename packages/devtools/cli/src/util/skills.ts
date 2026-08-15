@@ -6,7 +6,7 @@ import * as Layer from 'effect/Layer';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
-import { DatabaseHandlers, DatabaseSkill } from '@dxos/assistant-toolkit';
+import { DatabaseHandlers, DatabaseSkill as DatabaseSchemaSkill } from '@dxos/assistant-toolkit';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Feed, Tag, type Type } from '@dxos/echo';
@@ -39,6 +39,8 @@ import { CommentOperationHandlerSet } from '@dxos/plugin-review/operations';
 import { CommentSkill } from '@dxos/plugin-review/skills';
 import { ScriptOperationHandlerSet } from '@dxos/plugin-script/operations';
 import { ScriptSkill } from '@dxos/plugin-script/skills';
+import { SpaceObjectOperationHandlerSet } from '@dxos/plugin-space/operations';
+import { DatabaseSkill } from '@dxos/plugin-space/skills';
 import { TableOperationHandlerSet } from '@dxos/plugin-table/operations';
 import { TableSkill } from '@dxos/plugin-table/skills';
 import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription/operations';
@@ -64,6 +66,7 @@ export const skillRegistry = makeRegistry({
     // Skills available to the chat.
     AssistantSkill.make(),
     DatabaseSkill.make(),
+    DatabaseSchemaSkill.make(),
     CalendarSkill.make(),
     ChessSkill.make(),
     InboxSkill.make(),
@@ -86,6 +89,7 @@ export const skillRegistry = makeRegistry({
 export const operationHandlers = OperationHandlerSet.merge(
   // NOTE: Operation handlers referenced by skills above need to be added here.
   DatabaseHandlers,
+  SpaceObjectOperationHandlerSet,
   ChessOperationHandlerSet,
   InboxOperationHandlerSet,
   // Mail-provider handlers: InboxSendSkill / CalendarSkill reference provider ops, and a missing

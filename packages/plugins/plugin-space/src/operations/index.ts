@@ -5,8 +5,21 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { SpaceObjectOperation, SpaceOperation } from '#types';
 
+/**
+ * The object verbs alone, for a host that registers handlers by hand (the CLI chat runtime) rather
+ * than through the capability system: the full set names definitions whose schemas do not serialize
+ * (e.g. `ImportSpace`), which a skill-serializing registry cannot carry.
+ */
+export const SpaceObjectOperationHandlerSet = OperationHandlerSet.lazy([
+  SpaceObjectOperation.GetObjects.pipe(Operation.lazyHandler(() => import('./get-objects'))),
+  SpaceObjectOperation.QueryObjects.pipe(Operation.lazyHandler(() => import('./query-objects'))),
+  SpaceObjectOperation.UpdateObject.pipe(Operation.lazyHandler(() => import('./update-object'))),
+  SpaceOperation.AddObject.pipe(Operation.lazyHandler(() => import('./add-object'))),
+  SpaceOperation.RemoveObjects.pipe(Operation.lazyHandler(() => import('./remove-objects'))),
+]);
+
 export const SpaceOperationHandlerSet = OperationHandlerSet.lazy([
-  SpaceObjectOperation.GetObject.pipe(Operation.lazyHandler(() => import('./get-object'))),
+  SpaceObjectOperation.GetObjects.pipe(Operation.lazyHandler(() => import('./get-objects'))),
   SpaceObjectOperation.QueryObjects.pipe(Operation.lazyHandler(() => import('./query-objects'))),
   SpaceObjectOperation.UpdateObject.pipe(Operation.lazyHandler(() => import('./update-object'))),
   SpaceOperation.AddObject.pipe(Operation.lazyHandler(() => import('./add-object'))),

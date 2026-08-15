@@ -67,7 +67,10 @@ export const makeGateway = Effect.fn(function* () {
     ProjectOperationHandlerSet,
     TasksOperationHandlerSet,
   );
-  const handlers = yield* handlerSet.handlers;
+  // An operation reaching the registry from both an activated plugin and the CLI's curated chat
+  // list must project once; a second registration is a tool-name collision, which the projection
+  // raises rather than resolving silently.
+  const handlers = dedupeOperations(yield* handlerSet.handlers);
   const skills = dedupeByKey([...capabilities.getAll(AppCapabilities.SkillDefinition), CodeProjectSkillDefinition]);
 
   // Same visibility rule as EDGE: the HALO space and the settings space hold identity and app
@@ -133,6 +136,21 @@ const serializableHandlers = (
 
 /** Operation keys travel with or without the `dxn:` prefix; compare them stripped. */
 const normalizeKey = (key: string): string => key.replace(/^dxn:/, '');
+
+/** Operations reaching the merge from two sources; the first registration wins. */
+const dedupeOperations = (
+  handlers: readonly Operation.WithHandler<Operation.Definition.Any>[],
+): Operation.WithHandler<Operation.Definition.Any>[] => {
+  const seen = new Set<string>();
+  return handlers.filter((handler) => {
+    const key = normalizeKey(String(handler.meta.key));
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
 
 /** A skill contributed both by an activated plugin and by direct import must project once. */
 const dedupeByKey = <T extends { readonly key: unknown }>(definitions: readonly T[]): T[] => {

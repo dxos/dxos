@@ -12,10 +12,8 @@ import {
   AlarmSkill,
   AutomationSkill,
   BrowserSkill,
-  DatabaseSkill,
+  DatabaseSkill as DatabaseSchemaSkill,
   DelegationSkill,
-  DiscordSkill,
-  LinearSkill,
   MemorySkill,
   PlanningSkill,
   ProjectSkill,
@@ -24,6 +22,7 @@ import {
   makeDelegationStrategy,
 } from '@dxos/assistant-toolkit';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import { DatabaseSkill } from '@dxos/plugin-space/skills';
 
 import { AssistantSkill } from '#skills';
 
@@ -33,9 +32,8 @@ const skillDefinition = () =>
       AssistantSkill,
       BrowserSkill,
       DatabaseSkill,
+      DatabaseSchemaSkill,
       WebSearchSkill,
-      DiscordSkill,
-      LinearSkill,
       AgentSkill,
       PlanningSkill,
       MemorySkill,

@@ -20,6 +20,7 @@ export default defineConfig({
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
+    'skills': 'src/skills/index.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'SpaceCapabilities': 'src/types/SpaceCapabilities.ts',

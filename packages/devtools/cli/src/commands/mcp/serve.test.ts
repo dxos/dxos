@@ -46,7 +46,7 @@ const STATIC_TOOLS = ['whoami', 'listSpaces', 'listPlugins', 'listTypes', 'listO
  * so these names prove the projection reaches the registry rather than a hand-written toolkit.
  * Named after the ECHO API (`Database.add` / `Database.remove`), not create/delete.
  */
-const PROJECTED_OBJECT_TOOLS = ['addObject', 'getObject', 'updateObject', 'removeObjects', 'queryObjects'];
+const PROJECTED_OBJECT_TOOLS = ['addObject', 'getObjects', 'updateObject', 'removeObjects', 'queryObjects'];
 
 type Response = { id?: number; result?: any };
 

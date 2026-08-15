@@ -11,7 +11,14 @@ import { SpaceObjectOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceObjectOperation.QueryObjects> = SpaceObjectOperation.QueryObjects.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ typename, text, includeContent = false, limit = 10, includeQueues = false }) {
+    Effect.fnUntraced(function* ({
+      in: parents,
+      typename,
+      text,
+      includeContent = false,
+      limit = 10,
+      includeQueues = false,
+    }) {
       const { db } = yield* Database.Service;
 
       let query: Query.Any;
@@ -24,6 +31,10 @@ const handler: Operation.WithHandler<typeof SpaceObjectOperation.QueryObjects> =
         query = Query.select(Filter.type(yield* resolveType(typename)));
       } else {
         query = Query.select(Filter.everything());
+      }
+
+      if (parents && parents.length > 0) {
+        query = query.select(Filter.childOf(parents));
       }
 
       query = query.limit(limit);

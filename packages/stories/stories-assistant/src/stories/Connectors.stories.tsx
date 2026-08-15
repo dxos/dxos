@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { LinearSkill } from '@dxos/assistant-toolkit';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
 import { ConnectorsSkill, meta as connectorMeta } from '@dxos/plugin-connector';
@@ -15,12 +14,11 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import { TranscriptionSkill } from '@dxos/plugin-transcription';
 import { Cell } from '@dxos/storybook-testing';
-import { Event, Message, Person, Pipeline, Task, Transcript } from '@dxos/types';
+import { Event, Message, Transcript } from '@dxos/types';
 
 import { StoryRole } from '../modules';
 import {
   ModuleContainer,
-  accessTokensFromEnv,
   addToRootCollection,
   config,
   createDecorators,
@@ -180,23 +178,6 @@ export const WithCalendar: Story = {
       [{ type: AppSurface.Article, data: { subject: `${connectorMeta.profile.key}.space-settings` } }],
       [StoryRole.Context],
     ],
-  },
-};
-
-// TODO(burdon): Move to env.
-const VITE_LINEAR_API_KEY = process.env.VITE_LINEAR_API_KEY;
-
-export const WithLinearSync: Story = {
-  decorators: createDecorators({
-    plugins: [],
-    types: [Task.Task, Person.Person, Pipeline.Pipeline],
-    accessTokens: accessTokensFromEnv({
-      'linear.app': VITE_LINEAR_API_KEY,
-    }),
-    skills: [LinearSkill.key],
-  }),
-  args: {
-    layout: [[StoryRole.Chat], [StoryRole.Graph]],
   },
 };
 

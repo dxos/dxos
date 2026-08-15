@@ -4485,9 +4485,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../../echo/echo-protocol
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
@@ -4521,9 +4518,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      dfx:
-        specifier: 'catalog:'
-        version: 1.0.15(effect@4.0.0-rc.108)
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
