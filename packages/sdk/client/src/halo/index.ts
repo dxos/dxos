@@ -3,11 +3,6 @@
 //
 
 export { type Halo } from '@dxos/client-protocol';
-export {
-  type Contact,
-  CreateEpochRequest,
-  Device,
-  DeviceKind,
-  type Identity,
-} from '@dxos/protocols/proto/dxos/client/services';
+export { type Contact, Device, DeviceKind, type Identity } from '@dxos/protocols/proto/dxos/client/services';
 export { type Credential, DeviceType, type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
+export { SpacesService } from '@dxos/protocols/rpc';

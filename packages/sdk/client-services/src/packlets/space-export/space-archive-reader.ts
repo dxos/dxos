@@ -12,7 +12,7 @@ import {
   SpaceArchiveFileStructure,
   type SpaceArchiveMetadata,
 } from '@dxos/protocols';
-import type { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import type { SpacesService } from '@dxos/protocols/rpc';
 
 /**
  * Extracted feed data from the archive.
@@ -28,7 +28,7 @@ export type ExtractedSpaceArchive = {
   feeds: Record<string, ExtractedFeed>;
 };
 
-export const extractSpaceArchive = async (archive: SpaceArchive): Promise<ExtractedSpaceArchive> => {
+export const extractSpaceArchive = async (archive: SpacesService.SpaceArchive): Promise<ExtractedSpaceArchive> => {
   const { Archive } = await import('@obsidize/tar-browserify');
   const { entries } = await Archive.extract(archive.contents);
   const metadataEntry = entries.find((entry) => entry.fileName === SpaceArchiveFileStructure.metadata);

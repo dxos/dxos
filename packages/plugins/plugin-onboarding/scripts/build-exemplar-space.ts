@@ -68,7 +68,7 @@ import * as MapView from '@dxos/plugin-map/Map';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 import { Table } from '@dxos/react-ui-table/types';
 import { Tagging, TagIndex, ViewModel } from '@dxos/schema';
 import { Actor, ContentBlock, Event, Message, Organization, Person, Task, TaskSet } from '@dxos/types';
@@ -1769,7 +1769,7 @@ try {
   await space.db.flush();
 
   console.log('exporting…');
-  const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+  const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
 
   // Store as a single line so regenerations produce a 1-line diff rather than
   // thousands of changed lines. The file is valid JSON; use `jq .` to inspect it.
