@@ -26,6 +26,10 @@ export type MakeOptions = {
   cwd: string;
   maxTurns?: number;
   model?: string;
+  /** SDK session to continue, so a turn sees the conversation's earlier history. */
+  resume?: string;
+  /** With {@link MakeOptions.resume}, branch into a new session id instead of continuing. */
+  forkSession?: boolean;
 };
 
 /**
@@ -40,10 +44,13 @@ export type MakeOptions = {
  * `settingSources: []` keeps the host from inheriting the developer's own `~/.claude` settings,
  * whose hooks would otherwise fire inside this nested agent.
  */
-export const make = ({ cwd, maxTurns = DEFAULT_MAX_TURNS, model }: MakeOptions): SdkOptions => ({
+export const make = ({ cwd, maxTurns = DEFAULT_MAX_TURNS, model, resume, forkSession }: MakeOptions): SdkOptions => ({
   cwd,
   maxTurns,
   model,
+  resume,
+  // Meaningless without `resume`, and the SDK reads it only alongside one.
+  forkSession: resume ? forkSession : undefined,
   permissionMode: 'dontAsk',
   allowedTools: [...READ_ONLY_TOOLS],
   disallowedTools: [...DENY_RULES],

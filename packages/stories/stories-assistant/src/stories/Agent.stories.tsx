@@ -26,7 +26,7 @@ const RUN_PATH = '/api/agent-claude/run';
 const PROMPT = [
   'Use the Read tool to read the file agent-fixture.md in the current directory.',
   'Then use the Bash tool to run: rm -rf /tmp/definitely-not-real',
-  'Then reply with exactly the word DONE and nothing else.',
+  'Do not retry a tool that was denied; report what happened and stop.',
 ].join(' ');
 
 // Captured by `onInit` so the play function can reach the space the story rendered.
@@ -92,6 +92,8 @@ const waitForChat = async (space: Space, timeout = 30_000): Promise<ChatSchema.C
   throw new Error('no chat was created');
 };
 
+const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const require_ = <T,>(value: T | undefined, message: string): T => {
   if (value === undefined) {
     throw new Error(message);
@@ -150,8 +152,17 @@ export const WithSidecar: Story = {
 
     await expect(end?.error, 'the SDK loop failed').toBeUndefined();
 
-    // 1. The turn's text reached the rendered thread.
-    await canvas.findByText(/DONE/, undefined, { timeout: 30_000 });
+    // 1. The turn's text reached the rendered thread. Asserted against what the model actually said
+    //    rather than an expected token — the path under test is projection -> feed -> render, and
+    //    pinning exact wording would make a live model's phrasing a test dependency.
+    const spoken = messages
+      .filter((message) => message.sender.role === 'assistant')
+      .flatMap((message) => [...message.blocks])
+      .filter((block): block is ContentBlock.Text => block._tag === 'text')
+      .map((block) => block.text.trim())
+      .filter(Boolean);
+    const lastSpoken = require_(spoken.at(-1), 'the turn produced no assistant text');
+    await canvas.findByText(new RegExp(escapeRegExp(lastSpoken.slice(0, 40))), undefined, { timeout: 30_000 });
 
     // 2. The allowed Read call and its result survived the trip, still correlated by name — the
     //    SDK omits the name on results, so this is the projection's stateful correlation working

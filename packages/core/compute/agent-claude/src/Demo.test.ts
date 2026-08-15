@@ -13,6 +13,17 @@ import * as Host from './Host';
 /** Spawns the real SDK and spends real tokens, so it is opt-in: `moon run agent-claude:demo`. */
 const ENABLED = !!process.env.DX_RUN_LIVE;
 
+/** Collects a turn's assistant text, which is what these assertions are about. */
+const runText = async (session: Host.Session, prompt: string): Promise<string> => {
+  const messages = await EffectEx.runPromise(
+    Stream.runCollect(session.run({ prompt, cwd: import.meta.dirname, maxTurns: 2 })),
+  );
+  return Array.from(messages)
+    .filter((message) => message.sender.role === 'assistant')
+    .map((message) => Message.extractText(message))
+    .join('');
+};
+
 describe.skipIf(!ENABLED)('Demo (live)', () => {
   test('runs a turn and projects it', { timeout: 120_000 }, async () => {
     const session = new Host.Session();
@@ -42,5 +53,28 @@ describe.skipIf(!ENABLED)('Demo (live)', () => {
     const stats = collected.at(-1)?.blocks.find((block) => block._tag === 'stats') as ContentBlock.Stats | undefined;
     expect(stats?.duration).to.be.a('number');
     expect(session.denials).to.have.length(0);
+    expect(session.sessionId, 'no session id was captured').to.be.a('string');
+  });
+
+  test('a second turn continues the first', { timeout: 180_000 }, async () => {
+    const session = new Host.Session();
+    await runText(session, 'Remember the word pelican. Reply with exactly OK.');
+    const sessionId = session.sessionId;
+    expect(sessionId).to.be.a('string');
+
+    // Only a resumed session can answer this; a fresh one has never seen the word.
+    const answer = await runText(session, 'What word did I ask you to remember? Reply with just that word.');
+    expect(answer.toLowerCase(), 'the second turn did not see the first').to.contain('pelican');
+    expect(session.sessionId, 'continuing should not change the session').to.eq(sessionId);
+  });
+
+  test('a fork branches from the parent history onto its own session', { timeout: 180_000 }, async () => {
+    const parent = new Host.Session();
+    await runText(parent, 'Remember the word pelican. Reply with exactly OK.');
+
+    const branch = parent.fork();
+    const answer = await runText(branch, 'What word did I ask you to remember? Reply with just that word.');
+    expect(answer.toLowerCase(), 'the fork did not inherit the parent history').to.contain('pelican');
+    expect(branch.sessionId, 'a fork must land on its own session').not.to.eq(parent.sessionId);
   });
 });

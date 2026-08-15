@@ -7,10 +7,12 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import * as path from 'node:path';
 
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
+import { AgentHostError } from './errors';
 import * as Host from './Host';
 import * as Wire from './Wire';
 
@@ -18,14 +20,40 @@ import * as Wire from './Wire';
 export const PATH = '/api/agent-claude/run';
 
 export type MakeMiddlewareOptions = {
-  /** Working directory turns are scoped to when a request does not name one. */
+  /** Root that every turn is confined to; a request may narrow it but never escape it. */
   cwd: string;
 };
 
 export type RunRequest = {
   prompt: string;
+  /** Optional subdirectory of the configured root — see {@link resolveCwd}. */
   cwd?: string;
   maxTurns?: number;
+  /** SDK session to continue, so a follow-up turn sees the conversation's history. */
+  resume?: string;
+  /** With {@link RunRequest.resume}, branch into a new session rather than continuing. */
+  fork?: boolean;
+};
+
+/**
+ * Confines a requested working directory to the configured root.
+ *
+ * The root is the whole of the host's read scope, so a request that could replace it would make that
+ * scope advisory rather than real; anything resolving outside is refused instead of clamped, since
+ * silently substituting a different directory would hide the attempt.
+ */
+export const resolveCwd = (root: string, requested?: string): string => {
+  if (requested === undefined) {
+    return root;
+  }
+
+  const resolvedRoot = path.resolve(root);
+  const resolved = path.resolve(resolvedRoot, requested);
+  if (resolved !== resolvedRoot && !resolved.startsWith(resolvedRoot + path.sep)) {
+    throw new AgentHostError({ message: 'cwd outside the configured root', context: { root, requested } });
+  }
+
+  return resolved;
 };
 
 const readBody = (req: IncomingMessage): Promise<string> =>
@@ -52,21 +80,37 @@ export const make =
       return next();
     }
 
-    const { prompt, cwd = defaultCwd, maxTurns }: RunRequest = JSON.parse(await readBody(req));
-    log.info('run', { prompt, cwd });
+    const request: RunRequest = JSON.parse(await readBody(req));
+    const { prompt, maxTurns, resume, fork } = request;
+    let cwd: string;
+    try {
+      cwd = resolveCwd(defaultCwd, request.cwd);
+    } catch (error) {
+      res.writeHead(400, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ error: String(error) }));
+      return;
+    }
+
+    log.info('run', { prompt, cwd, resume });
 
     // NDJSON rather than SSE: the client reads it with a plain streaming fetch, and a turn's frames
     // are already newline-delimitable JSON objects.
     res.writeHead(200, { 'content-type': 'application/x-ndjson', 'cache-control': 'no-cache' });
     const write = (frame: Wire.WireFrame) => res.write(`${JSON.stringify(frame)}\n`);
 
-    const session = new Host.Session();
+    const session = new Host.Session({ resume, fork });
     await EffectEx.runPromise(
       session.run({ prompt, cwd, maxTurns }).pipe(
         Stream.runForEach((message) => Effect.sync(() => write(Wire.encode(message)))),
         Effect.match({
-          onSuccess: () => write({ end: true, denials: session.denials.length }),
-          onFailure: (error) => write({ end: true, denials: session.denials.length, error: String(error) }),
+          onSuccess: () => write({ end: true, denials: session.denials.length, sessionId: session.sessionId }),
+          onFailure: (error) =>
+            write({
+              end: true,
+              denials: session.denials.length,
+              sessionId: session.sessionId,
+              error: String(error),
+            }),
         }),
       ),
     );
