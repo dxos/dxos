@@ -76,9 +76,12 @@ export const Schema = AppCapability.schema(() => import('./schema'));
 export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SpaceCapabilities.SettingsAtom],
 });
+// Browser-only: it requires the app graph, layout and attention — app-shell capabilities no
+// headless host registers.
 export const SpacesReady = Capability.lazyModule(
   'SpacesReady',
   {
+    environments: [],
     requires: [
       Capabilities.OperationInvoker,
       AppCapabilities.AppGraph,
