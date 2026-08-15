@@ -85,7 +85,8 @@ Committed, unpushed. This is the PR to open first.
   JMAP as a mailbox role, both already mapped in the providers' `sync/system-tags.ts`, so one toggle
   serves both directions and NO filter-complement operator is needed anywhere.
 - **Archive is LOCAL-ONLY for now** (syncing tags back to Gmail is P2). A Gmail sync WILL restore an
-  archived message. Accepted deliberately — do not re-file this as a bug.
+  archived message. Accepted deliberately — do not re-file this as a bug. **Superseded 2026-08-15** by
+  Phase 6 below, which closes the P2 — see [`TAG-SYNC.md`](TAG-SYNC.md).
 
 ---
 
@@ -552,6 +553,43 @@ generalize now with mailbox as instance #1.
       `ExtractCorrespondents` is the clear win — it re-derives over the whole feed every run and the
       identity index already makes it idempotent, so a cursor is pure saving. The projects trio is
       blocked on the item above. Real scope: ONE, maybe two.
+
+---
+
+## Phase 6: Bidirectional tag sync (design agreed 2026-08-15)
+
+Design: [`TAG-SYNC.md`](TAG-SYNC.md). Closes the Phase 1 P2 deferral — a star or an archive made in
+Composer reaches the provider, and a label changed at the provider is no longer add-only.
+
+The mechanism is a three-way merge whose **base is the tag index's Automerge heads**
+(`Obj.version` / `Obj.getVersion`), not a shadow object and not an outbox: ECHO already keeps the
+mutation log, and a state diff has no self-echo failure mode — sync writes tags through the same
+`Tagging.set` the star button does, so an intent queue would enqueue every pulled tag for push.
+
+### Tasks
+
+- [ ] **Pure diff module** — `(base, local, remote, eligible) → { push, pull }` over plain
+      `Map<string, Set<string>>`; no ECHO, no provider, no Effect. Table-driven unit tests over the
+      merge matrix, including empty base (first sync pushes nothing) and the opposed-conflict case.
+- [ ] **Heads on the binding** — persist `nextHeads` beside `Cursor.spec.token`; re-baseline (push
+      nothing) when `A.view` cannot resolve them. Capture the heads AFTER the pull commits and BEFORE
+      the push, which is what avoids both a lost mid-run toggle and re-pushing this run's own pulls.
+- [ ] **`pushTags` hook on `MailSyncProvider`** — optional, so a provider with no write path degrades
+      to pull-only. Harness resolves tag uris → provider label ids from the reverse label map, caps
+      ops per run, and persists heads only on a fully-drained push.
+- [ ] **Gmail write path** — `modifyMessage` + `batchModify` on `GoogleMailApi`, its `Live` layer, and
+      `GoogleMailApi.mock` (the mock needs mutable per-message label state so `listHistory` reflects a
+      push). Confirm the connector requests the `gmail.modify` scope.
+- [ ] **Live round-trip test** — env-gated on `GOOGLE_ACCESS_TOKEN`, both directions against a real
+      account.
+
+### Open
+
+- Whether `ClassifyMailbox`'s canonical output (`spam` / `promotions` / `updates`) should push to the
+  user's real Gmail account. Eligibility is by tag, not by actor, so today's rule says yes.
+- Conflict policy: remote-wins (consistent with `ConnectorSync.mergeField`) vs local-wins for
+  canonical toggles specifically.
+- JMAP assumed to be a follow-up; its add-only keyword comment stays accurate until then.
 
 ---
 
