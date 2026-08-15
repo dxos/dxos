@@ -95,32 +95,49 @@ changes what a model sees lives in the shared package or it is a bug.
       operations. Classify by _domain_, not by service dependency — `memory` and `project` are both
       `Database.Service`-only yet squarely assistant-scoped, which is what makes the service axis
       misleading.
-  - [ ] `database` skill splits: the CRUD/query/schema/relation/tag half → **plugin-space**;
-        `contextAdd`/`contextRemove` stay (they bind `Harness.HarnessService`). The only skill whose
-        split runs _through_ it rather than between skills.
+  - [x] `database` skill — **CRUD half done.** plugin-space owns the **Database** skill (`add`, `get`,
+        `query`, `update`, `remove` over its own verbs, `@dxos/plugin-space/skills`); the toolkit's
+        five duplicates (`objectCreate`, `objectDelete`, `objectUpdate`, `query`, `load`) are gone and
+        its skill is renamed **Database schema** for the residue. Two capabilities moved rather than
+        being dropped: `queryObjects` gained `in`, and `getObject` became `getObjects` (array in, one
+        call) — both covered by `plugin-space/src/operations/object-verbs.test.ts`.
+  - [ ] `database` skill — **schema/relation/tag half still in the toolkit.** Check each against what
+        plugin-space already has before moving: `RelationCreate`/`RelationDelete` against
+        `SpaceOperation.AddRelation`, `SchemaAdd` against `AddType` (`SchemaAdd` takes a JSON Schema,
+        `AddType` a `Type` — probably both survive, agent-facing vs app-facing). `TagAdd`/`TagRemove`
+        and `SchemaList` have no counterpart. `contextAdd`/`contextRemove` stay (they bind
+        `Harness.HarnessService`); once the rest leaves, the toolkit skill is a chat-context skill and
+        should be keyed as one.
+  - [ ] **Model fixtures need regenerating** (needs `DX_ANTHROPIC_API_KEY`, absent from the cloud
+        sandbox). `parameters.tools` is part of the fixture match key, so shrinking `DatabaseSkill`'s
+        tool list invalidated all 134 conversations under
+        `.store/conversations/packages_core_compute_assistant-toolkit_src_skills_database_skill/`.
+        `DX_UPDATE_MODEL_FIXTURES=1 moon run '#model-fixture:test'`, then commit `.store/**`. The
+        `Model Fixture` workflow is deliberately **not** a required check, so this reports red without
+        blocking merge.
   - [x] `connectors` → **plugin-connector**. Done. Instructions-only skill (no operations), moved to
         the plugin that owns the connectors it tells the model to prompt for; ConnectorPlugin
         contributes it through `AppCapabilities.SkillDefinition` and re-exports `ConnectorsSkill`.
-  - [ ] `discord` / `linear` — **not a relocation; decide first.** Both skills advertise a tool
+  - [x] `discord` / `linear` — **deleted, not relocated.** Each advertised a tool
         (`org.dxos.function.discord.fetchDiscordMessages`, `org.dxos.function.linear.syncIssues`)
-        whose handler set — `DiscordHandlers` / `LinearHandlers` — is registered **nowhere in either
-        repo**: `plugin-assistant`'s operation-handler capability lists the other eight toolkit sets
-        and not these two. Invoking either tool fails with `NoHandlerError` today, and the only
-        tests are off (`describe.skip`, `skipIf(!DISCORD_TOKEN)`). Meanwhile plugin-discord and
-        plugin-linear already own connector-based sync (`GetDiscordChannels`,
-        `MaterializeDiscordTarget`, `SyncDiscord`, …) with registered handlers. So the choice is
-        delete-as-superseded vs relocate-and-wire, which are materially different outcomes —
-        ask before moving.
+        whose handler set was registered nowhere in either repo, so invoking it failed with
+        `NoHandlerError`; the only tests were off (`describe.skip`, `skipIf(!DISCORD_TOKEN)`), and
+        plugin-discord and plugin-linear already own connector-based sync with registered handlers.
+        The skill-manager test used `DiscordSkill` as its not-agent-enablable fixture — `AutomationSkill`
+        now plays that part.
   - [ ] `project` — **deprecated**, superseded by plugin-projects. Primitive predecessor (artifact
         filing against a chat-bound project). Remove once `projects.eval.ts` and
         `sender-ledger.eval.ts` move to the plugin's skill.
   - [ ] Stays in assistant-toolkit: `memory`, `agent`, `agent-wizard`, `delegation`, `planning`,
         `alarm`, `skill-manager`, `browser`, `automation`, `websearch`. What is left is the chat
         runtime's own skills — which is what the package name claims.
-  - [ ] **Gate:** `DatabaseSkill` is consumed by four `packages/core/` harnesses (`assistant-e2e`
-        harness + `local-ai.test.ts`, `assistant-evals/skills.ts`, `functions-testing`) via
-        `Ref.make(DatabaseSkill.make())`. They must assemble the _same_ skill production ships, or
-        the evals stop testing what runs. Settle this before moving anything.
+  - [ ] **Gate (softer than first recorded):** `DatabaseSkill` is consumed by four `packages/core/`
+        harnesses (`assistant-e2e` harness + `local-ai.test.ts`, `assistant-evals/skills.ts`,
+        `functions-testing`) via `Ref.make(DatabaseSkill.make())`; they still bind only the toolkit's
+        skill, so they no longer assemble what production ships — plugin-space's Database skill has
+        the CRUD verbs. `assistant-e2e` and `assistant-evals` already depend on plugins
+        (`plugin-assistant`, `plugin-crm`, …), so adding `@dxos/plugin-space` is no new direction;
+        only `functions-testing` has no plugin dependency today.
 - [x] **Observability as a registered mapping, not a call.** Done, in the `UndoMapping` shape:
       `ObservabilityMapping` (operation, event name, properties derived from input/output) is
       contributed through `Capabilities.ObservabilityMapping`, and plugin-observability's
