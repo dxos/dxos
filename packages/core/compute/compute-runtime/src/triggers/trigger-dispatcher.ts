@@ -58,7 +58,13 @@ export interface TriggerDispatcherOptions {
 
   /**
    * Poll interval for cron triggers in 'natural' time control mode.
-   * @default 1 second
+   *
+   * Bounds how late a cron trigger fires, so it is also the finest schedule the dispatcher can
+   * honour — a minute, matching the shortest interval any deployed trigger asks for. Every tick
+   * re-runs each feed trigger's query, which is why this is not free to shorten: pass a smaller
+   * value explicitly (tests do) rather than lowering the default.
+   *
+   * @default 1 minute
    */
   livePollInterval?: Duration.Duration;
 
@@ -250,6 +256,9 @@ export class TriggerDispatcher extends Context.Service<
 }
 
 const DEFAULT_MAX_CONCURRENCY = 5;
+
+/** See {@link TriggerDispatcherOptions.livePollInterval}. */
+const DEFAULT_LIVE_POLL_INTERVAL = Duration.minutes(1);
 const DEFAULT_FAILURE_COOLDOWN = Duration.seconds(30);
 
 class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispatcher> {
@@ -313,7 +322,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
   constructor(options: TriggerDispatcherOptions) {
     this._services = options.services;
     this.timeControl = options.timeControl;
-    this.livePollInterval = options.livePollInterval ?? Duration.seconds(1);
+    this.livePollInterval = options.livePollInterval ?? DEFAULT_LIVE_POLL_INTERVAL;
     this._internalTime = options.startingTime ?? new Date();
     this._maxConcurrency = options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;
     this._failureCooldown = options.failureCooldown ?? DEFAULT_FAILURE_COOLDOWN;

@@ -306,7 +306,7 @@ export const generator = () => ({
           const { canvasModel, computeModel } = createQueueSinkPreset(
             space,
             'timer',
-            (triggerSpec) => (triggerSpec.cron = '*/5 * * * * *'),
+            (triggerSpec) => (triggerSpec.cron = '* * * * *'),
             'result',
           );
           return addToSpace(PresetName.TIMER_TICK_QUEUE, space, canvasModel, computeModel);
