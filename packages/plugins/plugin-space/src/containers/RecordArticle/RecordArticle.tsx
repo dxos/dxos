@@ -89,7 +89,10 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                 </Input.Root>
                 {/* The masonry's own gutter would inset these cards relative to the record card above,
                     which shares this column — the scroll padding is the article's to own, not theirs. */}
-                <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined}>
+                {/* `centered={false}` on the ROOT, which is column alignment — distinct from
+                    `Content`'s prop of the same name below (ScrollArea's scrollbar padding). Centred
+                    columns drift right of the record card above them, which shares this column. */}
+                <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined} centered={false}>
                   <Masonry.Content padding={false} centered={false}>
                     <Masonry.Viewport items={related} />
                   </Masonry.Content>
