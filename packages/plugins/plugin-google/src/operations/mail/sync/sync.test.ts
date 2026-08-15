@@ -291,7 +291,9 @@ describe('runGoogleSync against a mock Gmail API', () => {
       true,
     );
     expect(statusUpdates.every((update) => update.progress?.key === createSyncProgressKey(mailbox))).toBe(true);
-    expect(statusUpdates.some((update) => update.message === mailbox.name)).toBe(true);
+    // Names the phase as well as the mailbox: two meters run over one mailbox (sync, then analyze),
+    // so the bare name left the user unable to tell which was moving.
+    expect(statusUpdates.some((update) => update.message === `Syncing ${mailbox.name}`)).toBe(true);
   });
 
   // `Pipeline.abortWith` interrupts, so nothing after the pipeline runs — the terminal status has to
