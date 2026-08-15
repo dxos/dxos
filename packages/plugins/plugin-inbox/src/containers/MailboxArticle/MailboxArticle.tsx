@@ -25,7 +25,7 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, Panel } from '@dxos/react-ui';
+import { Deferred, ElevationProvider, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
@@ -423,12 +423,7 @@ export const MailboxArticle = ({
         </Menu.Root>
       </ElevationProvider>
       <Panel.Content asChild>
-        {showEmptyState ? (
-          <InitializeMailbox mailbox={mailbox} />
-        ) : (
-          // Always keep the list mounted (even with no items yet); `loading` renders an in-flow
-          // spinner at the end of the list rather than replacing the whole panel — so a page fetch
-          // or a mid-sync refresh never blanks what's already shown.
+        <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
             items={items}
@@ -444,7 +439,7 @@ export const MailboxArticle = ({
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        )}
+        </Deferred>
       </Panel.Content>
       {progress && (progress.status === 'running' || progress.status === 'error') && (
         <Panel.Statusbar asChild>

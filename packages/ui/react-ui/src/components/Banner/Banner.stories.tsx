@@ -10,7 +10,7 @@ import { type MessageValence } from '@dxos/ui-types';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-import { Message } from './Message';
+import { Banner } from './Banner';
 
 random.seed(123);
 
@@ -24,26 +24,26 @@ type StoryArgs = {
 const DefaultStory = ({ valence, title, body, button }: StoryArgs) => {
   return (
     <div className='w-[30rem]'>
-      <Message.Root valence={valence}>
-        <Message.Content>
-          {title && <Message.Title onClose={() => console.log('close')}>{title}</Message.Title>}
+      <Banner.Root valence={valence}>
+        <Banner.Content>
+          {title && <Banner.Title onClose={() => console.log('close')}>{title}</Banner.Title>}
           {body && (
-            <Message.Body asChild classNames='gap-2'>
+            <Banner.Body asChild classNames='gap-2'>
               <div>
                 <p>{body}</p>
                 {button && <Button>Test</Button>}
               </div>
-            </Message.Body>
+            </Banner.Body>
           )}
-        </Message.Content>
-      </Message.Root>
+        </Banner.Content>
+      </Banner.Root>
     </div>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-core/components/Message',
-  component: Message.Root as any,
+  title: 'ui/react-ui-core/components/Banner',
+  component: Banner.Root as any,
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: {
