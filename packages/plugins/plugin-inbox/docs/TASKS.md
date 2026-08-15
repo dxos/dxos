@@ -609,11 +609,11 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
       — never synced"), so `ClassifyMailbox`'s canonical `spam` tag has nothing to push to. Adding it
       is BIDIRECTIONAL: `syncLabels` reads the same map, so Gmail's own spam verdict starts arriving
       as the canonical tag — wanted, but a reversal of a documented exclusion, not a one-line edit.
-      `TRASH` stays out; deletion is not a tag. VERIFIED 2026-08-15 against `dxos.test@gmail.com`:
+      `TRASH` stays out; deletion is not a tag. VERIFIED 2026-08-15 against `test@braneframe.com`:
       `users.messages.modify` accepts `SPAM` in `addLabelIds` (HTTP 200, applied, restored cleanly),
       so the reverse map stays a bare `tagUri → labelId` and no binding descriptor is needed for the
       Gmail cut. Revisit when JMAP lands, where `spam` is a `$junk` keyword rather than a label.
-- [ ] **Live round-trip test** — both directions against `dxos.test@gmail.com` (DECIDED 2026-08-15;
+- [ ] **Live round-trip test** — both directions against `test@braneframe.com` (DECIDED 2026-08-15;
       unblocked). Nothing in the repo referenced that account before, so `TAG-SYNC.md` is now its
       canonical record. This test WRITES labels, so `GOOGLE_ACCESS_TOKEN` alone must not arm it: that
       variable already exists for the read-only `sync-e2e.test.ts`, and reusing it would silently turn

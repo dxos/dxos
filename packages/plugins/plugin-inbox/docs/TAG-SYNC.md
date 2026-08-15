@@ -130,7 +130,7 @@ separates those from the pull's own writes; see
 
 Gmail records a push in its own history: after a `batchModify`, `history.list` from a pre-push
 `historyId` reports the very `labelsAdded` we just wrote (verified 2026-08-15 against
-`dxos.test@gmail.com`; `batchModify` returns `204` with an empty body). The delta token advances at
+`test@braneframe.com`; `batchModify` returns `204` with an empty body). The delta token advances at
 `prepare` time, before the push, so **every run that pushes guarantees its own write is in the next
 run's delta.**
 
@@ -279,7 +279,7 @@ no Gmail counterpart to push to. Two consequences:
    `SystemTags` — but it reverses a documented exclusion, so it is a deliberate change and not a
    one-line addition. `TRASH` stays out: deletion is not a tag.
 2. **`SPAM` is a plain label write — VERIFIED 2026-08-15.** Probed live against
-   `dxos.test@gmail.com`: `POST users/me/messages/{id}/modify` with `addLabelIds: ['SPAM']` returns
+   `test@braneframe.com`: `POST users/me/messages/{id}/modify` with `addLabelIds: ['SPAM']` returns
    **HTTP 200** and applies the label (the message's labels became
    `CATEGORY_UPDATES, SPAM, STARRED, UNREAD`, and a follow-up `removeLabelIds` restored the original
    set exactly). So no dedicated endpoint is needed and the reverse map stays a bare
@@ -470,7 +470,7 @@ TDD, in this order. Each layer is a gate for the next.
 4. **Live Gmail test.** Writes labels to a real mailbox, so it is gated harder than the read-only
    suites and must not run against anyone's primary account:
 
-   - **The shared team test account `dxos.test@gmail.com`** — never a personal or working mailbox.
+   - **The shared team test account `test@braneframe.com`** — never a personal or working mailbox.
    - **Two gates, not one.** `GOOGLE_ACCESS_TOKEN` alone must not arm it — that variable already
      exists for the read-only `sync-e2e.test.ts`, so reusing it would silently turn an existing
      read-only setup into one that mutates mail. The second gate is `DX_GMAIL_TAG_SYNC_ACCOUNT`,
@@ -517,7 +517,7 @@ TDD, in this order. Each layer is a gate for the next.
    the binding across vocabularies — a label in Gmail (verified), a `$junk` keyword in JMAP — so the
    `ProviderTagBinding` descriptor is deferred until JMAP actually needs it rather than built now
    with one inhabited case.
-4. ~~**Live-test account**~~ **DECIDED 2026-08-15: the shared team account `dxos.test@gmail.com`.**
+4. ~~**Live-test account**~~ **DECIDED 2026-08-15: the shared team account `test@braneframe.com`.**
    Nothing in the repo referenced it before this — no guide and nothing under `plugin-google` — so it
    is recorded here as the canonical place, and the test asserts it rather than trusting whatever the
    token happens to point at.
@@ -535,9 +535,9 @@ TDD, in this order. Each layer is a gate for the next.
 ## Status of the open decisions
 
 All four are closed, and both mechanical prerequisites were discharged live on 2026-08-15 against
-`dxos.test@gmail.com`:
+`test@braneframe.com`:
 
-- `getProfile()` returns `dxos.test@gmail.com`, so the identity assertion the live test relies on
+- `getProfile()` returns `test@braneframe.com`, so the identity assertion the live test relies on
   works, and every label `GMAIL_SYSTEM_TAGS` maps exists on that account — `SPAM` included.
 - `modify` accepts `SPAM`, so `spam` is an ordinary label write.
 - `gmail.modify` is already in the connector's requested scopes.
