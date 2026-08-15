@@ -645,14 +645,19 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
 
 ### Open
 
-- **PRE-EXISTING, found during tag-sync work: `sync.test.ts`'s capped-run test is order-dependent.**
-  `moon run plugin-google:test -- src/operations/mail/sync/sync.test.ts -t "a capped run requests"`
-  fails (24 of 25 ids synced); the whole file passes 22/22. Reproduces IDENTICALLY with the tag-sync
-  changes stashed, so it is not ours — but it flaked once in a full-package run too, so it is not a
-  pure `-t` artifact either. Worth chasing because the assertion is a real invariant: repeated capped
-  runs must eventually sync the whole mailbox without duplicating or losing a message. The loop exits
-  SUCCESSFULLY at 24/25, so the run reported completion with one message unreached — suspect the
-  backward-window / `min` advance stalling on the final message when the dedup seed differs.
+- **PRE-EXISTING FLAKE: `sync.test.ts`'s capped-run test loses a message under load.**
+  `a capped run requests Operation.runAgain(), and repeated runs sync the whole mailbox` intermittently
+  asserts 24 of 25 synced ids. NOT order-dependent — an earlier reading of it as "fails under `-t`,
+  passes in the file" was wrong; 8 consecutive uncached isolated runs pass on a quiet machine, and the
+  failures clustered while the box was busy with the live Gmail suite. Reproduces with the tag-sync
+  changes stashed, so it is not ours.
+
+  DIAGNOSED, not fixed: the sync is innocent. The funnel logs show all 25 committed across the three
+  capped runs (10 + 10 + 5) in BOTH the passing and failing cases — it is the post-run `db.query` that
+  occasionally returns 24. So this is a read-visibility race after `runMailSync`'s closing
+  `Database.flush({ indexes: true })`, not a lost message. Adding one extra query before the assertion
+  makes it pass every time, which is the Heisenbug signature of exactly that. Worth chasing because
+  the same race would make ANY post-sync read racy, not just this test.
 
 - ~~Whether `ClassifyMailbox`'s canonical output should push to the user's real Gmail account.~~
   DECIDED 2026-08-15: it pushes — a classification the user sees in Composer should be the one their
