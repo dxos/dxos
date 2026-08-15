@@ -200,10 +200,10 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
   const recordDetail = record ? (
     <ScrollArea.Root orientation='vertical' classNames='flex-1 min-h-0 overflow-hidden'>
       <ScrollArea.Viewport classNames='p-2'>
-        <Flex role='none' column gap='sm'>
+        <Flex column gap='sm'>
           <span className='font-mono text-xs text-description truncate'>{record.uri}</span>
           {mappedForCollection ? (
-            <Flex role='none' column gap='sm'>
+            <Flex column gap='sm'>
               {preview && previewIcon && (
                 <Card.Root>
                   <Card.Header>

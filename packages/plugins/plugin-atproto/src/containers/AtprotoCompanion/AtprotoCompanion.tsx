@@ -212,7 +212,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            <Flex role='none' column gap='md' classNames='p-3'>
+            <Flex column gap='md' classNames='p-3'>
               {/* Publish status — the status icon overrides the Message's default valence icon. A
                   neutral "checking" state shows until the first async derivation resolves. */}
               <Message.Root
@@ -253,7 +253,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                   <Message.Content>
                     <Message.Body>{t('confirm-publish.message')}</Message.Body>
                     <Message.Body asChild>
-                      <Flex role='none' gap='sm' classNames='pbs-2'>
+                      <Flex gap='sm' classNames='pbs-2'>
                         <Button variant='primary' disabled={busy} onClick={handlePublish}>
                           {t('confirm-publish.label')}
                         </Button>
@@ -269,7 +269,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
               {/* Public projection: what the network sees, as a treegrid. Each leaf is tagged Published (we
                   publish it), Mirrored (the network sees it via a linked upstream record), or Private;
                   fields whose local value diverges from the mirrored record are flagged Diverged (not pushed). */}
-              <Flex role='none' column gap='xs'>
+              <Flex column gap='xs'>
                 <h2 className='text-xs uppercase tracking-wide text-description'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
                   <Message.Root valence='warning'>

@@ -137,24 +137,24 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
   return (
     <ScrollArea.Root orientation='vertical'>
       <ScrollArea.Viewport>
-        <Flex role='none' column gap='lg' classNames='mx-auto max-w-[48rem] p-4'>
+        <Flex column gap='lg' classNames='mx-auto max-w-[48rem] p-4'>
           {/* Header — cover + catalog identity. */}
           <section className='flex gap-4 rounded-lg border border-separator p-4'>
             {cover ? (
               <img src={cover} alt='' className='w-[6rem] aspect-[2/3] shrink-0 self-start rounded object-cover' />
             ) : (
-              <Flex center role='none' classNames='w-[8rem] aspect-[2/3] shrink-0 rounded bg-input'>
+              <Flex center classNames='w-[8rem] aspect-[2/3] shrink-0 rounded bg-input'>
                 <Icon icon='ph--book--regular' size={8} classNames='text-description' />
               </Flex>
             )}
-            <Flex role='none' column gap='sm' classNames='min-w-0'>
+            <Flex column gap='sm' classNames='min-w-0'>
               <h1 className='text-xl font-semibold'>{catalog?.title}</h1>
               {authors.length > 0 && (
                 <p className='text-description'>{t('by-author.label', { authors: authors.join(', ') })}</p>
               )}
               {/* The user's own rating (1–10) as five stars in half-star increments. */}
               {stars != null && <StarRating value={stars / STARS_PER_STAR} />}
-              <Flex role='none' gap='xs' align='center' wrap>
+              <Flex gap='xs' align='center' wrap>
                 {live.status && <Tag hue='info'>{STATUS_LABELS[live.status]}</Tag>}
                 {live.owned && <Tag hue='neutral'>{t('owned.label')}</Tag>}
               </Flex>
@@ -177,7 +177,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
                 </p>
               )}
               {catalog?.genres && catalog.genres.length > 0 && (
-                <Flex role='none' gap='xs' wrap>
+                <Flex gap='xs' wrap>
                   {catalog.genres.map((genre) => (
                     <Tag key={genre} hue='neutral'>
                       {genre}

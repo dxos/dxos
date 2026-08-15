@@ -32,7 +32,7 @@ const fileType = (file: File): string => {
 };
 
 const Spinner = () => (
-  <Flex center role='none' classNames='h-full text-description'>
+  <Flex center classNames='h-full text-description'>
     <Icon icon='ph--spinner-gap--regular' size={6} classNames='animate-spin' />
   </Flex>
 );
@@ -204,7 +204,7 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
       );
     }
     return (
-      <Flex center role='none' classNames='h-full p-4'>
+      <Flex center classNames='h-full p-4'>
         <Button asChild>
           <a href={resolved.url} download>
             {t('download-file.label')}
@@ -240,7 +240,7 @@ type UploadPromptProps = {
 };
 
 const UploadPrompt = ({ busy, inputRef, onFile, label, message, accept }: UploadPromptProps) => (
-  <Flex role='none' column gap='md' center classNames='h-full p-4 text-center'>
+  <Flex column gap='md' center classNames='h-full p-4 text-center'>
     <Icon icon='ph--book-open--regular' size={10} classNames='text-description' />
     <p className='text-sm text-description'>{message}</p>
     <input

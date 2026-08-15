@@ -294,9 +294,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
 const InvitationComplete = ({ succeeded }: { succeeded: boolean }) => {
   return succeeded ? (
-    <Icon icon='ph--check--regular' size={6} classNames='m-1.5' />
+    <Icon icon='ph--check--regular' size={6} classNames='m-trim-xs' />
   ) : (
-    <Icon icon='ph--x--regular' size={6} classNames='m-1.5' />
+    <Icon icon='ph--x--regular' size={6} classNames='m-trim-xs' />
   );
 };
 
