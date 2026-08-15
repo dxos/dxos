@@ -3,3 +3,4 @@
 //
 
 export * from './DefaultSettings';
+export * from './SettingsScope';

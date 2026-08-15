@@ -8,6 +8,8 @@ import React, { useCallback } from 'react';
 
 import { usePluginManager, useSettingsState } from '@dxos/app-framework/ui';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import { useSettingsScope } from '@dxos/app-toolkit/ui';
 import { EffectEx } from '@dxos/effect';
 
 import { RegistrySettings } from '#components';
@@ -27,6 +29,7 @@ export const RegistrySettingsContainer = ({ subject }: RegistrySettingsContainer
   const manager = usePluginManager();
   const { settings, updateSettings } = useSettingsState<RegistrySettingsType>(subject.atom);
   const activeDevPluginIds = useAtomValue(manager.devPluginIds);
+  const pluginScope = useSettingsScope(AppSettings.PLUGINS_NAMESPACE);
 
   const onEnableDev = useCallback(
     async (url: string) => {
@@ -54,6 +57,8 @@ export const RegistrySettingsContainer = ({ subject }: RegistrySettingsContainer
       activeDevPluginIds={activeDevPluginIds}
       onEnableDev={onEnableDev}
       onDisableDev={onDisableDev}
+      pluginScopeLocal={pluginScope.available ? !pluginScope.synced : undefined}
+      onPluginScopeLocalChange={(local) => pluginScope.setSynced(!local)}
     />
   );
 };
