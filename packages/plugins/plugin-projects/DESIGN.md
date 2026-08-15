@@ -75,8 +75,8 @@ TaskSet (org.dxos.type.taskSet)
 
 Milestone (org.dxos.type.milestone — NEW)   meta.keys: [linear/github milestone]
    name, description?                  description carries "what done means" (absorbs Goal)
-   status?: upcoming | active | done | cancelled
    targetDate?
+   (no status — progress is % complete, computed from its tasks; Linear-shaped)
 
 Task (org.dxos.type.task)
    title, priority?, status?, assignee?, estimate?, description?
@@ -121,7 +121,8 @@ out of `TaskSet.tasks` (cascade deletes the objects, not the array entries).
 Derived at view time, never stored: backlog (root tasks with `milestone` unset), the
 tree (group by `parentTask`), milestone groups (partition by `milestone`, order groups
 by the `milestones` array), sub-task milestone inheritance (nearest ancestor's, unless
-overridden — Linear's behavior).
+overridden — Linear's behavior), and **milestone progress** (% complete computed from
+its tasks' statuses — done over non-cancelled; a milestone has no stored status).
 
 Invariants live in the `TaskOperation` verbs (the single write path shared by UI and
 agents): array entry + parent edge written together; `task.milestone` must point into
@@ -130,10 +131,11 @@ id, dangling ref ⇒ backlog/root) since concurrent array merges can still doubl
 
 **Naming** (2026-08-14, second pass): `Milestone`, not `Phase` — it is the ecosystem
 term (Linear and GitHub both call this entity a milestone, so sync maps name-to-name),
-and it **replaces `Project.goals`**: a milestone with a description and status IS a goal
-with tasks attached, so the embedded `Goal` struct (and the `goals` field) is removed
-rather than duplicated. Goal's `dropped` status maps to `cancelled` (matching Task's
-vocabulary). This un-defers M5's `Milestone` under its original name. `TaskSet` itself
+and it **replaces `Project.goals`**: a milestone with a description IS a goal with
+tasks attached, so the embedded `Goal` struct (and the `goals` field) is removed
+rather than duplicated. Goal's lifecycle maps to derived state: "met" is 100%
+complete, "dropped" is deleting the milestone — no stored status on the milestone
+itself. This un-defers M5's `Milestone` under its original name. `TaskSet` itself
 is retained: its dual role (native container AND sync mirror of a Linear team/project
 or GitHub repo) rules out native-flavored names like `Plan`; `Tracker` is the recorded
 candidate if a rename is ever worth the typename churn.
@@ -256,10 +258,10 @@ Three fields change:
   and `Instructions.objects` is precedent for an inline heterogeneous ref array.
   `ProjectSkill.artifact-add/-list` retarget to the field.
 - **`goals` is REMOVED.** Milestones replace goals: a `Milestone` (name, description =
-  "what done means", status, target date) in the project's TaskSet carries everything
-  the embedded `Goal` struct did, plus the tasks that get it done. One "what done
-  means" surface instead of two. The `Goal` struct and the read-only GoalList section
-  go; the milestone sequence renders in their place.
+  "what done means", target date, derived % complete) in the project's TaskSet carries
+  everything the embedded `Goal` struct did, plus the tasks that get it done. One
+  "what done means" surface instead of two. The `Goal` struct and the read-only
+  GoalList section go; the milestone sequence renders in their place.
 - **`routines` is REMOVED.** The array duplicated what already exists: routines
   connect to their project via `instructions.objects` (seeded at creation), and
   `connectedRoutinesQuery` / `RoutineCompanion` discover them through the structural

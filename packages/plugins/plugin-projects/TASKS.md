@@ -444,9 +444,9 @@ deletion guards (Phase 5) are separate planned follow-ups.**
 ### Phase 1 — task schema v2
 
 - [ ] **`Milestone` type** — `org.dxos.type.milestone` in `@dxos/types`: name, description?
-      (carries "what done means" — absorbs Goal), status? (upcoming|active|done|cancelled;
-      `cancelled` covers Goal's `dropped`), targetDate?; label/icon annotations; parented to its
-      TaskSet.
+      (carries "what done means" — absorbs Goal), targetDate?; NO stored status — progress is a
+      computed % complete from its tasks (done over non-cancelled; Goal's "met" = 100%, "dropped" =
+      delete the milestone); label/icon annotations; parented to its TaskSet.
 - [ ] **`TaskSet` arrays** — `milestones: Ref<Milestone>[]` (ordered = milestone sequence) +
       `tasks: Ref<Task>[]` (ordered, EVERY task flat, incl. sub-tasks); update the docstring that
       currently rejects membership arrays (record the reversal, DESIGN.md has the why).
