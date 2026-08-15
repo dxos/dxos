@@ -63,7 +63,32 @@ M2 gotchas worth remembering:
 - `storybook/test`'s `expect` is jest-style and returns a promise — `.to.be.true`
   type-errors and un-awaited assertions trip `no-floating-promises`.
 
-## BROKEN — Agent.stories regression (2026-08-15)
+## FINDING — `Feed.append` alone does NOT render in the Chat surface
+
+Established 2026-08-15 by dumping the projected frames instead of guessing. Two
+separate problems were tangled:
+
+1. **Test bug (FIXED).** The SDK's `Read` requires an absolute path, so the
+   agent's first relative attempt fails and it retries. The story asserted on the
+   FIRST `Read` call, whose result carries that error. It now selects the
+   succeeding pair. With the render assertion removed the story is green
+   (19053ms, no retry, 31/31).
+2. **Real defect (OPEN).** With that fixed, the DOM assertion STILL fails: the
+   messages are on `Chat.feed`, the projection is correct, and the thread does
+   not show them. **So the M2 claim that projected messages render in the
+   existing Chat surface with no plugin change is FALSE as it stands.** Writing
+   to `Chat.feed` is necessary but not sufficient — `useChatProcessor` evidently
+   owns something more (a queue, a `threadId` partition, or a reactivity path)
+   that an external writer has to participate in.
+
+This is what the M2 milestone was meant to discover, and it lands the
+`plugin-assistant` change that option 4 budgeted for back on the table.
+
+NEXT: read `useChatProcessor` and the `Chat` component to find what the surface
+actually subscribes to, then either write through that path or contribute the
+missing one.
+
+## Superseded — earlier regression notes (2026-08-15)
 
 `moon run stories-assistant:test-storybook-live` fails. It was green at
 `4faed14287`/`92c988b1bf` (13045ms, no retry) and broke while extracting the
