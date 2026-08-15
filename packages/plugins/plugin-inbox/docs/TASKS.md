@@ -443,7 +443,12 @@ Raised while driving the live mailbox. Grouped by owner, since half of these are
       already uses sparkle for the same "run AI over this subject" meaning. Promote it to the
       `SystemIconButton` primitive and apply it wherever an AI/agent action is offered — today each
       action sets a raw `icon` string in its graph properties, so nothing enforces the convention.
-- [ ] **Sync message tags back to Gmail (the P2 deferred in Phase 1 DECIDED).** Tag changes are
+- [ ] **Sync message tags back to Gmail (the P2 deferred in Phase 1 DECIDED).** CLAIMED — designed in
+      [#12611](https://github.com/dxos/dxos/pull/12611) (branch `claude/mailbox-tag-sync-89f351`),
+      which adds `docs/TAG-SYNC.md` and a Phase 6 entry to THIS file. Design-only so far; the write
+      path is still unbuilt. Do not start it here. **That PR and this branch both edit this ledger, so
+      whichever lands second must merge the two sections by hand rather than take either wholesale.**
+      Original scope below. Tag changes are
       local-only; a Gmail sync restores an archived message. `system-tags.ts` maps a Gmail label id →
       canonical `SystemTag` on READ, and its own doc notes some labels are read-only concepts (there
       is no archive label — archive is derived as "not in INBOX"). The write path does not exist.
