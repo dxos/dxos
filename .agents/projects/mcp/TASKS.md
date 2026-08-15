@@ -91,6 +91,31 @@ changes what a model sees lives in the shared package or it is a bug.
         accepts it, so sending it fails the call today; not advertising it is already an
         improvement. Implement with ref-walking when it earns its place.
 
+- [ ] **assistant-toolkit → plugins** (accounted 2026-08-15; do not defer long). 15 skills, ~34
+      operations. Classify by _domain_, not by service dependency — `memory` and `project` are both
+      `Database.Service`-only yet squarely assistant-scoped, which is what makes the service axis
+      misleading.
+  - [ ] `database` skill splits: the CRUD/query/schema/relation/tag half → **plugin-space**;
+        `contextAdd`/`contextRemove` stay (they bind `Harness.HarnessService`). The only skill whose
+        split runs _through_ it rather than between skills.
+  - [ ] `discord` → plugin-discord, `linear` → plugin-linear, `connectors` → plugin-connector —
+        destination plugins already exist, so these are relocation with no new packages and the
+        dependency direction (plugin → core) already correct. Lowest risk; do first.
+  - [ ] `project` — **deprecated**, superseded by plugin-projects. Primitive predecessor (artifact
+        filing against a chat-bound project). Remove once `projects.eval.ts` and
+        `sender-ledger.eval.ts` move to the plugin's skill.
+  - [ ] Stays in assistant-toolkit: `memory`, `agent`, `agent-wizard`, `delegation`, `planning`,
+        `alarm`, `skill-manager`, `browser`, `automation`, `websearch`. What is left is the chat
+        runtime's own skills — which is what the package name claims.
+  - [ ] **Gate:** `DatabaseSkill` is consumed by four `packages/core/` harnesses (`assistant-e2e`
+        harness + `local-ai.test.ts`, `assistant-evals/skills.ts`, `functions-testing`) via
+        `Ref.make(DatabaseSkill.make())`. They must assemble the _same_ skill production ships, or
+        the evals stop testing what runs. Settle this before moving anything.
+- [ ] **plugin-studio navigation regression** — `getArtifactsPath` was removed with `addObject`'s
+      navigation output, and unlike the type-section cases `findTypeSectionPath` cannot replace it:
+      studio's url binding ends in the studio segment, not a typename. Artifacts now navigate to
+      their database-subtree path. Fix: plugin-studio contributes its own
+      `AppCapabilities.NavigationTargetResolver`.
 - [ ] **Space visibility factored out** — which spaces a session may target is decided twice and
       differently: the CLI filters `client.spaces` through `AppSpace.isVisibleSpace`, while edge's
       `space-tools.ts` hard-codes its own `SETTINGS_SPACE_TAG` constant plus `withoutHaloSpace` /
