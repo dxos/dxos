@@ -64,8 +64,10 @@ const listStyles = tv({
     //
     // `px-[var(--gutter,…)]` aligns padding with sibling `Column.Center` content, falling back to
     // the density control pad when not nested under `Column.Root`.
+    // `dx-highlighted` styles the keyboard cursor (`data-highlighted`), `dx-selected` the chosen
+    // option (`aria-selected`) — separate states once a picker is multi-select.
     pickerItem:
-      'dx-hover dx-selected flex items-center min-h-(--dx-control) px-[var(--gutter,var(--dx-control-pad))] cursor-pointer select-none',
+      'dx-hover dx-selected dx-highlighted flex items-center min-h-(--dx-control) px-[var(--gutter,var(--dx-control-pad))] cursor-pointer select-none',
 
     //
     // Combobox

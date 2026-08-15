@@ -44,6 +44,36 @@ const DefaultStory = () => {
   );
 };
 
+// `multiple` swaps the value model to an array and each item toggles its own membership; the
+// popover stays open so several can be set in one visit. `displayValue` summarizes the selection on
+// the trigger, since the Root only knows values and not the labels its items render.
+const MultipleStory = () => {
+  const [query, setQuery] = useState('');
+  const [values, setValues] = useState<readonly string[]>([items[0], items[3]]);
+  const filtered = useMemo(() => items.filter((item) => item.toLowerCase().includes(query.toLowerCase())), [query]);
+
+  return (
+    <Combobox.Root
+      multiple
+      value={values}
+      onValueChange={setValues}
+      placeholder='Nothing selected'
+      displayValue={values.length > 2 ? `${values.length} selected` : undefined}
+    >
+      <Combobox.Trigger />
+      <Combobox.Content>
+        <Combobox.Input placeholder='Search...' value={query} onValueChange={setQuery} />
+        <Combobox.List>
+          {filtered.map((value) => (
+            <Combobox.Item key={value} value={value} label={value} />
+          ))}
+        </Combobox.List>
+        <Combobox.Arrow />
+      </Combobox.Content>
+    </Combobox.Root>
+  );
+};
+
 const meta = {
   title: 'ui/react-ui-list/Combobox',
   component: Combobox.Root as any,
@@ -57,4 +87,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {},
+};
+
+export const Multiple: Story = {
+  args: {},
+  render: MultipleStory,
 };

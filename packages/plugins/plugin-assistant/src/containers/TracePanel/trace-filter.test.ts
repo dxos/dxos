@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { UNTAGGED_OPERATION_TAG } from '#execution-graph';
 
-import { DEFAULT_OPERATION_TAGS, availableOperationTags, toggleOperationTag } from './trace-filter';
+import { DEFAULT_OPERATION_TAGS, availableOperationTags } from './trace-filter';
 
 describe('DEFAULT_OPERATION_TAGS', () => {
   test('hides the high-volume tags and keeps untagged visible', ({ expect }) => {
@@ -55,29 +55,5 @@ describe('availableOperationTags', () => {
   test('does not duplicate tags', ({ expect }) => {
     const tags = availableOperationTags([Operation.Tag.Sync, Operation.Tag.Sync], [Operation.Tag.Sync]);
     expect(tags.filter((tag) => tag === Operation.Tag.Sync)).toHaveLength(1);
-  });
-});
-
-describe('toggleOperationTag', () => {
-  const available = [Operation.Tag.UI, Operation.Tag.Sync, Operation.Tag.Agent];
-
-  test('adds a tag in the canonical order rather than at the end', ({ expect }) => {
-    expect(toggleOperationTag([Operation.Tag.Agent], Operation.Tag.UI, available)).toEqual([
-      Operation.Tag.UI,
-      Operation.Tag.Agent,
-    ]);
-  });
-
-  test('removes a selected tag', ({ expect }) => {
-    expect(toggleOperationTag([Operation.Tag.UI, Operation.Tag.Agent], Operation.Tag.UI, available)).toEqual([
-      Operation.Tag.Agent,
-    ]);
-  });
-
-  test('drops selections no longer offered', ({ expect }) => {
-    expect(toggleOperationTag(['stale', Operation.Tag.Agent], Operation.Tag.Sync, available)).toEqual([
-      Operation.Tag.Sync,
-      Operation.Tag.Agent,
-    ]);
   });
 });

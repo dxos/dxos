@@ -8,6 +8,12 @@
 //
 // The two contexts (Input / Item) are split so items don't re-render on
 // every keystroke and the input doesn't re-render on every (un)register.
+//
+// The keyboard cursor and the chosen option(s) are separate states — they
+// coincide in a single-select list but diverge in a multi-select one, so each
+// gets its own attribute: `data-highlighted` for the cursor (addressed by the
+// input's `aria-activedescendant`, since browser focus never leaves the input)
+// and `aria-selected` for `checked`.
 
 import { Slot } from '@radix-ui/react-slot';
 import React, {
@@ -33,6 +39,7 @@ import {
   type ThemedClassName,
   composableProps,
   slottable,
+  useId,
   useThemeContext,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -41,6 +48,7 @@ import { listTheme } from '../List.theme';
 import {
   PickerInputContextProvider,
   PickerItemContextProvider,
+  pickerItemId,
   usePickerInputContext,
   usePickerItemContext,
 } from './context';
@@ -65,9 +73,12 @@ type PickerRootProps = PropsWithChildren<{
    * changes the selection, not the item set). Defaults to false.
    */
   resetSelectionOnChange?: boolean;
+  /** Id namespace for item elements. Generated when omitted. */
+  id?: string;
 }>;
 
-const PickerRoot = ({ children, resetSelectionOnChange = false }: PickerRootProps) => {
+const PickerRoot = ({ children, resetSelectionOnChange = false, id }: PickerRootProps) => {
+  const pickerId = useId('Picker', id);
   const [selectedValue, setSelectedValue] = useState<string | undefined>(undefined);
   const itemsRef = useRef<Map<string, ItemData>>(new Map());
   // Bumped on every (un)register to retrigger auto-select.
@@ -142,23 +153,25 @@ const PickerRoot = ({ children, resetSelectionOnChange = false }: PickerRootProp
   // Stable values items subscribe to.
   const itemContextValue = useMemo(
     () => ({
+      pickerId,
       selectedValue,
       onSelectedValueChange: setSelectedValue,
       registerItem,
       unregisterItem,
     }),
-    [selectedValue, registerItem, unregisterItem],
+    [pickerId, selectedValue, registerItem, unregisterItem],
   );
 
   // Volatile values the input subscribes to (keyboard helpers).
   const inputContextValue = useMemo(
     () => ({
+      pickerId,
       selectedValue,
       onSelectedValueChange: setSelectedValue,
       getItemValues,
       triggerSelect,
     }),
-    [selectedValue, getItemValues, triggerSelect],
+    [pickerId, selectedValue, getItemValues, triggerSelect],
   );
 
   return (
@@ -191,7 +204,7 @@ type PickerInputProps = ThemedClassName<
 const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
   ({ value, onValueChange, onChange, onKeyDown, autoFocus, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
-    const { selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
+    const { pickerId, selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       usePickerInputContext('Picker.Input');
 
     const handleChange = useCallback(
@@ -281,6 +294,8 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
         <Input.TextInput
           {...props}
           autoFocus={autoFocus && !hasIosKeyboard}
+          // Browser focus stays here, so the highlighted option is announced by reference.
+          aria-activedescendant={selectedValue !== undefined ? pickerItemId(pickerId, selectedValue) : undefined}
           {...(value !== undefined && { value })}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
@@ -302,6 +317,13 @@ type PickerItemProps = ThemedClassName<{
   value: string;
   /** Callback when the item is committed (click, or Enter while highlighted). */
   onSelect?: () => void;
+  /**
+   * Whether this option is chosen, surfaced as `aria-selected`. Distinct from the keyboard
+   * highlight (`data-highlighted`): in a multi-select listbox the two diverge, so only one of them
+   * can own `aria-selected` — the WAI-ARIA combobox pattern gives it to selection and expresses the
+   * highlight through the input's `aria-activedescendant`.
+   */
+  checked?: boolean;
   /** Disable the item — registry-visible but not focusable, not navigable, not clickable. */
   disabled?: boolean;
   asChild?: boolean;
@@ -309,11 +331,12 @@ type PickerItemProps = ThemedClassName<{
 }>;
 
 const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
-  ({ value, onSelect, disabled, asChild, children, ...props }, forwardedRef) => {
-    const { selectedValue, onSelectedValueChange, registerItem, unregisterItem } = usePickerItemContext('Picker.Item');
+  ({ value, onSelect, checked, disabled, asChild, children, ...props }, forwardedRef) => {
+    const { pickerId, selectedValue, onSelectedValueChange, registerItem, unregisterItem } =
+      usePickerItemContext('Picker.Item');
     const internalRef = useRef<HTMLDivElement>(null);
 
-    const isSelected = selectedValue === value && !disabled;
+    const isHighlighted = selectedValue === value && !disabled;
 
     useEffect(() => {
       const element = internalRef.current;
@@ -324,10 +347,10 @@ const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
     }, [value, onSelect, disabled, registerItem, unregisterItem]);
 
     useEffect(() => {
-      if (isSelected && internalRef.current) {
+      if (isHighlighted && internalRef.current) {
         internalRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
-    }, [isSelected]);
+    }, [isHighlighted]);
 
     const handleClick = useCallback(() => {
       if (disabled) {
@@ -359,12 +382,14 @@ const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
             forwardedRef.current = node;
           }
         }}
-        aria-selected={isSelected}
+        id={pickerItemId(pickerId, value)}
+        aria-selected={checked}
         aria-disabled={disabled}
-        data-selected={isSelected}
+        {...(isHighlighted && { 'data-highlighted': '' })}
         data-disabled={disabled}
         data-value={value}
-        // Browser focus stays on the input; highlight is via `aria-selected`.
+        // Browser focus stays on the input; the highlight is announced via the input's
+        // `aria-activedescendant` and styled off `data-highlighted`.
         tabIndex={-1}
         onMouseDown={handleMouseDown}
         onClick={handleClick}

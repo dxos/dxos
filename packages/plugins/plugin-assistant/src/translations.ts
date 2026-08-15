@@ -106,8 +106,7 @@ export const translations: Resource[] = [
         'trace.label': 'Trace',
 
         'trace-filter.menu': 'Filter operations',
-        'trace-filter-all.label': 'Show all',
-        'trace-filter-none.label': 'Hide all',
+        'trace-filter.placeholder': 'Filter by tag...',
         'trace-tag-ui.label': 'Interface',
         'trace-tag-edit.label': 'Edits',
         'trace-tag-query.label': 'Queries',

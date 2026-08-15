@@ -14,6 +14,8 @@ import { createContext } from '@radix-ui/react-context';
 
 /** Stable: items subscribe to selection, registry. Doesn't change on query. */
 export type PickerItemContextValue = {
+  /** Namespace for item element ids, so `aria-activedescendant` can address them. */
+  pickerId: string;
   /** Currently highlighted item value (virtual; not browser focus). */
   selectedValue: string | undefined;
   /** Update the highlighted value (e.g. arrow keys, hover). */
@@ -31,6 +33,8 @@ export type PickerItemContextValue = {
 
 /** Volatile: input subscribes to selection + the input keyboard helpers. */
 export type PickerInputContextValue = {
+  /** Namespace for item element ids, so `aria-activedescendant` can address them. */
+  pickerId: string;
   /** Currently highlighted item value. */
   selectedValue: string | undefined;
   /** Update the highlighted value. */
@@ -42,6 +46,13 @@ export type PickerInputContextValue = {
 };
 
 export const [PickerItemContextProvider, usePickerItemContext] = createContext<PickerItemContextValue>('PickerItem');
+
+/**
+ * Element id of an item, addressed by the input's `aria-activedescendant`.
+ * Values are caller-supplied (DXNs, tags, free text), so whitespace — which would split the
+ * id-reference list — is collapsed.
+ */
+export const pickerItemId = (pickerId: string, value: string): string => `${pickerId}--${value.replace(/\s+/g, '-')}`;
 
 export const [PickerInputContextProvider, usePickerInputContext] =
   createContext<PickerInputContextValue>('PickerInput');

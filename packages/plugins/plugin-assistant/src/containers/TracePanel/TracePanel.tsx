@@ -40,7 +40,8 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const tracePanelDebug = settings.tracePanelDebug ?? false;
     const operationTags = settings.traceOperationTags ?? DEFAULT_OPERATION_TAGS;
     const handleOperationTagsChange = useCallback(
-      (traceOperationTags: string[]) => updateSettings((settings) => ({ ...settings, traceOperationTags })),
+      // Copied on the way into settings: the schema's field is mutable, the filter's value is not.
+      (tags: readonly string[]) => updateSettings((settings) => ({ ...settings, traceOperationTags: [...tags] })),
       [updateSettings],
     );
 

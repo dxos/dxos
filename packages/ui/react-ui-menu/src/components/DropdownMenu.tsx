@@ -37,15 +37,10 @@ const DropdownMenuItem = ({
   // the current value is announced, not conveyed by the trailing check icon alone. Mutually-exclusive
   // (single-select) groups use radio semantics; multi-select groups use checkbox.
   const checkable = typeof action.properties?.checked === 'boolean';
-  const multiple = group?.properties?.selectCardinality === 'multiple';
-  const role = multiple ? 'menuitemcheckbox' : 'menuitemradio';
-  // A multi-select group is set by toggling several members, so suppress the primitive's
-  // close-on-select; picking one value and closing is single-select behaviour.
-  const handleSelect = useCallback((event: Event) => multiple && event.preventDefault(), [multiple]);
+  const role = group?.properties?.selectCardinality === 'multiple' ? 'menuitemcheckbox' : 'menuitemradio';
   return (
     <NaturalDropdownMenu.Item
       onClick={handleClick}
-      onSelect={handleSelect}
       classNames='gap-2'
       disabled={action.properties?.disabled}
       {...(checkable && { role, 'aria-checked': !!action.properties?.checked })}
@@ -91,9 +86,7 @@ const DropdownMenuRoot = ({
       }
       event.stopPropagation();
       // TODO(thure): Why does Dialog's modal-ness cause issues if we don't explicitly close the menu here?
-      if (group?.properties?.selectCardinality !== 'multiple') {
-        setOptionsMenuOpen(false);
-      }
+      setOptionsMenuOpen(false);
       const params = { parent: group, caller, modifiers: { shift: event.shiftKey } };
       if (onAction) {
         onAction(action, params);

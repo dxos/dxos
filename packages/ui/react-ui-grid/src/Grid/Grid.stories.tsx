@@ -10,7 +10,7 @@ import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
-import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-list';
+import { Combobox, type ComboboxMultipleRootProps } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -33,8 +33,8 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
 
   // Multiselect
   const [popoverOpen, setPopoverOpen] = useState(false);
-  const [multiSelectValue, setInternalMultiselectValue] = useState('');
-  const setMultiselectValue = useCallback<NonNullable<ComboboxRootProps['onValueChange']>>((nextValue) => {
+  const [multiSelectValue, setInternalMultiselectValue] = useState<readonly string[]>([]);
+  const setMultiselectValue = useCallback<NonNullable<ComboboxMultipleRootProps['onValueChange']>>((nextValue) => {
     setInternalMultiselectValue(nextValue);
     setCells((cells) => {
       // TODO(burdon): How can we get the cell address to update?
@@ -82,6 +82,7 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
 
       {/* Multiselect */}
       <Combobox.Root
+        multiple
         open={popoverOpen}
         onOpenChange={setPopoverOpen}
         value={multiSelectValue}

@@ -7,14 +7,14 @@ import * as Operation from '@dxos/compute/Operation';
 import { UNTAGGED_OPERATION_TAG } from '#execution-graph';
 
 /**
- * Order tags are offered in, matching `Operation.Tag`'s declaration order so the menu reads
+ * Order tags are offered in, matching `Operation.Tag`'s declaration order so the list reads
  * consistently regardless of which tags a given trace happens to contain. Tags outside the
  * well-known vocabulary (a plugin may define its own) sort after these, alphabetically, and
  * `untagged` sorts last — it is a fallback, not a category.
  */
 const TAG_ORDER: readonly string[] = Object.values(Operation.Tag);
 
-/** Icon shown beside each tag in the filter menu. */
+/** Icon shown beside each tag in the filter list. */
 const TAG_ICONS: Record<string, string> = {
   [Operation.Tag.UI]: 'ph--layout--regular',
   [Operation.Tag.Edit]: 'ph--pencil-simple--regular',
@@ -41,8 +41,8 @@ export const tagIcon = (tag: string): string => TAG_ICONS[tag] ?? 'ph--tag--regu
 export const DEFAULT_OPERATION_TAGS: readonly string[] = [...Operation.DEFAULT_TAGS, UNTAGGED_OPERATION_TAG];
 
 /**
- * Tags the filter menu offers: those seen in the trace, plus the well-known vocabulary and anything
- * currently selected, so the menu doesn't reshuffle as a trace grows and a selected tag is always
+ * Tags the filter offers: those seen in the trace, plus the well-known vocabulary and anything
+ * currently selected, so the list doesn't reshuffle as a trace grows and a selected tag is always
  * visible (and therefore clearable).
  */
 export const availableOperationTags = (traceTags: readonly string[], selected: readonly string[]): string[] => {
@@ -56,7 +56,3 @@ export const availableOperationTags = (traceTags: readonly string[], selected: r
   };
   return [...tags].sort((left, right) => rank(left) - rank(right) || left.localeCompare(right));
 };
-
-/** Adds or removes a tag from the selection, preserving the canonical order. */
-export const toggleOperationTag = (selected: readonly string[], tag: string, available: readonly string[]): string[] =>
-  available.filter((candidate) => (candidate === tag ? !selected.includes(tag) : selected.includes(candidate)));

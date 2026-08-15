@@ -22,6 +22,7 @@ import React, {
   type PropsWithChildren,
   forwardRef,
   useCallback,
+  useMemo,
 } from 'react';
 
 import {
@@ -61,10 +62,14 @@ type ComboboxContextValue = {
   placeholder?: string;
   open: boolean;
   onOpenChange: (nextOpen: boolean) => void;
-  value: string;
-  /** Human-readable text shown on the trigger for the current value (defaults to the value itself). */
+  /** Chosen values. A single-select combobox holds at most one. */
+  values: readonly string[];
+  /** Whether several values may be chosen at once. */
+  multiple: boolean;
+  /** Human-readable text shown on the trigger for the current value(s) (defaults to the values). */
   displayValue?: string;
-  onValueChange: (nextValue: string) => void;
+  /** Choose a value: replaces the selection when single, toggles membership when multiple. */
+  onItemSelect: (value: string) => void;
 };
 
 const [ComboboxProvider, useComboboxContext] = createContext<Partial<ComboboxContextValue>>(COMBOBOX_NAME, {});
@@ -73,16 +78,36 @@ const [ComboboxProvider, useComboboxContext] = createContext<Partial<ComboboxCon
 // Root
 //
 
-type ComboboxRootProps = PropsWithChildren<
-  Partial<
-    ComboboxContextValue & {
-      modal: boolean;
-      defaultOpen: boolean;
-      defaultValue: string;
-      placeholder: string;
-    }
-  >
->;
+type ComboboxSharedRootProps = {
+  modalId?: string;
+  modal?: boolean;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (nextOpen: boolean) => void;
+  displayValue?: string;
+  placeholder?: string;
+};
+
+/** Single-select: one value, and choosing one closes the popover. */
+type ComboboxSingleRootProps = ComboboxSharedRootProps & {
+  multiple?: false;
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+};
+
+/**
+ * Multi-select: an array of values, each item toggling its own membership. The popover stays open
+ * across toggles — several values are set in one visit, unlike the pick-one-and-dismiss gesture.
+ */
+type ComboboxMultipleRootProps = ComboboxSharedRootProps & {
+  multiple: true;
+  value?: readonly string[];
+  defaultValue?: readonly string[];
+  onValueChange?: (value: readonly string[]) => void;
+};
+
+type ComboboxRootProps = PropsWithChildren<ComboboxSingleRootProps | ComboboxMultipleRootProps>;
 
 const ComboboxRoot = ({
   children,
@@ -91,11 +116,9 @@ const ComboboxRoot = ({
   open: openProp,
   defaultOpen,
   onOpenChange: propsOnOpenChange,
-  value: valueProp,
-  defaultValue,
   displayValue,
-  onValueChange: propsOnValueChange,
   placeholder,
+  ...valueProps
 }: ComboboxRootProps) => {
   const modalId = useId(COMBOBOX_NAME, modalIdProp);
   const [open = false, onOpenChange] = useControllableState({
@@ -103,11 +126,30 @@ const ComboboxRoot = ({
     defaultProp: defaultOpen,
     onChange: propsOnOpenChange,
   });
-  const [value = '', onValueChange] = useControllableState({
-    prop: valueProp,
+  // One controllable state for both shapes: the props union guarantees `value`, `defaultValue` and
+  // `onValueChange` agree with `multiple`, so the array form is the single internal representation.
+  const multiple = valueProps.multiple === true;
+  // Memoized because the single-select form wraps a string in a fresh array: an unstable identity
+  // here would re-render every item on every parent render.
+  const value = useMemo(() => toValues(valueProps.value), [valueProps.value]);
+  const defaultValue = useMemo(() => toValues(valueProps.defaultValue), [valueProps.defaultValue]);
+  const [values = EMPTY_VALUES, setValues] = useControllableState<readonly string[]>({
+    prop: value,
     defaultProp: defaultValue,
-    onChange: propsOnValueChange,
+    onChange: (next) => {
+      if (valueProps.multiple) {
+        valueProps.onValueChange?.(next);
+      } else {
+        valueProps.onValueChange?.(next[0] ?? '');
+      }
+    },
   });
+
+  const onItemSelect = useCallback(
+    (value: string) =>
+      setValues(multiple ? (values.includes(value) ? values.filter((v) => v !== value) : [...values, value]) : [value]),
+    [multiple, values, setValues],
+  );
 
   return (
     <Popover.Root open={open} onOpenChange={onOpenChange} modal={modal}>
@@ -117,15 +159,22 @@ const ComboboxRoot = ({
         placeholder={placeholder}
         open={open}
         onOpenChange={onOpenChange}
-        value={value}
+        values={values}
+        multiple={multiple}
         displayValue={displayValue}
-        onValueChange={onValueChange}
+        onItemSelect={onItemSelect}
       >
         {children}
       </ComboboxProvider>
     </Popover.Root>
   );
 };
+
+/** Stable ref, so an unset selection doesn't re-render every consumer. */
+const EMPTY_VALUES: readonly string[] = [];
+
+const toValues = (value: string | readonly string[] | undefined): readonly string[] | undefined =>
+  value === undefined ? undefined : typeof value !== 'string' ? value : value === '' ? EMPTY_VALUES : [value];
 
 //
 // Content — Popover.Content + Picker.Root.
@@ -145,7 +194,9 @@ const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
     return (
       <Popover.Content {...composableProps(props, { id: modalId })} ref={forwardedRef}>
         <Popover.Viewport classNames='w-(--radix-popover-trigger-width)'>
-          <Picker.Root resetSelectionOnChange={resetSelectionOnChange}>{children}</Picker.Root>
+          <Picker.Root id={modalId} resetSelectionOnChange={resetSelectionOnChange}>
+            {children}
+          </Picker.Root>
         </Popover.Viewport>
       </Popover.Content>
     );
@@ -162,7 +213,11 @@ type ComboboxTriggerProps = ButtonProps;
 
 const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
   ({ children, onClick, ...props }, forwardedRef) => {
-    const { modalId, open, onOpenChange, placeholder, value, displayValue } = useComboboxContext(COMBOBOX_TRIGGER_NAME);
+    const { modalId, open, onOpenChange, placeholder, values, displayValue } =
+      useComboboxContext(COMBOBOX_TRIGGER_NAME);
+    // The Root only knows values, not the labels its items render, so a caller wanting prettier
+    // chrome than the raw values passes `displayValue`.
+    const summary = displayValue || values?.join(', ');
     const handleClick = useCallback(
       (event: Parameters<Exclude<ButtonProps['onClick'], undefined>>[0]) => {
         onClick?.(event);
@@ -184,8 +239,8 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
         >
           {children ?? (
             <>
-              <span className={styles.comboboxTriggerText({ class: !value && 'text-subdued' })}>
-                {displayValue || value || placeholder}
+              <span className={styles.comboboxTriggerText({ class: !summary && 'text-subdued' })}>
+                {summary || placeholder}
               </span>
               <Icon icon='ph--caret-down--bold' size={3} />
             </>
@@ -228,10 +283,12 @@ type ComboboxListProps = PropsWithChildren<{ classNames?: string | string[] }>;
 
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
+    const { multiple } = useComboboxContext('Combobox.List');
     return (
       <ScrollArea.Root
         {...composableProps(props, { classNames: styles.comboboxList({ class: classNames }) })}
         role='listbox'
+        aria-multiselectable={multiple || undefined}
         centered
         padding
         thin
@@ -261,7 +318,10 @@ type ComboboxItemProps = ThemedClassName<
     icon?: string;
     /** Additional class names for the icon. */
     iconClassNames?: IconProps['classNames'];
-    /** Show a check icon on the right (commonly used for confirming the picked item). */
+    /**
+     * Show a check icon on the right (commonly used for confirming the picked item).
+     * Defaults to whether this item is in the Root's selection.
+     */
     checked?: boolean;
     /** Suffix text after the label. */
     suffix?: string;
@@ -269,7 +329,10 @@ type ComboboxItemProps = ThemedClassName<
     disabled?: boolean;
     /** Caller-supplied select handler in addition to value-commit. */
     onSelect?: () => void;
-    /** Whether to close the popover when this item is selected. Defaults to true. */
+    /**
+     * Whether to close the popover when this item is selected.
+     * Defaults to true for a single-select combobox, false for a multi-select one.
+     */
     closeOnSelect?: boolean;
   }>
 >;
@@ -284,36 +347,40 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
       description,
       icon,
       iconClassNames,
-      checked,
+      checked: checkedProp,
       suffix,
       disabled,
-      closeOnSelect = true,
+      closeOnSelect,
       children,
     },
     forwardedRef,
   ) => {
-    const { onValueChange, onOpenChange } = useComboboxContext(COMBOBOX_ITEM_NAME);
+    const { values, multiple, onItemSelect, onOpenChange } = useComboboxContext(COMBOBOX_ITEM_NAME);
+    const checked = checkedProp ?? values?.includes(value) ?? false;
+    // Toggling several values is the whole point of a multi-select, so it keeps the popover open.
+    const close = closeOnSelect ?? !multiple;
     const handleSelect = useCallback<NonNullable<PickerItemProps['onSelect']>>(() => {
       onSelect?.();
       if (value !== undefined) {
-        onValueChange?.(value);
+        onItemSelect?.(value);
       }
-      if (closeOnSelect) {
+      if (close) {
         onOpenChange?.(false);
       }
-    }, [onSelect, onValueChange, onOpenChange, value, closeOnSelect]);
+    }, [onSelect, onItemSelect, onOpenChange, value, close]);
 
     return (
       <Picker.Item
         value={value}
+        checked={checked}
         disabled={disabled}
         onSelect={handleSelect}
         ref={forwardedRef}
         classNames={styles.comboboxItem({
-          // Row height/inset, `cursor-pointer`, `select-none` and the `dx-hover` / `dx-selected`
-          // pairing come from `Picker.Item`'s defaults; the slot only adds row-shape (flex /
-          // icons + label). Disabled overrides are layered on per-instance.
-          class: mx(disabled && 'hover:bg-transparent data-[selected=true]:bg-transparent', classNames),
+          // Row height/inset, `cursor-pointer`, `select-none` and the `dx-hover` / `dx-selected` /
+          // `dx-highlighted` pairing come from `Picker.Item`'s defaults; the slot only adds
+          // row-shape (flex / icons + label). Disabled overrides are layered on per-instance.
+          class: mx(disabled && 'hover:bg-transparent data-highlighted:bg-transparent', classNames),
         })}
       >
         {children ?? (
@@ -394,8 +461,10 @@ export type {
   ComboboxInputProps,
   ComboboxItemProps,
   ComboboxListProps,
+  ComboboxMultipleRootProps,
   ComboboxPortalProps,
   ComboboxRootProps,
+  ComboboxSingleRootProps,
   ComboboxTriggerProps,
   ComboboxVirtualTriggerProps,
 };
