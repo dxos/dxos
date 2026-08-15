@@ -25,6 +25,7 @@ import { Mailbox, SyncStreamConfig } from '#types';
 
 import { MailSyncError } from '../errors';
 import { readBindingOptions } from './binding';
+import type { TagPushOp } from './tag-push';
 
 /**
  * Provider-agnostic harness for a bidirectional, capped, resumable mail sync. The provider is an Effect
@@ -118,17 +119,6 @@ export type MailSyncSource = {
    * `Cursor.LayerOptions.reconcileFilter`) rather than scanning the whole feed.
    */
   readonly reconcileForeignIds?: readonly string[];
-};
-
-/**
- * One message's tag movements to apply at the provider, in provider vocabulary (Gmail label ids). The
- * harness resolves tag uris through the run's {@link MailSyncSource.tagBindings} so the diff itself
- * stays provider-agnostic.
- */
-export type TagPushOp = {
-  readonly foreignId: string;
-  readonly addLabelIds: readonly string[];
-  readonly removeLabelIds: readonly string[];
 };
 
 /**
