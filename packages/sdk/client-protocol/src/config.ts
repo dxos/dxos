@@ -44,6 +44,8 @@ export const DX_RUNTIME = '/tmp/dx/run';
 export enum DXEnv {
   CONFIG = 'DX_CONFIG',
   DEBUG = 'DX_DEBUG',
+  /** Opts a fresh profile into demo/labs plugins; mirrors Composer's `DX_LABS`. */
+  LABS = 'DX_LABS',
   NO_AGENT = 'DX_NO_AGENT',
   PROFILE = 'DX_PROFILE',
 }

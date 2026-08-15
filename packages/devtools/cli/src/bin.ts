@@ -17,12 +17,12 @@ import * as Command from 'effect/unstable/cli/Command';
 import { createCliApp } from '@dxos/app-framework/cli';
 import { unrefTimeout } from '@dxos/async';
 import { ConfigService, DXOS_VERSION } from '@dxos/client';
-import { DEFAULT_PROFILE } from '@dxos/client-protocol';
+import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { loadEnabledPlugins } from '@dxos/plugin-registry';
 
 import { admin, chat, commandConfigLayer, debug, dx, fn, hub, mailbox, mcp, reflect, repl, reset } from './commands';
-import { getDefaults, getPlugins } from './commands/plugin-defs';
+import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
 import { setDispatcher } from './dispatcher';
 import { installStderrFilter } from './util';
 
@@ -81,8 +81,11 @@ const program = Effect.gen(function* () {
   const configPath = readRootFlag('config', 'c');
   const config = yield* ConfigService.load({ config: Option.fromNullishOr(configPath), profile });
 
+  const isLabs = DXEnv.get(DXEnv.LABS) === 'true';
+  // `undefined` means the profile has never been configured; an empty array means the user
+  // turned everything optional off, which must not be re-seeded with the defaults.
   const savedEnabled = yield* loadEnabledPlugins({ profile });
-  const enabled = savedEnabled.length > 0 ? [...savedEnabled] : getDefaults();
+  const enabled = savedEnabled ?? getDefaults({ isLabs });
 
   const { command, layer: pluginLayer } = yield* createCliApp({
     rootCommand: dx,
@@ -107,6 +110,7 @@ const program = Effect.gen(function* () {
     ],
     plugins: getPlugins({ config }),
     enabled,
+    core: getCore(),
   });
 
   // Built once in the program scope, so each `Effect.provide(layer)` — both the top-level command
