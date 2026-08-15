@@ -184,9 +184,10 @@ export const AddObject = Operation.make({
       Schema.String.annotate({ description: 'Qualified graph node ID of the target collection.' }),
     ),
   }),
+  // No navigation path: where an object lands in the tree is resolved on demand by
+  // `NavigationOperation.ResolveNavigationTargets`, which is the single entry point for it.
   output: Schema.Struct({
     id: Schema.String,
-    subject: Schema.Array(Schema.String),
     object: Obj.Unknown,
   }),
 }).pipe(

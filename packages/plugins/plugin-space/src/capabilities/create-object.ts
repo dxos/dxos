@@ -42,7 +42,6 @@ export default Capability.makeModule(
               });
               return {
                 id: result.id,
-                subject: [],
                 object: result.object,
               };
             }),

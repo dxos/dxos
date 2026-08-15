@@ -6,6 +6,9 @@ import * as Effect from 'effect/Effect';
 
 // Narrow subpath: the app-toolkit barrel drags `@dxos/client` (→ protobufjs), which the workerd
 // bundle guard (env-tests) forbids for assistant-toolkit.
+// TODO(wittjosiah): This is the only thing core takes from the sdk layer, and it is leakage — but
+//   `CollectionModel` encodes an opinionated app structure (a root collection, and which objects
+//   get filed into it) that does not belong in core either. Could a lower-level form of it exist?
 import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';

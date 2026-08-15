@@ -3,15 +3,12 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
-import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
 import { deepMapValues } from '@dxos/util';
 
 import { SpaceOperation } from '#types';
@@ -51,7 +48,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
         target: Database.isDatabase(target) ? undefined : target,
       }).pipe(Effect.provide(Database.layer(db)));
 
-      const typename = Obj.getTypename(object)!;
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
         name: 'space.object.add',
         properties: {
@@ -61,69 +57,14 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
         },
       });
 
-      const types = yield* Effect.promise(() =>
-        db.query(Query.select(Filter.type(Type.Type)).from(Scope.registry())).run(),
-      );
-      const [runtimeSchema] = types.filter((t) => !Type.isTypeKind(t) && Type.getTypename(t) === typename);
-      const echoViewPath =
-        runtimeSchema !== undefined
-          ? ViewAnnotation.get(Type.getSchema(runtimeSchema)).pipe(Option.getOrElse(() => []))
-          : [];
-      const view = echoViewPath.length > 0 ? yield* ViewAnnotation.tryLoadAtPath(object, echoViewPath) : undefined;
-      const viewTargetUri = view ? getTypeURIFromQuery(view.query.ast) : undefined;
-      // A view holder filed under a target type its view query can't resolve would be invisible in
-      // the navigation tree. Fail loudly rather than silently dropping it under its own typename.
-      invariant(
-        !view || viewTargetUri != null,
-        `View object ${typename} (${object.id}) has no resolvable target type — its view query must filter by a known type.`,
-      );
-      // Graph type nodes are keyed by a slash-free slug (entity id for stored types, typename for
-      // static); resolve the object's own type slug rather than filing it under its (human) typename.
-      const objectType = Obj.getType(object);
-      const typeSlug = objectType ? GraphPath.getTypeSlug(objectType) : typename;
-      const subject = getSubjectPathForNewObject({
-        spaceId: db.spaceId,
-        objectId: object.id,
-        nodeId: input.targetNodeId,
-        object,
-        typename,
-        typeSlug,
-        viewTargetSlug: viewTargetUri ? GraphPath.getTypeSlugFromUri(viewTargetUri) : undefined,
-      });
-
       return {
         id: Obj.getURI(object),
-        subject: [subject],
         object,
       };
     }),
   ),
 );
 export default handler;
-
-const getSubjectPathForNewObject = (props: {
-  spaceId: string;
-  objectId: string;
-  nodeId?: string;
-  object: Obj.Unknown;
-  typename: string;
-  /** Slug of the object's own type ({@link getTypeSlug}) — keys the `types/<slug>` node it files under. */
-  typeSlug: string;
-  /** Slug of the view holder's target type, when the object is a view holder. */
-  viewTargetSlug?: string;
-}): string => {
-  const { nodeId, object, typeSlug, viewTargetSlug, spaceId, objectId } = props;
-  if (typeof nodeId === 'string') {
-    return GraphPath.getCollectionObjectPath(nodeId, objectId);
-  }
-  if (AppNode.isCollectionItem(object)) {
-    return GraphPath.getCollectionsPath(spaceId, objectId);
-  }
-  if (viewTargetSlug) {
-    return GraphPath.getTypePath(spaceId, viewTargetSlug, objectId);
-  }
-  return GraphPath.getObjectPath(spaceId, typeSlug, objectId);
-};
 
 /**
  * Instantiates a described object against the types registered for the space.

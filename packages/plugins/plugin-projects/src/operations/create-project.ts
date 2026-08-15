@@ -41,10 +41,20 @@ const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOp
       const result = yield* Operation.invoke(SpaceOperation.AddObject, {
         object: draft,
         target: db,
-        targetNodeId: GraphPath.getSpacePath(db.spaceId, GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)),
       });
       invariant(Obj.instanceOf(Project.Project, result.object), 'Expected a Project.');
-      return { id: result.id, subject: result.subject, project: result.object };
+      // This caller knows where a project belongs in the tree, so it spells the path rather than
+      // having the add compute one.
+      const nodePath = GraphPath.getSpacePath(
+        db.spaceId,
+        GraphPath.GroupSegments.ai,
+        Type.getTypename(Project.Project),
+      );
+      return {
+        id: result.id,
+        subject: [GraphPath.getCollectionObjectPath(nodePath, result.object.id)],
+        project: result.object,
+      };
     }),
   ),
 );

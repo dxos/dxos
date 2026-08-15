@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import { ProjectSkill } from '@dxos/assistant-toolkit';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -44,7 +45,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.CreateRoutine> = Pr
       // place; the blank template leaves the action and schedule to be configured in the routine form.
       // The project travels as the creation subject, so the scaffold seeds it into
       // `instructions.objects` — the routine's headless sessions then run in project scope.
-      const { object, subject } = yield* Operation.invoke(RoutineOperation.CreateRoutine, {
+      const { object } = yield* Operation.invoke(RoutineOperation.CreateRoutine, {
         db,
         templateId: RoutineCapabilities.BlankTemplateId,
         subject: project,
@@ -65,7 +66,13 @@ const handler: Operation.WithHandler<typeof ProjectOperation.CreateRoutine> = Pr
       });
 
       yield* Database.flush();
-      yield* Operation.invoke(LayoutOperation.Open, { subject: [...subject] });
+      const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
+        query: { uri: Obj.getURI(object) },
+      });
+      const [navigationTarget] = targets;
+      if (navigationTarget) {
+        yield* Operation.invoke(LayoutOperation.Open, { subject: [navigationTarget.path] });
+      }
       return { routine: object };
     }),
   ),

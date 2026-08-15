@@ -251,14 +251,16 @@ export default Capability.makeModule(
                     { db: space.db },
                     { spaceId: space.db.spaceId },
                   );
-                  const { subject } = yield* Operation.invoke(
+                  yield* Operation.invoke(
                     SpaceOperation.AddObject,
-                    { object: chat, target: space.db, targetNodeId: getChatsPath(space.db.spaceId) },
+                    { object: chat, target: space.db },
                     { spaceId: space.db.spaceId },
                   );
+                  // This caller knows the destination — the chat is filed at the space root but
+                  // belongs under the chats node — so it spells the path rather than resolving it.
                   yield* Operation.invoke(
                     LayoutOperation.Open,
-                    { subject: [...subject] },
+                    { subject: [GraphPath.getCollectionObjectPath(getChatsPath(space.db.spaceId), chat.id)] },
                     { spaceId: space.db.spaceId },
                   );
                 }),

@@ -11,6 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
@@ -195,14 +196,22 @@ export const CreateObjectDialog = ({
         invariant(db, 'Missing database');
         const result = yield* metadata.createObject(data, { db, target, targetNodeId });
         const shouldNavigate = _shouldNavigate ?? (() => true);
-        if (result.subject.length > 0 && shouldNavigate(result.object)) {
-          yield* invoke(LayoutOperation.Open, {
-            subject: [...result.subject],
-            navigation: 'immediate',
+        if (shouldNavigate(result.object)) {
+          // Resolved after the fact rather than returned by the create: where an object lives in
+          // the tree is the resolver's question, and the operations are no longer chained.
+          const { targets } = yield* invoke(NavigationOperation.ResolveNavigationTargets, {
+            query: { uri: Obj.getURI(result.object) },
           });
-          yield* invoke(LayoutOperation.Expose, {
-            subject: result.subject[0],
-          });
+          const [navigationTarget] = targets;
+          if (navigationTarget) {
+            yield* invoke(LayoutOperation.Open, {
+              subject: [navigationTarget.path],
+              navigation: 'immediate',
+            });
+            yield* invoke(LayoutOperation.Expose, {
+              subject: navigationTarget.path,
+            });
+          }
         }
 
         onCreateObject?.(result.object);
