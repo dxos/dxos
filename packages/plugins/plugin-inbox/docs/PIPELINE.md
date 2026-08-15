@@ -2,7 +2,8 @@
 
 How mail gets into a mailbox and what runs over it afterwards. Sibling docs: [`PLAN.md`](PLAN.md)
 (product plan), [`TASKS.md`](TASKS.md) (ledger), [`TESTING.md`](TESTING.md) (manual test plan),
-[`AUDIT.md`](AUDIT.md) (component/test index).
+[`PIPELINE-AUDIT.md`](PIPELINE-AUDIT.md) (pipeline/operation coverage index). `AUDIT.md` is a
+separate decomposition audit, not a test index.
 
 **Status:** D1–D3, D5 and D6 built; D4 outstanding. See [Open](#open).
 
