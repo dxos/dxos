@@ -111,6 +111,16 @@ changes what a model sees lives in the shared package or it is a bug.
         harness + `local-ai.test.ts`, `assistant-evals/skills.ts`, `functions-testing`) via
         `Ref.make(DatabaseSkill.make())`. They must assemble the _same_ skill production ships, or
         the evals stop testing what runs. Settle this before moving anything.
+- [ ] **Observability as a registered mapping, not a call.** `addObject` invokes
+      `ObservabilityOperation.SendEvent` directly, which is what binds a space verb to a plugin.
+      Do NOT fix this by pushing the operation definition down — the agreed design is the
+      `UndoMapping` shape: an observability plugin listens to the operation stream and fires an
+      event when the operation has one registered, exactly as undo derives its inverse. The
+      interception point already exists (`ProcessManagerPlugin` requires `Capabilities.UndoMapping` + `Capabilities.OperationInvoker`, so the invoker already consults a registry keyed by
+      operation). The payoff is portability: EDGE supplies an entirely different listener and the
+      operations themselves do not change. Open question first — whether the invoker consults
+      mappings on every invocation path or only app-side ones; if the latter, this trades one
+      asymmetry for another.
 - [ ] **plugin-studio navigation regression** — `getArtifactsPath` was removed with `addObject`'s
       navigation output, and unlike the type-section cases `findTypeSectionPath` cannot replace it:
       studio's url binding ends in the studio segment, not a typename. Artifacts now navigate to
