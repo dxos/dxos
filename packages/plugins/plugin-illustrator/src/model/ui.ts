@@ -226,7 +226,7 @@ const emitControl = (node: Control, x: number, y: number, emit: Emit): void => {
     case 'select':
       elements.push(
         { kind: 'rect', id: 'box', x: 0, y: top, w: CONTROL_W, h: CONTROL_H, stroke: 'solid' },
-        { kind: 'text', id: 'caret', x: CONTROL_W - 20, y: top + 4, text: 'v', weight: 's', color: 'grey' },
+        { kind: 'text', id: 'caret', x: CONTROL_W - 20, y: top + 4, text: '*', weight: 's', color: 'grey' },
       );
       break;
     case 'input':
@@ -345,7 +345,7 @@ export const compile = (node: UiNode, options: CompileOptions = {}): Scene.Comma
 
 const GLYPHS: Record<ControlKind, string> = {
   input: '[__________]',
-  select: '[________ v]',
+  select: '[_________*]',
   checkbox: '[ ]',
   switch: '(o )',
 };

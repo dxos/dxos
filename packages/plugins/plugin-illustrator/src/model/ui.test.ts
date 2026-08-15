@@ -89,7 +89,7 @@ describe('Ui.renderAscii', () => {
         '[ ]',
         '',
         'role',
-        '[________ v]',
+        '[_________*]',
         '',
         'address',
         '  street',
