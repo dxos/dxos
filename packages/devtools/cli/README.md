@@ -112,6 +112,23 @@ claude mcp add dxos-dev -- /path/to/dxos/packages/devtools/cli/bin/dx mcp serve
 Register it under a distinct name if you also have the released `dx` configured; two servers offering
 the same tool names leave the client to disambiguate.
 
+Add `--watch` to pick up an edit without restarting the client:
+
+```bash
+claude mcp add dxos-dev -- /path/to/dxos/packages/devtools/cli/bin/dx mcp serve --watch
+```
+
+The server re-runs itself under `bun --watch`, which reloads the module graph it imported — so any
+source file the server actually reached triggers it. The reload keeps the same process and the same
+pipes and wipes only the JS realm, so the client's connection survives; a supervisor outside that
+realm replays the MCP handshake into the new one and emits `tools/list_changed` and
+`prompts/list_changed`. In-flight requests are answered with an error rather than left hanging, so
+retry them. Each reload is a full server start — identity, storage and plugin activation — so expect
+the first request after an edit to wait on that.
+
+`--watch` only exists when running from source; the compiled binary has no sources to watch, so both
+the flag and its supervisor are stripped from it by the `DX_CLI_BUNDLED` define in `scripts/build.ts`.
+
 ## Release
 
 ```bash

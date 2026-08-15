@@ -191,6 +191,12 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
     entrypoints: ['./src/bin.ts'],
     target: 'bun',
     plugins: [solidPlugin, rawImportPlugin, urlImportPlugin, nodeStdPlugin, subductionWasmPlugin, automergeWasmPlugin],
+    // Marks the binary so source-only affordances drop out of it. `dx mcp serve --watch` re-runs the
+    // CLI under `bun --watch`, which a binary has no sources to watch: the flag hides from `--help`
+    // and the branch guarding its supervisor folds away, taking the supervisor module with it.
+    define: {
+      'process.env.DX_CLI_BUNDLED': '"1"',
+    },
     compile: {
       target,
       outfile,

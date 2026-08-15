@@ -63,7 +63,7 @@ changes what a model sees lives in the shared package or it is a bug.
 - [ ] **Registry construction shared** — `dx mcp serve` merges the CLI's curated
       `operationHandlers`; operation-service assembles its own list plus base types. Factor one
       assembly so both hosts register the same operations, skills and types.
-- [ ] **Watch/reload** — see Milestone 7; today an edit still needs a restart.
+- [x] **Watch/reload** — `dx mcp serve --watch` (Milestone 7); an edit no longer needs a restart.
 
 ## Milestone 7 — third-party plugins and reload (design: [DESIGN.md](./DESIGN.md) §2-3)
 
@@ -149,9 +149,14 @@ reads as though disabling does not exist. DESIGN §2.3.
 
 ### Reload, stage 1 — our own dev loop
 
-- [ ] **`dx mcp serve --watch`** — supervise a child process, restart on change. The stdio session
-      dies with the process, so the client reconnects per edit; acceptable for our own loop.
-      `moon run cli:dev` already runs `dx` from source, so this is a supervisor plus a watcher.
+- [x] **`dx mcp serve --watch`** — DONE. Re-runs the CLI under `bun --watch` and proxies the
+      client's stdio to it. The planned "session dies with the process, client reconnects per edit"
+      is not what happens: `bun --watch` reloads in place (same pid, same pipes, wiped realm), so the
+      connection survives and only the session state is lost. The supervisor holds the handshake
+      outside the realm and replays it, so an edit is invisible to the client — no reconnect, and
+      `tools/list_changed` / `prompts/list_changed` follow each reload. Source-only: hidden from
+      `--help` and DCE'd out of the binary by the `DX_CLI_BUNDLED` define. Cost is a full server
+      start per reload. Details in [DESIGN.md](./DESIGN.md) §3.
 
 ### Reload, stage 2 — external plugin authors
 

@@ -338,10 +338,27 @@ that point, which is what the worker boundary is for.
 
 ## 3. Reload, in two stages
 
-**Stage 1 — developing dxos itself.** `--watch` supervising a child process, restarting on change.
-An MCP stdio session dies with the process, so the client reconnects per edit; acceptable for our
-own loop. `moon run cli:dev` already runs `dx` from source, so this is a supervisor and a file
-watcher.
+**Stage 1 — developing dxos itself.** `dx mcp serve --watch`, shipped. The premise this was planned
+on — "an MCP stdio session dies with the process, so the client reconnects per edit" — turned out to
+be false, which made the stage cheaper _and_ better than budgeted. `bun --watch` reloads **in place**:
+same pid, same pipes, and a wiped JS realm. Measured, not assumed — a reload keeps `process.pid`
+constant, data written to the child's stdin after the edit reaches the new instance, and `globalThis`
+comes back empty, so module-level and global registries both reset (which is also why the stage-2
+schema-re-registration obstacle below does not apply here).
+
+What survives is the connection; what dies is the session. So the supervisor's job is not to make
+the client reconnect but to hold the handshake outside the realm and replay it: it caches the
+client's `initialize` and `notifications/initialized`, re-drives them into the fresh realm under a
+namespaced id whose response it swallows, errors the requests the reload stranded, and emits
+`tools/list_changed` / `prompts/list_changed`. An edit is invisible to the client. The watching
+itself is delegated to `bun --watch`, whose file set is exactly the imported module graph.
+
+The flag is source-only, since a binary has no sources to watch, and is stripped from the compiled
+CLI by a `process.env.DX_CLI_BUNDLED` define in `scripts/build.ts`: `Flag.withHidden` drops it from
+`--help`, and guarding the supervisor's dynamic import on the same constant lets bun's DCE drop the
+module (verified — the supervisor is absent from a bundle built with the define, present without).
+The remaining cost is latency: a reload is a full server start, identity and plugin activation
+included.
 
 **Stage 2 — external plugin authors.** The loop that pays, and the browser shows its shape: a dev
 manifest with `devEntry` served by Vite. The CLI equivalent is
