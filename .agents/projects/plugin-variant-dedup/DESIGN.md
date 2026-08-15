@@ -277,7 +277,31 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
    its guard passes with nothing included. A plugin that produces no conditions at all carries no
    guard — tracing it would assert a property of a bundle no headless host loads.
 
-5. **What the widened defaults caught.** Eleven real leaks, every one pre-existing on main and
+5. **The isomorphic default has a second axis the guards cannot see — OPEN.** A module with no
+   annotation and no family default is carried into every variant, on the theory that the structure
+   guards will catch anything that turns out not to be isomorphic. That holds for React
+   reachability, which is all `dx-trace-imports` measures. It does not hold for two other ways a
+   module can be wrong in an environment:
+
+   - **Unsatisfiable `requires`.** plugin-markdown's `AnchorResolver`/`AnchorSort` require the app
+     graph and `MarkdownState` requires attention's view state — app-shell capabilities no headless
+     host registers. Under node they failed the dependency graph at boot.
+   - **Missing configuration.** plugin-calls' `CallManager` reads `runtime.services.edge.url` in its
+     constructor; absent that, the module throws and the plugin auto-disables.
+
+   Both surface only when a host actually boots the plugin set, which in CI means the `dx` CLI's
+   e2e tests — 22 of ~95 plugins. plugin-observability and plugin-connector were caught the same
+   way, and in both cases the headless module set on main had been deliberately narrow (observability
+   shipped only the `OperationHandler` stub) — the isomorphic default silently overrode a documented
+   decision.
+
+   The alternative, and the current recommendation: keep the per-family defaults, which are
+   evidence-driven and headless-by-construction, and let an unannotated raw `Capability.lazyModule`
+   generate no variant, as it did before. That removes this class rather than relying on boot errors
+   in whichever hosts happen to have end-to-end coverage. The change is one predicate in
+   `generate.ts` (`member.environments === null` → excluded rather than carried) plus regeneration.
+
+6. **What the widened defaults caught.** Eleven real leaks, every one pre-existing on main and
    invisible until the guards traced both condition sets:
 
    - React values parked in `types/` — plugin-presenter's `PresenterContext`, plugin-debug's
