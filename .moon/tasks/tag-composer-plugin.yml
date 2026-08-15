@@ -14,7 +14,11 @@ tasks:
       - src/capabilities/overrides.*.ts
       - package.json
     outputs:
-      - src/capabilities/gen
+      # Optional: a plugin with no non-browser `environments` annotations (fully browser-only
+      # outside node/workerd) produces zero gen files, and a required output fails the task when
+      # nothing was written.
+      - file: src/capabilities/gen
+        optional: true
   build:
     deps:
       - prebuild

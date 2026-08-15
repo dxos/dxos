@@ -23,10 +23,24 @@ export type GenerateResult = {
 const findFirst = (dir: string, names: string[]): string | null =>
   names.map((name) => path.join(dir, name)).find((candidate) => fs.existsSync(candidate)) ?? null;
 
+const OVERRIDES_FILE_PATTERN = /^overrides\.([a-z0-9]+)\.tsx?$/;
+
+/**
+ * Environments named by an `overrides.<env>.ts(x)` file even when no canonical member opts into
+ * that environment — a fully browser-only plugin (every member unannotated) still needs its
+ * `#capabilities` barrel conditioned so the built bundle doesn't fall through to the browser
+ * barrel under node/workerd resolution; an override-only environment renders as an all-stub file.
+ */
+const overrideEnvironments = (capabilitiesDir: string): string[] => {
+  const entries = fs.existsSync(capabilitiesDir) ? fs.readdirSync(capabilitiesDir) : [];
+  return entries.flatMap((entry) => OVERRIDES_FILE_PATTERN.exec(entry)?.[1] ?? []);
+};
+
 /**
  * Generates the per-environment headless capability barrels for one plugin package:
  * `src/capabilities/gen/<env>.ts` for every environment named by an `environments` annotation in
- * the canonical barrel, plus the matching `#capabilities` condition map in package.json.
+ * the canonical barrel (or by a standalone `overrides.<env>.ts`), plus the matching
+ * `#capabilities` condition map in package.json.
  */
 export const generate = (pluginDir: string): GenerateResult => {
   const capabilitiesDir = path.join(pluginDir, 'src/capabilities');
@@ -38,7 +52,10 @@ export const generate = (pluginDir: string): GenerateResult => {
   const members = parseBarrel(indexPath);
   const moduleMembers = [...members.values()].filter((member) => member.kind === 'maker-call');
   const environments = [
-    ...new Set(moduleMembers.flatMap((member) => member.environments ?? []).filter((env) => env !== 'browser')),
+    ...new Set([
+      ...moduleMembers.flatMap((member) => member.environments ?? []).filter((env) => env !== 'browser'),
+      ...overrideEnvironments(capabilitiesDir),
+    ]),
   ].sort();
 
   const genDir = path.join(capabilitiesDir, 'gen');
@@ -121,7 +138,7 @@ const renderBarrel = ({ env, genDir, included, stubbed, overridesPath, overrideN
   if (importTexts.size > 0) {
     lines.push(...sortImports([...importTexts]), '');
   }
-  if (overridesPath) {
+  if (overridesPath && overrideNames.size > 0) {
     const overridesSpec = `../${path.basename(overridesPath).replace(/\.tsx?$/, '')}`;
     lines.push(`export { ${[...overrideNames].sort().join(', ')} } from '${overridesSpec}';`, '');
   }

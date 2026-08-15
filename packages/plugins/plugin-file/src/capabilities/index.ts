@@ -12,17 +12,29 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { FileCapabilities, FileEvents } from '#types';
 
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
+
+export const Schema = AppCapability.schema(() => import('./schema'), {
+  environments: ['browser', 'node', 'workerd'],
+});
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
+  environments: ['browser', 'node', 'workerd'],
+});
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: ['browser', 'node', 'workerd'],
+});
 export const EdgeBackend = Capability.lazyModule(
   'EdgeBackend',
   {
     requires: [ClientCapabilities.Client],
     provides: [FileCapabilities.Backend],
     activatesOn: FileEvents.Start,
+    environments: ['browser', 'node', 'workerd'],
   },
   () => import('./edge-backend'),
 );
@@ -37,7 +49,7 @@ export const FileUploader = Capability.lazyModule(
 );
 export const InlineBackend = Capability.lazyModule(
   'InlineBackend',
-  { provides: [FileCapabilities.Backend], activatesOn: FileEvents.Start },
+  { provides: [FileCapabilities.Backend], activatesOn: FileEvents.Start, environments: ['browser', 'node', 'workerd'] },
   () => import('./inline-backend'),
 );
 export const Markdown = Capability.lazyModule(
@@ -47,6 +59,7 @@ export const Markdown = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
+  environments: ['browser', 'node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.formInput', 'org.dxos.role.section', 'org.dxos.role.slide'],
@@ -54,4 +67,11 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 export const Settings = AppCapability.settings(() => import('./settings'), {
   activatesOn: ActivationEvents.Idle,
   provides: [FileCapabilities.SettingsAtom],
+});
+export const Translations = AppCapability.translations(translations);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
 });
