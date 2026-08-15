@@ -122,8 +122,8 @@ next run's business.
 
 One thing this ordering does _not_ resolve on its own: a tag written by **local logic** during the
 same window — the known-sender rule, an on-arrival extractor — is also inside `nextHeads`, and would
-be stranded if left there unpushed. The per-run base overlay for newly-inserted messages is what
-separates those from the pull's own writes; see
+be stranded if left there unpushed. Carrying each insert's `remoteTagUris` on the remote side of the
+merge is what separates those from the pull's own writes; see
 [Pipeline-applied tags](#pipeline-applied-tags-push-too--and-spam-has-no-mapping-yet).
 
 ### The provider echoes our own push back (verified)
@@ -252,17 +252,19 @@ treating the whole class as non-pushing would strand (2) permanently: it would s
 `local` from the next run onward, so no diff would ever emit it.
 
 The separation is available without tracking actors, because the run knows each new message's remote
-state exactly — the `labelIds` it just fetched. So **a message inserted this run enters the diff with
-its base seeded from that remote state**, not from its post-commit local state:
+state exactly — the `labelIds` it just fetched, carried on the insert as `remoteTagUris`. Recording
+those on the **remote** side of the merge is enough; the base needs no special casing:
 
-| Tag on a newly-inserted message | In seeded base? | Result   |
-| ------------------------------- | --------------- | -------- |
-| From the provider's `labelIds`  | yes             | no push  |
-| Added locally at insert time    | no              | **push** |
+| Tag on a newly-inserted message | base | local | remote | outcome            |
+| ------------------------------- | ---- | ----- | ------ | ------------------ |
+| From the provider's `labelIds`  | ∅    | ✓     | ✓      | converged, no push |
+| Added locally at insert time    | ∅    | ✓     | ✗      | **push**           |
 
-Mechanically, `base` is the heads snapshot overlaid with `{ newMessageId: remoteTagsAtFetch }` for
-this run's inserts. The overlay is per-run and in-memory — nothing extra is persisted — and it exists
-only because a brand-new message has no history in the heads snapshot to diff against.
+An earlier draft seeded the _base_ for inserted messages instead. Writing the tests showed that to be a
+second mechanism for the same outcome — the merge already resolves it once the remote side is modelled
+accurately — so it was dropped. What must not be dropped is `remoteFromBase` recording inserts:
+without it a newly-synced message's own labels read as local additions and push straight back at the
+provider they came from, on first sight of every message. `tag-push.test.ts` guards exactly that.
 
 **DECIDED: classifier output pushes.** A classification the user can see in Composer should be the
 same classification their mail client shows; a local-only verdict is the confusing case, not the

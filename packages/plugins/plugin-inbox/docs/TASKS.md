@@ -627,9 +627,11 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
 - [ ] **Push insert-time local tags** — a tag written by local logic during a run (known-sender
       `important`, on-arrival extractors) is NOT the same as a tag the pull wrote, though both land
       before the heads capture. Left in the base it strands forever: it sits in both `base` and
-      `local` from the next run on, so no diff ever emits it. Separate them with a per-run base
-      overlay seeding each newly-inserted message from the `labelIds` just fetched — provider labels
-      land in the base (no push), locally-added tags do not (push). In-memory, nothing persisted.
+      `local` from the next run on, so no diff ever emits it. Separated by carrying each insert's
+      `remoteTagUris` on the REMOTE side of the merge: a provider label is then on local and remote
+      with an empty base (converged, no push) while an insert-time local tag is local-only (push).
+      NO base overlay — the earlier design had one; the tests showed it was a second mechanism for
+      the same outcome.
 
 ### Open
 
