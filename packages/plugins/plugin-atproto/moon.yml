@@ -1,12 +1,32 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
 tasks:
+  check-module-structure:
+    # Every plugin generates headless capability barrels, so the plugin entry must stay UI-free
+    # under each condition it produces: fail if React ever becomes reachable from it.
+    command: >-
+      pnpm exec dx-trace-imports
+      --export ./AtprotoPlugin
+      --to "{react,react-dom}"
+      --conditions workerd,worker
+      --conditions node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60
   build:
     args:
       - '--entryPoint=src/index.ts'
