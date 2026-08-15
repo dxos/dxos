@@ -12,7 +12,7 @@
 // Usage: node scripts/generate-icon.mjs
 //
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,20 +24,27 @@ const SOURCE_SVG = join(REPO_ROOT, 'packages/ui/brand/assets/icons/dxos.svg');
 const OUTPUT = join(PACKAGE_ROOT, 'src/internal/icon-data.ts');
 const SIZE = 96;
 
-// sharp is not a dependency of this package; resolve it from the workspace store when present.
+// Ranks a store directory (`sharp@0.34.5`) by version; a lexical sort would put 0.9 above 0.34.
+const rank = (dir) =>
+  dir
+    .slice('sharp@'.length)
+    .split('.')
+    .reduce((total, part) => total * 1000 + (Number.parseInt(part, 10) || 0), 0);
+
+// sharp is a heavy native package and this generator runs about as often as the mark changes, so it
+// is resolved from the workspace store rather than declared as a dependency every install pays for.
 const loadSharp = () => {
   try {
     return require('sharp');
   } catch {
-    const [dir] = require('node:fs')
-      .readdirSync(join(REPO_ROOT, 'node_modules/.pnpm'))
+    const store = join(REPO_ROOT, 'node_modules/.pnpm');
+    const [dir] = readdirSync(store)
       .filter((name) => name.startsWith('sharp@'))
-      .sort()
-      .reverse();
+      .sort((left, right) => rank(right) - rank(left));
     if (!dir) {
-      throw new Error('sharp not found in the workspace; install it or run this from a checkout that has it');
+      throw new Error('sharp not found in the workspace; add it with `pnpm add -w -D sharp` and re-run');
     }
-    return require(join(REPO_ROOT, 'node_modules/.pnpm', dir, 'node_modules/sharp'));
+    return require(join(store, dir, 'node_modules/sharp'));
   }
 };
 
