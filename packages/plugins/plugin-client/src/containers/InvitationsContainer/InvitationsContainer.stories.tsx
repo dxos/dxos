@@ -11,8 +11,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
+import { ClientPlugin } from '#plugin';
 
-import { ClientPlugin } from '../../plugin';
 import { InvitationsContainer } from './InvitationsContainer';
 
 const meta = {

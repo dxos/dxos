@@ -12,8 +12,8 @@ import { translations as shellTranslations } from '@dxos/shell/react';
 
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
+import { ClientPlugin } from '#plugin';
 
-import { ClientPlugin } from '../../plugin';
 import { DevicesContainer } from './DevicesContainer';
 
 const meta = {
