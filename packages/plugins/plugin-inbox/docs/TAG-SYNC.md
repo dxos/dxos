@@ -94,8 +94,9 @@ follow-up work (see [Open decisions](#open-decisions)).
 2. Read `local` and capture `nextHeads = Obj.version(tagIndex).automergeHeads` **at the same
    instant**.
 3. Diff base/local/remote; push the local-only changes to the provider.
-4. Persist `nextHeads` beside the delta token — but only if the push fully drained with nothing
-   `pending` (see [What an op's outcome does to the base](#what-an-ops-outcome-does-to-the-base)).
+4. Persist `nextHeads` **and** the delta token in a single `Obj.update` on the cursor — but only if
+   the push fully drained with nothing `pending` (see
+   [What an op's outcome does to the base](#what-an-ops-outcome-does-to-the-base)).
 
 Capturing at step 2 rather than at the end of the run is what keeps the two failure modes from
 appearing:
@@ -139,6 +140,31 @@ in one run and surface it in the next.
 
 Consequence worth knowing, not a bug: a run that pushes always sees a non-empty delta next run, so
 the sync never observes "nothing changed" immediately after a push.
+
+### Heads and the delta token are one recovery unit
+
+`runMailSync` advances the token today via `Cursor.writeToken`, which does its own `Obj.update`.
+Tag sync must **not** add a second, separate write for `nextHeads`: the two describe the same
+position, and a crash between them leaves the cursor self-inconsistent.
+
+The damaging order is token-then-heads. The next run reads its delta from the _advanced_ token, so
+the previous run's pulled changes are invisible to it, while `base` is the _stale_ heads from before
+those changes were applied. Every tag that run pulled now reads as a local-only addition.
+
+Mostly that is benign — pushing a tag back at the provider it came from is a no-op, since the pulled
+state mirrors the remote by construction. It stops being benign as soon as the remote moves again in
+the window:
+
+1. Run N pulls `STARRED` added remotely. Crash before heads persist.
+2. Another client unstars the message at the provider.
+3. Run N+1: `base` (stale) lacks the star, `local` has it, and the delta — read from the advanced
+   token — never mentions it. So `local ⊖ base = {starred}` with no opposing remote change, and the
+   run **re-stars a message that was deliberately unstarred.**
+
+No conflict rule catches this, because from the diff's point of view there is no conflict. The fix
+is structural rather than a policy: write both fields in one `Obj.update`, so a crash either
+advances the pair or neither. That means a combined writer on `Cursor` (`writeSyncState({ token,
+tagHeads })`) rather than calling `writeToken` and a heads writer in sequence.
 
 ### Worked example
 

@@ -195,7 +195,11 @@ Deeper conventions:
 Put it in **`.secrets/`** at the repo root — never in the chat. Pasting a token into a
 prompt writes it to the transcript permanently; a file can be deleted.
 
-- `.secrets/` is gitignored at every depth and holds no tracked files.
+- `.secrets/` is gitignored at every depth. That is default exclusion, not enforcement — `git add -f`
+  would still stage a file, so treat "nothing under `.secrets/` is tracked" as an invariant to uphold
+  rather than a guarantee git gives you. Verify with `git ls-files | grep -i secret`; the only
+  expected hits are `scripts/secrets.mjs` and its edge-compute twin, which are tooling, not
+  credentials.
 - **The user creates the file** (agents cannot sign in or complete an OAuth consent) and
   names the path in chat. One file per credential, `chmod 600`, `key=value` lines.
 - **The agent deletes it** when the task that needed it is done, and revokes the grant if
@@ -208,14 +212,17 @@ prompt writes it to the transcript permanently; a file can be deleted.
 
 Example (Gmail, for the live tag-sync test — see `packages/plugins/plugin-inbox/docs/TAG-SYNC.md`):
 
+Create the file in an editor, not a shell command — an interactive shell records a heredoc's
+contents in its history, and a file written before `chmod` is briefly world-readable under the
+default umask:
+
 ```bash
-cat > .secrets/gmail.env <<'EOF'
-client_id=...
-client_secret=...
-refresh_token=...
-EOF
-chmod 600 .secrets/gmail.env
+umask 077
+mkdir -p .secrets
+${EDITOR:-vi} .secrets/gmail.env   # add client_id / client_secret / refresh_token here
 ```
+
+Do not paste real credential values into any shell command, and do not paste them into chat.
 
 ## Where things live
 

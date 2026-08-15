@@ -573,7 +573,13 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
       `Map<tagUri, { owner }>`, so the caller resolves `Tag.isProviderTag` once and the diff needs no
       notion of tag origin. Table-driven unit tests over the merge matrix, including empty base (first
       sync pushes nothing) and BOTH conflict directions (canonical → local wins, provider → remote).
-- [ ] **Heads on the binding** — persist `nextHeads` beside `Cursor.spec.token`. Capture them AFTER
+- [ ] **Heads on the binding** — persist `nextHeads` and `Cursor.spec.token` in ONE `Obj.update`
+      (a combined `Cursor.writeSyncState({ token, tagHeads })`, never `writeToken` followed by a
+      separate heads write). They are one recovery unit: token-then-heads leaves the next run reading
+      its delta from the advanced token while diffing against stale heads, so every tag the previous
+      run PULLED reads as a local-only add. Usually a no-op re-push, but if the remote moves in that
+      window it silently re-applies a tag the provider deliberately removed, and no conflict rule
+      catches it because the diff sees no conflict. Capture them AFTER
       the pull commits and BEFORE the push, which is what avoids both a lost mid-run toggle and
       re-pushing this run's own pulls. When `Obj.getVersion` cannot reconstruct the saved heads, do
       NOT re-baseline silently — that drops every local change made since the last sync. Fall back to
