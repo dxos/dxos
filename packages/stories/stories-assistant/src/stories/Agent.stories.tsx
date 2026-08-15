@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 
 import { Client } from '@dxos/agent-claude/client';
 import { Chat as ChatSchema } from '@dxos/assistant-toolkit';
@@ -180,4 +180,21 @@ export const Console: Story = {
   // stories pass in the test runner). `AgentModule` is registered under `StoryRole.Agent` all the
   // same, so it composes into a module layout wherever that path works.
   render: () => <AgentModule />,
+};
+
+/**
+ * The same console resolved through the modules mechanism rather than rendered directly, which is
+ * what proves `StoryRole.Agent` actually binds to `AgentModule`. Kept separate from {@link Console}
+ * because this path boots the plugin stack, which `storybook dev` currently cannot start.
+ */
+export const ConsoleModule: Story = {
+  decorators: createDecorators({}),
+  args: {
+    layout: [[StoryRole.Agent], [StoryRole.Logging]],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Resolving the surface is the assertion: the prompt box only exists if the role bound.
+    await canvas.findByPlaceholderText('Ask the agent…', undefined, { timeout: 60_000 });
+  },
 };
