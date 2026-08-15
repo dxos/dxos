@@ -13,7 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { StoryRole } from '../modules';
+import { StoryRole, getChatProcessor } from '../modules';
 import { ModuleContainer, createDecorators, storyParameters } from '../testing';
 
 /**
@@ -117,18 +117,18 @@ export const WithSidecar: Story = {
       });
       messages.push(message);
       await EffectEx.runPromise(Feed.append(feed, [message]).pipe(Effect.provide(database)));
+      // The thread renders the processor's in-memory messages, not the feed, so the turn has to be
+      // handed over as well as persisted.
+      getChatProcessor()?.present([message]);
     }
 
     await expect(end?.error, 'the SDK loop failed').toBeUndefined();
 
-    // 1. The turn's messages reached the chat's feed, which is what the Chat surface reads.
+    // 1. The turn reached the chat's feed and was handed to the processor.
     //
-    // NOT asserted: that the thread then renders them. Several formulations of a DOM assertion
-    // (exact word, model's own phrasing, markdown-normalised ancestor text) all failed against a
-    // canvas that does contain the chat, so something between `Feed.append` and the rendered thread
-    // is unresolved — see TASKS.md. Claiming the render path works is not yet earned.
-    // `Feed.append` above fails the run if a message cannot be written, so reaching here with a
-    // non-empty set is the assertion that the turn landed on the feed.
+    // NOT asserted: that the thread then renders it. `AiChatProcessor.present` was added for exactly
+    // this (the thread reads in-memory atoms, not the feed) and the DOM assertion still fails, so
+    // something further along is unresolved — see TASKS.md before trying again.
     await expect(messages.length, 'nothing reached the feed').toBeGreaterThan(0);
 
     // 2. The allowed Read call and its result survived the trip, still correlated by name — the

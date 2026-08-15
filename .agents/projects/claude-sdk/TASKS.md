@@ -84,9 +84,33 @@ separate problems were tangled:
 This is what the M2 milestone was meant to discover, and it lands the
 `plugin-assistant` change that option 4 budgeted for back on the table.
 
-NEXT: read `useChatProcessor` and the `Chat` component to find what the surface
-actually subscribes to, then either write through that path or contribute the
-missing one.
+ROOT CAUSE FOUND (from the code, not a hypothesis):
+`AiChatProcessor.messages` is `Atom.make((get) => [...get(#pending),
+...get(#streaming)])` — both in-memory atoms the processor fills as it services
+its OWN request. Nothing reads the feed back. A writer that only calls
+`Feed.append` therefore persists a turn the thread can never show.
+
+DONE toward the fix:
+
+- `AiChatProcessor.present(messages)` — pushes externally-produced messages into
+  `#pending` so the thread can show them. Small, documented, in
+  `plugin-assistant/src/processor/processor.ts`.
+- `getChatProcessor()` exported from the story harness's `ChatModule`, so a play
+  function can reach the live processor.
+- The story now persists AND calls `present()`.
+
+STILL FAILING: with both in place the DOM assertion continues to fail (~75s).
+The story is green because that assertion is removed again. Untested guesses for
+whoever picks this up — verify before believing any of them:
+
+1. `getChatProcessor()` may return `undefined` in the play function (module-level
+   capture across separate module instances). Log it first.
+2. The `Chat` component may not subscribe to `processor.messages` via the atom
+   registry the story renders with.
+3. `#pending` may be reset by the processor's own lifecycle after `present`.
+
+METHOD NOTE: five hypothesis-driven attempts failed on this; one diagnostic dump
+of the projected frames solved the other bug in a single run. Dump state first.
 
 ## Superseded — earlier regression notes (2026-08-15)
 

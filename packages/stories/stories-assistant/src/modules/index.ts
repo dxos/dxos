@@ -70,3 +70,5 @@ export const moduleSurfaces: Surface.Definition[] = [
     component: TasksModule,
   }),
 ];
+
+export { getChatProcessor } from './ChatModule';
