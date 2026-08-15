@@ -5,7 +5,14 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { Commands, CreateObject, IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
+import {
+  Commands,
+  CreateObject,
+  IdentityCreated,
+  ObservabilityMappings,
+  OperationHandler,
+  UndoMappings,
+} from '#capabilities';
 import { meta } from '#meta';
 import { SpaceSchema } from '#types';
 
@@ -15,6 +22,7 @@ export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).p
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(AppCapability.schema(() => import('./schema.node'))),
+  Plugin.addModule(ObservabilityMappings),
   Plugin.addModule(UndoMappings),
   Plugin.addModule(IdentityCreated),
   Plugin.make,

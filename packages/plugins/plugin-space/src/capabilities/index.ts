@@ -93,10 +93,12 @@ export const SpaceState = Capability.lazyModule(
   },
   () => import('./state'),
 );
+export const ObservabilityMappings = AppCapability.observabilityMappings(() => import('./observability-mappings'), {
+  props: (options: SpaceSchema.SpacePluginOptions) => ({ observability: options.observability }),
+});
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
   provides: [SpaceOperationConfig],
   props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),
-    observability: options.observability,
   }),
 });

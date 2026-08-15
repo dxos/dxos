@@ -6,7 +6,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
@@ -34,15 +33,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOpera
         onTypeAdded.map((callback) => callback({ db, type, show: input.show })),
         { concurrency: 'unbounded' },
       );
-
-      yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-        name: 'space.type.add',
-        properties: {
-          spaceId: db.spaceId,
-          objectId: type.id,
-          typename: Type.getTypename(type),
-        },
-      });
 
       return { id: type.id, object: type };
     }),

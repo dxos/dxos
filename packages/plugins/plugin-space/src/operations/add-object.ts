@@ -8,7 +8,6 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { deepMapValues } from '@dxos/util';
 
 import { SpaceOperation } from '#types';
@@ -47,15 +46,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
         object,
         target: Database.isDatabase(target) ? undefined : target,
       }).pipe(Effect.provide(Database.layer(db)));
-
-      yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-        name: 'space.object.add',
-        properties: {
-          spaceId: db.spaceId,
-          objectId: object.id,
-          typename: Obj.getTypename(object),
-        },
-      });
 
       return {
         id: Obj.getURI(object),

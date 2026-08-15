@@ -30,13 +30,20 @@ export const OperationHandler = Capability.lazyModule(
   { provides: [Capabilities.OperationHandler] },
   () => import('./operation-handler'),
 );
+export const ObservabilityMappings = Capability.lazyModule(
+  'ObservabilityMappings',
+  {
+    provides: [Capabilities.ObservabilityMapping],
+    props: (options: SpaceSchema.SpacePluginOptions) => ({ observability: options.observability }),
+  },
+  () => import('./observability-mappings'),
+);
 export const UndoMappings = Capability.lazyModule(
   'UndoMappings',
   {
     provides: [Capabilities.UndoMapping, SpaceOperationConfig],
     props: (options: SpaceSchema.SpacePluginOptions) => ({
       createInvitationUrl: makeCreateInvitationUrl(options),
-      observability: options.observability,
     }),
   },
   () => import('./undo-mappings'),

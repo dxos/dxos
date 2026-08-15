@@ -9,7 +9,6 @@ import { SpaceCapabilities } from '#types';
 
 export type SpaceOperationConfig = {
   createInvitationUrl: (invitationCode: string) => string;
-  observability: boolean;
 };
 
 export const SpaceOperationConfig = Capability.makeSingleton<SpaceOperationConfig>()(

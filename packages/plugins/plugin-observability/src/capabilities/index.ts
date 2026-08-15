@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
@@ -26,6 +27,17 @@ export const ClientReady = Capability.lazyModule(
     activatesOn: ObservabilityCapabilities.ClientInitialized,
   },
   () => import('./client-ready'),
+);
+export const InvocationListener = Capability.lazyModule(
+  'InvocationListener',
+  {
+    requires: [Capabilities.OperationInvoker, Capabilities.ObservabilityMapping],
+    provides: [],
+    // Idle rather than Startup: contributed mappings are read live, so the listener only has to be
+    // running before the first user action, not before the plugins that register events.
+    activatesOn: ActivationEvents.Idle,
+  },
+  () => import('./invocation-listener'),
 );
 export const PrivacyNotice = Capability.lazyModule(
   'PrivacyNotice',

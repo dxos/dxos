@@ -111,16 +111,18 @@ changes what a model sees lives in the shared package or it is a bug.
         harness + `local-ai.test.ts`, `assistant-evals/skills.ts`, `functions-testing`) via
         `Ref.make(DatabaseSkill.make())`. They must assemble the _same_ skill production ships, or
         the evals stop testing what runs. Settle this before moving anything.
-- [ ] **Observability as a registered mapping, not a call.** `addObject` invokes
-      `ObservabilityOperation.SendEvent` directly, which is what binds a space verb to a plugin.
-      Do NOT fix this by pushing the operation definition down — the agreed design is the
-      `UndoMapping` shape: an observability plugin listens to the operation stream and fires an
-      event when the operation has one registered, exactly as undo derives its inverse. The
-      interception point already exists (`ProcessManagerPlugin` requires `Capabilities.UndoMapping` + `Capabilities.OperationInvoker`, so the invoker already consults a registry keyed by
-      operation). The payoff is portability: EDGE supplies an entirely different listener and the
-      operations themselves do not change. Open question first — whether the invoker consults
-      mappings on every invocation path or only app-side ones; if the latter, this trades one
-      asymmetry for another.
+- [x] **Observability as a registered mapping, not a call.** Done, in the `UndoMapping` shape:
+      `ObservabilityMapping` (operation, event name, properties derived from input/output) is
+      contributed through `Capabilities.ObservabilityMapping`, and plugin-observability's
+      `InvocationListener` consumes `invoker.invocations` and sends the event — the operation
+      definitions are untouched, so EDGE substitutes its own listener over the same stream. The
+      open question resolved itself: the listener is a *subscriber*, not an invoker change, so it
+      sees exactly the paths the invoker already publishes (successful invocations, not the
+      `_invokeCore` path undo replays on). The five space operations no longer import
+      plugin-observability, and `SpacePlugin`'s `observability` option now gates the registration
+      rather than one handler's send (`SpaceOperationConfig.observability` deleted).
+      - [ ] Follow-up: plugin-review's seven handlers and the two registry containers still send
+            directly. Same conversion, no new machinery.
 - [x] **plugin-studio navigation regression** — closed. `getArtifactsPath` was removed with
       `addObject`'s navigation output, and unlike the type-section cases `findTypeSectionPath` could
       not replace it: studio's url binding ends in the studio segment, not a typename. plugin-studio

@@ -3446,7 +3446,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@8.1.1)
+        version: 4.4.3(supports-color@5.5.0)
       domain-browser:
         specifier: 'catalog:'
         version: 4.22.0
@@ -12375,6 +12375,9 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
     devDependencies:
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/compute/operation
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing

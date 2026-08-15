@@ -16,11 +16,10 @@ import { SpaceOperationConfig } from '../operations/helpers';
 
 type UndoMappingsOptions = {
   createInvitationUrl: (invitationCode: string) => string;
-  observability?: boolean;
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ createInvitationUrl, observability }: UndoMappingsOptions) {
+  Effect.fnUntraced(function* ({ createInvitationUrl }: UndoMappingsOptions) {
     return [
       Capability.contribute(Capabilities.UndoMapping, [
         UndoMapping.make({
@@ -54,10 +53,7 @@ export default Capability.makeModule(
           },
         }),
       ]),
-      Capability.contribute(SpaceOperationConfig, {
-        createInvitationUrl,
-        observability: observability ?? false,
-      }),
+      Capability.contribute(SpaceOperationConfig, { createInvitationUrl }),
     ];
   }),
 );
