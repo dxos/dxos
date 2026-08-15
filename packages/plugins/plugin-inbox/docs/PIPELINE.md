@@ -25,7 +25,7 @@ surface calls (contract capability).
 `sync/mail-sync.ts` is a provider-agnostic harness owning everything not provider-specific:
 binding/mailbox/feed loads, window resolution, the dedup → cap → process → commit pipeline, progress,
 cancellation and stats. plugin-google and plugin-jmap each contribute only a layer.
-`operations/scan/scan-mailbox.ts` resolves contributed processors into a run order from the `after`
+`operations/analyze/analyze-mailbox.ts` resolves contributed processors into a run order from the `after`
 edges each declares, and plugin-inbox contributes its own four through the same seam — so there is no
 privileged built-in path to drift from the contributed one.
 
@@ -89,7 +89,7 @@ Mailbox
     │       └── » commitPageSize ⇒ Cursor.commit
     │
     └── SCAN — READS the feed, one cursor per processor
-        └── ScanMailbox                      topology from MailboxProcessor contributions
+        └── AnalyzeMailbox                      topology from MailboxProcessor contributions
             ├── contacts       [inbox]       no cursor
             ├── subscriptions  [inbox]       no cursor
             ├── classify       [inbox]       after: contacts
@@ -111,6 +111,23 @@ Two things this makes visible:
   `Capability.Service` and invokes `ExtractMessage`, neither available off-host under edge compute.
   Moving it to a processor that runs where those services exist is exactly what Scan is for.
 
+## Operations
+
+Two phases:
+
+```
+Sync => ConnectorSpec.Connector => connector.sync.operation
+Scan => InboxOperation.AnalyzeMailbox => MailboxProcessor
+```
+
+### Sync
+
+- Single pipeline with deterministic, fast (non-LLM) stages.
+
+### Scan
+
+- Multiple processors, each with cursor
+
 ## Decisions
 
 **D1 — Extension is a capability contribution, not an Effect service.** BUILT; see
@@ -131,7 +148,7 @@ is absent); duplicate ids keep the first (ids are cursor tags); a cycle excludes
 blocks, every member naming the whole cycle. Ties resolve to contribution order, since a topology that
 reshuffled between runs would make cursor behaviour irreproducible.
 
-> `ScanMailbox` declares `Capability.Service`, which the operation runtime provides — but resolves
+> `AnalyzeMailbox` declares `Capability.Service`, which the operation runtime provides — but resolves
 > through the `ServiceResolver`, NOT the caller's Effect context. A test cannot supply it with
 > `Effect.provideService`; it must use `AssistantTestLayer`'s `extraServices`.
 
@@ -171,7 +188,7 @@ the host" sounds:
 | `operations/topology.ts`          | generic — knows only `{ id, after }`                         |
 | `operations/precondition.ts`      | generic — knows only `Cause`s                                |
 | `Cursor` itself                   | generic — `target` is already an untyped association anchor  |
-| the **host** (`ScanMailbox`)      | mailbox-typed — input, progress key, progress label, logging |
+| the **host** (`AnalyzeMailbox`)   | mailbox-typed — input, progress key, progress label, logging |
 | the **seam** (`MailboxProcessor`) | mailbox-typed — subject param and `tier`                     |
 
 ### The subject is the feed's OWNER, not the feed

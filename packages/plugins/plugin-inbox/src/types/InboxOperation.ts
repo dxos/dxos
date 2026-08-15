@@ -318,20 +318,21 @@ const createProgressKey = (mailbox: Mailbox.Mailbox, suffix: string) =>
   Obj.getURI(mailbox, { prefer: 'absolute' }).toString() + suffix;
 
 /**
- * Progress-registry key for a mailbox's fact-analysis monitor.
+ * Progress-registry key for a mailbox's fact-extraction monitor.
  *
  * The operation moved to plugin-brain, but the key stays here with its siblings: it is derived from
  * the mailbox URI, and every monitor key on a mailbox must be minted the same way or the producer and
- * the article compute different names and no meter appears.
+ * the article compute different names and no meter appears. Named for the facts it extracts rather
+ * than its tier, since the cascade that runs it is now {@link AnalyzeMailbox}.
  */
-export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#analyze');
+export const createFactsProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#facts');
 
 /** Progress-registry key for a mailbox's correspondent-extraction monitor ({@link ExtractCorrespondents}). */
 export const createCorrespondentsProgressKey = (mailbox: Mailbox.Mailbox) =>
   createProgressKey(mailbox, '#correspondents');
 
-/** Progress-registry key for a mailbox's pipeline-cascade monitor ({@link ScanMailbox}). */
-export const createScanProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#scan');
+/** Progress-registry key for a mailbox's pipeline-cascade monitor ({@link AnalyzeMailbox}). */
+export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#analyze');
 
 /** Progress-registry key for a mailbox's summarization monitor ({@link SummarizeMailbox}). */
 export const createSummarizeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#summarize');
@@ -381,7 +382,7 @@ export const SummarizeMailbox = Operation.make({
 }).pipe(Operation.idempotent);
 
 /**
- * The cost classes {@link ScanMailbox} runs. Each tier's output gates the next,
+ * The cost classes {@link AnalyzeMailbox} runs. Each tier's output gates the next,
  * so the ordering is the contract — not a convenience:
  *
  * - `deterministic` — no LLM, no spend: contacts (the known-sender allow-list) and subscriptions.
@@ -401,12 +402,12 @@ export type MailboxTier = Schema.Schema.Type<typeof MailboxTier>;
  * A tier SELECTS which processors run, never their order — that comes from the `after` edges each
  * processor declares, so a caller listing tiers backwards still gets the cascade order.
  */
-export const DEFAULT_SCAN_MAILBOX_TIERS: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize'];
+export const DEFAULT_ANALYZE_MAILBOX_TIERS: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize'];
 
-export const ScanMailbox = Operation.make({
+export const AnalyzeMailbox = Operation.make({
   meta: {
-    key: makeKey('scanMailbox'),
-    name: 'Scan Mailbox',
+    key: makeKey('analyzeMailbox'),
+    name: 'Analyze Mailbox',
     description:
       'Runs the mailbox pipelines in cascade order — deterministic extraction, then cheap LLM classification, then optional per-message analysis.',
     icon: 'ph--stack-simple--regular',

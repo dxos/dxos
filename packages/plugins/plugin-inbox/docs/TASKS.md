@@ -312,10 +312,10 @@ this repo does not unit-test. One entry is worth acting on rather than dismissin
 
 - [x] **`Enrich` was four unrelated things** — two of them primary buttons on adjacent toolbars. The
       mailbox one was not enrichment at all: it runs the extract → classify → summarize cascade, which
-      creates objects rather than filling gaps. Renamed: - `InboxOperation.EnrichMailbox` → `ScanMailbox` (op key `enrichMailbox` → `scanMailbox`,
-      `createEnrichProgressKey` → `createScanProgressKey`, `#enrich` → `#scan`,
-      `DEFAULT_ENRICH_MAILBOX_TIERS` → `DEFAULT_SCAN_MAILBOX_TIERS`, files under `operations/scan/`,
-      template `org.dxos.routine.scanMailbox`). **Not** `AnalyzeMailbox` — that name is taken by the
+      creates objects rather than filling gaps. Renamed: - `InboxOperation.EnrichMailbox` → `AnalyzeMailbox` (op key `enrichMailbox` → `analyzeMailbox`,
+      `createEnrichProgressKey` → `createAnalyzeProgressKey`, `#enrich` → `#scan`,
+      `DEFAULT_ENRICH_MAILBOX_TIERS` → `DEFAULT_ANALYZE_MAILBOX_TIERS`, files under `operations/analyze/`,
+      template `org.dxos.routine.analyzeMailbox`). **Not** `AnalyzeMailbox` — that name is taken by the
       cascade's own third tier. Safe to rename the op key because its changeset is still pending, so
       no released routine references the old DXN. - CRM record + sender actions → `Research`, matching the `ResearchPerson`/`ResearchOrganization`
       operations they actually invoke, and signalling the outbound web/LLM run that `Enrich` hid. - `Enrich images` → `Find images`. `CrmOperation.EnrichImages` keeps its id — that one really is
@@ -469,7 +469,7 @@ generalize now with mailbox as instance #1.
       a property of the stage, it is whatever the deployment did not contribute, and `Database`/`Trace`
       cannot be missing (the cascade could not have spawned). Matched structurally with a message
       fallback, not by class — the error is flattened crossing the invocation boundary, which is why
-      `ai-gate.ts` was already written that way. 7 tests; the workaround at `scan-mailbox.test.ts:166`
+      `ai-gate.ts` was already written that way. 7 tests; the workaround at `analyze-mailbox.test.ts:166`
       is gone and that test now exercises BOTH precondition flavours in one run, each tier naming its
       own reason instead of inheriting the first one's.
 - [x] **Tag `AnalyzeMailbox`'s cursor with an explicit id** — `ANALYZE_CURSOR_KEY_ID`, via a new
@@ -481,7 +481,7 @@ generalize now with mailbox as instance #1.
       the two tests that cover it, so neither is vacuous. `analyze-mailbox.test.ts` seeds untagged
       cursors and still passes, which exercises the migration path in situ. Delete the adoption branch
       once no untagged cursors remain in the wild.
-- [x] **`MailboxProcessor` capability + topology resolution** — `ScanMailbox` now reads its passes
+- [x] **`MailboxProcessor` capability + topology resolution** — `AnalyzeMailbox` now reads its passes
       from `InboxCapabilities.MailboxProcessor` and orders them by the `after` edges each declares.
       plugin-inbox contributes its own five through the SAME seam (`capabilities/mailbox-processors.ts`),
       so there is no privileged built-in path to drift from the contributed one. - `operations/topology.ts` is pure and ECHO-free: unknown `after` ids ignored (optional
@@ -548,7 +548,7 @@ generalize now with mailbox as instance #1.
 - [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6) — WEAKER than first written,
       and NEEDS A DECISION BEFORE ANY MORE CODE. - DONE (2026-08-14): the cursor layer. `findFeedCursor`/`findOrCreateFeedCursor` now take any
       `FeedAnnotation`-carrying owner and resolve the feed via `getFeedRef`, so one of the three
-      mailbox-typed couplings is gone. Tested against a Calendar owner. - STILL MAILBOX-TYPED: the `MailboxProcessor` subject and `tier`, and `ScanMailbox`'s input and
+      mailbox-typed couplings is gone. Tested against a Calendar owner. - STILL MAILBOX-TYPED: the `MailboxProcessor` subject and `tier`, and `AnalyzeMailbox`'s input and
       progress key. Already generic: `topology.ts` (`{id, after}` only), `precondition.ts` (`Cause`s
       only), and a feed cursor's `target`. - THE DECISION: `Ref.byAnnotation` was dropped in review on #12575, so a generic subject CANNOT
       be validated at the operation boundary — it must be `Ref.Ref(Obj.Unknown)` plus a runtime guard

@@ -101,7 +101,7 @@ export type MailboxProcessorOptions = {
 
 /**
  * One cursored pass over a mailbox feed, contributed by whichever plugin owns it — a node in the
- * topology {@link import('./InboxOperation').ScanMailbox} resolves and runs.
+ * topology {@link import('./InboxOperation').AnalyzeMailbox} resolves and runs.
  *
  * This is the seam that keeps the cascade open: a plugin owning a pass contributes it here rather
  * than plugin-inbox enumerating every pass it must know about. It is deliberately NOT the same thing

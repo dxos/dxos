@@ -17,29 +17,29 @@ import * as Mailbox from '../types/Mailbox';
 const DEFAULT_CRON = '0 6 * * *';
 
 /**
- * "Scan Mailbox" automation template: a routine binding {@link InboxOperation.ScanMailbox}
+ * "Analyze Mailbox" automation template: a routine binding {@link InboxOperation.AnalyzeMailbox}
  * directly (kind: runnable) on a timer trigger — no model sits between the trigger and the cascade.
  *
- * The unattended counterpart to the mailbox toolbar's Scan action. Every tier the cascade spawns
+ * The unattended counterpart to the mailbox toolbar's Analyze action. Every tier the cascade spawns
  * keeps its own durable cursor, so a firing catches up on whatever arrived since the last one and
  * an extra firing costs nothing; the LLM tier stays batch-capped per run either way.
  */
-export const scanMailbox: RoutineCapabilities.Template = {
-  id: 'org.dxos.routine.scanMailbox',
-  label: 'Scan Mailbox',
+export const analyzeMailbox: RoutineCapabilities.Template = {
+  id: 'org.dxos.routine.analyzeMailbox',
+  label: 'Analyze Mailbox',
   icon: 'ph--stack-simple--regular',
   appliesTo: (subject) => subject != null && Obj.instanceOf(Mailbox.Mailbox, subject),
   scaffold: ({ name, subject }) =>
     Effect.gen(function* () {
       invariant(
         subject != null && Obj.instanceOf(Mailbox.Mailbox, subject),
-        'Scan Mailbox template requires a Mailbox subject.',
+        'Analyze Mailbox template requires a Mailbox subject.',
       );
       const mailbox = subject;
 
       return makeRoutine({
-        name: name ?? `Scan — ${mailbox.name ?? 'Mailbox'}`,
-        spec: { kind: 'runnable', runnable: Ref.fromURI(InboxOperation.ScanMailbox.meta.key) },
+        name: name ?? `Analyze — ${mailbox.name ?? 'Mailbox'}`,
+        spec: { kind: 'runnable', runnable: Ref.fromURI(InboxOperation.AnalyzeMailbox.meta.key) },
         trigger: Trigger.make({
           enabled: false,
           spec: Trigger.specTimer(DEFAULT_CRON),

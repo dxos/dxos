@@ -246,10 +246,10 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         // Ollama drives the story's LLM tiers, so `strict: false` skips the structured-output pass
         // local models never honor.
         id: 'scan',
-        label: 'InboxOperation.ScanMailbox',
+        label: 'InboxOperation.AnalyzeMailbox',
         run: () =>
           invoker.invokePromise(
-            InboxOperation.ScanMailbox,
+            InboxOperation.AnalyzeMailbox,
             { mailbox: Ref.make(mailbox), me: USER_EMAILS, model: OLLAMA_MODEL, strict: false },
             { spaceId: space.id },
           ),

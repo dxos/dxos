@@ -53,12 +53,12 @@ type StageResult = {
  * adds no pipeline logic — it decides what runs, in what order, and what to do when a stage fails.
  * A failure invalidates only that processor's DESCENDANTS in the topology; independent branches run.
  */
-const handler = InboxOperation.ScanMailbox.pipe(
+const handler = InboxOperation.AnalyzeMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({
       mailbox: mailboxRef,
       me = [],
-      tiers = InboxOperation.DEFAULT_SCAN_MAILBOX_TIERS,
+      tiers = InboxOperation.DEFAULT_ANALYZE_MAILBOX_TIERS,
       batchLimit,
       model,
       provider,
@@ -69,16 +69,23 @@ const handler = InboxOperation.ScanMailbox.pipe(
       const signal = yield* Cancellation.signal;
 
       const traceWriter = yield* Trace.TraceService;
-      const progressKey = InboxOperation.createScanProgressKey(mailbox);
+      const progressKey = InboxOperation.createAnalyzeProgressKey(mailbox);
       // Both counters are held across updates: a meter reads the LATEST status, so emitting an
       // undefined total on a current-only tick would blank the denominator mid-cascade.
       let current = 0;
       let total: number | undefined;
+      // Named for the PHASE, not just the mailbox: sync runs against the same mailbox and its meter
+      // reads the same field, so a bare mailbox name rendered two unrelated runs identically. The
+      // processor is appended rather than substituted, so the label does not flicker between the two
+      // on ticks that carry no processor.
+      const analyzeLabel = `Analyze — ${mailbox.name ?? 'Mailbox'}`;
+      let processor: string | undefined;
       const reportStatus = (patch: { message?: string; current?: number; total?: number } = {}) => {
         current = patch.current ?? current;
         total = patch.total ?? total;
+        processor = patch.message ?? processor;
         traceWriter.write(Trace.StatusUpdate, {
-          message: patch.message ?? mailbox.name ?? 'Mailbox',
+          message: processor ? `${analyzeLabel} · ${processor}` : analyzeLabel,
           progress: { key: progressKey, current, total },
         });
       };
