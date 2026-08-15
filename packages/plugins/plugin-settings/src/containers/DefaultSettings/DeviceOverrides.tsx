@@ -53,7 +53,7 @@ export const DeviceOverrides = ({ subject }: DeviceOverridesProps) => {
   const pinned = overrides[subject.prefix] ?? {};
 
   return (
-    <Form.Section title={t('device overrides label')} description={t('device overrides description')}>
+    <Form.Section title={t('device-overrides.label')} description={t('device-overrides.description')}>
       {fields.map(({ name, label }) => (
         <Form.Row key={name} label={label}>
           <Input.Root>

@@ -18,7 +18,7 @@ export const translations = [
         'source.label': 'Source',
         'resources.label': 'Resources',
         'availability.label': 'Availability',
-        'device override.label': 'Only on this device',
+        'device-override.label': 'Only on this device',
         'plugin-registry.label': 'Plugins',
         'plugin-settings.label': 'Plugin Settings',
         'bundled-plugins.label': 'Bundled',

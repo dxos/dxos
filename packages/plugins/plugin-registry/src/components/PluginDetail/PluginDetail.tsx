@@ -206,7 +206,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                         checked={deviceOverride}
                         onCheckedChange={onDeviceOverrideChange}
                       />
-                      <Input.Label classNames='text-sm text-description'>{t('device override.label')}</Input.Label>
+                      <Input.Label classNames='text-sm text-description'>{t('device-override.label')}</Input.Label>
                     </Input.Root>
                   </div>
                 </Section.Body>
