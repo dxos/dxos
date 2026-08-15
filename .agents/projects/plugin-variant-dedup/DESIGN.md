@@ -247,27 +247,51 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
    `schema.workerd.ts` files remain.
 2. ~~inbox's lazy→inline workerd conversion~~ — resolved; inbox annotates its canonical barrel
    and uses `overrides.{node,workerd}.ts` for the schema-list divergence.
-3. **Per-maker `environments` defaults — open, and the next piece of work.** `moduleMaker` now
-   accepts `defaults.environments` (mirroring how it already defaults `activatesOn`), but no
-   maker declares one yet. The annotation audit across the converted plugins shows the
-   inconsistency is real and concentrated in exactly the families that are headless-safe by
-   construction:
+3. ~~Per-maker `environments` defaults~~ — **done** (Josiah, 2026-08-15), and it subsumed the
+   global-default question. `AppCapability.environmentDefaults` declares the conditions once per
+   family; the makers spread it into the specs they build and `dx-plugin gen` resolves the same
+   literal statically, so the two cannot drift. 58 annotations that only restated their family's
+   default are gone, and a genuine exception stays a one-line `environments` at the exception
+   (plugin-transcription's `appGraphBuilder` renders a `<Mic/>` inline, so it declares `[]`).
 
-   | maker                        | n   | distribution                                                  |
-   | ---------------------------- | --- | ------------------------------------------------------------- |
-   | `surface`                    | 71  | 100% unannotated                                              |
-   | `pluginAsset`                | 27  | 100% unannotated                                              |
-   | `reactRoot` / `reactContext` | 11  | 100% unannotated                                              |
-   | `commands`                   | 5   | 100% `['node']`                                               |
-   | `schema`                     | 52  | 48% unannotated / 46% `['node','workerd']` / 6% `['workerd']` |
-   | `operationHandler`           | 60  | 57% unannotated / 35% `['node','workerd']` / 8% other         |
-   | `skillDefinition`            | 26  | 42% unannotated / 38% `['node']` / 19% other                  |
+   Resolution walks the barrel's namespace imports to the declaring module via that package's
+   `exports`, preferring `source` and falling back to `import` — so it works in-workspace and
+   against a published package. A maker module opts in simply by exporting `environmentDefaults`,
+   which is what makes this work for out-of-repo plugin authors too.
 
-   The UI-bound families are unanimous, so their (absent) default is uncontroversial. `schema`,
-   `operationHandler` and `skillDefinition` split roughly 50/50 — that is authoring drift, not
-   design intent. Defaulting those three to `['node','workerd']` would change behavior for ~60
-   currently-unannotated modules; it is only safe to attempt now that the guards trace every
-   condition a plugin produces.
+   Defaults, from the annotation evidence: headless-by-construction families (`schema`,
+   `operationHandler`, `appGraphBuilder`, `settings`, `translations`, `skillDefinition`,
+   `undoMappings`, `commentConfig`, `textContent`, `anchorSort`, `navigationResolver`) →
+   `['node','workerd']`; `commands` and `layerSpec` → `['node']` (every instance in the repo is
+   node-side — evidence, not intrinsic, so widening is a one-line change); UI-bound families
+   (`surface`, `reactRoot`, `reactContext`, `pluginAsset`, `navigationHandler`) → `[]`.
+
+4. **Tag membership was an artifact, now fixed.** The `composer-plugin` tag had gone to exactly
+   the 36 plugins that already carried hand-written variants — a record of what someone had
+   written, not of what any host needs. It was already wrong: the `dx` CLI depends on
+   plugin-google and plugin-jmap, both untagged, so their `#capabilities` stayed unconditioned
+   and the CLI resolved the full browser barrel.
+
+   Every plugin with a capabilities barrel is now tagged and guarded (94). The cost is low: a
+   plugin whose modules are all UI families stubs every module out, so its barrel is empty and
+   its guard passes with nothing included. A plugin that produces no conditions at all carries no
+   guard — tracing it would assert a property of a bundle no headless host loads.
+
+5. **What the widened defaults caught.** Eleven real leaks, every one pre-existing on main and
+   invisible until the guards traced both condition sets:
+
+   - React values parked in `types/` — plugin-presenter's `PresenterContext`, plugin-debug's
+     `DebugContext` (dead, deleted), plugin-support's `Tour.Context`. `types/` is reachable from
+     the node barrel, so a live `createContext` there pulls React into a headless bundle.
+   - Root-barrel imports for React-free values — `@dxos/react-ui-board`,
+     `@dxos/react-ui-canvas{,-editor}` gained `./types` entries (matching
+     `@dxos/react-ui-attention/types`) for schema that never needed React; `@dxos/shell` gained
+     `./translations` for the same reason.
+   - Surface ids living in component modules — plugin-registry's `LOAD_PLUGIN_DIALOG` moved to
+     its React-free `types.ts`; the app-graph builder needed only the id, not the dialog.
+   - plugin-commerce and plugin-onboarding imported `./capabilities` relatively rather than
+     `#capabilities`, bypassing the condition map entirely so every runtime got the browser
+     barrel.
 
 ## Artifacts
 
