@@ -247,6 +247,7 @@ export const translations = [
         'settings-panel.label': 'Open settings',
         'related-actions.label': 'Related Actions',
         'related-objects.label': 'Related Objects',
+        'type-filter.label': 'Filter by type',
         'row-details-no-selection.label': 'No objects selected',
         'companion-related.label': 'Related',
         'companion-selected-objects.label': 'Selected',
