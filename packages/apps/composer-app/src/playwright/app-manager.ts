@@ -512,6 +512,51 @@ export class AppManager {
     return this.page.getByTestId('registrySettings.devPluginUrl');
   }
 
+  /**
+   * The "use a different plugin set on this device" switch in the registry's settings panel. Absent
+   * until the settings space opens, which is what backs the device-synced settings store.
+   */
+  getPluginScopeToggle(): Locator {
+    return this.page.getByTestId('registrySettings.pluginScope');
+  }
+
+  /**
+   * Detaches this device's plugin set from the account. Leaving is lossless and immediate; only
+   * rejoining prompts, so this path has no confirmation to dismiss.
+   */
+  async usePluginSetForThisDeviceOnly(): Promise<void> {
+    const toggle = this.getPluginScopeToggle();
+    await expect(toggle).toBeVisible();
+    await expect(toggle).not.toBeChecked();
+    await toggle.click();
+    await expect(toggle).toBeChecked();
+  }
+
+  async openPluginRegistry(): Promise<void> {
+    // Direct-navigate to the registry workspace rather than clicking the
+    // pinned tree node. The click path requires the layout/settings
+    // operation handlers to be fully registered before the click fires; in
+    // firefox that initialisation occasionally lags behind first paint, so
+    // the click is silently swallowed and the test then times out waiting
+    // for the registry tree to render. URL-driven navigation has no such
+    // dependency on operation-handler registration.
+    await this.page.goto(workspaceUrl(REGISTRY_WORKSPACE));
+    await this.page.getByTestId('pluginRegistry.recommended').waitFor({ state: 'visible' });
+  }
+
+  async openRegistryCategory(category: string): Promise<void> {
+    // Clicked rather than deep-linked: a cold load of `<workspace>/category/<name>` restores the
+    // workspace but not the category plank, so the list never opens. The category's tree node is
+    // present either way, so the open list is the only thing worth waiting on.
+    await this.openPluginRegistry();
+    await this.page.getByTestId(`pluginRegistry.${category}`).getByRole('button').first().click();
+    await expect(this.page.locator('[data-testid^="pluginList."]').first()).toBeVisible();
+  }
+
+  getPluginToggle(plugin: string): Locator {
+    return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
+  }
+
   async changeStorageVersionInMetadata(version: number): Promise<void> {
     await this.page.evaluate(
       ({ version }) => {
