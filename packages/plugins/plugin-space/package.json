@@ -222,6 +222,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-dashboard": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",

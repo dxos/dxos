@@ -1,15 +1,28 @@
 # plugin-inbox — Tasks
 
-_Resume: **#12555 MERGED. #12574 and #12575 (the two ECHO changes) MERGED.** Current PR is **#12577**
-(green, `CLEAN`, not auto-merged — awaiting a call on whether to land it). The 27-step plan in
-[`TESTING.md`](TESTING.md) HAS now been run, against a live Gmail-synced mailbox over the agent debug
-port: 12 passed, 2 failed and are fixed, 1 was a stale expectation in the plan itself, 12 yielded no
-verdict. Threadless messages now reach the list, and
-the cursor layer is no longer mailbox-typed. **D6 is deliberately NOT built** — `Ref.byAnnotation` was
-dropped in review on #12575, so a generic subject loses boundary validation, and there is still no
-second cursored consumer; see the D6 entry in Phase 5 for the recommendation. Unblocked and unclaimed:
-`ExtractCorrespondents`'s cursor, the `Mailbox.ts` util split, `useContactLookup`, the `useBlobUrl`
-coverage gap, and Phase 4 summarization._
+_Resume: **#12555, #12574, #12575 and #12577 MERGED.** Current PR is **#12605** (provider operations
+out of plugin-inbox) — **`test` is RED and undiagnosed**; everything after it sits unpushed on the
+same branch and needs either a retitle or its own PR.
+
+Landed since: the twelve Google/JMAP operation definitions moved to `@dxos/plugin-google/GoogleOperation`
+and `@dxos/plugin-jmap/JmapOperation`, so plugin-inbox no longer declares operations it does not
+implement; the Inbox / Inbox (Send) / Calendar skills take their tools from the connectors a deployment
+actually installs, fixing a JMAP-only deployment advertising Gmail tools; `DraftEvent.isDraft` asks for
+any foreign key rather than Google's; **`ScanMailbox` is now `AnalyzeMailbox`** (op key, progress key
+`#analyze`, `operations/analyze/`, `templates/analyze-mailbox.ts`, toolbar label "Analyze"), and its
+cascade runner calls its plan entries _passes_ rather than overloading "stage"; the trigger dispatcher
+polls once a minute instead of once a second and refuses a cron finer than its own tick; the Research
+action now runs the agent that fills the profile skeleton it creates.
+
+**D6 is deliberately NOT built** — `Ref.byAnnotation` was dropped in review on #12575, so a generic
+subject loses boundary validation, and there is still no second cursored consumer; PIPELINE.md now
+records this as SETTLED rather than open.
+
+Unresolved: the mailbox empty-panel flicker's root cause is still unknown (`Deferred` masks it, and the
+`!feed` fix committed in `f107a7314c` did not work); the CRM agent wiring has never been observed
+running, and binds skills by querying `Skill.Skill` objects in the space — silently skipping if none
+match. Unblocked and unclaimed: `ExtractCorrespondents`'s cursor, the `Mailbox.ts` util split,
+`useContactLookup`, the `useBlobUrl` coverage gap, and Phase 4 summarization._
 
 Registry project: **`mailbox-pipeline`** (renamed from `inbox-surface` 2026-08-14 — the work outgrew
 the name; it is now the pipeline architecture as much as the surface over it).
@@ -312,12 +325,16 @@ this repo does not unit-test. One entry is worth acting on rather than dismissin
 
 - [x] **`Enrich` was four unrelated things** — two of them primary buttons on adjacent toolbars. The
       mailbox one was not enrichment at all: it runs the extract → classify → summarize cascade, which
-      creates objects rather than filling gaps. Renamed: - `InboxOperation.EnrichMailbox` → `AnalyzeMailbox` (op key `enrichMailbox` → `analyzeMailbox`,
-      `createEnrichProgressKey` → `createAnalyzeProgressKey`, `#enrich` → `#scan`,
-      `DEFAULT_ENRICH_MAILBOX_TIERS` → `DEFAULT_ANALYZE_MAILBOX_TIERS`, files under `operations/analyze/`,
-      template `org.dxos.routine.analyzeMailbox`). **Not** `AnalyzeMailbox` — that name is taken by the
-      cascade's own third tier. Safe to rename the op key because its changeset is still pending, so
-      no released routine references the old DXN. - CRM record + sender actions → `Research`, matching the `ResearchPerson`/`ResearchOrganization`
+      creates objects rather than filling gaps. Renamed: - `InboxOperation.EnrichMailbox` → `ScanMailbox`, and then **→ `AnalyzeMailbox` on 2026-08-15**
+      (final state: op key `analyzeMailbox`, `createAnalyzeProgressKey` → `#analyze`,
+      `DEFAULT_ANALYZE_MAILBOX_TIERS`, files under `operations/analyze/`, template
+      `org.dxos.routine.analyzeMailbox`, toolbar label "Analyze"). `Scan` was chosen first precisely
+      to avoid `AnalyzeMailbox`, which the cascade's own third tier already used — the second rename
+      accepted that collision deliberately, taking `#analyze` for the cascade and moving the brain
+      fact pass to `createFactsProgressKey` → `#facts`. Processor ids and `MailboxTier` values were
+      NOT renamed: an id doubles as its feed cursor tag, and tiers appear in persisted routine input.
+      Safe to rename the op key because its changeset is still pending, so no released routine
+      references the old DXN. - CRM record + sender actions → `Research`, matching the `ResearchPerson`/`ResearchOrganization`
       operations they actually invoke, and signalling the outbound web/LLM run that `Enrich` hid. - `Enrich images` → `Find images`. `CrmOperation.EnrichImages` keeps its id — that one really is
       enrichment. - Deleted the dead `view-mode-enriched.menu` key: labels derive from `VIEW_MODES`
       (`html`/`markdown`/`plain`), so nothing could ever resolve it.
@@ -395,25 +412,77 @@ server-assigned id.
 
 ---
 
-## Enhance pipeline: compose it from the existing stages (tracked 2026-08-14)
+## Analyze pipeline: compose it from the existing stages (tracked 2026-08-14)
 
-_Tracked verbatim from the user: "use created stages for enhance pipeline". The stages exist; what
-"enhance" names does not — see the open question below before building anything._
+_"Enhance" meant the SECOND PHASE, settled 2026-08-15: it is now `AnalyzeMailbox`, and the naming
+question below is closed._
 
 ### Tasks
 
-- [ ] **Assemble the enhance pipeline out of the stages already written**, rather than new ad-hoc
+- [ ] **Assemble the Analyze cascade out of the stages already written**, rather than new ad-hoc
       logic. What exists today: `pipeline-email`'s `summarizeStage`, `extractContactsStage`,
       `statsStage` and `extractFactsStage`, assembled by `EmailPipeline.run`
       ([`pipeline.ts`](../../../core/compute/pipeline-email/src/pipeline.ts)); plugin-inbox's own
       `on-arrival-extractors` stage ([`on-arrival.ts`](../src/util/on-arrival.ts)); and the
-      `EmailFactPipeline` / topics variants alongside them.
-- [ ] **OPEN QUESTION — name the target.** There is no "enhance" pipeline, stage, or operation in the
-      repo today (`rg -i enhance` over `packages/` finds nothing relevant), so this is either a new
-      composition to be defined or another name for the Phase 2 enrichment path
-      (`ResearchPerson`/`ResearchOrganization` + `EnrichImages`). Settle which before scoping; the
-      answer decides whether this belongs under Phase 2 or as its own processor in the Phase 5
-      topology.
+      `EmailFactPipeline` / topics variants alongside them. Note PIPELINE.md's count: only six of the
+      twelve pipelines have an internal stage chain at all, so this is as much about giving the plain
+      loops one as about reusing what exists.
+
+---
+
+## Tracked 2026-08-15
+
+Raised while driving the live mailbox. Grouped by owner, since half of these are not plugin-inbox's.
+
+### plugin-inbox
+
+- [ ] **Analyze icon → sparkle, via `SystemIconButton`.** The toolbar action uses
+      `ph--stack-simple--regular` (and `ph--stop--regular` while running); plugin-crm's Research
+      already uses sparkle for the same "run AI over this subject" meaning. Promote it to the
+      `SystemIconButton` primitive and apply it wherever an AI/agent action is offered — today each
+      action sets a raw `icon` string in its graph properties, so nothing enforces the convention.
+- [ ] **Sync message tags back to Gmail (the P2 deferred in Phase 1 DECIDED).** Tag changes are
+      local-only; a Gmail sync restores an archived message. `system-tags.ts` maps a Gmail label id →
+      canonical `SystemTag` on READ, and its own doc notes some labels are read-only concepts (there
+      is no archive label — archive is derived as "not in INBOX"). The write path does not exist.
+      Scope: which tags are writable (archive = `INBOX` off → `labels.modify`; starred → `STARRED`;
+      user tags need Gmail labels resolved by name), where it lives (Gmail-specific, so plugin-google
+      through a seam plugin-inbox owns, mirroring `MailSendOperation`; JMAP needs the same seam with
+      roles rather than labels), conflict handling between local and remote edits, and its own notion
+      of "not yet pushed" — the tag index is space-side while messages are feed-side. The
+      `gmail.modify` scope is already requested, so no OAuth change.
+
+### compute-runtime — filed as [#12608](https://github.com/dxos/dxos/issues/12608) (dmaretskyi)
+
+- [ ] **Bound the feed-trigger query by its cursor.** `trigger-dispatcher.ts:645` scans the whole feed
+      every tick (`Filter.everything()`, then cursor-filtered in JS — the existing `TODO(dmaretskyi)`).
+      Measured on a live 538-message mailbox: ~1069ms per scan, 924ms of it one unbroken main-thread
+      block, ~23% of the main thread sustained on an idle settings page. Polling once a minute made it
+      60× rarer, not cheaper. Related: `invokeScheduledTriggers` defaults to
+      `['timer','feed','subscription']`, but only `timer` needs a wall clock.
+
+### plugin-space / react-ui
+
+- [ ] **Type filter for Related Objects.** The Related Objects masonry mixes every related type in one
+      list; narrow it by type.
+- [ ] **Object avatars in cards.** STARTED: `ObjectAvatar` (react-ui-card) resolves picture → initials
+      → type glyph for any object, and `TypeArticle`'s tile uses it. Not yet applied to
+      `RecordArticle`'s own header, and has no story covering the three-way fallback.
+- [ ] **Icons fall back to the dashed placeholder for lazily-activated types.** A Routine and a
+      Markdown document both render `ph--circle-dashed--regular` in the navtree and plank header. Both
+      types DO declare `IconAnnotation` (`ph--lightning--regular`, `ph--text-aa--regular`), so this is
+      resolution, not declaration: `getIcon` returns `undefined` when `getSchema(entity)` is null
+      ([`annotations.ts:650`](../../../core/echo/echo/src/internal/Annotation/annotations.ts)), which is
+      indistinguishable from "no icon". Eleven call sites share that fallback, so one fix covers them.
+
+### devtools
+
+- [ ] **Filter the trace panel.** It lists every operation including 2ms UI ones, burying the ones that
+      matter, and renders the full event JSON inline with `meta` repeated per event. Composer is
+      noticeably slow after triggering Research and opening the panel. Two problems: what is listed
+      (a duration threshold is not enough — Research person is 55ms and matters, Expose is 27ms and
+      does not) and what it renders (collapse, virtualize, hoist the per-span constant meta). Measure
+      before fixing: it may be the panel, the trace volume Research produces, or both.
 
 ---
 

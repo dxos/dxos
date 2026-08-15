@@ -18,7 +18,14 @@ import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { Column } from '../Column';
 import { Icon } from '../Icon';
-import { bannerIcons } from './banner-icons';
+
+const bannerIcons: Record<MessageValence, string> = {
+  success: 'ph--check-circle--duotone',
+  info: 'ph--info--duotone',
+  warning: 'ph--warning--duotone',
+  error: 'ph--warning-circle--duotone',
+  neutral: 'ph--info--duotone',
+};
 
 type BannerRootProps = PropsWithChildren<{
   valence?: MessageValence;

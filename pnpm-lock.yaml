@@ -3446,7 +3446,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@5.5.0)
+        version: 4.4.3(supports-color@8.1.1)
       domain-browser:
         specifier: 'catalog:'
         version: 4.22.0
@@ -14660,6 +14660,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-card':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-card
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
