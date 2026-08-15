@@ -22,7 +22,7 @@ import { Text } from '@dxos/schema';
 import { translations } from '#translations';
 import { Subscription } from '#types';
 
-import { MagazinePlugin } from '../../plugin';
+import { MagazinePlugin } from '#plugin';
 import { PostArticle } from './PostArticle';
 
 const SAMPLE_MARKDOWN = `# Local-first software

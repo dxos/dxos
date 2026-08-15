@@ -36,7 +36,7 @@ import { Message, Person } from '@dxos/types';
 import { initializeMailbox, seedSummaries } from '#testing';
 import { InboxCapabilities, Mailbox } from '#types';
 
-import { InboxPlugin } from '../../plugin';
+import { InboxPlugin } from '#plugin';
 import * as InboxOperation from '../../types/InboxOperation';
 import AttachmentArticle from '../AttachmentArticle';
 import MessageArticle from '../MessageArticle';

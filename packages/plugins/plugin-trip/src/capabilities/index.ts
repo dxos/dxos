@@ -17,7 +17,10 @@ import skillDefinition from './skill-definition';
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [AttentionCapabilities.ViewState],
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
+// Headless environments load the reduced list via ./overrides.node.ts / ./overrides.workerd.ts.
+export const Schema = AppCapability.schema(() => import('./schema'), {
+  environments: ['browser', 'node', 'workerd'],
+});
 export const SkillDefinition = Capability.inlineModule(
   'SkillDefinition',
   { provides: [AppCapabilities.SkillDefinition] },

@@ -72,7 +72,7 @@ import { enableQueryIndexes } from '#testing';
 import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
 
-import { TranscriptionPlugin } from '../plugin';
+import { TranscriptionPlugin } from '#plugin';
 
 const SAMPLE_CONTENT = trim`
   # Test

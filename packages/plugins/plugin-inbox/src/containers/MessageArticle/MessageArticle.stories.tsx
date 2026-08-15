@@ -23,7 +23,7 @@ import { Message, Person } from '@dxos/types';
 import { initializeMailbox, seedSummaries } from '#testing';
 import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../plugin';
+import { InboxPlugin } from '#plugin';
 import { MessageArticle } from './MessageArticle';
 
 const ATTENDABLE_ID = 'story';

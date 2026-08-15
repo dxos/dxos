@@ -17,9 +17,16 @@ import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations'
 import { InboxCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// Headless environments load the reduced list via ./overrides.node.ts / ./overrides.workerd.ts.
+export const Schema = AppCapability.schema(() => import('./schema'), {
+  environments: ['browser', 'node', 'workerd'],
+});
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
+  environments: ['browser', 'node'],
+});
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: ['browser', 'node'],
+});
 export const IdentitySpecs = Capability.lazyModule(
   'IdentitySpecs',
   { provides: [SpaceCapabilities.IdentitySpec] },
@@ -51,8 +58,11 @@ export const NavigationTargetResolver = AppCapability.navigationResolver(() => i
   // so gating this on the surface that the resolution leads to would never resolve.
   activatesOn: ActivationEvents.Idle,
 });
+// Workerd uses the inline form via ./overrides.workerd.ts to avoid a dynamic-import chunk in the
+// worker bundle.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
+  environments: ['browser', 'node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [

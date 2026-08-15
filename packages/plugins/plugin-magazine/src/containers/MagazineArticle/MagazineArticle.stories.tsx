@@ -25,7 +25,7 @@ import { generateCuratedPost, generateFeed, generateMagazine } from '#testing';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
 
-import { MagazinePlugin } from '../../plugin';
+import { MagazinePlugin } from '#plugin';
 import { MagazineArticle } from './MagazineArticle';
 
 const DefaultStory = () => {

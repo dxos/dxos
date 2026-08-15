@@ -22,7 +22,7 @@ import { Message, Person } from '@dxos/types';
 import { initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../plugin';
+import { InboxPlugin } from '#plugin';
 import { InitializeMailbox } from './InitializeMailbox';
 
 type StoryArgs = {

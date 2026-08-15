@@ -18,7 +18,7 @@ import { Message, Transcript } from '@dxos/types';
 import { TestItem } from '#testing';
 import { translations } from '#translations';
 
-import { TranscriptionPlugin } from '../../plugin';
+import { TranscriptionPlugin } from '#plugin';
 import { TranscriptionArticle } from './TranscriptionArticle';
 
 const DefaultStory = () => {

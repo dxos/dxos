@@ -20,7 +20,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { Calendar } from '#types';
 
-import { InboxPlugin } from '../../plugin';
+import { InboxPlugin } from '#plugin';
 import { InitializeCalendar } from './InitializeCalendar';
 
 type StoryArgs = {

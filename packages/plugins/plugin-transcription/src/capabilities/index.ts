@@ -9,7 +9,12 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { TranscriptionCapabilities, TranscriptionEvents } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 // RecordingSession / PipelineStatus / TranscriptionSettings stay eager with the driver
 // (ReactContext): its components read them via strict useAtomCapability hooks, so deferring
@@ -35,14 +40,20 @@ export const RecordingSession = Capability.lazyModule(
   { provides: [TranscriptionCapabilities.RecordingSession] },
   () => import('./recording-session'),
 );
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = AppCapability.schema(() => import('./schema'), {
+  environments: ['browser', 'node', 'workerd'],
+});
 export const TranscriptionDriver = AppCapability.reactContext(() => import('./transcription-driver'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
+  environments: ['browser', 'node'],
+});
 export const TextContent = AppCapability.textContent(() => import('./text-content'), {
   activatesOn: TranscriptionEvents.Start,
+  environments: ['browser', 'node'],
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
+  environments: ['browser', 'node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.section'],
@@ -58,4 +69,11 @@ export const Transcriber = Capability.lazyModule(
 );
 export const TranscriptionSettings = AppCapability.settings(() => import('./settings'), {
   provides: [TranscriptionCapabilities.Settings],
+});
+export const Translations = AppCapability.translations(translations);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
 });

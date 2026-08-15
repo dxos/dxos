@@ -3,25 +3,23 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
 
 import {
   CommentConfig,
   CreateObject,
   OnTypeAdded,
   OperationHandler,
+  PluginAsset,
   ReactSurface,
   Schema,
   SkillDefinition,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
-
+// Canonical single-entry composition: lists every module once; per-environment filtering happens
+// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
+// as `undefined`, which `Plugin.addModule` skips.
 export const TablePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(CommentConfig),
@@ -29,16 +27,9 @@ export const TablePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
   Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations([...translations, ...formTranslations, ...tableTranslations])),
+  Plugin.addModule(Translations),
   Plugin.addModule(OnTypeAdded),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(PluginAsset),
   Plugin.make,
 );
 

@@ -19,7 +19,7 @@ import { Message } from '@dxos/types';
 
 import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../plugin';
+import { InboxPlugin } from '#plugin';
 import { SubscriptionsArticle } from './SubscriptionsArticle';
 
 /** Bulk-mail senders with a `List-Unsubscribe` affordance; counts drive the noisiest-first sort. */

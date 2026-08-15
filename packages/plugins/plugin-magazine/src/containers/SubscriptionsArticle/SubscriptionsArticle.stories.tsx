@@ -23,7 +23,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Subscription } from '#types';
 
-import { MagazinePlugin } from '../../plugin';
+import { MagazinePlugin } from '#plugin';
 import { SubscriptionsArticle } from './SubscriptionsArticle';
 
 const DefaultStory = () => {

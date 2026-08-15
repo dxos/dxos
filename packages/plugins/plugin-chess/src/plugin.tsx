@@ -3,29 +3,20 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { GameVariant, OperationHandler, Schema, SkillDefinition } from '#capabilities';
+import { GameVariant, OperationHandler, PluginAsset, Schema, SkillDefinition, Translations } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
-
+// Canonical single-entry composition: lists every module once; per-environment filtering happens
+// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
+// as `undefined`, which `Plugin.addModule` skips.
 export const ChessPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(GameVariant),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(PluginAsset),
   Plugin.addModule(Schema),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

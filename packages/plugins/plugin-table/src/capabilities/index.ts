@@ -11,17 +11,32 @@ import * as Operation from '@dxos/compute/Operation';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { TableEvents, TableOperation } from '#types';
 
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
+
+export const Schema = AppCapability.schema(() => import('./schema'), {
+  environments: ['browser', 'node', 'workerd'],
+});
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
+  environments: ['browser', 'node'],
+});
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'), {
   activatesOn: TableEvents.Start,
+  environments: ['browser', 'node'],
 });
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: ['browser', 'node'],
+});
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
+  environments: ['browser', 'node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.slide'],
@@ -38,3 +53,10 @@ export const OnTypeAdded = Capability.inlineModule(
       ),
     ]),
 );
+export const Translations = AppCapability.translations([...translations, ...formTranslations, ...tableTranslations]);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});

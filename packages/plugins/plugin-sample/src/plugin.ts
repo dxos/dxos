@@ -10,15 +10,22 @@
 // `Plugin.make` finalizes the plugin (must be the last call in the chain).
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SampleSettings, Schema } from '#capabilities';
+import {
+  AppGraphBuilder,
+  CreateObject,
+  OperationHandler,
+  PluginAsset,
+  ReactSurface,
+  SampleSettings,
+  Schema,
+  Translations,
+} from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
-
+// Canonical single-entry composition: lists every module once; per-environment filtering happens
+// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
+// as `undefined`, which `Plugin.addModule` skips.
 export const SamplePlugin = Plugin.define(meta).pipe(
   // Registers graph builder extensions (actions, connectors, companions).
   // Activates when the app graph builder capability can be resolved.
@@ -42,17 +49,10 @@ export const SamplePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(ReactSurface),
 
   // Registers i18n translations.
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Translations),
 
   // Finalizes the plugin. Must be the last call in the chain.
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(PluginAsset),
   Plugin.make,
 );
 
