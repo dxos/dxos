@@ -27,7 +27,17 @@ per-namespace scope: `unsynced` routes writes, reads still layer shared undernea
 - [x] `SettingsScope` control in the settings plank header (`NavbarEnd`) — reaches all 27 plugins
 - [x] "Use a different plugin set on this device" switch in `RegistrySettings`
 - [x] Delete `DeviceOverrides` and the per-plugin switch in `PluginDetail`
-- [ ] Manual verification against two profiles/devices
+
+## Phase 2b — end-to-end verification
+
+- [x] `settings.spec.ts` — single device: a device-local edit leaves the account's value intact,
+      proven by rejoining and watching the shared value come back (green 3/3 locally)
+- [x] Fix found by it: `unsynced` held the live ECHO array, whose proxy identity survives a
+      reassignment, so the atom never notified and the scope control never flipped
+- [x] `AppManager.waitForDefaultWorkspace()` — the boot navigation to the default space lands
+      seconds after the shell renders and replaces any route set before it
+- [ ] `halo.spec.ts` two-device test — written, unverifiable in the cloud sandbox: EDGE device
+      invitations stall there, which the pre-existing `join new identity` test fails on too
 
 ## Phase 3 — follow-ups (not in the prototype)
 
