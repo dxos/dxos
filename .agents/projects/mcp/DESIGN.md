@@ -149,14 +149,15 @@ Eleven plugins, seven core, four defaults, nothing left over. So the practical e
 built-in is always on", and `disable` can only ever turn off four content plugins. The mechanism is
 there; the state has no inhabitants.
 
-Two things follow, and both are CLI work rather than framework work:
+Two things follow:
 
 - **The `system` tagging is a Composer judgment inherited wholesale.** Each plugin declares
   `tags: ['system']` in its own `dx.config.ts`, so the CLI has no say — `observability` and
   `connector` are non-disableable in `dx` because they are non-disableable in Composer. Some of
   that is right (`client`, `space`), some deserves a deliberate CLI answer. Core needs to be a
-  host-supplied set, or the tag needs a host-scoped variant; the manager already accepts core as a
-  constructor input rather than deriving it, so this is a `createCliApp` change.
+  host-supplied set, or the tag needs a host-scoped variant — and that is a framework change before
+  it is a CLI one: `ManagerOptions` exposes no `core` field, so `ManagerImpl`'s constructor derives
+  the set from `meta.profile.tags` with no way for a host to override it.
 - **`getDefaults()` is a fixed four-element list that ignores its own config.** The CLI's
   `PluginConfig` declares `isDev` / `isLabs` / `isStrict` and `getDefaults()` takes no arguments,
   where composer-app's takes the same config and branches on it. Parity means the CLI's defaults

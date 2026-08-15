@@ -150,7 +150,7 @@ reads as though disabling does not exist. DESIGN §2.3.
       plugin over HTTP. Registers from a directory marked dev, persisted per profile like
       `devPluginUrl`. Reuse the manager's existing shadowing (`PluginCatalog.#devPlugins` records
       the displaced plugin and `wasEnabled`, restores on remove) so `link ./packages/plugins/
-  plugin-markdown` tests the working copy rather than the compiled-in one. No manifest needed —
+plugin-markdown` tests the working copy rather than the compiled-in one. No manifest needed —
       every in-repo plugin's meta already comes from its `dx.config.ts`, the same `Config2.Plugin`
       shape a published manifest carries. DESIGN §2.5.
 - [ ] **Measure: can a compiled `dx` binary import on-disk TypeScript at runtime?** §2.1 measured
