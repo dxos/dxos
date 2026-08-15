@@ -126,6 +126,16 @@ realm replays the MCP handshake into the new one and emits `tools/list_changed` 
 retry them. Each reload is a full server start — identity, storage and plugin activation — so expect
 the first request after an edit to wait on that.
 
+**`--watch` runs the child with `--conditions=source`**, unlike a plain `bin/dx`. Without it every
+`@dxos/*` import resolves to that package's `dist`, so editing a plugin's source would change
+nothing the watcher tracks until you rebuilt it — the reload would fire on builds rather than on
+edits. Set `DX_SOURCE=0` to opt back out and get the rebuild-triggered loop instead.
+
+Only files the server actually imported are watched, and **the CLI imports subpaths rather than
+barrels** (`@dxos/plugin-projects/operations`, not `@dxos/plugin-projects`). Editing a package's
+`src/index.ts` therefore reloads nothing if nothing imports it; edit the module that is really on
+the path.
+
 `--watch` only exists when running from source; the compiled binary has no sources to watch, so both
 the flag and its supervisor are stripped from it by the `globalThis.DX_CLI_BUNDLED` define in
 `scripts/build.ts`. It is substituted while bundling rather than read at startup — that is the only

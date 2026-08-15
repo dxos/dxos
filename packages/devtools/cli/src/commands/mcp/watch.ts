@@ -50,7 +50,15 @@ export const runWatchSupervisor = ({ entry, args }: WatchSupervisorOptions = {})
     const childArgs = args ?? process.argv.slice(2).filter((arg) => arg !== '--watch' && !arg.startsWith('--watch='));
 
     // `--no-clear-screen` because a clear sequence on stdout would corrupt the protocol stream.
-    const child = spawn('bun', ['--watch', '--no-clear-screen', 'run', childEntry, ...childArgs], {
+    const bunArgs = ['--watch', '--no-clear-screen'];
+    // `--watch` implies source resolution: without it every `@dxos/*` import resolves to `dist`, so
+    // editing a plugin's source changes nothing the watcher tracks until that package is rebuilt —
+    // the reload would fire on builds rather than on edits. `DX_SOURCE=0` opts back out, since this
+    // is the resolution `bin/dx` keeps behind a flag.
+    if (process.env.DX_SOURCE !== '0') {
+      bunArgs.push('--conditions=source');
+    }
+    const child = spawn('bun', [...bunArgs, 'run', childEntry, ...childArgs], {
       env: { ...process.env, [WATCH_CHILD_ENV]: '1' },
     });
 
