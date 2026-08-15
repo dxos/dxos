@@ -41,3 +41,21 @@ export const UndoMappings = Capability.lazyModule(
   },
   () => import('./undo-mappings'),
 );
+
+// Node-specific schema subset; loaded from the sibling headless schema list rather than the
+// browser `./schema` module.
+export const Schema = AppCapability.schema(() => import('../schema.node'));
+
+// Stubs for modules not flagged for node: the canonical plugin entry lists every module and
+// `Plugin.addModule` skips `undefined`.
+export const AppGraphBuilder = undefined;
+export const NavigationHandler = undefined;
+export const NavigationTargetResolver = undefined;
+export const PluginAsset = undefined;
+export const ReactRoot = undefined;
+export const ReactSurface = undefined;
+export const Repair = undefined;
+export const SpaceSettings = undefined;
+export const SpacesReady = undefined;
+export const SpaceState = undefined;
+export const Translations = undefined;

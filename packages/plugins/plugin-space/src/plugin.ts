@@ -3,10 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
-import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { translations as shellTranslations } from '@dxos/shell/react';
 
 import {
   AppGraphBuilder,
@@ -16,6 +12,7 @@ import {
   NavigationHandler,
   NavigationTargetResolver,
   OperationHandler,
+  PluginAsset,
   ReactRoot,
   ReactSurface,
   Repair,
@@ -23,15 +20,15 @@ import {
   SpaceSettings,
   SpacesReady,
   SpaceState,
+  Translations,
   UndoMappings,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 import { SpaceSchema } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
-
+// Canonical single-entry composition (spike): lists every module once; per-environment filtering
+// happens in the `#capabilities` barrel resolution — headless barrels stub excluded modules as
+// `undefined`, which `Plugin.addModule` skips.
 export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
   Plugin.addModule(Commands),
@@ -42,9 +39,7 @@ export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).p
   Plugin.addModule(ReactRoot),
   Plugin.addModule(Schema),
   Plugin.addModule(SpaceSettings),
-  Plugin.addModule(
-    AppCapability.translations([...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations]),
-  ),
+  Plugin.addModule(Translations),
   Plugin.addModule(SpaceState),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppGraphBuilder),
@@ -52,14 +47,7 @@ export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).p
   Plugin.addModule(IdentityCreated),
   Plugin.addModule(SpacesReady),
   Plugin.addModule(Repair),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(PluginAsset),
   Plugin.make,
 );
 

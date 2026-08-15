@@ -9,9 +9,16 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as shellTranslations } from '@dxos/shell/react';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { SpaceCapabilities, SpaceCapability, SpaceSchema } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 import { SpaceOperationConfig } from '../operations/helpers';
 import { makeCreateInvitationUrl } from './helpers';
 
@@ -99,4 +106,16 @@ export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mapp
     createInvitationUrl: makeCreateInvitationUrl(options),
     observability: options.observability,
   }),
+});
+export const Translations = AppCapability.translations([
+  ...translations,
+  ...componentsTranslations,
+  ...formTranslations,
+  ...shellTranslations,
+]);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
 });
