@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Client } from '@dxos/agent-claude/client';
 import { Icon, IconButton, Input, Panel } from '@dxos/react-ui';
@@ -30,6 +30,17 @@ const blockText = (block: ContentBlock.Any): string => {
       return `[${block._tag}]`;
   }
 };
+
+/**
+ * A failed tool result the agent immediately retried and got right. The SDK's `Read` wants an
+ * absolute path, so nearly every turn carries one of these; showing each in full buries the answer.
+ */
+const isSuperseded = (block: ContentBlock.Any, blocks: readonly ContentBlock.Any[], index: number): boolean =>
+  block._tag === 'toolResult' &&
+  block.error !== undefined &&
+  blocks
+    .slice(index + 1)
+    .some((later) => later._tag === 'toolResult' && later.name === block.name && later.error === undefined);
 
 /** Colour by kind so a denied tool call is obvious without reading it. */
 const blockClass = (block: ContentBlock.Any): string => {
@@ -67,6 +78,22 @@ export const AgentModule = () => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight });
   }, [turns, running]);
 
+  const rows = useMemo(() => {
+    const flat = turns.flatMap((turn) => turn.blocks.map((block) => ({ role: turn.role, block })));
+    const blocks = flat.map(({ block }) => block);
+    let previousRole: string | undefined;
+    return (
+      flat
+        // A reasoning block with no text rendered as a bare role header with nothing under it.
+        .filter(({ block }) => blockText(block).trim().length > 0)
+        .map(({ role, block }, index) => {
+          const label = role === previousRole ? undefined : role;
+          previousRole = role;
+          return { role: label, block, superseded: isSuperseded(block, blocks, index) };
+        })
+    );
+  }, [turns]);
+
   const send = useCallback(
     async (fork = false) => {
       if (!prompt.trim() || running) {
@@ -99,16 +126,26 @@ export const AgentModule = () => {
 
   return (
     <Panel.Root classNames='bs-full is-full min-bs-0 min-is-0 flex flex-col gap-2 p-2 overflow-hidden'>
+      <Panel.Toolbar classNames='shrink-0 justify-end'>
+        <div className='flex items-center gap-1 text-xs text-description'>
+          <Icon icon='ph--git-commit--regular' size={4} />
+          {session ? `session ${session.slice(0, 8)}` : 'no session'}
+        </div>
+      </Panel.Toolbar>
+
       <div ref={scroller} className='flex-1 min-bs-0 overflow-y-auto p-2'>
         <div className='flex flex-col gap-3'>
-          {turns.map((turn, index) => (
+          {rows.map(({ role, block, superseded }, index) => (
             <div key={index} className='flex flex-col gap-1'>
-              <div className='text-xs text-description uppercase'>{turn.role}</div>
-              {turn.blocks.map((block, blockIndex) => (
-                <div key={blockIndex} className={mx('whitespace-pre-wrap text-sm', blockClass(block))}>
-                  {blockText(block)}
-                </div>
-              ))}
+              {role && <div className='text-xs text-description uppercase'>{role}</div>}
+              <div
+                className={mx(
+                  'whitespace-pre-wrap text-sm',
+                  superseded ? 'text-description text-xs' : blockClass(block),
+                )}
+              >
+                {superseded ? `✗ ${block._tag === 'toolResult' ? block.name : ''} (retried)` : blockText(block)}
+              </div>
             </div>
           ))}
           {running && <div className='text-sm text-description'>running…</div>}
@@ -146,10 +183,6 @@ export const AgentModule = () => {
           disabled={running || !session}
           onClick={() => void send(true)}
         />
-        <div className='shrink-0 text-xs text-description flex items-center gap-1'>
-          <Icon icon='ph--identification-badge--regular' size={4} />
-          {session ? session.slice(0, 8) : 'new'}
-        </div>
       </div>
     </Panel.Root>
   );

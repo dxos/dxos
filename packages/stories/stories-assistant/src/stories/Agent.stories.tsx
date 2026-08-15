@@ -4,7 +4,6 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
 import { expect, within } from 'storybook/test';
 
 import { Client } from '@dxos/agent-claude/client';
@@ -14,7 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { AgentModule, StoryRole, getChatProcessor } from '../modules';
+import { StoryRole, getChatProcessor } from '../modules';
 import { ModuleContainer, createDecorators, storyParameters } from '../testing';
 
 /**
@@ -167,25 +166,11 @@ export const WithSidecar: Story = {
 };
 
 /**
- * The interactive console: type a prompt and the Claude Agent SDK answers, with tool calls and
- * denials surfaced inline. Same host as {@link WithSidecar}, driven by hand instead of a play
- * function — no ECHO, so it also renders turns the Chat surface cannot (see TASKS.md, M3b).
+ * The interactive console, resolved through the modules mechanism: type a prompt and the Claude
+ * Agent SDK answers, with tool calls and denials surfaced inline, alongside the logging panel.
  *
  * Needs the host mounted in the dev server:
  * `DX_AGENT_CWD=<dir> pnpm --filter @dxos/storybook-react exec storybook dev --port 9016`
- */
-export const Console: Story = {
-  // Rendered directly rather than through `ModuleContainer`: the console needs no space, and the
-  // plugin stack every other variant boots currently fails to start under `storybook dev` (the same
-  // stories pass in the test runner). `AgentModule` is registered under `StoryRole.Agent` all the
-  // same, so it composes into a module layout wherever that path works.
-  render: () => <AgentModule />,
-};
-
-/**
- * The same console resolved through the modules mechanism rather than rendered directly, which is
- * what proves `StoryRole.Agent` actually binds to `AgentModule`. Kept separate from {@link Console}
- * because this path boots the plugin stack, which `storybook dev` currently cannot start.
  */
 export const ConsoleModule: Story = {
   decorators: createDecorators({}),
