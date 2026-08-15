@@ -149,14 +149,21 @@ reads as though disabling does not exist. DESIGN §2.3.
 
 ### Reload, stage 1 — our own dev loop
 
-- [x] **`dx mcp serve --watch`** — DONE. Re-runs the CLI under `bun --watch` and proxies the
-      client's stdio to it. The planned "session dies with the process, client reconnects per edit"
-      is not what happens: `bun --watch` reloads in place (same pid, same pipes, wiped realm), so the
-      connection survives and only the session state is lost. The supervisor holds the handshake
-      outside the realm and replays it, so an edit is invisible to the client — no reconnect, and
-      `tools/list_changed` / `prompts/list_changed` follow each reload. Source-only: hidden from
-      `--help` and DCE'd out of the binary by the `DX_CLI_BUNDLED` define. Cost is a full server
-      start per reload. Details in [DESIGN.md](./DESIGN.md) §3.
+- [x] **`dx mcp serve --watch`** — DONE, both builds. A supervisor holds the client's stdio and
+      replays the MCP handshake into each reloaded child, so an edit is invisible to the client — no
+      reconnect, and `tools/list_changed` / `prompts/list_changed` follow every reload. The planned
+      "session dies with the process, client reconnects per edit" is not what happens: `bun --watch`
+      reloads in place (same pid, same pipes, wiped realm), so the connection survives and only the
+      session state is lost. The child also runs with `--conditions=source`, without which the
+      watcher tracked `dist` and a plugin source edit reloaded nothing until a rebuild. Cost is a
+      full server start per reload. Details in [DESIGN.md](./DESIGN.md) §3.
+- [x] **`--watch` in the released binary** — DONE, and the reason the flag matters to plugin
+      authors, who have `dx` rather than a checkout. A binary takes `--watch` as ordinary argv, so
+      the supervisor re-runs it via `process.execPath` and arms recursive `fs.watch` over the
+      directories the child reports: its `add --dev` (`link`) installs, the only on-disk code a
+      shipped `dx` can see change. `copy` installs are skipped. Verified against a real compiled
+      binary: `plugin add --dev` the fixture plugin, `mcp serve --watch`, edit the plugin, and the
+      session keeps its 22 tools across the restart with no reconnect.
 
 ### Reload, stage 2 — external plugin authors
 

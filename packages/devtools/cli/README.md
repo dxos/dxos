@@ -118,13 +118,21 @@ Add `--watch` to pick up an edit without restarting the client:
 claude mcp add dxos-dev -- /path/to/dxos/packages/devtools/cli/bin/dx mcp serve --watch
 ```
 
-The server re-runs itself under `bun --watch`, which reloads the module graph it imported — so any
-source file the server actually reached triggers it. The reload keeps the same process and the same
-pipes and wipes only the JS realm, so the client's connection survives; a supervisor outside that
-realm replays the MCP handshake into the new one and emits `tools/list_changed` and
-`prompts/list_changed`. In-flight requests are answered with an error rather than left hanging, so
-retry them. Each reload is a full server start — identity, storage and plugin activation — so expect
-the first request after an edit to wait on that.
+The server runs as a child of a supervisor that holds the client's stdio. When the child reloads,
+the supervisor replays the MCP handshake into the new one and emits `tools/list_changed` and
+`prompts/list_changed`, so the client never reconnects and never re-initializes. In-flight requests
+are answered with an error rather than left hanging, so retry them. Each reload is a full server
+start — identity, storage and plugin activation — so expect the first request after an edit to wait
+on that.
+
+What counts as a change depends on which `dx` you are running, because what can change differs:
+
+|                | watched                                                | how                                                                         |
+| -------------- | ------------------------------------------------------ | --------------------------------------------------------------------------- |
+| from source    | every source file the server imported                  | `bun --watch`, which reloads in place — same pid, same pipes, wiped JS realm |
+| released binary| the directories of your `--dev`-installed plugins       | the supervisor re-runs the binary and watches those directories itself       |
+
+### From source
 
 **`--watch` runs the child with `--conditions=source`**, unlike a plain `bin/dx`. Without it every
 `@dxos/*` import resolves to that package's `dist`, so editing a plugin's source would change
@@ -136,10 +144,27 @@ barrels** (`@dxos/plugin-projects/operations`, not `@dxos/plugin-projects`). Edi
 `src/index.ts` therefore reloads nothing if nothing imports it; edit the module that is really on
 the path.
 
-`--watch` only exists when running from source; the compiled binary has no sources to watch, so both
-the flag and its supervisor are stripped from it by the `globalThis.DX_CLI_BUNDLED` define in
-`scripts/build.ts`. It is substituted while bundling rather than read at startup — that is the only
-phase that can drop the dead branch, and it leaves nothing the environment can flip.
+### From the released binary
+
+A shipped `dx` has no sources, and bun's watcher is not in the artifact — a compiled binary receives
+`--watch` as ordinary argv rather than acting on it. So the supervisor re-runs the binary itself and
+watches the only on-disk code a shipped `dx` can see change: the plugins you installed with
+`dx plugin add --dev <path>`, which are read in place rather than copied.
+
+```bash
+dx plugin add --dev ~/src/my-plugin     # a link, not a copy
+claude mcp add dxos -- dx mcp serve --watch
+```
+
+Edit anything under `~/src/my-plugin` and the server restarts with your change, keeping the client's
+session. The directories come from the running server rather than from config the supervisor reads
+itself, so adding or removing a dev plugin re-arms the watch on the next reload. `copy` installs
+(`dx plugin add <url>`) are deliberately not watched: they are snapshots the CLI owns, and only
+`add` rewrites them.
+
+`globalThis.DX_CLI_BUNDLED`, substituted by the `define` in `scripts/build.ts`, is what picks the
+strategy. It is substituted while bundling rather than read at startup, so nothing in the
+environment can flip it.
 
 ## Release
 

@@ -16,3 +16,42 @@ export const WATCH_CHILD_ENV = 'DX_MCP_WATCH_CHILD';
  * same pipes — so a process exit cannot mark the restart and this line is the only signal.
  */
 export const WATCH_READY_SENTINEL = '@dxos/cli:mcp-serve-ready';
+
+/**
+ * What the child tells the supervisor when it comes up: the directories worth watching, which are
+ * its `link`-installed (dev) plugins.
+ *
+ * Reported by the child rather than derived by the supervisor because the child is what actually
+ * loaded them — it has the profile, the records and the resolved paths, and it re-reports on every
+ * reload, so adding or removing a dev plugin re-arms the watch with no extra plumbing.
+ */
+export type WatchReady = {
+  readonly watch: readonly string[];
+};
+
+/** The sentinel line the child writes. */
+export const formatReady = ({ watch }: WatchReady): string => `${WATCH_READY_SENTINEL} ${JSON.stringify({ watch })}`;
+
+/**
+ * Reads a stderr line as the ready sentinel, or `undefined` when it is ordinary log output. A bare
+ * sentinel with no payload reports nothing to watch, which is what a child with no dev plugins —
+ * and any older child — means.
+ */
+export const parseReady = (line: string): WatchReady | undefined => {
+  if (!line.startsWith(WATCH_READY_SENTINEL)) {
+    return undefined;
+  }
+  const payload = line.slice(WATCH_READY_SENTINEL.length).trim();
+  if (payload.length === 0) {
+    return { watch: [] };
+  }
+  try {
+    const parsed = JSON.parse(payload);
+    const watch = Array.isArray(parsed?.watch)
+      ? parsed.watch.filter((entry: unknown) => typeof entry === 'string')
+      : [];
+    return { watch };
+  } catch {
+    return { watch: [] };
+  }
+};

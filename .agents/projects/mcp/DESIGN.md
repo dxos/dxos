@@ -353,17 +353,39 @@ namespaced id whose response it swallows, errors the requests the reload strande
 `tools/list_changed` / `prompts/list_changed`. An edit is invisible to the client. The watching
 itself is delegated to `bun --watch`, whose file set is exactly the imported module graph.
 
-The flag is source-only, since a binary has no sources to watch, and is stripped from the compiled
-CLI by a `globalThis.DX_CLI_BUNDLED` define in `scripts/build.ts`: `Flag.withHidden` drops it from
-`--help`, and guarding the supervisor's dynamic import on the same constant lets bun's DCE drop the
-module (verified — the supervisor is absent from a bundle built with the define, present without).
+**The flag ships in the binary too**, which is where it pays: a plugin author has the released `dx`,
+not a dxos checkout. It was source-only for one revision on the theory that a binary has nothing to
+watch — true of the CLI's own code, false of the thing that matters. Two strategies, chosen by
+`globalThis.DX_CLI_BUNDLED`:
 
-A build-time define rather than a runtime check, because bundled-ness is only observable at runtime
-(`import.meta.dir` is `/$bunfs/root` in a binary) and a runtime check cannot be folded — both
-branches would ship. The only code that statically knows is the build script, so it has to say so.
-The define target is a global rather than `process.env.*`: both fold and both stay safe unreplaced
-on the source path, where no bundler runs, but a bare identifier throws `ReferenceError` there and
-an env var can be flipped by a stray exported variable. Measured across all three.
+- **From source**, `bun --watch` runs the child and tracks the imported module graph. It reloads in
+  place, so the supervisor only has to replay the handshake.
+- **From the binary**, bun's watcher is absent (a compiled binary takes `--watch` as ordinary argv —
+  measured), so the supervisor re-runs the binary via `process.execPath` and arms recursive
+  `fs.watch` itself. Both work inside a compiled binary; so does importing on-disk TypeScript, so an
+  author needs no build step.
+
+**The watch set is reported by the child, not derived by the supervisor.** The child has the profile,
+the records and the resolved paths, so it emits its `link`-install directories on the ready sentinel
+it already writes. The supervisor stays a JSON-RPC proxy that knows nothing about plugins, and
+adding or removing a dev plugin re-arms the watch on the next reload for free. `copy` installs are
+skipped: the CLI owns those bytes and only `add` rewrites them.
+
+The `DX_CLI_BUNDLED` define is a build-time constant rather than a runtime check because
+bundled-ness is only observable at runtime (`import.meta.dir` is `/$bunfs/root` in a binary), and
+while the strip it originally served is gone — the binary needs the supervisor now — the constant
+still has to pick the strategy. Its target is a global rather than `process.env.*`: both fold and
+both stay safe unreplaced on the source path, where no bundler runs, but a bare identifier throws
+`ReferenceError` there and an env var can be flipped by a stray exported variable. Measured across
+all three.
+
+`--watch` also runs its child with `--conditions=source`. Without it every `@dxos/*` import resolves
+to `dist`, so the watcher tracked build output and a plugin source edit reloaded nothing until that
+package was rebuilt — the flag fired on builds rather than on edits. `DX_SOURCE=0` opts back out.
+Related trap for anyone debugging a watch that will not fire: only imported files are watched, and
+the CLI imports subpaths rather than barrels, so a package's `src/index.ts` is frequently not on the
+path at all.
+
 The remaining cost is latency: a reload is a full server start, identity and plugin activation
 included.
 

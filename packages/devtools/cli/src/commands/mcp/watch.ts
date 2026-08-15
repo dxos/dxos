@@ -3,12 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { spawn } from 'node:child_process';
+import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
+import { type FSWatcher, watch as watchPath } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { BaseError } from '@dxos/errors';
 
-import { WATCH_CHILD_ENV, WATCH_READY_SENTINEL } from './watch-protocol';
+import { WATCH_CHILD_ENV, parseReady } from './watch-protocol';
 
 export class WatchError extends BaseError.extend('WatchError', 'MCP watch supervisor error') {}
 
@@ -22,6 +23,9 @@ const REPLAY_ID = '@dxos/cli:watch-initialize';
 /** JSON-RPC internal error; what in-flight requests get when the reload discards them. */
 const RESTART_ERROR_CODE = -32603;
 
+/** An editor writes a file several times per save, so the restart waits for the writes to settle. */
+const SETTLE_MS = 150;
+
 /** A single JSON-RPC message. Only the routing fields are read; everything else passes through. */
 type Frame = {
   id?: string | number;
@@ -33,34 +37,36 @@ export type WatchSupervisorOptions = {
   entry?: string;
   /** Arguments forwarded to the child. Defaults to this process's, less `--watch`. */
   args?: string[];
+  /** Force the binary strategy. Defaults to whether this is the compiled binary. */
+  bundled?: boolean;
+  /** Executable the binary strategy re-runs. Defaults to this process's own. */
+  execPath?: string;
 };
 
 /**
- * Runs `dx mcp serve` under `bun --watch` and proxies the client's stdio to it, replaying the MCP
- * handshake across each reload so an edit is invisible to the connected client.
+ * Runs `dx mcp serve` as a child and proxies the client's stdio to it, replaying the MCP handshake
+ * across each reload so an edit is invisible to the connected client.
  *
- * The watching is delegated to the child because bun tracks exactly the module graph it imported,
- * which is the file set that matters. The cost is that a reload keeps the same pid and the same
- * pipes, wiping only the JS realm: the connection survives but the session state does not, so
- * something outside the realm has to hold the handshake. That is this supervisor.
+ * Two strategies, because what can change differs by build:
+ *
+ * - **From source**, `bun --watch` runs the child and tracks exactly the module graph it imported,
+ *   which is the right file set and costs nothing to maintain. It reloads *in place* — same pid,
+ *   same pipes, wiped JS realm — so the connection survives while the session state does not.
+ * - **From the binary**, there are no sources and bun's watcher is not in the artifact, so the
+ *   supervisor re-runs a copy of itself and watches the directories the child reports: its
+ *   dev-installed plugins, the only on-disk code a shipped `dx` can see change.
+ *
+ * Either way something outside the reloaded realm has to hold the handshake. That is this
+ * supervisor, and it is identical for both.
  */
-export const runWatchSupervisor = ({ entry, args }: WatchSupervisorOptions = {}): Effect.Effect<void, WatchError> =>
+export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupervisorOptions = {}): Effect.Effect<
+  void,
+  WatchError
+> =>
   Effect.callback<void, WatchError>((resume) => {
+    const isBundled = bundled ?? globalThis.DX_CLI_BUNDLED === true;
     const childEntry = entry ?? fileURLToPath(new URL('../../bin.ts', import.meta.url));
     const childArgs = args ?? process.argv.slice(2).filter((arg) => arg !== '--watch' && !arg.startsWith('--watch='));
-
-    // `--no-clear-screen` because a clear sequence on stdout would corrupt the protocol stream.
-    const bunArgs = ['--watch', '--no-clear-screen'];
-    // `--watch` implies source resolution: without it every `@dxos/*` import resolves to `dist`, so
-    // editing a plugin's source changes nothing the watcher tracks until that package is rebuilt —
-    // the reload would fire on builds rather than on edits. `DX_SOURCE=0` opts back out, since this
-    // is the resolution `bin/dx` keeps behind a flag.
-    if (process.env.DX_SOURCE !== '0') {
-      bunArgs.push('--conditions=source');
-    }
-    const child = spawn('bun', [...bunArgs, 'run', childEntry, ...childArgs], {
-      env: { ...process.env, [WATCH_CHILD_ENV]: '1' },
-    });
 
     /** Cached from the client so the handshake can be re-driven into a fresh realm. */
     let initialize: Frame | undefined;
@@ -69,9 +75,14 @@ export const runWatchSupervisor = ({ entry, args }: WatchSupervisorOptions = {})
     const pending = new Set<string | number>();
     /** Client traffic held while the child has no session to answer it. */
     const queued: string[] = [];
+    /** Directories watched under the binary strategy, keyed by path so re-arming is a diff. */
+    const watchers = new Map<string, FSWatcher>();
+    let child: ChildProcessWithoutNullStreams;
     let ready = false;
     let starts = 0;
     let stopping = false;
+    let restarting = false;
+    let settle: NodeJS.Timeout | undefined;
 
     const toChild = (line: string) => child.stdin.write(`${line}\n`);
     const toClient = (message: unknown) => process.stdout.write(`${JSON.stringify(message)}\n`);
@@ -96,8 +107,9 @@ export const runWatchSupervisor = ({ entry, args }: WatchSupervisorOptions = {})
       toClient({ jsonrpc: '2.0', method: 'notifications/prompts/list_changed', params: {} });
     };
 
-    const onRestart = () => {
+    const onReady = (paths: readonly string[]) => {
       starts += 1;
+      armWatchers(paths);
       if (starts === 1 || !initialize) {
         // Nothing to replay — the client drives the first handshake itself.
         ready = true;
@@ -148,37 +160,119 @@ export const runWatchSupervisor = ({ entry, args }: WatchSupervisorOptions = {})
     };
 
     const onChildError = (line: string) => {
-      line === WATCH_READY_SENTINEL ? onRestart() : process.stderr.write(`${line}\n`);
+      const readyLine = parseReady(line);
+      readyLine ? onReady(readyLine.watch) : process.stderr.write(`${line}\n`);
     };
 
-    child.stdout.on('data', splitLines(onChildLine));
-    child.stderr.on('data', splitLines(onChildError));
-    // Surfaced rather than left to throw: a write racing the child's death is EPIPE here, and the
-    // exit handler below is what actually reports the failure.
-    child.stdin.on('error', (error) => note(`child stdin: ${error.message}`));
+    /**
+     * Re-arms the watch set to what the child just reported. Only the binary strategy needs it —
+     * under `bun --watch` a linked plugin is already in the module graph, and a second watcher
+     * would race bun's in-place reload with a process kill.
+     */
+    const armWatchers = (paths: readonly string[]) => {
+      if (!isBundled) {
+        return;
+      }
+      for (const [path, watcher] of watchers) {
+        if (!paths.includes(path)) {
+          watcher.close();
+          watchers.delete(path);
+        }
+      }
+      for (const path of paths) {
+        if (watchers.has(path)) {
+          continue;
+        }
+        try {
+          watchers.set(
+            path,
+            watchPath(path, { recursive: true }, () => scheduleRestart()),
+          );
+        } catch (error) {
+          // A dev plugin whose directory has been moved or deleted should not take the server down.
+          note(`cannot watch ${path}: ${(error as Error).message}`);
+        }
+      }
+      if (starts === 1) {
+        note(
+          watchers.size > 0 ? `watching ${watchers.size} dev plugin(s)` : 'no dev plugins installed; nothing to watch',
+        );
+      }
+    };
+
+    const scheduleRestart = () => {
+      clearTimeout(settle);
+      settle = setTimeout(() => {
+        if (stopping || restarting) {
+          return;
+        }
+        restarting = true;
+        child.kill('SIGTERM');
+      }, SETTLE_MS);
+    };
+
+    const spawnChild = () => {
+      if (isBundled) {
+        // Re-runs this very binary; `WATCH_CHILD_ENV` is what stops the copy supervising in turn.
+        child = spawn(execPath ?? process.execPath, childArgs, {
+          env: { ...process.env, [WATCH_CHILD_ENV]: '1' },
+        });
+      } else {
+        // `--no-clear-screen` because a clear sequence on stdout would corrupt the protocol stream.
+        const bunArgs = ['--watch', '--no-clear-screen'];
+        // `--watch` implies source resolution: without it every `@dxos/*` import resolves to `dist`,
+        // so editing a plugin's source changes nothing the watcher tracks until that package is
+        // rebuilt — the reload would fire on builds rather than on edits. `DX_SOURCE=0` opts out.
+        if (process.env.DX_SOURCE !== '0') {
+          bunArgs.push('--conditions=source');
+        }
+        child = spawn('bun', [...bunArgs, 'run', childEntry, ...childArgs], {
+          env: { ...process.env, [WATCH_CHILD_ENV]: '1' },
+        });
+      }
+
+      child.stdout.on('data', splitLines(onChildLine));
+      child.stderr.on('data', splitLines(onChildError));
+      // Surfaced rather than left to throw: a write racing the child's death is EPIPE here, and the
+      // exit handler below is what actually reports the failure.
+      child.stdin.on('error', (error) => note(`child stdin: ${error.message}`));
+      child.on('error', (error) =>
+        resume(Effect.fail(new WatchError({ message: 'Failed to start the watched server.', cause: error }))),
+      );
+      child.on('exit', (code, signal) => {
+        if (restarting) {
+          // Expected: the binary strategy kills its own child to reload it.
+          restarting = false;
+          ready = false;
+          spawnChild();
+          return;
+        }
+        resume(
+          stopping
+            ? Effect.void
+            : Effect.fail(
+                new WatchError({
+                  message: `Watched server exited (code ${code ?? 'none'}, signal ${signal ?? 'none'}).`,
+                }),
+              ),
+        );
+      });
+    };
+
+    spawnChild();
+
     process.stdin.on('data', splitLines(onClientLine));
     process.stdin.on('end', () => {
       stopping = true;
       child.kill('SIGTERM');
     });
 
-    child.on('error', (error) =>
-      resume(Effect.fail(new WatchError({ message: 'Failed to start `bun --watch`.', cause: error }))),
-    );
-    child.on('exit', (code, signal) =>
-      resume(
-        stopping
-          ? Effect.void
-          : Effect.fail(
-              new WatchError({
-                message: `Watched server exited (code ${code ?? 'none'}, signal ${signal ?? 'none'}).`,
-              }),
-            ),
-      ),
-    );
-
     return Effect.sync(() => {
       stopping = true;
+      clearTimeout(settle);
+      for (const watcher of watchers.values()) {
+        watcher.close();
+      }
       child.kill('SIGTERM');
     });
   });

@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { identity } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
 import * as McpServer from 'effect/unstable/ai/McpServer';
@@ -14,15 +13,17 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
+import { CommandConfig } from '@dxos/cli-util';
 import { DXOS_VERSION } from '@dxos/client';
 import { log } from '@dxos/log';
 import { Gateway, Server } from '@dxos/mcp-server';
+import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
 
 import { DiscoveryToolkit, discoveryHandlers } from './discovery-tools';
 import { makeGateway } from './gateway';
 import { ObjectToolkit, objectHandlers } from './object-tools';
 import { SpaceToolkit, spaceHandlers } from './space-tools';
-import { WATCH_CHILD_ENV, WATCH_READY_SENTINEL } from './watch-protocol';
+import { WATCH_CHILD_ENV, formatReady } from './watch-protocol';
 
 /**
  * Names of the statically-defined tools; projected operations must not collide with them.
@@ -45,38 +46,49 @@ declare global {
   /**
    * Substituted with `true` by the `define` in `scripts/build.ts`, so only the compiled binary sees
    * it; running from source leaves it `undefined`. A global rather than an env var because the
-   * substitution has to happen while bun is bundling — the phase that can eliminate a dead branch —
-   * and because nothing should be able to flip it from the environment.
+   * substitution happens while bun bundles, and because nothing should be able to flip it from the
+   * environment. It selects the watch strategy: a binary has no sources for `bun --watch` to track,
+   * so it supervises a copy of itself and watches its dev-installed plugins instead.
    */
   // eslint-disable-next-line no-var
   var DX_CLI_BUNDLED: boolean | undefined;
 }
 
 /**
- * `--watch` supervises a `bun --watch` child, so it only means anything when the CLI runs from
- * source. In the binary the constant folds to `true`, which both hides the flag from `--help` and
- * lets bun drop the supervisor from the bundle.
+ * What `--watch` reloads on differs by build, so the description does too: from source the whole
+ * imported graph is live, while the binary can only change through its dev-installed plugins.
  */
 const watchOption = Options.boolean('watch').pipe(
-  Options.withDescription('Restart the server when sources change (requires running from source).'),
+  Options.withDescription(
+    globalThis.DX_CLI_BUNDLED
+      ? 'Restart the server when a dev-installed plugin changes.'
+      : 'Restart the server when sources change.',
+  ),
   Options.withDefault(false),
-  globalThis.DX_CLI_BUNDLED ? Options.withHidden : identity,
 );
+
+/**
+ * Directories of the profile's dev-installed plugins — the only on-disk code a running server can
+ * see change. A `copy` install is a snapshot the CLI owns and only `add` rewrites, and a
+ * compiled-in plugin cannot change at all, so neither is worth a watch.
+ */
+const devPluginPaths = Effect.gen(function* () {
+  const { profile } = yield* CommandConfig;
+  const records = (yield* loadPlugins({ profile })) ?? [];
+  return records.flatMap((record) =>
+    isRecordEnabled(record) && record.source?.kind === 'link' ? [record.source.path] : [],
+  );
+});
 
 export const serve = Command.make(
   'serve',
   { watch: watchOption },
   Effect.fn(function* ({ watch }) {
     if (watch) {
-      if (globalThis.DX_CLI_BUNDLED) {
-        return yield* Effect.fail(
-          new Error('`--watch` is only available when running the CLI from source (packages/devtools/cli/bin/dx).'),
-        );
-      } else {
-        // Dynamic so the branch, and the supervisor with it, is eliminated from the binary.
-        const { runWatchSupervisor } = yield* Effect.promise(() => import('./watch'));
-        return yield* runWatchSupervisor();
-      }
+      // Imported here rather than at the top so the supervisor is absent from the module graph of
+      // the child it supervises, which would otherwise reload itself on every one of its own edits.
+      const { runWatchSupervisor } = yield* Effect.promise(() => import('./watch'));
+      return yield* runWatchSupervisor();
     }
 
     const manager = yield* Capability.get(Capabilities.PluginManager);
@@ -98,7 +110,7 @@ export const serve = Command.make(
     // Written before the transport blocks: the child's stdin is a pipe, so anything the supervisor
     // sends on the strength of this line waits in the buffer until the server reads it.
     if (process.env[WATCH_CHILD_ENV]) {
-      process.stderr.write(`${WATCH_READY_SENTINEL}\n`);
+      process.stderr.write(`${formatReady({ watch: yield* devPluginPaths })}\n`);
     }
 
     yield* Layer.launch(
