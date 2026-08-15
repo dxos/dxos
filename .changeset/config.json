@@ -9,6 +9,7 @@
   "bumpVersionsWithWorkspaceProtocolOnly": true,
   "fixed": [
     [
+      "@dxos/agent-claude",
       "@dxos/agent-runtime",
       "@dxos/ai",
       "@dxos/app-framework",
