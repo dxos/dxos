@@ -15,13 +15,13 @@ const handler: Operation.WithHandler<typeof SpaceObjectOperation.UpdateObject> =
     Effect.fnUntraced(function* ({ object, properties }) {
       const { db } = yield* Database.Service;
       const resolved = yield* Database.load(object);
-      Obj.update(resolved, (draft) => {
+      Obj.update(resolved, (resolved) => {
         for (const [key, value] of Object.entries(properties)) {
           // `setValue` rather than an index write: the object is only known to be `Obj.Unknown`,
           // which declares no arbitrary properties. A patch arrives in wire form, so a reference is
           // an envelope rather than a live `Ref`.
           Obj.setValue(
-            draft,
+            resolved,
             [key],
             EncodedReference.isEncodedReference(value) ? db.makeRef(EncodedReference.toURI(value)) : value,
           );
