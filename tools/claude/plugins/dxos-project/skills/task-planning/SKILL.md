@@ -1,6 +1,6 @@
 ---
 name: task-planning
-description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `/project` command (any verb — list, tasks, new, end, track, hydrate, resume). Covers the project registry (`.agents/projects/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading project state across sessions and PRs.
+description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `/dxos-project:project` command (any verb — list, tasks, new, end, track, hydrate, resume). Covers the project registry, maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading project state across sessions and PRs.
 ---
 
 # Task Planning
@@ -28,8 +28,12 @@ A **project** is a work-stream — one coherent effort, usually one branch/workt
 decisions). All projects are listed in a committed registry so you and any future
 session can see everything in flight and resume the right one.
 
-**Registry:** `.agents/projects/registry.yml` — one entry per project, recording
-where its docs and PRs live:
+**Registry** — one entry per project, recording where its docs and PRs live. Its
+location is **not** fixed by this skill: the `/dxos-project:project` directive ends with a
+`BACKEND:` line naming the store (by default the file
+`.agents/projects/registry.yml`, overridable via `DX_PROJECT_REGISTRY`). Obey
+that line; a future backend is a service rather than a file, and the schema below
+is the shape either way.
 
 ```yaml
 projects:
@@ -39,7 +43,7 @@ projects:
     host: burdon-mbp-2022 # machine the project lives on (`hostname -s`)
     created: 2026-07-05
     summary: One line — what this stream delivers.
-    tasks: path/to/TASKS.md # a package file, or .agents/projects/<name>/TASKS.md
+    tasks: path/to/TASKS.md # a package file, or <registry-dir>/<name>/TASKS.md
     design: path/to/DESIGN.md # spec + decisions (a REPORT.md counts)
     prs: [12163]
     resume: 'The single next action.'
@@ -48,22 +52,22 @@ ended: []
 
 - The registry records the **location** of each doc, so an existing effort points
   at its package files and a brand-new project defaults to
-  `.agents/projects/<name>/docs/{TASKS.md,DESIGN.md}`. Keep it committed and current.
+  `<registry-dir>/<name>/{TASKS.md,DESIGN.md}`. Keep it committed and current.
 
-### The `/project` command
+### The `/dxos-project:project` command
 
-`/project VERB [ARGS]` drives the registry — `(bare) | list [all] | tasks | new | end |
-track | hydrate | resume`. **The per-verb instructions are not repeated here.**
-`.claude/hooks/track.sh` reads the raw typed text on `UserPromptSubmit` and
-injects the directive for the verb actually given; that directive is
-authoritative and arrives whether or not the command expansion does. Follow it
-and confirm in one short line.
+`/dxos-project:project VERB [ARGS]` drives the registry — `(bare) | list [all] | tasks | new |
+end | track | hydrate | resume`. **The per-verb instructions are not repeated
+here.** The plugin's `hooks/track.sh` reads the raw typed text on
+`UserPromptSubmit` and injects the directive for the verb actually given; that
+directive is authoritative and arrives whether or not the command expansion does.
+Follow it, obey its `BACKEND:` line, and confirm in one short line.
 
 This file covers what applies **without** the command — the TASKS.md convention,
 the registry schema, and the handoff steps below — because the skill loads on
 "work spans several steps" or "resuming work", when nobody has typed anything.
 
-**A lone number** in the user's next message after a `/project list` table means
+**A lone number** in the user's next message after a `/dxos-project:project list` table means
 "resume the project at that row". With no argument, `resume`/`hydrate` fall back
 to the single `active` entry for the current user; if more than one is active,
 ask which (list them numbered) — never a guess.
@@ -83,7 +87,7 @@ ask which (list them numbered) — never a guess.
 - Work spans **3+ distinct steps**, multiple files, or phases.
 - The task will likely outlive one session (you'll resume it later).
 - The user asks for a plan, roadmap, or to track progress.
-- The user uses **`/project track <text>`** — always record the item, never a
+- The user uses **`/dxos-project:project track <text>`** — always record the item, never a
   task chip.
 - You are resuming work — read the existing `TASKS.md` first to reload state.
 
@@ -98,7 +102,7 @@ ask which (list them numbered) — never a guess.
 One file per unit of work: `<root>/TASKS.md`, where `<root>` is the package root
 when there is one (e.g. `packages/plugins/plugin-magazine/TASKS.md`), or
 otherwise the directory you're working in (e.g.
-`.agents/skills/task-planning/TASKS.md`). Match the existing convention:
+`tools/claude/plugins/dxos-project/skills/task-planning/TASKS.md`). Match the existing convention:
 
 ```markdown
 # <Package> — Tasks
@@ -136,12 +140,12 @@ Short paragraph of context — what this phase delivers and why.
 5. **Commit it** — `TASKS.md` is committed alongside the work it tracks. Do not
    leave it as an uncommitted local edit (see "commit nothing silently").
 
-## Project handoff (`/project hydrate` / `/project resume`)
+## Project handoff (`/dxos-project:project hydrate` / `/dxos-project:project resume`)
 
 `TASKS.md` is the handoff medium — no separate `HANDOFF.md` (keep plans in the
 original doc). The two verbs are the explicit checkpoint/reload actions.
 
-### `/project hydrate` — checkpoint before stopping or opening a PR
+### `/dxos-project:project hydrate` — checkpoint before stopping or opening a PR
 
 1. **Reconcile `TASKS.md`** — check off what's done; add a one-line status note to
    each in-progress item (what's blocked, what's next).
@@ -157,7 +161,7 @@ original doc). The two verbs are the explicit checkpoint/reload actions.
 5. **Confirm** the checkpoint in one short block (done / in-progress / next /
    uncommitted).
 
-### `/project resume` — reload at the start of a session
+### `/dxos-project:project resume` — reload at the start of a session
 
 1. **Stay put** — resume continues the work-stream in **this session's assigned
    worktree**; never `cd` into or adopt the project's previous worktree/branch.

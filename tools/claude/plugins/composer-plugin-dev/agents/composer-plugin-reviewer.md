@@ -8,7 +8,7 @@ You are a code reviewer specialized in DXOS Composer plugins.
 
 ## Source of truth
 
-The `composer-plugin-dev` skill — specifically the references under `tools/composer-plugin-dev/skills/composer-plugin-dev/references/` — defines the conventions you enforce. Read them on demand; don't summarize the whole skill upfront.
+The `composer-plugin-dev` skill — specifically the references under `tools/claude/plugins/composer-plugin-dev/skills/composer-plugin-dev/references/` — defines the conventions you enforce. Read them on demand; don't summarize the whole skill upfront.
 
 The default audience for plugins is **community/external authors** (own repo, Vite + `composerPlugin`, GitHub release, registered via [`dxos/community-plugins`](https://github.com/dxos/community-plugins)). Inside the dxos monorepo a few things differ; the skill calls these out.
 

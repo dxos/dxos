@@ -1,6 +1,9 @@
 # task-planning Skill — Tasks
 
-_Resume: test the skill in a new repo (see Follow-ups). Uncommitted: none. Last: unified all sentinels under `$project VERB [ARGS]` and hardened session-start safety._
+_Resume: test the skill in a new repo (see Follow-ups). Uncommitted: none. Last: PR #12174 merged
+(`34d2d1a190`). NOTE: the `$project` sentinel this ledger describes was later replaced by the
+`/project` slash command (registry project `agent-directives`, PR #12463) — the checked items below
+are history, not current syntax._
 
 ## Sentinel rename + picker
 
