@@ -395,8 +395,7 @@ TDD, in this order. Each layer is a gate for the next.
 4. **Live Gmail test.** Writes labels to a real mailbox, so it is gated harder than the read-only
    suites and must not run against anyone's primary account:
 
-   - **A shared team test account** (decided; see [Open decisions](#open-decisions)), recorded in this
-     doc before the test is written — never a personal or working mailbox.
+   - **The shared team test account `dxos.test@gmail.com`** — never a personal or working mailbox.
    - **Two gates, not one.** `GOOGLE_ACCESS_TOKEN` alone must not arm it — that variable already
      exists for the read-only `sync-e2e.test.ts`, so reusing it would silently turn an existing
      read-only setup into one that mutates mail. The second gate is `DX_GMAIL_TAG_SYNC_ACCOUNT`,
@@ -439,10 +438,10 @@ TDD, in this order. Each layer is a gate for the next.
    back, so it is revisited then, not before; and `spam` is the case that stresses
    `ProviderTagBinding` across vocabularies — a label in Gmail, a `$junk` keyword in JMAP — so treat
    the descriptor as provisional until a second provider has used it.
-4. **Live-test account** — **DECIDED 2026-08-15: a shared team test account**, not a throwaway. Still
-   blocks step 4 on one input: no such account is recorded anywhere in the repo (nothing under
-   `plugin-google` or the guides names one), so the address has to be supplied and written in here
-   before the test is authored.
+4. ~~**Live-test account**~~ **DECIDED 2026-08-15: the shared team account `dxos.test@gmail.com`.**
+   Nothing in the repo referenced it before this — no guide and nothing under `plugin-google` — so it
+   is recorded here as the canonical place, and the test asserts it rather than trusting whatever the
+   token happens to point at.
 
    The gate is `DX_GMAIL_TAG_SYNC_ACCOUNT`, holding that address. Its value doubles as the allowlist:
    the test runs only when it is set, and asserts `getProfile().emailAddress` equals it before the
@@ -450,6 +449,16 @@ TDD, in this order. Each layer is a gate for the next.
    rule above — a failed `finally` leaves a colleague's mailbox modified — so cleanup failures must be
    loud rather than swallowed.
 
+   Remaining prerequisite, not a decision: the token for that account must carry `gmail.modify`.
+   Confirm the connector requests that scope before writing the test.
+
    Precedent worth noting when wiring this: `plugin-google`'s `mail/send/handler.test.ts` already
    **sends real email** gated on `GOOGLE_ACCESS_TOKEN` alone. That is the pattern the two-gate rule
    exists to avoid repeating, not one to copy.
+
+## Status of the open decisions
+
+All four are now closed. What remains before implementation is mechanical, not a design question:
+confirm the `gmail.modify` scope on the test account's token, and verify whether
+`users.messages.modify` accepts `SPAM` in `addLabelIds` (which decides whether `spam` binds as a
+`label` or an `operation`).

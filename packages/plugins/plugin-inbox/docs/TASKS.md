@@ -598,10 +598,9 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
       `TRASH` stays out; deletion is not a tag. Verify whether `users.messages.modify` accepts `SPAM`
       in `addLabelIds` — if not, the reverse map needs a binding descriptor (`label` vs `operation`)
       rather than a bare `tagUri → labelId`.
-- [ ] **Live round-trip test** — both directions against a real account. Account kind DECIDED
-      2026-08-15: a SHARED TEAM test account. Still BLOCKED on the address itself — no such account is
-      recorded anywhere in the repo, so it must be supplied and written into `TAG-SYNC.md` before the
-      test is authored. This test WRITES labels, so `GOOGLE_ACCESS_TOKEN` alone must not arm it: that
+- [ ] **Live round-trip test** — both directions against `dxos.test@gmail.com` (DECIDED 2026-08-15;
+      unblocked). Nothing in the repo referenced that account before, so `TAG-SYNC.md` is now its
+      canonical record. This test WRITES labels, so `GOOGLE_ACCESS_TOKEN` alone must not arm it: that
       variable already exists for the read-only `sync-e2e.test.ts`, and reusing it would silently turn
       an existing read-only setup into one that mutates mail. Second gate is
       `DX_GMAIL_TAG_SYNC_ACCOUNT` holding the address (its value IS the allowlist), with a
