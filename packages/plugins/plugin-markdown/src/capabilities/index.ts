@@ -16,7 +16,7 @@ import { MarkdownCapabilities } from '#types';
 // AppGraphReady ordering the event-mode module used previously); the body reads nothing.
 export const AnchorResolver = Capability.lazyModule(
   'AnchorResolver',
-  { requires: [AppCapabilities.AppGraph], provides: [AppCapabilities.AnchorResolver] },
+  { requires: [AppCapabilities.AppGraph], provides: [AppCapabilities.AnchorResolver], environments: [] },
   () => import('./anchor-resolver'),
 );
 // Ordering-only: registers the sort comparator once the app graph exists (mirrors the
@@ -37,11 +37,14 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 export const MarkdownSettings = AppCapability.settings(() => import('./settings'), {
   provides: [MarkdownCapabilities.Settings],
 });
+// Browser-only, like the two anchor modules: it requires attention's view state, which only the
+// app shell provides — activating it headlessly just fails the dependency graph at boot.
 export const MarkdownState = Capability.lazyModule(
   'MarkdownState',
   {
     requires: [AttentionCapabilities.ViewState],
     provides: [MarkdownCapabilities.EditorState, MarkdownCapabilities.EditorViews],
+    environments: [],
   },
   () => import('./state'),
 );

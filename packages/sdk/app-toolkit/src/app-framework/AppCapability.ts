@@ -209,7 +209,8 @@ export const textContent: Maker<typeof AppCapabilities.TextContent> = Capability
 export const anchorSort: Maker<typeof AppCapabilities.AnchorSort> = Capability$.moduleMaker(
   'AnchorSort',
   AppCapabilities.AnchorSort,
-  { environments: ['node', 'workerd'] },
+  // Browser-only: a sort comparator is registered into the app graph, which no headless host builds.
+  { environments: [] },
 );
 
 //
