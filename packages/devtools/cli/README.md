@@ -127,7 +127,9 @@ retry them. Each reload is a full server start — identity, storage and plugin 
 the first request after an edit to wait on that.
 
 `--watch` only exists when running from source; the compiled binary has no sources to watch, so both
-the flag and its supervisor are stripped from it by the `DX_CLI_BUNDLED` define in `scripts/build.ts`.
+the flag and its supervisor are stripped from it by the `globalThis.DX_CLI_BUNDLED` define in
+`scripts/build.ts`. It is substituted while bundling rather than read at startup — that is the only
+phase that can drop the dead branch, and it leaves nothing the environment can flip.
 
 ## Release
 

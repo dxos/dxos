@@ -41,15 +41,26 @@ const STATIC_TOOL_NAMES = [
   'listOperations',
 ] as const;
 
+declare global {
+  /**
+   * Substituted with `true` by the `define` in `scripts/build.ts`, so only the compiled binary sees
+   * it; running from source leaves it `undefined`. A global rather than an env var because the
+   * substitution has to happen while bun is bundling — the phase that can eliminate a dead branch —
+   * and because nothing should be able to flip it from the environment.
+   */
+  // eslint-disable-next-line no-var
+  var DX_CLI_BUNDLED: boolean | undefined;
+}
+
 /**
  * `--watch` supervises a `bun --watch` child, so it only means anything when the CLI runs from
- * source. `scripts/build.ts` defines `process.env.DX_CLI_BUNDLED` for the compiled binary, which
- * both hides the flag from `--help` there and lets bun drop the supervisor from the bundle.
+ * source. In the binary the constant folds to `true`, which both hides the flag from `--help` and
+ * lets bun drop the supervisor from the bundle.
  */
 const watchOption = Options.boolean('watch').pipe(
   Options.withDescription('Restart the server when sources change (requires running from source).'),
   Options.withDefault(false),
-  process.env.DX_CLI_BUNDLED ? Options.withHidden : identity,
+  globalThis.DX_CLI_BUNDLED ? Options.withHidden : identity,
 );
 
 export const serve = Command.make(
@@ -57,7 +68,7 @@ export const serve = Command.make(
   { watch: watchOption },
   Effect.fn(function* ({ watch }) {
     if (watch) {
-      if (process.env.DX_CLI_BUNDLED) {
+      if (globalThis.DX_CLI_BUNDLED) {
         return yield* Effect.fail(
           new Error('`--watch` is only available when running the CLI from source (packages/devtools/cli/bin/dx).'),
         );

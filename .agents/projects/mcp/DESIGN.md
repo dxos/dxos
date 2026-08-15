@@ -354,9 +354,16 @@ namespaced id whose response it swallows, errors the requests the reload strande
 itself is delegated to `bun --watch`, whose file set is exactly the imported module graph.
 
 The flag is source-only, since a binary has no sources to watch, and is stripped from the compiled
-CLI by a `process.env.DX_CLI_BUNDLED` define in `scripts/build.ts`: `Flag.withHidden` drops it from
+CLI by a `globalThis.DX_CLI_BUNDLED` define in `scripts/build.ts`: `Flag.withHidden` drops it from
 `--help`, and guarding the supervisor's dynamic import on the same constant lets bun's DCE drop the
 module (verified — the supervisor is absent from a bundle built with the define, present without).
+
+A build-time define rather than a runtime check, because bundled-ness is only observable at runtime
+(`import.meta.dir` is `/$bunfs/root` in a binary) and a runtime check cannot be folded — both
+branches would ship. The only code that statically knows is the build script, so it has to say so.
+The define target is a global rather than `process.env.*`: both fold and both stay safe unreplaced
+on the source path, where no bundler runs, but a bare identifier throws `ReferenceError` there and
+an env var can be flipped by a stray exported variable. Measured across all three.
 The remaining cost is latency: a reload is a full server start, identity and plugin activation
 included.
 

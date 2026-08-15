@@ -194,8 +194,10 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
     // Marks the binary so source-only affordances drop out of it. `dx mcp serve --watch` re-runs the
     // CLI under `bun --watch`, which a binary has no sources to watch: the flag hides from `--help`
     // and the branch guarding its supervisor folds away, taking the supervisor module with it.
+    // Substituted here rather than read from the environment at startup, because only a value known
+    // while bundling can eliminate the dead branch — and a define cannot be flipped by a stray var.
     define: {
-      'process.env.DX_CLI_BUNDLED': '"1"',
+      'globalThis.DX_CLI_BUNDLED': 'true',
     },
     compile: {
       target,
