@@ -14,8 +14,8 @@ import { isNonNullable } from '@dxos/util';
  * Returns objects related to `subject` via direct references and/or relations.
  * Returns an empty array when `subject` is undefined.
  *
- * Every type present is returned; narrowing is the consumer's (see `useRelatedTypeFilter`). Only
- * types annotated hidden are withheld, since those are not addressable by the user at all.
+ * Withholds only types annotated hidden, which the user cannot address at all; narrowing the rest
+ * belongs to the consumer (see `useRelatedTypeFilter`).
  */
 // TODO(burdon): Factor out (make more generally useful -- e.g., in cards).
 // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.

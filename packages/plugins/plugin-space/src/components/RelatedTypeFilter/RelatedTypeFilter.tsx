@@ -18,13 +18,12 @@ export type RelatedTypeFilterProps = {
 /**
  * Toggles which types a related-object view shows, one item per type present in the set.
  *
- * Renders nothing for fewer than two types: filtering by the only type present is a no-op control.
- * Built on the standalone `ToggleGroup` rather than `Toolbar.ToggleGroup` so it can sit either in a
- * panel toolbar (the Related companion) or in a section header (the record's inline section), the
- * latter having no toolbar to provide the roving-focus context a toolbar item requires.
+ * Uses the standalone `ToggleGroup` because the record's section header, one of its two hosts, has
+ * no toolbar to supply the roving-focus context `Toolbar.ToggleGroup` requires.
  */
 export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFilterProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // Filtering by the only type present cannot narrow anything.
   if (types.length < 2) {
     return null;
   }

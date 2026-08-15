@@ -46,8 +46,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
       ? 'ph--cube--regular'
       : (Obj.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular');
 
-  // Keyed by the record itself rather than by this article, so the filter set here and the one set
-  // in the Related companion are the same filter.
+  // Keyed by the record, not this article, so the Related companion shares the same filter.
   const relatedObjects = useRelatedObjects(db, subject, { references: true, relations: true });
   const { types, items: related, toggle } = useRelatedTypeFilter(relatedObjects, Obj.getURI(subject).toString());
   const singleColumn = related.length === 1;
@@ -77,6 +76,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
             </Card.Root>
 
             {/* TODO(burdon): Only show label if surface exists? */}
+            {/* TODO(burdon): Remove this section — move the related actions into the object menu. */}
             <div className='flex flex-col gap-form-gap'>
               <Input.Root>
                 <Input.Label>{t('related-actions.label')}</Input.Label>
@@ -84,8 +84,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
               <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
             </div>
 
-            {/* Gated on the unfiltered set: hiding every type must not take the filter away with the
-                cards, leaving no way back. */}
+            {/* Gated on the unfiltered set so hiding every type does not remove the filter itself. */}
             {relatedObjects.length > 0 && (
               <div
                 className={mx('dx-expander flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}

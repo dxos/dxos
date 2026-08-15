@@ -12,10 +12,8 @@ import { ViewState, useViewState, useViewStateActions } from '@dxos/react-ui-att
 const DEFAULT_ICON = 'ph--circle-dashed--regular';
 
 /**
- * Typenames withheld from a related-objects view, keyed by the subject's URI so that the companion
- * panel and the record's inline section agree on one filter. Stored as an exclusion rather than a
- * selection so a type that first appears after the choice was made shows up instead of being
- * silently withheld.
+ * Typenames withheld from a related-objects view, keyed by the subject's URI so every view of that
+ * record shares one filter. Held as an exclusion so a type appearing after the choice stays visible.
  */
 export const relatedTypeFilterAspect: ViewState.Aspect<string[]> = ViewState.define<string[]>({
   key: 'space-related-type-filter',
@@ -66,8 +64,7 @@ export const useRelatedTypeFilter = (items: Entity.Unknown[], contextId?: string
 
       byTypename.set(typename, {
         typename,
-        // `typename.label` belongs to the type's own plugin, which may not have been activated yet;
-        // the raw typename is the only label available until it is.
+        // `typename.label` belongs to the type's own plugin, which may not have activated yet.
         label: t('typename.label', { ns: typename, defaultValue: typename }),
         icon: Entity.getIcon(item)?.icon ?? DEFAULT_ICON,
         count: 1,

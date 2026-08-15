@@ -23,8 +23,7 @@ export type RelatedArticleProps = Pick<
 export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
   const db = Obj.getDatabase(companionTo);
   const related = useRelatedObjects(db, companionTo, { references: true, relations: true });
-  // Keyed by the record itself, so each record keeps its own filter and the record article's inline
-  // section (which has no toolbar to host the control) narrows with it.
+  // Keyed by the record, not this article, so the record's inline section shares the same filter.
   const contextId = companionTo && Obj.getURI(companionTo).toString();
   const { types, items, toggle } = useRelatedTypeFilter(related, contextId);
 
