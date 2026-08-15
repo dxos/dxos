@@ -9,6 +9,7 @@ import { type BarrelMember, parseBarrel } from './barrel';
 import {
   collectFreeIdentifiers,
   parseFile,
+  rebaseSpecifier,
   rewriteRelativeSpecifiers,
   topLevelExportConsts,
   topLevelImportDeclarations,
@@ -125,8 +126,12 @@ type RenderOptions = {
 
 const renderBarrel = ({ env, genDir, included, stubbed, overridesPath, overrideNames }: RenderOptions): string => {
   // Imports selected per included statement against the file the statement was sliced from, so
-  // cross-file re-exports resolve their own imports; specifiers re-based into gen/.
-  const importTexts = new Set<string>();
+  // cross-file re-exports resolve their own imports; specifiers re-based into gen/. Merged per
+  // specifier rather than collected as text: a re-exported module and the barrel itself often
+  // import overlapping bindings from the same path, and emitting both statements verbatim
+  // duplicates the binding.
+  type Merged = { isTypeOnly: boolean; defaultName: string | null; namespaceName: string | null; named: Set<string> };
+  const bySpecifier = new Map<string, Merged>();
   const importCache = new Map<string, ReturnType<typeof topLevelImportDeclarations>>();
   for (const member of included) {
     const free = collectFreeIdentifiers(member.statementText);
@@ -134,9 +139,37 @@ const renderBarrel = ({ env, genDir, included, stubbed, overridesPath, overrideN
       importCache.set(member.sourceFile, topLevelImportDeclarations(parseFile(member.sourceFile)!));
     }
     for (const decl of importCache.get(member.sourceFile)!) {
-      if ([...decl.boundNames].some((name) => free.has(name))) {
-        importTexts.add(rewriteRelativeSpecifiers(decl.text, path.dirname(member.sourceFile), genDir));
+      if (![...decl.boundNames].some((name) => free.has(name))) {
+        continue;
       }
+      const spec = rebaseSpecifier(decl.specifier, path.dirname(member.sourceFile), genDir);
+      const existing = bySpecifier.get(spec) ?? {
+        isTypeOnly: decl.isTypeOnly,
+        defaultName: null,
+        namespaceName: null,
+        named: new Set<string>(),
+      };
+      existing.isTypeOnly = existing.isTypeOnly && decl.isTypeOnly;
+      existing.defaultName ??= decl.defaultName;
+      existing.namespaceName ??= decl.namespaceName;
+      for (const name of decl.named) {
+        existing.named.add(name);
+      }
+      bySpecifier.set(spec, existing);
+    }
+  }
+
+  const importTexts = new Set<string>();
+  for (const [spec, merged] of bySpecifier) {
+    const prefix = merged.isTypeOnly ? 'import type' : 'import';
+    if (merged.namespaceName) {
+      importTexts.add(`${prefix} * as ${merged.namespaceName} from '${spec}';`);
+    }
+    const clause = [merged.defaultName, merged.named.size > 0 ? `{ ${[...merged.named].sort().join(', ')} }` : null]
+      .filter(Boolean)
+      .join(', ');
+    if (clause) {
+      importTexts.add(`${prefix} ${clause} from '${spec}';`);
     }
   }
 

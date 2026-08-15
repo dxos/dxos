@@ -9,9 +9,10 @@ import { translations } from '#translations';
 
 import { PreviewEvents } from '../events';
 
+// Browser-only: the module mounts the popover itself, so its body is React all the way down.
 export const PreviewPopover = Capability.lazyModule(
   'PreviewPopover',
-  { provides: [], activatesOn: PreviewEvents.Start },
+  { provides: [], activatesOn: PreviewEvents.Start, environments: [] },
   () => import('./preview-popover'),
 );
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {

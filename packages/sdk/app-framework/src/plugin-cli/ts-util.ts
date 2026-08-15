@@ -133,6 +133,13 @@ export const resolveRelativeModule = (fromDir: string, spec: string): string | n
 export type ImportDeclarationEntry = {
   text: string;
   boundNames: Set<string>;
+  specifier: string;
+  /** Whole-clause `import type`, distinct from a per-element `type` modifier. */
+  isTypeOnly: boolean;
+  defaultName: string | null;
+  namespaceName: string | null;
+  /** Named bindings as written, e.g. `Foo`, `Foo as Bar`, `type Foo`. */
+  named: string[];
 };
 
 /** Every top-level import declaration, with the local identifiers it binds. */
@@ -156,7 +163,26 @@ export const topLevelImportDeclarations = (sourceFile: SourceFile): ImportDeclar
         }
       }
     }
-    out.push({ text: nodeText(sourceFile, stmt), boundNames });
+    const named: string[] = [];
+    let namespaceName: string | null = null;
+    if (clause.namedBindings) {
+      if (ts.isNamespaceImport(clause.namedBindings)) {
+        namespaceName = clause.namedBindings.name.text;
+      } else if (ts.isNamedImports(clause.namedBindings)) {
+        for (const el of clause.namedBindings.elements) {
+          named.push(nodeText(sourceFile, el));
+        }
+      }
+    }
+    out.push({
+      text: nodeText(sourceFile, stmt),
+      boundNames,
+      specifier: ts.isStringLiteralLike(stmt.moduleSpecifier) ? stmt.moduleSpecifier.text : '',
+      isTypeOnly: clause.isTypeOnly,
+      defaultName: clause.name?.text ?? null,
+      namespaceName,
+      named,
+    });
   }
   return out;
 };
@@ -202,6 +228,15 @@ export const collectFreeIdentifiers = (snippet: string): Set<string> => {
  * Rewrite every relative module specifier in a snippet (static `from '...'` and dynamic
  * `import('...')`) so text authored in `originDir` stays correct when emitted into `outDir`.
  */
+/** Re-bases one relative module specifier from `originDir` to `outDir`; absolute ones pass through. */
+export const rebaseSpecifier = (specifier: string, originDir: string, outDir: string): string => {
+  if (!specifier.startsWith('.')) {
+    return specifier;
+  }
+  const next = path.relative(outDir, path.resolve(originDir, specifier)).split(path.sep).join('/');
+  return next.startsWith('.') ? next : `./${next}`;
+};
+
 export const rewriteRelativeSpecifiers = (snippet: string, originDir: string, outDir: string): string => {
   const sf = ts.createSourceFile('snippet.tsx', snippet, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const edits: Array<{ start: number; end: number; text: string }> = [];
