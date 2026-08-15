@@ -15,11 +15,11 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import { Person } from '@dxos/types';
 
 import { GoogleContacts } from '#apis';
 import { GoogleCredentials } from '#services';
+import { GoogleOperation } from '#types';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
 import { mapGooglePerson } from '../mapper';
@@ -122,7 +122,7 @@ const upsertPerson =
       return false;
     });
 
-const handler = InboxOperation.GoogleContactsSync.pipe(
+const handler = GoogleOperation.GoogleContactsSync.pipe(
   Operation.withHandler(({ binding: bindingRef }) =>
     Effect.gen(function* () {
       const bindingObj = bindingRef.target;

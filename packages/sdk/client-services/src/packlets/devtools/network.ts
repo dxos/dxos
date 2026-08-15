@@ -8,17 +8,11 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
-import {
-  type GetNetworkPeersRequest,
-  type GetNetworkPeersResponse,
-  type SignalResponse,
-  type SubscribeToNetworkTopicsResponse,
-  type SubscribeToSignalStatusResponse,
-  type SubscribeToSwarmInfoResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
 export const subscribeToNetworkStatus = ({ signalManager }: { signalManager: SignalManager }) =>
-  new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {
+  new Stream<DevtoolsHost.SubscribeToSignalStatusResponse>(({ next, close }) => {
     const update = () => {
       try {
         const status = signalManager.getStatus?.();
@@ -94,7 +88,7 @@ export const subscribeToSignal = ({
   });
 
 export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: SwarmNetworkManager }) =>
-  new Stream<SubscribeToNetworkTopicsResponse>(({ next, close }) => {
+  new Stream<DevtoolsHost.SubscribeToNetworkTopicsResponse>(({ next, close }) => {
     const update = () => {
       try {
         const topics = networkManager.topics;
@@ -113,7 +107,7 @@ export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: S
   });
 
 export const subscribeToSwarmInfo = ({ networkManager }: { networkManager: SwarmNetworkManager }) =>
-  new Stream<SubscribeToSwarmInfoResponse>(({ next }) => {
+  new Stream<DevtoolsHost.SubscribeToSwarmInfoResponse>(({ next }) => {
     const update = () => {
       const info = networkManager.connectionLog?.swarms;
       if (info) {
@@ -126,8 +120,8 @@ export const subscribeToSwarmInfo = ({ networkManager }: { networkManager: Swarm
 
 export const getNetworkPeers = (
   { networkManager }: { networkManager: SwarmNetworkManager },
-  request: GetNetworkPeersRequest,
-): GetNetworkPeersResponse => {
+  request: DevtoolsHost.GetNetworkPeersRequest,
+): DevtoolsHost.GetNetworkPeersResponse => {
   if (!request.topic) {
     throw new Error('Expected a network topic');
   }

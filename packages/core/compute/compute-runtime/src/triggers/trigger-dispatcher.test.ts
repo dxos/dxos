@@ -143,6 +143,7 @@ const TestLayer = (
     startingTime?: Date;
     failureCooldown?: Duration.Duration;
     spaceAwareResolver?: boolean;
+    livePollInterval?: Duration.Duration;
   } = {},
 ) =>
   Layer.empty.pipe(
@@ -151,6 +152,9 @@ const TestLayer = (
         timeControl: options.timeControl ?? 'manual',
         startingTime: options.startingTime ?? new Date('2025-09-05T15:01:00.000Z'),
         failureCooldown: options.failureCooldown,
+        // A sub-minute schedule is refused against the 1-minute default, so a test wanting one says
+        // so here — the same knob production would have to turn to allow it.
+        livePollInterval: options.livePollInterval,
       }),
     ),
     Layer.provide(TriggerStateStore.layerMemory),
@@ -288,6 +292,52 @@ describe('TriggerDispatcher', () => {
   });
 
   describe('Timer Triggers', () => {
+    // A schedule finer than the poll cannot be honoured: the tick finds it due, fires it once and
+    // skips to the next occurrence after now, dropping the ones in between. It is refused rather
+    // than run at the poll rate under a faster name.
+    it.effect(
+      'refuses a cron finer than the poll interval',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specTimer('*/5 * * * * *'), // Every 5s, against the 1-minute default.
+        });
+        yield* Database.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+        yield* dispatcher.advanceTime(Duration.minutes(1));
+
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] })).toEqual([]);
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'allows a sub-minute cron when the caller shortens the poll interval',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const functionObj = yield* registerOperation(Reply);
+          const trigger = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: Trigger.specTimer('*/5 * * * * *'),
+          });
+          yield* Database.add(trigger);
+
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.refreshTriggers();
+          yield* dispatcher.advanceTime(Duration.minutes(1));
+
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
+          expect(results.length).toBe(1);
+          expect(results[0].triggerId).toBe(trigger.id);
+        },
+        Effect.provide(TestLayer({ livePollInterval: Duration.seconds(1) })),
+      ),
+    );
+
     it.effect(
       'should invoke scheduled timer triggers',
       Effect.fnUntraced(function* ({ expect }) {
