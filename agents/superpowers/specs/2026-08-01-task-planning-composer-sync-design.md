@@ -6,7 +6,7 @@ Project: `mcp` (milestone 3, task 3). Builds on the verified local loop
 
 ## Goal
 
-The task-planning skill (`.agents/skills/task-planning`) keeps each project's TASKS in a
+The task-planning skill (`tools/claude/plugins/dxos-project/skills/task-planning`) keeps each project's TASKS in a
 **Composer document** instead of (or alongside) a repo `TASKS.md`, so tasks are live objects —
 visible in Composer, editable by humans and agents concurrently, and queryable by other tooling.
 
