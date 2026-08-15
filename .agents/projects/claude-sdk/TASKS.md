@@ -27,9 +27,10 @@ Decisions (confirmed with burdon 2026-08-15):
 
 - [x] Sidecar = vite middleware in `stories-assistant`, not a standalone
       process. Same origin, no CORS, works under `serve` and `test-storybook`.
-- [x] Always live — no fixture replay — but **never runs in CI**
-      (`tags: ['!test']` by default, lifted by the live env var; the moon task
-      that sets it is `runInCI: false`).
+- [x] Always live — no fixture replay — but **never runs in CI**. Implemented as
+      `tags: ['manual']` + a `DX_RUN_MANUAL_TESTS` gate in the storybook tag
+      config; the moon task that sets it is `runInCI: false`. (The first attempt,
+      a computed `!test` tag, broke storybook's static indexer.)
 - [x] New `Agent.stories.tsx`, not an extension of `Chat.stories.tsx` (which is
       built around `ScriptedLanguageModel`).
 - [x] Absorb changes inside `plugin-assistant` if the denial assertion needs
@@ -57,7 +58,7 @@ M2 gotchas worth remembering:
   inside `configureServer`.
 - **Storybook tags are not vitest tags.** `tags: ['manual']` is inert against
   `vitest.tags.ts`; the `DX_RUN_MANUAL_TESTS` gate is repeated in
-  `vite.base.config.ts`'s storybook tag config. A *computed* `tags` expression
+  `vite.base.config.ts`'s storybook tag config. A _computed_ `tags` expression
   breaks storybook's static indexer outright.
 - `storybook/test`'s `expect` is jest-style and returns a promise — `.to.be.true`
   type-errors and un-awaited assertions trip `no-floating-promises`.
