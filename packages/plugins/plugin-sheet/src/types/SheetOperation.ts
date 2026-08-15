@@ -79,7 +79,7 @@ export const Create = Operation.make({
     name: 'Create',
     description: 'Creates a new sheet and adds it to the space.',
     icon: 'ph--grid-nine--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     name: Schema.optional(Schema.String).annotate({ description: 'Display name for the sheet.' }),
@@ -98,7 +98,7 @@ export const GetValues = Operation.make({
     name: 'Get Range Values',
     description: 'Returns cell values from a sheet as a 2D array. Defaults to the entire occupied area.',
     icon: 'ph--table--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     sheet: Ref.Ref(Sheet.Sheet).annotate({ description: 'The sheet to read from.' }),
@@ -122,7 +122,7 @@ export const SetValues = Operation.make({
     name: 'Set Range Values',
     description: 'Sets multiple cell values in a sheet at once.',
     icon: 'ph--pencil--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     sheet: Ref.Ref(Sheet.Sheet).annotate({ description: 'The sheet to write to.' }),

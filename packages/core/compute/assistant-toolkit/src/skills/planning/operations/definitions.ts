@@ -28,7 +28,7 @@ export const UpdateTasks = Operation.make({
     name: 'Update tasks',
     description: INSTRUCTIONS,
     icon: 'ph--check-square-offset--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     tasks: Schema.Array(ChecklistTask),

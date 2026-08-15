@@ -262,21 +262,23 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
 };
 
 /**
- * Removes spans the predicate rejects, splicing each rejected span's children into its parent.
+ * Removes top-level spans the predicate rejects, splicing each rejected span's children into the
+ * root in its place.
  *
- * Hoisting rather than deleting the subtree is what makes the trace panel's tag filter usable:
- * hiding a noisy wrapper must not also hide the interesting work it kicked off. The rejected
- * span's own events go with it — they describe the hidden unit of work, not its children.
+ * The predicate only ever sees a span that would sit at the top level, never one nested inside a
+ * span that survived: once something is worth showing, the work it kicked off is worth showing too
+ * — an agent's run is not much use with its database calls filtered out of it. A rejected span's
+ * own events go with it; they describe the hidden unit of work, not its children.
  *
- * The root is never removed.
+ * Hoisted children face the predicate in turn, since they have themselves become top-level.
  */
-export const filterSpanTree = (span: Span, predicate: (span: Span) => boolean): Span => {
-  const children = span.children.flatMap((child) => {
-    const filtered = filterSpanTree(child, predicate);
-    return predicate(child) ? [filtered] : filtered.children;
-  });
-  return { ...span, children };
-};
+export const filterSpanTree = (root: Span, predicate: (span: Span) => boolean): Span => ({
+  ...root,
+  children: filterTopLevelSpans(root.children, predicate),
+});
+
+const filterTopLevelSpans = (spans: readonly Span[], predicate: (span: Span) => boolean): Span[] =>
+  spans.flatMap((span) => (predicate(span) ? [span] : filterTopLevelSpans(span.children, predicate)));
 
 /**
  * Message stamped on synthetic end events produced when a span times out.

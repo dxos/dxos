@@ -57,7 +57,7 @@ export const Open = Operation.make({
     name: 'Open',
     description: 'Opens and reads the contents of a transcription object.',
     icon: 'ph--folder-open--regular',
-    tags: [OperationTag.Navigation, OperationTag.Assistant],
+    tags: [OperationTag.Navigation],
   },
   input: Schema.Struct({
     transcript: Ref.Ref(Transcript.Transcript).annotate({

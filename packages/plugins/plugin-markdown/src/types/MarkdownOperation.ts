@@ -41,7 +41,7 @@ export const Create = Operation.make({
     name: 'Create',
     description: 'Creates a new markdown document and adds it to the space.',
     icon: 'ph--file-text--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     name: Schema.String,
@@ -78,7 +78,7 @@ export const Open = Operation.make({
     name: 'Open',
     description: 'Opens and reads the contents of a new markdown document.',
     icon: 'ph--arrow-square-out--regular',
-    tags: [OperationTag.Navigation, OperationTag.Assistant],
+    tags: [OperationTag.Navigation],
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotate({
@@ -98,7 +98,7 @@ export const GetSelection = Operation.make({
     description:
       "Returns the user's current text selection in the markdown document as anchor/text pairs (empty when nothing is selected).",
     icon: 'ph--selection--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     doc: Schema.optional(
@@ -143,7 +143,7 @@ export const CreateCheckpoint = Operation.make({
     name: 'Create Checkpoint',
     description: 'Records a named checkpoint of the current document content that can be viewed or restored later.',
     icon: 'ph--bookmark-simple--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotate({ description: 'The document to checkpoint.' }),
@@ -165,7 +165,7 @@ export const CreateBranch = Operation.make({
       by passing the returned branch id as branchId, then merge it back for review.
     `,
     icon: 'ph--git-branch--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotate({ description: 'The document to branch.' }),
@@ -217,7 +217,7 @@ export const MergeBranch = Operation.make({
       conflicting hunks are left in the text with git-style markers).
     `,
     icon: 'ph--git-merge--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotate({ description: 'The document that owns the branch.' }),
@@ -236,7 +236,7 @@ export const GetHistory = Operation.make({
     name: 'Get History',
     description: 'Lists the checkpoints and branches of a document.',
     icon: 'ph--clock-counter-clockwise--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotate({ description: 'The document to inspect.' }),
@@ -258,7 +258,7 @@ export const Update = Operation.make({
       Applies a set of edits to the markdown document.
     `,
     icon: 'ph--pencil-simple--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     // Any text-bearing document (an object holding a `content: Ref(Text)`), not only

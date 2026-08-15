@@ -38,7 +38,7 @@ export const ListProjects = Operation.make({
     description:
       'List the projects in the space: id, name, status, description, goal count, and whether a task set is linked.',
     icon: 'ph--list-bullets--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -69,7 +69,7 @@ export const GetProject = Operation.make({
     description:
       'Read a project in full: status, goals, task-set summary (open/total per set), outline, and artifacts.',
     icon: 'ph--info--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -103,7 +103,7 @@ export const UpdateProject = Operation.make({
     name: 'Update Project',
     description: 'Patch a project: name, status, description, or the goals list (what done means).',
     icon: 'ph--pencil-simple--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({

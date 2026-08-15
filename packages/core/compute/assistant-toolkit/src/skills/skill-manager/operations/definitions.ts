@@ -17,7 +17,7 @@ export const QuerySkills = Operation.make({
     name: 'Query skills',
     description: 'Queries available skills.',
     icon: 'ph--blueprint--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({}),
   output: Schema.Array(Type.getSchema(Skill.Skill)),

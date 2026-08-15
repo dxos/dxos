@@ -140,7 +140,7 @@ export const ReadEmail = Operation.make({
     name: 'Read email',
     description: 'Opens and reads the contents of a mailbox.',
     icon: 'ph--envelope-open--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotate({

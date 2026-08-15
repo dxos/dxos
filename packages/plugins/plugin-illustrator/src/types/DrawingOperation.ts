@@ -24,7 +24,7 @@ export const Create = Operation.make({
     key: makeKey('create'),
     name: 'Create Drawing',
     icon: 'ph--pencil-simple--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -53,7 +53,7 @@ export const Read = Operation.make({
     description:
       'Returns the current scene of a drawing: world objects (by id) with their elements in object-local units. Call before editing an existing drawing.',
     icon: 'ph--eye--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to read.' }),
@@ -69,7 +69,7 @@ export const Edit = Operation.make({
     description:
       'Applies scene commands to a drawing: upsert/move/remove world objects or individual elements by id. Returns the resulting scene.',
     icon: 'ph--pencil-simple-line--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to edit.' }),

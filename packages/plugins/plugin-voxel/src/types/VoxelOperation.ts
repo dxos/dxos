@@ -32,7 +32,7 @@ export const QueryWorld = Operation.make({
     name: 'Query world',
     description: 'Returns the current state of the voxel world including all voxels, grid dimensions, and block size.',
     icon: 'ph--cube--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotate({
@@ -62,7 +62,7 @@ export const AddVoxels = Operation.make({
     name: 'Add voxels',
     description: 'Adds one or more voxels to the world at specified coordinates with a given hue.',
     icon: 'ph--plus--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotate({
@@ -84,7 +84,7 @@ export const RemoveVoxels = Operation.make({
     name: 'Remove voxels',
     description: 'Removes voxels at specified coordinates from the world.',
     icon: 'ph--minus--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotate({

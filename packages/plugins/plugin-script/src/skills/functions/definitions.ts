@@ -102,7 +102,7 @@ export const Create = Operation.make({
     name: 'Create',
     description: `Creates a new function with TypeScript source code and adds it to the space. ${FUNCTION_FORMAT} ${AVAILABLE_PACKAGES}`,
     icon: 'ph--code--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     name: Schema.String.annotate({
@@ -127,7 +127,7 @@ export const Read = Operation.make({
     name: 'Read',
     description: 'Reads the source code and metadata of a function.',
     icon: 'ph--file-text--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -160,7 +160,7 @@ export const Update = Operation.make({
     name: 'Update',
     description: `Updates the source code or metadata of a function. ${FUNCTION_FORMAT}`,
     icon: 'ph--pencil--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -186,7 +186,7 @@ export const Delete = Operation.make({
     name: 'Delete',
     description: 'Deletes a function and its source from the space.',
     icon: 'ph--trash--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -201,7 +201,7 @@ export const Deploy = Operation.make({
     name: 'Deploy',
     description: `Deploys a function to the Edge runtime. The function source must follow the required format: a single export default of Operation.pipe(Operation.withHandler(Effect.fn(function* (...) { ... }))). See the Create operation description for a full example.`,
     icon: 'ph--rocket-launch--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -221,7 +221,7 @@ export const Invoke = Operation.make({
     name: 'Invoke',
     description: 'Invokes a deployed Edge function with the given payload.',
     icon: 'ph--play--regular',
-    tags: [OperationTag.Assistant],
+    tags: [OperationTag.System],
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -264,7 +264,7 @@ export const InspectInvocations = Operation.make({
     name: 'InspectInvocations',
     description: 'Queries the invocation trace feed for a function, returning its invocation history.',
     icon: 'ph--magnifying-glass--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -307,7 +307,7 @@ export const QueryDeployedFunctions = Operation.make({
     name: 'QueryDeployedFunctions',
     description: 'Lists all functions deployed to the EDGE runtime. Use InstallFunction to add one to the space.',
     icon: 'ph--list--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Void,
   output: Schema.Struct({
@@ -325,7 +325,7 @@ export const InstallFunction = Operation.make({
     description:
       'Installs a deployed EDGE function into the current space by key. The returned function ID can be passed directly to Invoke.',
     icon: 'ph--download--regular',
-    tags: [OperationTag.Assistant],
+    tags: [OperationTag.System],
   },
   input: Schema.Struct({
     key: Schema.String.annotate({

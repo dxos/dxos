@@ -98,7 +98,7 @@ export const AddSegment = Operation.make({
     name: 'Add segment',
     description: 'Add a travel segment (flight, train, boat, road, accommodation, activity) to a trip.',
     icon: 'ph--plus--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({

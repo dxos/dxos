@@ -108,7 +108,7 @@ export const SetProviderTemplate = Operation.make({
     name: 'Set Provider Template',
     description: 'Persists the derived search schema, request mapping, and result mapping onto a provider.',
     icon: 'ph--floppy-disk--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     provider: Ref.Ref(Provider),

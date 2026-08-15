@@ -111,6 +111,33 @@ describe('buildExecutionGraph operation tag filter', () => {
     expect(render(messages, ['sync'])).not.toContain('Legacy');
   });
 
+  test('a hidden tag is shown when it is a subtask of a shown operation', ({ expect }) => {
+    const messages = collectTraceEvents(
+      Effect.gen(function* () {
+        yield* withMeta(
+          { pid: 'op-1' },
+          Trace.write(Trace.OperationStart, { key: 'run', name: 'Run', tags: ['assistant'] }),
+        );
+        yield* operation({ pid: 'op-2', parentPid: 'op-1' }, { key: 'query', name: 'Query', tags: ['database'] });
+        yield* withMeta(
+          { pid: 'op-1' },
+          Trace.write(Trace.OperationEnd, { key: 'run', name: 'Run', tags: ['assistant'], outcome: 'success' }),
+        );
+      }),
+    );
+    // `database` is not selected, but the agent's own run is — so what it kicked off comes with it.
+    const filtered = render(messages, ['assistant']);
+    expect(filtered).toContain('Run');
+    expect(filtered).toContain('Query');
+  });
+
+  test('the same tag is still hidden at the top level', ({ expect }) => {
+    const messages = collectTraceEvents(
+      operation({ pid: 'op-1' }, { key: 'query', name: 'Query', tags: ['database'] }),
+    );
+    expect(render(messages, ['assistant'])).not.toContain('Query');
+  });
+
   test('hiding a parent operation keeps the work it started', ({ expect }) => {
     const messages = collectTraceEvents(
       Effect.gen(function* () {
@@ -138,11 +165,12 @@ describe('buildExecutionGraph operation tag filter', () => {
         yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
       }),
     );
-    // The agent span survives the filter; with its only child hidden it has no inner detail left,
-    // so it collapses to a single commit exactly as an empty span does unfiltered.
+    // The agent request is not an operation, so the filter never touches it — and its `ui` child is
+    // a subtask of a shown span, so it comes along even though `ui` is not selected.
     const filtered = render(messages, ['sync']);
+    expect(filtered).toContain('Agent processing request...');
     expect(filtered).toContain('Agent completed request');
-    expect(filtered).not.toContain('Open');
+    expect(filtered).toContain('Open');
   });
 
   test('an end event whose span never opened is filtered too', ({ expect }) => {

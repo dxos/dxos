@@ -33,7 +33,7 @@ export const AttachImage = Operation.make({
       Use this after you have already identified a candidate avatar, logo, or
       photograph for a Person or Organization via web research.
     `,
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     subject: Ref.Ref(Obj.Unknown).annotate({

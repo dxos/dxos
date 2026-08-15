@@ -91,7 +91,7 @@ export const QueryFacts = Operation.make({
     description:
       'Queries the space fact store (a semantic index of subject-predicate-object facts extracted from user content) with structured filters.',
     icon: 'ph--brain--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   services: [FactStore],
   input: Schema.Struct({

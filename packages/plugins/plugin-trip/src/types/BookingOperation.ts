@@ -28,7 +28,7 @@ export const SearchBookings = Operation.make({
     name: 'Search Bookings',
     description: 'Search for flights (and other bookings) across the enabled booking providers.',
     icon: 'ph--magnifying-glass--regular',
-    tags: [OperationTag.Assistant],
+    tags: [OperationTag.Connector],
   },
   input: Schema.Struct({
     query: BookingSearch.SearchQuery,

@@ -33,7 +33,7 @@ export const Create = Operation.make({
     key: makeKey('create'),
     name: 'Create Project',
     icon: 'ph--stack--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({

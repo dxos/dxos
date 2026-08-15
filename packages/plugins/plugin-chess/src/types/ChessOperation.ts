@@ -20,7 +20,7 @@ export const Move = Operation.make({
     name: 'Move',
     description: 'Makes a move in the given chess game.',
     icon: 'ph--play--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     game: Game.GameRef(Chess.State).annotate({
@@ -45,7 +45,7 @@ export const Play = Operation.make({
     name: 'Play',
     description: 'Uses the chess engine to play the next move.',
     icon: 'ph--play--regular',
-    tags: [OperationTag.Assistant],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     game: Game.GameRef(Chess.State).annotate({
@@ -73,7 +73,7 @@ export const Print = Operation.make({
     name: 'Print game',
     description: 'Prints the chess game to ASCII.',
     icon: 'ph--clipboard-text--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     pgn: Schema.optional(

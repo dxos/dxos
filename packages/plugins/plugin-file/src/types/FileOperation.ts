@@ -35,7 +35,7 @@ export const Read = Operation.make({
     description:
       'Reads the contents of a file and returns them as a File content block (data URL for inline files, original URL for external files).',
     icon: 'ph--file-arrow-down--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     file: Ref.Ref(File.File).annotate({

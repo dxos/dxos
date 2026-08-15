@@ -45,7 +45,7 @@ export const FetchArticleContent = Operation.make({
     name: 'Fetch Article Content',
     description: "Fetches and extracts text + image URLs from a Post's article page.",
     icon: 'ph--article--regular',
-    tags: [OperationTag.Assistant, OperationTag.Connector],
+    tags: [OperationTag.Connector],
   },
   input: Schema.Struct({
     post: Ref.Ref(Subscription.Post).annotate({

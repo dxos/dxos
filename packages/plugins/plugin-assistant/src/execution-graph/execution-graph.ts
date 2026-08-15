@@ -118,9 +118,12 @@ export interface BuildExecutionGraphParams {
    */
   now?: number;
   /**
-   * Operation tags (`Operation.Tag`) to keep. An operation is kept when it carries at least one;
-   * one that declares none matches {@link UNTAGGED_OPERATION_TAG}. Omit to keep every operation.
-   * Non-operation activity (agent requests, tool calls, status) is never filtered.
+   * Operation tags to keep. A top-level operation is kept when it carries at least one; one that
+   * declares none matches {@link UNTAGGED_OPERATION_TAG}. Omit to keep every operation.
+   *
+   * Only top-level spans are filtered — whatever a shown span kicked off stays with it, since an
+   * agent's run is not much use with its database calls filtered out of it. Non-operation activity
+   * (agent requests, tool calls, status) is never filtered.
    */
   operationTags?: readonly string[];
 }
@@ -206,8 +209,8 @@ export const buildExecutionGraph = ({
 };
 
 /**
- * Drops operation spans whose tags fall outside the selection, and the stray boundary events of
- * such operations that never formed a span (an end whose begin was never recorded).
+ * Drops top-level operation spans whose tags fall outside the selection, and the stray boundary
+ * events of such operations that never formed a span (an end whose begin was never recorded).
  */
 const applyOperationTagFilter = (root: Span, operationTags: readonly string[] | undefined): Span => {
   if (operationTags === undefined) {

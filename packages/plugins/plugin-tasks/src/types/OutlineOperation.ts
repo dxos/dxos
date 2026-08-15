@@ -75,7 +75,7 @@ export const GetOutline = Operation.make({
     name: 'Get Outline',
     description: "Read an outline's checklist markdown and its parsed items.",
     icon: 'ph--list-checks--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -96,7 +96,7 @@ export const UpdateOutline = Operation.make({
     description:
       'Update an outline: upsert checklist items by title (preserving position and surrounding prose), or replace the markdown wholesale.',
     icon: 'ph--pencil-simple--regular',
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   services: [Database.Service],
   input: Schema.Struct({

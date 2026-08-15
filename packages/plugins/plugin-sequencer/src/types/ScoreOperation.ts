@@ -29,7 +29,7 @@ export const Read = Operation.make({
       every track as a [index:name] section followed by events of the form
       bar.beat[.frac] <pitch>[/<denom>] (or <drum>[/<denom>] for drum tracks).
     `,
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     score: Ref.Ref(Score.Score).annotate({
@@ -61,7 +61,7 @@ export const Write = Operation.make({
       The Score's tempo, time signature, name, and loop range are preserved.
       Use Read first to inspect the current state in the same format.
     `,
-    tags: [OperationTag.Assistant, OperationTag.Database],
+    tags: [OperationTag.Database],
   },
   input: Schema.Struct({
     score: Ref.Ref(Score.Score).annotate({
