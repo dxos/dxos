@@ -645,6 +645,19 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
 
 ### Open
 
+- **ADOPT FROM PR #12599 (wittjosiah's parallel `outbound-tag-sync` design): the `isProviderTag`
+  split.** Provider tags should stay non-renamable and non-recolorable but become MEMBERSHIP-
+  toggleable — one predicate split into two, auditing every call site (`meta-tags.ts`,
+  `SystemTags.ts`). Without it our eligibility is half-connected: `tagBindings` makes
+  `com.google.gmail.label` tags pushable, but the UI still forbids attaching or detaching them, so
+  only canonical tags can ever actually change locally. Small, and it completes what shipped.
+
+- **ADOPT FROM PR #12599: a tag add/remove affordance on messages** (their Phase 4). None exists today
+  beyond the star and the archive toggle — `Mailbox.applyTag` is called only by the classifier and
+  extractors. Until it lands, most of the push path is reachable only by pipeline code, not by a user.
+  Deliberately NOT folded into the tag-sync PR: it is a UI feature with its own storybook and review
+  surface, and that PR is already four packages wide.
+
 - **PRE-EXISTING FLAKE: `sync.test.ts`'s capped-run test loses a message under load.**
   `a capped run requests Operation.runAgain(), and repeated runs sync the whole mailbox` intermittently
   asserts 24 of 25 synced ids. NOT order-dependent — an earlier reading of it as "fails under `-t`,
