@@ -142,6 +142,59 @@ The clean alternative is reverting `Agent.stories.tsx` to `92c988b1bf` (needs
 burdon's approval — never revert uncommitted work unasked) and re-landing the
 client extraction separately.
 
+## M3 — a turn you can watch (PLANNED, not started)
+
+Goal: a human opens a UI, triggers a turn, and sees it appear. Split so the
+watchable part does not depend on the unresolved part.
+
+**Working rules for this milestone** (written before starting, because ignoring
+them is what burned the previous session):
+
+- **Diagnose before the second hypothesis.** On any non-obvious failure, dump the
+  relevant state (frames, atom contents, whether the handle is even defined)
+  before forming another theory. Five hypothesis-driven attempts failed on the
+  render bug; one dump solved the sibling bug in a single run.
+- **Build the cheap loop first.** The live story is ~60s and spends real tokens.
+  Nothing may be iterated on it until a seconds-long loop exists.
+- **No scope additions mid-milestone.** The client extraction in the previous
+  session was unnecessary and introduced a red herring.
+
+### M3a — mount the sidecar in `storybook dev` (small, independent)
+
+`tools/storybook-react/.storybook/main.ts` builds its own vite config in
+`viteFinal` and never loads a package's `vite.config.ts`, so the middleware is
+absent from the interactive storybook. Add it there, guarded so it only mounts
+when the agent host is wanted.
+
+- [ ] Mount the middleware in `viteFinal`.
+- [ ] Verify by hand: open the Agent story at 9009, confirm the turn runs.
+- [ ] Exit: burdon can watch a real turn without waiting on M3b.
+
+### M3b — the render path
+
+Root cause is known (see the FINDING section): `AiChatProcessor.messages` reads
+in-memory atoms, never the feed. `present()` has landed and is necessary but not
+sufficient.
+
+- [ ] **Cheap loop first**: a storybook story (or node test) that mounts the chat
+      and calls `present()` with a hand-built message — no SDK, no network.
+      Seconds per run. Everything below iterates on this.
+- [ ] Dump, in this order, before theorising: does `getChatProcessor()` return a
+      processor inside the play function; does `processor.messages` contain the
+      message after `present()`; does the component re-render.
+- [ ] Fix whatever that shows. Leads (UNTESTED): module-instance split across the
+      story boundary; the `Chat` component subscribing through a different atom
+      registry than the story renders with; `#pending` reset by the processor
+      lifecycle.
+- [ ] Restore the DOM assertion in `Agent.stories.tsx` and confirm green live.
+- [ ] Exit: the live story asserts the rendered thread again, and the M2 claim
+      about the render path is true rather than withdrawn.
+
+### M3c — invoke it from Composer's chat (blocked on M3b)
+
+- [ ] Route the Assistant chat input to the sidecar so a typed prompt runs a turn.
+- [ ] Exit: burdon types in Composer and sees the agent answer.
+
 ## Backlog
 
 - [ ] **Tree-based chat UI**: multiple threads via a sidebar selector, quick
