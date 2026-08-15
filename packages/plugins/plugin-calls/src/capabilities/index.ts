@@ -50,7 +50,7 @@ export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'), {
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.deckCompanion.activeCall', 'org.dxos.role.devtoolsOverview'],
 });
-export const Translations = AppCapability.translations(translations, { environments: ['browser', 'node'] });
+export const Translations = AppCapability.translations(translations, { environments: ['node'] });
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',

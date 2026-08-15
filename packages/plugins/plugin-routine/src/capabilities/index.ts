@@ -13,21 +13,21 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { RoutineCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const Commands = AppCapability.commands(() => import('./commands'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), {
   name: 'LayerSpecs',
   provides: [Capabilities.TraceSink],
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 // Node uses a hand-built lazyModule (idle activation) via ./overrides.node.ts — see the override
 // file for why it diverges from the maker's Startup default.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
@@ -42,17 +42,17 @@ export const RegistrySync = Capability.lazyModule(
       Capabilities.OperationHandler,
     ],
     provides: [],
-    environments: ['browser', 'node'],
+    environments: ['node'],
   },
   () => import('./registry-sync'),
 );
 // Headless environments load the reduced list via ./overrides.node.ts / ./overrides.workerd.ts.
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const Templates = Capability.lazyModule(
   'Templates',
-  { provides: [RoutineCapabilities.Template], environments: ['browser', 'node', 'workerd'] },
+  { provides: [RoutineCapabilities.Template], environments: ['node', 'workerd'] },
   () => import('./templates'),
 );
 export const TriggerRuntimeController = Capability.lazyModule(
@@ -62,7 +62,7 @@ export const TriggerRuntimeController = Capability.lazyModule(
     provides: [],
     // Runtime event: triggers only need to react to spaces once the client observes them.
     activatesOn: ClientEvents.SpacesReady,
-    environments: ['browser', 'node'],
+    environments: ['node'],
   },
   () => import('./trigger-runtime-controller'),
 );

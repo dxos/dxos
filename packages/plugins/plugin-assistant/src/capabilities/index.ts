@@ -29,22 +29,22 @@ export const AgentHydrator = Capability.lazyModule(
     requires: [Capabilities.ProcessManagerRuntime],
     provides: [],
     activatesOn: AssistantEvents.Start,
-    environments: ['browser', 'node'],
+    environments: ['node'],
   },
   () => import('./agent-hydrator'),
 );
 export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-service'), {
   name: 'AgentRuntime',
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const AiContext = AppCapability.layerSpec(() => import('./ai-context'), {
   name: 'AiContext',
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const AiService = AppCapability.layerSpec(() => import('./ai-service'), {
   name: 'AiService',
   requires: [AppCapabilities.AiModelResolver],
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const Connector = Capability.lazyModule(
   'AnthropicConnector',
@@ -52,7 +52,7 @@ export const Connector = Capability.lazyModule(
   () => import('./connector'),
 );
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
@@ -60,14 +60,14 @@ export const AutomationTemplates = Capability.lazyModule(
   () => import('./automation-templates'),
 );
 export const Schema = AppCapability.schema(() => import('./schema-defs'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 // Workerd loads a reduced declaration via ./overrides.workerd.ts: the workerd entry has no
 // ReactSurface to fire `AssistantEvents.Start` (see the maker's own doc comment), so the skill
 // must register on the framework's idle-default there instead.
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
   provides: [RoutineCapabilities.AgentDelegationStrategy],
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const CompanionChatProvisioner = Capability.lazyModule(
   'CompanionChatProvisioner',
@@ -89,7 +89,7 @@ export const CompanionChatProvisioner = Capability.lazyModule(
   () => import('./companion-chat-provisioner'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 // Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
 // require once during startup, so a resolver contributed in a later round is invisible to it.
@@ -112,7 +112,7 @@ export const MarkdownExtension = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
@@ -150,7 +150,7 @@ export const Toolkit = Capability.lazyModule(
   {
     provides: [AppCapabilities.Toolkit],
     activatesOn: AssistantEvents.Start,
-    environments: ['browser', 'node', 'workerd'],
+    environments: ['node', 'workerd'],
   },
   () => import('./toolkit'),
 );

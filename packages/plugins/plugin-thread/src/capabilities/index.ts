@@ -24,7 +24,7 @@ export const ChannelBackendFeed = Capability.lazyModule(
   {
     provides: [ThreadCapabilities.ChannelBackend],
     activatesOn: ThreadEvents.Start,
-    environments: ['browser', 'node', 'workerd'],
+    environments: ['node', 'workerd'],
   },
   () => import('./channel-backend-feed'),
 );
@@ -33,13 +33,13 @@ export const ChannelBackendFeed = Capability.lazyModule(
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const Translations = AppCapability.translations([...translations, ...threadTranslations]);
 export const PluginAsset = AppCapability.pluginAsset({

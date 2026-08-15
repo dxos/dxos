@@ -16,7 +16,7 @@ import { PresenterCapabilities } from '#types';
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const MarkdownExtension = Capability.lazyModule(
   'MarkdownExtension',

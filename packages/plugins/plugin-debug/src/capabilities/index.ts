@@ -16,7 +16,7 @@ import { Debug, DebugEvents } from '#types';
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
@@ -33,7 +33,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 export const DebugSettings = AppCapability.settings(() => import('./settings'), {
   activatesOn: ActivationEvents.Idle,
   provides: [Debug.DebugCapabilities.Settings],
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const StatsPanel = Capability.lazyModule(
   'StatsPanel',

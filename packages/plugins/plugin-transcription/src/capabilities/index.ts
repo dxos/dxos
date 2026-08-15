@@ -41,19 +41,19 @@ export const RecordingSession = Capability.lazyModule(
   () => import('./recording-session'),
 );
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const TranscriptionDriver = AppCapability.reactContext(() => import('./transcription-driver'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const TextContent = AppCapability.textContent(() => import('./text-content'), {
   activatesOn: TranscriptionEvents.Start,
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.section'],

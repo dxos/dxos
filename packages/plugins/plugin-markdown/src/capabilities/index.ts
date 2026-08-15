@@ -26,16 +26,16 @@ export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort')
 });
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],

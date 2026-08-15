@@ -10,6 +10,9 @@ export type PresenterContextType = {
   stop: () => void;
 };
 
+// Lives with the components rather than under `types/`: `createContext` is a real React import, and
+// `types/` is reachable from the node-conditioned capability barrel, so a context declared there
+// pulls React into a headless bundle.
 export const PresenterContext: Context<PresenterContextType> = createContext<PresenterContextType>({
   running: false,
   start: () => {},

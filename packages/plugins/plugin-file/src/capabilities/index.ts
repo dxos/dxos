@@ -20,13 +20,13 @@ import { FileCapabilities, FileEvents } from '#types';
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const EdgeBackend = Capability.lazyModule(
   'EdgeBackend',
@@ -34,7 +34,7 @@ export const EdgeBackend = Capability.lazyModule(
     requires: [ClientCapabilities.Client],
     provides: [FileCapabilities.Backend],
     activatesOn: FileEvents.Start,
-    environments: ['browser', 'node', 'workerd'],
+    environments: ['node', 'workerd'],
   },
   () => import('./edge-backend'),
 );
@@ -49,7 +49,7 @@ export const FileUploader = Capability.lazyModule(
 );
 export const InlineBackend = Capability.lazyModule(
   'InlineBackend',
-  { provides: [FileCapabilities.Backend], activatesOn: FileEvents.Start, environments: ['browser', 'node', 'workerd'] },
+  { provides: [FileCapabilities.Backend], activatesOn: FileEvents.Start, environments: ['node', 'workerd'] },
   () => import('./inline-backend'),
 );
 export const Markdown = Capability.lazyModule(
@@ -59,7 +59,7 @@ export const Markdown = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.formInput', 'org.dxos.role.section', 'org.dxos.role.slide'],

@@ -12,7 +12,7 @@ import { ProjectCapabilities, ProjectsEvents } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['browser', 'workerd'],
+  environments: ['workerd'],
 });
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 // Headless environments register eagerly (Startup, the maker's default) via ./overrides.workerd.ts —
@@ -20,14 +20,14 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 // post-interactive Idle deferral.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'workerd'],
+  environments: ['workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
 // Headless environments load the reduced list via ./overrides.workerd.ts.
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'workerd'],
+  environments: ['workerd'],
 });
 // Headless environments register ungated (Idle) via ./overrides.workerd.ts — the workerd variant
 // never fires `ProjectsEvents.Start` (no UI surface to trigger it).
@@ -36,7 +36,7 @@ export const Templates = Capability.lazyModule(
   {
     provides: [ProjectCapabilities.Template],
     activatesOn: ProjectsEvents.Start,
-    environments: ['browser', 'workerd'],
+    environments: ['workerd'],
   },
   () => import('./templates'),
 );

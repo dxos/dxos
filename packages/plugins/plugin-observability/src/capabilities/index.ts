@@ -69,7 +69,7 @@ export const Observability = Capability.inlineModule(
 // telemetry (see the overrides files for why), so they register a no-op `SendEvent` handler
 // instead of the browser implementation.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],

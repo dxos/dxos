@@ -17,6 +17,7 @@ tasks:
       --export ./AssistantPlugin
       --to "@dxos/react-ui"
       --conditions workerd,worker
+      --conditions node
       --fail-on present
     deps:
       - dx-trace-imports:build

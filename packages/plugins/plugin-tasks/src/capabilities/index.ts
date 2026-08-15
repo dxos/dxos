@@ -19,14 +19,14 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 // post-interactive Idle deferral.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'workerd'],
+  environments: ['workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.dialog', 'org.dxos.role.section'],
 });
 // Headless environments load the reduced list via ./overrides.workerd.ts.
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'workerd'],
+  environments: ['workerd'],
 });
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({

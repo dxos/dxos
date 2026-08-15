@@ -16,7 +16,6 @@ export default defineConfig({
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'translations': 'src/translations.ts',
-    'Presenter': 'src/types/Presenter.ts',
     'testing': 'src/testing.ts',
     'PresenterCapabilities': 'src/types/PresenterCapabilities.ts',
     'PresenterEvents': 'src/types/PresenterEvents.ts',

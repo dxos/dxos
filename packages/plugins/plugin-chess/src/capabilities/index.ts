@@ -15,10 +15,10 @@ import { translations } from '#translations';
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const GameVariant = Capability.lazyModule(
   'GameVariant',
@@ -27,7 +27,7 @@ export const GameVariant = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

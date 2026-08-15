@@ -27,16 +27,16 @@ export const Migrations = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.slide'],
 });
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
@@ -45,5 +45,5 @@ export const PluginAsset = AppCapability.pluginAsset({
   mimeType: 'application/x-mdl',
 });
 export const Translations = AppCapability.translations(translations, {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });

@@ -491,13 +491,23 @@ export interface Module<Options = void> {
 }
 
 /**
- * Environments a module can be flagged for via {@link ModuleSpec}'s `environments`.
- * Omitted means browser-only — headless availability is opt-in per module. The annotation
- * must be a literal array at the authoring site: barrel generation reads it statically
- * (headless barrels are emitted per environment, since bundlers follow lazy loaders), so a
+ * A package.json export/import condition a module is additionally split out for, via
+ * {@link ModuleSpec}'s `environments` — `'node'` and `'workerd'` in this repo.
+ *
+ * Deliberately an open string rather than a union: conditions are defined by whichever build tool
+ * resolves the package, so the framework has no business enumerating them (a consumer targeting
+ * `deno`, `electron`, or a private condition is equally valid).
+ *
+ * There is no `'browser'` member because there is no `browser` condition — the canonical barrel IS
+ * the `default` condition, which is what a browser resolves. Omitting `environments` therefore
+ * means "do not split this module by environment", not "browser-only": no per-condition variant is
+ * generated for it at all.
+ *
+ * The annotation must be a literal array at the authoring site: barrel generation reads it
+ * statically (variants are emitted per condition, since bundlers follow lazy loaders), so a
  * computed value would be invisible to the generator.
  */
-export type Environment = 'browser' | 'node' | 'workerd';
+export type Environment = string;
 
 /**
  * Spec shared by {@link lazyModule} and {@link inlineModule}: the requires/provides
@@ -511,7 +521,7 @@ type ModuleSpec<Provides extends readonly AnyTag[], Requires extends readonly An
   readonly activatesOn?: ActivationEvent.Events;
   /** Maps plugin options to the body's props; omit when they coincide. */
   readonly props?: (options: Options) => Props;
-  /** Environments this module is flagged for (literal array); omitted means browser-only. */
+  /** Conditions this module is additionally split out for (literal array); omitted means no split. */
   readonly environments?: readonly Environment[];
 };
 
@@ -616,7 +626,7 @@ export type MakerOptions<
   activatesOn?: ActivationEvent.Events;
   /** Maps plugin options to the body's props; omit when they coincide. */
   props?: (options: Options) => Props;
-  /** Environments this module is flagged for (literal array); omitted means browser-only. */
+  /** Conditions this module is additionally split out for (literal array); omitted means no split. */
   environments?: readonly Environment[];
 };
 

@@ -15,16 +15,16 @@ import { ScriptCapabilities, ScriptEvents } from '#types';
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const Compiler = Capability.lazyModule(
   'Compiler',
@@ -37,7 +37,7 @@ export const Compiler = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.objectProperties', 'org.dxos.role.section'],

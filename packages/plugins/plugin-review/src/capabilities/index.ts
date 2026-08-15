@@ -33,17 +33,17 @@ export const AgentRunner = Capability.lazyModule(
   () => import('./agent-runner'),
 );
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./history-graph'), {
   name: 'HistoryGraph',
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
@@ -69,7 +69,7 @@ export const MarkdownBinding = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
@@ -95,13 +95,13 @@ export const ReviewState = Capability.lazyModule(
   {
     provides: [ReviewCapabilities.ReviewRenderPolicy],
     activatesOn: ReviewEvents.Start,
-    environments: ['browser', 'node'],
+    environments: ['node'],
   },
   () => import('./review-state'),
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
   activatesOn: ReviewEvents.Start,
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const Translations = AppCapability.translations([...translations, ...threadTranslations]);
 export const PluginAsset = AppCapability.pluginAsset({

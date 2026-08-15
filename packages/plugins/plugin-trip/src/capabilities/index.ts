@@ -19,7 +19,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 });
 // Headless environments load the reduced list via ./overrides.node.ts / ./overrides.workerd.ts.
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const SkillDefinition = Capability.inlineModule(
   'SkillDefinition',

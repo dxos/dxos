@@ -20,12 +20,12 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
@@ -43,7 +43,7 @@ export const SampleSettings = AppCapability.settings(() => import('./settings'),
   provides: [SampleCapabilities.Settings],
 });
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({

@@ -23,7 +23,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 });
 // Node-specific implementation spliced by `dx-plugin gen` (see overrides.node.ts): a node host has
 // the OAuth callback server and filesystem the browser command set omits (`account`, `profile`).
-export const Commands = AppCapability.commands(() => import('./commands'), { environments: ['browser', 'node'] });
+export const Commands = AppCapability.commands(() => import('./commands'), { environments: ['node'] });
 export const HubHttpClient = Capability.lazyModule(
   'HubHttpClient',
   {
@@ -46,13 +46,13 @@ export const Client = Capability.lazyModule(
       ClientCapabilities.IdentityService,
       ClientCapabilities.SpaceService,
     ],
-    environments: ['browser', 'node'],
+    environments: ['node'],
   },
   () => import('./client'),
 );
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), {
   name: 'LayerSpecs',
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const Migrations = Capability.lazyModule(
   'Migrations',
@@ -63,7 +63,7 @@ export const Migrations = Capability.lazyModule(
     // client initialization to have completed — the same point it ran at when the startup pass
     // awaited initialize.
     activatesOn: ClientEvents.Initialized,
-    environments: ['browser', 'node'],
+    environments: ['node'],
   },
   () => import('./migrations'),
 );
@@ -75,7 +75,7 @@ export const NavigationTargetLoader = Capability.lazyModule(
   () => import('./navigation-target-loader'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
@@ -100,7 +100,7 @@ export const SchemaDefs = Capability.lazyModule(
   {
     requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema],
     provides: [],
-    environments: ['browser', 'node'],
+    environments: ['node'],
   },
   () => import('./schema-defs'),
 );

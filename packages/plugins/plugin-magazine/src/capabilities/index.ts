@@ -26,10 +26,10 @@ export const RoutineTemplates = Capability.lazyModule(
 );
 // Headless environments load the reduced list via ./overrides.workerd.ts.
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'workerd'],
+  environments: ['workerd'],
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['browser', 'workerd'],
+  environments: ['workerd'],
 });
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 // Headless environments register eagerly (Startup, the maker's default) via ./overrides.workerd.ts —
@@ -37,7 +37,7 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 // post-interactive Idle deferral.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'workerd'],
+  environments: ['workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.objectProperties'],

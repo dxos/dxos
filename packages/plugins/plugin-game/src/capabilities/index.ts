@@ -16,7 +16,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section'],
 });
 export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['browser', 'node', 'workerd'],
+  environments: ['node', 'workerd'],
 });
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
@@ -25,5 +25,5 @@ export const PluginAsset = AppCapability.pluginAsset({
   mimeType: 'application/x-mdl',
 });
 export const Translations = AppCapability.translations(translations, {
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });

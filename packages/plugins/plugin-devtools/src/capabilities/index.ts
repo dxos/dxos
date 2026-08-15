@@ -17,7 +17,7 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [AppCapabilities.AppGraph],
-  environments: ['browser', 'node'],
+  environments: ['node'],
 });
 export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {

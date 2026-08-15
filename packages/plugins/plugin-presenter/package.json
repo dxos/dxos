@@ -15,12 +15,10 @@
   "imports": {
     "#capabilities": {
       "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
@@ -73,11 +71,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./Presenter": {
-      "source": "./src/types/Presenter.ts",
-      "types": "./dist/types/src/types/Presenter.d.ts",
-      "import": "./dist/lib/Presenter.mjs"
     },
     "./PresenterCapabilities": {
       "source": "./src/types/PresenterCapabilities.ts",
