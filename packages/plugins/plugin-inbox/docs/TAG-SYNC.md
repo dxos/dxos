@@ -116,6 +116,30 @@ be stranded if left there unpushed. The per-run base overlay for newly-inserted 
 separates those from the pull's own writes; see
 [Pipeline-applied tags](#pipeline-applied-tags-push-too--and-spam-has-no-mapping-yet).
 
+### The provider echoes our own push back (verified)
+
+Gmail records a push in its own history: after a `batchModify`, `history.list` from a pre-push
+`historyId` reports the very `labelsAdded` we just wrote (verified 2026-08-15 against
+`dxos.test@gmail.com`; `batchModify` returns `204` with an empty body). The delta token advances at
+`prepare` time, before the push, so **every run that pushes guarantees its own write is in the next
+run's delta.**
+
+The ordering above absorbs this rather than looping on it. Take a locally-applied star:
+
+| Run | base    | local       | remote (base ⊕ delta) | Outcome                      |
+| --- | ------- | ----------- | --------------------- | ---------------------------- |
+| N   | no star | star (user) | no star               | push `addLabelIds:[STARRED]` |
+| N+1 | star    | star        | star (echo)           | all three agree → no-op      |
+
+`base` at run N+1 is the heads captured at run N step 2, which already included the user's toggle —
+so the echo arrives as an add of something the base already has. Removals are symmetric. Two ways to
+get this wrong, both ruled out by the ordering rule: capturing heads _before_ the pull leaves the
+echo looking like a remote-only change, and advancing the token _after_ the push would hide the echo
+in one run and surface it in the next.
+
+Consequence worth knowing, not a bug: a run that pushes always sees a non-empty delta next run, so
+the sync never observes "nothing changed" immediately after a push.
+
 ### Worked example
 
 1. Run N: Gmail reports message A as `[INBOX, STARRED]`; local gets `inbox` + `starred`; heads `H1`
