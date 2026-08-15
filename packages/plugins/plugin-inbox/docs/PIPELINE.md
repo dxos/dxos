@@ -9,11 +9,11 @@ How mail gets into a mailbox and what runs over it afterwards. Sibling docs: [`P
 ## The shape
 
 1. **Sync** — dispatches to the connector bound to the mailbox and **writes** the feed. Mechanical, no LLM.
-2. **Scan** — **reads** the feed through N independent cursors, running processors that plugins contribute.
+2. **Analyze** — **reads** the feed through N independent cursors, running processors that plugins contribute.
 
 Both halves are extensible, by deliberately different mechanisms. Sync's provider is an Effect
 service (`MailSyncProvider`) because exactly **one** provider is active per operation — the shape a
-`Context.Tag` models. Scan needs **N** processors active at once from different plugins, which a tag
+`Context.Tag` models. Analyze needs **N** processors active at once from different plugins, which a tag
 cannot express, so it is a capability contribution (`InboxCapabilities.MailboxProcessor`).
 
 A third seam covers one-shot operations a surface invokes rather than the cascade running:
@@ -44,6 +44,9 @@ subsystem. "Pipeline" survives as the informal collective noun.
 A processor's `id` is also its **cursor tag**, so two processors sharing an id would share a
 watermark and silently skip each other's work.
 
+The cascade runner calls its own plan entries **passes** (`analyze-mailbox.ts`), one per processor —
+not "stages", which this vocabulary reserves for the finer granularity above.
+
 ## Inventory
 
 **Processor** is the contributed id; `—` means the pipeline is not a contributed processor. `⋈` is a
@@ -64,7 +67,7 @@ stream merge, `»` a `Stream.grouped` page, and the last element of each chain i
 | plugin-projects | `UpdateInvestorLog`     | —               | —             | LLM                | none — whole feed        | none — filter + regenerate                                                                                                   |
 | plugin-inbox    | `ExtractMailbox`        | —               | —             | LLM                | none                     | none — `@deprecated`                                                                                                         |
 
-Everything with a processor id runs from the Scan cascade. The sync pair runs from the Sync toolbar
+Everything with a processor id runs from the Analyze cascade. The sync pair runs from the Sync toolbar
 action or a routine; `AnalyzeMailbox` is also reachable from brain's "Mailbox Facts" routine; the
 projects trio run from project routines. Per-message one-shots (`ExtractMessage`,
 `CreateProjectFromMessage`, `UnsubscribeSender`, …) are not pipelines; neither is `GenerateReply`,
@@ -105,11 +108,12 @@ NOT CONTRIBUTED — same feed, outside the topology
 
 Two things this makes visible:
 
-- **Only four of the twelve have an internal stage chain.** The rest are plain loops, so
+- **Six of the twelve have an internal stage chain**, and two of those are the same harness with the
+  provider layer swapped — so five distinct chains across twelve pipelines. The rest are plain loops:
   `@dxos/pipeline` is not the shared substrate the sync half suggests.
 - **On-arrival extraction is commented out of the sync chain**, because it reaches
   `Capability.Service` and invokes `ExtractMessage`, neither available off-host under edge compute.
-  Moving it to a processor that runs where those services exist is exactly what Scan is for.
+  Moving it to a processor that runs where those services exist is exactly what Analyze is for.
 
 ## Operations
 
@@ -117,16 +121,27 @@ Two phases:
 
 ```
 Sync => ConnectorSpec.Connector => connector.sync.operation
-Scan => InboxOperation.AnalyzeMailbox => MailboxProcessor
+Analyze => InboxOperation.AnalyzeMailbox => MailboxProcessor
 ```
 
 ### Sync
 
 - Single pipeline with deterministic, fast (non-LLM) stages.
+- Resolved through a REGISTRY rather than a topology: the toolbar action hands a target to
+  `syncTarget`, which finds its binding, then its `Connection`, then the contributed
+  `ConnectorSpec.Connector` whose `sync.operation` it runs. Note the two halves discover their
+  extensions differently — a registry lookup here, a DAG sort there — and say so in different
+  vocabularies.
+- A connector declaring a `sync.trigger` is run by force-firing that trigger rather than invoking the
+  operation, because the trigger dispatcher is what drives `Operation.runAgain()` continuation, so a
+  capped run finishes its remaining batches. Gmail and JMAP both declare one; `Operation.invoke` is
+  the fallback for a connector that does not.
 
-### Scan
+### Analyze
 
-- Multiple processors, each with cursor
+- Multiple processors, each independently cursored.
+- Contributed through `InboxCapabilities.MailboxProcessor`; `operations/analyze/analyze-mailbox.ts`
+  resolves them, filters by tier, orders them by their `after` edges and invokes each in turn.
 
 ## Decisions
 
@@ -176,7 +191,7 @@ deliberately, pre-1.0. Note the changesets are `minor`, not `major`: at 0.x a br
 the minor, and `major` would cut 1.0.0 across the whole fixed publish group.
 
 **D6 — Generalize off `Mailbox`.** NOT BUILT, and the least settled of the six. In one line: make the
-Scan half run contributed, independently-cursored **processors** over any feed, not just a mailbox's.
+Analyze half run contributed, independently-cursored **processors** over any feed, not just a mailbox's.
 
 ### What is already generic
 
@@ -285,7 +300,15 @@ is written — a write-time seam structurally closer to the sync half's inline s
 read-time pass.
 
 So D6 is not "generalize for the second instance". It is "build the abstraction on spec, or wait".
-That is a build-vs-defer decision, not a design detail, and it is the one to settle first.
+
+**SETTLED 2026-08-15 — wait.** `Ref.byAnnotation` was dropped in review on #12575, so a generic
+subject cannot be validated at the operation boundary; it would have to be `Ref.Ref(Obj.Unknown)`
+plus a runtime guard, which is a real loss of type safety on the one operation users invoke directly.
+Trading that for an abstraction with one implementor is a bad trade. Revisit when a second cursored
+consumer actually exists. The cursor layer itself is already generic (`findFeedCursor` /
+`findOrCreateFeedCursor` take any `FeedAnnotation`-carrying owner), so only the `MailboxProcessor`
+subject, its `tier`, and `AnalyzeMailbox`'s input and progress key remain mailbox-typed. See the D6
+entry in [`TASKS.md`](TASKS.md).
 
 ## Fixed along the way
 

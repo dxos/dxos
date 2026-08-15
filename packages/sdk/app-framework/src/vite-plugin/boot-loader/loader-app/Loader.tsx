@@ -166,7 +166,7 @@ export const Loader: Component<LoaderProps> = (props) => {
           where the reader's eye already is. */}
       {props.store.onAbort() ? (
         <div id='boot-loader-stalled'>
-          <p id='boot-loader-stalled-text'>Still starting after {props.store.elapsedSeconds()}s. Nothing has failed.</p>
+          <p id='boot-loader-stalled-text'>Still starting after {props.store.elapsedSeconds()}s.</p>
           <button id='boot-loader-stalled-abort' type='button' onClick={() => props.store.onAbort()?.()}>
             Abort and show diagnostics
           </button>
