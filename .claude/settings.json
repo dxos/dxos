@@ -1,12 +1,4 @@
 {
-  "enabledPlugins": {
-    "superpowers@claude-plugins-official": true,
-    "context7@claude-plugins-official": true,
-    "linear@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-    "playwright@claude-plugins-official": true,
-    "dxos-project@dxos": true
-  },
   "permissions": {
     "allow": ["mcp__Trunk__search-test", "mcp__Trunk__investigate-ci-failure", "mcp__Trunk__detect-frameworks"]
   },
@@ -44,12 +36,12 @@
       }
     ]
   },
-  "extraKnownMarketplaces": {
-    "dxos": {
-      "source": {
-        "source": "github",
-        "repo": "dxos/dxos"
-      }
-    }
-  }
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "linear@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {}
 }

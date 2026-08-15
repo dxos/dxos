@@ -181,28 +181,6 @@ projects:
     design: packages/stories/stories-brain/fixtures/REPORT.md
     prs: [12163, 12167, 12178, 12538, 12546, 12553, 12555]
     resume: 'UMBRELLA work-stream. The inbox SURFACE work lives in the CHILD ledger packages/plugins/plugin-inbox/docs/TASKS.md (registry project mailbox-pipeline) — that split is deliberate and its file says do not add surface work here; THIS ledger (packages/stories/stories-brain/docs/TASKS.md) keeps the model-ladder / FINDINGS / Topics research, 42 open items. CHILD STATUS 2026-08-14: PR #12555 is IN THE MERGE QUEUE (auto-merge, squash, 84 commits) carrying Phases 0-5 — virtual folders, archive, sender enrichment, and the processor topology. The Scan cascade no longer enumerates its passes: they are InboxCapabilities.MailboxProcessor contributions ordered by declared `after` edges, a failure blocks only its DESCENDANTS, and a missing service is a SKIP not a failure. AnalyzeMailbox and GenerateReply moved to plugin-brain (two released DXNs changed, accepted pre-1.0), which dropped @dxos/pipeline-rdf from plugin-inbox entirely. TWO ECHO CHIPS SPAWNED and gating the rest, both awaiting Dima: computed aggregate group keys (threadless messages are silently truncated to 4 today) and annotation-constrained refs (needed for D6 boundary validation). NOTHING in those 84 commits has been verified in a running app: the 27-step plan in packages/plugins/plugin-inbox/docs/TESTING.md needs a WARM browser — an automation browser starts with an empty OPFS and trips the fixed 30s budget at useApp.tsx:236, a cold-profile problem rather than a worktree or code one. Design for the pipeline architecture: packages/plugins/plugin-inbox/docs/PIPELINE.md.'
-  - name: task-planning-skill
-    status: active
-    user: burdon
-    host: burdon-mbp-2022
-    created: 2026-07-12
-    summary: Rename the $session sentinel/concept to $project and add a numbered pick-to-resume table.
-    tasks: tools/claude/plugins/dxos-project/skills/task-planning/TASKS.md
-    design: tools/claude/plugins/dxos-project/skills/task-planning/SKILL.md
-    prs: [12174]
-    resume: 'PR #12174 MERGED (34d2d1a190) — the $session->$project rename and the numbered pick-to-resume
-      table both shipped. The `$project` SENTINEL this project introduced was subsequently REPLACED by the
-      `/project` slash command in the `agent-directives` project (PR #12463), which also thinned SKILL.md
-      215->186 lines by moving the per-verb enumeration into the hook directives; the ledger''s checked items
-      are history, not current syntax. ONE open task remains (.agents/skills/task-planning/TASKS.md
-      "Follow-ups"): test the skill in a CLEAN repo outside the monorepo — copy SKILL.md in, run a realistic
-      multi-step task, confirm it triggers and produces a well-formed TASKS.md, optionally apply the
-      writing-skills TDD method (baseline pressure scenario without the skill, then with it), and fold any
-      gaps back into SKILL.md. 2026-08-15: fixed a related defect OUTSIDE this project''s scope —
-      ~/.claude/hooks/branch-beacon.sh and session-context.sh asserted `branch == claude/<worktree-dir-name>`,
-      which the harness no longer honours (it names the branch after the originating prompt), so a healthy
-      session got a false BRANCH ALERT every turn; the hooks now test detached HEAD + stub worktrees instead,
-      and AGENTS.md + cloud-sandbox/SKILL.md dropped the same dead claim (commit 1c7999ab29).'
   - name: inbox-test-suite
     status: active
     user: jdw
@@ -377,6 +355,23 @@ projects:
     prs: [12229, 12583, 12588]
     resume: "The ledger IS packages/core/halo/halo/MIGRATION_PLAN.md (per-plugin table + numbered Missing APIs 1-10); CONSUMER_MIGRATION.md is the cookbook, API_AUDIT.md the pre-migration inventory. THE HALO TIER IS COMPLETE — Missing APIs 1-6 all landed: #12229 (React + imperative singleton tiers), #12583 (1: Identity.personalSpaceId; 2: createRecoveryCredential/requestRecoveryChallenge/revokeRecoveryCredential + passkey recover), #12588 (3: Identity.getEdgeIdentity), and this branch (4: useInvitationFlow in halo-react + DeviceInfo.presence/os/platform/kind + shell DeviceListItem takes the structural ShellDevice with toShellDevice for client callers; 5: ClientOperation.GrantServiceAccess, plugin-script off writeCredentials; 6: Identity.atom(service), an Atom<Option<Info>> keyed by service reference, used by app-graph-builder). No plugin touches @dxos/client for HALO anymore. NEXT is the non-HALO remainder, all bigger: 7 = ECHO React bindings (~340 imports, the dominant blocker), 8 = space-invitation UI on Space.share/join, 9 = config/mesh/services access without the client root (what still pins DevicesContainer via useNetworkStatus + the DX_ENVIRONMENT gate, app-graph-builder, plugin-debug, plugin-observability), 10 = a @dxos/react-client/testing replacement. DELIBERATE BOUNDARIES (not gaps): CLI src/commands/** construct the client; plugin-client provides it. CARVE-OUTS: requestRecoveryChallenge needs EDGE so halo-e2e cannot cover it; plugin-onboarding queryAllCredentials wants an exhaustive credential QUERY verb distinct from the credentials stream; oauth-recovery-redirect keeps a client for Account.createHubClient and a 30s recover timeout vs the proxy's 20s. E2E: playwright app-manager.ts parses the DevicesContainer console JSON for invitationCode — that log line is load-bearing, keep it."
 ended:
+  - name: task-planning-skill
+    user: burdon
+    host: burdon-mbp-2022
+    created: 2026-07-12
+    ended: 2026-08-15
+    summary: Rename the $session sentinel/concept to $project and add a numbered pick-to-resume table.
+    tasks: tools/claude/plugins/dxos-project/skills/task-planning/TASKS.md
+    design: tools/claude/plugins/dxos-project/skills/task-planning/SKILL.md
+    prs: [12174]
+    resume: "ENDED 2026-08-15, subsumed by `claude-plugins`. PR #12174 MERGED (34d2d1a190) — the
+      $session->$project rename and the numbered pick-to-resume table both shipped. The `$project`
+      SENTINEL it introduced was later REPLACED by the `/project` slash command (`agent-directives`,
+      PR #12463); the skill then moved out of .agents/skills entirely into the `dxos-project` plugin
+      (PR #12618), so both this ledger's syntax and its file paths are history. Its one open
+      follow-up — test the skill in a clean repo outside the monorepo — was answered by that
+      extraction: the plugin was verified in a scratch `git init` repo with no .agents/ directory,
+      and the remaining live-path check is tracked as Phase 1 of `claude-plugins`."
   - name: app-framework-capability-activation
     user: jdw
     host: jdw-mbp

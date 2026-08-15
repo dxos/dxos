@@ -13,15 +13,6 @@
       "author": {
         "name": "DXOS"
       }
-    },
-    {
-      "name": "composer-plugin-dev",
-      "source": "./tools/claude/plugins/composer-plugin-dev",
-      "description": "Authoring guide for DXOS Composer plugins: scaffolding, capabilities, surfaces, operations, skills, testing, and community-plugin packaging.",
-      "version": "0.1.0",
-      "author": {
-        "name": "DXOS"
-      }
     }
   ],
   "description": "Claude Code plugins published by DXOS."

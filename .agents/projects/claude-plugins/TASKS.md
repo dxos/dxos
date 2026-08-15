@@ -1,9 +1,8 @@
 # DXOS Claude Code Plugins — Tasks
 
-_Resume: phase 1 rebuilt and both plugins staged for one PR; verify `/dxos-project:project` fires
-live after a session restart. Uncommitted: none. Last: recovered the stranded plugin commits,
-renamed `dx` -> `dxos-project`, moved `composer-plugin-dev` under `tools/claude/plugins/`, and listed
-both in the marketplace._
+_Resume: Phase 2 (Composer MCP backend) is the live work; PR #12618 carries phases 1 + 1b and is
+green. Uncommitted: none. Last: dropped `composer-plugin-dev` from the manifest and ended the
+`task-planning-skill` project, leaving `dxos` publishing exactly one plugin._
 
 ## Phase 1: Extract into a distributable plugin
 
@@ -75,15 +74,15 @@ layout the marketplace publishes under.
 - [x] **One home for Claude plugins** — moved `tools/composer-plugin-dev` (Dima's, unmaintained
       since 2026-05-01 apart from sweeps) to `tools/claude/plugins/composer-plugin-dev` and fixed
       its two self-referencing paths.
-- [x] **List both plugins in the marketplace** — `composer-plugin-dev` was on main but in no
-      manifest, so it had always been uninstallable.
-- [ ] **Decide `composer-plugin-dev`'s fate** — it is deprecated in the user's view but still the
-      only portable Composer-authoring artifact; `.agents/skills/composer-plugins/SKILL.md` (656
-      lines, in-repo audience) is the live one. Either fold the in-repo skill's content into its 22
-      reference files, or drop the plugin from the manifest.
-- [ ] **Fold in or close `task-planning-skill`** — that registry entry now points at this plugin's
-      files and its one open follow-up ("test the skill in a clean repo") is subsumed by this
-      project's foreign-repo verification. Two active entries for one work-stream.
+- [x] **Decided `composer-plugin-dev`'s fate** — DROPPED from the marketplace manifest (user,
+      2026-08-15). It was briefly listed, since it had sat on main in no manifest and so had always
+      been uninstallable; the decision is not to publish it. The files stay at
+      `tools/claude/plugins/composer-plugin-dev/` but ship to nobody, and the live Composer-authoring
+      guidance remains `.agents/skills/composer-plugins/SKILL.md` (656 lines, in-repo audience).
+      `dxos` therefore publishes exactly one plugin.
+- [x] **Closed `task-planning-skill`** — moved to the registry's `ended` list (user, 2026-08-15).
+      Its files now live in this plugin and its one open follow-up, testing the skill in a clean
+      repo, was answered by the extraction itself.
 
 ## Phase 2: Composer MCP backend
 
