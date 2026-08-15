@@ -14,6 +14,7 @@ export * from './binding';
 export * from './headers';
 export * from './mail-sync';
 export * from './policy';
+export * from './tag-diff';
 
 // Providers wrap their own failures into this shared type, so it belongs to the contract even though
 // it is declared with the plugin's other errors.

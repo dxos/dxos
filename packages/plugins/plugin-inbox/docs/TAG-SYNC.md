@@ -55,36 +55,45 @@ For every (message, tag) pair over the eligible tag set:
 | unchanged       | changed          | **pull** — the existing retag path          |
 | changed         | unchanged        | **push** — `addLabelIds` / `removeLabelIds` |
 | changed         | changed, same    | converged; nothing                          |
-| changed         | changed, opposed | conflict → resolved by tag origin, below    |
 
-The first four rows are `ConnectorSync.mergeField` at set granularity
+That is the whole matrix — there is no fifth "both changed, opposed" row. It mirrors
+`ConnectorSync.mergeField` at set granularity
 ([`ConnectorSync.ts:49`](../../../sdk/app-toolkit/src/types/ConnectorSync.ts:49)), the repo's existing
-three-way merge for external sync.
+three-way merge for external sync, minus the one case that cannot arise here.
 
-### Conflict resolution: the owner wins
+### There is no conflict case
 
-`mergeField` resolves a double-edit remote-wins unconditionally. Tag sync **diverges on that one
-row**, because unlike an arbitrary connector field, a tag already has a declared owner:
+Membership of one tag on one message is a **boolean** on each side. So `local !== base && remote !==
+base` forces `local === remote`: both sides flipped to the negation of base, which is convergence,
+not disagreement. All eight `(base, local, remote)` triples resolve to push, pull, or nothing.
 
-| Tag origin                                     | Winner     | Why                                                                                                                           |
-| ---------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| canonical (`org.dxos.tag`) — starred, inbox, … | **local**  | Applied and removed locally by design; a star or an archive the user just performed is a recent, explicit, user-authored act. |
-| provider (`com.google.gmail.label`)            | **remote** | Read-only in the app; sync owns both the tag and its membership, so there is no local act to defend.                          |
+| base | local | remote | outcome   |
+| ---- | ----- | ------ | --------- |
+| 0    | 0     | 0      | nothing   |
+| 0    | 0     | 1      | pull      |
+| 0    | 1     | 0      | push      |
+| 0    | 1     | 1      | converged |
+| 1    | 0     | 0      | converged |
+| 1    | 0     | 1      | push      |
+| 1    | 1     | 0      | pull      |
+| 1    | 1     | 1      | nothing   |
 
-This is not a second policy invented for tags — it is
-[`Tag.md`](../../../core/echo/echo/src/Tag.md) §"Tag origin" applied to the conflict case. That table
-already says who may change what: canonical tags stay locally toggleable (rule 2), foreign provider
-tags are sync's to decide (rule 1). Resolving a conflict any other way would contradict the ownership
-model the rest of the tag system is built on — remote-wins on a canonical tag means the app reverts a
-toggle it told the user was theirs.
+**This supersedes the conflict policy previously recorded here** (owner-wins: local for canonical
+tags, remote for provider tags). That policy was not wrong, it was inapplicable — it resolved a case
+the data model cannot express. It is removed rather than kept as dead code, and `eligible` is
+consequently a plain `Set` of tag uris rather than carrying a per-tag owner.
 
-The predicate is the existing `Tag.isProviderTag(tag)`, so no new classification is introduced.
+The moment this stops holding is the moment membership stops being a boolean — a tombstone, a
+tri-state, a per-tag payload. `tag-diff.test.ts` enumerates all eight triples and asserts no tag is
+ever pushed _and_ pulled in the same run, so introducing such a state fails the suite rather than
+silently reviving an unresolved conflict. **That is when a policy needs deciding, and owner-wins is
+the one to reach for** — a tag has a declared owner in [`Tag.md`](../../../core/echo/echo/src/Tag.md)
+§"Tag origin", where canonical tags stay locally toggleable and foreign provider tags are sync's to
+decide.
 
-The residual cost, stated plainly: a star removed on another device is resurrected by an unsynced
-local star, because "both changed" cannot distinguish which act was later. Bounded by one sync
-interval, and the alternative — reverting a toggle the user just made in front of them — is the worse
-of the two surprises. Timestamped last-writer-wins would resolve it properly and is tracked as
-follow-up work (see [Open decisions](#open-decisions)).
+Genuine ambiguity does exist, but one level up: **without a base**, "local has it and remote does
+not" cannot be told apart from "the remote removed it". That is answered by the additive-only rule
+below, not by a conflict policy.
 
 ### Ordering within a run
 
@@ -335,10 +344,9 @@ state to own. The operation layer already re-runs, and a bounded per-run push ke
 short.
 
 The diff is a pure module — `(base, local, remote, eligible) → { push, pull }` over plain
-`Map<string, Set<string>>` — with no ECHO, no provider and no Effect in it. `eligible` is
-`Map<tagUri, { owner: 'local' | 'remote' }>` rather than a bare set: it carries both which tags
-participate and who wins a conflict on each, so the caller resolves `Tag.isProviderTag` once and the
-diff itself needs no notion of tag origin. That is what makes it unit-testable without a database,
+`Map<string, Set<string>>` — with no ECHO, no provider and no Effect in it. `eligible` is a plain
+`Set` of tag uris (the provider's label map inverted); it needs no per-tag owner, since there is no
+conflict to resolve. That is what makes it unit-testable without a database,
 reusable by any container owning a `TagIndex` (Calendar's starred events), and swappable onto a
 shadow base.
 
@@ -421,9 +429,11 @@ operation, and `TRASH` stays absent from the label map.
 TDD, in this order. Each layer is a gate for the next.
 
 1. **Pure diff unit tests** — no database, no provider. Table-driven over the merge matrix above:
-   local-only add, local-only remove, remote-only add/remove, converged double-add, opposed conflict
-   on a canonical tag (local wins), opposed conflict on a provider tag (remote wins), ineligible tag
-   ignored, empty base (first sync) pushes nothing.
+   local-only add, local-only remove, remote-only add/remove, converged double-add and double-remove,
+   ineligible tag ignored, absent message treated as untagged, first sync pushes nothing, and the
+   base-less additive path emitting no removals. Plus an enumeration over all eight
+   `(base, local, remote)` triples asserting no tag is ever pushed and pulled at once — the guard that
+   fails if membership ever stops being boolean. **15 tests, passing.**
 2. **Mock-provider sync tests** (`sync.test.ts` alongside the existing suite) — seed a mailbox via
    `seedGmailBinding`, sync, toggle a tag locally, sync again, assert the mock recorded the expected
    `batchModify`. Then the reverse: mutate the mock's label state, sync, assert the local `TagIndex`.
@@ -461,12 +471,15 @@ TDD, in this order. Each layer is a gate for the next.
    `spam` has no Gmail mapping today and `GMAIL_SYSTEM_TAGS` documents `SPAM` as never synced, so
    adding it is a deliberate bidirectional change — see
    [the mapping section](#pipeline-applied-tags-push-too--and-spam-has-no-mapping-yet).
-2. ~~**Conflict policy**~~ **DECIDED 2026-08-15: the owner wins** — local for canonical tags, remote
-   for provider tags, split by `Tag.isProviderTag`. See
-   [Conflict resolution](#conflict-resolution-the-owner-wins).
+2. ~~**Conflict policy**~~ **MOOT 2026-08-15, found while writing the tests.** An opposed conflict is
+   unrepresentable for boolean tag membership, so the owner-wins policy decided earlier resolved a
+   case that cannot occur; it is removed rather than kept as dead code. See
+   [There is no conflict case](#there-is-no-conflict-case) — including what would revive the question
+   and why owner-wins is still the right answer if it ever does.
 
-   **Follow-up: timestamped last-writer-wins.** The chosen rule cannot tell which of two opposed acts
-   happened later, so an unsynced local star resurrects one removed on another device. Real LWW needs
+   **Follow-up: timestamped last-writer-wins.** Still relevant, but for the base-less path rather
+   than for conflicts: without a base an unsynced local star cannot be told from a remote removal, so
+   the additive rule keeps the star. Real LWW needs
    a per-entry write time, which `TagIndex` (`Record<tagId, objectId[]>`) does not carry — a schema
    change plus clock-skew handling between the device and the provider, since the two clocks are not
    comparable without a server-supplied ordering. Deliberately out of the first cut; revisit if the

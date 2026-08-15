@@ -568,11 +568,14 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
 
 ### Tasks
 
-- [ ] **Pure diff module** — `(base, local, remote, eligible) → { push, pull }` over plain
-      `Map<string, Set<string>>`; no ECHO, no provider, no Effect. `eligible` is
-      `Map<tagUri, { owner }>`, so the caller resolves `Tag.isProviderTag` once and the diff needs no
-      notion of tag origin. Table-driven unit tests over the merge matrix, including empty base (first
-      sync pushes nothing) and BOTH conflict directions (canonical → local wins, provider → remote).
+- [x] **Pure diff module** — `src/sync/tag-diff.ts`, `(base, local, remote, eligible) → { push, pull }`
+      over plain `Map<string, Set<string>>`; no ECHO, no provider, no Effect. 15 tests passing.
+      FOUND WHILE WRITING THEM: an opposed conflict is UNREPRESENTABLE. Membership is a boolean per
+      (message, tag), so `local !== base && remote !== base` forces `local === remote` — both flipped
+      to the negation of base. All eight triples resolve to push/pull/nothing, so the owner-wins
+      policy decided earlier is MOOT and is gone, along with the per-tag owner in `eligible` (now a
+      plain `Set`). The suite enumerates all eight and asserts no tag is ever pushed AND pulled, so a
+      future tri-state or tombstone fails the test rather than silently reviving the question.
 - [ ] **Heads on the binding** — persist `nextHeads` and `Cursor.spec.token` in ONE `Obj.update`
       (a combined `Cursor.writeSyncState({ token, tagHeads })`, never `writeToken` followed by a
       separate heads write). They are one recovery unit: token-then-heads leaves the next run reading
@@ -629,11 +632,10 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
 - ~~Whether `ClassifyMailbox`'s canonical output should push to the user's real Gmail account.~~
   DECIDED 2026-08-15: it pushes — a classification the user sees in Composer should be the one their
   mail client shows. See the `spam` mapping task above for the work that decision creates.
-- ~~Conflict policy.~~ DECIDED 2026-08-15: **the owner wins** — local for canonical (`org.dxos.tag`)
-  tags, remote for provider tags, split by the existing `Tag.isProviderTag`. This diverges from
-  `ConnectorSync.mergeField`'s unconditional remote-wins on exactly one row, and deliberately: a tag
-  already has a declared owner (`Tag.md` §"Tag origin"), and remote-wins on a canonical tag means the
-  app reverts a toggle it told the user was theirs.
+- ~~Conflict policy.~~ MOOT 2026-08-15 — an opposed conflict cannot be represented for boolean tag
+  membership, so neither owner-wins nor remote-wins ever fires. Removed rather than kept as dead code.
+  If membership ever gains a third state, owner-wins is the answer to reach for (a tag has a declared
+  owner per `Tag.md` §"Tag origin") — and the enumeration test will fail loudly at that point.
 - **CONSIDER LATER: timestamped last-writer-wins.** The rule above cannot tell which of two opposed
   acts happened later, so an unsynced local star resurrects one removed on another device — bounded
   by one sync interval. Real LWW needs a per-entry write time, which `TagIndex`
