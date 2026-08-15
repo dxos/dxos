@@ -10,7 +10,6 @@ import { EffectEx } from '@dxos/effect';
 import { Button, Dialog, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { LOAD_PLUGIN_DIALOG } from '#types';
 
 export const LoadPluginDialog = () => {
   const manager = usePluginManager();

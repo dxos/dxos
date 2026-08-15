@@ -32,47 +32,6 @@ type Maker<C extends Capability$.AnyTag> = <
   options?: Capability$.MakerOptions<Requires, Extra, Props, Options>,
 ) => Capability$.Module<Options>;
 
-/**
- * Which package.json conditions each capability family is split out for, declared once here rather
- * than restated at every one of the ~500 call sites across ~36 plugins. A family is headless by
- * construction (schema is data, an operation handler is logic) or browser-bound by construction (a
- * React surface, a context provider), so the annotation belongs to the family, not the module.
- *
- * `[]` means the family contributes only to the `default` condition — the canonical barrel a
- * browser resolves — so no variant is generated for it.
- *
- * Read two ways, from this one literal: `dx-plugin gen` resolves it statically (it parses barrels,
- * so it cannot see a default buried in a maker's body), and the makers below spread it into the
- * module specs they build. A call site's own `environments` still wins, which is how the handful of
- * genuine exceptions — a workerd-only surface, a browser-only schema — stay expressible.
- */
-export const environmentDefaults = {
-  // Headless by construction: schemas, handlers, and static data have no DOM or React dependency.
-  anchorSort: ['node', 'workerd'],
-  appGraphBuilder: ['node', 'workerd'],
-  commentConfig: ['node', 'workerd'],
-  navigationResolver: ['node', 'workerd'],
-  operationHandler: ['node', 'workerd'],
-  schema: ['node', 'workerd'],
-  settings: ['node', 'workerd'],
-  skillDefinition: ['node', 'workerd'],
-  textContent: ['node', 'workerd'],
-  translations: ['node', 'workerd'],
-  undoMappings: ['node', 'workerd'],
-
-  // Node-only: the `dx` binary is the sole consumer of CLI commands, and every LayerSpec in the
-  // repo wires node-side services.
-  commands: ['node'],
-  layerSpec: ['node'],
-
-  // Browser-only: React components, providers, and bundler-inlined assets.
-  navigationHandler: [],
-  pluginAsset: [],
-  reactContext: [],
-  reactRoot: [],
-  surface: [],
-} as const satisfies Record<string, readonly Capability$.Environment[]>;
-
 //
 // Lazy module makers (loader-based bodies).
 //
@@ -86,7 +45,7 @@ export const environmentDefaults = {
 export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Capability$.moduleMaker(
   'AppGraphBuilder',
   AppCapabilities.AppGraphBuilder,
-  { activatesOn: ActivationEvents.Idle, environments: environmentDefaults.appGraphBuilder },
+  { activatesOn: ActivationEvents.Idle, environments: ['node', 'workerd'] },
 );
 
 /**
@@ -103,7 +62,7 @@ export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Ca
 export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.moduleMaker(
   'Settings',
   AppCapabilities.Settings,
-  { activatesOn: ActivationEvents.Startup, environments: environmentDefaults.settings },
+  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
 );
 
 /**
@@ -115,7 +74,7 @@ export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.modu
 export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Capability$.moduleMaker(
   'SkillDefinition',
   AppCapabilities.SkillDefinition,
-  { activatesOn: AppActivationEvents.AssistantStart, environments: environmentDefaults.skillDefinition },
+  { activatesOn: AppActivationEvents.AssistantStart, environments: ['node', 'workerd'] },
 );
 
 /**
@@ -133,7 +92,7 @@ export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Ca
 export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
   'OperationHandler',
   Capabilities.OperationHandler,
-  { activatesOn: ActivationEvents.Startup, environments: environmentDefaults.operationHandler },
+  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
 );
 
 /**
@@ -152,14 +111,14 @@ export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Cap
 export const layerSpec: Maker<typeof Capabilities.LayerSpec> = Capability$.moduleMaker(
   'LayerSpec',
   Capabilities.LayerSpec,
-  { activatesOn: ActivationEvents.Startup, environments: environmentDefaults.layerSpec },
+  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
 );
 
 /** Module maker contributing undo operation mappings. */
 export const undoMappings: Maker<typeof Capabilities.UndoMapping> = Capability$.moduleMaker(
   'UndoMappings',
   Capabilities.UndoMapping,
-  { environments: environmentDefaults.undoMappings },
+  { environments: ['node', 'workerd'] },
 );
 
 /** Module maker contributing a React context. */
@@ -169,7 +128,7 @@ export const reactContext: Maker<typeof Capabilities.ReactContext> = Capability$
   // A context provider has to wrap the tree on the FIRST render, and shell components read what it
   // provides through the strict `useCapability` hooks — arriving in the idle wave trips the
   // missing-capability invariant rather than merely rendering late.
-  { activatesOn: ActivationEvents.Startup, environments: environmentDefaults.reactContext },
+  { activatesOn: ActivationEvents.Startup, environments: [] },
 );
 
 /** Module maker contributing a React root. */
@@ -177,7 +136,7 @@ export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.modul
   'ReactRoot',
   Capabilities.ReactRoot,
   // Same reason as `reactContext` — a root that mounts at idle is a blank shell until it does.
-  { activatesOn: ActivationEvents.Startup, environments: environmentDefaults.reactRoot },
+  { activatesOn: ActivationEvents.Startup, environments: [] },
 );
 
 /**
@@ -188,7 +147,7 @@ export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.modul
 export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetResolver> = Capability$.moduleMaker(
   'NavigationResolver',
   AppCapabilities.NavigationTargetResolver,
-  { activatesOn: ActivationEvents.Startup, environments: environmentDefaults.navigationResolver },
+  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
 );
 
 /** Module maker contributing a navigation handler. On the startup pass for the same reason as
@@ -196,13 +155,12 @@ export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetRe
 export const navigationHandler: Maker<typeof AppCapabilities.NavigationHandler> = Capability$.moduleMaker(
   'NavigationHandler',
   AppCapabilities.NavigationHandler,
-  { activatesOn: ActivationEvents.Startup, environments: environmentDefaults.navigationHandler },
+  { activatesOn: ActivationEvents.Startup, environments: [] },
 );
 
 const surfaceMaker: Maker<typeof Capabilities.ReactSurface> = Capability$.moduleMaker(
   'ReactSurface',
   Capabilities.ReactSurface,
-  { environments: environmentDefaults.surface },
 );
 
 /**
@@ -224,6 +182,7 @@ export const surface = <
   const { roles, ...rest } = options ?? {};
   return surfaceMaker(loader, {
     ...rest,
+    environments: rest.environments ?? [],
     activatesOn:
       rest.activatesOn ??
       (roles?.length
@@ -236,21 +195,21 @@ export const surface = <
 export const commentConfig: Maker<typeof AppCapabilities.CommentConfig> = Capability$.moduleMaker(
   'CommentConfig',
   AppCapabilities.CommentConfig,
-  { environments: environmentDefaults.commentConfig },
+  { environments: ['node', 'workerd'] },
 );
 
 /** Module maker contributing a text content extractor. */
 export const textContent: Maker<typeof AppCapabilities.TextContent> = Capability$.moduleMaker(
   'TextContent',
   AppCapabilities.TextContent,
-  { environments: environmentDefaults.textContent },
+  { environments: ['node', 'workerd'] },
 );
 
 /** Module maker contributing an anchor sort comparator. */
 export const anchorSort: Maker<typeof AppCapabilities.AnchorSort> = Capability$.moduleMaker(
   'AnchorSort',
   AppCapabilities.AnchorSort,
-  { environments: environmentDefaults.anchorSort },
+  { environments: ['node', 'workerd'] },
 );
 
 //
@@ -267,7 +226,7 @@ export const translations = (
     options?.name ?? 'translations',
     {
       provides: [AppCapabilities.Translations],
-      environments: options?.environments ?? environmentDefaults.translations,
+      environments: options?.environments ?? ['node', 'workerd'],
     },
     () => Effect.succeed([Capability$.contribute(AppCapabilities.Translations, value)]),
   );
@@ -284,7 +243,7 @@ export const schema = (
 ) => {
   const spec = {
     provides: [AppCapabilities.Schema],
-    environments: options?.environments ?? environmentDefaults.schema,
+    environments: options?.environments ?? ['node', 'workerd'],
   } as const;
   if (typeof types === 'function') {
     const loader = types;
@@ -307,7 +266,7 @@ export const pluginAsset = (
   const values: ReadonlyArray<AppCapabilities.PluginAsset> = Array.isArray(asset) ? asset : [asset];
   return Capability$.inlineModule(
     options?.name ?? 'plugin-asset',
-    { provides: [AppCapabilities.PluginAsset], environments: options?.environments ?? environmentDefaults.pluginAsset },
+    { provides: [AppCapabilities.PluginAsset], environments: options?.environments ?? [] },
     () => Effect.succeed([Capability$.contributeAll(AppCapabilities.PluginAsset, values)]),
   );
 };
@@ -333,7 +292,7 @@ export const commands = (
   const spec = {
     activatesOn: ActivationEvents.CommandsRequested,
     provides: [Capabilities.Command],
-    environments: options?.environments ?? environmentDefaults.commands,
+    environments: options?.environments ?? ['node', 'workerd'],
   } as const;
   if (typeof values === 'function') {
     const loader = values;

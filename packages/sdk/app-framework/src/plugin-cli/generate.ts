@@ -91,12 +91,13 @@ export const generate = (pluginDir: string): GenerateResult => {
       }
     }
 
-    const included = moduleMembers.filter(
-      (member) => !overrideNames.has(member.name) && (member.environments ?? []).includes(env),
-    );
-    const stubbed = moduleMembers.filter(
-      (member) => !overrideNames.has(member.name) && !(member.environments ?? []).includes(env),
-    );
+    // A module with neither its own annotation nor a family default is isomorphic until something
+    // proves otherwise: it goes in every condition, and the structure guards fail if that turns out
+    // to be false. Excluding it instead would silently narrow a plugin — dropping React-free state
+    // from headless hosts — and the omission would look identical to a deliberate choice.
+    const carries = (member: BarrelMember) => member.environments === null || member.environments.includes(env);
+    const included = moduleMembers.filter((member) => !overrideNames.has(member.name) && carries(member));
+    const stubbed = moduleMembers.filter((member) => !overrideNames.has(member.name) && !carries(member));
 
     const text = renderBarrel({ env, genDir, included, stubbed, overridesPath, overrideNames });
     const outPath = path.join(genDir, `${env}.ts`);

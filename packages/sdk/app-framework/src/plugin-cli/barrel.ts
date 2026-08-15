@@ -23,7 +23,8 @@ export type BarrelMember = {
   kind: 'maker-call' | 'non-call-initializer';
   /**
    * Conditions this module is split out for: the call site's own `environments` literal, else the
-   * default its maker family declares. Null means neither applies — no variant carries it.
+   * default its maker family declares. Null means neither applies, and the module is treated as
+   * isomorphic — every generated variant carries it.
    */
   environments: readonly string[] | null;
   /** File the declaration statement actually lives in (may differ from the barrel via re-exports). */
