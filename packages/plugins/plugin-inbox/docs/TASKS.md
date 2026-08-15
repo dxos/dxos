@@ -556,7 +556,7 @@ generalize now with mailbox as instance #1.
 
 ---
 
-## Phase 6: Bidirectional tag sync (design agreed 2026-08-15)
+## Phase 6: Bidirectional tag sync — BUILT 2026-08-15 (Gmail)
 
 Design: [`TAG-SYNC.md`](TAG-SYNC.md). Closes the Phase 1 P2 deferral — a star or an archive made in
 Composer reaches the provider, and a label changed at the provider is no longer add-only.

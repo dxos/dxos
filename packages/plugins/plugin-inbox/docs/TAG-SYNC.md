@@ -4,9 +4,22 @@ How a tag applied in Composer reaches the provider, and how a label changed at t
 the mailbox. Sibling docs: [`PIPELINE.md`](PIPELINE.md) (sync/scan architecture),
 [`TASKS.md`](TASKS.md) (ledger), [`TESTING.md`](TESTING.md) (manual test plan).
 
-**Status:** design. Nothing below is built. Supersedes the deliberate deferral recorded in
-[`TASKS.md`](TASKS.md) §Phase 1 DECIDED ("Archive is LOCAL-ONLY for now… syncing tags back to Gmail
-is P2").
+**Status: BUILT** for Gmail (2026-08-15), and this document now describes shipped behaviour rather
+than intent. Supersedes the deferral in [`TASKS.md`](TASKS.md) §Phase 1 DECIDED ("Archive is
+LOCAL-ONLY for now… syncing tags back to Gmail is P2"). JMAP remains pull-only by decision.
+
+| Layer            | Where                                                            | Tests |
+| ---------------- | ---------------------------------------------------------------- | ----- |
+| Pure merge       | `plugin-inbox/src/sync/tag-diff.ts`                              | 15    |
+| Push resolution  | `plugin-inbox/src/sync/tag-push.ts`                              | 14    |
+| Base persistence | `link/src/Cursor.ts` (`tagHeads`, `writeSyncState`)              | 26    |
+| Harness phase    | `plugin-inbox/src/sync/mail-sync.ts` (`pushLocalTags`)           | —     |
+| Gmail write path | `plugin-google` (`modifyMessage`, `batchModifyMessages`, `SPAM`) | 8     |
+| Live round trip  | `plugin-google/.../sync-live.test.ts` (real account, gated)      | 3     |
+
+Two things in the original design did not survive contact with the tests, both recorded in place
+below: the **conflict case cannot occur** for boolean tag membership, and the **base overlay for
+inserted messages was redundant** once the remote side models them.
 
 ## The gap
 
