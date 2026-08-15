@@ -116,13 +116,12 @@ changes what a model sees lives in the shared package or it is a bug.
       contributed through `Capabilities.ObservabilityMapping`, and plugin-observability's
       `InvocationListener` consumes `invoker.invocations` and sends the event — the operation
       definitions are untouched, so EDGE substitutes its own listener over the same stream. The
-      open question resolved itself: the listener is a *subscriber*, not an invoker change, so it
+      open question resolved itself: the listener is a _subscriber_, not an invoker change, so it
       sees exactly the paths the invoker already publishes (successful invocations, not the
       `_invokeCore` path undo replays on). The five space operations no longer import
       plugin-observability, and `SpacePlugin`'s `observability` option now gates the registration
-      rather than one handler's send (`SpaceOperationConfig.observability` deleted).
-      - [ ] Follow-up: plugin-review's seven handlers and the two registry containers still send
-            directly. Same conversion, no new machinery.
+      rather than one handler's send (`SpaceOperationConfig.observability` deleted). - [ ] Follow-up: plugin-review's seven handlers and the two registry containers still send
+      directly. Same conversion, no new machinery.
 - [x] **plugin-studio navigation regression** — closed. `getArtifactsPath` was removed with
       `addObject`'s navigation output, and unlike the type-section cases `findTypeSectionPath` could
       not replace it: studio's url binding ends in the studio segment, not a typename. plugin-studio
