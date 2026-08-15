@@ -12,7 +12,6 @@ import {
   AlarmSkill,
   AutomationSkill,
   BrowserSkill,
-  ConnectorsSkill,
   DatabaseSkill,
   DelegationSkill,
   DiscordSkill,
@@ -33,7 +32,6 @@ const skillDefinition = () =>
     Capability.contributeAll(AppCapabilities.SkillDefinition, [
       AssistantSkill,
       BrowserSkill,
-      ConnectorsSkill,
       DatabaseSkill,
       WebSearchSkill,
       DiscordSkill,

@@ -8,7 +8,6 @@ export * from './alarm';
 export * from './automation';
 export * from './skill-manager';
 export * from './browser';
-export * from './connectors';
 export * from './database';
 export * from './delegation';
 export * from './discord';

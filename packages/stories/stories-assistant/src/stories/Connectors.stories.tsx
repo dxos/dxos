@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { ConnectorsSkill, LinearSkill } from '@dxos/assistant-toolkit';
+import { LinearSkill } from '@dxos/assistant-toolkit';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
-import { meta as connectorMeta } from '@dxos/plugin-connector';
+import { ConnectorsSkill, meta as connectorMeta } from '@dxos/plugin-connector';
 import { CalendarSkill, InboxSkill } from '@dxos/plugin-inbox';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';

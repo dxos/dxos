@@ -98,9 +98,19 @@ changes what a model sees lives in the shared package or it is a bug.
   - [ ] `database` skill splits: the CRUD/query/schema/relation/tag half → **plugin-space**;
         `contextAdd`/`contextRemove` stay (they bind `Harness.HarnessService`). The only skill whose
         split runs _through_ it rather than between skills.
-  - [ ] `discord` → plugin-discord, `linear` → plugin-linear, `connectors` → plugin-connector —
-        destination plugins already exist, so these are relocation with no new packages and the
-        dependency direction (plugin → core) already correct. Lowest risk; do first.
+  - [x] `connectors` → **plugin-connector**. Done. Instructions-only skill (no operations), moved to
+        the plugin that owns the connectors it tells the model to prompt for; ConnectorPlugin
+        contributes it through `AppCapabilities.SkillDefinition` and re-exports `ConnectorsSkill`.
+  - [ ] `discord` / `linear` — **not a relocation; decide first.** Both skills advertise a tool
+        (`org.dxos.function.discord.fetchDiscordMessages`, `org.dxos.function.linear.syncIssues`)
+        whose handler set — `DiscordHandlers` / `LinearHandlers` — is registered **nowhere in either
+        repo**: `plugin-assistant`'s operation-handler capability lists the other eight toolkit sets
+        and not these two. Invoking either tool fails with `NoHandlerError` today, and the only
+        tests are off (`describe.skip`, `skipIf(!DISCORD_TOKEN)`). Meanwhile plugin-discord and
+        plugin-linear already own connector-based sync (`GetDiscordChannels`,
+        `MaterializeDiscordTarget`, `SyncDiscord`, …) with registered handlers. So the choice is
+        delete-as-superseded vs relocate-and-wire, which are materially different outcomes —
+        ask before moving.
   - [ ] `project` — **deprecated**, superseded by plugin-projects. Primitive predecessor (artifact
         filing against a chat-bound project). Remove once `projects.eval.ts` and
         `sender-ledger.eval.ts` move to the plugin's skill.
