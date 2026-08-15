@@ -39,7 +39,7 @@ const Contact = Schema.Struct({
 
 const DefaultStory = () => {
   const [{ canvas, ascii }] = useState(() => {
-    const drawing = Ui.deckOf(Ui.fromSchema(Contact));
+    const drawing = Ui.deckOf(Ui.fromSchema(Contact), Ui.schemaTitle(Contact));
     const content: ContentMap = {};
     applyCommands(content, Ui.compile(drawing, { scale: 1.5 }));
     return {

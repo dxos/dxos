@@ -52,7 +52,8 @@ export type ArrayGroup = {
 
 export type FormChild = Control | Group | ArrayGroup;
 
-export type Form = { kind: 'form'; label?: string; children: FormChild[] };
+/** A form has no title of its own — the schema title belongs to the enclosing container. */
+export type Form = { kind: 'form'; children: FormChild[] };
 export type Panel = { kind: 'panel'; label?: string; child: Form };
 export type Plank = { kind: 'plank'; label?: string; child: Panel };
 export type Deck = { kind: 'deck'; planks: Plank[] };
@@ -139,13 +140,16 @@ export const fromSchema = (schema: Schema.Top, options: FromSchemaOptions = {}):
   const children = propertiesOf(schema.ast)
     .filter((property) => property.name !== 'id')
     .map((property) => childOf(property.type, property.name, String(property.name), maxDepth));
-  return { kind: 'form', label: titleOf(schema.ast), children };
+  return { kind: 'form', children };
 };
+
+/** The schema's title annotation — container chrome, not form content. */
+export const schemaTitle = (schema: Schema.Top): string | undefined => titleOf(schema.ast);
 
 /** Wrap a form in the app-ontology containers for a full schematic. */
 export const deckOf = (form: Form, title?: string): Deck => ({
   kind: 'deck',
-  planks: [{ kind: 'plank', label: title ?? form.label, child: { kind: 'panel', child: form } }],
+  planks: [{ kind: 'plank', label: title, child: { kind: 'panel', child: form } }],
 });
 
 //
@@ -177,12 +181,9 @@ const heightOf = (node: UiNode): number => {
       }
       return TITLE_H + node.children.reduce((sum, child) => sum + heightOf(child) + GAP, 0) + PAD;
     case 'array':
-      return TITLE_H + heightOf(node.item) + GAP + PLUS_H + PAD;
+      return TITLE_H + heightOf(node.item) + PAD;
     case 'form':
-      return (
-        (node.label ? TITLE_H : 0) +
-        node.children.reduce((sum, child, index) => sum + heightOf(child) + (index > 0 ? GAP : 0), 0)
-      );
+      return node.children.reduce((sum, child, index) => sum + heightOf(child) + (index > 0 ? GAP : 0), 0);
     case 'panel':
       return heightOf(node.child) + PAD * 2 + TITLE_H;
     case 'plank':
@@ -263,32 +264,23 @@ const emitNode = (node: UiNode, x: number, y: number, emit: Emit): void => {
     }
 
     case 'array': {
-      frame(node.path, x, y, widthOf(node), heightOf(node), `${node.label} []`, emit);
-      emitNode(node.item, x + PAD, y + TITLE_H, emit);
+      const width = widthOf(node);
+      frame(node.path, x, y, width, heightOf(node), node.label, emit);
+      // The add button sits on the header line, where the array marker reads in ASCII.
       emit.commands.push({
         op: 'upsert-object',
         object: {
           id: `${node.path}.add`,
-          origin: { x: x + PAD, y: y + TITLE_H + heightOf(node.item) + GAP },
+          origin: { x: x + width - TOGGLE_W - 4, y: y + 2 },
           elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: TOGGLE_W, h: PLUS_H, text: '+', stroke: 'solid' }],
         },
       });
+      emitNode(node.item, x + PAD, y + TITLE_H, emit);
       break;
     }
 
     case 'form': {
       let cursor = y;
-      if (node.label) {
-        emit.commands.push({
-          op: 'upsert-object',
-          object: {
-            id: 'form.title',
-            origin: { x, y: cursor },
-            elements: [{ kind: 'text', id: 'title', x: 0, y: 0, text: node.label, weight: 'm' }],
-          },
-        });
-        cursor += TITLE_H;
-      }
       for (const child of node.children) {
         emitNode(child, x, cursor, emit);
         cursor += heightOf(child) + GAP;
@@ -380,12 +372,9 @@ const asciiLines = (node: UiNode): string[] => {
       return node.label ? [node.label, ...indent(children, '  ')] : children;
     }
     case 'array':
-      return [`${node.label} []`, ...indent([...asciiLines(node.item), '[+]'], '  ')];
+      return [`${node.label} [+]`, ...indent(asciiLines(node.item), '  ')];
     case 'form':
-      return [
-        ...(node.label ? [`# ${node.label}`, ''] : []),
-        ...node.children.flatMap((child, index) => (index > 0 ? ['', ...asciiLines(child)] : asciiLines(child))),
-      ];
+      return node.children.flatMap((child, index) => (index > 0 ? ['', ...asciiLines(child)] : asciiLines(child)));
     case 'panel':
       return boxed(asciiLines(node.child), node.label);
     case 'plank':

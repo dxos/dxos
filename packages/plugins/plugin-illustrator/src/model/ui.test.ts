@@ -29,7 +29,8 @@ const Contact = Schema.Struct({
 describe('Ui.fromSchema', () => {
   test('classifies controls and recurses into objects and arrays', ({ expect }) => {
     const form = Ui.fromSchema(Contact);
-    expect(form.label).toBe('Contact');
+    // The schema title is container chrome, never part of the form itself.
+    expect(Ui.schemaTitle(Contact)).toBe('Contact');
     expect(form.children.map((child) => child.kind)).toEqual([
       'control', // name
       'control', // active
@@ -81,8 +82,6 @@ describe('Ui.renderAscii', () => {
     const ascii = Ui.renderAscii(Ui.fromSchema(Contact));
     expect(ascii).toBe(
       [
-        '# Contact',
-        '',
         'name',
         '[__________]',
         '',
@@ -99,17 +98,15 @@ describe('Ui.renderAscii', () => {
         '  city',
         '  [__________]',
         '',
-        'emails []',
+        'emails [+]',
         '  [__________]',
-        '  [+]',
         '',
-        'tasks []',
+        'tasks [+]',
         '  title',
         '  [__________]',
         '',
         '  done',
         '  [ ]',
-        '  [+]',
       ].join('\n'),
     );
   });
