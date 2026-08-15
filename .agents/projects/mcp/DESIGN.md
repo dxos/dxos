@@ -336,6 +336,19 @@ user's own working directory.) That is what makes "trusted publisher + explicit 
 than a label on a flow where the code already ran. It does not bound what a plugin does **after**
 that point, which is what the worker boundary is for.
 
+**The consent step is now explicit** (2026-08-15). `add` names the plugin and where it came from,
+says that its code runs with the user's HALO identity and that `dx mcp serve` exposes its operations
+to an AI agent, and asks. A non-interactive caller has to pass `--yes` rather than being assumed to
+consent — the same posture `dx admin identity delete` takes with `--force`, and the only way the
+prompt means anything in a script. It is asked at `add` rather than `enable` because `add` enables
+by default, so `enable` would be silent on the common path; a plugin already consented to is not
+re-asked.
+
+`--watch` sharpens the argument for a real boundary rather than weakening it: a dev plugin's code is
+re-executed automatically on every file change, so the human beat between "author saves" and "code
+runs" is gone after the initial consent. That is the intended dev loop, and it is exactly the
+property the worker boundary would bound.
+
 ## 3. Reload, in two stages
 
 **Stage 1 — developing dxos itself.** `dx mcp serve --watch`, shipped. The premise this was planned
