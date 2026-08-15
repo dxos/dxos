@@ -13,9 +13,9 @@ import { invariant } from '@dxos/invariant';
 import { IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { ClientPlugin } from '#plugin';
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
-import { ClientPlugin } from '#plugin';
 
 import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer';
 

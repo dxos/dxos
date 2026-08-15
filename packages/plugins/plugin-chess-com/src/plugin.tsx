@@ -4,7 +4,15 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { AppGraphBuilder, CreateObject, OperationHandler, PluginAsset, ReactSurface, Schema, Translations } from '#capabilities';
+import {
+  AppGraphBuilder,
+  CreateObject,
+  OperationHandler,
+  PluginAsset,
+  ReactSurface,
+  Schema,
+  Translations,
+} from '#capabilities';
 import { meta } from '#meta';
 
 // Canonical single-entry composition: lists every module once; per-environment filtering happens

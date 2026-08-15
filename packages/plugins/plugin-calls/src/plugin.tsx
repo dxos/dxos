@@ -4,7 +4,15 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { AppGraphBuilder, CallManager, CallTransport, PluginAsset, ReactRoot, ReactSurface, Translations } from '#capabilities';
+import {
+  AppGraphBuilder,
+  CallManager,
+  CallTransport,
+  PluginAsset,
+  ReactRoot,
+  ReactSurface,
+  Translations,
+} from '#capabilities';
 import { meta } from '#meta';
 
 // Canonical single-entry composition: lists every module once; per-environment filtering happens

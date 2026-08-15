@@ -16,6 +16,7 @@ import { Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
 import { TranscriptionPlugin } from '#plugin';
+
 import { TestItem } from './testing';
 
 // TODO(mykola): Make API easier to use.

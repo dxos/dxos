@@ -68,11 +68,10 @@ import { seedTestData } from '@dxos/types/testing';
 import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
 import { isNonNullable, trim } from '@dxos/util';
 
+import { TranscriptionPlugin } from '#plugin';
 import { enableQueryIndexes } from '#testing';
 import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
-
-import { TranscriptionPlugin } from '#plugin';
 
 const SAMPLE_CONTENT = trim`
   # Test

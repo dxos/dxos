@@ -9,8 +9,8 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Dialog } from '@dxos/react-ui';
 
-import { translations } from '#translations';
 import { ClientPlugin } from '#plugin';
+import { translations } from '#translations';
 
 import { JoinDialog } from './JoinDialog';
 

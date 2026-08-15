@@ -25,6 +25,8 @@ export const SkillDefinition = Capability.lazyModule(
   () => import('./skill-definition'),
 );
 
-export const Toolkit = Capability.lazyModule('toolkit', { provides: [AppCapabilities.Toolkit] }, () =>
-  import('./toolkit'),
+export const Toolkit = Capability.lazyModule(
+  'toolkit',
+  { provides: [AppCapabilities.Toolkit] },
+  () => import('./toolkit'),
 );
