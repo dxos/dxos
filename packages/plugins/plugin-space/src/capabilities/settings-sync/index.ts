@@ -49,7 +49,10 @@ export default Capability.makeModule(
       store.update((draft) => AppSettings.setDeviceLabel(draft, deviceKey, label));
     }
 
-    const unsynced = Atom.make<readonly string[]>(AppSettings.getUnsynced(settings, deviceKey)).pipe(Atom.keepAlive);
+    // Copied out of ECHO rather than handed over live: the array proxy keeps its identity across a
+    // reassignment, and the atom compares by identity, so a live value would never notify.
+    const readUnsynced = () => [...AppSettings.getUnsynced(settings, deviceKey)];
+    const unsynced = Atom.make<readonly string[]>(readUnsynced()).pipe(Atom.keepAlive);
 
     const reconcilers: Reconciler[] = [];
     const subscriptions: (() => void)[] = [];
@@ -156,7 +159,7 @@ export default Capability.makeModule(
 
     subscriptions.push(
       Obj.subscribe(settings, () => {
-        registry.set(unsynced, AppSettings.getUnsynced(settings, deviceKey));
+        registry.set(unsynced, readUnsynced());
         for (const reconciler of reconcilers) {
           reconciler.pull();
         }

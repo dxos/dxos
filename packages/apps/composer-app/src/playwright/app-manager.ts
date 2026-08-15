@@ -130,6 +130,17 @@ export class AppManager {
     return this.page.getByTestId('navtree.workspace.visible');
   }
 
+  /**
+   * Waits out the boot-time navigation to the default space.
+   *
+   * `init()` returns as soon as the shell renders, but spaces resolve seconds later and the app
+   * opens the default one when they do — replacing whatever route ran in the meantime. Anything that
+   * navigates early (settings, the registry) has to let that land first or it is silently undone.
+   */
+  async waitForDefaultWorkspace(): Promise<void> {
+    await this.page.waitForURL(/\/w\/[A-Z0-9]{20,}\/home/, { timeout: 60_000 });
+  }
+
   async openUserAccount(): Promise<void> {
     await this.page.getByTestId('clientPlugin.account').click();
   }

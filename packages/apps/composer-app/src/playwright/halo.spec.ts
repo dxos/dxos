@@ -77,6 +77,7 @@ test.describe('HALO tests', () => {
     test.setTimeout(180_000);
 
     // Both devices on one identity, so they share a settings space.
+    await host.waitForDefaultWorkspace();
     await host.openUserDevices();
     const invitationCode = await host.createDeviceInvitation();
     const authCode = await host.getAuthCode();
@@ -85,6 +86,7 @@ test.describe('HALO tests', () => {
     await guest.shell.acceptDeviceInvitation(invitationCode);
     await guest.shell.authenticateDevice(authCode);
     await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 60_000 });
+    await guest.waitForDefaultWorkspace();
 
     // The plugin set is an ordinary synced namespace keyed by plugin id, so enabling one here is
     // the same mechanism as changing any other setting.

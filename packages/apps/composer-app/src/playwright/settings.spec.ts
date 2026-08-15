@@ -28,6 +28,7 @@ test.describe('Settings sync', () => {
     test.skip(browserName !== 'chromium');
     host = new AppManager(browser, false);
     await host.init();
+    await host.waitForDefaultWorkspace();
   });
 
   test.afterEach(async () => {
