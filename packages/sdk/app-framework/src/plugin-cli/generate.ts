@@ -12,8 +12,8 @@ import {
   rebaseSpecifier,
   rewriteRelativeSpecifiers,
   topLevelExportConsts,
-  topLevelLocalDeclarations,
   topLevelImportDeclarations,
+  topLevelLocalDeclarations,
 } from './ts-util';
 
 export type GenerateResult = {
