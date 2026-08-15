@@ -258,16 +258,35 @@ export class TriggerDispatcher extends Context.Service<
 const DEFAULT_MAX_CONCURRENCY = 5;
 
 /**
- * The interval between a cron's next two occurrences, or `undefined` if it fires at most once more.
+ * How many consecutive occurrences to sample when measuring how often a cron wants to run.
  *
- * Cron has no period of its own — an expression is a predicate over instants — so the gap between
- * consecutive occurrences is the only way to ask how often it wants to run.
+ * One gap is not enough: `0,5 * * * * *` fires at `:00` and `:05`, so a sample taken at `:05` sees the
+ * 55-second gap to the next minute and reports a schedule that comfortably clears a one-minute floor —
+ * while the 5-second gap it also has would be dropped every minute. Enough samples to cross a cluster
+ * and come back, which for any minute-or-finer pattern this floor cares about is a handful.
+ */
+const CRON_PERIOD_SAMPLES = 8;
+
+/**
+ * The SHORTEST interval between consecutive occurrences of a cron, or `undefined` if it fires at most
+ * once more.
+ *
+ * Cron has no period of its own — an expression is a predicate over instants — so the gaps between
+ * consecutive occurrences are the only way to ask how often it wants to run. The minimum is what
+ * matters to a poll floor: a schedule is unhonourable if ANY adjacent pair is closer than the tick,
+ * not merely if its typical spacing is.
  */
 const cronPeriod = (cron: Cron.Cron, now: Date): Duration.Duration | undefined => {
   try {
-    const first = Cron.next(cron, now);
-    const second = Cron.next(cron, first);
-    return Duration.millis(second.getTime() - first.getTime());
+    let previous = Cron.next(cron, now);
+    let shortest: number | undefined;
+    for (let index = 0; index < CRON_PERIOD_SAMPLES; index += 1) {
+      const next = Cron.next(cron, previous);
+      const gap = next.getTime() - previous.getTime();
+      shortest = shortest === undefined ? gap : Math.min(shortest, gap);
+      previous = next;
+    }
+    return shortest === undefined ? undefined : Duration.millis(shortest);
   } catch {
     return undefined;
   }

@@ -122,7 +122,9 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
       <Card.Root ref={cardRef} classNames={classNames}>
         <Card.Header>
           <Card.Block>
-            <Icon icon={icon} />
+            <CardIconSlot subject={subject}>
+              <Icon icon={icon} />
+            </CardIconSlot>
           </Card.Block>
           <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
           <Card.Block end>

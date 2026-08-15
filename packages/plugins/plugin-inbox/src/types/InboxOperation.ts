@@ -466,6 +466,8 @@ export const AnalyzeMailbox = Operation.make({
         tier: MailboxTier,
         /** The contributed processor's id — its topology key and its cursor tag. */
         processor: Schema.String,
+        /** URI of what this run was about; several entries share a processor when it covers N subjects. */
+        subject: Schema.optional(Schema.String),
         status: Schema.Literals(['completed', 'failed', 'skipped', 'cancelled']),
         output: Schema.optional(Schema.Any),
         error: Schema.optional(Schema.String),
