@@ -14,7 +14,8 @@ import {
   OperationHandler,
   ReactSurface,
   Settings,
-} from './capabilities';
+} from '#capabilities';
+
 import { meta } from './meta';
 import { translations } from './translations';
 

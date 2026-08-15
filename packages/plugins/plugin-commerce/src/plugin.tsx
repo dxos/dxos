@@ -5,11 +5,11 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
+import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, Schema, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, Schema, SkillDefinition } from './capabilities';
 import { translations } from './translations';
 
 export const CommercePlugin = Plugin.define(meta).pipe(
