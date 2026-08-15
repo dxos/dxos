@@ -309,10 +309,18 @@ export const useApp = ({
 
       // In development the deadline is a symptom, not a verdict: a cold OPFS, a rebuild or a paused
       // debugger all overrun it while the run is perfectly healthy, and killing it discards the
-      // state worth looking at. Offer the abort through the loader and let startup continue; the
-      // button raises exactly the failure this branch used to raise unprompted.
-      if (import.meta.env?.DEV && bootLoader?.stalled) {
-        bootLoader.stalled(abort);
+      // state worth looking at. Startup continues either way and the user decides — the offer raises
+      // exactly the failure this branch used to raise unprompted.
+      //
+      // The missing-`stalled` case does NOT fall through to failing: the loader is inlined into
+      // `index.html` at build time, so a page served before this shipped has the old bundle, and
+      // treating that as fatal would resurrect the dialog precisely where dev asked for a button.
+      if (import.meta.env?.DEV) {
+        if (bootLoader?.stalled) {
+          bootLoader.stalled(abort);
+        } else {
+          log.warn('startup timed out; boot loader cannot offer an abort (stale inlined bundle?)', { timeout });
+        }
         return;
       }
 
