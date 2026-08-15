@@ -570,9 +570,14 @@ export interface SpaceScope extends Schema.Schema.Type<typeof SpaceScope> {}
 
 /**
  * Selects from a specific feed (by its underlying queue DXN).
+ *
+ * `after` resumes from a cursor: only blocks positioned strictly after it are selected, so a reader
+ * that keeps a cursor pays for what is new rather than for the whole feed. Combine with `limit()`
+ * to bound the page.
  */
 export const FeedScope = Schema.TaggedStruct('feed', {
   feedUri: Schema.String,
+  after: Schema.optional(Schema.String),
 });
 export interface FeedScope extends Schema.Schema.Type<typeof FeedScope> {}
 

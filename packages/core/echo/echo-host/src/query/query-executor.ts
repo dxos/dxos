@@ -19,7 +19,13 @@ import {
 } from '@dxos/echo-protocol';
 import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import { RuntimeProvider } from '@dxos/effect';
-import { type EntityMeta, EscapedPropPath, type IndexEngine, type ReverseRef } from '@dxos/index-core';
+import {
+  type EntityMeta,
+  EscapedPropPath,
+  type IndexEngine,
+  type QueueWindow,
+  type ReverseRef,
+} from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -772,7 +778,7 @@ export class QueryExecutor extends Resource {
       case 'WildcardSelector': {
         const beginIndexQuery = performance.now();
         const queueIds = extractQueueIds(queues);
-        const metas = await this._queryAllFromSqlIndex(spaces, allQueuesFromSpaces, queueIds);
+        const metas = await this._queryAllFromSqlIndex(spaces, allQueuesFromSpaces, queueIds, extractQueueWindow(step));
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -841,6 +847,7 @@ export class QueryExecutor extends Resource {
           step.selector.inverted,
           allQueuesFromSpaces,
           queueIds,
+          extractQueueWindow(step),
         );
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
@@ -1713,8 +1720,9 @@ export class QueryExecutor extends Resource {
     spaceIds: readonly SpaceId[],
     includeAllQueues: boolean,
     queueIds: readonly EntityId[] | null,
+    window?: QueueWindow,
   ): Promise<readonly EntityMeta[]> {
-    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds, includeAllQueues, queueIds }));
+    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds, includeAllQueues, queueIds, window }));
   }
 
   private async _queryTypesFromSqlIndex(
@@ -1723,9 +1731,10 @@ export class QueryExecutor extends Resource {
     inverted: boolean,
     includeAllQueues: boolean,
     queueIds: readonly EntityId[] | null,
+    window?: QueueWindow,
   ): Promise<readonly EntityMeta[]> {
     return await this._runInRuntime(
-      this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queueIds }),
+      this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queueIds, window }),
     );
   }
 
@@ -2129,6 +2138,39 @@ export class QueryExecutor extends Resource {
 const extractSpaceIdFromQueue = (feedUri: string): SpaceId | undefined => {
   const echoUri = EID.tryParse(feedUri);
   return echoUri ? EID.getSpaceId(echoUri) : undefined;
+};
+
+/**
+ * The index-level window for a queue-only select: resume after the scope's cursor and cap the page
+ * at the pushed-down limit.
+ *
+ * Returns `undefined` unless the step selects exclusively from feeds that agree on a cursor —
+ * `queuePosition` is null for automerge objects, so windowing a mixed scan would drop every
+ * document, and two feed scopes with different cursors have no single bound.
+ *
+ * A cursor that is not a decimal position is treated as unsatisfiable rather than as "no cursor":
+ * resuming a corrupted checkpoint from the beginning would re-dispatch the whole feed.
+ */
+const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined => {
+  const feedScopes = step.scope.filter((scope): scope is QueryAST.FeedScope => scope._tag === 'feed');
+  if (feedScopes.length === 0 || feedScopes.length !== step.scope.length) {
+    return undefined;
+  }
+
+  const cursors = new Set(feedScopes.map((scope) => scope.after));
+  if (cursors.size > 1) {
+    return undefined;
+  }
+  // The empty string is the "from the beginning" sentinel (`Feed.START`), i.e. no lower bound —
+  // and without a bound there is no window: an unbounded scan must keep returning the blocks a
+  // peer that does not assign positions writes, which have no position to order or bound by.
+  const cursor = feedScopes[0].after || undefined;
+  if (cursor === undefined) {
+    return undefined;
+  }
+
+  const after = /^\d+$/.test(cursor) ? Number(cursor) : Number.NaN;
+  return { after: Number.isSafeInteger(after) ? after : Number.MAX_SAFE_INTEGER, limit: step.limit };
 };
 
 const extractQueueIds = (queues: readonly string[]): EntityId[] | null => {

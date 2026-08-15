@@ -8,7 +8,6 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
-import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
@@ -74,11 +73,33 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
 //
 
 /**
- * Opaque cursor for iterating over feed items.
+ * Opaque position of a feed item — the insertion id the position authority assigned its block,
+ * as read from an item with {@link getCursor}. Ordering is the feed's append order; a reader
+ * resumes by passing the last cursor it processed to {@link query}.
  */
-// TODO(dmaretskyi): T needs to be referenced in the type structure for typescript to respect it during inference and type-checking.
-export interface Cursor<T = Obj.Snapshot> {
-  readonly _tag: 'Cursor';
+export const Cursor = Schema.String.pipe(Schema.brand('@dxos/echo/Feed/Cursor'));
+export type Cursor = Schema.Schema.Type<typeof Cursor>;
+
+/**
+ * Sentinel cursor preceding every item — "read from the beginning".
+ *
+ * A sentinel rather than `undefined` so a stored checkpoint is always a `Cursor`: a reader that has
+ * processed nothing yet holds this, and the same code path resumes it as resumes a live cursor.
+ */
+export const START: Cursor = Cursor.make('');
+
+/**
+ * Options for {@link query}.
+ */
+export interface QueryOptions {
+  /**
+   * Resume after this cursor — only items positioned strictly after it are returned.
+   * Pushed into the index scan, so a reader pays for what is new rather than for the whole feed.
+   */
+  after?: Cursor;
+
+  /** Maximum number of items to return, in append order. */
+  limit?: number;
 }
 
 /**
@@ -305,6 +326,15 @@ export const getPosition = (item: Entity.Unknown | Entity.Snapshot): number => {
 };
 
 /**
+ * The item's {@link Cursor}, or `undefined` when it has none — a block written locally and not yet
+ * acknowledged by the position authority. Pass it to {@link query} to resume after this item.
+ */
+export const getCursor = (item: Entity.Unknown | Entity.Snapshot): Cursor | undefined => {
+  const key = internal.getKeys(item, KEY_QUEUE_POSITION).at(0)?.id;
+  return key !== undefined ? Cursor.make(key) : undefined;
+};
+
+/**
  * Returns an item's explicit lineage parent, or `undefined` when it continues from the item that
  * precedes it in append order (the default for every feed).
  *
@@ -416,23 +446,45 @@ export const history = <T extends Entity.Unknown | Entity.Snapshot>(
  *
  * // Data-last (curried) form composes with `pipe`:
  * const objects = yield* pipe(feed, Feed.query(Filter.type(Person))).run;
+ *
+ * // Resume after a cursor, reading a bounded page of what is new:
+ * const objects = yield* Feed.query(feed, Filter.everything(), { after: cursor, limit: 10 }).run;
  * ```
  */
 export const query: {
-  <Q extends Query.Any>(feed: Feed, query: Q): QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
-  <F extends Filter.Any>(feed: Feed, filter: F): QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
+  <Q extends Query.Any>(
+    feed: Feed,
+    query: Q,
+    options?: QueryOptions,
+  ): QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
+  <F extends Filter.Any>(
+    feed: Feed,
+    filter: F,
+    options?: QueryOptions,
+  ): QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
   <Q extends Query.Any>(
     query: Q,
+    options?: QueryOptions,
   ): (feed: Feed) => QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
   <F extends Filter.Any>(
     filter: F,
+    options?: QueryOptions,
   ): (feed: Feed) => QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
-} = Function.dual(2, (feed: Feed, queryOrFilter: Query.Any | Filter.Any) => {
-  const feedUri = getFeedUri(feed);
-  invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
-  const query = Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter);
-  return Database.query(query.from(Scope.feed(feedUri.toString())));
-});
+  // Arity alone cannot separate the two forms once options are in play (`query(filter, options)` and
+  // `query(feed, filter)` are both two arguments), so the data-first form is recognized by its
+  // leading feed.
+} = Function.dual(
+  (args) => Obj.instanceOf(Feed, args[0]),
+  (feed: Feed, queryOrFilter: Query.Any | Filter.Any, options?: QueryOptions) => {
+    const feedUri = getFeedUri(feed);
+    invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
+    const selection = Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter);
+    // `START` is the empty sentinel, which the scan reads as "no lower bound" — pass it through
+    // rather than special-casing it here.
+    const scoped = selection.from(Scope.feed(feedUri.toString(), { after: options?.after }));
+    return Database.query(options?.limit !== undefined ? scoped.limit(options.limit) : scoped);
+  },
+);
 
 /**
  * Syncs the feed with the server.
@@ -460,35 +512,6 @@ export const getSyncState = (feed: Feed): Effect.Effect<SyncState, never, Databa
   Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.getFeedSyncState(feed)))).pipe(
     Effect.withSpan('Feed.getSyncState'),
   );
-
-/**
- * Creates a cursor for iterating over feed items.
- * Currently stubbed — cursor operations are not yet implemented.
- *
- * @example
- * ```ts
- * const cursor = yield* Feed.cursor<Person>(feed);
- * const item = yield* Feed.next(cursor);
- * ```
- */
-// TODO(wittjosiah): Implement cursor operations. Use Effect streams?
-export const cursor = <T = Obj.Snapshot>(_feed: Feed): Effect.Effect<Cursor<T>, never, Database.Service> =>
-  Effect.succeed({ _tag: 'Cursor' } as Cursor<T>);
-
-/**
- * Returns the next item from a feed cursor.
- * Currently stubbed — cursor operations are not yet implemented.
- */
-export const next = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<T, never, Database.Service> =>
-  Effect.die('Feed.next is not yet implemented');
-
-/**
- * Returns the next item from a feed cursor as an Option.
- * Currently stubbed — cursor operations are not yet implemented.
- */
-export const nextOption = <T = Obj.Snapshot>(
-  _cursor: Cursor<T>,
-): Effect.Effect<Option.Option<T>, never, Database.Service> => Effect.die('Feed.nextOption is not yet implemented');
 
 /**
  * Sets the local retention policy for a feed.

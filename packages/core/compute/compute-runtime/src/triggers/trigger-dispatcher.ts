@@ -279,6 +279,25 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
   #pendingRefreshFiber: Fiber.Fiber<void, never> | undefined;
 
   /**
+   * Live queries that wake the non-timer kinds, keyed by trigger id: a feed trigger watches what
+   * follows its cursor, a subscription trigger watches its own query. Only `timer` genuinely needs
+   * a wall clock, so the poll tick drives that kind alone and the rest react to their data.
+   *
+   * `key` folds in whatever the query is derived from (a feed trigger's cursor), so a refresh
+   * rebuilds a subscription exactly when it has gone stale and leaves the rest untouched.
+   */
+  #reactiveSources = new Map<string, { key: string; unsubscribe: () => void }>();
+
+  /**
+   * Serializes reactive dispatch so two overlapping wake-ups cannot invoke the same trigger twice
+   * for one item — the cursor advances only after an invocation completes.
+   */
+  #reactiveDispatchLock = Semaphore.makeUnsafe(1);
+
+  /** Fibers forked by reactive subscriptions, interrupted on teardown. */
+  #reactiveDispatchFibers = new Set<Fiber.Fiber<void, never>>();
+
+  /**
    * Unified runtime state for every trigger kind: cron schedule, failure cooldown, and pending
    * {@link RunAgainError} retries. Keyed by trigger id.
    */
@@ -636,18 +655,22 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
                 log('skipping feed trigger with no feed reference', { triggerId: trigger.id });
                 continue;
               }
-              const cursor = Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id;
               const feed = yield* Database.load(feedRef).pipe(Effect.orDie);
 
               const concurrency = Math.min(trigger.concurrency ?? 1, this._maxConcurrency);
 
-              // TODO(dmaretskyi): Include cursor & limit in the query.
-              const chunks = yield* Feed.query(feed, Filter.everything()).run.pipe(
-                Effect.map((objects) => filterReadyFeedItems(objects, cursor)),
-                Effect.map(Array.chunksOf(concurrency)),
-              );
+              // Read only what follows the cursor, one page at a time: the cursor is pushed into the
+              // index scan, so the cost of a tick is the size of the page rather than of the feed.
+              let cursor = Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id;
+              for (;;) {
+                const chunk = yield* Feed.query(feed, Filter.everything(), {
+                  after: cursor !== undefined ? Feed.Cursor.make(cursor) : undefined,
+                  limit: concurrency,
+                }).run.pipe(Effect.map((objects) => filterReadyFeedItems(objects, cursor)));
+                if (chunk.length === 0) {
+                  break;
+                }
 
-              for (const chunk of chunks) {
                 const invocationsThisIteration = yield* Effect.forEach(
                   chunk,
                   ({ item, position }) =>
@@ -670,12 +693,11 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
                   Array.last,
                 );
                 if (Option.isSome(lastSuccessfulInvocation)) {
+                  cursor = lastSuccessfulInvocation.value.feedCursor ?? failedInvariant();
+                  const advanced = cursor;
                   Obj.update(trigger, (trigger) => {
                     Obj.deleteKeys(trigger, KEY_FEED_CURSOR);
-                    Obj.getMeta(trigger).keys.push({
-                      source: KEY_FEED_CURSOR,
-                      id: lastSuccessfulInvocation.value.feedCursor ?? failedInvariant(),
-                    });
+                    Obj.getMeta(trigger).keys.push({ source: KEY_FEED_CURSOR, id: advanced });
                   });
                   yield* Database.flush();
                 } else {
@@ -924,6 +946,10 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         }
       }
 
+      if (this._running && this.timeControl === 'natural') {
+        yield* this.#refreshReactiveSources();
+      }
+
       const registry = yield* Registry.AtomRegistry;
       this._publishRuntimeStatuses(registry);
 
@@ -977,6 +1003,113 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
     }).pipe(Effect.provide(this._services));
 
   /**
+   * Rebuild the live queries that wake feed and subscription triggers so the set matches the
+   * current triggers: drop sources whose trigger is gone or whose query has gone stale, and
+   * subscribe the ones that are missing. Called from {@link refreshTriggers}, which the trigger
+   * query already re-runs whenever a trigger changes — including the cursor write that dispatch
+   * itself performs, which is what makes a feed source follow its cursor forward.
+   */
+  #refreshReactiveSources = (): Effect.Effect<void> =>
+    Effect.gen({ self: this }, function* () {
+      const wanted = new Map<string, { key: string; trigger: Trigger.Trigger }>();
+      for (const trigger of this._triggers) {
+        const kind = trigger.spec?.kind;
+        if (!trigger.enabled || (kind !== 'feed' && kind !== 'subscription')) {
+          continue;
+        }
+        const key = kind === 'feed' ? `feed:${Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id ?? ''}` : 'subscription';
+        wanted.set(trigger.id, { key, trigger });
+      }
+
+      for (const [triggerId, source] of this.#reactiveSources) {
+        if (wanted.get(triggerId)?.key !== source.key) {
+          source.unsubscribe();
+          this.#reactiveSources.delete(triggerId);
+        }
+      }
+
+      for (const [triggerId, { key, trigger }] of wanted) {
+        if (this.#reactiveSources.has(triggerId)) {
+          continue;
+        }
+        const unsubscribe = yield* this.#subscribeToTriggerSource(trigger);
+        if (unsubscribe) {
+          this.#reactiveSources.set(triggerId, { key, unsubscribe });
+        }
+      }
+    }).pipe(Effect.provide(this._services));
+
+  /**
+   * Subscribe to whatever a non-timer trigger reacts to, dispatching its kind on every change.
+   * Returns `undefined` when the trigger has nothing to watch (e.g. a feed reference that no longer
+   * resolves), so no source is recorded and the next refresh retries.
+   */
+  #subscribeToTriggerSource = (trigger: Trigger.Trigger): Effect.Effect<(() => void) | undefined> =>
+    Effect.gen({ self: this }, function* () {
+      const spec = trigger.spec;
+      const queryResult = yield* spec?.kind === 'feed'
+        ? Effect.gen({ self: this }, function* () {
+            if (!spec.feed) {
+              return undefined;
+            }
+            const feed = yield* Database.load(spec.feed).pipe(Effect.orDie);
+            const cursor = Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id;
+            // One item past the cursor is enough to know there is work; the dispatch that follows
+            // reads the pages it needs. Watching the whole feed would restore the full scan this
+            // subscription exists to avoid.
+            return yield* Feed.query(feed, Filter.everything(), {
+              after: cursor !== undefined ? Feed.Cursor.make(cursor) : undefined,
+              limit: 1,
+            });
+          })
+        : spec?.kind === 'subscription'
+          ? Database.query(Query.fromAst(spec.query.ast).options({ deleted: 'include' }))
+          : Effect.succeed(undefined);
+      if (!queryResult) {
+        return undefined;
+      }
+
+      const kind = spec!.kind as 'feed' | 'subscription';
+      return queryResult.subscribe(() => this.#dispatchReactively(kind), { fire: true });
+    }).pipe(Effect.provide(this._services));
+
+  /**
+   * Fork a dispatch of one kind, serialized so overlapping wake-ups never invoke a trigger twice
+   * for the same item.
+   */
+  #dispatchReactively = (kind: 'feed' | 'subscription'): void => {
+    // Declared ahead of the fork so the `ensuring` finalizer can drop this fiber from the set.
+    let fiber: Fiber.Fiber<void, never>;
+    fiber = Effect.runFork(
+      this.#reactiveDispatchLock
+        .withPermits(1)(this.invokeScheduledTriggers({ kinds: [kind], untilExhausted: true }))
+        .pipe(
+          Effect.asVoid,
+          Effect.tapCause((cause) =>
+            Effect.sync(() =>
+              log.error('reactive trigger dispatch failed', { kind, error: EffectEx.causeToError(cause) }),
+            ),
+          ),
+          Effect.catchCause(() => Effect.void),
+          Effect.ensuring(Effect.sync(() => this.#reactiveDispatchFibers.delete(fiber))),
+        ),
+    );
+    this.#reactiveDispatchFibers.add(fiber);
+  };
+
+  /** Drop every reactive source and interrupt the dispatches they forked. */
+  #teardownReactiveSources = (): Effect.Effect<void> =>
+    Effect.gen({ self: this }, function* () {
+      for (const source of this.#reactiveSources.values()) {
+        source.unsubscribe();
+      }
+      this.#reactiveSources.clear();
+      const fibers = [...this.#reactiveDispatchFibers];
+      this.#reactiveDispatchFibers.clear();
+      yield* Effect.forEach(fibers, Fiber.interrupt, { discard: true });
+    });
+
+  /**
    * Unsubscribe from the live trigger query and interrupt any refresh it forked, so neither can
    * repopulate trigger state after the dispatcher has stopped — called from both {@link stop} and
    * the natural-time-processing failure path in {@link start} (a crash bypasses `stop()` since it
@@ -984,6 +1117,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
    */
   #teardownTriggerSubscription = (): Effect.Effect<void> =>
     Effect.gen({ self: this }, function* () {
+      yield* this.#teardownReactiveSources();
       this.#triggerQueryUnsubscribe?.();
       this.#triggerQueryUnsubscribe = undefined;
       this.#triggerQuery = undefined;
@@ -995,7 +1129,9 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 
   private _startNaturalTimeProcessing = (): Effect.Effect<void> =>
     Effect.gen({ self: this }, function* () {
-      yield* this.invokeScheduledTriggers();
+      // Timer triggers only: feed and subscription triggers are woken by `#reactiveSources` when
+      // their data changes, so the wall clock no longer re-reads every feed on every tick.
+      yield* this.invokeScheduledTriggers({ kinds: ['timer'] });
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 
   private _prepareInputData = (trigger: Trigger.Trigger, event: TriggerEvent.TriggerEvent): any => {

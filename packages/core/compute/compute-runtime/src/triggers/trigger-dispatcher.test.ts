@@ -142,6 +142,7 @@ const TestLayer = (
     timeControl?: 'natural' | 'manual';
     startingTime?: Date;
     failureCooldown?: Duration.Duration;
+    livePollInterval?: Duration.Duration;
     spaceAwareResolver?: boolean;
   } = {},
 ) =>
@@ -151,6 +152,7 @@ const TestLayer = (
         timeControl: options.timeControl ?? 'manual',
         startingTime: options.startingTime ?? new Date('2025-09-05T15:01:00.000Z'),
         failureCooldown: options.failureCooldown,
+        livePollInterval: options.livePollInterval,
       }),
     ),
     Layer.provide(TriggerStateStore.layerMemory),
@@ -525,6 +527,44 @@ describe('TriggerDispatcher', () => {
           yield* dispatcher.stop();
         },
         Effect.provide(TestLayer({ timeControl: 'natural' })),
+      ),
+    );
+
+    // `it.live` (not `it.effect`): the reactive path is woken by real subscriptions, so the sleeps
+    // below must pass real time rather than a virtual clock nothing advances.
+    it.live(
+      'feed triggers fire on append without waiting for a poll tick',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const feed = yield* Database.add(Feed.make());
+          const functionObj = yield* registerOperation(Reply);
+          const trigger = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: Trigger.specFeed(feed),
+          });
+          yield* Database.add(trigger);
+
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.start();
+
+          yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'John Doe' })]);
+          yield* Database.flush();
+
+          // The poll interval is an hour, so anything observed here came from the feed subscription.
+          const registry = yield* Registry.AtomRegistry;
+          let fired = false;
+          for (let attempt = 0; attempt < 100 && !fired; attempt++) {
+            fired = registry.get(dispatcher.state).invocations.some((_) => _.trigger.id === trigger.id);
+            if (!fired) {
+              yield* Effect.sleep(Duration.millis(20));
+            }
+          }
+          expect(fired).toBe(true);
+
+          yield* dispatcher.stop();
+        },
+        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) })),
       ),
     );
   });

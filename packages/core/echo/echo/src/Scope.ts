@@ -43,8 +43,17 @@ export const registry = (location: 'local' | 'remote' = 'local'): QueryAST.Regis
 
 /**
  * Scope targeting a specific feed (by its underlying queue EID).
+ *
+ * Pass `after` to resume from a cursor — only items positioned strictly after it are selected,
+ * pushed into the index scan rather than filtered in memory.
+ *
+ * @example
+ * ```ts
+ * db.query(Filter.everything().from(Scope.feed(feedUri, { after: cursor })));
+ * ```
  */
-export const feed = (feedUri: string): QueryAST.FeedScope => ({
+export const feed = (feedUri: string, options?: { after?: string }): QueryAST.FeedScope => ({
   _tag: 'feed',
   feedUri,
+  ...(options?.after !== undefined ? { after: options.after } : {}),
 });

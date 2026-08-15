@@ -22,7 +22,9 @@ const parseFeedPosition = (position: string): number | undefined => {
 };
 
 /**
- * Filter feed items to only those past the given cursor, pairing each with its position.
+ * Filter feed items to only those past the given cursor, pairing each with its position and
+ * ordering them by it — the dispatcher advances its cursor to the last item it invoked, so an
+ * unordered page would skip everything positioned before that item.
  * Objects without a position key are skipped defensively so that a single malformed entry
  * does not stall trigger dispatch. A malformed cursor rejects all items so a corrupted
  * checkpoint cannot cause unbounded re-dispatch.
@@ -35,7 +37,7 @@ export const filterReadyFeedItems = <T extends Entity.Unknown>(
   if (cursor !== undefined && cursorPos === undefined) {
     return [];
   }
-  const ready: { item: T; position: string }[] = [];
+  const ready: { item: T; position: string; order: number }[] = [];
   for (const item of objects) {
     const position = getFeedPosition(item);
     if (position === undefined) {
@@ -48,7 +50,7 @@ export const filterReadyFeedItems = <T extends Entity.Unknown>(
     if (cursorPos !== undefined && cursorPos >= itemPos) {
       continue;
     }
-    ready.push({ item, position });
+    ready.push({ item, position, order: itemPos });
   }
-  return ready;
+  return ready.sort((a, b) => a.order - b.order).map(({ item, position }) => ({ item, position }));
 };
