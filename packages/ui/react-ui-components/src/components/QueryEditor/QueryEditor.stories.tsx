@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type Filter, Tag } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
@@ -23,38 +23,37 @@ const createTags = (): Tag.Map => ({
   tag_3: Tag.make({ label: 'New' }),
 });
 
+const DefaultStory = (args: QueryEditorProps) => {
+  const { space } = useClientStory();
+  const [filter, setFilter] = useState<Filter.Any>();
+  // Create tags and builder at render time to avoid Storybook serialization issues.
+  const tags = useMemo(() => args.tags ?? createTags(), [args.tags]);
+
+  // The editor parses the DSL itself; a story that rebuilt the filter here would be exercising its
+  // own `QueryBuilder` rather than the component's.
+  const handleFilterChange = useCallback<NonNullable<QueryEditorProps['onFilterChange']>>(
+    ({ filter }) => setFilter(filter),
+    [],
+  );
+
+  return (
+    <div className='flex flex-col gap-2'>
+      <Toolbar.Root>
+        <QueryEditor {...args} db={space?.db} tags={tags} onFilterChange={handleFilterChange} />
+      </Toolbar.Root>
+
+      <JsonHighlighter data={filter} classNames='text-xs' />
+    </div>
+  );
+};
+
 const meta = {
   title: 'ui/react-ui-components/QueryEditor',
   component: QueryEditor,
-  render: (args: QueryEditorProps) => {
-    const { space } = useClientStory();
-    const [filter, setFilter] = useState<Filter.Any>();
-    // Create tags and builder at render time to avoid Storybook serialization issues.
-    const tags = useMemo(() => args.tags ?? createTags(), [args.tags]);
-    const builder = useMemo(() => new QueryBuilder(tags), [tags]);
-    const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
-      (value) => {
-        setFilter(builder.build(value).filter);
-      },
-      [builder],
-    );
-
-    return (
-      <div className='flex flex-col gap-2'>
-        <QueryEditor
-          {...args}
-          classNames='p-2 border border-subdued-separator rounded-xs'
-          db={space?.db}
-          onChange={handleChange}
-        />
-
-        <JsonHighlighter data={filter} classNames='text-xs' />
-      </div>
-    );
-  },
+  render: (args: QueryEditorProps) => <DefaultStory {...args} />,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column', classNames: 'p-2', scroll: true }),
+    withLayout({ layout: 'column' }),
     withClientProvider({
       types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
       createIdentity: true,
@@ -70,6 +69,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const Simple: Story = {
+  args: {
+    value: '#important',
+  },
+};
 
 export const Complex: Story = {
   args: {

@@ -670,7 +670,11 @@ export const project = <T, K extends RefPropKey<T>>(query: Query<T>, property: K
  * @returns Query for the combined results.
  */
 // TODO(dmaretskyi): Rename to `combine` or `union`.
-export const all = (...queries: Any[]): Any => {
+export const all: {
+  /** Combining queries over one type preserves it, so a union stays assignable where its arms were. */
+  <T>(...queries: Query<T>[]): Query<T>;
+  (...queries: Any[]): Any;
+} = (...queries: Any[]): Any => {
   if (queries.length === 0) {
     throw new TypeError(
       'Query.all combines results of multiple queries, to query all objects use Query.select(Filter.everything())',

@@ -5,7 +5,8 @@ existed; the real fix is upstream `automerge/automerge-repo#712`, now ported
 into our pinned `.40` dist patch and verified (commit/fragment re-persist on
 boot is zero). Two follow-ons found: the same defect in a second cache
 (`#lastRemoteHeads`, Phase 0), and idle index churn that is now the dominant
-boot SQL cost (Phase 2b). Phase 3 is specced but not implemented._
+boot SQL cost (Phase 2b). Phase 3 is IMPLEMENTED in PR #12585 but not yet verified
+in a browser boot._
 
 Root cause, timeline, and measurements: DESIGN.md.
 
@@ -94,44 +95,37 @@ Details and call paths: DESIGN.md §"Idle index churn".
       carrying a real `LIMIT` — the current `break` after `limit` saves nothing
       because the SQL is unbounded.
 
-## Phase 3: Defer network activity behind the handshake
+## Phase 3: Defer network activity behind the handshake — DONE (PR #12585)
 
-Spec: DESIGN.md §"Spec: begin network activity only after boot". **Deferred to a
-follow-up PR** — implemented once and reverted to keep this PR scoped; the
-working diff is preserved at
-`.agents/projects/client-startup-timeout/defer-networking.patch` (edge-client `deferConnect` +
-`startNetworking()`, host-owned 300 ms delay, worker-runtime anchor, feed-syncer
-eager-poll gate). Re-apply rather than re-deriving.
+Spec: DESIGN.md §"Spec: begin network activity only after boot". The carrier patch
+that held this diff is deleted; the change is in the tree.
 
-Verified while implementing: only the edge dial needs an explicit gate.
-Subduction already returns early while the socket is not `CONNECTED`
-([echo-edge-subduction-replicator.ts:265](../../../packages/core/echo/echo-host/src/edge/echo-edge-subduction-replicator.ts))
-and resumes from `_handleReconnect`; feed sync re-schedules its poll/push from
-`onReconnected`. The one leak is `FeedSyncer._open`'s unconditional initial
-`pollTask.schedule()`, which parks on the send-ready trigger until the socket
-appears — hence the gate in the saved patch.
+- [x] Gate the edge dial rather than every initiator. `EdgeClient` takes
+      `deferConnect` and exposes an idempotent `startNetworking()`; the policy and
+      the 300 ms grace live in `ClientServicesHost`, not the edge client.
+- [x] Anchor it to the worker actually booting — `worker-runtime` calls
+      `startNetworking()` after its start sequence drains, which is strictly later
+      than the stack open.
+- [x] Bound it so a host with no external boot signal (node, tests) still dials:
+      `_openStack` falls back on a microtask, and only when nothing else
+      signalled, so it cannot pre-empt the worker anchor and latch the guard.
+- [x] Confirmed only the dial needs gating. Subduction returns early while the
+      socket is not `CONNECTED`
+      ([echo-edge-subduction-replicator.ts:265](../../../packages/core/echo/echo-host/src/edge/echo-edge-subduction-replicator.ts))
+      and resumes from `_handleReconnect`; feed sync re-schedules poll/push from
+      `onReconnected`. The one gap was `FeedSyncer._open`'s unconditional initial
+      `pollTask.schedule()`, now gated on a live socket.
+- [ ] Verify against a single-`i` fresh-boot `app.log` on a document-heavy
+      profile: first `received subduction batch` / edge-connect strictly after
+      `worker-session opened`, and measure handshake→first-batch to show no
+      time-to-first-sync regression. NOT yet done — the change is unverified in
+      the browser.
 
-Also note `EdgeConnection` is implemented twice — `EdgeClient` and
-`TestEdgeConnection` (`packages/core/mesh/messaging/src/testing/test-edge-mesh.ts`)
-— so adding an interface member breaks `messaging:build` until the double is
-updated.
-
-- [ ] Add a worker-runtime-owned `bootGate`, resolved after the session
-      handshake completes; bind it to the runtime's lifetime so a second tab
-      against a warm worker is not gated again.
-- [ ] Await it in every outbound initiator: subduction connection managers
-      (`SubductionConnections.manageConnection`, `AdapterConnections.addAdapter`),
-      the edge WebSocket connect, and feed sync's first pull. Local hydration is
-      explicitly out of scope (Phase 2 owns that).
-- [ ] Bound it: resolve on the earlier of handshake-complete or a ~5 s ceiling,
-      and unconditionally on handshake _failure_ so a broken tab cannot leave
-      the worker offline. Log which arm fired.
-- [ ] Verify against a single-`i` fresh-boot `app.log`: first
-      `received subduction batch` / edge-connect strictly after
-      `worker-session opened`.
-- [ ] Confirm the edge WebSocket connect is no longer starved (it landed at
-      24.231 only because the thread freed at 23.707), and measure
-      handshake→first-batch to show no time-to-first-sync regression.
+Gotcha for the next reader: `EdgeConnection` has **three** implementors, not two —
+`EdgeClient`, `TestEdgeConnection`
+(`packages/core/mesh/messaging/src/testing/test-edge-mesh.ts`), and an inline stub
+in `feed-syncer.test.ts`. Adding an interface member breaks `messaging:build` and
+`client-services:build` until all three are updated.
 
 ## Phase 4: Independent cleanups
 

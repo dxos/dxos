@@ -650,7 +650,13 @@ export const McpTool = Schema$.Struct({
    * `write` mutates space data, `destructive` deletes or is otherwise irreversible.
    */
   safety: Schema$.Literals(['read', 'write', 'destructive']),
-  /** Aspect/toolset, for server-side filtering (e.g. `/mcp?toolsets=tasks`). */
+  /**
+   * Aspect/toolset, for server-side filtering (e.g. `/mcp?toolsets=tasks`).
+   *
+   * TODO(wittjosiah): Remove? Nothing reads it — the MCP projection decodes the field and drops it,
+   * and no toolset filtering exists. Not an MCP concept either: the specification's tool definition
+   * has no grouping field, so this would stay a server-side convention.
+   */
   aspect: Schema$.optional(Schema$.String),
   /**
    * Prompt name of the skill whose workflow this tool belongs to (a skill key's final segment,

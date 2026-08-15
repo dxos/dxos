@@ -31,6 +31,7 @@ import { translations as observabilityTranslations } from '@dxos/plugin-observab
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
+import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
@@ -517,7 +518,14 @@ const main = async () => {
         }
         fallbackRender={(props) => <ErrorFallback {...props} error={error} />}
       >
-        <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
+        {/* `react-ui`'s own namespace ships with no plugin to register it, unlike every sibling
+            (`react-ui-card`, `-form`, …) which a plugin re-exports — so without this the primitives'
+            keys (`system-button.*`, `toolbar-*`) render raw as the accessible name of every
+            icon-only button. */}
+        <ThemeProvider
+          tx={defaultTx}
+          resourceExtensions={[...reactUiTranslations, ...translations, ...observabilityTranslations]}
+        >
           <Tooltip.Provider>
             {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
                 fatal-dialog boundary above, which shows the original error via ErrorFallback. */}

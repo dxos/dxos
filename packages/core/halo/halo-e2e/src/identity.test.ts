@@ -6,12 +6,13 @@ import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe } from 'vitest';
 
 import { Identity } from '@dxos/halo';
 import { PublicKey, SpaceId } from '@dxos/keys';
 
-import { currentOf, makeClientLayer } from './testing';
+import { currentOf, makeClientLayer, pollUntil } from './testing';
 
 describe('Identity', () => {
   it.effect(
@@ -42,6 +43,42 @@ describe('Identity', () => {
       },
       Effect.provide(makeClientLayer({ identity: false })),
     ),
+  );
+
+  it.effect(
+    'reports the local device as present, with a kind a device list can render',
+    Effect.fn(function* ({ expect }) {
+      const devices = yield* currentOf(Identity.devices);
+      const current = devices.find((device) => device.current);
+      expect(current?.presence).toEqual('online');
+      // A kind is what selects the list icon; without it the UI falls back to a key-derived emoji.
+      expect(current?.kind).toBeTypeOf('string');
+    }, Effect.provide(makeClientLayer())),
+  );
+
+  it.effect(
+    'exposes the identity as an atom seeded with the current value',
+    Effect.fn(function* ({ expect }) {
+      const service = yield* Identity.Service;
+      const identity = Option.getOrThrow(yield* Identity.getSnapshot);
+      // Registry.get, not a subscription: a reader evaluating before the first stream tick must
+      // still see the existing identity.
+      const registry = Registry.make();
+      const atom = Identity.atom(service);
+      expect(Option.getOrThrow(registry.get(atom)).did).toEqual(identity.did);
+      // Same service, same atom — the family is keyed by reference.
+      expect(Identity.atom(service)).toBe(atom);
+
+      // Subscribe, then mutate: the seed alone would satisfy the assertions above.
+      const seen: (string | undefined)[] = [];
+      const unsubscribe = registry.subscribe(atom, (value) => seen.push(Option.getOrUndefined(value)?.displayName));
+      yield* Identity.updateProfile({ displayName: 'renamed' });
+      yield* pollUntil(
+        Effect.sync(() => seen),
+        (values) => values.includes('renamed'),
+      );
+      unsubscribe();
+    }, Effect.provide(makeClientLayer())),
   );
 
   it.effect(

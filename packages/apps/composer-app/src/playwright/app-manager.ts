@@ -47,6 +47,7 @@ const JOIN_IDENTITY_BOOT_TIMEOUT = 60_000;
  * of silently.
  */
 const OBJECT_TYPENAMES: Record<string, string> = {
+  Chat: 'org.dxos.type.assistant.chat',
   Collection: 'org.dxos.type.collection',
   Document: 'org.dxos.type.document',
   Mailbox: 'org.dxos.type.mailbox',

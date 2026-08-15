@@ -545,7 +545,6 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       creator: space.inner.spaceState.creator?.key,
       tags: space.tags,
       membershipPolicy: space.membershipPolicy,
-      cache: space.cache,
       metrics: space.metrics,
       edgeReplication: space.getEdgeReplicationSetting(),
     };

@@ -64,14 +64,18 @@ export const CompanionChatProvisioner = Capability.lazyModule(
   () => import('./companion-chat-provisioner'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
+// require once during startup, so a resolver contributed in a later round is invisible to it.
+// TODO(burdon): Defer past startup again so a user who never opens a chat does not pay for the
+//   provider client bindings; needs the AI service to read resolvers per request, not snapshot them.
 export const EdgeModelResolver = Capability.lazyModule(
   'EdgeModelResolver',
-  { provides: [AppCapabilities.AiModelResolver], activatesOn: AssistantEvents.Start },
+  { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
   () => import('./edge-model-resolver'),
 );
 export const LocalModelResolver = Capability.lazyModule(
   'LocalModelResolver',
-  { provides: [AppCapabilities.AiModelResolver], activatesOn: AssistantEvents.Start },
+  { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
   () => import('./local-model-resolver'),
 );
 export const MarkdownExtension = Capability.lazyModule(
