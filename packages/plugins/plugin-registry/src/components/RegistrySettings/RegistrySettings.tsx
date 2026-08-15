@@ -108,6 +108,7 @@ export const RegistrySettings = ({
               <Form.Row label={t('plugin-scope.label')} description={t('plugin-scope.description')}>
                 <Input.Root>
                   <Input.Switch
+                    data-testid='registrySettings.pluginScope'
                     checked={pluginScopeLocal}
                     // Only rejoining asks: it replaces this device's choices with the account's.
                     onCheckedChange={(local) => (local ? onPluginScopeLocalChange?.(true) : setRejoining(true))}
@@ -166,6 +167,7 @@ export const RegistrySettings = ({
               </AlertDialog.Cancel>
               <AlertDialog.Action asChild>
                 <Button
+                  data-testid='registrySettings.pluginScope.confirm'
                   variant='primary'
                   onClick={() => {
                     onPluginScopeLocalChange?.(false);

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -45,5 +46,31 @@ export const Enabled: Story = {
     activeDevPluginIds: [],
     onEnableDev: async () => {},
     onDisableDev: async () => {},
+  },
+};
+
+/**
+ * Rejoining the account replaces this device's plugin choices, so it is the one direction that must
+ * ask first. Leaving is lossless and deliberately does not prompt.
+ */
+export const RejoinPrompt: Story = {
+  args: {
+    settings: { devPluginUrl: 'http://localhost:3967', devPluginEnabled: false },
+    onSettingsChange: () => {},
+    activeDevPluginIds: [],
+    onEnableDev: async () => {},
+    onDisableDev: async () => {},
+    pluginScopeLocal: true,
+    onPluginScopeLocalChange: () => {},
+  },
+  play: async () => {
+    const body = within(document.body);
+
+    const scopeSwitch = await body.findByTestId('registrySettings.pluginScope', undefined, { timeout: 10_000 });
+    await expect(scopeSwitch).toBeChecked();
+
+    await userEvent.click(scopeSwitch);
+    const confirm = await body.findByTestId('registrySettings.pluginScope.confirm', undefined, { timeout: 10_000 });
+    await expect(confirm).toBeInTheDocument();
   },
 };
