@@ -96,13 +96,12 @@ and editable outside the agent.
 - [x] **Implement `resolve_backend` for `mcp`** — the `BACKEND:` line now names the object mapping
       and the tools rather than a file path, built against the surface `dx mcp serve` actually
       exposes: `projectList`/`projectGet`/`projectUpdate`, `outlineGet`/`outlineUpdate`,
-      `taskList`/`taskCreate`/`taskComplete`/`taskAssign`, plus `createObject`. The mapping follows
+      `projectCreate`, and `taskList`/`taskCreate`/`taskComplete`/`taskAssign`. The mapping follows
       `plugin-projects/MILESTONE-5.md` §8: registry entry = `Project`, TASKS.md = `Project.outline`,
       checked items = promoted `Task`s, DESIGN.md = an artifact document. `DX_PROJECT_SPACE` names
       the space; otherwise the agent resolves it with `listSpaces`.
-      **Found while wiring it:** there is no `projectCreate` over MCP — it resolves a
-      `Capability.Service` that exists only inside the app — so `new` goes through the generic
-      `createObject` tool.
+      `new` maps to `projectCreate`, which scaffolds the instructions/artifacts/TaskSet graph in one
+      call and returns the `taskSet` reference for `taskCreate`.
 - [x] **Decided the fallback rule** — NO cascade. When a needed tool is absent the agent says so and
       stops; it never degrades to the file backend. A write landing in a file the user believes is
       dead is the exact divergence this backend exists to prevent, and a silent fallback would make

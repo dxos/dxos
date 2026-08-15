@@ -78,8 +78,9 @@ Two rules the directive enforces:
 - **No cascade.** If a needed tool is absent, the agent stops rather than writing
   to `registry.yml`. A write landing in a file the user believes is dead is the
   divergence this backend exists to prevent.
-- **`new` uses `createObject`.** There is no `projectCreate` over MCP: it resolves
-  a `Capability.Service` that only exists inside the app.
+- **`new` uses `projectCreate`**, which scaffolds the project's instructions,
+  artifacts collection and TaskSet in one call and returns the `taskSet`
+  reference that `taskCreate` files work against.
 
 ## Layout
 
