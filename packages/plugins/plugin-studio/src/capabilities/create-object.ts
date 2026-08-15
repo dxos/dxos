@@ -24,8 +24,6 @@ export default Capability.makeModule(
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,
-                // Absent a caller-supplied target (e.g. the space's generic create menu), navigate to
-                // the new Artifact under the Studio section rather than the database subtree.
               });
             }),
         },
