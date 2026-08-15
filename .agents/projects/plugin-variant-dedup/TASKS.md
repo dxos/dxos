@@ -58,3 +58,27 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
 - [ ] Extend `check-module-structure` coverage to plugins that lack it but have variants
 - [ ] Fix `toolbox lintPackageExports` nested-`source` flattening hazard
 - [ ] Consider a workerd-pool smoke test that activates one collapsed plugin in the real workers pool
+
+## Phase 5 — condition model correction (Josiah, 2026-08-15)
+
+- [x] Drop the inert `'browser'` token: there is no `browser` condition (the canonical barrel is
+      `default`), and the generator filtered it back out — a third of every annotation was
+      ceremony. 127 annotations rewritten; omitting `environments` now means "do not split",
+      not "browser-only"
+- [x] `Environment` becomes an open string — conditions belong to the build tool resolving the
+      package, not the framework (`deno`/`electron`/private conditions are equally valid)
+- [x] Delete the 6 empty `overrides.<env>.ts` marker files; a plugin that contributes nothing to
+      a runtime generates no variant, and headless hosts leave it out of their plugin list
+- [x] Fix generator retraction: `generate()` returned before `syncPackageImports` when a plugin
+      dropped to zero conditions, leaving `#capabilities` pointed at gen files no longer produced
+- [x] Stop the generator authoring `#capabilities` for plugins that never declared one, and
+      expanding a deliberate shorthand string into the conditional form
+- [x] `dx-trace-imports --conditions` is repeatable, each occurrence an independent set; guards
+      now trace exactly the conditions each plugin produces (25 dual, 4 node-only, 2 dropped)
+- [x] Fix the React leaks the corrected guards exposed, all pre-existing on main:
+      plugin-presenter (`PresenterContext` moved from `types/` to `components/`), plugin-debug
+      (`DebugContext` deleted — zero consumers repo-wide), plugin-assistant (`Attention` imported
+      from the root barrel instead of `/types` for a pure string helper)
+- [ ] Per-maker `environments` defaults for the headless-safe families (`schema`,
+      `operationHandler`, `skillDefinition`) — `moduleMaker` plumbing is in, no maker declares
+      one yet. See DESIGN.md §6.3 for the annotation audit and blast radius

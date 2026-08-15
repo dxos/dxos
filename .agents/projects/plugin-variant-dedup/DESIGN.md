@@ -159,10 +159,24 @@ statements regardless of `sideEffects` (which is why O2's canonical entry stays 
 ## 5. Recommended design (O2, concrete)
 
 1. **Framework** (done in spike): `Plugin.addModule(undefined)` → no-op.
-2. **Annotation**: `environments?: readonly ('browser' | 'node' | 'workerd')[]` on
-   `ModuleSpec` / maker options in the canonical `capabilities/index.ts` — the single
-   source of truth. Default: `['browser']` (headless is opt-in, matching the existing
-   "only add a variant the plugin genuinely supports" rule).
+2. **Annotation**: `environments?: readonly string[]` on `ModuleSpec` / maker options in the
+   canonical `capabilities/index.ts` — the single source of truth. It names the package.json
+   **conditions** a module is additionally split out for (`'node'`, `'workerd'` in this repo).
+
+   Revised (Josiah, 2026-08-15) from the original `('browser' | 'node' | 'workerd')[]` with a
+   `['browser']` default. There is no `browser` condition — the canonical barrel IS the
+   `default` condition, which is what a browser resolves — so `'browser'` was an inert token the
+   generator filtered straight back out, i.e. a third of every annotation in the repo was
+   ceremony. **Omitting `environments` means "do not split this module by condition"**, not
+   "browser-only"; no variant is generated for it at all. The type is an open string because
+   conditions are defined by whichever build tool resolves the package, so the framework has no
+   business enumerating them (`deno`, `electron`, or a private condition are equally valid).
+
+   Corollary: a plugin whose modules name no conditions generates nothing and keeps an
+   unconditioned `#capabilities`. If a headless host loaded it, it would resolve the default
+   barrel — so headless hosts simply leave browser-only plugins out of their plugin list, rather
+   than the plugin carrying a stub barrel to be safely ignorable.
+
 3. **Generator**: productize `spikes/generate.mjs` and **ship it with
    `@dxos/app-framework` as a distributed binary** (e.g. `bin: dx-plugin gen`), not
    monorepo-internal tooling — if stub-barrel generation is the plugin authoring pattern,
@@ -211,26 +225,49 @@ statements regardless of `sideEffects` (which is why O2's canonical entry stays 
 6. **Deletions per plugin**: `plugin.node.ts`, `plugin.workerd.ts`, the `#plugin`
    conditions, two vite entries, one schema copy. Repo-wide: ~70 files immediately, ~100
    after schema/overrides consolidation.
-7. **Guard-rail updates**: keep `check-module-structure` exactly as is (it validated the
-   spike unchanged); extend `pkg-lint` to require that a package with `environments`
-   annotations has matching `#capabilities` conditions (kills the "silently resolves the
-   browser barrel" bug class); fix `toolbox lintPackageExports` which would flatten nested
-   `source` maps if ever pointed at plugins (pre-existing hazard).
+7. **Guard-rail updates**: `check-module-structure` needed more than the spike suggested.
+   `dx-trace-imports --conditions` is now **repeatable**, each occurrence an independent set:
+   `#capabilities` resolves to a different barrel per runtime, so the previous single set only
+   ever checked one of them. Every plugin guard traced `workerd,worker` and nothing traced
+   `node`, so node-side React leaks passed a green check — the corrected guards found three
+   (plugin-assistant, plugin-debug, plugin-presenter), all pre-existing on main.
+
+   Each plugin's guard now traces exactly the conditions it produces: 25 trace workerd and node,
+   4 trace node only, and the two plugins that declare no conditions (map-solid, wnfs) drop the
+   guard entirely — tracing them would assert a property of a bundle no headless host loads.
+   Also fix `toolbox lintPackageExports` which would flatten nested `source` maps if ever
+   pointed at plugins (pre-existing hazard).
 
 Migration is mechanical per plugin (the two spike commits are the template) and incremental
 — collapsed and uncollapsed plugins coexist; consumers see no API change.
 
 ## 6. Open questions
 
-1. Whether to fix the 4 stale headless schema lists during migration (regeneration will
-   surface them; the _intended_ headless subsets need a human call — some omissions may be
-   deliberate, e.g. browser-only types).
-2. Whether inbox's lazy→inline workerd conversion is still wanted (it predates the
-   chunk-tolerant edge bundler config) or can revert to the plain sliced form, removing the
-   only override-file user before the escape hatch is even built.
-3. Default-environments policy for makers that are intrinsically headless-safe
-   (`schema`, `operationHandler`, `skillDefinition`) — a per-maker default (e.g. schema
-   defaults to all three) would shrink annotations further but adds magic.
+1. ~~Stale headless schema lists~~ — resolved during migration; no `schema.node.ts` /
+   `schema.workerd.ts` files remain.
+2. ~~inbox's lazy→inline workerd conversion~~ — resolved; inbox annotates its canonical barrel
+   and uses `overrides.{node,workerd}.ts` for the schema-list divergence.
+3. **Per-maker `environments` defaults — open, and the next piece of work.** `moduleMaker` now
+   accepts `defaults.environments` (mirroring how it already defaults `activatesOn`), but no
+   maker declares one yet. The annotation audit across the converted plugins shows the
+   inconsistency is real and concentrated in exactly the families that are headless-safe by
+   construction:
+
+   | maker                        | n   | distribution                                                  |
+   | ---------------------------- | --- | ------------------------------------------------------------- |
+   | `surface`                    | 71  | 100% unannotated                                              |
+   | `pluginAsset`                | 27  | 100% unannotated                                              |
+   | `reactRoot` / `reactContext` | 11  | 100% unannotated                                              |
+   | `commands`                   | 5   | 100% `['node']`                                               |
+   | `schema`                     | 52  | 48% unannotated / 46% `['node','workerd']` / 6% `['workerd']` |
+   | `operationHandler`           | 60  | 57% unannotated / 35% `['node','workerd']` / 8% other         |
+   | `skillDefinition`            | 26  | 42% unannotated / 38% `['node']` / 19% other                  |
+
+   The UI-bound families are unanimous, so their (absent) default is uncontroversial. `schema`,
+   `operationHandler` and `skillDefinition` split roughly 50/50 — that is authoring drift, not
+   design intent. Defaulting those three to `['node','workerd']` would change behavior for ~60
+   currently-unannotated modules; it is only safe to attempt now that the guards trace every
+   condition a plugin produces.
 
 ## Artifacts
 
