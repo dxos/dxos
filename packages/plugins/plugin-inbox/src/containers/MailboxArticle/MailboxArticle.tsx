@@ -229,7 +229,13 @@ export const MailboxArticle = ({
 
   // Drives an in-flow spinner in the list, never a full-panel fallback — a page fetch or a
   // background refresh must not blank the list. `source` is undefined until a free-text feed resolves.
-  const loading = !source || pagination.isLoading;
+  //
+  // `!feed` is load-bearing for the empty state, not redundant with `!source`: a system-tag view
+  // degrades to a space-only scope while the feed resolves (see `scopes` above), and that query is
+  // valid and answers immediately — with nothing, since every message lives in the feed (measured on
+  // a live profile: 0 messages space-only vs 432 feed-scoped). Without this the empty panel renders
+  // for the width of the first feed resolution and then vanishes.
+  const loading = !source || !feed || pagination.isLoading;
   // Show the empty-mailbox panel only once the query has settled with nothing, never mid-load.
   const showEmptyState = !loading && messages.length === 0;
 
