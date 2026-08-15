@@ -645,6 +645,15 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
 
 ### Open
 
+- **PRE-EXISTING, found during tag-sync work: `sync.test.ts`'s capped-run test is order-dependent.**
+  `moon run plugin-google:test -- src/operations/mail/sync/sync.test.ts -t "a capped run requests"`
+  fails (24 of 25 ids synced); the whole file passes 22/22. Reproduces IDENTICALLY with the tag-sync
+  changes stashed, so it is not ours — but it flaked once in a full-package run too, so it is not a
+  pure `-t` artifact either. Worth chasing because the assertion is a real invariant: repeated capped
+  runs must eventually sync the whole mailbox without duplicating or losing a message. The loop exits
+  SUCCESSFULLY at 24/25, so the run reported completion with one message unreached — suspect the
+  backward-window / `min` advance stalling on the final message when the dedup seed differs.
+
 - ~~Whether `ClassifyMailbox`'s canonical output should push to the user's real Gmail account.~~
   DECIDED 2026-08-15: it pushes — a classification the user sees in Composer should be the one their
   mail client shows. See the `spam` mapping task above for the work that decision creates.
