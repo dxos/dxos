@@ -27,6 +27,8 @@ export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
   return (
     <Masonry.Root Tile={RelatedObjectCard}>
       <Panel.Root role={role}>
+        {/* TODO(burdon): Build this out into a real toolbar: text filter, and a table/card view
+            toggle as TypeArticle has. */}
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <RelatedTypeFilter types={types} onToggle={toggle} />
