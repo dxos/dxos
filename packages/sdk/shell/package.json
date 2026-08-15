@@ -1,7 +1,7 @@
 {
   "name": "@dxos/shell",
   "version": "0.11.1",
-  "description": "DXOS\u2019s OS experiences",
+  "description": "DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {

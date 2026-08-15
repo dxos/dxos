@@ -14,20 +14,17 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-// Headless environments register eagerly (Startup, the maker's default) via ./overrides.workerd.ts —
-// a worker host handling operation requests needs handlers ready immediately, unlike the browser's
-// post-interactive Idle deferral.
+// workerd registers eagerly (Startup, the maker's default) via ./overrides.workerd.ts — a worker
+// host handling operation requests needs handlers ready immediately, unlike the post-interactive
+// Idle deferral browser and node share.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.dialog', 'org.dxos.role.section'],
 });
-// Headless environments load the reduced list via ./overrides.workerd.ts.
-export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['workerd'],
-});
+// workerd loads the reduced list via ./overrides.workerd.ts; node takes the canonical one.
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
