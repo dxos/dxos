@@ -70,11 +70,9 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/effect": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/atom-react": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/plugin-graph": "workspace:*",

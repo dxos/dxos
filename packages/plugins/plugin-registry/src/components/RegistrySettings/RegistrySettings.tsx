@@ -4,8 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { type AppSurface, useSettingsScope } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
 import { AlertDialog, Button, Input, Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -19,6 +18,13 @@ export type RegistrySettingsProps = AppSurface.SettingsProps<
     activeDevPluginIds: readonly string[];
     onEnableDev: (url: string) => Promise<void>;
     onDisableDev: (id: string) => Promise<void>;
+    /**
+     * Whether this device uses its own plugin set rather than the account's. `undefined` hides the
+     * section — there is no device-synced settings store (no client, or the settings space has not
+     * opened).
+     */
+    pluginScopeLocal?: boolean;
+    onPluginScopeLocalChange?: (local: boolean) => void;
   }
 >;
 
@@ -40,9 +46,10 @@ export const RegistrySettings = ({
   activeDevPluginIds,
   onEnableDev,
   onDisableDev,
+  pluginScopeLocal,
+  onPluginScopeLocalChange,
 }: RegistrySettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const pluginScope = useSettingsScope(AppSettings.PLUGINS_NAMESPACE);
   const [rejoining, setRejoining] = useState(false);
   const [busy, setBusy] = useState(false);
   const enabled = !!settings.devPluginEnabled;
@@ -96,13 +103,14 @@ export const RegistrySettings = ({
     <Form.Root variant='settings' readonly={!onSettingsChange} schema={RegistrySettingsSchema} values={settings}>
       <Form.Viewport scroll>
         <Form.Content>
-          {pluginScope.available && (
+          {pluginScopeLocal !== undefined && (
             <Form.Section title={t('plugin-registry.label')}>
               <Form.Row label={t('plugin-scope.label')} description={t('plugin-scope.description')}>
                 <Input.Root>
                   <Input.Switch
-                    checked={!pluginScope.synced}
-                    onCheckedChange={(local) => (local ? pluginScope.setSynced(false) : setRejoining(true))}
+                    checked={pluginScopeLocal}
+                    // Only rejoining asks: it replaces this device's choices with the account's.
+                    onCheckedChange={(local) => (local ? onPluginScopeLocalChange?.(true) : setRejoining(true))}
                   />
                 </Input.Root>
               </Form.Row>
@@ -160,7 +168,7 @@ export const RegistrySettings = ({
                 <Button
                   variant='primary'
                   onClick={() => {
-                    pluginScope.setSynced(true);
+                    onPluginScopeLocalChange?.(false);
                     setRejoining(false);
                   }}
                 >

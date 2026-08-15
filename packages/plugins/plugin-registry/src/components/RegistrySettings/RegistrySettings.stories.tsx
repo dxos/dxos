@@ -31,6 +31,10 @@ export const Default: Story = {
     activeDevPluginIds: [],
     onEnableDev: async () => {},
     onDisableDev: async () => {},
+    // Present, so the plugin-set scope section renders; `Enabled` omits it and covers the
+    // no-device-sync case.
+    pluginScopeLocal: false,
+    onPluginScopeLocalChange: () => {},
   },
 };
 
