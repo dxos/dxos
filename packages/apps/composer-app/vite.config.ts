@@ -366,6 +366,21 @@ export default defineConfig((env) => ({
     ShutdownPlugin(),
     ...sharedPlugins(env),
 
+    // Hosts the Claude Agent SDK in the dev server, so the app reaches it same-origin. Dev only —
+    // a deployed Composer has no vite server, and needs the standalone managed process instead.
+    // Turns are confined to DX_AGENT_CWD (default: the workspace root); the host refuses any
+    // requested directory outside it.
+    {
+      name: 'dx-agent-claude',
+      apply: 'serve',
+      // Imported dynamically: vite bundles this config's static imports as CJS `require`, and
+      // `@dxos/agent-claude` is ESM-only.
+      configureServer: async (server) => {
+        const { Middleware } = await import('@dxos/agent-claude');
+        server.middlewares.use(Middleware.make({ cwd: process.env.DX_AGENT_CWD ?? rootDir }));
+      },
+    },
+
     // RSS proxy middleware for CORS-free feed fetching.
     {
       name: 'rss-proxy',

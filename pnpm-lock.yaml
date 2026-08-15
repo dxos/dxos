@@ -2759,6 +2759,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: 'catalog:'
         version: 5.20260719.1
+      '@dxos/agent-claude':
+        specifier: workspace:*
+        version: link:../../core/compute/agent-claude
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client

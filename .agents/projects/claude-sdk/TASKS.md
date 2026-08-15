@@ -63,11 +63,46 @@ M2 gotchas worth remembering:
 - `storybook/test`'s `expect` is jest-style and returns a promise — `.to.be.true`
   type-errors and un-awaited assertions trip `no-floating-promises`.
 
+## BROKEN — Agent.stories regression (2026-08-15)
+
+`moon run stories-assistant:test-storybook-live` fails. It was green at
+`4faed14287`/`92c988b1bf` (13045ms, no retry) and broke while extracting the
+browser client and reworking assertion 1. **CI is unaffected** — the story is
+`manual`-tagged and excluded from `test-storybook`.
+
+Diagnoses tried and DISPROVEN, so nobody repeats them:
+
+1. Model phrasing — asserting the literal `DONE` was genuinely fragile, but
+   replacing it did not fix the failure.
+2. Markdown rendering splitting text nodes — normalising both sides did not fix
+   it.
+3. Dual `@dxos/types` instance via the client subpath — moving `Message.make`
+   back into the story did not fix it.
+4. Making the client fully dependency-free — did not fix it.
+5. Resource contention from a concurrent composer dev server — fails identically
+   without it.
+
+Current state: with the DOM assertion removed entirely it STILL fails at ~45s,
+which means the failure is now in assertion 2 or 3 (Read call/result
+correlation, or the denial), not rendering. Two separate problems are likely
+tangled. The prompt also changed (asks for MAGIC_TOKEN) and `maxTurns: 8` may end
+the run before Bash is attempted, leaving `denied` undefined.
+
+NEXT: run it once with the frames dumped to console before assuming anything.
+The clean alternative is reverting `Agent.stories.tsx` to `92c988b1bf` (needs
+burdon's approval — never revert uncommitted work unasked) and re-landing the
+client extraction separately.
+
 ## Backlog
 
 - [ ] **Tree-based chat UI**: multiple threads via a sidebar selector, quick
       switching between them, and a common task list shared across branches.
       (tracked by burdon 2026-08-15 — this is M4.)
+- [ ] **Multitasking UI for human + agent**: fast iteration on spec/design in the
+      foreground while an experiment runs in the background. The point of the
+      tree is not just seeing branches — it is that a slow branch keeps running
+      while the human works a fast one. (tracked by burdon 2026-08-15; shapes
+      M4's requirements.)
 - [ ] `Projection` fidelity: `model` came back `undefined` on the live run
       because `soleModel` only reports when `modelUsage` has exactly one key.
       Needs a real `modelUsage` payload inspected.
