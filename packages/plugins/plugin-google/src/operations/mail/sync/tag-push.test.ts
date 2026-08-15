@@ -387,3 +387,68 @@ describe('gmail tag push — the reconciliation base', () => {
     }
   });
 });
+
+describe('gmail tag push — unpushable labels', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const now = new Date('2026-07-16T12:00:00.000Z');
+
+  /**
+   * `SENT` maps inbound but Gmail refuses it in a `modify` write (`400 Invalid label: SENT`, verified
+   * live). The send flow applies the canonical `sent` tag locally on every send, so without the
+   * exclusion every sent message would produce a permanent 400 — an error per message for a change
+   * that could never have been applied.
+   */
+  test('the canonical `sent` tag is never pushed', async ({ expect }) => {
+    const dataset = {
+      ...generateGmailDataset({ count: 2, seed: 71, start: subDays(now, 6), end: subDays(now, 2) }),
+      historyId: '1000',
+    };
+    const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
+    const pushes: { add: readonly string[]; remove: readonly string[] }[] = [];
+    const layer = Layer.effect(
+      GoogleMailApi,
+      Effect.gen(function* () {
+        const inner = yield* GoogleMailApi;
+        return GoogleMailApi.of({
+          ...inner,
+          batchModifyMessages: (userId, ids, labels) => {
+            pushes.push({ add: labels.addLabelIds ?? [], remove: labels.removeLabelIds ?? [] });
+            return inner.batchModifyMessages(userId, ids, labels);
+          },
+        });
+      }),
+    ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
+    const services = Layer.mergeAll(layer, ambientSyncServices(db));
+
+    await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
+
+    const target = dataset.messages[0];
+    const feed = mailbox.feed.target!;
+    const items = await db
+      .query(Query.select(Filter.type(Message.Message)).from(Scope.feed(Feed.getFeedUri(feed)!)))
+      .run();
+    const message = items.find((item) =>
+      Obj.getMeta(item).keys.some((key) => key.source === GMAIL_SOURCE && key.id === target.id),
+    )!;
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+
+    // What the send flow does locally.
+    const sent = await Tag.findOrCreate(db, { key: SystemTags.systemTagKey('sent'), label: 'Sent' });
+    Tagging.set(message, Obj.getURI(sent).toString(), { index: tagIndex });
+    await db.flush({ indexes: true });
+
+    await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
+
+    expect(pushes.flatMap((push) => push.add)).not.toContain('SENT');
+    expect(pushes).toEqual([]);
+  });
+});

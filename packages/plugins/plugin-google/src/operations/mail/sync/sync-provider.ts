@@ -35,7 +35,7 @@ import { GoogleApiError } from '../../../errors';
 import { decodeBody, mapToMessage } from '../mapper';
 import { findOrCreateGmailTag } from '../tags';
 import { GOOGLE_SYNC_CONFIG, fetchAttachments, fetchMessages } from './fetch';
-import { GMAIL_SYSTEM_TAGS } from './system-tags';
+import { GMAIL_SYSTEM_TAGS, GMAIL_UNPUSHABLE_LABELS } from './system-tags';
 
 /** The resolved delta for one run — either a fresh capture (no delta) or a fetched `history.list` page. */
 type DeltaPlan = {
@@ -221,8 +221,14 @@ export const googleMailSyncProvider = (options: {
               reconcileForeignIds: reconcileItems.map((item) => item.foreignId),
               hasMoreDelta: () => hasMoreDelta,
               // The label map inverted: tag uri → Gmail label id. Its keys are the eligible set for
-              // tag reconciliation, so a user tag (which has no label) is never pushed.
-              tagBindings: new Map([...labelMap].map(([labelId, uri]) => [uri, labelId])),
+              // tag reconciliation, so a user tag (which has no label) is never pushed — and neither
+              // is a label Gmail derives rather than accepts (see `GMAIL_UNPUSHABLE_LABELS`), which
+              // would otherwise 400 on every send.
+              tagBindings: new Map(
+                [...labelMap]
+                  .filter(([labelId]) => !GMAIL_UNPUSHABLE_LABELS.has(labelId))
+                  .map(([labelId, uri]) => [uri, labelId]),
+              ),
             };
             return source;
           }).pipe(Effect.provide(context), Effect.mapError(MailSyncError.wrap())),
