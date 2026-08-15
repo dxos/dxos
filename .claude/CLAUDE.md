@@ -33,10 +33,12 @@
 ## Task planning
 
 - One command: `/dxos-project:project VERB [ARGS]`, leading the message (bare `/project`
-  also matches). It is shipped by the **`dx` plugin**
+  also matches). It is shipped by the **`dxos-project` plugin**
   (`tools/claude/plugins/dxos-project`), enabled for this repo via `extraKnownMarketplaces`
   - `enabledPlugins` in `.claude/settings.json` — it is NOT a `.claude/` hook any
-    more. The plugin's `UserPromptSubmit` hook reads the raw text before the
+    more. **Enabling is not installing:** on a fresh machine run
+    `claude plugin install dxos-project@dxos` once, or every invocation answers
+    `Unknown command`. The plugin's `UserPromptSubmit` hook reads the raw text before the
     command expands and injects the matching directive, ending with a `BACKEND:`
     line naming the store — follow the directive and obey that line.
   * `/dxos-project:project` (bare) — status of the CURRENT project: worktree + branch, the

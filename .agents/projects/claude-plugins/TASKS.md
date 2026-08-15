@@ -45,11 +45,21 @@ SDK skills along.
       and no DXOS anything: read verbs report the missing registry, `new`
       dispatches, and after scaffolding the backend resolves to the real file.
       `DX_PROJECT_REGISTRY` override honoured.
-- [ ] **Live verification after a session restart** — every test so far feeds
-      JSON to the hook directly. The plugin path (marketplace resolution,
-      `${CLAUDE_PLUGIN_ROOT}` expansion, `/dxos-project:project` autocomplete) is only
-      exercised once Claude Code reloads plugins. Run `/dxos-project:project` and confirm
-      the directive arrives from the plugin rather than a stale `.claude/` hook.
+- [x] **Live verification** — DONE 2026-08-15 without waiting for a restart: `claude -p` runs a real
+      session, so the plugin path was driven headlessly from a scratch repo outside the monorepo
+      (`git init`, a one-entry registry, a `.claude/settings.json` naming the marketplace).
+      `/dxos-project:project list` rendered the numbered table and `track` created a well-formed
+      `TASKS.md` at the registry's path — marketplace resolution, `${CLAUDE_PLUGIN_ROOT}` and the
+      command namespace all exercised for real.
+      **THE INSTALL GAP, which cost an afternoon of "nothing works":** `extraKnownMarketplaces` in
+      `settings.json` registers the MARKETPLACE but `enabledPlugins` does NOT install the PLUGIN.
+      The marketplace shows up in `claude plugin marketplace list` while `claude plugin list` stays
+      empty, and every invocation returns `Unknown command`. The fix is one command, and it belongs
+      in any onboarding doc: `claude plugin install dxos-project@dxos`.
+- [ ] **Decide whether the repo should self-install** — since `enabledPlugins` alone does not
+      install, a fresh clone of this repo gets `Unknown command` until someone runs
+      `claude plugin install`. Either document it in `.claude/README.md` or find a settings key that
+      installs rather than merely enables.
 - [ ] **Decide the `/mode` question** — `/mode` stays repo-local for now. It is
       equally generic and would fit the same plugin, but it was explicitly out of
       scope for this extraction.

@@ -225,6 +225,33 @@ the raw `/name …` text one step earlier — grep it there and the command name
 just ergonomics over a deterministic write. `/mode` is built this way; see
 §Sentinels.
 
+### Plugins
+
+`/dxos-project:project` ships in the `dxos-project` plugin
+([tools/claude/plugins/dxos-project](../tools/claude/plugins/dxos-project)),
+published through the `dxos` marketplace declared at the repo root in
+[`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json).
+
+**A fresh clone needs one manual command.** `settings.json` carries both halves of
+the wiring, but they do different jobs and only one of them is automatic:
+
+| Key                       | Effect                                     |
+| ------------------------- | ------------------------------------------ |
+| `extraKnownMarketplaces`  | registers the marketplace — happens for you |
+| `enabledPlugins`          | enables the plugin **once installed**       |
+
+Neither installs it. Until you run the command below, `claude plugin marketplace
+list` shows `dxos` while `claude plugin list` is empty, and every invocation
+answers `Unknown command: /dxos-project:project`:
+
+```bash
+claude plugin install dxos-project@dxos
+```
+
+Verified 2026-08-15 by driving `list` and `track` with `claude -p` from a scratch
+repo outside the monorepo — which is also the cheapest way to test plugin changes
+without restarting a session.
+
 ### Skills
 
 Skills are directories under `.agents/skills/` (surfaced to the harness via the
