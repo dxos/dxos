@@ -48,9 +48,11 @@ export const InlineBackend = Capability.lazyModule(
   { provides: [FileCapabilities.Backend], activatesOn: FileEvents.Start, environments: ['node', 'workerd'] },
   () => import('./inline-backend'),
 );
+// Browser-only: the `image` editor extension mounts a React tree into the CodeMirror widget via
+// `react-dom/client`.
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
-  { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
+  { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start, environments: [] },
   () => import('./markdown-extension'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {

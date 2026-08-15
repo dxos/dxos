@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { ViewState } from '@dxos/react-ui-attention';
+import { ViewState } from '@dxos/react-ui-attention/types';
 
 /** Global context for the deck-companion view state. */
 export const CONTEXT = 'deck-companion';

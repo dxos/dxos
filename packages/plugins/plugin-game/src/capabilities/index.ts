@@ -11,7 +11,11 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// Browser-only: the entry supplies `CreateGamePanel`, the React form that picks the variant and
+// collects its input.
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: [],
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section'],
 });

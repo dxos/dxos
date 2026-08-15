@@ -94,6 +94,11 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./util": {
+      "source": "./src/util/index.ts",
+      "types": "./dist/types/src/util/index.d.ts",
+      "import": "./dist/lib/util.mjs"
+    },
     "./Routine": {
       "source": "./src/types/Routine.ts",
       "types": "./dist/types/src/types/Routine.d.ts",

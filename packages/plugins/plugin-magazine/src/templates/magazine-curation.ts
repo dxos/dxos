@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { makeRoutine } from '@dxos/plugin-routine';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import { makeRoutine } from '@dxos/plugin-routine/util';
 
 import { FeedOperation, Magazine } from '#types';
 

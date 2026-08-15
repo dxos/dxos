@@ -30,7 +30,9 @@ export const ChannelBackendFeed = Capability.lazyModule(
 );
 // `CreateObjectEntry` carries a `customPanel` React component alongside the object factory, so it
 // cannot load without React — browser only.
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: [],
+});
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });

@@ -16,8 +16,9 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList } from '@dxos/async';
 import { type Client } from '@dxos/client';
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
-import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
+import { PublicKey, SPACE_ID_LENGTH, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -25,8 +26,6 @@ import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { PublicKey } from '@dxos/react-client';
-import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceCapabilities, SpaceOperation } from '#types';

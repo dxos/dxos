@@ -18,7 +18,11 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'), {
   activatesOn: IllustratorEvents.Start,
 });
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// Browser-only: the entry supplies `CreateDrawingPanel`, the React form that picks the drawing
+// variant and collects its input.
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: [],
+});
 // Migration providers stay eager: a migration missing when a space opens is a data hazard.
 export const Migrations = Capability.lazyModule(
   'IllustratorMigrations',

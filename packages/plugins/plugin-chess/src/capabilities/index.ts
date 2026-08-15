@@ -18,9 +18,11 @@ export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
   environments: ['node'],
 });
+// Browser-only: the variant descriptor carries the `card`/`article` React components the game
+// host renders, so the module cannot load without a DOM.
 export const GameVariant = Capability.lazyModule(
   'GameVariant',
-  { provides: [GameCapabilities.VariantProvider], activatesOn: GameEvents.Start },
+  { provides: [GameCapabilities.VariantProvider], activatesOn: GameEvents.Start, environments: [] },
   () => import('./game-variant'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {

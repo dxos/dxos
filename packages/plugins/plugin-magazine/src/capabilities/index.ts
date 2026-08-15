@@ -24,20 +24,15 @@ export const RoutineTemplates = Capability.lazyModule(
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./routine-templates'),
 );
-// Headless environments load the reduced list via ./overrides.workerd.ts.
-export const Schema = AppCapability.schema(() => import('./schema'), {
-  environments: ['workerd'],
-});
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  environments: ['workerd'],
-});
+// workerd loads the reduced list via ./overrides.workerd.ts; node takes the canonical one.
+export const Schema = AppCapability.schema(() => import('./schema'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-// Headless environments register eagerly (Startup, the maker's default) via ./overrides.workerd.ts —
-// a worker host handling operation requests needs handlers ready immediately, unlike the browser's
-// post-interactive Idle deferral.
+// workerd registers eagerly (Startup, the maker's default) via ./overrides.workerd.ts — a worker
+// host handling operation requests needs handlers ready immediately, unlike the post-interactive
+// Idle deferral browser and node share.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.objectProperties'],

@@ -14,7 +14,11 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
   environments: ['workerd'],
 });
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// Browser-only: the entry supplies `CreateProjectPanel`, the React form that picks the project
+// template and collects its name.
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: [],
+});
 // Headless environments register eagerly (Startup, the maker's default) via ./overrides.workerd.ts —
 // a worker host handling operation requests needs handlers ready immediately, unlike the browser's
 // post-interactive Idle deferral.

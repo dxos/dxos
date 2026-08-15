@@ -16,7 +16,11 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
   environments: ['node'],
 });
 export const Commands = AppCapability.commands(() => import('./commands'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// The entry carries a live `customPanel` (`CreateRoutinePanel`) alongside the object factory, so the
+// module cannot be evaluated without React.
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: [],
+});
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), {
   name: 'LayerSpecs',
   provides: [Capabilities.TraceSink],

@@ -25,9 +25,11 @@ export const SkillDefinition = Capability.inlineModule(
   skillDefinition,
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// Browser-only: a `MarkerProvider` contributes a `useMarkers` React hook, and this one calls
+// `useMemo`/`useObject`/`useObjects` in its own body.
 export const MarkerProvider = Capability.lazyModule(
   'MarkerProvider',
-  { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start },
+  { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start, environments: [] },
   () => import('./marker-provider'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
