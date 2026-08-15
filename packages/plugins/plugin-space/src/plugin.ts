@@ -26,9 +26,9 @@ import {
 import { meta } from '#meta';
 import { SpaceSchema } from '#types';
 
-// Canonical single-entry composition (spike): lists every module once; per-environment filtering
-// happens in the `#capabilities` barrel resolution — headless barrels stub excluded modules as
-// `undefined`, which `Plugin.addModule` skips.
+// Canonical single-entry composition: lists every module once; per-environment filtering happens
+// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
+// as `undefined`, which `Plugin.addModule` skips.
 export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
   Plugin.addModule(Commands),
