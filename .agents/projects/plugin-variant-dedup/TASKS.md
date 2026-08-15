@@ -29,8 +29,10 @@ distributed binary (pattern must work for out-of-repo plugin authors), following
 the task graph owns it (echo-query `prebuild-lezer` is the template).
 
 - [ ] Promote `spikes/generate.mjs` to a `dx-gen-barrels` binary compiled and published with `@dxos/app-framework` (bin entry + compile task like `compile-plugin`), driven by `environments` annotations instead of the reverse-engineered matrix
+- [ ] Same shipped tool sets up the package.json `imports`/`exports` maps (`#plugin`/`#capabilities` conditions, subpath exports) from the annotations — replaces reliance on internal toolbox/codemorph for plugin export wiring; decide whether it owns the vite entry list too (in-repo) or leaves bundling to composerPlugin (out-of-repo)
 - [ ] Emit headless barrels + stubs with `// GENERATED` headers; overrides splice (escape hatch)
-- [ ] `prebuild` task wiring: per-plugin `prebuild` with declared outputs; `build` deps on `prebuild`; `^:prebuild` as the default dep in `.moon/tasks/tag-ts-test*.yml` (replacing `^:build` as the source-reading direction lands); gitignore the generated barrel paths
+- [ ] `prebuild` task wiring: per-plugin `prebuild` with declared outputs; `build` deps on `prebuild`; `^:prebuild` as the default dep in `.moon/tasks/tag-ts-test*.yml` (replacing `^:build` as the source-reading direction lands)
+- [ ] Emit into `src/capabilities/gen/` and point the `#capabilities` source conditions there; one repo-wide `gen/` gitignore pattern (echo-query `src/parser/gen/` layout)
 - [ ] Fresh-clone/non-moon entrypoints: ensure `DX_SOURCE=1` bun and bare vitest/IDE runs have a documented `moon run :prebuild` path (or wrapper-script trigger)
 - [ ] `pkg-lint`: run `import-source-missing` after prebuild or exempt declared prebuild outputs; verify `pack` tarballs include generated barrels
 - [ ] pkg-lint rule: annotations ⇒ matching `#capabilities` conditions exist

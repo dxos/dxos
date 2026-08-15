@@ -169,9 +169,12 @@ statements regardless of `sideEffects` (which is why O2's canonical entry stays 
    out-of-repo plugin authors need it from the published package. Precedent in the same
    package: the composer vite plugin is compiled to `dist/plugin` by the `compile-plugin`
    task and exported at `./vite-plugin`; the generator follows that shape plus a `bin`
-   entry (decision: Josiah, 2026-08-15). It emits `capabilities/node.ts` /
-   `capabilities/workerd.ts` (subset + stubs + `// GENERATED` header). Runs as the
-   plugin's `prebuild` moon task with declared `outputs`, and the generated barrels are
+   entry (decision: Josiah, 2026-08-15). It emits the headless barrels into a
+   **`gen/` folder** — `src/capabilities/gen/{node,workerd}.ts` (subset + stubs +
+   `// GENERATED` header), with the `#capabilities` source conditions pointing there —
+   so one repo-wide `gen/` gitignore pattern covers every plugin (decision: Josiah,
+   2026-08-15; same layout as `echo-query`'s `src/parser/gen/`). Runs as the plugin's
+   `prebuild` moon task with declared `outputs`, and the generated barrels are
    **gitignored, not committed** (decision: Josiah, 2026-08-15 — supersedes the earlier
    committed-files + CI-freshness-check sketch). `build` depends on `prebuild`, and
    `test` depends on **`^:prebuild`** so every dependency package's generated sources
@@ -182,6 +185,14 @@ statements regardless of `sideEffects` (which is why O2's canonical entry stays 
    `outputs`), aligned with apps reading from source rather than depending on full
    builds. The task graph is the freshness guarantee, so no separate CI check is needed
    and generated diffs never appear in review.
+   The shipped tooling also owns **setting up the package.json `imports`/`exports`
+   maps** (decision: Josiah, 2026-08-15) — deriving the `#plugin`/`#capabilities`
+   condition wiring and subpath exports from the same annotations, instead of the
+   internal toolbox/codemorph tooling (which out-of-repo authors don't have, and whose
+   `lintPackageExports` would flatten nested `source` maps if pointed at a plugin).
+   Barrels and condition maps come from one source of truth, so the
+   "missing `node` condition silently resolves the browser barrel" class (7 plugins
+   today) becomes unrepresentable rather than merely linted.
    Follow-ups this creates: (a) non-moon entrypoints (bare `vitest`/IDE runners,
    `DX_SOURCE=1` bun) need the barrels present — run `moon run :prebuild` once on a fresh
    clone, or have the wrapper scripts trigger it; (b) `pkg-lint`'s `import-source-missing`
