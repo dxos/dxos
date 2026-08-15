@@ -267,3 +267,127 @@ describe('gmail tag push', () => {
     expect(tagHeadsOf(binding)).toEqual(baseAfterPull);
   });
 });
+
+describe('gmail tag push — the reconciliation base', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const now = new Date('2026-07-16T12:00:00.000Z');
+
+  const recordingApi = (dataset: GmailDataset) => {
+    const pushes: { ids: readonly string[]; add: readonly string[]; remove: readonly string[] }[] = [];
+    const layer = Layer.effect(
+      GoogleMailApi,
+      Effect.gen(function* () {
+        const inner = yield* GoogleMailApi;
+        return GoogleMailApi.of({
+          ...inner,
+          batchModifyMessages: (userId, ids, labels) => {
+            pushes.push({ ids, add: labels.addLabelIds ?? [], remove: labels.removeLabelIds ?? [] });
+            return inner.batchModifyMessages(userId, ids, labels);
+          },
+        });
+      }),
+    ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
+    return { layer, pushes };
+  };
+
+  /**
+   * The load-bearing ECHO assumption behind the whole design: heads persisted at the end of one run
+   * reconstruct that run's tag state later, even after the index has moved on. If this stops holding,
+   * the base must switch to a shadow index (see `docs/TAG-SYNC.md` §"Why not the alternatives").
+   */
+  test('Obj.getVersion reconstructs the tag index as of stored heads', async ({ expect }) => {
+    const dataset = {
+      ...generateGmailDataset({ count: 2, seed: 61, start: subDays(now, 6), end: subDays(now, 2) }),
+      historyId: '1000',
+    };
+    const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
+    const { layer } = recordingApi(dataset);
+
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(Layer.mergeAll(layer, ambientSyncServices(db))),
+      ),
+    );
+
+    const heads = binding.spec.kind === 'external' ? [...(binding.spec.tagHeads ?? [])] : [];
+    expect(heads.length).toBeGreaterThan(0);
+
+    const tagIndex = await EffectEx.runPromise(
+      Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))),
+    );
+    const before = JSON.parse(JSON.stringify(tagIndex.index ?? {}));
+
+    // Mutate after the heads were taken.
+    const followUp = await Tag.findOrCreate(db, { label: 'Follow up' });
+    const message = await (async () => {
+      const feed = mailbox.feed.target!;
+      const items = await db
+        .query(Query.select(Filter.type(Message.Message)).from(Scope.feed(Feed.getFeedUri(feed)!)))
+        .run();
+      return items[0];
+    })();
+    Tagging.set(message, Obj.getURI(followUp).toString(), { index: tagIndex });
+    await db.flush({ indexes: true });
+
+    // The live index moved; the historical view did not.
+    expect(TagIndex.bind(tagIndex).tags(message.id)).toContain(Obj.getURI(followUp).toString());
+    const historical = Obj.getVersion(tagIndex, heads);
+    expect(JSON.parse(JSON.stringify(historical.index ?? {}))).toEqual(before);
+  });
+
+  /**
+   * Heads that no longer resolve (compaction, an epoch, a fresh replica on another runtime) must not
+   * take the local side down with them. The run falls back to an additive reconcile: it may re-push a
+   * tag the provider already has, but it must never synthesise a removal from a base it cannot read.
+   */
+  test('unresolvable heads fall back to an additive reconcile that emits no removals', async ({ expect }) => {
+    const dataset = {
+      ...generateGmailDataset({ count: 2, seed: 62, start: subDays(now, 6), end: subDays(now, 2) }),
+      historyId: '1000',
+    };
+    const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
+    const { layer, pushes } = recordingApi(dataset);
+    const services = Layer.mergeAll(layer, ambientSyncServices(db));
+
+    await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
+
+    // Archive locally — a removal, which the additive path must refuse to push.
+    const feed = mailbox.feed.target!;
+    const items = await db
+      .query(Query.select(Filter.type(Message.Message)).from(Scope.feed(Feed.getFeedUri(feed)!)))
+      .run();
+    const message = items[0];
+    const tagIndex = await EffectEx.runPromise(
+      Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))),
+    );
+    const inbox = await Tag.findOrCreate(db, { key: SystemTags.systemTagKey('inbox'), label: 'Inbox' });
+    Tagging.unset(message, Obj.getURI(inbox).toString(), { index: tagIndex });
+    await db.flush({ indexes: true });
+
+    // A head the replica cannot resolve — the shape of a compacted or evicted history.
+    Obj.update(binding, (binding) => {
+      if (binding.spec.kind === 'external') {
+        binding.spec.tagHeads = ['0000000000000000000000000000000000000000000000000000000000000000'];
+      }
+    });
+
+    const exit = await EffectEx.runPromise(
+      Effect.exit(runGoogleSync({ binding: Ref.make(binding), now })).pipe(Effect.provide(services)),
+    );
+
+    // The run survives, and nothing destructive was sent.
+    expect(exit._tag).toBe('Success');
+    for (const push of pushes) {
+      expect(push.remove).toEqual([]);
+    }
+  });
+});

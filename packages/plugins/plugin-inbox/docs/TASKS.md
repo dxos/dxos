@@ -576,7 +576,7 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
       policy decided earlier is MOOT and is gone, along with the per-tag owner in `eligible` (now a
       plain `Set`). The suite enumerates all eight and asserts no tag is ever pushed AND pulled, so a
       future tri-state or tombstone fails the test rather than silently reviving the question.
-- [ ] **Heads on the binding** — persist `nextHeads` and `Cursor.spec.token` in ONE `Obj.update`.
+- [x] **Heads on the binding** — persist `nextHeads` and `Cursor.spec.token` in ONE `Obj.update`.
       CONCRETELY: `runMailSync` writes the token today at `mail-sync.ts:578` inside `if (!capped)`;
       that call must NOT stay as-is with a heads write added beside it. Hold `source.nextToken()` in
       memory, run the push phase first, then write both through `Cursor.writeSyncState` — and write
@@ -594,18 +594,18 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
       either way); without a base, "local has it, remote does not" cannot distinguish a local add from
       a remote removal, so only the additive half is safe. Self-healing: the run captures fresh heads,
       so the next diff is well-founded and removals resume.
-- [ ] **`pushTags` hook on `MailSyncProviderService`** — optional, so a provider with no write path
+- [x] **`pushTags` hook on `MailSyncProviderService`** — optional, so a provider with no write path
       degrades to pull-only. Returns `{ settled, pending }` rather than void: a PERMANENT rejection
       (404, label gone, missing scope) is `settled` because no retry can succeed and refusing to
       advance would block the base forever; a TRANSIENT one (429, 5xx, timeout) is `pending`. Heads
       persist only when `pending` is empty and the cap was not hit — otherwise `runAgain`, so retry is
       between runs and `pushTags` owns no backoff state. Harness resolves tag uris → provider bindings
       from the reverse label map and caps ops per run.
-- [ ] **Gmail write path** — `modifyMessage` + `batchModify` on `GoogleMailApi`, its `Live` layer, and
+- [x] **Gmail write path** — `modifyMessage` + `batchModify` on `GoogleMailApi`, its `Live` layer, and
       `GoogleMailApi.mock` (the mock needs mutable per-message label state so `listHistory` reflects a
       push). The connector ALREADY requests `gmail.modify` (`capabilities/connector.ts`, added for
       trash) — nothing to change there.
-- [ ] **Map `spam` onto Gmail's `SPAM`** — `GMAIL_SYSTEM_TAGS` omits it deliberately today ("TRASH/SPAM
+- [x] **Map `spam` onto Gmail's `SPAM`** — `GMAIL_SYSTEM_TAGS` omits it deliberately today ("TRASH/SPAM
       — never synced"), so `ClassifyMailbox`'s canonical `spam` tag has nothing to push to. Adding it
       is BIDIRECTIONAL: `syncLabels` reads the same map, so Gmail's own spam verdict starts arriving
       as the canonical tag — wanted, but a reversal of a documented exclusion, not a one-line edit.
@@ -613,6 +613,13 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
       `users.messages.modify` accepts `SPAM` in `addLabelIds` (HTTP 200, applied, restored cleanly),
       so the reverse map stays a bare `tagUri → labelId` and no binding descriptor is needed for the
       Gmail cut. Revisit when JMAP lands, where `spam` is a `$junk` keyword rather than a label.
+- [x] **Mock-provider round trip** — `plugin-google/src/operations/mail/sync/tag-push.test.ts`, 8 tests
+      driving the real harness against the mock (which now holds mutable label state, so a push is
+      observable through the same API the sync writes through). Covers first sync, star, archive,
+      pull-not-pushed-back, user tag ignored, transient failure holding the base, `Obj.getVersion`
+      reconstructing a past index, and unresolvable heads emitting no removals. FIXTURE BUG FOUND:
+      `SYSTEM_LABELS` omitted STARRED/SPAM/TRASH, and since `syncLabels` maps the label DICTIONARY, a
+      missing entry silently disables tag reconciliation for that tag rather than failing.
 - [ ] **Live round-trip test** — both directions against `test@braneframe.com` (DECIDED 2026-08-15;
       unblocked). Nothing in the repo referenced that account before, so `TAG-SYNC.md` is now its
       canonical record. This test WRITES labels, so `GOOGLE_ACCESS_TOKEN` alone must not arm it: that
@@ -624,7 +631,7 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
       surfacing cleanup failures, since a shared mailbox means a swallowed one hits a colleague.
       NOTE: `plugin-google`'s `mail/send/handler.test.ts` already SENDS real email on
       `GOOGLE_ACCESS_TOKEN` alone — the pattern this rule exists to avoid repeating, not to copy.
-- [ ] **Push insert-time local tags** — a tag written by local logic during a run (known-sender
+- [x] **Push insert-time local tags** — a tag written by local logic during a run (known-sender
       `important`, on-arrival extractors) is NOT the same as a tag the pull wrote, though both land
       before the heads capture. Left in the base it strands forever: it sits in both `base` and
       `local` from the next run on, so no diff ever emits it. Separated by carrying each insert's
