@@ -395,17 +395,19 @@ TDD, in this order. Each layer is a gate for the next.
 4. **Live Gmail test.** Writes labels to a real mailbox, so it is gated harder than the read-only
    suites and must not run against anyone's primary account:
 
-   - **A dedicated, disposable test account**, recorded in the doc before the test is written — never
-     a personal or shared working mailbox.
+   - **A shared team test account** (decided; see [Open decisions](#open-decisions)), recorded in this
+     doc before the test is written — never a personal or working mailbox.
    - **Two gates, not one.** `GOOGLE_ACCESS_TOKEN` alone must not arm it — that variable already
      exists for the read-only `sync-e2e.test.ts`, so reusing it would silently turn an existing
-     read-only setup into one that mutates mail. Require a second, explicit opt-in naming the
-     account, and assert `getProfile().emailAddress` equals it before the first write. Mismatch fails
-     the test rather than skipping, so a mis-pointed token is loud.
+     read-only setup into one that mutates mail. The second gate is `DX_GMAIL_TAG_SYNC_ACCOUNT`,
+     holding the account's address; its value doubles as the allowlist. Assert
+     `getProfile().emailAddress` equals it before the first write — mismatch **fails** the test rather
+     than skipping, so a mis-pointed token is loud rather than quietly writing to the wrong mailbox.
    - **Only messages the test itself created**, identified by a marker it sends, never by a query
      over existing mail.
-   - **Cleanup in a `finally`** restoring each touched message's original `labelIds`, so a mid-test
-     failure does not leave the account modified.
+   - **Cleanup in a `finally`** restoring each touched message's original `labelIds`. The account
+     being shared rather than disposable raises the stakes here: a swallowed cleanup failure leaves a
+     colleague's mailbox modified, so it must surface rather than be caught and ignored.
 
    With those in place: round trip both directions — change a label through the Gmail API, sync,
    assert local tags; toggle locally, sync, read the label back through the API. This is also where
@@ -437,7 +439,17 @@ TDD, in this order. Each layer is a gate for the next.
    back, so it is revisited then, not before; and `spam` is the case that stresses
    `ProviderTagBinding` across vocabularies — a label in Gmail, a `$junk` keyword in JMAP — so treat
    the descriptor as provisional until a second provider has used it.
-4. **Live-test account** — **blocks step 4 of the test plan.** Which disposable Gmail account the
-   test writes to, the name of its opt-in variable, and whether that token carries `gmail.modify`.
-   The safety gates are specified above; the account itself is a human decision and must be recorded
-   here before the test is written.
+4. **Live-test account** — **DECIDED 2026-08-15: a shared team test account**, not a throwaway. Still
+   blocks step 4 on one input: no such account is recorded anywhere in the repo (nothing under
+   `plugin-google` or the guides names one), so the address has to be supplied and written in here
+   before the test is authored.
+
+   The gate is `DX_GMAIL_TAG_SYNC_ACCOUNT`, holding that address. Its value doubles as the allowlist:
+   the test runs only when it is set, and asserts `getProfile().emailAddress` equals it before the
+   first write. That the account is shared rather than disposable raises the stakes on the cleanup
+   rule above — a failed `finally` leaves a colleague's mailbox modified — so cleanup failures must be
+   loud rather than swallowed.
+
+   Precedent worth noting when wiring this: `plugin-google`'s `mail/send/handler.test.ts` already
+   **sends real email** gated on `GOOGLE_ACCESS_TOKEN` alone. That is the pattern the two-gate rule
+   exists to avoid repeating, not one to copy.

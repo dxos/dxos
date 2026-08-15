@@ -598,13 +598,18 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
       `TRASH` stays out; deletion is not a tag. Verify whether `users.messages.modify` accepts `SPAM`
       in `addLabelIds` — if not, the reverse map needs a binding descriptor (`label` vs `operation`)
       rather than a bare `tagUri → labelId`.
-- [ ] **Live round-trip test** — both directions against a real account. BLOCKED on choosing a
-      dedicated disposable account. This test WRITES labels, so `GOOGLE_ACCESS_TOKEN` alone must not
-      arm it: that variable already exists for the read-only `sync-e2e.test.ts`, and reusing it would
-      silently turn an existing read-only setup into one that mutates mail. Needs a second explicit
-      opt-in naming the account, a `getProfile().emailAddress` assertion that FAILS (not skips) on
-      mismatch, operation only on messages the test itself created, and cleanup in a `finally`
-      restoring original `labelIds`.
+- [ ] **Live round-trip test** — both directions against a real account. Account kind DECIDED
+      2026-08-15: a SHARED TEAM test account. Still BLOCKED on the address itself — no such account is
+      recorded anywhere in the repo, so it must be supplied and written into `TAG-SYNC.md` before the
+      test is authored. This test WRITES labels, so `GOOGLE_ACCESS_TOKEN` alone must not arm it: that
+      variable already exists for the read-only `sync-e2e.test.ts`, and reusing it would silently turn
+      an existing read-only setup into one that mutates mail. Second gate is
+      `DX_GMAIL_TAG_SYNC_ACCOUNT` holding the address (its value IS the allowlist), with a
+      `getProfile().emailAddress` assertion that FAILS (not skips) on mismatch, operation only on
+      messages the test itself created, and cleanup in a `finally` restoring original `labelIds` —
+      surfacing cleanup failures, since a shared mailbox means a swallowed one hits a colleague.
+      NOTE: `plugin-google`'s `mail/send/handler.test.ts` already SENDS real email on
+      `GOOGLE_ACCESS_TOKEN` alone — the pattern this rule exists to avoid repeating, not to copy.
 - [ ] **Push insert-time local tags** — a tag written by local logic during a run (known-sender
       `important`, on-arrival extractors) is NOT the same as a tag the pull wrote, though both land
       before the heads capture. Left in the base it strands forever: it sits in both `base` and
