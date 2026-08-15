@@ -1,15 +1,47 @@
 # plugin-inbox — Tasks
 
-_Resume: **#12555 MERGED. #12574 and #12575 (the two ECHO changes) MERGED.** Current PR is **#12577**
-(green, `CLEAN`, not auto-merged — awaiting a call on whether to land it). The 27-step plan in
-[`TESTING.md`](TESTING.md) HAS now been run, against a live Gmail-synced mailbox over the agent debug
-port: 12 passed, 2 failed and are fixed, 1 was a stale expectation in the plan itself, 12 yielded no
-verdict. Threadless messages now reach the list, and
-the cursor layer is no longer mailbox-typed. **D6 is deliberately NOT built** — `Ref.byAnnotation` was
-dropped in review on #12575, so a generic subject loses boundary validation, and there is still no
-second cursored consumer; see the D6 entry in Phase 5 for the recommendation. Unblocked and unclaimed:
-`ExtractCorrespondents`'s cursor, the `Mailbox.ts` util split, `useContactLookup`, the `useBlobUrl`
-coverage gap, and Phase 4 summarization._
+_Resume: **#12555, #12574, #12575, #12577 and #12612 MERGED.** Current PR is **#12605**, now carrying
+five subjects rather than the one its original title named — provider operations, the `Banner` rename
+plus `Deferred`, the dev startup abort, the card-depiction seam, and the trigger poll. Landing as one
+PR was a deliberate call over splitting it into five.
+
+**Its `test` job was red and is now fixed.** Cause: `vite.config.ts` lists build entrypoints
+explicitly, and new subpaths were added without them — `#types` dangled in plugin-google's built
+`operations` entry, so the CLI died at import and all 11 of its tests failed on a module-resolution
+error rather than anything they asserted. Same omission in plugin-jmap, and in plugin-inbox's
+`MailSend`/`ReplyGeneration` (whose exports also pointed at a nested `dist/lib/types/` path no sibling
+uses). A local `:build` cannot catch this class — the entry is absent, not broken, and it only fails at
+runtime resolution in a consumer. An audit of every manifest against files on disk found five more
+packages with the same defect, all pre-existing on `main` and none with a consumer yet:
+`plugin-atproto`, `plugin-library`, `plugin-brain` (`./containers`), `plugin-projects` (`./templates`)
+and `storybook-testing` (`./modules`) — four of them pointing into a `dist/lib/neutral/` layout that
+does not exist.
+
+Landed since: the twelve Google/JMAP operation definitions moved to `@dxos/plugin-google/GoogleOperation`
+and `@dxos/plugin-jmap/JmapOperation`, so plugin-inbox no longer declares operations it does not
+implement; the Inbox / Inbox (Send) / Calendar skills take their tools from the connectors a deployment
+actually installs, fixing a JMAP-only deployment advertising Gmail tools; `DraftEvent.isDraft` asks for
+any foreign key rather than Google's; **`ScanMailbox` is now `AnalyzeMailbox`** (op key, progress key
+`#analyze`, `operations/analyze/`, `templates/analyze-mailbox.ts`, toolbar label "Analyze"), and its
+cascade runner calls its plan entries _passes_ rather than overloading "stage"; the trigger dispatcher
+polls once a minute instead of once a second and refuses a cron finer than its own tick; the Research
+action now runs the agent that fills the profile skeleton it creates.
+
+**D6 is BUILT (2026-08-15) — and it was not the thing it was named after.** Framed as "generalize off
+`Mailbox`" it had no second consumer and every costing said wait. The real defect was that
+`findOrCreateFeedCursor` took one object playing two roles: the feed's OWNER and the cursor's SUBJECT.
+Splitting them is D6. `isConsumerCursor` now matches on `spec.target` — which was the entirety of the
+"cursor identity" problem PIPELINE.md called blocking and specified a composite key for; the write side
+already stored the target and the predicate ignored it. `createInvocation` became `createInvocations`,
+so a processor can cover N subjects. First consumer: `syncProjectTasks`, one cursor per Project over a
+shared mailbox feed. No `Ref.byAnnotation` (dropped for good in #12612), no generic feed host, no
+change to `AnalyzeMailbox`'s input.
+
+Unresolved: the mailbox empty-panel flicker's root cause is still unknown (`Deferred` masks it, and the
+`!feed` fix committed in `f107a7314c` did not work); the CRM agent wiring has never been observed
+running, and binds skills by querying `Skill.Skill` objects in the space — silently skipping if none
+match. Unblocked and unclaimed: `ExtractCorrespondents`'s cursor, the `Mailbox.ts` util split,
+`useContactLookup`, the `useBlobUrl` coverage gap, and Phase 4 summarization._
 
 Registry project: **`mailbox-pipeline`** (renamed from `inbox-surface` 2026-08-14 — the work outgrew
 the name; it is now the pipeline architecture as much as the surface over it).
@@ -138,7 +170,7 @@ Committed, unpushed. This is the PR to open first.
       it survives as `ResetFeedCursor` with a required `cursorId` instead of being removed. Also note
       `CrmOperation.ProcessMailbox` is a different operation and was left alone. The `stories-brain`
       phase that documented building it is marked REMOVED.
-      CI FALLOUT, caught by the PR and fixed: (a) the `FeedPipeline` "Fixture Test" play test drove the
+      CI FALLOUT, caught by the PR and fixed: (a) the `MailboxAnalyze` "Fixture Test" play test drove the
       deleted operation's `execute` button through run → rerun-0 → reset → run, so it lost its subject;
       it is reduced to asserting the fixture corpus loads. (b) The story's action `useState('process')`
       default pointed at the removed action. (c) Cursor coverage went with `process-mailbox.test.ts`
@@ -312,12 +344,16 @@ this repo does not unit-test. One entry is worth acting on rather than dismissin
 
 - [x] **`Enrich` was four unrelated things** — two of them primary buttons on adjacent toolbars. The
       mailbox one was not enrichment at all: it runs the extract → classify → summarize cascade, which
-      creates objects rather than filling gaps. Renamed: - `InboxOperation.EnrichMailbox` → `ScanMailbox` (op key `enrichMailbox` → `scanMailbox`,
-      `createEnrichProgressKey` → `createScanProgressKey`, `#enrich` → `#scan`,
-      `DEFAULT_ENRICH_MAILBOX_TIERS` → `DEFAULT_SCAN_MAILBOX_TIERS`, files under `operations/scan/`,
-      template `org.dxos.routine.scanMailbox`). **Not** `AnalyzeMailbox` — that name is taken by the
-      cascade's own third tier. Safe to rename the op key because its changeset is still pending, so
-      no released routine references the old DXN. - CRM record + sender actions → `Research`, matching the `ResearchPerson`/`ResearchOrganization`
+      creates objects rather than filling gaps. Renamed: - `InboxOperation.EnrichMailbox` → `ScanMailbox`, and then **→ `AnalyzeMailbox` on 2026-08-15**
+      (final state: op key `analyzeMailbox`, `createAnalyzeProgressKey` → `#analyze`,
+      `DEFAULT_ANALYZE_MAILBOX_TIERS`, files under `operations/analyze/`, template
+      `org.dxos.routine.analyzeMailbox`, toolbar label "Analyze"). `Scan` was chosen first precisely
+      to avoid `AnalyzeMailbox`, which the cascade's own third tier already used — the second rename
+      accepted that collision deliberately, taking `#analyze` for the cascade and moving the brain
+      fact pass to `createFactsProgressKey` → `#facts`. Processor ids and `MailboxTier` values were
+      NOT renamed: an id doubles as its feed cursor tag, and tiers appear in persisted routine input.
+      Safe to rename the op key because its changeset is still pending, so no released routine
+      references the old DXN. - CRM record + sender actions → `Research`, matching the `ResearchPerson`/`ResearchOrganization`
       operations they actually invoke, and signalling the outbound web/LLM run that `Enrich` hid. - `Enrich images` → `Find images`. `CrmOperation.EnrichImages` keeps its id — that one really is
       enrichment. - Deleted the dead `view-mode-enriched.menu` key: labels derive from `VIEW_MODES`
       (`html`/`markdown`/`plain`), so nothing could ever resolve it.
@@ -395,6 +431,102 @@ server-assigned id.
 
 ---
 
+## Analyze pipeline: compose it from the existing stages (tracked 2026-08-14)
+
+_"Enhance" meant the SECOND PHASE, settled 2026-08-15: it is now `AnalyzeMailbox`, and the naming
+question below is closed._
+
+### Tasks
+
+- [ ] **Assemble the Analyze cascade out of the stages already written**, rather than new ad-hoc
+      logic. What exists today: `pipeline-email`'s `summarizeStage`, `extractContactsStage`,
+      `statsStage` and `extractFactsStage`, assembled by `EmailPipeline.run`
+      ([`pipeline.ts`](../../../core/compute/pipeline-email/src/pipeline.ts)); plugin-inbox's own
+      `on-arrival-extractors` stage ([`on-arrival.ts`](../src/util/on-arrival.ts)); and the
+      `EmailFactPipeline` / topics variants alongside them. Note PIPELINE.md's count: only six of the
+      twelve pipelines have an internal stage chain at all, so this is as much about giving the plain
+      loops one as about reusing what exists.
+
+---
+
+## Tracked 2026-08-15
+
+Raised while driving the live mailbox. Grouped by owner, since half of these are not plugin-inbox's.
+
+### plugin-inbox
+
+- [ ] **Analyze icon → sparkle, via `SystemIconButton`.** The toolbar action uses
+      `ph--stack-simple--regular` (and `ph--stop--regular` while running); plugin-crm's Research
+      already uses sparkle for the same "run AI over this subject" meaning. Promote it to the
+      `SystemIconButton` primitive and apply it wherever an AI/agent action is offered — today each
+      action sets a raw `icon` string in its graph properties, so nothing enforces the convention.
+- [ ] **Sync message tags back to Gmail (the P2 deferred in Phase 1 DECIDED).** CLAIMED — designed in
+      [#12611](https://github.com/dxos/dxos/pull/12611) (branch `claude/mailbox-tag-sync-89f351`),
+      which adds `docs/TAG-SYNC.md` and a Phase 6 entry to THIS file. Design-only so far; the write
+      path is still unbuilt. Do not start it here. **That PR and this branch both edit this ledger, so
+      whichever lands second must merge the two sections by hand rather than take either wholesale.**
+      Original scope below. Tag changes are
+      local-only; a Gmail sync restores an archived message. `system-tags.ts` maps a Gmail label id →
+      canonical `SystemTag` on READ, and its own doc notes some labels are read-only concepts (there
+      is no archive label — archive is derived as "not in INBOX"). The write path does not exist.
+      Scope: which tags are writable (archive = `INBOX` off → `labels.modify`; starred → `STARRED`;
+      user tags need Gmail labels resolved by name), where it lives (Gmail-specific, so plugin-google
+      through a seam plugin-inbox owns, mirroring `MailSendOperation`; JMAP needs the same seam with
+      roles rather than labels), conflict handling between local and remote edits, and its own notion
+      of "not yet pushed" — the tag index is space-side while messages are feed-side. The
+      `gmail.modify` scope is already requested, so no OAuth change.
+
+### compute-runtime — filed as [#12608](https://github.com/dxos/dxos/issues/12608) (dmaretskyi)
+
+- [ ] **Bound the feed-trigger query by its cursor.** `trigger-dispatcher.ts:645` scans the whole feed
+      every tick (`Filter.everything()`, then cursor-filtered in JS — the existing `TODO(dmaretskyi)`).
+      Measured on a live 538-message mailbox: ~1069ms per scan, 924ms of it one unbroken main-thread
+      block, ~23% of the main thread sustained on an idle settings page. Polling once a minute made it
+      60× rarer, not cheaper. Related: `invokeScheduledTriggers` defaults to
+      `['timer','feed','subscription']`, but only `timer` needs a wall clock.
+
+### plugin-space / react-ui
+
+- [ ] **Type filter for Related Objects.** The Related Objects masonry mixes every related type in one
+      list; narrow it by type.
+- [ ] **Object avatars in cards.** STARTED: `ObjectAvatar` (react-ui-card) resolves picture → initials
+      → type glyph for any object, and `TypeArticle`'s tile uses it. Not yet applied to
+      `RecordArticle`'s own header, and has no story covering the three-way fallback.
+- [x] **A card header's depiction is now contributable per type** (`AppSurface.CardIcon`). Raised as
+      "the avatar colour is wrong" — every person rendered on the same grey disc, because
+      `ObjectAvatar` preferred the type's declared hue and both `Person` and `Organization` declare
+      `hue: 'neutral'`. Flipping that precedence globally was the WRONG fix: the treatment belongs to
+      Person cards, not to every object.
+      DECIDED: a role-scoped Surface, not a type annotation. How an object is depicted depends on the
+      space it gets — a 6-unit card block affords initials or a photograph, a 16px navtree row does
+      not — so an annotation would state one fact for surfaces that legitimately disagree, whereas
+      `CardIcon` says how a type looks IN A CARD and nothing more. Non-card surfaces keep resolving
+      `IconAnnotation` via `Obj.getIcon`.
+      Shipped: the role token; `CardIconSlot` (pairs `Surface.useIsAvailable` with the host's own
+      default as children — unlike `CardContent`, a miss cannot render nothing, and `Surface`'s
+      `fallback` is the error boundary); `ObjectAvatar`'s `initialsHue` prop (`'type'` default, so no
+      existing caller changed); `PersonCardIcon` contributed for `Person` alone; four hosts wired
+      (`TypeArticle`, `RecordArticle`, plugin-projects `ObjectCard`, plugin-deck `Popover`).
+      LEFT OPEN: `PersonCard` still renders the same photo again as a square row in the body, so a
+      Person with a picture now shows it twice. A design call, not a defect — decide and act.
+- [ ] **Icons fall back to the dashed placeholder for lazily-activated types.** A Routine and a
+      Markdown document both render `ph--circle-dashed--regular` in the navtree and plank header. Both
+      types DO declare `IconAnnotation` (`ph--lightning--regular`, `ph--text-aa--regular`), so this is
+      resolution, not declaration: `getIcon` returns `undefined` when `getSchema(entity)` is null
+      ([`annotations.ts:650`](../../../core/echo/echo/src/internal/Annotation/annotations.ts)), which is
+      indistinguishable from "no icon". Eleven call sites share that fallback, so one fix covers them.
+
+### devtools
+
+- [ ] **Filter the trace panel.** It lists every operation including 2ms UI ones, burying the ones that
+      matter, and renders the full event JSON inline with `meta` repeated per event. Composer is
+      noticeably slow after triggering Research and opening the panel. Two problems: what is listed
+      (a duration threshold is not enough — Research person is 55ms and matters, Expose is 27ms and
+      does not) and what it renders (collapse, virtualize, hoist the per-span constant meta). Measure
+      before fixing: it may be the panel, the trace volume Research produces, or both.
+
+---
+
 ## BLOCKER: storybook startup times out for a COLD BROWSER PROFILE (diagnosed 2026-08-13)
 
 Every plugin-manager story dies with `Startup timed out after 30000ms` (`useApp.tsx:236`) when driven
@@ -447,7 +579,7 @@ generalize now with mailbox as instance #1.
       a property of the stage, it is whatever the deployment did not contribute, and `Database`/`Trace`
       cannot be missing (the cascade could not have spawned). Matched structurally with a message
       fallback, not by class — the error is flattened crossing the invocation boundary, which is why
-      `ai-gate.ts` was already written that way. 7 tests; the workaround at `scan-mailbox.test.ts:166`
+      `ai-gate.ts` was already written that way. 7 tests; the workaround at `analyze-mailbox.test.ts:166`
       is gone and that test now exercises BOTH precondition flavours in one run, each tier naming its
       own reason instead of inheriting the first one's.
 - [x] **Tag `AnalyzeMailbox`'s cursor with an explicit id** — `ANALYZE_CURSOR_KEY_ID`, via a new
@@ -459,7 +591,7 @@ generalize now with mailbox as instance #1.
       the two tests that cover it, so neither is vacuous. `analyze-mailbox.test.ts` seeds untagged
       cursors and still passes, which exercises the migration path in situ. Delete the adoption branch
       once no untagged cursors remain in the wild.
-- [x] **`MailboxProcessor` capability + topology resolution** — `ScanMailbox` now reads its passes
+- [x] **`MailboxProcessor` capability + topology resolution** — `AnalyzeMailbox` now reads its passes
       from `InboxCapabilities.MailboxProcessor` and orders them by the `after` edges each declares.
       plugin-inbox contributes its own five through the SAME seam (`capabilities/mailbox-processors.ts`),
       so there is no privileged built-in path to drift from the contributed one. - `operations/topology.ts` is pure and ECHO-free: unknown `after` ids ignored (optional
@@ -515,18 +647,23 @@ generalize now with mailbox as instance #1.
       `after: ['summarize']` pointing at an absent node, so it is ignored and `analyze` runs despite the
       classification failure. Sharp but correct — a processor the caller excluded cannot constrain
       anything, and `analyze` never consumed classification. 6 topology tests + 2 cascade tests.
-- [ ] **DEFERRED TO D6 — the plugin-projects trio as processors.** They read `mailbox.feed`, but all
-      three take BOTH a `project` and a `mailbox` ref, and `createInvocation(mailbox, options)` has no
-      slot for a Project and returns ONE invocation rather than a list. The blocking problem is cursor
-      identity: a processor's id IS its cursor tag, but these need per-(processor, project) — one
-      `projects` tag across three projects on a mailbox means they share a watermark and silently skip
-      each other, the same class of bug as the untagged analysis cursor.
-      DECIDED 2026-08-14: do not decide this in isolation. D6 has to answer "what is the subject of a
-      pass" regardless, and fan-out plus composite cursor keys are better settled with that context.
+- [x] **RESOLVED 2026-08-15 — the plugin-projects trio, and the entry above was wrong about them.**
+      They were filed as needing fan-out. They ALREADY fan out: `CreateTrackingProject` gives each
+      tracking Project its own routine and trigger with per-project senders, so the fan-out arrives
+      through the routine layer rather than the processor seam. What they actually lacked was cursors
+      — every run re-queried the whole feed.
+      And only ONE of the three should have one. `syncProjectTasks` upserts tasks keyed by message id,
+      so a cursor is pure saving; it now keeps one per Project (subject = the Project, source = the
+      mailbox's feed). `update-travel-log` and `update-investor-log` REGENERATE their document from the
+      whole feed — travel-log's own comment says it is "idempotent without a cursor" — so a cursor would
+      corrupt what they derive. Same call, same reasoning, as `ExtractSubscriptions`.
+      Converting them to contributed processors was NOT done: it would buy only the cascade's ordering
+      and failure semantics, which nothing has asked for, and would cost them their independent
+      triggers.
 - [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6) — WEAKER than first written,
       and NEEDS A DECISION BEFORE ANY MORE CODE. - DONE (2026-08-14): the cursor layer. `findFeedCursor`/`findOrCreateFeedCursor` now take any
       `FeedAnnotation`-carrying owner and resolve the feed via `getFeedRef`, so one of the three
-      mailbox-typed couplings is gone. Tested against a Calendar owner. - STILL MAILBOX-TYPED: the `MailboxProcessor` subject and `tier`, and `ScanMailbox`'s input and
+      mailbox-typed couplings is gone. Tested against a Calendar owner. - STILL MAILBOX-TYPED: the `MailboxProcessor` subject and `tier`, and `AnalyzeMailbox`'s input and
       progress key. Already generic: `topology.ts` (`{id, after}` only), `precondition.ts` (`Cause`s
       only), and a feed cursor's `target`. - THE DECISION: `Ref.byAnnotation` was dropped in review on #12575, so a generic subject CANNOT
       be validated at the operation boundary — it must be `Ref.Ref(Obj.Unknown)` plus a runtime guard

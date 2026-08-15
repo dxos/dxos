@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+
+import { GoogleOperation } from '#types';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
 import { CalendarForeignKeyWrongTypeError } from '../../../errors';
@@ -47,8 +48,8 @@ const findOrCreateCalendar = (remoteId: string, name: string) =>
  * target exists before the cursor is created. Find-or-create keyed on the calendar's foreign key, so
  * re-running for the same remote calendar returns the existing Calendar (with its name refreshed).
  */
-const handler: Operation.WithHandler<typeof InboxOperation.MaterializeCalendarTarget> =
-  InboxOperation.MaterializeCalendarTarget.pipe(
+const handler: Operation.WithHandler<typeof GoogleOperation.MaterializeGoogleCalendarTarget> =
+  GoogleOperation.MaterializeGoogleCalendarTarget.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ connection, remoteTarget }) {
         if (!remoteTarget) {

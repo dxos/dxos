@@ -10,13 +10,13 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
 import { GoogleCalendarApi, GoogleCredentials } from '#services';
+import { GoogleOperation } from '#types';
 
 import { type SyncCalendarProps, syncCalendar } from './sync';
 
-const handler = InboxOperation.GoogleCalendarSync.pipe(
+const handler = GoogleOperation.GoogleCalendarSync.pipe(
   Operation.withHandler((props: SyncCalendarProps) =>
     Effect.gen(function* () {
       const bindingObj = props.binding.target;

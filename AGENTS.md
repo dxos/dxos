@@ -73,8 +73,10 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
 ## Non-negotiables
 
 - **Never create, rename, or switch worktrees or branches.** The harness assigns
-  this session's worktree and branch at startup; the Desktop UI pairs them by the
-  convention `branch == claude/<worktree-dir-name>`. Breaking that convention
+  this session's worktree and branch at startup and owns the pairing between
+  them; the branch is named after the originating prompt, not the worktree
+  directory, so the two names routinely differ and that is NOT a fault to
+  "correct". Creating or renaming either breaks the harness's own record and
   makes your work invisible in the UI. Therefore:
   - Do NOT run `git worktree add`, `git checkout -b`/`-B`, `git switch -c`/`-C`,
     or `git branch -m`/`-M` (the `guard-branch.sh` hook denies these).
