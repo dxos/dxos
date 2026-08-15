@@ -5,7 +5,7 @@ single canonical entry + generated stub barrels).
 
 ## Phase 0 — research (this PR)
 
-- [x] Map current variant landscape (36 plugins, ~123 files, six sync points; drift audit → `spikes/matrix.md`)
+- [x] Map current variant landscape (36 plugins, ~123 files, six sync points; drift audit — see DESIGN.md §4.2; the `spikes/` prototype that produced it was removed after Phase 3 verified clean)
 - [x] Enumerate candidate mechanisms (O1–O5, DESIGN.md §3)
 - [x] S1: bundler DCE fixture — invalidates O4 under `sideEffects: true` + source-mode consumers; negative control proves runtime `environments` opts are never tree-shakeable
 - [x] S2: generator prototype + equivalence comparison (20/23 exact; 2 handwritten bugs; 1 deliberate rewrite → escape hatch)

@@ -235,7 +235,10 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
 ## Artifacts
 
 - Spike commits on this branch: framework change + plugin-markdown, then plugin-space.
-- `spikes/` — generator prototype (`audit.mjs`, `generate.mjs`, `compare.mjs`, `lib/`),
-  drift audit (`matrix.md`), generated barrels + comparison reports for 4 plugins
-  (`generated/`), edge-bundle simulation (`edge-sim.mjs`).
+- `spikes/` — the pre-implementation prototype (`audit.mjs`, `generate.mjs`, `compare.mjs`,
+  `lib/`, `matrix.md`, `generated/`, `edge-sim.mjs`) that produced the findings in §4.
+  **Removed** once the real `dx-plugin gen` tool superseded it and the full 36-plugin sweep
+  verified clean (repo-wide build/test/`check-module-structure` green, zero plugins left on
+  the old variant pattern) — the findings live on in this doc and in the production code the
+  prototype's evidence justified.
 - PR: #12610 (draft). DCE fixture lives in the session scratchpad only; its verdict is §4.3.
