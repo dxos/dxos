@@ -628,7 +628,11 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
   (`Record<tagId, objectId[]>`) does not carry: a schema change plus clock-skew handling, since the
   device and provider clocks are not comparable without a server-supplied ordering. Revisit if the
   resurrection case is actually observed, not pre-emptively.
-- JMAP assumed to be a follow-up; its add-only keyword comment stays accurate until then.
+- ~~JMAP in this change or a follow-up?~~ DECIDED 2026-08-15: **follow-up**. `pushTags` is optional so
+  an unimplemented provider degrades to pull-only. `jmapReconcile`'s add-only keyword handling exists
+  only because local flags could not be written back — revisit it when JMAP lands, not before. Treat
+  `ProviderTagBinding` as PROVISIONAL until a second provider has used it: `spam` is a label in Gmail
+  and a `$junk` keyword in JMAP, which is exactly the shape the descriptor has to survive.
 
 ---
 

@@ -430,7 +430,13 @@ TDD, in this order. Each layer is a gate for the next.
    comparable without a server-supplied ordering. Deliberately out of the first cut; revisit if the
    resurrection case is observed in practice rather than pre-emptively.
 
-3. **JMAP in this change or a follow-up** — assumed follow-up.
+3. ~~**JMAP in this change or a follow-up?**~~ **DECIDED 2026-08-15: follow-up.** Gmail alone proves
+   the seam, and `pushTags` is optional precisely so an unimplemented provider degrades to pull-only
+   rather than breaking. Two things must not be forgotten when JMAP lands, both already noted above:
+   `jmapReconcile`'s add-only keyword handling exists only because local flags could not be written
+   back, so it is revisited then, not before; and `spam` is the case that stresses
+   `ProviderTagBinding` across vocabularies — a label in Gmail, a `$junk` keyword in JMAP — so treat
+   the descriptor as provisional until a second provider has used it.
 4. **Live-test account** — **blocks step 4 of the test plan.** Which disposable Gmail account the
    test writes to, the name of its opt-in variable, and whether that token carries `gmail.modify`.
    The safety gates are specified above; the account itself is a human decision and must be recorded
