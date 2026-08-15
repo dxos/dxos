@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { ToggleGroup, ToggleGroupIconItem, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { type RelatedType } from '#hooks';
 import { meta } from '#meta';
@@ -32,7 +33,9 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
     <ToggleGroup
       type='multiple'
       aria-label={t('type-filter.label')}
-      classNames={classNames}
+      // Gapped, so each type reads as its own control rather than one segmented bar; grouped
+      // buttons drop their own rounding, which the gap makes visible again.
+      classNames={mx('gap-1 [&>button]:rounded-xs', classNames)}
       value={types.filter(({ visible }) => visible).map(({ typename }) => typename)}
     >
       {types.map(({ typename, label, icon, count }) => (
@@ -41,6 +44,9 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
           iconOnly
           value={typename}
           icon={icon}
+          // Selection reads off the icon alone: the pressed fill is pinned to the resting one so
+          // the chip itself never changes, leaving `text-subdued` to mark a type as hidden.
+          classNames='aria-pressed:bg-input-bg aria-[pressed=false]:text-subdued'
           // Carries the count to the tooltip; the type's label is already localized.
           label={`${label} (${count})`}
           onClick={() => onToggle(typename)}
