@@ -429,9 +429,6 @@ export type ObjectPropertiesProps<
 // Card
 //
 
-/** Role token for the card slot. */
-export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardContent');
-
 /**
  * Role token for the card header's leading depiction — a person's avatar, an organization's logo,
  * a type's glyph.
@@ -445,6 +442,9 @@ export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.ca
  * so hosts check {@link Surface.useIsAvailable} and fall back. `CardIconSlot` packages that pair.
  */
 export const CardIcon: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardIcon');
+
+/** Role token for the card slot. */
+export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardContent');
 
 /** Surface data for card role. */
 export type CardData<Subject = unknown, Props extends {} = {}> = {
