@@ -321,9 +321,7 @@ describe('gmail tag push — the reconciliation base', () => {
     const heads = binding.spec.kind === 'external' ? [...(binding.spec.tagHeads ?? [])] : [];
     expect(heads.length).toBeGreaterThan(0);
 
-    const tagIndex = await EffectEx.runPromise(
-      Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))),
-    );
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
     const before = JSON.parse(JSON.stringify(tagIndex.index ?? {}));
 
     // Mutate after the heads were taken.
@@ -366,9 +364,7 @@ describe('gmail tag push — the reconciliation base', () => {
       .query(Query.select(Filter.type(Message.Message)).from(Scope.feed(Feed.getFeedUri(feed)!)))
       .run();
     const message = items[0];
-    const tagIndex = await EffectEx.runPromise(
-      Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))),
-    );
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
     const inbox = await Tag.findOrCreate(db, { key: SystemTags.systemTagKey('inbox'), label: 'Inbox' });
     Tagging.unset(message, Obj.getURI(inbox).toString(), { index: tagIndex });
     await db.flush({ indexes: true });

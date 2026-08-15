@@ -31,35 +31,47 @@ hand. That path cost ~30 minutes; this one is two commands.
 
 ## 2. Mint the OAuth token
 
-- Run the auth tool. It opens the browser once for consent, then saves the refresh token locally
-  (git-ignored, mode `600`):
+- Save the downloaded client JSON to `.secrets/client_secret_*.apps.googleusercontent.com.json`
+  (keep the name — the test globs for that pattern).
+- Obtain a refresh token for the test account and save the token response as `.secrets/gmail.json`.
+  Either run the loopback auth tool, which opens the browser once and needs no redirect URI with a
+  Desktop client:
   ```bash
   node packages/stories/stories-brain/scripts/google-auth.mjs
   ```
-- Every later run mints an access token from that refresh token with no browser interaction:
-  ```bash
-  node packages/stories/stories-brain/scripts/google-auth.mjs --token
-  ```
-- `--force` re-consents; `--revoke` revokes the grant at Google and deletes the local token.
-- Keep the refresh token between runs — that is the point of it. Revoke only on a leak or when the
-  account is retired.
+  or, with a Web client, use the OAuth Playground with **Use your own OAuth credentials** ticked and
+  **Access type: Offline** (the checkbox is the last line of the gear dialog, above **Close**).
+- `src/testing/live-credentials.ts` reads those two files and mints a fresh access token from the
+  refresh token on every run, so this is a one-time cost.
+- Keep both files between runs — that is the point of a refresh token. Revoke only on a leak or when
+  the account is retired.
+
+## Running
+
+```bash
+moon run plugin-google:test -- src/operations/mail/sync/sync-live.test.ts
+```
+
+The suite skips itself when the credential files are absent, so a normal `moon run plugin-google:test`
+is unaffected.
 
 ## Notes
 
 - **Never paste credential values into a chat, a shell heredoc, a log, or a commit message.** See
   `AGENTS.md` §"Handing an agent a credential" for the `.secrets/` convention used when a human has to
   hand a file to an agent directly.
-- The gate is the presence of a usable refresh token, not `GOOGLE_ACCESS_TOKEN`. That variable already
+- The gate is the presence of both credential files, not `GOOGLE_ACCESS_TOKEN`. That variable already
   arms the read-only `sync-e2e.test.ts`, so reusing it would silently turn an existing read-only setup
   into one that mutates real mail.
-- Safety rules the live test itself enforces: assert `getProfile().emailAddress` matches the expected
-  account and **fail** (not skip) on mismatch; touch only messages the test created; restore original
-  `labelIds` in a `finally`, surfacing cleanup failures rather than swallowing them.
+- Safety rules the suite enforces: it asserts `getProfile().emailAddress` equals
+  `LIVE_GMAIL_ACCOUNT` and **fails** (not skips) on mismatch; it records every message's original
+  `labelIds` before touching it and restores them in `afterAll`, throwing if any restore fails rather
+  than leaving a shared mailbox modified.
 
 ## TODO: promote the auth tool
 
-`google-auth.mjs` lives in `packages/stories/stories-brain/scripts/` and hardcodes
-`gmail.readonly`. It is the only piece of Google-auth plumbing in the repo and every live Google test
-needs it, so it should move somewhere shared (`tools/google-auth`) with the scope passed in. Until
-then this doc points at its current path, and the scope constant needs widening to `gmail.modify` for
-the write tests.
+`google-auth.mjs` lives in `packages/stories/stories-brain/scripts/` and hardcodes `gmail.readonly`.
+It is the only Google-auth plumbing in the repo and every live Google test needs it, so it should move
+somewhere shared (`tools/google-auth`) with the scope passed in, and `live-credentials.ts` should call
+it rather than re-reading `.secrets/` itself. Deferred: the current split works and the consolidation
+is not on the critical path for tag sync.

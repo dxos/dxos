@@ -620,15 +620,18 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
       reconstructing a past index, and unresolvable heads emitting no removals. FIXTURE BUG FOUND:
       `SYSTEM_LABELS` omitted STARRED/SPAM/TRASH, and since `syncLabels` maps the label DICTIONARY, a
       missing entry silently disables tag reconciliation for that tag rather than failing.
-- [ ] **Live round-trip test** — both directions against `test@braneframe.com` (DECIDED 2026-08-15;
+- [x] **Live round-trip test** — both directions against `test@braneframe.com` (DECIDED 2026-08-15;
       unblocked). Nothing in the repo referenced that account before, so `TAG-SYNC.md` is now its
       canonical record. This test WRITES labels, so `GOOGLE_ACCESS_TOKEN` alone must not arm it: that
       variable already exists for the read-only `sync-e2e.test.ts`, and reusing it would silently turn
       an existing read-only setup into one that mutates mail. Second gate is
       `DX_GMAIL_TAG_SYNC_ACCOUNT` holding the address (its value IS the allowlist), with a
       `getProfile().emailAddress` assertion that FAILS (not skips) on mismatch, operation only on
-      messages the test itself created, and cleanup in a `finally` restoring original `labelIds` —
-      surfacing cleanup failures, since a shared mailbox means a swallowed one hits a colleague.
+      messages the test itself created, and cleanup in `afterAll` restoring original `labelIds` —
+      throwing if a restore fails, since a shared mailbox means a swallowed one hits a colleague.
+      SHIPPED as `sync-live.test.ts` + `testing/live-credentials.ts`, 3 tests, RUN GREEN against
+      test@braneframe.com: identity assertion, star pushed + Gmail label pulled in one run, and
+      archive removing INBOX. Account verified restored afterwards (0 starred, 24 in inbox).
       NOTE: `plugin-google`'s `mail/send/handler.test.ts` already SENDS real email on
       `GOOGLE_ACCESS_TOKEN` alone — the pattern this rule exists to avoid repeating, not to copy.
 - [x] **Push insert-time local tags** — a tag written by local logic during a run (known-sender
