@@ -7,9 +7,9 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
 import { useClient } from '@dxos/react-client';
 import {
+  Banner,
   Button,
   Icon,
-  Message,
   Panel,
   ScrollArea,
   Status,
@@ -194,11 +194,11 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
         {status === 'error' && <Tag hue='rose'>{t('result.error.label')}</Tag>}
       </header>
       {result.error && (
-        <Message.Root valence='error'>
-          <Message.Content classNames='m-2'>
-            <Message.Body>{result.error}</Message.Body>
-          </Message.Content>
-        </Message.Root>
+        <Banner.Root valence='error'>
+          <Banner.Content classNames='m-2'>
+            <Banner.Body>{result.error}</Banner.Body>
+          </Banner.Content>
+        </Banner.Root>
       )}
       {result.issues.length > 0 && (
         <ul className='border-t border-separator divide-y divide-subdued-separator'>

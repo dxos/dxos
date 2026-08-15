@@ -11,14 +11,14 @@ import { Database, Obj } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import { runMailSync } from '@dxos/plugin-inbox/sync';
 
 import { GoogleCredentials, GoogleMailApi } from '#services';
+import { GoogleOperation } from '#types';
 
 import { googleMailSyncProvider } from './sync-provider';
 
-const handler = InboxOperation.GoogleMailSync.pipe(
+const handler = GoogleOperation.GoogleMailSync.pipe(
   Operation.withHandler(({ binding: bindingRef, userId = 'me', label = 'all' }) =>
     Effect.gen(function* () {
       const bindingObj = yield* Database.load(bindingRef);

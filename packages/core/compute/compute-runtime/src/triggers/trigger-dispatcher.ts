@@ -58,7 +58,13 @@ export interface TriggerDispatcherOptions {
 
   /**
    * Poll interval for cron triggers in 'natural' time control mode.
-   * @default 1 second
+   *
+   * Bounds how late a cron trigger fires, so it is also the finest schedule the dispatcher can
+   * honour — a minute, matching the shortest interval any deployed trigger asks for. Every tick
+   * re-runs each feed trigger's query, which is why this is not free to shorten: pass a smaller
+   * value explicitly (tests do) rather than lowering the default.
+   *
+   * @default 1 minute
    */
   livePollInterval?: Duration.Duration;
 
@@ -250,6 +256,25 @@ export class TriggerDispatcher extends Context.Service<
 }
 
 const DEFAULT_MAX_CONCURRENCY = 5;
+
+/**
+ * The interval between a cron's next two occurrences, or `undefined` if it fires at most once more.
+ *
+ * Cron has no period of its own — an expression is a predicate over instants — so the gap between
+ * consecutive occurrences is the only way to ask how often it wants to run.
+ */
+const cronPeriod = (cron: Cron.Cron, now: Date): Duration.Duration | undefined => {
+  try {
+    const first = Cron.next(cron, now);
+    const second = Cron.next(cron, first);
+    return Duration.millis(second.getTime() - first.getTime());
+  } catch {
+    return undefined;
+  }
+};
+
+/** See {@link TriggerDispatcherOptions.livePollInterval}. */
+const DEFAULT_LIVE_POLL_INTERVAL = Duration.minutes(1);
 const DEFAULT_FAILURE_COOLDOWN = Duration.seconds(30);
 
 class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispatcher> {
@@ -313,7 +338,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
   constructor(options: TriggerDispatcherOptions) {
     this._services = options.services;
     this.timeControl = options.timeControl;
-    this.livePollInterval = options.livePollInterval ?? Duration.seconds(1);
+    this.livePollInterval = options.livePollInterval ?? DEFAULT_LIVE_POLL_INTERVAL;
     this._internalTime = options.startingTime ?? new Date();
     this._maxConcurrency = options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;
     this._failureCooldown = options.failureCooldown ?? DEFAULT_FAILURE_COOLDOWN;
@@ -897,6 +922,25 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
           if (Result.isSuccess(cronEither)) {
             const cron = cronEither.success;
             const now = this.getCurrentTime();
+            const period = cronPeriod(cron, now);
+
+            // A schedule finer than the poll cannot be honoured — the tick would find it due, fire it
+            // once and skip to the next occurrence after now, so the missed ones are dropped rather
+            // than delayed. Refusing it says that out loud instead of running at the poll rate while
+            // claiming a faster one. A caller that genuinely needs sub-minute firing (a test) shortens
+            // `livePollInterval`, which moves this floor with it.
+            if (period !== undefined && Duration.isLessThan(period, this.livePollInterval)) {
+              entry.cron = undefined;
+              entry.nextExecution = undefined;
+              log.error('Cron schedule is finer than the trigger poll interval; trigger will not run', {
+                triggerId: trigger.id,
+                cron: timerSpec.cron,
+                period: Duration.toMillis(period),
+                livePollInterval: Duration.toMillis(this.livePollInterval),
+              });
+              continue;
+            }
+
             const nextExecution = entry.nextExecution ?? Cron.next(cron, now);
 
             log('Updated scheduled trigger', {

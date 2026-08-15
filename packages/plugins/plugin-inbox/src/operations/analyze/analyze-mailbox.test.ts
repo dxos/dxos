@@ -53,7 +53,7 @@ const analyzeProcessor: InboxCapabilities.MailboxProcessor = {
   id: 'analyze',
   tier: 'analyze',
   after: ['summarize'],
-  createInvocation: (mailbox) => ({ operation: StubOperation, input: { mailbox: Ref.make(mailbox) } }),
+  createInvocations: (mailbox) => [{ operation: StubOperation, input: { mailbox: Ref.make(mailbox) } }],
 };
 
 /**
@@ -124,14 +124,14 @@ const seedMailbox = Effect.fnUntraced(function* () {
   return { db, mailbox };
 });
 
-describe('ScanMailbox cascade', () => {
+describe('AnalyzeMailbox cascade', () => {
   it.effect(
     'runs the deterministic tier in order and reports each spawned stage',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { mailbox } = yield* seedMailbox();
 
-        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+        const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['deterministic'],
@@ -160,7 +160,7 @@ describe('ScanMailbox cascade', () => {
       function* ({ expect }) {
         const { mailbox } = yield* seedMailbox();
 
-        const first = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+        const first = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
           tiers: ['deterministic'],
         });
@@ -169,13 +169,13 @@ describe('ScanMailbox cascade', () => {
         expect((yield* Database.query(Filter.type(Person.Person)).run).length).toBe(0);
 
         // The cascade inherits each operation's idempotency: a rerun creates nothing new.
-        const rerun = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+        const rerun = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['deterministic'],
         });
         expect(rerun.completed).toBe(2);
-        const again = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+        const again = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['deterministic'],
@@ -199,7 +199,7 @@ describe('ScanMailbox cascade', () => {
         // get a classification pass whose contact allow-list has not been built yet. Classification
         // fails here (the client has no usable key in this environment), which is what pins the order —
         // the deterministic stages ran first and the failure lands on the third stage, not the first.
-        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+        const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['classify', 'deterministic'],
@@ -227,7 +227,7 @@ describe('ScanMailbox cascade', () => {
         // `analyze` is included: it is missing a DIFFERENT precondition (a FactStore no plugin here
         // contributes), so one run exercises both flavours and shows each tier naming its own reason
         // rather than inheriting the first one's.
-        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+        const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['deterministic', 'classify', 'summarize', 'analyze'],
@@ -270,7 +270,7 @@ describe('ScanMailbox cascade', () => {
         // precondition as an absent `AiService` — the host app did not contribute something a tier
         // declared — and must be reported the same way, or one uninstalled plugin turns a healthy
         // mailbox's scan red and strands the deterministic work behind it.
-        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+        const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['deterministic', 'analyze'],
@@ -298,7 +298,7 @@ describe('ScanMailbox cascade', () => {
         // `classify` fails here (no usable key in this environment). `subscriptions` declares no edge
         // to it, so it must still run — blocking by run POSITION would have stranded it purely for
         // sitting later in the list, which is the whole point of taking the order from the DAG.
-        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+        const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['deterministic', 'classify', 'summarize'],
@@ -327,7 +327,7 @@ describe('ScanMailbox cascade', () => {
       function* ({ expect }) {
         const { mailbox } = yield* seedMailbox();
 
-        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+        const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['deterministic'],
@@ -344,10 +344,12 @@ describe('ScanMailbox cascade', () => {
             id: 'thirdParty',
             tier: 'deterministic',
             after: ['subscriptions'],
-            createInvocation: (mailbox) => ({
-              operation: InboxOperation.ExtractSubscriptions,
-              input: { mailbox: Ref.make(mailbox) },
-            }),
+            createInvocations: (mailbox) => [
+              {
+                operation: InboxOperation.ExtractSubscriptions,
+                input: { mailbox: Ref.make(mailbox) },
+              },
+            ],
           },
           ...inboxMailboxProcessors.filter((processor) => processor.tier === 'deterministic'),
         ]),
@@ -364,7 +366,7 @@ describe('ScanMailbox cascade', () => {
 
         // One contributor shipping a cycle must not cost everyone else their run, and the members must
         // be named — silence here would look exactly like a pass that ran and found nothing.
-        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+        const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['deterministic'],
@@ -385,19 +387,23 @@ describe('ScanMailbox cascade', () => {
             id: 'x',
             tier: 'deterministic',
             after: ['y'],
-            createInvocation: (mailbox) => ({
-              operation: InboxOperation.ExtractSubscriptions,
-              input: { mailbox: Ref.make(mailbox) },
-            }),
+            createInvocations: (mailbox) => [
+              {
+                operation: InboxOperation.ExtractSubscriptions,
+                input: { mailbox: Ref.make(mailbox) },
+              },
+            ],
           },
           {
             id: 'y',
             tier: 'deterministic',
             after: ['x'],
-            createInvocation: (mailbox) => ({
-              operation: InboxOperation.ExtractSubscriptions,
-              input: { mailbox: Ref.make(mailbox) },
-            }),
+            createInvocations: (mailbox) => [
+              {
+                operation: InboxOperation.ExtractSubscriptions,
+                input: { mailbox: Ref.make(mailbox) },
+              },
+            ],
           },
         ]),
       ),
@@ -416,7 +422,7 @@ describe('ScanMailbox cascade', () => {
         // `classify`. It therefore RUNS despite the classification failure, and skips on its own unmet
         // precondition instead. Sharp but correct: a processor the caller excluded cannot constrain
         // anything, and `analyze` never consumed classification in the first place.
-        const result = yield* Operation.invoke(InboxOperation.ScanMailbox, {
+        const result = yield* Operation.invoke(InboxOperation.AnalyzeMailbox, {
           mailbox: Ref.make(mailbox),
           me: ME,
           tiers: ['deterministic', 'classify', 'analyze'],
