@@ -156,8 +156,13 @@ type InvocationContext = {
 const invoke = (
   { handlerSet, handlers, ambient }: InvocationContext,
   { key, input, spaceId }: Gateway.InvokeRequest,
-): Effect.Effect<unknown, Gateway.Error> =>
-  Effect.gen(function* () {
+): Effect.Effect<unknown, Gateway.Error> => {
+  // A named target that does not parse is an error, not a fallback: treating it as absent runs the
+  // call against the session's default space, which is not the space the caller asked for.
+  if (spaceId != null && !SpaceId.isValid(spaceId)) {
+    return Effect.fail(Gateway.error(`Invalid spaceId: ${spaceId}`));
+  }
+  return Effect.gen(function* () {
     const handler = handlers.find((candidate) => normalizeKey(String(candidate.meta.key)) === normalizeKey(key));
     if (!handler) {
       return yield* Effect.fail(Gateway.error(`Operation not found: ${key}`));
@@ -178,6 +183,7 @@ const invoke = (
     Effect.provideContext(ambient),
     Effect.mapError(Gateway.error),
   );
+};
 
 const spaceIdOption = (spaceId: string | undefined): Option.Option<SpaceId> =>
   spaceId != null && SpaceId.isValid(spaceId) ? Option.some(spaceId) : Option.none();

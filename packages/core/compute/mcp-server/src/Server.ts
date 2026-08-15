@@ -86,10 +86,17 @@ export const loadSkillByName = (
 ): Effect.Effect<{ name: string; key: string; description?: string; instructions: string }, ToolFailure> =>
   gateway.listSkills.pipe(
     Effect.mapError((error) => failure('operation_failed', `skillLoad failed: ${error.message}`)),
-    Effect.flatMap((skills) => {
-      // The same projection the prompts use, so a skill answers to exactly one name in both
-      // surfaces; the full key is accepted too for callers that copied it from a listing.
-      const projected = Projection.projectSkills(skills, []);
+    // The same projection the prompts use, so a skill answers to exactly one name in both
+    // surfaces; the full key is accepted too for callers that copied it from a listing. It throws
+    // on a name collision, which inside the request path is this call's failure rather than a
+    // defect that takes the handler down.
+    Effect.flatMap((skills) =>
+      Effect.try({
+        try: () => Projection.projectSkills(skills, []),
+        catch: (error) => failure('operation_failed', `skillLoad failed: ${String(error)}`),
+      }),
+    ),
+    Effect.flatMap((projected) => {
       // Registry keys carry a `dxn:` prefix; accept the caller's spelling with or without it.
       const requested = skill.replace(/^dxn:/, '');
       const match = projected.find(
@@ -146,8 +153,8 @@ export const loadSkills = (
 /**
  * Builds the MCP toolkit layer for projected operations.
  *
- * Every projected tool gains the session's optional `spaceId` parameter (stripped before
- * invocation); ref-valued inputs are already envelope-shaped in the operations' own schemas — the
+ * A projected tool gains the session's optional `spaceId` parameter unless the operation declares
+ * one itself; the ambient parameter is stripped before invocation. Ref-valued inputs are already envelope-shaped in the operations' own schemas — the
  * upstream verbs were written to be invocable from a remote host. Outputs are objects by upstream
  * convention; a non-object output is wrapped as `{ output }` because MCP requires
  * `structuredContent` to be a JSON object.
@@ -193,7 +200,12 @@ export const makeTool = (operation: Projection.ProjectedOperation) =>
 export const makeHandler =
   (gateway: Gateway.Shape, operation: Projection.ProjectedOperation) =>
   (args: Record<string, unknown> | undefined): Effect.Effect<Record<string, unknown>, ToolFailure> => {
-    const { spaceId, ...decodedInput } = args ?? {};
+    const { spaceId, ...withoutSpaceId } = args ?? {};
+    // An operation that declares `spaceId` itself keeps it: {@link makeTool} adds the ambient
+    // parameter only when the operation has none, so stripping it unconditionally would drop a
+    // required field before the encode below.
+    const decodedInput = 'spaceId' in operation.parameters ? (args ?? {}) : withoutSpaceId;
+    const targetSpaceId = typeof spaceId === 'string' ? spaceId : undefined;
     // The tool layer decoded the arguments (ref envelopes became live `Ref`s); encode back to the
     // wire form the gateway expects — live refs cannot cross an RPC boundary.
     const encodeInput =
@@ -208,16 +220,14 @@ export const makeHandler =
       // The space is resolved after encoding, because the wire form is where a reference argument
       // states which space it belongs to.
       Effect.flatMap((input) =>
-        spaceInternal
-          .resolveId(gateway.spaceIds, (spaceId as string | undefined) ?? spaceInternal.hintFromInput(input))
-          .pipe(
-            Effect.flatMap((resolvedSpaceId) =>
-              gateway.invokeOperation({ key: operation.key, input, spaceId: resolvedSpaceId }).pipe(
-                Effect.mapError((error) => failure('operation_failed', `${operation.key} failed: ${error.message}`)),
-                Effect.map((output) => spaceInternal.qualifyRefs(output, resolvedSpaceId)),
-              ),
+        spaceInternal.resolveId(gateway.spaceIds, targetSpaceId ?? spaceInternal.hintFromInput(input)).pipe(
+          Effect.flatMap((resolvedSpaceId) =>
+            gateway.invokeOperation({ key: operation.key, input, spaceId: resolvedSpaceId }).pipe(
+              Effect.mapError((error) => failure('operation_failed', `${operation.key} failed: ${error.message}`)),
+              Effect.map((output) => spaceInternal.qualifyRefs(output, resolvedSpaceId)),
             ),
           ),
+        ),
       ),
       Effect.map((output) =>
         output !== null && typeof output === 'object' && !Array.isArray(output)
@@ -314,7 +324,11 @@ export const normalizeResponse = async (
   const text = await response.text();
   const unwrapped = unwrapBatch(text);
   const normalized = wireInternal.normalizeText(unwrapped, options);
-  return new Response(normalized ?? unwrapped, { status: response.status, headers: response.headers });
+  const headers = new Headers(response.headers);
+  // The passes above change the body length, so an upstream `Content-Length` now describes a body
+  // that no longer exists; a client that trusts it truncates the response.
+  headers.delete('content-length');
+  return new Response(normalized ?? unwrapped, { status: response.status, headers });
 };
 
 /**

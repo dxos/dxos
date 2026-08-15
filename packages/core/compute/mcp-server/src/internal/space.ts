@@ -73,24 +73,47 @@ const refUri = (record: Record<string, unknown>): string | undefined => {
  * {@link hintFromInput} reads the space straight off it. A reference that already names a space is
  * left alone, so a genuine cross-space reference is never silently re-homed.
  */
-export const qualifyRefs = (value: unknown, spaceId: string, seen: Set<unknown> = new Set()): unknown => {
-  if (value == null || typeof value !== 'object' || seen.has(value)) {
+export const qualifyRefs = (
+  value: unknown,
+  spaceId: string,
+  seen: WeakMap<object, unknown> = new WeakMap(),
+): unknown => {
+  if (value == null || typeof value !== 'object') {
     return value;
   }
-  seen.add(value);
+  // Keyed by the qualified counterpart, not merely visited: one envelope object reachable by two
+  // paths must qualify on both, or the agent carries an unqualified reference back and it resolves
+  // against the session default space.
+  const qualified = seen.get(value);
+  if (qualified !== undefined) {
+    return qualified;
+  }
 
   if (Array.isArray(value)) {
-    return value.map((entry) => qualifyRefs(entry, spaceId, seen));
+    // Registered before descending, so a cycle finds the copy being filled instead of recursing.
+    const copy: unknown[] = [];
+    seen.set(value, copy);
+    for (const entry of value) {
+      copy.push(qualifyRefs(entry, spaceId, seen));
+    }
+    return copy;
   }
 
   const record = value as Record<string, unknown>;
   const uri = refUri(record);
   if (uri !== undefined) {
     const match = ECHO_URI_PATTERN.exec(uri);
-    return match && match[1] === '' ? { '/': `echo://${spaceId}/${match[2]}` } : record;
+    const result = match && match[1] === '' ? { '/': `echo://${spaceId}/${match[2]}` } : record;
+    seen.set(record, result);
+    return result;
   }
 
-  return Object.fromEntries(Object.entries(record).map(([key, entry]) => [key, qualifyRefs(entry, spaceId, seen)]));
+  const copy: Record<string, unknown> = {};
+  seen.set(record, copy);
+  for (const [key, entry] of Object.entries(record)) {
+    copy[key] = qualifyRefs(entry, spaceId, seen);
+  }
+  return copy;
 };
 
 /**

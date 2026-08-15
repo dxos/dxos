@@ -75,7 +75,7 @@ Settings → Developer → Edit Config, or edit the file directly
 
 Restart Claude Desktop; the tools appear under the connector menu and skills as slash commands.
 
-`command` must be **absolute** — `which dx` gives the path. A GUI app is not launched from your
+`command` must be **absolute** — `which dx` (`where.exe dx` on Windows) gives the path. A GUI app is not launched from your
 shell, so it does not inherit your `PATH` and a bare `dx` will not resolve.
 
 ### Other clients

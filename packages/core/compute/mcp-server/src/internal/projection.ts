@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import * as SchemaGetter from 'effect/SchemaGetter';
 import * as SchemaIssue from 'effect/SchemaIssue';
 
@@ -170,11 +171,15 @@ export const tolerateStringifiedRefs = (fields: Fields, inputSchema: any): Field
   return widened;
 };
 
-/** An optional field wraps the real schema, which is what the widening above must reach. */
+/**
+ * An optional field wraps the real schema, which is what the widening above must reach. Optionality
+ * comes off the AST because other key modifiers (`Schema.mutableKey`) also expose `.schema`, and
+ * treating one of those as optional would re-emit a required field as optional.
+ */
 const isOptionalField = (
   field: Schema.Codec<any, any>,
 ): field is Schema.Codec<any, any> & { readonly schema: Schema.Codec<any, any> } =>
-  'schema' in field && Schema.isSchema(field.schema);
+  SchemaAST.isOptional(field.ast) && 'schema' in field && Schema.isSchema(field.schema);
 
 const isStruct = (schema: Schema.Codec<any, any>): schema is Schema.Codec<any, any> & { readonly fields: Fields } =>
   'fields' in schema;

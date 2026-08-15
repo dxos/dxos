@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Result from 'effect/Result';
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
@@ -78,6 +79,23 @@ describe('Server', () => {
       const { gateway } = testGateway({ output: { taskSet: { '/': 'echo:///01J000000000000000000000000' } } });
       const result = await EffectEx.runPromise(Server.makeHandler(gateway, operation())({}));
       expect(result).to.deep.equal({ taskSet: { '/': `echo://${SPACE_A}/01J000000000000000000000000` } });
+    });
+
+    test('a reference reachable by two paths is qualified on both', async ({ expect }) => {
+      const shared = { '/': 'echo:///01J000000000000000000000000' };
+      const { gateway } = testGateway({ output: { first: shared, second: shared } });
+      const result = await EffectEx.runPromise(Server.makeHandler(gateway, operation())({}));
+      const qualified = { '/': `echo://${SPACE_A}/01J000000000000000000000000` };
+      expect(result).to.deep.equal({ first: qualified, second: qualified });
+    });
+
+    test('an operation that declares spaceId itself receives it as input', async ({ expect }) => {
+      const { gateway, invocations } = testGateway();
+      await EffectEx.runPromise(
+        Server.makeHandler(gateway, operation({ parameters: { spaceId: Schema.String } }))({ spaceId: SPACE_A }),
+      );
+      expect(invocations[0].input).to.deep.equal({ spaceId: SPACE_A });
+      expect(invocations[0].spaceId).to.equal(SPACE_A);
     });
 
     test('a space-qualified ref argument selects its space when spaceId is omitted', async ({ expect }) => {
@@ -194,6 +212,29 @@ describe('Server', () => {
       expect(icon.headers.get('Content-Type')).to.equal('image/png');
       expect((await icon.arrayBuffer()).byteLength).to.be.greaterThan(0);
       expect(Server.iconResponse('/nope.png')).to.be.undefined;
+    });
+
+    test('drops a Content-Length the passes above invalidated', async ({ expect }) => {
+      const body = JSON.stringify([initialize]);
+      const response = await Server.normalizeResponse(
+        new Response(body, {
+          headers: { 'content-type': 'application/json', 'content-length': String(body.length) },
+        }),
+      );
+      expect(response.headers.get('content-length')).to.be.null;
+      expect((await response.json()).id).to.equal(1);
+    });
+  });
+
+  describe('snapshot', () => {
+    test('an object reachable by two paths is snapshotted on both', ({ expect }) => {
+      const shared = { title: 'shared' };
+      const result = Gateway.snapshot({ first: shared, second: shared }) as Record<string, unknown>;
+      expect(result).to.deep.equal({ first: shared, second: shared });
+      // The second path must reach the snapshot too; returning the input there is how a live entity
+      // escapes into a result.
+      expect(result.first).to.equal(result.second);
+      expect(result.first).to.not.equal(shared);
     });
   });
 });
