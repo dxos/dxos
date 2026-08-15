@@ -74,18 +74,14 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       // undefined total on a current-only tick would blank the denominator mid-cascade.
       let current = 0;
       let total: number | undefined;
-      // Named for the PHASE, not just the mailbox: sync runs against the same mailbox and its meter
-      // reads the same field, so a bare mailbox name rendered two unrelated runs identically. The
-      // processor is appended rather than substituted, so the label does not flicker between the two
-      // on ticks that carry no processor.
-      const analyzeLabel = `Analyze — ${mailbox.name ?? 'Mailbox'}`;
-      let processor: string | undefined;
+      // Phase first — see the matching note in `mail-sync.ts`. The running processor is not appended:
+      // the meter's own `current/total` already says how far through the cascade the run is.
+      const analyzeLabel = `Analyzing ${mailbox.name ?? 'mailbox'}`;
       const reportStatus = (patch: { message?: string; current?: number; total?: number } = {}) => {
         current = patch.current ?? current;
         total = patch.total ?? total;
-        processor = patch.message ?? processor;
         traceWriter.write(Trace.StatusUpdate, {
-          message: processor ? `${analyzeLabel} · ${processor}` : analyzeLabel,
+          message: analyzeLabel,
           progress: { key: progressKey, current, total },
         });
       };

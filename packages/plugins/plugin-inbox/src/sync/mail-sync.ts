@@ -312,9 +312,10 @@ export const runMailSync = (
     // the runtime `ProgressRegistry` for `MailboxArticle` and the R0 popover.
     const traceWriter = yield* Trace.TraceService;
     const progressKey = createSyncProgressKey(mailbox);
-    // Named for the PHASE, not just the mailbox: sync and analyze both run against the same mailbox
-    // and both meters read `message`, so a bare mailbox name rendered two unrelated runs identically.
-    const syncLabel = `Sync — ${mailbox.name ?? 'Mailbox'}`;
+    // The phase leads, so the meter says what is happening before it says what to: sync and analyze
+    // run against the same mailbox and both meters read `message`, and a name-first label truncated
+    // away the only part that told them apart.
+    const syncLabel = `Syncing ${mailbox.name ?? 'mailbox'}`;
     let progressCurrent = 0;
     let progressTotal: number | undefined;
     type StatusPatch = {
