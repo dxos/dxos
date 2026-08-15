@@ -31,12 +31,13 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 // as `undefined`, which `Plugin.addModule` skips.
 export const TripPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
+  Plugin.addModule(MarkerProvider),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
   Plugin.addModule(Settings),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({
@@ -51,7 +52,6 @@ export const TripPlugin = Plugin.define(meta).pipe(
       Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, TripMessageExtractor)]),
     ),
   ),
-  Plugin.addModule(MarkerProvider),
   Plugin.make,
 );
 

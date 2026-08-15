@@ -23,12 +23,12 @@ import { meta } from '#meta';
 // as `undefined`, which `Plugin.addModule` skips.
 export const PresenterPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(MarkdownExtension),
   Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
   Plugin.addModule(PresenterSettings),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(MarkdownExtension),
   Plugin.addModule(Translations),
-  Plugin.addModule(PluginAsset),
   Plugin.make,
 );
 

@@ -12,6 +12,7 @@ import {
   rebaseSpecifier,
   rewriteRelativeSpecifiers,
   topLevelExportConsts,
+  topLevelLocalDeclarations,
   topLevelImportDeclarations,
 } from './ts-util';
 
@@ -159,6 +160,56 @@ const renderBarrel = ({ env, genDir, included, stubbed, overridesPath, overrideN
     }
   }
 
+  // Local helpers the kept statements reference, pulled in transitively (one helper may use the
+  // next) and attributed to the file they came from so their own imports are collected too.
+  const locals: Array<{ sourceFile: string; name: string; text: string }> = [];
+  const localCache = new Map<string, ReturnType<typeof topLevelLocalDeclarations>>();
+  for (const member of included) {
+    if (!localCache.has(member.sourceFile)) {
+      localCache.set(member.sourceFile, topLevelLocalDeclarations(parseFile(member.sourceFile)!));
+    }
+    const available = localCache.get(member.sourceFile)!;
+    const taken = new Set(locals.filter((local) => local.sourceFile === member.sourceFile).map((l) => l.name));
+    const pending = [...collectFreeIdentifiers(member.statementText)];
+    while (pending.length > 0) {
+      const name = pending.pop()!;
+      if (taken.has(name)) {
+        continue;
+      }
+      const decl = available.find((candidate) => candidate.name === name);
+      if (!decl) {
+        continue;
+      }
+      taken.add(name);
+      locals.push({ sourceFile: member.sourceFile, name, text: decl.text });
+      pending.push(...collectFreeIdentifiers(decl.text));
+    }
+  }
+
+  // Helpers need their imports as much as the modules do.
+  for (const local of locals) {
+    const free = collectFreeIdentifiers(local.text);
+    for (const decl of importCache.get(local.sourceFile) ?? []) {
+      if (![...decl.boundNames].some((name) => free.has(name))) {
+        continue;
+      }
+      const spec = rebaseSpecifier(decl.specifier, path.dirname(local.sourceFile), genDir);
+      const existing = bySpecifier.get(spec) ?? {
+        isTypeOnly: decl.isTypeOnly,
+        defaultName: null,
+        namespaceName: null,
+        named: new Set<string>(),
+      };
+      existing.isTypeOnly = existing.isTypeOnly && decl.isTypeOnly;
+      existing.defaultName ??= decl.defaultName;
+      existing.namespaceName ??= decl.namespaceName;
+      for (const name of decl.named) {
+        existing.named.add(name);
+      }
+      bySpecifier.set(spec, existing);
+    }
+  }
+
   const importTexts = new Set<string>();
   for (const [spec, merged] of bySpecifier) {
     const prefix = merged.isTypeOnly ? 'import type' : 'import';
@@ -190,6 +241,9 @@ const renderBarrel = ({ env, genDir, included, stubbed, overridesPath, overrideN
   if (overridesPath && overrideNames.size > 0) {
     const overridesSpec = `../${path.basename(overridesPath).replace(/\.tsx?$/, '')}`;
     lines.push(`export { ${[...overrideNames].sort().join(', ')} } from '${overridesSpec}';`, '');
+  }
+  for (const local of locals) {
+    lines.push(rewriteRelativeSpecifiers(local.text, path.dirname(local.sourceFile), genDir), '');
   }
   for (const member of included) {
     lines.push(rewriteRelativeSpecifiers(member.statementText, path.dirname(member.sourceFile), genDir), '');

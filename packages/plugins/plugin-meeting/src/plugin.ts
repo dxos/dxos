@@ -22,13 +22,13 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(CallExtension),
   Plugin.addModule(MeetingSettings),
   Plugin.addModule(MeetingState),
-  Plugin.addModule(CallExtension),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

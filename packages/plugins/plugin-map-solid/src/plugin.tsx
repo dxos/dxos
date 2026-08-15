@@ -11,8 +11,8 @@ import { meta } from '#meta';
 // in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
 // as `undefined`, which `Plugin.addModule` skips.
 export const MapPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(Surface),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(Surface),
   Plugin.make,
 );
 

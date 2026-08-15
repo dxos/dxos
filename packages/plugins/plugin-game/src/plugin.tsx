@@ -12,10 +12,10 @@ import { meta } from '#meta';
 // as `undefined`, which `Plugin.addModule` skips.
 export const GamePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(Translations),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

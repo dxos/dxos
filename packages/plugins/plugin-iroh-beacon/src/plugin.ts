@@ -18,7 +18,6 @@ export const IrohBeaconPlugin = Plugin.define(meta).pipe(
 
   // Translations.
   Plugin.addModule(AppCapability.translations(translations)),
-
   Plugin.make,
 );
 

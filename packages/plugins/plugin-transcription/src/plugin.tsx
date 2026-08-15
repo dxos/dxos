@@ -27,21 +27,21 @@ import { meta } from '#meta';
 // in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
 // as `undefined`, which `Plugin.addModule` skips.
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(EntityLookup),
+  Plugin.addModule(MarkdownExtension),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PipelineStatus),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(RecordingSession),
+  Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(TextContent),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(Translations),
-  Plugin.addModule(TranscriptionSettings),
-  Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(TranscriptionDriver),
   Plugin.addModule(Transcriber),
-  Plugin.addModule(EntityLookup),
-  Plugin.addModule(RecordingSession),
-  Plugin.addModule(PipelineStatus),
-  Plugin.addModule(MarkdownExtension),
-  Plugin.addModule(PluginAsset),
+  Plugin.addModule(TranscriptionDriver),
+  Plugin.addModule(TranscriptionSettings),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

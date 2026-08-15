@@ -21,15 +21,15 @@ import { meta } from '#meta';
 // in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
 // as `undefined`, which `Plugin.addModule` skips.
 export const IllustratorPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(Migrations),
   Plugin.addModule(CommentConfig),
   Plugin.addModule(CreateObject),
+  Plugin.addModule(Migrations),
   Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
-  Plugin.addModule(ReactSurface),
   Plugin.addModule(Translations),
-  Plugin.addModule(PluginAsset),
   Plugin.make,
 );
 

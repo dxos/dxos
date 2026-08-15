@@ -23,15 +23,15 @@ import { meta } from '#meta';
 // as `undefined`, which `Plugin.addModule` skips.
 export const ScriptPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Compiler),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(Translations),
-  Plugin.addModule(ScriptSettings),
-  Plugin.addModule(Compiler),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(ScriptSettings),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

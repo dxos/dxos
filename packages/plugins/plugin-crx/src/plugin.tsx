@@ -14,11 +14,11 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CrxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CrxSettings),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(InstallPageActions),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PageActionProvider),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

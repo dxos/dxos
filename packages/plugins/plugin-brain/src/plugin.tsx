@@ -22,9 +22,22 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BrainPlugin = Plugin.define(meta).pipe(
+  // Provisions the per-space FactStore LayerSpec + registry; the mailbox `AnalyzeMailbox` operation
+  // (in plugin-inbox) resolves these at invoke time, so BrainPlugin must be loaded wherever analysis
+  // runs.
+  Plugin.addModule(FactStore),
+  // Injects the `Analyze` action into plugin-inbox's mailbox toolbar menu (fact analysis is owned by
+  // brain); reads the settings atom live at invoke time. Shares the atom with the Settings module.
+  Plugin.addModule(MailboxProcessor),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(SkillDefinition),
+  // Contributes the "Mailbox Facts" project template: a scheduled AnalyzeMailbox routine plus
+  // brain-skill chats, scoped to one project.
+  Plugin.addModule(ProjectTemplates),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(ReplyGenerator),
+  // Owns the fact-analysis settings (model/provider/strict) and registers them in the settings UI.
+  Plugin.addModule(Settings),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,
@@ -34,19 +47,6 @@ export const BrainPlugin = Plugin.define(meta).pipe(
     }),
   ),
   Plugin.addModule(AppCapability.translations(translations)),
-  // Provisions the per-space FactStore LayerSpec + registry; the mailbox `AnalyzeMailbox` operation
-  // (in plugin-inbox) resolves these at invoke time, so BrainPlugin must be loaded wherever analysis
-  // runs.
-  Plugin.addModule(FactStore),
-  // Owns the fact-analysis settings (model/provider/strict) and registers them in the settings UI.
-  Plugin.addModule(Settings),
-  // Injects the `Analyze` action into plugin-inbox's mailbox toolbar menu (fact analysis is owned by
-  // brain); reads the settings atom live at invoke time. Shares the atom with the Settings module.
-  Plugin.addModule(MailboxProcessor),
-  Plugin.addModule(ReplyGenerator),
-  // Contributes the "Mailbox Facts" project template: a scheduled AnalyzeMailbox routine plus
-  // brain-skill chats, scoped to one project.
-  Plugin.addModule(ProjectTemplates),
   Plugin.make,
 );
 

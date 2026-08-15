@@ -15,8 +15,8 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const LibraryPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
-  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({

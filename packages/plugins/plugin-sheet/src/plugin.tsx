@@ -25,19 +25,19 @@ import { meta } from '#meta';
 // in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
 // as `undefined`, which `Plugin.addModule` skips.
 export const SheetPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(SkillDefinition),
-  Plugin.addModule(CommentConfig),
-  Plugin.addModule(CreateObject),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(UndoMappings),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(Translations),
-  Plugin.addModule(SheetState),
-  Plugin.addModule(ComputeGraphRegistry),
-  Plugin.addModule(Markdown),
   Plugin.addModule(AnchorSort),
+  Plugin.addModule(CommentConfig),
+  Plugin.addModule(ComputeGraphRegistry),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(Markdown),
+  Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SheetState),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Translations),
+  Plugin.addModule(UndoMappings),
   Plugin.make,
 );
 

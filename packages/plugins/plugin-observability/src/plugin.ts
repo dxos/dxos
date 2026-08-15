@@ -31,12 +31,15 @@ import { ObservabilityCapabilities, ObservabilityOptions } from '#types';
 // stub it — leaving it here is a no-op under any host that never wires `downloadLogs`, exactly
 // matching the node/workerd variants that never contributed it.
 export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.ObservabilityPluginOptions>(meta).pipe(
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(Translations),
+  Plugin.addModule(ClientReady),
+  Plugin.addModule(Namespace),
   Plugin.addModule(Observability),
   Plugin.addModule(ObservabilitySettings),
   Plugin.addModule(ObservabilityState),
-  Plugin.addModule(Namespace),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PrivacyNotice),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Translations),
   Plugin.addModule(({ downloadLogs }: ObservabilityOptions.ObservabilityPluginOptions) => ({
     id: 'log-downloader',
     requires: [],
@@ -48,9 +51,6 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.Observabil
           : [],
       ),
   })),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(PrivacyNotice),
-  Plugin.addModule(ClientReady),
   Plugin.make,
 );
 

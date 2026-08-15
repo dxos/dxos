@@ -27,15 +27,15 @@ export type SupportPluginOptions = { helpSteps?: Tour.Step[] };
 
 export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(HelpState),
+  Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactRoot),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(SupportSettings),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

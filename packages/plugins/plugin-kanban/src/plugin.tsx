@@ -20,14 +20,14 @@ import { meta } from '#meta';
 // in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
 // as `undefined`, which `Plugin.addModule` skips.
 export const KanbanPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(UndoMappings),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(Translations),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Translations),
+  Plugin.addModule(UndoMappings),
   Plugin.make,
 );
 

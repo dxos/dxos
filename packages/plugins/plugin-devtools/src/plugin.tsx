@@ -12,11 +12,11 @@ import { meta } from '#meta';
 // as `undefined`, which `Plugin.addModule` skips.
 export const DevtoolsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(PluginAsset),
   Plugin.addModule(ReactContext),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(Translations),
   Plugin.addModule(SetupDevtools),
-  Plugin.addModule(PluginAsset),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

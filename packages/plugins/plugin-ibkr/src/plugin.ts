@@ -22,13 +22,13 @@ import { meta } from './meta';
 
 export const IbkrPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(Schema),
+  Plugin.addModule(Connector),
   Plugin.addModule(CreateObject),
-  Plugin.addModule(SkillDefinition),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(Connector),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

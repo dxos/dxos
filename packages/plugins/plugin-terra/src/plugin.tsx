@@ -14,9 +14,9 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TerraPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
-  Plugin.addModule(Schema),
   Plugin.addModule(PlanetCache),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({

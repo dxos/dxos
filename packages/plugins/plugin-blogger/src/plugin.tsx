@@ -13,6 +13,10 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BloggerPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
   Plugin.addModule(
     AppCapability.pluginAsset({
@@ -23,10 +27,6 @@ export const BloggerPlugin = Plugin.define(meta).pipe(
     }),
   ),
   Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(CreateObject),
-  Plugin.addModule(AppGraphBuilder),
   Plugin.make,
 );
 

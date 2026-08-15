@@ -12,10 +12,10 @@ import { meta } from '#meta';
 // as `undefined`, which `Plugin.addModule` skips.
 export const ChessPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(GameVariant),
-  Plugin.addModule(SkillDefinition),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
   Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(Translations),
   Plugin.make,
 );

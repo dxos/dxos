@@ -23,14 +23,14 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CodePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(BuildRunState),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
   Plugin.addModule(SettingsCapability),
-  Plugin.addModule(ReactSurface),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(BuildRunState),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

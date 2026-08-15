@@ -28,19 +28,19 @@ import { translations } from '#translations';
 // as `undefined`, which `Plugin.addModule` skips.
 export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(SkillDefinition),
-  Plugin.addModule(CreateObject),
-  Plugin.addModule(NavigationTargetResolver),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(Schema),
-  Plugin.addModule(IdentitySpecs),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(InboxSettings),
   Plugin.addModule(AutomationTemplates),
   Plugin.addModule(ContactExtractor),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(IdentitySpecs),
+  Plugin.addModule(InboxSettings),
   Plugin.addModule(MailboxProcessors),
+  Plugin.addModule(NavigationTargetResolver),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(SummarizeExtractor),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

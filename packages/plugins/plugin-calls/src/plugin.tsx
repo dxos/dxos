@@ -20,12 +20,12 @@ import { meta } from '#meta';
 // as `undefined`, which `Plugin.addModule` skips.
 export const CallsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(ReactRoot),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(Translations),
   Plugin.addModule(CallManager),
   Plugin.addModule(CallTransport),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactRoot),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

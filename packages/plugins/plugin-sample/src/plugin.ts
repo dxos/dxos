@@ -38,21 +38,21 @@ export const SamplePlugin = Plugin.define(meta).pipe(
   // Registers operation handlers.
   Plugin.addModule(OperationHandler),
 
-  // Registers ECHO schemas so the framework knows about this type.
-  // Required for queries, serialization, and type resolution.
-  Plugin.addModule(Schema),
-
-  // Registers the settings module.
-  Plugin.addModule(SampleSettings),
+  // Finalizes the plugin. Must be the last call in the chain.
+  Plugin.addModule(PluginAsset),
 
   // Registers React surface contributions.
   Plugin.addModule(ReactSurface),
 
+  // Registers the settings module.
+  Plugin.addModule(SampleSettings),
+
+  // Registers ECHO schemas so the framework knows about this type.
+  // Required for queries, serialization, and type resolution.
+  Plugin.addModule(Schema),
+
   // Registers i18n translations.
   Plugin.addModule(Translations),
-
-  // Finalizes the plugin. Must be the last call in the chain.
-  Plugin.addModule(PluginAsset),
   Plugin.make,
 );
 

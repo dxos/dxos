@@ -25,11 +25,11 @@ export const MagazinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(RoutineTemplates),
   Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
-  Plugin.addModule(ReactSurface),
   Plugin.addModule(Translations),
-  Plugin.addModule(RoutineTemplates),
   Plugin.make,
 );
 

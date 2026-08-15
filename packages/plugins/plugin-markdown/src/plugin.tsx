@@ -24,18 +24,18 @@ import { meta } from '#meta';
 // in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
 // as `undefined`, which `Plugin.addModule` skips.
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(AnchorResolver),
+  Plugin.addModule(AnchorSort),
   Plugin.addModule(CommentConfig),
   Plugin.addModule(CreateObject),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(UndoMappings),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(Translations),
   Plugin.addModule(MarkdownSettings),
   Plugin.addModule(MarkdownState),
-  Plugin.addModule(AnchorSort),
-  Plugin.addModule(AnchorResolver),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Translations),
+  Plugin.addModule(UndoMappings),
   Plugin.make,
 );
 

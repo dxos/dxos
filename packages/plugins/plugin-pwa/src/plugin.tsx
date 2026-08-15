@@ -149,9 +149,9 @@ const UpdateProgress = Capability.inlineModule(
 );
 
 export const PwaPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(RegisterPwa),
   Plugin.addModule(UpdateProgress),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

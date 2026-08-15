@@ -13,8 +13,8 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const StackPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({

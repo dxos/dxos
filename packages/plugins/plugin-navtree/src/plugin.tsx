@@ -14,12 +14,12 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(State),
   Plugin.addModule(Expose),
   Plugin.addModule(Keyboard),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(State),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

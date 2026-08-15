@@ -14,10 +14,10 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpotlightPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(State),
-  Plugin.addModule(SpotlightDismiss),
   Plugin.addModule(ReactRoot),
+  Plugin.addModule(SpotlightDismiss),
+  Plugin.addModule(State),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

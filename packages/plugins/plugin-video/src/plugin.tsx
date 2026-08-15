@@ -17,8 +17,8 @@ export const VideoPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CommentConfig),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({

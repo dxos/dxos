@@ -90,6 +90,40 @@ export const topLevelExportConsts = (sourceFile: SourceFile): ExportConst[] => {
   return out;
 };
 
+export type LocalDeclaration = {
+  name: string;
+  text: string;
+};
+
+/**
+ * Top-level declarations a file keeps to itself — `const` and `function` without `export`. A kept
+ * module statement can reference one (a helper the barrel author factored out), and it has to
+ * travel with the statement or the generated barrel will not compile.
+ */
+export const topLevelLocalDeclarations = (sourceFile: SourceFile): LocalDeclaration[] => {
+  const out: LocalDeclaration[] = [];
+  const exported = (stmt: Statement): boolean =>
+    (ts.canHaveModifiers(stmt) ? ts.getModifiers(stmt) : undefined)?.some(
+      (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+    ) ?? false;
+
+  for (const stmt of sourceFile.statements) {
+    if (exported(stmt)) {
+      continue;
+    }
+    if (ts.isVariableStatement(stmt)) {
+      for (const decl of stmt.declarationList.declarations) {
+        if (ts.isIdentifier(decl.name)) {
+          out.push({ name: decl.name.text, text: statementTextWithLeadingComments(sourceFile, stmt) });
+        }
+      }
+    } else if (ts.isFunctionDeclaration(stmt) && stmt.name) {
+      out.push({ name: stmt.name.text, text: statementTextWithLeadingComments(sourceFile, stmt) });
+    }
+  }
+  return out;
+};
+
 export type ExportDeclarationEntry =
   | { kind: 'star'; moduleSpecifier: string | null }
   | { kind: 'named'; isTypeOnly: boolean; localName: string; exportedName: string; moduleSpecifier: string | null };

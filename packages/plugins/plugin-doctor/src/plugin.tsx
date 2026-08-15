@@ -14,10 +14,10 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const DoctorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(DiagnosticProviders),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(DiagnosticProviders),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({

@@ -42,19 +42,21 @@ export type ReviewPluginOptions = {
 // in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
 // as `undefined`, which `Plugin.addModule` skips.
 export const ReviewPlugin = Plugin.define<ReviewPluginOptions>(meta).pipe(
+  Plugin.addModule(AgentIdentityModule),
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(HistoryGraph),
-  Plugin.addModule(SkillDefinition),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(UndoMappings),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(HistorySurface),
-  Plugin.addModule(Translations),
   Plugin.addModule(CommentState),
-  Plugin.addModule(ReviewState),
-  Plugin.addModule(MarkdownBinding),
+  Plugin.addModule(HistoryGraph),
+  Plugin.addModule(HistorySurface),
   Plugin.addModule(Markdown),
+  Plugin.addModule(MarkdownBinding),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(ReviewState),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Translations),
+  Plugin.addModule(UndoMappings),
   // Default comment-thread agent runner (one-shot LLM call per scheduled turn). `AgentRunner`
   // is a singleton capability, so a test/storybook host that wants a stub runner passes
   // `agentRunner` in `ReviewPluginOptions` instead of contributing a second provider.
@@ -79,8 +81,6 @@ export const ReviewPlugin = Plugin.define<ReviewPluginOptions>(meta).pipe(
         }
       : { id: 'agent-runner-unavailable', provides: [], activate: () => Effect.succeed([]) };
   }),
-  Plugin.addModule(AgentIdentityModule),
-  Plugin.addModule(PluginAsset),
   Plugin.make,
 );
 

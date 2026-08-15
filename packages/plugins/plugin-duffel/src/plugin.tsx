@@ -10,8 +10,8 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const DuffelPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(Duffel),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

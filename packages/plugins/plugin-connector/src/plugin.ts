@@ -24,19 +24,19 @@ import { meta } from '#meta';
 // as `undefined`, which `Plugin.addModule` skips.
 export const ConnectorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(CreateObject),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(Translations),
   Plugin.addModule(BuiltinConnectors),
-  Plugin.addModule(Coordinator),
-  Plugin.addModule(OAuthRedirect),
   // Previously wired only into the node entry; included here too because the command graph is
   // demand-gated on `CommandsRequested`, fired both by the `dx` CLI at boot and by browser hosts
   // when the devtools terminal opens — omitting it from browser was a gap, not a deliberate scope.
   Plugin.addModule(Commands),
+  Plugin.addModule(Coordinator),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OAuthRedirect),
+  Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

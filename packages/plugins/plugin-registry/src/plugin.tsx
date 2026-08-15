@@ -20,15 +20,15 @@ import { meta } from '#meta';
 // as `undefined`, which `Plugin.addModule` skips.
 export const RegistryPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(RegistrySettings),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(Translations),
-  Plugin.addModule(DevPluginLoader),
   // Previously wired only into the node entry; included here too because the command graph is
   // demand-gated on `CommandsRequested`, fired both by the `dx` CLI at boot and by browser hosts
   // when the devtools terminal opens — omitting it from browser was a gap, not a deliberate scope.
   Plugin.addModule(Commands),
+  Plugin.addModule(DevPluginLoader),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(RegistrySettings),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

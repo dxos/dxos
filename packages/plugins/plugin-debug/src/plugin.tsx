@@ -22,11 +22,11 @@ import { Debug } from '#types';
 export const DebugPlugin = Plugin.define<Debug.DebugPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(DebugSettings),
-  Plugin.addModule(ReactSurface),
   Plugin.addModule(LogRecording),
-  Plugin.addModule(Translations),
-  Plugin.addModule(StatsPanel),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(StatsPanel),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

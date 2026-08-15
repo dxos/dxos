@@ -24,16 +24,16 @@ import { meta } from '#meta';
 // as `undefined`, which `Plugin.addModule` skips.
 export const MapPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
   Plugin.addModule(MapSettings),
-  Plugin.addModule(Translations),
-  Plugin.addModule(MarkerProvider),
   Plugin.addModule(MapState),
+  Plugin.addModule(MarkerProvider),
+  Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

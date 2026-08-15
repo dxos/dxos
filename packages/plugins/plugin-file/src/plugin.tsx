@@ -24,18 +24,18 @@ import { meta } from '#meta';
 // in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
 // as `undefined`, which `Plugin.addModule` skips.
 export const FilePlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
+  Plugin.addModule(EdgeBackend),
+  Plugin.addModule(FileUploader),
+  Plugin.addModule(InlineBackend),
+  Plugin.addModule(Markdown),
   Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
   Plugin.addModule(Settings),
-  Plugin.addModule(ReactSurface),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(Translations),
-  Plugin.addModule(InlineBackend),
-  Plugin.addModule(FileUploader),
-  Plugin.addModule(EdgeBackend),
-  Plugin.addModule(Markdown),
-  Plugin.addModule(PluginAsset),
   Plugin.make,
 );
 

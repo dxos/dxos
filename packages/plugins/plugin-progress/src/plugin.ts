@@ -11,8 +11,8 @@ import { translations } from '#translations';
 
 export const ProgressPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(ProgressRegistry),
-  Plugin.addModule(TraceProgressSink),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(TraceProgressSink),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );

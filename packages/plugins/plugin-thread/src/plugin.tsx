@@ -23,15 +23,15 @@ import { meta } from '#meta';
 // as `undefined`, which `Plugin.addModule` skips.
 export const ThreadPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(CreateObject),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(Translations),
   // Default local-feed channel backend. Other plugins contribute additional
   // `ChannelBackend` providers (e.g. ATProto) earlier in plugin order.
   Plugin.addModule(ChannelBackendFeed),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

@@ -11,10 +11,10 @@ import { meta } from '#meta';
 // in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
 // as `undefined`, which `Plugin.addModule` skips.
 export const WnfsPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(Translations),
-  Plugin.addModule(Dependencies),
   Plugin.addModule(BlobBackend),
+  Plugin.addModule(Dependencies),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

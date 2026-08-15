@@ -13,6 +13,8 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TypefullyPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(Connector),
+  Plugin.addModule(PublisherService),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({
@@ -22,8 +24,6 @@ export const TypefullyPlugin = Plugin.define(meta).pipe(
       mimeType: 'application/x-mdl',
     }),
   ),
-  Plugin.addModule(Connector),
-  Plugin.addModule(PublisherService),
   Plugin.make,
 );
 

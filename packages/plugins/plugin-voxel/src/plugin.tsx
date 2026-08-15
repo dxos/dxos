@@ -14,8 +14,8 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const VoxelPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
-  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(

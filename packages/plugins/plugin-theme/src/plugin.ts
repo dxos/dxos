@@ -26,8 +26,8 @@ const Settings = AppCapability.settings(() => import('./settings'), {
 });
 
 export const ThemePlugin = Plugin.define<ThemePluginOptions>(meta).pipe(
-  Plugin.addModule(Settings),
   Plugin.addModule(ReactContext),
+  Plugin.addModule(Settings),
   Plugin.addModule(Translator),
   Plugin.make,
 );

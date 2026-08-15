@@ -15,10 +15,10 @@ import { translations } from '#translations';
  * against belong to `@dxos/plugin-inbox`.
  */
 export const JmapPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(Connector),
   Plugin.addModule(MailSend),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 
