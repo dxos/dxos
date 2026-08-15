@@ -216,9 +216,10 @@ The whole of plugin management, at Composer parity — not just the `add` verb. 
   flow that §2.3's import boundary makes meaningful.
 - **A real default set, and a CLI-owned core set.** `getDefaults()` becomes config-driven the way
   composer-app's is (it already receives `isDev` / `isLabs` / `isStrict` and ignores them), and the
-  core set moves from each plugin's `system` tag to something `createCliApp` supplies — the manager
-  takes core as a constructor input, so the CLI is free to decide that a plugin Composer pins is
-  merely default-enabled here.
+  core set moves from each plugin's `system` tag to something `createCliApp` supplies, so the CLI
+  can decide that a plugin Composer pins is merely default-enabled here. That last part is an
+  app-framework change, not a CLI one: `ManagerOptions` exposes no `core` field, so the manager
+  computes the set in its constructor from `meta.profile.tags` and no host can override it.
 - **`remove` is not `disable`.** `remove <id>` drops the record and deletes assets; on a compiled-in
   plugin it must fail pointing at `disable`, mirroring the core check `disable.ts` already has.
   Aliases: `install` → `add`, `uninstall` → `remove`.

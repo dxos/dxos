@@ -88,9 +88,11 @@ reads as though disabling does not exist. DESIGN §2.3.
 
 - [ ] **CLI-owned core set** — core is derived from each plugin's own `tags: ['system']` in its
       `dx.config.ts`, so `dx` inherits Composer's judgment wholesale (`observability` and
-      `connector` are non-disableable here because they are there). `PluginManager` accepts core as
-      a constructor input rather than deriving it, so `createCliApp` can supply a CLI set. Decide
-      which of the seven genuinely cannot be turned off in a CLI.
+      `connector` are non-disableable here because they are there). `ManagerOptions` has no `core`
+      field — the manager computes it in its constructor from the tag — so letting a host decide is
+      an app-framework change (add `core?: string[]`, falling back to the tag derivation) before
+      `createCliApp` can supply a CLI set. Decide which of the seven genuinely cannot be turned off
+      in a CLI.
 - [ ] **Real default set** — `getDefaults()` is a fixed 4-element list that takes no arguments,
       while the CLI's `PluginConfig` already declares `isDev` / `isLabs` / `isStrict` and
       composer-app's equivalent branches on exactly those. Make it an editorial choice about which
@@ -148,7 +150,7 @@ reads as though disabling does not exist. DESIGN §2.3.
       plugin over HTTP. Registers from a directory marked dev, persisted per profile like
       `devPluginUrl`. Reuse the manager's existing shadowing (`PluginCatalog.#devPlugins` records
       the displaced plugin and `wasEnabled`, restores on remove) so `link ./packages/plugins/
-    plugin-markdown` tests the working copy rather than the compiled-in one. No manifest needed —
+  plugin-markdown` tests the working copy rather than the compiled-in one. No manifest needed —
       every in-repo plugin's meta already comes from its `dx.config.ts`, the same `Config2.Plugin`
       shape a published manifest carries. DESIGN §2.5.
 - [ ] **Measure: can a compiled `dx` binary import on-disk TypeScript at runtime?** §2.1 measured
