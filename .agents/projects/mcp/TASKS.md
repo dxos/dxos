@@ -53,6 +53,34 @@ changes what a model sees lives in the shared package or it is a bug.
       Contributed as annotated operations they would project through `@dxos/mcp-server` like the
       project and task verbs. The object tools are the easy half — both hosts already only wrap
       `database.*` operations, differing in the invoke seam alone.
+
+  The object group goes to **plugin-space**, whose verbs mirror the ECHO API (`Database.add` /
+  `Database.remove` → `addObject` / `removeObjects`); `database.objectCreate` / `objectDelete`
+  retire into them. Two blockers, not one: a declared service the handler never resolves, and an
+  input/output shape carrying live objects or UI coordinates. Phases (PR #12616):
+
+  - [x] **Phase 0** — 15 spurious `Capability.Service` declarations dropped from `SpaceOperation`.
+        Declared services resolve eagerly (`ServiceResolver.resolveAll(...).pipe(Effect.orDie)`), so
+        a spurious one dies on a host that cannot supply it. `Join` keeps its declaration:
+        `HaloServicesLayer` requires it.
+  - [x] **Phase 1** — `Capabilities.getAtomValueOption` / `updateAtomValueOption`. A headless host
+        _has_ a capability manager; what it lacks is the app's UI capabilities. `removeObjects` now
+        reads the layout optionally (unlinks and deletes headlessly; plank-closing and the undo
+        record stay in the app), and `migrate` no-ops its progress flag.
+  - [x] **Phase 2a** — `SpaceObjectOperation` leaf module (compute/echo/keys only) with
+        `getObject`, `updateObject`, `queryObjects`. Outputs are named-field objects so a projected
+        tool's `structuredContent` is a JSON object.
+  - [ ] **Phase 2b** — `addObject` accepts a serialized envelope beside a live object (rehydrate via
+        `@type` → registry schema → `Obj.make`, minting an id when absent) and a `Ref(Collection)`
+        target defaulting to the space root; `subject` (a graph path) becomes optional.
+        `removeObjects` accepts refs. `createObject` is deliberately NOT added — a detached object
+        cannot survive between two stateless MCP calls, so `addObject` absorbs both.
+  - [ ] **Phase 3** — `Operation.mcpTool` on the five verbs, `serialize.test.ts`, delete
+        `cli/src/commands/mcp/object-tools.ts`; edge's copy follows on the next `@dxos/*` pin bump.
+  - [ ] **Deferred** — `expandDepth` on the read verbs. Both toolkits advertise it and no operation
+        accepts it, so sending it fails the call today; not advertising it is already an
+        improvement. Implement with ref-walking when it earns its place.
+
 - [ ] **Space visibility factored out** — which spaces a session may target is decided twice and
       differently: the CLI filters `client.spaces` through `AppSpace.isVisibleSpace`, while edge's
       `space-tools.ts` hard-codes its own `SETTINGS_SPACE_TAG` constant plus `withoutHaloSpace` /
