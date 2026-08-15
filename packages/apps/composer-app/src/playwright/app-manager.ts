@@ -464,6 +464,34 @@ export class AppManager {
     await this.page.getByTestId('treeView.appSettings').click();
   }
 
+  /** Opens one plugin's settings panel from the settings workspace tree. */
+  async openPluginSettings(plugin: string): Promise<void> {
+    await this.openSettings();
+    const item = this.page.getByTestId(`settings.${plugin}`);
+    await expect(item).toBeVisible();
+    await item.click();
+  }
+
+  /**
+   * The "use a different plugin set on this device" switch in the registry's settings panel. Absent
+   * until the settings space opens, which is what backs the device-synced settings store.
+   */
+  getPluginScopeToggle(): Locator {
+    return this.page.getByTestId('registrySettings.pluginScope');
+  }
+
+  /**
+   * Detaches this device's plugin set from the account. Leaving is lossless and immediate; only
+   * rejoining prompts, so this path has no confirmation to dismiss.
+   */
+  async usePluginSetForThisDeviceOnly(): Promise<void> {
+    const toggle = this.getPluginScopeToggle();
+    await expect(toggle).toBeVisible();
+    await expect(toggle).not.toBeChecked();
+    await toggle.click();
+    await expect(toggle).toBeChecked();
+  }
+
   async openPluginRegistry(): Promise<void> {
     // Direct-navigate to the registry workspace rather than clicking the
     // pinned tree node. The click path requires the layout/settings

@@ -98,6 +98,7 @@ export default Capability.makeModule(
                     label: meta.profile.name ?? meta.profile.key,
                     icon: meta.profile.icon?.key ?? 'ph--circle--regular',
                     iconHue: meta.profile.icon?.hue,
+                    testId: `settings.${meta.profile.key}`,
                   },
                 }),
               ),
