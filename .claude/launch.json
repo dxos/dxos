@@ -179,6 +179,16 @@
       ],
       "port": 9014,
       "autoPort": false
+    },
+    {
+      "name": "storybook-agent",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && export DX_AGENT_CWD=/Users/burdon/Code/dxos/dxos/.claude/worktrees/boot-loader-animation-86c185/packages/stories/stories-assistant/src/testing/fixtures && pnpm --filter @dxos/storybook-react exec storybook dev --port 9016 --no-open --ci"
+      ],
+      "port": 9016,
+      "autoPort": false
     }
   ]
 }

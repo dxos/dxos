@@ -142,7 +142,32 @@ The clean alternative is reverting `Agent.stories.tsx` to `92c988b1bf` (needs
 burdon's approval — never revert uncommitted work unasked) and re-landing the
 client extraction separately.
 
-## M3 — a turn you can watch (PLANNED, not started)
+## M3 — a turn you can watch (M3a + interactive UI DONE)
+
+**ACHIEVED 2026-08-15: you can talk to the Claude Agent SDK from a UI.**
+`AgentConsole.stories.tsx` — prompt box, streamed transcript, tool calls and
+denials colour-coded, session id, Fork button. Verified by driving it in a real
+`storybook dev` on 9016: a turn read the fixture off disk and answered
+`pelican-42`; a follow-up answered from session memory in 9 tokens with no tool
+calls, same session id (continuation, not restart).
+
+How to run it:
+
+```
+DX_AGENT_CWD=$PWD/packages/stories/stories-assistant/src/testing/fixtures \
+  pnpm --filter @dxos/storybook-react exec storybook dev --port 9016 --no-open
+```
+
+Then open `stories-assistant/AgentConsole`. The `storybook-agent` entry in
+`.claude/launch.json` does the same.
+
+DESIGN NOTE: the console renders projected `ContentBlock`s directly instead of
+going through the assistant's `Chat` surface. That sidesteps M3b entirely — the
+Chat surface reads a processor's in-memory atoms and cannot show an externally
+produced turn. M3b remains open for the case where the turn must appear in the
+REAL chat UI; the console proves the harness end to end without it.
+
+## M3 original plan
 
 Goal: a human opens a UI, triggers a turn, and sees it appear. Split so the
 watchable part does not depend on the unresolved part.

@@ -22646,6 +22646,9 @@ importers:
         specifier: 'catalog:'
         version: 7.29.0
     devDependencies:
+      '@dxos/agent-claude':
+        specifier: workspace:*
+        version: link:../../packages/core/compute/agent-claude
       '@dxos/log':
         specifier: workspace:*
         version: link:../../packages/common/log
