@@ -9,8 +9,6 @@ export default defineConfig({
     'index': 'src/index.ts',
     'MarkdownPlugin': 'src/MarkdownPlugin.ts',
     'plugin': 'src/plugin.tsx',
-    'plugin.node': 'src/plugin.node.ts',
-    'plugin.workerd': 'src/plugin.workerd.ts',
     'skills': 'src/skills/index.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities.workerd': 'src/capabilities/workerd.ts',

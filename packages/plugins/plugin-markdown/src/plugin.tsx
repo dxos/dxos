@@ -3,8 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 
 import {
   AnchorResolver,
@@ -17,11 +15,14 @@ import {
   ReactSurface,
   Schema,
   SkillDefinition,
+  Translations,
   UndoMappings,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
+// Canonical single-entry composition (spike): lists every module once; per-environment filtering
+// happens in the `#capabilities` barrel resolution — headless barrels stub excluded modules as
+// `undefined`, which `Plugin.addModule` skips.
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(CommentConfig),
@@ -30,7 +31,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(UndoMappings),
   Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations([...translations, ...editorTranslations])),
+  Plugin.addModule(Translations),
   Plugin.addModule(MarkdownSettings),
   Plugin.addModule(MarkdownState),
   Plugin.addModule(AnchorSort),

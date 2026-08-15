@@ -7,7 +7,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 
+import { translations } from '#translations';
 import { MarkdownCapabilities } from '#types';
 
 // Ordering-only: registers the anchor text resolver once the app graph exists (mirrors the
@@ -41,4 +43,5 @@ export const MarkdownState = Capability.lazyModule(
   },
   () => import('./state'),
 );
+export const Translations = AppCapability.translations([...translations, ...editorTranslations]);
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'));
