@@ -193,12 +193,12 @@ type ComboboxContentProps = PopoverContentProps & {
 
 const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
   ({ children, resetSelectionOnChange, ...props }, forwardedRef) => {
-    const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
+    const { modalId, multiple } = useComboboxContext(COMBOBOX_CONTENT_NAME);
 
     return (
       <Popover.Content {...composableProps(props, { id: modalId })} ref={forwardedRef}>
         <Popover.Viewport classNames='w-(--radix-popover-trigger-width)'>
-          <Picker.Root id={modalId} resetSelectionOnChange={resetSelectionOnChange}>
+          <Picker.Root id={modalId} multiselectable={multiple} resetSelectionOnChange={resetSelectionOnChange}>
             {children}
           </Picker.Root>
         </Popover.Viewport>
@@ -213,10 +213,17 @@ ComboboxContent.displayName = COMBOBOX_CONTENT_NAME;
 // Trigger — the button that opens the popover.
 //
 
-type ComboboxTriggerProps = ButtonProps;
+type ComboboxTriggerProps = ButtonProps & {
+  /**
+   * Render the caller's own control instead of the default `Button`, receiving the combobox's
+   * trigger props. Use when the surrounding chrome owns the control's metrics — a toolbar's
+   * icon button, say — so the trigger doesn't read as a foreign element in it.
+   */
+  asChild?: boolean;
+};
 
 const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
-  ({ children, onClick, ...props }, forwardedRef) => {
+  ({ children, onClick, asChild, ...props }, forwardedRef) => {
     const { modalId, open, onOpenChange, placeholder, values, displayValue } =
       useComboboxContext(COMBOBOX_TRIGGER_NAME);
     // The Root only knows values, not the labels its items render, so a caller wanting prettier
@@ -230,17 +237,25 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
       [onClick, onOpenChange],
     );
 
+    const triggerProps = {
+      'role': 'combobox' as const,
+      'aria-expanded': open,
+      'aria-controls': modalId,
+      'aria-haspopup': 'dialog' as const,
+      'onClick': handleClick,
+    };
+
+    if (asChild) {
+      return (
+        <Popover.Trigger asChild {...triggerProps} {...props} ref={forwardedRef}>
+          {children}
+        </Popover.Trigger>
+      );
+    }
+
     return (
       <Popover.Trigger asChild>
-        <Button
-          {...props}
-          role='combobox'
-          aria-expanded={open}
-          aria-controls={modalId}
-          aria-haspopup='dialog'
-          onClick={handleClick}
-          ref={forwardedRef}
-        >
+        <Button {...props} {...triggerProps} ref={forwardedRef}>
           {children ?? (
             <>
               <span className={styles.comboboxTriggerText({ class: !summary && 'text-subdued' })}>
@@ -270,7 +285,8 @@ const ComboboxVirtualTrigger = Popover.VirtualTrigger;
 //
 
 type ComboboxInputProps = ThemedClassName<
-  Omit<ComponentPropsWithRef<'input'>, 'value'> & Pick<PickerInputProps, 'value' | 'onValueChange'>
+  Omit<ComponentPropsWithRef<'input'>, 'value'> &
+    Pick<PickerInputProps, 'value' | 'onValueChange' | 'density' | 'elevation' | 'variant'>
 >;
 
 const ComboboxInput = composable<HTMLInputElement, ComboboxInputProps>(({ classNames, ...props }, forwardedRef) => {

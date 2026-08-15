@@ -16,6 +16,8 @@ import { createContext } from '@radix-ui/react-context';
 export type PickerItemContextValue = {
   /** Namespace for item element ids, so `aria-activedescendant` can address them. */
   pickerId: string;
+  /** Whether several options may be chosen at once. See `Picker.Root`. */
+  multiselectable: boolean;
   /** Currently highlighted item value (virtual; not browser focus). */
   selectedValue: string | undefined;
   /** Update the highlighted value (e.g. arrow keys, hover). */

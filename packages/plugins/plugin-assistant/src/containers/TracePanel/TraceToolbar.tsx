@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { Icon, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { Combobox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -36,19 +36,22 @@ export const TraceToolbar = ({ selected, available, onSelectedChange }: TraceToo
   );
 
   return (
-    <Toolbar.Root classNames='justify-end border-be border-subdued-separator'>
+    <Toolbar.Root density='sm' classNames='justify-end border-be border-subdued-separator'>
       <Combobox.Root multiple value={selected} onValueChange={onSelectedChange}>
-        <Combobox.Trigger variant='ghost' aria-label={t('trace-filter.menu')}>
-          <Icon icon='ph--funnel--regular' size={4} />
+        {/* The toolbar owns the control's metrics, so the trigger is one of its own icon buttons. */}
+        <Combobox.Trigger asChild>
+          <Toolbar.IconButton iconOnly variant='ghost' icon='ph--funnel--regular' label={t('trace-filter.menu')} />
         </Combobox.Trigger>
-        {/* Portalled: rendered inline, the popover is clipped by the panel's grid and scroll areas. */}
+        {/* Portalled: rendered inline, the popover is clipped by the panel's grid and scroll areas.
+            The portal also cuts it off from the panel's density, so it carries its own. */}
         <Combobox.Portal>
-          <Combobox.Content>
+          <Combobox.Content align='end' classNames='dx-density-sm'>
             <Combobox.Input
+              autoFocus
+              density='sm'
               placeholder={t('trace-filter.placeholder')}
               value={query}
               onValueChange={setQuery}
-              autoFocus
             />
             <Combobox.List>
               {filtered.map((tag) => (

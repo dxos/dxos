@@ -75,9 +75,15 @@ type PickerRootProps = PropsWithChildren<{
   resetSelectionOnChange?: boolean;
   /** Id namespace for item elements. Generated when omitted. */
   id?: string;
+  /**
+   * Whether several options may be chosen at once. Multi-select rows carry their state in the
+   * trailing check rather than a filled row, so the fill is left to mean "keyboard cursor" — the
+   * two surfaces are too alike to tell apart when a row can be both.
+   */
+  multiselectable?: boolean;
 }>;
 
-const PickerRoot = ({ children, resetSelectionOnChange = false, id }: PickerRootProps) => {
+const PickerRoot = ({ children, resetSelectionOnChange = false, id, multiselectable = false }: PickerRootProps) => {
   const pickerId = useId('Picker', id);
   const [selectedValue, setSelectedValue] = useState<string | undefined>(undefined);
   const itemsRef = useRef<Map<string, ItemData>>(new Map());
@@ -154,12 +160,13 @@ const PickerRoot = ({ children, resetSelectionOnChange = false, id }: PickerRoot
   const itemContextValue = useMemo(
     () => ({
       pickerId,
+      multiselectable,
       selectedValue,
       onSelectedValueChange: setSelectedValue,
       registerItem,
       unregisterItem,
     }),
-    [pickerId, selectedValue, registerItem, unregisterItem],
+    [pickerId, multiselectable, selectedValue, registerItem, unregisterItem],
   );
 
   // Volatile values the input subscribes to (keyboard helpers).
@@ -332,7 +339,7 @@ type PickerItemProps = ThemedClassName<{
 
 const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
   ({ value, onSelect, checked, disabled, asChild, children, ...props }, forwardedRef) => {
-    const { pickerId, selectedValue, onSelectedValueChange, registerItem, unregisterItem } =
+    const { pickerId, multiselectable, selectedValue, onSelectedValueChange, registerItem, unregisterItem } =
       usePickerItemContext('Picker.Item');
     const internalRef = useRef<HTMLDivElement>(null);
 
@@ -371,7 +378,11 @@ const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
     return (
       <Comp
         {...composableProps<HTMLDivElement>(props, {
-          classNames: styles.pickerItem({ class: mx(disabled && 'opacity-50 cursor-not-allowed') }),
+          classNames: styles.pickerItem({
+            // Single-select fills the chosen row: there, chosen and cursor coincide, so the fill is
+            // the whole affordance.
+            class: mx(!multiselectable && 'dx-selected', disabled && 'opacity-50 cursor-not-allowed'),
+          }),
           role: 'option',
         })}
         ref={(node: HTMLDivElement | null) => {
