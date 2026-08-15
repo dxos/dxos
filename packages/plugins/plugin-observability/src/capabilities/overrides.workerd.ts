@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { meta } from '#meta';
 import { ObservabilityOperation } from '#types';
 
+// Workerd-specific implementation spliced into the generated barrel by `dx-plugin gen` in place
+// of the canonical declaration.
 // TODO(wittjosiah): Make observability actually work in a worker. `SendEvent` drops its event here
 //   because neither half of the browser implementation ports to workerd:
 //   1. Transport — `@dxos/observability` is browser-only (posthog-js, @dxos/client, localforage,
@@ -26,18 +26,14 @@ import { ObservabilityOperation } from '#types';
 //      choice; dropping them is the conservative default.
 //   NOTE: The real handler cannot simply be registered here — it resolves the capability with
 //   `Capability.waitFor`, which never settles when nothing contributes it, hanging the invocation.
-export const ObservabilityPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(
-    Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
-      Effect.succeed([
-        Capability.contribute(
-          Capabilities.OperationHandler,
-          OperationHandlerSet.make(Operation.withHandler(ObservabilityOperation.SendEvent, () => Effect.void)),
-        ),
-      ]),
-    ),
-  ),
-  Plugin.make,
+export const OperationHandler = Capability.inlineModule(
+  'OperationHandler',
+  { provides: [Capabilities.OperationHandler] },
+  () =>
+    Effect.succeed([
+      Capability.contribute(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.make(Operation.withHandler(ObservabilityOperation.SendEvent, () => Effect.void)),
+      ),
+    ]),
 );
-
-export default ObservabilityPlugin;
