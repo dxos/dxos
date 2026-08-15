@@ -20,9 +20,16 @@ single canonical entry + generated stub barrels).
 
 ## Phase 2 — generator productization
 
+Decision (Josiah, 2026-08-15): generation runs in the plugin's `prebuild` moon task with
+declared `outputs`; generated barrels are gitignored, not committed. Source-reading
+app/test tasks depend on the prebuild closure of their dependency graph (echo-query
+`prebuild-lezer` is the template). No CI freshness check needed — the task graph owns it.
+
 - [ ] Promote `spikes/generate.mjs` to a real tool (`tools/` package or toolbox command), driven by `environments` annotations instead of the reverse-engineered matrix
 - [ ] Emit headless barrels + stubs with `// GENERATED` headers; overrides splice (escape hatch)
-- [ ] CI freshness check (regenerate + `git diff --exit-code`)
+- [ ] `prebuild` task wiring (tag or per-plugin): `build`/`test` dep on `prebuild`; app serve/test tasks dep on `^:prebuild` closure; gitignore the generated barrel paths
+- [ ] Fresh-clone/non-moon entrypoints: ensure `DX_SOURCE=1` bun and bare vitest/IDE runs have a documented `moon run :prebuild` path (or wrapper-script trigger)
+- [ ] `pkg-lint`: run `import-source-missing` after prebuild or exempt declared prebuild outputs; verify `pack` tarballs include generated barrels
 - [ ] pkg-lint rule: annotations ⇒ matching `#capabilities` conditions exist
 
 ## Phase 3 — migration (mechanical, incremental; spike commits are the template)

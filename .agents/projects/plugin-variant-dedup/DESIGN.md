@@ -165,8 +165,20 @@ statements regardless of `sideEffects` (which is why O2's canonical entry stays 
    "only add a variant the plugin genuinely supports" rule).
 3. **Generator** (productize `spikes/generate.mjs`, e.g. `tools/dx-gen-barrels`): emits
    `capabilities/node.ts` / `capabilities/workerd.ts` (subset + stubs + `// GENERATED`
-   header). CI freshness check (regenerate + `git diff --exit-code`), same pattern as other
-   generated artifacts. If a plugin ever needs a node-only module, generate the browser
+   header). Runs as the plugin's `prebuild` moon task with declared `outputs`, and the
+   generated barrels are **gitignored, not committed** (decision: Josiah, 2026-08-15 —
+   supersedes the earlier committed-files + CI-freshness-check sketch). `build` and `test`
+   depend on `prebuild`, and source-reading app/test tasks depend on the prebuild closure
+   of their dependency graph — the same shape as `echo-query`'s `prebuild-lezer`
+   (`src/parser/gen/*` via task `outputs`), aligned with the direction of apps reading from
+   source rather than depending on full builds. The task graph is the freshness guarantee,
+   so no separate CI check is needed and generated diffs never appear in review.
+   Follow-ups this creates: (a) non-moon entrypoints (bare `vitest`/IDE runners,
+   `DX_SOURCE=1` bun) need the barrels present — run `moon run :prebuild` once on a fresh
+   clone, or have the wrapper scripts trigger it; (b) `pkg-lint`'s `import-source-missing`
+   check must run after prebuild or exempt declared prebuild outputs; (c) `pack` must
+   include the generated barrels in the tarball (pack → build → prebuild should give this
+   for free — verify). If a plugin ever needs a node-only module, generate the browser
    barrel too (canonical index stays authored, all consumed barrels generated); no current
    plugin needs it for browser, but plugin-connector/plugin-registry's node-only `Commands`
    land here.
