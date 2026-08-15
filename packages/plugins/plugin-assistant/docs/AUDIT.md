@@ -331,13 +331,23 @@ document ("island"), with React chrome around it.** One engine, owned by us, rep
 MessageList  (the engine)
 ├── model        readonly Message[]  +  renderMessage(message) => markdown
 ├── virtualizer  dynamic measurement + height cache; we own scroll anchoring
-├── island       one CodeMirror view per visible message (pooled/recycled)
+├── island       ONE PER MESSAGE (decided) — a CodeMirror view, pooled/recycled
 │                extensions: markdown decoration · xmlTags(registry) · optional tail-append
-│                escape hatch: an island may be arbitrary React (email HTML, custom tiles)
+│                a message's blocks render INLINE within its island, not as separate islands
+│                the renderer is GENERALIZED (decided): an island may be arbitrary React
+│                  (email HTML with CID resolution, custom tiles) instead of a document
+├── selection    model-level: (messageId, offset) anchors + copy interception
+├── search       model-level: hits as (messageId, offset, length) → scrollToIndex + decorate
 └── chrome       render-prop per message — avatar, heading, time, menu, star, branch toolbar
 ```
 
 Each of the five scenarios then differs only in `registry` + `chrome` + `renderMessage`.
+
+**Granularity: per message, not per block.** Blocks render inline inside a single message's
+document, which keeps the island aligned with the unit that carries chrome (one avatar, one
+timestamp, one menu per message) and keeps the virtualizer's item count equal to the message count.
+The AI thread renders blocks as separate document regions today; under the engine those regions stay
+regions, they just live in a per-message document rather than a per-thread one.
 
 **What it buys**
 
@@ -361,12 +371,8 @@ Each of the five scenarios then differs only in `registry` + `chrome` + `renderM
    measures in its own phase, so an island that reflows after mount resizes underneath the
    virtualizer. This is the hard part and the most likely source of scroll jumps. Prototype three
    cases: mid-list growth, tail growth during streaming, and restore-scroll-on-remount.
-3. **Selection across messages is lost.** Native selection cannot span separate CodeMirror
-   instances, so "select the conversation and copy" needs an explicit affordance. This is the one
-   real UX regression versus family D and should be an accepted, stated tradeoff.
-4. **Cross-thread find.** CodeMirror search is per-view; thread-wide search becomes a custom pass
-   over the model plus scroll-to-island.
-5. **Minimap coordinates change** from document offsets to (island, offset); `buildMarkers` and
+3. **Selection and search move from CodeMirror to us** — one problem, not two. See §3.3.1.
+4. **Minimap coordinates change** from document offsets to (island, offset); `buildMarkers` and
    `MessageSpan` need rework.
 
 **What already exists to build on**
@@ -379,11 +385,53 @@ Each of the five scenarios then differs only in `registry` + `chrome` + `renderM
   answer to cost 2 in the append case.
 
 **Verdict: right target, spike first.** It is a better destination than "two renderers over one
-model" (§4.2 option 1's assumption), because it collapses the families instead of blessing them. But
-costs 2 and 3 decide whether it works, and neither is knowable from reading code. The spike is small
-— a virtualized list of ~200 markdown islands with one streaming tail — and it gates everything in
-§4 that touches the renderer. Nothing in the port/mock work (§4.3 track A steps 1–2, 4–5) depends on
-the outcome, so the spike can run in parallel.
+model", because it collapses the families instead of blessing them. Cost 2 is the one that decides
+it and is not knowable from reading code. The spike is small — a virtualized list of ~200 markdown
+islands with one streaming tail — and it gates everything in §4 that touches the renderer. Nothing
+in the port/mock work (§4.3 track A steps 1–2, 4–5) depends on the outcome, so the spike can run in
+parallel.
+
+#### 3.3.1 Selection and search
+
+Both are the same problem wearing two hats, and the answer to both is **the model, not the DOM**.
+
+**Why native selection breaks.** Each island is an `EditorView`, and today `readOnly` maps to
+`EditorState.readOnly.of(true)` plus a transaction filter
+([`factories.ts:151`](../../../ui/ui-editor/src/extensions/core/factories.ts)) — it does **not** set
+`EditorView.editable.of(false)`. The DOM stays `contenteditable="true"`, and browsers refuse to
+extend one selection across two contenteditable hosts, so a drag from message 1 into message 3
+collapses into one of them.
+
+**One lever exists.** The engine can set `EditorView.editable.of(false)` on non-focused islands.
+Non-editable CodeMirror is ordinary DOM and native selection spans ordinary DOM freely, so
+cross-island selection works for the read-only case — the common one. Two caveats: an *editable*
+island (draft, edit-in-place) reintroduces a boundary at its edges; and a native copy then yields the
+**rendered** text rather than the markdown source, because `decorateMarkdown` replaces ranges with
+widgets.
+
+**Virtualization defeats the DOM answer regardless.** Unmounted islands are not in the DOM, so Cmd+A
+and long drags cannot reach them whatever the contenteditable state. Any correct implementation has
+to reconstruct from the model.
+
+**So both become model-level operations**, which we can do because the engine owns
+`renderMessage(message) => markdown`:
+
+| | Implementation | Consequence |
+| --- | --- | --- |
+| Copy | track anchor/focus as `(messageId, offset)`; intercept `copy`; slice the model between them | markdown source, includes unmounted messages, DOM-independent |
+| Search | scan the model; hits as `(messageId, offset, length)`; `virtualizer.scrollToIndex` then push a decoration set into that island | reaches unmounted messages **and** content hidden by `viewType` |
+
+**Search is a gain, not a regression.** Only transcription enables CodeMirror search today
+(`createBasicExtensions({ search: true })`); the AI thread does not
+([`MarkdownStream.tsx:303`](../../../ui/react-ui-markdown/src/MarkdownStream/MarkdownStream.tsx)
+passes only `lineWrapping` + `readOnly`), and neither tile renderer has any. Four of five scenarios
+have no thread search at all — model-level search gives it to all five, including over blocks the
+current `viewType` filters out (e.g. reasoning in `normal` view), which no renderer can do today.
+
+**Net cost, stated precisely.** Islands move selection and copy from "free from CodeMirror" to
+"implemented by us over the model" — bounded, unit-testable without a DOM, and strictly more
+capable. The irreducible part is that a browser-native drag-select across the whole thread needs
+both the `editable: false` lever and a copy interceptor to be complete.
 
 ---
 
@@ -403,12 +451,16 @@ plugin-assistant · plugin-thread · plugin-review · plugin-inbox · plugin-tra
                              ChatProcessor port + MockChatProcessor (scripted, no AI)
                              ✗ NO @dxos/assistant (no AiContext) in phase 1
     ↓
-@dxos/react-ui-chat          THE COMPOSER + THE ENGINE + shared contracts:
-   (widened)                 ChatEditor (one composer) · extension packs ($sentinel, /slash,
-                               @mention, references, pendingText) · ChatDialog · ChatStatus
-                             MessageList (§3.3) — virtualized islands, chrome render-prop
+@dxos/react-ui-chat          THE COMPOSER: ChatEditor (one composer) · extension packs
+   (widened)                   ($sentinel, /slash, @mention, references, pendingText) ·
+                               ChatDialog · ChatStatus
+    ↓
+@dxos/react-ui-messages      THE ENGINE + shared contracts (§4.0):
+   (new)                     MessageList (§3.3) — virtualized islands, chrome render-prop,
+                               model-level selection + search (§3.3.1)
                              MessageMetadata / MessageCallbacks / block-renderer contract
-                             deps: react-ui-editor, ui-editor, react-ui-mosaic, echo, types
+                             deps: react-ui-mosaic, react-ui-markdown, react-ui-editor,
+                                   ui-editor, echo, types
     ↑                              ↑                              ↑
 react-ui-thread            plugin-inbox                  react-ui-transcription
   chat + comments chrome     email chrome + HTML island     timestamp chrome + chunk renderer
@@ -417,6 +469,22 @@ react-ui-thread            plugin-inbox                  react-ui-transcription
 Five renderers become **one engine plus five chrome/registry configurations**, over one composer and
 one message model. `react-ui-thread` keeps its scenario-specific chrome and contracts; what it stops
 owning is the stack mechanics.
+
+### 4.0 Where the engine lives — the candidate packages
+
+| #   | Package                          | Holds today                       | `@dxos` deps                          | Consumers                                            | As engine host                                                                             |
+| --- | -------------------------------- | --------------------------------- | ------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 1   | `react-ui-chat`                  | ChatEditor, ChatDialog, ChatStatus | no echo                               | plugin-assistant, composer-crx, 2 stories            | forces `react-ui-thread → react-ui-chat`; "thread depends on chat" reads backwards           |
+| 2   | `react-ui-thread`                | Thread/Message tiles, textbox      | echo, types, **mosaic**, editor        | plugin-thread, plugin-review                         | forces `react-ui-chat → react-ui-thread`; also carries human-chat chrome, so not separable   |
+| 3   | `react-ui-markdown`              | MarkdownStream                     | echo, editor, ui                       | **8** incl. react-ui-components, react-ui-form       | closest in spirit ("a markdown document"), already echo+editor; singular-document, needs mosaic |
+| 4   | `react-ui-mosaic`                | Stack / VirtualStack, dnd          | echo, echo-react, menu, search         | **21**                                               | wrong altitude — a layout primitive; `Message`/`ContentBlock` would pollute 21 consumers     |
+| 5   | `react-ui-transcription`         | TranscriptModel, audio capture     | echo, types, av, pipeline              | plugin-assistant, plugin-transcription               | domain-named for audio; wrong home                                                           |
+| 6   | **new `@dxos/react-ui-messages`** | —                                 | mosaic, editor, markdown, echo, types  | would be: 1, 2, 5, react-ui-assistant, plugin-inbox  | **no backwards edge** — every existing package depends downward into it                      |
+
+**Recommended: 6.** Every existing candidate creates either a backwards edge (1, 2) or pollution (4).
+Fallback is 3 if a new package is unwelcome: the engine really is "many markdown documents", and
+`react-ui-markdown` already has echo + editor + the widest reach — it would gain a `react-ui-mosaic`
+dependency and `Message` awareness.
 
 ### 4.1 What moves, what stays
 
@@ -442,13 +510,18 @@ owning is the stack mechanics.
 - `Chat.Toolbar`, `hooks/useChatProcessor`, `useChatServices`, `useSelectionContext`, `usePresets`,
   `useChatToolbarActions`, `useHomeSuggestions`, `useProcessEphemeralStatus`, `useTraceMessages`
 
-**Moves into `@dxos/react-ui-chat`** (the composer + engine consolidation):
+**Moves into `@dxos/react-ui-chat`** (the composer consolidation):
 
 - `react-ui-thread`'s `command` extension (slash/mention) as a peer of `commands` (sentinel)
+- plugin-inbox's `Editor` and `Message.Textbox` re-based on `ChatEditor`
+
+**New in `@dxos/react-ui-messages`** (the engine, §4.0):
+
+- `MessageList` — seeded from `TranscriptModel`'s model/renderer/diff shape and
+  `Mosaic.VirtualStack`'s virtualizer, replacing `MessageSyncer` and both tile stacks
 - `MessageMetadata` / `MessageCallbacks` / the block-renderer contract — shared vocabulary every
-  renderer imports
-- `MessageList` — the new engine (§3.3), seeded from `TranscriptModel`'s model/renderer/diff shape
-  and `Mosaic.VirtualStack`'s virtualizer, replacing `MessageSyncer` and the two tile stacks
+  renderer imports (moved out of `react-ui-thread`, which keeps its chrome)
+- model-level selection and search (§3.3.1)
 
 The `ChatPrompt` prop surface grows one slot (`actions?: ReactNode` or a render prop) that carries
 `ChatOptions`, `ChatReferences` and `ChatActions` in from the plugin. `SpaceHomePrompt` already
@@ -532,8 +605,9 @@ nothing else. Tracks A and B are independent of its outcome and can start immedi
 0. Build a virtualized list of ~200 markdown islands with one streaming tail and answer, with
    numbers: (a) cost of N `EditorView`s with and without pooling; (b) whether dynamic measurement
    survives mid-list growth, tail growth during streaming, and restore-scroll-on-remount without
-   jumps; (c) what selection/copy across islands should do. _Deliverable: a story plus a paragraph of
-   findings appended to §3.3._
+   jumps — **the gating question**; (c) whether `EditorView.editable.of(false)` does let native
+   selection span adjacent islands in Chrome and Firefox (§3.3.1, open question 5). _Deliverable: a
+   story plus a paragraph of findings appended to §3.3._
 
 **Track A — the mock-processor loop (the immediate goal)**
 
@@ -593,33 +667,38 @@ The two tiers answer different questions and both are needed.
 
 ---
 
-## 5. Open questions
+## 5. Decisions and open questions
 
-1. **Packaging shape** — three packages by role (§4.2 option 1, recommended), or commit directly to
+**Decided**
+
+- **Island granularity: per message.** Blocks render inline within a message's island (§3.3).
+- **The message renderer is generalized** — an island may be an arbitrary React component rather
+  than a markdown document, which is what lets email HTML (sanitized + CID resolution) participate
+  (§3.3).
+- **Selection and search are model-level**, not DOM-level, and search is a net gain rather than a
+  regression (§3.3.1).
+
+**Open**
+
+1. **Engine home** — new `@dxos/react-ui-messages` (§4.0, recommended), or fold it into
+   `react-ui-markdown` to avoid a new package?
+2. **Packaging shape** — three packages by role (§4.2 option 1, recommended), or commit directly to
    the single-package endpoint (option 3)?
-2. **Package name** — `@dxos/react-ui-assistant`, or something narrower like
+3. **Package name** for the assistant layer — `@dxos/react-ui-assistant`, or something narrower like
    `@dxos/react-ui-conversation`?
-3. **Where the engine and contracts live** — `MessageList` + `MessageMetadata` / `MessageCallbacks` /
-   block-renderer contract in `react-ui-chat` (as proposed), or in a dedicated
-   `@dxos/react-ui-messages` that `react-ui-chat`, `react-ui-thread`, `react-ui-transcription` and
-   the plugins all depend on? The latter avoids `react-ui-thread → react-ui-chat`, which reads
-   backwards.
-4. **Island granularity** — one island per `Message`, or per _block_? Per-message is simpler and
-   matches the chrome; per-block would let a long tool result collapse independently, and the AI
-   thread's blocks already render as separate document regions today.
-5. **Non-markdown islands** — email HTML bodies (sanitized + CID image resolution) and any future
-   custom tile cannot be a CodeMirror document. Confirm the engine takes an arbitrary-React escape
-   hatch per island rather than assuming every island is a document.
-6. **Selection across messages** — accept the regression with an explicit copy-thread affordance, or
-   is continuous selection a requirement that would sink the island model?
-7. **`Chat.Toolbar`** — move as presentation with injected `MenuActions`, or leave it in the plugin
+4. **Where the shared contracts live** — `MessageMetadata` / `MessageCallbacks` / block-renderer
+   contract alongside the engine (natural), or separately in `react-ui-chat`?
+5. **`editable: false` for non-focused islands** — adopt it so native selection spans read-only
+   islands (§3.3.1), accepting that a native copy yields rendered text while the copy interceptor
+   yields markdown? Or keep every island editable-shaped and rely solely on the interceptor?
+6. **`Chat.Toolbar`** — move as presentation with injected `MenuActions`, or leave it in the plugin
    entirely? Leaving it means the package's composite story has no toolbar.
-8. **Test-generator split** — does `testing/test-generator.ts` move (it needs a plugin-free half), or
+7. **Test-generator split** — does `testing/test-generator.ts` move (it needs a plugin-free half), or
    does the new package get a fresh Feed-shaped generator and the plugin keeps its own?
-9. **Tree-of-threads scope** — is the model _within_ one Feed (lineage / soft fork, which
+8. **Tree-of-threads scope** — is the model _within_ one Feed (lineage / soft fork, which
    `Feed.history` already supports) settled enough to build, or does the multi-Feed case need a
    design pass first? Multi-Feed changes the component's input from `chat` to a set of feeds, and
    that decision should land before step 4 fixes the composite's props.
-10. **Does the tile chrome need lineage too?** `Feed.history` / `PARENT_KEY` are feed-level, so human
-    channels and email threads could branch as well. If yes, `projectThread` / `resolveRewind` belong
-    in the shared layer rather than in the assistant package.
+9. **Does the tile chrome need lineage too?** `Feed.history` / `PARENT_KEY` are feed-level, so human
+   channels and email threads could branch as well. If yes, `projectThread` / `resolveRewind` belong
+   in the shared layer rather than in the assistant package.
