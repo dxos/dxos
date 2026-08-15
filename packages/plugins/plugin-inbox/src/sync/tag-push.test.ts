@@ -17,12 +17,14 @@ import {
 /** Structural stand-ins for pipeline changes — the observer reads only these fields. */
 const retag = (entityId: string, add: string[], remove: string[]): ObservableChange => ({
   _tag: 'retag',
+  foreignId: `foreign-${entityId}`,
   entityId,
   addTagIds: add,
   removeTagIds: remove,
 });
 const insert = (id: string, tagUris: string[], remoteTagUris?: string[]): ObservableChange => ({
   _tag: 'insert',
+  foreignId: `foreign-${id}`,
   message: { id },
   tagUris,
   ...(remoteTagUris ? { remoteTagUris } : {}),
@@ -63,6 +65,9 @@ describe('createRemoteObserver', () => {
 
     expect(observer.retags.get('m1')).toEqual({ add: [STARRED], remove: [INBOX] });
     expect(observer.inserts.get('m2')).toEqual([INBOX]);
+    // Foreign ids are captured in flight so most pushes resolve without a feed query.
+    expect(observer.foreignIds.get('m1')).toBe('foreign-m1');
+    expect(observer.foreignIds.get('m2')).toBe('foreign-m2');
   });
 
   test('an insert without remoteTagUris treats every tag as provider-derived', ({ expect }) => {

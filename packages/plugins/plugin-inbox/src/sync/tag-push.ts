@@ -57,12 +57,14 @@ export type ObservedRemote = {
 export type ObservableChange =
   | {
       readonly _tag: 'retag';
+      readonly foreignId: string;
       readonly entityId: string;
       readonly addTagIds: readonly string[];
       readonly removeTagIds: readonly string[];
     }
   | {
       readonly _tag: 'insert';
+      readonly foreignId: string;
       readonly message: { readonly id: string };
       readonly tagUris?: readonly string[];
       readonly remoteTagUris?: readonly string[];
@@ -71,6 +73,8 @@ export type ObservableChange =
 
 /** Accumulator the harness feeds from the change stream; see {@link createRemoteObserver}. */
 export type RemoteObserver = ObservedRemote & {
+  /** Message id → provider foreign id for everything this run touched, so most pushes need no query. */
+  readonly foreignIds: ReadonlyMap<string, string>;
   readonly observe: (change: ObservableChange) => void;
 };
 
@@ -85,17 +89,21 @@ export type RemoteObserver = ObservedRemote & {
 export const createRemoteObserver = (): RemoteObserver => {
   const retags = new Map<string, { add: readonly string[]; remove: readonly string[] }>();
   const inserts = new Map<string, readonly string[]>();
+  const foreignIds = new Map<string, string>();
   return {
     retags,
     inserts,
+    foreignIds,
     observe: (change) => {
       switch (change._tag) {
         case 'retag':
           retags.set(change.entityId, { add: change.addTagIds, remove: change.removeTagIds });
+          foreignIds.set(change.entityId, change.foreignId);
           break;
         case 'insert':
           // `message.id` is the object's id before the feed append, which is what the tag index keys by.
           inserts.set(change.message.id, change.remoteTagUris ?? change.tagUris ?? []);
+          foreignIds.set(change.message.id, change.foreignId);
           break;
         default:
           break;
