@@ -4132,6 +4132,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
@@ -4145,9 +4148,6 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/types
     devDependencies:
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(vitest@4.1.10)
@@ -18432,6 +18432,9 @@ importers:
         specifier: ~19.2.7
         version: 19.2.7(react@19.2.7)
     devDependencies:
+      '@dxos/agent-claude':
+        specifier: workspace:*
+        version: link:../../core/compute/agent-claude
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai

@@ -458,7 +458,13 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         storybookScript: 'storybook dev --ci',
         tags: {
           include: ['test'],
-          exclude: ['experimental'],
+          // `manual` mirrors the vitest tag of the same name (vitest.tags.ts) — storybook tags are
+          // not vitest tags, so the opt-in gate has to be repeated here. Stories needing local
+          // services or spending real tokens carry it and stay out of a default run.
+          exclude: [
+            'experimental',
+            ...(['1', 'true'].includes(process.env.DX_RUN_MANUAL_TESTS ?? '') ? [] : ['manual']),
+          ],
         },
       }),
     ],

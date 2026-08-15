@@ -44,6 +44,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-claude": "workspace:*",
     "@dxos/ai": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/echo-client": "workspace:*",

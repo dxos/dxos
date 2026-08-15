@@ -29,13 +29,13 @@
     "@anthropic-ai/claude-agent-sdk": "catalog:",
     "@anthropic-ai/sdk": "catalog:",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/types": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/effect": "workspace:*",
     "@effect/vitest": "catalog:",
     "effect": "catalog:",
     "vitest": "catalog:"
