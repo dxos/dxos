@@ -94,7 +94,8 @@ follow-up work (see [Open decisions](#open-decisions)).
 2. Read `local` and capture `nextHeads = Obj.version(tagIndex).automergeHeads` **at the same
    instant**.
 3. Diff base/local/remote; push the local-only changes to the provider.
-4. On a fully-drained run, persist `nextHeads` beside the delta token.
+4. Persist `nextHeads` beside the delta token — but only if the push fully drained with nothing
+   `pending` (see [What an op's outcome does to the base](#what-an-ops-outcome-does-to-the-base)).
 
 Capturing at step 2 rather than at the end of the run is what keeps the two failure modes from
 appearing:
@@ -220,15 +221,47 @@ interface MailSyncProviderService {
   /**
    * Applies local tag changes at the provider. Absent for a provider with no write path, which
    * degrades the run to pull-only rather than failing it.
+   *
+   * Never fails the run: a provider reports per-op outcomes and the harness decides what that means
+   * for the base. The effect's error channel is reserved for a fault that aborts the whole push
+   * (auth revoked, network down), which is reported as `{ settled: [], pending: <all ops> }`.
    */
-  readonly pushTags?: (ops: readonly TagPushOp[]) => Effect.Effect<void, MailSyncError>;
+  readonly pushTags?: (ops: readonly TagPushOp[]) => Effect.Effect<TagPushResult, MailSyncError>;
 }
+
+type TagPushResult = {
+  /** Ops that reached a terminal state — applied, or permanently rejected. Safe to advance past. */
+  readonly settled: readonly TagPushOp[];
+  /** Ops that failed transiently and must be retried on a later run. */
+  readonly pending: readonly TagPushOp[];
+};
 ```
 
 `TagPushOp` is `{ foreignId, add, remove }` where each entry is a `ProviderTagBinding` (see
 [the mapping section](#pipeline-applied-tags-push-too--and-spam-has-no-mapping-yet)) resolved from
 the reverse label map by the harness — so the diff itself stays provider-agnostic, and a tag whose
 push needs a dedicated endpoint rather than a label write is expressible.
+
+### What an op's outcome does to the base
+
+The split above exists because "the push drained" and "every op succeeded" are different questions,
+and only the first may advance `nextHeads`:
+
+| Outcome                                                                     | Classification | Rationale                                                                                                                                                                            |
+| --------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Applied                                                                     | `settled`      | Local and remote now agree.                                                                                                                                                          |
+| Permanent rejection — message deleted (404), label gone, insufficient scope | `settled`      | No retry can succeed. Advancing past it is the only terminating choice; the local tag stays as the user left it and simply never reaches the provider. Logged at `warn` with the op. |
+| Transient — 429, 5xx, timeout                                               | `pending`      | Retrying is expected to succeed.                                                                                                                                                     |
+
+**`nextHeads` is persisted only when `pending` is empty** (and the cap was not hit). A run with any
+pending op leaves the base where it was and requests `runAgain`, so the whole diff — including the
+ops that did settle — recomputes next run. Re-pushing a settled op is a no-op at both providers, so
+the duplication is the acceptable half of the trade; the alternative, advancing past a transient
+failure, would silently drop the change.
+
+Retry is therefore **between runs, not inside `pushTags`** — no in-effect retry loop, no backoff
+state to own. The operation layer already re-runs, and a bounded per-run push keeps each invocation
+short.
 
 The diff is a pure module — `(base, local, remote, eligible) → { push, pull }` over plain
 `Map<string, Set<string>>` — with no ECHO, no provider and no Effect in it. `eligible` is
@@ -241,10 +274,10 @@ shadow base.
 ### Bounding
 
 Push ops are capped per run (`maxTagOps`) and grouped by identical add/remove sets so Gmail
-`batchModify` carries up to 1000 message ids per call. **`nextHeads` is persisted only when the
-push fully drained**; a truncated push requests `runAgain` and leaves the base where it was, so the
-remainder re-diffs next run. The cost of that rule is that a truncated run re-pushes what it already
-pushed — idempotent at both providers, so it converges.
+`batchModify` carries up to 1000 message ids per call. **`nextHeads` is persisted only when the push
+fully drained and `pending` is empty**; a truncated or partially-failed push requests `runAgain` and
+leaves the base where it was, so the remainder re-diffs next run. The cost of that rule is that such
+a run re-pushes what it already settled — idempotent at both providers, so it converges.
 
 ### First sync
 
@@ -252,15 +285,43 @@ No `savedHeads` → no base → **push nothing**, capture heads, done. Without t
 had been tagged locally before ever being connected would push its entire tag state at the provider
 on first sync.
 
+This is the one case where discarding the local→remote direction is right: there is no evidence any
+of those tags were ever _meant_ for the provider. It is deliberately not the same as losing the base
+later — see below.
+
+### Base-less reconcile (when the saved heads cannot be resolved)
+
+If `Obj.getVersion(tagIndex, savedHeads)` cannot reconstruct the historical value — the replica no
+longer holds the change those heads name, after a compaction, an epoch, or a fresh load on another
+runtime — the run has `local` and `remote` but no base. It must not simply re-baseline and push
+nothing: any tag the user applied since the last successful sync would be silently dropped, with
+nothing left to recover it from.
+
+It also cannot compute the pending diff, which is the very thing the base provides. So the run falls
+back to a **base-less additive reconcile**:
+
+- push every eligible local tag the remote lacks;
+- pull every eligible remote tag the local lacks;
+- **remove nothing, in either direction.**
+
+Without a base, "local has it and remote does not" is ambiguous — a local add or a remote removal —
+so only the additive half is safe. That loses no local change and makes no destructive move; the one
+casualty is that a _removal_ made while the base was unresolvable does not propagate until a real
+diff exists again. Removals recover on the next normal run, because the freshly-captured heads make
+the following diff well-founded.
+
+The run then captures heads as usual, so this is self-healing rather than a state to get stuck in.
+
 ## Failure modes
 
-| Condition                                                            | Behaviour                                                                                                                                                                                                              |
-| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `savedHeads` do not resolve (compaction, epoch, fresh replica)       | `A.view` throws; catch, log, **re-baseline** — capture current heads and push nothing this run. Costs one local change; never pushes a fabricated diff.                                                                |
-| No usable delta token (first tick, or the 404 `clearToken` fallback) | Remote state is unknown. Fetch `labelIds` for the locally-changed messages only — a bounded set — rather than skipping the push and stranding the change.                                                              |
-| Concurrent host + edge runs on one mailbox                           | Both diff the same base and push the same ops. Idempotent at the provider; the later heads write wins. `withMailboxLock` is in-process only and does not cover this — the idempotence is the mitigation, not the lock. |
-| Push succeeds, run dies before heads are persisted                   | Next run recomputes the same diff and re-pushes. Converges.                                                                                                                                                            |
-| Provider rejects one op (message deleted, 404)                       | Log and drop that op; do not fail the run. A deleted message has no tags to reconcile.                                                                                                                                 |
+| Condition                                                                        | Behaviour                                                                                                                                                                                                                                                  |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `savedHeads` do not resolve (compaction, epoch, fresh replica)                   | `Obj.getVersion` cannot reconstruct the historical value and throws; catch, log, and fall back to the [base-less additive reconcile](#base-less-reconcile-when-the-saved-heads-cannot-be-resolved) — never drop the local side, never fabricate a removal. |
+| No usable delta token (first tick, or the 404 `clearToken` fallback)             | Remote state is unknown. Fetch `labelIds` for the locally-changed messages only — a bounded set — rather than skipping the push and stranding the change.                                                                                                  |
+| Concurrent host + edge runs on one mailbox                                       | Both diff the same base and push the same ops. Idempotent at the provider; the later heads write wins. `withMailboxLock` is in-process only and does not cover this — the idempotence is the mitigation, not the lock.                                     |
+| Push succeeds, run dies before heads are persisted                               | Next run recomputes the same diff and re-pushes. Converges.                                                                                                                                                                                                |
+| Provider rejects one op permanently (message deleted, label gone, missing scope) | `settled`; log at `warn` with the op. No retry can succeed, and refusing to advance would block the base forever.                                                                                                                                          |
+| Provider rejects one op transiently (429, 5xx, timeout)                          | `pending`; the base does not advance and the run requests `runAgain`. Retry is between runs, never inside `pushTags`.                                                                                                                                      |
 
 ## Provider work
 
@@ -297,7 +358,8 @@ TDD, in this order. Each layer is a gate for the next.
    `batchModify`. Then the reverse: mutate the mock's label state, sync, assert the local `TagIndex`.
    Then the conflict case, and a crash-between-push-and-heads case asserting convergence.
 3. **Heads-resolution test** — persist heads, mutate, assert `Obj.getVersion` returns the pre-mutation
-   set; and an unresolvable-heads case asserting the re-baseline path pushes nothing.
+   set; and an unresolvable-heads case asserting the base-less reconcile pushes the additive half and
+   emits no removal in either direction.
 4. **Live Gmail test**, env-gated on `GOOGLE_ACCESS_TOKEN` (the gate `sync-e2e.test.ts` already
    uses). Round trip both directions against a real account: change a label through the Gmail API,
    sync, assert local tags; toggle locally, sync, read the label back through the API. This is also

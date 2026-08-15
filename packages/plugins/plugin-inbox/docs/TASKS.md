@@ -573,12 +573,21 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
       `Map<tagUri, { owner }>`, so the caller resolves `Tag.isProviderTag` once and the diff needs no
       notion of tag origin. Table-driven unit tests over the merge matrix, including empty base (first
       sync pushes nothing) and BOTH conflict directions (canonical → local wins, provider → remote).
-- [ ] **Heads on the binding** — persist `nextHeads` beside `Cursor.spec.token`; re-baseline (push
-      nothing) when `A.view` cannot resolve them. Capture the heads AFTER the pull commits and BEFORE
-      the push, which is what avoids both a lost mid-run toggle and re-pushing this run's own pulls.
-- [ ] **`pushTags` hook on `MailSyncProvider`** — optional, so a provider with no write path degrades
-      to pull-only. Harness resolves tag uris → provider label ids from the reverse label map, caps
-      ops per run, and persists heads only on a fully-drained push.
+- [ ] **Heads on the binding** — persist `nextHeads` beside `Cursor.spec.token`. Capture them AFTER
+      the pull commits and BEFORE the push, which is what avoids both a lost mid-run toggle and
+      re-pushing this run's own pulls. When `Obj.getVersion` cannot reconstruct the saved heads, do
+      NOT re-baseline silently — that drops every local change made since the last sync. Fall back to
+      the base-less ADDITIVE reconcile (push what remote lacks, pull what local lacks, remove nothing
+      either way); without a base, "local has it, remote does not" cannot distinguish a local add from
+      a remote removal, so only the additive half is safe. Self-healing: the run captures fresh heads,
+      so the next diff is well-founded and removals resume.
+- [ ] **`pushTags` hook on `MailSyncProviderService`** — optional, so a provider with no write path
+      degrades to pull-only. Returns `{ settled, pending }` rather than void: a PERMANENT rejection
+      (404, label gone, missing scope) is `settled` because no retry can succeed and refusing to
+      advance would block the base forever; a TRANSIENT one (429, 5xx, timeout) is `pending`. Heads
+      persist only when `pending` is empty and the cap was not hit — otherwise `runAgain`, so retry is
+      between runs and `pushTags` owns no backoff state. Harness resolves tag uris → provider bindings
+      from the reverse label map and caps ops per run.
 - [ ] **Gmail write path** — `modifyMessage` + `batchModify` on `GoogleMailApi`, its `Live` layer, and
       `GoogleMailApi.mock` (the mock needs mutable per-message label state so `listHistory` reflects a
       push). Confirm the connector requests the `gmail.modify` scope.
