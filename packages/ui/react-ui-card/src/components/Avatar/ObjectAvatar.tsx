@@ -35,35 +35,17 @@ export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClic
   object: Entity.Unknown | Entity.Snapshot;
   /** Fallback glyph when the object has neither a picture nor a label. */
   fallbackIcon?: string;
-  /**
-   * Where the initials take their hue from.
-   *
-   * `type` (the default) uses the schema's declared hue, so every object of a type looks alike — right
-   * for a list you scan by kind. `label` derives it per object, so two people are told apart at a
-   * glance — right where the object IS the identity. A type declaring `neutral` (as `Person` and
-   * `Organization` both do) renders every instance on the same grey disc under `type`, which is
-   * correct for the glyph and useless for initials; that is the choice this names.
-   */
-  initialsHue?: 'type' | 'label';
 };
 
 /**
- * An object's visual identity, resolved in one place: its picture, else its initials, else its type
- * icon.
+ * An object depicted as itself: its picture, else its initials, else its type glyph.
  *
- * Generic over the object rather than special-cased per type, because every surface showing an
- * object faces the same three-way choice and each was making it separately — a card rendering the
- * bare type glyph next to a Person whose avatar had already been fetched is the visible symptom.
- * `Obj.getLabel` and `Obj.getIcon` already generalize the other two legs; this adds the first.
+ * This is the treatment for objects whose identity IS the point — a person, an organization — so it
+ * is opted into per type through `AppSurface.CardIcon` rather than applied to everything. A
+ * directory of cards is scanned by kind, and giving every object a per-instance disc would trade
+ * that away; the type glyph stays the default.
  */
-export const ObjectAvatar = ({
-  object,
-  variant = 'circle',
-  size = 6,
-  fallbackIcon,
-  initialsHue = 'type',
-  onClick,
-}: ObjectAvatarProps) => {
+export const ObjectAvatar = ({ object, variant = 'circle', size = 6, fallbackIcon, onClick }: ObjectAvatarProps) => {
   const image = getObjectImage(object);
   const label = Obj.getLabel(object as Obj.Unknown);
   const iconAnnotation = Entity.getIcon(object);
@@ -78,8 +60,10 @@ export const ObjectAvatar = ({
 
   return (
     <DxAvatar
-      // Either way the derivation is pure, so one object keeps its colour everywhere it appears.
-      hue={initialsHue === 'label' ? nameToHue(label ?? '') : (iconAnnotation?.hue ?? nameToHue(label ?? ''))}
+      // From the label, not the type: a type declaring one hue (`Person` and `Organization` both
+      // declare `neutral`) would put every instance on the same disc, which is exactly what initials
+      // exist to prevent. The derivation is pure, so one object keeps its colour everywhere.
+      hue={nameToHue(label ?? '')}
       hueVariant='surface'
       variant={variant}
       size={size}

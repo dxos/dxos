@@ -12,9 +12,8 @@ import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
-import { Card, Focus, Panel, useTranslation } from '@dxos/react-ui';
+import { Card, Focus, Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { Selection, useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
-import { ObjectAvatar } from '@dxos/react-ui-card';
 import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -396,10 +395,8 @@ const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) =
       <Card.Root fullWidth classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
         <Card.Header>
           <Card.Block>
-            {/* A type may contribute its own depiction (plugin-preview gives a Person their face);
-                otherwise the object's picture, its initials, then the type glyph. */}
             <CardIconSlot subject={live}>
-              <ObjectAvatar object={live} size={6} fallbackIcon={icon} />
+              <Icon icon={icon} classNames={iconStyles?.text} />
             </CardIconSlot>
           </Card.Block>
           <Card.Title>{label}</Card.Title>
