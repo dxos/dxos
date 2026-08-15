@@ -29,7 +29,7 @@ const DemoChrome = ({ message, index, selected, onSelect, children }: MessageChr
   return (
     <div
       className={mx(
-        'group grid grid-cols-[2rem_1fr] gap-2 px-2 py-2 border-b border-subdued-separator',
+        'group relative grid grid-cols-[2rem_1fr] gap-2 px-2 py-2 border-b border-subdued-separator',
         selected && 'bg-hoverSurface',
       )}
       data-testid='feed.message'
@@ -45,18 +45,22 @@ const DemoChrome = ({ message, index, selected, onSelect, children }: MessageChr
         <Icon icon={role === 'user' ? 'ph--user--regular' : 'ph--sparkle--regular'} size={4} />
       </div>
 
+      {/*
+        Fork / rewind / reply — chrome, not content. Positioned out of flow and toggled by opacity:
+        anything that changes a row's height on hover re-triggers the virtualizer's measurement, and
+        a pointer moving down the list during a scroll then shifts every row below it.
+      */}
+      <div className='absolute right-1 top-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100'>
+        <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size={3} />
+        <IconButton icon='ph--arrow-counter-clockwise--regular' iconOnly label='Rewind' variant='ghost' size={3} />
+        <IconButton icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' size={3} />
+      </div>
+
       <div className='min-is-0'>
         <div className='flex items-center gap-2 text-xs text-description'>
           <span className='font-medium'>{message.sender.name ?? role}</span>
           <span>{time}</span>
           <span className='text-subdued'>#{index}</span>
-          <div className='grow' />
-          {/* Fork / rewind / reply — chrome, not content. */}
-          <div className='hidden group-hover:flex gap-1'>
-            <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size={3} />
-            <IconButton icon='ph--arrow-counter-clockwise--regular' iconOnly label='Rewind' variant='ghost' size={3} />
-            <IconButton icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' size={3} />
-          </div>
         </div>
         {children}
       </div>

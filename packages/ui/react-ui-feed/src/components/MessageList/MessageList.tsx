@@ -47,7 +47,13 @@ export type MessageListProps = {
   controllerRef?: Ref<MessageListController>;
   renderer?: MessageRenderer;
   registry?: XmlWidgetRegistry;
-  /** Chrome wrapper; receives the island as `children`. Defaults to a bare frame. */
+  /**
+   * Chrome wrapper; receives the island as `children`. Defaults to a bare frame.
+   *
+   * Chrome must be layout-stable: a control that changes a row's height on hover or focus
+   * re-triggers measurement, and a pointer travelling down the list mid-scroll then shifts every
+   * row below it. Toggle such affordances with opacity, or take them out of flow.
+   */
   Chrome?: ComponentType<MessageChromeProps>;
   /** Message currently streaming; its island reconciles by delta rather than remounting. */
   streamingId?: string;
