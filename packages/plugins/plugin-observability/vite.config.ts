@@ -8,9 +8,9 @@ export default defineConfig({
   entry: {
     'index': 'src/index.ts',
     'ObservabilityPlugin': 'src/ObservabilityPlugin.ts',
-    'plugin.node': 'src/plugin.node.ts',
-    'plugin.workerd': 'src/plugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
+    'capabilities.workerd': 'src/capabilities/gen/workerd.ts',
+    'capabilities.node': 'src/capabilities/gen/node.ts',
     'containers': 'src/containers/index.ts',
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',

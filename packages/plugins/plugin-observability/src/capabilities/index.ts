@@ -8,6 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
+import { translations } from '#translations';
 import { ObservabilityCapabilities, ObservabilityEvents, ObservabilityOptions } from '#types';
 
 export const ClientReady = Capability.lazyModule(
@@ -64,7 +65,12 @@ export const Observability = Capability.inlineModule(
       return [Capability.contribute(ObservabilityCapabilities.Observability, obs)];
     }),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+// Node/workerd load a stubbed handler via ./overrides.<env>.ts: neither host can send real
+// telemetry (see the overrides files for why), so they register a no-op `SendEvent` handler
+// instead of the browser implementation.
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  environments: ['browser', 'node', 'workerd'],
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
@@ -80,3 +86,4 @@ export const ObservabilityState = Capability.lazyModule(
   },
   () => import('./state'),
 );
+export const Translations = AppCapability.translations(translations);
