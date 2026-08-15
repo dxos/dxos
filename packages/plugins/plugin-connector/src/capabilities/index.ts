@@ -37,7 +37,12 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 });
 export const OAuthRedirect = Capability.lazyModule(
   'OAuthRedirect',
-  { requires: [ConnectorCoordination.ConnectorCoordinator], provides: [], activatesOn: ConnectorEvents.Start },
+  {
+    requires: [ConnectorCoordination.ConnectorCoordinator],
+    provides: [],
+    activatesOn: ConnectorEvents.Start,
+    environments: [],
+  },
   () => import('./oauth-redirect'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {

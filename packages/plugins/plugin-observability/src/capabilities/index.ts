@@ -11,9 +11,13 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations } from '#translations';
 import { ObservabilityCapabilities, ObservabilityEvents, ObservabilityOptions } from '#types';
 
+// Browser-only, with the rest of the observability runtime below: the telemetry pipeline reads
+// browser storage and the user's telemetry preference, neither of which exists headlessly. Both
+// headless variants on main carried only the `OperationHandler` stub, and its overrides still do.
 export const ClientReady = Capability.lazyModule(
   'ClientReady',
   {
+    environments: [],
     requires: [
       Capabilities.PluginManager,
       Capabilities.OperationInvoker,
@@ -31,6 +35,7 @@ export const ClientReady = Capability.lazyModule(
 export const PrivacyNotice = Capability.lazyModule(
   'PrivacyNotice',
   {
+    environments: [],
     requires: [
       Capabilities.OperationInvoker,
       Capabilities.AtomRegistry,
@@ -47,6 +52,7 @@ export const PrivacyNotice = Capability.lazyModule(
 export const Namespace = Capability.inlineModule(
   'namespace',
   {
+    environments: [],
     provides: [ObservabilityCapabilities.Namespace],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.namespace,
   },
@@ -55,6 +61,7 @@ export const Namespace = Capability.inlineModule(
 export const Observability = Capability.inlineModule(
   'observability',
   {
+    environments: [],
     provides: [ObservabilityCapabilities.Observability],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.observability,
   },
@@ -78,6 +85,7 @@ export const ObservabilitySettings = AppCapability.settings(() => import('./sett
 export const ObservabilityState = Capability.lazyModule(
   'ObservabilityState',
   {
+    environments: [],
     requires: [Capabilities.AtomRegistry],
     provides: [ObservabilityCapabilities.State],
     props: ({ namespace }: ObservabilityOptions.ObservabilityPluginOptions) => ({ namespace }),
