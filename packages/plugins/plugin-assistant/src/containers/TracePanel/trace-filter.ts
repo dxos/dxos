@@ -21,34 +21,28 @@ const TAG_ICONS: Record<string, string> = {
 export const tagIcon = (tag: string): string => TAG_ICONS[tag] ?? 'ph--tag--regular';
 
 /**
- * The selection the panel starts from: the tags worth watching, plus `untagged`.
- *
- * The excluded ones are the high-volume, low-signal tags — interface chrome, navigation, and the
- * per-keystroke database traffic behind them. What is left is the work someone watching the system
- * actually wants to see: agentic runs, external sync, and anything touching identity.
- *
- * Untagged is included because a trace outlives the code that wrote it — events recorded before an
- * operation was tagged, or by a definition this build has never seen (an EDGE-deployed script),
- * carry no tags, and silently dropping them would make the panel look broken on existing data.
+ * The selection the panel starts from: agentic runs and external sync — the work someone watching
+ * the system is actually there to see. Everything else (interface chrome, navigation, the
+ * per-keystroke database traffic behind them, and untagged legacy events) starts hidden.
  */
-export const DEFAULT_OPERATION_TAGS: readonly string[] = [
-  OperationTag.Assistant,
-  OperationTag.Connector,
-  OperationTag.Identity,
-  UNTAGGED_OPERATION_TAG,
-];
+export const DEFAULT_OPERATION_TAGS: readonly string[] = [OperationTag.Assistant, OperationTag.Connector];
 
 /**
- * Tags the filter offers: those seen in the trace, plus the common vocabulary and anything
- * currently selected, so the list doesn't reshuffle as a trace grows and a selected tag is always
- * visible (and therefore clearable).
+ * Tags the filter offers: those the trace actually contains, plus anything currently selected so a
+ * selection is always visible and therefore clearable.
  *
- * Ordered by `OperationTag.all` so the list reads consistently regardless of which tags a given
- * trace happens to contain. Tags outside the common vocabulary (a plugin may coin its own) sort
- * after these, alphabetically, and `untagged` sorts last — it is a fallback, not a category.
+ * Deliberately NOT the full `OperationTag` vocabulary. Whether a tag can appear at all depends on
+ * the invocation path, not the tag: an operation reaches the trace feed only when a space is in
+ * scope, so the entire layout/navigation surface — invoked from app chrome with no space — never
+ * records anything. Offering those tags would present a toggle that provably cannot change what is
+ * on screen.
+ *
+ * Ordered by `OperationTag.all` so the list reads consistently as a trace grows. Tags outside the
+ * common vocabulary (a plugin may coin its own) sort after these, alphabetically, and `untagged`
+ * sorts last — it is a fallback, not a category.
  */
 export const availableOperationTags = (traceTags: readonly string[], selected: readonly string[]): string[] => {
-  const tags = new Set([...traceTags, ...selected, ...OperationTag.all, UNTAGGED_OPERATION_TAG]);
+  const tags = new Set([...traceTags, ...selected]);
   const rank = (tag: string): number => {
     if (tag === UNTAGGED_OPERATION_TAG) {
       return OperationTag.all.length + 1;

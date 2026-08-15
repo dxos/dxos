@@ -10,7 +10,12 @@ import * as Trace from '@dxos/compute/Trace';
 import { EntityId } from '@dxos/keys';
 import { renderTimelineAscii } from '@dxos/react-ui-components';
 
-import { UNTAGGED_OPERATION_TAG, buildExecutionGraph, collectOperationTags } from './execution-graph';
+import {
+  type OperationTagScope,
+  UNTAGGED_OPERATION_TAG,
+  buildExecutionGraph,
+  collectOperationTags,
+} from './execution-graph';
 import { collectTraceEvents, withMeta } from './testing';
 
 EntityId.dangerouslyDisableRandomness();
@@ -32,10 +37,30 @@ const operation = (
     }),
   );
 
-const render = (messages: Trace.Message[], operationTags?: readonly string[]) => {
-  const { commits, branches } = buildExecutionGraph({ traceMessages: messages, operationTags });
+const render = (
+  messages: Trace.Message[],
+  operationTags?: readonly string[],
+  operationTagScope?: OperationTagScope,
+) => {
+  const { commits, branches } = buildExecutionGraph({ traceMessages: messages, operationTags, operationTagScope });
   return `\n${renderTimelineAscii(commits, branches)}\n`;
 };
+
+/** An agent run (`assistant`) that issues a `database` subtask. */
+const agentWithDatabaseSubtask = () =>
+  collectTraceEvents(
+    Effect.gen(function* () {
+      yield* withMeta(
+        { pid: 'op-1' },
+        Trace.write(Trace.OperationStart, { key: 'run', name: 'Run', tags: ['assistant'] }),
+      );
+      yield* operation({ pid: 'op-2', parentPid: 'op-1' }, { key: 'query', name: 'Query', tags: ['database'] });
+      yield* withMeta(
+        { pid: 'op-1' },
+        Trace.write(Trace.OperationEnd, { key: 'run', name: 'Run', tags: ['assistant'], outcome: 'success' }),
+      );
+    }),
+  );
 
 describe('collectOperationTags', () => {
   test('collects the tags present in a trace', ({ expect }) => {
@@ -112,22 +137,32 @@ describe('buildExecutionGraph operation tag filter', () => {
   });
 
   test('a hidden tag is shown when it is a subtask of a shown operation', ({ expect }) => {
-    const messages = collectTraceEvents(
-      Effect.gen(function* () {
-        yield* withMeta(
-          { pid: 'op-1' },
-          Trace.write(Trace.OperationStart, { key: 'run', name: 'Run', tags: ['assistant'] }),
-        );
-        yield* operation({ pid: 'op-2', parentPid: 'op-1' }, { key: 'query', name: 'Query', tags: ['database'] });
-        yield* withMeta(
-          { pid: 'op-1' },
-          Trace.write(Trace.OperationEnd, { key: 'run', name: 'Run', tags: ['assistant'], outcome: 'success' }),
-        );
-      }),
-    );
     // `database` is not selected, but the agent's own run is — so what it kicked off comes with it.
-    const filtered = render(messages, ['assistant']);
+    const filtered = render(agentWithDatabaseSubtask(), ['assistant']);
     expect(filtered).toContain('Run');
+    expect(filtered).toContain('Query');
+  });
+
+  test('top-level is the default scope', ({ expect }) => {
+    const messages = agentWithDatabaseSubtask();
+    expect(render(messages, ['assistant'])).toBe(render(messages, ['assistant'], 'top-level'));
+  });
+
+  test('the `all` scope hides a subtask whose tag is not selected', ({ expect }) => {
+    const filtered = render(agentWithDatabaseSubtask(), ['assistant'], 'all');
+    expect(filtered).toContain('Run');
+    expect(filtered).not.toContain('Query');
+  });
+
+  test('the `all` scope keeps a subtask whose tag is selected', ({ expect }) => {
+    const filtered = render(agentWithDatabaseSubtask(), ['assistant', 'database'], 'all');
+    expect(filtered).toContain('Run');
+    expect(filtered).toContain('Query');
+  });
+
+  test('the `all` scope hoists a shown subtask out of a hidden parent', ({ expect }) => {
+    const filtered = render(agentWithDatabaseSubtask(), ['database'], 'all');
+    expect(filtered).not.toContain('Run');
     expect(filtered).toContain('Query');
   });
 

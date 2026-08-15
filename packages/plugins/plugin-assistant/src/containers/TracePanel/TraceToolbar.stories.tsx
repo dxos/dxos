@@ -9,6 +9,7 @@ import * as OperationTag from '@dxos/app-toolkit/OperationTag';
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { type OperationTagScope } from '#execution-graph';
 import { translations } from '#translations';
 
 import { DEFAULT_OPERATION_TAGS, availableOperationTags } from './trace-filter';
@@ -23,6 +24,7 @@ const available = availableOperationTags([...OperationTag.all], DEFAULT_OPERATIO
  */
 const DefaultStory = () => {
   const [selected, setSelected] = useState<readonly string[]>(DEFAULT_OPERATION_TAGS);
+  const [scope, setScope] = useState<OperationTagScope>('top-level');
   const [processTree, setProcessTree] = useState(false);
 
   return (
@@ -32,12 +34,15 @@ const DefaultStory = () => {
           selected={selected}
           available={available}
           onSelectedChange={setSelected}
+          scope={scope}
+          onScopeChange={setScope}
           processTree={processTree}
           onProcessTreeChange={setProcessTree}
         />
       </Panel.Toolbar>
       <Panel.Content classNames='p-2 text-sm text-description'>
         <div>{selected.join(', ') || 'nothing shown'}</div>
+        <div>scope: {scope}</div>
         <div>processes: {String(processTree)}</div>
       </Panel.Content>
     </Panel.Root>
@@ -57,5 +62,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { selected: [], available, onSelectedChange: () => {}, processTree: false, onProcessTreeChange: () => {} },
+  args: {
+    selected: [],
+    available,
+    onSelectedChange: () => {},
+    scope: 'top-level',
+    onScopeChange: () => {},
+    processTree: false,
+    onProcessTreeChange: () => {},
+  },
 };

@@ -11,6 +11,8 @@ import { Provider } from '@dxos/ai';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
+import { OperationTagScope } from '#execution-graph';
+
 // A provider id is an open DXN (third-party providers define their own), validated as a DXN rather
 // than restricted to a closed literal union. The known providers come from the @dxos/ai registry.
 export const ModelProvider = DXN.Schema;
@@ -88,6 +90,13 @@ export const Settings = Schema.Struct({
       title: 'Trace panel operation tags',
       description:
         'Operation tags shown in the trace panel. Unset uses the default selection, which hides layout, navigation, and database chatter.',
+    }),
+  ),
+  traceOperationTagScope: Schema.optional(
+    OperationTagScope.annotate({
+      title: 'Trace panel filter scope',
+      description:
+        'Whether the trace panel tag filter applies to every operation or only to top-level ones, letting whatever a shown operation kicked off come with it.',
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));

@@ -118,15 +118,22 @@ export interface BuildExecutionGraphParams {
    */
   now?: number;
   /**
-   * Operation tags to keep. A top-level operation is kept when it carries at least one; one that
-   * declares none matches {@link UNTAGGED_OPERATION_TAG}. Omit to keep every operation.
-   *
-   * Only top-level spans are filtered — whatever a shown span kicked off stays with it, since an
-   * agent's run is not much use with its database calls filtered out of it. Non-operation activity
-   * (agent requests, tool calls, status) is never filtered.
+   * Operation tags to keep. An operation is kept when it carries at least one; one that declares
+   * none matches {@link UNTAGGED_OPERATION_TAG}. Omit to keep every operation. Non-operation
+   * activity (agent requests, tool calls, status) is never filtered.
    */
   operationTags?: readonly string[];
+  /**
+   * How deep {@link operationTags} reaches. Defaults to `top-level`, where whatever a shown
+   * operation kicked off comes with it — an agent's run is not much use with its database calls
+   * filtered out of it. `all` applies the selection at every depth.
+   */
+  operationTagScope?: OperationTagScope;
 }
+
+/** See {@link BuildExecutionGraphParams.operationTagScope}. */
+export const OperationTagScope = Schema.Literals(['top-level', 'all']);
+export type OperationTagScope = Schema.Schema.Type<typeof OperationTagScope>;
 
 /**
  * Pseudo-tag matching operations that declare no tags — anything predating the tag vocabulary, or
@@ -192,10 +199,12 @@ export const buildExecutionGraph = ({
   spanTimeoutMs,
   now,
   operationTags,
+  operationTagScope = 'top-level',
 }: BuildExecutionGraphParams): ExecutionGraph => {
   const spanTree = applyOperationTagFilter(
     buildSpanTree(traceMessages, { eventLimit, spanTimeoutMs, now }),
     operationTags,
+    operationTagScope,
   );
   const toolCallContext = buildToolCallContext(traceMessages);
   const built = spanTreeToCommits(spanTree, activeProcesses, toolCallContext, collapseCompletedSpans);
@@ -209,10 +218,14 @@ export const buildExecutionGraph = ({
 };
 
 /**
- * Drops top-level operation spans whose tags fall outside the selection, and the stray boundary
- * events of such operations that never formed a span (an end whose begin was never recorded).
+ * Drops operation spans whose tags fall outside the selection, and the stray boundary events of
+ * such operations that never formed a span (an end whose begin was never recorded).
  */
-const applyOperationTagFilter = (root: Span, operationTags: readonly string[] | undefined): Span => {
+const applyOperationTagFilter = (
+  root: Span,
+  operationTags: readonly string[] | undefined,
+  scope: OperationTagScope,
+): Span => {
   if (operationTags === undefined) {
     return root;
   }
@@ -224,7 +237,7 @@ const applyOperationTagFilter = (root: Span, operationTags: readonly string[] | 
     return tags === undefined || tags.some((tag) => selected.has(tag));
   };
 
-  const filtered = filterSpanTree(root, (span) => matches(span.events[0]));
+  const filtered = filterSpanTree(root, (span) => matches(span.events[0]), { deep: scope === 'all' });
   return { ...filtered, events: filtered.events.filter(matches) };
 };
 
