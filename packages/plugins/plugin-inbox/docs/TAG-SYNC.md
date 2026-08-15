@@ -55,12 +55,36 @@ For every (message, tag) pair over the eligible tag set:
 | unchanged       | changed          | **pull** — the existing retag path          |
 | changed         | unchanged        | **push** — `addLabelIds` / `removeLabelIds` |
 | changed         | changed, same    | converged; nothing                          |
-| changed         | changed, opposed | conflict → **remote wins** (see below)      |
+| changed         | changed, opposed | conflict → resolved by tag origin, below    |
 
-This is `ConnectorSync.mergeField`'s policy at set granularity, deliberately — that function is the
-repo's existing three-way merge for external sync
-([`ConnectorSync.ts:49`](../../../sdk/app-toolkit/src/types/ConnectorSync.ts:49)) and already
-resolves a double-edit remote-wins. Tag sync should not invent a second policy.
+The first four rows are `ConnectorSync.mergeField` at set granularity
+([`ConnectorSync.ts:49`](../../../sdk/app-toolkit/src/types/ConnectorSync.ts:49)), the repo's existing
+three-way merge for external sync.
+
+### Conflict resolution: the owner wins
+
+`mergeField` resolves a double-edit remote-wins unconditionally. Tag sync **diverges on that one
+row**, because unlike an arbitrary connector field, a tag already has a declared owner:
+
+| Tag origin                                     | Winner     | Why                                                                                                                           |
+| ---------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| canonical (`org.dxos.tag`) — starred, inbox, … | **local**  | Applied and removed locally by design; a star or an archive the user just performed is a recent, explicit, user-authored act. |
+| provider (`com.google.gmail.label`)            | **remote** | Read-only in the app; sync owns both the tag and its membership, so there is no local act to defend.                          |
+
+This is not a second policy invented for tags — it is
+[`Tag.md`](../../../core/echo/echo/src/Tag.md) §"Tag origin" applied to the conflict case. That table
+already says who may change what: canonical tags stay locally toggleable (rule 2), foreign provider
+tags are sync's to decide (rule 1). Resolving a conflict any other way would contradict the ownership
+model the rest of the tag system is built on — remote-wins on a canonical tag means the app reverts a
+toggle it told the user was theirs.
+
+The predicate is the existing `Tag.isProviderTag(tag)`, so no new classification is introduced.
+
+The residual cost, stated plainly: a star removed on another device is resurrected by an unsynced
+local star, because "both changed" cannot distinguish which act was later. Bounded by one sync
+interval, and the alternative — reverting a toggle the user just made in front of them — is the worse
+of the two surprises. Timestamped last-writer-wins would resolve it properly and is tracked as
+follow-up work (see [Open decisions](#open-decisions)).
 
 ### Ordering within a run
 
@@ -207,9 +231,12 @@ the reverse label map by the harness — so the diff itself stays provider-agnos
 push needs a dedicated endpoint rather than a label write is expressible.
 
 The diff is a pure module — `(base, local, remote, eligible) → { push, pull }` over plain
-`Map<string, Set<string>>` — with no ECHO, no provider and no Effect in it. That is what makes it
-unit-testable without a database, reusable by any container owning a `TagIndex` (Calendar's starred
-events), and swappable onto a shadow base.
+`Map<string, Set<string>>` — with no ECHO, no provider and no Effect in it. `eligible` is
+`Map<tagUri, { owner: 'local' | 'remote' }>` rather than a bare set: it carries both which tags
+participate and who wins a conflict on each, so the caller resolves `Tag.isProviderTag` once and the
+diff itself needs no notion of tag origin. That is what makes it unit-testable without a database,
+reusable by any container owning a `TagIndex` (Calendar's starred events), and swappable onto a
+shadow base.
 
 ### Bounding
 
@@ -262,8 +289,9 @@ operation, and `TRASH` stays absent from the label map.
 TDD, in this order. Each layer is a gate for the next.
 
 1. **Pure diff unit tests** — no database, no provider. Table-driven over the merge matrix above:
-   local-only add, local-only remove, remote-only add/remove, converged double-add, opposed
-   conflict, ineligible tag ignored, empty base (first sync) pushes nothing.
+   local-only add, local-only remove, remote-only add/remove, converged double-add, opposed conflict
+   on a canonical tag (local wins), opposed conflict on a provider tag (remote wins), ineligible tag
+   ignored, empty base (first sync) pushes nothing.
 2. **Mock-provider sync tests** (`sync.test.ts` alongside the existing suite) — seed a mailbox via
    `seedGmailBinding`, sync, toggle a tag locally, sync again, assert the mock recorded the expected
    `batchModify`. Then the reverse: mutate the mock's label state, sync, assert the local `TagIndex`.
@@ -283,9 +311,17 @@ TDD, in this order. Each layer is a gate for the next.
    `spam` has no Gmail mapping today and `GMAIL_SYSTEM_TAGS` documents `SPAM` as never synced, so
    adding it is a deliberate bidirectional change — see
    [the mapping section](#pipeline-applied-tags-push-too--and-spam-has-no-mapping-yet).
-2. **Conflict policy** — remote-wins is assumed above for consistency with `ConnectorSync.mergeField`.
-   The alternative worth considering is local-wins for canonical toggles specifically, on the grounds
-   that a star the user just applied is a more recent and more explicit act than a delta.
+2. ~~**Conflict policy**~~ **DECIDED 2026-08-15: the owner wins** — local for canonical tags, remote
+   for provider tags, split by `Tag.isProviderTag`. See
+   [Conflict resolution](#conflict-resolution-the-owner-wins).
+
+   **Follow-up: timestamped last-writer-wins.** The chosen rule cannot tell which of two opposed acts
+   happened later, so an unsynced local star resurrects one removed on another device. Real LWW needs
+   a per-entry write time, which `TagIndex` (`Record<tagId, objectId[]>`) does not carry — a schema
+   change plus clock-skew handling between the device and the provider, since the two clocks are not
+   comparable without a server-supplied ordering. Deliberately out of the first cut; revisit if the
+   resurrection case is observed in practice rather than pre-emptively.
+
 3. **JMAP in this change or a follow-up** — assumed follow-up.
 4. **Live-test account** — which Gmail account the gated test runs against, and whether the token
    carries `gmail.modify`.

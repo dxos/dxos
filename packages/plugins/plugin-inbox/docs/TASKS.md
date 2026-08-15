@@ -569,8 +569,10 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
 ### Tasks
 
 - [ ] **Pure diff module** — `(base, local, remote, eligible) → { push, pull }` over plain
-      `Map<string, Set<string>>`; no ECHO, no provider, no Effect. Table-driven unit tests over the
-      merge matrix, including empty base (first sync pushes nothing) and the opposed-conflict case.
+      `Map<string, Set<string>>`; no ECHO, no provider, no Effect. `eligible` is
+      `Map<tagUri, { owner }>`, so the caller resolves `Tag.isProviderTag` once and the diff needs no
+      notion of tag origin. Table-driven unit tests over the merge matrix, including empty base (first
+      sync pushes nothing) and BOTH conflict directions (canonical → local wins, provider → remote).
 - [ ] **Heads on the binding** — persist `nextHeads` beside `Cursor.spec.token`; re-baseline (push
       nothing) when `A.view` cannot resolve them. Capture the heads AFTER the pull commits and BEFORE
       the push, which is what avoids both a lost mid-run toggle and re-pushing this run's own pulls.
@@ -595,8 +597,17 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
 - ~~Whether `ClassifyMailbox`'s canonical output should push to the user's real Gmail account.~~
   DECIDED 2026-08-15: it pushes — a classification the user sees in Composer should be the one their
   mail client shows. See the `spam` mapping task above for the work that decision creates.
-- Conflict policy: remote-wins (consistent with `ConnectorSync.mergeField`) vs local-wins for
-  canonical toggles specifically.
+- ~~Conflict policy.~~ DECIDED 2026-08-15: **the owner wins** — local for canonical (`org.dxos.tag`)
+  tags, remote for provider tags, split by the existing `Tag.isProviderTag`. This diverges from
+  `ConnectorSync.mergeField`'s unconditional remote-wins on exactly one row, and deliberately: a tag
+  already has a declared owner (`Tag.md` §"Tag origin"), and remote-wins on a canonical tag means the
+  app reverts a toggle it told the user was theirs.
+- **CONSIDER LATER: timestamped last-writer-wins.** The rule above cannot tell which of two opposed
+  acts happened later, so an unsynced local star resurrects one removed on another device — bounded
+  by one sync interval. Real LWW needs a per-entry write time, which `TagIndex`
+  (`Record<tagId, objectId[]>`) does not carry: a schema change plus clock-skew handling, since the
+  device and provider clocks are not comparable without a server-supplied ordering. Revisit if the
+  resurrection case is actually observed, not pre-emptively.
 - JMAP assumed to be a follow-up; its add-only keyword comment stays accurate until then.
 
 ---
