@@ -70,7 +70,7 @@ stdout as context the agent reads. Every other event needs
 | `~/.claude/hooks/guard-branch.sh`, `deny-git-worktree-add.sh`                                                     | `PreToolUse(Bash)`        | deny           | derived                                   |
 | `~/.claude/hooks/guard-worktree.sh` + [repo copy](./hooks/guard-worktree.sh)                                      | `PreToolUse(Edit\|Write)` | deny           | derived                                   |
 | [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)   | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode`    |
-| `dx` plugin → `hooks/track.sh` ([tools/claude/plugins/dxos-project](../tools/claude/plugins/dxos-project))                            | `UserPromptSubmit`        | agent          | persisted, backend-resolved (registry)    |
+| `dxos` plugin → `hooks/track.sh` ([tools/claude/plugins/dxos](../tools/claude/plugins/dxos))                            | `UserPromptSubmit`        | agent          | persisted, backend-resolved (registry)    |
 | [`AGENTS.md`](../AGENTS.md) (+ `CLAUDE.md` / `GEMINI.md` symlinks), [`CLAUDE.md`](./CLAUDE.md)                    | —                         | agent          | static                                    |
 | `skills/` → `../.agents/skills/` (25)                                                                             | —                         | agent          | on demand                                 |
 | [`agents/`](./agents) (2), [`commands/`](./commands) (2)                                                          | —                         | agent          | on demand                                 |
@@ -147,7 +147,7 @@ A sentinel is a **marker typed inside a normal message** that a
 | Marker                          | Hook                                 | Effect                                                     |
 | ------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
 | `/mode terse` / `/mode normal`  | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (see aliases below)            |
-| `/dxos-project:project VERB [ARGS]`       | `dx` plugin (see below)              | task-planning: list / tasks / new / end / track / hydrate / resume |
+| `/dxos:project VERB [ARGS]`       | `dxos` plugin (see below)              | task-planning: list / tasks / new / end / track / hydrate / resume |
 
 They exist because a hook can act on them **before the model runs**, which makes
 the state change deterministic rather than dependent on the agent complying.
@@ -227,8 +227,8 @@ just ergonomics over a deterministic write. `/mode` is built this way; see
 
 ### Plugins
 
-`/dxos-project:project` ships in the `dxos-project` plugin
-([tools/claude/plugins/dxos-project](../tools/claude/plugins/dxos-project)),
+`/dxos:project` ships in the `dxos` plugin
+([tools/claude/plugins/dxos](../tools/claude/plugins/dxos)),
 published through the `dxos` marketplace declared at the repo root in
 [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json).
 
@@ -242,10 +242,10 @@ the wiring, but they do different jobs and only one of them is automatic:
 
 Neither installs it. Until you run the command below, `claude plugin marketplace
 list` shows `dxos` while `claude plugin list` is empty, and every invocation
-answers `Unknown command: /dxos-project:project`:
+answers `Unknown command: /dxos:project`:
 
 ```bash
-claude plugin install dxos-project@dxos
+claude plugin install dxos@dxos
 ```
 
 Verified 2026-08-15 by driving `list` and `track` with `claude -p` from a scratch
@@ -262,6 +262,6 @@ until invoked, then large. Treat their size as a cost — see the note in §A.
 ### References
 
 - Hook event + JSON reference: https://code.claude.com/docs/en/hooks
-- Task-planning workflow: `tools/claude/plugins/dxos-project/skills/task-planning/SKILL.md`
+- Task-planning workflow: `tools/claude/plugins/dxos/skills/task-planning/SKILL.md`
 - Design rationale for the per-turn injection model:
   `.agents/projects/agent-directives/DESIGN.md`

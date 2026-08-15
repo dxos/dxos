@@ -16,7 +16,7 @@ DXOS.
 Dotfiles distribute to one person's machines. A plugin distributes to a team and
 to customers, with versioning and updates. The cost is namespacing — plugin
 components are always `/<plugin>:<command>` — which is why the name is `dx` and
-not `agent-directives`: `/dxos-project:project` is 11 characters, `/agent-directives:project`
+not `agent-directives`: `/dxos:project` is 11 characters, `/agent-directives:project`
 would be 25 and would undo the ergonomics the command exists for.
 
 The hook also accepts bare `/project`, so the muscle memory built up in this repo
@@ -33,7 +33,7 @@ So the directives now state the **operation** only, and one resolver appends a
 **`BACKEND:`** line stating the **mechanism**:
 
 ```
-TASK-PLANNING PROJECT DIRECTIVE: /dxos-project:project list — render the active projects…
+TASK-PLANNING PROJECT DIRECTIVE: /dxos:project list — render the active projects…
 BACKEND: file · `.agents/projects/registry.yml` — read/write it as YAML per the
          registry schema in the task-planning skill.
 ```

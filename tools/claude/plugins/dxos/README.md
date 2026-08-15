@@ -15,23 +15,23 @@ claude plugin marketplace add dxos/dxos
 ```
 
 ```bash
-claude plugin install dxos-project@dxos
+claude plugin install dxos@dxos
 ```
 
 ## Use
 
 | Command                                  | Does                                                                     |
 | ---------------------------------------- | ------------------------------------------------------------------------ |
-| `/dxos-project:project`                  | Status of the current project — worktree, branch, docs, uncommitted work |
-| `/dxos-project:project list [all]`       | Numbered table of active projects; reply with a row number to resume     |
-| `/dxos-project:project tasks [all]`      | Open `- [ ]` items from the current project's `TASKS.md`                 |
-| `/dxos-project:project new <name>`       | Register a project and scaffold its `TASKS.md` + `DESIGN.md`             |
-| `/dxos-project:project end <name>`       | Move it to `ended`, recording final status                               |
-| `/dxos-project:project track <text>`     | Record a follow-up in the active `TASKS.md`                              |
-| `/dxos-project:project hydrate`          | Checkpoint before stopping or opening a PR                               |
-| `/dxos-project:project resume [name]`    | Reload project state at the start of a session                           |
+| `/dxos:project`                  | Status of the current project — worktree, branch, docs, uncommitted work |
+| `/dxos:project list [all]`       | Numbered table of active projects; reply with a row number to resume     |
+| `/dxos:project tasks [all]`      | Open `- [ ]` items from the current project's `TASKS.md`                 |
+| `/dxos:project new <name>`       | Register a project and scaffold its `TASKS.md` + `DESIGN.md`             |
+| `/dxos:project end <name>`       | Move it to `ended`, recording final status                               |
+| `/dxos:project track <text>`     | Record a follow-up in the active `TASKS.md`                              |
+| `/dxos:project hydrate`          | Checkpoint before stopping or opening a PR                               |
+| `/dxos:project resume [name]`    | Reload project state at the start of a session                           |
 
-In a repo with no registry yet, `/dxos-project:project new <name>` creates one. Read verbs
+In a repo with no registry yet, `/dxos:project new <name>` creates one. Read verbs
 report that none exists rather than inventing entries.
 
 ## How it works

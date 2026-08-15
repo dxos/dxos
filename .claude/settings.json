@@ -41,7 +41,15 @@
     "context7@claude-plugins-official": true,
     "linear@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
-    "playwright@claude-plugins-official": true
+    "playwright@claude-plugins-official": true,
+    "dxos@dxos": true
   },
-  "extraKnownMarketplaces": {}
+  "extraKnownMarketplaces": {
+    "dxos": {
+      "source": {
+        "source": "github",
+        "repo": "dxos/dxos"
+      }
+    }
+  }
 }
