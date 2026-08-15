@@ -18,25 +18,13 @@ import { Gateway, Server } from '@dxos/mcp-server';
 
 import { DiscoveryToolkit, discoveryHandlers } from './discovery-tools';
 import { makeGateway } from './gateway';
-import { ObjectToolkit, objectHandlers } from './object-tools';
 import { SpaceToolkit, spaceHandlers } from './space-tools';
 
 /**
  * Names of the statically-defined tools; projected operations must not collide with them.
  * Task and project verbs are deliberately absent — they arrive via the annotation projection.
  */
-const STATIC_TOOL_NAMES = [
-  'whoami',
-  'listSpaces',
-  'createObject',
-  'getObject',
-  'updateObject',
-  'deleteObject',
-  'queryObjects',
-  'listPlugins',
-  'listTypes',
-  'listOperations',
-] as const;
+const STATIC_TOOL_NAMES = ['whoami', 'listSpaces', 'listPlugins', 'listTypes', 'listOperations'] as const;
 
 export const serve = Command.make(
   'serve',
@@ -54,7 +42,6 @@ export const serve = Command.make(
 
     const staticToolkits = Layer.mergeAll(
       McpServer.toolkit(SpaceToolkit).pipe(Layer.provide(SpaceToolkit.toLayer(spaceHandlers(gateway)))),
-      McpServer.toolkit(ObjectToolkit).pipe(Layer.provide(ObjectToolkit.toLayer(objectHandlers(gateway)))),
       McpServer.toolkit(DiscoveryToolkit).pipe(Layer.provide(DiscoveryToolkit.toLayer(discoveryHandlers(gateway)))),
     );
 

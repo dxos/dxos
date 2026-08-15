@@ -44,7 +44,7 @@ export const GetObject = Operation.make({
   output: Schema.Struct({
     object: Schema.Unknown,
   }),
-});
+}).pipe(Operation.mcpTool({ name: 'getObject', safety: 'read', aspect: 'space' }));
 
 export const UpdateObject = Operation.make({
   meta: {
@@ -63,7 +63,7 @@ export const UpdateObject = Operation.make({
   output: Schema.Struct({
     object: Schema.Unknown,
   }),
-});
+}).pipe(Operation.mcpTool({ name: 'updateObject', safety: 'write', aspect: 'space' }));
 
 export const QueryObjects = Operation.make({
   meta: {
@@ -91,4 +91,4 @@ export const QueryObjects = Operation.make({
   output: Schema.Struct({
     results: Schema.Array(Schema.Unknown),
   }),
-});
+}).pipe(Operation.mcpTool({ name: 'queryObjects', safety: 'read', aspect: 'space' }));

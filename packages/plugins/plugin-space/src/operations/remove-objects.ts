@@ -21,7 +21,14 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       // Optional: a headless host (edge operation-service, `dx mcp serve`) has a capability manager
       // but contributes no layout, and removal must still unlink and delete there.
       const layout = yield* Capabilities.getAtomValueOption(AppCapabilities.Layout);
-      const entities = input.objects;
+      invariant(
+        (input.objects == null) !== (input.refs == null),
+        'Pass exactly one of `objects` (held) or `refs` (referenced).',
+      );
+      // Loaded through the refs themselves rather than `Database.Service`: the app's call sites
+      // invoke without a spaceId, so a declared service would fail to resolve for them.
+      const entities =
+        input.objects ?? (yield* Effect.forEach(input.refs ?? [], (ref) => Effect.promise(() => ref.load())));
 
       const space = getSpace(entities[0] as Obj.Unknown);
       invariant(

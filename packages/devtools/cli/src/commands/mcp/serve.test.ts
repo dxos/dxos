@@ -39,18 +39,14 @@ const REQUESTS = [
 ];
 
 /** The host-local toolkits, named as EDGE names them; see the TODOs on each `*-tools.ts`. */
-const STATIC_TOOLS = [
-  'whoami',
-  'listSpaces',
-  'createObject',
-  'getObject',
-  'updateObject',
-  'deleteObject',
-  'queryObjects',
-  'listPlugins',
-  'listTypes',
-  'listOperations',
-];
+const STATIC_TOOLS = ['whoami', 'listSpaces', 'listPlugins', 'listTypes', 'listOperations'];
+
+/**
+ * Object CRUD, which is no longer host-local: plugin-space contributes it as annotated operations,
+ * so these names prove the projection reaches the registry rather than a hand-written toolkit.
+ * Named after the ECHO API (`Database.add` / `Database.remove`), not create/delete.
+ */
+const PROJECTED_OBJECT_TOOLS = ['addObject', 'getObject', 'updateObject', 'removeObjects', 'queryObjects'];
 
 type Response = { id?: number; result?: any };
 
@@ -169,7 +165,7 @@ describe('dx mcp serve', () => {
   // ones an agent reaches for first — whoami, listSpaces, the object CRUD — are simply absent.
   test('serves the static toolkits alongside the projected operations', ({ expect }) => {
     const names: string[] = responses.get(2)!.result.tools.map((tool: { name: string }) => tool.name);
-    for (const tool of STATIC_TOOLS) {
+    for (const tool of [...STATIC_TOOLS, ...PROJECTED_OBJECT_TOOLS]) {
       expect(names, `${tool} is advertised`).to.include(tool);
     }
 
@@ -192,8 +188,8 @@ describe('dx mcp serve', () => {
 
     const byName = new Map(tools.map((tool) => [tool.name, tool.annotations]));
     expect(byName.get('whoami')?.readOnlyHint).to.be.true;
-    expect(byName.get('deleteObject')?.destructiveHint).to.be.true;
-    expect(byName.get('createObject')?.destructiveHint).to.be.false;
+    expect(byName.get('removeObjects')?.destructiveHint).to.be.true;
+    expect(byName.get('addObject')?.destructiveHint).to.be.false;
   });
 
   // This profile has no identity, which is the interesting case: the tool has to say so as a tool

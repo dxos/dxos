@@ -141,6 +141,21 @@ export const WaitForObject = Operation.make({
   output: Schema.Void,
 });
 
+/**
+ * An object described rather than held: the typename plus its properties, which is all a caller
+ * outside this process can supply. References are the `{ "/": "echo:..." }` envelope form.
+ */
+export const ObjectDraft = Schema.StructWithRest(
+  Schema.Struct({
+    '@type': Schema.String.annotate({
+      description: 'Typename of the object to create (e.g. org.dxos.type.task).',
+      examples: ['org.dxos.type.task'],
+    }),
+  }),
+  [Schema.Record(Schema.String, Schema.Unknown)],
+);
+export type ObjectDraft = Schema.Schema.Type<typeof ObjectDraft>;
+
 export const AddObject = Operation.make({
   meta: {
     key: makeKey('addObject'),
@@ -149,14 +164,20 @@ export const AddObject = Operation.make({
     icon: 'ph--plus--regular',
   },
   input: Schema.Struct({
-    object: Obj.Unknown.annotate({ description: 'The object to add.' }),
+    object: Schema.optional(Obj.Unknown).annotate({ description: 'The object to add, already instantiated.' }),
+    // A caller that cannot hold a live object — anything across an RPC boundary — describes one
+    // instead, and the handler instantiates it against the space's type registry. Kept as its own
+    // field rather than a union with `object`, so the live path's schema (and its decoding) is
+    // untouched. Exactly one of the two is required.
+    create: Schema.optional(ObjectDraft).annotate({
+      description: 'Description of an object to create and add, when no instantiated object is available.',
+    }),
     // A reference is the only form of the three that survives an RPC boundary, so a remote caller
     // names the target collection that way; in-process callers keep passing the live entity.
-    target: Schema.Union([
-      Database.Database,
-      Type.getSchema(Collection.Collection),
-      Ref.Ref(Collection.Collection),
-    ]).annotate({
+    // Absent, the object is filed at the space root.
+    target: Schema.optional(
+      Schema.Union([Database.Database, Type.getSchema(Collection.Collection), Ref.Ref(Collection.Collection)]),
+    ).annotate({
       description: 'The database or collection to add to, or a reference to the collection.',
     }),
     targetNodeId: Schema.optional(
@@ -168,7 +189,18 @@ export const AddObject = Operation.make({
     subject: Schema.Array(Schema.String),
     object: Obj.Unknown,
   }),
-});
+}).pipe(
+  Operation.mcpTool({
+    name: 'addObject',
+    description:
+      'Creates an object in the space and files it so it appears in Composer. Describe it with ' +
+      '`create` ({ "@type": "<typename>", ...properties }); the type must already be registered ' +
+      '(see queryObjects). Reference values use the envelope form { "/": "echo:..." }. Omit ' +
+      '`target` to file it at the space root.',
+    safety: 'write',
+    aspect: 'space',
+  }),
+);
 
 // TODO(wittjosiah): Rename `objects` to `entities` (covers objects, relations, and persisted types).
 export const RemoveObjectsOutput = Schema.Struct({
@@ -193,13 +225,27 @@ export const RemoveObjects = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    objects: Schema.Array(Entity.Unknown).annotate({ description: 'The entities to remove.' }),
+    objects: Schema.optional(Schema.Array(Entity.Unknown)).annotate({ description: 'The entities to remove.' }),
+    // References are what a caller outside this process can supply; resolved to the same entities
+    // before anything else happens. Exactly one of the two is required.
+    refs: Schema.optional(Schema.Array(Ref.Ref(Obj.Unknown))).annotate({
+      description: 'References to the entities to remove, when the entities themselves are not held.',
+    }),
     target: Schema.optional(Type.getSchema(Collection.Collection)).annotate({
       description: 'The collection to remove from.',
     }),
   }),
   output: RemoveObjectsOutput,
-});
+}).pipe(
+  Operation.mcpTool({
+    name: 'removeObjects',
+    description:
+      'Deletes entities from the space and unlinks them from the collection that held them. Name ' +
+      'them with `refs` (an array of { "/": "echo:..." } envelopes, as returned by queryObjects).',
+    safety: 'destructive',
+    aspect: 'space',
+  }),
+);
 
 /**
  * Reclaim the storage held by a space's deleted objects. Permanent — the objects are removed

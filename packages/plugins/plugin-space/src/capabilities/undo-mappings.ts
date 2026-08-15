@@ -43,9 +43,12 @@ export default Capability.makeModule(
             indices: output.indices,
             wasActive: output.wasActive,
           }),
-          message: (input, _output) => {
-            const ns = Entity.getTypename(input.objects[0]);
-            return ns && input.objects.length === 1
+          // Read off the output: the input names the entities either directly or by reference, and
+          // only the output is guaranteed to carry the entities that were actually removed.
+          message: (_input, output) => {
+            const [removed] = output.objects;
+            const ns = removed && Entity.getTypename(removed);
+            return ns && output.objects.length === 1
               ? ['object-deleted.label', { ns: [ns, meta.profile.key] }]
               : ['objects-deleted.label', { ns: meta.profile.key }];
           },
