@@ -99,7 +99,80 @@ So bun's runtime module registry is the node-side analogue of the browser's impo
 - A shared-scope registration at startup — `Bun.plugin` over `DEFAULT_PACKAGES`, generated from the
   same list the Vite plugin reads.
 
-### 2.3 Open question: isolation
+### 2.3 Installed vs enabled
+
+Yes, they are different, and the CLI is where the difference starts to carry weight. `PluginManager`
+has had both axes since it was written — `add`/`remove` register and unregister a plugin,
+`enable`/`disable` turn a registered one on, and `add`'s contract is explicitly "registers it
+**without enabling it**". What the CLI lacks is a second axis worth showing: its installed set is the
+compile-time constant `getPlugins()` in `commands/plugin-defs.ts`, so "installed" is true of
+everything and carries no information. That is why `plugin/list.ts` renders one collapsed `status`
+string (`core | enabled | disabled`) from two independent booleans. `dx plugin add` is exactly the
+change that makes the collapse wrong.
+
+The state a `dx plugin list` row has to express after that:
+
+| Axis        | Meaning in the CLI                                                           | Where it lives                                  |
+| ----------- | ---------------------------------------------------------------------------- | ----------------------------------------------- |
+| `installed` | a persisted record exists — compiled-in, or on disk under `plugins/<id>/`    | `plugins/<profile>.yml` (compiled-in: implicit) |
+| `enabled`   | imported, registered and activated on **every** `dx` invocation              | same file                                       |
+| `core`      | pinned installed+enabled, not disableable (`meta.profile.tags` has `system`) | derived; already enforced in `disable.ts`       |
+| `failed`    | installed and enabled, but this run could not load or activate it            | runtime only (`manager.getFailed()`)            |
+
+`failed` is not a fourth state so much as the reason the first two must be shown separately: a
+compiled-in plugin cannot fail to resolve, a remote one can (assets deleted, host unreachable, import
+throws), and a plugin that silently vanishes from `dx mcp serve`'s tool list with no row explaining
+why is the worst failure this feature can produce.
+
+**Install must not import.** This is the load-bearing consequence, and the CLI can have it where the
+browser today does not. A published manifest carries the whole of `Config2.Plugin` — `key`, `name`,
+`description`, `tags` and `dependsOn` — so `add` can register `Plugin.lazy(metaFromManifest, () =>
+import(entryPath))` and get a fully-formed catalog entry, dependency declarations included, without
+executing a line of plugin code. Enable is then the single point where third-party code first runs.
+The browser's `UrlLoader.preload` does the opposite: it imports every persisted remote entry at boot
+and only afterwards consults the enabled set, so an installed-but-disabled plugin runs its module
+body on every page load. Worth aligning, but the CLI should not inherit it — see §2.5, where this
+boundary is also the cheapest thing we have resembling a consent point.
+
+**One file, not two.** The browser's split (remote records in `localStorage`, enabled ids elsewhere)
+is a localStorage artifact, not a design; two files can disagree and something then has to
+reconcile them. `plugins/<profile>.yml` should become one list of records — `id`, `enabled`, and for
+remotes `url`, `version`, integrity — with compiled-in plugins appearing only once a non-default
+state is set for them.
+
+Two hazards in that migration, both in code as written today:
+
+- The file is a bare `Schema.Array(Schema.String)` and `loadEnabledPlugins` **catches a decode
+  failure and returns `[]`**; `bin.ts` then reads `savedEnabled.length > 0 ? … : getDefaults()`. So
+  shipping a new shape without a union that still accepts the legacy `string[]` silently resets
+  every existing profile to defaults, with no error. Union, then write back the new shape.
+- An `enabled` id with no installed record is reachable the moment installs live on disk, and
+  `createCliApp`'s default `pluginLoader` handles it with `invariant(plugin, 'Plugin not found')` —
+  a hard crash at startup, for every command, until the user edits YAML. The rule has to be: an
+  unresolvable enabled entry records a failure and is skipped; the binary still runs and
+  `dx plugin list` is what explains the absence.
+
+### 2.4 The command surface
+
+- **`dx plugin add <url|name>` installs and enables by default**, with `--no-enable` to stop at
+  install. The two-axis model stays in the data; only the default composes them. A CLI `add` that
+  leaves the plugin inert is a papercut — `code --install-extension` and `npm install` both do the
+  working thing — and `--no-enable` is precisely the "fetch it, let me look at it before it runs"
+  flow that §2.3's import boundary makes meaningful.
+- **`remove` is not `disable`.** `remove <id>` drops the record and deletes assets; on a compiled-in
+  plugin it must fail pointing at `disable`, mirroring the core check `disable.ts` already has.
+  Aliases: `install` → `add`, `uninstall` → `remove`.
+- **`enable <id>` on a non-installed id** should name `dx plugin add` rather than fail the current
+  bare `invariant(plugin, 'Plugin not found: ${id}')`.
+- **`add` takes a locator, everything else takes an NSID.** The user types a URL and then needs an id
+  for every subsequent verb, so `add` must print the resolved id — the browser's `add` returns the
+  plugin for this reason. It also needs `UrlLoader.make`'s duplicate-id guard applied against the
+  compiled-in set: a remote plugin claiming a builtin's id would make the builtin unreachable.
+- **`list` grows columns** — id, name, source (builtin / url / registry), version, installed,
+  enabled, state — instead of the single `status` string. `--json` already exists and should carry
+  the same fields.
+
+### 2.5 Open question: isolation
 
 This loads third-party code **in-process with the user's HALO keys, unsandboxed**, and MCP widens
 the blast radius: a plugin's operations become tools an external agent can invoke. The browser gets
@@ -107,6 +180,13 @@ origin isolation for free; node gets nothing. The range is "trusted publisher + 
 (what the registry already implies) through to running plugins in a worker behind a
 capability-passing boundary — which would also solve reload, since a worker can be replaced.
 Undecided; decide before third-party plugins ship, not after.
+
+§2.3's install/enable boundary changes the shape of the cheap end of that range without closing the
+question. If install never imports, then `add --no-enable` fetches and records without running
+anything, and `enable` is a single auditable moment where a named plugin starts executing with the
+user's keys. That is what makes "trusted publisher + explicit enable" an actual consent step rather
+than a label on a flow where the code already ran. It does not bound what a plugin does **after**
+that point, which is what the worker boundary is for.
 
 ## 3. Reload, in two stages
 

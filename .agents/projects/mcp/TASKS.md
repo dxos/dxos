@@ -81,14 +81,36 @@ shared-scope import map, registry publish); this milestone is its node/bun half.
       `node_modules` (DESIGN §2.1). Generate the list from the same source the Vite plugin reads —
       two contracts would drift.
 - [ ] **`dx plugin add <url|name>`** — fetch manifest, download assets under
-      `~/.config/dx/plugins/<id>/`, import, validate `meta`, register. `enable/disable/list`
-      already exist but resolve only against compiled-in plugins.
-- [ ] **Installed-remote persistence** — `plugins/<profile>.yml` records enabled ids; the
-      `RemotePluginView` records (id, url, version) that live in `localStorage` in the browser need
-      a file-backed equivalent.
-- [ ] **Decide isolation** (DESIGN §2.3) — third-party code runs in-process with the user's HALO
+      `~/.config/dx/plugins/<id>/`, register from the manifest, enable by default (`--no-enable`
+      stops at install). Prints the resolved NSID, since the user typed a locator and every other
+      verb takes an id. Rejects an id already claimed by a compiled-in plugin, as
+      `UrlLoader.make` does in the browser. DESIGN §2.4.
+- [ ] **Register without importing** — `add` builds a `Plugin.lazy` stub from the manifest, with the
+      dynamic import as its loader. The manifest carries the whole `Config2.Plugin` meta (`key`,
+      `name`, `tags`, `dependsOn`), so a catalog entry needs no module evaluation and `enable` becomes the
+      one point where third-party code first runs. Deliberately unlike the browser, where
+      `UrlLoader.preload` imports every persisted remote entry at boot. DESIGN §2.3.
+- [ ] **Installed-remote persistence, one file** — `plugins/<profile>.yml` becomes a list of
+      records (`id`, `enabled`, plus `url`/`version`/integrity for remotes) rather than the bare
+      `string[]` of enabled ids; the browser's separate `localStorage` `RemotePluginView` list is a
+      storage artifact, not a design worth copying. **Decode must be a union that still accepts the
+      legacy `string[]`** — `loadEnabledPlugins` swallows a decode failure into `[]` and `bin.ts`
+      then falls back to `getDefaults()`, so a bare schema bump silently resets every profile.
+- [ ] **Never crash on a dangling enabled id** — an enabled entry with no installed record hits
+      `createCliApp`'s default `pluginLoader` invariant and kills every command until the user
+      edits YAML. Record a failure, skip the entry, keep running.
+- [ ] **`plugin list` shows both axes** — installed / enabled / core / failed as separate fields
+      (and in `--json`), replacing the collapsed `core | enabled | disabled` status string.
+      Without the failed row a remote plugin that did not load just disappears from
+      `dx mcp serve`'s tool list with no explanation.
+- [ ] **`plugin remove`** — drops the record and deletes assets; fails on a compiled-in plugin
+      pointing at `disable`, mirroring `disable.ts`'s existing core check. `enable` on a
+      non-installed id should point at `add` instead of failing a bare invariant.
+- [ ] **Decide isolation** (DESIGN §2.5) — third-party code runs in-process with the user's HALO
       keys, and MCP lets an external agent invoke it. Decide before third-party plugins ship:
       trusted-publisher-and-explicit-enable, or a worker boundary (which would also solve reload).
+      The install/enable boundary above makes the cheap end a real consent step, but bounds
+      nothing after enable.
 
 ### Reload, stage 1 — our own dev loop
 
