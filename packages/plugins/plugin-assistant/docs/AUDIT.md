@@ -246,6 +246,43 @@ Storage under all five: `Feed` for AI chat (`Chat.feed`), human chat (channel ba
 transcription (`Transcript.feed`); `Thread.messages: Ref<Message>[]` for comments; an ECHO query for
 email. Every one of them is a list of `Message.Message` from `@dxos/types`.
 
+### 3.0.1 Functionality aspects
+
+The seven aspects any message-thread renderer has to answer, and where each of the five stands
+today. ✅ = present, ➖ = absent, ⚠️ = present but constrained.
+
+| Aspect                | AI chat                                             | human chat                                | comments                                    | transcription                            | email                                                    |
+| --------------------- | ---------------------------------------------------- | ----------------------------------------- | ------------------------------------------- | ---------------------------------------- | -------------------------------------------------------- |
+| **virtualization**    | ⚠️ CodeMirror viewport (implicit, one doc)            | ✅ `Mosaic.VirtualStack` (TanStack)        | ➖ `anchors.map(…)` — no virtualization      | ⚠️ CodeMirror viewport                    | ➖ `Mosaic.Stack` — no virtualization                      |
+| **search**            | ➖ not enabled                                        | ➖                                         | ➖                                          | ✅ `createBasicExtensions({ search })`    | ➖                                                        |
+| **select (text)**     | ✅ continuous across messages (one doc)               | ➖ per-message only (each tile is its own CM view) | ➖ per-message only                 | ✅ continuous across the transcript       | ⚠️ within a tile; HTML tiles are plain DOM, markdown are not |
+| **select (messages)** | ➖                                                    | ⚠️ `currentMessageId` (single)             | ⚠️ current thread                            | ➖                                        | ⚠️ current message                                        |
+| **streaming**         | ✅ typewriter + monotonic append (`MessageSyncer`)     | ➖                                         | ➖                                          | ✅ live chunk append (`TranscriptModel`)  | ➖                                                        |
+| **mutability**        | ➖ no edit; rewind/fork instead                        | ✅ author edits own text in place (`onSave`) | ✅ same primitives                          | ➖ read-only                              | ✅ inline reply drafts (`EditMessage`)                     |
+| **renderers**         | markdown + 11 XML widget tags                        | markdown (per-message CM) + 3 block types  | same                                        | markdown + link-preview widget           | **two**: `text/html` → `Html`, else `MarkdownViewer`      |
+| **chrome**            | `<branch>` XML tag in-document → fork / rewind / time | avatar, heading, time, delete, accept, grouping | resolve, delete thread, accept, anchor nav | timestamp gutter                       | avatar, star, details, menu (reply/forward/delete/extract) |
+
+Reading the matrix:
+
+1. **No scenario has more than four of the seven.** Every one is missing something another already
+   solved — which is the argument for one engine stated as a capability table rather than as a code
+   count.
+2. **Virtualization and continuous text selection are currently exclusive.** The two document
+   renderers get selection free and virtualization implicitly; the three tile renderers get the
+   reverse (and two of the three don't even get virtualization). The engine has to deliver both, and
+   §3.3.1 is why that requires owning selection at the model level.
+3. **The critical precedent: `react-ui-thread` already mounts one CodeMirror view per message inside
+   a `Mosaic.VirtualStack`.** `Message.Body` → `TextBlock` calls `useTextEditor` per message, with
+   `readOnly: !editing`. **The island model is therefore already in production** — the engine's core
+   hypothesis is not unproven, it is unmeasured and un-generalized. That materially lowers the risk
+   in §3.3 cost 1 and is the first thing the spike should quantify.
+4. **Two selection modes are needed, not one.** Text selection spanning message boundaries (a
+   document-shaped gesture) and selection of *sets of messages* (a list-shaped gesture — for
+   forking, extracting, deleting, quoting). No current renderer has the second beyond "the current
+   one".
+5. **Email is the only two-renderer scenario** and the reason the island renderer must generalize
+   beyond markdown (§5, decided).
+
 ### 3.1 Aspect 1 — the composer (duplicated; should be unified)
 
 |            | `react-ui-chat` `ChatEditor`                                      | `react-ui-thread` `Message.Textbox`            | `plugin-inbox` `Editor` (72 LOC)     |
@@ -455,7 +492,7 @@ plugin-assistant · plugin-thread · plugin-review · plugin-inbox · plugin-tra
    (widened)                   ($sentinel, /slash, @mention, references, pendingText) ·
                                ChatDialog · ChatStatus
     ↓
-@dxos/react-ui-messages      THE ENGINE + shared contracts (§4.0):
+@dxos/react-ui-feed          THE ENGINE + shared contracts (§4.0):
    (new)                     MessageList (§3.3) — virtualized islands, chrome render-prop,
                                model-level selection + search (§3.3.1)
                              MessageMetadata / MessageCallbacks / block-renderer contract
@@ -479,12 +516,30 @@ owning is the stack mechanics.
 | 3   | `react-ui-markdown`              | MarkdownStream                     | echo, editor, ui                       | **8** incl. react-ui-components, react-ui-form       | closest in spirit ("a markdown document"), already echo+editor; singular-document, needs mosaic |
 | 4   | `react-ui-mosaic`                | Stack / VirtualStack, dnd          | echo, echo-react, menu, search         | **21**                                               | wrong altitude — a layout primitive; `Message`/`ContentBlock` would pollute 21 consumers     |
 | 5   | `react-ui-transcription`         | TranscriptModel, audio capture     | echo, types, av, pipeline              | plugin-assistant, plugin-transcription               | domain-named for audio; wrong home                                                           |
-| 6   | **new `@dxos/react-ui-messages`** | —                                 | mosaic, editor, markdown, echo, types  | would be: 1, 2, 5, react-ui-assistant, plugin-inbox  | **no backwards edge** — every existing package depends downward into it                      |
+| 6   | **new `@dxos/react-ui-feed`**    | —                                 | mosaic, list, markdown, editor, echo, types | would be: 1, 2, 5, react-ui-assistant, plugin-inbox | **no backwards edge** — every existing package depends downward into it                      |
 
-**Recommended: 6.** Every existing candidate creates either a backwards edge (1, 2) or pollution (4).
-Fallback is 3 if a new package is unwelcome: the engine really is "many markdown documents", and
-`react-ui-markdown` already has echo + editor + the widest reach — it would gain a `react-ui-mosaic`
-dependency and `Message` awareness.
+**Recommended: 6, named `@dxos/react-ui-feed`.** Every existing candidate creates either a backwards
+edge (1, 2) or pollution (4). The name follows the data abstraction rather than a rendering shape:
+the thing that holds across all five scenarios is a **`Feed` of `Message` objects**, `Feed` is
+already the `@dxos/echo` primitive, and "feed" is unclaimed in the UI namespace where "chat"
+(composer) and "thread" (comments + human chat) are both taken and both mean something narrower.
+
+Siting the prototype:
+
+1. **`react-ui-feed` (recommended).** The prototype is the package's first content, so there is
+   nothing to unpick later if it works, and nothing entangled to delete if it does not. `private: true`
+   until it earns a publisher.
+2. **`react-ui-chat`.** Would mean the composer package temporarily owns a renderer, and would drag
+   `echo` + `types` + `mosaic` into a package that has none of them — changes that only make sense if
+   the engine stays there permanently, which §4.0 argues against.
+3. **`react-ui-thread`.** Closest to the prototype's substrate (it already has `mosaic` + `echo` +
+   per-message editors — see §3.0.1 finding 3), so it is the cheapest place to *measure*. But its
+   existing `Thread.*` / `Message.*` API and two consumers would sit alongside the prototype, and
+   separating them afterwards is exactly the work option 1 avoids. Reasonable if the goal is only to
+   get a scrolling number quickly.
+
+Fallback if a new package is unwelcome: option 3 in the table (`react-ui-markdown`) — it already has
+echo + editor + the widest reach, and would gain `react-ui-mosaic` and `Message` awareness.
 
 ### 4.1 What moves, what stays
 
@@ -515,7 +570,7 @@ dependency and `Message` awareness.
 - `react-ui-thread`'s `command` extension (slash/mention) as a peer of `commands` (sentinel)
 - plugin-inbox's `Editor` and `Message.Textbox` re-based on `ChatEditor`
 
-**New in `@dxos/react-ui-messages`** (the engine, §4.0):
+**New in `@dxos/react-ui-feed`** (the engine, §4.0):
 
 - `MessageList` — seeded from `TranscriptModel`'s model/renderer/diff shape and
   `Mosaic.VirtualStack`'s virtualizer, replacing `MessageSyncer` and both tile stacks
@@ -600,14 +655,50 @@ Arguments against / real costs:
 Three tracks. **Track 0 is the gate** — it decides whether track C is possible at all, and it blocks
 nothing else. Tracks A and B are independent of its outcome and can start immediately.
 
-**Track 0 — the engine spike (do this first, in a storybook, throwaway code)**
+**Track 0 — the engine spike (do this first; storybook, `@dxos/react-ui-feed`, §4.0)**
 
-0. Build a virtualized list of ~200 markdown islands with one streaming tail and answer, with
-   numbers: (a) cost of N `EditorView`s with and without pooling; (b) whether dynamic measurement
-   survives mid-list growth, tail growth during streaming, and restore-scroll-on-remount without
-   jumps — **the gating question**; (c) whether `EditorView.editable.of(false)` does let native
-   selection span adjacent islands in Chrome and Firefox (§3.3.1, open question 5). _Deliverable: a
-   story plus a paragraph of findings appended to §3.3._
+**Deciding criterion: virtualization quality — smooth scrolling with no jumps or drift.** Everything
+else in the spike is secondary; if scrolling is not good, the engine does not happen and track C is
+dropped.
+
+0. Build the prototype and demonstrate:
+
+   **(a) `Feed` of `Message` as the data abstraction.** One input shape for all five scenarios —
+   `useQuery(db, Query.from(feed))` → model. Prove it by seeding the same story from an AI chat
+   feed, a channel feed and a transcript feed; carry the comments case (`Thread.messages: Ref[]`)
+   and the email case (mailbox query) as adapters onto the same model, which also tests whether the
+   abstraction really does hold or whether two of the five need an escape hatch.
+
+   **(b) We control virtualization.** Analyse and choose between the two existing substrates — they
+   are complementary, not alternatives:
+   - `react-ui-mosaic` — `Mosaic.VirtualStack`: TanStack `useVirtualizer`, `measureElement` dynamic
+     measurement, `getItemKey` so the size cache survives reorder, gap/padding insets, overscan
+     (default 8), pagination, drag placeholders, `scrollToId` registration. This is the scroll
+     substrate; the open question is whether its drag-placeholder index doubling and dnd coupling
+     are wanted here, or whether the engine should drive `useVirtualizer` directly.
+   - `react-ui-list` — **not** a virtualizer: `Tree`/`Listbox`/`Picker`/`OrderedList` plus
+     `aspects/` hooks (`useListSelection` single/multi, `useListNavigation` roving tabindex,
+     `useListDisclosure`, `useReorder`). This is where **message-set selection** and keyboard
+     navigation come from (§3.0.1 finding 4) — reuse the aspect hooks rather than reinventing them.
+
+     Measure: scroll smoothness at 200 / 2,000 messages, cost of N `EditorView`s with and without
+     pooling, and whether dynamic measurement survives mid-list growth, tail growth during
+     streaming, and restore-scroll-on-remount. Baseline to beat: `react-ui-thread` already runs
+     per-message CodeMirror views inside `Mosaic.VirtualStack` in production (§3.0.1 finding 3), so
+     measure that first — it is the honest starting number.
+
+   **(c) Per-message renderer variants.** Three islands in one list: markdown (CodeMirror +
+   `xmlTags` registry), HTML (sanitized, non-editor — the email case), and streaming (tail append
+   with typewriter). Mixed in a single feed, since email threads and AI chats both contain more than
+   one kind.
+
+   **(d) Aspects.** Exercise §3.0.1 against the prototype: model-level search across mounted and
+   unmounted messages; text selection across island boundaries including the
+   `EditorView.editable.of(false)` question (§3.3.1, open question 5); message-set selection via
+   `useListSelection`; per-message chrome (fork, rewind, reply-to) as a render-prop.
+
+   _Deliverable: stories per variant, a scrolling measurement, and a findings paragraph appended to
+   §3.3 recording what held and what did not._
 
 **Track A — the mock-processor loop (the immediate goal)**
 
@@ -680,8 +771,8 @@ The two tiers answer different questions and both are needed.
 
 **Open**
 
-1. **Engine home** — new `@dxos/react-ui-messages` (§4.0, recommended), or fold it into
-   `react-ui-markdown` to avoid a new package?
+1. **Engine home / prototype site** — new `@dxos/react-ui-feed` (§4.0, recommended),
+   `react-ui-thread` (cheapest place to measure, most to unpick afterwards), or `react-ui-chat`?
 2. **Packaging shape** — three packages by role (§4.2 option 1, recommended), or commit directly to
    the single-package endpoint (option 3)?
 3. **Package name** for the assistant layer — `@dxos/react-ui-assistant`, or something narrower like
