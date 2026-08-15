@@ -101,7 +101,7 @@ export type MailboxProcessorOptions = {
 
 /**
  * One cursored pass over a mailbox feed, contributed by whichever plugin owns it — a node in the
- * topology {@link import('./InboxOperation').ScanMailbox} resolves and runs.
+ * topology {@link import('./InboxOperation').AnalyzeMailbox} resolves and runs.
  *
  * This is the seam that keeps the cascade open: a plugin owning a pass contributes it here rather
  * than plugin-inbox enumerating every pass it must know about. It is deliberately NOT the same thing
@@ -122,15 +122,31 @@ export type MailboxProcessor = {
    */
   after?: readonly string[];
   /**
-   * Builds the invocation for one run, or returns a reason the pass cannot run against this mailbox
-   * (reported as skipped rather than attempted). A closure rather than value properties, for the same
-   * reason as {@link MailboxAction}: holding an `Operation.Definition` on the capability value makes
-   * the capability atom read recurse.
+   * Builds this pass's invocations for one run, or returns a reason it cannot run against this
+   * mailbox (reported as skipped rather than attempted).
+   *
+   * A LIST because a pass is not always about the mailbox as a whole: one scoped to something
+   * narrower — a Project tracking part of a shared feed — has one invocation per subject, and each
+   * needs its own cursor. An empty list means the pass had nothing to run and is reported as such,
+   * distinctly from a skip.
+   *
+   * A closure rather than value properties, for the same reason as {@link MailboxAction}: holding an
+   * `Operation.Definition` on the capability value makes the capability atom read recurse.
    */
-  createInvocation: (
+  createInvocations: (
     mailbox: import('./Mailbox').Mailbox,
     options: MailboxProcessorOptions,
-  ) => { operation: import('@dxos/compute').Operation.Definition.Any; input: unknown } | { skip: string };
+  ) =>
+    | {
+        /**
+         * What this invocation's cursor is about. Defaults to the mailbox; a pass covering several
+         * subjects sets it per entry so their watermarks stay independent.
+         */
+        subject?: import('@dxos/echo').Obj.Any;
+        operation: import('@dxos/compute').Operation.Definition.Any;
+        input: unknown;
+      }[]
+    | { skip: string };
 };
 
 // Multi: the whole point is that several plugins contribute; plugin-inbox contributes its own passes

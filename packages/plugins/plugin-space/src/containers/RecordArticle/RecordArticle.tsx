@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface, CardIconSlot, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Card, Icon, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
@@ -66,7 +66,9 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
             <Card.Root fullWidth>
               <Card.Header>
                 <Card.Block>
-                  <Icon icon={icon} />
+                  <CardIconSlot subject={subject}>
+                    <Icon icon={icon} />
+                  </CardIconSlot>
                 </Card.Block>
                 <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
               </Card.Header>
@@ -96,7 +98,10 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                 <RelatedTypeFilter classNames='self-start' types={types} onToggle={toggle} />
                 {/* The masonry's own gutter would inset these cards relative to the record card above,
                     which shares this column — the scroll padding is the article's to own, not theirs. */}
-                <Masonry.Root Tile={RelatedObjectCard} columns={singleColumn ? 1 : undefined}>
+                {/* `centered={false}` on the ROOT, which is column alignment — distinct from
+                    `Content`'s prop of the same name below (ScrollArea's scrollbar padding). Centred
+                    columns drift right of the record card above them, which shares this column. */}
+                <Masonry.Root Tile={RelatedObjectCard} columns={singleColumn ? 1 : undefined} centered={false}>
                   <Masonry.Content padding={false} centered={false}>
                     <Masonry.Viewport items={related} />
                   </Masonry.Content>
@@ -109,6 +114,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
     </Panel.Root>
   );
 };
+
 //
 // Hooks
 //

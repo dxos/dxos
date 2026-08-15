@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type StorageInfo } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Icon, Input, Panel, ScrollArea, Toolbar, useFileDownload } from '@dxos/react-ui';
@@ -27,7 +27,7 @@ type DatabaseInfo = {
   databaseFile?: string;
   configuredSqliteMode?: number | string;
   servicesMode?: number | string;
-  storageInfo?: StorageInfo;
+  storageInfo?: DevtoolsHost.StorageInfo;
 };
 
 const quoteIdentifier = (name: string): string => `"${name.replace(/"/g, '""')}"`;

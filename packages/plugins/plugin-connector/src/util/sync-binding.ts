@@ -25,13 +25,13 @@ import { fireSyncTrigger, syncTriggerMonitorLayer } from './sync-trigger';
  * syncs on demand only, and its operation is invoked directly.
  */
 export const syncBinding = ({
+  spaceId,
   connector,
   cursor,
-  spaceId,
 }: {
+  spaceId: Key.SpaceId;
   connector: ConnectorSpec.ConnectorEntry;
   cursor: Cursor.ExternalCursor;
-  spaceId: Key.SpaceId;
 }): Effect.Effect<void, ConnectionSyncError, Database.Service | Operation.Service | Capability.Service> =>
   Effect.gen(function* () {
     const sync = connector.sync;

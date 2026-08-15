@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, CardIconSlot, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
 import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
@@ -32,7 +32,9 @@ export const RelatedObjectCard = ({ data: subject, classNames }: RelatedObjectCa
       <Card.Root ref={cardRef} classNames={classNames}>
         <Card.Header>
           <Card.Block>
-            <Icon icon={icon} />
+            <CardIconSlot subject={subject}>
+              <Icon icon={icon} />
+            </CardIconSlot>
           </Card.Block>
           <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
           <Card.Block end>

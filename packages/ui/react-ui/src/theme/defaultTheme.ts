@@ -5,6 +5,7 @@
 import { type Theme } from '@dxos/ui-types';
 
 import { avatarTheme } from '../components/Avatars/Avatar.theme';
+import { bannerTheme } from '../components/Banner/Banner.theme';
 import { breadcrumbTheme } from '../components/Breadcrumb/Breadcrumb.theme';
 import { buttonTheme } from '../components/Button/Button.theme';
 import { iconButtonTheme } from '../components/Button/IconButton.theme';
@@ -19,7 +20,6 @@ import { inputTheme } from '../components/Input/Input.theme';
 import { linkTheme } from '../components/Link/Link.theme';
 import { mainTheme } from '../components/Main/Main.theme';
 import { menuTheme } from '../components/Menu/Menu.theme';
-import { messageTheme } from '../components/Message/Message.theme';
 import { panelTheme } from '../components/Panel/Panel.theme';
 import { popoverTheme } from '../components/Popover/Popover.theme';
 import { scrollAreaTheme } from '../components/ScrollArea/ScrollArea.theme';
@@ -62,7 +62,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   input: inputTheme,
   link: linkTheme,
   main: mainTheme,
-  message: messageTheme,
+  banner: bannerTheme,
   menu: menuTheme,
   popover: popoverTheme,
   scrollArea: scrollAreaTheme,

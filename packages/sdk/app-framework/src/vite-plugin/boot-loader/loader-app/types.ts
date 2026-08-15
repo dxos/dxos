@@ -42,6 +42,16 @@ export type BootLoaderApi = {
   status: (payload: StatusPayload) => void;
   /** Enter host-driven progress — `fraction` ∈ [0, 1]. */
   progress: (fraction?: number) => void;
+  /**
+   * Report that startup has outrun its budget without failing it, offering the user a way out.
+   *
+   * Dev-only: production still treats the deadline as fatal, because a user watching a hung boot
+   * has no diagnostics to gain by waiting. In development the run is usually just slow (a cold
+   * OPFS, a rebuild, a paused debugger), and killing it destroys the state worth inspecting — so
+   * the loader keeps running and offers `onAbort`, which raises the same failure the deadline
+   * used to raise on its own.
+   */
+  stalled: (onAbort: () => void) => void;
   /** Play the dismissal outro, then remove the loader DOM (graceful path). */
   ready: () => void;
   /** Remove the loader DOM immediately (fast-load backstop / terminal). */
