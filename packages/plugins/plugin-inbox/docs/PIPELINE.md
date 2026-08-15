@@ -238,14 +238,13 @@ is exactly the `FeedOwner` marker this needs. It is not new work:
 So the DISCOVERY half of a feed-generic host is built and shipping. What D6 adds is the cursored-pass
 half.
 
-#### An annotated ref — REOPENED 2026-08-15, the earlier entry here was wrong
+#### An annotated ref — CLOSED 2026-08-15, after a round trip
 
 `Ref.Ref` accepts a concrete `Type`, a relation, a `Type.Type`, or the "any object" schema. An
 annotation-constrained overload — "a ref to any type carrying `FeedAnnotation`" — was the missing
-piece, and this section previously recorded it as permanently unavailable. **That is not the state of
-the tree.**
+piece. It existed briefly, twice, and is now deliberately gone.
 
-What actually happened, in merge order:
+What happened, in merge order:
 
 1. `Ref.byAnnotation` was added on the inbox branch (`b5eba8b43d`, pinned against a real database in
    `ff5ba58a29`).
@@ -256,10 +255,17 @@ What actually happened, in merge order:
 3. **#12577 put it back**, because that branch still carried the two commits from step 1 and the merge
    resurrected them. Merged 2026-08-14T22:46Z.
 
-So `Ref.byAnnotation` **is on `main` today** (`packages/core/echo/echo/src/Ref.ts`, with tests),
-present by accident rather than by decision. A deliberate review outcome was silently reverted by a
-later merge. Until that is adjudicated, do not cost D6 as though the primitive were unavailable — and
-do not cost it as though it were endorsed either.
+4. **#12612 dropped it again**, restoring the #12575 decision, once the accidental resurrection was
+   noticed. It is not on `main`.
+
+So the answer is settled and the reasoning is worth keeping, because it is the reason not to propose
+this again: annotations do not participate in the type system, so `Ref.byAnnotation(X)` produced the
+same TypeScript type as `Ref.Ref(Obj.Unknown)`; and the check is synchronous, so it could only inspect
+a target already resident — an unresolved reference passed regardless, and the handler had to re-check
+after loading either way. It bought nothing a runtime guard does not.
+
+The lesson about the round trip is worth keeping too: a branch carrying commits that predate a review
+decision will silently undo it on merge, and nothing warns.
 
 #### Candidates, restated against those facts
 
@@ -271,10 +277,9 @@ do not cost it as though it were endorsed either.
    declared. Strictly worse than 1 now that the annotation exists.
 3. **The feed alone**, each processor resolving its own subject. Removes the owner from the seam but
    pushes the cursor-anchor problem into every processor, and each would solve it differently.
-4. **`Ref.byAnnotation` as the subject** — `owner: Ref.byAnnotation(FeedAnnotationId)`, keeping the
-   constraint at the operation boundary and costing no runtime guard. It is on `main` and tested, so
-   this is a live option again — but it was dropped on purpose in #12575 and only came back by merge,
-   so choosing it means re-affirming it deliberately, not leaning on the accident.
+4. ~~**`Ref.byAnnotation` as the subject.**~~ RULED OUT twice, most recently in #12612. It never
+   removed the runtime guard it was meant to replace (see above), so option 1 loses nothing by
+   comparison. Reviving it means re-opening a decision two reviews have now made.
 
 ### The open sub-questions
 

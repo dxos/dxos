@@ -1,8 +1,21 @@
 # plugin-inbox — Tasks
 
-_Resume: **#12555, #12574, #12575 and #12577 MERGED.** Current PR is **#12605** (provider operations
-out of plugin-inbox) — **`test` is RED and undiagnosed**; everything after it sits unpushed on the
-same branch and needs either a retitle or its own PR.
+_Resume: **#12555, #12574, #12575, #12577 and #12612 MERGED.** Current PR is **#12605**, now carrying
+five subjects rather than the one its original title named — provider operations, the `Banner` rename
+plus `Deferred`, the dev startup abort, the card-depiction seam, and the trigger poll. Landing as one
+PR was a deliberate call over splitting it into five.
+
+**Its `test` job was red and is now fixed.** Cause: `vite.config.ts` lists build entrypoints
+explicitly, and new subpaths were added without them — `#types` dangled in plugin-google's built
+`operations` entry, so the CLI died at import and all 11 of its tests failed on a module-resolution
+error rather than anything they asserted. Same omission in plugin-jmap, and in plugin-inbox's
+`MailSend`/`ReplyGeneration` (whose exports also pointed at a nested `dist/lib/types/` path no sibling
+uses). A local `:build` cannot catch this class — the entry is absent, not broken, and it only fails at
+runtime resolution in a consumer. An audit of every manifest against files on disk found five more
+packages with the same defect, all pre-existing on `main` and none with a consumer yet:
+`plugin-atproto`, `plugin-library`, `plugin-brain` (`./containers`), `plugin-projects` (`./templates`)
+and `storybook-testing` (`./modules`) — four of them pointing into a `dist/lib/neutral/` layout that
+does not exist.
 
 Landed since: the twelve Google/JMAP operation definitions moved to `@dxos/plugin-google/GoogleOperation`
 and `@dxos/plugin-jmap/JmapOperation`, so plugin-inbox no longer declares operations it does not
@@ -16,8 +29,9 @@ action now runs the agent that fills the profile skeleton it creates.
 
 **D6 is NOT built and NOT closed** — it is scheduled: the standing instruction (2026-08-14) is to
 revive it once the two ECHO chips are approved. One of those, `Ref.byAnnotation`, was dropped on
-purpose in #12575 and then **restored by accident** when #12577 merged commits predating the drop, so
-it sits on `main` today unendorsed. Adjudicate that before building on it. The independent argument
+purpose in #12575, **restored by accident** when #12577 merged commits predating the drop, and dropped
+again for good in #12612 — it is not on `main`, and the D6 design no longer waits on it (a runtime
+guard was always required regardless). The independent argument
 against building at all is unchanged: still no second cursored consumer.
 
 Unresolved: the mailbox empty-panel flicker's root cause is still unknown (`Deferred` masks it, and the
