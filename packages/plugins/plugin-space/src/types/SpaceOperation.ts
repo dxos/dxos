@@ -180,9 +180,6 @@ export const AddObject = Operation.make({
     ).annotate({
       description: 'The database or collection to add to, or a reference to the collection.',
     }),
-    targetNodeId: Schema.optional(
-      Schema.String.annotate({ description: 'Qualified graph node ID of the target collection.' }),
-    ),
   }),
   // No navigation path: where an object lands in the tree is resolved on demand by
   // `NavigationOperation.ResolveNavigationTargets`, which is the single entry point for it.

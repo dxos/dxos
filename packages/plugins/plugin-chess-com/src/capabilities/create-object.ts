@@ -24,7 +24,6 @@ export default Capability.makeModule(
           const result = yield* Operation.invoke(SpaceOperation.AddObject, {
             object,
             target: options.target,
-            targetNodeId: options.targetNodeId,
           });
           yield* Operation.schedule(
             ChessComOperation.SyncGames,

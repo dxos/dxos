@@ -16,6 +16,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
@@ -32,8 +33,6 @@ import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
-
-import { getChatsPath } from '../paths';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [RunInstructions] as const;
@@ -256,13 +255,19 @@ export default Capability.makeModule(
                     { object: chat, target: space.db },
                     { spaceId: space.db.spaceId },
                   );
-                  // This caller knows the destination — the chat is filed at the space root but
-                  // belongs under the chats node — so it spells the path rather than resolving it.
-                  yield* Operation.invoke(
-                    LayoutOperation.Open,
-                    { subject: [GraphPath.getCollectionObjectPath(getChatsPath(space.db.spaceId), chat.id)] },
+                  const { targets } = yield* Operation.invoke(
+                    NavigationOperation.ResolveNavigationTargets,
+                    { query: { uri: Obj.getURI(chat) } },
                     { spaceId: space.db.spaceId },
                   );
+                  const [navigationTarget] = targets;
+                  if (navigationTarget) {
+                    yield* Operation.invoke(
+                      LayoutOperation.Open,
+                      { subject: [navigationTarget.path] },
+                      { spaceId: space.db.spaceId },
+                    );
+                  }
                 }),
               properties: {
                 label: ['create-chat.label', { ns: meta.profile.key }],

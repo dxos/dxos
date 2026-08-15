@@ -18,8 +18,6 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { AssistantOperation } from '#types';
 
-import { getChatsPath } from '../paths';
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
@@ -35,7 +33,6 @@ export default Capability.makeModule(
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,
-                targetNodeId: options.targetNodeId ?? getChatsPath(options.db.spaceId),
               });
             }),
         },
@@ -48,7 +45,6 @@ export default Capability.makeModule(
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,
-                targetNodeId: options.targetNodeId,
               });
             }),
         },
@@ -60,7 +56,6 @@ export default Capability.makeModule(
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,
-                targetNodeId: options.targetNodeId,
               });
             }),
         },
@@ -73,7 +68,6 @@ export default Capability.makeModule(
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,
-                targetNodeId: options.targetNodeId,
               });
             }).pipe(
               Effect.provide(

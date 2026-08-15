@@ -24,7 +24,6 @@ export default Capability.makeModule(
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,
-                targetNodeId: options.targetNodeId,
               });
             }),
         },
@@ -38,12 +37,10 @@ export default Capability.makeModule(
               yield* Operation.invoke(SpaceOperation.AddObject, {
                 object: spec,
                 target: options.target,
-                targetNodeId: options.targetNodeId,
               });
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object: project,
                 target: options.target,
-                targetNodeId: options.targetNodeId,
               });
             }),
         },

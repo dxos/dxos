@@ -12,8 +12,6 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { RoutineCapabilities, RoutineOperation } from '#types';
 
-import { getRoutinesPath } from '../paths';
-
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = RoutineOperation.CreateRoutine.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, templateId, name, subject }) {
@@ -27,11 +25,9 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = Ro
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
-      const targetNodeId = getRoutinesPath(db.spaceId);
       return yield* Operation.invoke(SpaceOperation.AddObject, {
         object: draft,
         target: db,
-        targetNodeId,
       });
     }),
   ),

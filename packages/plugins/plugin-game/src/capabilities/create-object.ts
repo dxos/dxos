@@ -40,7 +40,6 @@ export default Capability.makeModule(
           yield* Operation.invoke(SpaceOperation.AddObject, {
             object: stateObject,
             target: options.target,
-            targetNodeId: options.targetNodeId,
           });
 
           const game = Game.make({
@@ -54,7 +53,6 @@ export default Capability.makeModule(
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object: game,
             target: options.target,
-            targetNodeId: options.targetNodeId,
           }).pipe(
             Effect.tapError(() =>
               Operation.invoke(SpaceOperation.RemoveObjects, { objects: [stateObject] }).pipe(Effect.ignore),
