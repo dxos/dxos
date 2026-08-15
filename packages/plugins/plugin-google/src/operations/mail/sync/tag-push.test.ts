@@ -7,6 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { PROGRESS_STATUS_COMPLETE } from '@dxos/app-toolkit';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -304,6 +306,67 @@ describe('gmail tag push', () => {
     expect(pushes).toHaveLength(1);
     expect(TagIndex.bind(tagIndex).tags(message.id)).toContain(Obj.getURI(starred).toString());
   });
+
+  /**
+   * The push phase runs OUTSIDE the pipeline's `tapError`, so a defect escaping it would end the run
+   * with no terminal status — leaving the progress key live and the mailbox's Sync button disabled
+   * until the user navigates away. The pull has already committed by then, so losing the push is a
+   * degradation; losing the completion signal is a visible break. Regression for exactly that.
+   */
+  test('a broken push phase still completes the run and reports COMPLETE', async ({ expect }) => {
+    const dataset = {
+      ...generateGmailDataset({ count: 2, seed: 91, start: subDays(now, 6), end: subDays(now, 2) }),
+      historyId: '1000',
+    };
+    const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
+
+    // A provider whose push DEFECTS (dies) rather than failing in the typed error channel — the shape
+    // an unexpected bug takes, and the one a `catch` on the error channel alone would not contain.
+    const exploding = Layer.effect(
+      GoogleMailApi,
+      Effect.gen(function* () {
+        const inner = yield* GoogleMailApi;
+        return GoogleMailApi.of({
+          ...inner,
+          batchModifyMessages: () => Effect.die(new Error('injected push defect')),
+        });
+      }),
+    ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
+
+    const statusUpdates: Trace.PayloadType<typeof Trace.StatusUpdate>[] = [];
+    const traceLayer = Trace.testTraceService().pipe(
+      Layer.provide(
+        Layer.succeed(Trace.TraceSink, {
+          write: (message) => {
+            for (const event of Trace.flatten(message)) {
+              if (Trace.isOfType(Trace.StatusUpdate, event)) {
+                statusUpdates.push(event.data);
+              }
+            }
+          },
+        }),
+      ),
+    );
+    const services = Layer.mergeAll(exploding, ambientSyncServices(db, { traceLayer }));
+
+    await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
+
+    const target = dataset.messages[0];
+    const message = await feedMessageFor(db, mailbox, target.id);
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const starred = await Tag.findOrCreate(db, { key: SystemTags.systemTagKey('starred'), label: 'Starred' });
+    Tagging.set(message, Obj.getURI(starred).toString(), { index: tagIndex });
+    await db.flush({ indexes: true });
+
+    statusUpdates.length = 0;
+    const result = await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)),
+    );
+
+    // The run completes rather than dying, and the meter is released.
+    expect(result.newMessages).toBe(0);
+    expect(statusUpdates.map((update) => update.message)).toContain(PROGRESS_STATUS_COMPLETE);
+  });
 });
 
 describe('gmail tag push — the reconciliation base', () => {
@@ -488,5 +551,80 @@ describe('gmail tag push — unpushable labels', () => {
 
     expect(pushes.flatMap((push) => push.add)).not.toContain('SENT');
     expect(pushes).toEqual([]);
+  });
+});
+
+describe('gmail tag push — an existing binding gaining tag sync', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const now = new Date('2026-07-16T12:00:00.000Z');
+
+  /**
+   * A mailbox that has been syncing for weeks and only now gains tag sync has no `tagHeads` — the same
+   * signal a brand-new binding gives. Treating it as a first sync would absorb every tag the user had
+   * already applied into the base, after which `local ⊖ base` is empty forever and they could never
+   * reach the provider. Diagnosed against a real mailbox whose four existing stars had become
+   * permanently unpushable exactly this way.
+   */
+  test('pre-existing local tags are pushed, not absorbed into the base', async ({ expect }) => {
+    const dataset = {
+      ...generateGmailDataset({ count: 2, seed: 95, start: subDays(now, 6), end: subDays(now, 2) }),
+      historyId: '1000',
+    };
+    const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
+    const pushes: { add: readonly string[]; remove: readonly string[] }[] = [];
+    const layer = Layer.effect(
+      GoogleMailApi,
+      Effect.gen(function* () {
+        const inner = yield* GoogleMailApi;
+        return GoogleMailApi.of({
+          ...inner,
+          batchModifyMessages: (userId, ids, labels) => {
+            pushes.push({ add: labels.addLabelIds ?? [], remove: labels.removeLabelIds ?? [] });
+            return inner.batchModifyMessages(userId, ids, labels);
+          },
+        });
+      }),
+    ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
+    const services = Layer.mergeAll(layer, ambientSyncServices(db));
+
+    // Backfill first, which leaves the binding with a watermark — it has synced before. Then clear the
+    // tag heads, which is exactly the state a mailbox is in the moment tag sync ships: syncing for
+    // weeks, but never a tag-aware pass.
+    await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
+    Obj.update(binding, (binding) => {
+      if (binding.spec.kind === 'external') {
+        binding.spec.tagHeads = undefined;
+      }
+    });
+
+    const target = dataset.messages[0];
+    const feed = mailbox.feed.target!;
+    const items = await db
+      .query(Query.select(Filter.type(Message.Message)).from(Scope.feed(Feed.getFeedUri(feed)!)))
+      .run();
+    const message = items.find((item) =>
+      Obj.getMeta(item).keys.some((key) => key.source === GMAIL_SOURCE && key.id === target.id),
+    )!;
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const starred = await Tag.findOrCreate(db, { key: SystemTags.systemTagKey('starred'), label: 'Starred' });
+    Tagging.set(message, Obj.getURI(starred).toString(), { index: tagIndex });
+    await db.flush({ indexes: true });
+    pushes.length = 0;
+
+    await EffectEx.runPromise(runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(services)));
+
+    // The pre-existing star reaches Gmail rather than being silently baselined away.
+    expect(pushes.flatMap((push) => push.add)).toContain('STARRED');
+    // Additive only: an upgrade must never synthesise a removal from a base it never had.
+    expect(pushes.flatMap((push) => push.remove)).toEqual([]);
   });
 });

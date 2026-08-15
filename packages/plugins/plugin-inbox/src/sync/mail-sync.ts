@@ -293,11 +293,20 @@ const pushLocalTags = Effect.fn('mail-sync.pushTags')(function* ({
   const nextHeads = Obj.version(tagIndex).automergeHeads;
   const local = tagsFromIndex(tagIndex.index ?? {}, eligible);
 
-  // A base is absent for two different reasons, and they call for different behaviour: never synced
-  // (push nothing — no evidence these tags were meant for the provider) versus heads that no longer
-  // resolve (additive reconcile — losing the base must not lose the user's changes).
+  // A base is absent for three different reasons, and only one of them justifies pushing nothing.
+  //
+  // A genuinely NEW binding (no heads, no watermark) has no evidence its local tags were ever meant
+  // for the provider, so it records a base and pushes nothing. But a binding that has been syncing
+  // for weeks and is only now gaining tag sync ALSO has no heads — and treating that as a first sync
+  // strands every tag the user already applied: the first run absorbs them into the base, after which
+  // `local ⊖ base` is empty forever and they can never reach the provider. Diagnosed live against a
+  // real mailbox whose four existing stars had become permanently unpushable exactly this way.
+  //
+  // So an existing binding gaining tag sync takes the additive path instead — push what the remote
+  // lacks, remove nothing — which is the same treatment as heads that no longer resolve.
   let base: ReturnType<typeof tagsFromIndex> | undefined;
-  let firstSync = savedHeads === undefined;
+  const newBinding = Cursor.parseKey(binding.max) === 0 && Cursor.readToken(binding) === undefined;
+  let firstSync = savedHeads === undefined && newBinding;
   if (savedHeads !== undefined) {
     try {
       const historical = Obj.getVersion(tagIndex, savedHeads);
@@ -691,6 +700,12 @@ export const runMailSync = (
     // is persisted: the heads captured here already contain this run's pulled tags (so they are not
     // re-pushed next run) while anything the user does after this instant belongs to the next run (so
     // it is not silently absorbed). See `docs/TAG-SYNC.md` §"Ordering within a run".
+    //
+    // Defects are contained here rather than allowed to fail the run. This phase sits OUTSIDE the
+    // pipeline's `tapError`, so an escaping failure would end the run with no terminal status at all —
+    // leaving the progress key live and the mailbox's Sync button disabled until the user navigates
+    // away. The pull has already committed by this point, so losing the push is a degradation; losing
+    // the run's completion signal is a visible break.
     const tagPush = yield* pushLocalTags({
       provider,
       source,
@@ -698,7 +713,14 @@ export const runMailSync = (
       feed,
       tagIndex,
       observed: remoteObserver,
-    });
+    }).pipe(
+      Effect.catchCause((cause) =>
+        Effect.sync(() => {
+          log.warn('mail sync: tag push phase failed, continuing pull-only', { provider: provider.name, cause });
+          return NO_TAG_PUSH;
+        }),
+      ),
+    );
 
     // Full funnel, each stage narrower than the last, so a zero result on a completed run can be
     // attributed: `enumerated` 0 → empty windows / provider returned no ids; `taken` 0

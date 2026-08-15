@@ -155,6 +155,14 @@ Committed, unpushed. This is the PR to open first.
 
 ### Tasks
 
+- [ ] **Conversation star state should be the OR across the thread, and read-only** (reported
+      2026-08-15). A conversation whose FIRST message is starred appears in the Starred folder, but the
+      conversation header shows no star — the header reads membership from one message while the folder
+      query matches any. Decided direction: in `MailboxArticle` the conversation star is the logical OR
+      of every message in the thread and is READ-ONLY, or alternatively render a star per message.
+      Toggling one aggregate star cannot express which message it belongs to, which is why it stops
+      being a control.
+
 - [ ] **Filtered mailbox results float instead of anchoring to the top** (reported 2026-08-15, with a
       screenshot). With a filter applied in the mailbox toolbar (`# inbox patrick`), the two matching
       conversations render roughly a third of the way down the pane with a large empty band above
