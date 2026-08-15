@@ -120,6 +120,32 @@ export type MailSyncSource = {
   readonly reconcileForeignIds?: readonly string[];
 };
 
+/**
+ * One message's tag movements to apply at the provider, in provider vocabulary (Gmail label ids). The
+ * harness resolves tag uris through the run's {@link MailSyncSource.tagBindings} so the diff itself
+ * stays provider-agnostic.
+ */
+export type TagPushOp = {
+  readonly foreignId: string;
+  readonly addLabelIds: readonly string[];
+  readonly removeLabelIds: readonly string[];
+};
+
+/**
+ * Per-op outcome of a tag push. The split exists because "the push drained" and "every op succeeded"
+ * are different questions, and only the first may advance the reconciliation base.
+ */
+export type TagPushResult = {
+  /**
+   * Ops that reached a terminal state — applied, or permanently rejected (message deleted, label
+   * gone, insufficient scope). Safe to advance past: no retry can change a permanent rejection, and
+   * refusing to advance would block the base forever.
+   */
+  readonly settled: readonly TagPushOp[];
+  /** Ops that failed transiently (429, 5xx, timeout) and must be retried on a later run. */
+  readonly pending: readonly TagPushOp[];
+};
+
 /** Resolved run context the harness hands a provider's {@link MailSyncProviderService.prepare}. */
 export type MailSyncPreparation = {
   readonly db: Database.Database;
