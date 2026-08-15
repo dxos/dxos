@@ -101,16 +101,68 @@ So bun's runtime module registry is the node-side analogue of the browser's impo
 
 ### 2.3 Installed vs enabled
 
-Yes, they are different, and the CLI is where the difference starts to carry weight. `PluginManager`
-has had both axes since it was written — `add`/`remove` register and unregister a plugin,
-`enable`/`disable` turn a registered one on, and `add`'s contract is explicitly "registers it
-**without enabling it**". What the CLI lacks is a second axis worth showing: its installed set is the
-compile-time constant `getPlugins()` in `commands/plugin-defs.ts`, so "installed" is true of
-everything and carries no information. That is why `plugin/list.ts` renders one collapsed `status`
-string (`core | enabled | disabled`) from two independent booleans. `dx plugin add` is exactly the
-change that makes the collapse wrong.
+**Decision (2026-08-15, user): parity with Composer.** Same two axes, same verbs, same meanings. The
+CLI does not get its own plugin-lifecycle model.
 
-The state a `dx plugin list` row has to express after that:
+That settles the question but is worth grounding, because the CLI is a short-lived process and
+"installed but disabled" reads at first like "bytes on disk that do nothing" — which sounds like a
+state with no purpose. Three things make it load-bearing, and they are stronger in the CLI than in
+Composer rather than weaker:
+
+- **Startup cost is paid per command, not per session.** Composer amortizes activation over a long
+  session; `dx` pays it on every invocation. An enabled plugin is a tax on `dx space list`.
+  Disabling is how a user gets a fast `dx` without losing the plugin, and it is the only lever they
+  have.
+- **Enabled plugins claim namespace.** They contribute `Capabilities.Command` (top-level `dx` verbs)
+  and, through `dx mcp serve`, MCP tool names. Two plugins wanting the same verb is resolved by
+  disabling one, not by deleting it.
+- **Enabled is the MCP exposure boundary.** The gateway projects every enabled plugin's operations
+  as tools an external agent can invoke. "Installed but disabled" means "on disk, but Claude cannot
+  call it" — the closest thing to a permission the CLI has, and the reason §2.6 is not academic.
+
+Uninstall throws away assets and the version pin; disable keeps them, so re-enabling is instant and
+offline where re-installing needs the network and may resolve differently.
+
+Where the CLI genuinely differs from Composer is not the model but the **flow**: Composer's
+install-now-enable-later is natural because you are browsing a registry UI, whereas someone typing
+`dx plugin add` almost always wants the thing working. So the state is rare as a _default_, not rare
+as a _state_ — which is why `add` enables by default (§2.4).
+
+#### What exists today
+
+`PluginManager` has had both axes since it was written — `add`/`remove` register and unregister,
+`enable`/`disable` turn a registered plugin on, and `add`'s contract is explicitly "registers it
+**without enabling it**". `dx plugin enable|disable|list` exist (contributed by `plugin-registry`,
+which is `system`-tagged so its commands are always reachable) and persist to
+`plugins/<profile>.yml`.
+
+**But no compiled-in plugin can actually land in the installed-but-disabled state.** Counting the
+CLI's set in `commands/plugin-defs.ts` against the `system` tag in each plugin's `dx.config.ts`:
+
+| Bucket                            | Plugins                                                                     | Disableable |
+| --------------------------------- | --------------------------------------------------------------------------- | ----------- |
+| core (`tags: ['system']`)         | client, registry, space, connector, routine, observability, process-manager | no          |
+| default-enabled (`getDefaults()`) | chess, sample, inbox, markdown                                              | yes         |
+| installed, not enabled            | — none —                                                                    | n/a         |
+
+Eleven plugins, seven core, four defaults, nothing left over. So the practical experience is "every
+built-in is always on", and `disable` can only ever turn off four content plugins. The mechanism is
+there; the state has no inhabitants.
+
+Two things follow, and both are CLI work rather than framework work:
+
+- **The `system` tagging is a Composer judgment inherited wholesale.** Each plugin declares
+  `tags: ['system']` in its own `dx.config.ts`, so the CLI has no say — `observability` and
+  `connector` are non-disableable in `dx` because they are non-disableable in Composer. Some of
+  that is right (`client`, `space`), some deserves a deliberate CLI answer. Core needs to be a
+  host-supplied set, or the tag needs a host-scoped variant; the manager already accepts core as a
+  constructor input rather than deriving it, so this is a `createCliApp` change.
+- **`getDefaults()` is a fixed four-element list that ignores its own config.** The CLI's
+  `PluginConfig` declares `isDev` / `isLabs` / `isStrict` and `getDefaults()` takes no arguments,
+  where composer-app's takes the same config and branches on it. Parity means the CLI's defaults
+  become a real editorial choice about which extra `dx` verbs a fresh profile has.
+
+The state a `dx plugin list` row has to express once remotes exist:
 
 | Axis        | Meaning in the CLI                                                           | Where it lives                                  |
 | ----------- | ---------------------------------------------------------------------------- | ----------------------------------------------- |
@@ -131,7 +183,7 @@ import(entryPath))` and get a fully-formed catalog entry, dependency declaration
 executing a line of plugin code. Enable is then the single point where third-party code first runs.
 The browser's `UrlLoader.preload` does the opposite: it imports every persisted remote entry at boot
 and only afterwards consults the enabled set, so an installed-but-disabled plugin runs its module
-body on every page load. Worth aligning, but the CLI should not inherit it — see §2.5, where this
+body on every page load. Worth aligning, but the CLI should not inherit it — see §2.6, where this
 boundary is also the cheapest thing we have resembling a consent point.
 
 **One file, not two.** The browser's split (remote records in `localStorage`, enabled ids elsewhere)
@@ -154,11 +206,19 @@ Two hazards in that migration, both in code as written today:
 
 ### 2.4 The command surface
 
+The whole of plugin management, at Composer parity — not just the `add` verb. Today only
+`enable|disable|list` exist and, per §2.3, they govern four content plugins.
+
 - **`dx plugin add <url|name>` installs and enables by default**, with `--no-enable` to stop at
   install. The two-axis model stays in the data; only the default composes them. A CLI `add` that
   leaves the plugin inert is a papercut — `code --install-extension` and `npm install` both do the
   working thing — and `--no-enable` is precisely the "fetch it, let me look at it before it runs"
   flow that §2.3's import boundary makes meaningful.
+- **A real default set, and a CLI-owned core set.** `getDefaults()` becomes config-driven the way
+  composer-app's is (it already receives `isDev` / `isLabs` / `isStrict` and ignores them), and the
+  core set moves from each plugin's `system` tag to something `createCliApp` supplies — the manager
+  takes core as a constructor input, so the CLI is free to decide that a plugin Composer pins is
+  merely default-enabled here.
 - **`remove` is not `disable`.** `remove <id>` drops the record and deletes assets; on a compiled-in
   plugin it must fail pointing at `disable`, mirroring the core check `disable.ts` already has.
   Aliases: `install` → `add`, `uninstall` → `remove`.
@@ -168,11 +228,44 @@ Two hazards in that migration, both in code as written today:
   for every subsequent verb, so `add` must print the resolved id — the browser's `add` returns the
   plugin for this reason. It also needs `UrlLoader.make`'s duplicate-id guard applied against the
   compiled-in set: a remote plugin claiming a builtin's id would make the builtin unreachable.
-- **`list` grows columns** — id, name, source (builtin / url / registry), version, installed,
-  enabled, state — instead of the single `status` string. `--json` already exists and should carry
-  the same fields.
+- **`list` grows columns** — id, name, source (builtin / url / registry / linked), version,
+  installed, enabled, state — instead of the single `status` string. `--json` already exists and
+  should carry the same fields.
 
-### 2.5 Open question: isolation
+### 2.5 Dev plugins: a path, not a dev server
+
+Composer's dev loop is `devPluginUrl` + `devPluginEnabled` settings pointing at a Vite dev-server
+manifest (`devEntry`, port 3967), because a browser can only reach a plugin over HTTP. The CLI has
+no such constraint, so the equivalent should be a **local path**:
+
+```
+dx plugin link <path>     # register from a directory, marked dev
+dx plugin unlink <id>
+```
+
+Parity is in the semantics, not the transport. Three properties carry over from the browser and are
+worth keeping deliberately:
+
+- **Shadowing.** The manager already implements it (`PluginCatalog.#devPlugins` records the
+  displaced plugin and `wasEnabled`, restoring it on remove), and a dev manifest is allowed to
+  collide with a builtin id where a production one is not. It matters more here than in the browser:
+  `dx plugin link ./packages/plugins/plugin-markdown` should test your working copy, not the copy
+  compiled into the binary.
+- **No manifest needed.** Every in-repo plugin's meta already comes from its own `dx.config.ts`
+  (`Plugin.getMetaFromConfig(config)`), which is the same `Config2.Plugin` shape a published
+  manifest carries. So `link` reads `dx.config.ts` from the directory and needs neither a build
+  output nor a served manifest — strictly better ergonomics than the browser's manifest+Vite dance,
+  and it falls out of what already exists.
+- **Persistence per profile**, like `devPluginUrl`, cleared by `unlink`.
+
+Unmeasured, and it decides how much this is worth: **whether a compiled `dx` binary can import
+on-disk TypeScript at runtime.** §2.1 measured ESM import from a compiled binary; TS transpilation
+inside a standalone executable is a different question. If it works, `link` needs no build step at
+all and the author's loop is edit-and-rerun. If it does not, `link` requires a built entry in the
+directory, and unbuilt-source iteration stays a `moon run cli:dev` (bun-from-source) affair — which
+is fine for us and poor for an external author. Measure before designing around either.
+
+### 2.6 Open question: isolation
 
 This loads third-party code **in-process with the user's HALO keys, unsandboxed**, and MCP widens
 the blast radius: a plugin's operations become tools an external agent can invoke. The browser gets
@@ -210,5 +303,5 @@ Two obstacles, both real:
 - Re-importing a plugin that registers ECHO types collides with process-global schema registration
   ("Schema version already registered"). Registration has to become idempotent, or scoped per load.
 
-A worker-per-plugin boundary (§2.3) would sidestep both, at the cost of a serialization seam between
+A worker-per-plugin boundary (§2.6) would sidestep both, at the cost of a serialization seam between
 the host and plugin handlers.

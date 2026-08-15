@@ -73,6 +73,29 @@ skills must reach the MCP surface. The MCP half is already done: the gateway rea
 projects with no further work. The browser has the rest of the system (manifest, URL loader,
 shared-scope import map, registry publish); this milestone is its node/bun half.
 
+**Decided 2026-08-15 (user):** plugin management reaches **Composer parity** — a real default
+enabled set, enable/disable, install from registry or URL, and a dev-plugin loop. The CLI does not
+get its own lifecycle model. DESIGN §2.3.
+
+### Plugin management (Composer parity)
+
+Today `enable|disable|list` exist (contributed by the `system`-tagged `plugin-registry`, so always
+reachable) and persist to `plugins/<profile>.yml` — but **no compiled-in plugin can occupy the
+installed-but-disabled state**: of the 11 in `commands/plugin-defs.ts`, 7 are `system`-tagged core
+(client, registry, space, connector, routine, observability, process-manager) and the other 4 are
+`getDefaults()` (chess, sample, inbox, markdown). Every built-in is always on, which is why it
+reads as though disabling does not exist. DESIGN §2.3.
+
+- [ ] **CLI-owned core set** — core is derived from each plugin's own `tags: ['system']` in its
+      `dx.config.ts`, so `dx` inherits Composer's judgment wholesale (`observability` and
+      `connector` are non-disableable here because they are there). `PluginManager` accepts core as
+      a constructor input rather than deriving it, so `createCliApp` can supply a CLI set. Decide
+      which of the seven genuinely cannot be turned off in a CLI.
+- [ ] **Real default set** — `getDefaults()` is a fixed 4-element list that takes no arguments,
+      while the CLI's `PluginConfig` already declares `isDev` / `isLabs` / `isStrict` and
+      composer-app's equivalent branches on exactly those. Make it an editorial choice about which
+      extra `dx` verbs a fresh profile has.
+
 ### Plugin loading
 
 - [ ] **Shared scope at startup** — register `DEFAULT_PACKAGES` through `Bun.plugin`'s module
@@ -106,7 +129,7 @@ shared-scope import map, registry publish); this milestone is its node/bun half.
 - [ ] **`plugin remove`** — drops the record and deletes assets; fails on a compiled-in plugin
       pointing at `disable`, mirroring `disable.ts`'s existing core check. `enable` on a
       non-installed id should point at `add` instead of failing a bare invariant.
-- [ ] **Decide isolation** (DESIGN §2.5) — third-party code runs in-process with the user's HALO
+- [ ] **Decide isolation** (DESIGN §2.6) — third-party code runs in-process with the user's HALO
       keys, and MCP lets an external agent invoke it. Decide before third-party plugins ship:
       trusted-publisher-and-explicit-enable, or a worker boundary (which would also solve reload).
       The install/enable boundary above makes the cheap end a real consent step, but bounds
@@ -120,10 +143,21 @@ shared-scope import map, registry publish); this milestone is its node/bun half.
 
 ### Reload, stage 2 — external plugin authors
 
-- [ ] **`--dev-plugin <manifest-url>`** — the CLI equivalent of the browser's `devEntry` dev
-      manifest: re-import on change with a cache-busting query, rebuild the projected layer, emit
-      `tools/list_changed` / `prompts/list_changed` (already emitted at startup, already acted on
-      by clients).
+- [ ] **`dx plugin link <path>` / `unlink <id>`** — the CLI's dev-plugin story is a **local path**,
+      not a dev-server URL: the browser needs `devPluginUrl` + Vite only because it can only reach a
+      plugin over HTTP. Registers from a directory marked dev, persisted per profile like
+      `devPluginUrl`. Reuse the manager's existing shadowing (`PluginCatalog.#devPlugins` records
+      the displaced plugin and `wasEnabled`, restores on remove) so `link ./packages/plugins/
+    plugin-markdown` tests the working copy rather than the compiled-in one. No manifest needed —
+      every in-repo plugin's meta already comes from its `dx.config.ts`, the same `Config2.Plugin`
+      shape a published manifest carries. DESIGN §2.5.
+- [ ] **Measure: can a compiled `dx` binary import on-disk TypeScript at runtime?** §2.1 measured
+      ESM import from a compiled binary; TS transpilation inside a standalone executable is a
+      separate question and it decides whether `link` needs a build step at all. Measure before
+      designing around either answer.
+- [ ] **`--dev-plugin <manifest-url>`** — re-import on change with a cache-busting query, rebuild
+      the projected layer, emit `tools/list_changed` / `prompts/list_changed` (already emitted at
+      startup, already acted on by clients). Same machinery as `link`, driven by a watcher.
 - [ ] **Upstream: tool/prompt removal in `McpServer`** — it exposes `addTool`/`addPrompt` only, so
       a changed surface cannot replace the old one without rebuilding the server layer under the
       live transport.
