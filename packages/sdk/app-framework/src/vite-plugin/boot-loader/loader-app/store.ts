@@ -69,10 +69,14 @@ export type LoaderStore = {
   lines: Accessor<StatusLine[]>;
   /** Current lifecycle phase. */
   phase: Accessor<Phase>;
+  /** The abort handler once startup has stalled, or `undefined` while it is within budget. */
+  onAbort: Accessor<(() => void) | undefined>;
   /** Apply a status update (append, or replace-in-place for range ticks). */
   pushStatus: (payload: StatusPayload) => void;
   /** Enter host-driven progress with `fraction` ∈ [0, 1]; never regresses. */
   setProgress: (fraction?: number) => void;
+  /** Offer the user an abort (see `BootLoaderApi.stalled`). Idempotent — the first handler wins. */
+  stalled: (onAbort: () => void) => void;
   /** Snap to 100%, stop the creep, and enter the dismissing phase. */
   ready: () => void;
   /** Stop the creep timer (call on teardown). */
@@ -83,6 +87,9 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   const [progress, setProgressPct] = createSignal(0);
   const [lines, setLines] = createSignal<StatusLine[]>(initialStatus ? [{ id: 0, text: initialStatus }] : []);
   const [phase, setPhase] = createSignal<Phase>('creep');
+  // Held as a signal rather than a boolean + prop so the button has the handler directly, and so a
+  // second `stalled()` (a re-fired deadline) cannot swap it mid-press.
+  const [onAbort, setOnAbort] = createSignal<(() => void) | undefined>(undefined);
 
   let creepCeiling = STATE_1_ASYMPTOTE;
   let creepRate = STATE_1_RATE;
@@ -135,15 +142,23 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     startCreep();
   };
 
+  const stalled = (handler: () => void): void => {
+    // Updater form, and the handler is the RETURN value: Solid would otherwise call a bare
+    // function argument as an updater rather than storing it.
+    setOnAbort((current) => current ?? handler);
+  };
+
   const ready = (): void => {
     stopCreep();
     setProgressPct(100);
     setPhase('dismissing');
+    // Startup got there in the end; the escape hatch is no longer an offer worth making.
+    setOnAbort(undefined);
   };
 
   const dispose = (): void => stopCreep();
 
   startCreep();
 
-  return { progress, lines, phase, pushStatus, setProgress, ready, dispose };
+  return { progress, lines, phase, onAbort, pushStatus, setProgress, stalled, ready, dispose };
 };

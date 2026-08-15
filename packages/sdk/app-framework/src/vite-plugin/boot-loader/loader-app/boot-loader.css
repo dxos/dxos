@@ -309,3 +309,48 @@ body {
   height: 1.5em;
   white-space: nowrap;
 }
+
+/*
+ * Stalled affordance (dev only — see `BootLoaderApi.stalled`). Sits below the status log, which is
+ * itself offset from the disc, so its own offset clears both. Full opacity deliberately: unlike the
+ * status log this is the one thing on screen asking to be read and acted on.
+ */
+#boot-loader-stalled {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translate(
+    0,
+    calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap) * 2 + var(--boot-loader-status-height, 4.5em))
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+#boot-loader-stalled-text {
+  margin: 0;
+  opacity: 0.5;
+}
+
+#boot-loader-stalled-abort {
+  /*
+   * Styled from scratch rather than inherited: the loader paints before any app CSS loads, so it
+   * cannot rely on the design system's button.
+   */
+  padding: 6px 14px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+#boot-loader-stalled-abort:hover {
+  opacity: 1;
+}
