@@ -1,9 +1,11 @@
 # DXOS Claude Code Plugins — Tasks
 
-_Resume: Phase 2's `mcp` backend is CODE-COMPLETE but has never touched a running space — next is the
-live round-trip (`dx mcp serve` up, `DX_PROJECT_BACKEND=mcp`, one list → new → track → tasks cycle
-checked in Composer). PR #12618 carries phases 1 + 1b and is green. Uncommitted: none. Last: wired
-`resolve_backend` for `mcp` against the real tool surface and settled the no-cascade rule._
+_Resume: PR #12618 MERGED 2026-08-15 (`526147b39e`) — phases 1, 1b and 2's code all landed, and the
+`dxos` marketplace publishes `dxos-project` from `main`. The `mcp` backend has still never touched a
+running space: next is the live round-trip (`dx mcp serve` up, `DX_PROJECT_BACKEND=mcp`, one list →
+new → track → tasks cycle checked in Composer). Two local steps first — restart so the plugin loads
+from `main`, and re-point the local `dxos` marketplace, which still sources from a deleted worktree.
+Uncommitted: none. Last: tracked Phase 3, modelling the user._
 
 ## Phase 1: Extract into a distributable plugin
 
@@ -116,6 +118,33 @@ and editable outside the agent.
       ("readable from both Composer and MCP without divergence").
 - [ ] **Migrate this repo's registry** once the round-trip passes — 34 active projects and their
       TASKS.md ledgers become Projects + outlines. Needs an import path, not hand-entry.
+
+## Phase 3: Model the user
+
+Tracked 2026-08-15 (user). Today the planning agent models the _work_ — projects, ledgers, open
+items — and nothing about the person doing it. Every prioritisation it offers is therefore made
+blind: it cannot tell what the user is trying to achieve this week, which of 34 active projects
+actually matters, whether they have ten minutes or a day, or that a "next action" it proposes needs
+someone who is asleep.
+
+### Tasks
+
+- [ ] **Model the user alongside the work** — state, goals, priorities, availability. Open design
+      questions, all of which need answering before any of it is built:
+  - **What is modelled.** Goals and priorities are durable and user-authored; state and
+    availability are volatile and mostly inferred. Those two halves probably want different
+    storage and different trust rules.
+  - **Where it lives.** A `Person`/`Actor` object in the space is the obvious home under the `mcp`
+    backend, and it makes the model editable in Composer rather than trapped in the agent. The
+    `file` backend has no equivalent — worth deciding whether this is `mcp`-only.
+  - **How it is populated.** Asking the user directly is reliable but expensive (the
+    minimise-round-trips rule cuts against it); inference from session history is cheap and
+    frequently wrong. A user-confirmed inference is likely the shape.
+  - **What consumes it.** At minimum: which project `/dxos-project:project` resolves to, how the
+    `list` table is ordered, and what "next action" a resume proposes. Availability should also
+    gate whether the agent asks a blocking question at all.
+  - **The privacy boundary.** This is a model of a person, committed to a repo or synced to a
+    space. Decide what is never recorded before recording anything.
 
 ### References
 
