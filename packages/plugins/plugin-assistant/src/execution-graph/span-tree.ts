@@ -261,42 +261,6 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
   return freezeSpan(root);
 };
 
-export interface FilterSpanTreeOptions {
-  /**
-   * Test every span rather than only the ones that would sit at the top level. Off by default,
-   * because once something is worth showing the work it kicked off usually is too — an agent's run
-   * is not much use with its database calls filtered out of it.
-   */
-  deep?: boolean;
-}
-
-/**
- * Removes spans the predicate rejects, splicing each rejected span's children into its place.
- *
- * A rejected span's own events go with it; they describe the hidden unit of work, not its children.
- * Hoisted children face the predicate in turn, since they have themselves moved up a level.
- */
-export const filterSpanTree = (
-  root: Span,
-  predicate: (span: Span) => boolean,
-  { deep = false }: FilterSpanTreeOptions = {},
-): Span => ({
-  ...root,
-  children: (deep ? filterSpansDeep : filterTopLevelSpans)(root.children, predicate),
-});
-
-/** Rejected spans are replaced by their (re-tested) children; survivors keep their subtree intact. */
-const filterTopLevelSpans = (spans: readonly Span[], predicate: (span: Span) => boolean): Span[] =>
-  spans.flatMap((span) => (predicate(span) ? [span] : filterTopLevelSpans(span.children, predicate)));
-
-/** As above, but a survivor's subtree is filtered too. */
-const filterSpansDeep = (spans: readonly Span[], predicate: (span: Span) => boolean): Span[] =>
-  spans.flatMap((span) =>
-    predicate(span)
-      ? [{ ...span, children: filterSpansDeep(span.children, predicate) }]
-      : filterSpansDeep(span.children, predicate),
-  );
-
 /**
  * Message stamped on synthetic end events produced when a span times out.
  */

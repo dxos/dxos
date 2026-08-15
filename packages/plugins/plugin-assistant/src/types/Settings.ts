@@ -11,8 +11,6 @@ import { Provider } from '@dxos/ai';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import { OperationTagScope } from '#execution-graph';
-
 // A provider id is an open DXN (third-party providers define their own), validated as a DXN rather
 // than restricted to a closed literal union. The known providers come from the @dxos/ai registry.
 export const ModelProvider = DXN.Schema;
@@ -79,24 +77,11 @@ export const Settings = Schema.Struct({
       description: 'Show the raw span tree as JSON in the trace panel instead of the commit graph.',
     }),
   ),
-  traceProcessTree: Schema.optional(
-    Schema.Boolean.annotate({
-      title: 'Trace panel process tree',
-      description: 'Show the live process tree above the trace panel timeline.',
-    }),
-  ),
   traceOperationTags: Schema.optional(
     Schema.mutable(Schema.Array(Schema.String)).annotate({
       title: 'Trace panel operation tags',
       description:
-        'Operation tags shown in the trace panel. Unset uses the default selection, which hides layout, navigation, and database chatter.',
-    }),
-  ),
-  traceOperationTagScope: Schema.optional(
-    OperationTagScope.annotate({
-      title: 'Trace panel filter scope',
-      description:
-        'Whether the trace panel tag filter applies to every operation or only to top-level ones, letting whatever a shown operation kicked off come with it.',
+        'Operation tags whose processes are listed in the trace panel. Unset uses the default selection: assistant and connector activity.',
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));

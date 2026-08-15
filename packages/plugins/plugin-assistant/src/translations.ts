@@ -107,8 +107,6 @@ export const translations: Resource[] = [
 
         'trace-filter.menu': 'Filter operations',
         'trace-filter.placeholder': 'Filter by tag...',
-        'trace-filter-scope.label': 'Apply to subtasks',
-        'trace-processes.menu': 'Show processes',
         'trace-tag-layout.label': 'Layout',
         'trace-tag-navigation.label': 'Navigation',
         'trace-tag-assistant.label': 'Assistant',

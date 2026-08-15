@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
-import { Icon, Input, Separator, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { Combobox } from '@dxos/react-ui-list';
 
-import { type OperationTagScope } from '#execution-graph';
 import { meta } from '#meta';
 
 import { tagIcon } from './trace-filter';
@@ -18,29 +17,15 @@ export type TraceToolbarProps = {
   /** Every tag offered, in menu order (see `availableOperationTags`). */
   available: readonly string[];
   onSelectedChange: (tags: readonly string[]) => void;
-  /** How deep the tag selection reaches. */
-  scope: OperationTagScope;
-  onScopeChange: (scope: OperationTagScope) => void;
-  /** Whether the live process tree is shown above the timeline. */
-  processTree: boolean;
-  onProcessTreeChange: (processTree: boolean) => void;
 };
 
 /**
  * Trace panel toolbar.
  *
- * Both controls are deliberately reticent: bare icons, no visible state, so the default view reads
- * as "the trace" rather than "a filtered trace". What is on only shows once the user asks.
+ * Deliberately reticent: a bare icon, no visible state, so the default view reads as "the trace"
+ * rather than "a filtered trace". What is on only shows once the user asks.
  */
-export const TraceToolbar = ({
-  selected,
-  available,
-  onSelectedChange,
-  scope,
-  onScopeChange,
-  processTree,
-  onProcessTreeChange,
-}: TraceToolbarProps) => {
+export const TraceToolbar = ({ selected, available, onSelectedChange }: TraceToolbarProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [query, setQuery] = useState('');
   const label = (tag: string) => t(`trace-tag-${tag}.label`, { defaultValue: tag });
@@ -48,23 +33,9 @@ export const TraceToolbar = ({
     () => available.filter((tag) => label(tag).toLowerCase().includes(query.toLowerCase())),
     [available, query, t],
   );
-  const handleScopeChange = useCallback(
-    (allLevels: boolean) => onScopeChange(allLevels ? 'all' : 'top-level'),
-    [onScopeChange],
-  );
 
   return (
     <Toolbar.Root density='sm' classNames='border-be border-subdued-separator'>
-      <Toolbar.Toggle
-        variant='ghost'
-        pressed={processTree}
-        onPressedChange={onProcessTreeChange}
-        aria-label={t('trace-processes.menu')}
-        data-testid='tracePanel.processes'
-      >
-        <Icon icon='ph--tree-structure--regular' size={4} />
-      </Toolbar.Toggle>
-
       <div role='none' className='grow' />
 
       <Combobox.Root multiple value={selected} onValueChange={onSelectedChange}>
@@ -94,21 +65,6 @@ export const TraceToolbar = ({
                 <Combobox.Item key={tag} value={tag} label={label(tag)} icon={tagIcon(tag)} />
               ))}
             </Combobox.List>
-            {/* Outside the listbox: a setting about the selection, not a member of it. */}
-            <Separator classNames='mlb-1' />
-            <Input.Root>
-              <div
-                role='none'
-                className='flex items-center gap-2 pli-(--dx-control-pad) min-h-(--dx-control) cursor-default'
-              >
-                <Input.Label classNames='w-0 grow truncate'>{t('trace-filter-scope.label')}</Input.Label>
-                <Input.Switch
-                  checked={scope === 'all'}
-                  onCheckedChange={handleScopeChange}
-                  data-testid='tracePanel.filterScope'
-                />
-              </div>
-            </Input.Root>
             <Combobox.Arrow />
           </Combobox.Content>
         </Combobox.Portal>

@@ -9,7 +9,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useAtomCapabilityState, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapabilityState, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import * as Process from '@dxos/compute/Process';
@@ -23,16 +23,16 @@ import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
-import {
-  type ExecutionGraph,
-  type OperationTagScope,
-  buildExecutionGraph,
-  collectOperationTags,
-} from '#execution-graph';
+import { type ExecutionGraph, buildExecutionGraph } from '#execution-graph';
 import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
-import { DEFAULT_OPERATION_TAGS, availableOperationTags } from './trace-filter';
+import {
+  DEFAULT_OPERATION_TAGS,
+  availableOperationTags,
+  filterProcesses,
+  operationTagsByProcessKey,
+} from './trace-filter';
 import { TraceToolbar } from './TraceToolbar';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
@@ -49,27 +49,10 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       (tags: readonly string[]) => updateSettings((settings) => ({ ...settings, traceOperationTags: [...tags] })),
       [updateSettings],
     );
-    // Top-level by default: a shown operation brings its subtasks with it, so selecting `assistant`
-    // gives the whole agent run rather than a run with its database calls cut out.
-    const operationTagScope = settings.traceOperationTagScope ?? 'top-level';
-    const handleOperationTagScopeChange = useCallback(
-      (traceOperationTagScope: OperationTagScope) =>
-        updateSettings((settings) => ({ ...settings, traceOperationTagScope })),
-      [updateSettings],
-    );
-    // Hidden by default: the tree is a live view of this runtime's processes, useful when debugging
-    // one but noise beside the trace the panel is named for.
-    const processTree = settings.traceProcessTree ?? false;
-    const handleProcessTreeChange = useCallback(
-      (traceProcessTree: boolean) => updateSettings((settings) => ({ ...settings, traceProcessTree })),
-      [updateSettings],
-    );
 
     // `useDeferredValue` batches update bursts, works together with `React.memo`.
-    // See the comment in `ProcessTreeContainer` for more details.
-    const { branches, commits, spanTree, details } = useDeferredValue(
-      useExecutionGraph(space, { operationTags, operationTagScope }),
-    );
+    // See the comment on `useMonitoredProcesses` for more details.
+    const { branches, commits, spanTree, details } = useDeferredValue(useExecutionGraph(space));
 
     // Debug hatch (dev builds only): expose the raw trace messages (the exact `buildExecutionGraph`
     // input) so a real trace can be captured as a test fixture. While the TracePanel is mounted, run
@@ -99,23 +82,26 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       };
     }, [traceMessages]);
 
-    // Tags the filter offers: what this trace actually produced, plus whatever is selected.
+    // The filter classifies processes by the operation each one runs, so it offers only the tags
+    // the listed processes actually carry — see `./trace-filter`.
+    const processes = useMonitoredProcesses();
+    const tagsByKey = useOperationTagsByProcessKey();
     const availableTags = useMemo(
-      () => availableOperationTags(collectOperationTags(traceMessages), operationTags),
-      [traceMessages, operationTags],
+      () => availableOperationTags(processes, tagsByKey, operationTags),
+      [processes, tagsByKey, operationTags],
+    );
+    const visibleProcesses = useMemo(
+      () => filterProcesses(processes, tagsByKey, operationTags),
+      [processes, tagsByKey, operationTags],
     );
 
     const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
-    // Toolbar, then the optional process tree, the timeline, and the optional detail pane. Spelled
-    // out rather than composed: Tailwind only generates classes it can see whole in the source.
+    // Toolbar, process tree, timeline, and the optional detail pane. Spelled out rather than
+    // composed: Tailwind only generates classes it can see whole in the source.
     const showDetail = !tracePanelDebug && selectedCommit !== undefined;
-    const gridRows = processTree
-      ? showDetail
-        ? 'grid-rows-[min-content_minmax(0,160px)_1fr_minmax(0,206px)]'
-        : 'grid-rows-[min-content_minmax(0,160px)_1fr]'
-      : showDetail
-        ? 'grid-rows-[min-content_1fr_minmax(0,206px)]'
-        : 'grid-rows-[min-content_1fr]';
+    const gridRows = showDetail
+      ? 'grid-rows-[min-content_minmax(0,160px)_1fr_minmax(0,206px)]'
+      : 'grid-rows-[min-content_minmax(0,160px)_1fr]';
     const handleCommitSelect = useCallback(
       (commit: Commit | undefined) => {
         setSelectedCommit(commit);
@@ -154,19 +140,14 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         })}
         ref={forwardedRef}
       >
-        <TraceToolbar
-          selected={operationTags}
-          available={availableTags}
-          onSelectedChange={handleOperationTagsChange}
-          scope={operationTagScope}
-          onScopeChange={handleOperationTagScopeChange}
-          processTree={processTree}
-          onProcessTreeChange={handleProcessTreeChange}
-        />
+        <TraceToolbar selected={operationTags} available={availableTags} onSelectedChange={handleOperationTagsChange} />
 
-        {processTree && (
-          <ProcessTreeContainer onProcessSelect={handleProcessSelect} onProcessTerminate={onProcessTerminate} />
-        )}
+        <ProcessTree
+          processes={visibleProcesses}
+          depth={3}
+          onProcessSelect={handleProcessSelect}
+          onProcessTerminate={onProcessTerminate}
+        />
 
         <ScrollContainer.Root pin>
           <ScrollContainer.Content thin>
@@ -219,15 +200,11 @@ const SPAN_TIMEOUT_CHECK_INTERVAL_MS = 60_000;
 type UseExecutionGraphOptions = {
   collapseCompletedSpans?: boolean;
   eventLimit?: number;
-  /** Operation tags to show. See `BuildExecutionGraphParams.operationTags`. */
-  operationTags?: readonly string[];
-  /** How deep the tag filter reaches. See `BuildExecutionGraphParams.operationTagScope`. */
-  operationTagScope?: OperationTagScope;
 };
 
 const useExecutionGraph = (
   space: Space,
-  { collapseCompletedSpans, eventLimit, operationTags, operationTagScope }: UseExecutionGraphOptions = {},
+  { collapseCompletedSpans, eventLimit }: UseExecutionGraphOptions = {},
 ): ExecutionGraph => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processesAtom = monitor?.processTreeAtom ?? atomEmpty;
@@ -243,15 +220,8 @@ const useExecutionGraph = (
   }, []);
 
   const atom = useMemo(
-    () =>
-      getExecutionGraph(space, processesAtom, {
-        collapseCompletedSpans,
-        eventLimit,
-        operationTags,
-        operationTagScope,
-        now,
-      }),
-    [space, processesAtom, collapseCompletedSpans, eventLimit, operationTags, operationTagScope, now],
+    () => getExecutionGraph(space, processesAtom, { collapseCompletedSpans, eventLimit, now }),
+    [space, processesAtom, collapseCompletedSpans, eventLimit, now],
   );
 
   return useAtomValue(atom);
@@ -265,13 +235,7 @@ const sameProcesses = (left: readonly Process.Info[], right: readonly Process.In
 const getExecutionGraph = (
   space: Space,
   processesAtom: Atom.Atom<readonly Process.Info[]>,
-  {
-    collapseCompletedSpans = true,
-    eventLimit = 100,
-    operationTags,
-    operationTagScope,
-    now,
-  }: UseExecutionGraphOptions & { now: number },
+  { collapseCompletedSpans = true, eventLimit = 100, now }: UseExecutionGraphOptions & { now: number },
 ): Atom.Atom<ExecutionGraph> => {
   const traceMessages = getTraceMessagesAtom(space);
 
@@ -294,35 +258,37 @@ const getExecutionGraph = (
       activeProcesses: get(activeProcesses),
       collapseCompletedSpans,
       eventLimit,
-      operationTags,
-      operationTagScope,
       now,
     }),
   );
 };
 TracePanel.displayName = 'TracePanel';
 
-// Isolate `ProcessTree` updates from the rest of the panel.
-// TODO(dmaretskyi): Currently not useful since `useExecutionGraph` also pulls in the updates.
-const ProcessTreeContainer = ({
-  onProcessSelect,
-  onProcessTerminate,
-}: Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'>) => {
+/**
+ * This runtime's process tree, debounced.
+ *
+ * `processes` updates in bursts (about 14 per navigation); `useDeferredValue` holds a stale value
+ * for short periods so the burst does not reach the render path. NOTE: `ProcessTree` MUST use
+ * `React.memo`, otherwise this has no effect.
+ */
+const useMonitoredProcesses = (): readonly Process.Info[] => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processes = useAtomValue(
     useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),
   );
+  return useDeferredValue(processes);
+};
 
-  // `processes` updates in bursts (about 14 updates per navigation).
-  // `useDeferredValue` will debounce update propagation, returning stale value for short periods.
-  // NOTE: `ProcessTree` MUST use `React.memo`, otherwise this will not work.
-  const processesDeferred = useDeferredValue(processes);
-  return (
-    <ProcessTree
-      processes={processesDeferred}
-      depth={3}
-      onProcessSelect={onProcessSelect}
-      onProcessTerminate={onProcessTerminate}
-    />
+/**
+ * Operation tags indexed by process key, drawn from every contributed handler set.
+ *
+ * `definitions()` enumerates without loading a single handler body, so classifying the process list
+ * costs no module loads.
+ */
+const useOperationTagsByProcessKey = (): ReadonlyMap<string, readonly string[]> => {
+  const handlerSets = useCapabilities(Capabilities.OperationHandler);
+  return useMemo(
+    () => operationTagsByProcessKey(handlerSets.flatMap((handlerSet) => [...handlerSet.definitions()])),
+    [handlerSets],
   );
 };
