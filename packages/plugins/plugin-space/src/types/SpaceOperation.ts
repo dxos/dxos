@@ -48,6 +48,7 @@ export const Join = Operation.make({
     description: 'Join a space via invitation.',
     icon: 'ph--sign-in--regular',
   },
+  // `HaloServicesLayer`, which the handler provides to read the local identity, requires it.
   services: [Capability.Service],
   input: Schema.Struct({
     invitationCode: Schema.optional(Schema.String),
@@ -63,7 +64,6 @@ export const Open = Operation.make({
     description: 'Open a space.',
     icon: 'ph--arrow-square-out--regular',
   },
-  services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
   }),
@@ -77,7 +77,6 @@ export const Close = Operation.make({
     description: 'Close a space.',
     icon: 'ph--x-circle--regular',
   },
-  services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
   }),
@@ -105,7 +104,6 @@ export const Share = Operation.make({
     description: 'Share a space.',
     icon: 'ph--share-network--regular',
   },
-  services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
     type: Schema.Enum(Invitation.Type),
@@ -123,7 +121,6 @@ export const OpenSettings = Operation.make({
     description: 'Open space settings.',
     icon: 'ph--gear--regular',
   },
-  services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
   }),
@@ -151,7 +148,6 @@ export const AddObject = Operation.make({
     description: 'Add an object to a space.',
     icon: 'ph--plus--regular',
   },
-  services: [Capability.Service],
   input: Schema.Struct({
     object: Obj.Unknown.annotate({ description: 'The object to add.' }),
     target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]).annotate({
@@ -296,7 +292,6 @@ export const OpenCreateSpace = Operation.make({
     description: 'Open the create space dialog.',
     icon: 'ph--plus--regular',
   },
-  services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,
 });
@@ -308,7 +303,6 @@ export const OpenImportSpace = Operation.make({
     description: 'Open the import space dialog to create a new space from a backup.',
     icon: 'ph--download--regular',
   },
-  services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,
 });
@@ -340,7 +334,6 @@ export const ExportSpace = Operation.make({
     description: 'Export a space as a backup and download the archive.',
     icon: 'ph--download--regular',
   },
-  services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
     format: Schema.Enum(SpaceArchive.Format),
@@ -370,7 +363,6 @@ export const Snapshot = Operation.make({
     description: 'Create a snapshot of the space.',
     icon: 'ph--camera--regular',
   },
-  services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
     query: QueryAST.Query.pipe(Schema.optional),
@@ -387,7 +379,6 @@ export const Rename = Operation.make({
     description: 'Rename a space.',
     icon: 'ph--pencil-simple--regular',
   },
-  services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
     caller: Schema.optional(Schema.String),
@@ -402,7 +393,6 @@ export const RenameObject = Operation.make({
     description: 'Rename an entity (object, relation, or persisted type).',
     icon: 'ph--pencil-simple--regular',
   },
-  services: [Capability.Service],
   input: Schema.Struct({
     object: Entity.Unknown,
     caller: Schema.optional(Schema.String),
@@ -417,7 +407,6 @@ export const OpenMembers = Operation.make({
     description: 'Open the members panel for a space.',
     icon: 'ph--users--regular',
   },
-  services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
   }),
@@ -474,7 +463,6 @@ export const AddRelation = Operation.make({
     description: 'Add a relation between objects.',
     icon: 'ph--link--regular',
   },
-  services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
     // TODO(wittjosiah): Relation schema.
@@ -497,7 +485,6 @@ export const DuplicateObject = Operation.make({
     description: 'Duplicate an object.',
     icon: 'ph--file--regular',
   },
-  services: [Capability.Service],
   input: Schema.Struct({
     object: Obj.Unknown,
     target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]),
@@ -536,7 +523,6 @@ export const RestoreObjects = Operation.make({
     description: 'Restore deleted entities to a space.',
     icon: 'ph--clock-counter-clockwise--regular',
   },
-  services: [Capability.Service],
   input: Schema.Struct({
     objects: Schema.Array(Entity.Unknown).annotate({ description: 'The entities to restore.' }),
     parentCollection: Type.getSchema(Collection.Collection).annotate({
