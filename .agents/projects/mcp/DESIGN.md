@@ -230,42 +230,64 @@ The whole of plugin management, at Composer parity — not just the `add` verb. 
   for every subsequent verb, so `add` must print the resolved id — the browser's `add` returns the
   plugin for this reason. It also needs `UrlLoader.make`'s duplicate-id guard applied against the
   compiled-in set: a remote plugin claiming a builtin's id would make the builtin unreachable.
-- **`list` grows columns** — id, name, source (builtin / url / registry / linked), version,
-  installed, enabled, state — instead of the single `status` string. `--json` already exists and
-  should carry the same fields.
+- **`list` grows columns** — id, name, source (builtin / url / registry / dev), version, installed,
+  enabled, state — instead of the single `status` string. `--json` already exists and should carry
+  the same fields.
 
-### 2.5 Dev plugins: a path, not a dev server
+### 2.5 Dev plugins are `add --dev`, not a second verb
 
-Composer's dev loop is `devPluginUrl` + `devPluginEnabled` settings pointing at a Vite dev-server
-manifest (`devEntry`, port 3967), because a browser can only reach a plugin over HTTP. The CLI has
-no such constraint, so the equivalent should be a **local path**:
+An earlier draft of this section proposed `dx plugin link <path>` / `unlink <id>` alongside `add`.
+One verb is better, and the reason is worth stating because it also fixes what the two-verb split
+could not express.
 
-```
-dx plugin link <path>     # register from a directory, marked dev
-dx plugin unlink <id>
-```
+**The locator dispatches itself.** URL versus filesystem path is decidable from the argument, the way
+`npm i lodash` / `npm i ./local-pkg` / `npm i git+https://…` are. That is not a second verb's worth of
+difference.
 
-Parity is in the semantics, not the transport. Three properties carry over from the browser and are
-worth keeping deliberately:
+**What actually varies is one bit: copy or reference.** `add <url>` snapshots into
+`~/.config/dx/plugins/<id>/` and owns the copy; a dev install points at a directory the user owns and
+re-reads it. That bit outlives the command — it decides whether `remove` deletes anything and whether
+edits to the source reach the installed plugin. One bit is a flag (`pip install -e`, `cargo add
+--path`), not a verb. npm's `link` is a poor model here: it is really about npm's global symlink
+registry, a mechanism we do not have.
 
-- **Shadowing.** The manager already implements it (`PluginCatalog.#devPlugins` records the
-  displaced plugin and `wasEnabled`, restoring it on remove), and a dev manifest is allowed to
-  collide with a builtin id where a production one is not. It matters more here than in the browser:
-  `dx plugin link ./packages/plugins/plugin-markdown` should test your working copy, not the copy
-  compiled into the binary.
-- **No manifest needed.** Every in-repo plugin's meta already comes from its own `dx.config.ts`
-  (`Plugin.getMetaFromConfig(config)`), which is the same `Config2.Plugin` shape a published
-  manifest carries. So `link` reads `dx.config.ts` from the directory and needs neither a build
-  output nor a served manifest — strictly better ergonomics than the browser's manifest+Vite dance,
-  and it falls out of what already exists.
-- **Persistence per profile**, like `devPluginUrl`, cleared by `unlink`.
+**And the two axes are orthogonal**, which is what the two-verb split got wrong — it assumed URL
+implies copy and path implies reference:
 
-Unmeasured, and it decides how much this is worth: **whether a compiled `dx` binary can import
+|      | copy (snapshot)                 | reference (live)                                |
+| ---- | ------------------------------- | ----------------------------------------------- |
+| URL  | `add <url>`                     | `add --dev http://localhost:3967/manifest.json` |
+| path | `add ./dist` — snapshot a build | `add --dev ./packages/plugins/plugin-markdown`  |
+
+The top-right cell is the browser's existing dev-plugin flow (`devPluginUrl` against a Vite
+`devEntry` manifest), and `link <path>` could not express it.
+
+**`--dev` names a bit the framework already carries.** `LoadedPlugin.dev` exists, and
+`PluginCatalog` already keys shadow-on-id-collision off it: a dev-sourced plugin displaces an
+already-registered one of the same id, stashing it with its `wasEnabled` for restoration on remove.
+So the flag sets existing state rather than introducing any, and `add --dev ./plugin-markdown`
+overriding the compiled-in markdown plugin works through machinery that is already written.
+
+Two consequences to keep:
+
+- **One `remove`.** It consults the installed record's kind: delete the copy, or forget the
+  reference. Two verbs would have differed only in whether files are unlinked.
+- **`--dev` stays coupled to shadowing.** It means both "do not copy" and "may take a builtin's id".
+  The browser couples them the same way — `UrlLoader.make` runs its duplicate-id check only
+  `if (!manifest.dev)` — and the coupling is what stops a registry install permanently shadowing
+  `plugin-space`. Overriding a builtin is only ever a development act.
+
+**No manifest needed for a path.** Every in-repo plugin's meta already comes from its own
+`dx.config.ts` (`Plugin.getMetaFromConfig(config)`), the same `Config2.Plugin` shape a published
+manifest carries. So a dev install from a directory needs neither a build output nor a served
+manifest — better ergonomics than the browser's manifest+Vite dance, and it falls out of what exists.
+
+Unmeasured, and it decides how much that is worth: **whether a compiled `dx` binary can import
 on-disk TypeScript at runtime.** §2.1 measured ESM import from a compiled binary; TS transpilation
-inside a standalone executable is a different question. If it works, `link` needs no build step at
-all and the author's loop is edit-and-rerun. If it does not, `link` requires a built entry in the
-directory, and unbuilt-source iteration stays a `moon run cli:dev` (bun-from-source) affair — which
-is fine for us and poor for an external author. Measure before designing around either.
+inside a standalone executable is a different question. If it works, `add --dev <path>` needs no
+build step and the author's loop is edit-and-rerun. If not, it requires a built entry in the
+directory, and unbuilt-source iteration stays a `moon run cli:dev` (bun-from-source) affair — fine
+for us, poor for an external author. Measure before designing around either.
 
 ### 2.6 Open question: isolation
 

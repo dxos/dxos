@@ -86,17 +86,19 @@ installed-but-disabled state**: of the 11 in `commands/plugin-defs.ts`, 7 are `s
 `getDefaults()` (chess, sample, inbox, markdown). Every built-in is always on, which is why it
 reads as though disabling does not exist. DESIGN §2.3.
 
-- [ ] **CLI-owned core set** — core is derived from each plugin's own `tags: ['system']` in its
-      `dx.config.ts`, so `dx` inherits Composer's judgment wholesale (`observability` and
-      `connector` are non-disableable here because they are there). `ManagerOptions` has no `core`
-      field — the manager computes it in its constructor from the tag — so letting a host decide is
-      an app-framework change (add `core?: string[]`, falling back to the tag derivation) before
-      `createCliApp` can supply a CLI set. Decide which of the seven genuinely cannot be turned off
-      in a CLI.
-- [ ] **Real default set** — `getDefaults()` is a fixed 4-element list that takes no arguments,
-      while the CLI's `PluginConfig` already declares `isDev` / `isLabs` / `isStrict` and
-      composer-app's equivalent branches on exactly those. Make it an editorial choice about which
-      extra `dx` verbs a fresh profile has.
+- [x] **CLI-owned core set** (2026-08-15, PR #12606) — `ManagerOptions.core` added to
+      app-framework, defaulting to the old `system`-tag derivation and dropping ids that name no
+      registered plugin; threaded through `createCliApp`. `dx` now pins only client, registry,
+      space and process-manager, so observability, connector and routine became disableable. 3 unit
+      tests.
+- [x] **Real default set** (2026-08-15, PR #12606) — `getDefaults({ isLabs })` replaces the fixed
+      4-element list; chess and sample moved behind `DX_LABS` (new `DXEnv.LABS`), so a fresh
+      `dx --help` lists work verbs rather than a chess game.
+- [x] **Persistence fix found on the way** (2026-08-15, PR #12606) — `loadEnabledPlugins` returned
+      `[]` both for "no file" and "empty list", and `bin.ts` read `length > 0 ? saved : defaults`,
+      so disabling every optional plugin silently restored the defaults on the next command. It now
+      returns `undefined` for unconfigured; core ids are no longer persisted, since they are host
+      policy rather than a user choice. Regression test included.
 
 ### Plugin loading
 
@@ -124,13 +126,13 @@ reads as though disabling does not exist. DESIGN §2.3.
 - [ ] **Never crash on a dangling enabled id** — an enabled entry with no installed record hits
       `createCliApp`'s default `pluginLoader` invariant and kills every command until the user
       edits YAML. Record a failure, skip the entry, keep running.
-- [ ] **`plugin list` shows both axes** — installed / enabled / core / failed as separate fields
-      (and in `--json`), replacing the collapsed `core | enabled | disabled` status string.
-      Without the failed row a remote plugin that did not load just disappears from
-      `dx mcp serve`'s tool list with no explanation.
-- [ ] **`plugin remove`** — drops the record and deletes assets; fails on a compiled-in plugin
-      pointing at `disable`, mirroring `disable.ts`'s existing core check. `enable` on a
-      non-installed id should point at `add` instead of failing a bare invariant.
+- [x] **`plugin list` shows both axes** (2026-08-15, PR #12606) — installed / enabled / core plus
+      any load-or-activation failure, in text and `--json`, replacing the collapsed status string;
+      `--enabled` filters to the active set. `enable`/`disable` also became idempotent and now fail
+      with typed, actionable errors instead of bare invariants. 11 subprocess tests over `runDx`.
+- [ ] **`plugin remove`** — one verb for both install kinds: deletes the copy for a URL/registry
+      install, forgets the reference for a `--dev` one, by the record's kind. Fails on a
+      compiled-in plugin pointing at `disable`, mirroring `disable.ts`'s existing core check.
 - [ ] **Decide isolation** (DESIGN §2.6) — third-party code runs in-process with the user's HALO
       keys, and MCP lets an external agent invoke it. Decide before third-party plugins ship:
       trusted-publisher-and-explicit-enable, or a worker boundary (which would also solve reload).
@@ -145,21 +147,22 @@ reads as though disabling does not exist. DESIGN §2.3.
 
 ### Reload, stage 2 — external plugin authors
 
-- [ ] **`dx plugin link <path>` / `unlink <id>`** — the CLI's dev-plugin story is a **local path**,
-      not a dev-server URL: the browser needs `devPluginUrl` + Vite only because it can only reach a
-      plugin over HTTP. Registers from a directory marked dev, persisted per profile like
-      `devPluginUrl`. Reuse the manager's existing shadowing (`PluginCatalog.#devPlugins` records
-      the displaced plugin and `wasEnabled`, restores on remove) so `link ./packages/plugins/
-plugin-markdown` tests the working copy rather than the compiled-in one. No manifest needed —
-      every in-repo plugin's meta already comes from its `dx.config.ts`, the same `Config2.Plugin`
-      shape a published manifest carries. DESIGN §2.5.
+- [ ] **`dx plugin add --dev <path|url>`** — the dev loop is a flag on `add`, not a `link` verb
+      (decided 2026-08-15, DESIGN §2.5): the locator dispatches itself, and the one bit that
+      actually varies is copy-vs-reference. `--dev` sets `LoadedPlugin.dev`, which the manager
+      already keys shadow-on-id-collision off (`PluginCatalog.#devPlugins` stashes the displaced
+      plugin with its `wasEnabled` and restores it on remove), so
+      `add --dev ./packages/plugins/plugin-markdown` tests the working copy rather than the
+      compiled-in one. A path needs no manifest — every in-repo plugin's meta already comes from
+      its `dx.config.ts`, the same `Config2.Plugin` shape a published manifest carries. Persist the
+      reference per profile; one `remove` deletes a copy or forgets a reference by record kind.
 - [ ] **Measure: can a compiled `dx` binary import on-disk TypeScript at runtime?** §2.1 measured
       ESM import from a compiled binary; TS transpilation inside a standalone executable is a
-      separate question and it decides whether `link` needs a build step at all. Measure before
-      designing around either answer.
-- [ ] **`--dev-plugin <manifest-url>`** — re-import on change with a cache-busting query, rebuild
-      the projected layer, emit `tools/list_changed` / `prompts/list_changed` (already emitted at
-      startup, already acted on by clients). Same machinery as `link`, driven by a watcher.
+      separate question and it decides whether `add --dev <path>` needs a build step at all.
+      Measure before designing around either answer.
+- [ ] **Watch a dev install** — re-import on change with a cache-busting query, rebuild the
+      projected layer, emit `tools/list_changed` / `prompts/list_changed` (already emitted at
+      startup, already acted on by clients). Same machinery as `add --dev`, driven by a watcher.
 - [ ] **Upstream: tool/prompt removal in `McpServer`** — it exposes `addTool`/`addPrompt` only, so
       a changed surface cannot replace the old one without rebuilding the server layer under the
       live transport.
