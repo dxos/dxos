@@ -156,6 +156,30 @@ the sync never observes "nothing changed" immediately after a push.
 Tag sync must **not** add a second, separate write for `nextHeads`: the two describe the same
 position, and a crash between them leaves the cursor self-inconsistent.
 
+Concretely, `runMailSync` today writes the token at
+[`mail-sync.ts:578`](../src/sync/mail-sync.ts:578), inside the `if (!capped)` block at the very end of
+the run:
+
+```ts
+const nextToken = source.nextToken?.();
+if (nextToken !== undefined) {
+  Cursor.writeToken(binding, nextToken); // ← its own Obj.update
+}
+```
+
+Leaving that call where it is and adding a heads write beside it produces exactly the two-write hazard
+below. The push phase therefore runs **before** this block, `source.nextToken()` is held in memory
+rather than written as it is captured, and the block becomes a single combined write:
+
+```ts
+if (!capped && pending.length === 0) {
+  Cursor.writeSyncState(binding, { token: nextToken, tagHeads: nextHeads });
+}
+```
+
+With anything `pending`, neither field is written — the run requests `runAgain` and both the token and
+the base stay where they were, so the next run re-reads the same delta and re-derives the same diff.
+
 The damaging order is token-then-heads. The next run reads its delta from the _advanced_ token, so
 the previous run's pulled changes are invisible to it, while `base` is the _stale_ heads from before
 those changes were applied. Every tag that run pulled now reads as a local-only addition.

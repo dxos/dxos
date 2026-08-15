@@ -576,7 +576,11 @@ mutation log, and a state diff has no self-echo failure mode — sync writes tag
       policy decided earlier is MOOT and is gone, along with the per-tag owner in `eligible` (now a
       plain `Set`). The suite enumerates all eight and asserts no tag is ever pushed AND pulled, so a
       future tri-state or tombstone fails the test rather than silently reviving the question.
-- [ ] **Heads on the binding** — persist `nextHeads` and `Cursor.spec.token` in ONE `Obj.update`
+- [ ] **Heads on the binding** — persist `nextHeads` and `Cursor.spec.token` in ONE `Obj.update`.
+      CONCRETELY: `runMailSync` writes the token today at `mail-sync.ts:578` inside `if (!capped)`;
+      that call must NOT stay as-is with a heads write added beside it. Hold `source.nextToken()` in
+      memory, run the push phase first, then write both through `Cursor.writeSyncState` — and write
+      neither when anything is `pending`.
       (a combined `Cursor.writeSyncState({ token, tagHeads })`, never `writeToken` followed by a
       separate heads write). They are one recovery unit: token-then-heads leaves the next run reading
       its delta from the advanced token while diffing against stale heads, so every tag the previous
