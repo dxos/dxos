@@ -3,42 +3,40 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AppGraphBuilder,
   BuiltinConnectors,
+  Commands,
   Coordinator,
   CreateObject,
   OAuthRedirect,
   OperationHandler,
+  PluginAsset,
   ReactSurface,
   Schema,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
-
+// Canonical single-entry composition: lists every module once; per-environment filtering happens
+// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
+// as `undefined`, which `Plugin.addModule` skips.
 export const ConnectorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Translations),
   Plugin.addModule(BuiltinConnectors),
   Plugin.addModule(Coordinator),
   Plugin.addModule(OAuthRedirect),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  // Previously wired only into the node entry; included here too because the command graph is
+  // demand-gated on `CommandsRequested`, fired both by the `dx` CLI at boot and by browser hosts
+  // when the devtools terminal opens — omitting it from browser was a gap, not a deliberate scope.
+  Plugin.addModule(Commands),
+  Plugin.addModule(PluginAsset),
   Plugin.make,
 );
 

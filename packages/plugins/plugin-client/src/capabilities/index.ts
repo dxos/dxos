@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
+import { translations } from '#translations';
 import { ClientCapabilities, ClientEvents, ClientOptions } from '#types';
 
 export const AccountCache = Capability.lazyModule(
@@ -20,7 +21,9 @@ export const AccountCache = Capability.lazyModule(
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   activatesOn: ClientEvents.Initialized,
 });
-export const Commands = AppCapability.commands(() => import('./commands'));
+// Node-specific implementation spliced by `dx-plugin gen` (see overrides.node.ts): a node host has
+// the OAuth callback server and filesystem the browser command set omits (`account`, `profile`).
+export const Commands = AppCapability.commands(() => import('./commands'), { environments: ['browser', 'node'] });
 export const HubHttpClient = Capability.lazyModule(
   'HubHttpClient',
   {
@@ -43,10 +46,14 @@ export const Client = Capability.lazyModule(
       ClientCapabilities.IdentityService,
       ClientCapabilities.SpaceService,
     ],
+    environments: ['browser', 'node'],
   },
   () => import('./client'),
 );
-export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), { name: 'LayerSpecs' });
+export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), {
+  name: 'LayerSpecs',
+  environments: ['browser', 'node'],
+});
 export const Migrations = Capability.lazyModule(
   'Migrations',
   {
@@ -56,6 +63,7 @@ export const Migrations = Capability.lazyModule(
     // client initialization to have completed — the same point it ran at when the startup pass
     // awaited initialize.
     activatesOn: ClientEvents.Initialized,
+    environments: ['browser', 'node'],
   },
   () => import('./migrations'),
 );
@@ -66,7 +74,9 @@ export const NavigationTargetLoader = Capability.lazyModule(
   { requires: [ClientCapabilities.Client], provides: [AppCapabilities.NavigationTargetLoader] },
   () => import('./navigation-target-loader'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  environments: ['browser', 'node', 'workerd'],
+});
 export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
@@ -87,7 +97,11 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const SchemaDefs = Capability.lazyModule(
   'SchemaDefs',
-  { requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema], provides: [] },
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema],
+    provides: [],
+    environments: ['browser', 'node'],
+  },
   () => import('./schema-defs'),
 );
 export const RemoteTraceMonitor = Capability.lazyModule(
@@ -120,3 +134,4 @@ export const TraceProgress = Capability.lazyModule(
   },
   () => import('./trace-progress'),
 );
+export const Translations = AppCapability.translations(translations);

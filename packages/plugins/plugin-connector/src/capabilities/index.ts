@@ -7,23 +7,34 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { ConnectorCoordination, ConnectorEvents, ConnectorSpec } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export * from './connector-coordinator';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [ConnectorSpec.Connector],
+  environments: ['browser', 'node'],
 });
 export const BuiltinConnectors = Capability.lazyModule(
   'BuiltinConnectors',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   () => import('./connectors'),
 );
-// Empty in the browser: `connector oauth` needs a Bun callback server, so only the
-// node barrel loads the command graph. The export still has to exist here — `#capabilities`
-// resolves its types through this file for both variants.
-export const Commands = AppCapability.commands([]);
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// Empty in the browser: `connector oauth` needs a Bun callback server, so only the node barrel
+// loads the real command graph, via overrides.node.ts. Also included in browser: `AppCapability
+// .commands`'s own doc comment says the command graph is demand-gated on
+// `ActivationEvents.CommandsRequested`, fired both by the `dx` CLI at boot and by a browser host
+// when someone opens the devtools terminal — so activating this module in browser too (with its
+// empty list, since there are no browser-safe connector commands) is consistent with that intent.
+export const Commands = AppCapability.commands([], { environments: ['browser', 'node'] });
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: ['browser', 'node'],
+});
 export const OAuthRedirect = Capability.lazyModule(
   'OAuthRedirect',
   { requires: [ConnectorCoordination.ConnectorCoordinator], provides: [], activatesOn: ConnectorEvents.Start },
@@ -31,8 +42,18 @@ export const OAuthRedirect = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
+  environments: ['browser', 'node', 'workerd'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.formInput'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = AppCapability.schema(() => import('./schema'), {
+  environments: ['browser', 'node', 'workerd'],
+});
+export const Translations = AppCapability.translations(translations);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});

@@ -3,7 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AccountCache,
@@ -22,18 +21,21 @@ import {
   SchemaDefs,
   SpaceReplicationProgress,
   TraceProgress,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 import { ClientOptions } from '#types';
 
+// Canonical single-entry composition: lists every module once; per-environment filtering happens
+// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
+// as `undefined`, which `Plugin.addModule` skips.
 export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(meta).pipe(
   Plugin.addModule(Commands),
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(NavigationHandler),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactContext),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Translations),
   Plugin.addModule(Client),
   Plugin.addModule(AccountCache),
   Plugin.addModule(NavigationTargetLoader),
