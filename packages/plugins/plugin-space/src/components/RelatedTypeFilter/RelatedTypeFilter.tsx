@@ -38,9 +38,10 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
       {types.map(({ typename, label, icon, count }) => (
         <ToggleGroupIconItem
           key={typename}
+          iconOnly
           value={typename}
           icon={icon}
-          // The type's label is already localized; only the count is appended.
+          // Carries the count to the tooltip; the type's label is already localized.
           label={`${label} (${count})`}
           onClick={() => onToggle(typename)}
         />

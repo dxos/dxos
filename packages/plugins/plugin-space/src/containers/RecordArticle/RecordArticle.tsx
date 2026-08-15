@@ -89,12 +89,11 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
               <div
                 className={mx('dx-expander flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
               >
-                <div className='flex items-center justify-between gap-2'>
-                  <Input.Root>
-                    <Input.Label>{t('related-objects.label')}</Input.Label>
-                  </Input.Root>
-                  <RelatedTypeFilter types={types} onToggle={toggle} />
-                </div>
+                <Input.Root>
+                  <Input.Label>{t('related-objects.label')}</Input.Label>
+                </Input.Root>
+                {/* `self-start` so the group sizes to its icons rather than stretching this column. */}
+                <RelatedTypeFilter classNames='self-start' types={types} onToggle={toggle} />
                 {/* The masonry's own gutter would inset these cards relative to the record card above,
                     which shares this column — the scroll padding is the article's to own, not theirs. */}
                 <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined}>
