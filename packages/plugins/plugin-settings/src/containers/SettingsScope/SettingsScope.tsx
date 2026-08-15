@@ -50,6 +50,7 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
   return (
     <>
       <IconButton
+        data-testid='settingsScope.toggle'
         variant='ghost'
         icon={synced ? 'ph--cloud-check--regular' : 'ph--monitor--regular'}
         label={synced ? t('settings-scope.synced.label') : t('settings-scope.local.label')}
@@ -69,7 +70,7 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
                 <Button>{t('settings-scope.rejoin-dialog.cancel.label')}</Button>
               </AlertDialog.Cancel>
               <AlertDialog.Action asChild>
-                <Button variant='primary' onClick={handleConfirm}>
+                <Button data-testid='settingsScope.confirm' variant='primary' onClick={handleConfirm}>
                   {t('settings-scope.rejoin-dialog.confirm.label')}
                 </Button>
               </AlertDialog.Action>

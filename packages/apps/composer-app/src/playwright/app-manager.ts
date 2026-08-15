@@ -472,64 +472,33 @@ export class AppManager {
     await item.click();
   }
 
-  /**
-   * The "use a different plugin set on this device" switch in the registry's settings panel. Absent
-   * until the settings space opens, which is what backs the device-synced settings store.
-   */
-  getPluginScopeToggle(): Locator {
-    return this.page.getByTestId('registrySettings.pluginScope');
+  /** The scope control in a settings plank header: on = follows the account, off = this device only. */
+  getSettingsScopeToggle(): Locator {
+    return this.page.getByTestId('settingsScope.toggle');
   }
 
   /**
-   * Detaches this device's plugin set from the account. Leaving is lossless and immediate; only
-   * rejoining prompts, so this path has no confirmation to dismiss.
+   * Takes the open settings panel off the account. Leaving is lossless and immediate, so unlike
+   * rejoining it has no confirmation to dismiss.
    */
-  async usePluginSetForThisDeviceOnly(): Promise<void> {
-    const toggle = this.getPluginScopeToggle();
+  async useSettingsForThisDeviceOnly(): Promise<void> {
+    const toggle = this.getSettingsScopeToggle();
     await expect(toggle).toBeVisible();
-    await expect(toggle).not.toBeChecked();
     await toggle.click();
-    await expect(toggle).toBeChecked();
   }
 
-  async openPluginRegistry(): Promise<void> {
-    // Direct-navigate to the registry workspace rather than clicking the
-    // pinned tree node. The click path requires the layout/settings
-    // operation handlers to be fully registered before the click fires; in
-    // firefox that initialisation occasionally lags behind first paint, so
-    // the click is silently swallowed and the test then times out waiting
-    // for the registry tree to render. URL-driven navigation has no such
-    // dependency on operation-handler registration.
-    await this.page.goto(workspaceUrl(REGISTRY_WORKSPACE));
-    await this.page.getByTestId('pluginRegistry.recommended').waitFor({ state: 'visible' });
+  /**
+   * Puts the open settings panel back under the account, confirming the prompt. Rejoining discards
+   * this device's values, which is why this direction asks.
+   */
+  async rejoinAccountSettings(): Promise<void> {
+    await this.getSettingsScopeToggle().click();
+    await this.page.getByTestId('settingsScope.confirm').click();
   }
 
-  async openRegistryCategory(category: string): Promise<void> {
-    // A category node's id is the bare category name, addressed as the `category` key.
-    await this.page.goto(`${workspaceUrl(REGISTRY_WORKSPACE)}/category/${category}`);
-    await this.page.getByTestId(`pluginRegistry.${category}`).waitFor({ state: 'visible' });
-  }
-
-  getPluginToggle(plugin: string): Locator {
-    return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
-  }
-
-  async enablePlugin(plugin: string): Promise<void> {
-    const toggle = this.getPluginToggle(plugin);
-    // Wait for the toggle to be present and stable before clicking — the
-    // plugin list re-renders after the workspace switch and the React
-    // onClick handler may not be bound on the first render that produces
-    // the checkbox element.
-    await expect(toggle).toBeVisible();
-    await expect(toggle).not.toBeChecked();
-    await toggle.click();
-    // Wait for the click to actually flip the toggle's checked state before
-    // reloading — the click handler persists the enable into storage and
-    // navigating mid-write leaves the new page's plugin manager in an
-    // inconsistent state where the lazy plugin chunk fetch can be cancelled.
-    await expect(toggle).toBeChecked();
-    await this.page.goto(INITIAL_URL);
-    await this.page.getByTestId('treeView.userAccount').waitFor();
+  /** The registry's dev-plugin URL field — an ordinary synced plugin setting. */
+  getDevPluginUrlInput(): Locator {
+    return this.page.getByTestId('registrySettings.devPluginUrl');
   }
 
   async changeStorageVersionInMetadata(version: number): Promise<void> {

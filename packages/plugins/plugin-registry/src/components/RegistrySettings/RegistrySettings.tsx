@@ -126,6 +126,7 @@ export const RegistrySettings = ({
             <Form.Row label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
               <Input.Root>
                 <Input.TextInput
+                  data-testid='registrySettings.devPluginUrl'
                   disabled={!onSettingsChange || enabled || busy}
                   value={url}
                   onChange={(event) =>

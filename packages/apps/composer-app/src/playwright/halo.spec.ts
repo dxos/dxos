@@ -88,27 +88,27 @@ test.describe('HALO tests', () => {
 
     // The plugin set is an ordinary synced namespace keyed by plugin id, so enabling one here is
     // the same mechanism as changing any other setting.
-    await host.openPluginRegistry();
+    await host.openRegistryCategory('recommended');
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
     await host.getPluginToggle(StackPlugin.meta.profile.key).click();
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
 
     // 1. Sync: the host's decision replicates to the guest through the settings space.
-    await guest.openPluginRegistry();
+    await guest.openRegistryCategory('recommended');
     await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked({ timeout: 60_000 });
 
     // 2. Local override: the guest leaves the account for the plugin set only.
     await guest.openPluginSettings('org.dxos.plugin.registry');
     await guest.usePluginSetForThisDeviceOnly();
 
-    await guest.openPluginRegistry();
+    await guest.openRegistryCategory('recommended');
     await guest.getPluginToggle(StackPlugin.meta.profile.key).click();
     await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
 
     // The guest's change stays put and the host is untouched. Asserting the host after the guest
     // has settled is the real check: a leaked write would have replicated by now.
     await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked({ timeout: 30_000 });
-    await host.openPluginRegistry();
+    await host.openRegistryCategory('recommended');
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked({ timeout: 30_000 });
   });
 
