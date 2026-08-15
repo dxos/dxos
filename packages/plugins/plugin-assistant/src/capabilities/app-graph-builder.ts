@@ -27,7 +27,7 @@ import { Database, DXN, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
