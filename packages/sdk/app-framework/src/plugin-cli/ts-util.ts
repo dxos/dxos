@@ -21,7 +21,7 @@ const resolveTypescript = (): typeof import('typescript') => {
       continue;
     }
   }
-  throw new Error("dx-gen-barrels requires 'typescript' to be installed in the target package or workspace.");
+  throw new Error("dx-plugin requires 'typescript' to be installed in the target package or workspace.");
 };
 
 export const ts = resolveTypescript();

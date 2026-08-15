@@ -12,7 +12,7 @@ tasks:
   build:
     deps:
       - compile-plugin
-      - compile-gen-barrels
+      - compile-plugin-cli
   compile-plugin:
     command: dx-compile
     args:
@@ -24,20 +24,20 @@ tasks:
       - dx-compile:build
     outputs:
       - dist/plugin
-  # The `dx-gen-barrels` bin — ships with the package so out-of-repo plugin authors run the same
-  # headless-barrel generation; in-repo, plugin `prebuild` tasks depend on this.
-  compile-gen-barrels:
+  # The `dx-plugin` bin — the plugin-authoring CLI shipped with the package so out-of-repo plugin
+  # authors run the same toolchain; in-repo, the composer-plugin tag's `prebuild` depends on this.
+  compile-plugin-cli:
     command: dx-compile
     args:
-      - '--entryPoint=src/gen-barrels/main.ts'
-      - '--outputPath=dist/gen-barrels'
+      - '--entryPoint=src/plugin-cli/main.ts'
+      - '--outputPath=dist/plugin-cli'
       - '--platform=node'
     deps:
       - dx-compile:build
     inputs:
-      - src/gen-barrels/**/*
+      - src/plugin-cli/**/*
     outputs:
-      - dist/gen-barrels
+      - dist/plugin-cli
   check-module-structure:
     # Verify headless entrypoints resolve under workerd conditions (post-build artifacts
     # must exist — catches stale `./workerd` export paths like the removed browser bundle).

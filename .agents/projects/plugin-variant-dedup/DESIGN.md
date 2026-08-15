@@ -164,7 +164,7 @@ statements regardless of `sideEffects` (which is why O2's canonical entry stays 
    source of truth. Default: `['browser']` (headless is opt-in, matching the existing
    "only add a variant the plugin genuinely supports" rule).
 3. **Generator**: productize `spikes/generate.mjs` and **ship it with
-   `@dxos/app-framework` as a distributed binary** (e.g. `bin: dx-gen-barrels`), not
+   `@dxos/app-framework` as a distributed binary** (e.g. `bin: dx-plugin prebuild`), not
    monorepo-internal tooling — if stub-barrel generation is the plugin authoring pattern,
    out-of-repo plugin authors need it from the published package. Precedent in the same
    package: the composer vite plugin is compiled to `dist/plugin` by the `compile-plugin`

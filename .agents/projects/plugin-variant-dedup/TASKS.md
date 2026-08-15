@@ -20,6 +20,12 @@ single canonical entry + generated stub barrels).
 
 ## Phase 2 — generator productization
 
+Naming (Josiah, 2026-08-15): the bin is `dx-plugin` — the plugin-authoring CLI shipped with
+@dxos/app-framework; generation runs as `dx-plugin prebuild`, future tooling (exports/#plugin
+sync, scaffolding) becomes subcommands. Common task definitions live in the `composer-plugin`
+moon tag (.moon/tasks/tag-composer-plugin.yml) so plugins don't repeat prebuild/build/test/lint
+wiring.
+
 Decisions (Josiah, 2026-08-15): generation runs in the plugin's `prebuild` moon task with
 declared `outputs`; generated barrels are gitignored, not committed; `test` depends on
 `^:prebuild` (dependency packages' generated sources must exist), defaulted in the shared
@@ -28,7 +34,7 @@ distributed binary (pattern must work for out-of-repo plugin authors), following
 `compile-plugin`/`./vite-plugin` precedent in that package. No CI freshness check needed —
 the task graph owns it (echo-query `prebuild-lezer` is the template).
 
-- [x] `dx-gen-barrels` in `@dxos/app-framework` (`src/gen-barrels/`, `compile-gen-barrels` moon task via dx-compile, `bin/dx-gen-barrels.mjs`); annotation-driven AST slicing; `typescript` resolved at runtime from the target package/workspace (no runtime dependency added)
+- [x] `dx-plugin` in `@dxos/app-framework` (`src/plugin-cli/`, `compile-plugin-cli` moon task via dx-compile, `bin/dx-plugin.mjs`); annotation-driven AST slicing; `typescript` resolved at runtime from the target package/workspace (no runtime dependency added)
 - [x] Tool syncs the package.json `#capabilities` condition map (source → `gen/` paths, normalized dist conditions) — `#plugin`/exports/vite-entry ownership remains a follow-up
 - [x] Headless barrels + stubs with GENERATED headers; `overrides.<env>.ts` splice (spliced as re-exports, exercised by plugin-space's Schema)
 - [x] `prebuild` task wiring: per-plugin `prebuild` with declared outputs + build/test/lint deps; optional `^:prebuild` dep added to `.moon/tasks/tag-ts-test{,-storybook,-workerd}.yml` (alongside `^:build` until the source-reading direction removes it)
@@ -36,6 +42,7 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
 - [ ] Fresh-clone/non-moon entrypoints: ensure `DX_SOURCE=1` bun and bare vitest/IDE runs have a documented `moon run :prebuild` path (or wrapper-script trigger)
 - [x] `pkg-lint`: `import-source-missing` exempts `/gen/` source paths (task graph owns their existence); `pack` → `build` → `prebuild` covers tarballs
 - [ ] pkg-lint rule: annotations ⇒ matching `#capabilities` conditions exist (superseded in part by the tool writing the map itself)
+- [ ] TODO(wittjosiah): Roll `dx-plugin` into the `dx` cli? Once we stop shipping non-core plugins bundled into the cli it might be light weight enough to support this use case.
 
 ## Phase 3 — migration (mechanical, incremental; spike commits are the template)
 

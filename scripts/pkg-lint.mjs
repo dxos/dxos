@@ -114,9 +114,9 @@ for (const { name, path: pkgPath } of packages) {
 
   // Check imports source paths.
   const pkgImports = pkgJson.imports ?? {};
-  // Prebuild-generated sources (e.g. dx-gen-barrels' src/**/gen/ barrels) are gitignored, so a
-  // fresh checkout legitimately lacks them — the moon task graph, not the checkout, guarantees
-  // their existence.
+  // Prebuild-generated sources (e.g. `dx-plugin prebuild`'s src/**/gen/ barrels) are gitignored,
+  // so a fresh checkout legitimately lacks them — the moon task graph, not the checkout,
+  // guarantees their existence.
   const isGeneratedSource = (value) => /\/gen\//.test(value);
   for (const [importPath, importValue] of Object.entries(pkgImports)) {
     if (typeof importValue === 'string') {

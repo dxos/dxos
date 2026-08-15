@@ -126,7 +126,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "bin": {
-    "dx-gen-barrels": "./bin/dx-gen-barrels.mjs"
+    "dx-plugin": "./bin/dx-plugin.mjs"
   },
   "scripts": {
     "typedoc": "typedoc --out typedoc"
