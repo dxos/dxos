@@ -195,26 +195,17 @@ no Gmail counterpart to push to. Two consequences:
    certainly wanted — the two verdicts should be one tag, which is the whole point of
    `SystemTags` — but it reverses a documented exclusion, so it is a deliberate change and not a
    one-line addition. `TRASH` stays out: deletion is not a tag.
-2. **Not every canonical tag pushes through the same call.** `users.messages.modify` refuses to add
-   `TRASH` (that is `messages.trash`), and whether it accepts `SPAM` needs verifying against the live
-   API — the Gmail connector surfaces "mark spam" as its own operation, which hints it may not be a
-   plain label write. So the reverse map cannot be a bare `tagUri → labelId`; it needs a small
-   descriptor:
+2. **`SPAM` is a plain label write — VERIFIED 2026-08-15.** Probed live against
+   `dxos.test@gmail.com`: `POST users/me/messages/{id}/modify` with `addLabelIds: ['SPAM']` returns
+   **HTTP 200** and applies the label (the message's labels became
+   `CATEGORY_UPDATES, SPAM, STARRED, UNREAD`, and a follow-up `removeLabelIds` restored the original
+   set exactly). So no dedicated endpoint is needed and the reverse map stays a bare
+   `tagUri → labelId`, batched through `batchModify` like every other tag.
 
-   ```ts
-   type ProviderTagBinding =
-     | { readonly kind: 'label'; readonly labelId: string }
-     | { readonly kind: 'operation'; readonly apply: 'spam' | 'trash' };
-   ```
-
-   A `label` binding batches into `batchModify` as described above; an `operation` binding calls the
-   dedicated endpoint per message. Verify which bucket `SPAM` falls into in the live test before
-   writing the Gmail side (see [Test plan](#test-plan) step 4) — if `modify` accepts it, the
-   descriptor collapses to the `label` case for everything except trash, which is out of scope
-   anyway.
-
-The same shape covers JMAP when it lands: `$junk` / `$notjunk` are keywords there, so `spam` binds as
-a keyword write rather than a folder move.
+   This retires the `ProviderTagBinding` descriptor for the Gmail cut. `TRASH` is the only label
+   `modify` refuses, and trash is out of scope. **Reintroduce the descriptor when JMAP lands** — there
+   `spam` is a `$junk` keyword, not a folder, so the two vocabularies stop agreeing. Until then a
+   two-case union with one inhabited case would be speculative structure.
 
 ## Why not the alternatives
 
@@ -267,10 +258,10 @@ type TagPushResult = {
 };
 ```
 
-`TagPushOp` is `{ foreignId, add, remove }` where each entry is a `ProviderTagBinding` (see
-[the mapping section](#pipeline-applied-tags-push-too--and-spam-has-no-mapping-yet)) resolved from
-the reverse label map by the harness — so the diff itself stays provider-agnostic, and a tag whose
-push needs a dedicated endpoint rather than a label write is expressible.
+`TagPushOp` is `{ foreignId, addLabelIds, removeLabelIds }` — provider-vocabulary ids resolved from
+the reverse label map by the harness, so the diff itself stays provider-agnostic. A plain id list
+suffices because every eligible Gmail tag, `SPAM` included, is a `modify` label write (verified; see
+[the mapping section](#pipeline-applied-tags-push-too--and-spam-has-no-mapping-yet)).
 
 ### What an op's outcome does to the base
 
@@ -362,11 +353,11 @@ service, the `Live` layer, and `GoogleMailApi.mock` — the mock must hold mutab
 state so a test can assert what was pushed and so a subsequent `listHistory` reflects it.
 
 Add `SPAM: 'spam'` to `GMAIL_SYSTEM_TAGS` and update its doc comment, which currently states that
-`TRASH`/`SPAM` are never synced. Verify whether `modify` accepts `SPAM` in `addLabelIds`; if it does
-not, `spam` binds as an `operation` rather than a `label` and needs the dedicated endpoint.
+`TRASH`/`SPAM` are never synced. `modify` accepts `SPAM` in `addLabelIds` (verified live), so it needs
+no special handling.
 
-Scope note: `gmail.modify` is required on the OAuth token. Confirm the connector already requests it
-before the live test.
+Scope note: `gmail.modify` is required, and the Gmail connector **already requests it** —
+`capabilities/connector.ts`, added for trash support. Nothing to change there.
 
 **JMAP.** Out of scope for the first cut. The seam is optional, so JMAP simply does not implement
 `pushTags` and keeps its add-only keyword behaviour; the comment in `jmapReconcile` that defers this
@@ -436,8 +427,9 @@ TDD, in this order. Each layer is a gate for the next.
    rather than breaking. Two things must not be forgotten when JMAP lands, both already noted above:
    `jmapReconcile`'s add-only keyword handling exists only because local flags could not be written
    back, so it is revisited then, not before; and `spam` is the case that stresses
-   `ProviderTagBinding` across vocabularies — a label in Gmail, a `$junk` keyword in JMAP — so treat
-   the descriptor as provisional until a second provider has used it.
+   the binding across vocabularies — a label in Gmail (verified), a `$junk` keyword in JMAP — so the
+   `ProviderTagBinding` descriptor is deferred until JMAP actually needs it rather than built now
+   with one inhabited case.
 4. ~~**Live-test account**~~ **DECIDED 2026-08-15: the shared team account `dxos.test@gmail.com`.**
    Nothing in the repo referenced it before this — no guide and nothing under `plugin-google` — so it
    is recorded here as the canonical place, and the test asserts it rather than trusting whatever the
@@ -449,16 +441,30 @@ TDD, in this order. Each layer is a gate for the next.
    rule above — a failed `finally` leaves a colleague's mailbox modified — so cleanup failures must be
    loud rather than swallowed.
 
-   Remaining prerequisite, not a decision: the token for that account must carry `gmail.modify`.
-   Confirm the connector requests that scope before writing the test.
-
    Precedent worth noting when wiring this: `plugin-google`'s `mail/send/handler.test.ts` already
    **sends real email** gated on `GOOGLE_ACCESS_TOKEN` alone. That is the pattern the two-gate rule
    exists to avoid repeating, not one to copy.
 
 ## Status of the open decisions
 
-All four are now closed. What remains before implementation is mechanical, not a design question:
-confirm the `gmail.modify` scope on the test account's token, and verify whether
-`users.messages.modify` accepts `SPAM` in `addLabelIds` (which decides whether `spam` binds as a
-`label` or an `operation`).
+All four are closed, and both mechanical prerequisites were discharged live on 2026-08-15 against
+`dxos.test@gmail.com`:
+
+- `getProfile()` returns `dxos.test@gmail.com`, so the identity assertion the live test relies on
+  works, and every label `GMAIL_SYSTEM_TAGS` maps exists on that account — `SPAM` included.
+- `modify` accepts `SPAM`, so `spam` is an ordinary label write.
+- `gmail.modify` is already in the connector's requested scopes.
+
+Nothing blocks implementation. Start at test-plan step 1 (the pure diff module), which needs no
+provider at all.
+
+### Getting a token for the live test
+
+The Playground is the path both existing live suites assume. Sign in to Google as the test account,
+open <https://developers.google.com/oauthplayground/>, paste
+`https://www.googleapis.com/auth/gmail.modify` into "Input your own scopes", authorize, then exchange
+the code for tokens. Export `GOOGLE_ACCESS_TOKEN` and `DX_GMAIL_TAG_SYNC_ACCOUNT`.
+
+Access tokens last an hour; a refresh token lasts a week. Never commit either, and revoke a leaked
+one immediately — `POST https://oauth2.googleapis.com/revoke` with `token=<refresh_token>` kills the
+whole grant, including access tokens already minted from it.
