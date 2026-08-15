@@ -59,6 +59,13 @@ export type PluginDetailProps = {
    * rendered next to the plugin name in the header.
    */
   failure?: PluginManager.PluginFailure;
+  /**
+   * Whether this plugin's enabled state is pinned to the current device rather than shared with the
+   * user's other devices. `undefined` hides the control — there is no device-synced settings store
+   * (no client, or the settings space has not opened).
+   */
+  deviceOverride?: boolean;
+  onDeviceOverrideChange?: (pinned: boolean) => void;
   onEnabledChange?: (enabled: boolean) => void;
   /**
    * When provided, the plugin is not installed and an Install button is shown
@@ -118,6 +125,8 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       dependencies,
       dependents,
       failure,
+      deviceOverride,
+      onDeviceOverrideChange,
       onEnabledChange,
       onInstall,
       onInstallVersion,
@@ -182,6 +191,24 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 <Section.Heading title={t('description.label')} />
                 <Section.Body>
                   <MarkdownView classNames='text-description' content={description} />
+                </Section.Body>
+              </Section.Root>
+            )}
+
+            {deviceOverride !== undefined && (
+              <Section.Root>
+                <Section.Heading title={t('availability.label')} />
+                <Section.Body>
+                  <div className='flex gap-3 items-center'>
+                    <Input.Root>
+                      <Input.Switch
+                        classNames='self-center'
+                        checked={deviceOverride}
+                        onCheckedChange={onDeviceOverrideChange}
+                      />
+                      <Input.Label classNames='text-sm text-description'>{t('device override.label')}</Input.Label>
+                    </Input.Root>
+                  </div>
                 </Section.Body>
               </Section.Root>
             )}

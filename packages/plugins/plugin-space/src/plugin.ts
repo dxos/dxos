@@ -20,6 +20,7 @@ import {
   ReactSurface,
   Repair,
   Schema,
+  SettingsSync,
   SpaceSettings,
   SpacesReady,
   SpaceState,
@@ -52,6 +53,7 @@ export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).p
   Plugin.addModule(IdentityCreated),
   Plugin.addModule(SpacesReady),
   Plugin.addModule(Repair),
+  Plugin.addModule(SettingsSync),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

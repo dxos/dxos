@@ -181,6 +181,34 @@ export const isSettings = (value: unknown): value is Settings =>
  */
 export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.capability.settings');
 
+/**
+ * Control surface over the device-synced settings store, which projects every {@link Settings}
+ * contribution (plus the plugin set) into the settings space so they follow the identity across
+ * devices, with per-key device overrides.
+ *
+ * Contributed once the settings space is open, so consumers must tolerate its absence: before that,
+ * and in hosts with no client at all (stories, node), settings stay device-local.
+ */
+export type SettingsSync = {
+  /** Key of the device this app instance writes overrides for. */
+  readonly deviceKey: string;
+  /**
+   * This device's override sets, keyed by settings prefix. A key's presence is the override; its
+   * value is the device-local value in effect. Reactive, so settings UI re-renders when a pin here
+   * or an edit on another device changes what is overridden.
+   */
+  readonly overrides: Atom.Atom<Record<string, Record<string, any>>>;
+  /** Pin `key` to this device, seeded with the value currently in effect. */
+  pin(prefix: string, key: string): void;
+  /** Release `key` back to the value shared across devices. */
+  unpin(prefix: string, key: string): void;
+};
+
+/**
+ * @category Capability
+ */
+export const SettingsSync = Capability$.makeSingleton<SettingsSync>()('org.dxos.app-framework.capability.settingsSync');
+
 export type Schema = ReadonlyArray<Type.AnyEntity>;
 
 /**
