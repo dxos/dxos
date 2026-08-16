@@ -13,7 +13,7 @@ rendering layer. Track B and C touch `react-ui-thread`, so coordinate before mov
 - [x] Move `DESIGN.md` into `plugin-assistant/docs/` and fix its relative links.
 - [x] Five thread scenarios enumerated (AI chat, human chat, comments, transcription, email) with
       per-aspect input/thread mechanism tables (§3.0).
-- [x] Seven-aspect matrix — virtualization, search, text selection, message selection, streaming,
+- [x] Eight-aspect matrix — virtualization, search, text selection, message selection, streaming,
       mutability, renderers, chrome (§3.0.1).
 - [x] Candidate homes for the engine, six packages compared (§4.0).
 

@@ -20,6 +20,7 @@ export type SelectionGroup = {
   claim: (view: EditorView) => void;
 };
 
+/** Creates a group; one per feed, provided to its items by `MessageList.Root`. */
 export const createSelectionGroup = (): SelectionGroup => {
   const views = new Set<EditorView>();
 

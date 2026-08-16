@@ -19,7 +19,7 @@ messages, across four packages and three plugins:
 renderer) rather than by **speaker** (AI / human / email / machine).
 
 Companion docs: [`DESIGN.md`](./DESIGN.md) (the end-to-end call stack and the test/story audit),
-[`DEBUG.md`](../DEBUG.md) (AI → CodeMirror dataflow). This document does not repeat either; it is a
+[`DEBUG.md`](./DEBUG.md) (AI → CodeMirror dataflow). This document does not repeat either; it is a
 **structural** audit, where DESIGN.md is a **behavioural** one.
 
 Measured on branch `claude/ai-chat-interface-restructure-bdc043`.
@@ -68,7 +68,7 @@ Runtime composition for the primary entry point, `ChatArticle`. Coupling tags:
 - **[plugin]** — depends on `@dxos/app-framework` / `@dxos/app-toolkit` capabilities, operations,
   surfaces, or another plugin.
 
-```
+```text
 ChatArticle                                        containers/ChatArticle          [plugin]
 ├── useChatServices                                hooks/                          [plugin] ProcessManagerRuntime capability
 ├── usePresets(settings)                           hooks/                          [plugin] Settings capability
@@ -185,7 +185,7 @@ The existing packages are split by **who is talking** (AI / human / email / mach
 **what the component is** (composer vs renderer). That is the wrong axis, and it is why the same two
 aspects are implemented repeatedly.
 
-```
+```text
 @dxos/react-ui-chat            ChatEditor · ChatDialog · ChatStatus · ChatStatusIndicator
    "the AI one"                deps: react-ui, react-ui-components, react-ui-dnd,
                                      react-ui-editor, ui-editor, ui-theme, async, util
@@ -248,7 +248,7 @@ email. Every one of them is a list of `Message.Message` from `@dxos/types`.
 
 ### 3.0.1 Functionality aspects
 
-The seven aspects any message-thread renderer has to answer, and where each of the five stands
+The eight aspects any message-thread renderer has to answer, and where each of the five stands
 today. ✅ = present, ➖ = absent, ⚠️ = present but constrained.
 
 | Aspect                | AI chat                                               | human chat                                         | comments                                   | transcription                            | email                                                        |
@@ -364,7 +364,7 @@ Findings:
 The target architecture: **a virtualized list where each message is its own CodeMirror markdown
 document ("item"), with React chrome around it.** One engine, owned by us, replacing both families.
 
-```
+```text
 MessageList  (the engine)
 ├── model        readonly Message[]  +  renderMessage(message) => markdown
 ├── virtualizer  dynamic measurement + height cache; we own scroll anchoring
@@ -478,7 +478,7 @@ The target is a package where the **chat / thread / tree loop can be developed a
 processor**, consumed from `plugin-assistant`. Getting there also resolves §3's tension, provided
 the packages are re-cut along _what the component is_ rather than _who is talking_.
 
-```
+```text
 plugin-assistant · plugin-thread · plugin-review · plugin-inbox · plugin-transcription
        each supplies: registry extensions · per-message chrome · host callbacks
     ↓
@@ -731,7 +731,7 @@ implements ChatProcessor` + a `MockChatProcessor` in `#testing` driving the atom
 
 **Track C — the engine (gated on track 0)**
 
-7. **Build `MessageList`** in `react-ui-chat` from the spike, with the block-renderer contract and
+7. **Build `MessageList`** in `@dxos/react-ui-feed` from the spike, with the block-renderer contract and
    the chrome render-prop. _Test: unit tests for the model/diff (ported from `sync.test.ts` and
    `TranscriptModel`), plus a story per item mode._
 8. **Migrate renderers one at a time**, cheapest first, each landing independently: email

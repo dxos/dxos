@@ -32,20 +32,16 @@
   "dependencies": {
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
-    "@dxos/echo": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@radix-ui/react-context": "catalog:",
     "@tanstack/react-virtual": "catalog:",
     "dompurify": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

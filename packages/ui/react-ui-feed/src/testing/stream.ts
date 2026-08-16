@@ -21,13 +21,17 @@ export type TextStreamOptions = {
  */
 export async function* textStream(text: string, options: TextStreamOptions = {}): AsyncGenerator<string, void> {
   const { chunkDelay = 120, variance = 0.4, wordsPerChunk = 4 } = options;
+  // Floored rather than validated: this is driven by a storybook control, and a size of zero never
+  // advances the cursor — the generator would yield empty chunks for ever, which presents as a hang
+  // rather than a mistake.
+  const chunkSize = Math.max(1, Math.floor(wordsPerChunk));
   const tokens = text.match(/\S+|\s+/g) ?? [];
 
   let index = 0;
   while (index < tokens.length) {
     const chunk: string[] = [];
     let words = 0;
-    while (index < tokens.length && words < wordsPerChunk) {
+    while (index < tokens.length && words < chunkSize) {
       const token = tokens[index++];
       chunk.push(token);
       if (token.trim()) {

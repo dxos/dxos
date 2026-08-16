@@ -15,22 +15,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../sdk/types"
     },
     {
       "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-editor"
-    },
-    {
-      "path": "../react-ui-mosaic"
     },
     {
       "path": "../ui-editor"

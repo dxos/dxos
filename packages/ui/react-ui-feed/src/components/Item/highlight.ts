@@ -12,6 +12,8 @@ export const setHighlights = StateEffect.define<readonly HighlightRange[]>();
 
 const mark = Decoration.mark({ class: 'dx-feed-hit' });
 
+const clamp = (offset: number, length: number) => Math.max(0, Math.min(offset, length));
+
 /**
  * Highlights pushed in from the model.
  *
@@ -26,9 +28,10 @@ export const highlights = StateField.define<DecorationSet>({
         const length = tr.state.doc.length;
         return Decoration.set(
           effect.value
-            // Clamp against the current document: a hit computed on the model can outrun a view
-            // whose streaming tail has not arrived yet, and an out-of-range decoration throws.
-            .map(([from, to]) => [Math.min(from, length), Math.min(to, length)] as const)
+            // Clamp against the current document at both ends: a hit computed on the model can
+            // outrun a view whose streaming tail has not arrived yet, and a decoration outside
+            // `[0, length]` throws rather than being ignored.
+            .map(([from, to]) => [clamp(from, length), clamp(to, length)] as const)
             .filter(([from, to]) => from < to)
             .map(([from, to]) => mark.range(from, to)),
           true,

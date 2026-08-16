@@ -457,7 +457,14 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         <ScrollArea.Viewport data-testid='feed.viewport' ref={handleViewportRef}>
           <div className='relative w-full' style={{ height: virtualizer.getTotalSize() }}>
             {virtualizer.getVirtualItems().map((item) => {
+              // The virtualizer can still report items for the previous count on the render after a
+              // feed truncates — a rewind, a filter, a space switch — and the row would throw on a
+              // message that is no longer there.
               const message = messages[item.index];
+              if (!message) {
+                return null;
+              }
+
               return (
                 <div
                   key={item.key}
