@@ -209,18 +209,18 @@ so the suspicion is that it does not activate at all rather than that it fails.
 The story is tagged `!test` so the suite stays green rather than red; it is an
 artifact for the next session, not a passing test.
 
-Leads, UNTESTED — dump before believing any of them:
+DIAGNOSED (2026-08-16, `agent-claude-plugin.test.ts`): leads 1 and 3 are
+ELIMINATED — in a bare `PluginManager` the plugin activates on Startup and the
+producer contribution is visible (`2 passed`). Two "Not a valid effect" errors
+seen on the way were the diagnostic's own bug: `manager.capabilities.getAll` is
+SYNCHRONOUS, and casting it to an effect handed `Effect.runPromise` a plain
+array (an array's toString printed the function source, then `[object Object]`).
+A record-wrapper "fix" made on that false reading was reverted.
 
-1. The module never activates. `Plugin.make(builder)()` was needed to turn the
-   builder into a `Plugin` (a plain builder is not assignable); check the plugin
-   is actually in `enabled` and that the Startup pass reaches it.
-2. `provides: [AgentTurnProducer]` may make the module's activation a dependency
-   of something that never resolves, stalling the startup pass — `WithSidecar`
-   does not declare it.
-3. Importing `@dxos/agent-claude/producer` may fail in the browser (new export
-   entry); a module whose import throws would explain silence in the log.
-
-NEXT: confirm which, with a dump — not a fourth theory.
+REMAINING: the stall reproduces only inside the story stack (lead 2 territory —
+the interaction between `provides: [AgentTurnProducer]`, the story's plugin
+composition, and `AgentServiceSpec`'s layer build). Next dump: log from inside
+the story's activation pass, not another bare-manager test.
 
 ## Backlog
 
