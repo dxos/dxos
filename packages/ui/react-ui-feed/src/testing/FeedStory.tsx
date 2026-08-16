@@ -254,9 +254,9 @@ export const FeedStory = ({
             another box in the height chain. */}
         {/* `minmax(0, 1fr)` on the row: without it the grid sizes to its tallest child, the rail
             grows the panel instead of being bounded by it, and the rail never learns to thin. */}
-        <Panel.Content classNames='grid grid-cols-[2rem_1fr] grid-rows-[minmax(0,1fr)] overflow-hidden'>
-          <div className='dx-expander grid grid-rows-[1fr_3fr_1fr] justify-center'>
-            <FeedMinimap classNames='border row-start-2 overflow-hidden' messages={messages} />
+        <Panel.Content classNames='grid grid-cols-[2rem_1fr] grid-rows-[minmax(0,1fr)]'>
+          <div className='dx-expander grid grid-rows-[1fr_4fr_1fr] justify-center'>
+            <FeedMinimap classNames='row-start-2' messages={messages} />
           </div>
           <MessageList.Viewport classNames='dx-document' />
         </Panel.Content>
@@ -408,15 +408,10 @@ const StatusBar = ({ hits, query, selected, copied, streaming }: StatusBarProps)
   const { range, currentIndex, count, scrollToBottom } = useMessageList('StatusBar');
 
   return (
-    <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-description tabular-nums'>
-      <button
-        type='button'
-        data-testid='feed.range'
-        className='text-left'
-        onClick={() => scrollToBottom({ behavior: 'smooth' })}
-      >
-        {range ? `${range.startIndex}–${range.endIndex} / ${count} · #${currentIndex}` : count}
-      </button>
+    <div className='h-6 grid grid-cols-7 items-center gap-4 px-2 text-xs text-description tabular-nums'>
+      <span>#{currentIndex}</span>
+      <span>{range ? `${range.startIndex}–${range.endIndex}` : ''}</span>
+      <span>{count}</span>
       <span>{selected} selected</span>
       {query ? <span>{hits.length} hits</span> : <span />}
       {copied ? (
