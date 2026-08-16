@@ -143,19 +143,23 @@ export const Minimap = ({ classNames, markers, visibleRange, onSelect }: Minimap
   }, []);
 
   // Arrow keys walk the rail. The ticks are buttons, so tab reaches the rail and the arrows then
-  // move within it — the roving behaviour a vertical list of controls is expected to have.
+  // move within it — the roving behaviour a vertical list of controls is expected to have. The step
+  // is taken from the focused row rather than `hovered`, which the pointer leaving the rail clears
+  // while the keyboard is still on a tick; and clamped to `rows`, since thinning can leave the ref
+  // array longer than the rail it now renders.
   const handleKeyDown = useCallback(
     (event: ReactKeyboardEvent<HTMLDivElement>) => {
       const delta = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
-      if (!delta || hovered == null) {
+      const current = rowsRef.current.findIndex((element) => element === event.target);
+      if (!delta || current < 0) {
         return;
       }
 
-      const next = Math.min(Math.max(hovered + delta, 0), rowsRef.current.length - 1);
+      const next = Math.min(Math.max(current + delta, 0), rows.length - 1);
       event.preventDefault();
       rowsRef.current[next]?.focus();
     },
-    [hovered],
+    [rows.length],
   );
 
   const hoveredMarker = hovered == null ? undefined : rows[hovered]?.marker;

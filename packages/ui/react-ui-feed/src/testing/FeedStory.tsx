@@ -408,10 +408,11 @@ const StatusBar = ({ hits, query, selected, copied, streaming }: StatusBarProps)
   const { range, currentIndex, count, scrollToBottom } = useMessageList('StatusBar');
 
   return (
-    <div className='h-6 grid grid-cols-7 items-center gap-4 px-2 text-xs text-description tabular-nums'>
+    <div className='h-6 grid grid-cols-6 items-center gap-4 px-2 text-xs text-description tabular-nums'>
       <span>{range ? `${range.startIndex}–${range.endIndex}` : ''}</span>
-      <span>#{currentIndex}</span>
-      <span>{count}</span>
+      <span>
+        {currentIndex} / {count}
+      </span>
       <span>{selected} selected</span>
       {query ? <span>{hits.length} hits</span> : <span />}
       {copied ? (
