@@ -3,7 +3,7 @@
 //
 
 import { HighlightStyle, LanguageSupport, LRLanguage, syntaxHighlighting, syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
+import { EditorState, type Extension, RangeSetBuilder, StateField, type TransactionSpec } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
 import { styleTags, tags as t } from '@lezer/highlight';
@@ -27,6 +27,7 @@ export const query = ({ tags }: QueryOptions = {}): Extension => {
     new LanguageSupport(queryLanguage),
     syntaxHighlighting(queryHighlightStyle),
     decorations({ tags }),
+    spacing,
     typeahead({
       onComplete: ({ line }: CompletionContext) => {
         const words = line.split(/\s+/).filter(Boolean);
@@ -54,6 +55,11 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
       const range = intersectRanges(state.selection.main, node);
       return hasFocus && range && (state.selection.main.from > 0 || range.to - range.from > 0);
     };
+
+    // A tag is atomic everywhere except at its trailing edge, which is the only position from which it
+    // can still be composed — `#` then label characters. Atomic ranges keep the caret from landing
+    // anywhere else inside it, so this position is reachable only while typing the tag.
+    const isComposing = ({ to }: Range) => hasFocus && state.selection.main.empty && state.selection.main.head === to;
 
     // Collected rather than fed straight to a `RangeSetBuilder`, which demands ascending `from`:
     // the bare-`#` ranges below come from a document scan and interleave with the tree's own.
@@ -117,8 +123,8 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
               const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
               const tag = Tag.findTagByLabel(tags, label);
               const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
-              if (isInside(node)) {
-                // Under the caret the text has to stay live and editable, so the chip is painted with
+              if (isComposing(tagNode)) {
+                // While the tag is being typed the text has to stay live and editable, so the chip is painted with
                 // marks over it rather than replacing it. `tagMarks` mirrors `TagWidget` class for
                 // class, so the tag does not change shape as the caret enters or leaves it.
                 for (const mark of tagMarks(node.from, node.to, hue)) {
@@ -245,6 +251,55 @@ const decorations = ({ tags }: QueryOptions): Extension => {
     }),
   ];
 };
+
+/**
+ * Keeps typed text from being glued onto a tag chip.
+ *
+ * Two rules, both applied as follow-up changes so the user's own transaction is left intact:
+ * 1. Text typed immediately before a tag is separated from it by a space.
+ * 2. An insertion leaves a trailing space at the end of the document, so there is always somewhere to
+ *    type that is not adjacent to a chip. Deletions are exempt, or backspace at the end of the
+ *    document would only ever delete a space this rule puts straight back.
+ */
+export const spacing: Extension = EditorState.transactionFilter.of((tr) => {
+  if (!tr.docChanged) {
+    return tr;
+  }
+
+  const tagStarts = new Set<number>();
+  syntaxTree(tr.startState).iterate({
+    enter: (node) => {
+      if (node.type.id === QueryDSL.Node.Tag) {
+        tagStarts.add(node.from);
+      }
+    },
+  });
+
+  let inserting = false;
+  let separator: number | undefined;
+  tr.changes.iterChanges((fromA, toA, _fromB, toB, inserted) => {
+    if (!inserted.length) {
+      return;
+    }
+
+    inserting = true;
+    if (fromA === toA && tagStarts.has(fromA) && !/\s$/.test(inserted.toString())) {
+      separator = toB;
+    }
+  });
+
+  const specs: TransactionSpec[] = [tr];
+  let text = tr.newDoc.toString();
+  if (separator !== undefined) {
+    specs.push({ changes: { from: separator, insert: ' ' }, sequential: true });
+    text = text.slice(0, separator) + ' ' + text.slice(separator);
+  }
+  if (inserting && text.length > 0 && !/\s$/.test(text)) {
+    specs.push({ changes: { from: text.length, insert: ' ' }, sequential: true });
+  }
+
+  return specs;
+});
 
 const lineHeight = '30px';
 

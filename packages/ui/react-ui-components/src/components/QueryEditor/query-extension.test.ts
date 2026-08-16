@@ -18,7 +18,7 @@ const hue = tag.hue ?? getHashHue(tag.id);
 /**
  * A tag has two renderings: a widget that REPLACES the text, and marks drawn OVER it. The second
  * exists only because an atomic widget cannot be edited character by character — so the tag switches
- * to marks exactly while the caret is in it, and back once the caret leaves.
+ * to marks exactly while it is being composed (the caret at its trailing edge), and back otherwise.
  */
 describe('tag rendering', () => {
   test('is an atomic chip when the caret is elsewhere', async () => {
@@ -31,7 +31,13 @@ describe('tag rendering', () => {
     view.destroy();
   });
 
-  test('is marks while the caret is in it, so the text stays editable', async () => {
+  test('stays an atomic chip with the caret inside it', async () => {
+    const view = await viewOf('#important', 5);
+    expect(decorationsOf(view)).toMatchObject([{ from: 0, to: 10, atomic: true }]);
+    view.destroy();
+  });
+
+  test('is marks while it is being composed, so the text stays editable', async () => {
     const view = await viewOf('#important', 10);
     const ranges = decorationsOf(view);
     expect(ranges.every((range) => !range.atomic)).toBe(true);
@@ -113,6 +119,43 @@ describe('buildQueryDecorations', () => {
   test('the chip is drawn in the tag hue', async () => {
     const view = await viewOf('#important', 10);
     expect(decorationsOf(view).some((range) => range.class?.includes(hue))).toBe(true);
+    view.destroy();
+  });
+});
+
+/**
+ * Tags are atomic, so text must never end up glued to one — and there has to be a position at the end
+ * of the document that is not adjacent to a chip.
+ */
+describe('spacing', () => {
+  test('typing immediately before a tag is separated from it', async () => {
+    const view = await viewOf('#important', 0);
+    view.dispatch({ changes: { from: 0, insert: 'a' }, selection: EditorSelection.cursor(1) });
+    expect(view.state.doc.toString()).toBe('a #important ');
+    expect(view.state.selection.main.head).toBe(1);
+    view.destroy();
+  });
+
+  test('an insertion leaves a trailing space', async () => {
+    const view = await viewOf('#a', 2);
+    view.dispatch({ changes: { from: 2, insert: 'b' }, selection: EditorSelection.cursor(3) });
+    expect(view.state.doc.toString()).toBe('#ab ');
+    // The caret stays before the trailing space, so typing continues to extend the tag.
+    expect(view.state.selection.main.head).toBe(3);
+    view.destroy();
+  });
+
+  test('the trailing space is not re-added after a deletion', async () => {
+    const view = await viewOf('#a ', 3);
+    view.dispatch({ changes: { from: 2, to: 3 } });
+    expect(view.state.doc.toString()).toBe('#a');
+    view.destroy();
+  });
+
+  test('an empty document is left empty, so the placeholder shows', async () => {
+    const view = await viewOf('x', 1);
+    view.dispatch({ changes: { from: 0, to: 1 } });
+    expect(view.state.doc.toString()).toBe('');
     view.destroy();
   });
 });
