@@ -217,10 +217,22 @@ SYNCHRONOUS, and casting it to an effect handed `Effect.runPromise` a plain
 array (an array's toString printed the function source, then `[object Object]`).
 A record-wrapper "fix" made on that false reading was reverted.
 
-REMAINING: the stall reproduces only inside the story stack (lead 2 territory —
-the interaction between `provides: [AgentTurnProducer]`, the story's plugin
-composition, and `AgentServiceSpec`'s layer build). Next dump: log from inside
-the story's activation pass, not another bare-manager test.
+RESOLVED (2026-08-16): after the Scope/`runTurn` refactor (dmaretskyi's review)
+and the merge with main, all three checkpoints fire — module activates,
+`AgentServiceSpec` sees 1 producer, story reaches the chat. The original stall
+was never reproduced against the new seam, so its precise cause is unknown; it
+is gone.
+
+**M3c COMPLETE.** `WithClaudeAgent` types a prompt into the assistant's OWN chat
+input; the processor requests a session from `AgentService`, the process runs
+the turn on the contributed Claude producer (HTTP to the sidecar, real SDK), the
+projected messages land on the feed, and the thread renders the fixture token.
+In-suite: 34 passed, With Claude Agent 9655ms.
+
+One more shared-state bug found by running the full suite: `storySpace` was a
+single module-level slot, so a later story in the file picked up the PREVIOUS
+story's space — client already destroyed — and hung both waits (passed alone,
+failed in-suite at 60s). Captures are now keyed per story.
 
 ## Backlog
 

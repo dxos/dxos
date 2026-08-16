@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { Client } from '@dxos/agent-claude/client';
 import { Chat as ChatSchema } from '@dxos/assistant-toolkit';
@@ -31,19 +31,38 @@ const PROMPT = [
 /** Lives only in the fixture file, so seeing it rendered proves the read reached the thread. */
 const MAGIC_TOKEN = 'pelican-42';
 
-// Captured by `onInit` so the play function can reach the space the story rendered.
-let storySpace: Space | undefined;
+/** Types a prompt into the chat editor and submits it. */
+const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
+  const canvas = within(canvasElement);
+  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
+  const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
+  if (!editor) {
+    throw new Error('Chat editor not found.');
+  }
 
-const captureSpace = async ({ space }: { space: Space }) => {
-  storySpace = space;
+  await userEvent.click(editor);
+  await userEvent.type(editor, text);
+  await userEvent.keyboard('{Enter}');
 };
 
+// Captured by `onInit` so the play function can reach the space the story rendered. Keyed per
+// story: the module is shared across the file's stories, and a later story polling a single shared
+// slot would pick up the PREVIOUS story's space — whose client is already destroyed — and hang.
+const storySpaces = new Map<string, Space>();
+
+const captureSpaceFor =
+  (key: string) =>
+  async ({ space }: { space: Space }) => {
+    storySpaces.set(key, space);
+  };
+
 /** `onInit` runs on SpacesReady, which the play function can reach first. */
-const waitForSpace = async (timeout = 30_000): Promise<Space> => {
+const waitForSpace = async (key: string, timeout = 30_000): Promise<Space> => {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
-    if (storySpace) {
-      return storySpace;
+    const space = storySpaces.get(key);
+    if (space) {
+      return space;
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
@@ -89,12 +108,12 @@ type Story = StoryObj<typeof ModuleContainer>;
  * the chat's feed, so the existing Chat surface renders them with no plugin change.
  */
 export const WithSidecar: Story = {
-  decorators: createDecorators({ onInit: captureSpace }),
+  decorators: createDecorators({ onInit: captureSpaceFor('withSidecar') }),
   args: {
     layout: [[StoryRole.Chat], [StoryRole.Logging]],
   },
   play: async () => {
-    const space = await waitForSpace();
+    const space = await waitForSpace('withSidecar');
     const chat = await waitForChat(space);
     const feed = await chat.feed.load();
     const database = Database.layer(space.db);
@@ -221,9 +240,26 @@ export const Console: Story = {
  * Diagnose that before touching anything else; see TASKS.md.
  */
 export const WithClaudeAgent: Story = {
-  tags: ['!test'],
-  decorators: createDecorators({ onInit: captureSpace, plugins: [AgentClaudePlugin] }),
+  tags: ['manual'],
+  decorators: createDecorators({ onInit: captureSpaceFor('withClaudeAgent'), plugins: [AgentClaudePlugin] }),
   args: {
     layout: [[StoryRole.Chat], [StoryRole.Logging]],
+  },
+  play: async ({ canvasElement }) => {
+    const space = await waitForSpace('withClaudeAgent');
+    await waitForChat(space);
+
+    // Submitted through the assistant's own chat input: the processor requests a session from
+    // AgentService, whose process runs the turn on the contributed Claude producer, which appends
+    // the projected messages to the feed the thread renders.
+    await submitPrompt(canvasElement, `Read agent-fixture.md and state the MAGIC_TOKEN. Do not run any other tools.`);
+
+    const deadline = Date.now() + 90_000;
+    while (Date.now() < deadline && !document.body.innerText.includes(MAGIC_TOKEN)) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    await expect(document.body.innerText, 'the SDK-produced turn never reached the rendered thread').toContain(
+      MAGIC_TOKEN,
+    );
   },
 };
