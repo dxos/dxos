@@ -68,8 +68,10 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       so a portal whose React content grows later (a disclosure opening) left the editor with a stale
       height and the lines below drew **over** the widget. `MarkdownItem` now observes the portal
       roots and calls `view.requestMeasure()`; the row follows through the virtualizer's observer.
-      The widgets also open with `duration={0}` — an animated height is measured on every frame by
-      both observers, which dragged every row below through a dozen positions.
+      Widgets also declare `estimatedHeight`: a portal paints a frame after CodeMirror places the
+      widget, so with nothing reserved the row was measured at the height of an empty box and grew a
+      frame later — a row jumping under the reader mid-scroll. Measured after: 110 rows mounted
+      during a scroll, zero post-mount height changes. The disclosure keeps its animation.
 - [ ] Reconcile a document that shrinks — `MarkdownItem` appends when the new text extends the old
       and otherwise **replaces the whole document**, which the block turn now triggers twice per
       turn (status removed, reasoning tag closed). A replace discards decorations and widget state;

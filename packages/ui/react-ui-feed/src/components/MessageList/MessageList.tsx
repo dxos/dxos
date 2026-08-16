@@ -50,6 +50,9 @@ type MessageListContextValue = {
   range?: MessageRange;
   /** Index the reader is on: moved by the arrow keys and by any navigation, tracked while scrolling. */
   currentIndex: number;
+  /** Block widgets mounted across every mounted item — what the visible window actually costs. */
+  mountedWidgets: number;
+  reportWidgets: (id: string, count: number) => void;
   virtualizer: Virtualizer<HTMLElement, HTMLElement>;
   /** Row ref: measures the element and feeds the running average behind `estimateSize`. */
   measureItem: (element: HTMLElement | null) => void;
@@ -71,8 +74,9 @@ const [MessageListProvider, useMessageListContext] = createContext<MessageListCo
  * find-next, a statusbar's range readout.
  */
 export const useMessageList = (consumerName = 'useMessageList') => {
-  const { range, currentIndex, messages, scrollToIndex, scrollToBottom } = useMessageListContext(consumerName);
-  return { range, currentIndex, count: messages.length, scrollToIndex, scrollToBottom };
+  const { range, currentIndex, mountedWidgets, messages, scrollToIndex, scrollToBottom } =
+    useMessageListContext(consumerName);
+  return { range, currentIndex, mountedWidgets, count: messages.length, scrollToIndex, scrollToBottom };
 };
 
 //
@@ -162,6 +166,21 @@ const MessageListRoot = ({
   const setCurrent = useCallback((index: number) => {
     currentIndexRef.current = index;
     setCurrentIndex(index);
+  }, []);
+
+  // Widget census, kept per item so an item that unmounts takes its own widgets out of the total.
+  // Batched into state rather than counted on every report: a scroll mounts and unmounts several
+  // items per frame, and a readout is not worth a render each.
+  const widgetCounts = useRef(new Map<string, number>());
+  const [mountedWidgets, setMountedWidgets] = useState(0);
+  const reportWidgets = useCallback((id: string, count: number) => {
+    if (count) {
+      widgetCounts.current.set(id, count);
+    } else {
+      widgetCounts.current.delete(id);
+    }
+
+    setMountedWidgets([...widgetCounts.current.values()].reduce((total, value) => total + value, 0));
   }, []);
 
   // Running average of the rows measured so far. The estimate governs every row the list has not
@@ -521,6 +540,8 @@ const MessageListRoot = ({
         hitsByMessage={hitsByMessage}
         range={range}
         currentIndex={currentIndex}
+        mountedWidgets={mountedWidgets}
+        reportWidgets={reportWidgets}
         virtualizer={virtualizer}
         measureItem={measureItem}
         setViewport={setViewport}
@@ -635,13 +656,19 @@ type MessageListItemExtra = {
  * outside the scrolling window — a pinned message, a preview — through the same path.
  */
 const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ message, ...props }, forwardedRef) => {
-  const { renderer, registry, hitsByMessage } = useMessageListContext(MESSAGE_LIST_ITEM_NAME);
+  const { renderer, registry, hitsByMessage, reportWidgets } = useMessageListContext(MESSAGE_LIST_ITEM_NAME);
   const content = renderer(message);
   const hits = hitsByMessage.get(message.id);
+  const handleWidgetsChange = useCallback(
+    (count: number) => reportWidgets(message.id, count),
+    [reportWidgets, message.id],
+  );
 
   return (
     <div {...composableProps(props)} ref={forwardedRef}>
-      {content.kind === 'markdown' && <MarkdownItem text={content.text} registry={registry} hits={hits} />}
+      {content.kind === 'markdown' && (
+        <MarkdownItem text={content.text} registry={registry} hits={hits} onWidgetsChange={handleWidgetsChange} />
+      )}
       {content.kind === 'html' && <HtmlItem html={content.html} />}
     </div>
   );

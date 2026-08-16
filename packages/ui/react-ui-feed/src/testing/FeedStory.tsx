@@ -493,16 +493,18 @@ type StatusBarProps = {
 };
 
 const StatusBar = ({ hits, query, selected, streaming, meter }: StatusBarProps) => {
-  const { range, currentIndex, count, scrollToBottom } = useMessageList('StatusBar');
+  const { range, currentIndex, mountedWidgets, count } = useMessageList('StatusBar');
 
   return (
     // The frame readout gets a double-width column: it is the longest cell, and an equal share
     // wrapped it onto a second line, which an `h-6` bar renders as clipped.
-    <div className='h-6 w-full overflow-hidden grid grid-cols-[1fr_1fr_1fr_1fr_3fr_1fr] items-center gap-4 px-2 text-xs text-description tabular-nums'>
+    <div className='h-6 w-full overflow-hidden grid grid-cols-[1fr_1fr_1fr_1fr_1fr_3fr_1fr] items-center gap-4 px-2 text-xs text-description tabular-nums'>
       <span>{range ? `${range.startIndex}–${range.endIndex}` : ''}</span>
       <span>
         {currentIndex} / {count}
       </span>
+      {/* Block widgets mounted right now: what the visible window costs beyond its text. */}
+      <span data-testid='feed.widgets'>{mountedWidgets} blocks</span>
       <span>{selected} selected</span>
       {query ? <span>{hits.length} hits</span> : <span />}
       <FrameMeter meter={meter} />

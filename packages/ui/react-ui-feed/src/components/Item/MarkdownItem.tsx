@@ -34,6 +34,8 @@ export type MarkdownItemProps = {
   editable?: boolean;
   registry?: XmlWidgetRegistry;
   hits?: readonly HighlightRange[];
+  /** Number of block widgets this item currently has mounted; 0 once it unmounts. */
+  onWidgetsChange?: (count: number) => void;
 };
 
 /**
@@ -42,7 +44,7 @@ export type MarkdownItemProps = {
  * Each item owns a document, so streaming appends and per-message editing stay local — where a
  * single thread-wide document needs a cursor and a range table to know which message it is touching.
  */
-export const MarkdownItem = memo(({ text, editable = false, registry, hits }: MarkdownItemProps) => {
+export const MarkdownItem = memo(({ text, editable = false, registry, hits, onWidgetsChange }: MarkdownItemProps) => {
   const { themeMode } = useThemeContext();
   const [view, setView] = useState<EditorView | null>(null);
   // React widgets render in portals into hosts the extension places in the document, so the item has
@@ -137,6 +139,13 @@ export const MarkdownItem = memo(({ text, editable = false, registry, hits }: Ma
   useEffect(() => {
     view?.dispatch({ effects: setHighlights.of(hits ?? []) });
   }, [view, hits]);
+
+  // Reported rather than derived: the widgets are portals into the item's own document, so nothing
+  // above the item can count them without reaching into the DOM.
+  useEffect(() => {
+    onWidgetsChange?.(widgets.length);
+    return () => onWidgetsChange?.(0);
+  }, [widgets.length, onWidgetsChange]);
 
   // A block widget is measured once, when CodeMirror mounts it. Its content is React rendered into a
   // portal, so anything that changes height afterwards — a disclosure opening, an image loading —

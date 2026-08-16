@@ -27,11 +27,10 @@ import { mx } from '@dxos/ui-theme';
  * they open when they care. Reasoning and tool traces are long, incidental and frequent — rendering
  * them expanded turns a chat into a log.
  *
- * Opened without animation (`duration={0}`) on purpose. Inside a virtualized list an animated height
- * is measured on every frame it passes through — by CodeMirror, to re-place the lines under the
- * widget, and by the virtualizer, to re-place the rows under the item — so a 250ms disclosure drags
- * everything below it through a dozen intermediate positions. The reader asked for one change; make
- * one.
+ * The disclosure animates, and every frame of it is measured twice — by CodeMirror, to re-place the
+ * lines under the widget, and by the virtualizer, to re-place the rows under the item. That is what
+ * it costs for the content below to travel with the panel instead of jumping to its new place; the
+ * geometry stays consistent because `MarkdownItem` re-measures the document as the widget resizes.
  */
 const Panel = ({
   icon,
@@ -47,7 +46,7 @@ const Panel = ({
   const [open, setOpen] = useState(false);
 
   return (
-    <TogglePanel.Root open={open} duration={0} onChangeOpen={setOpen}>
+    <TogglePanel.Root open={open} onChangeOpen={setOpen}>
       <TogglePanel.Content classNames={mx('rounded border border-subdued-separator', classNames)}>
         <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
           <span className='grow text-description truncate'>{title}</span>
@@ -125,15 +124,26 @@ const Json = ({ children }: XmlWidgetProps) => (
   <pre className='px-2 py-1 overflow-x-auto rounded bg-groupSurface text-xs'>{getXmlTextChild(children ?? [])}</pre>
 );
 
+/**
+ * Height a collapsed panel reserves before its React content exists.
+ *
+ * A block widget's content is portaled, so it paints a frame after CodeMirror places the widget. With
+ * nothing reserved the row is measured at the height of an empty box, the virtualizer records that,
+ * and the row grows a frame later — which is a row jumping under the reader mid-scroll, and the rows
+ * below it moving with it. Reserving the collapsed height means the first measurement is the right
+ * one.
+ */
+const COLLAPSED_HEIGHT = 34;
+
 export const chatRegistry: XmlWidgetRegistry = {
   // No widget: the reader's own words stay in the document, where they can be selected and searched
   // like any other text. Registered so the markdown parser keeps the tag as one block — an
   // unregistered tag opens a paragraph that swallows the lines after it.
   prompt: { block: true },
-  reasoning: { block: true, streaming: true, Component: Reasoning },
+  reasoning: { block: true, streaming: true, estimatedHeight: () => COLLAPSED_HEIGHT, Component: Reasoning },
   status: { block: true, streaming: true, Component: Status },
-  toolCall: { block: true, Component: ToolCall },
-  toolResult: { block: true, Component: ToolResult },
+  toolCall: { block: true, estimatedHeight: () => COLLAPSED_HEIGHT, Component: ToolCall },
+  toolResult: { block: true, estimatedHeight: () => COLLAPSED_HEIGHT, Component: ToolResult },
   suggestion: { block: false, Component: Suggestion },
   select: { block: true, Component: Select },
   json: { block: true, Component: Json },
