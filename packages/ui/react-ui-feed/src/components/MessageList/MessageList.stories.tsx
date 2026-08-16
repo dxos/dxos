@@ -7,11 +7,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { IconButton, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { type FeedAnchor, type SearchHit, defaultRenderer, searchFeed, sliceFeed } from '../../model';
-import { createMessages } from '../../testing';
+import { createAnswer, createMessages, textStream } from '../../testing';
 import { type MessageChromeProps, MessageList, useMessageList } from './MessageList';
 
 //
@@ -275,6 +275,138 @@ const StatusBar = ({ hits, query, selected, copied, fps }: StatusBarProps) => {
   );
 };
 
+//
+// AI streaming
+//
+
+type AiStoryProps = {
+  /** Messages of history before the streamed answer. */
+  count?: number;
+  wordsPerChunk?: number;
+  chunkDelay?: number;
+};
+
+/**
+ * A model answering into the tail of a feed.
+ *
+ * The counterpart of `react-ui-markdown`'s `MarkdownStream/Streaming`, one layer up: there a single
+ * document receives the chunks, here the chunks land in the last message's own item while the list
+ * follows it. What this exercises that the document story cannot is the interaction between a
+ * growing row and the virtualizer measuring it.
+ */
+const AiStreamingStory = ({ count = 12, wordsPerChunk = 4, chunkDelay = 120 }: AiStoryProps) => {
+  const [messages, setMessages] = useState<Message.Message[]>(() => createMessages({ count }));
+  const [streaming, setStreaming] = useState(false);
+  const [answerId, setAnswerId] = useState<string | undefined>();
+
+  const handleStart = useCallback(() => {
+    // The answer starts empty and is filled by the stream, exactly as a real turn does.
+    const answer = Message.make({
+      sender: { role: 'assistant', name: 'Assistant' },
+      blocks: [{ _tag: 'text', text: '' }],
+    });
+    setMessages((prev) => [...prev, answer]);
+    setAnswerId(answer.id);
+    setStreaming(true);
+  }, []);
+
+  const handleStop = useCallback(() => setStreaming(false), []);
+
+  const handleReset = useCallback(() => {
+    setStreaming(false);
+    setAnswerId(undefined);
+    setMessages(createMessages({ count }));
+  }, [count]);
+
+  useEffect(() => {
+    if (!streaming || !answerId) {
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      for await (const chunk of textStream(createAnswer(), { wordsPerChunk, chunkDelay })) {
+        if (cancelled) {
+          return;
+        }
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === answerId
+              ? ({
+                  ...message,
+                  blocks: [{ ...message.blocks[0], text: `${(message.blocks[0] as any).text}${chunk}` }],
+                } as Message.Message)
+              : message,
+          ),
+        );
+      }
+
+      if (!cancelled) {
+        setStreaming(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [streaming, answerId, wordsPerChunk, chunkDelay]);
+
+  return (
+    <MessageList.Root
+      messages={messages}
+      Chrome={TestChrome}
+      streamingId={streaming ? answerId : undefined}
+      stickyBottom
+      stickyBehavior='smooth'
+    >
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <IconButton
+              icon='ph--play--regular'
+              iconOnly
+              label='Start'
+              disabled={streaming}
+              data-testid='feed.stream.start'
+              onClick={handleStart}
+            />
+            <IconButton
+              icon='ph--stop--regular'
+              iconOnly
+              label='Stop'
+              disabled={!streaming}
+              data-testid='feed.stream.stop'
+              onClick={handleStop}
+            />
+            <IconButton icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
+            <div className='grow' />
+            <NavButtons />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+
+        <Panel.Content asChild>
+          <MessageList.Viewport classNames='dx-document' />
+        </Panel.Content>
+
+        <Panel.Statusbar>
+          <StreamStatus streaming={streaming} />
+        </Panel.Statusbar>
+      </Panel.Root>
+    </MessageList.Root>
+  );
+};
+
+const StreamStatus = ({ streaming }: { streaming: boolean }) => {
+  const { range, count } = useMessageList('StreamStatus');
+
+  return (
+    <div className='h-6 flex items-center gap-4 px-2 text-xs text-description'>
+      <span data-testid='feed.range'>{range ? `${range.startIndex}–${range.endIndex} of ${count}` : count}</span>
+      <span data-testid='feed.stream.state'>{streaming ? 'streaming…' : 'idle'}</span>
+    </div>
+  );
+};
+
 const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-feed/MessageList',
   render: DefaultStory,
@@ -303,4 +435,13 @@ export const BadEstimate: Story = {
 /** Tail growth: the item reconciles by delta while the virtualizer re-measures a growing row. */
 export const Streaming: Story = {
   args: { count: 50, streaming: true },
+};
+
+/**
+ * A model answering into the tail, with the list following it smoothly. Press play; the answer
+ * arrives in word chunks and re-parses as markdown (heading, list, code fence) while it grows.
+ */
+export const AiStreaming: StoryObj<AiStoryProps> = {
+  render: AiStreamingStory,
+  args: { count: 12, wordsPerChunk: 4, chunkDelay: 120 },
 };

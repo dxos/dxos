@@ -95,8 +95,10 @@ export type MessageListRootProps = PropsWithChildren<{
   hits?: readonly SearchHit[];
   /** Estimated row height before measurement; a bad estimate shows up as scrollbar drift. */
   estimateSize?: number;
-  /** Pin to the bottom as messages arrive (chat behaviour). */
+  /** Pin to the bottom as messages arrive, and as a streaming message grows (chat behaviour). */
   stickyBottom?: boolean;
+  /** How the sticky follow moves; `smooth` glides after a streaming tail. @default 'auto' */
+  stickyBehavior?: ScrollToOptions['behavior'];
   overscan?: number;
   onRangeChange?: (range: MessageRange) => void;
 }>;
@@ -123,6 +125,7 @@ const MessageListRoot = ({
   hits,
   estimateSize = 120,
   stickyBottom = false,
+  stickyBehavior = 'auto',
   overscan = 8,
   onRangeChange,
 }: MessageListRootProps) => {
@@ -197,11 +200,15 @@ const MessageListRoot = ({
     [scrollToIndex, messages.length],
   );
 
+  // Keyed on the total size as well as the count: a streaming tail grows the last row without
+  // adding a message, so following it means reacting to the height the virtualizer measured, not
+  // to how many messages exist.
+  const totalSize = virtualizer.getTotalSize();
   useEffect(() => {
     if (stickyBottom && atBottomRef.current) {
-      scrollToBottom();
+      scrollToBottom({ behavior: stickyBehavior });
     }
-  }, [stickyBottom, messages.length, scrollToBottom]);
+  }, [stickyBottom, stickyBehavior, messages.length, totalSize, scrollToBottom]);
 
   // Cmd/Ctrl + Arrow jumps to the first or last message; plain arrows stay with the scroll container
   // and with whatever the reader is interacting with inside an item. Bound imperatively to the
