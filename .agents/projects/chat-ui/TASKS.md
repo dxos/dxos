@@ -40,6 +40,10 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
 - [ ] Streaming content — the Streaming story only extends a text block by whole tokens. Real
       streaming arrives as `ContentBlock`s (reasoning, toolCall, status) appearing and completing
       mid-message, so the item's delta reconciliation is only exercised on the easy case.
+- [ ] Multi-item selection — `selectedIds` + `onSelect` exist, but only as an additive toggle
+      driven by the story's checkbox. Needs the list-shaped gestures (click, shift-range,
+      cmd-toggle, keyboard) and a decision on whether to adopt `react-ui-list`'s
+      `useListSelection` / `useListNavigation` rather than reimplement them.
 - [ ] Item pooling / view recycling — deliberately not done, so the unoptimized number is
       measured first.
 - [ ] Wire the `custom` item kind (typed, currently returns `null`).
