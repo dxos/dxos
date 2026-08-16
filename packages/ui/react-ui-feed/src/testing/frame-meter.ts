@@ -69,6 +69,9 @@ export type FrameMeterOptions = {
   label?: string;
 };
 
+/** Live statistics plus the control that ends one pass and begins the next. */
+export type FrameMeter = FrameStats & { label?: string; record: () => string };
+
 /**
  * Samples animation-frame intervals and records a pass on demand.
  *
@@ -82,7 +85,7 @@ export type FrameMeterOptions = {
  * Durations are bucketed by the millisecond rather than kept, so a pass costs the same however long
  * it runs; percentiles come out of the histogram.
  */
-export const useFrameMeter = ({ label }: FrameMeterOptions = {}) => {
+export const useFrameMeter = ({ label }: FrameMeterOptions = {}): FrameMeter => {
   const [stats, setStats] = useState<FrameStats>(EMPTY);
 
   const buckets = useRef(new Uint32Array(MAX_BUCKET));
@@ -181,5 +184,5 @@ export const useFrameMeter = ({ label }: FrameMeterOptions = {}) => {
     return () => cancelAnimationFrame(handle);
   }, [rateAt]);
 
-  return { ...stats, record };
+  return { ...stats, label, record };
 };

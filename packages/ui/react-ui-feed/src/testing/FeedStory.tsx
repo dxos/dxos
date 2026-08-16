@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { IconButton, Input, Panel, ThemedClassName, Toolbar } from '@dxos/react-ui';
@@ -19,9 +19,10 @@ import {
   sliceFeed,
   useMessageList,
 } from '../';
-import { useFrameMeter } from './frame-meter';
+import { type FrameMeter as FrameMeterState, useFrameMeter } from './frame-meter';
 import { createMessages } from './generator';
 import { createAnswer, textStream } from './stream';
+import { sweepScroll } from './sweep';
 
 /** Pause between one answer finishing and the next question arriving. */
 const TURN_DELAY = 800;
@@ -144,6 +145,39 @@ export const FeedStory = ({
     [count, estimateSize, streaming],
   );
 
+  // The meter lives here rather than in the statusbar because the sweep has to record the pass it
+  // just ran, and the two controls sit on opposite sides of the panel.
+  const meter = useFrameMeter({ label });
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [sweeping, setSweeping] = useState(false);
+  const cancelSweep = useRef<(() => void) | null>(null);
+
+  // A measured pass has to be one repeatable gesture. Flinging 2,000 rows by hand is neither, so
+  // the sweep runs the traversal and records what it cost: click, wait, read the clipboard.
+  const handleSweep = useCallback(() => {
+    if (sweeping) {
+      cancelSweep.current?.();
+      return;
+    }
+
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return;
+    }
+
+    meter.record();
+    setSweeping(true);
+    cancelSweep.current = sweepScroll(viewport, {
+      onDone: () => {
+        cancelSweep.current = null;
+        setSweeping(false);
+        meter.record();
+      },
+    });
+  }, [sweeping, meter]);
+
+  useEffect(() => () => cancelSweep.current?.(), []);
+
   const handleAppend = useCallback(() => setMessages((prev) => [...prev, makeQuestion()]), []);
 
   const handleReset = useCallback(() => {
@@ -256,6 +290,13 @@ export const FeedStory = ({
             </Input.Root>
             <FindButton hits={hits} />
             <IconButton icon='ph--copy--regular' iconOnly label='Copy range' onClick={handleCopy} />
+            <IconButton
+              icon={sweeping ? 'ph--stop--regular' : 'ph--arrows-down-up--regular'}
+              iconOnly
+              label={sweeping ? 'Stop sweep' : 'Sweep (measure a pass)'}
+              data-testid='feed.sweep'
+              onClick={handleSweep}
+            />
             <div className='grow' />
             <NavButtons />
           </Toolbar.Root>
@@ -269,7 +310,7 @@ export const FeedStory = ({
           <div className='dx-expander grid grid-rows-[1fr_4fr_1fr] justify-center'>
             <FeedMinimap classNames='row-start-2' messages={messages} />
           </div>
-          <MessageList.Viewport classNames='dx-document' />
+          <MessageList.Viewport classNames='dx-document' ref={viewportRef} />
         </Panel.Content>
 
         <Panel.Statusbar>
@@ -279,7 +320,7 @@ export const FeedStory = ({
             selected={selectedIds.size}
             copied={copied}
             streaming={streaming}
-            label={label}
+            meter={meter}
           />
         </Panel.Statusbar>
       </Panel.Root>
@@ -420,11 +461,10 @@ type StatusBarProps = {
   selected: number;
   copied: string | null;
   streaming: boolean;
-  /** Names the frame-meter pass: the story's arguments, since they are what varies between passes. */
-  label: string;
+  meter: FrameMeterState;
 };
 
-const StatusBar = ({ hits, query, selected, streaming, label }: StatusBarProps) => {
+const StatusBar = ({ hits, query, selected, streaming, meter }: StatusBarProps) => {
   const { range, currentIndex, count, scrollToBottom } = useMessageList('StatusBar');
 
   return (
@@ -437,7 +477,7 @@ const StatusBar = ({ hits, query, selected, streaming, label }: StatusBarProps) 
       </span>
       <span>{selected} selected</span>
       {query ? <span>{hits.length} hits</span> : <span />}
-      <FrameMeter label={label} />
+      <FrameMeter meter={meter} />
       <span className='text-right' data-testid='feed.stream.state'>
         {streaming ? 'streaming…' : 'idle'}
       </span>
@@ -454,8 +494,8 @@ const StatusBar = ({ hits, query, selected, streaming, label }: StatusBarProps) 
  * starts. So a measurement is click, gesture, click — and the median rate, which rarely says
  * anything the live rate has not, rides in the tooltip and the recorded line rather than on screen.
  */
-const FrameMeter = ({ label }: { label: string }) => {
-  const { fps, p50, p95, worst, hitches, frames, duration, record } = useFrameMeter({ label });
+const FrameMeter = ({ meter }: { meter: FrameMeterState }) => {
+  const { label, fps, p50, p95, worst, hitches, frames, duration, record } = meter;
 
   return (
     <button
