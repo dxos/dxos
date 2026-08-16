@@ -3,7 +3,7 @@
 //
 
 import { HighlightStyle, LanguageSupport, LRLanguage, syntaxHighlighting, syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
+import { EditorState, type Extension, RangeSetBuilder, StateField, type TransactionSpec } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
 import { styleTags, tags as t } from '@lezer/highlight';
@@ -27,6 +27,7 @@ export const query = ({ tags }: QueryOptions = {}): Extension => {
     new LanguageSupport(queryLanguage),
     syntaxHighlighting(queryHighlightStyle),
     decorations({ tags }),
+    spacing,
     typeahead({
       onComplete: ({ line }: CompletionContext) => {
         const words = line.split(/\s+/).filter(Boolean);
@@ -117,19 +118,14 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
               const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
               const tag = Tag.findTagByLabel(tags, label);
               const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
-              if (isInside(node)) {
-                // Under the caret the text has to stay live and editable, so the chip is painted with
-                // marks over it rather than replacing it. `tagMarks` mirrors `TagWidget` class for
-                // class, so the tag does not change shape as the caret enters or leaves it.
-                for (const mark of tagMarks(node.from, node.to, hue)) {
-                  deco.add(mark.from, mark.to, mark.deco);
-                }
-              } else {
-                // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range that
-                // starts at offset 0 paints before that offset's coordinate and the caret draws to its
-                // right — pressing Home appeared to leave the caret after the tag.
-                deco.add(node.from, node.to, Decoration.replace({ widget: new TagWidget(label, hue), atomic: true }));
-              }
+              // Atomic at its own edges too, so Backspace against a tag takes the chip rather than a
+              // character of the label; typing still grows it, since an insertion at the range's
+              // boundary lands outside it.
+              //
+              // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range that
+              // starts at offset 0 paints before that offset's coordinate and the caret draws to its
+              // right — pressing Home appeared to leave the caret after the tag.
+              deco.add(node.from, node.to, Decoration.replace({ widget: new TagWidget(label, hue), atomic: true }));
             }
             break;
           }
@@ -246,6 +242,57 @@ const decorations = ({ tags }: QueryOptions): Extension => {
   ];
 };
 
+/**
+ * Keeps typed text from being glued onto a tag chip.
+ *
+ * Two rules, both applied as follow-up changes so the user's own transaction is left intact:
+ * 1. Text typed immediately before a tag is separated from it by a space.
+ * 2. An insertion leaves a trailing space at the end of the document, so there is always somewhere to
+ *    type that is not adjacent to a chip. Deletions are exempt, or backspace at the end of the
+ *    document would only ever delete a space this rule puts straight back.
+ */
+export const spacing: Extension = EditorState.transactionFilter.of((tr) => {
+  if (!tr.docChanged) {
+    return tr;
+  }
+
+  const tagStarts = new Set<number>();
+  syntaxTree(tr.startState).iterate({
+    enter: (node) => {
+      if (node.type.id === QueryDSL.Node.Tag) {
+        tagStarts.add(node.from);
+      }
+    },
+  });
+
+  let inserting = false;
+  let separator: number | undefined;
+  tr.changes.iterChanges((fromA, toA, _fromB, toB, inserted) => {
+    if (!inserted.length) {
+      return;
+    }
+
+    inserting = true;
+    // Keyed on `toA`, the offset the inserted text ends against: that covers a replacement whose
+    // range ends at the tag as well as a plain insertion, where `fromA` and `toA` are the same.
+    if (tagStarts.has(toA) && !/\s$/.test(inserted.toString())) {
+      separator = toB;
+    }
+  });
+
+  const specs: TransactionSpec[] = [tr];
+  let text = tr.newDoc.toString();
+  if (separator !== undefined) {
+    specs.push({ changes: { from: separator, insert: ' ' }, sequential: true });
+    text = text.slice(0, separator) + ' ' + text.slice(separator);
+  }
+  if (inserting && text.length > 0 && !/\s$/.test(text)) {
+    specs.push({ changes: { from: text.length, insert: ' ' }, sequential: true });
+  }
+
+  return specs;
+});
+
 const lineHeight = '30px';
 
 /** The outer box vertically aligns the inner text with content in the outer div. */
@@ -259,42 +306,13 @@ const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
   return Domino.of('span').classNames(CHIP_OUTER).append(inner).root;
 };
 
-/**
- * A tag chip's parts, keyed by the nesting {@link container} produces.
- *
- * Single source for both of the tag's renderings — {@link TagWidget} when the caret is elsewhere,
- * {@link tagMarks} over live text when it is not. Anything that drifts between them shows up as the
- * tag changing shape as the caret enters or leaves it, so neither builds its own classes.
- */
+/** A tag chip's parts, keyed by the nesting {@link container} produces. */
 const chipClasses = (hue: string) => {
-  const { bg, fg, border, surface } = getStyles(hue);
+  const { bg, fg, surface } = getStyles(hue);
   return {
-    outer: CHIP_OUTER,
-    inner: mx(CHIP_INNER, border),
     hash: mx('flex items-center px-1 text-black text-xs', bg),
     label: mx('flex items-center px-1 text-sm', surface, fg),
   };
-};
-
-/**
- * The chip drawn as marks, so the text underneath stays editable.
- *
- * Ranges are returned outermost first; `buildQueryDecorations` sorts equal starts widest-first and
- * `Array.prototype.sort` is stable, so this order is the nesting order.
- */
-const tagMarks = (from: number, to: number, hue: string): { from: number; to: number; deco: Decoration }[] => {
-  const classes = chipClasses(hue);
-  const marks = [
-    { from, to, deco: Decoration.mark({ class: classes.outer }) },
-    { from, to, deco: Decoration.mark({ class: classes.inner }) },
-    { from, to: from + 1, deco: Decoration.mark({ class: classes.hash }) },
-  ];
-  // A bare `#` has no label yet, and an empty range is not a decoration.
-  if (to > from + 1) {
-    marks.push({ from: from + 1, to, deco: Decoration.mark({ class: classes.label }) });
-  }
-
-  return marks;
 };
 
 /**
