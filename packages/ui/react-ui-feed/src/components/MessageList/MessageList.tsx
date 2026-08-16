@@ -116,8 +116,18 @@ export type MessageListRootProps = PropsWithChildren<{
   onSelectedIdsChange?: (ids: ReadonlySet<string>) => void;
   /** Search hits from the model; the list routes them to the items that own them. */
   hits?: readonly SearchHit[];
-  /** Estimated row height before measurement; a bad estimate shows up as scrollbar drift. */
-  estimateSize?: number;
+  /**
+   * Estimated row height before measurement.
+   *
+   * A function is worth supplying whenever the feed's rows differ widely — a one-line prompt beside a
+   * long answer — because a single number is wrong for both, and every row measured for the first
+   * time then re-lays the rows below it. That correction is invisible scrolling down, where the rows
+   * above have already been measured, and is the flicker a reader sees scrolling up.
+   *
+   * Defaults to the running average of what has been measured, which is right only when rows are
+   * roughly uniform.
+   */
+  estimateSize?: number | ((message: Message.Message, index: number) => number);
   /** Pin to the bottom as messages arrive, and as a streaming message grows (chat behaviour). */
   stickyBottom?: boolean;
   /**
@@ -138,6 +148,9 @@ const SMOOTH_SCROLL_LIMIT = 10;
 
 /** Distance from the tail within which scrolling counts as returning to the bottom. */
 const STICKY_THRESHOLD = 32;
+
+/** Row height assumed before anything has been measured. */
+const DEFAULT_ESTIMATE = 120;
 
 /** Rows that must have measured before their average is trusted over the caller's estimate. */
 const MEASURED_SAMPLE = 4;
@@ -169,7 +182,7 @@ const MessageListRoot = ({
   selectedIds,
   onSelectedIdsChange,
   hits,
-  estimateSize = 120,
+  estimateSize = DEFAULT_ESTIMATE,
   stickyBottom = false,
   stickyBehavior = 'auto',
   follow: followOptions,
@@ -178,6 +191,10 @@ const MessageListRoot = ({
 }: MessageListRootProps) => {
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const [range, setRange] = useState<MessageRange | undefined>(undefined);
+
+  // One number standing in for the caller's estimate wherever a single value is needed — the opening
+  // offset, the fallback row height — since a per-row estimator answers about a row, not the feed.
+  const nominalSize = typeof estimateSize === 'number' ? estimateSize : DEFAULT_ESTIMATE;
 
   // The reader's position as an index rather than a pixel offset: what the arrow keys step through,
   // what navigation sets, and what a minimap or a counter reports. Mirrored in a ref because the
@@ -215,10 +232,18 @@ const MessageListRoot = ({
     getScrollElement: () => viewport,
     // Deliberately reads refs rather than state: the virtualizer calls this while computing a
     // layout, and re-rendering to publish a new average would recompute the layout it is inside.
-    estimateSize: useCallback(() => {
-      const { sizes, total } = measured.current;
-      return sizes.size >= MEASURED_SAMPLE ? Math.round(total / sizes.size) : estimateSize;
-    }, [estimateSize]),
+    estimateSize: useCallback(
+      (index: number) => {
+        const message = messages[index];
+        if (typeof estimateSize === 'function' && message) {
+          return estimateSize(message, index);
+        }
+
+        const { sizes, total } = measured.current;
+        return sizes.size >= MEASURED_SAMPLE ? Math.round(total / sizes.size) : nominalSize;
+      },
+      [estimateSize, nominalSize, messages],
+    ),
     // Key measurements by message id, not index: a prepended page or a rewind would otherwise
     // shift every cached height by one row and the scrollbar would jump.
     getItemKey: useCallback((index: number) => messages[index]?.id ?? index, [messages]),
@@ -230,7 +255,7 @@ const MessageListRoot = ({
     //
     // Read once, at construction: the virtualizer only consults this while it has no scroll offset
     // of its own, and the sticky effect corrects the real `scrollTop` on the next frame.
-    initialOffset: stickyBottom ? () => messages.length * estimateSize : undefined,
+    initialOffset: stickyBottom ? () => messages.length * nominalSize : undefined,
     overscan,
   });
 
@@ -266,9 +291,9 @@ const MessageListRoot = ({
       .getVirtualItems()
       .map((item) => item.size)
       .sort((a, b) => a - b);
-    const median = sizes.length ? sizes[Math.floor(sizes.length / 2)] : estimateSize;
+    const median = sizes.length ? sizes[Math.floor(sizes.length / 2)] : nominalSize;
     return Math.min(median, viewport?.clientHeight || median);
-  }, [virtualizer, estimateSize, viewport]);
+  }, [virtualizer, nominalSize, viewport]);
   const follower = useMemo(
     () => (viewport ? new ScrollFollower(viewport, { ...followOptions, rowHeight }) : undefined),
     [viewport, followOptions?.maxSpeed, followOptions?.acceleration, followOptions?.deceleration, rowHeight],
@@ -277,11 +302,24 @@ const MessageListRoot = ({
 
   // Where each row was placed, and whether it stayed there. A row that moves after it was laid out
   // is what the reader sees as flicker, and it happens scrolling up, where unmeasured rows enter.
-  const { shifts, breaks, last: lastShift, record: recordPositions, reset: resetShifts } = usePositionLog();
+  const {
+    shifts,
+    breaks,
+    last: lastShift,
+    trace: shiftTrace,
+    record: recordPositions,
+    reset: resetShifts,
+  } = usePositionLog();
   const virtualItems = virtualizer.getVirtualItems();
   useEffect(() => {
-    recordPositions(virtualItems.map(({ key, index, start }) => ({ key, index, start })));
-  }, [virtualItems, recordPositions]);
+    recordPositions(
+      virtualItems.map(({ key, index, start }) => ({ key, index, start })),
+      // The offset the layout was computed against, not the element's current `scrollTop`: reading
+      // the DOM here samples a scroll that has moved on since, and every row then looks displaced by
+      // exactly one frame of travel.
+      { scrollOffset: virtualizer.scrollOffset ?? 0 },
+    );
+  }, [virtualItems, recordPositions, virtualizer]);
 
   const mounted = virtualizer.getVirtualItems().length;
   const startIndex = virtualizer.range?.startIndex;
@@ -410,11 +448,12 @@ const MessageListRoot = ({
   // shifts every offset, so the reader is put back where they were: at the tail if they were
   // following it, otherwise on the message they were on. Converges — the average becomes the basis,
   // so the next comparison is against itself.
-  const basis = useRef(estimateSize);
+  const basis = useRef(nominalSize);
   const rebases = useRef(0);
   useEffect(() => {
+    // A caller estimating per row is already better informed than an average over every row.
     const { sizes, total } = measured.current;
-    if (sizes.size < MEASURED_SAMPLE) {
+    if (typeof estimateSize === 'function' || sizes.size < MEASURED_SAMPLE) {
       return;
     }
 
@@ -473,7 +512,7 @@ const MessageListRoot = ({
           return positioned.current;
         },
         get shifted() {
-          return { shifts, breaks, last: lastShift };
+          return { shifts, breaks, last: lastShift, recent: shiftTrace.current };
         },
         get measured() {
           const { sizes, total } = measured.current;

@@ -30,7 +30,13 @@ export type ScenarioDefinition = {
   Chrome: ComponentType<MessageChromeProps>;
   /** Whether the feed follows its tail: true where messages arrive, false where they are read. */
   stickyBottom: boolean;
-  estimateSize: number;
+  /**
+   * Height a row is assumed to have before it is measured. A function where rows differ widely: a
+   * one-line prompt and a long answer share no useful average, and a row measured for the first time
+   * re-lays everything below it — which the reader sees as flicker when scrolling up, into rows that
+   * have never been measured.
+   */
+  estimateSize: number | ((message: Message.Message, index: number) => number);
 };
 
 export type ScenarioOptions = {
@@ -49,7 +55,7 @@ export const createScenario = ({ scenario, count, seed = 999 }: ScenarioOptions)
         registry: chatRegistry,
         Chrome: AssistantChrome,
         stickyBottom: true,
-        estimateSize: 160,
+        estimateSize: estimateAssistantRow,
       };
 
     case 'email':
@@ -89,6 +95,48 @@ export const createScenario = ({ scenario, count, seed = 999 }: ScenarioOptions)
         estimateSize: 48,
       };
   }
+};
+
+/** Chrome around every assistant row: the sender line, the padding and the separator. */
+const ROW_CHROME = 46;
+
+/** Height of a wrapped line of body text, and how many characters fit on one at the story's width. */
+const LINE_HEIGHT = 24;
+const LINE_CHARS = 90;
+
+/** A collapsed panel: reasoning, a tool call, a tool result. */
+const PANEL_HEIGHT = 50;
+
+/**
+ * What a row will measure, from the message alone.
+ *
+ * Rough on purpose — it is an estimate, and its only job is to be close enough that measuring the row
+ * does not move the rows below it. Text is counted in wrapped lines, blank lines between blocks are
+ * counted, and every block that renders as a widget is counted at its collapsed height.
+ */
+const estimateAssistantRow = (message: Message.Message): number => {
+  let height = ROW_CHROME;
+  for (const block of message.blocks) {
+    switch (block._tag) {
+      case 'text': {
+        const paragraphs = block.text.split('\n\n');
+        for (const paragraph of paragraphs) {
+          height += Math.max(1, Math.ceil(paragraph.length / LINE_CHARS)) * LINE_HEIGHT;
+        }
+        break;
+      }
+      case 'suggestion':
+        height += LINE_HEIGHT + 8;
+        break;
+      case 'select':
+        height += block.options.length * (LINE_HEIGHT + 10);
+        break;
+      default:
+        height += PANEL_HEIGHT;
+    }
+  }
+
+  return height;
 };
 
 //

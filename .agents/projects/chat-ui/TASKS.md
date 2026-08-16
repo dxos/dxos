@@ -71,6 +71,15 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       The floor for a portal that paints late is a CSS `min-block-size` on the widget's own content,
       NOT `estimatedHeight` in the registry: that sets `height` + `overflow: hidden` on the widget
       root, which pins the panel shut — it is for blocks whose height is known up front, like images.
+- [ ] **Upward-scroll flicker — measured, not fixed.** A per-frame probe (read the scroll and every
+      row's `getBoundingClientRect().top` in the same rAF, and compare each row's travel against the
+      scroll's) shows the whole window jumping on ~9% of frames, median 67px, worst 91px, every row
+      by the same amount. So it is one uncompensated layout correction per first-time measurement,
+      not per-row noise. Ruled out: `heightMode: 'min'` on widgets (fixed the pinned panel, reduced
+      but did not remove it); a per-message `estimateSize` (deltas 197 → 88); forcing
+      `shouldAdjustScrollPositionOnItemSizeChange` true (made it worse: 8.8% → 11.3%). Next: our own
+      scroll anchoring — hold the top visible row's viewport-relative position across a measurement
+      batch — or a directional `rangeExtractor` that measures rows before they enter from above.
 - [ ] Widget state does not survive virtualization — an expanded panel scrolled out of the window
       remounts collapsed, because the open flag is React state inside the widget. Either the state
       moves into the message, or the item keeps a per-widget map.
