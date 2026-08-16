@@ -16,10 +16,8 @@ const tags: Tag.Map = { [tag.id]: tag };
 const hue = tag.hue ?? getHashHue(tag.id);
 
 /**
- * A tag is one object: a widget REPLACES its text, atomically, wherever the caret is — including at
- * the tag's own edges, so Backspace against it removes the whole chip rather than a character of the
- * label. It is still typed a character at a time, since an insertion at the range's boundary lands
- * outside it and grows the node.
+ * A tag is one object: a widget replaces its text atomically wherever the caret is, its own edges
+ * included, so Backspace against it takes the chip rather than a character of the label.
  */
 describe('tag rendering', () => {
   test('is an atomic chip when the caret is elsewhere', async () => {
@@ -119,12 +117,30 @@ describe('spacing', () => {
     view.destroy();
   });
 
+  test('a replacement ending at a tag is separated from it', async () => {
+    // The separator keys on where the inserted text ENDS, so a selection typed over — not just an
+    // empty-range insertion — is caught.
+    const view = await viewOf('ab #important', 0);
+    view.dispatch({ changes: { from: 0, to: 3, insert: 'c' }, selection: EditorSelection.cursor(1) });
+    expect(view.state.doc.toString()).toBe('c #important ');
+    view.destroy();
+  });
+
   test('an insertion leaves a trailing space', async () => {
     const view = await viewOf('#a', 2);
     view.dispatch({ changes: { from: 2, insert: 'b' }, selection: EditorSelection.cursor(3) });
     expect(view.state.doc.toString()).toBe('#ab ');
     // The caret stays before the trailing space, so typing continues to extend the tag.
     expect(view.state.selection.main.head).toBe(3);
+    view.destroy();
+  });
+
+  test('the trailing space follows an edit to ordinary text too', async () => {
+    // Not conditional on the document ending in a tag: the caret must always have somewhere to sit
+    // that is not against a chip, whatever the query ends with.
+    const view = await viewOf('type:x', 6);
+    view.dispatch({ changes: { from: 6, insert: 'y' }, selection: EditorSelection.cursor(7) });
+    expect(view.state.doc.toString()).toBe('type:xy ');
     view.destroy();
   });
 

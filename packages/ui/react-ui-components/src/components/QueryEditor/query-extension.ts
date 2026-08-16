@@ -245,11 +245,11 @@ const decorations = ({ tags }: QueryOptions): Extension => {
 /**
  * Keeps typed text from being glued onto a tag chip.
  *
- * Two rules, both applied as follow-up changes so the user's own transaction is left intact:
- * 1. Text typed immediately before a tag is separated from it by a space.
- * 2. An insertion leaves a trailing space at the end of the document, so there is always somewhere to
- *    type that is not adjacent to a chip. Deletions are exempt, or backspace at the end of the
- *    document would only ever delete a space this rule puts straight back.
+ * Two rules, applied as follow-up changes so the user's own transaction is left intact:
+ * 1. Text inserted immediately before a tag is separated from it by a space.
+ * 2. An insertion leaves a trailing space, so there is always somewhere to type that is not adjacent
+ *    to a chip. Deletions are exempt, or Backspace at the end of the document would only ever delete
+ *    a space this rule puts straight back.
  */
 export const spacing: Extension = EditorState.transactionFilter.of((tr) => {
   if (!tr.docChanged) {

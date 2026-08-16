@@ -92,22 +92,26 @@ export const Tags: Story = {
     value: 'type:org.dxos.type.person #investor #new',
   },
   play: async ({ canvasElement }) => {
-    const content = await waitFor(() => {
+    const view = await waitFor(() => {
       const element = canvasElement.querySelector<HTMLElement>('.cm-content');
-      if (!element) {
-        throw new Error('Query editor content not found.');
+      const view = element && EditorView.findFromDOM(element);
+      if (!view) {
+        throw new Error('Query editor not found.');
       }
-      return element;
+      return view;
     });
 
     // The document, not `textContent`: a type filter is drawn as a widget, so the rendered text is
     // the chip's label rather than what the document holds.
-    const view = EditorView.findFromDOM(content)!;
-
+    //
     // `selectionEnd` puts the caret at the end of the document on the first render.
     await waitFor(() => expect(view.state.selection.main.head).toEqual(view.state.doc.length));
 
     // Which is what makes the first keystroke append rather than land in front of the query.
+    // Focused explicitly rather than relying on `autoFocus`: `keyboard` types into whatever the
+    // document has focused, which is not this editor once other stories share the browser. Focusing
+    // does not move the caret, so the assertion above still governs where the text lands.
+    view.focus();
     await userEvent.keyboard('X');
     await waitFor(() => expect(view.state.doc.toString()).toEqual('type:org.dxos.type.person #investor #newX '));
   },
@@ -125,22 +129,29 @@ export const Atomic: Story = {
     value: '#test',
   },
   play: async ({ canvasElement }) => {
-    const content = await waitFor(() => {
+    const view = await waitFor(() => {
       const element = canvasElement.querySelector<HTMLElement>('.cm-content');
-      if (!element) {
-        throw new Error('Query editor content not found.');
+      const view = element && EditorView.findFromDOM(element);
+      if (!view) {
+        throw new Error('Query editor not found.');
       }
-      return element;
+      return view;
     });
 
-    // The placeholder renders inside the content element, so an empty document is not empty text.
-    const doc = () => (content.querySelector('.cm-placeholder') ? '' : content.textContent);
+    const doc = () => view.state.doc.toString();
 
+    // `selectionEnd` puts the caret at the end of the document on the first render, so the tag's own
+    // trailing edge — inside the atomic range — is where the keystrokes below land.
+    await waitFor(() => expect(view.state.selection.main.head).toEqual(view.state.doc.length));
     await waitFor(() => expect(doc()).toEqual('#test'));
 
-    // No click and no `{End}`: `selectionEnd` is what puts the caret at the end of the document on
-    // the first render, and the caret at the tag's own edge is still in the tag — so this single
-    // Backspace both proves that and takes the whole chip.
+    // Focused explicitly rather than relying on `autoFocus`: `keyboard` types into whatever the
+    // document has focused, which is not this editor once other stories share the browser. Focusing
+    // does not move the caret, so the assertion above still governs where the text lands.
+    view.focus();
+
+    // No click and no `{End}`: the caret at the tag's edge is still in the tag, so this single
+    // Backspace takes the whole chip.
     // `keyboard`, not `type`: the latter clicks the element first, which would move the caret.
     await userEvent.keyboard('{Backspace}');
     await waitFor(() => expect(doc()).toEqual(''));
