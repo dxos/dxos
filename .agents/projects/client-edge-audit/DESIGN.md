@@ -63,13 +63,15 @@ Holders downstream (all gated, three inconsistent absent-URL policies):
   calls). These are acceptable only for user-initiated edge features; anything
   reachable from boot must not throw.
 
-Out-of-config endpoints (violations of goal 3 by spirit):
+Out-of-config endpoints (violations of goal 3 by spirit, as audited):
 
 - `proxyFetchLegacy` — [cors-proxy.ts:9](packages/core/mesh/edge-client/src/cors-proxy.ts) hard-codes
   `https://cors.dxos.network`; used by ~13 plugins + websearch fetch; marked
-  TEMPORARY in-source. Only fires on explicit feature use, not boot.
-- CLI hub util falls back to literal `'https://hub.dxos.network'`
+  TEMPORARY in-source. Only fires on explicit feature use, not boot. **Still
+  open — Phase 4 follow-up.**
+- CLI hub util fell back to literal `'https://hub.dxos.network'`
   ([cli hub/util.ts](packages/devtools/cli/src/commands/hub/util.ts)).
+  **Removed in this PR** — fails with `HubApiError` when unset.
 
 Notable secondary findings:
 
@@ -129,9 +131,11 @@ false`, dials 300ms post-boot); `fromHost`/CLI/Node still dial on stack open
 (`autoConnect` default `true`). Observability is untouched by it.
 
 Non-client-stack feature endpoints worth flagging: pipeline-transcription
-`fetch(${endpoint}/transcribe)` defaulting to `https://calls.dxos.network` via
-`EDGE_SERVICE_DEFAULTS`; a test fixture hitting live `api.coindesk.com`
-(compute-hyperformula) and `free.ratesdb.com` (functions-testing).
+`fetch(${endpoint}/transcribe)` defaulted to `https://calls.dxos.network` via
+`EDGE_SERVICE_DEFAULTS` (**removed in this PR** — the endpoint is threaded from
+config and `_open` fails without it); a test fixture hitting live
+`api.coindesk.com` (compute-hyperformula) and `free.ratesdb.com`
+(functions-testing) remains.
 
 ### Config plumbing & defaults
 
@@ -156,7 +160,12 @@ agent create, plugin resolvers) throw only on explicit use, never during
 deliberately contribute `[]` when their endpoint is absent (plugin-file edge
 backend, plugin-client hub client).
 
-**Defaults that violate goal 3 (SDK code):**
+**Defaults that violated goal 3 (SDK code) — pre-fix audit snapshot.** Outcomes:
+`defaultConfig` and `EDGE_SERVICE_DEFAULTS` deleted, CLI hub / devtools /
+GptRealtime / plugin-wnfs / `DEFAULT_VAULT_URL` / image-service fallbacks
+removed (TASKS.md Phase 3); `configPreset` kept by decision; `memoryConfig`,
+plugin-script `?? ''`, and the standalone feature-time literals remain open
+(Phase 4).
 
 | Site                                                                                    | Default                                                                                                                                                                                                                                                                                                                                                       | Severity                                                       |
 | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |

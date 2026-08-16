@@ -15,8 +15,10 @@ defaults can be audited against a complete list. Findings live in DESIGN.md.
       inconsistent absent-URL policies (skip / throw-on-use / invariant).
 - [x] **Inventory direct `fetch`/`WebSocket`/other network calls in the client stack** —
       DESIGN.md §Direct network call sites. Client stack: zero calls without
-      edge URL; observability has 2 consent-gating bugs (ipdata pre-`disabled` +
-      boot warn, OtelMetrics constructor-started exporter).
+      edge URL; observability has 3 open consent-gating issues (ipdata
+      pre-`disabled` ordering, OtelMetrics constructor-started exporter,
+      `posthog.init` ignoring `disabled`); its missing-key boot warn was fixed
+      in this branch.
 - [x] **Inventory config plumbing for the edge endpoint** —
       DESIGN.md §Config plumbing & defaults. SDK boot is clean; violations were
       in @dxos/config (defaultConfig, configPreset, EDGE_SERVICE_DEFAULTS) +
