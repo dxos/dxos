@@ -421,24 +421,40 @@ regions, they just live in a per-message document rather than a per-thread one.
 - `ConversationStack`'s tail-growth scroll re-pinning (ResizeObserver + settle window) — a working
   answer to cost 2 in the append case.
 
-**Measured (2026-08-16, `@dxos/react-ui-feed`, `MessageList/Large`, 2,000 messages)**
+**Measured (2026-08-16, `@dxos/react-ui-feed`, 120Hz display, Chrome)**
 
-```
-2000 msgs · p50 125 · p95 111 · worst 409ms · 3 hitches · 486 frames · 4.4s
-```
+Each pass is the same scripted gesture — `sweepScroll`, 3,000 px/s down for 5s and back — recorded
+by `useFrameMeter`, both in the package's `#testing` entry.
 
-Read on a 120Hz display: the median frame and the slow tail both sit at the display's own rate, so
-cost 1 (N `EditorView`s) is **not** what limits scrolling — an unpooled list of read-only CodeMirror
-items scrolls at rate. Percentiles rather than an average because the same pass contains a **409ms
-stall**: three frames of the 486 missed, and one of them by a quarter-second. That is cost 2 —
-measurement correction — arriving as a single lump rather than as a steady drag, which is what the
-hitch trace has to attribute before phase 4 can be planned.
+| Pass                                           | p50 | p95 | worst     | hitches | frames        |
+| ---------------------------------------------- | --- | --- | --------- | ------- | ------------- |
+| `Large` — 2,000 msgs                           | 125 | 59  | 67ms      | 7       | 1,054 / 10.0s |
+| `BadEstimate` — 2,000 msgs, `estimateSize: 24` | 125 | 111 | 34ms      | 2       | 1,140 / 10.0s |
+| `BadEstimate` — its first 4.2s, mounting       | 125 | 13  | **950ms** | 13      | 140 / 4.2s    |
+| `Streaming` — 30s of arriving turns            | 125 | 100 | 51ms      | 5       | 3,500 / 29.5s |
 
-The numbers come from `useFrameMeter` + `sweepScroll` in the package's `#testing` entry: a scripted
-fixed-duration traversal, so a pass is one repeatable gesture rather than a hand-made fling, and the
-same gesture can be compared across stories. They cannot be gathered by an agent — a headless
-browser throttles `requestAnimationFrame` to single frames per second, which the meter reports
-faithfully (3 frames in 28.1s) and which describes the harness, not the engine.
+**Cost 1 is not real.** An unpooled list of read-only CodeMirror views scrolls at the display's rate:
+the median frame is 8ms in every pass, and pooling would be optimising something that is not the
+bottleneck. Item pooling can stay off the critical path.
+
+**Cost 2 is real but is paid at mount, not while scrolling.** A deliberately bad estimate costs a
+**950ms** stall as the list first measures — the worst single frame anywhere in these numbers — and
+then scrolls _better_ than the well-estimated story (p95 111 vs 59), because by then every row it
+touches has a real height. So the defect to design against is the arrival transient, not steady-state
+drift; and the interesting artefact is that `Large`'s own p95 of 59 is that same correction, spread
+thin.
+
+**Streaming is the cheapest of the three.** 3,500 frames with 5 hitches while the tail grows and the
+follow runs: markdown re-parsing on one growing item does not compete with the scroll.
+
+**The ceiling, for scale.** The first version of the sweep traversed the whole document in 6s —
+40,000 px/s, some 400 rows a second — and the frame rate collapsed to 3–11fps with a hitch on nearly
+every frame. Nothing a reader can do reaches that, but it marks where mount-and-measure saturates.
+
+These numbers cannot be gathered by an agent's own browser: a pane that is not displayed does not
+composite, so `requestAnimationFrame` is throttled to about 1fps (the meter reports it faithfully —
+3 frames in 28.1s). They were taken by driving a real, visible Chrome window over the extension,
+with `document.visibilityState` sampled throughout the pass to prove the tab stayed visible.
 
 **Verdict: right target, spike first.** It is a better destination than "two renderers over one
 model", because it collapses the families instead of blessing them. Cost 2 is the one that decides

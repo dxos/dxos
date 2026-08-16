@@ -36,11 +36,14 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       readout is `fps · p95 · worst · hitches`, click to record the pass (clipboard + console) and
       start a fresh one. Averages hide the defect, so the percentiles, the worst frame and the count
       over 32ms are reported beside the live rate, and each hitch is traced to the console.
-- [ ] **Frame-rate measurement by a human** — rAF is throttled in the headless pane (it reports
-      ~13fps there, and 89s "worst" for a backgrounded tab), so the readout has to be read at the
-      keyboard. Three passes, scripted as numbered `Test:` blocks on the stories: Large
-      (fling-scroll, watch drift), BadEstimate (`estimateSize: 24`), Streaming (tail growth).
-      Record the numbers in AUDIT.md §3.3 — they are the phase-1 verdict.
+- [x] **Frame-rate measurement** — all three passes taken on a 120Hz Chrome via the extension (a
+      pane that is not displayed does not composite, so an agent's own browser reports ~1fps). Table
+      in AUDIT.md §3.3. Verdict: cost 1 (N `EditorView`s) is not the bottleneck — p50 is the display
+      rate in every pass; cost 2 (measurement) is real but paid as a 950ms stall at mount, not as
+      drift while scrolling.
+- [ ] Kill the mount stall — `BadEstimate` pays 950ms in one frame as the list first measures.
+      Candidates: `initialMeasurementsCache`, measuring in chunks across frames, or a better
+      first-render estimate. This is the one number the measurement found worth fixing.
 - [ ] Scroll to button — an affordance that jumps to the tail (the controller already exposes
       `scrollToBottom`; it needs a control, and a rule for when it shows).
 - [ ] Fade transition on a slow jump — a far `scrollToIndex` goes instantly (the offset is an
