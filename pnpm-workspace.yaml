@@ -212,7 +212,7 @@ catalog:
   '@storybook/addon-vitest': ^10.5.8
   '@storybook/builder-vite': ^10.5.8
   '@storybook/html-vite': ^10.5.8
-  '@storybook/icons': ^2.0.2
+  '@storybook/icons': ^2.1.0
   '@storybook/mdx2-csf': ^1.1.0
   '@storybook/react-vite': ^10.5.8
   '@storybook/web-components-vite': ^10.5.8
@@ -222,7 +222,7 @@ catalog:
   '@tailwindcss/forms': ^0.5.9
   '@tailwindcss/oxide': ^4.3.0
   '@tailwindcss/postcss': ^4.3.0
-  '@tailwindcss/vite': ^4.3.0
+  '@tailwindcss/vite': ^4.3.3
   '@tanstack/react-virtual': ^3.13.18
   '@tauri-apps/api': ^2.11.1
   '@tauri-apps/cli': ^2.11.4
@@ -318,8 +318,8 @@ catalog:
   '@uiw/codemirror-theme-vscode': ^4.25.2
   '@valtown/codemirror-continue': ^2.3.1
   '@valtown/codemirror-ts': ^2.3.1
-  '@vitejs/plugin-react': ^6.0.3
-  '@vitejs/plugin-react-swc': ^4.3.1
+  '@vitejs/plugin-react': ^6.0.5
+  '@vitejs/plugin-react-swc': ^4.3.3
   '@vitest/browser': 4.1.10
   '@vitest/browser-playwright': ^4.1.10
   '@vitest/coverage-v8': ^4.1.10
@@ -675,13 +675,13 @@ catalog:
   varint: 6.0.0
   versor: ^0.2.0
   viem: ^2.21.26
-  vite: ^8.1.4
+  vite: ^8.2.1
   vite-node: ^6.0.0
-  vite-plugin-devtools-json: ^1.0.0
+  vite-plugin-devtools-json: ^1.1.0
   vite-plugin-glslify: ^2.3.0
   vite-plugin-inspect: ^12.0.2
   vite-plugin-pwa: ^1.2.0
-  vite-plugin-solid: ^2.11.12
+  vite-plugin-solid: ^2.11.14
   vite-plugin-top-level-await: ^1.6.0
   vite-plugin-turbosnap: ^1.0.3
   vite-plugin-wasm: ^3.6.0
@@ -790,7 +790,7 @@ overrides:
   tar-fs: '>=3.1.1'
   typescript: 'catalog:'
   undici: '>=7.18.2'
-  vite: '>=8.1.4'
+  vite: '>=8.2.1'
   web-ext: ^10.5.0
   wrangler: '>=4.112.0'
   ws: '>=8.17.1'
