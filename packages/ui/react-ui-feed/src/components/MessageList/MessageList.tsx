@@ -146,13 +146,15 @@ const MessageListRoot = ({
   const startIndex = virtualizer.range?.startIndex;
   const endIndex = virtualizer.range?.endIndex;
   useEffect(() => {
-    if (startIndex === undefined || endIndex === undefined) {
-      return;
-    }
-    const next = { startIndex, endIndex };
+    // An emptied list keeps whatever range it last reported, so clear it rather than leave a
+    // readout describing rows that are gone.
+    const next =
+      messages.length && startIndex !== undefined && endIndex !== undefined ? { startIndex, endIndex } : undefined;
     setRange(next);
-    onRangeChange?.(next);
-  }, [mounted, startIndex, endIndex, onRangeChange]);
+    if (next) {
+      onRangeChange?.(next);
+    }
+  }, [mounted, startIndex, endIndex, messages.length, onRangeChange]);
 
   // Stick to the bottom while new messages arrive, but only when the reader is already there —
   // yanking the viewport away from someone reading history is the classic chat-scroll defect.

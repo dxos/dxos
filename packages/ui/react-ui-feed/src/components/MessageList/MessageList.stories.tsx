@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { random } from '@dxos/random';
 import { IconButton, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
@@ -280,32 +281,39 @@ const StatusBar = ({ hits, query, selected, copied, fps }: StatusBarProps) => {
 //
 
 type AiStoryProps = {
-  /** Messages of history before the streamed answer. */
-  count?: number;
   wordsPerChunk?: number;
   chunkDelay?: number;
 };
 
 /**
- * A model answering into the tail of a feed.
+ * A model answering into the tail of a feed, starting from nothing.
  *
  * The counterpart of `react-ui-markdown`'s `MarkdownStream/Streaming`, one layer up: there a single
  * document receives the chunks, here the chunks land in the last message's own item while the list
  * follows it. What this exercises that the document story cannot is the interaction between a
- * growing row and the virtualizer measuring it.
+ * growing row and the virtualizer measuring it — including the first row, where there is no prior
+ * measurement to fall back on.
  */
-const AiStreamingStory = ({ count = 12, wordsPerChunk = 4, chunkDelay = 120 }: AiStoryProps) => {
-  const [messages, setMessages] = useState<Message.Message[]>(() => createMessages({ count }));
+const makeQuestion = () =>
+  Message.make({
+    sender: { role: 'user', name: 'Alice' },
+    blocks: [{ _tag: 'text', text: random.lorem.sentence(8) }],
+  });
+
+const AiStreamingStory = ({ wordsPerChunk = 4, chunkDelay = 120 }: AiStoryProps) => {
+  const [messages, setMessages] = useState<Message.Message[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [answerId, setAnswerId] = useState<string | undefined>();
 
+  const handleAppend = useCallback(() => setMessages((prev) => [...prev, makeQuestion()]), []);
+
   const handleStart = useCallback(() => {
-    // The answer starts empty and is filled by the stream, exactly as a real turn does.
+    // One turn: the question, then an empty answer the stream fills — as a real turn arrives.
     const answer = Message.make({
       sender: { role: 'assistant', name: 'Assistant' },
       blocks: [{ _tag: 'text', text: '' }],
     });
-    setMessages((prev) => [...prev, answer]);
+    setMessages((prev) => [...prev, makeQuestion(), answer]);
     setAnswerId(answer.id);
     setStreaming(true);
   }, []);
@@ -315,8 +323,8 @@ const AiStreamingStory = ({ count = 12, wordsPerChunk = 4, chunkDelay = 120 }: A
   const handleReset = useCallback(() => {
     setStreaming(false);
     setAnswerId(undefined);
-    setMessages(createMessages({ count }));
-  }, [count]);
+    setMessages([]);
+  }, []);
 
   useEffect(() => {
     if (!streaming || !answerId) {
@@ -377,6 +385,13 @@ const AiStreamingStory = ({ count = 12, wordsPerChunk = 4, chunkDelay = 120 }: A
               disabled={!streaming}
               data-testid='feed.stream.stop'
               onClick={handleStop}
+            />
+            <IconButton
+              icon='ph--plus--regular'
+              iconOnly
+              label='Add message'
+              data-testid='feed.stream.append'
+              onClick={handleAppend}
             />
             <IconButton icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
             <div className='grow' />
@@ -443,5 +458,5 @@ export const Streaming: Story = {
  */
 export const AiStreaming: StoryObj<AiStoryProps> = {
   render: AiStreamingStory,
-  args: { count: 12, wordsPerChunk: 4, chunkDelay: 120 },
+  args: { wordsPerChunk: 4, chunkDelay: 120 },
 };
