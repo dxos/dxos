@@ -401,6 +401,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
+  /** Selects the feed items appended after the supplied cursor. */
   static feedCursor(after: string): Filter$.Any {
     return new FilterClass({
       type: 'feed-cursor',
