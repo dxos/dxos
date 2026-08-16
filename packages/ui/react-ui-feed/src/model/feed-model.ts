@@ -21,34 +21,89 @@ export type MessageRenderer = (message: Message.Message) => ItemContent;
  * Default renderer: an `text/html` block wins (email), otherwise every block is flattened to
  * markdown. Block kinds the engine does not know become fenced JSON so nothing renders as blank.
  */
-export const defaultRenderer: MessageRenderer = (message) => {
+export const defaultRenderer: MessageRenderer = (message) => createContent(message, false);
+
+/**
+ * Assistant chat: as {@link defaultRenderer}, plus the reader's own turns marked with `<prompt>`.
+ *
+ * Separate because the tag is only meaningful where a widget registry knows it — a feed rendered
+ * without one would show the reader their own angle brackets, which is what a human chat, a
+ * transcript and a comment list all are.
+ */
+export const chatRenderer: MessageRenderer = (message) => createContent(message, true);
+
+const createContent = (message: Message.Message, prompts: boolean): ItemContent => {
   const textBlocks = message.blocks.filter((block): block is ContentBlock.Text => block._tag === 'text');
   const html = textBlocks.find((block) => block.mimeType === 'text/html');
   if (html) {
     return { kind: 'html', html: html.text };
   }
 
-  return { kind: 'markdown', text: message.blocks.map(blockToMarkdown).filter(Boolean).join('\n\n') };
+  return {
+    kind: 'markdown',
+    text: message.blocks
+      .map((block) => blockToMarkdown(message, block, prompts))
+      .filter(Boolean)
+      .join('\n\n'),
+  };
 };
 
-const blockToMarkdown = (block: ContentBlock.Any): string => {
+/**
+ * One block as markdown, with anything that is not prose emitted as an XML tag for a widget to
+ * render. A message is the concatenation of these, which is what makes an item a document rather
+ * than a component tree: the blocks are content, and the chrome around them belongs to the host.
+ */
+const blockToMarkdown = (message: Message.Message, block: ContentBlock.Any, prompts: boolean): string => {
   switch (block._tag) {
     case 'text':
-      return block.text;
+      // A prompt is marked rather than styled: the reader's own words are content, and the widget
+      // that frames them is the host's business.
+      return prompts && message.sender.role === 'user' ? tag('prompt', block.text, block) : block.text.trim();
     case 'reasoning':
-      return `<reasoning>${block.reasoningText ?? block.redactedText ?? ''}</reasoning>`;
+      return tag('reasoning', block.reasoningText ?? block.redactedText ?? '', block);
     case 'status':
-      return `<status>${block.statusText}</status>`;
+      return tag('status', block.statusText, block);
     case 'summary':
-      return `<summary>${block.content}</summary>`;
+      return tag('summary', block.content, block);
     case 'suggestion':
-      return `<suggestion>${block.text}</suggestion>`;
+      return tag('suggestion', block.text, block);
+    case 'select':
+      return block.options.length
+        ? `<select>${block.options.map((option) => `<option>${escapeXml(option)}</option>`).join('')}</select>`
+        : '';
     case 'toolCall':
-      return `<toolCall id="${block.toolCallId}" />`;
+      // Name and status ride on the tag rather than in widget state kept beside the document: an
+      // item is rebuilt from its message alone, so anything the widget needs has to survive there.
+      return `<toolCall id="${escapeXml(block.toolCallId)}" name="${escapeXml(block.name)}"${block.pending ? ' pending="true"' : ''} />`;
+    case 'toolResult':
+      return tag('toolResult', String(block.result ?? block.error ?? ''), block, `for="${escapeXml(block.name)}"`);
     default:
-      return '';
+      // Nothing renders blank: an unknown block is shown as what it is.
+      return tag('json', JSON.stringify(block), block);
   }
 };
+
+/**
+ * An XML tag holding block content.
+ *
+ * A pending block is emitted **unclosed**, which is the streaming contract: the item reconciles by
+ * appending, so a closing tag written before the content is complete would have to be rewritten on
+ * every chunk — and rewriting the document is what discards decorations and scroll position.
+ *
+ * Paragraph breaks inside the content are collapsed, since a blank line would end the enclosing
+ * markdown block and leave the rest of the tag parsing as prose.
+ */
+const tag = (name: string, content: string, block: ContentBlock.Any, attributes?: string): string => {
+  const text = escapeXml(content.replace(/\n\n+/g, ' ').trim());
+  if (!text.length && !block.pending) {
+    return '';
+  }
+
+  const open = `<${name}${attributes ? ` ${attributes}` : ''}>`;
+  return block.pending ? `${open}${text}` : `${open}${text}</${name}>`;
+};
+
+const escapeXml = (raw: string): string => raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /** Plain text of a message, used by search and copy so both read the same projection. */
 export const messageText = (message: Message.Message, renderer: MessageRenderer): string => {

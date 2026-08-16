@@ -5,14 +5,19 @@
 import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { useThemeContext } from '@dxos/react-ui';
 import {
   type XmlWidgetRegistry,
+  type XmlWidgetState,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  extendedMarkdown,
+  xmlBlockDecoration,
+  xmlFormatting,
   xmlTags,
 } from '@dxos/ui-editor';
 
@@ -40,6 +45,9 @@ export type MarkdownItemProps = {
 export const MarkdownItem = memo(({ text, editable = false, registry, hits }: MarkdownItemProps) => {
   const { themeMode } = useThemeContext();
   const [view, setView] = useState<EditorView | null>(null);
+  // React widgets render in portals into hosts the extension places in the document, so the item has
+  // to own them: a widget's tree belongs to the React root that rendered the item, not to CodeMirror.
+  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
   const rootRef = useRef<HTMLDivElement>(null);
 
   // Read through a ref so the group never lands in the extension deps: rebuilding extensions
@@ -53,9 +61,23 @@ export const MarkdownItem = memo(({ text, editable = false, registry, hits }: Ma
       [
         createBasicExtensions({ readOnly: !editable, editable, lineWrapping: true }),
         createThemeExtensions({ themeMode }),
-        createMarkdownExtensions(),
+        // A registry changes how the document is *parsed*, not only how it is decorated: registered
+        // tags have to survive as single blocks through the markdown parser before `xmlTags` can
+        // replace them, and without that they render as the literal angle brackets they are.
+        registry ? extendedMarkdown({ registry }) : createMarkdownExtensions(),
+        registry && xmlFormatting({ skip: ['prompt'] }),
         decorateMarkdown(),
-        registry && xmlTags({ registry }),
+        // The reader's own words stay in the document rather than becoming a widget, so they can be
+        // selected and searched; the bubble around them is a line decoration.
+        registry?.prompt &&
+          xmlBlockDecoration({
+            tag: 'prompt',
+            lineClass: 'cm-prompt-line bg-groupSurface border-is-4 border-separator pis-2 pie-2',
+            firstLineClass: 'pbs-1 rounded-t-sm',
+            lastLineClass: 'pbe-1 rounded-b-sm',
+            hideTags: true,
+          }),
+        registry && xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
         EditorView.updateListener.of((update) => {
           if (update.selectionSet && !update.state.selection.main.empty) {
             selectionGroupRef.current.claim(update.view);
@@ -116,7 +138,14 @@ export const MarkdownItem = memo(({ text, editable = false, registry, hits }: Ma
     view?.dispatch({ effects: setHighlights.of(hits ?? []) });
   }, [view, hits]);
 
-  return <div ref={rootRef} />;
+  return (
+    <>
+      <div ref={rootRef} />
+      {widgets.map(({ Component, root, id, props }) => (
+        <div key={id}>{createPortal(<Component view={view ?? undefined} {...props} />, root)}</div>
+      ))}
+    </>
+  );
 });
 
 MarkdownItem.displayName = 'MarkdownItem';

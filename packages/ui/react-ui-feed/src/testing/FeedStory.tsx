@@ -21,6 +21,7 @@ import {
 } from '../';
 import { type FrameMeter as FrameMeterState, useFrameMeter } from './frame-meter';
 import { createMessages } from './generator';
+import { type FeedScenario, createScenario } from './scenarios';
 import { createAnswer, textStream } from './stream';
 import { sweepScroll } from './sweep';
 
@@ -97,6 +98,12 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
 //
 
 export type FeedStoryProps = {
+  /**
+   * Which downstream call site to approximate. Each supplies its own renderer, chrome and follow
+   * behaviour; everything else — the list, virtualization, selection, search — is the same engine.
+   * Omitted, the story runs the synthetic mixed feed the measurements were taken against.
+   */
+  scenario?: FeedScenario;
   /** Messages of seeded history; 0 starts empty. */
   count?: number;
   /** Begin streaming turns on mount. */
@@ -117,6 +124,7 @@ export type FeedStoryProps = {
  * another component to keep in step.
  */
 export const FeedStory = ({
+  scenario,
   count = 0,
   streaming: autoStart = false,
   wordsPerChunk = 4,
@@ -126,7 +134,8 @@ export const FeedStory = ({
   acceleration,
   deceleration,
 }: FeedStoryProps) => {
-  const [messages, setMessages] = useState<Message.Message[]>(() => createMessages({ count }));
+  const definition = useMemo(() => (scenario ? createScenario({ scenario, count }) : undefined), [scenario, count]);
+  const [messages, setMessages] = useState<Message.Message[]>(() => definition?.messages ?? createMessages({ count }));
   const [streaming, setStreaming] = useState(autoStart);
   const [answerId, setAnswerId] = useState<string | undefined>();
   const [query, setQuery] = useState('');
@@ -139,10 +148,15 @@ export const FeedStory = ({
   // recorded line carries them rather than a story name the component cannot see.
   const label = useMemo(
     () =>
-      [`${count} msgs`, estimateSize ? `est ${estimateSize}` : undefined, streaming ? 'streaming' : undefined]
+      [
+        scenario ?? 'mixed',
+        `${count} msgs`,
+        estimateSize ? `est ${estimateSize}` : undefined,
+        streaming ? 'streaming' : undefined,
+      ]
         .filter(Boolean)
         .join(' · '),
-    [count, estimateSize, streaming],
+    [scenario, count, estimateSize, streaming],
   );
 
   // The meter lives here rather than in the statusbar because the sweep has to record the pass it
@@ -183,8 +197,8 @@ export const FeedStory = ({
   const handleReset = useCallback(() => {
     setStreaming(false);
     setAnswerId(undefined);
-    setMessages(createMessages({ count }));
-  }, [count]);
+    setMessages(definition?.messages ?? createMessages({ count }));
+  }, [count, definition]);
 
   const handleCopy = useCallback(() => {
     // Copy across message boundaries is reconstructed from the model: unmounted items are not in the
@@ -251,13 +265,15 @@ export const FeedStory = ({
     // the list's state through `useMessageList`.
     <MessageList.Root
       messages={messages}
-      Chrome={TestChrome}
+      renderer={definition?.renderer}
+      Chrome={definition?.Chrome ?? TestChrome}
+      registry={definition?.registry}
       hits={hits}
       streamingId={streaming ? answerId : undefined}
       selectedIds={selectedIds}
       onSelectedIdsChange={setSelectedIds}
-      estimateSize={estimateSize}
-      stickyBottom
+      estimateSize={estimateSize ?? definition?.estimateSize}
+      stickyBottom={definition?.stickyBottom ?? true}
       stickyBehavior='smooth'
       follow={{ maxSpeed, acceleration, deceleration }}
     >

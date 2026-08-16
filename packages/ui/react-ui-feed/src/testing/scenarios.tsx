@@ -1,0 +1,311 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React, { type ComponentType } from 'react';
+
+import { random } from '@dxos/random';
+import { IconButton, Input } from '@dxos/react-ui';
+import { type ContentBlock, Message } from '@dxos/types';
+import { type XmlWidgetRegistry } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
+
+import { type MessageChromeProps, type MessageRenderer, chatRenderer, defaultRenderer } from '../';
+import { chatRegistry } from './widgets';
+
+/**
+ * The five places in the repo that render a thread of messages, approximated against one engine.
+ *
+ * The point is not the fixtures — it is that all five differ only in the renderer, the chrome and a
+ * couple of options, while the list, the virtualization, the selection and the search are the same
+ * code. Where a scenario needs something the engine does not have, that is the finding.
+ */
+export type FeedScenario = 'assistant' | 'email' | 'thread' | 'comments' | 'transcript';
+
+export type ScenarioDefinition = {
+  messages: Message.Message[];
+  renderer: MessageRenderer;
+  /** Widgets for the tags the renderer emits; only the assistant turn has non-prose blocks. */
+  registry?: XmlWidgetRegistry;
+  Chrome: ComponentType<MessageChromeProps>;
+  /** Whether the feed follows its tail: true where messages arrive, false where they are read. */
+  stickyBottom: boolean;
+  estimateSize: number;
+};
+
+export type ScenarioOptions = {
+  scenario: FeedScenario;
+  count: number;
+  seed?: number;
+};
+
+export const createScenario = ({ scenario, count, seed = 999 }: ScenarioOptions): ScenarioDefinition => {
+  random.seed(seed);
+  switch (scenario) {
+    case 'assistant':
+      return {
+        messages: createAssistantMessages(count),
+        renderer: chatRenderer,
+        registry: chatRegistry,
+        Chrome: AssistantChrome,
+        stickyBottom: true,
+        estimateSize: 160,
+      };
+
+    case 'email':
+      return {
+        messages: createEmailMessages(count),
+        renderer: defaultRenderer,
+        Chrome: EmailChrome,
+        // A conversation is read from its start; the newest message is not where the reader is going.
+        stickyBottom: false,
+        estimateSize: 220,
+      };
+
+    case 'thread':
+      return {
+        messages: createThreadMessages(count),
+        renderer: defaultRenderer,
+        Chrome: ThreadChrome,
+        stickyBottom: true,
+        estimateSize: 64,
+      };
+
+    case 'comments':
+      return {
+        messages: createCommentMessages(count),
+        renderer: defaultRenderer,
+        Chrome: CommentChrome,
+        stickyBottom: false,
+        estimateSize: 96,
+      };
+
+    case 'transcript':
+      return {
+        messages: createTranscriptMessages(count),
+        renderer: defaultRenderer,
+        Chrome: TranscriptChrome,
+        stickyBottom: true,
+        estimateSize: 48,
+      };
+  }
+};
+
+//
+// Fixtures
+//
+
+const NAMES = ['Alice', 'Bob', 'Charlie', 'Dana'];
+
+const at = (index: number, step = 60_000) => new Date(Date.now() - (2_000 - index) * step).toISOString();
+
+/** A turn: the reader's prompt, then an answer carrying the block kinds a model actually emits. */
+const createAssistantMessages = (count: number): Message.Message[] =>
+  Array.from({ length: count }, (_, index) => {
+    if (index % 2 === 0) {
+      return Message.make({
+        created: at(index),
+        sender: { role: 'user', name: 'Alice' },
+        blocks: [{ _tag: 'text', text: random.lorem.sentence(8) }],
+      });
+    }
+
+    const blocks: ContentBlock.Any[] = [];
+    if (index % 6 === 1) {
+      blocks.push({ _tag: 'reasoning', reasoningText: random.lorem.paragraph() });
+    }
+    if (index % 6 === 3) {
+      const toolCallId = `tool-${index}`;
+      blocks.push({ _tag: 'toolCall', toolCallId, name: 'search', input: '{}', providerExecuted: false });
+      blocks.push({
+        _tag: 'toolResult',
+        toolCallId,
+        name: 'search',
+        result: random.lorem.sentence(10),
+        providerExecuted: false,
+      });
+    }
+
+    blocks.push({ _tag: 'text', text: answerText(index) });
+    if (index % 6 === 5) {
+      blocks.push({ _tag: 'suggestion', text: 'List tools' });
+      blocks.push({ _tag: 'suggestion', text: 'Show details' });
+      blocks.push({ _tag: 'select', options: ['Option 1', 'Option 2', 'Option 3'] });
+    }
+
+    return Message.make({ created: at(index), sender: { role: 'assistant', name: 'Assistant' }, blocks });
+  });
+
+const answerText = (index: number): string =>
+  [
+    `**${index}.** ${random.lorem.sentence(10)}`,
+    '',
+    random.lorem.paragraph(),
+    '',
+    `- ${random.lorem.sentence(5)}`,
+    `- ${random.lorem.sentence(7)}`,
+  ].join('\n');
+
+/** An email conversation: HTML bodies, quoted history, and a subject that never changes. */
+const createEmailMessages = (count: number): Message.Message[] => {
+  const subject = `Re: ${random.lorem.words(4)}`;
+  return Array.from({ length: count }, (_, index) => {
+    const from = NAMES[index % NAMES.length];
+    return Message.make({
+      created: at(index, 3_600_000),
+      sender: { role: 'user', name: from, email: `${from.toLowerCase()}@example.com` },
+      blocks: [
+        {
+          _tag: 'text',
+          mimeType: 'text/html',
+          text: [
+            `<p>${random.lorem.paragraph()}</p>`,
+            `<p>${random.lorem.sentence(12)}</p>`,
+            '<ul><li>attachment.pdf</li><li>invoice.csv</li></ul>',
+            `<blockquote>${random.lorem.sentence(16)}</blockquote>`,
+          ].join(''),
+        },
+      ],
+      properties: { subject },
+    });
+  });
+};
+
+/** Human chat: short turns, many of them, often several in a row from one speaker. */
+const createThreadMessages = (count: number): Message.Message[] =>
+  Array.from({ length: count }, (_, index) => {
+    const name = NAMES[Math.floor(index / 3) % NAMES.length];
+    return Message.make({
+      created: at(index, 30_000),
+      sender: { role: 'user', name },
+      blocks: [{ _tag: 'text', text: random.lorem.sentence(random.number.int({ min: 4, max: 20 })) }],
+    });
+  });
+
+/** Comments: each anchored to a range of a document, and resolvable. */
+const createCommentMessages = (count: number): Message.Message[] =>
+  Array.from({ length: count }, (_, index) =>
+    Message.make({
+      created: at(index, 120_000),
+      sender: { role: 'user', name: NAMES[index % NAMES.length] },
+      blocks: [{ _tag: 'text', text: random.lorem.sentence(random.number.int({ min: 6, max: 24 })) }],
+      properties: { anchor: random.lorem.sentence(6), resolved: index % 7 === 0 },
+    }),
+  );
+
+/** Transcription: one utterance per message, seconds apart, arriving while the reader watches. */
+const createTranscriptMessages = (count: number): Message.Message[] =>
+  Array.from({ length: count }, (_, index) =>
+    Message.make({
+      created: at(index, 6_000),
+      sender: { role: 'user', name: NAMES[index % 2] },
+      blocks: [{ _tag: 'text', text: random.lorem.sentence(random.number.int({ min: 5, max: 18 })) }],
+    }),
+  );
+
+//
+// Chrome
+//
+// Every scenario's difference that is not the renderer lives here — which is the claim being
+// tested: chrome is the host's, and the engine only has to keep it out of the measurement.
+//
+
+const timeOf = (message: Message.Message, options?: Intl.DateTimeFormatOptions) =>
+  new Date(message.created).toLocaleTimeString([], options ?? { hour: '2-digit', minute: '2-digit' });
+
+const Row = ({ children, classNames }: { children: React.ReactNode; classNames?: string }) => (
+  <div className={mx('group relative px-2 py-2', classNames)} data-testid='feed.message'>
+    {children}
+  </div>
+);
+
+/** Assistant: a selectable message with fork / rewind / reply, and the role in the gutter. */
+const AssistantChrome = ({ message, index, selected, onSelect, children }: MessageChromeProps) => (
+  <Row
+    classNames={mx('grid grid-cols-[2rem_1fr] gap-2 border-b border-subdued-separator', selected && 'bg-hoverSurface')}
+  >
+    <Input.Root>
+      <Input.Checkbox checked={selected} onCheckedChange={() => onSelect(message.id, true)} />
+    </Input.Root>
+    <div className='min-is-0'>
+      <div className='flex items-center gap-2 text-xs text-description'>
+        <span className='font-medium'>{message.sender.name}</span>
+        <span>{timeOf(message)}</span>
+        <span className='text-subdued'>#{index}</span>
+      </div>
+      {children}
+    </div>
+    {/* Out of flow and toggled by opacity: chrome that changes a row's height on hover re-triggers
+        measurement, and a pointer travelling down a scrolling list then shifts every row below it. */}
+    <div className='absolute right-1 top-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100'>
+      <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size={3} />
+      <IconButton icon='ph--arrow-counter-clockwise--regular' iconOnly label='Rewind' variant='ghost' size={3} />
+      <IconButton icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' size={3} />
+    </div>
+  </Row>
+);
+
+/** Email: a header of its own — sender, address, date — and a card-like body. */
+const EmailChrome = ({ message, children }: MessageChromeProps) => (
+  <Row classNames='border-b border-separator'>
+    <div className='flex items-baseline gap-2'>
+      <span className='font-medium'>{message.sender.name}</span>
+      <span className='text-xs text-description'>{message.sender.email}</span>
+      <span className='grow' />
+      <span className='text-xs text-description'>{new Date(message.created).toLocaleString()}</span>
+    </div>
+    <p className='text-xs text-description'>{String(message.properties?.subject ?? '')}</p>
+    <div className='mt-1'>{children}</div>
+  </Row>
+);
+
+/** Human chat: an avatar, and consecutive turns from one speaker read as one block. */
+const ThreadChrome = ({ message, children }: MessageChromeProps) => (
+  <Row classNames='grid grid-cols-[2rem_1fr] gap-2'>
+    <div className='w-6 h-6 rounded-full bg-groupSurface grid place-items-center text-xs'>
+      {message.sender.name?.[0]}
+    </div>
+    <div className='min-is-0'>
+      <div className='flex items-center gap-2 text-xs text-description'>
+        <span className='font-medium'>{message.sender.name}</span>
+        <span>{timeOf(message)}</span>
+      </div>
+      {children}
+    </div>
+  </Row>
+);
+
+/** Comments: the quoted anchor above the comment, and a resolve control. */
+const CommentChrome = ({ message, children }: MessageChromeProps) => (
+  <Row classNames={mx('border-b border-subdued-separator', message.properties?.resolved && 'opacity-50')}>
+    <p className='mbe-1 pis-2 border-is-2 border-separator text-xs text-description line-clamp-1'>
+      {String(message.properties?.anchor ?? '')}
+    </p>
+    <div className='flex items-center gap-2 text-xs text-description'>
+      <span className='font-medium'>{message.sender.name}</span>
+      <span>{timeOf(message)}</span>
+      <span className='grow' />
+      <IconButton
+        icon={message.properties?.resolved ? 'ph--check-circle--regular' : 'ph--circle--regular'}
+        iconOnly
+        label='Resolve'
+        variant='ghost'
+        size={3}
+      />
+    </div>
+    {children}
+  </Row>
+);
+
+/** Transcription: a timestamp and speaker in the gutter, and no separators — it reads as one text. */
+const TranscriptChrome = ({ message, children }: MessageChromeProps) => (
+  <Row classNames='grid grid-cols-[5rem_1fr] gap-2 py-0.5'>
+    <div className='text-xs text-description tabular-nums'>
+      {timeOf(message, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+    </div>
+    <div className='min-is-0'>
+      <span className='mie-2 text-xs font-medium text-description'>{message.sender.name}</span>
+      {children}
+    </div>
+  </Row>
+);

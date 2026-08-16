@@ -488,6 +488,47 @@ items with one streaming tail — and it gates everything in §4 that touches th
 in the port/mock work (§4.3 track A steps 1–2, 4–5) depends on the outcome, so the spike can run in
 parallel.
 
+### 3.4 The five call sites, against one engine
+
+All five now exist as stories in `@dxos/react-ui-feed` (`MessageList/Assistant`, `Email`, `Thread`,
+`Comments`, `Transcript`), built from `testing/scenarios.tsx`. They are approximations — the fixtures
+are synthetic and the widgets are stand-ins — but they are driven by the real engine, so what they
+disagree about is real.
+
+What a scenario supplies is a **renderer**, a **chrome** component and two options. Everything else —
+virtualization, measurement, the index cursor, selection, search, the minimap — is the same code.
+
+| Call site                                | Renderer          | Item body              | Chrome                                | Follows tail               | Row    |
+| ---------------------------------------- | ----------------- | ---------------------- | ------------------------------------- | -------------------------- | ------ |
+| AI chat (`plugin-assistant`)             | `chatRenderer`    | markdown + XML widgets | role, time, fork/rewind/reply, select | yes                        | ~160px |
+| Email (`plugin-inbox`)                   | `defaultRenderer` | sanitized HTML         | from/address/subject/date header      | **no** — read from the top | ~220px |
+| Human chat (`react-ui-thread`)           | `defaultRenderer` | markdown               | avatar, name, time                    | yes                        | ~64px  |
+| Comments (`plugin-review`)               | `defaultRenderer` | markdown               | quoted anchor, resolve toggle         | no                         | ~96px  |
+| Transcription (`react-ui-transcription`) | `defaultRenderer` | markdown               | timestamp + speaker, no separators    | yes                        | ~48px  |
+
+**What the exercise proved.** Two engine gaps showed up as soon as a second scenario existed, both
+now fixed: React block widgets need a portal host per item (`MarkdownItem` owns `setWidgets` and
+renders the portals — without it the widgets reserved space and drew nothing), and a registry has to
+reach the **parser**, not only the decorations (`extendedMarkdown({ registry })`; with plain
+`createMarkdownExtensions` every tag rendered as literal angle brackets). A third was a design error
+found the same way: `<prompt>` wrapping lived in the default renderer, so a transcript — which has no
+registry — showed the speaker their own markup. Prompts moved to `chatRenderer`.
+
+**What each still needs, in the order it will bite.**
+
+1. **Email** — the HTML item has no prose styling, so a `blockquote` and a `ul` render as flat text.
+   It also needs quoted history collapsed, which is a per-item affordance the chrome cannot express
+   today because it cannot change the item's height without re-measuring the row.
+2. **Human chat** — consecutive turns from one speaker should read as one block, and chrome is given
+   only its own message and index; grouping needs the neighbour. Either the engine passes it, or the
+   host closes over the array (which the story does, and which breaks under a windowed model).
+3. **Comments** — the anchor is a range in another document; the pairing (scroll the feed from the
+   editor, highlight the editor from the feed) is the whole feature and is outside the list.
+4. **Transcription** — an utterance is edited in place as recognition improves, so the item needs
+   mutation that is neither an append nor a remount; the delta path currently assumes a growing tail.
+5. **AI chat** — the widgets here are stand-ins; the real ones move down with the plugin, and tool
+   state has to survive a remount from the message alone (the plugin keeps it beside the document).
+
 #### 3.3.1 Selection and search
 
 Both are the same problem wearing two hats, and the answer to both is **the model, not the DOM**.

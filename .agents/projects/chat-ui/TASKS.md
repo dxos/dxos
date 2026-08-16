@@ -56,9 +56,20 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       estimate beyond a few rows, so an animation travels to the wrong place), which lands the
       reader somewhere new with no sense of having moved. Cross-fade the viewport over the jump
       instead, so the discontinuity is expressed rather than hidden.
+- [x] Five call-site approximations — `MessageList/{Assistant,Email,Thread,Comments,Transcript}` from
+      `testing/scenarios.tsx`: renderer + chrome + follow per scenario, one engine underneath. Two
+      engine gaps found and fixed (per-item React widget portal host; the registry must reach the
+      parser via `extendedMarkdown`), one design error fixed (`<prompt>` moved out of the default
+      renderer into `chatRenderer`). Aspect table in AUDIT.md §3.4.
 - [ ] Streaming content — the Streaming story only extends a text block by whole tokens. Real
       streaming arrives as `ContentBlock`s (reasoning, toolCall, status) appearing and completing
-      mid-message, so the item's delta reconciliation is only exercised on the easy case.
+      mid-message, so the item's delta reconciliation is only exercised on the easy case. The
+      Assistant scenario now has the blocks; it needs them arriving one at a time.
+- [ ] Email item needs prose styling — `blockquote` and `ul` render flat in `HtmlItem`.
+- [ ] Chrome cannot see its neighbours — human chat groups consecutive turns from one speaker, and
+      chrome receives only its own message and index.
+- [ ] In-place item mutation — a transcript utterance is rewritten as recognition improves; the
+      delta path assumes a growing tail and falls back to replacing the document.
 - [ ] Multi-item selection — `selectedIds` + `onSelect` exist, but only as an additive toggle
       driven by the story's checkbox. Needs the list-shaped gestures (click, shift-range,
       cmd-toggle, keyboard) and a decision on whether to adopt `react-ui-list`'s
