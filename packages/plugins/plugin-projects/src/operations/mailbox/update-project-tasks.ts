@@ -47,9 +47,13 @@ export const syncProjectTasks = (project: Project.Project, mailbox: Mailbox.Mail
     const cursorKey = Cursor.parseKey(cursor.max);
 
     const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+    // `>=`, not `>`: two messages can share a `created` timestamp, and excluding the boundary would
+    // drop the second one permanently once the first advanced the cursor past it. Re-examining the
+    // boundary instant each run is bounded (the messages sharing one timestamp) and costs nothing,
+    // because `upsertTask` keys on the message id — the same boundary re-fetch the Gmail sync does.
     const pending = messages.filter((message) => {
       const key = Date.parse(message.created);
-      return Number.isFinite(key) && key > cursorKey;
+      return Number.isFinite(key) && key >= cursorKey;
     });
     const matched = messagesAscending(pending).filter((message) => senderMatches(message, senders));
 

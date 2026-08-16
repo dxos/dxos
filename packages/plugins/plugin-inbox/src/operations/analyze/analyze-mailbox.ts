@@ -36,6 +36,8 @@ type Pass = {
 type PassResult = {
   readonly tier: InboxOperation.MailboxTier;
   readonly processor: string;
+  /** URI of what this run was about; several results share a processor when it covers N subjects. */
+  readonly subject?: string;
   readonly status: 'completed' | 'failed' | 'skipped' | 'cancelled';
   readonly output?: unknown;
   readonly error?: string;
@@ -126,12 +128,15 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
         }),
       ];
 
-      log.info('scan: cascade start', {
+      log.info('analyze: cascade start', {
         mailbox: Obj.getURI(mailbox),
         tiers,
         passes: passes.map((pass) => pass.processor),
       });
       reportStatus({ current: 0, total: passes.length });
+
+      /** Identity every result carries, kept in one place so no branch can report half of it. */
+      const passId = (pass: Pass) => ({ tier: pass.tier, processor: pass.processor, subject: pass.subject });
 
       const results: PassResult[] = [];
       /** Processors invalidated by an upstream failure, and why. */
@@ -141,17 +146,17 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
         index += 1;
         const blockedReason = blocked.get(pass.processor);
         if (blockedReason) {
-          results.push({ tier: pass.tier, processor: pass.processor, status: 'skipped', error: blockedReason });
+          results.push({ ...passId(pass), status: 'skipped', error: blockedReason });
           reportStatus({ current: index, message: pass.processor });
           continue;
         }
         if (signal.aborted) {
           // Remaining passes are reported rather than dropped: a half-run cascade must be legible.
-          results.push({ tier: pass.tier, processor: pass.processor, status: 'cancelled' });
+          results.push({ ...passId(pass), status: 'cancelled' });
           continue;
         }
         if (pass.skip) {
-          results.push({ tier: pass.tier, processor: pass.processor, status: 'skipped', error: pass.skip });
+          results.push({ ...passId(pass), status: 'skipped', error: pass.skip });
           reportStatus({ current: index, message: pass.processor });
           continue;
         }
@@ -162,10 +167,16 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
         // the whole cascade instead of being reported as one pass's outcome.
         const exit = yield* Effect.exit(pass.run);
         if (Exit.isSuccess(exit)) {
-          results.push({ tier: pass.tier, processor: pass.processor, status: 'completed', output: exit.value });
+          results.push({ ...passId(pass), status: 'completed', output: exit.value });
         } else if (Cause.hasInterruptsOnly(exit.cause)) {
-          // Cancellation is not a pass failure — stop without marking the pipeline broken.
-          results.push({ tier: pass.tier, processor: pass.processor, status: 'cancelled' });
+          // Cancellation is not a pass failure — stop without marking the pipeline broken. Everything
+          // planned behind it is reported too: a half-run cascade whose tail is simply ABSENT reads as
+          // a cascade that was never planned that way, which is the same illegibility the excluded and
+          // pre-run-cancelled paths already avoid.
+          results.push({ ...passId(pass), status: 'cancelled' });
+          for (const remaining of passes.slice(index)) {
+            results.push({ ...passId(remaining), status: 'cancelled' });
+          }
           break;
         } else {
           const unmet = unmetPrecondition(exit.cause);
@@ -175,15 +186,15 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
             // tier as skipped and keep going. Every later tier missing the same thing skips itself the
             // same way, and the tiers that already ran stay valid — treating it as a failure instead
             // aborts the cascade and leaves the meter red for a mailbox nothing is wrong with.
-            log.info('scan: pass skipped', { processor: pass.processor, error: unmet });
-            results.push({ tier: pass.tier, processor: pass.processor, status: 'skipped', error: unmet });
+            log.info('analyze: pass skipped', { processor: pass.processor, error: unmet });
+            results.push({ ...passId(pass), status: 'skipped', error: unmet });
             reportStatus({ current: index, message: pass.processor });
             continue;
           }
 
           const error = Cause.pretty(exit.cause).slice(0, 500);
-          log.warn('scan: pass failed', { processor: pass.processor, error });
-          results.push({ tier: pass.tier, processor: pass.processor, status: 'failed', error });
+          log.warn('analyze: pass failed', { processor: pass.processor, error });
+          results.push({ ...passId(pass), status: 'failed', error });
           if (!continueOnError) {
             // Only what actually consumed this output is invalidated. Blocking by run POSITION instead
             // would strand processors that never depended on it — `subscriptions` declares no edge to
@@ -196,11 +207,16 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
         reportStatus({ current: index });
       }
 
-      const completed = results.filter((result) => result.status === 'completed').length;
-      const failed = results.filter((result) => result.status === 'failed').length;
-      const skipped = results.filter((result) => result.status !== 'completed' && result.status !== 'failed').length;
+      // Counted by their own status rather than by exclusion: `skipped` used to mean "not completed
+      // and not failed", which swept up cancellations — so an interrupted run reported its entire
+      // unrun tail as skipped, a pass having decided not to run rather than never reaching the line.
+      const countOf = (status: PassResult['status']) => results.filter((result) => result.status === status).length;
+      const completed = countOf('completed');
+      const failed = countOf('failed');
+      const skipped = countOf('skipped');
+      const cancelled = countOf('cancelled');
 
-      log.info('scan: cascade done', { mailbox: Obj.getURI(mailbox), completed, failed, skipped });
+      log.info('analyze: cascade done', { mailbox: Obj.getURI(mailbox), completed, failed, skipped, cancelled });
       reportStatus({
         current: passes.length,
         message: signal.aborted
@@ -210,7 +226,7 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
             : PROGRESS_STATUS_COMPLETE,
       });
 
-      return { completed, failed, skipped, stages: results };
+      return { completed, failed, skipped, cancelled, stages: results };
     }),
   ),
   Operation.opaqueHandler,

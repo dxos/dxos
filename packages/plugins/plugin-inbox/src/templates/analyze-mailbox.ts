@@ -9,6 +9,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { makeRoutine } from '@dxos/plugin-routine';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import { AI_ACTION_ICON } from '@dxos/ui-types';
 
 import * as InboxOperation from '../types/InboxOperation';
 import * as Mailbox from '../types/Mailbox';
@@ -27,7 +28,7 @@ const DEFAULT_CRON = '0 6 * * *';
 export const analyzeMailbox: RoutineCapabilities.Template = {
   id: 'org.dxos.routine.analyzeMailbox',
   label: 'Analyze Mailbox',
-  icon: 'ph--stack-simple--regular',
+  icon: AI_ACTION_ICON,
   appliesTo: (subject) => subject != null && Obj.instanceOf(Mailbox.Mailbox, subject),
   scaffold: ({ name, subject }) =>
     Effect.gen(function* () {
