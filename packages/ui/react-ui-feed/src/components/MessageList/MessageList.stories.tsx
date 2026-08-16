@@ -33,14 +33,35 @@ export const Medium: Story = {
   },
 };
 
-/** Scroll-quality case: the deciding criterion is smoothness here, not at 200. */
+/**
+ * Scroll-quality case: the deciding criterion is smoothness here, not at 200.
+ *
+ * The statusbar's right-hand readout is `fps · worst frame · hitches`, sampled from animation
+ * frames and reset by clicking it. It has to be read at a real keyboard — an agent's browser
+ * throttles `requestAnimationFrame`, so any number collected there describes the harness.
+ *
+ * Test:
+ * 1. Click the frame readout to reset it, then fling-scroll the list from top to bottom twice.
+ * 2. Read `fps` while the scroll is running: it should hold near the display's rate.
+ * 3. Read `worst` and `hitches` after it settles — one 200ms stall reads as smooth in an average
+ *    and as broken to a reader, which is why they are reported separately.
+ * 4. Watch the scrollbar thumb during the fling: it should not jump backwards as rows measure.
+ */
 export const Large: Story = {
   args: {
     count: 2_000,
   },
 };
 
-/** A bad height estimate is what scrollbar drift looks like; compare against `Default`. */
+/**
+ * A bad height estimate is what scrollbar drift looks like; compare against `Large`.
+ *
+ * Test:
+ * 1. Reset the frame readout and fling-scroll to the middle of the list.
+ * 2. Compare `worst` and `hitches` against `Large` — the cost of measurement correction is the
+ *    difference between the two stories, since nothing else changes.
+ * 3. Hold at one position for a second: the rows must not creep once measurement catches up.
+ */
 export const BadEstimate: Story = {
   args: {
     count: 2_000,
@@ -51,6 +72,13 @@ export const BadEstimate: Story = {
 /**
  * A model answering into the tail, from nothing, until stopped. The answer arrives in word chunks
  * and re-parses as markdown (heading, list, code fence) while the row it lives in grows.
+ *
+ * Test:
+ * 1. Reset the frame readout and let three or four turns arrive.
+ * 2. Read `fps` while the tail grows — the follow runs on animation frames, so it competes with
+ *    the item re-parsing its markdown, and this is where they collide.
+ * 3. Scroll away mid-answer: the follow must stop and stay stopped.
+ * 4. Scroll back to the tail: it must resume following without a jump.
  */
 export const Streaming: Story = {
   args: {

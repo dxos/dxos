@@ -3,5 +3,6 @@
 //
 
 export * from './FeedStory';
+export * from './frame-meter';
 export * from './generator';
 export * from './stream';

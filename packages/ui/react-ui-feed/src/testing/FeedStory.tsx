@@ -19,6 +19,7 @@ import {
   sliceFeed,
   useMessageList,
 } from '../';
+import { useFrameMeter } from './frame-meter';
 import { createMessages } from './generator';
 import { createAnswer, textStream } from './stream';
 
@@ -408,7 +409,9 @@ const StatusBar = ({ hits, query, selected, copied, streaming }: StatusBarProps)
   const { range, currentIndex, count, scrollToBottom } = useMessageList('StatusBar');
 
   return (
-    <div className='h-6 grid grid-cols-6 items-center gap-4 px-2 text-xs text-description tabular-nums'>
+    // The last two cells size to their content: the frame readout is the longest thing here, and an
+    // equal-width column wrapped it onto a second line, which an `h-6` bar renders as clipped.
+    <div className='h-6 grid grid-cols-[repeat(5,minmax(0,1fr))_auto_auto] items-center gap-4 px-2 text-xs text-description tabular-nums whitespace-nowrap'>
       <span>{range ? `${range.startIndex}–${range.endIndex}` : ''}</span>
       <span>
         {currentIndex} / {count}
@@ -420,9 +423,38 @@ const StatusBar = ({ hits, query, selected, copied, streaming }: StatusBarProps)
       ) : (
         <span />
       )}
+      <FrameMeter />
       <span className='text-right' data-testid='feed.stream.state'>
         {streaming ? 'streaming…' : 'idle'}
       </span>
     </div>
+  );
+};
+
+/**
+ * Frame rate, worst frame and hitch count — the phase-1 verdict, readable only at a real keyboard.
+ * Click to reset, so a pass measures one gesture rather than everything since the story mounted.
+ */
+const FrameMeter = () => {
+  const { fps, worst, hitches, frames, reset } = useFrameMeter();
+
+  return (
+    <button
+      type='button'
+      className='text-left tabular-nums whitespace-nowrap'
+      title={`${frames} frames sampled — click to reset`}
+      data-testid='feed.frames'
+      onClick={reset}
+    >
+      <span className={mx(fps && fps < 50 && 'text-warning-text')}>{fps} fps</span>
+      <span className='opacity-70'>
+        {' · '}
+        {worst}ms
+      </span>
+      <span className={mx('opacity-70', hitches > 0 && 'text-warning-text opacity-100')}>
+        {' · '}
+        {hitches} hitches
+      </span>
+    </button>
   );
 };
