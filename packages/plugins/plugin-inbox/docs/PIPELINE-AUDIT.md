@@ -7,8 +7,8 @@ and storybooks that exercise each. Written 2026-08-15._
 > and provider plugins) and unrelated to this. Design lives in [`PIPELINE.md`](PIPELINE.md); the
 > manual walkthrough in [`TESTING.md`](TESTING.md).
 
-The point of this document is the **gap column**. Counting tests per package says nothing useful —
-plugin-inbox has 33 test files and still has passes nothing drives end to end.
+The point of this document is the **gap column**. Counting tests per package says nothing useful:
+plugin-inbox has 33 test files, and no test drives a message through the pipeline end to end.
 
 ## 1. Sync — writes the feed
 

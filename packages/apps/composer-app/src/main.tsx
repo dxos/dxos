@@ -73,7 +73,9 @@ const startupTimeout = (() => {
     return undefined;
   }
   const seconds = Number(import.meta.env.VITE_DX_STARTUP_TIMEOUT);
-  return Number.isFinite(seconds) && seconds > 0 ? seconds * 1_000 : undefined;
+  // The CONVERTED value is checked, not the input: 1e308 is finite and 1e308 * 1_000 is not.
+  const timeout = seconds * 1_000;
+  return Number.isFinite(timeout) && timeout > 0 ? timeout : undefined;
 })();
 
 // Injected by the `define` block in vite.config.ts; '' in production builds.
