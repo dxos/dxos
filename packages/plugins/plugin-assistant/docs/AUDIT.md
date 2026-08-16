@@ -421,6 +421,25 @@ regions, they just live in a per-message document rather than a per-thread one.
 - `ConversationStack`'s tail-growth scroll re-pinning (ResizeObserver + settle window) — a working
   answer to cost 2 in the append case.
 
+**Measured (2026-08-16, `@dxos/react-ui-feed`, `MessageList/Large`, 2,000 messages)**
+
+```
+2000 msgs · p50 125 · p95 111 · worst 409ms · 3 hitches · 486 frames · 4.4s
+```
+
+Read on a 120Hz display: the median frame and the slow tail both sit at the display's own rate, so
+cost 1 (N `EditorView`s) is **not** what limits scrolling — an unpooled list of read-only CodeMirror
+items scrolls at rate. Percentiles rather than an average because the same pass contains a **409ms
+stall**: three frames of the 486 missed, and one of them by a quarter-second. That is cost 2 —
+measurement correction — arriving as a single lump rather than as a steady drag, which is what the
+hitch trace has to attribute before phase 4 can be planned.
+
+The numbers come from `useFrameMeter` + `sweepScroll` in the package's `#testing` entry: a scripted
+fixed-duration traversal, so a pass is one repeatable gesture rather than a hand-made fling, and the
+same gesture can be compared across stories. They cannot be gathered by an agent — a headless
+browser throttles `requestAnimationFrame` to single frames per second, which the meter reports
+faithfully (3 frames in 28.1s) and which describes the harness, not the engine.
+
 **Verdict: right target, spike first.** It is a better destination than "two renderers over one
 model", because it collapses the families instead of blessing them. Cost 2 is the one that decides
 it and is not knowable from reading code. The spike is small — a virtualized list of ~200 markdown
