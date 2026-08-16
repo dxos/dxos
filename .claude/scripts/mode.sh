@@ -126,7 +126,7 @@ EOF
 - MODE: TERSE — Reply with the answer or current status in 1-2 sentences.
   Provide follow-up options as a short flat numbered list, with a recommendation if applicable.
   Consider providing the following options iff applicable:
-  - Detailed explanation.
+  1. Detailed explanation.
 EOF
     else
       cat <<'EOF'
