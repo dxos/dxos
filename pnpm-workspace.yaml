@@ -217,8 +217,8 @@ catalog:
   '@storybook/react-vite': ^10.5.8
   '@storybook/web-components-vite': ^10.5.8
   '@svgr/cli': ^8.1.0
-  '@swc/core': 1.15.46
-  '@swc/types': ^0.1.27
+  '@swc/core': 1.16.0
+  '@swc/types': ^0.1.28
   '@tailwindcss/forms': ^0.5.9
   '@tailwindcss/oxide': ^4.3.0
   '@tailwindcss/postcss': ^4.3.0
