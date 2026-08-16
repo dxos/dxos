@@ -48,6 +48,8 @@ type MessageListContextValue = {
   hitsByMessage: ReadonlyMap<string, HighlightRange[]>;
   /** The mounted window; `undefined` until the viewport has measured. */
   range?: MessageRange;
+  /** Index the reader is on: moved by the arrow keys and by any navigation, tracked while scrolling. */
+  currentIndex: number;
   virtualizer: Virtualizer<HTMLElement, HTMLElement>;
   setViewport: (viewport: HTMLElement | null) => void;
   onSelect: (id: string, additive: boolean) => void;
@@ -67,8 +69,8 @@ const [MessageListProvider, useMessageListContext] = createContext<MessageListCo
  * find-next, a statusbar's range readout.
  */
 export const useMessageList = (consumerName = 'useMessageList') => {
-  const { range, messages, scrollToIndex, scrollToBottom } = useMessageListContext(consumerName);
-  return { range, count: messages.length, scrollToIndex, scrollToBottom };
+  const { range, currentIndex, messages, scrollToIndex, scrollToBottom } = useMessageListContext(consumerName);
+  return { range, currentIndex, count: messages.length, scrollToIndex, scrollToBottom };
 };
 
 //
@@ -144,6 +146,16 @@ const MessageListRoot = ({
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const [range, setRange] = useState<MessageRange | undefined>(undefined);
 
+  // The reader's position as an index rather than a pixel offset: what the arrow keys step through,
+  // what navigation sets, and what a minimap or a counter reports. Mirrored in a ref because the
+  // keymap is bound to the element once and would otherwise step from a captured value.
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const currentIndexRef = useRef(0);
+  const setCurrent = useCallback((index: number) => {
+    currentIndexRef.current = index;
+    setCurrentIndex(index);
+  }, []);
+
   const virtualizer = useVirtualizer<HTMLElement, HTMLElement>({
     count: messages.length,
     getScrollElement: () => viewport,
@@ -187,8 +199,13 @@ const MessageListRoot = ({
     setRange(next);
     if (next) {
       onRangeChange?.(next);
+      // Scrolling past the cursor moves it: a wheel or a scrollbar drag is the reader relocating,
+      // so the next arrow press should step from where they now are, not from where they were.
+      if (currentIndexRef.current < next.startIndex || currentIndexRef.current > next.endIndex) {
+        setCurrent(next.startIndex);
+      }
     }
-  }, [mounted, startIndex, endIndex, messages.length, onRangeChange]);
+  }, [mounted, startIndex, endIndex, messages.length, onRangeChange, setCurrent]);
 
   // Following is an intent, and only the reader can withdraw it.
   //
@@ -247,6 +264,8 @@ const MessageListRoot = ({
         follower?.cancel();
       }
 
+      setCurrent(index);
+
       // A smooth scroll is driven from the offset the virtualizer computes, because the virtualizer
       // itself refuses to animate under dynamic measurement (it warns and scrolls instantly).
       //
@@ -264,7 +283,7 @@ const MessageListRoot = ({
         virtualizer.scrollToIndex(index, { align });
       }
     },
-    [virtualizer, viewport, follower, messages.length],
+    [virtualizer, viewport, follower, messages.length, setCurrent],
   );
 
   const scrollToBottom = useCallback(
@@ -326,11 +345,14 @@ const MessageListRoot = ({
     follower.start();
   }, [viewport, follower, stickyBottom, stickyBehavior, messages.length, totalSize, scrollToBottom]);
 
-  // Cmd/Ctrl + Arrow jumps to the first or last message; plain arrows stay with the scroll container
-  // and with whatever the reader is interacting with inside an item. Bound imperatively to the
-  // viewport element (rather than as a React prop) because `ScrollArea.Viewport` narrows its props
-  // to the slottable set, and wrapping it in a focusable div would insert a box into the height
-  // chain. `scrollToIndex` decides whether the jump animates.
+  // Arrow keys move by message, not by line: a plain arrow steps the cursor to the adjacent message
+  // and Cmd/Ctrl + Arrow jumps to the first or last. Stepping the index rather than letting the
+  // container scroll by a notch is what makes the position readable — a few pixels into a tall
+  // message leaves every index-based readout on the message the reader has already left.
+  //
+  // Bound imperatively to the viewport element (rather than as a React prop) because
+  // `ScrollArea.Viewport` narrows its props to the slottable set, and wrapping it in a focusable div
+  // would insert a box into the height chain. `scrollToIndex` decides whether the jump animates.
   useEffect(() => {
     if (!viewport) {
       return;
@@ -340,16 +362,24 @@ const MessageListRoot = ({
     // has to be focusable for the keymap to have somewhere to land.
     viewport.tabIndex = 0;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) {
-        return;
-      }
-      const target = event.key === 'ArrowDown' ? messages.length - 1 : event.key === 'ArrowUp' ? 0 : undefined;
-      if (target === undefined) {
+      if (event.altKey || event.shiftKey) {
         return;
       }
 
+      const delta = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+      if (!delta) {
+        return;
+      }
+
+      const jump = event.metaKey || event.ctrlKey;
+      const target = jump
+        ? delta > 0
+          ? messages.length - 1
+          : 0
+        : Math.min(Math.max(currentIndexRef.current + delta, 0), messages.length - 1);
+
       event.preventDefault();
-      scrollToIndex(target, { align: target === 0 ? 'start' : 'end', behavior: 'smooth' });
+      scrollToIndex(target, { align: target === messages.length - 1 ? 'end' : 'start', behavior: 'smooth' });
     };
 
     viewport.addEventListener('keydown', onKeyDown);
@@ -398,6 +428,7 @@ const MessageListRoot = ({
         selectedIds={selectedIds}
         hitsByMessage={hitsByMessage}
         range={range}
+        currentIndex={currentIndex}
         virtualizer={virtualizer}
         setViewport={setViewport}
         onSelect={onSelect}

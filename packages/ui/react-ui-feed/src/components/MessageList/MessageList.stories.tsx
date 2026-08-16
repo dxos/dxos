@@ -13,7 +13,7 @@ const meta: Meta<FeedStoryProps> = {
   render: FeedStory,
   decorators: [withLayout({ layout: 'column' }), withTheme()],
   parameters: { layout: 'fullscreen' },
-  args: { count: 200 },
+  args: { count: 100 },
 };
 
 export default meta;
@@ -21,16 +21,31 @@ export default meta;
 type Story = StoryObj<FeedStoryProps>;
 
 /** Mixed markdown / html / code items — the realistic feed. */
-export const Default: Story = {};
+export const Small: Story = {
+  args: {
+    count: 20,
+  },
+};
+
+export const Medium: Story = {
+  args: {
+    count: 100,
+  },
+};
 
 /** Scroll-quality case: the deciding criterion is smoothness here, not at 200. */
 export const Large: Story = {
-  args: { count: 2_000 },
+  args: {
+    count: 2_000,
+  },
 };
 
 /** A bad height estimate is what scrollbar drift looks like; compare against `Default`. */
 export const BadEstimate: Story = {
-  args: { count: 2_000, estimateSize: 24 },
+  args: {
+    count: 2_000,
+    estimateSize: 24,
+  },
 };
 
 /**
@@ -38,5 +53,8 @@ export const BadEstimate: Story = {
  * and re-parses as markdown (heading, list, code fence) while the row it lives in grows.
  */
 export const Streaming: Story = {
-  args: { count: 0, streaming: true },
+  args: {
+    count: 0,
+    streaming: true,
+  },
 };

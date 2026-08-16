@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { IconButton, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { IconButton, Input, Panel, ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Minimap, type MinimapMarker } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -252,9 +252,13 @@ export const FeedStory = ({
 
         {/* Panel.Content is itself the two-column grid — the rail sits beside the viewport without
             another box in the height chain. */}
-        <Panel.Content classNames='grid grid-cols-[1fr_2rem] overflow-hidden'>
+        {/* `minmax(0, 1fr)` on the row: without it the grid sizes to its tallest child, the rail
+            grows the panel instead of being bounded by it, and the rail never learns to thin. */}
+        <Panel.Content classNames='grid grid-cols-[2rem_1fr] grid-rows-[minmax(0,1fr)] overflow-hidden'>
+          <div className='dx-expander grid grid-rows-[1fr_3fr_1fr] justify-center'>
+            <FeedMinimap classNames='border row-start-2 overflow-hidden' messages={messages} />
+          </div>
           <MessageList.Viewport classNames='dx-document' />
-          <FeedMinimap messages={messages} />
         </Panel.Content>
 
         <Panel.Statusbar>
@@ -265,9 +269,6 @@ export const FeedStory = ({
   );
 };
 
-/** Beyond this the rail is taller than any viewport, so markers are sampled rather than dropped. */
-const MARKER_LIMIT = 48;
-
 /**
  * The minimap over a feed: one tick per prompt, in message-index space.
  *
@@ -276,25 +277,37 @@ const MARKER_LIMIT = 48;
  * pixel offsets are involved, which is what makes this survive rows whose heights are still
  * estimates.
  */
-const FeedMinimap = ({ messages }: { messages: readonly Message.Message[] }) => {
-  const { range, scrollToIndex } = useMessageList('FeedMinimap');
+const FeedMinimap = ({ classNames, messages }: ThemedClassName<{ messages: readonly Message.Message[] }>) => {
+  const { currentIndex, scrollToIndex } = useMessageList('FeedMinimap');
 
   const markers = useMemo<MinimapMarker[]>(() => {
-    const prompts = messages
+    // Every prompt is passed; the rail thins them to whatever its height affords.
+    return messages
       .map((message, index) => ({ message, index }))
-      .filter(({ message }) => message.sender.role === 'user');
-    // The rail sizes itself from the marker count, so a long feed is sampled evenly to keep it
-    // within a screen; every tick still points at a real message.
-    const step = Math.max(1, Math.ceil(prompts.length / MARKER_LIMIT));
-    return prompts
-      .filter((_, position) => position % step === 0)
+      .filter(({ message }) => message.sender.role === 'user')
       .map(({ message, index }) => ({
         id: message.id,
         title: `#${index} · ${message.sender.name ?? message.sender.role}`,
-        description: Message.extractText(message).split('\n').find(Boolean)?.slice(0, 160),
+        // Tags stripped: an html-kind message's text is markup, which reads as noise in a tooltip.
+        description: Message.extractText(message)
+          .replace(/<[^>]*>/g, ' ')
+          .split('\n')
+          .map((line) => line.trim())
+          .find(Boolean)
+          ?.slice(0, 160),
+        // A tick marks one message, not a span: which one is current is decided below, so the range
+        // stays honest about what the tick points at.
         range: { from: index, to: index + 1 },
       }));
   }, [messages]);
+
+  // Exactly one tick reads as current — the last prompt at or before the cursor. Passing the
+  // mounted window instead would light up whichever ticks happen to fall inside it: none for most
+  // of a sampled rail, two when the window straddles a boundary.
+  const current = useMemo(() => {
+    const marker = [...markers].reverse().find(({ range: { from } }) => from <= currentIndex) ?? markers[0];
+    return marker?.range;
+  }, [markers, currentIndex]);
 
   const handleSelect = useCallback(
     (marker: MinimapMarker) => scrollToIndex(marker.range.from, { align: 'start', behavior: 'smooth' }),
@@ -307,9 +320,9 @@ const FeedMinimap = ({ messages }: { messages: readonly Message.Message[] }) => 
 
   return (
     <Minimap
-      classNames='justify-self-center self-start'
+      classNames={['justify-self-center', classNames]}
       markers={markers}
-      visibleRange={range && { from: range.startIndex, to: range.endIndex + 1 }}
+      visibleRange={current}
       onSelect={handleSelect}
     />
   );
@@ -328,10 +341,9 @@ const FindButton = ({ hits }: { hits: readonly SearchHit[] }) => {
   return <IconButton icon='ph--magnifying-glass--regular' iconOnly label='Find' onClick={handleFind} />;
 };
 
-/** Move by one message, or to either end, from whichever message is at the top of the viewport. */
+/** Move by one message, or to either end, from the list's cursor (what the arrow keys also move). */
 const NavButtons = () => {
-  const { range, count, scrollToIndex, scrollToBottom } = useMessageList('NavButtons');
-  const current = range?.startIndex ?? 0;
+  const { currentIndex: current, count, scrollToIndex, scrollToBottom } = useMessageList('NavButtons');
 
   const step = useCallback(
     (delta: number) => {
@@ -393,7 +405,7 @@ type StatusBarProps = {
 };
 
 const StatusBar = ({ hits, query, selected, copied, streaming }: StatusBarProps) => {
-  const { range, count, scrollToBottom } = useMessageList('StatusBar');
+  const { range, currentIndex, count, scrollToBottom } = useMessageList('StatusBar');
 
   return (
     <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-description tabular-nums'>
@@ -403,7 +415,7 @@ const StatusBar = ({ hits, query, selected, copied, streaming }: StatusBarProps)
         className='text-left'
         onClick={() => scrollToBottom({ behavior: 'smooth' })}
       >
-        {range ? `${range.startIndex}–${range.endIndex}/${count}` : count}
+        {range ? `${range.startIndex}–${range.endIndex} / ${count} · #${currentIndex}` : count}
       </button>
       <span>{selected} selected</span>
       {query ? <span>{hits.length} hits</span> : <span />}
