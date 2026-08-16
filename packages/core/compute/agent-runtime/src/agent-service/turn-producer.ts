@@ -31,7 +31,7 @@ export interface TurnProducer {
    *
    * Must be interruptible — the process wraps the call and cancels it on interrupt.
    */
-  createRequest(params: TurnRequest): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements>;
+  runTurn(params: TurnRequest): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements>;
 
   /** Skills bound to this conversation, which the process fires end-request hooks against. */
   getSkills(): Skill.Skill[];
@@ -62,5 +62,8 @@ export type MakeTurnProducer = (options: MakeTurnProducerOptions) => Effect.Effe
  */
 export const makeAiSessionTurnProducer: MakeTurnProducer = ({ feed, runtime, instructions }) =>
   EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime, instructions })).pipe(
-    Effect.map((session) => Object.assign(session, { getSkills: () => session.context.getSkills() })),
+    Effect.map((session) => ({
+      runTurn: (params: TurnRequest) => session.createRequest(params),
+      getSkills: () => session.context.getSkills(),
+    })),
   );

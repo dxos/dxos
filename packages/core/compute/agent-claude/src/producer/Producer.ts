@@ -40,7 +40,7 @@ export const make = ({ feed, cwd, maxTurns, path }: MakeOptions) => {
     // end-request hooks have nothing to fire. Bridging DXOS operations would go through MCP.
     getSkills: () => [],
 
-    createRequest: ({ prompt }: { prompt: string | ContentBlock.Any[] }) =>
+    runTurn: ({ prompt }: { prompt: string | ContentBlock.Any[] }) =>
       Effect.gen(function* () {
         const text =
           typeof prompt === 'string'

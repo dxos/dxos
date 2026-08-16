@@ -268,7 +268,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               log('trace agent request begin');
               yield* Trace.write(AgentRequestBegin, {});
               yield* session
-                .createRequest({
+                .runTurn({
                   prompt,
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
