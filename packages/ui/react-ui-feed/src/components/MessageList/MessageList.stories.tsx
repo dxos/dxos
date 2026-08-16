@@ -294,6 +294,9 @@ type AiStoryProps = {
  * growing row and the virtualizer measuring it — including the first row, where there is no prior
  * measurement to fall back on.
  */
+/** Pause between one answer finishing and the next question arriving. */
+const TURN_DELAY = 800;
+
 const makeQuestion = () =>
   Message.make({
     sender: { role: 'user', name: 'Alice' },
@@ -307,16 +310,7 @@ const AiStreamingStory = ({ wordsPerChunk = 4, chunkDelay = 120 }: AiStoryProps)
 
   const handleAppend = useCallback(() => setMessages((prev) => [...prev, makeQuestion()]), []);
 
-  const handleStart = useCallback(() => {
-    // One turn: the question, then an empty answer the stream fills — as a real turn arrives.
-    const answer = Message.make({
-      sender: { role: 'assistant', name: 'Assistant' },
-      blocks: [{ _tag: 'text', text: '' }],
-    });
-    setMessages((prev) => [...prev, makeQuestion(), answer]);
-    setAnswerId(answer.id);
-    setStreaming(true);
-  }, []);
+  const handleStart = useCallback(() => setStreaming(true), []);
 
   const handleStop = useCallback(() => setStreaming(false), []);
 
@@ -326,38 +320,49 @@ const AiStreamingStory = ({ wordsPerChunk = 4, chunkDelay = 120 }: AiStoryProps)
     setMessages([]);
   }, []);
 
+  // Turns keep arriving until stopped: a conversation that grows without bound is what the list has
+  // to survive, and it is the only way to watch the follow behave over more than one answer.
   useEffect(() => {
-    if (!streaming || !answerId) {
+    if (!streaming) {
       return;
     }
 
     let cancelled = false;
     void (async () => {
-      for await (const chunk of textStream(createAnswer(), { wordsPerChunk, chunkDelay })) {
-        if (cancelled) {
-          return;
-        }
-        setMessages((prev) =>
-          prev.map((message) =>
-            message.id === answerId
-              ? ({
-                  ...message,
-                  blocks: [{ ...message.blocks[0], text: `${(message.blocks[0] as any).text}${chunk}` }],
-                } as Message.Message)
-              : message,
-          ),
-        );
-      }
+      while (!cancelled) {
+        const answer = Message.make({
+          sender: { role: 'assistant', name: 'Assistant' },
+          blocks: [{ _tag: 'text', text: '' }],
+        });
+        setMessages((prev) => [...prev, makeQuestion(), answer]);
+        setAnswerId(answer.id);
 
-      if (!cancelled) {
-        setStreaming(false);
+        for await (const chunk of textStream(createAnswer(), { wordsPerChunk, chunkDelay })) {
+          if (cancelled) {
+            return;
+          }
+          setMessages((prev) =>
+            prev.map((message) =>
+              message.id === answer.id
+                ? ({
+                    ...message,
+                    blocks: [{ ...message.blocks[0], text: `${(message.blocks[0] as any).text}${chunk}` }],
+                  } as Message.Message)
+                : message,
+            ),
+          );
+        }
+
+        setAnswerId(undefined);
+        // A beat between turns, so the end of an answer is distinguishable from the next question.
+        await new Promise((resolve) => setTimeout(resolve, TURN_DELAY));
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [streaming, answerId, wordsPerChunk, chunkDelay]);
+  }, [streaming, wordsPerChunk, chunkDelay]);
 
   return (
     <MessageList.Root

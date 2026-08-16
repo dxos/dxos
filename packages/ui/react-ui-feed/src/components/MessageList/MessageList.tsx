@@ -207,10 +207,17 @@ const MessageListRoot = ({
   // to how many messages exist.
   const totalSize = virtualizer.getTotalSize();
   useEffect(() => {
-    if (stickyBottom && atBottomRef.current) {
-      scrollToBottom({ behavior: stickyBehavior });
+    if (!stickyBottom || !atBottomRef.current) {
+      return;
     }
-  }, [stickyBottom, stickyBehavior, messages.length, totalSize, scrollToBottom]);
+
+    // A gliding follow that cannot keep up with the content would be left behind for good, so it
+    // reverts to an instant one once the tail is more than a screen away — the reader was not
+    // tracking that text anyway.
+    const gap = viewport ? viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight : 0;
+    const behavior = viewport && gap > viewport.clientHeight ? 'auto' : stickyBehavior;
+    scrollToBottom({ behavior });
+  }, [stickyBottom, stickyBehavior, messages.length, totalSize, scrollToBottom, viewport]);
 
   // Cmd/Ctrl + Arrow jumps to the first or last message; plain arrows stay with the scroll container
   // and with whatever the reader is interacting with inside an item. Bound imperatively to the
