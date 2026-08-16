@@ -5,3 +5,4 @@
 export * from './HtmlIsland';
 export * from './MarkdownIsland';
 export * from './highlight';
+export * from './selection-group';

@@ -21,7 +21,13 @@ import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { type MessageRenderer, type SearchHit, defaultRenderer } from '../../model';
-import { type HighlightRange, HtmlIsland, MarkdownIsland } from '../Island';
+import {
+  type HighlightRange,
+  HtmlIsland,
+  MarkdownIsland,
+  SelectionGroupContext,
+  createSelectionGroup,
+} from '../Island';
 
 /** Per-message chrome (avatar, timestamp, fork/rewind/reply controls), supplied by the host. */
 export type MessageChromeProps = PropsWithChildren<{
@@ -190,45 +196,50 @@ export const MessageList = composable<HTMLDivElement, MessageListProps>(
       [selectedIds, onSelectedIdsChange],
     );
 
+    // The feed has one selection even though it has many editors; the group is what enforces that.
+    const selectionGroup = useMemo(createSelectionGroup, []);
+
     return (
-      <div
-        {...composableProps(props, { classNames: 'relative overflow-y-auto' })}
-        data-testid='feed.viewport'
-        ref={handleViewportRef}
-      >
-        <div className='relative w-full' style={{ height: virtualizer.getTotalSize() }}>
-          {items.map((item) => {
-            const message = messages[item.index];
-            return (
-              <div
-                key={item.key}
-                // `measureElement` reads the real height after CodeMirror lays out, which is what
-                // keeps a variable-height island from drifting against its estimate.
-                ref={virtualizer.measureElement}
-                data-index={item.index}
-                data-object-id={message.id}
-                className='absolute inset-x-0 top-0'
-                style={{ transform: `translateY(${item.start}px)` }}
-              >
-                <Chrome
-                  message={message}
-                  index={item.index}
-                  selected={selectedIds?.has(message.id) ?? false}
-                  onSelect={handleSelect}
+      <SelectionGroupContext.Provider value={selectionGroup}>
+        <div
+          {...composableProps(props, { classNames: 'relative overflow-y-auto' })}
+          data-testid='feed.viewport'
+          ref={handleViewportRef}
+        >
+          <div className='relative w-full' style={{ height: virtualizer.getTotalSize() }}>
+            {items.map((item) => {
+              const message = messages[item.index];
+              return (
+                <div
+                  key={item.key}
+                  // `measureElement` reads the real height after CodeMirror lays out, which is what
+                  // keeps a variable-height island from drifting against its estimate.
+                  ref={virtualizer.measureElement}
+                  data-index={item.index}
+                  data-object-id={message.id}
+                  className='absolute inset-x-0 top-0'
+                  style={{ transform: `translateY(${item.start}px)` }}
                 >
-                  <Island
+                  <Chrome
                     message={message}
-                    renderer={renderer}
-                    registry={registry}
-                    streaming={message.id === streamingId}
-                    hits={hitsByMessage.get(message.id)}
-                  />
-                </Chrome>
-              </div>
-            );
-          })}
+                    index={item.index}
+                    selected={selectedIds?.has(message.id) ?? false}
+                    onSelect={handleSelect}
+                  >
+                    <Island
+                      message={message}
+                      renderer={renderer}
+                      registry={registry}
+                      streaming={message.id === streamingId}
+                      hits={hitsByMessage.get(message.id)}
+                    />
+                  </Chrome>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      </SelectionGroupContext.Provider>
     );
   },
 );

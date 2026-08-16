@@ -175,11 +175,6 @@ const DefaultStory = ({ count, streaming, estimateSize }: StoryProps) => {
           <Toolbar.Text>{query ? `${hits.length} hits` : ''}</Toolbar.Text>
           <IconButton icon='ph--magnifying-glass--regular' label='Find' onClick={handleFindNext} />
           <IconButton icon='ph--copy--regular' label='Copy range' onClick={handleCopySelection} />
-          <div className='grow' />
-          <Toolbar.Text classNames='text-xs text-description'>
-            {range ? `rows ${range.startIndex}–${range.endIndex} mounted` : ''} · {fps ?? '—'} fps · {selectedIds.size}{' '}
-            selected
-          </Toolbar.Text>
         </Toolbar.Root>
       </Panel.Toolbar>
 
@@ -199,9 +194,16 @@ const DefaultStory = ({ count, streaming, estimateSize }: StoryProps) => {
         />
       </Panel.Content>
 
-      {copied && (
-        <Panel.Statusbar classNames='max-h-24 overflow-auto p-2 text-xs whitespace-pre-wrap'>{copied}</Panel.Statusbar>
-      )}
+      <Panel.Statusbar classNames='flex items-center gap-4 px-2 text-xs text-description'>
+        <span data-testid='feed.range'>
+          {range
+            ? `messages ${range.startIndex}–${range.endIndex} of ${messages.length}`
+            : `${messages.length} messages`}
+        </span>
+        <span>{fps ?? '—'} fps</span>
+        <span>{selectedIds.size} selected</span>
+        {copied && <span className='truncate opacity-70'>copied: {copied.replace(/\s+/g, ' ').slice(0, 80)}…</span>}
+      </Panel.Statusbar>
     </Panel.Root>
   );
 };

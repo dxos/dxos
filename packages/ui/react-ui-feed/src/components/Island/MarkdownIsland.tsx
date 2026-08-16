@@ -17,6 +17,7 @@ import {
 } from '@dxos/ui-editor';
 
 import { type HighlightRange, highlights, highlightTheme, setHighlights } from './highlight';
+import { useSelectionGroup } from './selection-group';
 
 export type MarkdownIslandProps = {
   text: string;
@@ -41,15 +42,25 @@ export const MarkdownIsland = memo(({ text, editable = false, registry, hits }: 
   const [view, setView] = useState<EditorView | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
+  // Read through a ref so the group never lands in the extension deps: rebuilding extensions
+  // reconstructs the view, which would discard the selection the reader just made.
+  const selectionGroup = useSelectionGroup();
+  const selectionGroupRef = useRef(selectionGroup);
+  selectionGroupRef.current = selectionGroup;
+
   const extensions = useMemo<Extension[]>(
     () =>
       [
-        createBasicExtensions({ readOnly: !editable, lineWrapping: true }),
+        createBasicExtensions({ readOnly: !editable, editable, lineWrapping: true }),
         createThemeExtensions({ themeMode }),
         createMarkdownExtensions(),
         decorateMarkdown(),
         registry && xmlTags({ registry }),
-        !editable && EditorView.editable.of(false),
+        EditorView.updateListener.of((update) => {
+          if (update.selectionSet && !update.state.selection.main.empty) {
+            selectionGroupRef.current.claim(update.view);
+          }
+        }),
         highlights,
         highlightTheme,
       ].filter(Boolean) as Extension[],
@@ -71,9 +82,11 @@ export const MarkdownIsland = memo(({ text, editable = false, registry, hits }: 
       parent,
       state: EditorState.create({ doc: initialTextRef.current, extensions }),
     });
+    const unregister = selectionGroupRef.current.register(instance);
     setView(instance);
 
     return () => {
+      unregister();
       instance.destroy();
       setView(null);
     };
