@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { type Filter, Tag } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -70,12 +71,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Simple: Story = {
-  args: {
-    value: '#important',
-  },
-};
-
 export const Complex: Story = {
   args: {
     autoFocus: true,
@@ -94,5 +89,41 @@ export const Tags: Story = {
   args: {
     autoFocus: true,
     value: 'type:org.dxos.type.person #investor #new',
+  },
+};
+
+/**
+ * A tag behaves as a single object: text typed against either edge is separated from it by a space,
+ * the document keeps a trailing space to type into, and one forward-delete removes the whole chip.
+ * Driven through real keystrokes, since atomicity is enforced by CodeMirror's own cursor and delete
+ * commands rather than by the decorations the unit tests inspect.
+ */
+export const Atomic: Story = {
+  args: {
+    autoFocus: true,
+    value: '#important',
+  },
+  play: async ({ canvasElement }) => {
+    const content = await waitFor(() => {
+      const element = canvasElement.querySelector<HTMLElement>('.cm-content');
+      if (!element) {
+        throw new Error('Query editor content not found.');
+      }
+      return element;
+    });
+
+    await userEvent.click(content);
+    await waitFor(() => expect(content.textContent).toEqual('#important'));
+
+    // `keyboard`, not `type`: the latter clicks the element first, which would move the caret.
+    await userEvent.keyboard('{Home}X');
+    await waitFor(() => expect(content.textContent).toEqual('X #important '));
+
+    await userEvent.keyboard('{End}Y');
+    await waitFor(() => expect(content.textContent).toEqual('X #important Y '));
+
+    // Two deletes for `X ` and then a single one for the whole ten-character tag.
+    await userEvent.keyboard('{Home}{Delete}{Delete}{Delete}');
+    await waitFor(() => expect(content.textContent).toEqual(' Y '));
   },
 };
