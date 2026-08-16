@@ -117,6 +117,9 @@ const SMOOTH_SCROLL_LIMIT = 10;
 /** Distance from the tail within which scrolling counts as returning to the bottom. */
 const STICKY_THRESHOLD = 32;
 
+/** How long after a gesture a scroll is still attributable to the reader. */
+const GESTURE_WINDOW = 300;
+
 /**
  * Headless root of a feed: owns the virtualizer, the selection group and the model-to-item mapping.
  * Renders no DOM of its own, so a toolbar or statusbar that reads its state can sit outside the
@@ -188,35 +191,51 @@ const MessageListRoot = ({
     }
   }, [mounted, startIndex, endIndex, messages.length, onRangeChange]);
 
-  // Following is an intent, not a measurement.
+  // Following is an intent, and only the reader can withdraw it.
   //
-  // Deriving it from "is the tail within N pixels" reads the reader's position and the content's
-  // growth through the same number: a tail growing faster than the follow travels widens that gap,
-  // the list concludes the reader has scrolled away, and it stops following for good.
+  // Neither of the obvious signals can tell the reader apart from the machinery. Distance says a
+  // tail growing faster than the follow travels is a reader who scrolled away; direction says the
+  // same of a row above being re-measured smaller, or of the virtualizer correcting its own
+  // estimate — and either way the follow switches off for good and the feed stops following.
   //
-  // Direction is the honest signal instead. The follow only ever moves the viewport down, so an
-  // upward move is the reader; returning to the bottom is them opting back in.
+  // Input events can: the follow writes `scrollTop`, it does not turn wheels or press keys. So a
+  // scroll counts as the reader's only when a gesture preceded it, and returning to the tail — by
+  // any means — opts back in.
   const followRef = useRef(true);
-  const lastTopRef = useRef(0);
+  const gestureRef = useRef(0);
   useEffect(() => {
     if (!viewport) {
       return;
     }
 
+    const onGesture = () => {
+      gestureRef.current = performance.now();
+    };
+
     const onScroll = () => {
-      const top = viewport.scrollTop;
-      if (top < lastTopRef.current - 1) {
+      const atTail = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < STICKY_THRESHOLD;
+      if (atTail) {
+        followRef.current = true;
+      } else if (performance.now() - gestureRef.current < GESTURE_WINDOW) {
         followRef.current = false;
         follower?.cancel();
-      } else if (viewport.scrollHeight - top - viewport.clientHeight < STICKY_THRESHOLD) {
-        followRef.current = true;
       }
-      lastTopRef.current = top;
     };
 
     onScroll();
     viewport.addEventListener('scroll', onScroll, { passive: true });
-    return () => viewport.removeEventListener('scroll', onScroll);
+    // Every way a reader can move a scroll container by hand: the wheel, a touch drag, the keyboard,
+    // and a pointer on the scrollbar itself.
+    for (const event of ['wheel', 'touchmove', 'keydown', 'pointerdown'] as const) {
+      viewport.addEventListener(event, onGesture, { passive: true });
+    }
+
+    return () => {
+      viewport.removeEventListener('scroll', onScroll);
+      for (const event of ['wheel', 'touchmove', 'keydown', 'pointerdown'] as const) {
+        viewport.removeEventListener(event, onGesture);
+      }
+    };
   }, [viewport, follower]);
 
   const scrollToIndex = useCallback(
@@ -262,6 +281,13 @@ const MessageListRoot = ({
   const positioned = useRef(false);
   const totalSize = virtualizer.getTotalSize();
   useEffect(() => {
+    // Why a follow is or is not running is invisible from the outside — the state lives in refs and
+    // an animation frame — and every wrong guess about it costs a round of debugging. Published on
+    // the element so it can be read from the console: `$0.__feed`.
+    if (viewport) {
+      (viewport as any).__feed = { follower, following: followRef.current, positioned: positioned.current };
+    }
+
     if (!follower || !stickyBottom || !followRef.current) {
       follower?.stop();
       return;
@@ -279,7 +305,7 @@ const MessageListRoot = ({
     }
 
     follower.start();
-  }, [follower, stickyBottom, stickyBehavior, messages.length, totalSize, scrollToBottom]);
+  }, [follower, stickyBottom, stickyBehavior, messages.length, totalSize, scrollToBottom, viewport]);
 
   // Cmd/Ctrl + Arrow jumps to the first or last message; plain arrows stay with the scroll container
   // and with whatever the reader is interacting with inside an item. Bound imperatively to the
