@@ -64,6 +64,12 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
 - [x] Streaming content — `streamTurn` (testing) emits a turn as the blocks a model actually sends:
       a status that is later removed, reasoning inside an unclosed tag that is closed on completion,
       a tool call, its result, the answer, then suggestions. The Assistant scenario streams it.
+- [x] Widget resize must re-measure the document — CodeMirror measures a block widget once, at mount,
+      so a portal whose React content grows later (a disclosure opening) left the editor with a stale
+      height and the lines below drew **over** the widget. `MarkdownItem` now observes the portal
+      roots and calls `view.requestMeasure()`; the row follows through the virtualizer's observer.
+      The widgets also open with `duration={0}` — an animated height is measured on every frame by
+      both observers, which dragged every row below through a dozen positions.
 - [ ] Reconcile a document that shrinks — `MarkdownItem` appends when the new text extends the old
       and otherwise **replaces the whole document**, which the block turn now triggers twice per
       turn (status removed, reasoning tag closed). A replace discards decorations and widget state;

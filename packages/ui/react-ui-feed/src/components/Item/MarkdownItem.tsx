@@ -138,6 +138,25 @@ export const MarkdownItem = memo(({ text, editable = false, registry, hits }: Ma
     view?.dispatch({ effects: setHighlights.of(hits ?? []) });
   }, [view, hits]);
 
+  // A block widget is measured once, when CodeMirror mounts it. Its content is React rendered into a
+  // portal, so anything that changes height afterwards — a disclosure opening, an image loading —
+  // leaves the editor holding a stale height and drawing the lines below it over the widget.
+  //
+  // Observing the portal roots and asking for a re-measure is what keeps the document's geometry
+  // honest; the row's own height then follows through the virtualizer's observer.
+  useEffect(() => {
+    if (!view || !widgets.length) {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => view.requestMeasure());
+    for (const { root } of widgets) {
+      observer.observe(root);
+    }
+
+    return () => observer.disconnect();
+  }, [view, widgets]);
+
   return (
     <>
       <div ref={rootRef} />

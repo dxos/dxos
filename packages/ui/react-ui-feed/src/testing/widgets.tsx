@@ -27,9 +27,11 @@ import { mx } from '@dxos/ui-theme';
  * they open when they care. Reasoning and tool traces are long, incidental and frequent — rendering
  * them expanded turns a chat into a log.
  *
- * `TogglePanel` animates its own height, which the virtualizer measures through the item's
- * `ResizeObserver` — the row grows on open and the rows below it move, which is correct here because
- * it is the reader's own gesture rather than something happening under a scroll.
+ * Opened without animation (`duration={0}`) on purpose. Inside a virtualized list an animated height
+ * is measured on every frame it passes through — by CodeMirror, to re-place the lines under the
+ * widget, and by the virtualizer, to re-place the rows under the item — so a 250ms disclosure drags
+ * everything below it through a dozen intermediate positions. The reader asked for one change; make
+ * one.
  */
 const Panel = ({
   icon,
@@ -45,7 +47,7 @@ const Panel = ({
   const [open, setOpen] = useState(false);
 
   return (
-    <TogglePanel.Root open={open} onChangeOpen={setOpen}>
+    <TogglePanel.Root open={open} duration={0} onChangeOpen={setOpen}>
       <TogglePanel.Content classNames={mx('rounded border border-subdued-separator', classNames)}>
         <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
           <span className='grow text-description truncate'>{title}</span>
