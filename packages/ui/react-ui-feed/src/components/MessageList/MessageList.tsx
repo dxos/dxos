@@ -103,6 +103,9 @@ export type MessageListRootProps = PropsWithChildren<{
 
 const DefaultChrome = ({ children }: MessageChromeProps) => <>{children}</>;
 
+/** Rows beyond which a requested smooth scroll goes instantly instead; see `scrollToIndex`. */
+const SMOOTH_SCROLL_LIMIT = 10;
+
 /**
  * Headless root of a feed: owns the virtualizer, the selection group and the model-to-item mapping.
  * Renders no DOM of its own, so a toolbar or statusbar that reads its state can sit outside the
@@ -165,11 +168,17 @@ const MessageListRoot = ({
 
   const scrollToIndex = useCallback(
     (index: number, { align = 'start', behavior = 'auto' }: ScrollToOptions = {}) => {
-      // The virtualizer refuses to animate under dynamic measurement (it warns and scrolls
-      // instantly), so a smooth scroll is driven from the offset it computes. For a row that has
-      // not been measured yet that offset is an estimate, and the landing corrects once the row
-      // mounts — fine for stepping between neighbours, visible when jumping across thousands.
-      const offset = behavior === 'smooth' ? virtualizer.getOffsetForIndex(index, align)?.[0] : undefined;
+      // A smooth scroll is driven from the offset the virtualizer computes, because the virtualizer
+      // itself refuses to animate under dynamic measurement (it warns and scrolls instantly).
+      //
+      // Beyond a few rows that offset is an estimate for everything not yet measured, so the
+      // animation travels to the wrong place and corrects on arrival. A far jump therefore goes
+      // instantly — the reader loses no continuity across a distance they could not have followed.
+      const distance = Math.abs(index - (virtualizer.range?.startIndex ?? 0));
+      const offset =
+        behavior === 'smooth' && distance <= SMOOTH_SCROLL_LIMIT
+          ? virtualizer.getOffsetForIndex(index, align)?.[0]
+          : undefined;
       if (offset !== undefined && viewport) {
         viewport.scrollTo({ top: offset, behavior: 'smooth' });
       } else {
@@ -193,6 +202,36 @@ const MessageListRoot = ({
       scrollToBottom();
     }
   }, [stickyBottom, messages.length, scrollToBottom]);
+
+  // Cmd/Ctrl + Arrow jumps to the first or last message; plain arrows stay with the scroll container
+  // and with whatever the reader is interacting with inside an item. Bound imperatively to the
+  // viewport element (rather than as a React prop) because `ScrollArea.Viewport` narrows its props
+  // to the slottable set, and wrapping it in a focusable div would insert a box into the height
+  // chain. `scrollToIndex` decides whether the jump animates.
+  useEffect(() => {
+    if (!viewport) {
+      return;
+    }
+
+    // The items are non-editable, so nothing inside the list takes focus on its own; the viewport
+    // has to be focusable for the keymap to have somewhere to land.
+    viewport.tabIndex = 0;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) {
+        return;
+      }
+      const target = event.key === 'ArrowDown' ? messages.length - 1 : event.key === 'ArrowUp' ? 0 : undefined;
+      if (target === undefined) {
+        return;
+      }
+
+      event.preventDefault();
+      scrollToIndex(target, { align: target === 0 ? 'start' : 'end', behavior: 'smooth' });
+    };
+
+    viewport.addEventListener('keydown', onKeyDown);
+    return () => viewport.removeEventListener('keydown', onKeyDown);
+  }, [viewport, messages.length, scrollToIndex]);
 
   // Hits are grouped once per pass rather than filtered per item, so a search over a long feed
   // stays O(hits) instead of O(hits × visible messages).
