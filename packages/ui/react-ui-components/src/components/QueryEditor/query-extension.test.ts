@@ -16,9 +16,10 @@ const tags: Tag.Map = { [tag.id]: tag };
 const hue = tag.hue ?? getHashHue(tag.id);
 
 /**
- * A tag has two renderings: a widget that REPLACES the text, and marks drawn OVER it. The second
- * exists only because an atomic widget cannot be edited character by character — so the tag switches
- * to marks exactly while it is being composed (the caret at its trailing edge), and back otherwise.
+ * A tag is one object: a widget REPLACES its text, atomically, wherever the caret is — including at
+ * the tag's own edges, so Backspace against it removes the whole chip rather than a character of the
+ * label. It is still typed a character at a time, since an insertion at the range's boundary lands
+ * outside it and grows the node.
  */
 describe('tag rendering', () => {
   test('is an atomic chip when the caret is elsewhere', async () => {
@@ -37,12 +38,11 @@ describe('tag rendering', () => {
     view.destroy();
   });
 
-  test('is marks while it is being composed, so the text stays editable', async () => {
+  test('stays an atomic chip with the caret at its trailing edge', async () => {
+    // Regression: the caret lands here both while the tag is being typed and after `End`, and an
+    // exception for it left Backspace deleting a character of the label instead of the whole tag.
     const view = await viewOf('#important', 10);
-    const ranges = decorationsOf(view);
-    expect(ranges.every((range) => !range.atomic)).toBe(true);
-    // The chip's four boxes: outer, bordered inner, the `#` badge, the label.
-    expect(ranges.map(({ from, to }) => `${from}-${to}`).sort()).toEqual(['0-1', '0-10', '0-10', '1-10']);
+    expect(decorationsOf(view)).toMatchObject([{ from: 0, to: 10, atomic: true }]);
     view.destroy();
   });
 
@@ -54,36 +54,17 @@ describe('tag rendering', () => {
     view.destroy();
   });
 
-  test('only the tag under the caret is marks; the rest stay chips', async () => {
+  test('every tag is a chip, wherever the caret is', async () => {
     const view = await viewOf('#alpha #beta', 12);
     const ranges = decorationsOf(view);
-    expect(ranges.filter((range) => range.atomic).map(({ from, to }) => [from, to])).toEqual([[0, 6]]);
+    expect(ranges.filter((range) => range.atomic).map(({ from, to }) => [from, to])).toEqual([
+      [0, 6],
+      [7, 12],
+    ]);
     view.destroy();
   });
-});
 
-/**
- * The two renderings have to be the same shape, or the tag visibly changes as the caret enters and
- * leaves it. Both are built from `chipClasses`, and this renders them to prove it holds end to end.
- */
-describe('the two renderings are the same chip', () => {
-  test('same class chain, part for part', async () => {
-    const view = await viewOf('#important', 10);
-    const marked = chipShape(view.contentDOM.querySelector('.cm-line')!);
-
-    const blurred = await viewOf('#important', 0);
-    blurred.contentDOM.dispatchEvent(new FocusEvent('blur'));
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-    const replaced = chipShape(blurred.contentDOM.querySelector('.cm-line')!);
-
-    // Guard the comparison itself: two empty chains would otherwise "match".
-    expect(marked).toHaveLength(4);
-    expect(marked).toEqual(replaced);
-    view.destroy();
-    blurred.destroy();
-  });
-
-  test('the label is rendered once, either way', async () => {
+  test('the label is rendered once', async () => {
     const view = await viewOf('#important', 10);
     expect(view.contentDOM.textContent).toBe('#important');
     view.destroy();
@@ -118,7 +99,9 @@ describe('buildQueryDecorations', () => {
 
   test('the chip is drawn in the tag hue', async () => {
     const view = await viewOf('#important', 10);
-    expect(decorationsOf(view).some((range) => range.class?.includes(hue))).toBe(true);
+    // The hue lives in the widget's own DOM, so it is read off the rendered chip rather than a spec.
+    const classes = [...view.contentDOM.querySelectorAll('span')].map((el) => el.className);
+    expect(classes.some((className) => className.includes(hue))).toBe(true);
     view.destroy();
   });
 });
@@ -191,7 +174,3 @@ const decorationsOf = (view: EditorView) => {
 
   return ranges;
 };
-
-/** The class of every element from the tag's outermost box down to its innermost, in order. */
-const chipShape = (root: Element): string[] =>
-  [...root.querySelectorAll('span')].map((el) => el.className).filter(Boolean);

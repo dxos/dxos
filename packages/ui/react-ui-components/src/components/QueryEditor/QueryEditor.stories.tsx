@@ -93,15 +93,15 @@ export const Tags: Story = {
 };
 
 /**
- * A tag behaves as a single object: text typed against either edge is separated from it by a space,
- * the document keeps a trailing space to type into, and one forward-delete removes the whole chip.
- * Driven through real keystrokes, since atomicity is enforced by CodeMirror's own cursor and delete
- * commands rather than by the decorations the unit tests inspect.
+ * A tag behaves as a single object: one Backspace or Delete removes the whole chip, and text typed
+ * against either edge is separated from it by a space, with a trailing space always left to type
+ * into. Driven through real keystrokes, since atomicity is enforced by CodeMirror's own cursor and
+ * delete commands rather than by the decorations the unit tests inspect.
  */
 export const Atomic: Story = {
   args: {
     autoFocus: true,
-    value: '#important',
+    value: '#test',
   },
   play: async ({ canvasElement }) => {
     const content = await waitFor(() => {
@@ -112,18 +112,32 @@ export const Atomic: Story = {
       return element;
     });
 
+    // The placeholder renders inside the content element, so an empty document is not empty text.
+    const doc = () => (content.querySelector('.cm-placeholder') ? '' : content.textContent);
+
     await userEvent.click(content);
-    await waitFor(() => expect(content.textContent).toEqual('#important'));
+    await waitFor(() => expect(doc()).toEqual('#test'));
 
     // `keyboard`, not `type`: the latter clicks the element first, which would move the caret.
+    // The caret at the tag's own edge is still in the tag, so one Backspace takes the whole chip.
+    await userEvent.keyboard('{End}{Backspace}');
+    await waitFor(() => expect(doc()).toEqual(''));
+
+    // Atomic does not mean uneditable: each character lands outside the replaced range and grows it,
+    // so the tag is still typed a character at a time. The chip renders the label the whole way.
+    await userEvent.keyboard('#te');
+    await waitFor(() => expect(doc()).toEqual('#te '));
+    await userEvent.keyboard('st');
+    await waitFor(() => expect(doc()).toEqual('#test '));
+
+    // Typed text is never glued to a chip, in either direction.
     await userEvent.keyboard('{Home}X');
-    await waitFor(() => expect(content.textContent).toEqual('X #important '));
-
+    await waitFor(() => expect(doc()).toEqual('X #test '));
     await userEvent.keyboard('{End}Y');
-    await waitFor(() => expect(content.textContent).toEqual('X #important Y '));
+    await waitFor(() => expect(doc()).toEqual('X #test Y '));
 
-    // Two deletes for `X ` and then a single one for the whole ten-character tag.
+    // Two deletes for `X `, then a single one for the whole five-character tag.
     await userEvent.keyboard('{Home}{Delete}{Delete}{Delete}');
-    await waitFor(() => expect(content.textContent).toEqual(' Y '));
+    await waitFor(() => expect(doc()).toEqual(' Y '));
   },
 };

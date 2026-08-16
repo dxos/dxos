@@ -56,11 +56,6 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
       return hasFocus && range && (state.selection.main.from > 0 || range.to - range.from > 0);
     };
 
-    // A tag is atomic everywhere except at its trailing edge, which is the only position from which it
-    // can still be composed — `#` then label characters. Atomic ranges keep the caret from landing
-    // anywhere else inside it, so this position is reachable only while typing the tag.
-    const isComposing = ({ to }: Range) => hasFocus && state.selection.main.empty && state.selection.main.head === to;
-
     // Collected rather than fed straight to a `RangeSetBuilder`, which demands ascending `from`:
     // the bare-`#` ranges below come from a document scan and interleave with the tree's own.
     const collected: { from: number; to: number; deco: Decoration }[] = [];
@@ -123,19 +118,15 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
               const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
               const tag = Tag.findTagByLabel(tags, label);
               const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
-              if (isComposing(tagNode)) {
-                // While the tag is being typed the text has to stay live and editable, so the chip is painted with
-                // marks over it rather than replacing it. `tagMarks` mirrors `TagWidget` class for
-                // class, so the tag does not change shape as the caret enters or leaves it.
-                for (const mark of tagMarks(node.from, node.to, hue)) {
-                  deco.add(mark.from, mark.to, mark.deco);
-                }
-              } else {
-                // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range that
-                // starts at offset 0 paints before that offset's coordinate and the caret draws to its
-                // right — pressing Home appeared to leave the caret after the tag.
-                deco.add(node.from, node.to, Decoration.replace({ widget: new TagWidget(label, hue), atomic: true }));
-              }
+              // Atomic in every caret position, including its own edges: a tag is one object, so
+              // Backspace against it removes the whole chip rather than a character of the label. The
+              // tag is still typed a character at a time — an insertion at the range's boundary lands
+              // outside it, growing the node, and the chip re-renders with the longer label.
+              //
+              // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range that
+              // starts at offset 0 paints before that offset's coordinate and the caret draws to its
+              // right — pressing Home appeared to leave the caret after the tag.
+              deco.add(node.from, node.to, Decoration.replace({ widget: new TagWidget(label, hue), atomic: true }));
             }
             break;
           }
@@ -314,42 +305,13 @@ const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
   return Domino.of('span').classNames(CHIP_OUTER).append(inner).root;
 };
 
-/**
- * A tag chip's parts, keyed by the nesting {@link container} produces.
- *
- * Single source for both of the tag's renderings — {@link TagWidget} when the caret is elsewhere,
- * {@link tagMarks} over live text when it is not. Anything that drifts between them shows up as the
- * tag changing shape as the caret enters or leaves it, so neither builds its own classes.
- */
+/** A tag chip's parts, keyed by the nesting {@link container} produces. */
 const chipClasses = (hue: string) => {
-  const { bg, fg, border, surface } = getStyles(hue);
+  const { bg, fg, surface } = getStyles(hue);
   return {
-    outer: CHIP_OUTER,
-    inner: mx(CHIP_INNER, border),
     hash: mx('flex items-center px-1 text-black text-xs', bg),
     label: mx('flex items-center px-1 text-sm', surface, fg),
   };
-};
-
-/**
- * The chip drawn as marks, so the text underneath stays editable.
- *
- * Ranges are returned outermost first; `buildQueryDecorations` sorts equal starts widest-first and
- * `Array.prototype.sort` is stable, so this order is the nesting order.
- */
-const tagMarks = (from: number, to: number, hue: string): { from: number; to: number; deco: Decoration }[] => {
-  const classes = chipClasses(hue);
-  const marks = [
-    { from, to, deco: Decoration.mark({ class: classes.outer }) },
-    { from, to, deco: Decoration.mark({ class: classes.inner }) },
-    { from, to: from + 1, deco: Decoration.mark({ class: classes.hash }) },
-  ];
-  // A bare `#` has no label yet, and an empty range is not a decoration.
-  if (to > from + 1) {
-    marks.push({ from: from + 1, to, deco: Decoration.mark({ class: classes.label }) });
-  }
-
-  return marks;
 };
 
 /**
