@@ -70,7 +70,7 @@ stdout as context the agent reads. Every other event needs
 | `~/.claude/hooks/guard-branch.sh`, `deny-git-worktree-add.sh`                                                     | `PreToolUse(Bash)`        | deny           | derived                                   |
 | `~/.claude/hooks/guard-worktree.sh` + [repo copy](./hooks/guard-worktree.sh)                                      | `PreToolUse(Edit\|Write)` | deny           | derived                                   |
 | [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)   | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode`    |
-| `dx` plugin → `hooks/track.sh` ([tools/claude/plugins/dxos-project](../tools/claude/plugins/dxos-project))                            | `UserPromptSubmit`        | agent          | persisted, backend-resolved (registry)    |
+| `dxos` plugin → `hooks/track.sh` ([tools/claude/plugins/dxos](../tools/claude/plugins/dxos))                            | `UserPromptSubmit`        | agent          | persisted, backend-resolved (registry)    |
 | [`AGENTS.md`](../AGENTS.md) (+ `CLAUDE.md` / `GEMINI.md` symlinks), [`CLAUDE.md`](./CLAUDE.md)                    | —                         | agent          | static                                    |
 | `skills/` → `../.agents/skills/` (25)                                                                             | —                         | agent          | on demand                                 |
 | [`agents/`](./agents) (2), [`commands/`](./commands) (2)                                                          | —                         | agent          | on demand                                 |
@@ -147,7 +147,7 @@ A sentinel is a **marker typed inside a normal message** that a
 | Marker                          | Hook                                 | Effect                                                     |
 | ------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
 | `/mode terse` / `/mode normal`  | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (see aliases below)            |
-| `/dxos-project:project VERB [ARGS]`       | `dx` plugin (see below)              | task-planning: list / tasks / new / end / track / hydrate / resume |
+| `/dxos:project VERB [ARGS]`       | `dxos` plugin (see below)              | task-planning: list / tasks / new / end / track / hydrate / resume |
 
 They exist because a hook can act on them **before the model runs**, which makes
 the state change deterministic rather than dependent on the agent complying.
@@ -178,7 +178,8 @@ value cannot wedge the machine — anything that is not `terse` means `normal`.
 **`mode.sh context` emits in BOTH states.** This is the point of the mechanism,
 not an implementation detail: the invariants it carries — number every question,
 lead with the answer — are state-independent, and only the length clause varies
-(`terse` caps a reply at 8 lines; `normal` sets no budget). A mode that stays
+(`terse` asks for 1–2 sentences plus a flat numbered list of follow-ups;
+`normal` sets no budget). A mode that stays
 silent in its default state delivers nothing on the turns that make up most of a
 session, which is exactly how the earlier version failed. The rules themselves
 are canonical in [`AGENTS.md`](../AGENTS.md) → "Responding to the user".
@@ -225,6 +226,33 @@ the raw `/name …` text one step earlier — grep it there and the command name
 just ergonomics over a deterministic write. `/mode` is built this way; see
 §Sentinels.
 
+### Plugins
+
+`/dxos:project` ships in the `dxos` plugin
+([tools/claude/plugins/dxos](../tools/claude/plugins/dxos)),
+published through the `dxos` marketplace declared at the repo root in
+[`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json).
+
+**A fresh clone needs one manual command.** `settings.json` carries both halves of
+the wiring, but they do different jobs and only one of them is automatic:
+
+| Key                       | Effect                                     |
+| ------------------------- | ------------------------------------------ |
+| `extraKnownMarketplaces`  | registers the marketplace — happens for you |
+| `enabledPlugins`          | enables the plugin **once installed**       |
+
+Neither installs it. Until you run the command below, `claude plugin marketplace
+list` shows `dxos` while `claude plugin list` is empty, and every invocation
+answers `Unknown command: /dxos:project`:
+
+```bash
+claude plugin install dxos@dxos
+```
+
+Verified 2026-08-15 by driving `list` and `track` with `claude -p` from a scratch
+repo outside the monorepo — which is also the cheapest way to test plugin changes
+without restarting a session.
+
 ### Skills
 
 Skills are directories under `.agents/skills/` (surfaced to the harness via the
@@ -235,6 +263,6 @@ until invoked, then large. Treat their size as a cost — see the note in §A.
 ### References
 
 - Hook event + JSON reference: https://code.claude.com/docs/en/hooks
-- Task-planning workflow: `tools/claude/plugins/dxos-project/skills/task-planning/SKILL.md`
+- Task-planning workflow: `tools/claude/plugins/dxos/skills/task-planning/SKILL.md`
 - Design rationale for the per-turn injection model:
   `.agents/projects/agent-directives/DESIGN.md`
