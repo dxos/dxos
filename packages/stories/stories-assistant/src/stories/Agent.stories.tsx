@@ -14,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { AgentModule, StoryRole, getChatProcessor } from '../modules';
+import { AgentModule, StoryRole } from '../modules';
 import { ModuleContainer, createDecorators, storyParameters } from '../testing';
 
 /**
@@ -118,19 +118,24 @@ export const WithSidecar: Story = {
       });
       messages.push(message);
       await EffectEx.runPromise(Feed.append(feed, [message]).pipe(Effect.provide(database)));
-      // The thread renders the processor's in-memory messages, not the feed, so the turn has to be
-      // handed over as well as persisted.
-      getChatProcessor()?.present([message]);
     }
 
     await expect(end?.error, 'the SDK loop failed').toBeUndefined();
 
-    // 1. The turn reached the chat's feed and was handed to the processor.
+    // 1. The turn reached the RENDERED thread.
     //
-    // NOT asserted: that the thread then renders it. `AiChatProcessor.present` was added for exactly
-    // this (the thread reads in-memory atoms, not the feed) and the DOM assertion still fails, so
-    // something further along is unresolved — see TASKS.md before trying again.
+    // Scoped to `document.body`, not `canvasElement`: the module layout renders outside the story
+    // root, so a canvas-scoped query never sees the thread — which is what made this look for a long
+    // time like a broken render path rather than a mis-scoped assertion.
     await expect(messages.length, 'nothing reached the feed').toBeGreaterThan(0);
+    // Asserted against the document's text rather than a testing-library matcher: the token appears
+    // in several elements (the tool result and the assistant's prose), which makes `findByText`
+    // ambiguous, and markdown splits it across nodes.
+    const deadline = Date.now() + 30_000;
+    while (Date.now() < deadline && !document.body.innerText.includes(MAGIC_TOKEN)) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    await expect(document.body.innerText, 'the turn never reached the rendered thread').toContain(MAGIC_TOKEN);
 
     // 2. The allowed Read call and its result survived the trip, still correlated by name — the
     //    SDK omits the name on results, so this is the projection's stateful correlation working

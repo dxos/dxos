@@ -63,84 +63,46 @@ M2 gotchas worth remembering:
 - `storybook/test`'s `expect` is jest-style and returns a promise — `.to.be.true`
   type-errors and un-awaited assertions trip `no-floating-promises`.
 
-## FINDING — `Feed.append` alone does NOT render in the Chat surface
+## RESOLVED — the render path was never broken (2026-08-15)
 
-Established 2026-08-15 by dumping the projected frames instead of guessing. Two
-separate problems were tangled:
+`Feed.append` onto `Chat.feed` renders in the existing Chat surface. The M2 claim
+stands. Three successive diagnoses were wrong; the actual fault was in the test.
 
-1. **Test bug (FIXED).** The SDK's `Read` requires an absolute path, so the
-   agent's first relative attempt fails and it retries. The story asserted on the
-   FIRST `Read` call, whose result carries that error. It now selects the
-   succeeding pair. With the render assertion removed the story is green
-   (19053ms, no retry, 31/31).
-2. **Real defect (OPEN).** With that fixed, the DOM assertion STILL fails: the
-   messages are on `Chat.feed`, the projection is correct, and the thread does
-   not show them. **So the M2 claim that projected messages render in the
-   existing Chat surface with no plugin change is FALSE as it stands.** Writing
-   to `Chat.feed` is necessary but not sufficient — `useChatProcessor` evidently
-   owns something more (a queue, a `threadId` partition, or a reactivity path)
-   that an external writer has to participate in.
+What settled it — dumping every stage instead of theorising:
 
-This is what the M2 milestone was meant to discover, and it lands the
-`plugin-assistant` change that option 4 budgeted for back on the table.
+```
+DIAG {"appended":9,"feedQuery":9,"reachable":9,
+      "domChars":1309,"domHasToken":true,
+      "domSample":"… I'll read the fixture file first. Calling Read Success Read …"}
+```
 
-ROOT CAUSE FOUND (from the code, not a hypothesis):
-`AiChatProcessor.messages` is `Atom.make((get) => [...get(#pending),
-...get(#streaming)])` — both in-memory atoms the processor fills as it services
-its OWN request. Nothing reads the feed back. A writer that only calls
-`Feed.append` therefore persists a turn the thread can never show.
+Messages reach the feed, the reactive query returns them, `Feed.history` keeps
+them, and they ARE in the DOM.
 
-DONE toward the fix:
+The assertions were at fault, twice over:
 
-- `AiChatProcessor.present(messages)` — pushes externally-produced messages into
-  `#pending` so the thread can show them. Small, documented, in
-  `plugin-assistant/src/processor/processor.ts`.
-- `getChatProcessor()` exported from the story harness's `ChatModule`, so a play
-  function can reach the live processor.
-- The story now persists AND calls `present()`.
+1. **Scope.** `within(canvasElement)` does not see the thread — the module layout
+   renders outside the story root. `document.body` does.
+2. **Matcher.** `findByText` is ambiguous here: the token appears in both the tool
+   result and the assistant's prose, and markdown splits text across nodes.
+   Asserting on `document.body.innerText` is what works.
 
-STILL FAILING: with both in place the DOM assertion continues to fail (~75s).
-The story is green because that assertion is removed again. Untested guesses for
-whoever picks this up — verify before believing any of them:
+Retracted, so nobody rebuilds on them:
 
-1. `getChatProcessor()` may return `undefined` in the play function (module-level
-   capture across separate module instances). Log it first.
-2. The `Chat` component may not subscribe to `processor.messages` via the atom
-   registry the story renders with.
-3. `#pending` may be reset by the processor's own lifecycle after `present`.
+- ~~"`AiChatProcessor.messages` reads in-memory atoms, never the feed."~~ `Chat.tsx`
+  composes `feedMessages` (a reactive query) with the processor's atoms.
+- ~~"`AgentService` is the only supported door."~~ It is how the assistant drives a
+  turn, not a precondition for a message rendering.
+- `AiChatProcessor.present()` was added on the first of these and has been
+  **removed** along with the `getChatProcessor` story hook.
 
-METHOD NOTE: five hypothesis-driven attempts failed on this; one diagnostic dump
-of the projected frames solved the other bug in a single run. Dump state first.
+CONSEQUENCE FOR M3c: no new seam is needed. Routing Composer's chat input to the
+sidecar plus `Feed.append` is the whole job. The ~1,100-line `AgentService`
+route is only required if a turn must join process lifecycle (cancellation,
+hydration, delegation, background tools).
 
-## Superseded — earlier regression notes (2026-08-15)
-
-`moon run stories-assistant:test-storybook-live` fails. It was green at
-`4faed14287`/`92c988b1bf` (13045ms, no retry) and broke while extracting the
-browser client and reworking assertion 1. **CI is unaffected** — the story is
-`manual`-tagged and excluded from `test-storybook`.
-
-Diagnoses tried and DISPROVEN, so nobody repeats them:
-
-1. Model phrasing — asserting the literal `DONE` was genuinely fragile, but
-   replacing it did not fix the failure.
-2. Markdown rendering splitting text nodes — normalising both sides did not fix
-   it.
-3. Dual `@dxos/types` instance via the client subpath — moving `Message.make`
-   back into the story did not fix it.
-4. Making the client fully dependency-free — did not fix it.
-5. Resource contention from a concurrent composer dev server — fails identically
-   without it.
-
-Current state: with the DOM assertion removed entirely it STILL fails at ~45s,
-which means the failure is now in assertion 2 or 3 (Read call/result
-correlation, or the denial), not rendering. Two separate problems are likely
-tangled. The prompt also changed (asks for MAGIC_TOKEN) and `maxTurns: 8` may end
-the run before Bash is attempted, leaving `denied` undefined.
-
-NEXT: run it once with the frames dumped to console before assuming anything.
-The clean alternative is reverting `Agent.stories.tsx` to `92c988b1bf` (needs
-burdon's approval — never revert uncommitted work unasked) and re-landing the
-client extraction separately.
+METHOD: five hypothesis-driven attempts failed here; one staged dump ended it.
+Dump state before the second hypothesis.
 
 ## M3 — a turn you can watch (M3a + interactive UI DONE)
 

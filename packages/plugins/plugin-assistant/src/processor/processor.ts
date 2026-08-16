@@ -276,18 +276,6 @@ export class AiChatProcessor {
     return this._options.system ?? '';
   }
 
-  /**
-   * Surfaces messages that reached the conversation's feed by some route other than this
-   * processor's own request flow — an external agent host, say.
-   *
-   * Necessary because {@link AiChatProcessor.messages} is composed from in-memory atoms this
-   * processor fills as it runs a request; it does not read the feed back. A writer that only calls
-   * `Feed.append` therefore persists a turn that the thread never shows.
-   */
-  present(messages: readonly Message.Message[]): void {
-    this.#registry.update(this.#pending, (pending) => [...pending, ...messages]);
-  }
-
   async getTools(): Promise<Record<string, any>> {
     return this._runtime.runPromise(
       Effect.provide(this._conversation.getTools(), ToolExecutionServices).pipe(Effect.provide(this._spaceLayer)),

@@ -23,18 +23,6 @@ export const ChatModule = () => {
   return <ChatModuleContainer space={space} />;
 };
 
-/** `plugin-assistant` has no `./processor` entry, so the type is taken from the hook's return. */
-type ChatProcessor = NonNullable<ReturnType<typeof useChatProcessor>>;
-
-/**
- * The processor the module last rendered, so a story's play function can reach it. The thread reads
- * the processor's in-memory messages rather than the feed, so an externally-produced turn has to be
- * handed to it — see `AiChatProcessor.present`.
- */
-let currentProcessor: ChatProcessor | undefined;
-
-export const getChatProcessor = (): ChatProcessor | undefined => currentProcessor;
-
 const ChatModuleContainer = ({ space }: { space: Space }) => {
   const { preset, ...chatProps } = usePresets({});
 
@@ -44,7 +32,6 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
   const registry = useRegistry();
   const runtime = useProcessManagerRuntime();
   const processor = useChatProcessor({ runtime, space, chat, preset, registry });
-  currentProcessor = processor;
 
   // Honor the view mode selected in ChatOptions (persisted on `chat.viewType`). Subscribe via
   // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.
