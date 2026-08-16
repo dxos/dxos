@@ -182,6 +182,46 @@ sufficient.
 - [ ] Route the Assistant chat input to the sidecar so a typed prompt runs a turn.
 - [ ] Exit: burdon types in Composer and sees the agent answer.
 
+## M3c — IN PROGRESS (2026-08-15)
+
+DONE and green:
+
+- [x] `TurnProducer` factoring in `agent-runtime` (`turn-producer.ts`) — two
+      members plus an optional lifecycle; `AiSession.Session` satisfies it
+      structurally, so the default path is unchanged. `agent-process` takes
+      `makeTurnProducer`; `AgentServiceOptions` threads it through.
+      agent-runtime 30 passed | 19 skipped.
+- [x] `@dxos/agent-claude/producer` — reaches the host over HTTP, appends each
+      streamed message to the feed, replays history via the SDK's `resume`.
+      Binds no DXOS skills (the SDK owns tool binding).
+- [x] `AssistantCapabilities.AgentTurnProducer` — a registry mirroring
+      `AgentDelegationStrategy`, read by `AgentServiceSpec` when its layer
+      materializes.
+- [x] `AgentClaudePlugin` in the story harness contributing it at Startup.
+
+BLOCKED — `WithClaudeAgent` does not work:
+
+With the producer contributed the story never reaches a space or a chat (60s,
+both waits time out), while `WithSidecar` — the same plugin stack without the
+producer — passes. **The producer module never appears in the activation log**,
+so the suspicion is that it does not activate at all rather than that it fails.
+
+The story is tagged `!test` so the suite stays green rather than red; it is an
+artifact for the next session, not a passing test.
+
+Leads, UNTESTED — dump before believing any of them:
+
+1. The module never activates. `Plugin.make(builder)()` was needed to turn the
+   builder into a `Plugin` (a plain builder is not assignable); check the plugin
+   is actually in `enabled` and that the Startup pass reaches it.
+2. `provides: [AgentTurnProducer]` may make the module's activation a dependency
+   of something that never resolves, stalling the startup pass — `WithSidecar`
+   does not declare it.
+3. Importing `@dxos/agent-claude/producer` may fail in the browser (new export
+   entry); a module whose import throws would explain silence in the log.
+
+NEXT: confirm which, with a dump — not a fourth theory.
+
 ## Backlog
 
 - [ ] **Tree-based chat UI**: multiple threads via a sidebar selector, quick

@@ -15,7 +15,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { AgentModule, StoryRole } from '../modules';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing';
+import { AgentClaudePlugin, ModuleContainer, createDecorators, storyParameters } from '../testing';
 
 /**
  * The turn asks for one allowed tool call (Read), one that the M1 permission posture must refuse
@@ -205,4 +205,25 @@ export const ConsoleModule: Story = {
  */
 export const Console: Story = {
   render: () => <AgentModule />,
+};
+
+/**
+ * The assistant's OWN chat, with turns produced by the Claude Agent SDK instead of `AiSession`.
+ *
+ * This is the end state M3c is after: the sidecar wired in as a `TurnProducer`, so the normal chat
+ * input drives it and the normal Chat surface renders it — no bespoke console, no writing to the
+ * feed from outside.
+ *
+ * NOT WORKING YET, and excluded from the suite (`!test`) rather than left red. With the producer
+ * contributed the story never reaches a space or a chat (60s, both waits time out), while
+ * {@link WithSidecar} — same stack, no producer — passes. The producer module does not appear in the
+ * activation log at all, so the suspicion is that it never activates rather than that it fails.
+ * Diagnose that before touching anything else; see TASKS.md.
+ */
+export const WithClaudeAgent: Story = {
+  tags: ['!test'],
+  decorators: createDecorators({ onInit: captureSpace, plugins: [AgentClaudePlugin] }),
+  args: {
+    layout: [[StoryRole.Chat], [StoryRole.Logging]],
+  },
 };
