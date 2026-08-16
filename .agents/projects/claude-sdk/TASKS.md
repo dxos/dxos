@@ -115,7 +115,7 @@ calls, same session id (continuation, not restart).
 
 How to run it:
 
-```
+```shell
 DX_AGENT_CWD=$PWD/packages/stories/stories-assistant/src/testing/fixtures \
   pnpm --filter @dxos/storybook-react exec storybook dev --port 9016 --no-open
 ```
@@ -153,9 +153,9 @@ them is what burned the previous session):
 absent from the interactive storybook. Add it there, guarded so it only mounts
 when the agent host is wanted.
 
-- [ ] Mount the middleware in `viteFinal`.
-- [ ] Verify by hand: open the Agent story at 9009, confirm the turn runs.
-- [ ] Exit: burdon can watch a real turn without waiting on M3b.
+- [x] Mount the middleware in `viteFinal` (opt-in via `DX_AGENT_CWD`).
+- [x] Verified by hand: the Agent story on port 9016 ran a real turn.
+- [x] Exit met: the owner can watch a real turn without waiting on M3b.
 
 ### M3b — the render path
 

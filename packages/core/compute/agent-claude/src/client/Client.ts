@@ -74,6 +74,7 @@ export const run = async function* ({
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  let terminated = false;
   for (;;) {
     const { done, value } = await reader.read();
     if (done) {
@@ -85,7 +86,21 @@ export const run = async function* ({
     // Whatever follows the last newline is an incomplete frame; hold it for the next chunk.
     buffer = lines.pop() ?? '';
     for (const line of lines.filter(Boolean)) {
-      yield JSON.parse(line);
+      const frame: Frame | End = JSON.parse(line);
+      terminated ||= isEnd(frame);
+      yield frame;
     }
+  }
+
+  buffer += decoder.decode();
+  if (buffer.trim()) {
+    const frame: Frame | End = JSON.parse(buffer);
+    terminated ||= isEnd(frame);
+    yield frame;
+  }
+  // A close without the terminal frame is a truncated turn; surfacing it beats a caller reading
+  // `end === undefined` as success.
+  if (!terminated) {
+    throw new Error('agent host stream ended without a terminal frame');
   }
 };

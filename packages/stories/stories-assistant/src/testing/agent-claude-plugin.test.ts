@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
-import { PluginManager } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as PluginManager from '@dxos/app-framework/PluginManager';
+import { EffectEx } from '@dxos/effect';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 
 import { AgentClaudePlugin } from './agent-claude-plugin';
@@ -29,7 +30,7 @@ describe('AgentClaudePlugin', () => {
       enabled: [AgentClaudePlugin.meta.profile.key],
     });
 
-    await Effect.runPromise(manager.activate(ActivationEvents.Startup));
+    await EffectEx.runPromise(manager.activate(ActivationEvents.Startup));
 
     const producers = manager.capabilities.getAll(AssistantCapabilities.AgentTurnProducer);
     expect(producers, 'the producer was never contributed').to.have.length(1);

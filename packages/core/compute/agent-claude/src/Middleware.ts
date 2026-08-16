@@ -6,6 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
+import * as fs from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import * as path from 'node:path';
 
@@ -43,17 +44,24 @@ export type RunRequest = {
  * silently substituting a different directory would hide the attempt.
  */
 export const resolveCwd = (root: string, requested?: string): string => {
+  // Real paths on both sides: the root is the SDK's filesystem boundary, so an in-root symlink
+  // pointing outside would otherwise smuggle an external directory past the prefix check.
+  const realRoot = fs.realpathSync(path.resolve(root));
   if (requested === undefined) {
-    return root;
+    return realRoot;
   }
 
-  const resolvedRoot = path.resolve(root);
-  const resolved = path.resolve(resolvedRoot, requested);
-  if (resolved !== resolvedRoot && !resolved.startsWith(resolvedRoot + path.sep)) {
+  let real: string;
+  try {
+    real = fs.realpathSync(path.resolve(realRoot, requested));
+  } catch {
+    throw new AgentHostError({ message: 'cwd does not exist', context: { root, requested } });
+  }
+  if (real !== realRoot && !real.startsWith(realRoot + path.sep)) {
     throw new AgentHostError({ message: 'cwd outside the configured root', context: { root, requested } });
   }
 
-  return resolved;
+  return real;
 };
 
 const readBody = (req: IncomingMessage): Promise<string> =>
@@ -91,7 +99,9 @@ export const make =
       return;
     }
 
-    log.info('run', { prompt, cwd, resume });
+    // Bounded metadata only: the prompt can carry source or credentials, and the session id names an
+    // SDK conversation — neither belongs in log sinks.
+    log.info('run', { cwd, promptLength: prompt.length, hasResume: resume !== undefined });
 
     // NDJSON rather than SSE: the client reads it with a plain streaming fetch, and a turn's frames
     // are already newline-delimitable JSON objects.
