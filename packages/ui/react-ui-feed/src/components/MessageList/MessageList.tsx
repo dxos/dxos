@@ -250,9 +250,16 @@ const MessageListRoot = ({
     [scrollToIndex, messages.length],
   );
 
-  // Keyed on the total size as well as the count: a streaming tail grows the last row without
+  // Keyed on the total size as well as the count: a growing tail extends the last row without
   // adding a message, so following it means reacting to the height the virtualizer measured, not
   // to how many messages exist.
+  //
+  // What the follow chases is the tail as it stands, not whatever produced it. The follower
+  // recomputes its target every frame, so content arriving faster than the travel simply keeps the
+  // target ahead; when the arrivals stop, the follow is still under way and lands by decelerating
+  // rather than being cut short. Tying this to a streaming flag instead would snap the moment a
+  // stream ended, discarding exactly the distance it had left to cover.
+  const positioned = useRef(false);
   const totalSize = virtualizer.getTotalSize();
   useEffect(() => {
     if (!follower || !stickyBottom || !followRef.current) {
@@ -260,20 +267,19 @@ const MessageListRoot = ({
       return;
     }
 
-    // Only a streaming tail is worth gliding after. Every other reason the height changes —
-    // opening a populated feed, rows being measured for the first time, a message arriving whole —
-    // is not motion the reader is following, and animating through it means a list that opens at
-    // the top and crawls, or one that lurches on every remeasure. Those snap.
-    if (stickyBehavior === 'smooth' && streamingId) {
-      follower.start();
-    } else {
-      // Through the virtualizer rather than by writing `scrollTop`: on first render the total size
-      // is mostly estimate, so a raw jump lands at a position the mounted window does not cover and
-      // the feed opens blank. `scrollToIndex` re-resolves as rows measure.
+    // Opening a populated feed is not motion to follow: arrive at the tail rather than travel to
+    // it. Through the virtualizer rather than by writing `scrollTop`, because on first render the
+    // total size is mostly estimate — a raw jump lands at a position the mounted window does not
+    // cover and the feed opens blank.
+    if (!positioned.current || stickyBehavior !== 'smooth') {
+      positioned.current = positioned.current || messages.length > 0;
       follower.cancel();
       scrollToBottom();
+      return;
     }
-  }, [follower, stickyBottom, stickyBehavior, streamingId, messages.length, totalSize, scrollToBottom]);
+
+    follower.start();
+  }, [follower, stickyBottom, stickyBehavior, messages.length, totalSize, scrollToBottom]);
 
   // Cmd/Ctrl + Arrow jumps to the first or last message; plain arrows stay with the scroll container
   // and with whatever the reader is interacting with inside an item. Bound imperatively to the
