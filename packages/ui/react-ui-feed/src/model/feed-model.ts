@@ -144,6 +144,7 @@ export const sliceFeed = (
     fromIndex < toIndex || (fromIndex === toIndex && range.from.offset <= range.to.offset)
       ? [range.from, range.to]
       : [range.to, range.from];
+
   const [startIndex, endIndex] = fromIndex < toIndex ? [fromIndex, toIndex] : [toIndex, fromIndex];
 
   const parts: string[] = [];

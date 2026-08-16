@@ -22,7 +22,7 @@ import { type MessageChromeProps, MessageList, type MessageListController } from
  * Per-message chrome, supplied by the host rather than the engine — the thing a single thread-wide
  * document cannot do without injecting widgets into its own markdown.
  */
-const DemoChrome = ({ message, index, selected, onSelect, children }: MessageChromeProps) => {
+const TestChrome = ({ message, index, selected, onSelect, children }: MessageChromeProps) => {
   const role = message.sender.role ?? 'user';
   const time = new Date(message.created).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -163,7 +163,6 @@ const DefaultStory = ({ count, streaming, estimateSize }: StoryProps) => {
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Toolbar.Text>{messages.length} messages</Toolbar.Text>
           <Input.Root>
             <Input.TextInput
               placeholder='Search…'
@@ -172,7 +171,6 @@ const DefaultStory = ({ count, streaming, estimateSize }: StoryProps) => {
               data-testid='feed.search'
             />
           </Input.Root>
-          <Toolbar.Text>{query ? `${hits.length} hits` : ''}</Toolbar.Text>
           <IconButton icon='ph--magnifying-glass--regular' label='Find' onClick={handleFindNext} />
           <IconButton icon='ph--copy--regular' label='Copy range' onClick={handleCopySelection} />
         </Toolbar.Root>
@@ -183,7 +181,7 @@ const DefaultStory = ({ count, streaming, estimateSize }: StoryProps) => {
           controllerRef={controllerRef}
           classNames='dx-document'
           messages={messages}
-          Chrome={DemoChrome}
+          Chrome={TestChrome}
           hits={hits}
           streamingId={streamingId}
           selectedIds={selectedIds}
@@ -194,15 +192,20 @@ const DefaultStory = ({ count, streaming, estimateSize }: StoryProps) => {
         />
       </Panel.Content>
 
-      <Panel.Statusbar classNames='flex items-center gap-4 px-2 text-xs text-description'>
-        <span data-testid='feed.range'>
-          {range
-            ? `messages ${range.startIndex}–${range.endIndex} of ${messages.length}`
-            : `${messages.length} messages`}
-        </span>
-        <span>{fps ?? '—'} fps</span>
-        <span>{selectedIds.size} selected</span>
-        {copied && <span className='truncate opacity-70'>copied: {copied.replace(/\s+/g, ' ').slice(0, 80)}…</span>}
+      <Panel.Statusbar>
+        <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-description'>
+          <span data-testid='feed.range'>
+            {range ? `${range.startIndex}–${range.endIndex} of ${messages.length}` : messages.length}
+          </span>
+          <span>{selectedIds.size} selected</span>
+          {query ? <span>{query ? `${hits.length} hits` : ''}</span> : <span />}
+          {copied ? (
+            <span className='truncate opacity-70'>copied: {copied.replace(/\s+/g, ' ').slice(0, 80)}…</span>
+          ) : (
+            <span />
+          )}
+          <span className='text-right'>{fps ?? '—'} fps</span>
+        </div>
       </Panel.Statusbar>
     </Panel.Root>
   );

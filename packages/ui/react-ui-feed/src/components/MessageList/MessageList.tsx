@@ -31,6 +31,8 @@ export type MessageChromeProps = PropsWithChildren<{
   onSelect: (id: string, additive: boolean) => void;
 }>;
 
+const DefaultChrome = ({ children }: MessageChromeProps) => <>{children}</>;
+
 export type MessageListController = {
   scrollToIndex: (index: number, align?: 'start' | 'center' | 'end') => void;
   scrollToBottom: () => void;
@@ -69,8 +71,6 @@ export type MessageListProps = {
   overscan?: number;
   onRangeChange?: (range: { startIndex: number; endIndex: number }) => void;
 };
-
-const DefaultChrome = ({ children }: MessageChromeProps) => <>{children}</>;
 
 /**
  * A virtualized feed of message items.
@@ -137,6 +137,7 @@ export const MessageList = composable<HTMLDivElement, MessageListProps>(
       if (!viewport) {
         return;
       }
+
       const onScroll = () => {
         const distance = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
         atBottomRef.current = distance < 32;
