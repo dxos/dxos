@@ -98,7 +98,10 @@ export type MessageListRootProps = PropsWithChildren<{
   estimateSize?: number;
   /** Pin to the bottom as messages arrive, and as a streaming message grows (chat behaviour). */
   stickyBottom?: boolean;
-  /** How the sticky follow moves; `smooth` glides after a streaming tail. @default 'auto' */
+  /**
+   * How the sticky follow moves while `streamingId` is set; every other height change snaps, so a
+   * populated feed opens already at the tail rather than travelling there. @default 'auto'
+   */
   stickyBehavior?: ScrollToOptions['behavior'];
   /** Travel speeds for the smooth follow, in rows/s. */
   follow?: FollowOptions;
@@ -248,12 +251,20 @@ const MessageListRoot = ({
       return;
     }
 
-    if (stickyBehavior === 'smooth') {
+    // Only a streaming tail is worth gliding after. Every other reason the height changes —
+    // opening a populated feed, rows being measured for the first time, a message arriving whole —
+    // is not motion the reader is following, and animating through it means a list that opens at
+    // the top and crawls, or one that lurches on every remeasure. Those snap.
+    if (stickyBehavior === 'smooth' && streamingId) {
       follower.start();
     } else {
-      follower.jump();
+      // Through the virtualizer rather than by writing `scrollTop`: on first render the total size
+      // is mostly estimate, so a raw jump lands at a position the mounted window does not cover and
+      // the feed opens blank. `scrollToIndex` re-resolves as rows measure.
+      follower.cancel();
+      scrollToBottom();
     }
-  }, [follower, stickyBottom, stickyBehavior, messages.length, totalSize]);
+  }, [follower, stickyBottom, stickyBehavior, streamingId, messages.length, totalSize, scrollToBottom]);
 
   // Cmd/Ctrl + Arrow jumps to the first or last message; plain arrows stay with the scroll container
   // and with whatever the reader is interacting with inside an item. Bound imperatively to the
