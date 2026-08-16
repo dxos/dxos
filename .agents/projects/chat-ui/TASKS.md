@@ -33,8 +33,9 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
 - [x] `SelectionGroup` — one selection across many editors.
 - [x] Range readout moved to `Panel.Statusbar`.
 - [x] Frame meter — `useFrameMeter` (testing) sampling animation frames; the statusbar's right-hand
-      readout is `fps · worst · hitches`, click to reset. Averages hide the defect, so the worst
-      frame and the count over 32ms are reported beside the rate.
+      readout is `fps · p95 · worst · hitches`, click to record the pass (clipboard + console) and
+      start a fresh one. Averages hide the defect, so the percentiles, the worst frame and the count
+      over 32ms are reported beside the live rate, and each hitch is traced to the console.
 - [ ] **Frame-rate measurement by a human** — rAF is throttled in the headless pane (it reports
       ~13fps there, and 89s "worst" for a backgrounded tab), so the readout has to be read at the
       keyboard. Three passes, scripted as numbered `Test:` blocks on the stories: Large
@@ -42,6 +43,10 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       Record the numbers in AUDIT.md §3.3 — they are the phase-1 verdict.
 - [ ] Scroll to button — an affordance that jumps to the tail (the controller already exposes
       `scrollToBottom`; it needs a control, and a rule for when it shows).
+- [ ] Fade transition on a slow jump — a far `scrollToIndex` goes instantly (the offset is an
+      estimate beyond a few rows, so an animation travels to the wrong place), which lands the
+      reader somewhere new with no sense of having moved. Cross-fade the viewport over the jump
+      instead, so the discontinuity is expressed rather than hidden.
 - [ ] Streaming content — the Streaming story only extends a text block by whole tokens. Real
       streaming arrives as `ContentBlock`s (reasoning, toolCall, status) appearing and completing
       mid-message, so the item's delta reconciliation is only exercised on the easy case.

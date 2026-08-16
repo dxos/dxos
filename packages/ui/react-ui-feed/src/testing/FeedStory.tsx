@@ -134,6 +134,16 @@ export const FeedStory = ({
 
   const hits = useMemo(() => searchFeed(messages, defaultRenderer, query), [messages, query]);
 
+  // What distinguishes one measured pass from another is the arguments it ran under, so the
+  // recorded line carries them rather than a story name the component cannot see.
+  const label = useMemo(
+    () =>
+      [`${count} msgs`, estimateSize ? `est ${estimateSize}` : undefined, streaming ? 'streaming' : undefined]
+        .filter(Boolean)
+        .join(' · '),
+    [count, estimateSize, streaming],
+  );
+
   const handleAppend = useCallback(() => setMessages((prev) => [...prev, makeQuestion()]), []);
 
   const handleReset = useCallback(() => {
@@ -263,7 +273,14 @@ export const FeedStory = ({
         </Panel.Content>
 
         <Panel.Statusbar>
-          <StatusBar hits={hits} query={query} selected={selectedIds.size} copied={copied} streaming={streaming} />
+          <StatusBar
+            hits={hits}
+            query={query}
+            selected={selectedIds.size}
+            copied={copied}
+            streaming={streaming}
+            label={label}
+          />
         </Panel.Statusbar>
       </Panel.Root>
     </MessageList.Root>
@@ -403,27 +420,24 @@ type StatusBarProps = {
   selected: number;
   copied: string | null;
   streaming: boolean;
+  /** Names the frame-meter pass: the story's arguments, since they are what varies between passes. */
+  label: string;
 };
 
-const StatusBar = ({ hits, query, selected, copied, streaming }: StatusBarProps) => {
+const StatusBar = ({ hits, query, selected, streaming, label }: StatusBarProps) => {
   const { range, currentIndex, count, scrollToBottom } = useMessageList('StatusBar');
 
   return (
     // The frame readout gets a double-width column: it is the longest cell, and an equal share
     // wrapped it onto a second line, which an `h-6` bar renders as clipped.
-    <div className='h-6 w-full overflow-hidden grid grid-cols-[1fr_1fr_1fr_1fr_1fr_2fr_1fr] items-center gap-4 px-2 text-xs text-description tabular-nums'>
+    <div className='h-6 w-full overflow-hidden grid grid-cols-[1fr_1fr_1fr_1fr_3fr_1fr] items-center gap-4 px-2 text-xs text-description tabular-nums'>
       <span>{range ? `${range.startIndex}–${range.endIndex}` : ''}</span>
       <span>
         {currentIndex} / {count}
       </span>
       <span>{selected} selected</span>
       {query ? <span>{hits.length} hits</span> : <span />}
-      {copied ? (
-        <span className='truncate opacity-70'>copied: {copied.replace(/\s+/g, ' ').slice(0, 80)}…</span>
-      ) : (
-        <span />
-      )}
-      <FrameMeter />
+      <FrameMeter label={label} />
       <span className='text-right' data-testid='feed.stream.state'>
         {streaming ? 'streaming…' : 'idle'}
       </span>
@@ -432,23 +446,33 @@ const StatusBar = ({ hits, query, selected, copied, streaming }: StatusBarProps)
 };
 
 /**
- * Frame rate, worst frame and hitch count — the phase-1 verdict, readable only at a real keyboard.
- * Click to reset, so a pass measures one gesture rather than everything since the story mounted.
+ * The phase-1 verdict: live rate, the rate at the pass's slowest fifth, the worst frame, and how
+ * many frames stuttered. Only meaningful at a real keyboard — an agent's browser throttles the
+ * frames this counts.
+ *
+ * Clicking records the pass: the summary goes to the clipboard and the console, and a fresh pass
+ * starts. So a measurement is click, gesture, click — and the median rate, which rarely says
+ * anything the live rate has not, rides in the tooltip and the recorded line rather than on screen.
  */
-const FrameMeter = () => {
-  const { fps, worst, hitches, frames, reset } = useFrameMeter();
+const FrameMeter = ({ label }: { label: string }) => {
+  const { fps, p50, p95, worst, hitches, frames, duration, record } = useFrameMeter({ label });
 
   return (
     <button
       type='button'
-      className='grid grid-cols-3 gap-1 text-left tabular-nums whitespace-nowrap overflow-hidden'
-      title={`${frames} frames sampled — click to reset`}
+      className='grid grid-cols-4 gap-1 text-left tabular-nums whitespace-nowrap overflow-hidden'
+      title={`${label} — p50 ${p50} · ${frames} frames · ${(duration / 1000).toFixed(1)}s. Click to record the pass.`}
       data-testid='feed.frames'
-      onClick={reset}
+      onClick={record}
     >
-      <span className={mx('flex justify-end', fps && fps < 50 && 'text-warning-text')}>{fps} fps</span>
+      <span className={mx('flex justify-end', fps > 0 && fps < 50 && 'text-warning-text')}>{fps} fps</span>
+      <span className={mx('flex justify-end opacity-70', p95 > 0 && p95 < 50 && 'text-warning-text opacity-100')}>
+        p95 {p95}
+      </span>
       <span className='flex justify-end opacity-70'>{worst}ms</span>
-      <span className={mx('opacity-70', hitches > 0 && 'text-warning-text opacity-100')}>{hitches}</span>
+      <span className={mx('flex justify-end opacity-70', hitches > 0 && 'text-warning-text opacity-100')}>
+        {hitches}
+      </span>
     </button>
   );
 };

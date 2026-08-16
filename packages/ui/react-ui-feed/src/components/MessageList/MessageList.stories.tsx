@@ -11,7 +11,7 @@ import { FeedStory, type FeedStoryProps } from '../../testing';
 const meta: Meta<FeedStoryProps> = {
   title: 'ui/react-ui-feed/MessageList',
   render: FeedStory,
-  decorators: [withLayout({ layout: 'column' }), withTheme()],
+  decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },
   args: { count: 100 },
 };
