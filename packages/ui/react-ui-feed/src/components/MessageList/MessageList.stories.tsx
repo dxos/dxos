@@ -3,16 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Icon, IconButton, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { IconButton, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { type FeedAnchor, defaultRenderer, searchFeed, sliceFeed } from '../../model';
+import { type FeedAnchor, type SearchHit, defaultRenderer, searchFeed, sliceFeed } from '../../model';
 import { createMessages } from '../../testing';
-import { type MessageChromeProps, MessageList, type MessageListController } from './MessageList';
+import { type MessageChromeProps, MessageList, useMessageList } from './MessageList';
 
 //
 // Chrome
@@ -42,7 +42,6 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
             data-testid='feed.message.select'
           />
         </Input.Root>
-        <Icon icon={role === 'user' ? 'ph--user--regular' : 'ph--sparkle--regular'} size={4} />
       </div>
 
       {/*
@@ -82,10 +81,8 @@ const DefaultStory = ({ count, streaming, estimateSize }: StoryProps) => {
   const [messages, setMessages] = useState<Message.Message[]>(() => createMessages({ count }));
   const [query, setQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
-  const [range, setRange] = useState<{ startIndex: number; endIndex: number } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [fps, setFps] = useState<number | null>(null);
-  const controllerRef = useRef<MessageListController>(null);
 
   const hits = useMemo(() => searchFeed(messages, defaultRenderer, query), [messages, query]);
 
@@ -152,62 +149,129 @@ const DefaultStory = ({ count, streaming, estimateSize }: StoryProps) => {
     setCopied(sliceFeed(messages, defaultRenderer, { from, to }));
   }, [messages]);
 
+  return (
+    // Root is headless, so the toolbar and statusbar sit outside the scroll container and still
+    // read the list's state through `useMessageList`.
+    <MessageList.Root
+      messages={messages}
+      Chrome={TestChrome}
+      hits={hits}
+      streamingId={streamingId}
+      selectedIds={selectedIds}
+      onSelectedIdsChange={setSelectedIds}
+      estimateSize={estimateSize}
+      stickyBottom={streaming}
+    >
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Input.Root>
+              <Input.TextInput
+                placeholder='Search…'
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                data-testid='feed.search'
+              />
+            </Input.Root>
+            <FindButton hits={hits} />
+            <IconButton icon='ph--copy--regular' label='Copy range' onClick={handleCopySelection} />
+            <div className='grow' />
+            <NavButtons />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+
+        <Panel.Content asChild>
+          <MessageList.Viewport classNames='dx-document' />
+        </Panel.Content>
+
+        <Panel.Statusbar>
+          <StatusBar hits={hits} query={query} selected={selectedIds.size} copied={copied} fps={fps} />
+        </Panel.Statusbar>
+      </Panel.Root>
+    </MessageList.Root>
+  );
+};
+
+/** Scroll-to-hit lives in the toolbar, outside the viewport — the reason Root is headless. */
+const FindButton = ({ hits }: { hits: readonly SearchHit[] }) => {
+  const { scrollToIndex } = useMessageList('FindButton');
   const handleFindNext = useCallback(() => {
     const hit = hits[0];
     if (hit) {
-      controllerRef.current?.scrollToIndex(hit.index, 'center');
+      scrollToIndex(hit.index, { align: 'center', behavior: 'smooth' });
     }
-  }, [hits]);
+  }, [hits, scrollToIndex]);
+
+  return <IconButton icon='ph--magnifying-glass--regular' label='Find' onClick={handleFindNext} />;
+};
+
+/** Step between messages, one at a time, from whichever is at the top of the viewport. */
+const NavButtons = () => {
+  const { range, count, scrollToIndex } = useMessageList('NavButtons');
+  const current = range?.startIndex ?? 0;
+
+  const step = useCallback(
+    (delta: number) => {
+      const next = Math.min(Math.max(current + delta, 0), count - 1);
+      scrollToIndex(next, { align: 'start', behavior: 'smooth' });
+    },
+    [current, count, scrollToIndex],
+  );
 
   return (
-    <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Input.Root>
-            <Input.TextInput
-              placeholder='Search…'
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              data-testid='feed.search'
-            />
-          </Input.Root>
-          <IconButton icon='ph--magnifying-glass--regular' label='Find' onClick={handleFindNext} />
-          <IconButton icon='ph--copy--regular' label='Copy range' onClick={handleCopySelection} />
-        </Toolbar.Root>
-      </Panel.Toolbar>
+    <>
+      <IconButton
+        icon='ph--caret-up--regular'
+        iconOnly
+        label='Previous message'
+        variant='ghost'
+        disabled={current <= 0}
+        data-testid='feed.nav.back'
+        onClick={() => step(-1)}
+      />
+      <IconButton
+        icon='ph--caret-down--regular'
+        iconOnly
+        label='Next message'
+        variant='ghost'
+        disabled={current >= count - 1}
+        data-testid='feed.nav.forward'
+        onClick={() => step(1)}
+      />
+    </>
+  );
+};
 
-      <Panel.Content asChild>
-        <MessageList
-          controllerRef={controllerRef}
-          classNames='dx-document'
-          messages={messages}
-          Chrome={TestChrome}
-          hits={hits}
-          streamingId={streamingId}
-          selectedIds={selectedIds}
-          onSelectedIdsChange={setSelectedIds}
-          onRangeChange={setRange}
-          estimateSize={estimateSize}
-          stickyBottom={streaming}
-        />
-      </Panel.Content>
+type StatusBarProps = {
+  hits: readonly SearchHit[];
+  query: string;
+  selected: number;
+  copied: string | null;
+  fps: number | null;
+};
 
-      <Panel.Statusbar>
-        <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-description'>
-          <span data-testid='feed.range'>
-            {range ? `${range.startIndex}–${range.endIndex} of ${messages.length}` : messages.length}
-          </span>
-          <span>{selectedIds.size} selected</span>
-          {query ? <span>{query ? `${hits.length} hits` : ''}</span> : <span />}
-          {copied ? (
-            <span className='truncate opacity-70'>copied: {copied.replace(/\s+/g, ' ').slice(0, 80)}…</span>
-          ) : (
-            <span />
-          )}
-          <span className='text-right'>{fps ?? '—'} fps</span>
-        </div>
-      </Panel.Statusbar>
-    </Panel.Root>
+const StatusBar = ({ hits, query, selected, copied, fps }: StatusBarProps) => {
+  const { range, count, scrollToBottom } = useMessageList('StatusBar');
+
+  return (
+    <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-description'>
+      <button
+        type='button'
+        data-testid='feed.range'
+        className='text-left'
+        onClick={() => scrollToBottom({ behavior: 'smooth' })}
+      >
+        {range ? `${range.startIndex}–${range.endIndex} of ${count}` : count}
+      </button>
+      <span>{selected} selected</span>
+      {query ? <span>{hits.length} hits</span> : <span />}
+      {copied ? (
+        <span className='truncate opacity-70'>copied: {copied.replace(/\s+/g, ' ').slice(0, 80)}…</span>
+      ) : (
+        <span />
+      )}
+      <span className='text-right'>{fps ?? '—'} fps</span>
+    </div>
   );
 };
 

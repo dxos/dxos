@@ -2,26 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { createContext } from '@radix-ui/react-context';
+import { type Virtualizer, useVirtualizer } from '@tanstack/react-virtual';
 import React, {
   type ComponentType,
   type PropsWithChildren,
-  type ReactNode,
-  type Ref,
   useCallback,
   useEffect,
-  useImperativeHandle,
   useMemo,
   useRef,
   useState,
 } from 'react';
 
-import { composable, composableProps, setRef } from '@dxos/react-ui';
+import { ScrollArea, type ScrollAreaRootProps, composable, composableProps, setRef } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { type MessageRenderer, type SearchHit, defaultRenderer } from '../../model';
 import { type HighlightRange, HtmlItem, MarkdownItem, SelectionGroupContext, createSelectionGroup } from '../Item';
+
+//
+// Context
+//
+
+const MESSAGE_LIST_NAME = 'MessageList';
 
 /** Per-message chrome (avatar, timestamp, fork/rewind/reply controls), supplied by the host. */
 export type MessageChromeProps = PropsWithChildren<{
@@ -31,22 +35,47 @@ export type MessageChromeProps = PropsWithChildren<{
   onSelect: (id: string, additive: boolean) => void;
 }>;
 
-const DefaultChrome = ({ children }: MessageChromeProps) => <>{children}</>;
+export type MessageRange = { startIndex: number; endIndex: number };
 
-export type MessageListController = {
-  scrollToIndex: (index: number, align?: 'start' | 'center' | 'end') => void;
-  scrollToBottom: () => void;
-  /** Visible range, for measuring how much of the feed is actually mounted. */
-  getRange: () => { startIndex: number; endIndex: number } | null;
+type MessageListContextValue = {
+  messages: readonly Message.Message[];
+  renderer: MessageRenderer;
+  registry?: XmlWidgetRegistry;
+  Chrome: ComponentType<MessageChromeProps>;
+  streamingId?: string;
+  selectedIds?: ReadonlySet<string>;
+  hitsByMessage: ReadonlyMap<string, HighlightRange[]>;
+  /** The mounted window; `undefined` until the viewport has measured. */
+  range?: MessageRange;
+  virtualizer: Virtualizer<HTMLElement, HTMLElement>;
+  setViewport: (viewport: HTMLElement | null) => void;
+  onSelect: (id: string, additive: boolean) => void;
+  scrollToIndex: (index: number, options?: ScrollToOptions) => void;
+  scrollToBottom: (options?: ScrollToOptions) => void;
 };
 
-export type MessageListProps = {
+export type ScrollToOptions = {
+  align?: 'start' | 'center' | 'end';
+  behavior?: 'auto' | 'smooth';
+};
+
+const [MessageListProvider, useMessageListContext] = createContext<MessageListContextValue>(MESSAGE_LIST_NAME);
+
+/**
+ * The list's state and scroll controls, for parts that live outside the viewport — a toolbar's
+ * find-next, a statusbar's range readout.
+ */
+export const useMessageList = (consumerName = 'useMessageList') => {
+  const { range, messages, scrollToIndex, scrollToBottom } = useMessageListContext(consumerName);
+  return { range, count: messages.length, scrollToIndex, scrollToBottom };
+};
+
+//
+// Root
+//
+
+export type MessageListRootProps = PropsWithChildren<{
   messages: readonly Message.Message[];
-  /**
-   * Imperative handle for scroll control. Separate from the component's ref, which forwards the
-   * scroll container so the list can be slotted (`asChild`) into a layout part.
-   */
-  controllerRef?: Ref<MessageListController>;
   renderer?: MessageRenderer;
   registry?: XmlWidgetRegistry;
   /**
@@ -62,153 +91,215 @@ export type MessageListProps = {
   /** Message ids selected as a set (list-shaped gesture, distinct from text selection). */
   selectedIds?: ReadonlySet<string>;
   onSelectedIdsChange?: (ids: ReadonlySet<string>) => void;
-  /** Search hits from the model; the engine routes them to the items that own them. */
+  /** Search hits from the model; the list routes them to the items that own them. */
   hits?: readonly SearchHit[];
-  /** Estimated item height before measurement; a bad estimate shows up as scrollbar drift. */
+  /** Estimated row height before measurement; a bad estimate shows up as scrollbar drift. */
   estimateSize?: number;
   /** Pin to the bottom as messages arrive (chat behaviour). */
   stickyBottom?: boolean;
   overscan?: number;
-  onRangeChange?: (range: { startIndex: number; endIndex: number }) => void;
-};
+  onRangeChange?: (range: MessageRange) => void;
+}>;
+
+const DefaultChrome = ({ children }: MessageChromeProps) => <>{children}</>;
 
 /**
- * A virtualized feed of message items.
- *
- * The engine owns virtualization, chrome and selection; each message renders as its own document
- * (or arbitrary component). This is the alternative to the two shapes in the repo today: a single
- * thread-wide CodeMirror document (shared rendering, no per-message chrome) and a React tile stack
- * (per-message chrome, no shared rendering).
+ * Headless root of a feed: owns the virtualizer, the selection group and the model-to-item mapping.
+ * Renders no DOM of its own, so a toolbar or statusbar that reads its state can sit outside the
+ * scroll container — the scrolling part is `MessageList.Viewport`.
  */
-export const MessageList = composable<HTMLDivElement, MessageListProps>(
-  (
-    {
-      messages,
-      controllerRef,
-      renderer = defaultRenderer,
-      registry,
-      Chrome = DefaultChrome,
-      streamingId,
-      selectedIds,
-      onSelectedIdsChange,
-      hits,
-      estimateSize = 120,
-      stickyBottom = false,
-      overscan = 8,
-      onRangeChange,
-      ...props
+const MessageListRoot = ({
+  children,
+  messages,
+  renderer = defaultRenderer,
+  registry,
+  Chrome = DefaultChrome,
+  streamingId,
+  selectedIds,
+  onSelectedIdsChange,
+  hits,
+  estimateSize = 120,
+  stickyBottom = false,
+  overscan = 8,
+  onRangeChange,
+}: MessageListRootProps) => {
+  const [viewport, setViewport] = useState<HTMLElement | null>(null);
+  const [range, setRange] = useState<MessageRange | undefined>(undefined);
+
+  const virtualizer = useVirtualizer<HTMLElement, HTMLElement>({
+    count: messages.length,
+    getScrollElement: () => viewport,
+    estimateSize: () => estimateSize,
+    // Key measurements by message id, not index: a prepended page or a rewind would otherwise
+    // shift every cached height by one row and the scrollbar would jump.
+    getItemKey: useCallback((index: number) => messages[index]?.id ?? index, [messages]),
+    overscan,
+  });
+
+  const mounted = virtualizer.getVirtualItems().length;
+  const startIndex = virtualizer.range?.startIndex;
+  const endIndex = virtualizer.range?.endIndex;
+  useEffect(() => {
+    if (startIndex === undefined || endIndex === undefined) {
+      return;
+    }
+    const next = { startIndex, endIndex };
+    setRange(next);
+    onRangeChange?.(next);
+  }, [mounted, startIndex, endIndex, onRangeChange]);
+
+  // Stick to the bottom while new messages arrive, but only when the reader is already there —
+  // yanking the viewport away from someone reading history is the classic chat-scroll defect.
+  const atBottomRef = useRef(true);
+  useEffect(() => {
+    if (!viewport) {
+      return;
+    }
+    const onScroll = () => {
+      atBottomRef.current = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 32;
+    };
+    onScroll();
+    viewport.addEventListener('scroll', onScroll, { passive: true });
+    return () => viewport.removeEventListener('scroll', onScroll);
+  }, [viewport]);
+
+  const scrollToIndex = useCallback(
+    (index: number, { align = 'start', behavior = 'auto' }: ScrollToOptions = {}) => {
+      // The virtualizer refuses to animate under dynamic measurement (it warns and scrolls
+      // instantly), so a smooth scroll is driven from the offset it computes. For a row that has
+      // not been measured yet that offset is an estimate, and the landing corrects once the row
+      // mounts — fine for stepping between neighbours, visible when jumping across thousands.
+      const offset = behavior === 'smooth' ? virtualizer.getOffsetForIndex(index, align)?.[0] : undefined;
+      if (offset !== undefined && viewport) {
+        viewport.scrollTo({ top: offset, behavior: 'smooth' });
+      } else {
+        virtualizer.scrollToIndex(index, { align });
+      }
     },
-    forwardedRef,
-  ) => {
-    // The scroll container is both the virtualizer's measurement root and the component's forwarded
-    // element, so the callback has to serve local state and the consumer's ref.
-    const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+    [virtualizer, viewport],
+  );
+
+  const scrollToBottom = useCallback(
+    (options?: ScrollToOptions) => {
+      if (messages.length) {
+        scrollToIndex(messages.length - 1, { align: 'end', ...options });
+      }
+    },
+    [scrollToIndex, messages.length],
+  );
+
+  useEffect(() => {
+    if (stickyBottom && atBottomRef.current) {
+      scrollToBottom();
+    }
+  }, [stickyBottom, messages.length, scrollToBottom]);
+
+  // Hits are grouped once per pass rather than filtered per item, so a search over a long feed
+  // stays O(hits) instead of O(hits × visible messages).
+  const hitsByMessage = useMemo(() => {
+    const map = new Map<string, HighlightRange[]>();
+    for (const hit of hits ?? []) {
+      const ranges = map.get(hit.messageId) ?? [];
+      ranges.push([hit.offset, hit.offset + hit.length]);
+      map.set(hit.messageId, ranges);
+    }
+    return map;
+  }, [hits]);
+
+  const onSelect = useCallback(
+    (id: string, additive: boolean) => {
+      if (!onSelectedIdsChange) {
+        return;
+      }
+      const next = new Set(additive ? (selectedIds ?? []) : []);
+      if (additive && next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      onSelectedIdsChange(next);
+    },
+    [selectedIds, onSelectedIdsChange],
+  );
+
+  // The feed has one selection even though it has many editors; the group is what enforces that.
+  const selectionGroup = useMemo(createSelectionGroup, []);
+
+  return (
+    <SelectionGroupContext.Provider value={selectionGroup}>
+      <MessageListProvider
+        messages={messages}
+        renderer={renderer}
+        registry={registry}
+        Chrome={Chrome}
+        streamingId={streamingId}
+        selectedIds={selectedIds}
+        hitsByMessage={hitsByMessage}
+        range={range}
+        virtualizer={virtualizer}
+        setViewport={setViewport}
+        onSelect={onSelect}
+        scrollToIndex={scrollToIndex}
+        scrollToBottom={scrollToBottom}
+      >
+        {children}
+      </MessageListProvider>
+    </SelectionGroupContext.Provider>
+  );
+};
+
+MessageListRoot.displayName = 'MessageList.Root';
+
+//
+// Viewport
+//
+
+const MESSAGE_LIST_VIEWPORT_NAME = 'MessageList.Viewport';
+
+type MessageListViewportExtra = Pick<
+  ScrollAreaRootProps,
+  'autoHide' | 'centered' | 'native' | 'padding' | 'scrollbars' | 'thin'
+>;
+
+/**
+ * The scroll container and the mounted window of rows.
+ *
+ * Scrolling belongs to `ScrollArea`, which owns the overlay thumbs and the padding tokens; the
+ * virtualizer needs only the element being scrolled, which `ScrollArea.Viewport` publishes.
+ */
+const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
+  ({ autoHide, centered, native, padding, scrollbars, thin, ...props }, forwardedRef) => {
+    const { messages, Chrome, selectedIds, virtualizer, setViewport, onSelect } =
+      useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
+
     const handleViewportRef = useCallback(
       (element: HTMLDivElement | null) => {
         setViewport(element);
         setRef(forwardedRef, element);
       },
-      [forwardedRef],
+      [setViewport, forwardedRef],
     );
-
-    const virtualizer = useVirtualizer({
-      count: messages.length,
-      getScrollElement: () => viewport,
-      estimateSize: () => estimateSize,
-      // Key measurements by message id, not index: a prepended page or a rewind would otherwise
-      // shift every cached height by one row and the scrollbar would jump.
-      getItemKey: useCallback((index: number) => messages[index]?.id ?? index, [messages]),
-      overscan,
-    });
-
-    const items = virtualizer.getVirtualItems();
-
-    useEffect(() => {
-      const range = virtualizer.range;
-      if (range) {
-        onRangeChange?.({ startIndex: range.startIndex, endIndex: range.endIndex });
-      }
-    }, [items.length, virtualizer.range?.startIndex, virtualizer.range?.endIndex, onRangeChange]);
-
-    // Stick to the bottom while new messages arrive, but only when the reader is already there —
-    // yanking the viewport away from someone reading history is the classic chat-scroll defect.
-    const atBottomRef = useRef(true);
-    useEffect(() => {
-      if (!viewport) {
-        return;
-      }
-
-      const onScroll = () => {
-        const distance = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
-        atBottomRef.current = distance < 32;
-      };
-      onScroll();
-      viewport.addEventListener('scroll', onScroll, { passive: true });
-      return () => viewport.removeEventListener('scroll', onScroll);
-    }, [viewport]);
-
-    useEffect(() => {
-      if (stickyBottom && atBottomRef.current && messages.length) {
-        virtualizer.scrollToIndex(messages.length - 1, { align: 'end' });
-      }
-    }, [stickyBottom, messages.length, virtualizer]);
-
-    useImperativeHandle(
-      controllerRef,
-      () => ({
-        scrollToIndex: (index, align = 'start') => virtualizer.scrollToIndex(index, { align }),
-        scrollToBottom: () => messages.length && virtualizer.scrollToIndex(messages.length - 1, { align: 'end' }),
-        getRange: () => virtualizer.range ?? null,
-      }),
-      [virtualizer, messages.length],
-    );
-
-    // Hits are grouped once per pass rather than filtered per item, so a search over a long feed
-    // stays O(hits) instead of O(hits × visible messages).
-    const hitsByMessage = useMemo(() => {
-      const map = new Map<string, HighlightRange[]>();
-      for (const hit of hits ?? []) {
-        const ranges = map.get(hit.messageId) ?? [];
-        ranges.push([hit.offset, hit.offset + hit.length]);
-        map.set(hit.messageId, ranges);
-      }
-      return map;
-    }, [hits]);
-
-    const handleSelect = useCallback(
-      (id: string, additive: boolean) => {
-        if (!onSelectedIdsChange) {
-          return;
-        }
-        const next = new Set(additive ? (selectedIds ?? []) : []);
-        if (additive && next.has(id)) {
-          next.delete(id);
-        } else {
-          next.add(id);
-        }
-        onSelectedIdsChange(next);
-      },
-      [selectedIds, onSelectedIdsChange],
-    );
-
-    // The feed has one selection even though it has many editors; the group is what enforces that.
-    const selectionGroup = useMemo(createSelectionGroup, []);
 
     return (
-      <SelectionGroupContext.Provider value={selectionGroup}>
-        <div
-          {...composableProps(props, { classNames: 'relative overflow-y-auto' })}
-          data-testid='feed.viewport'
-          ref={handleViewportRef}
-        >
+      <ScrollArea.Root
+        {...composableProps(props)}
+        orientation='vertical'
+        autoHide={autoHide}
+        centered={centered}
+        native={native}
+        padding={padding}
+        scrollbars={scrollbars}
+        thin={thin}
+      >
+        <ScrollArea.Viewport data-testid='feed.viewport' ref={handleViewportRef}>
           <div className='relative w-full' style={{ height: virtualizer.getTotalSize() }}>
-            {items.map((item) => {
+            {virtualizer.getVirtualItems().map((item) => {
               const message = messages[item.index];
               return (
                 <div
                   key={item.key}
-                  // `measureElement` reads the real height after CodeMirror lays out, which is what
-                  // keeps a variable-height item from drifting against its estimate.
+                  // `measureElement` reads the real height after the item lays out, which is what
+                  // keeps a variable-height row from drifting against its estimate.
                   ref={virtualizer.measureElement}
                   data-index={item.index}
                   data-object-id={message.id}
@@ -219,44 +310,59 @@ export const MessageList = composable<HTMLDivElement, MessageListProps>(
                     message={message}
                     index={item.index}
                     selected={selectedIds?.has(message.id) ?? false}
-                    onSelect={handleSelect}
+                    onSelect={onSelect}
                   >
-                    <Item
-                      message={message}
-                      renderer={renderer}
-                      registry={registry}
-                      streaming={message.id === streamingId}
-                      hits={hitsByMessage.get(message.id)}
-                    />
+                    <MessageListItem message={message} />
                   </Chrome>
                 </div>
               );
             })}
           </div>
-        </div>
-      </SelectionGroupContext.Provider>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     );
   },
 );
 
-MessageList.displayName = 'MessageList';
+MessageListViewport.displayName = MESSAGE_LIST_VIEWPORT_NAME;
 
-type ItemProps = {
+//
+// Item
+//
+
+const MESSAGE_LIST_ITEM_NAME = 'MessageList.Item';
+
+type MessageListItemExtra = {
   message: Message.Message;
-  renderer: MessageRenderer;
-  registry?: XmlWidgetRegistry;
-  streaming?: boolean;
-  hits?: readonly HighlightRange[];
 };
 
-const Item = ({ message, renderer, registry, hits }: ItemProps): ReactNode => {
+/**
+ * One message, rendered by the kind its renderer resolves. Exposed so a host can render a message
+ * outside the scrolling window — a pinned message, a preview — through the same path.
+ */
+const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ message, ...props }, forwardedRef) => {
+  const { renderer, registry, hitsByMessage } = useMessageListContext(MESSAGE_LIST_ITEM_NAME);
   const content = renderer(message);
-  switch (content.kind) {
-    case 'markdown':
-      return <MarkdownItem text={content.text} registry={registry} hits={hits} />;
-    case 'html':
-      return <HtmlItem html={content.html} />;
-    case 'custom':
-      return null;
-  }
+  const hits = hitsByMessage.get(message.id);
+
+  return (
+    <div {...composableProps(props)} ref={forwardedRef}>
+      {content.kind === 'markdown' && <MarkdownItem text={content.text} registry={registry} hits={hits} />}
+      {content.kind === 'html' && <HtmlItem html={content.html} />}
+    </div>
+  );
+});
+
+MessageListItem.displayName = MESSAGE_LIST_ITEM_NAME;
+
+//
+// MessageList
+//
+
+export const MessageList = {
+  Root: MessageListRoot,
+  Viewport: MessageListViewport,
+  Item: MessageListItem,
 };
+
+export type { MessageListItemExtra as MessageListItemProps, MessageListViewportExtra as MessageListViewportProps };

@@ -68,9 +68,9 @@ const buildSampleText = (): string => {
 
 const sampleText = buildSampleText();
 
-type StoryProps = { text: string };
+type StoryArgs = { text: string };
 
-const DefaultStory = ({ text }: StoryProps) => {
+const DefaultStory = ({ text }: StoryArgs) => {
   const { themeMode } = useThemeContext();
   const [collapsed, setCollapsed] = useState(false);
   const extensions = useMemo(() => chatExtensions(themeMode), [themeMode]);
