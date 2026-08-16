@@ -206,16 +206,16 @@ catalog:
   '@rollup/plugin-swc': ^0.4.0
   '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
-  '@storybook/addon-docs': ^10.4.2
-  '@storybook/addon-links': ^10.4.2
-  '@storybook/addon-themes': ^10.4.2
-  '@storybook/addon-vitest': ^10.4.2
-  '@storybook/builder-vite': ^10.4.2
-  '@storybook/html-vite': ^10.4.2
+  '@storybook/addon-docs': ^10.5.8
+  '@storybook/addon-links': ^10.5.8
+  '@storybook/addon-themes': ^10.5.8
+  '@storybook/addon-vitest': ^10.5.8
+  '@storybook/builder-vite': ^10.5.8
+  '@storybook/html-vite': ^10.5.8
   '@storybook/icons': ^2.0.2
   '@storybook/mdx2-csf': ^1.1.0
-  '@storybook/react-vite': ^10.4.2
-  '@storybook/web-components-vite': ^10.4.2
+  '@storybook/react-vite': ^10.5.8
+  '@storybook/web-components-vite': ^10.5.8
   '@svgr/cli': ^8.1.0
   '@swc/core': 1.15.46
   '@swc/types': ^0.1.27
@@ -630,8 +630,8 @@ catalog:
   sparqljs: ^3.7.4
   stage-js: 1.0.0-alpha.17
   starlight-links-validator: ^0.24.0
-  storybook: ^10.4.2
-  storybook-solidjs-vite: ^10.0.13
+  storybook: ^10.5.8
+  storybook-solidjs-vite: ^10.6.0
   streamx: ^2.12.5
   style-mod: ^4.1.0
   tabster: ^8.5.5
