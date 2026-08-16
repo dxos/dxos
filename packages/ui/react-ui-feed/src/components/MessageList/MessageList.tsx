@@ -240,6 +240,14 @@ const MessageListRoot = ({
 
   const scrollToIndex = useCallback(
     (index: number, { align = 'start', behavior = 'auto' }: ScrollToOptions = {}) => {
+      // Asking to be somewhere is an answer to "do you want the tail?". Navigating into the feed
+      // withdraws the follow — otherwise the next message drags the reader back from wherever they
+      // just asked to be — and asking for the last message opts back in.
+      followRef.current = index >= messages.length - 1;
+      if (!followRef.current) {
+        follower?.cancel();
+      }
+
       // A smooth scroll is driven from the offset the virtualizer computes, because the virtualizer
       // itself refuses to animate under dynamic measurement (it warns and scrolls instantly).
       //
@@ -257,7 +265,7 @@ const MessageListRoot = ({
         virtualizer.scrollToIndex(index, { align });
       }
     },
-    [virtualizer, viewport],
+    [virtualizer, viewport, follower, messages.length],
   );
 
   const scrollToBottom = useCallback(
@@ -284,8 +292,20 @@ const MessageListRoot = ({
     // Why a follow is or is not running is invisible from the outside — the state lives in refs and
     // an animation frame — and every wrong guess about it costs a round of debugging. Published on
     // the element so it can be read from the console: `$0.__feed`.
+    //
+    // Getters, not a snapshot: these refs are written outside React (by the scroll listener and by
+    // `scrollToIndex`), so a captured value would report the state as of the last render and send
+    // the next reader down the wrong path — which is precisely what this exists to prevent.
     if (viewport) {
-      (viewport as any).__feed = { follower, following: followRef.current, positioned: positioned.current };
+      (viewport as any).__feed = {
+        follower,
+        get following() {
+          return followRef.current;
+        },
+        get positioned() {
+          return positioned.current;
+        },
+      };
     }
 
     if (!follower || !stickyBottom || !followRef.current) {

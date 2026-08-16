@@ -274,9 +274,9 @@ const FindButton = ({ hits }: { hits: readonly SearchHit[] }) => {
   return <IconButton icon='ph--magnifying-glass--regular' iconOnly label='Find' onClick={handleFind} />;
 };
 
-/** Step between messages, one at a time, from whichever is at the top of the viewport. */
+/** Move by one message, or to either end, from whichever message is at the top of the viewport. */
 const NavButtons = () => {
-  const { range, count, scrollToIndex } = useMessageList('NavButtons');
+  const { range, count, scrollToIndex, scrollToBottom } = useMessageList('NavButtons');
   const current = range?.startIndex ?? 0;
 
   const step = useCallback(
@@ -288,6 +288,17 @@ const NavButtons = () => {
 
   return (
     <>
+      <IconButton
+        icon='ph--arrow-line-up--regular'
+        iconOnly
+        label='First message'
+        variant='ghost'
+        disabled={current <= 0}
+        data-testid='feed.nav.top'
+        // Smooth is requested, but a jump across more than a few rows travels towards an estimated
+        // offset, so `scrollToIndex` takes these instantly. Same call, honest either way.
+        onClick={() => scrollToIndex(0, { align: 'start', behavior: 'smooth' })}
+      />
       <IconButton
         icon='ph--caret-up--regular'
         iconOnly
@@ -305,6 +316,15 @@ const NavButtons = () => {
         disabled={current >= count - 1}
         data-testid='feed.nav.forward'
         onClick={() => step(1)}
+      />
+      <IconButton
+        icon='ph--arrow-line-down--regular'
+        iconOnly
+        label='Last message'
+        variant='ghost'
+        disabled={count === 0}
+        data-testid='feed.nav.bottom'
+        onClick={() => scrollToBottom({ behavior: 'smooth' })}
       />
     </>
   );
