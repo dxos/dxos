@@ -21,13 +21,7 @@ import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { type MessageRenderer, type SearchHit, defaultRenderer } from '../../model';
-import {
-  type HighlightRange,
-  HtmlIsland,
-  MarkdownIsland,
-  SelectionGroupContext,
-  createSelectionGroup,
-} from '../Island';
+import { type HighlightRange, HtmlItem, MarkdownItem, SelectionGroupContext, createSelectionGroup } from '../Item';
 
 /** Per-message chrome (avatar, timestamp, fork/rewind/reply controls), supplied by the host. */
 export type MessageChromeProps = PropsWithChildren<{
@@ -54,21 +48,21 @@ export type MessageListProps = {
   renderer?: MessageRenderer;
   registry?: XmlWidgetRegistry;
   /**
-   * Chrome wrapper; receives the island as `children`. Defaults to a bare frame.
+   * Chrome wrapper; receives the item as `children`. Defaults to a bare frame.
    *
    * Chrome must be layout-stable: a control that changes a row's height on hover or focus
    * re-triggers measurement, and a pointer travelling down the list mid-scroll then shifts every
    * row below it. Toggle such affordances with opacity, or take them out of flow.
    */
   Chrome?: ComponentType<MessageChromeProps>;
-  /** Message currently streaming; its island reconciles by delta rather than remounting. */
+  /** Message currently streaming; its item reconciles by delta rather than remounting. */
   streamingId?: string;
   /** Message ids selected as a set (list-shaped gesture, distinct from text selection). */
   selectedIds?: ReadonlySet<string>;
   onSelectedIdsChange?: (ids: ReadonlySet<string>) => void;
-  /** Search hits from the model; the engine routes them to the islands that own them. */
+  /** Search hits from the model; the engine routes them to the items that own them. */
   hits?: readonly SearchHit[];
-  /** Estimated island height before measurement; a bad estimate shows up as scrollbar drift. */
+  /** Estimated item height before measurement; a bad estimate shows up as scrollbar drift. */
   estimateSize?: number;
   /** Pin to the bottom as messages arrive (chat behaviour). */
   stickyBottom?: boolean;
@@ -79,7 +73,7 @@ export type MessageListProps = {
 const DefaultChrome = ({ children }: MessageChromeProps) => <>{children}</>;
 
 /**
- * A virtualized feed of message islands.
+ * A virtualized feed of message items.
  *
  * The engine owns virtualization, chrome and selection; each message renders as its own document
  * (or arbitrary component). This is the alternative to the two shapes in the repo today: a single
@@ -168,7 +162,7 @@ export const MessageList = composable<HTMLDivElement, MessageListProps>(
       [virtualizer, messages.length],
     );
 
-    // Hits are grouped once per pass rather than filtered per island, so a search over a long feed
+    // Hits are grouped once per pass rather than filtered per item, so a search over a long feed
     // stays O(hits) instead of O(hits × visible messages).
     const hitsByMessage = useMemo(() => {
       const map = new Map<string, HighlightRange[]>();
@@ -213,7 +207,7 @@ export const MessageList = composable<HTMLDivElement, MessageListProps>(
                 <div
                   key={item.key}
                   // `measureElement` reads the real height after CodeMirror lays out, which is what
-                  // keeps a variable-height island from drifting against its estimate.
+                  // keeps a variable-height item from drifting against its estimate.
                   ref={virtualizer.measureElement}
                   data-index={item.index}
                   data-object-id={message.id}
@@ -226,7 +220,7 @@ export const MessageList = composable<HTMLDivElement, MessageListProps>(
                     selected={selectedIds?.has(message.id) ?? false}
                     onSelect={handleSelect}
                   >
-                    <Island
+                    <Item
                       message={message}
                       renderer={renderer}
                       registry={registry}
@@ -246,7 +240,7 @@ export const MessageList = composable<HTMLDivElement, MessageListProps>(
 
 MessageList.displayName = 'MessageList';
 
-type IslandProps = {
+type ItemProps = {
   message: Message.Message;
   renderer: MessageRenderer;
   registry?: XmlWidgetRegistry;
@@ -254,13 +248,13 @@ type IslandProps = {
   hits?: readonly HighlightRange[];
 };
 
-const Island = ({ message, renderer, registry, hits }: IslandProps): ReactNode => {
+const Item = ({ message, renderer, registry, hits }: ItemProps): ReactNode => {
   const content = renderer(message);
   switch (content.kind) {
     case 'markdown':
-      return <MarkdownIsland text={content.text} registry={registry} hits={hits} />;
+      return <MarkdownItem text={content.text} registry={registry} hits={hits} />;
     case 'html':
-      return <HtmlIsland html={content.html} />;
+      return <HtmlItem html={content.html} />;
     case 'custom':
       return null;
   }

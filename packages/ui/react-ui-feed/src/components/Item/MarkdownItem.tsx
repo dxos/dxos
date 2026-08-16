@@ -19,12 +19,12 @@ import {
 import { type HighlightRange, highlights, highlightTheme, setHighlights } from './highlight';
 import { useSelectionGroup } from './selection-group';
 
-export type MarkdownIslandProps = {
+export type MarkdownItemProps = {
   text: string;
   /**
    * When false the view mounts with `EditorView.editable.of(false)`, which drops `contenteditable`
    * from the DOM. Browsers refuse to extend one selection across two contenteditable hosts, so this
-   * is what decides whether a drag can span adjacent islands.
+   * is what decides whether a drag can span adjacent items.
    */
   editable?: boolean;
   registry?: XmlWidgetRegistry;
@@ -34,10 +34,10 @@ export type MarkdownIslandProps = {
 /**
  * One message as its own markdown document.
  *
- * Each island owns a document, so streaming appends and per-message editing stay local — where a
+ * Each item owns a document, so streaming appends and per-message editing stay local — where a
  * single thread-wide document needs a cursor and a range table to know which message it is touching.
  */
-export const MarkdownIsland = memo(({ text, editable = false, registry, hits }: MarkdownIslandProps) => {
+export const MarkdownItem = memo(({ text, editable = false, registry, hits }: MarkdownItemProps) => {
   const { themeMode } = useThemeContext();
   const [view, setView] = useState<EditorView | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -119,4 +119,4 @@ export const MarkdownIsland = memo(({ text, editable = false, registry, hits }: 
   return <div ref={rootRef} />;
 });
 
-MarkdownIsland.displayName = 'MarkdownIsland';
+MarkdownItem.displayName = 'MarkdownItem';

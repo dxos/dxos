@@ -89,7 +89,7 @@ const DefaultStory = ({ count, streaming, estimateSize }: StoryProps) => {
 
   const hits = useMemo(() => searchFeed(messages, defaultRenderer, query), [messages, query]);
 
-  // Streaming: extend the tail message so the island reconciles by delta and the virtualizer
+  // Streaming: extend the tail message so the item reconciles by delta and the virtualizer
   // re-measures a growing row — the case that decides whether scroll anchoring holds.
   const [streamingId, setStreamingId] = useState<string | undefined>();
   useEffect(() => {
@@ -142,7 +142,7 @@ const DefaultStory = ({ count, streaming, estimateSize }: StoryProps) => {
   }, []);
 
   const handleCopySelection = useCallback(() => {
-    // Copy across message boundaries is reconstructed from the model: unmounted islands are not in
+    // Copy across message boundaries is reconstructed from the model: unmounted items are not in
     // the DOM, so a native selection could never have included them.
     if (messages.length < 3) {
       return;
@@ -220,7 +220,7 @@ export default meta;
 
 type Story = StoryObj<StoryProps>;
 
-/** Mixed markdown / html / code islands — the realistic feed. */
+/** Mixed markdown / html / code items — the realistic feed. */
 export const Default: Story = {};
 
 /** Scroll-quality case: the deciding criterion is smoothness here, not at 200. */
@@ -233,7 +233,7 @@ export const BadEstimate: Story = {
   args: { count: 2_000, estimateSize: 24 },
 };
 
-/** Tail growth: the island reconciles by delta while the virtualizer re-measures a growing row. */
+/** Tail growth: the item reconciles by delta while the virtualizer re-measures a growing row. */
 export const Streaming: Story = {
   args: { count: 50, streaming: true },
 };

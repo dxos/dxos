@@ -6,11 +6,11 @@ import { type EditorView } from '@codemirror/view';
 import { createContext, useContext, useMemo } from 'react';
 
 /**
- * Coordinates selection across the islands of one feed.
+ * Coordinates selection across the items of one feed.
  *
- * Each island is its own editor with its own selection state, and `drawSelection` paints that state
+ * Each item is its own editor with its own selection state, and `drawSelection` paints that state
  * whether or not the view has focus — so without a coordinator every message the reader has ever
- * selected in stays highlighted at once. The feed has one selection, so claiming it in one island
+ * selected in stays highlighted at once. The feed has one selection, so claiming it in one item
  * collapses it everywhere else.
  */
 export type SelectionGroup = {
@@ -44,7 +44,7 @@ export const createSelectionGroup = (): SelectionGroup => {
 
 export const SelectionGroupContext = createContext<SelectionGroup | undefined>(undefined);
 
-/** The enclosing feed's selection group, or a private one when an island is used standalone. */
+/** The enclosing feed's selection group, or a private one when an item is used standalone. */
 export const useSelectionGroup = (): SelectionGroup => {
   const provided = useContext(SelectionGroupContext);
   const fallback = useMemo(createSelectionGroup, []);

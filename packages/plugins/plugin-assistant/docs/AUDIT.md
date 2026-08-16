@@ -273,14 +273,14 @@ Reading the matrix:
    §3.3.1 is why that requires owning selection at the model level.
 3. **The critical precedent: `react-ui-thread` already mounts one CodeMirror view per message inside
    a `Mosaic.VirtualStack`.** `Message.Body` → `TextBlock` calls `useTextEditor` per message, with
-   `readOnly: !editing`. **The island model is therefore already in production** — the engine's core
+   `readOnly: !editing`. **The item model is therefore already in production** — the engine's core
    hypothesis is not unproven, it is unmeasured and un-generalized. That materially lowers the risk
    in §3.3 cost 1 and is the first thing the spike should quantify.
 4. **Two selection modes are needed, not one.** Text selection spanning message boundaries (a
    document-shaped gesture) and selection of _sets of messages_ (a list-shaped gesture — for
    forking, extracting, deleting, quoting). No current renderer has the second beyond "the current
    one".
-5. **Email is the only two-renderer scenario** and the reason the island renderer must generalize
+5. **Email is the only two-renderer scenario** and the reason the item renderer must generalize
    beyond markdown (§5, decided).
 
 ### 3.1 Aspect 1 — the composer (duplicated; should be unified)
@@ -359,19 +359,19 @@ Findings:
    dependency worth holding the line on is `@dxos/assistant` (`AiContext`) — AI-loop machinery, not
    chat UI.
 
-### 3.3 The way out: one engine — a virtualized list of markdown islands
+### 3.3 The way out: one engine — a virtualized list of markdown items
 
 The target architecture: **a virtualized list where each message is its own CodeMirror markdown
-document ("island"), with React chrome around it.** One engine, owned by us, replacing both families.
+document ("item"), with React chrome around it.** One engine, owned by us, replacing both families.
 
 ```
 MessageList  (the engine)
 ├── model        readonly Message[]  +  renderMessage(message) => markdown
 ├── virtualizer  dynamic measurement + height cache; we own scroll anchoring
-├── island       ONE PER MESSAGE (decided) — a CodeMirror view, pooled/recycled
+├── item       ONE PER MESSAGE (decided) — a CodeMirror view, pooled/recycled
 │                extensions: markdown decoration · xmlTags(registry) · optional tail-append
-│                a message's blocks render INLINE within its island, not as separate islands
-│                the renderer is GENERALIZED (decided): an island may be arbitrary React
+│                a message's blocks render INLINE within its item, not as separate items
+│                the renderer is GENERALIZED (decided): an item may be arbitrary React
 │                  (email HTML with CID resolution, custom tiles) instead of a document
 ├── selection    model-level: (messageId, offset) anchors + copy interception
 ├── search       model-level: hits as (messageId, offset, length) → scrollToIndex + decorate
@@ -381,7 +381,7 @@ MessageList  (the engine)
 Each of the five scenarios then differs only in `registry` + `chrome` + `renderMessage`.
 
 **Granularity: per message, not per block.** Blocks render inline inside a single message's
-document, which keeps the island aligned with the unit that carries chrome (one avatar, one
+document, which keeps the item aligned with the unit that carries chrome (one avatar, one
 timestamp, one menu per message) and keeps the virtualizer's item count equal to the message count.
 The AI thread renders blocks as separate document regions today; under the engine those regions stay
 regions, they just live in a per-message document rather than a per-thread one.
@@ -391,25 +391,25 @@ regions, they just live in a per-message document rather than a per-thread one.
 1. **One rendering path.** Comments and email inherit markdown decoration and the widget registry;
    the AI thread keeps its widgets; transcription keeps its inline previews.
 2. **Chrome stops being a hack.** `<branch>`-as-an-XML-tag and the timestamp gutter both become
-   ordinary React around the island — finding 4 above, resolved structurally.
-3. **Streaming gets simpler, not harder.** The streaming message is the tail island; the
-   monotonic-append contract becomes per-island and `MessageSyncer`'s global cursor, line accounting
+   ordinary React around the item — finding 4 above, resolved structurally.
+3. **Streaming gets simpler, not harder.** The streaming message is the tail item; the
+   monotonic-append contract becomes per-item and `MessageSyncer`'s global cursor, line accounting
    and `MessageSpan` bookkeeping largely collapse.
 4. **Virtualization for everyone.** Email conversations get it (they have none today); long channels
    and long chats stop paying for off-screen messages.
 5. **Per-message editability** (comments, email drafts, message edit-in-place) is native to the
-   island model, where it is awkward in a single shared document.
+   item model, where it is awkward in a single shared document.
 
 **What it costs — the parts that must be spiked before committing**
 
 1. **N `EditorView`s.** One per visible message plus overscan (`Mosaic.VirtualStack` defaults to 8).
    Needs view pooling/recycling and minimal read-only extension sets. Measure before believing.
 2. **Dynamic measurement vs CodeMirror's async layout.** The virtualizer needs heights; CodeMirror
-   measures in its own phase, so an island that reflows after mount resizes underneath the
+   measures in its own phase, so an item that reflows after mount resizes underneath the
    virtualizer. This is the hard part and the most likely source of scroll jumps. Prototype three
    cases: mid-list growth, tail growth during streaming, and restore-scroll-on-remount.
 3. **Selection and search move from CodeMirror to us** — one problem, not two. See §3.3.1.
-4. **Minimap coordinates change** from document offsets to (island, offset); `buildMarkers` and
+4. **Minimap coordinates change** from document offsets to (item, offset); `buildMarkers` and
    `MessageSpan` need rework.
 
 **What already exists to build on**
@@ -424,7 +424,7 @@ regions, they just live in a per-message document rather than a per-thread one.
 **Verdict: right target, spike first.** It is a better destination than "two renderers over one
 model", because it collapses the families instead of blessing them. Cost 2 is the one that decides
 it and is not knowable from reading code. The spike is small — a virtualized list of ~200 markdown
-islands with one streaming tail — and it gates everything in §4 that touches the renderer. Nothing
+items with one streaming tail — and it gates everything in §4 that touches the renderer. Nothing
 in the port/mock work (§4.3 track A steps 1–2, 4–5) depends on the outcome, so the spike can run in
 parallel.
 
@@ -432,31 +432,31 @@ parallel.
 
 Both are the same problem wearing two hats, and the answer to both is **the model, not the DOM**.
 
-**Why native selection breaks.** Each island is an `EditorView`, and today `readOnly` maps to
+**Why native selection breaks.** Each item is an `EditorView`, and today `readOnly` maps to
 `EditorState.readOnly.of(true)` plus a transaction filter
 ([`factories.ts:151`](../../../ui/ui-editor/src/extensions/core/factories.ts)) — it does **not** set
 `EditorView.editable.of(false)`. The DOM stays `contenteditable="true"`, and browsers refuse to
 extend one selection across two contenteditable hosts, so a drag from message 1 into message 3
 collapses into one of them.
 
-**One lever exists.** The engine can set `EditorView.editable.of(false)` on non-focused islands.
+**One lever exists.** The engine can set `EditorView.editable.of(false)` on non-focused items.
 Non-editable CodeMirror is ordinary DOM and native selection spans ordinary DOM freely, so
-cross-island selection works for the read-only case — the common one. Two caveats: an _editable_
-island (draft, edit-in-place) reintroduces a boundary at its edges; and a native copy then yields the
+cross-item selection works for the read-only case — the common one. Two caveats: an _editable_
+item (draft, edit-in-place) reintroduces a boundary at its edges; and a native copy then yields the
 **rendered** text rather than the markdown source, because `decorateMarkdown` replaces ranges with
 widgets.
 
-**Virtualization defeats the DOM answer regardless.** Unmounted islands are not in the DOM, so Cmd+A
+**Virtualization defeats the DOM answer regardless.** Unmounted items are not in the DOM, so Cmd+A
 and long drags cannot reach them whatever the contenteditable state. Any correct implementation has
 to reconstruct from the model.
 
 **So both become model-level operations**, which we can do because the engine owns
 `renderMessage(message) => markdown`:
 
-|        | Implementation                                                                                                                 | Consequence                                                     |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| Copy   | track anchor/focus as `(messageId, offset)`; intercept `copy`; slice the model between them                                    | markdown source, includes unmounted messages, DOM-independent   |
-| Search | scan the model; hits as `(messageId, offset, length)`; `virtualizer.scrollToIndex` then push a decoration set into that island | reaches unmounted messages **and** content hidden by `viewType` |
+|        | Implementation                                                                                                               | Consequence                                                     |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Copy   | track anchor/focus as `(messageId, offset)`; intercept `copy`; slice the model between them                                  | markdown source, includes unmounted messages, DOM-independent   |
+| Search | scan the model; hits as `(messageId, offset, length)`; `virtualizer.scrollToIndex` then push a decoration set into that item | reaches unmounted messages **and** content hidden by `viewType` |
 
 **Search is a gain, not a regression.** Only transcription enables CodeMirror search today
 (`createBasicExtensions({ search: true })`); the AI thread does not
@@ -465,7 +465,7 @@ passes only `lineWrapping` + `readOnly`), and neither tile renderer has any. Fou
 have no thread search at all — model-level search gives it to all five, including over blocks the
 current `viewType` filters out (e.g. reasoning in `normal` view), which no renderer can do today.
 
-**Net cost, stated precisely.** Islands move selection and copy from "free from CodeMirror" to
+**Net cost, stated precisely.** Items move selection and copy from "free from CodeMirror" to
 "implemented by us over the model" — bounded, unit-testable without a DOM, and strictly more
 capable. The irreducible part is that a browser-native drag-select across the whole thread needs
 both the `editable: false` lever and a copy interceptor to be complete.
@@ -493,14 +493,14 @@ plugin-assistant · plugin-thread · plugin-review · plugin-inbox · plugin-tra
                                ChatDialog · ChatStatus
     ↓
 @dxos/react-ui-feed          THE ENGINE + shared contracts (§4.0):
-   (new)                     MessageList (§3.3) — virtualized islands, chrome render-prop,
+   (new)                     MessageList (§3.3) — virtualized items, chrome render-prop,
                                model-level selection + search (§3.3.1)
                              MessageMetadata / MessageCallbacks / block-renderer contract
                              deps: react-ui-mosaic, react-ui-markdown, react-ui-editor,
                                    ui-editor, echo, types
     ↑                              ↑                              ↑
 react-ui-thread            plugin-inbox                  react-ui-transcription
-  chat + comments chrome     email chrome + HTML island     timestamp chrome + chunk renderer
+  chat + comments chrome     email chrome + HTML item     timestamp chrome + chunk renderer
 ```
 
 Five renderers become **one engine plus five chrome/registry configurations**, over one composer and
@@ -687,13 +687,13 @@ dropped.
      per-message CodeMirror views inside `Mosaic.VirtualStack` in production (§3.0.1 finding 3), so
      measure that first — it is the honest starting number.
 
-   **(c) Per-message renderer variants.** Three islands in one list: markdown (CodeMirror +
+   **(c) Per-message renderer variants.** Three items in one list: markdown (CodeMirror +
    `xmlTags` registry), HTML (sanitized, non-editor — the email case), and streaming (tail append
    with typewriter). Mixed in a single feed, since email threads and AI chats both contain more than
    one kind.
 
    **(d) Aspects.** Exercise §3.0.1 against the prototype: model-level search across mounted and
-   unmounted messages; text selection across island boundaries including the
+   unmounted messages; text selection across item boundaries including the
    `EditorView.editable.of(false)` question (§3.3.1, open question 5); message-set selection via
    `useListSelection`; per-message chrome (fork, rewind, reply-to) as a render-prop.
 
@@ -733,7 +733,7 @@ implements ChatProcessor` + a `MockChatProcessor` in `#testing` driving the atom
 
 7. **Build `MessageList`** in `react-ui-chat` from the spike, with the block-renderer contract and
    the chrome render-prop. _Test: unit tests for the model/diff (ported from `sync.test.ts` and
-   `TranscriptModel`), plus a story per island mode._
+   `TranscriptModel`), plus a story per item mode._
 8. **Migrate renderers one at a time**, cheapest first, each landing independently: email
    (`ConversationStack` — gains virtualization it lacks today), then human chat + comments
    (`react-ui-thread` — chrome stays, stack mechanics go), then transcription, then the AI thread
@@ -762,8 +762,8 @@ The two tiers answer different questions and both are needed.
 
 **Decided**
 
-- **Island granularity: per message.** Blocks render inline within a message's island (§3.3).
-- **The message renderer is generalized** — an island may be an arbitrary React component rather
+- **Item granularity: per message.** Blocks render inline within a message's item (§3.3).
+- **The message renderer is generalized** — an item may be an arbitrary React component rather
   than a markdown document, which is what lets email HTML (sanitized + CID resolution) participate
   (§3.3).
 - **Selection and search are model-level**, not DOM-level, and search is a net gain rather than a
@@ -779,9 +779,9 @@ The two tiers answer different questions and both are needed.
    `@dxos/react-ui-conversation`?
 4. **Where the shared contracts live** — `MessageMetadata` / `MessageCallbacks` / block-renderer
    contract alongside the engine (natural), or separately in `react-ui-chat`?
-5. **`editable: false` for non-focused islands** — adopt it so native selection spans read-only
-   islands (§3.3.1), accepting that a native copy yields rendered text while the copy interceptor
-   yields markdown? Or keep every island editable-shaped and rely solely on the interceptor?
+5. **`editable: false` for non-focused items** — adopt it so native selection spans read-only
+   items (§3.3.1), accepting that a native copy yields rendered text while the copy interceptor
+   yields markdown? Or keep every item editable-shaped and rely solely on the interceptor?
 6. **`Chat.Toolbar`** — move as presentation with injected `MenuActions`, or leave it in the plugin
    entirely? Leaving it means the package's composite story has no toolbar.
 7. **Test-generator split** — does `testing/test-generator.ts` move (it needs a plugin-free half), or

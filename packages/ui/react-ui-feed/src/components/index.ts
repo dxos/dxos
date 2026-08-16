@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Island';
+export * from './Item';
 export * from './MessageList';

@@ -5,17 +5,17 @@
 import { type ContentBlock, type Message } from '@dxos/types';
 
 /**
- * What an island renders. The engine is renderer-agnostic: a message may resolve to a markdown
+ * What an item renders. The engine is renderer-agnostic: a message may resolve to a markdown
  * document, to raw HTML (email bodies, which are not markdown and cannot be a CodeMirror document),
  * or to a caller-supplied component.
  */
-export type IslandContent =
+export type ItemContent =
   | { kind: 'markdown'; text: string }
   | { kind: 'html'; html: string }
   | { kind: 'custom'; key: string; data?: unknown };
 
-/** Resolves a message to the content its island renders. One per scenario (chat, email, …). */
-export type MessageRenderer = (message: Message.Message) => IslandContent;
+/** Resolves a message to the content its item renders. One per scenario (chat, email, …). */
+export type MessageRenderer = (message: Message.Message) => ItemContent;
 
 /**
  * Default renderer: an `text/html` block wins (email), otherwise every block is flattened to
