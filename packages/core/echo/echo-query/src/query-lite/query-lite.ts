@@ -401,6 +401,13 @@ class FilterClass implements Filter$.Any {
     });
   }
 
+  static feedCursor(after: string): Filter$.Any {
+    return new FilterClass({
+      type: 'feed-cursor',
+      after,
+    });
+  }
+
   private static _timeRangeFilter(
     field: 'updatedAt' | 'createdAt',
     range: { after?: Date | number; before?: Date | number },
@@ -888,6 +895,8 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.childOf([${filter.parents.map((parent) => JSON.stringify(parent)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
+    case 'feed-cursor':
+      return `Filter.feedCursor(${JSON.stringify(filter.after)})`;
     case 'not':
       return `Filter.not(${prettyFilter(filter.filter)})`;
     case 'and':

@@ -393,9 +393,11 @@ export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', 
  * item, and `Feed.START` for the sentinel that bounds nothing.
  *
  * The bound is pushed into the index scan, so a reader that keeps a cursor pays for what is new
- * rather than for the whole feed. Combine with `limit()` for a bounded page. Only meaningful
- * against a feed scope — an automerge object carries no position, so a query that also selects a
- * space's documents is rejected.
+ * rather than for the whole feed. Combine with `limit()` for a bounded page. Results come back in
+ * append order and cover positioned items only — an item a peer wrote but the position authority
+ * has not yet acknowledged has no place in that order, and `Feed.START` selects the same set from
+ * the beginning rather than everything. Only meaningful against a feed scope — an automerge object
+ * carries no position, so a query that also selects a space's documents is rejected.
  *
  * @example
  * ```ts

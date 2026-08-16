@@ -1147,9 +1147,11 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
    * append from re-querying every other trigger of the same kind.
    */
   #dispatchReactively = (kind: 'feed' | 'subscription', triggerId: string): void => {
-    // Declared ahead of the fork so the `ensuring` finalizer can drop this fiber from the set.
-    let fiber: Fiber.Fiber<void, never>;
-    fiber = Effect.runFork(
+    // Held in a cell rather than a plain binding: a dispatch that completes without an async
+    // boundary runs its finalizer before `runFork` returns, so the finalizer must tolerate not
+    // having the fiber yet — and the add below must not then resurrect a completed one.
+    const forked: { fiber?: Fiber.Fiber<void, never>; done?: boolean } = {};
+    forked.fiber = Effect.runFork(
       this.#reactiveDispatchLock
         .withPermits(1)(this.invokeScheduledTriggers({ kinds: [kind], triggerIds: [triggerId], untilExhausted: true }))
         .pipe(
@@ -1160,10 +1162,19 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
             ),
           ),
           Effect.catchCause(() => Effect.void),
-          Effect.ensuring(Effect.sync(() => this.#reactiveDispatchFibers.delete(fiber))),
+          Effect.ensuring(
+            Effect.sync(() => {
+              forked.done = true;
+              if (forked.fiber) {
+                this.#reactiveDispatchFibers.delete(forked.fiber);
+              }
+            }),
+          ),
         ),
     );
-    this.#reactiveDispatchFibers.add(fiber);
+    if (!forked.done) {
+      this.#reactiveDispatchFibers.add(forked.fiber);
+    }
   };
 
   /** Drop every reactive source and interrupt the dispatches they forked. */

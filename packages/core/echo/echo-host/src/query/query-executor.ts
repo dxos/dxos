@@ -2140,29 +2140,36 @@ const extractSpaceIdFromQueue = (feedUri: string): SpaceId | undefined => {
   return echoUri ? EID.getSpaceId(echoUri) : undefined;
 };
 
+/** Bound below every assigned position, which start at 0. */
+const BEFORE_FIRST_POSITION = -1;
+
 /**
- * The index-level window for a select bounded by a feed cursor: resume after that position and cap
- * the page at the pushed-down limit.
+ * The index-level window for a select bounded by a feed cursor: resume after that position, in
+ * position order, capped at the pushed-down limit.
  *
- * Throws when the step also selects from a space's documents — `queuePosition` is null for an
- * automerge object, so such a query has no answer to give rather than a cheaper one.
+ * Every cursor windows the scan, the start sentinel included — it bounds nothing but still asks for
+ * a cursor read, which is over positioned blocks in position order. A reader that paged the
+ * unpositioned blocks in first would stop at a page of items it cannot act on while positioned ones
+ * waited behind them.
  *
  * A cursor that is not a decimal position is treated as unsatisfiable rather than as "no cursor":
  * resuming a corrupted checkpoint from the beginning would re-dispatch the whole feed.
  */
 const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined => {
-  // The empty string is the "from the beginning" sentinel (`Feed.START`), i.e. no lower bound — and
-  // without a bound there is no window: an unbounded scan must keep returning the blocks a peer
-  // that does not assign positions writes, which have no position to order or bound by.
-  if (!step.afterFeedCursor) {
+  if (step.afterFeedCursor === undefined) {
     return undefined;
   }
 
+  // Backstop for the planner's check, which is where a cursor over a space's documents is refused.
   if (!step.scope.every((scope) => scope._tag === 'feed')) {
     throw new QueryError({
       message: 'A feed cursor filter can only be used with a feed scope.',
       context: { query: null },
     });
+  }
+
+  if (step.afterFeedCursor === '') {
+    return { after: BEFORE_FIRST_POSITION, limit: step.limit };
   }
 
   const after = /^\d+$/.test(step.afterFeedCursor) ? Number(step.afterFeedCursor) : Number.NaN;
