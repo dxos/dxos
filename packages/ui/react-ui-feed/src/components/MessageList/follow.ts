@@ -17,10 +17,17 @@ export type FollowOptions = {
   rowHeight?: () => number;
 };
 
-const DEFAULT_MAX_SPEED = 12;
-const DEFAULT_ACCELERATION = 24;
-const DEFAULT_DECELERATION = 24;
-
+const DEFAULT_MAX_SPEED = 2;
+const DEFAULT_ACCELERATION = 12;
+const DEFAULT_DECELERATION = 6;
+/**
+ * Gentler than the ramp up, and deliberately so.
+ *
+ * Braking distance is `v²/2d`, so matching the two rates sheds full speed in three rows — a travel
+ * of any length then cruises to within a few rows of the target and stops, which reads as an abrupt
+ * halt however correct the curve is. At a third of the acceleration the landing occupies nine rows
+ * and a second and a half, which is long enough to see.
+ */
 const DEFAULT_ROW_HEIGHT = 120;
 
 /** Within this distance the follow has arrived; below it the animation would only jitter. */

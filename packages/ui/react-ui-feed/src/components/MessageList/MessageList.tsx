@@ -153,12 +153,21 @@ const MessageListRoot = ({
   });
 
   // The follow carries velocity across frames, so a target that moves with every chunk produces one
-  // continuous travel rather than an animation restarted per chunk. Speeds are in rows, so the row
-  // height comes from what the virtualizer has actually measured.
-  const rowHeight = useCallback(
-    () => (messages.length ? virtualizer.getTotalSize() / messages.length : estimateSize),
-    [virtualizer, messages.length, estimateSize],
-  );
+  // continuous travel rather than an animation restarted per chunk.
+  //
+  // Speeds are in rows, so a row needs a height. The median of what is on screen, rather than the
+  // mean of everything: a streaming answer is enormous beside a handful of short messages, so the
+  // mean tracks that one row and the follow accelerates with it — the speed then honours its limit
+  // in rows while ignoring it entirely in pixels. Capped at the viewport because a row taller than
+  // the screen makes "rows per second" meaningless as a rate.
+  const rowHeight = useCallback(() => {
+    const sizes = virtualizer
+      .getVirtualItems()
+      .map((item) => item.size)
+      .sort((a, b) => a - b);
+    const median = sizes.length ? sizes[Math.floor(sizes.length / 2)] : estimateSize;
+    return Math.min(median, viewport?.clientHeight || median);
+  }, [virtualizer, estimateSize, viewport]);
   const follower = useMemo(
     () => (viewport ? new ScrollFollower(viewport, { ...followOptions, rowHeight }) : undefined),
     [viewport, followOptions?.maxSpeed, followOptions?.acceleration, followOptions?.deceleration, rowHeight],

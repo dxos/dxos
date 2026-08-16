@@ -191,6 +191,12 @@ export const FeedStory = ({
 
     return () => {
       cancelled = true;
+      // A turn interrupted before its first chunk leaves an empty answer behind, which renders as a
+      // tall blank row. Strict mode runs this teardown on mount, so it is the common case.
+      setMessages((prev) => {
+        const last = prev.at(-1);
+        return last && last.sender.role === 'assistant' && !Message.extractText(last).length ? prev.slice(0, -1) : prev;
+      });
     };
   }, [streaming, wordsPerChunk, chunkDelay]);
 
@@ -213,20 +219,11 @@ export const FeedStory = ({
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <IconButton
-              icon='ph--play--regular'
+              icon={streaming ? 'ph--stop--regular' : 'ph--play--regular'}
               iconOnly
-              label='Start'
-              disabled={streaming}
-              data-testid='feed.stream.start'
-              onClick={() => setStreaming(true)}
-            />
-            <IconButton
-              icon='ph--stop--regular'
-              iconOnly
-              label='Stop'
-              disabled={!streaming}
-              data-testid='feed.stream.stop'
-              onClick={() => setStreaming(false)}
+              label={streaming ? 'Stop' : 'Start'}
+              data-testid='feed.stream.toggle'
+              onClick={() => setStreaming((value) => !value)}
             />
             <IconButton
               icon='ph--plus--regular'
