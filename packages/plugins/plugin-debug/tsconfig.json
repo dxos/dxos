@@ -127,6 +127,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-google"
+    },
+    {
       "path": "../plugin-illustrator"
     },
     {

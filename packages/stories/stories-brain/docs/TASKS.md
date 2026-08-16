@@ -353,7 +353,7 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
 
 ## Mailbox pipeline suite (2026-08-12, autonomous session)
 
-Six pipelines over the FeedPipeline workbench plus a summarization tier and the orchestrator that
+Six pipelines over the MailboxAnalyze workbench plus a summarization tier and the orchestrator that
 cascades them, shipped on **PR #12546** (branch `claude/mailbox-research-1e4396`, opened
 after #12538 landed). Test index: `packages/stories/stories-inbox/AUDIT.md`; product plan:
 `packages/plugins/plugin-inbox/docs/PLAN.md` § "Mailbox pipelines → product".

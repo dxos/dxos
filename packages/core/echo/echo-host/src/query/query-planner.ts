@@ -140,6 +140,15 @@ export class QueryPlanner {
     // without it.
     const { after, rest } = _splitFeedCursor(filter, context);
     if (after !== undefined) {
+      // Checked here rather than where the bound is applied, so the start sentinel — which bounds
+      // nothing and so reaches no window — is refused over a space's documents just the same. An
+      // automerge object has no position for any cursor to name.
+      if (!context.scope.every((scope) => scope._tag === 'feed')) {
+        throw new QueryError({
+          message: 'A feed cursor filter can only be used with a feed scope.',
+          context: { query: context.originalQuery },
+        });
+      }
       const plan = this._generateSelectionFromFilter(rest ?? { type: 'object', typename: null, props: {} }, context);
       const selectIdx = plan.steps.findIndex((step) => step._tag === 'SelectStep');
       invariant(selectIdx !== -1, 'expected a select step to bound');

@@ -309,3 +309,45 @@ body {
   height: 1.5em;
   white-space: nowrap;
 }
+
+/*
+ * Stalled affordance (dev only — see `BootLoaderApi.stalled`). Anchored to the TOP of the viewport,
+ * clear of the centred disc and its status log: this is a notice about the boot rather than part of
+ * it, and putting it below the log left it competing with the very lines that keep moving.
+ */
+#boot-loader-stalled {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 24px 16px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+#boot-loader-stalled-text {
+  margin: 0;
+  opacity: 0.5;
+}
+
+#boot-loader-stalled-abort {
+  /*
+   * Styled from scratch rather than inherited: the loader paints before any app CSS loads, so it
+   * cannot rely on the design system's button.
+   */
+  padding: 6px 14px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+#boot-loader-stalled-abort:hover {
+  opacity: 1;
+}

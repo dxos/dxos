@@ -7,14 +7,14 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
 import { GoogleCalendar } from '#apis';
+import { GoogleOperation } from '#types';
 
 import { GoogleCredentials } from '../../../services/google-credentials';
 import { toGoogleEvent } from '../mapper';
 
-const handler = InboxOperation.CreateGoogleCalendarEvent.pipe(
+const handler = GoogleOperation.CreateGoogleCalendarEvent.pipe(
   Operation.withHandler(({ event, googleCalendarId, connection: connectionRef }) =>
     Effect.gen(function* () {
       log('creating calendar event', { googleCalendarId, connection: connectionRef.uri });

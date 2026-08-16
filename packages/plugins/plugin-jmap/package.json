@@ -47,6 +47,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -78,6 +83,11 @@
       "source": "./src/JmapPlugin.ts",
       "types": "./dist/types/src/JmapPlugin.d.ts",
       "import": "./dist/lib/JmapPlugin.mjs"
+    },
+    "./JmapOperation": {
+      "source": "./src/types/JmapOperation.ts",
+      "types": "./dist/types/src/types/JmapOperation.d.ts",
+      "import": "./dist/lib/JmapOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

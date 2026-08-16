@@ -10,7 +10,7 @@ import { Context, LifecycleState, Resource } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService } from '@dxos/protocols/rpc';
 import { retry } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
@@ -19,7 +19,7 @@ const MAX_UPDATE_FREQ = 10; // [updates/sec]
 
 export type DocumentsSynchronizerProps = {
   automergeHost: AutomergeHost;
-  sendUpdates: (updates: BatchedDocumentUpdates) => void;
+  sendUpdates: (updates: DataService.BatchedDocumentUpdates) => void;
 };
 
 interface DocSyncState {
@@ -166,7 +166,7 @@ export class DocumentsSynchronizer extends Resource {
     this._syncStates.clear();
   }
 
-  async update(ctx: Context, updates: DocumentUpdate[]): Promise<void> {
+  async update(ctx: Context, updates: DataService.DocumentUpdate[]): Promise<void> {
     for (const { documentId, mutation } of updates) {
       // Inbound (client -> worker) updates are always mutation-bearing; the
       // `mutation`-less variant is only used for worker -> client transition
@@ -208,7 +208,7 @@ export class DocumentsSynchronizer extends Resource {
     if (this.#sendUpdatesPaused) {
       return;
     }
-    const updates: DocumentUpdate[] = [];
+    const updates: DataService.DocumentUpdate[] = [];
 
     const docsWithPendingUpdates = Array.from(this._pendingUpdates);
     this._pendingUpdates.clear();

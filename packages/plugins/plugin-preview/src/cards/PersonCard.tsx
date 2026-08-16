@@ -11,8 +11,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Avatar } from '@dxos/react-ui';
-import { Card, Icon } from '@dxos/react-ui';
+import { Avatar, Card, Icon } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { type Person } from '@dxos/types';
 

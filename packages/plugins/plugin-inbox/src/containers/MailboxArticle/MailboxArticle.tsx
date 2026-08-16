@@ -25,7 +25,7 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, Panel } from '@dxos/react-ui';
+import { Deferred, ElevationProvider, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
@@ -90,11 +90,11 @@ export const MailboxArticle = ({
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
-  // Gmail sync (`#sync`), the process pipeline (`#process`) and the scan cascade (`#scan`)
+  // Mail sync (`#sync`), the process pipeline (`#process`) and the analyze cascade (`#analyze`)
   // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
   // first — it is the one that changes what the list contains rather than what is known about it.
   const syncProgress = useProgressMonitor(createSyncProgressKey(mailbox));
-  const scanProgress = useProgressMonitor(InboxOperation.createScanProgressKey(mailbox));
+  const scanProgress = useProgressMonitor(InboxOperation.createAnalyzeProgressKey(mailbox));
   const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
   const progress = [syncProgress, scanProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
@@ -229,6 +229,12 @@ export const MailboxArticle = ({
 
   // Drives an in-flow spinner in the list, never a full-panel fallback — a page fetch or a
   // background refresh must not blank the list. `source` is undefined until a free-text feed resolves.
+  //
+  // Deliberately NOT widened to cover the feed's own resolution: a system-tag view degrades to a
+  // space-only scope while `mailbox.feed` loads, which answers immediately with nothing (measured on
+  // a live profile: 0 messages space-only vs 432 feed-scoped) — but spinning through that window
+  // just trades a flash of the empty panel for a flash of the spinner. The `Deferred` below holds
+  // the panel back instead, which costs no visible state at all.
   const loading = !source || pagination.isLoading;
   // Show the empty-mailbox panel only once the query has settled with nothing, never mid-load.
   const showEmptyState = !loading && messages.length === 0;
@@ -417,12 +423,7 @@ export const MailboxArticle = ({
         </Menu.Root>
       </ElevationProvider>
       <Panel.Content asChild>
-        {showEmptyState ? (
-          <InitializeMailbox mailbox={mailbox} />
-        ) : (
-          // Always keep the list mounted (even with no items yet); `loading` renders an in-flow
-          // spinner at the end of the list rather than replacing the whole panel — so a page fetch
-          // or a mid-sync refresh never blanks what's already shown.
+        <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
             items={items}
@@ -438,7 +439,7 @@ export const MailboxArticle = ({
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        )}
+        </Deferred>
       </Panel.Content>
       {progress && (progress.status === 'running' || progress.status === 'error') && (
         <Panel.Statusbar asChild>

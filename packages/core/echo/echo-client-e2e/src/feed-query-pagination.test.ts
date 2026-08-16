@@ -199,12 +199,22 @@ describe('Feed query pagination', () => {
   test('cursor filter is rejected outside a feed scope', async ({ expect }) => {
     const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });
     const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'rejected-scope' }));
+    await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'a' })]);
+    await db.flush();
+    const feedUri = Feed.getFeedUri(feed)!;
 
     // An automerge object carries no position, so the bound has no answer to give — better a refusal
-    // than a query that silently returns everything.
-    await expect(
-      db.query(Query.select(Filter.feedCursor(Feed.Cursor.make('0'))).from(Scope.space())).run(),
-    ).rejects.toThrow();
+    // than a query that silently returns everything. The start sentinel bounds nothing, but it is
+    // still a cursor and is refused just the same rather than quietly running unbounded.
+    for (const cursor of [Feed.Cursor.make('0'), Feed.START]) {
+      await expect(db.query(Query.select(Filter.feedCursor(cursor)).from(Scope.space())).run()).rejects.toThrow(
+        /feed scope/,
+      );
+      await expect(
+        db.query(Query.select(Filter.feedCursor(cursor)).from(Scope.feed(feedUri), Scope.space())).run(),
+      ).rejects.toThrow(/feed scope/);
+    }
   });
 
   test('feed scope excludes space objects when paginating', async ({ expect }) => {

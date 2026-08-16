@@ -12,32 +12,30 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Messenger } from '@dxos/protocols';
 import {
   type Contact,
-  type CreateEpochRequest,
   type Invitation,
-  SpaceArchive,
   type Space as SpaceData,
   type SpaceMember,
   type SpaceState,
-  type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type Credential, type Epoch, type MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type SpacesService } from '@dxos/protocols/rpc';
 
 import { type CancellableInvitation } from './invitations';
 import { type SpaceProperties } from './types';
 
 export type CreateEpochOptions = {
-  migration?: CreateEpochRequest.Migration;
+  migration?: SpacesService.Migration;
   automergeRootUrl?: string;
 };
 
 export type ExportSpaceOptions = {
   /**
    * Archive format.
-   * @default SpaceArchive.Format.BINARY
+   * @default SpacesService.SpaceArchiveFormat.enums.BINARY
    */
-  format?: SpaceArchive.Format;
+  format?: SpacesService.SpaceArchiveFormat;
 };
 
 export interface SpaceInternal {
@@ -54,7 +52,7 @@ export interface SpaceInternal {
   // TOOD(burdon): Start to factor out credentials.
   removeMember(memberKey: PublicKey): Promise<void>;
 
-  export(options?: ExportSpaceOptions): Promise<SpaceArchive>;
+  export(options?: ExportSpaceOptions): Promise<SpacesService.SpaceArchive>;
 
   /**
    * Migrate space data to the latest version.
@@ -167,7 +165,7 @@ export interface Space extends Messenger {
   // TODO(burdon): Factor out membership, etc.
   share(options?: Partial<Invitation>): CancellableInvitation;
   admitContact(contact: Contact): Promise<void>;
-  updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
+  updateMemberRole(request: Omit<SpacesService.UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
 }
 
 export const isSpace = (object: unknown): object is Space =>
