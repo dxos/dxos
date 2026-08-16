@@ -98,13 +98,7 @@ AddIconButton.displayName = 'SystemIconButton.Add';
 // AI
 //
 
-/**
- * Any "run AI over this subject" affordance — analyse, research, generate, suggest.
- *
- * Only for BUTTONS. An operation's `meta.icon` and a graph action's `properties.icon` are strings, so
- * they take {@link AI_ACTION_ICON} directly; this preset and that constant are the same convention
- * reaching two kinds of call site.
- */
+/** The button form of {@link AI_ACTION_ICON}, which metadata call sites take as a string instead. */
 const AiIconButton = forwardRef<HTMLButtonElement, StaticPresetProps>(({ label, ...props }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   return (

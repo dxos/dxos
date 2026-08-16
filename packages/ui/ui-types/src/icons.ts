@@ -3,12 +3,8 @@
 //
 
 /**
- * The glyph for "run AI over this subject" — analysis, research, generation, suggestion.
- *
- * A named constant because these actions are DATA, not components: an operation's `meta.icon` and a
- * graph action's `properties.icon` are strings, so no shared button can hold the convention for them.
- * Eighteen call sites spelled it literally, and the mailbox Analyze action spelled something else
- * entirely — which is the divergence this exists to stop.
+ * The glyph for "run AI over this subject", named here because operation and graph-action metadata
+ * carry it as a string, where no shared component can hold the convention.
  */
 export const AI_ACTION_ICON = 'ph--sparkle--regular';
 
