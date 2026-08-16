@@ -20,8 +20,8 @@ claude plugin install dxos@dxos
 
 ## Use
 
-| Command                                  | Does                                                                     |
-| ---------------------------------------- | ------------------------------------------------------------------------ |
+| Command                          | Does                                                                     |
+| -------------------------------- | ------------------------------------------------------------------------ |
 | `/dxos:project`                  | Status of the current project — worktree, branch, docs, uncommitted work |
 | `/dxos:project list [all]`       | Numbered table of active projects; reply with a row number to resume     |
 | `/dxos:project tasks [all]`      | Open `- [ ]` items from the current project's `TASKS.md`                 |
