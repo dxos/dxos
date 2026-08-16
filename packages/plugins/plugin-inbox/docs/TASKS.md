@@ -1,12 +1,47 @@
 # plugin-inbox — Tasks
 
-_Resume: **PR #12555 IS IN THE MERGE QUEUE** (auto-merge enabled, squash; 84 commits, Phases 0-5).
-All three review threads cleared. Working tree clean, nothing unpushed. NOTHING IN THE BRANCH HAS BEEN
-VERIFIED IN A RUNNING APP — the 27-step plan in [`TESTING.md`](TESTING.md) is unrun and needs a WARM
-browser (see the blocker section). Next after the merge lands: the two ECHO chips gate the rest —
-computed group keys (spawned, running) unblocks the threadId truncation, and annotation-constrained
-refs (spawned) unblocks D6's boundary validation; both await Dima's approval. Unblocked meanwhile:
-Phase 4 summarization and the `useBlobUrl` coverage gap._
+_Resume: **#12555, #12574, #12575, #12577 and #12612 MERGED.** Current PR is **#12605**, now carrying
+five subjects rather than the one its original title named — provider operations, the `Banner` rename
+plus `Deferred`, the dev startup abort, the card-depiction seam, and the trigger poll. Landing as one
+PR was a deliberate call over splitting it into five.
+
+**Its `test` job was red and is now fixed.** Cause: `vite.config.ts` lists build entrypoints
+explicitly, and new subpaths were added without them — `#types` dangled in plugin-google's built
+`operations` entry, so the CLI died at import and all 11 of its tests failed on a module-resolution
+error rather than anything they asserted. Same omission in plugin-jmap, and in plugin-inbox's
+`MailSend`/`ReplyGeneration` (whose exports also pointed at a nested `dist/lib/types/` path no sibling
+uses). A local `:build` cannot catch this class — the entry is absent, not broken, and it only fails at
+runtime resolution in a consumer. An audit of every manifest against files on disk found five more
+packages with the same defect, all pre-existing on `main` and none with a consumer yet:
+`plugin-atproto`, `plugin-library`, `plugin-brain` (`./containers`), `plugin-projects` (`./templates`)
+and `storybook-testing` (`./modules`) — four of them pointing into a `dist/lib/neutral/` layout that
+does not exist.
+
+Landed since: the twelve Google/JMAP operation definitions moved to `@dxos/plugin-google/GoogleOperation`
+and `@dxos/plugin-jmap/JmapOperation`, so plugin-inbox no longer declares operations it does not
+implement; the Inbox / Inbox (Send) / Calendar skills take their tools from the connectors a deployment
+actually installs, fixing a JMAP-only deployment advertising Gmail tools; `DraftEvent.isDraft` asks for
+any foreign key rather than Google's; **`ScanMailbox` is now `AnalyzeMailbox`** (op key, progress key
+`#analyze`, `operations/analyze/`, `templates/analyze-mailbox.ts`, toolbar label "Analyze"), and its
+cascade runner calls its plan entries _passes_ rather than overloading "stage"; the trigger dispatcher
+polls once a minute instead of once a second and refuses a cron finer than its own tick; the Research
+action now runs the agent that fills the profile skeleton it creates.
+
+**D6 is BUILT (2026-08-15) — and it was not the thing it was named after.** Framed as "generalize off
+`Mailbox`" it had no second consumer and every costing said wait. The real defect was that
+`findOrCreateFeedCursor` took one object playing two roles: the feed's OWNER and the cursor's SUBJECT.
+Splitting them is D6. `isConsumerCursor` now matches on `spec.target` — which was the entirety of the
+"cursor identity" problem PIPELINE.md called blocking and specified a composite key for; the write side
+already stored the target and the predicate ignored it. `createInvocation` became `createInvocations`,
+so a processor can cover N subjects. First consumer: `syncProjectTasks`, one cursor per Project over a
+shared mailbox feed. No `Ref.byAnnotation` (dropped for good in #12612), no generic feed host, no
+change to `AnalyzeMailbox`'s input.
+
+Unresolved: the mailbox empty-panel flicker's root cause is still unknown (`Deferred` masks it, and the
+`!feed` fix committed in `f107a7314c` did not work); the CRM agent wiring has never been observed
+running, and binds skills by querying `Skill.Skill` objects in the space — silently skipping if none
+match. Unblocked and unclaimed: `ExtractCorrespondents`'s cursor, the `Mailbox.ts` util split,
+`useContactLookup`, the `useBlobUrl` coverage gap, and Phase 4 summarization._
 
 Registry project: **`mailbox-pipeline`** (renamed from `inbox-surface` 2026-08-14 — the work outgrew
 the name; it is now the pipeline architecture as much as the surface over it).
@@ -82,7 +117,8 @@ Committed, unpushed. This is the PR to open first.
   JMAP as a mailbox role, both already mapped in the providers' `sync/system-tags.ts`, so one toggle
   serves both directions and NO filter-complement operator is needed anywhere.
 - **Archive is LOCAL-ONLY for now** (syncing tags back to Gmail is P2). A Gmail sync WILL restore an
-  archived message. Accepted deliberately — do not re-file this as a bug.
+  archived message. Accepted deliberately — do not re-file this as a bug. **Superseded 2026-08-15** by
+  Phase 6 below, which closes the P2 — see [`TAG-SYNC.md`](TAG-SYNC.md).
 
 ---
 
@@ -135,7 +171,7 @@ Committed, unpushed. This is the PR to open first.
       it survives as `ResetFeedCursor` with a required `cursorId` instead of being removed. Also note
       `CrmOperation.ProcessMailbox` is a different operation and was left alone. The `stories-brain`
       phase that documented building it is marked REMOVED.
-      CI FALLOUT, caught by the PR and fixed: (a) the `FeedPipeline` "Fixture Test" play test drove the
+      CI FALLOUT, caught by the PR and fixed: (a) the `MailboxAnalyze` "Fixture Test" play test drove the
       deleted operation's `execute` button through run → rerun-0 → reset → run, so it lost its subject;
       it is reduced to asserting the fixture corpus loads. (b) The story's action `useState('process')`
       default pointed at the removed action. (c) Cursor coverage went with `process-mailbox.test.ts`
@@ -150,6 +186,26 @@ Committed, unpushed. This is the PR to open first.
 ## Phase 3: Fixes + polish
 
 ### Tasks
+
+- [ ] **Conversation star state should be the OR across the thread, and read-only** (reported
+      2026-08-15). A conversation whose FIRST message is starred appears in the Starred folder, but the
+      conversation header shows no star — the header reads membership from one message while the folder
+      query matches any. Decided direction: in `MailboxArticle` the conversation star is the logical OR
+      of every message in the thread and is READ-ONLY, or alternatively render a star per message.
+      Toggling one aggregate star cannot express which message it belongs to, which is why it stops
+      being a control.
+
+- [ ] **Filtered mailbox results float instead of anchoring to the top** (reported 2026-08-15, with a
+      screenshot). With a filter applied in the mailbox toolbar (`# inbox patrick`), the two matching
+      conversations render roughly a third of the way down the pane with a large empty band above
+      them, rather than sitting at the top of the list as they do unfiltered.
+      Start at `components/InboxStack/InboxStack.tsx` and the scroll container in
+      `containers/MailboxArticle`. Two candidates worth separating before fixing: (a) the virtualizer
+      or scroll container keeping the offset/spacer sizing of the UNFILTERED list, so the shortened
+      result set paints at the old scroll position — expect it to correct itself on scroll or resize,
+      which would confirm it; (b) a centring layout rule (`place-items-center` / `items-center`) that
+      only becomes visible once the content no longer fills the viewport. (a) is the more likely and
+      the more serious: it would mean any filter that shrinks the list leaves dead space.
 
 - [x] **Person rows should use the `Row.Person` avatar, not a `ph--user--regular` icon** (requested
       2026-08-13) — everywhere a card row represents a person, the generic user glyph should be the
@@ -309,12 +365,16 @@ this repo does not unit-test. One entry is worth acting on rather than dismissin
 
 - [x] **`Enrich` was four unrelated things** — two of them primary buttons on adjacent toolbars. The
       mailbox one was not enrichment at all: it runs the extract → classify → summarize cascade, which
-      creates objects rather than filling gaps. Renamed: - `InboxOperation.EnrichMailbox` → `ScanMailbox` (op key `enrichMailbox` → `scanMailbox`,
-      `createEnrichProgressKey` → `createScanProgressKey`, `#enrich` → `#scan`,
-      `DEFAULT_ENRICH_MAILBOX_TIERS` → `DEFAULT_SCAN_MAILBOX_TIERS`, files under `operations/scan/`,
-      template `org.dxos.routine.scanMailbox`). **Not** `AnalyzeMailbox` — that name is taken by the
-      cascade's own third tier. Safe to rename the op key because its changeset is still pending, so
-      no released routine references the old DXN. - CRM record + sender actions → `Research`, matching the `ResearchPerson`/`ResearchOrganization`
+      creates objects rather than filling gaps. Renamed: - `InboxOperation.EnrichMailbox` → `ScanMailbox`, and then **→ `AnalyzeMailbox` on 2026-08-15**
+      (final state: op key `analyzeMailbox`, `createAnalyzeProgressKey` → `#analyze`,
+      `DEFAULT_ANALYZE_MAILBOX_TIERS`, files under `operations/analyze/`, template
+      `org.dxos.routine.analyzeMailbox`, toolbar label "Analyze"). `Scan` was chosen first precisely
+      to avoid `AnalyzeMailbox`, which the cascade's own third tier already used — the second rename
+      accepted that collision deliberately, taking `#analyze` for the cascade and moving the brain
+      fact pass to `createFactsProgressKey` → `#facts`. Processor ids and `MailboxTier` values were
+      NOT renamed: an id doubles as its feed cursor tag, and tiers appear in persisted routine input.
+      Safe to rename the op key because its changeset is still pending, so no released routine
+      references the old DXN. - CRM record + sender actions → `Research`, matching the `ResearchPerson`/`ResearchOrganization`
       operations they actually invoke, and signalling the outbound web/LLM run that `Enrich` hid. - `Enrich images` → `Find images`. `CrmOperation.EnrichImages` keeps its id — that one really is
       enrichment. - Deleted the dead `view-mode-enriched.menu` key: labels derive from `VIEW_MODES`
       (`html`/`markdown`/`plain`), so nothing could ever resolve it.
@@ -355,6 +415,31 @@ this repo does not unit-test. One entry is worth acting on rather than dismissin
 
 ---
 
+## Messages without a `threadId` (from PR #12574)
+
+Drafts, transcriptions and assistant-authored messages carry no `threadId` (`Schema.optional` on
+`Message`, and no plugin-inbox creation site sets one); only synced Gmail/JMAP mail has a
+server-assigned id.
+
+### Tasks
+
+- [x] Conversation grouping keys on `threadId ?? id` — `Aggregate.group({ coalesce: [...] })`, added
+      to `@dxos/echo` for this (AST `group` entries now carry a `properties` fallback chain; `id`
+      resolves to the entity id). Each threadless message forms its own group, so the `items` preview
+      cap (`MAILBOX_THREAD_PREVIEW_COUNT` = 4) can no longer truncate a pool of unrelated messages.
+      Removed the null-group split in `MailboxArticle.tsx`.
+- [x] **Threadless messages never reach the list at all** — FIXED. `buildThreadSemiJoin` now returns
+      `Query.all(wholeThreads, Query.select(viewFilter))`: the semi-join arm still expands a match to
+      its whole thread, and the direct-match arm carries the threadless messages that
+      `threadId IN (…)` can never admit (they have no id to be found by and project nothing into the
+      subquery). The second arm is deliberately unscoped so the caller's own `.from(scopes)` applies to
+      it, while the subquery keeps its separate `matchesScope`. `Query.all` gained a typed overload in
+      `@dxos/echo` so the union stays a `Query<Message>` rather than needing a cast at the call site.
+      Covered by three live-DB tests (threadless reaches the list; not duplicated; a threaded message
+      matching both arms returns once).
+
+---
+
 ## Phase 4: Summarization
 
 ### Tasks
@@ -364,6 +449,119 @@ this repo does not unit-test. One entry is worth acting on rather than dismissin
       markdown task list.
 - [ ] **Investor-log LLM summaries live** — the `summarize: true` path is implemented and degrades to
       the deterministic form.
+
+---
+
+## Analyze pipeline: compose it from the existing stages (tracked 2026-08-14)
+
+_"Enhance" meant the SECOND PHASE, settled 2026-08-15: it is now `AnalyzeMailbox`, and the naming
+question below is closed._
+
+### Tasks
+
+- [ ] **Assemble the Analyze cascade out of the stages already written**, rather than new ad-hoc
+      logic. What exists today: `pipeline-email`'s `summarizeStage`, `extractContactsStage`,
+      `statsStage` and `extractFactsStage`, assembled by `EmailPipeline.run`
+      ([`pipeline.ts`](../../../core/compute/pipeline-email/src/pipeline.ts)); plugin-inbox's own
+      `on-arrival-extractors` stage ([`on-arrival.ts`](../src/util/on-arrival.ts)); and the
+      `EmailFactPipeline` / topics variants alongside them. Note PIPELINE.md's count: only six of the
+      twelve pipelines have an internal stage chain at all, so this is as much about giving the plain
+      loops one as about reusing what exists.
+
+---
+
+## Tracked 2026-08-15
+
+Raised while driving the live mailbox. Grouped by owner, since half of these are not plugin-inbox's.
+
+### plugin-inbox
+
+- [x] **Analyze icon → sparkle, via a constant AND a button preset** (2026-08-15). The framing needed
+      correcting: an AI action is DATA far more often than it is a button — 18 of the 21 sparkle uses
+      are an operation's `meta.icon` or a graph action's `properties.icon`, both plain strings that no
+      React component can constrain. So the mechanism is `AI_ACTION_ICON` in `@dxos/ui-types`
+      (React-free, so an operation definition can import it without pulling UI into a headless module),
+      with `SystemIconButton.Ai` sourcing the same constant for the 3 button call sites.
+      Analyze now uses it at all three of its sites, plus the two adjacent plugin-inbox uses whose
+      package already depended on `ui-types`.
+      LEFT DELIBERATELY: 13 literals across 10 packages. Converting each needs a new `ui-types`
+      dependency on that package — a poor trade for an icon string. The constant is there for new code
+      and for anyone already editing those files.
+      Original entry: **Analyze icon → sparkle, via `SystemIconButton`.** The toolbar action uses
+      `ph--stack-simple--regular` (and `ph--stop--regular` while running); plugin-crm's Research
+      already uses sparkle for the same "run AI over this subject" meaning. Promote it to the
+      `SystemIconButton` primitive and apply it wherever an AI/agent action is offered — today each
+      action sets a raw `icon` string in its graph properties, so nothing enforces the convention.
+- [x] **Sync message tags back to Gmail** — OFF THIS LEDGER, owned by
+      [#12611](https://github.com/dxos/dxos/pull/12611). **The write path is still unbuilt**: that PR is
+      open and design-only (`docs/TAG-SYNC.md` plus a Phase 6 entry), so a Gmail sync still restores an
+      archived message. Ticked here because the work is tracked there, not because it works.
+      Original entry: designed in
+      [#12611](https://github.com/dxos/dxos/pull/12611) (branch `claude/mailbox-tag-sync-89f351`),
+      which adds `docs/TAG-SYNC.md` and a Phase 6 entry to THIS file. Design-only so far; the write
+      path is still unbuilt. Do not start it here. **That PR and this branch both edit this ledger, so
+      whichever lands second must merge the two sections by hand rather than take either wholesale.**
+      Original scope below. Tag changes are
+      local-only; a Gmail sync restores an archived message. `system-tags.ts` maps a Gmail label id →
+      canonical `SystemTag` on READ, and its own doc notes some labels are read-only concepts (there
+      is no archive label — archive is derived as "not in INBOX"). The write path does not exist.
+      Scope: which tags are writable (archive = `INBOX` off → `labels.modify`; starred → `STARRED`;
+      user tags need Gmail labels resolved by name), where it lives (Gmail-specific, so plugin-google
+      through a seam plugin-inbox owns, mirroring `MailSendOperation`; JMAP needs the same seam with
+      roles rather than labels), conflict handling between local and remote edits, and its own notion
+      of "not yet pushed" — the tag index is space-side while messages are feed-side. The
+      `gmail.modify` scope is already requested, so no OAuth change.
+
+### compute-runtime — filed as [#12608](https://github.com/dxos/dxos/issues/12608) (dmaretskyi)
+
+- [ ] **Bound the feed-trigger query by its cursor.** `trigger-dispatcher.ts:645` scans the whole feed
+      every tick (`Filter.everything()`, then cursor-filtered in JS — the existing `TODO(dmaretskyi)`).
+      Measured on a live 538-message mailbox: ~1069ms per scan, 924ms of it one unbroken main-thread
+      block, ~23% of the main thread sustained on an idle settings page. Polling once a minute made it
+      60× rarer, not cheaper. Related: `invokeScheduledTriggers` defaults to
+      `['timer','feed','subscription']`, but only `timer` needs a wall clock.
+
+### plugin-space / react-ui
+
+- [x] **Type filter for Related Objects** — landed as [#12613](https://github.com/dxos/dxos/pull/12613).
+      Also extracted `RelatedObjectCard` out of `RecordArticle`, which is why the `CardIconSlot` fix for
+      related tiles was already present by the time the follow-up PR went to re-apply it.
+- [x] **Object avatars in cards** — delivered by the `AppSurface.CardIcon` seam rather than by making
+      `ObjectAvatar` every card's default: the type glyph stays the default at all hosts and `Person`
+      alone contributes its photo-then-initials treatment. The remaining story/test coverage is its own
+      item, not this one.
+- [x] **A card header's depiction is now contributable per type** (`AppSurface.CardIcon`). Raised as
+      "the avatar colour is wrong" — every person rendered on the same grey disc, because
+      `ObjectAvatar` preferred the type's declared hue and both `Person` and `Organization` declare
+      `hue: 'neutral'`. Flipping that precedence globally was the WRONG fix: the treatment belongs to
+      Person cards, not to every object.
+      DECIDED: a role-scoped Surface, not a type annotation. How an object is depicted depends on the
+      space it gets — a 6-unit card block affords initials or a photograph, a 16px navtree row does
+      not — so an annotation would state one fact for surfaces that legitimately disagree, whereas
+      `CardIcon` says how a type looks IN A CARD and nothing more. Non-card surfaces keep resolving
+      `IconAnnotation` via `Obj.getIcon`.
+      Shipped: the role token; `CardIconSlot` (pairs `Surface.useIsAvailable` with the host's own
+      default as children — unlike `CardContent`, a miss cannot render nothing, and `Surface`'s
+      `fallback` is the error boundary); `ObjectAvatar`'s `initialsHue` prop (`'type'` default, so no
+      existing caller changed); `PersonCardIcon` contributed for `Person` alone; four hosts wired
+      (`TypeArticle`, `RecordArticle`, plugin-projects `ObjectCard`, plugin-deck `Popover`).
+      LEFT OPEN: `PersonCard` still renders the same photo again as a square row in the body, so a
+      Person with a picture now shows it twice. A design call, not a defect — decide and act.
+- [ ] **Icons fall back to the dashed placeholder for lazily-activated types.** A Routine and a
+      Markdown document both render `ph--circle-dashed--regular` in the navtree and plank header. Both
+      types DO declare `IconAnnotation` (`ph--lightning--regular`, `ph--text-aa--regular`), so this is
+      resolution, not declaration: `getIcon` returns `undefined` when `getSchema(entity)` is null
+      ([`annotations.ts:650`](../../../core/echo/echo/src/internal/Annotation/annotations.ts)), which is
+      indistinguishable from "no icon". Eleven call sites share that fallback, so one fix covers them.
+
+### devtools
+
+- [ ] **Filter the trace panel.** It lists every operation including 2ms UI ones, burying the ones that
+      matter, and renders the full event JSON inline with `meta` repeated per event. Composer is
+      noticeably slow after triggering Research and opening the panel. Two problems: what is listed
+      (a duration threshold is not enough — Research person is 55ms and matters, Expose is 27ms and
+      does not) and what it renders (collapse, virtualize, hoist the per-span constant meta). Measure
+      before fixing: it may be the panel, the trace volume Research produces, or both.
 
 ---
 
@@ -419,7 +617,7 @@ generalize now with mailbox as instance #1.
       a property of the stage, it is whatever the deployment did not contribute, and `Database`/`Trace`
       cannot be missing (the cascade could not have spawned). Matched structurally with a message
       fallback, not by class — the error is flattened crossing the invocation boundary, which is why
-      `ai-gate.ts` was already written that way. 7 tests; the workaround at `scan-mailbox.test.ts:166`
+      `ai-gate.ts` was already written that way. 7 tests; the workaround at `analyze-mailbox.test.ts:166`
       is gone and that test now exercises BOTH precondition flavours in one run, each tier naming its
       own reason instead of inheriting the first one's.
 - [x] **Tag `AnalyzeMailbox`'s cursor with an explicit id** — `ANALYZE_CURSOR_KEY_ID`, via a new
@@ -431,7 +629,7 @@ generalize now with mailbox as instance #1.
       the two tests that cover it, so neither is vacuous. `analyze-mailbox.test.ts` seeds untagged
       cursors and still passes, which exercises the migration path in situ. Delete the adoption branch
       once no untagged cursors remain in the wild.
-- [x] **`MailboxProcessor` capability + topology resolution** — `ScanMailbox` now reads its passes
+- [x] **`MailboxProcessor` capability + topology resolution** — `AnalyzeMailbox` now reads its passes
       from `InboxCapabilities.MailboxProcessor` and orders them by the `after` edges each declares.
       plugin-inbox contributes its own five through the SAME seam (`capabilities/mailbox-processors.ts`),
       so there is no privileged built-in path to drift from the contributed one. - `operations/topology.ts` is pure and ECHO-free: unknown `after` ids ignored (optional
@@ -487,23 +685,33 @@ generalize now with mailbox as instance #1.
       `after: ['summarize']` pointing at an absent node, so it is ignored and `analyze` runs despite the
       classification failure. Sharp but correct — a processor the caller excluded cannot constrain
       anything, and `analyze` never consumed classification. 6 topology tests + 2 cascade tests.
-- [ ] **DEFERRED TO D6 — the plugin-projects trio as processors.** They read `mailbox.feed`, but all
-      three take BOTH a `project` and a `mailbox` ref, and `createInvocation(mailbox, options)` has no
-      slot for a Project and returns ONE invocation rather than a list. The blocking problem is cursor
-      identity: a processor's id IS its cursor tag, but these need per-(processor, project) — one
-      `projects` tag across three projects on a mailbox means they share a watermark and silently skip
-      each other, the same class of bug as the untagged analysis cursor.
-      DECIDED 2026-08-14: do not decide this in isolation. D6 has to answer "what is the subject of a
-      pass" regardless, and fan-out plus composite cursor keys are better settled with that context.
-- [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6) — WEAKER than first written.
-      The parts that matter are already generic (`topology.ts` knows only `{id, after}`,
-      `precondition.ts` only `Cause`s, a feed cursor's `target` is already untyped). Mailbox-typed:
-      the `MailboxProcessor` subject and `tier`, `ScanMailbox`'s input and progress key, and
-      `findOrCreateFeedCursor` (takes a `Mailbox` only to read `mailbox.feed`). Open question is what
-      replaces the subject — structural `{ feed: Ref<Feed> }`, a `FeedOwner` annotation, or passing the
-      `Feed`. CORRECTION: the projects trio was cited as the second instance and is not (see above);
-      the only genuine one is transcription, whose `messageEnricher` is a WRITE-time seam closer to
-      sync's inline stages than to a cursored read-time pass — so it may want the other half's shape.
+- [x] **RESOLVED 2026-08-15 — the plugin-projects trio, and the entry above was wrong about them.**
+      They were filed as needing fan-out. They ALREADY fan out: `CreateTrackingProject` gives each
+      tracking Project its own routine and trigger with per-project senders, so the fan-out arrives
+      through the routine layer rather than the processor seam. What they actually lacked was cursors
+      — every run re-queried the whole feed.
+      And only ONE of the three should have one. `syncProjectTasks` upserts tasks keyed by message id,
+      so a cursor is pure saving; it now keeps one per Project (subject = the Project, source = the
+      mailbox's feed). `update-travel-log` and `update-investor-log` REGENERATE their document from the
+      whole feed — travel-log's own comment says it is "idempotent without a cursor" — so a cursor would
+      corrupt what they derive. Same call, same reasoning, as `ExtractSubscriptions`.
+      Converting them to contributed processors was NOT done: it would buy only the cascade's ordering
+      and failure semantics, which nothing has asked for, and would cost them their independent
+      triggers.
+- [ ] **Generalize off `Mailbox`** to a feed-generic processor host (D6) — WEAKER than first written,
+      and NEEDS A DECISION BEFORE ANY MORE CODE. - DONE (2026-08-14): the cursor layer. `findFeedCursor`/`findOrCreateFeedCursor` now take any
+      `FeedAnnotation`-carrying owner and resolve the feed via `getFeedRef`, so one of the three
+      mailbox-typed couplings is gone. Tested against a Calendar owner. - STILL MAILBOX-TYPED: the `MailboxProcessor` subject and `tier`, and `AnalyzeMailbox`'s input and
+      progress key. Already generic: `topology.ts` (`{id, after}` only), `precondition.ts` (`Cause`s
+      only), and a feed cursor's `target`. - THE DECISION: `Ref.byAnnotation` was dropped in review on #12575, so a generic subject CANNOT
+      be validated at the operation boundary — it must be `Ref.Ref(Obj.Unknown)` plus a runtime guard
+      (see PIPELINE.md, now marked SETTLED). That is a real loss of type safety on the one operation
+      users invoke directly. - AND THERE IS STILL NO SECOND CONSUMER. The projects trio was twice cited and is not one (all
+      three read `mailbox.feed` and need fan-out). The only genuine candidate is transcription, whose
+      `messageEnricher` is a WRITE-time seam closer to sync's inline stages than to a cursored
+      read-time pass — so it likely wants the other half's shape anyway. - RECOMMENDATION: do not build the generic host until a second cursored consumer exists. Trading
+      boundary validation for an abstraction with one implementor is a bad trade. Revisit when
+      transcription or another feed owner actually needs a cursored pass.
 - [ ] **Retire `ExtractMailbox` once on-arrival extraction is restored** — it is `@deprecated`, but
       still LIVE: `MailboxArticle.tsx:584` → `useMailboxExtractorActions` renders a menu item per
       registered `ObjectExtractor` and invokes it, and two extractors ship. Its stated successor
@@ -519,22 +727,150 @@ generalize now with mailbox as instance #1.
       `ExtractCorrespondents` is the clear win — it re-derives over the whole feed every run and the
       identity index already makes it idempotent, so a cursor is pure saving. The projects trio is
       blocked on the item above. Real scope: ONE, maybe two.
-- [ ] **Retire `ExtractMailbox` once on-arrival extraction is restored** — it is `@deprecated`, but
-      still LIVE: `MailboxArticle.tsx:584` → `useMailboxExtractorActions` renders a menu item per
-      registered `ObjectExtractor` and invokes it, and two extractors ship. Its stated successor
-      (`onArrivalExtractors`) is commented OUT of the sync chain because it reaches
-      `Capability.Service` and invokes `ExtractMessage`, neither available off-host under edge compute
-      — so removing it now would delete a working feature with nothing behind it. Remove the operation,
-      the hook and the menu items together once the successor runs as a processor (D6). MEANWHILE the
-      `@deprecated` tag is misleading, since it points at a replacement that does not run.
-- [ ] **Give the seven cursorless consumers a cursor** — mechanical now that a processor id is also its
-      cursor tag, but each needs its own call on whether feed position or derived-state replacement is
-      the right idempotency story (`ExtractSubscriptions` replaces wholesale; `SummarizeMailbox` skips
-      by newest thread id).
+
+---
+
+## Phase 6: Bidirectional tag sync — BUILT 2026-08-15 (Gmail)
+
+Design: [`TAG-SYNC.md`](TAG-SYNC.md). Closes the Phase 1 P2 deferral — a star or an archive made in
+Composer reaches the provider, and a label changed at the provider is no longer add-only.
+
+The mechanism is a three-way merge whose **base is the tag index's Automerge heads**
+(`Obj.version` / `Obj.getVersion`), not a shadow object and not an outbox: ECHO already keeps the
+mutation log, and a state diff has no self-echo failure mode — sync writes tags through the same
+`Tagging.set` the star button does, so an intent queue would enqueue every pulled tag for push.
+
+### Tasks
+
+- [x] **Pure diff module** — `src/sync/tag-diff.ts`, `(base, local, remote, eligible) → { push, pull }`
+      over plain `Map<string, Set<string>>`; no ECHO, no provider, no Effect. 15 tests passing.
+      FOUND WHILE WRITING THEM: an opposed conflict is UNREPRESENTABLE. Membership is a boolean per
+      (message, tag), so `local !== base && remote !== base` forces `local === remote` — both flipped
+      to the negation of base. All eight triples resolve to push/pull/nothing, so the owner-wins
+      policy decided earlier is MOOT and is gone, along with the per-tag owner in `eligible` (now a
+      plain `Set`). The suite enumerates all eight and asserts no tag is ever pushed AND pulled, so a
+      future tri-state or tombstone fails the test rather than silently reviving the question.
+- [x] **Heads on the binding** — persist `nextHeads` and `Cursor.spec.token` in ONE `Obj.update`.
+      CONCRETELY: `runMailSync` writes the token today at `mail-sync.ts:578` inside `if (!capped)`;
+      that call must NOT stay as-is with a heads write added beside it. Hold `source.nextToken()` in
+      memory, run the push phase first, then write both through `Cursor.writeSyncState` — and write
+      neither when anything is `pending`.
+      (a combined `Cursor.writeSyncState({ token, tagHeads })`, never `writeToken` followed by a
+      separate heads write). They are one recovery unit: token-then-heads leaves the next run reading
+      its delta from the advanced token while diffing against stale heads, so every tag the previous
+      run PULLED reads as a local-only add. Usually a no-op re-push, but if the remote moves in that
+      window it silently re-applies a tag the provider deliberately removed, and no conflict rule
+      catches it because the diff sees no conflict. Capture them AFTER
+      the pull commits and BEFORE the push, which is what avoids both a lost mid-run toggle and
+      re-pushing this run's own pulls. When `Obj.getVersion` cannot reconstruct the saved heads, do
+      NOT re-baseline silently — that drops every local change made since the last sync. Fall back to
+      the base-less ADDITIVE reconcile (push what remote lacks, pull what local lacks, remove nothing
+      either way); without a base, "local has it, remote does not" cannot distinguish a local add from
+      a remote removal, so only the additive half is safe. Self-healing: the run captures fresh heads,
+      so the next diff is well-founded and removals resume.
+- [x] **`pushTags` hook on `MailSyncProviderService`** — optional, so a provider with no write path
+      degrades to pull-only. Returns `{ settled, pending }` rather than void: a PERMANENT rejection
+      (404, label gone, missing scope) is `settled` because no retry can succeed and refusing to
+      advance would block the base forever; a TRANSIENT one (429, 5xx, timeout) is `pending`. Heads
+      persist only when `pending` is empty and the cap was not hit — otherwise `runAgain`, so retry is
+      between runs and `pushTags` owns no backoff state. Harness resolves tag uris → provider bindings
+      from the reverse label map and caps ops per run.
+- [x] **Gmail write path** — `modifyMessage` + `batchModify` on `GoogleMailApi`, its `Live` layer, and
+      `GoogleMailApi.mock` (the mock needs mutable per-message label state so `listHistory` reflects a
+      push). The connector ALREADY requests `gmail.modify` (`capabilities/connector.ts`, added for
+      trash) — nothing to change there.
+- [x] **Map `spam` onto Gmail's `SPAM`** — `GMAIL_SYSTEM_TAGS` omits it deliberately today ("TRASH/SPAM
+      — never synced"), so `ClassifyMailbox`'s canonical `spam` tag has nothing to push to. Adding it
+      is BIDIRECTIONAL: `syncLabels` reads the same map, so Gmail's own spam verdict starts arriving
+      as the canonical tag — wanted, but a reversal of a documented exclusion, not a one-line edit.
+      `TRASH` stays out; deletion is not a tag. VERIFIED 2026-08-15 against `test@braneframe.com`:
+      `users.messages.modify` accepts `SPAM` in `addLabelIds` (HTTP 200, applied, restored cleanly),
+      so the reverse map stays a bare `tagUri → labelId` and no binding descriptor is needed for the
+      Gmail cut. Revisit when JMAP lands, where `spam` is a `$junk` keyword rather than a label.
+- [x] **Mock-provider round trip** — `plugin-google/src/operations/mail/sync/tag-push.test.ts`, 8 tests
+      driving the real harness against the mock (which now holds mutable label state, so a push is
+      observable through the same API the sync writes through). Covers first sync, star, archive,
+      pull-not-pushed-back, user tag ignored, transient failure holding the base, `Obj.getVersion`
+      reconstructing a past index, and unresolvable heads emitting no removals. FIXTURE BUG FOUND:
+      `SYSTEM_LABELS` omitted STARRED/SPAM/TRASH, and since `syncLabels` maps the label DICTIONARY, a
+      missing entry silently disables tag reconciliation for that tag rather than failing.
+- [x] **Live round-trip test** — both directions against `test@braneframe.com` (DECIDED 2026-08-15;
+      unblocked). Nothing in the repo referenced that account before, so `TAG-SYNC.md` is now its
+      canonical record. This test WRITES labels, so `GOOGLE_ACCESS_TOKEN` alone must not arm it: that
+      variable already exists for the read-only `sync-e2e.test.ts`, and reusing it would silently turn
+      an existing read-only setup into one that mutates mail. Second gate is
+      `DX_GMAIL_TAG_SYNC_ACCOUNT` holding the address (its value IS the allowlist), with a
+      `getProfile().emailAddress` assertion that FAILS (not skips) on mismatch, operation only on
+      messages the test itself created, and cleanup in `afterAll` restoring original `labelIds` —
+      throwing if a restore fails, since a shared mailbox means a swallowed one hits a colleague.
+      SHIPPED as `sync-live.test.ts` + `testing/live-credentials.ts`, 3 tests, RUN GREEN against
+      test@braneframe.com: identity assertion, star pushed + Gmail label pulled in one run, and
+      archive removing INBOX. Account verified restored afterwards (0 starred, 24 in inbox).
+      NOTE: `plugin-google`'s `mail/send/handler.test.ts` already SENDS real email on
+      `GOOGLE_ACCESS_TOKEN` alone — the pattern this rule exists to avoid repeating, not to copy.
+- [x] **Push insert-time local tags** — a tag written by local logic during a run (known-sender
+      `important`, on-arrival extractors) is NOT the same as a tag the pull wrote, though both land
+      before the heads capture. Left in the base it strands forever: it sits in both `base` and
+      `local` from the next run on, so no diff ever emits it. Separated by carrying each insert's
+      `remoteTagUris` on the REMOTE side of the merge: a provider label is then on local and remote
+      with an empty base (converged, no push) while an insert-time local tag is local-only (push).
+      NO base overlay — the earlier design had one; the tests showed it was a second mechanism for
+      the same outcome.
+
+### Open
+
+- **ADOPT FROM PR #12599 (wittjosiah's parallel `outbound-tag-sync` design): the `isProviderTag`
+  split.** Provider tags should stay non-renamable and non-recolorable but become MEMBERSHIP-
+  toggleable — one predicate split into two, auditing every call site (`meta-tags.ts`,
+  `SystemTags.ts`). Without it our eligibility is half-connected: `tagBindings` makes
+  `com.google.gmail.label` tags pushable, but the UI still forbids attaching or detaching them, so
+  only canonical tags can ever actually change locally. Small, and it completes what shipped.
+
+- **ADOPT FROM PR #12599: a tag add/remove affordance on messages** (their Phase 4). None exists today
+  beyond the star and the archive toggle — `Mailbox.applyTag` is called only by the classifier and
+  extractors. Until it lands, most of the push path is reachable only by pipeline code, not by a user.
+  Deliberately NOT folded into the tag-sync PR: it is a UI feature with its own storybook and review
+  surface, and that PR is already four packages wide.
+
+- **PRE-EXISTING FLAKE: `sync.test.ts`'s capped-run test loses a message under load.**
+  `a capped run requests Operation.runAgain(), and repeated runs sync the whole mailbox` intermittently
+  asserts 24 of 25 synced ids. NOT order-dependent — an earlier reading of it as "fails under `-t`,
+  passes in the file" was wrong; 8 consecutive uncached isolated runs pass on a quiet machine, and the
+  failures clustered while the box was busy with the live Gmail suite. Reproduces with the tag-sync
+  changes stashed, so it is not ours.
+
+  DIAGNOSED, not fixed: the sync is innocent. The funnel logs show all 25 committed across the three
+  capped runs (10 + 10 + 5) in BOTH the passing and failing cases — it is the post-run `db.query` that
+  occasionally returns 24. So this is a read-visibility race after `runMailSync`'s closing
+  `Database.flush({ indexes: true })`, not a lost message. Adding one extra query before the assertion
+  makes it pass every time, which is the Heisenbug signature of exactly that. Worth chasing because
+  the same race would make ANY post-sync read racy, not just this test.
+
+- ~~Whether `ClassifyMailbox`'s canonical output should push to the user's real Gmail account.~~
+  DECIDED 2026-08-15: it pushes — a classification the user sees in Composer should be the one their
+  mail client shows. See the `spam` mapping task above for the work that decision creates.
+- ~~Conflict policy.~~ MOOT 2026-08-15 — an opposed conflict cannot be represented for boolean tag
+  membership, so neither owner-wins nor remote-wins ever fires. Removed rather than kept as dead code.
+  If membership ever gains a third state, owner-wins is the answer to reach for (a tag has a declared
+  owner per `Tag.md` §"Tag origin") — and the enumeration test will fail loudly at that point.
+- **CONSIDER LATER: timestamped last-writer-wins.** The rule above cannot tell which of two opposed
+  acts happened later, so an unsynced local star resurrects one removed on another device — bounded
+  by one sync interval. Real LWW needs a per-entry write time, which `TagIndex`
+  (`Record<tagId, objectId[]>`) does not carry: a schema change plus clock-skew handling, since the
+  device and provider clocks are not comparable without a server-supplied ordering. Revisit if the
+  resurrection case is actually observed, not pre-emptively.
+- ~~JMAP in this change or a follow-up?~~ DECIDED 2026-08-15: **follow-up**. `pushTags` is optional so
+  an unimplemented provider degrades to pull-only. `jmapReconcile`'s add-only keyword handling exists
+  only because local flags could not be written back — revisit it when JMAP lands, not before. Treat
+  `ProviderTagBinding` as PROVISIONAL until a second provider has used it: `spam` is a label in Gmail
+  and a `$junk` keyword in JMAP, which is exactly the shape the descriptor has to survive.
 
 ---
 
 ## Manual test plan
 
-Moved to [`TESTING.md`](TESTING.md) — 26 steps across sections A–F, none run.
+Moved to [`TESTING.md`](TESTING.md) — 27 steps across sections A–F. **Run 2026-08-14** against a live
+Gmail-synced mailbox over the agent debug port: 12 passed, 2 failed (both fixed in #12577), 1 was a
+stale expectation in the plan itself, and 12 yielded no verdict. That file also carries an evaluation of
+what the debug port is and is not the right tool for.
 See the blocker above for why an automation browser cannot execute them and a warm browser can.

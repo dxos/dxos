@@ -170,7 +170,13 @@ profiles/
 # Bot temp files
 dxos-tmp
 build
+
+# Credentials the user hands to an agent for a task (see AGENTS.md "Handing an agent a
+# credential"). Ignored at every depth. An ignore rule is default exclusion, NOT enforcement:
+# `git add -f` still stages these, and a path already in the index stays tracked.
 .secrets
+.secrets/
+**/.secrets/
 
 # Custom git hooks
 .husky/post-applypatch

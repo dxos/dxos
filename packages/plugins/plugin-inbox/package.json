@@ -162,7 +162,7 @@
     "./MailSend": {
       "source": "./src/types/MailSend.ts",
       "types": "./dist/types/src/types/MailSend.d.ts",
-      "import": "./dist/lib/types/MailSend.mjs"
+      "import": "./dist/lib/MailSend.mjs"
     },
     "./Mailbox": {
       "source": "./src/types/Mailbox.ts",
@@ -192,7 +192,7 @@
     "./ReplyGeneration": {
       "source": "./src/types/ReplyGeneration.ts",
       "types": "./dist/types/src/types/ReplyGeneration.d.ts",
-      "import": "./dist/lib/types/ReplyGeneration.mjs"
+      "import": "./dist/lib/ReplyGeneration.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -288,6 +288,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",

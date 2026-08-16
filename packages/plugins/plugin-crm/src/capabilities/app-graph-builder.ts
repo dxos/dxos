@@ -15,10 +15,13 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Filter, Obj, Ref, Type } from '@dxos/echo';
+import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
 import { Organization, Person } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
+import { CRM_SKILL_KEY } from '#skills';
 import { CrmOperation } from '#types';
 
 /** A node whose data is a researchable CRM object, tagged so the action can pick the right operation. */
@@ -115,10 +118,30 @@ export default Capability.makeModule(
                       { spaceId: db.spaceId },
                     );
                   }
-                  // Set-scoped rather than subject-scoped (it walks everything missing an image), so it
-                  // is bounded by `limit` instead of targeting this object. A subject-scoped variant
-                  // would be the cleaner call here — see TASKS.md.
-                  yield* Operation.schedule(CrmOperation.EnrichImages, { limit: 8 }, { spaceId: db.spaceId });
+                  // The operations above only render the skeleton from what ECHO already knows —
+                  // every section beyond Details is emitted empty on purpose. Filling them is the
+                  // agent's job, which the CRM skill already instructs ("Enrich Profile documents in
+                  // place…"), so the action runs both halves: skeleton first (instant, no model), then
+                  // the agent against it.
+                  //
+                  // The subject rides along as a bound context object rather than a persisted
+                  // `Instructions`, and `background` keeps the run in the process monitor instead of
+                  // opening a chat. Images are the agent's too, via the skill's `attach-image` tool —
+                  // `EnrichImages` is set-scoped (it walks everything missing an image) and would fire
+                  // at objects the user never asked about.
+                  yield* Operation.invoke(RoutineOperation.RunPromptInNewChat, {
+                    db,
+                    objects: [matched.subject],
+                    skills: [CRM_SKILL_KEY],
+                    background: true,
+                    instructions: trim`
+                      Research this ${matched.kind} and fill in its Profile document, which has just
+                      been created with an empty Overview, Key Links, Notes and Sources.
+                      Extend each section in place, record every contributing URL under Sources, and
+                      attach an avatar or logo if research surfaces a good https candidate.
+                      Do not invent facts you cannot source.
+                    `,
+                  });
                 }),
               properties: {
                 label: ['research.label', { ns: meta.profile.key }],

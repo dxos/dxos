@@ -100,7 +100,7 @@ type StoryArgs = {
   seedSearchTerm?: boolean;
   /** Seeds a sync binding (AccessToken → Connection → Cursor) so `InitializeMailbox` shows "Mailbox empty" instead of "No connections configured". */
   bound?: boolean;
-  /** Registers a running `#scan` monitor so the statusbar progress meter renders (see `ProgressProbe`). */
+  /** Registers a running `#analyze` monitor so the statusbar progress meter renders (see `ProgressProbe`). */
   progress?: boolean;
   /** Attaches a real PDF blob to the first message, for the three-column `Attachments` story. */
   attachments?: boolean;
@@ -137,10 +137,10 @@ const seedAttachment = async (db: Database.Database, mailbox: Mailbox.Mailbox) =
 };
 
 /**
- * Registers a running monitor under the mailbox's `#scan` progress key, exactly as the scan
+ * Registers a running monitor under the mailbox's `#analyze` progress key, exactly as the analyze
  * cascade's trace status does — so the article's statusbar meter is exercised WITHOUT an LLM or a
  * scheduled process. The producer/consumer key derivation is the thing under test: both sides call
- * `createScanProgressKey` on their own copy of the mailbox.
+ * `createAnalyzeProgressKey` on their own copy of the mailbox.
  */
 const ProgressProbe = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
   const registry = useOptionalCapability(AppCapabilities.ProgressRegistry);
@@ -148,7 +148,7 @@ const ProgressProbe = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
     if (!registry) {
       return;
     }
-    const handle = registry.register(InboxOperation.createScanProgressKey(mailbox), { label: 'Scanning' });
+    const handle = registry.register(InboxOperation.createAnalyzeProgressKey(mailbox), { label: 'Analyzing' });
     handle.total(10);
     handle.set(3);
     return () => handle.remove();
@@ -481,7 +481,7 @@ export const SearchFilter: Story = {
   },
 };
 
-// The statusbar progress meter, which the scan cascade and Gmail sync drive through the
+// The statusbar progress meter, which the analyze cascade and mail sync drive through the
 // progress registry. Both sides key the monitor by the mailbox URI, derived independently — the bug
 // this guards is a key that differs between producer and consumer, which leaves the run invisible.
 export const Progress: Story = {

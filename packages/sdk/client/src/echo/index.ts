@@ -16,7 +16,7 @@ export {
 export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+export { type SpaceSyncState } from '@dxos/echo-client';
 
 export { type ImportSpaceOptions, importSpace } from './import';
 export { type PeerSyncState, type SpaceSyncStateMap, getSyncSummary } from './util';

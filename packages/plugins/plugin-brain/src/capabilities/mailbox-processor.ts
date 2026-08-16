@@ -33,17 +33,19 @@ export default Capability.makeModule(
       tier: 'analyze',
       // Facts are extracted per message; running after the summarize pass keeps the cost ladder intact.
       after: ['summarize'],
-      createInvocation: (mailbox, { model, provider, strict }) => {
+      createInvocations: (mailbox, { model, provider, strict }) => {
         const settings = registry.get(settingsAtom);
-        return {
-          operation: BrainOperation.AnalyzeMailbox,
-          input: {
-            mailbox: Ref.make(mailbox),
-            model: settings.model ?? model,
-            provider: settings.provider ?? provider,
-            strict: settings.strict ?? strict,
+        return [
+          {
+            operation: BrainOperation.AnalyzeMailbox,
+            input: {
+              mailbox: Ref.make(mailbox),
+              model: settings.model ?? model,
+              provider: settings.provider ?? provider,
+              strict: settings.strict ?? strict,
+            },
           },
-        };
+        ];
       },
     });
   }),

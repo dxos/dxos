@@ -2,7 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService } from '@dxos/protocols/rpc';
+
+export type SpaceSyncState = DataService.SpaceSyncState;
+export namespace SpaceSyncState {
+  export type PeerState = DataService.SpaceSyncState.PeerState;
+}
 
 export * from './automerge';
 export * from './client';

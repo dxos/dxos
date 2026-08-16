@@ -12,9 +12,9 @@ import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { withAuthorization } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
 import { GoogleCalendar } from '#apis';
+import { GoogleOperation } from '#types';
 
 import { AccessTokenNotPopulatedError } from '../../../errors';
 
@@ -40,34 +40,35 @@ const listGoogleCalendars = (token: string) =>
     return body.items ?? [];
   });
 
-const handler: Operation.WithHandler<typeof InboxOperation.GetGoogleCalendars> = InboxOperation.GetGoogleCalendars.pipe(
-  Operation.withHandler(
-    Effect.fn(function* ({ connection }) {
-      const target = connection.target;
-      const db = target ? Obj.getDatabase(target) : undefined;
-      if (!db) {
-        return yield* Effect.fail(new SyncDatabaseMissingError());
-      }
-
-      return yield* Effect.gen(function* () {
-        const connectionObj = yield* Database.load(connection);
-        const accessToken = yield* Database.load(connectionObj.accessToken);
-        if (!accessToken.token) {
-          return yield* Effect.fail(new AccessTokenNotPopulatedError());
+const handler: Operation.WithHandler<typeof GoogleOperation.GetGoogleCalendars> =
+  GoogleOperation.GetGoogleCalendars.pipe(
+    Operation.withHandler(
+      Effect.fn(function* ({ connection }) {
+        const target = connection.target;
+        const db = target ? Obj.getDatabase(target) : undefined;
+        if (!db) {
+          return yield* Effect.fail(new SyncDatabaseMissingError());
         }
 
-        const remoteCalendars = yield* listGoogleCalendars(accessToken.token).pipe(
-          Effect.provide(FetchHttpClient.layer),
-        );
-        const targets = remoteCalendars.map((item) => ({
-          id: item.id,
-          name: item.summary,
-          description: item.description,
-        }));
-        return { targets };
-      }).pipe(Effect.provide(Database.layer(db)));
-    }),
-  ),
-);
+        return yield* Effect.gen(function* () {
+          const connectionObj = yield* Database.load(connection);
+          const accessToken = yield* Database.load(connectionObj.accessToken);
+          if (!accessToken.token) {
+            return yield* Effect.fail(new AccessTokenNotPopulatedError());
+          }
+
+          const remoteCalendars = yield* listGoogleCalendars(accessToken.token).pipe(
+            Effect.provide(FetchHttpClient.layer),
+          );
+          const targets = remoteCalendars.map((item) => ({
+            id: item.id,
+            name: item.summary,
+            description: item.description,
+          }));
+          return { targets };
+        }).pipe(Effect.provide(Database.layer(db)));
+      }),
+    ),
+  );
 
 export default handler;

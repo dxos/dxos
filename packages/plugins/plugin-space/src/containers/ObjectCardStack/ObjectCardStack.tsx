@@ -6,7 +6,7 @@ import React, { forwardRef, useId, useMemo, useState } from 'react';
 
 import { type Database, Filter, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Banner, Card, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { ObjectForm } from '@dxos/react-ui-form';
@@ -48,11 +48,11 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
         </Panel.Toolbar>
         <Panel.Content>
           {selectedObjects.length === 0 ? (
-            <Message.Root>
-              <Message.Content classNames='m-trim-md'>
-                <Message.Title>{t('row-details-no-selection.label')}</Message.Title>
-              </Message.Content>
-            </Message.Root>
+            <Banner.Root>
+              <Banner.Content classNames='m-trim-md'>
+                <Banner.Title>{t('row-details-no-selection.label')}</Banner.Title>
+              </Banner.Content>
+            </Banner.Root>
           ) : (
             <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
               <ScrollArea.Root orientation='vertical' centered padding>

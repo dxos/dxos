@@ -21,6 +21,7 @@ import { Connection, Cursor } from '@dxos/link';
 import { isCursorForTarget, syncTarget } from '@dxos/plugin-connector';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage, Event, Message } from '@dxos/types';
+import { AI_ACTION_ICON } from '@dxos/ui-types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -511,13 +512,13 @@ export default Capability.makeModule(
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
           // Gated on a connection, not rendered disabled: a disabled primary button still reads as the
-          // view's main call to action on a mailbox that has nothing to scan yet.
+          // view's main call to action on a mailbox that has nothing to analyze yet.
           if (!db || !hasConnection(mailbox, get)) {
             return Effect.succeed([]);
           }
           return Effect.gen(function* () {
             const progressRegistry = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
-            const scanKey = InboxOperation.createScanProgressKey(mailbox);
+            const scanKey = InboxOperation.createAnalyzeProgressKey(mailbox);
             const isScanning = Option.match(progressRegistry, {
               onNone: () => false,
               onSome: (registry) => get(registry.monitorAtom(scanKey))?.status === 'running',
@@ -527,25 +528,25 @@ export default Capability.makeModule(
                 // The pipeline cascade the user runs by hand after a first sync: deterministic
                 // extraction, then cheap LLM labelling. Each spawned tier keeps its own cursor, so
                 // a repeat run catches up rather than redoing the mailbox.
-                id: 'scan',
+                id: 'analyze',
                 data: () =>
                   isScanning
                     ? Effect.sync(() => Option.getOrUndefined(progressRegistry)?.cancel(scanKey))
                     : // Scheduled (not invoked): the cascade is a long run the meter/stop can cancel
                       // between tiers.
                       Operation.schedule(
-                        InboxOperation.ScanMailbox,
+                        InboxOperation.AnalyzeMailbox,
                         { mailbox: Ref.make(mailbox), me: Mailbox.identityAddresses(mailbox) },
                         { spaceId: db.spaceId },
                       ),
                 properties: {
                   label: isScanning
-                    ? ['stop-scan-mailbox.label', { ns: meta.profile.key }]
-                    : ['scan-mailbox.label', { ns: meta.profile.key }],
-                  icon: isScanning ? 'ph--stop--regular' : 'ph--stack-simple--regular',
+                    ? ['stop-analyze-mailbox.label', { ns: meta.profile.key }]
+                    : ['analyze-mailbox.label', { ns: meta.profile.key }],
+                  icon: isScanning ? 'ph--stop--regular' : AI_ACTION_ICON,
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
-                  testId: 'inbox.mailbox.scan',
+                  testId: 'inbox.mailbox.analyze',
                 },
               },
             ];
