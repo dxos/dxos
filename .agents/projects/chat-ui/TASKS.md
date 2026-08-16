@@ -35,6 +35,8 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
 - [ ] **Frame-rate measurement by a human** — rAF is throttled in the headless pane, so the
       story's fps readout has to be read at the keyboard. Three passes: Large (fling-scroll,
       watch drift), BadEstimate (`estimateSize: 24`), Streaming (tail growth).
+- [ ] Scroll to button — an affordance that jumps to the tail (the controller already exposes
+      `scrollToBottom`; it needs a control, and a rule for when it shows).
 - [ ] Item pooling / view recycling — deliberately not done, so the unoptimized number is
       measured first.
 - [ ] Wire the `custom` item kind (typed, currently returns `null`).
