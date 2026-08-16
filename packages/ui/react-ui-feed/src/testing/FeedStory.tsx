@@ -24,9 +24,20 @@ import { createMessages } from './generator';
 import { type FeedScenario, createScenario } from './scenarios';
 import { createAnswer, textStream } from './stream';
 import { sweepScroll } from './sweep';
+import { streamTurn } from './turn';
 
 /** Pause between one answer finishing and the next question arriving. */
 const TURN_DELAY = 800;
+
+/** A turn that is only a growing text tail: what every scenario but the assistant chat produces. */
+async function* textTurn(options: { wordsPerChunk: number; chunkDelay: number }) {
+  let text = '';
+  for await (const chunk of textStream(createAnswer(), options)) {
+    text += chunk;
+    yield [{ _tag: 'text' as const, text, pending: true }];
+  }
+  yield [{ _tag: 'text' as const, text }];
+}
 
 const makeQuestion = () =>
   Message.make({
@@ -228,19 +239,20 @@ export const FeedStory = ({
         setMessages((prev) => [...prev, makeQuestion(), answer]);
         setAnswerId(answer.id);
 
-        for await (const chunk of textStream(createAnswer(), { wordsPerChunk, chunkDelay })) {
+        // A chat turn arrives as blocks — status, reasoning, a tool call, then the answer — which is
+        // what makes reconciliation hard: the document shrinks and rewrites as well as grows. Every
+        // other scenario streams a plain text tail, the easy half.
+        const turn =
+          scenario === 'assistant'
+            ? streamTurn({ wordsPerChunk, chunkDelay })
+            : textTurn({ wordsPerChunk, chunkDelay });
+
+        for await (const blocks of turn) {
           if (cancelled) {
             return;
           }
           setMessages((prev) =>
-            prev.map((message) =>
-              message.id === answer.id
-                ? ({
-                    ...message,
-                    blocks: [{ ...message.blocks[0], text: `${(message.blocks[0] as any).text}${chunk}` }],
-                  } as Message.Message)
-                : message,
-            ),
+            prev.map((message) => (message.id === answer.id ? ({ ...message, blocks } as Message.Message) : message)),
           );
         }
 
@@ -258,7 +270,7 @@ export const FeedStory = ({
         return last && last.sender.role === 'assistant' && !Message.extractText(last).length ? prev.slice(0, -1) : prev;
       });
     };
-  }, [streaming, wordsPerChunk, chunkDelay]);
+  }, [streaming, wordsPerChunk, chunkDelay, scenario]);
 
   return (
     // Root is headless, so the toolbar and statusbar sit outside the scroll container and still read

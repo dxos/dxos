@@ -8,4 +8,5 @@ export * from './generator';
 export * from './scenarios';
 export * from './stream';
 export * from './sweep';
+export * from './turn';
 export * from './widgets';

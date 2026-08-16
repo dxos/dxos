@@ -61,10 +61,13 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       engine gaps found and fixed (per-item React widget portal host; the registry must reach the
       parser via `extendedMarkdown`), one design error fixed (`<prompt>` moved out of the default
       renderer into `chatRenderer`). Aspect table in AUDIT.md §3.4.
-- [ ] Streaming content — the Streaming story only extends a text block by whole tokens. Real
-      streaming arrives as `ContentBlock`s (reasoning, toolCall, status) appearing and completing
-      mid-message, so the item's delta reconciliation is only exercised on the easy case. The
-      Assistant scenario now has the blocks; it needs them arriving one at a time.
+- [x] Streaming content — `streamTurn` (testing) emits a turn as the blocks a model actually sends:
+      a status that is later removed, reasoning inside an unclosed tag that is closed on completion,
+      a tool call, its result, the answer, then suggestions. The Assistant scenario streams it.
+- [ ] Reconcile a document that shrinks — `MarkdownItem` appends when the new text extends the old
+      and otherwise **replaces the whole document**, which the block turn now triggers twice per
+      turn (status removed, reasoning tag closed). A replace discards decorations and widget state;
+      measure whether it is visible, and diff rather than replace if it is.
 - [ ] Email item needs prose styling — `blockquote` and `ul` render flat in `HtmlItem`.
 - [ ] Chrome cannot see its neighbours — human chat groups consecutive turns from one speaker, and
       chrome receives only its own message and index.
