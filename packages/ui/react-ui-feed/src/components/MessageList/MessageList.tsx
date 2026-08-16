@@ -51,6 +51,8 @@ type MessageListContextValue = {
   /** Index the reader is on: moved by the arrow keys and by any navigation, tracked while scrolling. */
   currentIndex: number;
   virtualizer: Virtualizer<HTMLElement, HTMLElement>;
+  /** Row ref: measures the element and feeds the running average behind `estimateSize`. */
+  measureItem: (element: HTMLElement | null) => void;
   setViewport: (viewport: HTMLElement | null) => void;
   onSelect: (id: string, additive: boolean) => void;
   scrollToIndex: (index: number, options?: ScrollToOptions) => void;
@@ -118,6 +120,12 @@ const SMOOTH_SCROLL_LIMIT = 10;
 /** Distance from the tail within which scrolling counts as returning to the bottom. */
 const STICKY_THRESHOLD = 32;
 
+/** Rows that must have measured before their average is trusted over the caller's estimate. */
+const MEASURED_SAMPLE = 4;
+
+/** Relative error in the row height the layout assumes, beyond which it is rebuilt from the average. */
+const REBASE_THRESHOLD = 0.25;
+
 /** How long after a gesture a scroll is still attributable to the reader. */
 const GESTURE_WINDOW = 300;
 
@@ -156,15 +164,54 @@ const MessageListRoot = ({
     setCurrentIndex(index);
   }, []);
 
+  // Running average of the rows measured so far. The estimate governs every row the list has not
+  // rendered — the total height, the scrollbar, and which window a jump lands in — so a wrong one is
+  // not a slow start but a document of the wrong length, corrected row by row as the reader travels
+  // through it. Averaging the real heights replaces the guess after the first handful of rows.
+  const measured = useRef({ sizes: new Map<string, number>(), total: 0 });
+
   const virtualizer = useVirtualizer<HTMLElement, HTMLElement>({
     count: messages.length,
     getScrollElement: () => viewport,
-    estimateSize: () => estimateSize,
+    // Deliberately reads refs rather than state: the virtualizer calls this while computing a
+    // layout, and re-rendering to publish a new average would recompute the layout it is inside.
+    estimateSize: useCallback(() => {
+      const { sizes, total } = measured.current;
+      return sizes.size >= MEASURED_SAMPLE ? Math.round(total / sizes.size) : estimateSize;
+    }, [estimateSize]),
     // Key measurements by message id, not index: a prepended page or a rewind would otherwise
     // shift every cached height by one row and the scrollbar would jump.
     getItemKey: useCallback((index: number) => messages[index]?.id ?? index, [messages]),
+    // A feed that opens at its tail should mount the tail, and only the tail. Without this the first
+    // commit builds the window at offset 0, the sticky effect then scrolls to the bottom, and every
+    // row is constructed twice — once at each end of the document. Each row is an `EditorView`, so
+    // that doubling is the largest single cost in the list's lifetime: a deliberately low estimate
+    // mounts tens of editors per window, and the pair of them lands as one stalled frame.
+    //
+    // Read once, at construction: the virtualizer only consults this while it has no scroll offset
+    // of its own, and the sticky effect corrects the real `scrollTop` on the next frame.
+    initialOffset: stickyBottom ? () => messages.length * estimateSize : undefined,
     overscan,
   });
+
+  // Keyed by message id rather than index, so a row counted once is not counted again when the feed
+  // shifts beneath it.
+  const measureItem = useCallback(
+    (element: HTMLElement | null) => {
+      if (element) {
+        const id = element.dataset.objectId;
+        const size = element.offsetHeight;
+        if (id && size) {
+          const { sizes, total } = measured.current;
+          measured.current.total = total + size - (sizes.get(id) ?? 0);
+          sizes.set(id, size);
+        }
+      }
+
+      virtualizer.measureElement(element);
+    },
+    [virtualizer],
+  );
 
   // The follow carries velocity across frames, so a target that moves with every chunk produces one
   // continuous travel rather than an animation restarted per chunk.
@@ -295,6 +342,46 @@ const MessageListRoot = ({
     [scrollToIndex, messages.length],
   );
 
+  // Re-base the layout on what the rows actually measure, anchored on the reader's position.
+  //
+  // A new average only reaches the rows below the last one measured: the virtualizer rebuilds its
+  // measurements from the earliest pending index, so everything above keeps the height it was first
+  // laid out with. A feed opened at its tail therefore keeps a document sized by the original
+  // estimate — 2,000 rows at 24px where they measure 130 — and the scrollbar, the total height and
+  // every jump to an index stay wrong for as long as the reader does not travel through them.
+  //
+  // The rebuild is triggered by resizing row 0 to the average, which is the one supported way to
+  // make the virtualizer start again from the top: it resumes from its earliest pending measurement,
+  // so a tail-anchored feed otherwise rebuilds only the tail for ever. Clearing its caches outright
+  // does not work — the mounted rows re-measure before the rebuild runs, and the resumption point
+  // lands back at the tail over an emptied cache, leaving a layout with holes in it.
+  //
+  // Every real measurement is kept; only rows that were standing on the estimate move. The rebuild
+  // shifts every offset, so the reader is put back where they were: at the tail if they were
+  // following it, otherwise on the message they were on. Converges — the average becomes the basis,
+  // so the next comparison is against itself.
+  const basis = useRef(estimateSize);
+  useEffect(() => {
+    const { sizes, total } = measured.current;
+    if (sizes.size < MEASURED_SAMPLE) {
+      return;
+    }
+
+    const average = Math.round(total / sizes.size);
+    if (!average || Math.abs(average - basis.current) / basis.current < REBASE_THRESHOLD) {
+      return;
+    }
+
+    basis.current = average;
+    const anchor = currentIndexRef.current;
+    virtualizer.resizeItem(0, average);
+    if (stickyBottom && followRef.current) {
+      scrollToBottom();
+    } else {
+      virtualizer.scrollToIndex(anchor, { align: 'start' });
+    }
+  });
+
   // Keyed on the total size as well as the count: a growing tail extends the last row without
   // adding a message, so following it means reacting to the height the virtualizer measured, not
   // to how many messages exist.
@@ -316,12 +403,17 @@ const MessageListRoot = ({
     // the next reader down the wrong path — which is precisely what this exists to prevent.
     if (viewport) {
       (viewport as any).__feed = {
+        virtualizer,
         follower,
         get following() {
           return followRef.current;
         },
         get positioned() {
           return positioned.current;
+        },
+        get measured() {
+          const { sizes, total } = measured.current;
+          return { rows: sizes.size, average: sizes.size ? Math.round(total / sizes.size) : 0, basis: basis.current };
         },
       };
     }
@@ -430,6 +522,7 @@ const MessageListRoot = ({
         range={range}
         currentIndex={currentIndex}
         virtualizer={virtualizer}
+        measureItem={measureItem}
         setViewport={setViewport}
         onSelect={onSelect}
         scrollToIndex={scrollToIndex}
@@ -462,7 +555,7 @@ type MessageListViewportExtra = Pick<
  */
 const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
   ({ autoHide, centered, native, padding, scrollbars, thin, ...props }, forwardedRef) => {
-    const { messages, Chrome, selectedIds, virtualizer, setViewport, onSelect } =
+    const { messages, Chrome, selectedIds, virtualizer, measureItem, setViewport, onSelect } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
 
     const handleViewportRef = useCallback(
@@ -498,9 +591,10 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
               return (
                 <div
                   key={item.key}
-                  // `measureElement` reads the real height after the item lays out, which is what
-                  // keeps a variable-height row from drifting against its estimate.
-                  ref={virtualizer.measureElement}
+                  // Reads the real height after the item lays out, which is what keeps a
+                  // variable-height row from drifting against its estimate — and feeds the average
+                  // that stands in for every row still unmeasured.
+                  ref={measureItem}
                   data-index={item.index}
                   data-object-id={message.id}
                   className='absolute inset-x-0 top-0'

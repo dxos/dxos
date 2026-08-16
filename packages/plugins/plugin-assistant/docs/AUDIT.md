@@ -444,6 +444,31 @@ touches has a real height. So the defect to design against is the arrival transi
 drift; and the interesting artefact is that `Large`'s own p95 of 59 is that same correction, spread
 thin.
 
+**Fixed, and re-measured.** Three changes, in the order they were found:
+
+1. **Open at the tail, mount only the tail** (`initialOffset`). The first commit built the window at
+   offset 0 and the sticky effect then scrolled to the bottom, so every row was constructed twice —
+   at both ends of the document, each one an `EditorView`.
+2. **The estimate is the running average of what rows actually measure**, not a fixed number. A
+   caller's estimate is a guess about content it has not seen; the list has measured some by then.
+3. **Re-base the layout on that average, anchored on the reader.** The virtualizer rebuilds from its
+   earliest pending measurement, so a tail-anchored feed rebuilds only the tail and everything above
+   keeps the original guess. Resizing row 0 to the average is the supported way to make it start from
+   the top again (clearing its caches leaves a layout with holes); the reader is then put back at the
+   tail if they were following it, or on the message they were on. It converges after one pass.
+
+| `BadEstimate` mount | p95 | worst | hitches | frames        |
+| ------------------- | --- | ----- | ------- | ------------- |
+| before              | 13  | 950ms | 13      | 140 / 4.2s    |
+| after               | 100 | 567ms | 5       | 2,331 / 20.3s |
+
+The remaining 567ms is not the list: a cold load of `Medium` (100 messages) costs 216ms and `Large`
+449ms before anything is scrolled, which is module evaluation and the story generating its messages.
+Scrolling is unchanged (`Large` sweep p95 59 → 59, worst 67 → 68ms) and `BadEstimate` now scrolls
+like `Large` rather than better — its old advantage was that the 950ms stall had already measured
+everything. The document is also the right length now: 328,796px against 55,245px, so the scrollbar
+and every jump-to-index are honest from the first frame rather than after a traversal.
+
 **Streaming is the cheapest of the three.** 3,500 frames with 5 hitches while the tail grows and the
 follow runs: markdown re-parsing on one growing item does not compete with the scroll.
 

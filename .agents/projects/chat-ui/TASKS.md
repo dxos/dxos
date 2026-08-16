@@ -41,9 +41,15 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       in AUDIT.md §3.3. Verdict: cost 1 (N `EditorView`s) is not the bottleneck — p50 is the display
       rate in every pass; cost 2 (measurement) is real but paid as a 950ms stall at mount, not as
       drift while scrolling.
-- [ ] Kill the mount stall — `BadEstimate` pays 950ms in one frame as the list first measures.
-      Candidates: `initialMeasurementsCache`, measuring in chunks across frames, or a better
-      first-render estimate. This is the one number the measurement found worth fixing.
+- [x] Kill the mount stall — 950ms → 567ms, 13 hitches → 5, and the remaining cost is the cold load
+      (216ms for 100 messages before anything scrolls), not the list. Three changes: tail-anchored
+      `initialOffset` so rows are not mounted at both ends; `estimateSize` as the running average of
+      measured rows; and an anchored re-base (`resizeItem(0, average)`) so the rebuild reaches the
+      rows above the reader. Total height now honest from the first frame (328,796 vs 55,245).
+- [ ] Cover the re-base in tests — it is verified by hand in Chrome only. Needs a jsdom harness with
+      stubbed heights, or a story that asserts total size against a known row height.
+- [ ] Non-sticky anchoring — the re-base restores `currentIndex` for a list that is not following the
+      tail, but every story sets `stickyBottom`, so that branch has never run.
 - [ ] Scroll to button — an affordance that jumps to the tail (the controller already exposes
       `scrollToBottom`; it needs a control, and a rule for when it shows).
 - [ ] Fade transition on a slow jump — a far `scrollToIndex` goes instantly (the offset is an
