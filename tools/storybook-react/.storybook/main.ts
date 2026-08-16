@@ -195,6 +195,15 @@ export const createConfig = ({
   // (theme, sidebar labels) is only picked up if it is registered as a manager entry here.
   managerEntries: [resolve(__dirname, './manager.tsx')],
   staticDirs: [staticDir, { from: sketchAssetsDir, to: '/assets/plugin-tldraw' }],
+  // Suppress Storybook's own promotional UI: the "Learn what's new" release popup and the
+  // "Get started" onboarding checklist (sidebar widget and menu guide page).
+  core: {
+    disableWhatsNewNotifications: true,
+  },
+  features: {
+    sidebarOnboardingChecklist: false,
+    menuOnboardingChecklist: false,
+  },
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,

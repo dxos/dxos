@@ -208,23 +208,23 @@ catalog:
   '@rollup/plugin-swc': ^0.4.0
   '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
-  '@storybook/addon-docs': ^10.4.2
-  '@storybook/addon-links': ^10.4.2
-  '@storybook/addon-themes': ^10.4.2
-  '@storybook/addon-vitest': ^10.4.2
-  '@storybook/builder-vite': ^10.4.2
-  '@storybook/html-vite': ^10.4.2
-  '@storybook/icons': ^2.0.2
+  '@storybook/addon-docs': ^10.5.8
+  '@storybook/addon-links': ^10.5.8
+  '@storybook/addon-themes': ^10.5.8
+  '@storybook/addon-vitest': ^10.5.8
+  '@storybook/builder-vite': ^10.5.8
+  '@storybook/html-vite': ^10.5.8
+  '@storybook/icons': ^2.1.0
   '@storybook/mdx2-csf': ^1.1.0
-  '@storybook/react-vite': ^10.4.2
-  '@storybook/web-components-vite': ^10.4.2
+  '@storybook/react-vite': ^10.5.8
+  '@storybook/web-components-vite': ^10.5.8
   '@svgr/cli': ^8.1.0
   '@swc/core': 1.15.46
   '@swc/types': ^0.1.27
   '@tailwindcss/forms': ^0.5.9
   '@tailwindcss/oxide': ^4.3.0
   '@tailwindcss/postcss': ^4.3.0
-  '@tailwindcss/vite': ^4.3.0
+  '@tailwindcss/vite': ^4.3.3
   '@tanstack/react-virtual': ^3.13.18
   '@tauri-apps/api': ^2.11.1
   '@tauri-apps/cli': ^2.11.4
@@ -320,8 +320,8 @@ catalog:
   '@uiw/codemirror-theme-vscode': ^4.25.2
   '@valtown/codemirror-continue': ^2.3.1
   '@valtown/codemirror-ts': ^2.3.1
-  '@vitejs/plugin-react': ^6.0.3
-  '@vitejs/plugin-react-swc': ^4.3.1
+  '@vitejs/plugin-react': ^6.0.5
+  '@vitejs/plugin-react-swc': ^4.3.3
   '@vitest/browser': 4.1.10
   '@vitest/browser-playwright': ^4.1.10
   '@vitest/coverage-v8': ^4.1.10
@@ -632,8 +632,8 @@ catalog:
   sparqljs: ^3.7.4
   stage-js: 1.0.0-alpha.17
   starlight-links-validator: ^0.24.0
-  storybook: ^10.4.2
-  storybook-solidjs-vite: ^10.0.13
+  storybook: ^10.5.8
+  storybook-solidjs-vite: ^10.6.0
   streamx: ^2.12.5
   style-mod: ^4.1.0
   tabster: ^8.5.5
@@ -677,13 +677,13 @@ catalog:
   varint: 6.0.0
   versor: ^0.2.0
   viem: ^2.21.26
-  vite: ^8.1.4
+  vite: ^8.2.1
   vite-node: ^6.0.0
-  vite-plugin-devtools-json: ^1.0.0
+  vite-plugin-devtools-json: ^1.1.0
   vite-plugin-glslify: ^2.3.0
   vite-plugin-inspect: ^12.0.2
   vite-plugin-pwa: ^1.2.0
-  vite-plugin-solid: ^2.11.12
+  vite-plugin-solid: ^2.11.14
   vite-plugin-top-level-await: ^1.6.0
   vite-plugin-turbosnap: ^1.0.3
   vite-plugin-wasm: ^3.6.0
@@ -792,7 +792,7 @@ overrides:
   tar-fs: '>=3.1.1'
   typescript: 'catalog:'
   undici: '>=7.18.2'
-  vite: '>=8.1.4'
+  vite: '>=8.2.1'
   web-ext: ^10.5.0
   wrangler: '>=4.112.0'
   ws: '>=8.17.1'

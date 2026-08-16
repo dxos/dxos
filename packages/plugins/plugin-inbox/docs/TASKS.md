@@ -117,7 +117,8 @@ Committed, unpushed. This is the PR to open first.
   JMAP as a mailbox role, both already mapped in the providers' `sync/system-tags.ts`, so one toggle
   serves both directions and NO filter-complement operator is needed anywhere.
 - **Archive is LOCAL-ONLY for now** (syncing tags back to Gmail is P2). A Gmail sync WILL restore an
-  archived message. Accepted deliberately — do not re-file this as a bug.
+  archived message. Accepted deliberately — do not re-file this as a bug. **Superseded 2026-08-15** by
+  Phase 6 below, which closes the P2 — see [`TAG-SYNC.md`](TAG-SYNC.md).
 
 ---
 
@@ -185,6 +186,26 @@ Committed, unpushed. This is the PR to open first.
 ## Phase 3: Fixes + polish
 
 ### Tasks
+
+- [ ] **Conversation star state should be the OR across the thread, and read-only** (reported
+      2026-08-15). A conversation whose FIRST message is starred appears in the Starred folder, but the
+      conversation header shows no star — the header reads membership from one message while the folder
+      query matches any. Decided direction: in `MailboxArticle` the conversation star is the logical OR
+      of every message in the thread and is READ-ONLY, or alternatively render a star per message.
+      Toggling one aggregate star cannot express which message it belongs to, which is why it stops
+      being a control.
+
+- [ ] **Filtered mailbox results float instead of anchoring to the top** (reported 2026-08-15, with a
+      screenshot). With a filter applied in the mailbox toolbar (`# inbox patrick`), the two matching
+      conversations render roughly a third of the way down the pane with a large empty band above
+      them, rather than sitting at the top of the list as they do unfiltered.
+      Start at `components/InboxStack/InboxStack.tsx` and the scroll container in
+      `containers/MailboxArticle`. Two candidates worth separating before fixing: (a) the virtualizer
+      or scroll container keeping the offset/spacer sizing of the UNFILTERED list, so the shortened
+      result set paints at the old scroll position — expect it to correct itself on scroll or resize,
+      which would confirm it; (b) a centring layout rule (`place-items-center` / `items-center`) that
+      only becomes visible once the content no longer fills the viewport. (a) is the more likely and
+      the more serious: it would mean any filter that shrinks the list leaves dead space.
 
 - [x] **Person rows should use the `Row.Person` avatar, not a `ph--user--regular` icon** (requested
       2026-08-13) — everywhere a card row represents a person, the generic user glyph should be the
@@ -455,12 +476,27 @@ Raised while driving the live mailbox. Grouped by owner, since half of these are
 
 ### plugin-inbox
 
-- [ ] **Analyze icon → sparkle, via `SystemIconButton`.** The toolbar action uses
+- [x] **Analyze icon → sparkle, via a constant AND a button preset** (2026-08-15). The framing needed
+      correcting: an AI action is DATA far more often than it is a button — 18 of the 21 sparkle uses
+      are an operation's `meta.icon` or a graph action's `properties.icon`, both plain strings that no
+      React component can constrain. So the mechanism is `AI_ACTION_ICON` in `@dxos/ui-types`
+      (React-free, so an operation definition can import it without pulling UI into a headless module),
+      with `SystemIconButton.Ai` sourcing the same constant for the 3 button call sites.
+      Analyze now uses it at all three of its sites, plus the two adjacent plugin-inbox uses whose
+      package already depended on `ui-types`.
+      LEFT DELIBERATELY: 13 literals across 10 packages. Converting each needs a new `ui-types`
+      dependency on that package — a poor trade for an icon string. The constant is there for new code
+      and for anyone already editing those files.
+      Original entry: **Analyze icon → sparkle, via `SystemIconButton`.** The toolbar action uses
       `ph--stack-simple--regular` (and `ph--stop--regular` while running); plugin-crm's Research
       already uses sparkle for the same "run AI over this subject" meaning. Promote it to the
       `SystemIconButton` primitive and apply it wherever an AI/agent action is offered — today each
       action sets a raw `icon` string in its graph properties, so nothing enforces the convention.
-- [ ] **Sync message tags back to Gmail (the P2 deferred in Phase 1 DECIDED).** CLAIMED — designed in
+- [x] **Sync message tags back to Gmail** — OFF THIS LEDGER, owned by
+      [#12611](https://github.com/dxos/dxos/pull/12611). **The write path is still unbuilt**: that PR is
+      open and design-only (`docs/TAG-SYNC.md` plus a Phase 6 entry), so a Gmail sync still restores an
+      archived message. Ticked here because the work is tracked there, not because it works.
+      Original entry: designed in
       [#12611](https://github.com/dxos/dxos/pull/12611) (branch `claude/mailbox-tag-sync-89f351`),
       which adds `docs/TAG-SYNC.md` and a Phase 6 entry to THIS file. Design-only so far; the write
       path is still unbuilt. Do not start it here. **That PR and this branch both edit this ledger, so
@@ -487,11 +523,13 @@ Raised while driving the live mailbox. Grouped by owner, since half of these are
 
 ### plugin-space / react-ui
 
-- [ ] **Type filter for Related Objects.** The Related Objects masonry mixes every related type in one
-      list; narrow it by type.
-- [ ] **Object avatars in cards.** STARTED: `ObjectAvatar` (react-ui-card) resolves picture → initials
-      → type glyph for any object, and `TypeArticle`'s tile uses it. Not yet applied to
-      `RecordArticle`'s own header, and has no story covering the three-way fallback.
+- [x] **Type filter for Related Objects** — landed as [#12613](https://github.com/dxos/dxos/pull/12613).
+      Also extracted `RelatedObjectCard` out of `RecordArticle`, which is why the `CardIconSlot` fix for
+      related tiles was already present by the time the follow-up PR went to re-apply it.
+- [x] **Object avatars in cards** — delivered by the `AppSurface.CardIcon` seam rather than by making
+      `ObjectAvatar` every card's default: the type glyph stays the default at all hosts and `Person`
+      alone contributes its photo-then-initials treatment. The remaining story/test coverage is its own
+      item, not this one.
 - [x] **A card header's depiction is now contributable per type** (`AppSurface.CardIcon`). Raised as
       "the avatar colour is wrong" — every person rendered on the same grey disc, because
       `ObjectAvatar` preferred the type's declared hue and both `Person` and `Organization` declare
@@ -689,6 +727,143 @@ generalize now with mailbox as instance #1.
       `ExtractCorrespondents` is the clear win — it re-derives over the whole feed every run and the
       identity index already makes it idempotent, so a cursor is pure saving. The projects trio is
       blocked on the item above. Real scope: ONE, maybe two.
+
+---
+
+## Phase 6: Bidirectional tag sync — BUILT 2026-08-15 (Gmail)
+
+Design: [`TAG-SYNC.md`](TAG-SYNC.md). Closes the Phase 1 P2 deferral — a star or an archive made in
+Composer reaches the provider, and a label changed at the provider is no longer add-only.
+
+The mechanism is a three-way merge whose **base is the tag index's Automerge heads**
+(`Obj.version` / `Obj.getVersion`), not a shadow object and not an outbox: ECHO already keeps the
+mutation log, and a state diff has no self-echo failure mode — sync writes tags through the same
+`Tagging.set` the star button does, so an intent queue would enqueue every pulled tag for push.
+
+### Tasks
+
+- [x] **Pure diff module** — `src/sync/tag-diff.ts`, `(base, local, remote, eligible) → { push, pull }`
+      over plain `Map<string, Set<string>>`; no ECHO, no provider, no Effect. 15 tests passing.
+      FOUND WHILE WRITING THEM: an opposed conflict is UNREPRESENTABLE. Membership is a boolean per
+      (message, tag), so `local !== base && remote !== base` forces `local === remote` — both flipped
+      to the negation of base. All eight triples resolve to push/pull/nothing, so the owner-wins
+      policy decided earlier is MOOT and is gone, along with the per-tag owner in `eligible` (now a
+      plain `Set`). The suite enumerates all eight and asserts no tag is ever pushed AND pulled, so a
+      future tri-state or tombstone fails the test rather than silently reviving the question.
+- [x] **Heads on the binding** — persist `nextHeads` and `Cursor.spec.token` in ONE `Obj.update`.
+      CONCRETELY: `runMailSync` writes the token today at `mail-sync.ts:578` inside `if (!capped)`;
+      that call must NOT stay as-is with a heads write added beside it. Hold `source.nextToken()` in
+      memory, run the push phase first, then write both through `Cursor.writeSyncState` — and write
+      neither when anything is `pending`.
+      (a combined `Cursor.writeSyncState({ token, tagHeads })`, never `writeToken` followed by a
+      separate heads write). They are one recovery unit: token-then-heads leaves the next run reading
+      its delta from the advanced token while diffing against stale heads, so every tag the previous
+      run PULLED reads as a local-only add. Usually a no-op re-push, but if the remote moves in that
+      window it silently re-applies a tag the provider deliberately removed, and no conflict rule
+      catches it because the diff sees no conflict. Capture them AFTER
+      the pull commits and BEFORE the push, which is what avoids both a lost mid-run toggle and
+      re-pushing this run's own pulls. When `Obj.getVersion` cannot reconstruct the saved heads, do
+      NOT re-baseline silently — that drops every local change made since the last sync. Fall back to
+      the base-less ADDITIVE reconcile (push what remote lacks, pull what local lacks, remove nothing
+      either way); without a base, "local has it, remote does not" cannot distinguish a local add from
+      a remote removal, so only the additive half is safe. Self-healing: the run captures fresh heads,
+      so the next diff is well-founded and removals resume.
+- [x] **`pushTags` hook on `MailSyncProviderService`** — optional, so a provider with no write path
+      degrades to pull-only. Returns `{ settled, pending }` rather than void: a PERMANENT rejection
+      (404, label gone, missing scope) is `settled` because no retry can succeed and refusing to
+      advance would block the base forever; a TRANSIENT one (429, 5xx, timeout) is `pending`. Heads
+      persist only when `pending` is empty and the cap was not hit — otherwise `runAgain`, so retry is
+      between runs and `pushTags` owns no backoff state. Harness resolves tag uris → provider bindings
+      from the reverse label map and caps ops per run.
+- [x] **Gmail write path** — `modifyMessage` + `batchModify` on `GoogleMailApi`, its `Live` layer, and
+      `GoogleMailApi.mock` (the mock needs mutable per-message label state so `listHistory` reflects a
+      push). The connector ALREADY requests `gmail.modify` (`capabilities/connector.ts`, added for
+      trash) — nothing to change there.
+- [x] **Map `spam` onto Gmail's `SPAM`** — `GMAIL_SYSTEM_TAGS` omits it deliberately today ("TRASH/SPAM
+      — never synced"), so `ClassifyMailbox`'s canonical `spam` tag has nothing to push to. Adding it
+      is BIDIRECTIONAL: `syncLabels` reads the same map, so Gmail's own spam verdict starts arriving
+      as the canonical tag — wanted, but a reversal of a documented exclusion, not a one-line edit.
+      `TRASH` stays out; deletion is not a tag. VERIFIED 2026-08-15 against `test@braneframe.com`:
+      `users.messages.modify` accepts `SPAM` in `addLabelIds` (HTTP 200, applied, restored cleanly),
+      so the reverse map stays a bare `tagUri → labelId` and no binding descriptor is needed for the
+      Gmail cut. Revisit when JMAP lands, where `spam` is a `$junk` keyword rather than a label.
+- [x] **Mock-provider round trip** — `plugin-google/src/operations/mail/sync/tag-push.test.ts`, 8 tests
+      driving the real harness against the mock (which now holds mutable label state, so a push is
+      observable through the same API the sync writes through). Covers first sync, star, archive,
+      pull-not-pushed-back, user tag ignored, transient failure holding the base, `Obj.getVersion`
+      reconstructing a past index, and unresolvable heads emitting no removals. FIXTURE BUG FOUND:
+      `SYSTEM_LABELS` omitted STARRED/SPAM/TRASH, and since `syncLabels` maps the label DICTIONARY, a
+      missing entry silently disables tag reconciliation for that tag rather than failing.
+- [x] **Live round-trip test** — both directions against `test@braneframe.com` (DECIDED 2026-08-15;
+      unblocked). Nothing in the repo referenced that account before, so `TAG-SYNC.md` is now its
+      canonical record. This test WRITES labels, so `GOOGLE_ACCESS_TOKEN` alone must not arm it: that
+      variable already exists for the read-only `sync-e2e.test.ts`, and reusing it would silently turn
+      an existing read-only setup into one that mutates mail. Second gate is
+      `DX_GMAIL_TAG_SYNC_ACCOUNT` holding the address (its value IS the allowlist), with a
+      `getProfile().emailAddress` assertion that FAILS (not skips) on mismatch, operation only on
+      messages the test itself created, and cleanup in `afterAll` restoring original `labelIds` —
+      throwing if a restore fails, since a shared mailbox means a swallowed one hits a colleague.
+      SHIPPED as `sync-live.test.ts` + `testing/live-credentials.ts`, 3 tests, RUN GREEN against
+      test@braneframe.com: identity assertion, star pushed + Gmail label pulled in one run, and
+      archive removing INBOX. Account verified restored afterwards (0 starred, 24 in inbox).
+      NOTE: `plugin-google`'s `mail/send/handler.test.ts` already SENDS real email on
+      `GOOGLE_ACCESS_TOKEN` alone — the pattern this rule exists to avoid repeating, not to copy.
+- [x] **Push insert-time local tags** — a tag written by local logic during a run (known-sender
+      `important`, on-arrival extractors) is NOT the same as a tag the pull wrote, though both land
+      before the heads capture. Left in the base it strands forever: it sits in both `base` and
+      `local` from the next run on, so no diff ever emits it. Separated by carrying each insert's
+      `remoteTagUris` on the REMOTE side of the merge: a provider label is then on local and remote
+      with an empty base (converged, no push) while an insert-time local tag is local-only (push).
+      NO base overlay — the earlier design had one; the tests showed it was a second mechanism for
+      the same outcome.
+
+### Open
+
+- **ADOPT FROM PR #12599 (wittjosiah's parallel `outbound-tag-sync` design): the `isProviderTag`
+  split.** Provider tags should stay non-renamable and non-recolorable but become MEMBERSHIP-
+  toggleable — one predicate split into two, auditing every call site (`meta-tags.ts`,
+  `SystemTags.ts`). Without it our eligibility is half-connected: `tagBindings` makes
+  `com.google.gmail.label` tags pushable, but the UI still forbids attaching or detaching them, so
+  only canonical tags can ever actually change locally. Small, and it completes what shipped.
+
+- **ADOPT FROM PR #12599: a tag add/remove affordance on messages** (their Phase 4). None exists today
+  beyond the star and the archive toggle — `Mailbox.applyTag` is called only by the classifier and
+  extractors. Until it lands, most of the push path is reachable only by pipeline code, not by a user.
+  Deliberately NOT folded into the tag-sync PR: it is a UI feature with its own storybook and review
+  surface, and that PR is already four packages wide.
+
+- **PRE-EXISTING FLAKE: `sync.test.ts`'s capped-run test loses a message under load.**
+  `a capped run requests Operation.runAgain(), and repeated runs sync the whole mailbox` intermittently
+  asserts 24 of 25 synced ids. NOT order-dependent — an earlier reading of it as "fails under `-t`,
+  passes in the file" was wrong; 8 consecutive uncached isolated runs pass on a quiet machine, and the
+  failures clustered while the box was busy with the live Gmail suite. Reproduces with the tag-sync
+  changes stashed, so it is not ours.
+
+  DIAGNOSED, not fixed: the sync is innocent. The funnel logs show all 25 committed across the three
+  capped runs (10 + 10 + 5) in BOTH the passing and failing cases — it is the post-run `db.query` that
+  occasionally returns 24. So this is a read-visibility race after `runMailSync`'s closing
+  `Database.flush({ indexes: true })`, not a lost message. Adding one extra query before the assertion
+  makes it pass every time, which is the Heisenbug signature of exactly that. Worth chasing because
+  the same race would make ANY post-sync read racy, not just this test.
+
+- ~~Whether `ClassifyMailbox`'s canonical output should push to the user's real Gmail account.~~
+  DECIDED 2026-08-15: it pushes — a classification the user sees in Composer should be the one their
+  mail client shows. See the `spam` mapping task above for the work that decision creates.
+- ~~Conflict policy.~~ MOOT 2026-08-15 — an opposed conflict cannot be represented for boolean tag
+  membership, so neither owner-wins nor remote-wins ever fires. Removed rather than kept as dead code.
+  If membership ever gains a third state, owner-wins is the answer to reach for (a tag has a declared
+  owner per `Tag.md` §"Tag origin") — and the enumeration test will fail loudly at that point.
+- **CONSIDER LATER: timestamped last-writer-wins.** The rule above cannot tell which of two opposed
+  acts happened later, so an unsynced local star resurrects one removed on another device — bounded
+  by one sync interval. Real LWW needs a per-entry write time, which `TagIndex`
+  (`Record<tagId, objectId[]>`) does not carry: a schema change plus clock-skew handling, since the
+  device and provider clocks are not comparable without a server-supplied ordering. Revisit if the
+  resurrection case is actually observed, not pre-emptively.
+- ~~JMAP in this change or a follow-up?~~ DECIDED 2026-08-15: **follow-up**. `pushTags` is optional so
+  an unimplemented provider degrades to pull-only. `jmapReconcile`'s add-only keyword handling exists
+  only because local flags could not be written back — revisit it when JMAP lands, not before. Treat
+  `ProviderTagBinding` as PROVISIONAL until a second provider has used it: `spam` is a label in Gmail
+  and a `$junk` keyword in JMAP, which is exactly the shape the descriptor has to survive.
 
 ---
 

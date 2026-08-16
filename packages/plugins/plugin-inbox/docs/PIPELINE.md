@@ -5,7 +5,7 @@ How mail gets into a mailbox and what runs over it afterwards. Sibling docs: [`P
 [`PIPELINE-AUDIT.md`](PIPELINE-AUDIT.md) (pipeline/operation coverage index). `AUDIT.md` is a
 separate decomposition audit, not a test index.
 
-**Status:** D1–D3, D5 and D6 built; D4 outstanding. See [Open](#open).
+**Status:** D1–D6 all built. See [Open](#open) for what remains beyond them.
 
 ## The shape
 
@@ -92,7 +92,7 @@ Mailbox
     │       ├── toCommitUnit
     │       └── » commitPageSize ⇒ Cursor.commit
     │
-    └── SCAN — READS the feed, one cursor per processor
+    └── ANALYZE — READS the feed, one cursor per processor
         └── AnalyzeMailbox                      topology from MailboxProcessor contributions
             ├── contacts       [inbox]       no cursor
             ├── subscriptions  [inbox]       no cursor
@@ -120,7 +120,7 @@ Two things this makes visible:
 
 Two phases:
 
-```
+```text
 Sync => ConnectorSpec.Connector => connector.sync.operation
 Analyze => InboxOperation.AnalyzeMailbox => MailboxProcessor
 ```
@@ -168,9 +168,16 @@ reshuffled between runs would make cursor behaviour irreproducible.
 > through the `ServiceResolver`, NOT the caller's Effect context. A test cannot supply it with
 > `Effect.provideService`; it must use `AssistantTestLayer`'s `extraServices`.
 
-**D4 — Failure policy follows from the DAG.** NOT BUILT. `continueOnError` still aborts in list order,
-so a failing processor strands whatever sits behind it even when nothing connects them. Intended: a
-failed processor fails its descendants; independent branches continue.
+**D4 — Failure policy follows from the DAG.** BUILT. By default (`continueOnError: false`) a failed
+processor blocks exactly its descendants — `Topology.descendants` walks the transitive closure and each blocked pass is reported
+with the upstream that invalidated it. Independent branches keep running: `subscriptions` declares no
+edge to `classify`, so a classification failure no longer strands it for merely sitting later in the
+list. A caller passing `continueOnError: true` gets the failure reported and nothing blocked.
+
+Sharp edge pinned by test: a `tiers` filter DROPS the edges that ran through a filtered-out processor.
+Selecting `['deterministic','classify','analyze']` leaves `analyze`'s `after: ['summarize']` pointing
+at an absent node, so it is ignored and `analyze` runs despite the classification failure. Correct — a
+processor the caller excluded cannot constrain anything, and `analyze` never consumed classification.
 
 **D5 — An operation belongs to the plugin that owns what it needs.** BUILT. plugin-brain contributes the
 `analyze` processor **and** the `FactStore` layer it needs, so a deployment without brain has no
@@ -359,11 +366,10 @@ look bigger than it was. See the D6 entry in [`TASKS.md`](TASKS.md).
 
 ## Open
 
-1. **D4** — failure policy from the edges.
-2. **Give the remaining cursorless consumers a cursor** — mechanical now that a cursor is identified by
+1. **Give the remaining cursorless consumers a cursor** — mechanical now that a cursor is identified by
    `(feed, subject, tag)`, but each needs its own call on whether feed position or derived-state
    replacement is right. Settled so far: `syncProjectTasks` YES (2026-08-15, per-project);
    `ExtractSubscriptions`, `update-travel-log` and `update-investor-log` NO — all three regenerate
    derived state from the whole feed, so a cursor would corrupt what they produce.
-3. **A feed-generic host** — the residue of D6 as originally framed. Still unbuilt and still without a
+2. **A feed-generic host** — the residue of D6 as originally framed. Still unbuilt and still without a
    second consumer asking for it; the cursor correction that D6 turned out to be did not require it.
