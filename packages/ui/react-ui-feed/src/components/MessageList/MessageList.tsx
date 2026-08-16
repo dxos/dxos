@@ -21,6 +21,7 @@ import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { type MessageRenderer, type SearchHit, defaultRenderer } from '../../model';
 import { type HighlightRange, HtmlItem, MarkdownItem, SelectionGroupContext, createSelectionGroup } from '../Item';
 import { type FollowOptions, ScrollFollower } from './follow';
+import { usePositionLog } from './position-log';
 
 //
 // Context
@@ -53,6 +54,9 @@ type MessageListContextValue = {
   /** Block widgets mounted across every mounted item — what the visible window actually costs. */
   mountedWidgets: number;
   reportWidgets: (id: string, count: number) => void;
+  /** Rows that moved after being laid out, and windows whose offsets were out of order. */
+  shifts: number;
+  breaks: number;
   virtualizer: Virtualizer<HTMLElement, HTMLElement>;
   /** Row ref: measures the element and feeds the running average behind `estimateSize`. */
   measureItem: (element: HTMLElement | null) => void;
@@ -74,9 +78,18 @@ const [MessageListProvider, useMessageListContext] = createContext<MessageListCo
  * find-next, a statusbar's range readout.
  */
 export const useMessageList = (consumerName = 'useMessageList') => {
-  const { range, currentIndex, mountedWidgets, messages, scrollToIndex, scrollToBottom } =
+  const { range, currentIndex, mountedWidgets, shifts, breaks, messages, scrollToIndex, scrollToBottom } =
     useMessageListContext(consumerName);
-  return { range, currentIndex, mountedWidgets, count: messages.length, scrollToIndex, scrollToBottom };
+  return {
+    range,
+    currentIndex,
+    mountedWidgets,
+    shifts,
+    breaks,
+    count: messages.length,
+    scrollToIndex,
+    scrollToBottom,
+  };
 };
 
 //
@@ -129,6 +142,12 @@ const MEASURED_SAMPLE = 4;
 
 /** Relative error in the row height the layout assumes, beyond which it is rebuilt from the average. */
 const REBASE_THRESHOLD = 0.25;
+
+/** Quiet period (ms) after the last scroll before the layout may be rebuilt. */
+const REBASE_QUIET = 400;
+
+/** Rebuilds allowed per feed. The average converges; a list that keeps re-basing is thrashing. */
+const REBASE_LIMIT = 3;
 
 /** How long after a gesture a scroll is still attributable to the reader. */
 const GESTURE_WINDOW = 300;
@@ -254,6 +273,14 @@ const MessageListRoot = ({
   );
   useEffect(() => () => follower?.cancel(), [follower]);
 
+  // Where each row was placed, and whether it stayed there. A row that moves after it was laid out
+  // is what the reader sees as flicker, and it happens scrolling up, where unmeasured rows enter.
+  const { shifts, breaks, last: lastShift, record: recordPositions } = usePositionLog();
+  const virtualItems = virtualizer.getVirtualItems();
+  useEffect(() => {
+    recordPositions(virtualItems.map(({ key, index, start }) => ({ key, index, start })));
+  }, [virtualItems, recordPositions]);
+
   const mounted = virtualizer.getVirtualItems().length;
   const startIndex = virtualizer.range?.startIndex;
   const endIndex = virtualizer.range?.endIndex;
@@ -285,6 +312,7 @@ const MessageListRoot = ({
   // any means — opts back in.
   const followRef = useRef(true);
   const gestureRef = useRef(0);
+  const scrolledAt = useRef(0);
   useEffect(() => {
     if (!viewport) {
       return;
@@ -295,6 +323,7 @@ const MessageListRoot = ({
     };
 
     const onScroll = () => {
+      scrolledAt.current = performance.now();
       const atTail = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < STICKY_THRESHOLD;
       if (atTail) {
         followRef.current = true;
@@ -380,6 +409,7 @@ const MessageListRoot = ({
   // following it, otherwise on the message they were on. Converges — the average becomes the basis,
   // so the next comparison is against itself.
   const basis = useRef(estimateSize);
+  const rebases = useRef(0);
   useEffect(() => {
     const { sizes, total } = measured.current;
     if (sizes.size < MEASURED_SAMPLE) {
@@ -390,6 +420,16 @@ const MessageListRoot = ({
     if (!average || Math.abs(average - basis.current) / basis.current < REBASE_THRESHOLD) {
       return;
     }
+
+    // Never while the reader is moving. A rebuild moves every offset in the list, so doing it under
+    // a scroll is a row changing place beneath the eye — which is what "flicker" is, and it shows
+    // going up, where unmeasured rows enter and the average is still moving. Deferred to the next
+    // quiet moment: measurements keep arriving, so this effect runs again.
+    if (performance.now() - scrolledAt.current < REBASE_QUIET || rebases.current >= REBASE_LIMIT) {
+      return;
+    }
+
+    rebases.current++;
 
     basis.current = average;
     const anchor = currentIndexRef.current;
@@ -429,6 +469,9 @@ const MessageListRoot = ({
         },
         get positioned() {
           return positioned.current;
+        },
+        get shifted() {
+          return { shifts, breaks, last: lastShift };
         },
         get measured() {
           const { sizes, total } = measured.current;
@@ -542,6 +585,8 @@ const MessageListRoot = ({
         currentIndex={currentIndex}
         mountedWidgets={mountedWidgets}
         reportWidgets={reportWidgets}
+        shifts={shifts}
+        breaks={breaks}
         virtualizer={virtualizer}
         measureItem={measureItem}
         setViewport={setViewport}

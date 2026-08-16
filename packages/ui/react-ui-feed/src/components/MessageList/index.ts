@@ -4,3 +4,4 @@
 
 export * from './MessageList';
 export * from './follow';
+export * from './position-log';

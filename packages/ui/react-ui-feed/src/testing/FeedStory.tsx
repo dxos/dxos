@@ -493,24 +493,28 @@ type StatusBarProps = {
 };
 
 const StatusBar = ({ hits, query, selected, streaming, meter }: StatusBarProps) => {
-  const { range, currentIndex, mountedWidgets, count } = useMessageList('StatusBar');
+  const { range, currentIndex, mountedWidgets, shifts, breaks, count } = useMessageList('StatusBar');
 
   return (
     // The frame readout gets a double-width column: it is the longest cell, and an equal share
     // wrapped it onto a second line, which an `h-6` bar renders as clipped.
-    <div className='h-6 w-full overflow-hidden grid grid-cols-[1fr_1fr_1fr_1fr_1fr_3fr_1fr] items-center gap-4 px-2 text-xs text-description tabular-nums'>
-      <span>{range ? `${range.startIndex}–${range.endIndex}` : ''}</span>
-      <span>
+    <div className='w-full overflow-hidden grid grid-cols-4 items-center gap-4 px-2 text-xs text-description tabular-nums'>
+      <div>{range ? `${range.startIndex}–${range.endIndex}` : ''}</div>
+      <div>
         {currentIndex} / {count}
-      </span>
+      </div>
       {/* Block widgets mounted right now: what the visible window costs beyond its text. */}
-      <span data-testid='feed.widgets'>{mountedWidgets} blocks</span>
-      <span>{selected} selected</span>
-      {query ? <span>{hits.length} hits</span> : <span />}
+      <div data-testid='feed.widgets'>{mountedWidgets} blocks</div>
+      {/* Rows that moved after they were laid out — the reader calls this flicker. */}
+      <div className={mx(shifts > 0 && 'text-warning-text')} data-testid='feed.shifts'>
+        {shifts} shifts{breaks > 0 ? ` · ${breaks} breaks` : ''}
+      </div>
       <FrameMeter meter={meter} />
-      <span className='text-right' data-testid='feed.stream.state'>
+      <div>{selected} selected</div>
+      {query ? <div>{hits.length} hits</div> : <div />}
+      <div className='text-right' data-testid='feed.stream.state'>
         {streaming ? 'streaming…' : 'idle'}
-      </span>
+      </div>
     </div>
   );
 };
@@ -524,13 +528,13 @@ const StatusBar = ({ hits, query, selected, streaming, meter }: StatusBarProps) 
  * starts. So a measurement is click, gesture, click — and the median rate, which rarely says
  * anything the live rate has not, rides in the tooltip and the recorded line rather than on screen.
  */
-const FrameMeter = ({ meter }: { meter: FrameMeterState }) => {
+const FrameMeter = ({ classNames, meter }: ThemedClassName<{ meter: FrameMeterState }>) => {
   const { label, fps, p50, p95, worst, hitches, frames, duration, record } = meter;
 
   return (
     <button
       type='button'
-      className='grid grid-cols-4 gap-1 text-left tabular-nums whitespace-nowrap overflow-hidden'
+      className={mx('grid grid-cols-4 gap-1 text-left tabular-nums whitespace-nowrap overflow-hidden', classNames)}
       title={`${label} — p50 ${p50} · ${frames} frames · ${(duration / 1000).toFixed(1)}s. Click to record the pass.`}
       data-testid='feed.frames'
       onClick={record}
