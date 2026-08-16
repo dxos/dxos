@@ -97,15 +97,13 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
           return yield* Effect.fail(new OllamaError(`HTTP ${response.status}`));
         }
         const data = yield* HttpClientResponse.schemaBodyJson(TagsResponse)(response);
-        return (data.models ?? []).map(
-          (model): Model => ({
-            name: model.name ?? '',
-            size: model.size,
-            modifiedAt: model.modified_at,
-            digest: model.digest,
-            details: model.details,
-          }),
-        );
+        return (data.models ?? []).map((model): Model => ({
+          name: model.name ?? '',
+          size: model.size,
+          modifiedAt: model.modified_at,
+          digest: model.digest,
+          details: model.details,
+        }));
       }),
     ),
   );
@@ -119,14 +117,12 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
           return yield* Effect.fail(new OllamaError(`HTTP ${response.status}`));
         }
         const data = yield* HttpClientResponse.schemaBodyJson(PsResponse)(response);
-        return (data.models ?? []).map(
-          (model): RunningModel => ({
-            name: model.name ?? '',
-            size: model.size,
-            sizeVram: model.size_vram,
-            expiresAt: model.expires_at,
-          }),
-        );
+        return (data.models ?? []).map((model): RunningModel => ({
+          name: model.name ?? '',
+          size: model.size,
+          sizeVram: model.size_vram,
+          expiresAt: model.expires_at,
+        }));
       }),
     ),
   );

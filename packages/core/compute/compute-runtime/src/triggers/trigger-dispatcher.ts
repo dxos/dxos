@@ -594,15 +594,10 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         });
       }
       this._publishRuntimeStatuses(registry);
-      registry.update(
-        this._state,
-        (state): TriggerDispatcherState => ({
-          ...state,
-          invocations: state.invocations.map((_) =>
-            _.invocationId === invocation.invocationId ? { ..._, result } : _,
-          ),
-        }),
-      );
+      registry.update(this._state, (state): TriggerDispatcherState => ({
+        ...state,
+        invocations: state.invocations.map((_) => (_.invocationId === invocation.invocationId ? { ..._, result } : _)),
+      }));
 
       return triggerExecutionResult;
     }).pipe(Effect.provide(this._services));
