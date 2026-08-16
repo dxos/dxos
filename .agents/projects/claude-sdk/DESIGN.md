@@ -74,3 +74,69 @@ in M1, browser round-trip later. Layer swap, not rewrite.
 2. Concurrency: several branches running at once against one worktree.
 3. Which branch a permission prompt belongs to, and what the others do while it
    waits.
+
+## M3c — getting a turn into Composer's chat (2026-08-15)
+
+### Correction: the thread DOES read the feed
+
+Two earlier conclusions in this document's history were wrong and are retracted:
+
+1. ~~"`AiChatProcessor.messages` reads in-memory atoms, never the feed, so an
+   external writer cannot render."~~ **False.** `Chat.tsx` composes _both_:
+
+   ```ts
+   const feedMessages = useQuery(db, Query.select(Filter.type(Message.Message)).from(feed));
+   const pendingMessages = useAtomValue(processor.messages);
+   const { messages } = projectThread({ feedMessages, pendingMessages, rewindFrom });
+   ```
+
+   `feedMessages` is a reactive query over the chat's feed. `Feed.append` is a
+   supported path into the thread.
+
+2. ~~"`AgentService` is the only supported door."~~ Also false, and it followed
+   from (1). `AgentService` is how the _assistant_ drives a turn; it is not a
+   precondition for a message appearing.
+
+`AiChatProcessor.present()` was added to work around (1). It is therefore
+probably unnecessary — but it is harmless and still correct for messages that
+have not reached the feed yet, so it stays until the real cause is known.
+
+### What is actually unexplained
+
+The story appends projected messages to `chat.feed` and the thread does not show
+them. Given the above, the candidates are now narrow:
+
+1. `feedMessages` never contains them — the reactive query does not match. Most
+   likely if `Message.Message` is not registered in the story space's schema
+   registry, or the `db`/`feed` the component reads differs from the one the play
+   function wrote to.
+2. `projectThread` drops them. It sorts by `byAppendOrder` then calls
+   `Feed.history(sorted).items`. `Feed.history` walks backwards from the head
+   following parent links, falling through to the predecessor when no parent key
+   is present — so un-parented appends should survive. But its contract warns
+   that the walk is **positional** and that pre-sorting by a wall-clock field
+   "would corrupt it", and the story sets `created` from SDK frame timestamps.
+3. The messages are there and something later filters them (rewind pointer).
+
+These are distinguishable by dumping `feedMessages.length` and
+`projectThread(...).messages.length` in the story before asserting. That is the
+next step, and it must come before any further theory.
+
+### Design consequence
+
+If the cause is (1) or (3), the sidecar integration needs **no new seam at all** —
+`Feed.append` plus the existing surface is the whole story, and M3c reduces to
+routing the chat input at `Chat.tsx`'s `onSubmit`/`processor.request` to the
+sidecar instead of the AI service.
+
+Only if a turn must participate in process lifecycle (cancellation, hydration,
+delegation, background tools) does the `AgentService` route become necessary.
+That route is a project, not a wiring job: the existing implementation is ~1,100
+lines (`AgentService.ts` 270 + `agent-process.ts` 840) built on `ProcessManager`,
+and the turn is produced by `new AiSession.Session({ feed, runtime, instructions })`
+inside a process fiber. Substituting the SDK there is best done by making
+`agent-process` accept a pluggable turn producer rather than by writing a rival
+`AgentService` — a change that needs the owner of `agent-runtime`.
+
+**Decision: do not build an `AgentService` implementation until the render cause
+is known.** The cheap diagnostic decides whether M3c is an afternoon or a project.
