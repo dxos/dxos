@@ -58,12 +58,13 @@ const FollowStory = ({
         : undefined,
     [viewport, maxSpeed, acceleration, deceleration],
   );
-  useEffect(() => () => follower?.stop(), [follower]);
+  useEffect(() => () => follower?.cancel(), [follower]);
 
   const handleToggle = useCallback(() => {
     if (follower?.running) {
+      // `running` stays true through the coast; the sampler below clears it once the follow has
+      // actually come to rest, so the control reflects the motion rather than the intent.
       follower.stop();
-      setRunning(false);
     } else {
       follower?.start();
       setRunning(true);
@@ -71,7 +72,7 @@ const FollowStory = ({
   }, [follower]);
 
   const handleTop = useCallback(() => {
-    follower?.stop();
+    follower?.cancel();
     setRunning(false);
     setExtra(0);
     if (viewport) {

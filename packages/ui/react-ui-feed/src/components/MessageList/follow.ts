@@ -19,16 +19,7 @@ export type FollowOptions = {
 
 const DEFAULT_MAX_SPEED = 12;
 const DEFAULT_ACCELERATION = 24;
-
-/**
- * Gentler than the ramp up, and deliberately so.
- *
- * Braking distance is `v²/2d`, so matching the two rates sheds full speed in three rows — a travel
- * of any length then cruises to within a few rows of the target and stops, which reads as an abrupt
- * halt however correct the curve is. At a third of the acceleration the landing occupies nine rows
- * and a second and a half, which is long enough to see.
- */
-const DEFAULT_DECELERATION = 8;
+const DEFAULT_DECELERATION = 24;
 
 const DEFAULT_ROW_HEIGHT = 120;
 
@@ -100,6 +91,7 @@ export class ScrollFollower {
   #frame: number | undefined;
   #velocity = 0;
   #timestamp = 0;
+  #braking = false;
 
   constructor(
     private readonly _element: HTMLElement,
@@ -127,6 +119,7 @@ export class ScrollFollower {
 
   /** Starts (or continues) travelling towards the bottom. Safe to call on every content change. */
   start(): void {
+    this.#braking = false;
     if (this.#frame !== undefined) {
       return;
     }
@@ -135,18 +128,36 @@ export class ScrollFollower {
     this.#frame = requestAnimationFrame(this.#tick);
   }
 
-  /** Stops where it is, discarding the velocity — the reader has taken over. */
+  /**
+   * Coasts to a halt, shedding speed at `deceleration` — what a stream ending or a stop control
+   * means. Cutting the animation instead would halt mid-glide, which is the one motion the reader
+   * cannot have caused and so reads as a fault.
+   */
   stop(): void {
+    if (this.#frame === undefined) {
+      this.#velocity = 0;
+      return;
+    }
+
+    this.#braking = true;
+  }
+
+  /**
+   * Halts immediately, discarding the velocity — the reader has taken over, or the list is going
+   * away. Coasting here would fight a hand already on the scrollbar.
+   */
+  cancel(): void {
     if (this.#frame !== undefined) {
       cancelAnimationFrame(this.#frame);
       this.#frame = undefined;
     }
+    this.#braking = false;
     this.#velocity = 0;
   }
 
   /** Jumps to the bottom with no animation. */
   jump(): void {
-    this.stop();
+    this.cancel();
     this._element.scrollTop = this._element.scrollHeight - this._element.clientHeight;
   }
 
@@ -158,6 +169,24 @@ export class ScrollFollower {
 
     const target = this._element.scrollHeight - this._element.clientHeight;
     const distance = target - this._element.scrollTop;
+
+    // Coasting: the target no longer matters, only shedding what speed is left. Bounded by the
+    // bottom so a stop late in a travel still cannot run past it.
+    if (this.#braking) {
+      const rowHeight = Math.max(this.#rowHeight(), 1);
+      this.#velocity = Math.max(0, this.#velocity - this.#deceleration * rowHeight * dt);
+      if (this.#velocity <= 0 || distance <= ARRIVED) {
+        this.#frame = undefined;
+        this.#velocity = 0;
+        this.#braking = false;
+        return;
+      }
+
+      this._element.scrollTop = Math.min(target, this._element.scrollTop + this.#velocity * dt);
+      this.#frame = requestAnimationFrame(this.#tick);
+      return;
+    }
+
     if (distance <= ARRIVED) {
       this._element.scrollTop = target;
       this.#frame = undefined;

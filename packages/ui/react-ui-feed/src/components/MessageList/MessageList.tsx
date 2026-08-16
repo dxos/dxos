@@ -160,7 +160,7 @@ const MessageListRoot = ({
     () => (viewport ? new ScrollFollower(viewport, { ...followOptions, rowHeight }) : undefined),
     [viewport, followOptions?.maxSpeed, followOptions?.acceleration, followOptions?.deceleration, rowHeight],
   );
-  useEffect(() => () => follower?.stop(), [follower]);
+  useEffect(() => () => follower?.cancel(), [follower]);
 
   const mounted = virtualizer.getVirtualItems().length;
   const startIndex = virtualizer.range?.startIndex;
@@ -195,7 +195,7 @@ const MessageListRoot = ({
       const top = viewport.scrollTop;
       if (top < lastTopRef.current - 1) {
         followRef.current = false;
-        follower?.stop();
+        follower?.cancel();
       } else if (viewport.scrollHeight - top - viewport.clientHeight < STICKY_THRESHOLD) {
         followRef.current = true;
       }
