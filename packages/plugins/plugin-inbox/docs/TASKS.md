@@ -1,47 +1,34 @@
 # plugin-inbox — Tasks
 
-_Resume: **#12555, #12574, #12575, #12577 and #12612 MERGED.** Current PR is **#12605**, now carrying
-five subjects rather than the one its original title named — provider operations, the `Banner` rename
-plus `Deferred`, the dev startup abort, the card-depiction seam, and the trigger poll. Landing as one
-PR was a deliberate call over splitting it into five.
+_Resume: **#12555, #12574, #12575, #12577, #12605, #12612 and #12613 MERGED.** Current PR is
+**[#12621](https://github.com/dxos/dxos/pull/12621)** — the review follow-up to #12605, green and
+deliberately NOT enqueued: landing waits on a call about orphaned operation DXNs (below).
 
-**Its `test` job was red and is now fixed.** Cause: `vite.config.ts` lists build entrypoints
-explicitly, and new subpaths were added without them — `#types` dangled in plugin-google's built
-`operations` entry, so the CLI died at import and all 11 of its tests failed on a module-resolution
-error rather than anything they asserted. Same omission in plugin-jmap, and in plugin-inbox's
-`MailSend`/`ReplyGeneration` (whose exports also pointed at a nested `dist/lib/types/` path no sibling
-uses). A local `:build` cannot catch this class — the entry is absent, not broken, and it only fails at
-runtime resolution in a consumer. An audit of every manifest against files on disk found five more
-packages with the same defect, all pre-existing on `main` and none with a consumer yet:
-`plugin-atproto`, `plugin-library`, `plugin-brain` (`./containers`), `plugin-projects` (`./templates`)
-and `storybook-testing` (`./modules`) — four of them pointing into a `dist/lib/neutral/` layout that
-does not exist.
+**D6 is BUILT, and was not the thing it was named after.** Framed as "generalize off `Mailbox`" it had
+no second consumer and every costing said wait. The real defect was that `findOrCreateFeedCursor` took
+ONE object playing two roles — the feed's OWNER and the cursor's SUBJECT. `isConsumerCursor` matched on
+`(feed, tag)` and ignored `spec.target`, which was the entirety of the "cursor identity" problem this
+ledger called blocking and specified a composite key for: the write side already stored the target and
+the predicate was missing a conjunct. `createInvocation` became `createInvocations`, so a processor
+covers N subjects. First consumer: `syncProjectTasks`, one cursor per Project over a shared mailbox
+feed. No `Ref.byAnnotation`, no generic feed host, no change to `AnalyzeMailbox`'s input.
 
-Landed since: the twelve Google/JMAP operation definitions moved to `@dxos/plugin-google/GoogleOperation`
-and `@dxos/plugin-jmap/JmapOperation`, so plugin-inbox no longer declares operations it does not
-implement; the Inbox / Inbox (Send) / Calendar skills take their tools from the connectors a deployment
-actually installs, fixing a JMAP-only deployment advertising Gmail tools; `DraftEvent.isDraft` asks for
-any foreign key rather than Google's; **`ScanMailbox` is now `AnalyzeMailbox`** (op key, progress key
-`#analyze`, `operations/analyze/`, `templates/analyze-mailbox.ts`, toolbar label "Analyze"), and its
-cascade runner calls its plan entries _passes_ rather than overloading "stage"; the trigger dispatcher
-polls once a minute instead of once a second and refuses a cron finer than its own tick; the Research
-action now runs the agent that fills the profile skeleton it creates.
+**The projects-trio entry here was also wrong.** They were filed as needing fan-out; they ALREADY fan
+out, through per-project routines. What they lacked was cursors — and only one of the three should have
+one, since the other two regenerate their document from the whole feed.
 
-**D6 is BUILT (2026-08-15) — and it was not the thing it was named after.** Framed as "generalize off
-`Mailbox`" it had no second consumer and every costing said wait. The real defect was that
-`findOrCreateFeedCursor` took one object playing two roles: the feed's OWNER and the cursor's SUBJECT.
-Splitting them is D6. `isConsumerCursor` now matches on `spec.target` — which was the entirety of the
-"cursor identity" problem PIPELINE.md called blocking and specified a composite key for; the write side
-already stored the target and the predicate ignored it. `createInvocation` became `createInvocations`,
-so a processor can cover N subjects. First consumer: `syncProjectTasks`, one cursor per Project over a
-shared mailbox feed. No `Ref.byAnnotation` (dropped for good in #12612), no generic feed host, no
-change to `AnalyzeMailbox`'s input.
+**New:** [`PIPELINE-AUDIT.md`](PIPELINE-AUDIT.md) indexes all 24 pipelines and operations against their
+tests and storybooks. Its headline finding drives the next work: **nothing drives Sync → Analyze →
+Research end to end** — the cascade is tested with STUB operations while the real passes are tested
+WITHOUT the cascade. `FeedPipeline.stories` is now `MailboxAnalyze.stories`; it already is a workbench,
+and the gap is the JOIN with `MailboxSync`.
 
-Unresolved: the mailbox empty-panel flicker's root cause is still unknown (`Deferred` masks it, and the
-`!feed` fix committed in `f107a7314c` did not work); the CRM agent wiring has never been observed
-running, and binds skills by querying `Skill.Skill` objects in the space — silently skipping if none
-match. Unblocked and unclaimed: `ExtractCorrespondents`'s cursor, the `Mailbox.ts` util split,
-`useContactLookup`, the `useBlobUrl` coverage gap, and Phase 4 summarization._
+**Unresolved:** CodeRabbit's Major on #12605 — moving provider operations changed released DXNs, so
+existing triggers bound to the old keys will not resolve. Mechanism verified; consistent with the
+pre-1.0 trade accepted twice before and declared in the changeset, but a real user-visible break
+awaiting a human call. The mailbox empty-panel flicker's root cause is still unknown (`Deferred` masks
+it), the CRM research agent has never been observed running, and **nothing from this session has been
+seen in a running app**._
 
 Registry project: **`mailbox-pipeline`** (renamed from `inbox-surface` 2026-08-14 — the work outgrew
 the name; it is now the pipeline architecture as much as the surface over it).
