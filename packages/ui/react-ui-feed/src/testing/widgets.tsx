@@ -47,7 +47,12 @@ const Panel = ({
 
   return (
     <TogglePanel.Root open={open} onChangeOpen={setOpen}>
-      <TogglePanel.Content classNames={mx('rounded border border-subdued-separator', classNames)}>
+      {/* A minimum height, not a fixed one: the widget's content is portaled and paints after
+          CodeMirror has placed the box, so without a floor the row is measured empty and grows a
+          frame later — a row jumping under the reader. `estimatedHeight` in the registry looks like
+          the answer and is not: it sets `height` and `overflow: hidden` on the widget root, which
+          pins the panel shut. */}
+      <TogglePanel.Content classNames={mx('min-bs-[2.125rem] rounded border border-subdued-separator', classNames)}>
         <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
           <span className='grow text-description truncate'>{title}</span>
           <IconBlock>
@@ -124,26 +129,15 @@ const Json = ({ children }: XmlWidgetProps) => (
   <pre className='px-2 py-1 overflow-x-auto rounded bg-groupSurface text-xs'>{getXmlTextChild(children ?? [])}</pre>
 );
 
-/**
- * Height a collapsed panel reserves before its React content exists.
- *
- * A block widget's content is portaled, so it paints a frame after CodeMirror places the widget. With
- * nothing reserved the row is measured at the height of an empty box, the virtualizer records that,
- * and the row grows a frame later — which is a row jumping under the reader mid-scroll, and the rows
- * below it moving with it. Reserving the collapsed height means the first measurement is the right
- * one.
- */
-const COLLAPSED_HEIGHT = 34;
-
 export const chatRegistry: XmlWidgetRegistry = {
   // No widget: the reader's own words stay in the document, where they can be selected and searched
   // like any other text. Registered so the markdown parser keeps the tag as one block — an
   // unregistered tag opens a paragraph that swallows the lines after it.
   prompt: { block: true },
-  reasoning: { block: true, streaming: true, estimatedHeight: () => COLLAPSED_HEIGHT, Component: Reasoning },
+  reasoning: { block: true, streaming: true, Component: Reasoning },
   status: { block: true, streaming: true, Component: Status },
-  toolCall: { block: true, estimatedHeight: () => COLLAPSED_HEIGHT, Component: ToolCall },
-  toolResult: { block: true, estimatedHeight: () => COLLAPSED_HEIGHT, Component: ToolResult },
+  toolCall: { block: true, Component: ToolCall },
+  toolResult: { block: true, Component: ToolResult },
   suggestion: { block: false, Component: Suggestion },
   select: { block: true, Component: Select },
   json: { block: true, Component: Json },

@@ -10,15 +10,8 @@ import { Minimap, type MinimapMarker } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import {
-  type MessageChromeProps,
-  MessageList,
-  type SearchHit,
-  defaultRenderer,
-  searchFeed,
-  sliceFeed,
-  useMessageList,
-} from '../';
+import { type MessageChromeProps, MessageList, useMessageList } from '../components';
+import { SearchHit, defaultRenderer, searchFeed, sliceFeed } from '../model';
 import { type FrameMeter as FrameMeterState, useFrameMeter } from './frame-meter';
 import { createMessages } from './generator';
 import { type FeedScenario, createScenario } from './scenarios';
@@ -498,7 +491,7 @@ const StatusBar = ({ hits, query, selected, streaming, meter }: StatusBarProps) 
   return (
     // The frame readout gets a double-width column: it is the longest cell, and an equal share
     // wrapped it onto a second line, which an `h-6` bar renders as clipped.
-    <div className='w-full overflow-hidden grid grid-cols-4 items-center gap-4 px-2 text-xs text-description tabular-nums'>
+    <div className='w-full overflow-hidden grid grid-cols-4 items-center gap-x-4 gap-y-1 py-1 px-2 text-xs text-description tabular-nums'>
       <div>{range ? `${range.startIndex}–${range.endIndex}` : ''}</div>
       <div>
         {currentIndex} / {count}
