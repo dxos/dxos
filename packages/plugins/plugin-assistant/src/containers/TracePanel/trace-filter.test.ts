@@ -57,8 +57,13 @@ describe('filterProcesses', () => {
     expect(filterProcesses(processes, [])).toEqual([]);
   });
 
-  test('the default selection passes the list through unchanged', ({ expect }) => {
-    expect(filterProcesses(processes, DEFAULT_PROCESS_ENVIRONMENTS)).toBe(processes);
+  test('selecting every environment passes the list through unchanged', ({ expect }) => {
+    expect(filterProcesses(processes, ALL_PROCESS_ENVIRONMENTS)).toBe(processes);
+  });
+
+  test('the default selection hides app-level processes', ({ expect }) => {
+    const visible = filterProcesses(processes, DEFAULT_PROCESS_ENVIRONMENTS);
+    expect(visible.map((process) => process.params.name)).toEqual(['sync', 'agent']);
   });
 });
 
@@ -78,8 +83,8 @@ describe('toggleProcessEnvironment', () => {
 });
 
 describe('parseProcessEnvironments', () => {
-  test('unset settings show every environment', ({ expect }) => {
-    expect(parseProcessEnvironments(undefined)).toEqual(ALL_PROCESS_ENVIRONMENTS);
+  test('unset settings fall back to the default selection', ({ expect }) => {
+    expect(parseProcessEnvironments(undefined)).toEqual(DEFAULT_PROCESS_ENVIRONMENTS);
   });
 
   test('an empty selection is preserved, not treated as unset', ({ expect }) => {

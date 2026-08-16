@@ -30,13 +30,15 @@ export const ALL_PROCESS_ENVIRONMENTS: readonly ProcessEnvironment[] = [
 ];
 
 /**
- * The selection the panel starts from: everything.
+ * The selection the panel starts from: work scoped to a space or a conversation.
  *
- * Unlike a per-operation classification, these three buckets do not split into signal and chatter —
- * the unscoped bucket carries space lifecycle and identity work as well as interface churn — so
- * hiding one by default would be a guess about what the viewer came to see.
+ * App-level processes start hidden — that bucket is where the interface chatter lands (layout,
+ * navigation, settings), and it fires on every click regardless of what the user is watching.
  */
-export const DEFAULT_PROCESS_ENVIRONMENTS: readonly ProcessEnvironment[] = ALL_PROCESS_ENVIRONMENTS;
+export const DEFAULT_PROCESS_ENVIRONMENTS: readonly ProcessEnvironment[] = [
+  ProcessEnvironment.Space,
+  ProcessEnvironment.Conversation,
+];
 
 /** Icon shown beside each environment in the filter menu. */
 const ENVIRONMENT_ICONS: Record<ProcessEnvironment, string> = {
@@ -68,8 +70,8 @@ export const filterProcesses = (
   processes: readonly Process.Info[],
   selected: readonly ProcessEnvironment[],
 ): readonly Process.Info[] => {
-  // Identity for the default selection, so an unfiltered panel hands `ProcessTree` the same array
-  // it got last render and its `React.memo` still holds.
+  // Identity when nothing is excluded, so an unfiltered panel hands `ProcessTree` the same array it
+  // got last render and its `React.memo` still holds.
   if (selected.length === ALL_PROCESS_ENVIRONMENTS.length) {
     return processes;
   }

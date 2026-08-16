@@ -81,7 +81,7 @@ export const Settings = Schema.Struct({
     Schema.mutable(Schema.Array(Schema.String)).annotate({
       title: 'Trace panel process environments',
       description:
-        'Process environments (app, space, conversation) shown in the trace panel. Unset shows every environment.',
+        'Process environments (app, space, conversation) shown in the trace panel. Unset uses the default selection, which hides app-level chatter.',
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));

@@ -24,9 +24,8 @@ export type TraceToolbarProps = {
 /**
  * Trace panel toolbar.
  *
- * The filter is deliberately reticent: the trigger is a bare funnel, so the default view reads as
- * "the trace" rather than "a filtered trace", and the current selection only appears once the user
- * asks for it.
+ * The trigger is a bare funnel: the panel opens already filtered, and the selection that produced
+ * it is one click away rather than spelled out across the toolbar.
  */
 export const TraceToolbar = ({ selected, onSelectedChange }: TraceToolbarProps) => {
   const handleToggle = useCallback(
