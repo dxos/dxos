@@ -39,7 +39,6 @@ export const GetGitHubRepositories = Operation.make({
     name: 'Get GitHub Repositories',
     description: 'List GitHub repositories reachable from a connection without materializing local objects.',
     icon: 'ph--github-logo--regular',
-    tags: [Operation.Tag.Query],
   },
   input: ConnectorSpec.GetSyncTargetsInput,
   output: ConnectorSpec.GetSyncTargetsOutput,
@@ -56,7 +55,6 @@ export const MaterializeGitHubTarget = Operation.make({
     name: 'Materialize GitHub Target',
     description: 'Create the empty local root Project bound to a selected GitHub repository.',
     icon: 'ph--github-logo--regular',
-    tags: [Operation.Tag.Sync],
   },
   input: ConnectorSpec.MaterializeTargetInput,
   output: ConnectorSpec.MaterializeTargetOutput,
@@ -90,7 +88,6 @@ export const SyncGitHubRepositories = Operation.make({
     name: 'Sync GitHub Repositories',
     description: 'Reconcile one bound GitHub repo plus its owning org, members, issues, PRs, and comments.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
   },
   input: Schema.Struct({
     binding: Ref.Ref(Cursor.Cursor),

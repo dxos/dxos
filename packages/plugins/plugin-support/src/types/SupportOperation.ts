@@ -89,7 +89,6 @@ export const CaptureUserFeedback = Operation.make({
     name: 'Capture User Feedback',
     description: 'Capture one-shot user feedback (sent to the observability backend).',
     icon: 'ph--chat-text--regular',
-    tags: [Operation.Tag.Tool],
   },
   services: [Capability.Service],
   input: UserFeedback,
@@ -102,7 +101,6 @@ export const CreateTicket = Operation.make({
     name: 'Create Support Ticket',
     description: 'Creates a new support ticket in the active space.',
     icon: 'ph--note--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     title: Schema.String.annotate({
@@ -124,7 +122,6 @@ export const MarkInProgress = Operation.make({
     name: 'Mark Support Ticket In Progress',
     description: 'Marks a support ticket as in progress.',
     icon: 'ph--clock--regular',
-    tags: [Operation.Tag.Tool],
   },
   input: Schema.Struct({
     ticket: Ref.Ref(Support.Ticket).annotate({
@@ -141,7 +138,6 @@ export const ResolveTicket = Operation.make({
     name: 'Resolve Support Ticket',
     description: 'Marks a support ticket as resolved with optional resolution notes.',
     icon: 'ph--check--regular',
-    tags: [Operation.Tag.Tool],
   },
   input: Schema.Struct({
     ticket: Ref.Ref(Support.Ticket).annotate({
@@ -163,7 +159,6 @@ export const SearchDocs = Operation.make({
     name: 'Search Documentation',
     description: 'Searches DXOS / Composer documentation for the given query.',
     icon: 'ph--magnifying-glass--regular',
-    tags: [Operation.Tag.Tool],
   },
   input: Schema.Struct({
     query: Schema.String.annotate({

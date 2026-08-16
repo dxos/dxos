@@ -23,7 +23,7 @@ import * as Mailbox from './Mailbox';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const AddMailbox = Operation.make({
-  meta: { key: makeKey('addMailbox'), name: 'Add Mailbox', icon: 'ph--envelope--regular', tags: [Operation.Tag.Edit] },
+  meta: { key: makeKey('addMailbox'), name: 'Add Mailbox', icon: 'ph--envelope--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     object: Obj.Unknown,
@@ -42,7 +42,6 @@ export const DraftEmail = Operation.make({
     name: 'Draft email',
     description: 'Creates a new email draft.',
     icon: 'ph--pencil--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     subject: Schema.String.annotate({
@@ -73,7 +72,6 @@ export const DraftEmailAndOpen = Operation.make({
     key: makeKey('draftEmailAndOpen'),
     name: 'Draft email and open',
     icon: 'ph--pencil--regular',
-    tags: [Operation.Tag.UI, Operation.Tag.Agent],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -118,7 +116,6 @@ export const RenameFilter = Operation.make({
     key: makeKey('renameFilter'),
     name: 'Rename Filter',
     icon: 'ph--pencil-simple--regular',
-    tags: [Operation.Tag.Edit],
   },
   input: Schema.Struct({
     mailbox: Schema.Any,
@@ -134,7 +131,6 @@ export const ReadEmail = Operation.make({
     name: 'Read email',
     description: 'Opens and reads the contents of a mailbox.',
     icon: 'ph--envelope-open--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
@@ -165,7 +161,6 @@ export const ClassifyEmail = Operation.make({
     description:
       'Classifies an email message by selecting and applying an appropriate tag from available tags in the database.',
     icon: 'ph--tag--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     message: Schema.Any.annotate({
@@ -188,12 +183,7 @@ export const ClassifyEmail = Operation.make({
 
 /** @deprecated Use {@link ExtractContactFromMessage} + the message extractor pipeline instead. */
 export const ExtractContact = Operation.make({
-  meta: {
-    key: makeKey('extractContact'),
-    name: 'Extract Contact',
-    icon: 'ph--user--regular',
-    tags: [Operation.Tag.Agent],
-  },
+  meta: { key: makeKey('extractContact'), name: 'Extract Contact', icon: 'ph--user--regular' },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     db: Database.Database,
@@ -240,7 +230,6 @@ export const ExtractContactFromMessage = Operation.make({
     key: makeKey('extractContactFromMessage'),
     name: 'Extract Contact from Message',
     icon: 'ph--user--regular',
-    tags: [Operation.Tag.Agent],
   },
   services: [Capability.Service],
   input: ExtractInputSchema,
@@ -257,7 +246,6 @@ export const ExtractSummaryFromMessage = Operation.make({
     key: makeKey('extractSummaryFromMessage'),
     name: 'Extract Summary from Message',
     icon: 'ph--text-aa--regular',
-    tags: [Operation.Tag.Agent],
   },
   services: [Capability.Service, AiService.AiService],
   input: ExtractInputSchema,
@@ -265,7 +253,7 @@ export const ExtractSummaryFromMessage = Operation.make({
 });
 
 export const ExtractMessage = Operation.make({
-  meta: { key: makeKey('extractMessage'), name: 'Extract Message', tags: [Operation.Tag.Agent, Operation.Tag.Tool] },
+  meta: { key: makeKey('extractMessage'), name: 'Extract Message' },
   services: [Capability.Service, AiService.AiService, Database.Service],
   input: Schema.Struct({
     // Live object or an immutable snapshot (feed messages resolve to snapshots); the handler
@@ -291,7 +279,6 @@ export const ExtractMailbox = Operation.make({
     name: 'Extract Mailbox',
     description: 'Runs a selected extractor over every message in a mailbox feed.',
     icon: 'ph--magic-wand--regular',
-    tags: [Operation.Tag.Agent],
   },
   services: [Capability.Service, AiService.AiService, Database.Service],
   input: Schema.Struct({
@@ -363,7 +350,6 @@ export const SummarizeMailbox = Operation.make({
     description:
       "Summarizes mail from known contacts into the mailbox's annotation feed, one immutable summary per message.",
     icon: 'ph--text-align-left--regular',
-    tags: [Operation.Tag.Agent],
   },
   services: [AiService.AiService, Database.Service, Trace.TraceService],
   input: Schema.Struct({
@@ -425,7 +411,6 @@ export const AnalyzeMailbox = Operation.make({
     description:
       'Runs the mailbox pipelines in cascade order — deterministic extraction, then cheap LLM classification, then optional per-message analysis.',
     icon: 'ph--stack-simple--regular',
-    tags: [Operation.Tag.Agent],
   },
   // Only the orchestrator's own needs: each spawned operation resolves its own services (an AI tier
   // brings its own AiService), so the cascade itself stays runnable where no AI layer exists.
@@ -495,7 +480,6 @@ export const ExtractCorrespondents = Operation.make({
     name: 'Extract Correspondents',
     description: 'Creates Person objects for everyone the user has sent or replied to, derived from the mailbox feed.',
     icon: 'ph--users--regular',
-    tags: [Operation.Tag.Agent],
   },
   services: [Database.Service, Trace.TraceService],
   input: Schema.Struct({
@@ -528,7 +512,6 @@ export const ResetFeedCursor = Operation.make({
     name: 'Reset Feed Cursor',
     description: "Clears a pipeline's cursor so its next run reprocesses the whole mailbox feed.",
     icon: 'ph--arrow-counter-clockwise--regular',
-    tags: [Operation.Tag.Edit],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -565,7 +548,6 @@ export const ClassifyMailbox = Operation.make({
     description:
       'LLM spam detection and category labeling over the mailbox feed; senders with a known Person are never spam.',
     icon: 'ph--shield-check--regular',
-    tags: [Operation.Tag.Agent],
   },
   services: [AiService.AiService, Database.Service, Trace.TraceService],
   input: Schema.Struct({
@@ -610,7 +592,6 @@ export const CreateProjectFromMessage = Operation.make({
     name: 'Create Project',
     description: "Creates a Project seeded from a message's thread, with an LLM summary.",
     icon: 'ph--stack--regular',
-    tags: [Operation.Tag.Edit],
   },
   services: [AiService.AiService, Database.Service],
   input: Schema.Struct({
@@ -637,7 +618,6 @@ export const ExtractSubscriptions = Operation.make({
     description:
       'Extracts unsubscribe links (header and body) from the mailbox feed and records the per-sender subscriptions on the mailbox.',
     icon: 'ph--link--regular',
-    tags: [Operation.Tag.Agent],
   },
   services: [Database.Service, Trace.TraceService],
   input: Schema.Struct({
@@ -661,7 +641,6 @@ export const UnsubscribeSender = Operation.make({
     name: 'Unsubscribe',
     description: 'Adds a skip-sender filter and fires the List-Unsubscribe one-click request for a bulk sender.',
     icon: 'ph--prohibit--regular',
-    tags: [Operation.Tag.Edit],
   },
   services: [Database.Service],
   input: Schema.Struct({

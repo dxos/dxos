@@ -31,12 +31,7 @@ export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const OnTypeAdded = Operation.make({
-  meta: {
-    key: makeKey('onTypeAdded'),
-    name: 'On Type Added',
-    icon: 'ph--table--regular',
-    tags: [Operation.Tag.System],
-  },
+  meta: { key: makeKey('onTypeAdded'), name: 'On Type Added', icon: 'ph--table--regular' },
   input: Schema.Struct({
     db: Database.Database,
     type: Schema.Any,
@@ -46,7 +41,7 @@ export const OnTypeAdded = Operation.make({
 });
 
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Table', icon: 'ph--table--regular', tags: [Operation.Tag.Edit] },
+  meta: { key: makeKey('create'), name: 'Create Table', icon: 'ph--table--regular' },
   input: Schema.Struct({
     db: Database.Database,
   }).mapFields(Struct.assign(CreateTableSchema.fields)),
@@ -57,7 +52,7 @@ export const Create = Operation.make({
 
 // TODO(wittjosiah): This appears to be unused.
 export const AddRow = Operation.make({
-  meta: { key: makeKey('addRow'), name: 'Add Row', icon: 'ph--plus--regular', tags: [Operation.Tag.Edit] },
+  meta: { key: makeKey('addRow'), name: 'Add Row', icon: 'ph--plus--regular' },
   input: Schema.Struct({
     view: Type.getSchema(View.View),
     data: Schema.Any,
@@ -81,7 +76,6 @@ export const ExportRows = Operation.make({
     name: 'Export Rows',
     description: 'Exports table rows as CSV, JSON (.dx.json), or XML.',
     icon: 'ph--export--regular',
-    tags: [Operation.Tag.Edit],
   },
   input: Schema.Struct({
     format: Schema.Literals(['csv', 'json', 'xml']),

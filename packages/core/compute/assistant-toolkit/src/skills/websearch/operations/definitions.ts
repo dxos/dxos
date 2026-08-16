@@ -17,7 +17,6 @@ export const Fetch = Operation.make({
       Fetches the content of a web page and returns the HTML. 
       Use this to get the content of a web page.
     `,
-    tags: [Operation.Tag.Sync, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     url: Schema.String.annotate({

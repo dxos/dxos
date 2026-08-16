@@ -21,7 +21,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
 const Axis = Schema.Union([Schema.Literal('row'), Schema.Literal('col')]);
 
 export const InsertAxis = Operation.make({
-  meta: { key: makeKey('axisInsert'), name: 'Insert Axis', icon: 'ph--plus--regular', tags: [Operation.Tag.Edit] },
+  meta: { key: makeKey('axisInsert'), name: 'Insert Axis', icon: 'ph--plus--regular' },
   input: Schema.Struct({
     model: Schema.Any,
     axis: Axis,
@@ -46,7 +46,6 @@ export const DropAxis = Operation.make({
     key: makeKey('axisDrop'),
     name: 'Drop Axis',
     icon: 'ph--trash--regular',
-    tags: [Operation.Tag.Edit],
   },
   input: Schema.Struct({
     model: Schema.Any,
@@ -61,7 +60,6 @@ export const ScrollToAnchor = Operation.make({
     key: makeKey('scrollToAnchor'),
     name: 'Scroll To Anchor',
     icon: 'ph--anchor-simple--regular',
-    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -78,7 +76,6 @@ export const Create = Operation.make({
     name: 'Create',
     description: 'Creates a new sheet and adds it to the space.',
     icon: 'ph--grid-nine--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     name: Schema.optional(Schema.String).annotate({ description: 'Display name for the sheet.' }),
@@ -97,7 +94,6 @@ export const GetValues = Operation.make({
     name: 'Get Range Values',
     description: 'Returns cell values from a sheet as a 2D array. Defaults to the entire occupied area.',
     icon: 'ph--table--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     sheet: Ref.Ref(Sheet.Sheet).annotate({ description: 'The sheet to read from.' }),
@@ -121,7 +117,6 @@ export const SetValues = Operation.make({
     name: 'Set Range Values',
     description: 'Sets multiple cell values in a sheet at once.',
     icon: 'ph--pencil--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     sheet: Ref.Ref(Sheet.Sheet).annotate({ description: 'The sheet to write to.' }),
@@ -141,7 +136,6 @@ export const RestoreAxis = Operation.make({
     key: makeKey('restoreAxis'),
     name: 'Restore Axis',
     icon: 'ph--clock-counter-clockwise--regular',
-    tags: [Operation.Tag.Edit],
   },
   input: Schema.Struct({
     model: Schema.Any.annotate({ description: 'The sheet model.' }),

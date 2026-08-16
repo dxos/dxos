@@ -8,14 +8,17 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
-import { tagIcon, toggleOperationTag } from './trace-filter';
+import {
+  ALL_PROCESS_ENVIRONMENTS,
+  type ProcessEnvironment,
+  environmentIcon,
+  toggleProcessEnvironment,
+} from './trace-filter';
 
 export type TraceToolbarProps = {
-  /** Tags currently shown. */
-  selected: readonly string[];
-  /** Every tag offered, in menu order (see `availableOperationTags`). */
-  available: readonly string[];
-  onSelectedChange: (tags: string[]) => void;
+  /** Process environments currently shown. */
+  selected: readonly ProcessEnvironment[];
+  onSelectedChange: (environments: ProcessEnvironment[]) => void;
 };
 
 /**
@@ -25,17 +28,17 @@ export type TraceToolbarProps = {
  * "the trace" rather than "a filtered trace", and the current selection only appears once the user
  * asks for it.
  */
-export const TraceToolbar = ({ selected, available, onSelectedChange }: TraceToolbarProps) => {
+export const TraceToolbar = ({ selected, onSelectedChange }: TraceToolbarProps) => {
   const handleToggle = useCallback(
-    (tag: string) => onSelectedChange(toggleOperationTag(selected, tag, available)),
-    [selected, available, onSelectedChange],
+    (environment: ProcessEnvironment) => onSelectedChange(toggleProcessEnvironment(selected, environment)),
+    [selected, onSelectedChange],
   );
 
   const menu = useMenuBuilder(
     () =>
       MenuBuilder.make()
         .group(
-          'operationTags',
+          'processEnvironments',
           {
             label: ['trace-filter.menu', { ns: meta.profile.key }],
             icon: 'ph--funnel--regular',
@@ -46,23 +49,22 @@ export const TraceToolbar = ({ selected, available, onSelectedChange }: TraceToo
             testId: 'tracePanel.filter',
           },
           (group) => {
-            for (const tag of available) {
+            for (const environment of ALL_PROCESS_ENVIRONMENTS) {
               group.action(
-                tag,
+                environment,
                 {
-                  // A plugin may define its own tag; fall back to the raw tag rather than a missing key.
-                  label: [`trace-tag-${tag}.label`, { ns: meta.profile.key, defaultValue: tag }],
-                  icon: tagIcon(tag),
-                  checked: selected.includes(tag),
+                  label: [`trace-environment-${environment}.label`, { ns: meta.profile.key }],
+                  icon: environmentIcon(environment),
+                  checked: selected.includes(environment),
                 },
-                () => handleToggle(tag),
+                () => handleToggle(environment),
               );
             }
             group.separator('line');
             group.action(
               'all',
               { label: ['trace-filter-all.label', { ns: meta.profile.key }], icon: 'ph--list-checks--regular' },
-              () => onSelectedChange([...available]),
+              () => onSelectedChange([...ALL_PROCESS_ENVIRONMENTS]),
             );
             group.action(
               'none',
@@ -72,7 +74,7 @@ export const TraceToolbar = ({ selected, available, onSelectedChange }: TraceToo
           },
         )
         .build(),
-    [selected, available, handleToggle, onSelectedChange],
+    [selected, handleToggle, onSelectedChange],
   );
 
   return (

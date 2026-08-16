@@ -34,7 +34,6 @@ const Random = Operation.make({
     key: DXN.make('com.example.function.random'),
     name: 'random',
     description: 'Gets a random number.',
-    tags: [Operation.Tag.System],
   },
   input: Schema.Void,
   output: Schema.Struct({

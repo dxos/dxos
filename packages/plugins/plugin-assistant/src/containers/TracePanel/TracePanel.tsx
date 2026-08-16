@@ -23,11 +23,11 @@ import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
-import { type ExecutionGraph, buildExecutionGraph, collectOperationTags } from '#execution-graph';
+import { type ExecutionGraph, buildExecutionGraph } from '#execution-graph';
 import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
-import { DEFAULT_OPERATION_TAGS, availableOperationTags } from './trace-filter';
+import { type ProcessEnvironment, filterProcesses, parseProcessEnvironments } from './trace-filter';
 import { TraceToolbar } from './TraceToolbar';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
@@ -38,15 +38,19 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const { invokePromise } = useOperationInvoker();
     const [settings, updateSettings] = useAtomCapabilityState(AssistantCapabilities.Settings);
     const tracePanelDebug = settings.tracePanelDebug ?? false;
-    const operationTags = settings.traceOperationTags ?? DEFAULT_OPERATION_TAGS;
-    const handleOperationTagsChange = useCallback(
-      (traceOperationTags: string[]) => updateSettings((settings) => ({ ...settings, traceOperationTags })),
+    const environments = useMemo(
+      () => parseProcessEnvironments(settings.traceProcessEnvironments),
+      [settings.traceProcessEnvironments],
+    );
+    const handleEnvironmentsChange = useCallback(
+      (traceProcessEnvironments: ProcessEnvironment[]) =>
+        updateSettings((settings) => ({ ...settings, traceProcessEnvironments })),
       [updateSettings],
     );
 
     // `useDeferredValue` batches update bursts, works together with `React.memo`.
     // See the comment in `ProcessTreeContainer` for more details.
-    const { branches, commits, spanTree, details } = useDeferredValue(useExecutionGraph(space, { operationTags }));
+    const { branches, commits, spanTree, details } = useDeferredValue(useExecutionGraph(space));
 
     // Debug hatch (dev builds only): expose the raw trace messages (the exact `buildExecutionGraph`
     // input) so a real trace can be captured as a test fixture. While the TracePanel is mounted, run
@@ -75,12 +79,6 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         delete debugGlobal.dxosDumpTrace;
       };
     }, [traceMessages]);
-
-    // Tags the filter offers: what this trace actually produced, plus the known vocabulary.
-    const availableTags = useMemo(
-      () => availableOperationTags(collectOperationTags(traceMessages), operationTags),
-      [traceMessages, operationTags],
-    );
 
     const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
     const handleCommitSelect = useCallback(
@@ -126,9 +124,13 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         })}
         ref={forwardedRef}
       >
-        <TraceToolbar selected={operationTags} available={availableTags} onSelectedChange={handleOperationTagsChange} />
+        <TraceToolbar selected={environments} onSelectedChange={handleEnvironmentsChange} />
 
-        <ProcessTreeContainer onProcessSelect={handleProcessSelect} onProcessTerminate={onProcessTerminate} />
+        <ProcessTreeContainer
+          environments={environments}
+          onProcessSelect={handleProcessSelect}
+          onProcessTerminate={onProcessTerminate}
+        />
 
         <ScrollContainer.Root pin>
           <ScrollContainer.Content thin>
@@ -181,13 +183,11 @@ const SPAN_TIMEOUT_CHECK_INTERVAL_MS = 60_000;
 type UseExecutionGraphOptions = {
   collapseCompletedSpans?: boolean;
   eventLimit?: number;
-  /** Operation tags to show. See `BuildExecutionGraphParams.operationTags`. */
-  operationTags?: readonly string[];
 };
 
 const useExecutionGraph = (
   space: Space,
-  { collapseCompletedSpans, eventLimit, operationTags }: UseExecutionGraphOptions = {},
+  { collapseCompletedSpans, eventLimit }: UseExecutionGraphOptions = {},
 ): ExecutionGraph => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processesAtom = monitor?.processTreeAtom ?? atomEmpty;
@@ -203,8 +203,8 @@ const useExecutionGraph = (
   }, []);
 
   const atom = useMemo(
-    () => getExecutionGraph(space, processesAtom, { collapseCompletedSpans, eventLimit, operationTags, now }),
-    [space, processesAtom, collapseCompletedSpans, eventLimit, operationTags, now],
+    () => getExecutionGraph(space, processesAtom, { collapseCompletedSpans, eventLimit, now }),
+    [space, processesAtom, collapseCompletedSpans, eventLimit, now],
   );
 
   return useAtomValue(atom);
@@ -218,7 +218,7 @@ const sameProcesses = (left: readonly Process.Info[], right: readonly Process.In
 const getExecutionGraph = (
   space: Space,
   processesAtom: Atom.Atom<readonly Process.Info[]>,
-  { collapseCompletedSpans = true, eventLimit = 100, operationTags, now }: UseExecutionGraphOptions & { now: number },
+  { collapseCompletedSpans = true, eventLimit = 100, now }: UseExecutionGraphOptions & { now: number },
 ): Atom.Atom<ExecutionGraph> => {
   const traceMessages = getTraceMessagesAtom(space);
 
@@ -241,19 +241,20 @@ const getExecutionGraph = (
       activeProcesses: get(activeProcesses),
       collapseCompletedSpans,
       eventLimit,
-      operationTags,
       now,
     }),
   );
 };
 TracePanel.displayName = 'TracePanel';
 
+type ProcessTreeContainerProps = Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'> & {
+  /** Process environments to show. See `./trace-filter`. */
+  environments: readonly ProcessEnvironment[];
+};
+
 // Isolate `ProcessTree` updates from the rest of the panel.
 // TODO(dmaretskyi): Currently not useful since `useExecutionGraph` also pulls in the updates.
-const ProcessTreeContainer = ({
-  onProcessSelect,
-  onProcessTerminate,
-}: Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'>) => {
+const ProcessTreeContainer = ({ environments, onProcessSelect, onProcessTerminate }: ProcessTreeContainerProps) => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processes = useAtomValue(
     useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),
@@ -263,9 +264,13 @@ const ProcessTreeContainer = ({
   // `useDeferredValue` will debounce update propagation, returning stale value for short periods.
   // NOTE: `ProcessTree` MUST use `React.memo`, otherwise this will not work.
   const processesDeferred = useDeferredValue(processes);
+  const visibleProcesses = useMemo(
+    () => filterProcesses(processesDeferred, environments),
+    [processesDeferred, environments],
+  );
   return (
     <ProcessTree
-      processes={processesDeferred}
+      processes={visibleProcesses}
       depth={3}
       onProcessSelect={onProcessSelect}
       onProcessTerminate={onProcessTerminate}

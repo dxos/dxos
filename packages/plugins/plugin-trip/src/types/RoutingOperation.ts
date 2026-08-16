@@ -27,7 +27,6 @@ export const PlanRoute = Operation.make({
     name: 'Plan route',
     description: 'Compute driving routes between the cities on the trip’s road segments.',
     icon: 'ph--path--regular',
-    tags: [Operation.Tag.Agent, Operation.Tag.Tool],
   },
   // The Trip is passed as the live ECHO object (validated/narrowed in the handler).
   input: Schema.Struct({

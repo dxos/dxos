@@ -38,7 +38,6 @@ export const GetSlackChannels = Operation.make({
     name: 'Get Slack Channels',
     description: 'List Slack conversations reachable from a connection without materializing local Channels.',
     icon: 'ph--slack-logo--regular',
-    tags: [Operation.Tag.Query],
   },
   // Database.Service is provided inside the handler from the connection's
   // database and the resolved space's queues — same pattern as plugin-thread's `AppendChannelMessage`.
@@ -63,7 +62,6 @@ export const MaterializeSlackTarget = Operation.make({
     name: 'Materialize Slack Target',
     description: 'Create the empty local Channel bound to a selected Slack conversation.',
     icon: 'ph--slack-logo--regular',
-    tags: [Operation.Tag.Sync],
   },
   input: ConnectorSpec.MaterializeTargetInput,
   output: ConnectorSpec.MaterializeTargetOutput,
@@ -85,7 +83,6 @@ export const SyncSlackChannel = Operation.make({
     name: 'Sync Slack Channel',
     description: 'Reconcile messages for a single Slack channel binding.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
   },
   services: [Capability.Service],
   input: Schema.Struct({

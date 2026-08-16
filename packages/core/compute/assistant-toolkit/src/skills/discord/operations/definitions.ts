@@ -42,7 +42,6 @@ export const FetchMessages = Operation.make({
     key: DXN.make('org.dxos.function.discord.fetchDiscordMessages'),
     name: 'Sync Discord messages',
     icon: 'ph--hash--regular',
-    tags: [Operation.Tag.Sync, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     serverId: Schema.String.annotate({

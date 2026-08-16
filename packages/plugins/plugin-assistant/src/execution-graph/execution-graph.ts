@@ -20,15 +20,7 @@ import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 import { type ContentBlock } from '@dxos/types';
 
-import {
-  ROOT_SPAN_ID,
-  type Span,
-  buildSpanTree,
-  filterSpanTree,
-  isSpanBeginEvent,
-  isSpanEndEvent,
-  walkSpanTree,
-} from './span-tree';
+import { ROOT_SPAN_ID, type Span, buildSpanTree, isSpanBeginEvent, isSpanEndEvent, walkSpanTree } from './span-tree';
 
 /**
  * Branch name for top-level operation invocations.
@@ -117,48 +109,7 @@ export interface BuildExecutionGraphParams {
    * is omitted.
    */
   now?: number;
-  /**
-   * Operation tags (`Operation.Tag`) to keep. An operation is kept when it carries at least one;
-   * one that declares none matches {@link UNTAGGED_OPERATION_TAG}. Omit to keep every operation.
-   * Non-operation activity (agent requests, tool calls, status) is never filtered.
-   */
-  operationTags?: readonly string[];
 }
-
-/**
- * Pseudo-tag matching operations that declare no tags — anything predating the tag vocabulary, or
- * invoked from a definition the local build doesn't know about (an EDGE-deployed script).
- */
-export const UNTAGGED_OPERATION_TAG = 'untagged';
-
-/**
- * Tags carried by an operation trace event, or {@link UNTAGGED_OPERATION_TAG} when it declares none.
- * Returns `undefined` for events that are not operation boundaries.
- */
-export const operationTagsOf = (event: Trace.Event): readonly string[] | undefined => {
-  if (!Trace.isOfType(Trace.OperationStart, event) && !Trace.isOfType(Trace.OperationEnd, event)) {
-    return undefined;
-  }
-  const tags = (event.data as { tags?: readonly string[] } | undefined)?.tags;
-  return tags !== undefined && tags.length > 0 ? tags : [UNTAGGED_OPERATION_TAG];
-};
-
-/**
- * Every operation tag present in a trace, sorted — the universe of options a tag filter can offer.
- * Derived from the trace rather than from the operation registry so the list reflects what actually
- * ran, including operations the local build has no definition for.
- */
-export const collectOperationTags = (messages: readonly Trace.Message[]): string[] => {
-  const tags = new Set<string>();
-  for (const message of messages) {
-    for (const event of message.events) {
-      for (const tag of operationTagsOf(event) ?? []) {
-        tags.add(tag);
-      }
-    }
-  }
-  return [...tags].sort();
-};
 
 /**
  * Builds a Timeline-compatible execution graph from trace messages and active processes.
@@ -188,12 +139,8 @@ export const buildExecutionGraph = ({
   eventLimit = 500,
   spanTimeoutMs,
   now,
-  operationTags,
 }: BuildExecutionGraphParams): ExecutionGraph => {
-  const spanTree = applyOperationTagFilter(
-    buildSpanTree(traceMessages, { eventLimit, spanTimeoutMs, now }),
-    operationTags,
-  );
+  const spanTree = buildSpanTree(traceMessages, { eventLimit, spanTimeoutMs, now });
   const toolCallContext = buildToolCallContext(traceMessages);
   const built = spanTreeToCommits(spanTree, activeProcesses, toolCallContext, collapseCompletedSpans);
   log('trace execution graph', {
@@ -203,26 +150,6 @@ export const buildExecutionGraph = ({
     activeProcesses: activeProcesses.length,
   });
   return { ...built, spanTree };
-};
-
-/**
- * Drops operation spans whose tags fall outside the selection, and the stray boundary events of
- * such operations that never formed a span (an end whose begin was never recorded).
- */
-const applyOperationTagFilter = (root: Span, operationTags: readonly string[] | undefined): Span => {
-  if (operationTags === undefined) {
-    return root;
-  }
-
-  const selected = new Set(operationTags);
-  const matches = (event: Trace.Event): boolean => {
-    const tags = operationTagsOf(event);
-    // Non-operation events (agent requests, blocks, status) are not subject to the filter.
-    return tags === undefined || tags.some((tag) => selected.has(tag));
-  };
-
-  const filtered = filterSpanTree(root, (span) => matches(span.events[0]));
-  return { ...filtered, events: filtered.events.filter(matches) };
 };
 
 /**

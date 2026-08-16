@@ -262,23 +262,6 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
 };
 
 /**
- * Removes spans the predicate rejects, splicing each rejected span's children into its parent.
- *
- * Hoisting rather than deleting the subtree is what makes the trace panel's tag filter usable:
- * hiding a noisy wrapper must not also hide the interesting work it kicked off. The rejected
- * span's own events go with it — they describe the hidden unit of work, not its children.
- *
- * The root is never removed.
- */
-export const filterSpanTree = (span: Span, predicate: (span: Span) => boolean): Span => {
-  const children = span.children.flatMap((child) => {
-    const filtered = filterSpanTree(child, predicate);
-    return predicate(child) ? [filtered] : filtered.children;
-  });
-  return { ...span, children };
-};
-
-/**
  * Message stamped on synthetic end events produced when a span times out.
  */
 const SPAN_TIMEOUT_MESSAGE = 'No end event was recorded for this span; it was closed after a timeout.';

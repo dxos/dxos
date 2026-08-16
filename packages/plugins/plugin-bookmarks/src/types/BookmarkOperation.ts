@@ -20,7 +20,6 @@ export const AddFromSnapshot = Operation.make({
     name: 'Add bookmark',
     description: 'Save a web page snapshot as a bookmark.',
     icon: 'ph--bookmark-simple--regular',
-    tags: [Operation.Tag.Edit],
   },
   input: Schema.Struct({
     snapshot: PageAction.Snapshot,
@@ -41,7 +40,6 @@ export const Summarize = Operation.make({
     name: 'Summarize Bookmark',
     description: 'Summarizes the bookmarked page and links the summary.',
     icon: 'ph--text-align-left--regular',
-    tags: [Operation.Tag.Agent],
   },
   input: Schema.Struct({
     bookmark: Ref.Ref(Bookmark.Bookmark).annotate({ description: 'The bookmark to summarize.' }),

@@ -30,7 +30,6 @@ export const AddPublication = Operation.make({
     name: 'Add Publication',
     description: 'Create a new blog publication.',
     icon: 'ph--books--regular',
-    tags: [Operation.Tag.Edit],
   },
   input: Schema.Struct({
     name: Schema.optional(Schema.String).annotate({ description: 'The publication name.' }),
@@ -49,7 +48,6 @@ export const AddPost = Operation.make({
     name: 'Add Post',
     description: 'Create a new post and add it to a publication.',
     icon: 'ph--article--regular',
-    tags: [Operation.Tag.Edit],
   },
   input: Schema.Struct({
     publication: Ref.Ref(Blog.Publication).annotate({ description: 'The publication to add the post to.' }),
@@ -79,7 +77,6 @@ export const SyncPosts = Operation.make({
     name: 'Sync Posts',
     description: 'Bidirectionally sync a publication’s posts with its external publisher.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
   },
   input: Schema.Struct({
     publication: Ref.Ref(Blog.Publication).annotate({ description: 'The publication whose posts to sync.' }),

@@ -34,7 +34,6 @@ export const ExtractTrip = Operation.make({
     name: 'Extract Trip',
     description: 'Parse a flight confirmation email into Booking + Segment proposals.',
     icon: 'ph--airplane-takeoff--regular',
-    tags: [Operation.Tag.Agent],
   },
   services: [Capability.Service, AiService.AiService],
   input: InboxOperation.ExtractInputSchema,
@@ -53,7 +52,6 @@ export const MergeTrip = Operation.make({
     name: 'Merge trip',
     description: 'Merge this trip into the nearest other trip by date and delete it.',
     icon: 'ph--arrows-merge--regular',
-    tags: [Operation.Tag.Edit],
   },
   // The Trip is passed as the live ECHO object (validated/narrowed in the handler).
   input: Schema.Struct({ trip: Schema.Any }),
@@ -76,7 +74,6 @@ export const CreateTripFromEvents = Operation.make({
     name: 'Create trip from events',
     description: 'Create a new trip and itinerary from a range of calendar events.',
     icon: 'ph--airplane-takeoff--regular',
-    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -97,7 +94,6 @@ export const AddSegment = Operation.make({
     name: 'Add segment',
     description: 'Add a travel segment (flight, train, boat, road, accommodation, activity) to a trip.',
     icon: 'ph--plus--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
   },
   services: [Database.Service],
   input: Schema.Struct({

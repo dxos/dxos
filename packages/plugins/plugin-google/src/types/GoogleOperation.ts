@@ -37,7 +37,6 @@ export const GetGoogleCalendars = Operation.make({
     name: 'Get Google Calendars',
     description: 'Discover Google Calendars reachable from a connection without materializing local Calendars.',
     icon: 'ph--calendar--regular',
-    tags: [Operation.Tag.Query],
   },
   input: ConnectorSpec.GetSyncTargetsInput,
   output: ConnectorSpec.GetSyncTargetsOutput,
@@ -49,7 +48,6 @@ export const GmailSend = Operation.make({
     name: 'Send Gmail',
     description: 'Send emails via Gmail.',
     icon: 'ph--paper-plane-tilt--regular',
-    tags: [Operation.Tag.Edit],
   },
   input: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
@@ -65,7 +63,6 @@ export const GoogleMailSync = Operation.make({
     name: 'Sync Google Mail',
     description: 'Sync emails from Gmail to the mailbox feed.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
   },
   input: Schema.Struct({
     binding: Ref.Ref(Cursor.Cursor).annotate({
@@ -91,7 +88,6 @@ export const MaterializeGmailTarget = Operation.make({
     name: 'Materialize Gmail Target',
     description: 'Create the local Mailbox bound to a Gmail connection.',
     icon: 'ph--envelope--regular',
-    tags: [Operation.Tag.Sync],
   },
   input: ConnectorSpec.MaterializeTargetInput,
   output: ConnectorSpec.MaterializeTargetOutput,
@@ -104,7 +100,6 @@ export const GoogleCalendarSync = Operation.make({
     description:
       'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
   },
   input: Schema.Struct({
     binding: Ref.Ref(Cursor.Cursor).annotate({
@@ -127,7 +122,6 @@ export const MaterializeGoogleCalendarTarget = Operation.make({
     name: 'Materialize Calendar Target',
     description: 'Create the local Calendar bound to a selected Google calendar.',
     icon: 'ph--calendar--regular',
-    tags: [Operation.Tag.Sync],
   },
   input: ConnectorSpec.MaterializeTargetInput,
   output: ConnectorSpec.MaterializeTargetOutput,
@@ -139,7 +133,6 @@ export const CreateGoogleCalendarEvent = Operation.make({
     name: 'Create Google Calendar Event',
     description: 'Create an event on Google Calendar.',
     icon: 'ph--calendar-plus--regular',
-    tags: [Operation.Tag.Edit],
   },
   input: Schema.Struct({
     event: Type.getSchema(Event.Event),
@@ -160,7 +153,6 @@ export const GetGoogleContactGroups = Operation.make({
     name: 'Get Google Contact Groups',
     description: 'Discover Google Contact Groups reachable from a connection.',
     icon: 'ph--users--regular',
-    tags: [Operation.Tag.Query],
   },
   input: ConnectorSpec.GetSyncTargetsInput,
   output: ConnectorSpec.GetSyncTargetsOutput,
@@ -172,7 +164,6 @@ export const GoogleContactsSync = Operation.make({
     name: 'Sync Google Contacts',
     description: 'Sync contacts from a Google Contact group into Person objects in the space.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
   },
   input: Schema.Struct({
     binding: Ref.Ref(Cursor.Cursor).annotate({

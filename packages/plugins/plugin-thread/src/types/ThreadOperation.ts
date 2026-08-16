@@ -19,12 +19,7 @@ import { meta } from '#meta';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const CreateChannel = Operation.make({
-  meta: {
-    key: makeKey('createChannel'),
-    name: 'Create Channel',
-    icon: 'ph--hash--regular',
-    tags: [Operation.Tag.Edit],
-  },
+  meta: { key: makeKey('createChannel'), name: 'Create Channel', icon: 'ph--hash--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     spaceId: Key.SpaceId,
@@ -44,7 +39,6 @@ export const AppendChannelMessage = Operation.make({
     key: makeKey('appendChannelMessage'),
     name: 'Append Channel Message',
     icon: 'ph--chat-text--regular',
-    tags: [Operation.Tag.Edit],
   },
   // Note: Database.Service is provided inside the handler from space.db, not at the
   // operation level — the runtime can't fulfill it without a space context.

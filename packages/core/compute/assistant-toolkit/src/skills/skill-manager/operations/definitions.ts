@@ -16,7 +16,6 @@ export const QuerySkills = Operation.make({
     name: 'Query skills',
     description: 'Queries available skills.',
     icon: 'ph--blueprint--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
   },
   input: Schema.Struct({}),
   output: Schema.Array(Type.getSchema(Skill.Skill)),
@@ -30,7 +29,6 @@ export const EnableSkills = Operation.make({
     description:
       'Enables skills in the current conversation by their keys. Only skills with agentCanEnable=true can be enabled. The available keys are already listed in the system prompt, so call this directly rather than querying first.',
     icon: 'ph--plugs-connected--regular',
-    tags: [Operation.Tag.Tool],
   },
   input: Schema.Struct({
     keys: Schema.Array(Schema.String).annotate({

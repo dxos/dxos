@@ -31,7 +31,6 @@ export const GetDiscordChannels = Operation.make({
     name: 'Get Discord Channels',
     description: 'List Discord text channels reachable from a connection without materializing local Channels.',
     icon: 'ph--hash--regular',
-    tags: [Operation.Tag.Query],
   },
   services: [Capability.Service],
   input: ConnectorSpec.GetSyncTargetsInput,
@@ -50,7 +49,6 @@ export const MaterializeDiscordTarget = Operation.make({
     name: 'Materialize Discord Target',
     description: 'Create the empty local Channel bound to a selected Discord channel.',
     icon: 'ph--hash--regular',
-    tags: [Operation.Tag.Sync],
   },
   input: ConnectorSpec.MaterializeTargetInput,
   output: ConnectorSpec.MaterializeTargetOutput,
@@ -69,7 +67,6 @@ export const SyncDiscordChannel = Operation.make({
     name: 'Sync Discord Channel',
     description: 'Reconcile messages for the Discord channel bound by a Cursor.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -94,7 +91,6 @@ export const CrawlDiscordChannels = Operation.make({
     name: 'Crawl Discord Channels',
     description: 'Incrementally crawl Discord channels through the fact-extraction pipeline.',
     icon: 'ph--bulldozer--regular',
-    tags: [Operation.Tag.Sync],
   },
   services: [Capability.Service, AiService.AiService],
   input: Schema.Struct({

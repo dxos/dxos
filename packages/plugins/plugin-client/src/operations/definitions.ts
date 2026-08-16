@@ -32,36 +32,21 @@ const ProfileSchema = Schema.Struct({
 });
 
 export const CreateIdentity = Operation.make({
-  meta: {
-    key: makeKey('createIdentity'),
-    name: 'Create Identity',
-    icon: 'ph--user--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Identity],
-  },
+  meta: { key: makeKey('createIdentity'), name: 'Create Identity', icon: 'ph--user--regular' },
   services: [Capability.Service, Identity.Service],
   input: ProfileSchema,
   output: IdentitySchema,
 });
 
 export const UpdateProfile = Operation.make({
-  meta: {
-    key: makeKey('updateProfile'),
-    name: 'Update Profile',
-    icon: 'ph--user--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Identity],
-  },
+  meta: { key: makeKey('updateProfile'), name: 'Update Profile', icon: 'ph--user--regular' },
   services: [Identity.Service],
   input: ProfileSchema,
   output: Schema.Void,
 });
 
 export const JoinIdentity = Operation.make({
-  meta: {
-    key: makeKey('joinIdentity'),
-    name: 'Join Identity',
-    icon: 'ph--sign-in--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Identity],
-  },
+  meta: { key: makeKey('joinIdentity'), name: 'Join Identity', icon: 'ph--sign-in--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     invitationCode: Schema.optional(Schema.String),
@@ -74,7 +59,6 @@ export const ShareIdentity = Operation.make({
     key: makeKey('shareIdentity'),
     name: 'Share Identity',
     icon: 'ph--share-network--regular',
-    tags: [Operation.Tag.Identity],
   },
   services: [Capability.Service],
   input: Schema.Void,
@@ -86,7 +70,6 @@ export const OpenUsage = Operation.make({
     key: makeKey('openUsage'),
     name: 'Open Usage',
     icon: 'ph--chart-bar--regular',
-    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Void,
@@ -94,24 +77,14 @@ export const OpenUsage = Operation.make({
 });
 
 export const RecoverIdentity = Operation.make({
-  meta: {
-    key: makeKey('recoverIdentity'),
-    name: 'Recover Identity',
-    icon: 'ph--key--regular',
-    tags: [Operation.Tag.Identity],
-  },
+  meta: { key: makeKey('recoverIdentity'), name: 'Recover Identity', icon: 'ph--key--regular' },
   services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,
 });
 
 export const ResetStorage = Operation.make({
-  meta: {
-    key: makeKey('resetStorage'),
-    name: 'Reset Storage',
-    icon: 'ph--warning--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Identity],
-  },
+  meta: { key: makeKey('resetStorage'), name: 'Reset Storage', icon: 'ph--warning--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     mode: Schema.optional(Schema.String),
@@ -120,12 +93,7 @@ export const ResetStorage = Operation.make({
 });
 
 export const CreateAgent = Operation.make({
-  meta: {
-    key: makeKey('createAgent'),
-    name: 'Create Agent',
-    icon: 'ph--brain--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Identity],
-  },
+  meta: { key: makeKey('createAgent'), name: 'Create Agent', icon: 'ph--brain--regular' },
   services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,
@@ -136,7 +104,6 @@ export const GrantServiceAccess = Operation.make({
     key: makeKey('grantServiceAccess'),
     name: 'Grant Service Access',
     icon: 'ph--key--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Identity],
   },
   services: [Identity.Service],
   input: Schema.Struct({
@@ -153,7 +120,6 @@ export const CreateRecoveryCode = Operation.make({
     key: makeKey('createRecoveryCode'),
     name: 'Create Recovery Code',
     icon: 'ph--key--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Identity],
   },
   services: [Capability.Service, Identity.Service],
   input: Schema.Void,
@@ -161,12 +127,7 @@ export const CreateRecoveryCode = Operation.make({
 });
 
 export const CreatePasskey = Operation.make({
-  meta: {
-    key: makeKey('createPasskey'),
-    name: 'Create Passkey',
-    icon: 'ph--key--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Identity],
-  },
+  meta: { key: makeKey('createPasskey'), name: 'Create Passkey', icon: 'ph--key--regular' },
   services: [Capability.Service, Identity.Service],
   input: Schema.Void,
   output: Schema.Void,
@@ -177,7 +138,6 @@ export const RevokeRecoveryCredential = Operation.make({
     key: makeKey('revokeRecoveryCredential'),
     name: 'Revoke Recovery Credential',
     icon: 'ph--key--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Identity],
   },
   services: [Capability.Service, Identity.Service],
   input: Schema.Struct({
@@ -192,24 +152,14 @@ export const RevokeRecoveryCredential = Operation.make({
 });
 
 export const RedeemPasskey = Operation.make({
-  meta: {
-    key: makeKey('redeemPasskey'),
-    name: 'Redeem Passkey',
-    icon: 'ph--key--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Identity],
-  },
+  meta: { key: makeKey('redeemPasskey'), name: 'Redeem Passkey', icon: 'ph--key--regular' },
   services: [Capability.Service, Identity.Service],
   input: Schema.Void,
   output: Schema.Void,
 });
 
 export const RedeemToken = Operation.make({
-  meta: {
-    key: makeKey('redeemToken'),
-    name: 'Redeem Token',
-    icon: 'ph--lock--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Identity],
-  },
+  meta: { key: makeKey('redeemToken'), name: 'Redeem Token', icon: 'ph--lock--regular' },
   services: [Capability.Service, Identity.Service],
   input: Schema.Struct({
     token: Schema.String,

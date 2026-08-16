@@ -34,7 +34,6 @@ export const JmapSync = Operation.make({
     name: 'Sync JMAP',
     description: 'Sync emails from a JMAP server (e.g. Fastmail) to the mailbox feed.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
   },
   input: Schema.Struct({
     binding: Ref.Ref(Cursor.Cursor).annotate({
@@ -55,7 +54,6 @@ export const MaterializeJmapTarget = Operation.make({
     name: 'Materialize JMAP Target',
     description: 'Create the local Mailbox bound to a JMAP connection.',
     icon: 'ph--envelope--regular',
-    tags: [Operation.Tag.Sync],
   },
   input: ConnectorSpec.MaterializeTargetInput,
   output: ConnectorSpec.MaterializeTargetOutput,
@@ -67,7 +65,6 @@ export const JmapSend = Operation.make({
     name: 'Send JMAP',
     description: 'Send an email via a JMAP server.',
     icon: 'ph--paper-plane-tilt--regular',
-    tags: [Operation.Tag.Edit],
   },
   input: MailSend.Input,
   output: MailSend.Output,

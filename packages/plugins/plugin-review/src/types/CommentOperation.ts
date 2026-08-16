@@ -21,12 +21,7 @@ import { meta } from '#meta';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const Create = Operation.make({
-  meta: {
-    key: makeKey('create'),
-    name: 'Create Comment Thread',
-    icon: 'ph--chat-text--regular',
-    tags: [Operation.Tag.Edit],
-  },
+  meta: { key: makeKey('create'), name: 'Create Comment Thread', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -46,12 +41,7 @@ export const DeleteOutput = Schema.Struct({
 export type DeleteOutput = Schema.Schema.Type<typeof DeleteOutput>;
 
 export const Delete = Operation.make({
-  meta: {
-    key: makeKey('delete'),
-    name: 'Delete Comment Thread',
-    icon: 'ph--trash--regular',
-    tags: [Operation.Tag.Edit],
-  },
+  meta: { key: makeKey('delete'), name: 'Delete Comment Thread', icon: 'ph--trash--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo),
@@ -62,7 +52,7 @@ export const Delete = Operation.make({
 });
 
 export const Select = Operation.make({
-  meta: { key: makeKey('select'), name: 'Select Comment Thread', icon: 'ph--check--regular', tags: [Operation.Tag.UI] },
+  meta: { key: makeKey('select'), name: 'Select Comment Thread', icon: 'ph--check--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     // Optional so callers can clear the active thread (e.g. after delete/close).
@@ -80,7 +70,6 @@ export const ToggleResolved = Operation.make({
     key: makeKey('toggleResolved'),
     name: 'Toggle Resolved',
     icon: 'ph--check-circle--regular',
-    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -90,7 +79,7 @@ export const ToggleResolved = Operation.make({
 });
 
 export const AddMessage = Operation.make({
-  meta: { key: makeKey('addMessage'), name: 'Add Comment', icon: 'ph--chat-text--regular', tags: [Operation.Tag.Edit] },
+  meta: { key: makeKey('addMessage'), name: 'Add Comment', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Obj.Unknown,
@@ -109,12 +98,7 @@ export const DeleteMessageOutput = Schema.Struct({
 export type DeleteMessageOutput = Schema.Schema.Type<typeof DeleteMessageOutput>;
 
 export const DeleteMessage = Operation.make({
-  meta: {
-    key: makeKey('deleteMessage'),
-    name: 'Delete Comment',
-    icon: 'ph--trash--regular',
-    tags: [Operation.Tag.Edit],
-  },
+  meta: { key: makeKey('deleteMessage'), name: 'Delete Comment', icon: 'ph--trash--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo),
@@ -132,7 +116,6 @@ export const Restore = Operation.make({
     key: makeKey('restore'),
     name: 'Restore Comment Thread',
     icon: 'ph--clock-counter-clockwise--regular',
-    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -150,7 +133,6 @@ export const RestoreMessage = Operation.make({
     key: makeKey('restoreMessage'),
     name: 'Restore Comment',
     icon: 'ph--clock-counter-clockwise--regular',
-    tags: [Operation.Tag.Edit],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -166,7 +148,6 @@ export const RespondToThread = Operation.make({
     key: makeKey('respondToThread'),
     name: 'Respond to Comment Thread',
     description: 'Runs one comment-thread agent turn against the given comment thread + subject.',
-    tags: [Operation.Tag.Agent],
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -181,7 +162,6 @@ export const SetAgentConfig = Operation.make({
     key: makeKey('setAgentConfig'),
     name: 'Set Agent Config',
     description: 'Updates thread.agent. Undefined config disables the agent.',
-    tags: [Operation.Tag.Edit, Operation.Tag.Automation],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -199,7 +179,6 @@ export const CreateProposals = Operation.make({
     name: 'Create Proposals',
     description: 'Proposes a set of changes to a document.',
     icon: 'ph--sparkle--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Agent, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotate({

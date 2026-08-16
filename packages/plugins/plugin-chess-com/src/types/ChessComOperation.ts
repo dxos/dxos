@@ -22,7 +22,6 @@ export const ClearSyncedGames = Operation.make({
     name: 'Clear Synced Games',
     description: 'Remove all synced games from the Chess.com account feed.',
     icon: 'ph--trash--regular',
-    tags: [Operation.Tag.Edit],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -40,7 +39,6 @@ export const SyncGames = Operation.make({
     name: 'Sync Games',
     description: 'Sync archived Chess.com games into the account feed.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
   },
   services: [Database.Service],
   input: Schema.Struct({

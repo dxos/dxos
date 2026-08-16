@@ -15,7 +15,7 @@ import { meta } from '#meta';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const Toggle = Operation.make({
-  meta: { key: makeKey('toggle'), name: 'Toggle Map', icon: 'ph--compass--regular', tags: [Operation.Tag.UI] },
+  meta: { key: makeKey('toggle'), name: 'Toggle Map', icon: 'ph--compass--regular' },
   services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,

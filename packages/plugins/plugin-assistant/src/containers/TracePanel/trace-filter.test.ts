@@ -4,80 +4,92 @@
 
 import { describe, test } from 'vitest';
 
-import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
+import { SpaceId, URI } from '@dxos/keys';
 
-import { UNTAGGED_OPERATION_TAG } from '#execution-graph';
+import { makeProcess } from '#testing';
 
-import { DEFAULT_OPERATION_TAGS, availableOperationTags, toggleOperationTag } from './trace-filter';
+import {
+  ALL_PROCESS_ENVIRONMENTS,
+  DEFAULT_PROCESS_ENVIRONMENTS,
+  ProcessEnvironment,
+  filterProcesses,
+  parseProcessEnvironments,
+  processEnvironment,
+  toggleProcessEnvironment,
+} from './trace-filter';
 
-describe('DEFAULT_OPERATION_TAGS', () => {
-  test('hides the high-volume tags and keeps untagged visible', ({ expect }) => {
-    expect(DEFAULT_OPERATION_TAGS).toContain(UNTAGGED_OPERATION_TAG);
-    expect(DEFAULT_OPERATION_TAGS).toContain(Operation.Tag.Agent);
-    expect(DEFAULT_OPERATION_TAGS).not.toContain(Operation.Tag.UI);
-    expect(DEFAULT_OPERATION_TAGS).not.toContain(Operation.Tag.Edit);
-    expect(DEFAULT_OPERATION_TAGS).not.toContain(Operation.Tag.Query);
-    expect(DEFAULT_OPERATION_TAGS).not.toContain(Operation.Tag.System);
+const SPACE_ID = SpaceId.random();
+const CONVERSATION = URI.make('eid:BA25QRC2FWNUGWENQZ26MK5W6C64ZQPTC:01J00000000000000000000000');
+
+const makeInfo = (name: string, environment: Process.Environment): Process.Info =>
+  makeProcess({ pid: Process.ID.make(name), name, state: Process.State.RUNNING, environment });
+
+describe('processEnvironment', () => {
+  test('an unscoped process is app-level', ({ expect }) => {
+    expect(processEnvironment(makeInfo('layout', {}))).toBe(ProcessEnvironment.App);
+  });
+
+  test('a space-scoped process is space-level', ({ expect }) => {
+    expect(processEnvironment(makeInfo('sync', { space: SPACE_ID }))).toBe(ProcessEnvironment.Space);
+  });
+
+  test('a conversation outranks its space', ({ expect }) => {
+    expect(processEnvironment(makeInfo('agent', { space: SPACE_ID, conversation: CONVERSATION }))).toBe(
+      ProcessEnvironment.Conversation,
+    );
   });
 });
 
-describe('availableOperationTags', () => {
-  test('offers the well-known vocabulary even for an empty trace', ({ expect }) => {
-    expect(availableOperationTags([], [])).toEqual([
-      Operation.Tag.Space,
-      Operation.Tag.Identity,
-      Operation.Tag.Sync,
-      Operation.Tag.Agent,
-      Operation.Tag.Automation,
-      Operation.Tag.Tool,
-      UNTAGGED_OPERATION_TAG,
-    ]);
+describe('filterProcesses', () => {
+  const processes = [
+    makeInfo('layout', {}),
+    makeInfo('sync', { space: SPACE_ID }),
+    makeInfo('agent', { space: SPACE_ID, conversation: CONVERSATION }),
+  ];
+
+  test('keeps only the selected environments', ({ expect }) => {
+    const visible = filterProcesses(processes, [ProcessEnvironment.Conversation]);
+    expect(visible.map((process) => process.params.name)).toEqual(['agent']);
   });
 
-  test('orders known tags by the vocabulary and sorts untagged last', ({ expect }) => {
-    const tags = availableOperationTags([UNTAGGED_OPERATION_TAG, Operation.Tag.Tool, Operation.Tag.UI], []);
-    expect(tags[0]).toBe(Operation.Tag.UI);
-    expect(tags[tags.length - 1]).toBe(UNTAGGED_OPERATION_TAG);
+  test('an empty selection hides everything', ({ expect }) => {
+    expect(filterProcesses(processes, [])).toEqual([]);
   });
 
-  test('includes a selected tag the trace has not produced, so it can be cleared', ({ expect }) => {
-    expect(availableOperationTags([], ['custom'])).toContain('custom');
-  });
-
-  test('sorts unknown tags after the vocabulary, alphabetically', ({ expect }) => {
-    const tags = availableOperationTags(['zebra', 'custom'], []);
-    const known = tags.indexOf(Operation.Tag.Tool);
-    expect(tags.indexOf('custom')).toBeGreaterThan(known);
-    expect(tags.indexOf('custom')).toBeLessThan(tags.indexOf('zebra'));
-    expect(tags.indexOf('zebra')).toBeLessThan(tags.indexOf(UNTAGGED_OPERATION_TAG));
-  });
-
-  test('does not duplicate tags', ({ expect }) => {
-    const tags = availableOperationTags([Operation.Tag.Sync, Operation.Tag.Sync], [Operation.Tag.Sync]);
-    expect(tags.filter((tag) => tag === Operation.Tag.Sync)).toHaveLength(1);
+  test('the default selection passes the list through unchanged', ({ expect }) => {
+    expect(filterProcesses(processes, DEFAULT_PROCESS_ENVIRONMENTS)).toBe(processes);
   });
 });
 
-describe('toggleOperationTag', () => {
-  const available = [Operation.Tag.UI, Operation.Tag.Sync, Operation.Tag.Agent];
-
-  test('adds a tag in the canonical order rather than at the end', ({ expect }) => {
-    expect(toggleOperationTag([Operation.Tag.Agent], Operation.Tag.UI, available)).toEqual([
-      Operation.Tag.UI,
-      Operation.Tag.Agent,
+describe('toggleProcessEnvironment', () => {
+  test('adds in canonical order rather than at the end', ({ expect }) => {
+    expect(toggleProcessEnvironment([ProcessEnvironment.Conversation], ProcessEnvironment.App)).toEqual([
+      ProcessEnvironment.App,
+      ProcessEnvironment.Conversation,
     ]);
   });
 
-  test('removes a selected tag', ({ expect }) => {
-    expect(toggleOperationTag([Operation.Tag.UI, Operation.Tag.Agent], Operation.Tag.UI, available)).toEqual([
-      Operation.Tag.Agent,
-    ]);
+  test('removes a selected environment', ({ expect }) => {
+    expect(
+      toggleProcessEnvironment([ProcessEnvironment.App, ProcessEnvironment.Conversation], ProcessEnvironment.App),
+    ).toEqual([ProcessEnvironment.Conversation]);
+  });
+});
+
+describe('parseProcessEnvironments', () => {
+  test('unset settings show every environment', ({ expect }) => {
+    expect(parseProcessEnvironments(undefined)).toEqual(ALL_PROCESS_ENVIRONMENTS);
   });
 
-  test('drops selections no longer offered', ({ expect }) => {
-    expect(toggleOperationTag(['stale', Operation.Tag.Agent], Operation.Tag.Sync, available)).toEqual([
-      Operation.Tag.Sync,
-      Operation.Tag.Agent,
+  test('an empty selection is preserved, not treated as unset', ({ expect }) => {
+    expect(parseProcessEnvironments([])).toEqual([]);
+  });
+
+  test('drops values outside the vocabulary and restores canonical order', ({ expect }) => {
+    expect(parseProcessEnvironments([ProcessEnvironment.Conversation, 'retired', ProcessEnvironment.App])).toEqual([
+      ProcessEnvironment.App,
+      ProcessEnvironment.Conversation,
     ]);
   });
 });

@@ -20,7 +20,6 @@ export const SetAlarm = Operation.make({
       When the alarm fires you will receive a prompt and can continue working.
       Setting a new alarm replaces any previously scheduled one.
     `,
-    tags: [Operation.Tag.Edit, Operation.Tag.Automation, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     in: Schema.optional(
@@ -49,7 +48,6 @@ export const GetCurrentDate = Operation.make({
     name: 'Get current date',
     icon: 'ph--clock--regular',
     description: 'Get the current date and time as an ISO-8601 string.',
-    tags: [Operation.Tag.Query, Operation.Tag.Automation, Operation.Tag.Tool],
   },
   input: Schema.Struct({}),
   output: Schema.String,

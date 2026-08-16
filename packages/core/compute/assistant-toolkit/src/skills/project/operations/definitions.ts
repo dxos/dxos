@@ -21,7 +21,6 @@ export const ArtifactAdd = Operation.make({
       project's context, so the project owns it and it appears in the project's artifacts list.
       Adding the same object twice is a no-op.
     `,
-    tags: [Operation.Tag.Tool],
   },
   input: Schema.Struct({
     project: Ref.Ref(Project.Project).annotate({
@@ -52,7 +51,6 @@ export const ArtifactList = Operation.make({
       Use this to find what the project already holds before searching the whole space; load an
       artifact's content with the load tool when needed.
     `,
-    tags: [Operation.Tag.Tool],
   },
   input: Schema.Struct({
     project: Ref.Ref(Project.Project).annotate({

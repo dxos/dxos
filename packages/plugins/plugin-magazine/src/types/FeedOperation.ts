@@ -23,7 +23,6 @@ export const SyncFeed = Operation.make({
     name: 'Sync Feed',
     description: 'Fetches RSS/Atom feed and writes posts to the ECHO feed.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -44,7 +43,6 @@ export const FetchArticleContent = Operation.make({
     name: 'Fetch Article Content',
     description: "Fetches and extracts text + image URLs from a Post's article page.",
     icon: 'ph--article--regular',
-    tags: [Operation.Tag.Sync, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     post: Ref.Ref(Subscription.Post).annotate({
@@ -74,7 +72,6 @@ export const LoadPostContent = Operation.make({
     name: 'Load Post Content',
     description: 'Fetches and stores the full article content on a Post.',
     icon: 'ph--download--regular',
-    tags: [Operation.Tag.Edit],
   },
   input: Schema.Struct({
     post: Ref.Ref(Subscription.Post).annotate({
@@ -101,7 +98,6 @@ export const CurateMagazine = Operation.make({
     name: 'Curate Magazine',
     description: 'Syncs feeds, selects matching posts via the magazine skill, and applies per-feed keep limits.',
     icon: 'ph--sparkle--regular',
-    tags: [Operation.Tag.Agent],
   },
   input: Schema.Struct({
     magazine: Ref.Ref(Magazine.Magazine).annotate({
@@ -127,7 +123,6 @@ export const ClearMagazine = Operation.make({
     name: 'Clear Magazine',
     description: "Removes a Magazine's posts, keeping any that are starred.",
     icon: 'ph--trash--regular',
-    tags: [Operation.Tag.Edit],
   },
   input: Schema.Struct({
     magazine: Ref.Ref(Magazine.Magazine).annotate({

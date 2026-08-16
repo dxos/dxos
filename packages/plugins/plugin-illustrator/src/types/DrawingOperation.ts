@@ -19,12 +19,7 @@ import * as Drawing from './Drawing';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const Create = Operation.make({
-  meta: {
-    key: makeKey('create'),
-    name: 'Create Drawing',
-    icon: 'ph--pencil-simple--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
-  },
+  meta: { key: makeKey('create'), name: 'Create Drawing', icon: 'ph--pencil-simple--regular' },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
     variant: Schema.optional(Schema.String).annotate({
@@ -52,7 +47,6 @@ export const Read = Operation.make({
     description:
       'Returns the current scene of a drawing: world objects (by id) with their elements in object-local units. Call before editing an existing drawing.',
     icon: 'ph--eye--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to read.' }),
@@ -68,7 +62,6 @@ export const Edit = Operation.make({
     description:
       'Applies scene commands to a drawing: upsert/move/remove world objects or individual elements by id. Returns the resulting scene.',
     icon: 'ph--pencil-simple-line--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
   },
   input: Schema.Struct({
     drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to edit.' }),
@@ -89,7 +82,6 @@ export const Generate = Operation.make({
     description:
       'Replaces a drawing with a diagram compiled from a mermaid flowchart description. The dialect owns layout, so no coordinates are supplied.',
     icon: 'ph--graph--regular',
-    tags: [Operation.Tag.Agent],
   },
   input: Schema.Struct({
     drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to generate into.' }),

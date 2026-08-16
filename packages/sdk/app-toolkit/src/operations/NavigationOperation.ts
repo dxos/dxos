@@ -45,7 +45,6 @@ export const ResolveNavigationTargets = Operation.make({
     description:
       "Resolve a navigation path for the Open operation. Pass an object's URI (its DXN, e.g. a context object's <dxn>) as the query uri to resolve that object to its navigation target, or omit the query to list pages that can be navigated to. Targets are ordered best-first; pass the first target's path to Open.",
     icon: 'ph--compass--regular',
-    tags: [Operation.Tag.UI],
   },
   services: [Capability.Service],
   input: Schema.Struct({

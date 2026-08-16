@@ -17,7 +17,6 @@ const ChessBot = Operation.make({
     key: DXN.make('org.dxos.script.chessBot'),
     name: 'Chess Bot',
     description: 'Plays a random move in a chess game.',
-    tags: [Operation.Tag.System],
   },
   input: Schema.Struct({
     game: Game.GameRef(Chess.State).annotate({

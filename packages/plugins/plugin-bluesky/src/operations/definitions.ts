@@ -38,7 +38,6 @@ export const GetBlueskyTargets = Operation.make({
     name: 'Get Bluesky Targets',
     description: "List the user's Bluesky timeline / likes / bookmarks plus saved custom feeds.",
     icon: 'ph--butterfly--regular',
-    tags: [Operation.Tag.Query],
   },
   // Handler resolves the Composer `Client` via `Capability.get`.
   services: [Capability.Service],
@@ -58,7 +57,6 @@ export const MaterializeBlueskyTarget = Operation.make({
     name: 'Materialize Bluesky Target',
     description: 'Create the empty local Subscription feed bound to a selected Bluesky target.',
     icon: 'ph--butterfly--regular',
-    tags: [Operation.Tag.Sync],
   },
   input: ConnectorSpec.MaterializeTargetInput,
   output: ConnectorSpec.MaterializeTargetOutput,
@@ -77,7 +75,6 @@ export const SyncBlueskyTargets = Operation.make({
     name: 'Sync Bluesky',
     description: 'Pull posts for the Bluesky feed bound by a sync cursor.',
     icon: 'ph--arrows-clockwise--regular',
-    tags: [Operation.Tag.Sync],
   },
   // Handler resolves the Composer `Client` via `Capability.get`.
   services: [Capability.Service],

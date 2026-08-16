@@ -34,7 +34,6 @@ export const CreateTask = Operation.make({
     name: 'Create Task',
     description: 'Create a task in a task set. Defaults status to todo.',
     icon: 'ph--check-circle--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -62,7 +61,6 @@ export const UpdateTask = Operation.make({
     name: 'Update Task',
     description: 'Patch task fields: title, description, status, priority, estimate, assignee.',
     icon: 'ph--pencil-simple--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -88,7 +86,6 @@ export const CompleteTask = Operation.make({
     name: 'Complete Task',
     description: 'Mark a task done — the 90% action as one verb.',
     icon: 'ph--check--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -108,7 +105,6 @@ export const AssignTask = Operation.make({
     name: 'Assign Task',
     description: 'Assign a task to a person (contact/email/name) or an agent (role assistant + DID).',
     icon: 'ph--user-circle--regular',
-    tags: [Operation.Tag.Edit, Operation.Tag.Tool],
   },
   services: [Database.Service],
   input: Schema.Struct({
@@ -133,7 +129,6 @@ export const ListTasks = Operation.make({
     description:
       "List tasks in a task set (or a project's task sets), newest first. Filter by status or assignee; page with `after`/`limit`.",
     icon: 'ph--list-checks--regular',
-    tags: [Operation.Tag.Query, Operation.Tag.Tool],
   },
   services: [Database.Service],
   input: Schema.Struct({

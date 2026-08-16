@@ -21,7 +21,7 @@ export const createPluginId = (id: string): DXN.DXN => DXN.make(`org.dxos.test.g
 
 export const createAlertOperation = (id: DXN.DXN) =>
   Operation.make({
-    meta: { key: DXN.make(`${DXN.getName(id)}.operation.alert`), name: 'Alert', tags: [Operation.Tag.Edit] },
+    meta: { key: DXN.make(`${DXN.getName(id)}.operation.alert`), name: 'Alert' },
     input: Schema.Void,
     output: Schema.Void,
   });

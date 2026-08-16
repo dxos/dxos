@@ -28,7 +28,6 @@ export const CreateSampleItem = Operation.make({
     key: makeKey('createSampleItem'),
     name: 'Create Sample Item',
     icon: 'ph--plus--regular',
-    tags: [Operation.Tag.System],
   },
   input: Schema.Struct({
     name: Schema.optional(Schema.String).annotate({ description: 'Display name for the item.' }),
@@ -39,12 +38,7 @@ export const CreateSampleItem = Operation.make({
 });
 
 export const Randomize = Operation.make({
-  meta: {
-    key: makeKey('randomize'),
-    name: 'Randomize Sample Item',
-    icon: 'ph--shuffle--regular',
-    tags: [Operation.Tag.System],
-  },
+  meta: { key: makeKey('randomize'), name: 'Randomize Sample Item', icon: 'ph--shuffle--regular' },
   input: Schema.Struct({
     item: Schema.Any.annotate({ description: 'The SampleItem to randomize.' }),
   }),
@@ -52,12 +46,7 @@ export const Randomize = Operation.make({
 });
 
 export const UpdateStatus = Operation.make({
-  meta: {
-    key: makeKey('updateStatus'),
-    name: 'Update Status',
-    icon: 'ph--pencil--regular',
-    tags: [Operation.Tag.System],
-  },
+  meta: { key: makeKey('updateStatus'), name: 'Update Status', icon: 'ph--pencil--regular' },
   input: Schema.Struct({
     item: Schema.Any.annotate({ description: 'The SampleItem to update.' }),
     status: Schema.String.annotate({ description: 'The new status value.' }),

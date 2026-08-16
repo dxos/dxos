@@ -14,12 +14,7 @@ import { meta } from '#meta';
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const OpenSearch = Operation.make({
-  meta: {
-    key: makeKey('openSearch'),
-    name: 'Open Search',
-    icon: 'ph--magnifying-glass--regular',
-    tags: [Operation.Tag.UI],
-  },
+  meta: { key: makeKey('openSearch'), name: 'Open Search', icon: 'ph--magnifying-glass--regular' },
   input: Schema.Void,
   output: Schema.Void,
 });
