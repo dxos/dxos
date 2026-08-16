@@ -3,3 +3,4 @@
 //
 
 export * from './MessageList';
+export * from './follow';

@@ -20,6 +20,7 @@ import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { type MessageRenderer, type SearchHit, defaultRenderer } from '../../model';
 import { type HighlightRange, HtmlItem, MarkdownItem, SelectionGroupContext, createSelectionGroup } from '../Item';
+import { ScrollFollower } from './follow';
 
 //
 // Context
@@ -135,6 +136,11 @@ const MessageListRoot = ({
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const [range, setRange] = useState<MessageRange | undefined>(undefined);
 
+  // The follow carries velocity across frames, so a target that moves with every chunk produces one
+  // continuous travel rather than an animation restarted per chunk.
+  const follower = useMemo(() => (viewport ? new ScrollFollower(viewport) : undefined), [viewport]);
+  useEffect(() => () => follower?.stop(), [follower]);
+
   const virtualizer = useVirtualizer<HTMLElement, HTMLElement>({
     count: messages.length,
     getScrollElement: () => viewport,
@@ -178,6 +184,7 @@ const MessageListRoot = ({
       const top = viewport.scrollTop;
       if (top < lastTopRef.current - 1) {
         followRef.current = false;
+        follower?.stop();
       } else if (viewport.scrollHeight - top - viewport.clientHeight < STICKY_THRESHOLD) {
         followRef.current = true;
       }
@@ -187,7 +194,7 @@ const MessageListRoot = ({
     onScroll();
     viewport.addEventListener('scroll', onScroll, { passive: true });
     return () => viewport.removeEventListener('scroll', onScroll);
-  }, [viewport]);
+  }, [viewport, follower]);
 
   const scrollToIndex = useCallback(
     (index: number, { align = 'start', behavior = 'auto' }: ScrollToOptions = {}) => {
@@ -225,17 +232,17 @@ const MessageListRoot = ({
   // to how many messages exist.
   const totalSize = virtualizer.getTotalSize();
   useEffect(() => {
-    if (!stickyBottom || !followRef.current) {
+    if (!follower || !stickyBottom || !followRef.current) {
+      follower?.stop();
       return;
     }
 
-    // A gliding follow that cannot keep up with the content would be left behind for good, so it
-    // reverts to an instant one once the tail is more than a screen away — the reader was not
-    // tracking that text anyway.
-    const gap = viewport ? viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight : 0;
-    const behavior = viewport && gap > viewport.clientHeight ? 'auto' : stickyBehavior;
-    scrollToBottom({ behavior });
-  }, [stickyBottom, stickyBehavior, messages.length, totalSize, scrollToBottom, viewport]);
+    if (stickyBehavior === 'smooth') {
+      follower.start();
+    } else {
+      follower.jump();
+    }
+  }, [follower, stickyBottom, stickyBehavior, messages.length, totalSize]);
 
   // Cmd/Ctrl + Arrow jumps to the first or last message; plain arrows stay with the scroll container
   // and with whatever the reader is interacting with inside an item. Bound imperatively to the
