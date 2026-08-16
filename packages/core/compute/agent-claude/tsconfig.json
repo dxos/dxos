@@ -16,6 +16,9 @@
     },
     {
       "path": "../../../sdk/types"
+    },
+    {
+      "path": "../../echo/echo"
     }
   ]
 }

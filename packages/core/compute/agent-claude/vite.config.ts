@@ -10,6 +10,7 @@ export default defineConfig({
     // Separate entry so a browser consumer can reach the wire contract and fetch client without
     // pulling in the host, which spawns processes and reads the filesystem.
     client: 'src/client/index.ts',
+    producer: 'src/producer/index.ts',
   },
   test: { node: true },
 });

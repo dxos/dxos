@@ -20,7 +20,6 @@ import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
   AgentRequestBegin,
   AgentRequestEnd,
-  AiSession,
   HarnessControl,
   SkillHooks,
   getOperationFromTool,
@@ -43,10 +42,18 @@ import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type DelegationStrategy } from './delegation-strategy';
+import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer';
 
 interface AgentProcessOptions {
   // TODO(burdon): Instructions?
   systemPrompt?: string;
+
+  /**
+   * Produces each turn. Defaults to {@link makeAiSessionTurnProducer}; substituting it swaps the
+   * engine (e.g. a Claude Agent SDK host) while leaving the queue, alarms, redelivery, delegation
+   * and hydration around it untouched.
+   */
+  makeTurnProducer?: MakeTurnProducer;
 
   /** Model identifier. */
   model?: DXN.DXN;
@@ -125,8 +132,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             )
           : undefined;
         const runtime = yield* Effect.context<Database.Service>();
-        const session = yield* EffectEx.acquireReleaseResource(
-          () => new AiSession.Session({ feed, runtime, instructions: instructions ? [instructions] : [] }),
+        const makeTurnProducer = options.makeTurnProducer ?? makeAiSessionTurnProducer;
+        const session = yield* EffectEx.acquireReleaseResource(() =>
+          makeTurnProducer({ feed, runtime, instructions: instructions ? [instructions] : [] }),
         );
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsCell.get)];
         const storageService = yield* StorageService.StorageService;
@@ -168,7 +176,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // keeps the process alive past this turn.
         const runEndRequestHooks = Effect.gen(function* () {
           yield* SkillHooks.runHooks({
-            skills: session.context.getSkills(),
+            skills: session.getSkills(),
             phase: 'end-request',
             invoke: (operation, input) =>
               Effect.gen(function* () {

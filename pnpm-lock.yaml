@@ -4132,6 +4132,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: 'catalog:'
         version: 0.117.1(zod@4.3.6)
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -18425,6 +18428,9 @@ importers:
       '@dxos/storybook-testing':
         specifier: workspace:*
         version: link:../storybook-testing
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
@@ -18537,9 +18543,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
