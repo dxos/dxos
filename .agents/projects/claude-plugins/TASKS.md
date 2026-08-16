@@ -1,11 +1,11 @@
 # DXOS Claude Code Plugins — Tasks
 
-_Resume: PR #12618 MERGED 2026-08-15 (`526147b39e`) — phases 1, 1b and 2's code all landed, and the
-`dxos` marketplace publishes `dxos` from `main`. The `mcp` backend has still never touched a
-running space: next is the live round-trip (`dx mcp serve` up, `DX_PROJECT_BACKEND=mcp`, one list →
-new → track → tasks cycle checked in Composer). Two local steps first — restart so the plugin loads
-from `main`, and re-point the local `dxos` marketplace, which still sources from a deleted worktree.
-Uncommitted: none. Last: tracked Phase 3, modelling the user._
+_Resume: PRs #12618 + #12620 MERGED — the `dxos` marketplace publishes `dxos` from `main`, and
+`/dxos:project` is verified working in a live session. #12622 is open, carrying the
+`history`/`spawn`/`help` verbs. The `mcp` backend has still never touched a running space: next is
+the live round-trip (`dx mcp serve` up, `DX_PROJECT_BACKEND=mcp`, one list → new → track → tasks
+cycle checked in Composer). Uncommitted: none. Last: deleted `composer-plugin-dev` (its references
+taught an API deleted in #12414) and reworked the terse mode rules._
 
 ## Phase 1: Extract into a distributable plugin
 
@@ -90,12 +90,17 @@ layout the marketplace publishes under.
 - [x] **One home for Claude plugins** — moved `tools/composer-plugin-dev` (Dima's, unmaintained
       since 2026-05-01 apart from sweeps) to `tools/claude/plugins/composer-plugin-dev` and fixed
       its two self-referencing paths.
-- [x] **Decided `composer-plugin-dev`'s fate** — DROPPED from the marketplace manifest (user,
-      2026-08-15). It was briefly listed, since it had sat on main in no manifest and so had always
-      been uninstallable; the decision is not to publish it. The files stay at
-      `tools/claude/plugins/composer-plugin-dev/` but ship to nobody, and the live Composer-authoring
-      guidance remains `.agents/skills/composer-plugins/SKILL.md` (656 lines, in-repo audience).
-      `dxos` therefore publishes exactly one plugin.
+- [x] **Deleted `composer-plugin-dev`** (user, 2026-08-15) — first dropped from the marketplace
+      manifest, then removed entirely. Reconciling its `SKILL.md` against
+      `.agents/skills/composer-plugins/SKILL.md` settled it: the live skill has 27 commits since May
+      and was last touched 2026-08-09, while the plugin's had none since it was created 2026-05-01.
+      Worse than stale — its references teach `AppPlugin.add*Module`, which **PR #12414 deleted**
+      (`AppPlugin` now appears in zero source files), so anyone following it wrote code that would
+      not compile. `dxos` therefore publishes exactly one plugin.
+      Lost with it, and worth rebuilding if community plugins become a priority: the
+      external-author framing and the packaging/publishing topics (vite config, GitHub release with
+      `manifest.json` + `plugin.mjs`, registration via `dxos/community-plugins`) — none of which the
+      in-repo skill covers.
 - [x] **Closed `task-planning-skill`** — moved to the registry's `ended` list (user, 2026-08-15).
       Its files now live in this plugin and its one open follow-up, testing the skill in a clean
       repo, was answered by the extraction itself.

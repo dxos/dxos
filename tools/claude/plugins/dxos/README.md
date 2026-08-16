@@ -20,14 +20,17 @@ claude plugin install dxos@dxos
 
 ## Use
 
-| Command                                  | Does                                                                     |
-| ---------------------------------------- | ------------------------------------------------------------------------ |
+| Command                          | Does                                                                     |
+| -------------------------------- | ------------------------------------------------------------------------ |
 | `/dxos:project`                  | Status of the current project — worktree, branch, docs, uncommitted work |
 | `/dxos:project list [all]`       | Numbered table of active projects; reply with a row number to resume     |
 | `/dxos:project tasks [all]`      | Open `- [ ]` items from the current project's `TASKS.md`                 |
+| `/dxos:project spawn <N...>` | Spin the numbered open tasks out into background task chips              |
 | `/dxos:project new <name>`       | Register a project and scaffold its `TASKS.md` + `DESIGN.md`             |
 | `/dxos:project end <name>`       | Move it to `ended`, recording final status                               |
 | `/dxos:project track <text>`     | Record a follow-up in the active `TASKS.md`                              |
+| `/dxos:project history [all]` | Table of the PRs this project produced — date, author, one-sentence summary  |
+| `/dxos:project help`             | Table of every verb and what it does                                     |
 | `/dxos:project hydrate`          | Checkpoint before stopping or opening a PR                               |
 | `/dxos:project resume [name]`    | Reload project state at the start of a session                           |
 

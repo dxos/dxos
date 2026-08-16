@@ -178,7 +178,8 @@ value cannot wedge the machine — anything that is not `terse` means `normal`.
 **`mode.sh context` emits in BOTH states.** This is the point of the mechanism,
 not an implementation detail: the invariants it carries — number every question,
 lead with the answer — are state-independent, and only the length clause varies
-(`terse` caps a reply at 8 lines; `normal` sets no budget). A mode that stays
+(`terse` asks for 1–2 sentences plus a flat numbered list of follow-ups;
+`normal` sets no budget). A mode that stays
 silent in its default state delivers nothing on the turns that make up most of a
 session, which is exactly how the earlier version failed. The rules themselves
 are canonical in [`AGENTS.md`](../AGENTS.md) → "Responding to the user".
