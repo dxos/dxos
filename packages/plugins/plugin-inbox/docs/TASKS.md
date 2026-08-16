@@ -455,7 +455,18 @@ Raised while driving the live mailbox. Grouped by owner, since half of these are
 
 ### plugin-inbox
 
-- [ ] **Analyze icon → sparkle, via `SystemIconButton`.** The toolbar action uses
+- [x] **Analyze icon → sparkle, via a constant AND a button preset** (2026-08-15). The framing needed
+      correcting: an AI action is DATA far more often than it is a button — 18 of the 21 sparkle uses
+      are an operation's `meta.icon` or a graph action's `properties.icon`, both plain strings that no
+      React component can constrain. So the mechanism is `AI_ACTION_ICON` in `@dxos/ui-types`
+      (React-free, so an operation definition can import it without pulling UI into a headless module),
+      with `SystemIconButton.Ai` sourcing the same constant for the 3 button call sites.
+      Analyze now uses it at all three of its sites, plus the two adjacent plugin-inbox uses whose
+      package already depended on `ui-types`.
+      LEFT DELIBERATELY: 13 literals across 10 packages. Converting each needs a new `ui-types`
+      dependency on that package — a poor trade for an icon string. The constant is there for new code
+      and for anyone already editing those files.
+      Original entry: **Analyze icon → sparkle, via `SystemIconButton`.** The toolbar action uses
       `ph--stack-simple--regular` (and `ph--stop--regular` while running); plugin-crm's Research
       already uses sparkle for the same "run AI over this subject" meaning. Promote it to the
       `SystemIconButton` primitive and apply it wherever an AI/agent action is offered — today each

@@ -5,6 +5,8 @@
 import React, { InputHTMLAttributes, forwardRef, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { AI_ACTION_ICON } from '@dxos/ui-types';
+
 import { translationKey } from '#translations';
 
 import { IconButton, type IconButtonProps } from './IconButton';
@@ -91,6 +93,26 @@ const AddIconButton = forwardRef<HTMLButtonElement, StaticPresetProps>(({ label,
 });
 
 AddIconButton.displayName = 'SystemIconButton.Add';
+
+//
+// AI
+//
+
+/**
+ * Any "run AI over this subject" affordance — analyse, research, generate, suggest.
+ *
+ * Only for BUTTONS. An operation's `meta.icon` and a graph action's `properties.icon` are strings, so
+ * they take {@link AI_ACTION_ICON} directly; this preset and that constant are the same convention
+ * reaching two kinds of call site.
+ */
+const AiIconButton = forwardRef<HTMLButtonElement, StaticPresetProps>(({ label, ...props }, forwardedRef) => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <IconButton {...props} icon={AI_ACTION_ICON} label={label ?? t('system-button.ai.label')} ref={forwardedRef} />
+  );
+});
+
+AiIconButton.displayName = 'SystemIconButton.Ai';
 
 //
 // Delete
@@ -254,6 +276,7 @@ export const SystemIconButton = {
   Bookmark: BookmarkIconButton,
   Expander: ExpanderIconButton,
   Add: AddIconButton,
+  Ai: AiIconButton,
   Delete: DeleteIconButton,
   Edit: EditIconButton,
   Close: CloseIconButton,

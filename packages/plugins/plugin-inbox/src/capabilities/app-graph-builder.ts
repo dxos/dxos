@@ -21,6 +21,7 @@ import { Connection, Cursor } from '@dxos/link';
 import { isCursorForTarget, syncTarget } from '@dxos/plugin-connector';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage, Event, Message } from '@dxos/types';
+import { AI_ACTION_ICON } from '@dxos/ui-types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -542,7 +543,7 @@ export default Capability.makeModule(
                   label: isScanning
                     ? ['stop-analyze-mailbox.label', { ns: meta.profile.key }]
                     : ['analyze-mailbox.label', { ns: meta.profile.key }],
-                  icon: isScanning ? 'ph--stop--regular' : 'ph--stack-simple--regular',
+                  icon: isScanning ? 'ph--stop--regular' : AI_ACTION_ICON,
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
                   testId: 'inbox.mailbox.analyze',
