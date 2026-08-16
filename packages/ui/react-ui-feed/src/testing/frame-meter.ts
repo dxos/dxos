@@ -40,6 +40,30 @@ export type FrameStats = {
 
 const EMPTY: FrameStats = { fps: 0, p50: 0, p95: 0, worst: 0, hitches: 0, frames: 0, duration: 0 };
 
+/**
+ * Rate (fps) at the frame standing at `quantile` of a pass, counting from the fast end — so 0.95 is
+ * the slow tail, the fifth of the pass a reader would call the stutter.
+ *
+ * `buckets` counts frames by their duration in whole milliseconds. Exported for its test: this is
+ * the number the engine's verdict rests on, and an off-by-one in the walk would flatter it.
+ */
+export const rateAtQuantile = (buckets: Uint32Array, frames: number, quantile: number): number => {
+  if (!frames) {
+    return 0;
+  }
+
+  const target = frames * quantile;
+  let seen = 0;
+  for (let ms = 0; ms < buckets.length; ++ms) {
+    seen += buckets[ms];
+    if (seen >= target) {
+      return ms > 0 ? Math.round(1000 / ms) : 0;
+    }
+  }
+
+  return 0;
+};
+
 export type FrameMeterOptions = {
   /** Names the pass in the recorded line — the story's arguments, since they are what varies. */
   label?: string;
@@ -78,19 +102,7 @@ export const useFrameMeter = ({ label }: FrameMeterOptions = {}) => {
     setStats(EMPTY);
   }, []);
 
-  /** Rate (fps) at the frame standing at `quantile` of the pass, from the slow end. */
-  const rateAt = useCallback((quantile: number): number => {
-    const target = frames.current * quantile;
-    let seen = 0;
-    for (let ms = 0; ms < MAX_BUCKET; ++ms) {
-      seen += buckets.current[ms];
-      if (seen >= target) {
-        return ms > 0 ? Math.round(1000 / ms) : 0;
-      }
-    }
-
-    return 0;
-  }, []);
+  const rateAt = useCallback((quantile: number) => rateAtQuantile(buckets.current, frames.current, quantile), []);
 
   /**
    * Ends the pass: returns its one-line summary, copies it to the clipboard, logs it, and starts a
