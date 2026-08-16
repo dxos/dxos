@@ -2,19 +2,40 @@
 // Copyright 2026 DXOS.org
 //
 
+/**
+ * Speeds are expressed in **rows**, not pixels: a feed of tall messages and one of short replies
+ * should travel at the same perceived rate, and only a row-relative unit gives that.
+ */
 export type FollowOptions = {
-  /** Ceiling on travel speed, px/s. */
+  /** Ceiling on travel speed, rows/s. */
   maxSpeed?: number;
-  /** Rate the speed ramps up and down, px/s². */
+  /** Rate the speed ramps up, rows/s². */
   acceleration?: number;
+  /** Rate the speed sheds on approach, rows/s². Lower than `acceleration` gives a longer landing. */
+  deceleration?: number;
+  /** Height of a row in px, sampled each frame so a measured list can refine it. */
+  rowHeight?: () => number;
 };
 
-const DEFAULT_MAX_SPEED = 1_600;
-const DEFAULT_ACCELERATION = 3_200;
+const DEFAULT_MAX_SPEED = 12;
+const DEFAULT_ACCELERATION = 24;
+
+/**
+ * Gentler than the ramp up, and deliberately so.
+ *
+ * Braking distance is `v²/2d`, so matching the two rates sheds full speed in three rows — a travel
+ * of any length then cruises to within a few rows of the target and stops, which reads as an abrupt
+ * halt however correct the curve is. At a third of the acceleration the landing occupies nine rows
+ * and a second and a half, which is long enough to see.
+ */
+const DEFAULT_DECELERATION = 8;
+
+const DEFAULT_ROW_HEIGHT = 120;
 
 /** Within this distance the follow has arrived; below it the animation would only jitter. */
 const ARRIVED = 0.5;
 
+/** The physics runs in pixels; rows are converted at the boundary by {@link ScrollFollower}. */
 export type VelocityStep = {
   /** Current speed, px/s. */
   velocity: number;
@@ -22,8 +43,12 @@ export type VelocityStep = {
   distance: number;
   /** Elapsed time since the last step, seconds. */
   dt: number;
+  /** Ceiling, px/s. */
   maxSpeed: number;
+  /** Ramp-up rate, px/s². */
   acceleration: number;
+  /** Approach rate, px/s². Defaults to `acceleration`. */
+  deceleration?: number;
 };
 
 /**
@@ -34,14 +59,22 @@ export type VelocityStep = {
  * still be shed at `acceleration` (`v = sqrt(2·a·d)`) — that second term is what turns the arrival
  * into a deceleration instead of a stop, and what keeps a growing target at cruise speed.
  *
- * Deceleration is rate-limited exactly as acceleration is, so a single step cannot always brake
- * within the distance the cap implies; over a whole travel it does, and the follow clamps at the
- * target rather than overshooting it.
+ * Acceleration is rate-limited so a start is gradual; **deceleration is not**, because the braking
+ * curve is already a smooth ramp to zero and easing onto it instead leaves the speed above the
+ * curve for the whole approach — the follow then runs out of distance while still moving and the
+ * arrival reads as a stop rather than a landing.
  */
-export const stepVelocity = ({ velocity, distance, dt, maxSpeed, acceleration }: VelocityStep): number => {
-  const desired = Math.min(maxSpeed, Math.sqrt(2 * acceleration * Math.max(distance, 0)));
-  const delta = acceleration * dt;
-  return velocity < desired ? Math.min(desired, velocity + delta) : Math.max(desired, velocity - delta);
+export const stepVelocity = ({
+  velocity,
+  distance,
+  dt,
+  maxSpeed,
+  acceleration,
+  deceleration = acceleration,
+}: VelocityStep): number => {
+  const braking = Math.sqrt(2 * deceleration * Math.max(distance, 0));
+  const desired = Math.min(maxSpeed, braking);
+  return velocity < desired ? Math.min(desired, velocity + acceleration * dt) : desired;
 };
 
 /**
@@ -61,6 +94,8 @@ export const stepVelocity = ({ velocity, distance, dt, maxSpeed, acceleration }:
 export class ScrollFollower {
   readonly #maxSpeed: number;
   readonly #acceleration: number;
+  readonly #deceleration: number;
+  readonly #rowHeight: () => number;
 
   #frame: number | undefined;
   #velocity = 0;
@@ -68,14 +103,26 @@ export class ScrollFollower {
 
   constructor(
     private readonly _element: HTMLElement,
-    { maxSpeed = DEFAULT_MAX_SPEED, acceleration = DEFAULT_ACCELERATION }: FollowOptions = {},
+    {
+      maxSpeed = DEFAULT_MAX_SPEED,
+      acceleration = DEFAULT_ACCELERATION,
+      deceleration = DEFAULT_DECELERATION,
+      rowHeight = () => DEFAULT_ROW_HEIGHT,
+    }: FollowOptions = {},
   ) {
     this.#maxSpeed = maxSpeed;
     this.#acceleration = acceleration;
+    this.#deceleration = deceleration;
+    this.#rowHeight = rowHeight;
   }
 
   get running(): boolean {
     return this.#frame !== undefined;
+  }
+
+  /** Current speed, rows/s. Exposed so a harness can show the ramp. */
+  get velocity(): number {
+    return this.#velocity / Math.max(this.#rowHeight(), 1);
   }
 
   /** Starts (or continues) travelling towards the bottom. Safe to call on every content change. */
@@ -118,12 +165,16 @@ export class ScrollFollower {
       return;
     }
 
+    // Rows are converted to pixels every frame rather than once, so a list whose measured rows grow
+    // (a streaming message) travels at the same rate in rows throughout.
+    const rowHeight = Math.max(this.#rowHeight(), 1);
     this.#velocity = stepVelocity({
       velocity: this.#velocity,
       distance,
       dt,
-      maxSpeed: this.#maxSpeed,
-      acceleration: this.#acceleration,
+      maxSpeed: this.#maxSpeed * rowHeight,
+      acceleration: this.#acceleration * rowHeight,
+      deceleration: this.#deceleration * rowHeight,
     });
 
     this._element.scrollTop = Math.min(target, this._element.scrollTop + this.#velocity * dt);

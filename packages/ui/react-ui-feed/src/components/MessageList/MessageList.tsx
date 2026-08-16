@@ -20,7 +20,7 @@ import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { type MessageRenderer, type SearchHit, defaultRenderer } from '../../model';
 import { type HighlightRange, HtmlItem, MarkdownItem, SelectionGroupContext, createSelectionGroup } from '../Item';
-import { ScrollFollower } from './follow';
+import { type FollowOptions, ScrollFollower } from './follow';
 
 //
 // Context
@@ -100,6 +100,8 @@ export type MessageListRootProps = PropsWithChildren<{
   stickyBottom?: boolean;
   /** How the sticky follow moves; `smooth` glides after a streaming tail. @default 'auto' */
   stickyBehavior?: ScrollToOptions['behavior'];
+  /** Travel speeds for the smooth follow, in rows/s. */
+  follow?: FollowOptions;
   overscan?: number;
   onRangeChange?: (range: MessageRange) => void;
 }>;
@@ -130,16 +132,12 @@ const MessageListRoot = ({
   estimateSize = 120,
   stickyBottom = false,
   stickyBehavior = 'auto',
+  follow: followOptions,
   overscan = 8,
   onRangeChange,
 }: MessageListRootProps) => {
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const [range, setRange] = useState<MessageRange | undefined>(undefined);
-
-  // The follow carries velocity across frames, so a target that moves with every chunk produces one
-  // continuous travel rather than an animation restarted per chunk.
-  const follower = useMemo(() => (viewport ? new ScrollFollower(viewport) : undefined), [viewport]);
-  useEffect(() => () => follower?.stop(), [follower]);
 
   const virtualizer = useVirtualizer<HTMLElement, HTMLElement>({
     count: messages.length,
@@ -150,6 +148,19 @@ const MessageListRoot = ({
     getItemKey: useCallback((index: number) => messages[index]?.id ?? index, [messages]),
     overscan,
   });
+
+  // The follow carries velocity across frames, so a target that moves with every chunk produces one
+  // continuous travel rather than an animation restarted per chunk. Speeds are in rows, so the row
+  // height comes from what the virtualizer has actually measured.
+  const rowHeight = useCallback(
+    () => (messages.length ? virtualizer.getTotalSize() / messages.length : estimateSize),
+    [virtualizer, messages.length, estimateSize],
+  );
+  const follower = useMemo(
+    () => (viewport ? new ScrollFollower(viewport, { ...followOptions, rowHeight }) : undefined),
+    [viewport, followOptions?.maxSpeed, followOptions?.acceleration, followOptions?.deceleration, rowHeight],
+  );
+  useEffect(() => () => follower?.stop(), [follower]);
 
   const mounted = virtualizer.getVirtualItems().length;
   const startIndex = virtualizer.range?.startIndex;

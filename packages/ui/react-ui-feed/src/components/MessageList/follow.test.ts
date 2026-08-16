@@ -34,6 +34,15 @@ describe('stepVelocity', () => {
     expect(step(near, 5)).toBeLessThan(near);
   });
 
+  test('brakes onto the curve rather than easing towards it', () => {
+    // Rate-limiting the slow-down would leave the speed above what the remaining distance can shed,
+    // and the follow would reach the target still moving — an abrupt stop instead of a landing.
+    for (const distance of [1, 10, 100, 400]) {
+      const velocity = step(maxSpeed, distance);
+      expect((velocity * velocity) / (2 * acceleration)).toBeLessThanOrEqual(distance + 1e-6);
+    }
+  });
+
   test('arrives at rest', () => {
     expect(step(0, 0)).toEqual(0);
   });
@@ -46,17 +55,22 @@ describe('stepVelocity', () => {
     let position = 0;
     const target = 4_000;
     const speeds: number[] = [];
+    const steps: number[] = [];
     for (let index = 0; index < 600 && target - position > 0.5; index++) {
       velocity = step(velocity, target - position);
-      position = Math.min(target, position + velocity * frame);
+      const next = Math.min(target, position + velocity * frame);
+      steps.push(next - position);
+      position = next;
       speeds.push(velocity);
     }
 
     expect(position).toBeCloseTo(target, 0);
     expect(Math.max(...speeds)).toBeLessThanOrEqual(maxSpeed);
-    // Reached the ceiling in the middle, and shed most of it by the end.
     expect(Math.max(...speeds)).toBeGreaterThan(maxSpeed * 0.9);
-    expect(speeds[speeds.length - 1]).toBeLessThan(maxSpeed / 4);
+    // Landing measured in pixels travelled, not as a fraction of the ceiling: the last frame before
+    // arrival is what the eye reads as a glide or a stop, and a couple of pixels is a glide.
+    expect(steps[steps.length - 1]).toBeLessThan(4);
+    expect(steps[0]).toBeLessThan(steps[Math.floor(steps.length / 2)]);
   });
 
   test('a moving target keeps it at cruise speed', () => {
@@ -66,5 +80,26 @@ describe('stepVelocity', () => {
       velocity = step(velocity, 5_000);
     }
     expect(velocity).toEqual(maxSpeed);
+  });
+});
+
+describe('deceleration', () => {
+  const at = (distance: number, deceleration: number) =>
+    stepVelocity({ velocity: maxSpeed, distance, dt: frame, maxSpeed, acceleration, deceleration });
+
+  test('a gentler rate starts braking further out', () => {
+    // Braking distance is v²/2d: at a third of the rate the follow is already slowing where the
+    // matched rate is still at full speed, which is what makes the landing visible.
+    // 800px is inside the gentler rate's runway (v²/2d = 1200px) and outside the matched one's
+    // (400px), so the two disagree exactly where it matters.
+    const distance = 800;
+    expect(at(distance, acceleration)).toEqual(maxSpeed);
+    expect(at(distance, acceleration / 3)).toBeLessThan(maxSpeed);
+  });
+
+  test('defaults to the acceleration when unset', () => {
+    expect(stepVelocity({ velocity: maxSpeed, distance: 100, dt: frame, maxSpeed, acceleration })).toEqual(
+      at(100, acceleration),
+    );
   });
 });
