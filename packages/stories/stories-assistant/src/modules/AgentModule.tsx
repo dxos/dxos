@@ -32,15 +32,21 @@ const blockText = (block: ContentBlock.Any): string => {
 };
 
 /**
- * A failed tool result the agent immediately retried and got right. The SDK's `Read` wants an
- * absolute path, so nearly every turn carries one of these; showing each in full buries the answer.
+ * A failed tool result the agent immediately retried and got right — collapsed because the SDK's
+ * `Read` wants an absolute path, so nearly every turn carries one. Scoped to the same exchange
+ * (`segment`): a success in a later turn must not hide an unrelated earlier failure or a denial.
  */
-const isSuperseded = (block: ContentBlock.Any, blocks: readonly ContentBlock.Any[], index: number): boolean =>
+const isSuperseded = (
+  block: ContentBlock.Any,
+  rows: readonly { block: ContentBlock.Any; segment: number }[],
+  index: number,
+): boolean =>
   block._tag === 'toolResult' &&
   block.error !== undefined &&
-  blocks
+  rows
     .slice(index + 1)
-    .some((later) => later._tag === 'toolResult' && later.name === block.name && later.error === undefined);
+    .filter((row) => row.segment === rows[index].segment)
+    .some(({ block: later }) => later._tag === 'toolResult' && later.name === block.name && later.error === undefined);
 
 /** Colour by kind so a denied tool call is obvious without reading it. */
 const blockClass = (block: ContentBlock.Any): string => {
@@ -79,17 +85,24 @@ export const AgentModule = () => {
   }, [turns, running]);
 
   const rows = useMemo(() => {
-    const flat = turns.flatMap((turn) => turn.blocks.map((block) => ({ role: turn.role, block })));
-    const blocks = flat.map(({ block }) => block);
+    // Segments delimit one user prompt and the exchange it produced; supersede-collapsing must not
+    // cross them.
+    let segment = 0;
+    const flat = turns.flatMap((turn) => {
+      if (turn.role === 'user') {
+        segment += 1;
+      }
+      return turn.blocks.map((block) => ({ role: turn.role, block, segment }));
+    });
     let previousRole: string | undefined;
     return (
       flat
         // A reasoning block with no text rendered as a bare role header with nothing under it.
         .filter(({ block }) => blockText(block).trim().length > 0)
-        .map(({ role, block }, index) => {
+        .map(({ role, block }, index, filtered) => {
           const label = role === previousRole ? undefined : role;
           previousRole = role;
-          return { role: label, block, superseded: isSuperseded(block, blocks, index) };
+          return { role: label, block, superseded: isSuperseded(block, filtered, index) };
         })
     );
   }, [turns]);
