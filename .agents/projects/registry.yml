@@ -85,7 +85,7 @@ projects:
     summary: Extract /project + the task-planning skill into a distributable Claude Code plugin (`dx`) usable in any repo; phase 2 swaps the file registry for the DXOS Composer MCP server.
     tasks: .agents/projects/claude-plugins/TASKS.md
     design: .agents/projects/claude-plugins/DESIGN.md
-    prs: []
+    prs: [12618, 12620, 12622]
     resume: 'Phase 1 BUILT and dogfooded in-repo. Plugin at tools/claude/plugins/dxos-project (namespace `dx` -> /dx:project; bare /project also matches), marketplace manifest at .claude-plugin/marketplace.json (name `dxos`), enabled here via extraKnownMarketplaces + enabledPlugins. The repo-local .claude/hooks/track.sh and .claude/commands/project.md are DELETED and the skill MOVED out of .agents/skills — this repo now consumes the plugin. KEY DESIGN: every directive states the OPERATION only and resolve_backend appends a BACKEND: line stating the MECHANISM, so phase 2 (Composer MCP) is a one-function swap rather than a rewrite of seven directives plus the skill. Verified by feeding JSON to the hook: all verbs dispatch, both invocation forms fire, prose/`/projects`/second-line are inert, and a scratch `git init` repo with no .agents/ gets the missing-registry branch plus a working DX_PROJECT_REGISTRY override. NOT yet verified: the live plugin path (marketplace resolution, ${CLAUDE_PLUGIN_ROOT}, /dx:project autocomplete) needs a session restart — that is the next action. Then decide whether /mode joins the plugin.'
   - name: lenses
     status: active

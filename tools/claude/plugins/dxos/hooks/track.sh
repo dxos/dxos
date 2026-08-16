@@ -12,6 +12,9 @@
 #   new <name> [summary]  -> add an active entry + scaffold docs
 #   end <name>            -> move the entry to ended
 #   track <text>          -> record <text> in the active TASKS.md
+#   history [all|<name>]  -> table of the PRs a project has produced
+#   spawn <N...>          -> task chips for the numbered open tasks
+#   help                  -> table of the verbs
 #   hydrate | checkpoint  -> checkpoint the current project
 #   resume [name]         -> reload a project and report (rehydrate = alias)
 #
@@ -91,6 +94,18 @@ emit_track() {
   emit "$(printf 'TASK-PLANNING DIRECTIVE: `/dxos:project track`. Record this follow-up in the TASKS.md of the current unit of work (package or directory) per the task-planning skill — do NOT use a background task chip. Item: "%s". Confirm in one short line.' "$1")"
 }
 
+emit_history() {
+  emit "$(printf 'TASK-PLANNING PROJECT DIRECTIVE: `/dxos:project history` — args: "%s". Report the PRs a project has produced, newest first. Default to the CURRENT project (resolve it exactly as for bare `/dxos:project`); args `all` covers every project belonging to the current user (`whoami`); a bare name restricts to that project. The registry`s `prs` list is the SOURCE OF TRUTH for which PRs count as tracked — never enumerate the branch`s commits or the repo`s PR list instead, since those include work this project never claimed. Enrich each number with `gh pr view <n> --json number,title,author,mergedAt,createdAt,state` (one call per PR, or `gh pr list` filtered if that is fewer round-trips). Render ONE markdown table, columns: # | PR (as a markdown link to the PR URL) | date (merged date, else created, ISO yyyy-mm-dd) | user (the GitHub author login) | summary. The summary is ONE sentence in your own words describing what the PR changed — derive it from the title and the project ledger, never paste the raw title if it is uninformative. Add a `project` column only when covering more than one project. If `gh` is unavailable or unauthenticated, say so in one line and still render the table with the PR numbers and whatever the registry knows, leaving date and user blank rather than guessing. If the project has no `prs`, say so in one line and stop.' "$1")"
+}
+
+emit_help() {
+  emit 'TASK-PLANNING PROJECT DIRECTIVE: `/dxos:project help` — render the verbs as a markdown table with columns: command | description. Rows, in this order and no others: `/dxos:project` (status of the current project — worktree, branch, docs, PRs, uncommitted files, next action); `/dxos:project list [all]` (numbered table of active projects; reply with a row number to resume — `all` covers every user); `/dxos:project tasks [all|<phase>]` (open `- [ ]` items from the current project, numbered and grouped by phase); `/dxos:project spawn <N...>` (spin the numbered open tasks out into background task chips); `/dxos:project history [all]` (table of the PRs the project produced — date, author, one-sentence summary); `/dxos:project new <name>` (register a project and scaffold its TASKS.md + DESIGN.md); `/dxos:project end <name>` (move the entry to `ended`, recording final status); `/dxos:project track <text>` (record a follow-up in the active TASKS.md — never a task chip); `/dxos:project hydrate` (checkpoint before stopping or opening a PR; alias `checkpoint`); `/dxos:project resume [name]` (reload project state at the start of a session). Then add ONE line noting that bare `/project` also matches every verb, and ONE line naming the store from the BACKEND line below. Add nothing else — no preamble, no numbered options, no next-action suggestion.'
+}
+
+emit_spawn() {
+  emit "$(printf 'TASK-PLANNING PROJECT DIRECTIVE: `/dxos:project spawn` — args: "%s". Spin the named open task(s) out into background task chips. Resolve the CURRENT project exactly as for bare `/dxos:project`, read its TASKS.md, and number the open `- [ ]` items 1..N in the SAME order `/dxos:project tasks` renders them — the numbering must agree, since the user is quoting a row they just saw. The args are those row numbers (space or comma separated, e.g. `1 3`); with NO args, do not guess — render the numbered open list and ask which. For each selected item call the spawn-task tool once, with: a `title` that is a short imperative phrase from the item headline; a `prompt` that STANDS ALONE — the agent receiving it has none of this conversation, so include the repo-relative TASKS.md path, the project name, the item headline and every sub-bullet verbatim, and any file paths, PR numbers or commands the item references; and a `tldr` of one or two plain sentences. Do NOT start the work yourself and do NOT check the item off — a chip is a handoff, and the item stays open until the spawned session finishes it. Then confirm in one line per chip, naming the row number and title. If a row number does not exist, say so and list the valid range rather than spawning something adjacent. NOTE the standing rule this does NOT break: a follow-up you discover mid-task still belongs in TASKS.md via `track`, never a chip — `spawn` only ever acts on an item ALREADY recorded there.' "$1")"
+}
+
 emit_hydrate() {
   emit 'TASK-PLANNING HYDRATE: `/dxos:project hydrate`. Follow the task-planning skill "Project handoff" -> hydrate: identify the CURRENT project (the single `active` entry for the current user; if more than one, ask which), reconcile its TASKS.md (check off done, note next step on in-progress items), update its `resume` field + the doc resume pointer, push decisions into its DESIGN.md and durable direction to memory, run git status and account for EVERY uncommitted file, then confirm the checkpoint in one short block (done / in-progress / next / uncommitted).'
 }
@@ -120,6 +135,9 @@ if [ -n "${raw:-}" ]; then
     new) emit_new "$rest" ;;
     end) emit_end "$rest" ;;
     track) emit_track "$rest" ;;
+    history) emit_history "$(printf '%s' "$rest" | tr -cd 'a-zA-Z0-9 -')" ;;
+    spawn) emit_spawn "$(printf '%s' "$rest" | tr -cd '0-9, ')" ;;
+    help) emit_help ;;
     hydrate | checkpoint) emit_hydrate ;;
     resume | rehydrate)
       name=$(printf '%s' "$rest" | grep -ioE '^[a-z0-9][a-z0-9-]*' || true)
@@ -130,7 +148,7 @@ if [ -n "${raw:-}" ]; then
       fi
       ;;
     *)
-      printf 'TASK-PLANNING: `/dxos:project %s` — verb not recognized (valid: bare | list [all] | tasks [all] | new <name> | end <name> | track <text> | hydrate | resume [name]). Ask which was meant.\n' "$verb"
+      printf 'TASK-PLANNING: `/dxos:project %s` — verb not recognized (valid: bare | list [all] | tasks [all] | new <name> | end <name> | track <text> | history [all] | spawn <N...> | help | hydrate | resume [name]). Ask which was meant.\n' "$verb"
       ;;
   esac
 fi

@@ -53,6 +53,13 @@
     each project has a `TASKS.md` + `DESIGN.md`.
   * `/dxos:project track <text>` — record a follow-up in the active `TASKS.md`
     (never a background task chip).
+  * `/dxos:project spawn <N...>` — spin the numbered open tasks (same numbering
+    `tasks` renders) out into background task chips. This is the ONE sanctioned
+    use of a chip; a newly discovered follow-up still goes to `track`.
+  * `/dxos:project history [all]` — table of the PRs a project produced (date,
+    author, one-sentence summary), sourced from the registry entry's `prs` and
+    enriched via `gh`.
+  * `/dxos:project help` — table of every verb and what it does.
   * `/dxos:project hydrate` (alias `checkpoint`) — checkpoint before stopping or
     opening a PR.
   * `/dxos:project resume [name]` — reload state at session start, always in the
