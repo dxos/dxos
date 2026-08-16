@@ -19,14 +19,14 @@ import { ReviewCapabilities } from '#types';
 
 import { MAIN_BRANCH, commitToSelection, createTimelineModel } from './timeline';
 
-export type ObjectHiStoryArgs = AppSurface.ObjectArticleProps<History.VersionedObject>;
+export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.VersionedObject>;
 
 /**
  * Companion panel: git-graph timeline of an object's checkpoints, branch forks, and merges.
  * Clicking a checkpoint time-travels the object's surfaces; clicking a branch fork switches to it.
  * Gated per-type by a `ReviewCapabilities.HistoryProvider` contribution.
  */
-export const ObjectHistory = forwardRef<HTMLElement, ObjectHiStoryArgs>(({ role, subject }, forwardedRef) => {
+export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role, subject }, forwardedRef) => {
   const { t } = useTranslation(meta.profile.key);
   const providers = useCapabilities(ReviewCapabilities.HistoryProvider);
   const provider = providers.find(({ id }) => id === Obj.getTypename(subject));

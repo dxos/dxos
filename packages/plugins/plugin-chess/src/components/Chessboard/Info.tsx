@@ -20,7 +20,7 @@ export type InfoProps = ThemedClassName<
     orientation?: Player;
     onOrientationChange?: (orientation: Player) => void;
     onClose?: () => void;
-  } & Pick<HiStoryArgs, 'min' | 'max' | 'onSelect'>
+  } & Pick<HistoryProps, 'min' | 'max' | 'onSelect'>
 >;
 
 export const Info = ({ classNames, orientation = 'white', onOrientationChange, onClose, ...props }: InfoProps) => {
@@ -79,14 +79,14 @@ Info.displayName = INFO_NAME;
 // History
 //
 
-type HiStoryArgs = ThemedClassName<{
+type HistoryProps = ThemedClassName<{
   model: ExtendedChessModel;
   min?: number;
   max?: number;
   onSelect?: (index: number) => void;
 }>;
 
-const History = ({ classNames, model, min, max, onSelect }: HiStoryArgs) => {
+const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   const { t } = useTranslation(meta.profile.key);
   const moveIndex = useAtomValue(model.moveIndex);
   const label = model.game.isGameOver()
