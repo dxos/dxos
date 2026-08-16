@@ -140,3 +140,91 @@ inside a process fiber. Substituting the SDK there is best done by making
 
 **Decision: do not build an `AgentService` implementation until the render cause
 is known.** The cheap diagnostic decides whether M3c is an afternoon or a project.
+
+## M3c — factoring the turn producer (sketch, 2026-08-15)
+
+### The seam is one call
+
+`agent-process.ts:265` is the only place the process produces a turn:
+
+```ts
+yield * session.createRequest({ prompt, system, mcpServers });
+```
+
+`AiSession.Session.createRequest` reads history from the feed, gathers skills and
+context objects, builds an `AiRequest.Request` with
+`onOutput: (message) => appendTurnMessage(message)` (which is the `Feed.append`),
+and returns `Effect<Message.Message[], RunError, RunRequirements>`.
+
+Everything else in `agent-process.ts` (~840 lines) is agent-generic and needs no
+change: spawn-annotation resolution (feed, instructions), the input queue,
+`AlarmManager`, `ToolCallManager` redelivery, delegation strategy, end-request
+skill hooks, `Trace` begin/end, durable cells, hydration. All of `AgentService.ts`
+(~270 lines) is generic too: session cache, model/provider/instructions change
+detection, spawn/terminate, hydrate.
+
+**So the earlier "~1,100 lines to reimplement" was wrong. Nothing is
+reimplemented; one dependency is inverted.**
+
+### Proposed factoring
+
+```ts
+/** Produces one turn: writes each message to the feed and returns what it produced. */
+export interface TurnProducer {
+  createRequest(params: {
+    prompt: string | ContentBlock.Any[];
+    system?: string;
+    mcpServers?: McpServer.Config[];
+  }): Effect.Effect<Message.Message[], unknown, Database.Service>;
+}
+```
+
+`AiSession.Session` already satisfies this structurally. `AgentServiceOptions`
+gains `makeTurnProducer?: (args: { feed; runtime; instructions }) => TurnProducer`,
+defaulting to today's `new AiSession.Session(...)`. `agent-process.ts` changes at
+two lines: construction, and the call site keeps its shape.
+
+The Claude producer then wraps what already exists:
+
+```ts
+Host.Session.run({ prompt, cwd, resume }) // Stream<Message.Message>
+  -> Feed.append per message   (same contract as onOutput)
+  -> return the collected messages
+```
+
+The SDK's own `resume` replaces history replay, so `getHistory()` is not needed.
+
+### Contract a producer must honour
+
+1. Append each produced message to the feed as it goes — the thread renders from
+   the feed (see the RESOLVED section in TASKS.md).
+2. Return the produced messages.
+3. Be interruptible: the process wraps the call in `Effect.onExit` and cancels it.
+4. Optionally emit `Trace` events for streaming; absent them the turn appears when
+   it completes rather than incrementally.
+
+### What does NOT carry over, and needs a decision
+
+1. **Skills / operations.** `AiSession` binds DXOS skills and operations as tools.
+   The Claude SDK cannot call them directly — but it accepts `mcpServers`, and
+   this repo already ships `@dxos/mcp-server` (`dx mcp serve`). Bridging DXOS
+   operations to the SDK through MCP is the obvious path and is its own piece of
+   work. Until then an SDK-backed agent has the SDK's tools only.
+2. **Instructions.** `AiSession` takes `Instructions` objects; the SDK takes
+   `systemPrompt.append`. Mapping is easy but lossy (no ref, no reactivity).
+3. **Alarms / tool backgrounding / delegation.** These assume tools that suspend
+   and resume across process reloads. The SDK runs its tools inside its own loop,
+   so `ToolCallManager` redelivery and `AlarmManager` are inert for it — not
+   broken, just unused.
+4. **Compaction.** `SUMMARY_THRESHOLD` and the summarizer belong to `AiRequest`;
+   the SDK compacts on its own. Two policies, neither aware of the other.
+
+### Estimate
+
+The factoring itself is small — an interface, one option, two edited lines, plus
+a Claude producer of maybe 60 lines wrapping `Host.Session`. The work is in (1):
+without the MCP bridge, an SDK-backed agent in Composer answers but cannot use
+DXOS operations, which may or may not be acceptable for a first cut.
+
+**Open question for burdon: is a first cut with SDK-only tools useful, or does the
+MCP bridge have to land with it?**
