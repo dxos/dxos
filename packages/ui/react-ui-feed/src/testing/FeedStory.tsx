@@ -409,9 +409,9 @@ const StatusBar = ({ hits, query, selected, copied, streaming }: StatusBarProps)
   const { range, currentIndex, count, scrollToBottom } = useMessageList('StatusBar');
 
   return (
-    // The last two cells size to their content: the frame readout is the longest thing here, and an
-    // equal-width column wrapped it onto a second line, which an `h-6` bar renders as clipped.
-    <div className='h-6 grid grid-cols-[repeat(5,minmax(0,1fr))_auto_auto] items-center gap-4 px-2 text-xs text-description tabular-nums whitespace-nowrap'>
+    // The frame readout gets a double-width column: it is the longest cell, and an equal share
+    // wrapped it onto a second line, which an `h-6` bar renders as clipped.
+    <div className='h-6 w-full overflow-hidden grid grid-cols-[1fr_1fr_1fr_1fr_1fr_2fr_1fr] items-center gap-4 px-2 text-xs text-description tabular-nums'>
       <span>{range ? `${range.startIndex}–${range.endIndex}` : ''}</span>
       <span>
         {currentIndex} / {count}
@@ -441,20 +441,14 @@ const FrameMeter = () => {
   return (
     <button
       type='button'
-      className='text-left tabular-nums whitespace-nowrap'
+      className='grid grid-cols-3 gap-1 text-left tabular-nums whitespace-nowrap overflow-hidden'
       title={`${frames} frames sampled — click to reset`}
       data-testid='feed.frames'
       onClick={reset}
     >
-      <span className={mx(fps && fps < 50 && 'text-warning-text')}>{fps} fps</span>
-      <span className='opacity-70'>
-        {' · '}
-        {worst}ms
-      </span>
-      <span className={mx('opacity-70', hitches > 0 && 'text-warning-text opacity-100')}>
-        {' · '}
-        {hitches} hitches
-      </span>
+      <span className={mx('flex justify-end', fps && fps < 50 && 'text-warning-text')}>{fps} fps</span>
+      <span className='flex justify-end opacity-70'>{worst}ms</span>
+      <span className={mx('opacity-70', hitches > 0 && 'text-warning-text opacity-100')}>{hitches}</span>
     </button>
   );
 };
