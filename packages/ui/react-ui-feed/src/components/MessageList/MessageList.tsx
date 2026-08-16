@@ -81,7 +81,6 @@ export type MessageListRootProps = PropsWithChildren<{
   registry?: XmlWidgetRegistry;
   /**
    * Chrome wrapper; receives the item as `children`. Defaults to a bare frame.
-   *
    * Chrome must be layout-stable: a control that changes a row's height on hover or focus
    * re-triggers measurement, and a pointer travelling down the list mid-scroll then shifts every
    * row below it. Toggle such affordances with opacity, or take them out of flow.
@@ -325,7 +324,7 @@ const MessageListRoot = ({
     }
 
     follower.start();
-  }, [follower, stickyBottom, stickyBehavior, messages.length, totalSize, scrollToBottom, viewport]);
+  }, [viewport, follower, stickyBottom, stickyBehavior, messages.length, totalSize, scrollToBottom]);
 
   // Cmd/Ctrl + Arrow jumps to the first or last message; plain arrows stay with the scroll container
   // and with whatever the reader is interacting with inside an item. Bound imperatively to the

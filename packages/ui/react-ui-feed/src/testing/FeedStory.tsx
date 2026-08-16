@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { IconButton, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Minimap, type MinimapMarker } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -249,8 +250,11 @@ export const FeedStory = ({
           </Toolbar.Root>
         </Panel.Toolbar>
 
-        <Panel.Content asChild>
+        {/* Panel.Content is itself the two-column grid — the rail sits beside the viewport without
+            another box in the height chain. */}
+        <Panel.Content classNames='grid grid-cols-[1fr_2rem] overflow-hidden'>
           <MessageList.Viewport classNames='dx-document' />
+          <FeedMinimap messages={messages} />
         </Panel.Content>
 
         <Panel.Statusbar>
@@ -258,6 +262,56 @@ export const FeedStory = ({
         </Panel.Statusbar>
       </Panel.Root>
     </MessageList.Root>
+  );
+};
+
+/** Beyond this the rail is taller than any viewport, so markers are sampled rather than dropped. */
+const MARKER_LIMIT = 48;
+
+/**
+ * The minimap over a feed: one tick per prompt, in message-index space.
+ *
+ * `MinimapMarker.range` is "the document's own position space", which for a feed is the message
+ * index — so a marker is `[index, index + 1)` and the visible range is the mounted window. No
+ * pixel offsets are involved, which is what makes this survive rows whose heights are still
+ * estimates.
+ */
+const FeedMinimap = ({ messages }: { messages: readonly Message.Message[] }) => {
+  const { range, scrollToIndex } = useMessageList('FeedMinimap');
+
+  const markers = useMemo<MinimapMarker[]>(() => {
+    const prompts = messages
+      .map((message, index) => ({ message, index }))
+      .filter(({ message }) => message.sender.role === 'user');
+    // The rail sizes itself from the marker count, so a long feed is sampled evenly to keep it
+    // within a screen; every tick still points at a real message.
+    const step = Math.max(1, Math.ceil(prompts.length / MARKER_LIMIT));
+    return prompts
+      .filter((_, position) => position % step === 0)
+      .map(({ message, index }) => ({
+        id: message.id,
+        title: `#${index} · ${message.sender.name ?? message.sender.role}`,
+        description: Message.extractText(message).split('\n').find(Boolean)?.slice(0, 160),
+        range: { from: index, to: index + 1 },
+      }));
+  }, [messages]);
+
+  const handleSelect = useCallback(
+    (marker: MinimapMarker) => scrollToIndex(marker.range.from, { align: 'start', behavior: 'smooth' }),
+    [scrollToIndex],
+  );
+
+  if (!markers.length) {
+    return <div />;
+  }
+
+  return (
+    <Minimap
+      classNames='justify-self-center self-start'
+      markers={markers}
+      visibleRange={range && { from: range.startIndex, to: range.endIndex + 1 }}
+      onSelect={handleSelect}
+    />
   );
 };
 
@@ -342,14 +396,14 @@ const StatusBar = ({ hits, query, selected, copied, streaming }: StatusBarProps)
   const { range, count, scrollToBottom } = useMessageList('StatusBar');
 
   return (
-    <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-description'>
+    <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-description tabular-nums'>
       <button
         type='button'
         data-testid='feed.range'
         className='text-left'
         onClick={() => scrollToBottom({ behavior: 'smooth' })}
       >
-        {range ? `${range.startIndex}–${range.endIndex} of ${count}` : count}
+        {range ? `${range.startIndex}–${range.endIndex}/${count}` : count}
       </button>
       <span>{selected} selected</span>
       {query ? <span>{hits.length} hits</span> : <span />}

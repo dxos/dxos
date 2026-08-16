@@ -21,6 +21,9 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-components"
+    },
+    {
       "path": "../ui-editor"
     },
     {
