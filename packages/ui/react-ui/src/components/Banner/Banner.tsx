@@ -18,19 +18,26 @@ import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { Column } from '../Column';
 import { Icon } from '../Icon';
-import { messageIcons } from './message-icons';
 
-type MessageRootProps = PropsWithChildren<{
+const bannerIcons: Record<MessageValence, string> = {
+  success: 'ph--check-circle--duotone',
+  info: 'ph--info--duotone',
+  warning: 'ph--warning--duotone',
+  error: 'ph--warning-circle--duotone',
+  neutral: 'ph--info--duotone',
+};
+
+type BannerRootProps = PropsWithChildren<{
   valence?: MessageValence;
   titleId?: string;
   descriptionId?: string;
-  /** Overrides the default valence icon; consumed by {@link MessageTitle}. */
+  /** Overrides the default valence icon; consumed by {@link BannerTitle}. */
   icon?: string;
 }>;
 
 type MessageContextValue = { titleId?: string; descriptionId: string; valence: MessageValence; icon?: string };
 
-const MESSAGE_NAME = 'Message';
+const BANNER_NAME = 'Banner';
 
 // CSS custom properties for valence color inheritance — consumed by Button variant='valence'.
 // Extending CSSProperties so entries satisfy the style prop type without a cast at the use site.
@@ -68,7 +75,7 @@ const valenceVars: Record<MessageValence, ValenceCSSVars> = {
   },
 };
 
-const [MessageProvider, useMessageContext] = createContext<MessageContextValue>(MESSAGE_NAME);
+const [MessageProvider, useMessageContext] = createContext<MessageContextValue>(BANNER_NAME);
 
 //
 // Root
@@ -76,42 +83,42 @@ const [MessageProvider, useMessageContext] = createContext<MessageContextValue>(
 
 /**
  * Headless: renders no DOM element — only the shared message context (ids, valence, icon).
- * The element, with its role/aria wiring, valence CSS variables and surface, is `Message.Content`.
+ * The element, with its role/aria wiring, valence CSS variables and surface, is `Banner.Content`.
  */
-const MessageRoot = ({
+const BannerRoot = ({
   valence = 'neutral',
   titleId: propsTitleId,
   descriptionId: propsDescriptionId,
   icon,
   children,
-}: MessageRootProps) => {
+}: BannerRootProps) => {
   const titleId = useId('message__title', propsTitleId);
   const descriptionId = useId('message__description', propsDescriptionId);
 
   return <MessageProvider {...{ titleId, descriptionId, valence, icon }}>{children}</MessageProvider>;
 };
 
-MessageRoot.displayName = MESSAGE_NAME;
+BannerRoot.displayName = BANNER_NAME;
 
 //
 // Content
 //
 
-const MESSAGE_CONTENT_NAME = 'Message.Content';
+const BANNER_CONTENT_NAME = 'Banner.Content';
 
 // Narrowed to the composable surface because the element is a `Column.Root`, which only accepts
 // `classNames`/`role`/`style` (see `ComposableProps`).
-type MessageContentProps = SlottableProps<{ elevation?: Elevation }>;
+type BannerContentProps = SlottableProps<{ elevation?: Elevation }>;
 
 /**
  * The message's element: a `Column` grid carrying the role/aria wiring, the valence CSS variables
- * and surface — so `Message.Title` places its icon in the gutter and `Message.Body` aligns to the
- * content track. Required inside `Message.Root`, which renders no DOM element.
+ * and surface — so `Banner.Title` places its icon in the gutter and `Banner.Body` aligns to the
+ * content track. Required inside `Banner.Root`, which renders no DOM element.
  */
-const MessageContent = forwardRef<HTMLDivElement, MessageContentProps>(
+const BannerContent = forwardRef<HTMLDivElement, BannerContentProps>(
   ({ asChild, classNames, role, style, children, elevation: propsElevation, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { titleId, descriptionId, valence } = useMessageContext(MESSAGE_CONTENT_NAME);
+    const { titleId, descriptionId, valence } = useMessageContext(BANNER_CONTENT_NAME);
     const elevation = useElevationContext(propsElevation);
     // Spread rather than inline attributes: `Column.Root`'s composable surface does not declare
     // aria props, and assignability (unlike JSX literal attributes) admits them.
@@ -124,7 +131,7 @@ const MessageContent = forwardRef<HTMLDivElement, MessageContentProps>(
         {...aria}
         role={role ?? (valence === 'neutral' ? 'paragraph' : 'alert')}
         style={{ ...valenceVars[valence], ...style }}
-        classNames={tx('message.content', { valence, elevation }, classNames)}
+        classNames={tx('banner.content', { valence, elevation }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -133,33 +140,33 @@ const MessageContent = forwardRef<HTMLDivElement, MessageContentProps>(
   },
 );
 
-MessageContent.displayName = MESSAGE_CONTENT_NAME;
+BannerContent.displayName = BANNER_CONTENT_NAME;
 
 //
 // Title
 //
 
-const MESSAGE_TITLE_NAME = 'Message.Title';
+const BANNER_TITLE_NAME = 'Banner.Title';
 
-type MessageTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
+type BannerTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
   icon?: string;
   onClose?: () => void;
 };
 
-const MessageTitle = forwardRef<HTMLDivElement, MessageTitleProps>(
+const BannerTitle = forwardRef<HTMLDivElement, BannerTitleProps>(
   ({ classNames, children, icon: iconProp, onClose }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { tx } = useThemeContext();
-    const { titleId, valence, icon: contextIcon } = useMessageContext(MESSAGE_TITLE_NAME);
-    const icon = iconProp ?? contextIcon ?? messageIcons[valence];
+    const { titleId, valence, icon: contextIcon } = useMessageContext(BANNER_TITLE_NAME);
+    const icon = iconProp ?? contextIcon ?? bannerIcons[valence];
     return (
-      <Column.Row classNames={tx('message.header', {}, classNames)} ref={forwardedRef}>
+      <Column.Row classNames={tx('banner.header', {}, classNames)} ref={forwardedRef}>
         {icon && (
           <Column.Block>
             <Icon icon={icon} />
           </Column.Block>
         )}
-        <h2 className={tx('message.title', {}, classNames)} id={titleId}>
+        <h2 className={tx('banner.title', {}, classNames)} id={titleId}>
           {children}
         </h2>
         {onClose && (
@@ -179,44 +186,42 @@ const MessageTitle = forwardRef<HTMLDivElement, MessageTitleProps>(
   },
 );
 
-MessageTitle.displayName = MESSAGE_TITLE_NAME;
+BannerTitle.displayName = BANNER_TITLE_NAME;
 
 //
 // Body
 //
 
-const MESSAGE_BODY_NAME = 'Message.Body';
+const BANNER_BODY_NAME = 'Banner.Body';
 
-type MessageBodyProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
+type BannerBodyProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
   asChild?: boolean;
 };
 
-const MessageBody = forwardRef<HTMLParagraphElement, MessageBodyProps>(
+const BannerBody = forwardRef<HTMLParagraphElement, BannerBodyProps>(
   ({ asChild, classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { descriptionId } = useMessageContext(MESSAGE_BODY_NAME);
+    const { descriptionId } = useMessageContext(BANNER_BODY_NAME);
     const Comp = asChild ? Slot : Primitive.p;
     return (
-      <Comp {...props} className={tx('message.body', {}, classNames)} id={descriptionId} ref={forwardedRef}>
+      <Comp {...props} className={tx('banner.body', {}, classNames)} id={descriptionId} ref={forwardedRef}>
         {children}
       </Comp>
     );
   },
 );
 
-MessageBody.displayName = MESSAGE_BODY_NAME;
+BannerBody.displayName = BANNER_BODY_NAME;
 
 //
-// Message
+// Banner
 //
 
-export const Message = {
-  Root: MessageRoot,
-  Content: MessageContent,
-  Title: MessageTitle,
-  Body: MessageBody,
+export const Banner = {
+  Root: BannerRoot,
+  Content: BannerContent,
+  Title: BannerTitle,
+  Body: BannerBody,
 };
 
-export const Callout = Message;
-
-export type { MessageBodyProps, MessageContentProps, MessageRootProps, MessageTitleProps };
+export type { BannerBodyProps, BannerContentProps, BannerRootProps, BannerTitleProps };

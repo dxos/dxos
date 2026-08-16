@@ -19,7 +19,7 @@ import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { type Space, getSpace } from '@dxos/react-client/echo';
-import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
+import { Banner, Card, Icon, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
@@ -498,9 +498,9 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         })}
       </div>
     ) : hasSuggestions ? null : (
-      <Message.Root>
-        <Message.Content classNames='m-trim-md'>
-          <Message.Body>
+      <Banner.Root>
+        <Banner.Content classNames='m-trim-md'>
+          <Banner.Body>
             <span>
               <Trans
                 {...{
@@ -513,9 +513,9 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 }}
               />
             </span>
-          </Message.Body>
-        </Message.Content>
-      </Message.Root>
+          </Banner.Body>
+        </Banner.Content>
+      </Banner.Root>
     );
 
   return (

@@ -5,29 +5,29 @@
 import { messageValence, mx } from '@dxos/ui-theme';
 import { type ComponentFunction, type Elevation, type MessageValence, type Theme } from '@dxos/ui-types';
 
-export type MessageStyleProps = {
+export type BannerStyleProps = {
   valence?: MessageValence;
   elevation?: Elevation;
 };
 
 // The grid itself comes from `Column.Root`; this fragment only supplies the valence surface.
-const content: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
+const content: ComponentFunction<BannerStyleProps> = ({ valence }, etc) => {
   return mx('rounded-sm', messageValence(valence), etc);
 };
 
-const header: ComponentFunction<MessageStyleProps> = (_, etc) => {
+const header: ComponentFunction<BannerStyleProps> = (_, etc) => {
   return mx('items-center', etc);
 };
 
-const title: ComponentFunction<MessageStyleProps> = (_, etc) => {
+const title: ComponentFunction<BannerStyleProps> = (_, etc) => {
   return mx('col-start-2 overflow-hidden truncate', etc);
 };
 
-const body: ComponentFunction<MessageStyleProps> = (_, etc) => {
+const body: ComponentFunction<BannerStyleProps> = (_, etc) => {
   return mx('col-start-2 flex flex-col first:font-medium pb-1.5', etc);
 };
 
-export const messageTheme: Theme<MessageStyleProps> = {
+export const bannerTheme: Theme<BannerStyleProps> = {
   content,
   header,
   title,

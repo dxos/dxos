@@ -13,7 +13,7 @@
 
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Input, Message, Panel, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Banner, Input, Panel, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
@@ -46,12 +46,12 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
       <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
         {state === 'loading' && <p className='p-3 text-sm text-description'>{t('calling-tool.message')}</p>}
         {state === 'error' && (
-          <Message.Root valence='error'>
-            <Message.Content classNames='m-form-padding'>
-              {error instanceof Error && <Message.Title>{error.name}</Message.Title>}
-              <Message.Body>{error instanceof Error ? error.message : String(error)}</Message.Body>
-            </Message.Content>
-          </Message.Root>
+          <Banner.Root valence='error'>
+            <Banner.Content classNames='m-form-padding'>
+              {error instanceof Error && <Banner.Title>{error.name}</Banner.Title>}
+              <Banner.Body>{error instanceof Error ? error.message : String(error)}</Banner.Body>
+            </Banner.Content>
+          </Banner.Root>
         )}
         {state === 'empty' && <Empty label={t('no-result.message')} />}
         {state === 'result' &&

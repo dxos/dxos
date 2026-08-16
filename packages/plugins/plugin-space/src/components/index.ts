@@ -5,6 +5,8 @@
 export * from './AwaitingObject';
 export * from './CreateObjectPanel';
 export * from './ForeignKeys';
+export * from './RelatedObjectCard';
+export * from './RelatedTypeFilter';
 export * from './SyncStatus';
 
 // TODO(wittjosiah): Remove.

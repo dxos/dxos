@@ -1,11 +1,11 @@
 # DXOS Claude Code Plugins — Tasks
 
 _Resume: PRs #12618 + #12620 MERGED — the `dxos` marketplace publishes `dxos` from `main`, and
-`/dxos:project` is verified working in a live session. The `mcp` backend has still never touched a
-running space: next is the live round-trip (`dx mcp serve` up, `DX_PROJECT_BACKEND=mcp`, one list →
-new → track → tasks cycle checked in Composer). Uncommitted: none. Last: deleted
-`composer-plugin-dev` (its references taught an API deleted in #12414) and reworked the terse mode
-rules._
+`/dxos:project` is verified working in a live session. #12622 is open, carrying the
+`history`/`spawn`/`help` verbs. The `mcp` backend has still never touched a running space: next is
+the live round-trip (`dx mcp serve` up, `DX_PROJECT_BACKEND=mcp`, one list → new → track → tasks
+cycle checked in Composer). Uncommitted: none. Last: deleted `composer-plugin-dev` (its references
+taught an API deleted in #12414) and reworked the terse mode rules._
 
 ## Phase 1: Extract into a distributable plugin
 

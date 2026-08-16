@@ -19,19 +19,21 @@ import * as InboxOperation from '../../types/InboxOperation';
 import { unmetPrecondition } from '../precondition';
 import * as Topology from '../topology';
 
-/** Placeholder run for a stage that cannot be attempted; `skip` is what the loop reads. */
+/** Placeholder run for a pass that cannot be attempted; `skip` is what the loop reads. */
 const NEVER: Effect.Effect<unknown, unknown, Operation.Service> = Effect.void;
 
 /** One spawned pipeline: the tier it belongs to, and the invocation, held unevaluated until its turn. */
-type Stage = {
+type Pass = {
   readonly tier: InboxOperation.MailboxTier;
   readonly processor: string;
-  /** Reason the stage cannot run (reported as `skipped` rather than attempted). */
+  /** URI of what this run is about, when the processor covers more than the mailbox itself. */
+  readonly subject?: string;
+  /** Reason the pass cannot run (reported as `skipped` rather than attempted). */
   readonly skip?: string;
   readonly run: Effect.Effect<unknown, unknown, Operation.Service>;
 };
 
-type StageResult = {
+type PassResult = {
   readonly tier: InboxOperation.MailboxTier;
   readonly processor: string;
   readonly status: 'completed' | 'failed' | 'skipped' | 'cancelled';
@@ -43,22 +45,22 @@ type StageResult = {
  * Runs the mailbox pipelines as a cascade, each tier's output gating the next: deterministic
  * extraction (contacts + subscriptions) → cheap LLM classification → optional per-message analysis.
  *
- * Sequencing is the whole point. Classification consults the Person objects the contact stage
+ * Sequencing is the whole point. Classification consults the Person objects the contact pass
  * creates — a known sender is tagged personal, never spam, and never sent to the model — so running
  * the tiers out of order (or classifying a mailbox whose contacts were never extracted) silently
  * pays full price for a weaker verdict. Ordering the spawns here also makes the cursor watermark
  * hold by construction: no tier can advance past one that has not yet seen the same messages.
  *
  * Each spawned operation keeps its own cursor, batch cap, idempotency and services, so this handler
- * adds no pipeline logic — it decides what runs, in what order, and what to do when a stage fails.
+ * adds no pipeline logic — it decides what runs, in what order, and what to do when a pass fails.
  * A failure invalidates only that processor's DESCENDANTS in the topology; independent branches run.
  */
-const handler = InboxOperation.ScanMailbox.pipe(
+const handler = InboxOperation.AnalyzeMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({
       mailbox: mailboxRef,
       me = [],
-      tiers = InboxOperation.DEFAULT_SCAN_MAILBOX_TIERS,
+      tiers = InboxOperation.DEFAULT_ANALYZE_MAILBOX_TIERS,
       batchLimit,
       model,
       provider,
@@ -69,16 +71,19 @@ const handler = InboxOperation.ScanMailbox.pipe(
       const signal = yield* Cancellation.signal;
 
       const traceWriter = yield* Trace.TraceService;
-      const progressKey = InboxOperation.createScanProgressKey(mailbox);
+      const progressKey = InboxOperation.createAnalyzeProgressKey(mailbox);
       // Both counters are held across updates: a meter reads the LATEST status, so emitting an
       // undefined total on a current-only tick would blank the denominator mid-cascade.
       let current = 0;
       let total: number | undefined;
+      // Phase first — see the matching note in `mail-sync.ts`. The running processor is not appended:
+      // the meter's own `current/total` already says how far through the cascade the run is.
+      const analyzeLabel = `Analyzing ${mailbox.name ?? 'mailbox'}`;
       const reportStatus = (patch: { message?: string; current?: number; total?: number } = {}) => {
         current = patch.current ?? current;
         total = patch.total ?? total;
         traceWriter.write(Trace.StatusUpdate, {
-          message: patch.message ?? mailbox.name ?? 'Mailbox',
+          message: analyzeLabel,
           progress: { key: progressKey, current, total },
         });
       };
@@ -95,62 +100,72 @@ const handler = InboxOperation.ScanMailbox.pipe(
       // The plan is built up front so the cascade is inspectable as data (and the progress total is
       // known before the first spawn). `Operation.invoke` returns a lazy Effect — nothing runs here.
       const options: InboxCapabilities.MailboxProcessorOptions = { me, batchLimit, model, provider, strict };
-      const stages: Stage[] = [
+      const passes: Pass[] = [
         // A processor the topology could not place is reported, never dropped: silence here would look
         // exactly like a pass that ran and found nothing.
         ...excluded.map(({ node, reason }) => ({ tier: node.tier, processor: node.id, skip: reason, run: NEVER })),
-        ...ordered.map((processor) => {
-          const invocation = processor.createInvocation(mailbox, options);
-          return 'skip' in invocation
-            ? { tier: processor.tier, processor: processor.id, skip: invocation.skip, run: NEVER }
-            : {
-                tier: processor.tier,
-                processor: processor.id,
-                run: Operation.invoke(invocation.operation, invocation.input),
-              };
+        // `flatMap`, because a processor may cover several subjects — one Project's view of a shared
+        // feed, say — and each is a separately-cursored run. They keep the contributing processor's
+        // id so the `after` edges and the failure blocking below still speak in processor terms; only
+        // the reported subject differs.
+        ...ordered.flatMap((processor): Pass[] => {
+          const invocations = processor.createInvocations(mailbox, options);
+          if ('skip' in invocations) {
+            return [{ tier: processor.tier, processor: processor.id, skip: invocations.skip, run: NEVER }];
+          }
+          // An empty list is a processor that found nothing to run — reported, not silently absent.
+          if (invocations.length === 0) {
+            return [{ tier: processor.tier, processor: processor.id, skip: 'no subjects', run: NEVER }];
+          }
+          return invocations.map(({ subject, operation, input }) => ({
+            tier: processor.tier,
+            processor: processor.id,
+            subject: subject ? Obj.getURI(subject) : undefined,
+            run: Operation.invoke(operation, input),
+          }));
         }),
       ];
 
       log.info('scan: cascade start', {
         mailbox: Obj.getURI(mailbox),
         tiers,
-        stages: stages.map((stage) => stage.processor),
+        passes: passes.map((pass) => pass.processor),
       });
-      reportStatus({ current: 0, total: stages.length });
+      reportStatus({ current: 0, total: passes.length });
 
-      const results: StageResult[] = [];
+      const results: PassResult[] = [];
       /** Processors invalidated by an upstream failure, and why. */
       const blocked = new Map<string, string>();
       let index = 0;
-      for (const stage of stages) {
+      for (const pass of passes) {
         index += 1;
-        const blockedReason = blocked.get(stage.processor);
+        const blockedReason = blocked.get(pass.processor);
         if (blockedReason) {
-          results.push({ tier: stage.tier, processor: stage.processor, status: 'skipped', error: blockedReason });
-          reportStatus({ current: index, message: stage.processor });
+          results.push({ tier: pass.tier, processor: pass.processor, status: 'skipped', error: blockedReason });
+          reportStatus({ current: index, message: pass.processor });
           continue;
         }
         if (signal.aborted) {
-          // Remaining stages are reported rather than dropped: a half-run cascade must be legible.
-          results.push({ tier: stage.tier, processor: stage.processor, status: 'cancelled' });
+          // Remaining passes are reported rather than dropped: a half-run cascade must be legible.
+          results.push({ tier: pass.tier, processor: pass.processor, status: 'cancelled' });
           continue;
         }
-        if (stage.skip) {
-          results.push({ tier: stage.tier, processor: stage.processor, status: 'skipped', error: stage.skip });
-          reportStatus({ current: index, message: stage.processor });
+        if (pass.skip) {
+          results.push({ tier: pass.tier, processor: pass.processor, status: 'skipped', error: pass.skip });
+          reportStatus({ current: index, message: pass.processor });
           continue;
         }
 
-        reportStatus({ current: index - 1, total: stages.length, message: stage.processor });
+        reportStatus({ current: index - 1, total: passes.length, message: pass.processor });
         // `Effect.exit`, not `either`: an unavailable model or a provider HTTP error arrives as a
         // DEFECT (the AI layers `orDie`), which the error channel alone would let escape and fail
-        // the whole cascade instead of being reported as one stage's outcome.
-        const exit = yield* Effect.exit(stage.run);
+        // the whole cascade instead of being reported as one pass's outcome.
+        const exit = yield* Effect.exit(pass.run);
         if (Exit.isSuccess(exit)) {
-          results.push({ tier: stage.tier, processor: stage.processor, status: 'completed', output: exit.value });
+          results.push({ tier: pass.tier, processor: pass.processor, status: 'completed', output: exit.value });
         } else if (Cause.hasInterruptsOnly(exit.cause)) {
-          // Cancellation is not a stage failure — stop without marking the pipeline broken.
-          results.push({ tier: stage.tier, processor: stage.processor, status: 'cancelled' });
+          // Cancellation is not a pass failure — stop without marking the pipeline broken.
+          results.push({ tier: pass.tier, processor: pass.processor, status: 'cancelled' });
           break;
         } else {
           const unmet = unmetPrecondition(exit.cause);
@@ -160,21 +175,21 @@ const handler = InboxOperation.ScanMailbox.pipe(
             // tier as skipped and keep going. Every later tier missing the same thing skips itself the
             // same way, and the tiers that already ran stay valid — treating it as a failure instead
             // aborts the cascade and leaves the meter red for a mailbox nothing is wrong with.
-            log.info('scan: stage skipped', { processor: stage.processor, error: unmet });
-            results.push({ tier: stage.tier, processor: stage.processor, status: 'skipped', error: unmet });
-            reportStatus({ current: index, message: stage.processor });
+            log.info('scan: pass skipped', { processor: pass.processor, error: unmet });
+            results.push({ tier: pass.tier, processor: pass.processor, status: 'skipped', error: unmet });
+            reportStatus({ current: index, message: pass.processor });
             continue;
           }
 
           const error = Cause.pretty(exit.cause).slice(0, 500);
-          log.warn('scan: stage failed', { processor: stage.processor, error });
-          results.push({ tier: stage.tier, processor: stage.processor, status: 'failed', error });
+          log.warn('scan: pass failed', { processor: pass.processor, error });
+          results.push({ tier: pass.tier, processor: pass.processor, status: 'failed', error });
           if (!continueOnError) {
             // Only what actually consumed this output is invalidated. Blocking by run POSITION instead
             // would strand processors that never depended on it — `subscriptions` declares no edge to
             // `classify`, so a classification failure has no bearing on it.
-            for (const id of Topology.descendants(ordered, stage.processor)) {
-              blocked.set(id, `upstream '${stage.processor}' failed`);
+            for (const id of Topology.descendants(ordered, pass.processor)) {
+              blocked.set(id, `upstream '${pass.processor}' failed`);
             }
           }
         }
@@ -187,7 +202,7 @@ const handler = InboxOperation.ScanMailbox.pipe(
 
       log.info('scan: cascade done', { mailbox: Obj.getURI(mailbox), completed, failed, skipped });
       reportStatus({
-        current: stages.length,
+        current: passes.length,
         message: signal.aborted
           ? PROGRESS_STATUS_CANCELLED
           : failed > 0

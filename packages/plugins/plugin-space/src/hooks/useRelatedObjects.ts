@@ -13,6 +13,9 @@ import { isNonNullable } from '@dxos/util';
 /**
  * Returns objects related to `subject` via direct references and/or relations.
  * Returns an empty array when `subject` is undefined.
+ *
+ * Withholds only types annotated hidden, which the user cannot address at all; narrowing the rest
+ * belongs to the consumer (see `useRelatedTypeFilter`).
  */
 // TODO(burdon): Factor out (make more generally useful -- e.g., in cards).
 // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
@@ -73,9 +76,8 @@ export const useRelatedObjects = (
 
     return (
       Array.from(new Set(related))
-        // TODO(burdon): Configure.
-        .filter((obj) => Entity.getTypename(obj) !== 'org.dxos.type.text')
-        .filter((obj) => Entity.getTypename(obj) !== 'org.dxos.type.assistant.chat')
+        // A relation may name the subject at both ends, which would otherwise relate it to itself.
+        .filter((obj) => obj !== subject)
         .filter((obj) => {
           if (!Obj.isObject(obj)) {
             return true;
