@@ -168,11 +168,11 @@ reshuffled between runs would make cursor behaviour irreproducible.
 > through the `ServiceResolver`, NOT the caller's Effect context. A test cannot supply it with
 > `Effect.provideService`; it must use `AssistantTestLayer`'s `extraServices`.
 
-**D4 — Failure policy follows from the DAG.** BUILT. A failed processor blocks exactly its
-descendants — `Topology.descendants` walks the transitive closure and each blocked pass is reported
+**D4 — Failure policy follows from the DAG.** BUILT. By default (`continueOnError: false`) a failed
+processor blocks exactly its descendants — `Topology.descendants` walks the transitive closure and each blocked pass is reported
 with the upstream that invalidated it. Independent branches keep running: `subscriptions` declares no
 edge to `classify`, so a classification failure no longer strands it for merely sitting later in the
-list.
+list. A caller passing `continueOnError: true` gets the failure reported and nothing blocked.
 
 Sharp edge pinned by test: a `tiers` filter DROPS the edges that ran through a filtered-out processor.
 Selecting `['deterministic','classify','analyze']` leaves `analyze`'s `after: ['summarize']` pointing

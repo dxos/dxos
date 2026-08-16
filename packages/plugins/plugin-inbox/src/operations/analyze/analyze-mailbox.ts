@@ -207,11 +207,16 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
         reportStatus({ current: index });
       }
 
-      const completed = results.filter((result) => result.status === 'completed').length;
-      const failed = results.filter((result) => result.status === 'failed').length;
-      const skipped = results.filter((result) => result.status !== 'completed' && result.status !== 'failed').length;
+      // Counted by their own status rather than by exclusion: `skipped` used to mean "not completed
+      // and not failed", which swept up cancellations — so an interrupted run reported its entire
+      // unrun tail as skipped, a pass having decided not to run rather than never reaching the line.
+      const countOf = (status: PassResult['status']) => results.filter((result) => result.status === status).length;
+      const completed = countOf('completed');
+      const failed = countOf('failed');
+      const skipped = countOf('skipped');
+      const cancelled = countOf('cancelled');
 
-      log.info('analyze: cascade done', { mailbox: Obj.getURI(mailbox), completed, failed, skipped });
+      log.info('analyze: cascade done', { mailbox: Obj.getURI(mailbox), completed, failed, skipped, cancelled });
       reportStatus({
         current: passes.length,
         message: signal.aborted
@@ -221,7 +226,7 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
             : PROGRESS_STATUS_COMPLETE,
       });
 
-      return { completed, failed, skipped, stages: results };
+      return { completed, failed, skipped, cancelled, stages: results };
     }),
   ),
   Operation.opaqueHandler,

@@ -460,6 +460,8 @@ export const AnalyzeMailbox = Operation.make({
     completed: Schema.Number,
     failed: Schema.Number,
     skipped: Schema.Number,
+    /** Passes that never ran because the cascade was interrupted — distinct from skipped. */
+    cancelled: Schema.Number,
     /** Per-processor outcome in run order — the spawned operation's own output, or why it did not run. */
     stages: Schema.Array(
       Schema.Struct({
