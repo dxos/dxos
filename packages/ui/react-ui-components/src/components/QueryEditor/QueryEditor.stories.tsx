@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
@@ -90,6 +91,26 @@ export const Tags: Story = {
     autoFocus: true,
     value: 'type:org.dxos.type.person #investor #new',
   },
+  play: async ({ canvasElement }) => {
+    const content = await waitFor(() => {
+      const element = canvasElement.querySelector<HTMLElement>('.cm-content');
+      if (!element) {
+        throw new Error('Query editor content not found.');
+      }
+      return element;
+    });
+
+    // The document, not `textContent`: a type filter is drawn as a widget, so the rendered text is
+    // the chip's label rather than what the document holds.
+    const view = EditorView.findFromDOM(content)!;
+
+    // `selectionEnd` puts the caret at the end of the document on the first render.
+    await waitFor(() => expect(view.state.selection.main.head).toEqual(view.state.doc.length));
+
+    // Which is what makes the first keystroke append rather than land in front of the query.
+    await userEvent.keyboard('X');
+    await waitFor(() => expect(view.state.doc.toString()).toEqual('type:org.dxos.type.person #investor #newX '));
+  },
 };
 
 /**
@@ -115,12 +136,13 @@ export const Atomic: Story = {
     // The placeholder renders inside the content element, so an empty document is not empty text.
     const doc = () => (content.querySelector('.cm-placeholder') ? '' : content.textContent);
 
-    await userEvent.click(content);
     await waitFor(() => expect(doc()).toEqual('#test'));
 
+    // No click and no `{End}`: `selectionEnd` is what puts the caret at the end of the document on
+    // the first render, and the caret at the tag's own edge is still in the tag — so this single
+    // Backspace both proves that and takes the whole chip.
     // `keyboard`, not `type`: the latter clicks the element first, which would move the caret.
-    // The caret at the tag's own edge is still in the tag, so one Backspace takes the whole chip.
-    await userEvent.keyboard('{End}{Backspace}');
+    await userEvent.keyboard('{Backspace}');
     await waitFor(() => expect(doc()).toEqual(''));
 
     // Atomic does not mean uneditable: each character lands outside the replaced range and grows it,
