@@ -108,6 +108,9 @@ const DefaultChrome = ({ children }: MessageChromeProps) => <>{children}</>;
 /** Rows beyond which a requested smooth scroll goes instantly instead; see `scrollToIndex`. */
 const SMOOTH_SCROLL_LIMIT = 10;
 
+/** Distance from the tail within which scrolling counts as returning to the bottom. */
+const STICKY_THRESHOLD = 32;
+
 /**
  * Headless root of a feed: owns the virtualizer, the selection group and the model-to-item mapping.
  * Renders no DOM of its own, so a toolbar or statusbar that reads its state can sit outside the
@@ -156,16 +159,31 @@ const MessageListRoot = ({
     }
   }, [mounted, startIndex, endIndex, messages.length, onRangeChange]);
 
-  // Stick to the bottom while new messages arrive, but only when the reader is already there —
-  // yanking the viewport away from someone reading history is the classic chat-scroll defect.
-  const atBottomRef = useRef(true);
+  // Following is an intent, not a measurement.
+  //
+  // Deriving it from "is the tail within N pixels" reads the reader's position and the content's
+  // growth through the same number: a tail growing faster than the follow travels widens that gap,
+  // the list concludes the reader has scrolled away, and it stops following for good.
+  //
+  // Direction is the honest signal instead. The follow only ever moves the viewport down, so an
+  // upward move is the reader; returning to the bottom is them opting back in.
+  const followRef = useRef(true);
+  const lastTopRef = useRef(0);
   useEffect(() => {
     if (!viewport) {
       return;
     }
+
     const onScroll = () => {
-      atBottomRef.current = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 32;
+      const top = viewport.scrollTop;
+      if (top < lastTopRef.current - 1) {
+        followRef.current = false;
+      } else if (viewport.scrollHeight - top - viewport.clientHeight < STICKY_THRESHOLD) {
+        followRef.current = true;
+      }
+      lastTopRef.current = top;
     };
+
     onScroll();
     viewport.addEventListener('scroll', onScroll, { passive: true });
     return () => viewport.removeEventListener('scroll', onScroll);
@@ -207,7 +225,7 @@ const MessageListRoot = ({
   // to how many messages exist.
   const totalSize = virtualizer.getTotalSize();
   useEffect(() => {
-    if (!stickyBottom || !atBottomRef.current) {
+    if (!stickyBottom || !followRef.current) {
       return;
     }
 
