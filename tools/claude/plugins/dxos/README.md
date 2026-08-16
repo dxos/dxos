@@ -1,11 +1,11 @@
-# `dx` — project tracking for coding agents
+# `dxos` — project tracking for coding agents
 
 Durable, resumable project and task tracking. A committed **registry** of
 work-streams, a **`TASKS.md` ledger** per project, and one command to drive them.
 
 The problem it solves: an agent's own todo list is ephemeral. It dies with the
 context window, so the next session starts blind — re-deriving what was done,
-what is in flight, and what comes next. `dx` keeps that state in the repo, where
+what is in flight, and what comes next. `dxos` keeps that state in the repo, where
 both you and the agent can read it weeks later.
 
 ## Install
@@ -15,23 +15,26 @@ claude plugin marketplace add dxos/dxos
 ```
 
 ```bash
-claude plugin install dxos-project@dxos
+claude plugin install dxos@dxos
 ```
 
 ## Use
 
-| Command                                  | Does                                                                     |
-| ---------------------------------------- | ------------------------------------------------------------------------ |
-| `/dxos-project:project`                  | Status of the current project — worktree, branch, docs, uncommitted work |
-| `/dxos-project:project list [all]`       | Numbered table of active projects; reply with a row number to resume     |
-| `/dxos-project:project tasks [all]`      | Open `- [ ]` items from the current project's `TASKS.md`                 |
-| `/dxos-project:project new <name>`       | Register a project and scaffold its `TASKS.md` + `DESIGN.md`             |
-| `/dxos-project:project end <name>`       | Move it to `ended`, recording final status                               |
-| `/dxos-project:project track <text>`     | Record a follow-up in the active `TASKS.md`                              |
-| `/dxos-project:project hydrate`          | Checkpoint before stopping or opening a PR                               |
-| `/dxos-project:project resume [name]`    | Reload project state at the start of a session                           |
+| Command                          | Does                                                                     |
+| -------------------------------- | ------------------------------------------------------------------------ |
+| `/dxos:project`                  | Status of the current project — worktree, branch, docs, uncommitted work |
+| `/dxos:project list [all]`       | Numbered table of active projects; reply with a row number to resume     |
+| `/dxos:project tasks [all]`      | Open `- [ ]` items from the current project's `TASKS.md`                 |
+| `/dxos:project spawn <N...>` | Spin the numbered open tasks out into background task chips              |
+| `/dxos:project new <name>`       | Register a project and scaffold its `TASKS.md` + `DESIGN.md`             |
+| `/dxos:project end <name>`       | Move it to `ended`, recording final status                               |
+| `/dxos:project track <text>`     | Record a follow-up in the active `TASKS.md`                              |
+| `/dxos:project history [all]` | Table of the PRs this project produced — date, author, one-sentence summary  |
+| `/dxos:project help`             | Table of every verb and what it does                                     |
+| `/dxos:project hydrate`          | Checkpoint before stopping or opening a PR                               |
+| `/dxos:project resume [name]`    | Reload project state at the start of a session                           |
 
-In a repo with no registry yet, `/dxos-project:project new <name>` creates one. Read verbs
+In a repo with no registry yet, `/dxos:project new <name>` creates one. Read verbs
 report that none exists rather than inventing entries.
 
 ## How it works
@@ -85,7 +88,7 @@ Two rules the directive enforces:
 ## Layout
 
 ```
-dx/
+dxos/
 ├── commands/project.md            thin — defers to the injected directive
 ├── hooks/track.sh                 verb dispatch + backend resolver
 ├── hooks/hooks.json               UserPromptSubmit registration
