@@ -118,10 +118,9 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
               const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
               const tag = Tag.findTagByLabel(tags, label);
               const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
-              // Atomic in every caret position, including its own edges: a tag is one object, so
-              // Backspace against it removes the whole chip rather than a character of the label. The
-              // tag is still typed a character at a time — an insertion at the range's boundary lands
-              // outside it, growing the node, and the chip re-renders with the longer label.
+              // Atomic at its own edges too, so Backspace against a tag takes the chip rather than a
+              // character of the label; typing still grows it, since an insertion at the range's
+              // boundary lands outside it.
               //
               // `replace`, not `widget`: a widget is a POINT decoration, so one covering a range that
               // starts at offset 0 paints before that offset's coordinate and the caret draws to its
@@ -274,7 +273,9 @@ export const spacing: Extension = EditorState.transactionFilter.of((tr) => {
     }
 
     inserting = true;
-    if (fromA === toA && tagStarts.has(fromA) && !/\s$/.test(inserted.toString())) {
+    // Keyed on `toA`, the offset the inserted text ends against: that covers a replacement whose
+    // range ends at the tag as well as a plain insertion, where `fromA` and `toA` are the same.
+    if (tagStarts.has(toA) && !/\s$/.test(inserted.toString())) {
       separator = toB;
     }
   });

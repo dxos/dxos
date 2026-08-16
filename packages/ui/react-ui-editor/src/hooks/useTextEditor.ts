@@ -74,11 +74,12 @@ export const useTextEditor = (
     if (parentRef.current) {
       log('create', { id, instanceId, doc: initialValue?.length ?? 0 });
 
-      // Only records whether an explicit selection governs, so that `selectionEnd` defers to it. The
-      // selection itself is applied by the effect below, which also handles later changes to it.
+      // Only records whether an explicit selection governs, so that `selectionEnd` defers to it; the
+      // effect below applies it. `!== undefined`, since an explicit `{ anchor: 0 }` is a selection.
+      const length = (doc ?? initialValue)?.length ?? 0;
       let initialSelection;
-      if (selection?.anchor && initialValue?.length) {
-        if (selection.anchor <= initialValue.length && (selection?.head ?? 0) <= initialValue.length) {
+      if (selection?.anchor !== undefined && length) {
+        if (selection.anchor <= length && (selection?.head ?? 0) <= length) {
           initialSelection = selection;
         }
       }
