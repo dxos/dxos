@@ -129,15 +129,36 @@ const Json = ({ children }: XmlWidgetProps) => (
   <pre className='px-2 py-1 overflow-x-auto rounded bg-groupSurface text-xs'>{getXmlTextChild(children ?? [])}</pre>
 );
 
+/**
+ * Floor for a panel's collapsed height, reserved before its portaled content paints.
+ *
+ * `heightMode: 'min'` is what makes this a floor rather than a pin — the default pins the box and
+ * clips it, so an opened panel stays shut. Without any reservation the row is measured at the height
+ * of an empty box and grows a frame later, which is a row moving under a reader scrolling up.
+ */
+const COLLAPSED_HEIGHT = 42;
+
 export const chatRegistry: XmlWidgetRegistry = {
   // No widget: the reader's own words stay in the document, where they can be selected and searched
   // like any other text. Registered so the markdown parser keeps the tag as one block — an
   // unregistered tag opens a paragraph that swallows the lines after it.
   prompt: { block: true },
-  reasoning: { block: true, streaming: true, Component: Reasoning },
-  status: { block: true, streaming: true, Component: Status },
-  toolCall: { block: true, Component: ToolCall },
-  toolResult: { block: true, Component: ToolResult },
+  reasoning: {
+    block: true,
+    streaming: true,
+    estimatedHeight: () => COLLAPSED_HEIGHT,
+    heightMode: 'min',
+    Component: Reasoning,
+  },
+  status: {
+    block: true,
+    streaming: true,
+    estimatedHeight: () => COLLAPSED_HEIGHT,
+    heightMode: 'min',
+    Component: Status,
+  },
+  toolCall: { block: true, estimatedHeight: () => COLLAPSED_HEIGHT, heightMode: 'min', Component: ToolCall },
+  toolResult: { block: true, estimatedHeight: () => COLLAPSED_HEIGHT, heightMode: 'min', Component: ToolResult },
   suggestion: { block: false, Component: Suggestion },
   select: { block: true, Component: Select },
   json: { block: true, Component: Json },

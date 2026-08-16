@@ -57,6 +57,7 @@ type MessageListContextValue = {
   /** Rows that moved after being laid out, and windows whose offsets were out of order. */
   shifts: number;
   breaks: number;
+  resetShifts: () => void;
   virtualizer: Virtualizer<HTMLElement, HTMLElement>;
   /** Row ref: measures the element and feeds the running average behind `estimateSize`. */
   measureItem: (element: HTMLElement | null) => void;
@@ -78,7 +79,7 @@ const [MessageListProvider, useMessageListContext] = createContext<MessageListCo
  * find-next, a statusbar's range readout.
  */
 export const useMessageList = (consumerName = 'useMessageList') => {
-  const { range, currentIndex, mountedWidgets, shifts, breaks, messages, scrollToIndex, scrollToBottom } =
+  const { range, currentIndex, mountedWidgets, shifts, breaks, resetShifts, messages, scrollToIndex, scrollToBottom } =
     useMessageListContext(consumerName);
   return {
     range,
@@ -86,6 +87,7 @@ export const useMessageList = (consumerName = 'useMessageList') => {
     mountedWidgets,
     shifts,
     breaks,
+    resetShifts,
     count: messages.length,
     scrollToIndex,
     scrollToBottom,
@@ -275,7 +277,7 @@ const MessageListRoot = ({
 
   // Where each row was placed, and whether it stayed there. A row that moves after it was laid out
   // is what the reader sees as flicker, and it happens scrolling up, where unmeasured rows enter.
-  const { shifts, breaks, last: lastShift, record: recordPositions } = usePositionLog();
+  const { shifts, breaks, last: lastShift, record: recordPositions, reset: resetShifts } = usePositionLog();
   const virtualItems = virtualizer.getVirtualItems();
   useEffect(() => {
     recordPositions(virtualItems.map(({ key, index, start }) => ({ key, index, start })));
@@ -587,6 +589,7 @@ const MessageListRoot = ({
         reportWidgets={reportWidgets}
         shifts={shifts}
         breaks={breaks}
+        resetShifts={resetShifts}
         virtualizer={virtualizer}
         measureItem={measureItem}
         setViewport={setViewport}

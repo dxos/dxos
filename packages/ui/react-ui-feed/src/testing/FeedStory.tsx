@@ -486,7 +486,7 @@ type StatusBarProps = {
 };
 
 const StatusBar = ({ hits, query, selected, streaming, meter }: StatusBarProps) => {
-  const { range, currentIndex, mountedWidgets, shifts, breaks, count } = useMessageList('StatusBar');
+  const { range, currentIndex, mountedWidgets, shifts, breaks, resetShifts, count } = useMessageList('StatusBar');
 
   return (
     // The frame readout gets a double-width column: it is the longest cell, and an equal share
