@@ -677,10 +677,10 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
               // index scan, so the cost of a tick is the size of the page rather than of the feed.
               let cursor = Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id;
               for (;;) {
-                const chunk = yield* Feed.query(feed, Filter.everything(), {
-                  after: cursor !== undefined ? Feed.Cursor.make(cursor) : undefined,
-                  limit: concurrency,
-                }).run.pipe(Effect.map((objects) => filterReadyFeedItems(objects, cursor)));
+                const chunk = yield* Feed.query(
+                  feed,
+                  Query.select(Filter.feedCursor(cursor ?? Feed.START)).limit(concurrency),
+                ).run.pipe(Effect.map((objects) => filterReadyFeedItems(objects, cursor)));
                 if (chunk.length === 0) {
                   break;
                 }
@@ -1083,10 +1083,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
             // One item past the cursor is enough to know there is work; the dispatch that follows
             // reads the pages it needs. Watching the whole feed would restore the full scan this
             // subscription exists to avoid.
-            return yield* Feed.query(feed, Filter.everything(), {
-              after: cursor !== undefined ? Feed.Cursor.make(cursor) : undefined,
-              limit: 1,
-            });
+            return yield* Feed.query(feed, Query.select(Filter.feedCursor(cursor ?? Feed.START)).limit(1));
           })
         : spec?.kind === 'subscription'
           ? Database.query(Query.fromAst(spec.query.ast).options({ deleted: 'include' }))

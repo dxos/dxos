@@ -136,7 +136,7 @@ describe('Feed query pagination', () => {
     expect(results.map((obj) => (obj as TestSchema.Task).title)).toEqual(['task-2', 'task-3']);
   });
 
-  test('cursor scope resumes after a position', async ({ expect }) => {
+  test('cursor filter resumes after a position', async ({ expect }) => {
     // Cursors exist only where a position authority assigns them.
     const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });
     const db = await peer.createDatabase();
@@ -154,32 +154,24 @@ describe('Feed query pagination', () => {
       .run();
     const cursor = Feed.getCursor(all[1])!;
 
-    const after = await db.query(Query.select(Filter.everything()).from(Scope.feed(feedUri, { after: cursor }))).run();
+    const after = await db.query(Query.select(Filter.feedCursor(cursor)).from(Scope.feed(feedUri))).run();
     expect(after.map((obj) => (obj as TestSchema.Task).title).sort()).toEqual(['c', 'd']);
 
-    const page = await db
-      .query(
-        Query.select(Filter.everything())
-          .limit(1)
-          .from(Scope.feed(feedUri, { after: cursor })),
-      )
-      .run();
+    const page = await db.query(Query.select(Filter.feedCursor(cursor)).limit(1).from(Scope.feed(feedUri))).run();
     expect(page.map((obj) => (obj as TestSchema.Task).title)).toEqual(['c']);
 
     // The start sentinel bounds nothing.
-    const fromStart = await db
-      .query(Query.select(Filter.everything()).from(Scope.feed(feedUri, { after: Feed.START })))
-      .run();
+    const fromStart = await db.query(Query.select(Filter.feedCursor(Feed.START)).from(Scope.feed(feedUri))).run();
     expect(fromStart).toHaveLength(4);
 
     // A cursor past the tail yields nothing rather than falling back to a full scan.
     const exhausted = await db
-      .query(Query.select(Filter.everything()).from(Scope.feed(feedUri, { after: Feed.Cursor.make('1000') })))
+      .query(Query.select(Filter.feedCursor(Feed.Cursor.make('1000'))).from(Scope.feed(feedUri)))
       .run();
     expect(exhausted).toHaveLength(0);
   });
 
-  test('cursor scope applies to a type-selected query', async ({ expect }) => {
+  test('cursor filter applies to a type-selected query', async ({ expect }) => {
     const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'cursor-typed-feed' }));
@@ -197,9 +189,22 @@ describe('Feed query pagination', () => {
     const cursor = Feed.getCursor(all[0])!;
 
     const after = await db
-      .query(Query.select(Filter.type(TestSchema.Task)).from(Scope.feed(feedUri, { after: cursor })))
+      .query(
+        Query.select(Filter.and(Filter.type(TestSchema.Task), Filter.feedCursor(cursor))).from(Scope.feed(feedUri)),
+      )
       .run();
     expect(after.map((obj) => (obj as TestSchema.Task).title).sort()).toEqual(['b', 'c']);
+  });
+
+  test('cursor filter is rejected outside a feed scope', async ({ expect }) => {
+    const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });
+    const db = await peer.createDatabase();
+
+    // An automerge object carries no position, so the bound has no answer to give — better a refusal
+    // than a query that silently returns everything.
+    await expect(
+      db.query(Query.select(Filter.feedCursor(Feed.Cursor.make('0'))).from(Scope.space())).run(),
+    ).rejects.toThrow();
   });
 
   test('feed scope excludes space objects when paginating', async ({ expect }) => {

@@ -2141,35 +2141,31 @@ const extractSpaceIdFromQueue = (feedUri: string): SpaceId | undefined => {
 };
 
 /**
- * The index-level window for a queue-only select: resume after the scope's cursor and cap the page
- * at the pushed-down limit.
+ * The index-level window for a select bounded by a feed cursor: resume after that position and cap
+ * the page at the pushed-down limit.
  *
- * Returns `undefined` unless the step selects exclusively from feeds that agree on a cursor —
- * `queuePosition` is null for automerge objects, so windowing a mixed scan would drop every
- * document, and two feed scopes with different cursors have no single bound.
+ * Throws when the step also selects from a space's documents — `queuePosition` is null for an
+ * automerge object, so such a query has no answer to give rather than a cheaper one.
  *
  * A cursor that is not a decimal position is treated as unsatisfiable rather than as "no cursor":
  * resuming a corrupted checkpoint from the beginning would re-dispatch the whole feed.
  */
 const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined => {
-  const feedScopes = step.scope.filter((scope): scope is QueryAST.FeedScope => scope._tag === 'feed');
-  if (feedScopes.length === 0 || feedScopes.length !== step.scope.length) {
+  // The empty string is the "from the beginning" sentinel (`Feed.START`), i.e. no lower bound — and
+  // without a bound there is no window: an unbounded scan must keep returning the blocks a peer
+  // that does not assign positions writes, which have no position to order or bound by.
+  if (!step.afterFeedCursor) {
     return undefined;
   }
 
-  const cursors = new Set(feedScopes.map((scope) => scope.after));
-  if (cursors.size > 1) {
-    return undefined;
-  }
-  // The empty string is the "from the beginning" sentinel (`Feed.START`), i.e. no lower bound —
-  // and without a bound there is no window: an unbounded scan must keep returning the blocks a
-  // peer that does not assign positions writes, which have no position to order or bound by.
-  const cursor = feedScopes[0].after || undefined;
-  if (cursor === undefined) {
-    return undefined;
+  if (!step.scope.every((scope) => scope._tag === 'feed')) {
+    throw new QueryError({
+      message: 'A feed cursor filter can only be used with a feed scope.',
+      context: { query: null },
+    });
   }
 
-  const after = /^\d+$/.test(cursor) ? Number(cursor) : Number.NaN;
+  const after = /^\d+$/.test(step.afterFeedCursor) ? Number(step.afterFeedCursor) : Number.NaN;
   return { after: Number.isSafeInteger(after) ? after : Number.MAX_SAFE_INTEGER, limit: step.limit };
 };
 

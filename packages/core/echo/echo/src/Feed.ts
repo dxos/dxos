@@ -89,20 +89,6 @@ export type Cursor = Schema.Schema.Type<typeof Cursor>;
 export const START: Cursor = Cursor.make('');
 
 /**
- * Options for {@link query}.
- */
-export interface QueryOptions {
-  /**
-   * Resume after this cursor — only items positioned strictly after it are returned.
-   * Pushed into the index scan, so a reader pays for what is new rather than for the whole feed.
-   */
-  after?: Cursor;
-
-  /** Maximum number of items to return, in append order. */
-  limit?: number;
-}
-
-/**
  * Retention options for a feed.
  *
  * Live feed objects persist every `Obj.update` as a whole-object re-append reusing the object's id
@@ -448,43 +434,24 @@ export const history = <T extends Entity.Unknown | Entity.Snapshot>(
  * const objects = yield* pipe(feed, Feed.query(Filter.type(Person))).run;
  *
  * // Resume after a cursor, reading a bounded page of what is new:
- * const objects = yield* Feed.query(feed, Filter.everything(), { after: cursor, limit: 10 }).run;
+ * const objects = yield* Feed.query(feed, Query.select(Filter.feedCursor(cursor)).limit(10)).run;
  * ```
  */
 export const query: {
-  <Q extends Query.Any>(
-    feed: Feed,
-    query: Q,
-    options?: QueryOptions,
-  ): QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
-  <F extends Filter.Any>(
-    feed: Feed,
-    filter: F,
-    options?: QueryOptions,
-  ): QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
+  <Q extends Query.Any>(feed: Feed, query: Q): QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
+  <F extends Filter.Any>(feed: Feed, filter: F): QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
   <Q extends Query.Any>(
     query: Q,
-    options?: QueryOptions,
   ): (feed: Feed) => QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
   <F extends Filter.Any>(
     filter: F,
-    options?: QueryOptions,
   ): (feed: Feed) => QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
-  // Arity alone cannot separate the two forms once options are in play (`query(filter, options)` and
-  // `query(feed, filter)` are both two arguments), so the data-first form is recognized by its
-  // leading feed.
-} = Function.dual(
-  (args) => Obj.instanceOf(Feed, args[0]),
-  (feed: Feed, queryOrFilter: Query.Any | Filter.Any, options?: QueryOptions) => {
-    const feedUri = getFeedUri(feed);
-    invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
-    const selection = Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter);
-    // `START` is the empty sentinel, which the scan reads as "no lower bound" — pass it through
-    // rather than special-casing it here.
-    const scoped = selection.from(Scope.feed(feedUri.toString(), { after: options?.after }));
-    return Database.query(options?.limit !== undefined ? scoped.limit(options.limit) : scoped);
-  },
-);
+} = Function.dual(2, (feed: Feed, queryOrFilter: Query.Any | Filter.Any) => {
+  const feedUri = getFeedUri(feed);
+  invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
+  const query = Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter);
+  return Database.query(query.from(Scope.feed(feedUri.toString())));
+});
 
 /**
  * Syncs the feed with the server.

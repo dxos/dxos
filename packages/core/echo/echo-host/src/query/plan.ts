@@ -68,6 +68,13 @@ export namespace QueryPlan {
      * When set, the index scan can be optimized to stop early.
      */
     limit?: number;
+
+    /**
+     * Exclusive lower bound on feed position, from a `feed-cursor` filter. The scan returns only
+     * blocks positioned after it, in position order, so resuming a feed costs what is new rather
+     * than the whole feed.
+     */
+    afterFeedCursor?: string;
   };
 
   /**

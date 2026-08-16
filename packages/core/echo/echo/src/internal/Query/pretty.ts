@@ -64,6 +64,8 @@ export const prettyFilter = (filter: QueryAST.Filter): string => {
         : `Filter.textSearch(${JSON.stringify(filter.text)})`;
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
+    case 'feed-cursor':
+      return `Filter.feedCursor(${JSON.stringify(filter.after)})`;
     case 'child-of':
       return `Filter.childOf([${filter.parents.map((p) => JSON.stringify(p)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'not':

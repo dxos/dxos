@@ -154,6 +154,20 @@ export interface FilterTimestamp extends Schema.Schema.Type<typeof FilterTimesta
 export const FilterTimestamp: Schema.Codec<FilterTimestamp> = FilterTimestamp_;
 
 /**
+ * Filter feed items to those appended after a cursor — the position the position authority assigned
+ * a block (`Feed.getCursor`). Only meaningful against a feed scope: an automerge object has no
+ * position, so the query planner rejects this filter over a space's documents.
+ */
+const FilterFeedCursor_ = Schema.Struct({
+  type: Schema.Literal('feed-cursor'),
+  /** Exclusive lower bound. The empty string is the start sentinel and bounds nothing. */
+  after: Schema.String,
+});
+
+export interface FilterFeedCursor extends Schema.Schema.Type<typeof FilterFeedCursor_> {}
+export const FilterFeedCursor: Schema.Codec<FilterFeedCursor> = FilterFeedCursor_;
+
+/**
  * Text search.
  */
 const FilterTextSearch_ = Schema.Struct({
@@ -225,6 +239,7 @@ export const Filter = Schema.Union([
   FilterTag,
   FilterRange,
   FilterTimestamp,
+  FilterFeedCursor,
   FilterTextSearch,
   FilterChildOf,
   FilterNot,
@@ -570,14 +585,9 @@ export interface SpaceScope extends Schema.Schema.Type<typeof SpaceScope> {}
 
 /**
  * Selects from a specific feed (by its underlying queue DXN).
- *
- * `after` resumes from a cursor: only blocks positioned strictly after it are selected, so a reader
- * that keeps a cursor pays for what is new rather than for the whole feed. Combine with `limit()`
- * to bound the page.
  */
 export const FeedScope = Schema.TaggedStruct('feed', {
   feedUri: Schema.String,
-  after: Schema.optional(Schema.String),
 });
 export interface FeedScope extends Schema.Schema.Type<typeof FeedScope> {}
 

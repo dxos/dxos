@@ -388,6 +388,26 @@ export const updated = (range: TimeRange): Any => _timeRangeFilter('updatedAt', 
  */
 export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', range);
 
+/**
+ * Filter feed items to those appended after a cursor — see `Feed.getCursor` for reading one off an
+ * item, and `Feed.START` for the sentinel that bounds nothing.
+ *
+ * The bound is pushed into the index scan, so a reader that keeps a cursor pays for what is new
+ * rather than for the whole feed. Combine with `limit()` for a bounded page. Only meaningful
+ * against a feed scope — an automerge object carries no position, so a query that also selects a
+ * space's documents is rejected.
+ *
+ * @example
+ * ```ts
+ * db.query(Query.select(Filter.feedCursor(cursor)).limit(10).from(feed));
+ * ```
+ */
+export const feedCursor = (after: string): Any =>
+  new FilterClass({
+    type: 'feed-cursor',
+    after,
+  });
+
 export type ChildOfOptions = {
   /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
   transitive?: boolean;

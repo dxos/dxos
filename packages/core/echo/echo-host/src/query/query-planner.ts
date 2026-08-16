@@ -135,6 +135,19 @@ export class QueryPlanner {
   // TODO(dmaretskyi): This can be rewritten as a function of (filter[]) -> (selection ? undefined, rest: filter[]) that recurses onto itself.
   // TODO(dmaretskyi): If the tip of the query ast is a [select, ...filter] shape we can reorder the filters so the query is most efficient.
   private _generateSelectionFromFilter(filter: QueryAST.Filter, context: GenerationContext): QueryPlan.Plan {
+    // A feed cursor bounds the scan rather than describing an object, so it is lifted out of the
+    // filter tree and onto the select step it bounds; what remains plans exactly as it would
+    // without it.
+    const { after, rest } = _splitFeedCursor(filter, context);
+    if (after !== undefined) {
+      const plan = this._generateSelectionFromFilter(rest ?? { type: 'object', typename: null, props: {} }, context);
+      const selectIdx = plan.steps.findIndex((step) => step._tag === 'SelectStep');
+      invariant(selectIdx !== -1, 'expected a select step to bound');
+      const steps = [...plan.steps];
+      steps[selectIdx] = { ...(steps[selectIdx] as QueryPlan.SelectStep), afterFeedCursor: after };
+      return QueryPlan.Plan.make(steps);
+    }
+
     switch (filter.type) {
       // Props
       case 'object': {
@@ -266,6 +279,10 @@ export class QueryPlanner {
           ...this._generateDeletedHandlingSteps(context),
         ]);
       }
+
+      // Feed cursor — always lifted out above, so reaching here means the tree changed shape.
+      case 'feed-cursor':
+        throw queryTooComplexError(context.originalQuery);
 
       // Timestamp
       case 'timestamp': {
@@ -1116,6 +1133,72 @@ export const filterContainsInQuery = (filter: QueryAST.Filter): boolean => {
 /**
  * Recursively flattens nested `and` filters into a single list.
  */
+/**
+ * Lift a `feed-cursor` filter out of the top level of a filter tree, returning the bound and
+ * whatever else the tree selects.
+ *
+ * A cursor is a scan bound, not a predicate over an object, so it composes with AND and with
+ * nothing else: negating or OR-ing one has no scan to bound, and two of them have no single bound.
+ * Those are rejected rather than silently dropped, which would return the whole feed.
+ */
+const _splitFeedCursor = (
+  filter: QueryAST.Filter,
+  context: GenerationContext,
+): { after?: string; rest?: QueryAST.Filter } => {
+  const reject = () => {
+    throw new QueryError({
+      message: 'A feed cursor filter can only be combined with other filters via AND.',
+      context: { query: context.originalQuery },
+    });
+  };
+
+  if (filter.type === 'feed-cursor') {
+    if (context.selectionInverted) {
+      reject();
+    }
+    return { after: filter.after };
+  }
+
+  if (filter.type !== 'and') {
+    if (_containsFeedCursor(filter)) {
+      reject();
+    }
+    return {};
+  }
+
+  const flat = _flattenAnd(filter.filters);
+  const cursors = flat.filter((f): f is QueryAST.FilterFeedCursor => f.type === 'feed-cursor');
+  const rest = flat.filter((f) => f.type !== 'feed-cursor');
+  if (cursors.length === 0) {
+    if (rest.some(_containsFeedCursor)) {
+      reject();
+    }
+    return {};
+  }
+  if (cursors.length > 1 || context.selectionInverted || rest.some(_containsFeedCursor)) {
+    reject();
+  }
+
+  return {
+    after: cursors[0].after,
+    rest: rest.length === 0 ? undefined : rest.length === 1 ? rest[0] : { type: 'and', filters: rest },
+  };
+};
+
+const _containsFeedCursor = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'feed-cursor':
+      return true;
+    case 'not':
+      return _containsFeedCursor(filter.filter);
+    case 'and':
+    case 'or':
+      return filter.filters.some(_containsFeedCursor);
+    default:
+      return false;
+  }
+};
+
 const _flattenAnd = (filters: readonly QueryAST.Filter[]): QueryAST.Filter[] => {
   const result: QueryAST.Filter[] = [];
   for (const f of filters) {
