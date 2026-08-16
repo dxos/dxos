@@ -35,7 +35,6 @@ import * as Process from '@dxos/compute/Process';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
@@ -133,9 +132,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           : undefined;
         const runtime = yield* Effect.context<Database.Service>();
         const makeTurnProducer = options.makeTurnProducer ?? makeAiSessionTurnProducer;
-        const session = yield* EffectEx.acquireReleaseResource(() =>
-          makeTurnProducer({ feed, runtime, instructions: instructions ? [instructions] : [] }),
-        );
+        // Scoped acquisition: the producer's teardown registers with this process's scope.
+        const session = yield* makeTurnProducer({ feed, runtime, instructions: instructions ? [instructions] : [] });
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsCell.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);

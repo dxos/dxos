@@ -33,7 +33,9 @@ export type MakeOptions = {
 export const make = ({ feed, cwd, maxTurns, path }: MakeOptions) => {
   let session: string | undefined;
 
-  return {
+  // A scoped effect to match `MakeTurnProducer`; nothing to release — the host is reached over HTTP
+  // and each turn is a single request.
+  return Effect.succeed({
     // The SDK owns tool binding, so no DXOS skills are bound to this conversation and the process's
     // end-request hooks have nothing to fire. Bridging DXOS operations would go through MCP.
     getSkills: () => [],
@@ -72,5 +74,5 @@ export const make = ({ feed, cwd, maxTurns, path }: MakeOptions) => {
 
         return messages;
       }),
-  };
+  });
 };

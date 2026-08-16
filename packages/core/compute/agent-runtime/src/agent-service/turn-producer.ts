@@ -3,12 +3,14 @@
 //
 
 import type * as Context from 'effect/Context';
-import type * as Effect from 'effect/Effect';
+import * as Effect from 'effect/Effect';
+import type * as Scope from 'effect/Scope';
 
 import { type AiRequest, AiSession } from '@dxos/assistant';
 import type * as Instructions from '@dxos/compute/Instructions';
 import type * as Skill from '@dxos/compute/Skill';
 import type { Database, Feed } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import type { Message } from '@dxos/types';
 
 /**
@@ -24,10 +26,6 @@ import type { Message } from '@dxos/types';
  * appears.
  */
 export interface TurnProducer {
-  /** Resource lifecycle, driven by the process via `acquireReleaseResource`. */
-  open?(): Promise<unknown> | unknown;
-  close?(): Promise<unknown> | unknown;
-
   /**
    * Runs a turn, appending messages to the feed and returning what it produced.
    *
@@ -51,16 +49,18 @@ export type MakeTurnProducerOptions = {
   instructions: Instructions.Instructions[];
 };
 
-/** Builds the producer for a conversation; the default drives DXOS's own `AiSession`. */
-export type MakeTurnProducer = (options: MakeTurnProducerOptions) => TurnProducer;
+/**
+ * Builds the producer for a conversation as a scoped effect — teardown registers with the scope
+ * (`Effect.acquireRelease`/`addFinalizer`), so the process's scope owns the producer's lifetime.
+ * The default drives DXOS's own `AiSession`.
+ */
+export type MakeTurnProducer = (options: MakeTurnProducerOptions) => Effect.Effect<TurnProducer, never, Scope.Scope>;
 
 /**
  * The default producer: `AiSession.Session`, which resolves the model, binds skills and context
  * objects as tools, and appends each message to the feed via its `onOutput` hook.
  */
-export const makeAiSessionTurnProducer: MakeTurnProducer = ({ feed, runtime, instructions }) => {
-  const session = new AiSession.Session({ feed, runtime, instructions });
-  return Object.assign(session, {
-    getSkills: () => session.context.getSkills(),
-  });
-};
+export const makeAiSessionTurnProducer: MakeTurnProducer = ({ feed, runtime, instructions }) =>
+  EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime, instructions })).pipe(
+    Effect.map((session) => Object.assign(session, { getSkills: () => session.context.getSkills() })),
+  );
