@@ -1,8 +1,7 @@
 # plugin-inbox — Tasks
 
-_Resume: **#12555, #12574, #12575, #12577, #12605, #12612 and #12613 MERGED.** Current PR is
-**[#12621](https://github.com/dxos/dxos/pull/12621)** — the review follow-up to #12605, green and
-deliberately NOT enqueued: landing waits on a call about orphaned operation DXNs (below).
+_Resume: **#12555, #12574, #12575, #12577, #12605, #12612, #12613 and #12621 all MERGED.** No PR is
+open for this work-stream; the next piece starts from a clean base.
 
 **D6 is BUILT, and was not the thing it was named after.** Framed as "generalize off `Mailbox`" it had
 no second consumer and every costing said wait. The real defect was that `findOrCreateFeedCursor` took
