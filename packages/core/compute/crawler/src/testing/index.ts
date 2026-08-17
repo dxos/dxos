@@ -273,8 +273,8 @@ export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
  * `Source` layer and an `AiService` (the deterministic stand-in or a real model) to run the crawler.
  */
 export const coreLayer: Layer.Layer<StateStore.StateStore | AgentRegistry.AgentRegistry | FactStore> = Layer.mergeAll(
-  StateStore.StateStore.layerMemory,
-  AgentRegistry.AgentRegistry.layerMemory,
+  StateStore.layerMemory,
+  AgentRegistry.layerMemory,
   FactStoreLive.layerMemory,
 );
 

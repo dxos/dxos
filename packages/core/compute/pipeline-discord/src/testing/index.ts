@@ -26,12 +26,12 @@ export const storesLayer = <E>(
   E
 > =>
   Layer.mergeAll(
-    StateStore.StateStore.layerSql,
-    AgentRegistry.AgentRegistry.layerSql,
+    StateStore.layerSql,
+    AgentRegistry.layerSql,
     FactStoreLive.layer,
-    MessageStore.MessageStore.layerSql,
-    QuestionStore.QuestionStore.layerSql,
-    ExtractedQuestionStore.ExtractedQuestionStore.layerSql,
+    MessageStore.layerSql,
+    QuestionStore.layerSql,
+    ExtractedQuestionStore.layerSql,
   ).pipe(
     // Store migrations run inside the SqlTransaction service; derive it from the same client.
     Layer.provide(SqlTransaction.layer),

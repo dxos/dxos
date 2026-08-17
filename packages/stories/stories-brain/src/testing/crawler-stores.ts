@@ -29,11 +29,11 @@ export type CrawlerStoreServices =
 /** All crawler stores (minus `FactStore`) over one shared in-memory wasm SQLite client. */
 const crawlerStoresLayer = (): Layer.Layer<CrawlerStoreServices> =>
   Layer.mergeAll(
-    StateStore.StateStore.layerSql,
-    AgentRegistry.AgentRegistry.layerSql,
-    MessageStore.MessageStore.layerSql,
-    QuestionStore.QuestionStore.layerSql,
-    ExtractedQuestionStore.ExtractedQuestionStore.layerSql,
+    StateStore.layerSql,
+    AgentRegistry.layerSql,
+    MessageStore.layerSql,
+    QuestionStore.layerSql,
+    ExtractedQuestionStore.layerSql,
   ).pipe(
     // Store migrations run inside the SqlTransaction service; derive it from the same client.
     Layer.provide(SqlTransaction.layer),

@@ -64,22 +64,22 @@ export interface Service {
   readonly setRef: (id: string, ref: string) => Effect.Effect<void, StateError>;
 }
 
-export class AgentRegistry extends Context.Service<AgentRegistry, Service>()('@dxos/crawler/AgentRegistry') {
-  /** In-memory registry (tests, demos). Browser path will back this with ECHO Person objects. */
-  static layerMemory: Layer.Layer<AgentRegistry> = Layer.sync(AgentRegistry, () => makeMemory());
+export class AgentRegistry extends Context.Service<AgentRegistry, Service>()('@dxos/crawler/AgentRegistry') {}
 
-  /** SQLite-backed registry over a shared SqlClient. */
-  static layerSql: Layer.Layer<AgentRegistry, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
-    Layer.effect(
-      AgentRegistry,
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
-        yield* migrate().pipe(Effect.orDie);
-        return makeSql(sql);
-      }),
-    );
-}
+/** In-memory registry (tests, demos). Browser path will back this with ECHO Person objects. */
+export const layerMemory: Layer.Layer<AgentRegistry> = Layer.sync(AgentRegistry, () => makeMemory());
+
+/** SQLite-backed registry over a shared SqlClient. */
+export const layerSql: Layer.Layer<AgentRegistry, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
+  Layer.effect(
+    AgentRegistry,
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
+      yield* migrate().pipe(Effect.orDie);
+      return makeSql(sql);
+    }),
+  );
 
 export const resolve = (...args: Parameters<Service['resolve']>) =>
   AgentRegistry.use((registry) => registry.resolve(...args));

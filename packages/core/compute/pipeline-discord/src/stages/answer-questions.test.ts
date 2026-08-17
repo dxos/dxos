@@ -16,7 +16,7 @@ import { QuestionStore } from '../stores';
 import { answerOpenQuestions } from './answer-questions';
 
 const TestLayer = (answer?: string) =>
-  Layer.mergeAll(QuestionStore.QuestionStore.layerMemory, FactStoreLive.layerMemory, fakeAi(answer));
+  Layer.mergeAll(QuestionStore.layerMemory, FactStoreLive.layerMemory, fakeAi(answer));
 
 describe('answerOpenQuestions', () => {
   it.effect(

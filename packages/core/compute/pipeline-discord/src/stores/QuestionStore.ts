@@ -95,108 +95,108 @@ const toQuestion = (row: Row): Question => ({
   updatedAt: row.updated_at,
 });
 
-export class QuestionStore extends Context.Service<QuestionStore, Service>()('@dxos/pipeline-discord/QuestionStore') {
-  static layerSql: Layer.Layer<QuestionStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
-    Layer.effect(
-      QuestionStore,
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* migrate().pipe(Effect.orDie);
-        return {
-          add: (text, id) =>
-            Effect.gen(function* () {
-              const timestamp = yield* now;
-              const question: Question = {
-                id: id ?? crypto.randomUUID(),
-                text,
-                status: 'open',
-                supportingIds: [],
-                attempts: 0,
-                createdAt: timestamp,
-                updatedAt: timestamp,
-              };
-              yield* sql`INSERT INTO question (id, text, status, supporting_ids, attempts, created_at, updated_at)
-              VALUES (${question.id}, ${question.text}, 'open', '[]', 0, ${timestamp}, ${timestamp})`;
-              return question;
-            }).pipe(Effect.mapError(fail('Failed to add question'))),
-          get: (id) =>
-            sql<Row>`SELECT * FROM question WHERE id = ${id}`.pipe(
-              Effect.map((rows) => (rows[0] ? toQuestion(rows[0]) : undefined)),
-              Effect.mapError(fail('Failed to read question')),
-            ),
-          list: (status) =>
-            (status !== undefined
-              ? sql<Row>`SELECT * FROM question WHERE status = ${status} ORDER BY created_at ASC, id ASC`
-              : sql<Row>`SELECT * FROM question ORDER BY created_at ASC, id ASC`
-            ).pipe(
-              Effect.map((rows) => rows.map(toQuestion)),
-              Effect.mapError(fail('Failed to list questions')),
-            ),
-          answer: (id, answer, supportingIds) =>
-            Effect.gen(function* () {
-              const timestamp = yield* now;
-              yield* sql`UPDATE question SET status = 'answered', answer = ${answer},
-              supporting_ids = ${JSON.stringify(supportingIds)}, updated_at = ${timestamp} WHERE id = ${id}`;
-            }).pipe(Effect.asVoid, Effect.mapError(fail('Failed to answer question'))),
-          recordAttempt: (id) =>
-            Effect.gen(function* () {
-              const timestamp = yield* now;
-              yield* sql`UPDATE question SET attempts = attempts + 1, updated_at = ${timestamp} WHERE id = ${id}`;
-            }).pipe(Effect.asVoid, Effect.mapError(fail('Failed to record question attempt'))),
-        };
-      }),
-    );
+export class QuestionStore extends Context.Service<QuestionStore, Service>()('@dxos/pipeline-discord/QuestionStore') {}
 
-  static layerMemory: Layer.Layer<QuestionStore> = Layer.sync(QuestionStore, () => {
-    const byId = new Map<string, Question>();
-    return {
-      add: (text, id) =>
-        Effect.gen(function* () {
-          const timestamp = yield* now;
-          const question: Question = {
-            id: id ?? crypto.randomUUID(),
-            text,
-            status: 'open',
-            supportingIds: [],
-            attempts: 0,
-            createdAt: timestamp,
-            updatedAt: timestamp,
-          };
-          byId.set(question.id, question);
-          return question;
-        }),
-      get: (id) => Effect.sync(() => byId.get(id)),
-      list: (status) =>
-        Effect.sync(() =>
-          [...byId.values()]
-            .filter((question) => status === undefined || question.status === status)
-            .sort((left, right) => left.createdAt.localeCompare(right.createdAt) || left.id.localeCompare(right.id)),
-        ),
-      answer: (id, answer, supportingIds) =>
-        Effect.gen(function* () {
-          const timestamp = yield* now;
-          const question = byId.get(id);
-          if (question) {
-            byId.set(id, {
-              ...question,
-              status: 'answered',
-              answer,
-              supportingIds: [...supportingIds],
+export const layerSql: Layer.Layer<QuestionStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
+  Layer.effect(
+    QuestionStore,
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* migrate().pipe(Effect.orDie);
+      return {
+        add: (text, id) =>
+          Effect.gen(function* () {
+            const timestamp = yield* now;
+            const question: Question = {
+              id: id ?? crypto.randomUUID(),
+              text,
+              status: 'open',
+              supportingIds: [],
+              attempts: 0,
+              createdAt: timestamp,
               updatedAt: timestamp,
-            });
-          }
-        }),
-      recordAttempt: (id) =>
-        Effect.gen(function* () {
-          const timestamp = yield* now;
-          const question = byId.get(id);
-          if (question) {
-            byId.set(id, { ...question, attempts: question.attempts + 1, updatedAt: timestamp });
-          }
-        }),
-    };
-  });
-}
+            };
+            yield* sql`INSERT INTO question (id, text, status, supporting_ids, attempts, created_at, updated_at)
+            VALUES (${question.id}, ${question.text}, 'open', '[]', 0, ${timestamp}, ${timestamp})`;
+            return question;
+          }).pipe(Effect.mapError(fail('Failed to add question'))),
+        get: (id) =>
+          sql<Row>`SELECT * FROM question WHERE id = ${id}`.pipe(
+            Effect.map((rows) => (rows[0] ? toQuestion(rows[0]) : undefined)),
+            Effect.mapError(fail('Failed to read question')),
+          ),
+        list: (status) =>
+          (status !== undefined
+            ? sql<Row>`SELECT * FROM question WHERE status = ${status} ORDER BY created_at ASC, id ASC`
+            : sql<Row>`SELECT * FROM question ORDER BY created_at ASC, id ASC`
+          ).pipe(
+            Effect.map((rows) => rows.map(toQuestion)),
+            Effect.mapError(fail('Failed to list questions')),
+          ),
+        answer: (id, answer, supportingIds) =>
+          Effect.gen(function* () {
+            const timestamp = yield* now;
+            yield* sql`UPDATE question SET status = 'answered', answer = ${answer},
+            supporting_ids = ${JSON.stringify(supportingIds)}, updated_at = ${timestamp} WHERE id = ${id}`;
+          }).pipe(Effect.asVoid, Effect.mapError(fail('Failed to answer question'))),
+        recordAttempt: (id) =>
+          Effect.gen(function* () {
+            const timestamp = yield* now;
+            yield* sql`UPDATE question SET attempts = attempts + 1, updated_at = ${timestamp} WHERE id = ${id}`;
+          }).pipe(Effect.asVoid, Effect.mapError(fail('Failed to record question attempt'))),
+      };
+    }),
+  );
+
+export const layerMemory: Layer.Layer<QuestionStore> = Layer.sync(QuestionStore, () => {
+  const byId = new Map<string, Question>();
+  return {
+    add: (text, id) =>
+      Effect.gen(function* () {
+        const timestamp = yield* now;
+        const question: Question = {
+          id: id ?? crypto.randomUUID(),
+          text,
+          status: 'open',
+          supportingIds: [],
+          attempts: 0,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        };
+        byId.set(question.id, question);
+        return question;
+      }),
+    get: (id) => Effect.sync(() => byId.get(id)),
+    list: (status) =>
+      Effect.sync(() =>
+        [...byId.values()]
+          .filter((question) => status === undefined || question.status === status)
+          .sort((left, right) => left.createdAt.localeCompare(right.createdAt) || left.id.localeCompare(right.id)),
+      ),
+    answer: (id, answer, supportingIds) =>
+      Effect.gen(function* () {
+        const timestamp = yield* now;
+        const question = byId.get(id);
+        if (question) {
+          byId.set(id, {
+            ...question,
+            status: 'answered',
+            answer,
+            supportingIds: [...supportingIds],
+            updatedAt: timestamp,
+          });
+        }
+      }),
+    recordAttempt: (id) =>
+      Effect.gen(function* () {
+        const timestamp = yield* now;
+        const question = byId.get(id);
+        if (question) {
+          byId.set(id, { ...question, attempts: question.attempts + 1, updatedAt: timestamp });
+        }
+      }),
+  };
+});
 
 export const add = (...args: Parameters<Service['add']>) => QuestionStore.use((store) => store.add(...args));
 export const get = (...args: Parameters<Service['get']>) => QuestionStore.use((store) => store.get(...args));

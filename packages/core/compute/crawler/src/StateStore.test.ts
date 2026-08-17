@@ -92,10 +92,10 @@ const suite = (name: string, layer: Layer.Layer<StateStore.StateStore>) =>
   });
 
 describe('StateStore', () => {
-  suite('memory', StateStore.StateStore.layerMemory);
+  suite('memory', StateStore.layerMemory);
   suite(
     'sql',
-    StateStore.StateStore.layerSql.pipe(
+    StateStore.layerSql.pipe(
       Layer.provideMerge(SqlTransaction.layer),
       Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie)),
     ),
@@ -119,13 +119,13 @@ describe('StateStore', () => {
             const store = yield* StateStore.StateStore;
             yield* store.pushTargets([target('chan-1')]);
             yield* store.setCursor('chan-1', '42');
-          }).pipe(Effect.provide(StateStore.StateStore.layerSql), Effect.provide(shared));
+          }).pipe(Effect.provide(StateStore.layerSql), Effect.provide(shared));
 
           yield* Effect.gen(function* () {
             const store = yield* StateStore.StateStore;
             const [entry] = yield* store.listTargets();
             expect(entry.cursor).toBe('42');
-          }).pipe(Effect.provide(StateStore.StateStore.layerSql), Effect.provide(shared));
+          }).pipe(Effect.provide(StateStore.layerSql), Effect.provide(shared));
         }),
       );
     }),

@@ -71,47 +71,47 @@ const toQuestion = (row: Row): ExtractedQuestion => ({
 
 export class ExtractedQuestionStore extends Context.Service<ExtractedQuestionStore, Service>()(
   '@dxos/pipeline-discord/ExtractedQuestionStore',
-) {
-  static layerSql: Layer.Layer<ExtractedQuestionStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
-    Layer.effect(
-      ExtractedQuestionStore,
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* migrate().pipe(Effect.orDie);
-        return {
-          put: (question) =>
-            sql`INSERT INTO extracted_question (message_id, question, author_id, author_label, target_id, asked_at)
-            VALUES (${question.messageId}, ${question.question}, ${question.authorId},
-              ${question.authorLabel ?? null}, ${question.targetId}, ${question.askedAt ?? null})
-            ON CONFLICT(message_id, question) DO NOTHING`.pipe(
-              Effect.asVoid,
-              Effect.mapError(fail('Failed to persist extracted question')),
-            ),
-          list: (targetId) =>
-            (targetId !== undefined
-              ? sql<Row>`SELECT * FROM extracted_question WHERE target_id = ${targetId} ORDER BY message_id ASC`
-              : sql<Row>`SELECT * FROM extracted_question ORDER BY message_id ASC`
-            ).pipe(
-              Effect.map((rows) => rows.map(toQuestion)),
-              Effect.mapError(fail('Failed to list extracted questions')),
-            ),
-        };
-      }),
-    );
+) {}
 
-  static layerMemory: Layer.Layer<ExtractedQuestionStore> = Layer.sync(ExtractedQuestionStore, () => {
-    const byKey = new Map<string, ExtractedQuestion>();
-    return {
-      put: (question) => Effect.sync(() => void byKey.set(`${question.messageId}#${question.question}`, question)),
-      list: (targetId) =>
-        Effect.sync(() =>
-          [...byKey.values()]
-            .filter((question) => targetId === undefined || question.targetId === targetId)
-            .sort((left, right) => left.messageId.localeCompare(right.messageId)),
-        ),
-    };
-  });
-}
+export const layerSql: Layer.Layer<ExtractedQuestionStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
+  Layer.effect(
+    ExtractedQuestionStore,
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* migrate().pipe(Effect.orDie);
+      return {
+        put: (question) =>
+          sql`INSERT INTO extracted_question (message_id, question, author_id, author_label, target_id, asked_at)
+          VALUES (${question.messageId}, ${question.question}, ${question.authorId},
+            ${question.authorLabel ?? null}, ${question.targetId}, ${question.askedAt ?? null})
+          ON CONFLICT(message_id, question) DO NOTHING`.pipe(
+            Effect.asVoid,
+            Effect.mapError(fail('Failed to persist extracted question')),
+          ),
+        list: (targetId) =>
+          (targetId !== undefined
+            ? sql<Row>`SELECT * FROM extracted_question WHERE target_id = ${targetId} ORDER BY message_id ASC`
+            : sql<Row>`SELECT * FROM extracted_question ORDER BY message_id ASC`
+          ).pipe(
+            Effect.map((rows) => rows.map(toQuestion)),
+            Effect.mapError(fail('Failed to list extracted questions')),
+          ),
+      };
+    }),
+  );
+
+export const layerMemory: Layer.Layer<ExtractedQuestionStore> = Layer.sync(ExtractedQuestionStore, () => {
+  const byKey = new Map<string, ExtractedQuestion>();
+  return {
+    put: (question) => Effect.sync(() => void byKey.set(`${question.messageId}#${question.question}`, question)),
+    list: (targetId) =>
+      Effect.sync(() =>
+        [...byKey.values()]
+          .filter((question) => targetId === undefined || question.targetId === targetId)
+          .sort((left, right) => left.messageId.localeCompare(right.messageId)),
+      ),
+  };
+});
 
 export const put = (...args: Parameters<Service['put']>) => ExtractedQuestionStore.use((store) => store.put(...args));
 export const list = (...args: Parameters<Service['list']>) =>

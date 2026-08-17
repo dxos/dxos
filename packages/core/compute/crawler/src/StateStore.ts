@@ -41,12 +41,14 @@ export interface Service {
   readonly getRunStatus: () => Effect.Effect<RunStatus, StateError>;
 }
 
-export class StateStore extends Context.Service<StateStore, Service>()('@dxos/crawler/StateStore') {
-  /** In-memory frontier (tests, demos, single-process browser runs). */
-  static layerMemory: Layer.Layer<StateStore> = Layer.sync(StateStore, () => makeMemory());
+export class StateStore extends Context.Service<StateStore, Service>()('@dxos/crawler/StateStore') {}
 
-  /** SQLite-backed frontier over a shared SqlClient (browser wasm / node / DO SQLite). */
-  static layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.effect(
+/** In-memory frontier (tests, demos, single-process browser runs). */
+export const layerMemory: Layer.Layer<StateStore> = Layer.sync(StateStore, () => makeMemory());
+
+/** SQLite-backed frontier over a shared SqlClient (browser wasm / node / DO SQLite). */
+export const layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
+  Layer.effect(
     StateStore,
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
@@ -55,7 +57,6 @@ export class StateStore extends Context.Service<StateStore, Service>()('@dxos/cr
       return makeSql(sql);
     }),
   );
-}
 
 export const pushTargets = (...args: Parameters<Service['pushTargets']>) =>
   StateStore.use((store) => store.pushTargets(...args));
