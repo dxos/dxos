@@ -1,5 +1,5 @@
 //
-// Copyright 2026 DXOS.org
+// Copyright 2026 Daniel Thompson-Yvetot
 //
 
 // Live microphone capture bridged into the webview.
