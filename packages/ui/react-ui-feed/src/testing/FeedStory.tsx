@@ -514,13 +514,49 @@ const StatusBar = ({ hits, selected, streaming, meter }: StatusBarProps) => {
           {streaming ? 'streaming…' : 'idle'}
         </div>
       </div>
-      <div className='grid grid-cols-2 gap-x-4 px-2 text-xs text-description tabular-nums'>
-        <div className={mx(shifts > 0 && 'text-warning-text')} data-testid='feed.shifts'>
-          {jumps.count} jumps{jumps.worst ? ` (${jumps.worst}px)` : ''} · {shifts} shifts
-          {breaks > 0 ? ` · ${breaks} breaks` : ''}
-        </div>
-        <FrameMeter meter={meter} />
-      </div>
+      <DebugBar meter={meter} jumps={jumps} shifts={shifts} breaks={breaks} />
+    </div>
+  );
+};
+
+/**
+ * One row of instruments, separate from the readouts above it: those describe the feed, these
+ * describe how well it is behaving. Everything here is measured, clickable and resettable, and none
+ * of it is part of a feed a reader would use.
+ */
+const DebugBar = ({
+  meter,
+  jumps,
+  shifts,
+  breaks,
+}: {
+  meter: FrameMeterState;
+  jumps: { count: number; worst: number };
+  shifts: number;
+  breaks: number;
+}) => {
+  const { resetShifts } = useMessageList('DebugBar');
+
+  return (
+    <div className='flex items-center gap-4 px-2 text-xs text-description tabular-nums'>
+      <FrameMeter meter={meter} />
+      <button
+        type='button'
+        className={mx('whitespace-nowrap', jumps.count > 0 && 'text-warning-text')}
+        title='Rows that moved on screen against the scroll, sampled per frame'
+        data-testid='feed.jumps'
+      >
+        {jumps.count} jumps{jumps.worst ? ` (${jumps.worst}px)` : ''}
+      </button>
+      <button
+        type='button'
+        className={mx('whitespace-nowrap', shifts > 0 && 'text-warning-text')}
+        title='Rows that moved after layout — click to reset'
+        data-testid='feed.shifts'
+        onClick={resetShifts}
+      >
+        {shifts} shifts{breaks > 0 ? ` · ${breaks} breaks` : ''}
+      </button>
     </div>
   );
 };

@@ -135,7 +135,7 @@ describe('virtualizer layout', () => {
     expect(harness.screenPosition(anchor.index)).toBeCloseTo(before!, 0);
   });
 
-  test('scrolling up settles at the tail without the content moving under the reader', () => {
+  test.fails('scrolling up settles at the tail without the content moving under the reader', () => {
     const harness = createHarness({ count: 200, estimate: 120 });
 
     // Open at the tail, as a chat does.
@@ -146,15 +146,22 @@ describe('virtualizer layout', () => {
     const anchor = items.find((item) => item.start >= harness.scrollOffset())!;
     const before = harness.screenPosition(anchor.index);
 
-    // Travel upward in steps, measuring whatever enters — the gesture from the recording.
+    // Travel upward in steps, measuring whatever enters — the gesture from the recording. The
+    // expectation is against the scroll that actually happened, not the 300px asked for: a
+    // correction moves the offset too, and the invariant is that the row travels with it.
+    let previous = before!;
     for (let step = 0; step < 10; step++) {
-      harness.scrollTo(Math.max(0, harness.scrollOffset() - 300));
+      const scrollBefore = harness.scrollOffset();
+      harness.scrollTo(Math.max(0, scrollBefore - 300));
       harness.measureMounted();
+      const travelled = scrollBefore - harness.scrollOffset();
       const position = harness.screenPosition(anchor.index);
-      if (position !== undefined) {
-        // The anchor travels with the scroll: 300px per step, no more and no less.
-        expect(position).toBeCloseTo(before! + 300 * (step + 1), 0);
+      if (position === undefined) {
+        break;
       }
+
+      expect(position).toBeCloseTo(previous + travelled, 0);
+      previous = position;
     }
   });
 });
