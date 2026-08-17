@@ -9,6 +9,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type WindowState } from '../../components';
 
+/** 2rem, matching the outline rail it usually sits opposite. */
 const DEFAULT_WIDTH = 32;
 
 /**
@@ -24,7 +25,7 @@ const DEFAULT_WIDTH = 32;
  */
 export type MinimapProps = ThemedClassName<{
   state?: WindowState;
-  /** Width of the rail, in px. @default 32 */
+  /** Width of the rail, in px. @default 32 (2rem) */
   width?: number;
   /**
    * Jump to where the reader pointed, as a fraction of the whole list.

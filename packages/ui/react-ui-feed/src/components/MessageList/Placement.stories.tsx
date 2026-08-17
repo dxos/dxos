@@ -183,6 +183,7 @@ const Harness = ({
         </Window>
 
         <Minimap
+          classNames='border'
           state={state}
           onSelect={(fraction) => controller.current?.scrollToIndex(Math.round(fraction * (count - 1)))}
         />

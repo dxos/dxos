@@ -17,6 +17,7 @@ import { mx } from '@dxos/ui-theme';
 // Rest tick width (px) and the wave radius (in rows) over which the hover extension falls off. The
 // peak is the rail's own width: a tick at full extension spans it.
 const REST_WIDTH = 8;
+/** 2rem, matching the debug minimap it usually sits opposite. */
 const DEFAULT_WIDTH = 32;
 const WAVE_SPREAD = 2;
 
@@ -50,7 +51,7 @@ export type OutlineProps = ThemedClassName<{
    * tick looks the same. @default 8
    */
   tickSize?: number;
-  /** Width of the rail, in px, which is also how far a tick extends at the peak of the wave. @default 32 */
+  /** Width of the rail, in px, which is also how far a tick extends at the peak of the wave. @default 32 (2rem) */
   width?: number;
   onSelect?: (marker: OutlineMarker, index: number) => void;
 }>;
@@ -187,7 +188,7 @@ export const Outline = ({
     <Popover.Root open={hoveredMarker != null}>
       <div
         role='navigation'
-        className={mx('relative flex flex-col overflow-hidden', classNames)}
+        className={mx('relative flex flex-col justify-center overflow-hidden', classNames)}
         style={{
           width: `${width}px`,
           height: bounded ? '100%' : `${natural}px`,
@@ -196,10 +197,10 @@ export const Outline = ({
         onKeyDown={handleKeyDown}
         ref={containerRef}
       >
-        {/* The rail always fills what it is given and the rows share it, so the ticks span the whole
-            range whether there are more markers than fit — thinned above — or fewer, spread out. A
-            rail sized to its content would map the document onto part of the height and leave the
-            rest blank, which reads as the feed being shorter than it is. */}
+        {/* Ticks are a fixed height, so a document with fewer markers than the rail can hold does not
+            fill it — and they are centred rather than stacked at the top, which reads as the rail
+            having been cut short. Centring is the rail's own business; where the *rail* sits is its
+            container's. */}
         {rows.map((row, index) => {
           const marker = row.marker;
           const active = isActive(row);
