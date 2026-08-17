@@ -4,7 +4,27 @@
 
 import { describe, test } from 'vitest';
 
+import { Config } from '@dxos/client';
+import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
+
 import * as Account from './Account';
+
+describe('getHubUrl', () => {
+  test('prefers the bundler-set app env over the services key', ({ expect }) => {
+    const config = new Config({
+      runtime: { app: { env: { DX_HUB_URL: 'https://hub.env/' } }, services: { hub: { url: 'https://hub.svc/' } } },
+    });
+    expect(Account.getHubUrl({ config })).toBe('https://hub.env/');
+  });
+
+  test('falls back to the services key, then to the default', ({ expect }) => {
+    expect(
+      Account.getHubUrl({ config: new Config({ runtime: { services: { hub: { url: 'https://hub.svc/' } } } }) }),
+    ).toBe('https://hub.svc/');
+    // The case the CLI hits: no bundler ever wrote `runtime.app.env`.
+    expect(Account.getHubUrl({ config: new Config() })).toBe(DEFAULT_HUB_URL);
+  });
+});
 
 describe('access codes', () => {
   test('accepts hyphenated, bare, and lower-case forms', ({ expect }) => {
