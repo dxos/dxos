@@ -143,8 +143,7 @@ describe('apply edits', () => {
   });
 
   test('accepts a root reached through a symlink', async ({ expect }) => {
-    // `DX_COMPUTER_ROOT` is whatever the developer typed, and on macOS `/tmp` is a symlink to
-    // `/private/tmp`. Unless the host canonicalizes it, every file inside the root reads as an escape.
+    // A configured root can be a symlink — `/tmp` is one on macOS.
     const linked = path.join(os.tmpdir(), `dx-computer-link-${process.pid}`);
     fs.symlinkSync(root, linked);
     const linkedHost = await startHost({ root: linked });
@@ -159,6 +158,57 @@ describe('apply edits', () => {
       await linkedHost.close();
       fs.unlinkSync(linked);
     }
+  });
+
+  test('refuses a symlink inside the root that points outside it', async ({ expect }) => {
+    // A lexical prefix check passes here, and both the read and the write would follow the link.
+    const outside = path.join(os.tmpdir(), `dx-computer-outside-${process.pid}.ts`);
+    fs.writeFileSync(outside, 'secret\n');
+    fs.symlinkSync(outside, path.join(root, 'link.ts'));
+    try {
+      const result = await apply([{ path: 'link.ts', oldString: 'secret', newString: 'leaked' }]);
+      expect(result.applied).to.be.false;
+      expect(result.error).to.match(/outside the configured root/);
+      expect(fs.readFileSync(outside, 'utf8')).to.eq('secret\n');
+    } finally {
+      fs.rmSync(outside, { force: true });
+    }
+  });
+
+  test('preserves multi-byte text across stdin chunk boundaries', async ({ expect }) => {
+    // Node reads stdin in 64KiB chunks, which do not land on 3-byte character boundaries; decoding
+    // per chunk would write replacement characters into the file.
+    const wide = '→'.repeat(70_000);
+    write('a.ts', 'const label = "x";\n');
+
+    const result = await apply([{ path: 'a.ts', oldString: 'x', newString: wide }]);
+    expect(result.applied, result.error).to.be.true;
+    expect(read('a.ts')).to.eq(`const label = "${wide}";\n`);
+  });
+
+  test('returns a large batch result intact', async ({ expect }) => {
+    // The result is parsed from captured stdout, so anything that clips the stream reports a batch
+    // that was in fact applied as a failure.
+    const edits = Array.from({ length: 700 }, (_, index) => {
+      const file = `f${String(index).padStart(4, '0')}${'-padding'.repeat(12)}.ts`;
+      write(file, 'alpha\n');
+      return { path: file, oldString: 'alpha', newString: 'beta' };
+    });
+
+    const result = await apply(edits);
+    expect(result.applied, result.error).to.be.true;
+    expect(result.files).to.have.length(700);
+  });
+
+  test('preserves the file mode through the write', async ({ expect }) => {
+    // The write goes through a temporary file and a rename, which would otherwise hand the target the
+    // temporary's mode and quietly unset the executable bit on a script.
+    write('run.sh', 'echo alpha\n');
+    fs.chmodSync(path.join(root, 'run.sh'), 0o755);
+
+    const result = await apply([{ path: 'run.sh', oldString: 'alpha', newString: 'beta' }]);
+    expect(result.applied, result.error).to.be.true;
+    expect(fs.statSync(path.join(root, 'run.sh')).mode & 0o777).to.eq(0o755);
   });
 
   const write = (file: string, content: string) => {

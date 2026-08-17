@@ -102,8 +102,7 @@ describe('shell middleware', () => {
   });
 
   test('treats an opaque origin as cross-origin', async ({ expect }) => {
-    // A sandboxed frame sends `Origin: null`, which is not a URL — parsing it unguarded rejects the
-    // handler, and the request then hangs instead of being refused.
+    // A sandboxed frame sends `Origin: null`, which is not a parseable URL.
     const response = await fetch(host.path, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'origin': 'null' },
@@ -113,8 +112,7 @@ describe('shell middleware', () => {
   });
 
   test('falls back to the default timeout when the requested one is unusable', async ({ expect }) => {
-    // Straight over the wire: `Math.min(NaN, max)` is NaN, and `setTimeout(fn, NaN)` fires on the next
-    // tick — the script would be killed instantly and reported as a timeout that never happened.
+    // Straight over the wire, since `NaN` reaching `setTimeout` kills the script on the next tick.
     const response = await fetch(host.path, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
