@@ -19,8 +19,8 @@ const REST_WIDTH = 8;
 const PEAK_WIDTH = 32;
 const WAVE_SPREAD = 2;
 
-/** Row pitch: the closest two ticks may sit before the rail starts thinning them. */
-const MIN_ROW = 12;
+/** Height of one tick, and so the pitch the rail thins its markers to. */
+const TICK_SIZE = 8;
 
 const intersects = (range: { from: number; to: number }, visible: { from: number; to: number }): boolean =>
   range.from < visible.to && range.to > visible.from;
@@ -40,6 +40,15 @@ export type MinimapProps = ThemedClassName<{
   markers: MinimapMarker[];
   /** Currently-visible document range; markers intersecting it render brighter ("active"). */
   visibleRange?: { from: number; to: number };
+  /**
+   * Height of one tick, in px.
+   *
+   * Fixed rather than shared out over the rail's height: ticks that stretch to fill make a short
+   * document's markers enormous and a long one's hairline, so the same rail reads as a different
+   * control depending on what is in it. A fixed pitch means the rail thins to what fits and every
+   * tick looks the same. @default 8
+   */
+  tickSize?: number;
   onSelect?: (marker: MinimapMarker, index: number) => void;
 }>;
 
@@ -75,7 +84,7 @@ const thin = (markers: MinimapMarker[], capacity: number): Row[] => {
   }));
 };
 
-export const Minimap = ({ classNames, markers, visibleRange, onSelect }: MinimapProps) => {
+export const Minimap = ({ classNames, markers, visibleRange, tickSize = TICK_SIZE, onSelect }: MinimapProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rowsRef = useRef<Array<HTMLButtonElement | null>>([]);
   const [hovered, setHovered] = useState<number | null>(null);
@@ -101,12 +110,12 @@ export const Minimap = ({ classNames, markers, visibleRange, onSelect }: Minimap
     return () => observer.disconnect();
   }, []);
 
-  const natural = markers.length * MIN_ROW;
+  const natural = markers.length * tickSize;
   // Below two rows the measurement is a transient (an unlaid-out parent), not a real constraint.
-  const bounded = available >= MIN_ROW * 2;
+  const bounded = available >= tickSize * 2;
   const rows = useMemo(
-    () => thin(markers, bounded ? Math.min(markers.length, Math.floor(available / MIN_ROW)) : markers.length),
-    [markers, bounded, available],
+    () => thin(markers, bounded ? Math.min(markers.length, Math.floor(available / tickSize)) : markers.length),
+    [markers, bounded, available, tickSize],
   );
 
   // Rest is full opacity when there is no visible range to compare against. Compared against the
@@ -196,7 +205,8 @@ export const Minimap = ({ classNames, markers, visibleRange, onSelect }: Minimap
               // `flex-1` with `min-h-0`: the rows share whatever height the rail has, so N markers
               // spread over the full range rather than stacking at their natural pitch and leaving
               // the rest blank. Thinning above guarantees they never need less than the pitch.
-              className='flex items-center w-full flex-1 min-h-0 cursor-pointer outline-none'
+              className='flex items-center w-full shrink-0 cursor-pointer outline-none'
+              style={{ height: tickSize }}
               ref={(element) => {
                 rowsRef.current[index] = element;
               }}
