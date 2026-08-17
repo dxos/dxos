@@ -77,9 +77,14 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       by the same amount. So it is one uncompensated layout correction per first-time measurement,
       not per-row noise. Ruled out: `heightMode: 'min'` on widgets (fixed the pinned panel, reduced
       but did not remove it); a per-message `estimateSize` (deltas 197 → 88); forcing
-      `shouldAdjustScrollPositionOnItemSizeChange` true (made it worse: 8.8% → 11.3%). Next: our own
-      scroll anchoring — hold the top visible row's viewport-relative position across a measurement
-      batch — or a directional `rangeExtractor` that measures rows before they enter from above.
+      `shouldAdjustScrollPositionOnItemSizeChange` true (made it worse: 8.8% → 11.3%). Scroll
+      anchoring (`useScrollAnchor`, anchored on the topmost VISIBLE row — an overscanned row above is
+      itself being measured and cannot anchor anything) halves it: 8.8% → 5.0% of frames. The
+      remainder are full-size (88px) jumps, so they are corrections applied a frame late: the
+      measurement lands in a `ResizeObserver`, the virtualizer notifies, React re-renders, and our
+      layout effect compensates only on that next render. Next: compensate inside the measurement
+      path rather than in a React effect. NOTE the follow suspends anchoring, so a probe must
+      dispatch a gesture first or it measures nothing.
 - [ ] Widget state does not survive virtualization — an expanded panel scrolled out of the window
       remounts collapsed, because the open flag is React state inside the widget. Either the state
       moves into the message, or the item keeps a per-widget map.
