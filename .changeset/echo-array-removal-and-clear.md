@@ -1,5 +1,5 @@
 ---
-'@dxos/echo': patch
+'@dxos/react-ui-mosaic': patch
 ---
 
-Fix two ECHO mutation defects that destroyed data on reorder. `splice`, `pop`, and `shift` now return elements in the same form the array's accessors do, so an element taken out can be put back in; previously they returned the stored encoding, which failed schema validation on re-insert after the removal had already committed. Clearing a property by assigning `undefined` now deletes it instead of asserting `undefined` against the property schema, which rejected the clear for optional properties of a stored (mutable) schema.
+Fix drag-and-drop losing an item. Reordering within a board column destroyed the dragged item, and moving a kanban card to the uncategorized column did nothing: both re-entered the ECHO array or property in a form its schema rejects, after the removal had already committed. The board now reads an element before removing it, and the kanban pivot field is cleared by deleting it rather than assigning `undefined`.
