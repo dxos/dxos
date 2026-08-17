@@ -14,9 +14,10 @@ import React, {
 import { Popover, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-// Rest/peak tick widths (px) and the wave radius (in rows) over which the hover extension falls off.
+// Rest tick width (px) and the wave radius (in rows) over which the hover extension falls off. The
+// peak is the rail's own width: a tick at full extension spans it.
 const REST_WIDTH = 8;
-const PEAK_WIDTH = 32;
+const DEFAULT_WIDTH = 32;
 const WAVE_SPREAD = 2;
 
 /** Height of one tick, and so the pitch the rail thins its markers to. */
@@ -29,15 +30,15 @@ const intersects = (range: { from: number; to: number }, visible: { from: number
  * A single anchor marker within the mapped document.
  * `range` is expressed in the document's own position space (e.g. CodeMirror offsets).
  */
-export type MinimapMarker = {
+export type OutlineMarker = {
   id: string;
   title: string;
   description?: string;
   range: { from: number; to: number };
 };
 
-export type MinimapProps = ThemedClassName<{
-  markers: MinimapMarker[];
+export type OutlineProps = ThemedClassName<{
+  markers: OutlineMarker[];
   /** Currently-visible document range; markers intersecting it render brighter ("active"). */
   visibleRange?: { from: number; to: number };
   /**
@@ -49,11 +50,13 @@ export type MinimapProps = ThemedClassName<{
    * tick looks the same. @default 8
    */
   tickSize?: number;
-  onSelect?: (marker: MinimapMarker, index: number) => void;
+  /** Width of the rail, in px, which is also how far a tick extends at the peak of the wave. @default 32 */
+  width?: number;
+  onSelect?: (marker: OutlineMarker, index: number) => void;
 }>;
 
 /**
- * A fixed-width (4rem) vertical rail of horizontal ticks, each representing an anchor marker in a
+ * A vertical rail of horizontal ticks, each representing an anchor marker in a
  * scrollable document. The rows tile the full height, so hovering anywhere in the rail activates
  * the nearest tick: it (and its neighbours, with a distance falloff) extends rightward in a wave.
  * A single popover — anchored to the rail's right edge and shifted to the hovered row — shows the
@@ -61,7 +64,7 @@ export type MinimapProps = ThemedClassName<{
  * opacity; the rest are dimmed.
  */
 /** A rendered tick: the marker it points at, and the span of the document it stands for. */
-type Row = { marker: MinimapMarker; index: number; span: { from: number; to: number } };
+type Row = { marker: OutlineMarker; index: number; span: { from: number; to: number } };
 
 /**
  * Evenly spreads `markers` over at most `capacity` rows, keeping the first and last.
@@ -70,7 +73,7 @@ type Row = { marker: MinimapMarker; index: number; span: { from: number; to: num
  * the whole document — a position between two ticks belongs to the one above it, rather than to
  * nothing.
  */
-const thin = (markers: MinimapMarker[], capacity: number): Row[] => {
+const thin = (markers: OutlineMarker[], capacity: number): Row[] => {
   const step = capacity > 1 ? (markers.length - 1) / (capacity - 1) : 0;
   const indexes =
     markers.length <= capacity
@@ -84,7 +87,14 @@ const thin = (markers: MinimapMarker[], capacity: number): Row[] => {
   }));
 };
 
-export const Minimap = ({ classNames, markers, visibleRange, tickSize = TICK_SIZE, onSelect }: MinimapProps) => {
+export const Outline = ({
+  classNames,
+  markers,
+  visibleRange,
+  tickSize = TICK_SIZE,
+  width = DEFAULT_WIDTH,
+  onSelect,
+}: OutlineProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rowsRef = useRef<Array<HTMLButtonElement | null>>([]);
   const [hovered, setHovered] = useState<number | null>(null);
@@ -136,9 +146,9 @@ export const Minimap = ({ classNames, markers, visibleRange, tickSize = TICK_SIZ
 
       const distance = index - hovered;
       const falloff = Math.exp(-(distance * distance) / (2 * WAVE_SPREAD * WAVE_SPREAD));
-      return REST_WIDTH + (PEAK_WIDTH - REST_WIDTH) * falloff;
+      return REST_WIDTH + (width - REST_WIDTH) * falloff;
     },
-    [hovered],
+    [hovered, width],
   );
 
   const handleEnter = useCallback((index: number, row: HTMLElement) => {
@@ -179,7 +189,7 @@ export const Minimap = ({ classNames, markers, visibleRange, tickSize = TICK_SIZ
         role='navigation'
         className={mx('relative flex flex-col overflow-hidden', classNames)}
         style={{
-          width: `${PEAK_WIDTH}px`,
+          width: `${width}px`,
           height: bounded ? '100%' : `${natural}px`,
         }}
         onPointerLeave={() => setHovered(null)}
@@ -229,7 +239,7 @@ export const Minimap = ({ classNames, markers, visibleRange, tickSize = TICK_SIZ
         {/* Zero-height anchor at the hovered row's centre: the popover centres on a point, so it
             needs no knowledge of its own height to line up with the tick. */}
         <Popover.Anchor asChild>
-          <div className='absolute left-0' style={{ top: anchorOffset, width: PEAK_WIDTH, height: 0 }} />
+          <div className='absolute left-0' style={{ top: anchorOffset, width, height: 0 }} />
         </Popover.Anchor>
       </div>
       {hoveredMarker && (

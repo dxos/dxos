@@ -7,13 +7,13 @@ import React, { useMemo, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Minimap, type MinimapMarker, type MinimapProps } from './Minimap';
+import { Outline, type OutlineMarker, type OutlineProps } from './Outline';
 
 const DOC_LENGTH = 2000;
 const WINDOW = 320;
 
 // Synthetic prompt/response markers spread across a document of length `DOC_LENGTH`.
-const createMarkers = (count: number): MinimapMarker[] =>
+const createMarkers = (count: number): OutlineMarker[] =>
   Array.from({ length: count }, (_, index) => {
     const from = Math.round((index / count) * DOC_LENGTH);
     const to = Math.round(((index + 1) / count) * DOC_LENGTH) - 8;
@@ -27,16 +27,16 @@ const createMarkers = (count: number): MinimapMarker[] =>
 
 const defaultMarkers = createMarkers(14);
 
-const DefaultStory = ({ markers, ...props }: MinimapProps) => {
+const DefaultStory = ({ markers, ...props }: OutlineProps) => {
   const [start, setStart] = useState(0);
-  const [selected, setSelected] = useState<MinimapMarker | null>(null);
+  const [selected, setSelected] = useState<OutlineMarker | null>(null);
   const visibleRange = useMemo(() => ({ from: start, to: start + WINDOW }), [start]);
 
   return (
     <div className='relative grid grid-cols-[3rem_1fr] gap-6 p-4'>
       <div>
         <div className='absolute left-4 top-4'>
-          <Minimap
+          <Outline
             {...props}
             markers={markers}
             visibleRange={visibleRange}
@@ -71,11 +71,11 @@ const DefaultStory = ({ markers, ...props }: MinimapProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-components/Minimap',
-  component: Minimap,
+  title: 'ui/react-ui-components/Outline',
+  component: Outline,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-} satisfies Meta<typeof Minimap>;
+} satisfies Meta<typeof Outline>;
 
 export default meta;
 

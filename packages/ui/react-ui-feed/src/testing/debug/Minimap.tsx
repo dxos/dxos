@@ -9,6 +9,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { type WindowState } from '../../components';
 
+const DEFAULT_WIDTH = 32;
+
 /**
  * The whole list at a glance: what exists, what is mounted, and what the reader can see.
  *
@@ -20,8 +22,10 @@ import { type WindowState } from '../../components';
  *
  * Debug only. It reads the state the window publishes and draws it (§2); it does not participate.
  */
-export type WindowMapProps = ThemedClassName<{
+export type MinimapProps = ThemedClassName<{
   state?: WindowState;
+  /** Width of the rail, in px. @default 32 */
+  width?: number;
   /**
    * Jump to where the reader pointed, as a fraction of the whole list.
    *
@@ -31,7 +35,7 @@ export type WindowMapProps = ThemedClassName<{
   onSelect?: (fraction: number) => void;
 }>;
 
-export const WindowMap = ({ classNames, state, onSelect }: WindowMapProps) => {
+export const Minimap = ({ classNames, state, width = DEFAULT_WIDTH, onSelect }: MinimapProps) => {
   const total = state?.geometry.total ?? 0;
   const scale = (value: number) => (total > 0 ? `${Math.max(0, Math.min(100, (value / total) * 100))}%` : '0%');
 
@@ -39,7 +43,7 @@ export const WindowMap = ({ classNames, state, onSelect }: WindowMapProps) => {
     <div
       className={mx('relative w-4 h-full bg-input-surface overflow-hidden', onSelect && 'cursor-pointer', classNames)}
       title={total ? `${Math.round(total)}px over ${state?.count} rows` : 'empty'}
-      data-testid='window.map'
+      data-testid='minimap'
       onClick={
         onSelect &&
         ((event) => {
@@ -55,7 +59,7 @@ export const WindowMap = ({ classNames, state, onSelect }: WindowMapProps) => {
           <div
             className='absolute inset-x-0 bg-accent-fill/30'
             style={{ top: scale(state.geometry.window.start), height: scale(state.geometry.window.extent) }}
-            data-testid='window.map.mounted'
+            data-testid='minimap.mounted'
           />
           {/* Tenths, so a glance says roughly where in the list a bar sits without reading a number. */}
           {Array.from({ length: 9 }, (_, step) => (
@@ -69,7 +73,7 @@ export const WindowMap = ({ classNames, state, onSelect }: WindowMapProps) => {
           <div
             className='absolute inset-x-0 border-y border-accent-bg bg-accent-fill/70'
             style={{ top: scale(state.geometry.scroll), height: scale(state.geometry.viewport) }}
-            data-testid='window.map.viewport'
+            data-testid='minimap.viewport'
           />
         </>
       )}

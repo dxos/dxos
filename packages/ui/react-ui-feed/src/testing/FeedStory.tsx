@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { IconButton, Input, Panel, ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Minimap, type MinimapMarker } from '@dxos/react-ui-components';
+import { Outline, type OutlineMarker } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -301,7 +301,7 @@ export const FeedStory = ({
 
         <Panel.Content classNames='relative dx-container'>
           <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
-            <FeedMinimap classNames='row-start-2' messages={messages} />
+            <FeedOutline classNames='row-start-2' messages={messages} />
           </div>
           <MessageList.Viewport classNames='absolute inset-0' padding ref={viewportRef} />
         </Panel.Content>
@@ -312,17 +312,17 @@ export const FeedStory = ({
 };
 
 /**
- * The minimap over a feed: one tick per prompt, in message-index space.
+ * The outline of a feed: one tick per prompt, in message-index space.
  *
- * `MinimapMarker.range` is "the document's own position space", which for a feed is the message
+ * `OutlineMarker.range` is "the document's own position space", which for a feed is the message
  * index — so a marker is `[index, index + 1)` and the visible range is the mounted window. No
  * pixel offsets are involved, which is what makes this survive rows whose heights are still
  * estimates.
  */
-const FeedMinimap = ({ classNames, messages }: ThemedClassName<{ messages: readonly Message.Message[] }>) => {
-  const { currentIndex, scrollToIndex } = useMessageList('FeedMinimap');
+const FeedOutline = ({ classNames, messages }: ThemedClassName<{ messages: readonly Message.Message[] }>) => {
+  const { currentIndex, scrollToIndex } = useMessageList('FeedOutline');
 
-  const markers = useMemo<MinimapMarker[]>(() => {
+  const markers = useMemo<OutlineMarker[]>(() => {
     // Every prompt is passed; the rail thins them to whatever its height affords.
     return messages
       .map((message, index) => ({ message, index }))
@@ -352,7 +352,7 @@ const FeedMinimap = ({ classNames, messages }: ThemedClassName<{ messages: reado
   }, [markers, currentIndex]);
 
   const handleSelect = useCallback(
-    (marker: MinimapMarker) => scrollToIndex(marker.range.from, { align: 'start', behavior: 'smooth' }),
+    (marker: OutlineMarker) => scrollToIndex(marker.range.from, { align: 'start', behavior: 'smooth' }),
     [scrollToIndex],
   );
 
@@ -361,7 +361,7 @@ const FeedMinimap = ({ classNames, messages }: ThemedClassName<{ messages: reado
   }
 
   return (
-    <Minimap
+    <Outline
       classNames={['justify-self-center', classNames]}
       markers={markers}
       visibleRange={current}

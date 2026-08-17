@@ -7,11 +7,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { expect } from 'storybook/test';
 
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { Minimap, type MinimapMarker } from '@dxos/react-ui-components';
+import { Outline, type OutlineMarker } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { WindowMap } from '../../testing/debug';
+import { Minimap } from '../../testing/debug';
 import { type EdgeDrift } from './placement';
 import { Window, type WindowAxis, type WindowController, type WindowState } from './Window';
 
@@ -97,10 +97,10 @@ const Harness = ({
   const reserve = scrollPastEnd ? Math.max(0, available - extent(count - 1)) : 0;
 
   // The product minimap, in **index** space: a tick per marker, and the mounted window as the
-  // visible range. Beside `WindowMap`, which is the same list in **content** space — the pair is the
+  // visible range. Beside `Minimap`, which is the same list in **content** space — the pair is the
   // point, since an index-space rail cannot show a layout that has gone wrong and a content-space
   // one cannot show which message you are near.
-  const markers = useMemo<MinimapMarker[]>(
+  const markers = useMemo<OutlineMarker[]>(
     () =>
       Array.from({ length: Math.ceil(count / 10) }, (_, step) => ({
         id: `marker-${step * 10}`,
@@ -146,8 +146,8 @@ const Harness = ({
 
       <div ref={bodyRef} className='grow min-h-0 flex gap-2'>
         <div className='h-full grid grid-rows-[1fr_3fr_1fr]'>
-          <div className='flex items-center row-start-2'>
-            <Minimap
+          <div className='border flex items-center row-start-2'>
+            <Outline
               markers={markers}
               visibleRange={state ? { from: state.visible.first, to: state.visible.last } : undefined}
               onSelect={(marker) => controller.current?.scrollToIndex(marker.range.from)}
@@ -181,7 +181,7 @@ const Harness = ({
           )}
         </Window>
 
-        <WindowMap
+        <Minimap
           state={state}
           onSelect={(fraction) => controller.current?.scrollToIndex(Math.round(fraction * (count - 1)))}
         />
@@ -476,7 +476,7 @@ export const Chrome: Story = {
       atEnd,
       backToTop: read('window.index'),
       range: /^\d+–\d+ of 200$/.test(read('window.range')),
-      map: canvasElement.querySelectorAll('[data-testid="window.map.viewport"]').length,
+      map: canvasElement.querySelectorAll('[data-testid="minimap.viewport"]').length,
     }).toEqual({ filled: true, moved: true, atEnd: true, backToTop: '0', range: true, map: 1 });
   },
 };
