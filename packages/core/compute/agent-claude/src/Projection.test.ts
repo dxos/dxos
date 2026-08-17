@@ -45,7 +45,7 @@ const result = (overrides: Record<string, unknown> = {}): SDKMessage =>
     session_id: SESSION_ID,
     duration_ms: 1234,
     stop_reason: 'end_turn',
-    modelUsage: { 'claude-opus-5': {} },
+    modelUsage: { 'claude-opus-5': { outputTokens: 20 } },
     usage: { input_tokens: 100, output_tokens: 20 },
     permission_denials: [],
     ...overrides,
@@ -146,11 +146,18 @@ describe('Projection', () => {
     expect(block.finishReason).to.eq('stop');
   });
 
-  test('omits the model when a turn spanned several', () => {
+  test('reports the model that produced the turn, not the auxiliary one', () => {
+    // Mirrors a real payload: the SDK titles the session on a small model, and the main model's raw
+    // key carries a context suffix that canonicalModel strips.
     const message = new Projection.Projector().message(
-      result({ modelUsage: { 'claude-opus-5': {}, 'claude-haiku-4-5': {} } }),
+      result({
+        modelUsage: {
+          'claude-haiku-4-5-20251001': { outputTokens: 39, canonicalModel: 'claude-haiku-4-5' },
+          'claude-opus-5[1m]': { outputTokens: 240, canonicalModel: 'claude-opus-5' },
+        },
+      }),
     );
-    expect(statsBlock(message?.blocks[0]).model).to.be.undefined;
+    expect(statsBlock(message?.blocks[0]).model).to.eq('claude-opus-5');
   });
 
   test('reports a failed result as an error finish', () => {

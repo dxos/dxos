@@ -48,15 +48,26 @@ const finishReason = (stopReason: string | null): ContentBlock.FinishReason => {
   }
 };
 
-/** The single model of a turn, when the turn used exactly one — ambiguous otherwise, so omitted. */
-const soleModel = (modelUsage: Record<string, unknown>): string | undefined => {
-  const models = Object.keys(modelUsage);
-  return models.length === 1 ? models[0] : undefined;
+/**
+ * The turn's conversational model. Even a trivial turn reports several — the SDK runs auxiliary
+ * work (e.g. session titling) on a small model — so the main one is the entry with the most output
+ * tokens, reported by its canonical name (the raw key can carry a context suffix like `[1m]`).
+ */
+const mainModel = (modelUsage: Record<string, unknown>): string | undefined => {
+  let best: { key: string; outputTokens: number; canonical?: string } | undefined;
+  for (const [key, value] of Object.entries(modelUsage)) {
+    const usage = value as { outputTokens?: number; canonicalModel?: string };
+    const outputTokens = usage?.outputTokens ?? 0;
+    if (!best || outputTokens > best.outputTokens) {
+      best = { key, outputTokens, canonical: usage?.canonicalModel };
+    }
+  }
+  return best ? (best.canonical ?? best.key) : undefined;
 };
 
 const resultBlock = (result: SDKResultMessage): ContentBlock.Stats => ({
   _tag: 'stats',
-  model: soleModel(result.modelUsage ?? {}),
+  model: mainModel(result.modelUsage ?? {}),
   usage: {
     inputTokens: result.usage?.input_tokens,
     outputTokens: result.usage?.output_tokens,
