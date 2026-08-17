@@ -31,19 +31,11 @@ const AgentClaudePluginBuilder = Plugin.define(
     activatesOn: ActivationEvents.Startup,
     provides: [AssistantCapabilities.AgentTurnProducer],
     activate: () =>
-      Effect.sync(() => {
-        // eslint-disable-next-line no-console
-        console.log('DIAG agentClaude module activate');
-        return undefined;
-      }).pipe(
-        Effect.andThen(
-          Effect.succeed([
-            Capability.contribute(AssistantCapabilities.AgentTurnProducer, ({ feed }) =>
-              Producer.make({ feed, maxTurns: 8 }),
-            ),
-          ]),
+      Effect.succeed([
+        Capability.contribute(AssistantCapabilities.AgentTurnProducer, ({ feed }) =>
+          Producer.make({ feed, maxTurns: 8 }),
         ),
-      ),
+      ]),
   }),
 );
 
