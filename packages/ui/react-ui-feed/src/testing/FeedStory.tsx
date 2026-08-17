@@ -496,26 +496,43 @@ const DebugBar = ({
   breaks: number;
 }) => {
   const { resetShifts } = useMessageList('DebugBar');
+  // A pass is the interval between two presses, so the control is start/stop rather than a reset.
+  const [recording, setRecording] = useState(false);
+  const onRecord = useCallback(() => {
+    meter.record();
+    setRecording((value) => !value);
+  }, [meter]);
 
   return (
     // Fixed tracks, not flow: every number here changes while scrolling, and cells sized to their
     // content would shuffle the row on each update — an instrument that moves is hard to read.
     <div className='grid grid-cols-[repeat(6,6rem)_auto] items-center gap-2 px-2 text-xs text-description tabular-nums'>
       <FrameMeter meter={meter} />
-      <IconButton
-        icon='ph--arrow-counter-clockwise--regular'
-        iconOnly
-        label='Reset counters'
-        variant='ghost'
-        size={3}
-        data-testid='feed.debug.reset'
-        onClick={resetShifts}
-      />
       <span className={mx('text-right', jumps.count > 0 && 'text-warning-text')} data-testid='feed.jumps'>
         {jumps.count} jumps
       </span>
       <span className={mx('text-right', shifts > 0 && 'text-warning-text')} data-testid='feed.shifts'>
         {shifts} shifts{breaks > 0 ? ` · ${breaks}!` : ''}
+      </span>
+      <span className='flex gap-1'>
+        <IconButton
+          icon={recording ? 'ph--stop--regular' : 'ph--record--regular'}
+          iconOnly
+          label={recording ? 'End the pass' : 'Start a pass'}
+          variant='ghost'
+          size={3}
+          data-testid='feed.debug.record'
+          onClick={onRecord}
+        />
+        <IconButton
+          icon='ph--arrow-counter-clockwise--regular'
+          iconOnly
+          label='Reset counters'
+          variant='ghost'
+          size={3}
+          data-testid='feed.debug.reset'
+          onClick={resetShifts}
+        />
       </span>
     </div>
   );
@@ -531,24 +548,22 @@ const DebugBar = ({
  * anything the live rate has not, rides in the tooltip and the recorded line rather than on screen.
  */
 const FrameMeter = ({ classNames, meter }: ThemedClassName<{ meter: FrameMeterState }>) => {
-  const { label, fps, p50, p95, worst, hitches, frames, duration, record } = meter;
+  const { label, fps, p50, p95, worst, hitches, frames, duration } = meter;
 
+  // Readouts are text, not a control: the numbers change constantly and a button around them invites
+  // a click that resets what the reader is trying to read. Recording a pass is its own IconButton.
   return (
-    <button
-      type='button'
-      className={mx('col-span-4 grid grid-cols-subgrid text-left tabular-nums whitespace-nowrap', classNames)}
-      title={`${label} — p50 ${p50} · ${frames} frames · ${(duration / 1000).toFixed(1)}s. Click to record the pass.`}
+    <span
+      className={mx('col-span-4 grid grid-cols-subgrid tabular-nums whitespace-nowrap', classNames)}
+      title={`${label} — p50 ${p50} · ${frames} frames · ${(duration / 1000).toFixed(1)}s`}
       data-testid='feed.frames'
-      onClick={record}
     >
-      <span className={mx('flex justify-end', fps > 0 && fps < 50 && 'text-warning-text')}>{fps} fps</span>
-      <span className={mx('flex justify-end opacity-70', p95 > 0 && p95 < 50 && 'text-warning-text opacity-100')}>
+      <span className={mx('text-right', fps > 0 && fps < 50 && 'text-warning-text')}>{fps} fps</span>
+      <span className={mx('text-right opacity-70', p95 > 0 && p95 < 50 && 'text-warning-text opacity-100')}>
         p95 {p95}
       </span>
-      <span className='flex justify-end opacity-70'>{worst}ms</span>
-      <span className={mx('flex justify-end opacity-70', hitches > 0 && 'text-warning-text opacity-100')}>
-        {hitches}
-      </span>
-    </button>
+      <span className='text-right opacity-70'>{worst}ms</span>
+      <span className={mx('text-right opacity-70', hitches > 0 && 'text-warning-text opacity-100')}>{hitches}</span>
+    </span>
   );
 };
