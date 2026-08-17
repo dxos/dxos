@@ -181,6 +181,21 @@ export const Uniform: Story = {
   play: playFill('uniform 500'),
 };
 
+/**
+ * The same feed with space reserved past the end.
+ *
+ * The reserved space is part of the document, so everything that reads the element's own maximum —
+ * the tail test, the follow's target, the opening offset — has to stop short of it instead. This is
+ * where that is checked.
+ */
+export const UniformPastEnd: Story = {
+  args: { scenario: 'uniform', count: 500, scrollPastEnd: true },
+  // One frame of movement on the rebuild, as in `Varied`: the restore has to go round the
+  // virtualizer here, because the virtualizer clamps every offset to the element's maximum and the
+  // reserved space has moved that past the last row. Pinned at what is measured today.
+  play: playFill('uniform past-end', 1),
+};
+
 export const UniformShort: Story = {
   args: { scenario: 'uniform', count: 50 },
   play: playFill('uniform 50'),

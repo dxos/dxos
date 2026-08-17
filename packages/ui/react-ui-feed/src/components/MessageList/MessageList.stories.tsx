@@ -13,7 +13,10 @@ const meta: Meta<FeedStoryProps> = {
   render: FeedStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },
-  args: { count: 100, debug: false, scrollPastEnd: false },
+  args: {
+    count: 100,
+    scrollPastEnd: true,
+  },
   argTypes: {
     debug: { control: 'boolean' },
     scrollPastEnd: { control: 'boolean' },

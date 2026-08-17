@@ -33,7 +33,11 @@ const meta: Meta<FeedStoryProps> = {
   parameters: { layout: 'fullscreen' },
   // Listed in `args`, not only in `argTypes`: the meta names no `component`, so storybook has no
   // props to infer controls from and shows exactly the args that are set.
-  args: { count: 500, debug: false, scrollPastEnd: false },
+  args: {
+    count: 500,
+    debug: false,
+    scrollPastEnd: true,
+  },
   argTypes: {
     // Off by default and offered as a control rather than turned on: reserving space past the end
     // is what lets the last messages be read at the top of the screen, and it is also what stops a

@@ -15,6 +15,8 @@ export type FollowOptions = {
   deceleration?: number;
   /** Height of a row in px, sampled each frame so a measured list can refine it. */
   rowHeight?: () => number;
+  /** Empty space reserved below the last row, which the follow must stop short of. */
+  trailing?: () => number;
 };
 
 const DEFAULT_MAX_SPEED = 2;
@@ -94,6 +96,7 @@ export class ScrollFollower {
   readonly #acceleration: number;
   readonly #deceleration: number;
   readonly #rowHeight: () => number;
+  readonly #trailing: () => number;
 
   #frame: number | undefined;
   #velocity = 0;
@@ -107,12 +110,25 @@ export class ScrollFollower {
       acceleration = DEFAULT_ACCELERATION,
       deceleration = DEFAULT_DECELERATION,
       rowHeight = () => DEFAULT_ROW_HEIGHT,
+      trailing = () => 0,
     }: FollowOptions = {},
   ) {
     this.#maxSpeed = maxSpeed;
     this.#acceleration = acceleration;
     this.#deceleration = deceleration;
     this.#rowHeight = rowHeight;
+    this.#trailing = trailing;
+  }
+
+  /**
+   * The bottom of the last row, which is not the bottom of the document.
+   *
+   * A feed may reserve empty space below its last row so that row can be brought to the top of the
+   * viewport. That space is somewhere the reader may go and nowhere the follow should: chasing the
+   * element's own maximum walks the feed off the end of the conversation and keeps going.
+   */
+  get #bottom(): number {
+    return this._element.scrollHeight - this.#trailing() - this._element.clientHeight;
   }
 
   get running(): boolean {
@@ -165,7 +181,7 @@ export class ScrollFollower {
   /** Jumps to the bottom with no animation. */
   jump(): void {
     this.cancel();
-    this._element.scrollTop = this._element.scrollHeight - this._element.clientHeight;
+    this._element.scrollTop = Math.max(0, this.#bottom);
   }
 
   readonly #tick = (timestamp: number): void => {
@@ -174,7 +190,7 @@ export class ScrollFollower {
     const dt = Math.min((timestamp - this.#timestamp) / 1_000, 0.05);
     this.#timestamp = timestamp;
 
-    const target = this._element.scrollHeight - this._element.clientHeight;
+    const target = Math.max(0, this.#bottom);
     const distance = target - this._element.scrollTop;
 
     // Coasting: the target no longer matters, only shedding what speed is left. Bounded by the

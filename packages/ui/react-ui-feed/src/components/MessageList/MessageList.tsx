@@ -384,8 +384,13 @@ const MessageListRoot = ({
     const median = sizes.length ? sizes[Math.floor(sizes.length / 2)] : nominalSize;
     return Math.min(median, viewport?.clientHeight || median);
   }, [virtualizer, nominalSize, viewport]);
+  // `trailing` is read through a ref rather than captured: the follower is built once per viewport
+  // and the reserved space is not known until the element has been measured.
   const follower = useMemo(
-    () => (viewport ? new ScrollFollower(viewport, { ...followOptions, rowHeight }) : undefined),
+    () =>
+      viewport
+        ? new ScrollFollower(viewport, { ...followOptions, rowHeight, trailing: () => trailingRef.current })
+        : undefined,
     [viewport, followOptions?.maxSpeed, followOptions?.acceleration, followOptions?.deceleration, rowHeight],
   );
   useEffect(() => () => follower?.cancel(), [follower]);

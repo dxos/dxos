@@ -160,7 +160,13 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       frames changing afterwards, because the element and the virtualizer's own offset disagree) and
       `scrollToOffset` (same). `baseline/fill` now asserts the invariant that matters — a frame that
       changes the document's height must not change where the rows are.
-- [ ] **`baseline/varied` still moves for one frame on a rebuild.** Restoring by index makes the
+- [x] **`scrollPastEnd` walked off the end of the conversation.** `ScrollFollower` targeted
+      `scrollHeight - clientHeight`, and with space reserved below the last row that is the bottom of
+      the _reserved space_ — so a feed opened near the tail then scrolled steadily into the blank
+      area below the last message. The follower now takes a `trailing` accessor and stops at the last
+      row's bottom. `baseline/fill`'s `UniformPastEnd` covers it: the feed opens at the tail
+      (scrollTop 11605 against a tail of 11716 while rows are still measuring, then exactly 17352).
+- [ ] **`baseline/varied` and `UniformPastEnd` still move for one frame on a rebuild.** Restoring by index makes the
       virtualizer retry while the offsets around the landing point are estimates. Allowance of 1 is
       pinned in the story so a regression past it fails.
 - [ ] **Every other arrow press travels ~2px instead of a row.** Direction is right and the feed
