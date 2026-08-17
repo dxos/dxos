@@ -1,0 +1,43 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+# Packages a consumer cannot import from source, and the single place that fact is recorded.
+#
+# `source-deps` (`.moon/tasks/all.yml`) is a `noop` by default — importing a package's `src/` needs
+# nothing built. These three tags are the exceptions, and each resolves it to the package's own `build`:
+#
+#   `dist-runtime`  The package publishes no `source` export condition (or maps a subpath straight at
+#                   `dist/`), so `@dxos/<pkg>` resolves to a build artifact under every condition set
+#                   — vite dev, vitest, and the production bundle alike.
+#
+#   `vite-plugin`   The package exports a bundler plugin a consumer's config loads. Kept as its own
+#                   tag rather than folded into `dist-config` because `scripts/pkg-lint.mjs` keys the
+#                   `build-tool-source-export` rule off it to disambiguate an overloaded `./plugin`
+#                   export: for `@dxos/plugin-*` that subpath is browser code needing `source`, and
+#                   only a package that also ships build tooling means the other thing by it.
+#
+#   `dist-config`   Any other package whose dist is read while a *config file* loads. Vite bundles
+#                   `vite.config.ts` / `vitest.config.ts` / `.storybook/main.*` in Node before any
+#                   plugin runs, so `source` is not among the conditions there however the export map
+#                   reads — and `await import()` does not dodge it, because `externalize-deps`
+#                   resolves the specifier at bundle time. Covers whatever a config imports that is
+#                   not itself a plugin — an agent sidecar, a fixture-path helper.
+#                   `@storybook/addon-vitest` evaluates `.storybook/main.*` during vitest's *project
+#                   resolution*, before `--project` filtering, so this applies to every `:test*` task
+#                   of a consumer, not only the storybook one.
+#
+# Membership is verifiable rather than a judgement call: resolve each `@dxos/*` specifier the repo
+# imports with `source` first for `dist-runtime`, and without `source` for the config-file case, then
+# check whether the target lands in `dist/`. Adding a `source` condition removes a package from
+# `dist-runtime`; nothing removes it from `dist-config` short of the config no longer importing it.
+#
+# A package whose own `src/` is partly generated is NOT covered here — it overrides `source-deps` with
+# `~:prebuild` in its own `moon.yml`, because the codegen, not a build, is what a source import needs.
+tasks:
+  source-deps:
+    deps:
+      - ~:build
+
+inheritedBy:
+  tags:
+    - dist-runtime
+    - vite-plugin
+    - dist-config

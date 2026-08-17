@@ -7,8 +7,6 @@ tasks:
       - node-std:build
       - vite-plugin-icons:build
       - vite-plugin-import-source:build
-      # Narrowed like `:test` — the browser project resolves `@dxos/*` to source too. See
-      # `source-deps` in `.moon/tasks/all.yml`.
       - target: ^:source-deps
         cacheStrategy: hash
     inputs:

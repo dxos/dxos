@@ -14,10 +14,6 @@ tasks:
       - esbuild-plugins:build
       - node-std:build
       - vite-plugin-import-source:build
-      # Not `^:build`: vitest resolves `@dxos/*` to their `source` export, so only the upstream
-      # packages that cannot be imported from source need compiling. `source-deps` (`.moon/tasks/all.yml`)
-      # is the narrowed set, and its `^:source-deps` chain keeps every upstream source file in this
-      # task's hash.
       - target: ^:source-deps
         cacheStrategy: hash
     inputs:

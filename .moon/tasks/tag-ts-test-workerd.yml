@@ -9,8 +9,6 @@ tasks:
       - esbuild-plugins:build
       - node-std:build
       - vite-plugin-import-source:build
-      # Narrowed like `:test` — the workerd project resolves `@dxos/*` to source too. See
-      # `source-deps` in `.moon/tasks/all.yml`.
       - target: ^:source-deps
         cacheStrategy: hash
     inputs:

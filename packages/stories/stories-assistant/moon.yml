@@ -7,17 +7,6 @@ tags:
   - pack
   - storybook
 tasks:
-  # `vite.config.ts` wires the agent sidecar middleware via `await import('@dxos/agent-claude')`.
-  # Vite's `externalize-deps` resolves that specifier while bundling the config in Node, where the
-  # `source` condition does not apply, so the dynamic form does not dodge resolution and the package's
-  # dist has to exist before vitest can load the config at all. Every task that loads this config
-  # needs it, not just the storybook one.
-  test:
-    deps:
-      - agent-claude:build
-  test-storybook:
-    deps:
-      - agent-claude:build
   # Agent.stories drives the REAL Claude Agent SDK through the sidecar middleware, so it carries the
   # repo's `manual` tag and is skipped by `test-storybook` until this variable opts in.
   test-storybook-live:

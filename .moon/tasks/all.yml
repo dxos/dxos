@@ -37,10 +37,8 @@ tasks:
   # `source` export condition (`PluginImportSource` in `vite.base.config.ts`) — so compiling an
   # upstream package's `dist/` is work whose output the test run never reads.
   #
-  # The default here is a `noop`: nothing to produce. Two overrides add the exceptions:
-  #   - `tag-dist-runtime.yml` / `tag-vite-plugin.yml` add `~:build` for the packages that publish no
-  #     `source` condition, so a consumer resolves them to `dist/` whatever it does.
-  #   - a project whose own `src/` is partly generated adds `~:prebuild` in its own `moon.yml`.
+  # A `noop` by default. `tag-dist-consumed.yml` documents the exceptions and resolves them to a real
+  # `build`; a project whose own `src/` is generated overrides this with `~:prebuild`.
   #
   # The `^:source-deps` chain and `@group(sources)` are also what keep the cache honest: `^:build` is
   # what currently folds the upstream source closure into a downstream `:test` hash, so replacing it
