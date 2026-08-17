@@ -1,8 +1,9 @@
 # @dxos/plugin-computer
 
 > **Proof of concept, dev only.** Presented in the app as **Coding (Dev)**. The tools need a Composer
-> served by a vite dev server that mounted this package's plugin with `DX_COMPUTER_ROOT` set. A
-> deployed build has no dev server, so it has no shell: both tools fail with a configuration error.
+> served by a vite dev server that mounted this package's plugin; the tree they work in is that
+> server's own working directory. A deployed build has no dev server, so it has no shell: both tools
+> fail with a configuration error.
 
 A minimal coding harness for Composer's assistant: a **bash** tool and a **multi-string-replace**
 edit tool that run in a working tree on the developer's machine.
@@ -28,7 +29,8 @@ The host exposes exactly **one** verb: run a shell script under a configured roo
 stdout, stderr and exit code. The edit tool is not a second route — it runs a prebaked node script
 that the middleware materializes into a temp directory and names to every script through
 `$DX_COMPUTER_SCRIPTS`, with the edits arriving on stdin so no quoting in the replacement text can
-change what the shell runs.
+change what the shell runs. `$DX_COMPUTER_ROOT` carries the root to those scripts; it is set by the
+middleware, not by the developer.
 
 ## Enabling it
 
@@ -55,12 +57,12 @@ is an error rather than a quietly substituted directory.
 
 The protections that are real:
 
-- **Dev only, settings-gated.** The vite plugin mounts the route in `serve`; the Composer plugin
-  is off by default and registered only in dev/labs builds.
+- **Dev only, settings-gated.** `apply: 'serve'` mounts the route in a dev server and nowhere else, so
+  a deployed Composer has no shell; the Composer plugin is off by default and registered only in
+  dev/labs builds.
 - **Same-origin only.** The route requires a JSON content type, which a cross-origin page cannot
   send without a preflight this route never answers, and it refuses a request whose `Origin` names
   another host.
-- **Dev only.** `apply: 'serve'` — a deployed Composer has no dev server, so it has no shell.
 - **Bounded.** Per-request timeout (killing the whole process group), and an output cap that reports
   `truncated` rather than returning a response the size of a build log.
 - **Not agent-enablable.** The skill sets `agentCanEnable: false`, so the assistant cannot turn shell

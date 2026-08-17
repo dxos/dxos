@@ -35,8 +35,8 @@ const make = () =>
         dev server and their git status.
 
         This harness is a proof of concept and exists only while a vite dev server hosts it. If the
-        tools report that the host is not mounted, no command will work until the developer restarts
-        that server with DX_COMPUTER_ROOT set — say so rather than looking for another way in.
+        tools report that the host is not mounted, no command will work until the developer fixes
+        that — say so rather than looking for another way in.
 
         How to work:
         - Orient first. Run one bash command to see where you are and what is there (pwd, ls, git
