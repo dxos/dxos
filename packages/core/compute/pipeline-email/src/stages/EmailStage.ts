@@ -51,6 +51,16 @@ export type Insert = {
   readonly key: number;
   /** Provider label/folder tag URIs to apply on commit; omit for providers/stages that don't tag. */
   readonly tagUris?: readonly string[];
+  /**
+   * The subset of {@link tagUris} mirroring the provider's own labels, as opposed to tags local logic
+   * added at insert time (the known-sender `important` rule, an on-arrival extractor).
+   *
+   * Bidirectional tag sync seeds a newly-inserted message's reconciliation base from this, so provider
+   * labels land in the base (and never push back at the provider they came from) while locally-added
+   * tags stay outside it and push. Both kinds land before the run captures its heads, so nothing else
+   * can tell them apart. Absent means all of `tagUris` is provider-derived.
+   */
+  readonly remoteTagUris?: readonly string[];
   /** Attachments fetched by a provider-specific stage upstream of {@link processAttachments}. */
   readonly attachments?: readonly Attachment[];
   /** Contact resolved by {@link extractContacts}, added to the database by {@link toCommitUnit}. */

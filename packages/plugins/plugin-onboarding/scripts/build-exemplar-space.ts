@@ -68,7 +68,7 @@ import * as MapView from '@dxos/plugin-map/Map';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 import { Table } from '@dxos/react-ui-table/types';
 import { Tagging, TagIndex, ViewModel } from '@dxos/schema';
 import { Actor, ContentBlock, Event, Message, Organization, Person, Task, TaskSet } from '@dxos/types';
@@ -183,6 +183,12 @@ const threadSlug = (normalizedSubject: string): string =>
     .replace(/^-+|-+$/g, '')
     .toLowerCase() || 'thread';
 
+// Thread by normalized subject: a message's `threadId` is a deterministic slug of its subject (with
+// any "Re:" prefix stripped), so replies land in their root's thread. The mailbox conversation list
+// groups on the top-level `threadId`; it's mirrored into `properties.threadId` to match the shape
+// synced (Gmail/JMAP) mail carries.
+const threadIdFor = (subject: string): string => `thread-${threadSlug(normalizeSubject(subject))}`;
+
 //
 // Space population
 //
@@ -216,9 +222,15 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   addOrganizationViews(space);
 
   // Inbox ------------------------------------------------------------------
-  const { mailbox, messages } = makeMailbox(people);
+  const { mailbox, messages, messageTags } = makeMailbox(people);
   space.db.add(mailbox);
-  await tagMailboxMessages(space, mailbox, messages);
+  await tagMailboxMessages(space, mailbox, messages, messageTags);
+  // Bulk-mail senders for the Subscriptions view, grouped by the same function the extraction
+  // pipeline runs rather than hand-listed, so the counts always match the feed.
+  Obj.update(mailbox, (mailbox) => {
+    mailbox.subscriptions = Mailbox.deriveSubscriptions(messages);
+  });
+  const { feed: annotationsFeed, summaries } = makeMailboxSummaries(space, mailbox, messages);
 
   // Calendar ---------------------------------------------------------------
   const { calendar, events } = makeCalendar(people, organizations);
@@ -274,6 +286,7 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   // Append feed messages AFTER db.flush so the feed objects have DXNs.
   await space.db.flush();
   await appendToFeed(space, mailbox.feed.target!, messages);
+  await appendToFeed(space, annotationsFeed, summaries);
   await appendToFeed(space, calendar.feed.target!, events);
 };
 
@@ -512,7 +525,7 @@ const addOrganizationViews = (space: Space): void => {
 
 const makeMailbox = (
   people: Record<PersonKey, Person.Person>,
-): { mailbox: Mailbox.Mailbox; messages: Message.Message[] } => {
+): { mailbox: Mailbox.Mailbox; messages: Message.Message[]; messageTags: Map<string, SystemTags.SystemTagId[]> } => {
   const mailbox = Mailbox.make({ name: 'Inbox' });
 
   // Build emails as a chronological list — oldest first. Numbers are days-ago. `to` names the
@@ -525,6 +538,16 @@ const makeMailbox = (
     daysAgo: number;
     to: string;
     senderOverride?: Actor.Actor;
+    // Canonical system tags beyond the two every message gets by rule (`inbox`, plus `sent` for mail
+    // the MAIN_CHARACTER authored) — these back the mailbox's Starred / Important folders and the
+    // category chips the classification pipeline would otherwise assign.
+    tags?: SystemTags.SystemTagId[];
+    // Archived: the `inbox` tag comes OFF (archiving is that tag's removal, never a new tag), so the
+    // message keeps showing under All mail while leaving the Inbox folder.
+    archived?: boolean;
+    // RFC 2369 `List-Unsubscribe` header. Marks the sender as bulk mail: it groups into the mailbox's
+    // Subscriptions view (see {@link Mailbox.deriveSubscriptions}) and suppresses reply drafting.
+    listUnsubscribe?: string;
   };
   const peopleSeedByKey = Object.fromEntries(PEOPLE_SEEDS.map((seed) => [seed.key, seed])) as Record<
     PersonKey,
@@ -550,6 +573,7 @@ const makeMailbox = (
       daysAgo: 41,
       to: toAddr('kai'),
       subject: 'Hola Kai — Q2 harvest update from Esperanza',
+      tags: ['important'],
       body: 'Hola Kai, the cherries are coming in heavier than last year. Brix is good. I think we will have your full lot ready for shipment in 5–6 weeks. Will send photos next week. Saludos, Carmen',
     },
     {
@@ -564,6 +588,7 @@ const makeMailbox = (
       daysAgo: 38,
       to: toAddr('kai'),
       subject: 'Sidamo: lots 42–44 cupping scores',
+      tags: ['starred'],
       body: 'Kai, attached are the cupping scores for lots 42–44 this season. Lot 42 is the standout — fruit-forward, jasmine, clean ferment. Pricing for the full container coming separately. — Abel',
     },
     {
@@ -571,6 +596,7 @@ const makeMailbox = (
       daysAgo: 35,
       to: toAddr('kai'),
       subject: 'Reorder: 30 lb Linden + 10 lb Field Notes',
+      tags: ['important'],
       body: 'Hi Kai, ready for another round. Same as last time: 30 lb Linden whole bean, 10 lb Field Notes. Friday delivery if possible. — Jordan',
     },
     {
@@ -579,6 +605,7 @@ const makeMailbox = (
       to: toAddr('kai'),
       subject: 'Your Stripe payout — $4,218.91',
       senderOverride: actor('Stripe', 'no-reply@stripe.com'),
+      tags: ['updates'],
       body: 'Your weekly payout has been initiated. View details in the Stripe dashboard.',
     },
     {
@@ -615,6 +642,8 @@ const makeMailbox = (
       to: toAddr('kai'),
       subject: 'Coffee Expo NYC — registration open',
       senderOverride: actor('SCA Events', 'events@sca.coffee'),
+      tags: ['promotions'],
+      listUnsubscribe: '<https://sca.coffee/email/unsubscribe?list=events>, <mailto:unsubscribe@sca.coffee>',
       body: 'Specialty Coffee Expo NYC registration is now open. Early-bird pricing through next month.',
     },
     {
@@ -665,7 +694,41 @@ const makeMailbox = (
       to: toAddr('kai'),
       subject: 'Shipment update: tracking #1Z999AA10123456789',
       senderOverride: actor('UPS', 'tracking@ups.com'),
+      tags: ['updates'],
       body: 'Your shipment is in transit. Expected delivery: tomorrow by 8pm.',
+    },
+
+    // Bulk mail — each carries a `List-Unsubscribe` header, so the Subscriptions view groups them by
+    // sender (noisiest first) and the reply generator skips them.
+    {
+      from: 'noise',
+      daysAgo: 22,
+      to: toAddr('kai'),
+      subject: 'Daily Coffee News — this week in specialty',
+      senderOverride: actor('Daily Coffee News', 'newsletter@dailycoffeenews.com'),
+      tags: ['updates'],
+      listUnsubscribe: '<https://dailycoffeenews.com/email-preferences>',
+      body: 'This week: green prices ease off their Q1 highs, two roasteries open in the Southeast, and a look at solar drying beds in Huila.',
+    },
+    {
+      from: 'noise',
+      daysAgo: 13,
+      to: toAddr('kai'),
+      subject: 'Spring sale — 20% off packaging supplies',
+      senderOverride: actor('Stack & Co. Packaging', 'offers@stackandco.com'),
+      tags: ['promotions'],
+      listUnsubscribe: '<https://stackandco.com/unsubscribe?id=bramble>',
+      body: 'Bags, tins, and valves are 20% off through the end of the month. Free shipping over $250.',
+    },
+    {
+      from: 'noise',
+      daysAgo: 8,
+      to: toAddr('kai'),
+      subject: 'Daily Coffee News — origin report: Huila',
+      senderOverride: actor('Daily Coffee News', 'newsletter@dailycoffeenews.com'),
+      tags: ['updates'],
+      listUnsubscribe: '<https://dailycoffeenews.com/email-preferences>',
+      body: 'Our correspondent walks three washing stations in Huila and reports on how the longer rains are shifting harvest windows.',
     },
     {
       from: 'riley',
@@ -679,6 +742,7 @@ const makeMailbox = (
       daysAgo: 9,
       to: toAddr('kai'),
       subject: 'Pricing — Sidamo container',
+      tags: ['starred', 'important'],
       body: 'Kai — pricing attached for the full container. Up ~6% from last year, in line with what we discussed. Confirm and I will start the export paperwork. — Abel',
     },
     {
@@ -700,6 +764,7 @@ const makeMailbox = (
       daysAgo: 2,
       to: toAddr('kai'),
       subject: 'Spring blend v1 — feedback',
+      tags: ['starred', 'important'],
       body: 'Kai — the team loved the chocolate and red fruit notes. Wholesale customers asked about the espresso roast specifically. Would order standing 20 lb/wk starting at launch. — Priya',
     },
 
@@ -733,12 +798,15 @@ const makeMailbox = (
       body: 'Wonderful to hear, Priya. I will pencil in a standing 20 lb/wk for launch and send v3 the moment it is signed off. — Kai',
     },
 
-    // Label proofs — a three-message thread with Riley on the Letterform Press redesign.
+    // Label proofs — a three-message thread with Riley on the Letterform Press redesign. Settled, so
+    // the whole thread is archived: it stays in All mail (and in Sent, for Kai's reply) but has left
+    // the Inbox folder, which is what makes the two folders differ in the exemplar.
     {
       from: 'riley',
       daysAgo: 19,
       to: toAddr('kai'),
       subject: 'Label proofs — Spring Blend',
+      archived: true,
       body: 'First proofs back from Letterform Press. I am partial to option B with the bramble sketch. Any objections before I approve? — Riley',
     },
     {
@@ -746,6 +814,7 @@ const makeMailbox = (
       daysAgo: 18,
       to: toAddr('riley'),
       subject: 'Re: Label proofs — Spring Blend',
+      archived: true,
       body: 'Option B for me too. Could we warm the background up a shade? Otherwise ship it. — Kai',
     },
     {
@@ -753,15 +822,17 @@ const makeMailbox = (
       daysAgo: 16,
       to: toAddr('kai'),
       subject: 'Re: Label proofs — Spring Blend',
+      archived: true,
       body: 'Done — warming it up and sending final approval to the printer today. — Riley',
     },
 
-    // Green coffee arrival — a two-message logistics thread.
+    // Green coffee arrival — a two-message logistics thread, also archived once the delivery landed.
     {
       from: 'riley',
       daysAgo: 11,
       to: toAddr('kai'),
       subject: 'Esperanza container — customs cleared',
+      archived: true,
       body: 'The Esperanza container cleared customs in Oakland this morning. Delivery to the warehouse is set for Thursday. — Riley',
     },
     {
@@ -769,6 +840,7 @@ const makeMailbox = (
       daysAgo: 10,
       to: toAddr('riley'),
       subject: 'Re: Esperanza container — customs cleared',
+      archived: true,
       body: 'Perfect. I will have Diego check moisture on arrival Thursday. — Kai',
     },
 
@@ -794,14 +866,10 @@ const makeMailbox = (
   // above without hand-placing them; the sort is stable, so same-day messages keep their listed order.
   emails.sort((left, right) => right.daysAgo - left.daysAgo);
 
-  // Thread by normalized subject: a message's `threadId` is a deterministic slug of its subject (with
-  // any "Re:" prefix stripped), so replies land in their root's thread. Each non-first message in a
-  // thread links to its predecessor via `parentMessage`; the chronological sort above guarantees a
-  // reply's parent is created before it. The mailbox conversation list groups on the top-level
-  // `threadId`; it's mirrored into `properties.threadId` to match the shape synced (Gmail/JMAP) mail carries.
-  const threadIdFor = (subject: string): string => `thread-${threadSlug(normalizeSubject(subject))}`;
-
+  // Each non-first message in a thread (see {@link threadIdFor}) links to its predecessor via
+  // `parentMessage`; the chronological sort above guarantees a reply's parent is created before it.
   const lastMessageIdByThread = new Map<string, string>();
+  const messageTags = new Map<string, SystemTags.SystemTagId[]>();
   const messages: Message.Message[] = emails.map((email) => {
     const sender = email.senderOverride ?? senderFor(email.from as PersonKey); // 'noise' emails always carry senderOverride.
     const threadId = threadIdFor(email.subject);
@@ -812,48 +880,119 @@ const makeMailbox = (
       blocks: [textBlock(email.body)],
       threadId,
       ...(parentMessage ? { parentMessage } : {}),
-      properties: { subject: email.subject, threadId, to: email.to },
+      properties: {
+        subject: email.subject,
+        threadId,
+        to: email.to,
+        ...(email.listUnsubscribe ? { listUnsubscribe: email.listUnsubscribe } : {}),
+      },
     });
     lastMessageIdByThread.set(threadId, message.id);
+    // Two tags come by rule — `inbox` unless the thread is archived, and `sent` for mail the
+    // MAIN_CHARACTER authored — with anything the email declares layered on top.
+    messageTags.set(message.id, [
+      ...(email.archived ? [] : (['inbox'] as const)),
+      ...(email.from === MAIN_CHARACTER ? (['sent'] as const) : []),
+      ...(email.tags ?? []),
+    ]);
     return message;
   });
 
-  return { mailbox, messages };
+  return { mailbox, messages, messageTags };
 };
 
 /**
  * Applies canonical system tags to the mailbox's feed messages so the folder views resolve them:
- * every message carries `inbox` (the mailbox opens on the Inbox view, which selects by that tag), and
- * mail authored by the {@link MAIN_CHARACTER} additionally carries `sent` (surfacing it in the Sent
- * folder). Feed messages are immutable, so membership lives in the mailbox's child `TagIndex`, keyed by
- * the tag's space-relative URI so it survives the space-id remap on import (`TagIndex` matches by entity id).
+ * `inbox` backs the Inbox folder the mailbox opens on (archiving is that tag's absence), `sent` the
+ * Sent folder, `starred`/`important` their own folders, and the category tags (`promotions`,
+ * `updates`) stand in for what the classification pipeline assigns on a synced mailbox. Feed messages
+ * are immutable, so membership lives in the mailbox's child `TagIndex`, keyed by the tag's
+ * space-relative URI so it survives the space-id remap on import (`TagIndex` matches by entity id).
  */
 const tagMailboxMessages = async (
   space: Space,
   mailbox: Mailbox.Mailbox,
   messages: Message.Message[],
+  messageTags: Map<string, SystemTags.SystemTagId[]>,
 ): Promise<void> => {
-  const inboxTag = await SystemTags.findOrCreateSystemTag(space.db, 'inbox');
-  const sentTag = await SystemTags.findOrCreateSystemTag(space.db, 'sent');
-  // Store space-relative tag ids so membership survives the space-id remap on import. The runtime
-  // resolves the same tags to space-absolute uris, but `TagIndex` compares by entity id, so both match.
-  const inboxUri = Obj.getURI(inboxTag, { prefer: 'relative' }).toString();
-  const sentUri = Obj.getURI(sentTag, { prefer: 'relative' }).toString();
   const index = mailbox.tags.target;
   if (!index) {
     throw new Error('Mailbox is missing its tag index.');
   }
 
-  const mainCharacterSeed = PEOPLE_SEEDS.find((seed) => seed.key === MAIN_CHARACTER);
-  if (!mainCharacterSeed) {
-    throw new Error(`No PEOPLE_SEEDS entry for MAIN_CHARACTER "${MAIN_CHARACTER}".`);
+  // Resolve each distinct tag once. Store space-relative tag ids so membership survives the space-id
+  // remap on import — the runtime resolves the same tags to space-absolute uris, but `TagIndex`
+  // compares by entity id, so both match.
+  const uris = new Map<SystemTags.SystemTagId, string>();
+  for (const tagId of new Set([...messageTags.values()].flat())) {
+    const tag = await SystemTags.findOrCreateSystemTag(space.db, tagId);
+    uris.set(tagId, Obj.getURI(tag, { prefer: 'relative' }).toString());
   }
-  const mainCharacterEmail = mainCharacterSeed.email;
-  const entries = messages.flatMap((message) => [
-    { object: message, tagId: inboxUri },
-    ...(message.sender.email === mainCharacterEmail ? [{ object: message, tagId: sentUri }] : []),
-  ]);
+
+  const uriFor = (tagId: SystemTags.SystemTagId): string => {
+    const uri = uris.get(tagId);
+    if (!uri) {
+      throw new Error(`No system tag resolved for "${tagId}".`);
+    }
+    return uri;
+  };
+
+  const entries = messages.flatMap((message) =>
+    (messageTags.get(message.id) ?? []).map((tagId) => ({ object: message, tagId: uriFor(tagId) })),
+  );
   Tagging.setBatch(entries, { index });
+};
+
+// Conversation summaries, keyed by thread subject (any message's subject in the thread — it is
+// normalized to the thread key). `SummarizeMailbox` derives these with a model at runtime; the
+// exemplar writes them by hand so a fresh import shows the affordance without a model call.
+const THREAD_SUMMARIES: Record<string, string> = {
+  'Espresso blend pilot — interested':
+    'Hatch wants in on the Spring Blend pilot for their espresso bar. Kai committed to a 2 lb sample of v1; Priya confirmed the bar is available to experiment on.',
+  'Label proofs — Spring Blend':
+    'Riley picked option B (bramble sketch) from the Letterform Press proofs. Kai asked for a warmer background; Riley warmed it and sent final approval to the printer. **Closed.**',
+  'Pricing — Sidamo container':
+    'Abel quoted the full Sidamo container at ~6% over last year, in line with earlier discussion. Kai confirmed and told him to start the export paperwork.',
+  'Q2 planning — agenda':
+    'Kai opened the Q2 agenda: Spring Blend launch date, sourcing-trip logistics, and the part-time roaster hire. Riley added packaging lead times and the new freight quote.',
+  'Spring blend v1 — feedback':
+    'Hatch cupped v1 and liked the chocolate and red fruit; their wholesale customers asked specifically about the espresso roast. Priya would commit to a standing **20 lb/week** at launch, which Kai penciled in.',
+};
+
+/**
+ * Files each {@link THREAD_SUMMARIES} entry under the newest message of its thread, in the mailbox's
+ * `annotations` feed — the second, derived-only feed alongside the message log. Summaries are
+ * immutable annotation Messages whose `parentMessage` names their subject, so the conversation view
+ * resolves them without the message feed carrying anything derived.
+ */
+const makeMailboxSummaries = (
+  space: Space,
+  mailbox: Mailbox.Mailbox,
+  messages: Message.Message[],
+): { feed: Feed.Feed; summaries: Message.Message[] } => {
+  // Messages arrive oldest-first, so the last one seen per thread is the newest.
+  const newestByThread = new Map<string, Message.Message>();
+  for (const message of messages) {
+    if (message.threadId) {
+      newestByThread.set(message.threadId, message);
+    }
+  }
+
+  const summaries = Object.entries(THREAD_SUMMARIES).map(([subject, text]) => {
+    const message = newestByThread.get(threadIdFor(subject));
+    if (!message) {
+      throw new Error(`No thread found for summary subject "${subject}".`);
+    }
+
+    return Mailbox.makeSummary({
+      message,
+      text,
+      // An hour after the message it summarizes: a summary dated before its subject reads as stale.
+      created: new Date(Date.parse(message.created) + 60 * 60 * 1000).toISOString(),
+    });
+  });
+
+  return { feed: Mailbox.findOrCreateAnnotations(mailbox, space.db), summaries };
 };
 
 //
@@ -1630,7 +1769,7 @@ try {
   await space.db.flush();
 
   console.log('exporting…');
-  const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+  const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
 
   // Store as a single line so regenerations produce a 1-line diff rather than
   // thousands of changed lines. The file is valid JSON; use `jq .` to inspect it.

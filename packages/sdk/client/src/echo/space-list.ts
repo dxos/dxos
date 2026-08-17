@@ -23,14 +23,10 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import {
-  Invitation,
-  type Space as SerializedSpace,
-  type SpaceArchive,
-  SpaceState,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, type Space as SerializedSpace, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
@@ -296,7 +292,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
-  async import(archive: SpaceArchive, options?: { tags?: string[] }): Promise<Space> {
+  async import(archive: SpacesService.SpaceArchive, options?: { tags?: string[] }): Promise<Space> {
     const { newSpaceId } = await runServiceCall(
       this._runtime,
       this._serviceProvider.rpc['SpacesService.importSpace']({ archive, tags: options?.tags }),

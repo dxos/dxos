@@ -89,9 +89,8 @@ export const make = <Tools extends Record<string, Tool.Any>, E, R>(
 export const fromContext = <Tools extends Record<string, Tool.Any>>(
   toolkit: Toolkit.Toolkit<Tools>,
 ): Effect.Effect<OpaqueToolkit<Tool.HandlerServices<Tools>>, never, Tool.HandlersFor<Tools>> =>
-  Effect.map(
-    Effect.context<Tool.HandlersFor<Tools>>(),
-    (context): OpaqueToolkit<Tool.HandlerServices<Tools>> => make(toolkit, Layer.succeedContext(context)),
+  Effect.map(Effect.context<Tool.HandlersFor<Tools>>(), (context): OpaqueToolkit<Tool.HandlerServices<Tools>> =>
+    make(toolkit, Layer.succeedContext(context)),
   );
 
 /**

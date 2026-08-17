@@ -18,12 +18,9 @@ import { generatePasscode } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  type AcceptInvitationRequest,
-  type AuthenticationRequest,
-  Invitation,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata';
@@ -152,7 +149,7 @@ export class InvitationsManager {
     }
   }
 
-  acceptInvitation(ctx: Context, request: AcceptInvitationRequest): AuthenticatingInvitation {
+  acceptInvitation(ctx: Context, request: InvitationsService.AcceptInvitationRequest): AuthenticatingInvitation {
     const options = request.invitation;
     const existingInvitation = this._acceptInvitations.get(options.invitationId);
     if (existingInvitation) {
@@ -185,7 +182,7 @@ export class InvitationsManager {
     return invitation;
   }
 
-  async authenticate({ invitationId, authCode }: AuthenticationRequest): Promise<void> {
+  async authenticate({ invitationId, authCode }: InvitationsService.AuthenticationRequest): Promise<void> {
     log('authenticating...');
     invariant(invitationId);
     const observable = this._acceptInvitations.get(invitationId);

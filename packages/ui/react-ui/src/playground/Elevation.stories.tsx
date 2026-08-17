@@ -10,6 +10,7 @@ import { mx } from '@dxos/ui-theme';
 
 import {
   Avatar,
+  Banner,
   Button,
   Card,
   Dialog,
@@ -18,7 +19,6 @@ import {
   IconButton,
   Input,
   Main,
-  Message,
   Panel,
   ScrollArea,
   Select,
@@ -278,12 +278,12 @@ const AppFrame = () => {
           </Panel.Toolbar>
 
           <Panel.Content>
-            <Message.Root valence='warning'>
-              <Message.Content>
-                <Message.Title>Message.Root</Message.Title>
-                <Message.Body>A valence surface nested inside a card.</Message.Body>
-              </Message.Content>
-            </Message.Root>
+            <Banner.Root valence='warning'>
+              <Banner.Content>
+                <Banner.Title>Banner.Root</Banner.Title>
+                <Banner.Body>A valence surface nested inside a card.</Banner.Body>
+              </Banner.Content>
+            </Banner.Root>
             <ScrollArea.Root centered>
               <ScrollArea.Viewport classNames='flex flex-col gap-trim-md'>
                 <ContactCard />

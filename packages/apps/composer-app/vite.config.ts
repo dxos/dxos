@@ -6,6 +6,7 @@ import react from '@vitejs/plugin-react';
 import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { type ConfigEnv, type PluginOption, defineConfig, searchForWorkspaceRoot } from 'vite';
@@ -45,6 +46,45 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
 const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
+
+// Only these packages' default-condition entry is free of top-level await; the `browser` one imports
+// `.wasm` as a module.
+const SYNC_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-subduction'];
+
+/**
+ * Resolves {@link SYNC_WASM_PACKAGES} without the `browser` condition, selecting their
+ * synchronous-init entrypoints so no top-level await enters the module graph.
+ */
+// TODO(wittjosiah): Remove the need for this rather than waiting on a WebKit fix — either the
+//  automerge wasm packages stop requiring top-level await, or our bundling and dependencies change
+//  so the TDZ is unreachable. Only `serve` needs it, but the Tauri app renders in a WebKit web
+//  view, so that covers dev there too.
+const syncWasmInit = (): PluginOption => {
+  // `browser` is deliberately absent; the rest mirrors what vite would apply for the client.
+  const resolver = new ResolverFactory({ conditionNames: ['source', 'import', 'module', 'default'] });
+
+  return {
+    name: 'dxos-sync-wasm-init',
+    enforce: 'pre',
+    // The base64 entry costs ~33% over the binary, which a production bundle must not pay.
+    apply: 'serve',
+    resolveId: {
+      order: 'pre',
+      handler: (source, importer) => {
+        // Subpaths too: `./slim` re-exports the same wasm glue as the package root, so redirecting
+        // only the root would split the two across separate wasm instances and leave the signer
+        // that `/slim` hands out uninitialized.
+        const matched = SYNC_WASM_PACKAGES.some((pkg) => source === pkg || source.startsWith(`${pkg}/`));
+        if (!importer || !matched) {
+          return null;
+        }
+
+        const resolved = resolver.sync(path.dirname(importer), source);
+        return resolved.error || !resolved.path ? null : resolved.path;
+      },
+    },
+  };
+};
 
 /**
  * Transpile targets for oxc (dev) and Rolldown (build).
@@ -92,6 +132,9 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   importSource({
     include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
   }),
+  // WebKit evaluates a module before its dependencies when a graph reached by concurrent dynamic
+  // imports contains top-level await, leaving bindings in TDZ.
+  syncWasmInit(),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
   wasm(),
@@ -229,7 +272,10 @@ export default defineConfig((env) => ({
     },
   },
   optimizeDeps: {
-    exclude: ['@dxos/wa-sqlite'],
+    // The wasm packages `syncWasmInit` redirects must not be pre-bundled: the optimizer resolves
+    // with its own pipeline (the `browser` condition, so the bundler entry) and importers would
+    // land on that chunk's top-level await regardless of what the plugin resolves.
+    exclude: ['@dxos/wa-sqlite', ...SYNC_WASM_PACKAGES],
     // The full set of dep entrypoints the app reaches, so vite's optimize-deps phase pre-bundles
     // them up front rather than discovering them mid-load (when a dynamic import unwraps a new
     // subpath), which forces a full page reload with the "Discovered new dependencies" banner —
@@ -319,6 +365,25 @@ export default defineConfig((env) => ({
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
     ...sharedPlugins(env),
+
+    // Hosts the Claude Agent SDK in the dev server, so the app reaches it same-origin. Dev only —
+    // a deployed Composer has no vite server, and needs the standalone managed process instead.
+    // Turns are confined to DX_AGENT_CWD (default: the workspace root); the host refuses any
+    // requested directory outside it.
+    {
+      name: 'dx-agent-claude',
+      apply: 'serve',
+      // Imported dynamically: vite bundles this config's static imports as CJS `require`, and
+      // `@dxos/agent-claude` is ESM-only.
+      configureServer: async (server) => {
+        const { Middleware } = await import('@dxos/agent-claude');
+        server.middlewares.use(Middleware.make({ cwd: process.env.DX_AGENT_CWD ?? rootDir }));
+      },
+    },
+
+    // Hosts the computer harness's shell route against the vite process cwd. Imported dynamically
+    // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
+    import('@dxos/plugin-computer/vite-plugin').then(({ ComputerShellPlugin }) => ComputerShellPlugin()),
 
     // RSS proxy middleware for CORS-free feed fetching.
     {

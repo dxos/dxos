@@ -21,7 +21,6 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { StorageType } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { SqliteBlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
 import { SqliteMetadataStore } from '../metadata';
@@ -135,7 +134,6 @@ export type TestPeerProps = {
   spaceManager?: SpaceManager;
   dataSpaceManager?: DataSpaceManager;
   signingContext?: SigningContext;
-  blobStore?: SqliteBlobStore;
   echoHost?: EchoHost;
   meshEchoReplicator?: MeshEchoReplicator;
   invitationsManager?: InvitationsManager;
@@ -179,10 +177,6 @@ export class TestPeer {
     return (this._props.metadataStore ??= new SqliteMetadataStore({ runtime: this._runtime.contextEffect }));
   }
 
-  get blobStore() {
-    return (this._props.blobStore ??= new SqliteBlobStore({ runtime: this._runtime.contextEffect }));
-  }
-
   get networkManager() {
     return (this._props.networkManager ??= new SwarmNetworkManager({
       signalManager: new MemorySignalManager(this._signalContext),
@@ -195,7 +189,6 @@ export class TestPeer {
       feedStore: this.feedStore,
       networkManager: this.networkManager,
       metadataStore: this.metadataStore,
-      blobStore: this.blobStore,
     }));
   }
 
@@ -255,7 +248,7 @@ export class TestPeer {
 
   async migrate(): Promise<void> {
     await RuntimeProvider.runPromise(this._runtime.contextEffect)(
-      Effect.all([this.metadataStore.migrate, this.blobStore.migrate, this.keyring.migrate, this._feedStorage.migrate]),
+      Effect.all([this.metadataStore.migrate, this.keyring.migrate, this._feedStorage.migrate]),
     );
   }
 

@@ -13,7 +13,7 @@ import { Expando } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 import { Position } from '@dxos/util';
 
-import { ExpandoCard, FormCard, JsonCard, ProjectCard, TaskCard } from '../cards';
+import { ExpandoCard, FormCard, JsonCard, PersonCardIcon, ProjectCard, TaskCard } from '../cards';
 import { OrganizationCardContent, PersonCardContent } from './RelatedCards';
 
 export default Capability.makeModule(() =>
@@ -37,6 +37,15 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.CardContent, Person.Person),
         component: PersonCardContent,
         props: ({ role, data }) => ({ role, ...data }),
+      }),
+      // A person's card leads with their face, not the generic person glyph. Contributed only for
+      // `Person`; every other type keeps its host's default depiction.
+      Surface.create({
+        id: 'contactIcon',
+        position: Position.first,
+        filter: AppSurface.object(AppSurface.CardIcon, Person.Person),
+        component: PersonCardIcon,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
 
       Surface.create({

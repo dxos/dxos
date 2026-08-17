@@ -32,6 +32,24 @@ export const GroupBy = Object.freeze({
     typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? value : null,
 
   /**
+   * Resolves one `group` entry's key component from its fallback chain: the first property with a
+   * scalar value wins (`a ?? b`), `null` when none do. Shared by both executors and the aggregate
+   * stamping below so a group's key and its result field can never disagree.
+   */
+  resolveKeyComponent: (
+    properties: readonly string[],
+    getValue: (property: string) => unknown,
+  ): string | number | boolean | null => {
+    for (const property of properties) {
+      const value = GroupBy.coerceKeyComponent(getValue(property));
+      if (value !== null) {
+        return value;
+      }
+    }
+    return null;
+  },
+
+  /**
    * Stable serialization of a composite group key (component order matters).
    * Used for wire encoding, group identity, and synthetic entry ids.
    */
@@ -224,7 +242,7 @@ export const GroupBy = Object.freeze({
             ? members.length
             : aggregate.kind === 'group'
               ? // All members of a group share the key, so read the group value off any member.
-                GroupBy.coerceKeyComponent(getProperty(members[0], aggregate.property))
+                GroupBy.resolveKeyComponent(aggregate.properties, (property) => getProperty(members[0], property))
               : GroupBy.reduceAggregate(
                   members.map((member) => coerceScalar(getProperty(member, aggregate.property))),
                   aggregate.kind,

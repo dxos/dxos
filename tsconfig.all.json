@@ -4,6 +4,9 @@
   "compilerOptions": {},
   "references": [
     {
+      "path": "packages/core/compute/agent-claude/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/agent-runtime/tsconfig.json"
     },
     {
@@ -301,6 +304,9 @@
       "path": "packages/core/compute/mcp-client/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/mcp-server/tsconfig.json"
+    },
+    {
       "path": "packages/common/merkle-search-tree/tsconfig.json"
     },
     {
@@ -383,6 +389,9 @@
     },
     {
       "path": "packages/plugins/plugin-commerce/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-computer/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
@@ -863,9 +872,6 @@
     },
     {
       "path": "packages/core/mesh/teleport-extension-gossip/tsconfig.json"
-    },
-    {
-      "path": "packages/core/mesh/teleport-extension-object-sync/tsconfig.json"
     },
     {
       "path": "packages/core/mesh/teleport-extension-replicator/tsconfig.json"

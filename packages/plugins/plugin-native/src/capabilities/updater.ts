@@ -68,9 +68,11 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
     const { invoke } = yield* Capabilities.OperationInvoker;
 
-    const statusAtom = Atom.make<Update.Status>(enabled ? { kind: 'idle' } : { kind: 'unsupported' }).pipe(
-      Atom.keepAlive,
-    );
+    // The two disabled states are distinct to the reader: a dev server on macOS would update fine
+    // once packaged, so reporting it as an unsupported platform is wrong.
+    const disabledStatus: Update.Status = SUPPORTS_OTA.includes(platform) ? { kind: 'dev' } : { kind: 'unsupported' };
+
+    const statusAtom = Atom.make<Update.Status>(enabled ? { kind: 'idle' } : disabledStatus).pipe(Atom.keepAlive);
 
     // Updater.Update is a class with instance methods (downloadAndInstall) and can't live in an
     // atom value; cache it here between check and install.

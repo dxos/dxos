@@ -100,7 +100,9 @@ export default Capability.makeModule(
         position: Position.last,
         filter: AppSurface.subject(AppSurface.Article, Obj.isObject),
         component: RecordArticle,
-        props: ({ data: { subject } }) => ({ subject }),
+        // `attendableId` is the object's graph node: without it the toolbar has no node to source
+        // contributed actions from and renders empty.
+        props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
       }),
       Surface.create({
         id: 'typeCollection',

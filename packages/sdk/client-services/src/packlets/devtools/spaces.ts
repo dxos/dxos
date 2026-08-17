@@ -3,16 +3,17 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf/stream';
-import {
-  type SubscribeToSpacesRequest,
-  type SubscribeToSpacesResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
 import { type ServiceContext } from '../services';
 import { type Space } from '../space';
 
-export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: SubscribeToSpacesRequest) => {
+export const subscribeToSpaces = (
+  context: ServiceContext,
+  { spaceKeys = [] }: DevtoolsHost.SubscribeToSpacesRequest,
+) => {
   return new Stream<SubscribeToSpacesResponse>(({ next }) => {
     let unsubscribe: () => void;
 

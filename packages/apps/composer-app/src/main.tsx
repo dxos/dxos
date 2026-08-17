@@ -31,6 +31,7 @@ import { translations as observabilityTranslations } from '@dxos/plugin-observab
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
+import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
@@ -59,6 +60,24 @@ import {
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
 const ResetDialog = lazy(() => import('./components').then((module) => ({ default: module.ResetDialog })));
 
+/**
+ * Startup deadline override, in SECONDS (`VITE_DX_STARTUP_TIMEOUT=2`).
+ *
+ * Exists to exercise the deadline itself: shortening it does not fake a stall, it moves the line
+ * that startup has genuinely not crossed yet, so the real path runs with real work behind it. Dev
+ * only — in production the deadline is fatal, and a shorter one would just fail a boot sooner.
+ * Seconds rather than milliseconds because it is typed by hand.
+ */
+const startupTimeout = (() => {
+  if (!import.meta.env.DEV) {
+    return undefined;
+  }
+  const seconds = Number(import.meta.env.VITE_DX_STARTUP_TIMEOUT);
+  // The CONVERTED value is checked, not the input: 1e308 is finite and 1e308 * 1_000 is not.
+  const timeout = seconds * 1_000;
+  return Number.isFinite(timeout) && timeout > 0 ? timeout : undefined;
+})();
+
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
 
@@ -69,6 +88,8 @@ declare global {
 
   interface ImportMetaEnv {
     DEV: string;
+    /** Startup deadline override in SECONDS, dev only — see `startupTimeout` below. */
+    VITE_DX_STARTUP_TIMEOUT?: string;
   }
 
   // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
@@ -517,7 +538,14 @@ const main = async () => {
         }
         fallbackRender={(props) => <ErrorFallback {...props} error={error} />}
       >
-        <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
+        {/* `react-ui`'s own namespace ships with no plugin to register it, unlike every sibling
+            (`react-ui-card`, `-form`, …) which a plugin re-exports — so without this the primitives'
+            keys (`system-button.*`, `toolbar-*`) render raw as the accessible name of every
+            icon-only button. */}
+        <ThemeProvider
+          tx={defaultTx}
+          resourceExtensions={[...reactUiTranslations, ...translations, ...observabilityTranslations]}
+        >
           <Tooltip.Provider>
             {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
                 fatal-dialog boundary above, which shows the original error via ErrorFallback. */}
@@ -559,6 +587,9 @@ const main = async () => {
       // so the gap between `Startup` activated and `<Placeholder>` dismissed is at least 2× debounce.
       // The boot loader covers the pre-React phase, so we don't need a longer fade to hide a flash.
       debounce: 200,
+      // Shortened only to exercise the deadline (`VITE_DX_STARTUP_TIMEOUT=2` puts the loader's
+      // stalled offer two seconds in). `undefined` leaves `useApp` on its own 30s default.
+      timeout: startupTimeout,
     });
 
     // Rendered instead of `App`, not thrown: `Main` sits above the app-level error boundary, so a

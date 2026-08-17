@@ -89,10 +89,23 @@ export type InferEnvironmentNameOptions = {
  *   take the first segment as scope and the last as suffix, and treat everything in
  *   between as the name.
  * - `suffix` — 6-char random; stable per-tab via `sessionStorage`, fresh per worker / process instance.
+ *
+ * The default-scope result (no `options.scope` override) is cached at module level: every
+ * caller in the same JS realm — e.g. `@dxos/log-store-idb` and `vite-plugin-log`'s runtime both
+ * running inside one dedicated worker — gets back the identical id, so records from the two
+ * sinks can be correlated by `i`. Passing an explicit `scope` (tests simulating other realms)
+ * bypasses the cache and always computes fresh.
  */
-export const inferEnvironmentName = (options: InferEnvironmentNameOptions = {}): string => {
-  const scope: any = options.scope ?? globalThis;
+let cachedDefaultEnvironmentName: string | undefined;
 
+export const inferEnvironmentName = (options: InferEnvironmentNameOptions = {}): string => {
+  if (options.scope === undefined) {
+    return (cachedDefaultEnvironmentName ??= computeEnvironmentName(globalThis));
+  }
+  return computeEnvironmentName(options.scope);
+};
+
+const computeEnvironmentName = (scope: any): string => {
   // Cloudflare Workers — checked first because in service-worker syntax mode CF
   // workers also report as `ServiceWorkerGlobalScope`.
   if (scope.navigator?.userAgent === CF_WORKER_USER_AGENT) {

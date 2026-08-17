@@ -13,12 +13,19 @@ import {
   EncodedReference,
   type EntityPropPath,
   EntityStructure,
+  PROPERTY_ID,
   type QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import { RuntimeProvider } from '@dxos/effect';
-import { type EntityMeta, EscapedPropPath, type IndexEngine, type ReverseRef } from '@dxos/index-core';
+import {
+  type EntityMeta,
+  EscapedPropPath,
+  type IndexEngine,
+  type QueueWindow,
+  type ReverseRef,
+} from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -124,6 +131,15 @@ const QueryItem = Object.freeze({
   },
 
   /**
+   * Reads a top-level property for the `aggregate` clause, resolving `id` to the entity id — every
+   * object exposes `id` through the API, but documents don't store it in their data (see
+   * `PROPERTY_ID` handling in the echo handler), so a group key falling back to `id` would otherwise
+   * collapse every keyless member into the shared `null` group.
+   */
+  getAggregateProperty: (item: QueryItem, property: string): unknown =>
+    property === PROPERTY_ID ? item.objectId : QueryItem.getProperty(item, [property]),
+
+  /**
    * Computes the composite group key for this item from the aggregate's `group`-kind entries, keyed
    * by result field name. No `group` entries yields `{}` — a single group over the whole input.
    */
@@ -131,7 +147,9 @@ const QueryItem = Object.freeze({
     const key: GroupKeyValue = {};
     for (const aggregate of aggregates) {
       if (aggregate.kind === 'group') {
-        key[aggregate.name] = GroupBy.coerceKeyComponent(QueryItem.getProperty(item, [aggregate.property]));
+        key[aggregate.name] = GroupBy.resolveKeyComponent(aggregate.properties, (property) =>
+          QueryItem.getAggregateProperty(item, property),
+        );
       }
     }
     return key;
@@ -760,7 +778,7 @@ export class QueryExecutor extends Resource {
       case 'WildcardSelector': {
         const beginIndexQuery = performance.now();
         const queueIds = extractQueueIds(queues);
-        const metas = await this._queryAllFromSqlIndex(spaces, allQueuesFromSpaces, queueIds);
+        const metas = await this._queryAllFromSqlIndex(spaces, allQueuesFromSpaces, queueIds, extractQueueWindow(step));
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -829,6 +847,7 @@ export class QueryExecutor extends Resource {
           step.selector.inverted,
           allQueuesFromSpaces,
           queueIds,
+          extractQueueWindow(step),
         );
         trace.indexHits = metas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
@@ -1587,7 +1606,7 @@ export class QueryExecutor extends Resource {
       partitioned,
       (item) => GroupBy.serializeGroupKey(item.groupKey!),
       step.aggregates,
-      (item, property) => QueryItem.getProperty(item, [property]),
+      (item, property) => QueryItem.getAggregateProperty(item, property),
       (a, b, order) => this._compareByOrder(a, b, order),
     );
 
@@ -1701,8 +1720,9 @@ export class QueryExecutor extends Resource {
     spaceIds: readonly SpaceId[],
     includeAllQueues: boolean,
     queueIds: readonly EntityId[] | null,
+    window?: QueueWindow,
   ): Promise<readonly EntityMeta[]> {
-    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds, includeAllQueues, queueIds }));
+    return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds, includeAllQueues, queueIds, window }));
   }
 
   private async _queryTypesFromSqlIndex(
@@ -1711,9 +1731,10 @@ export class QueryExecutor extends Resource {
     inverted: boolean,
     includeAllQueues: boolean,
     queueIds: readonly EntityId[] | null,
+    window?: QueueWindow,
   ): Promise<readonly EntityMeta[]> {
     return await this._runInRuntime(
-      this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queueIds }),
+      this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queueIds, window }),
     );
   }
 
@@ -2117,6 +2138,49 @@ export class QueryExecutor extends Resource {
 const extractSpaceIdFromQueue = (feedUri: string): SpaceId | undefined => {
   const echoUri = EID.tryParse(feedUri);
   return echoUri ? EID.getSpaceId(echoUri) : undefined;
+};
+
+/** Bound below every assigned position, which start at 0. */
+const BEFORE_FIRST_POSITION = -1;
+
+/**
+ * The index-level window for a select bounded by a cursor range: the positions strictly between its
+ * bounds, in position order, capped at the pushed-down limit.
+ *
+ * Every cursor range windows the scan, an empty one included — it bounds nothing but still asks for
+ * a cursor read, which is over positioned blocks in position order. A reader that paged the
+ * unpositioned blocks in first would stop at a page of items it cannot act on while positioned ones
+ * waited behind them.
+ *
+ * A bound that is not a decimal position is treated as unsatisfiable rather than as absent:
+ * resuming a corrupted checkpoint from the beginning would re-dispatch the whole feed.
+ */
+const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined => {
+  const range = step.feedCursorRange;
+  if (range === undefined) {
+    return undefined;
+  }
+
+  // Backstop for the planner's check, which is where a cursor over a space's documents is refused.
+  if (!step.scope.every((scope) => scope._tag === 'feed')) {
+    throw new QueryError({
+      message: 'A feed cursor filter can only be used with a feed scope.',
+      context: { query: null },
+    });
+  }
+
+  return {
+    // The empty string is the start sentinel (`Feed.START`), which bounds nothing.
+    after: range.begin ? parseCursor(range.begin, Number.MAX_SAFE_INTEGER) : BEFORE_FIRST_POSITION,
+    ...(range.end ? { before: parseCursor(range.end, BEFORE_FIRST_POSITION) } : {}),
+    ...(step.limit !== undefined ? { limit: step.limit } : {}),
+  };
+};
+
+/** A cursor's position, or `unsatisfiable` when it does not name one. */
+const parseCursor = (cursor: string, unsatisfiable: number): number => {
+  const position = /^\d+$/.test(cursor) ? Number(cursor) : Number.NaN;
+  return Number.isSafeInteger(position) ? position : unsatisfiable;
 };
 
 const extractQueueIds = (queues: readonly string[]): EntityId[] | null => {

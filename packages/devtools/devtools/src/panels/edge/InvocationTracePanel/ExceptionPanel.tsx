@@ -5,7 +5,7 @@
 import React, { type FC, useMemo } from 'react';
 
 import { type TraceEvent } from '@dxos/compute-runtime';
-import { Message } from '@dxos/react-ui';
+import { Banner } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 type ExceptionPanelProps = {
@@ -33,11 +33,11 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ objects }) => {
   if (errorLogs.length === 0) {
     return (
       <div className={mx('flex w-full items-center justify-center m-4')}>
-        <Message.Root>
-          <Message.Content>
-            <Message.Title>No exceptions.</Message.Title>
-          </Message.Content>
-        </Message.Root>
+        <Banner.Root>
+          <Banner.Content>
+            <Banner.Title>No exceptions.</Banner.Title>
+          </Banner.Content>
+        </Banner.Root>
       </div>
     );
   }

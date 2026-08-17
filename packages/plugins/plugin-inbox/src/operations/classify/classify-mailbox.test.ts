@@ -142,7 +142,7 @@ describe('ClassifyMailbox operation', { tags: ['model-fixture'] }, () => {
         expect(second.remaining).toBe(0);
 
         // Reset via the shared cursor-reset operation, targeting the classify consumer id.
-        const reset = yield* Operation.invoke(InboxOperation.ResetProcessCursor, {
+        const reset = yield* Operation.invoke(InboxOperation.ResetFeedCursor, {
           mailbox: Ref.make(mailbox),
           cursorId: 'classifyMailbox',
         });

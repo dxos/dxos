@@ -39,6 +39,6 @@ describe('operation serialization', () => {
       .map((tool) => tool.name)
       .sort();
 
-    expect(projected).toEqual(['projectGet', 'projectList', 'projectUpdate']);
+    expect(projected).toEqual(['projectCreate', 'projectGet', 'projectList', 'projectUpdate']);
   });
 });
