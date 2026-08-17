@@ -166,7 +166,16 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       area below the last message. The follower now takes a `trailing` accessor and stops at the last
       row's bottom. `baseline/fill`'s `UniformPastEnd` covers it: the feed opens at the tail
       (scrollTop 11605 against a tail of 11716 while rows are still measuring, then exactly 17352).
-- [ ] **`baseline/varied` and `UniformPastEnd` still move for one frame on a rebuild.** Restoring by index makes the
+- [x] **A feed opened at the tail the estimate predicted, not the tail it had.** The opening jump is
+      computed from estimates, so it landed 60,000px into a document that measures 71,565 — and the
+      feed was marked positioned there, leaving the follow to close ten thousand pixels at two rows a
+      second (measured as a 1px-per-frame creep that never arrived). The follow is for content
+      arriving at a tail the reader is watching; a gap the estimate opened is a correction, so
+      anything more than a screen behind now jumps. `baseline/fill`'s `PlainPastEnd` settles in one
+      frame at exactly the tail, and this also took `Varied`'s rebuild frame to zero.
+- [ ] **`UniformPastEnd` still moves for one frame on a rebuild.** Its rows are short, so the gap the
+      estimate opens stays under a screen and the correction is a follow rather than a jump, landing
+      a frame after the rebuild that caused it. Allowance of 1 pinned in the story. Restoring by index makes the
       virtualizer retry while the offsets around the landing point are estimates. Allowance of 1 is
       pinned in the story so a regression past it fails.
 - [ ] **Every other arrow press travels ~2px instead of a row.** Direction is right and the feed

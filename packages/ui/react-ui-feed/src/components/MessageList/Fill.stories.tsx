@@ -188,11 +188,18 @@ export const Uniform: Story = {
  * the tail test, the follow's target, the opening offset — has to stop short of it instead. This is
  * where that is checked.
  */
+/** Tall uneven rows and space past the end: the case where the opening jump is most wrong. */
+export const PlainPastEnd: Story = {
+  args: { scenario: 'plain', count: 500, scrollPastEnd: true },
+  play: playFill('plain past-end'),
+};
+
 export const UniformPastEnd: Story = {
   args: { scenario: 'uniform', count: 500, scrollPastEnd: true },
-  // One frame of movement on the rebuild, as in `Varied`: the restore has to go round the
-  // virtualizer here, because the virtualizer clamps every offset to the element's maximum and the
-  // reserved space has moved that past the last row. Pinned at what is measured today.
+  // The one rung still not atomic. Its rows are short, so the gap the estimate opens is under a
+  // screen and the correction is a follow rather than a jump — which lands a frame later than the
+  // rebuild that caused it. `Varied` and `PlainPastEnd`, whose rows are tall enough to put the tail
+  // more than a screen away, both reach zero. Pinned at what is measured today.
   play: playFill('uniform past-end', 1),
 };
 
@@ -213,5 +220,5 @@ export const UniformShort: Story = {
  */
 export const Varied: Story = {
   args: { count: 500 },
-  play: playFill('varied 500', 1),
+  play: playFill('varied 500'),
 };

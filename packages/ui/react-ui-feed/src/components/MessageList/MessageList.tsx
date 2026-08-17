@@ -697,7 +697,7 @@ const MessageListRoot = ({
       };
     }
 
-    if (!follower || !stickyBottom || !followRef.current) {
+    if (!viewport || !follower || !stickyBottom || !followRef.current) {
       follower?.stop();
       return;
     }
@@ -706,7 +706,15 @@ const MessageListRoot = ({
     // it. Through the virtualizer rather than by writing `scrollTop`, because on first render the
     // total size is mostly estimate — a raw jump lands at a position the mounted window does not
     // cover and the feed opens blank.
-    if (!positioned.current || stickyBehavior !== 'smooth') {
+    // How far behind the tail the reader is, ignoring any space reserved past the last row.
+    //
+    // More than a screen is not motion to animate. The first jump is computed from estimates, so it
+    // lands where the estimate put the tail — 60,000px into a document that measures 71,565 — and
+    // the follow would then close the remaining ten thousand pixels at two rows a second. The follow
+    // is for content arriving at a tail the reader is watching; a gap the estimate opened is a
+    // correction, and corrections jump.
+    const behind = viewport.scrollHeight - trailingRef.current - viewport.scrollTop - viewport.clientHeight;
+    if (!positioned.current || stickyBehavior !== 'smooth' || behind > viewport.clientHeight) {
       positioned.current = positioned.current || messages.length > 0;
       follower.cancel();
       scrollToBottom();
