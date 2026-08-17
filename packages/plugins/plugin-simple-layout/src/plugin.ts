@@ -25,12 +25,12 @@ export type SimpleLayoutPluginOptions = {
 export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(State),
-  Plugin.addModule(SpotlightDismiss),
   Plugin.addModule(ReactRoot),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(SpotlightDismiss),
+  Plugin.addModule(State),
   Plugin.addModule(UrlHandler),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

@@ -10,9 +10,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const PaymentsPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(Settings),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Settings),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

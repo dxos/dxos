@@ -13,12 +13,12 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const NativeFilesystemPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(OperationHandler),
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(Markdown),
+  Plugin.addModule(OperationHandler),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(State),
-  Plugin.addModule(Markdown),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

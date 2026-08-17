@@ -3,7 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AgentHydrator,
@@ -20,19 +19,20 @@ import {
   LocalModelResolver,
   MarkdownExtension,
   OperationHandler,
+  PluginAsset,
   ReactSurface,
   Schema,
   Settings,
   SkillDefinition,
   Toolkit,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 import { AssistantOptions } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
-
+// Canonical single-entry composition: lists every module once; per-environment filtering happens
+// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
+// as `undefined`, which `Plugin.addModule` skips.
 export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOptions | void>(meta)
   .pipe(
     Plugin.addModule(AppGraphBuilder),
@@ -42,7 +42,7 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
     Plugin.addModule(Schema),
     Plugin.addModule(Settings),
     Plugin.addModule(ReactSurface),
-    Plugin.addModule(AppCapability.translations(translations)),
+    Plugin.addModule(Translations),
     Plugin.addModule(AutomationTemplates),
     Plugin.addModule(MarkdownExtension),
     // TODO(wittjosiah): Does not integrate with settings store.
@@ -65,14 +65,7 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
     Plugin.addModule(AgentHydrator),
     Plugin.addModule(CompanionChatProvisioner),
     Plugin.addModule(Connector),
-    Plugin.addModule(
-      AppCapability.pluginAsset({
-        pluginId: meta.profile.key,
-        path: 'PLUGIN.mdl',
-        content: pluginSpec,
-        mimeType: 'application/x-mdl',
-      }),
-    ),
+    Plugin.addModule(PluginAsset),
     Plugin.make,
   );
 

@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: plugin-variant-dedup
+    status: active
+    user: josiah
+    host: ccr-cloud
+    created: 2026-08-15
+    summary: 'Collapse the hand-maintained browser/node/workerd plugin variants (plugin.ts x3, capability barrels x3, schema copies, package.json conditions, vite entries — 36 plugins, ~123 files) into one canonical plugin definition with per-module environment flags plus generated per-env stub barrels.'
+    tasks: .agents/projects/plugin-variant-dedup/TASKS.md
+    design: .agents/projects/plugin-variant-dedup/DESIGN.md
+    prs: [12610]
+    resume: 'Research COMPLETE (PR #12610 draft): recommended mechanism O2 — single canonical plugin entry + generated per-env capability barrels with undefined stubs skipped by Plugin.addModule; validated end-to-end on plugin-markdown and plugin-space (build, dx-trace-imports workerd+node clean with browser positive control, lint, check-module-structure, full test suites, edge-sim esbuild bundle react-free). Generator prototype + repo-wide drift audit in .agents/projects/plugin-variant-dedup/spikes/ (20/23 barrels reproduced exactly; found real Startup->Idle OperationHandler drift in space/client/routine node barrels + 4 stale headless schema lists). O4 (define+DCE) invalidated by fixture spike (sideEffects:true orphan chunks; source-mode consumers unfiltered). NEXT: user decision on O2 vs O3 + DESIGN.md §6 open questions, then Phase 1 in TASKS.md.'
   - name: client-startup-timeout
     status: active
     user: jdw

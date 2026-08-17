@@ -8,11 +8,16 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
+import { translations } from '#translations';
 import { ObservabilityCapabilities, ObservabilityEvents, ObservabilityOptions } from '#types';
 
+// Browser-only, with the rest of the observability runtime below: the telemetry pipeline reads
+// browser storage and the user's telemetry preference, neither of which exists headlessly. Both
+// headless variants on main carried only the `OperationHandler` stub, and its overrides still do.
 export const ClientReady = Capability.lazyModule(
   'ClientReady',
   {
+    environments: [],
     requires: [
       Capabilities.PluginManager,
       Capabilities.OperationInvoker,
@@ -30,6 +35,7 @@ export const ClientReady = Capability.lazyModule(
 export const PrivacyNotice = Capability.lazyModule(
   'PrivacyNotice',
   {
+    environments: [],
     requires: [
       Capabilities.OperationInvoker,
       Capabilities.AtomRegistry,
@@ -46,6 +52,7 @@ export const PrivacyNotice = Capability.lazyModule(
 export const Namespace = Capability.inlineModule(
   'namespace',
   {
+    environments: [],
     provides: [ObservabilityCapabilities.Namespace],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.namespace,
   },
@@ -54,6 +61,7 @@ export const Namespace = Capability.inlineModule(
 export const Observability = Capability.inlineModule(
   'observability',
   {
+    environments: [],
     provides: [ObservabilityCapabilities.Observability],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.observability,
   },
@@ -64,6 +72,9 @@ export const Observability = Capability.inlineModule(
       return [Capability.contribute(ObservabilityCapabilities.Observability, obs)];
     }),
 );
+// Node/workerd load a stubbed handler via ./overrides.<env>.ts: neither host can send real
+// telemetry (see the overrides files for why), so they register a no-op `SendEvent` handler
+// instead of the browser implementation.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
@@ -74,9 +85,11 @@ export const ObservabilitySettings = AppCapability.settings(() => import('./sett
 export const ObservabilityState = Capability.lazyModule(
   'ObservabilityState',
   {
+    environments: [],
     requires: [Capabilities.AtomRegistry],
     provides: [ObservabilityCapabilities.State],
     props: ({ namespace }: ObservabilityOptions.ObservabilityPluginOptions) => ({ namespace }),
   },
   () => import('./state'),
 );
+export const Translations = AppCapability.translations(translations);

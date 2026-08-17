@@ -70,6 +70,10 @@ const AUXILIARY_ENTRY = [
   'src/**/*-worker.{ts,tsx}',
   // Function bodies the runtime bundles by path rather than importing.
   'src/functions/**/*.{ts,tsx}',
+  // Read by `dx-plugin gen`, which splices their exports into the gitignored `capabilities/gen/`
+  // barrels. A marker file that carries no exports (its presence alone forces a stubbed barrel for
+  // an environment the plugin contributes nothing to) is referenced by nothing at all.
+  'src/capabilities/overrides.*.{ts,tsx}',
   // Ambient declarations and module augmentations: TypeScript picks these up from `include`, so
   // nothing ever imports them. Scoped to checked-in locations — a bare `**` would pull the
   // generated `dist/types` tree into the analysis.
@@ -495,6 +499,9 @@ const config: KnipConfig = {
     'tailwindcss',
     // Provided by @storybook/test-runner, which the storybook harness installs on demand.
     'test-storybook',
+    // Shipped by @dxos/app-framework, a dependency of every plugin the `composer-plugin` tag
+    // applies to; the tag file that invokes it lives at the root, which declares no such dep.
+    'dx-plugin',
   ],
   ignoreDependencies: [
     //

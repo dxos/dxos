@@ -3,42 +3,35 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AppGraphBuilder,
   Compiler,
   CreateObject,
   OperationHandler,
+  PluginAsset,
   ReactSurface,
   Schema,
   ScriptSettings,
   SkillDefinition,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
-
+// Canonical single-entry composition: lists every module once; per-environment filtering happens
+// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
+// as `undefined`, which `Plugin.addModule` skips.
 export const ScriptPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Compiler),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(Schema),
+  Plugin.addModule(PluginAsset),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Schema),
   Plugin.addModule(ScriptSettings),
-  Plugin.addModule(Compiler),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

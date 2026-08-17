@@ -14,10 +14,10 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const AtprotoPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
   Plugin.addModule(AtprotoConnector),
+  Plugin.addModule(ReactSurface),
   Plugin.addModule(RepoLayer),
+  Plugin.addModule(Schema),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({

@@ -12,13 +12,21 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { RoutineCapabilities } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  environments: ['node'],
+});
 export const Commands = AppCapability.commands(() => import('./commands'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// The entry carries a live `customPanel` (`CreateRoutinePanel`) alongside the object factory, so the
+// module cannot be evaluated without React.
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: [],
+});
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), {
   name: 'LayerSpecs',
   provides: [Capabilities.TraceSink],
 });
+// Node uses a hand-built lazyModule (idle activation) via ./overrides.node.ts — see the override
+// file for why it diverges from the maker's Startup default.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
@@ -33,13 +41,15 @@ export const RegistrySync = Capability.lazyModule(
       Capabilities.OperationHandler,
     ],
     provides: [],
+    environments: ['node'],
   },
   () => import('./registry-sync'),
 );
+// Headless environments load the reduced list via ./overrides.node.ts / ./overrides.workerd.ts.
 export const Schema = AppCapability.schema(() => import('./schema'));
 export const Templates = Capability.lazyModule(
   'Templates',
-  { provides: [RoutineCapabilities.Template] },
+  { provides: [RoutineCapabilities.Template], environments: ['node', 'workerd'] },
   () => import('./templates'),
 );
 export const TriggerRuntimeController = Capability.lazyModule(
@@ -49,6 +59,7 @@ export const TriggerRuntimeController = Capability.lazyModule(
     provides: [],
     // Runtime event: triggers only need to react to spaces once the client observes them.
     activatesOn: ClientEvents.SpacesReady,
+    environments: ['node'],
   },
   () => import('./trigger-runtime-controller'),
 );

@@ -13,7 +13,17 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#capabilities": "./src/capabilities/index.ts",
+    "#capabilities": {
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "default": "./dist/lib/capabilities.mjs"
+    },
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",

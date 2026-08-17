@@ -13,12 +13,12 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BlueskyPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(Schema),
-  Plugin.addModule(Connector),
   // Read-only ATProto channel backend (contributes ThreadCapabilities.ChannelBackend).
   Plugin.addModule(ChannelBackend),
+  Plugin.addModule(Connector),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Schema),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

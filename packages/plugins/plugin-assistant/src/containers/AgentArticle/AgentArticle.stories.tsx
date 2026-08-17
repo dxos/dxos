@@ -24,10 +24,10 @@ import { Text } from '@dxos/schema';
 import { TypeSpec, createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Outline, Person } from '@dxos/types';
 
+import { AssistantPlugin } from '#plugin';
 import { createMessage } from '#testing';
 import { translations } from '#translations';
 
-import { AssistantPlugin } from '../../plugin';
 import { AgentArticle } from './AgentArticle';
 
 random.seed(1);

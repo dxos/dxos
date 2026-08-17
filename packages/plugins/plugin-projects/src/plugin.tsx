@@ -3,7 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AppGraphBuilder,
@@ -13,19 +12,22 @@ import {
   Schema,
   SkillDefinition,
   Templates,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
+// Canonical single-entry composition: lists every module once; per-environment filtering happens
+// in the `#capabilities` barrel resolution — the generated headless barrels stub excluded modules
+// as `undefined`, which `Plugin.addModule` skips.
 export const ProjectsPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(Schema),
-  Plugin.addModule(CreateObject),
-  Plugin.addModule(Templates),
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(SkillDefinition),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Templates),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

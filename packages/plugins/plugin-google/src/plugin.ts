@@ -16,10 +16,10 @@ import { translations } from '#translations';
  * `@dxos/plugin-inbox`.
  */
 export const GooglePlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(Connector),
   Plugin.addModule(MailSend),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

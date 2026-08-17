@@ -31,15 +31,15 @@ setAutoFreeze(false);
 
 export const DeckPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(DeckSettings),
   Plugin.addModule(CheckAppScheme),
+  Plugin.addModule(DeckSettings),
   Plugin.addModule(DeckState),
-  Plugin.addModule(ReactRoot),
-  Plugin.addModule(UrlHandler),
   Plugin.addModule(NotificationTracker),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactRoot),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(UrlHandler),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

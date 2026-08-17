@@ -12,9 +12,9 @@ import { meta } from '#meta';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SandboxPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(SkillDefinition),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

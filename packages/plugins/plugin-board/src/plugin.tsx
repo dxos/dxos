@@ -15,8 +15,8 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BoardPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
-  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
   Plugin.addModule(AppCapability.translations([...translations, ...boardTranslations])),
   Plugin.addModule(
     AppCapability.pluginAsset({

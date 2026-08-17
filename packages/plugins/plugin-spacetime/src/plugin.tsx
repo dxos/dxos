@@ -14,9 +14,9 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpacetimePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
+  Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
   Plugin.addModule(SpacetimeSettings),
-  Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({

@@ -26,9 +26,9 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
+import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { AssistantPlugin } from '../../plugin';
 import { ChatArticle } from './ChatArticle';
 
 /**

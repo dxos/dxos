@@ -13,9 +13,9 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const GitHubPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(Connector),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(Connector),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

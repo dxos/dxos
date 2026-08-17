@@ -14,11 +14,11 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const NativePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(NativeSettings),
+  Plugin.addModule(Ollama),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(SpotlightListener),
   Plugin.addModule(Updater),
-  Plugin.addModule(Ollama),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

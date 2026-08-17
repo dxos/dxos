@@ -10,6 +10,12 @@ import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
+
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [AttentionCapabilities.ViewState],
 });
@@ -18,12 +24,23 @@ export const RoutineTemplates = Capability.lazyModule(
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./routine-templates'),
 );
+// workerd loads the reduced list via ./overrides.workerd.ts; node takes the canonical one.
 export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// workerd registers eagerly (Startup, the maker's default) via ./overrides.workerd.ts — a worker
+// host handling operation requests needs handlers ready immediately, unlike the post-interactive
+// Idle deferral browser and node share.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.objectProperties'],
+});
+export const Translations = AppCapability.translations(translations);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
 });

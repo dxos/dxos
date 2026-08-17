@@ -28,6 +28,17 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "default": "./dist/lib/types.mjs"
+    },
+    "#capabilities": {
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "default": "./dist/lib/capabilities.mjs"
     }
   },
   "exports": {

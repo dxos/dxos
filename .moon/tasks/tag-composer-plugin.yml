@@ -1,0 +1,30 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+# Composer plugins on the single-entry pattern: one canonical plugin.ts + capabilities/index.ts
+# with per-module `environments` annotations; the prebuild generates the headless
+# `#capabilities` barrels (src/capabilities/gen/, gitignored) and syncs the package.json
+# condition map. build/test depend on prebuild so the generated sources exist before anything
+# resolves them; lint does not — oxlint ignores `**/gen/*`.
+tasks:
+  prebuild:
+    command: pnpm exec dx-plugin gen
+    deps:
+      - app-framework:compile-plugin-cli
+    inputs:
+      - src/capabilities/index.ts
+      - src/capabilities/overrides.*.ts
+      - package.json
+    outputs:
+      # Optional: a plugin with no non-browser `environments` annotations (fully browser-only
+      # outside node/workerd) produces zero gen files, and a required output fails the task when
+      # nothing was written.
+      - file: src/capabilities/gen
+        optional: true
+  build:
+    deps:
+      - prebuild
+  test:
+    deps:
+      - prebuild
+
+inheritedBy:
+  tags: composer-plugin

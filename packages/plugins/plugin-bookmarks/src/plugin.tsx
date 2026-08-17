@@ -14,10 +14,10 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BookmarksPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CommentConfig),
-  Plugin.addModule(Schema),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PageActionProvider),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({

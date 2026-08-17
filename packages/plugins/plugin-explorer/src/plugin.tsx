@@ -13,10 +13,10 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const ExplorerPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(CreateObject),
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(Schema),
+  Plugin.addModule(CreateObject),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({

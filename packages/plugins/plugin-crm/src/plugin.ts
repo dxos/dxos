@@ -23,17 +23,17 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CrmPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(SkillDefinition),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(OperationHandler),
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(Schema),
   Plugin.addModule(AutomationTemplates),
   // Injects the `Process CRM` action into plugin-inbox's mailbox toolbar menu.
   Plugin.addModule(MailboxAction),
   Plugin.addModule(MailboxProcessor),
-  Plugin.addModule(SenderAction),
+  Plugin.addModule(OperationHandler),
   Plugin.addModule(ProjectTemplates),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SenderAction),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

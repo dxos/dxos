@@ -11,8 +11,8 @@ import { translations } from '#translations';
 
 export const TemplatePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
-  Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
