@@ -103,9 +103,9 @@ export const Minimap = ({ classNames, markers, visibleRange, onSelect }: Minimap
 
   const natural = markers.length * MIN_ROW;
   // Below two rows the measurement is a transient (an unlaid-out parent), not a real constraint.
-  const bounded = available >= MIN_ROW * 2 && natural > available;
+  const bounded = available >= MIN_ROW * 2;
   const rows = useMemo(
-    () => thin(markers, bounded ? Math.floor(available / MIN_ROW) : markers.length),
+    () => thin(markers, bounded ? Math.min(markers.length, Math.floor(available / MIN_ROW)) : markers.length),
     [markers, bounded, available],
   );
 
@@ -177,6 +177,10 @@ export const Minimap = ({ classNames, markers, visibleRange, onSelect }: Minimap
         onKeyDown={handleKeyDown}
         ref={containerRef}
       >
+        {/* The rail always fills what it is given and the rows share it, so the ticks span the whole
+            range whether there are more markers than fit — thinned above — or fewer, spread out. A
+            rail sized to its content would map the document onto part of the height and leave the
+            rest blank, which reads as the feed being shorter than it is. */}
         {rows.map((row, index) => {
           const marker = row.marker;
           const active = isActive(row);
@@ -189,7 +193,10 @@ export const Minimap = ({ classNames, markers, visibleRange, onSelect }: Minimap
               // when the rail is unbounded), so any point in the rail maps to a tick. The focus
               // ring is suppressed because focus already shows as the tick extending and
               // darkening — an outline around an invisible full-width row reads as a stray box.
-              className='flex items-center w-full flex-1 min-h-[12px] cursor-pointer outline-none'
+              // `flex-1` with `min-h-0`: the rows share whatever height the rail has, so N markers
+              // spread over the full range rather than stacking at their natural pitch and leaving
+              // the rest blank. Thinning above guarantees they never need less than the pitch.
+              className='flex items-center w-full flex-1 min-h-0 cursor-pointer outline-none'
               ref={(element) => {
                 rowsRef.current[index] = element;
               }}

@@ -97,6 +97,12 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       REVERTED: `shouldAdjustScrollPositionOnItemSizeChange = () => false` (leave compensation to the
       anchor alone) — the feed then opens with a large blank area below the content, because the
       tail positioning depends on that adjustment.
+- [ ] **If TanStack is replaced, keep its API.** The swap must be drop-in — same `useVirtualizer`
+      options and the same `Virtualizer` surface (`getVirtualItems`, `measureElement`, `scrollToIndex`,
+      `measurementsCache`, …) — so our implementation and theirs can be exchanged without touching
+      `MessageList`, and so any fix can be offered upstream as a patch rather than stranded here.
+      `virtualizer.test.ts` drives the real `Virtualizer` through that surface, so it doubles as the
+      conformance test for a replacement.
 - [ ] Widget state does not survive virtualization — an expanded panel scrolled out of the window
       remounts collapsed, because the open flag is React state inside the widget. Either the state
       moves into the message, or the item keeps a per-widget map.
