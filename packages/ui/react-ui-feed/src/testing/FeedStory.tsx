@@ -244,6 +244,7 @@ export const FeedStory = ({
       onSelectedIdsChange={setSelectedIds}
       estimateSize={estimateSize ?? definition?.estimateSize}
       stickyBottom={definition?.stickyBottom ?? true}
+      scrollPastEnd
       stickyBehavior='smooth'
       follow={{ maxSpeed, acceleration, deceleration }}
     >

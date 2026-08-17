@@ -38,14 +38,8 @@ export type FeedDebug = {
  * the component. As an aspect the story stays about the feed, and what is being measured can be
  * read, changed or dropped in one file.
  */
-export const useFeedDebug = ({
-  scenario,
-  count,
-  estimateSize,
-  streaming,
-  enabled = true,
-}: FeedDebugOptions): FeedDebug => {
-  const [debug, setDebug] = useState(enabled);
+export const useFeedDebug = ({ scenario, count, estimateSize, streaming, enabled }: FeedDebugOptions): FeedDebug => {
+  const [debug, setDebug] = useState(enabled ?? true);
   const toggleDebug = useCallback(() => setDebug((value) => !value), []);
 
   const label = useMemo(

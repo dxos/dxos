@@ -114,6 +114,23 @@ regression — a row that costs ten times a probe's row is a set being rebuilt s
 300px on screen and `scrollOffset` moves _less_, because compensation deliberately moved it back.
 Asserting against the offset asserts that compensation did not happen.
 
+## Navigating between stops
+
+Arrow keys step between the stops a host names with `isAnchor` — prompts in a chat, speakers in a
+transcript — rather than by line or by message, so the position readout always names the thing the
+reader is on.
+
+Two things make a press reliable, and both were defects first:
+
+- **A navigation owns its destination until it arrives.** The cursor otherwise follows the mounted
+  range, which is right for a wheel or a scrollbar drag and wrong for a smooth scroll: the travel
+  passes through every range between here and its target and overwrites where it was going. The
+  symptom is an arrow that steps one _message_ instead of one stop.
+- **`scrollPastEnd` reserves the viewport less the last row.** Without it the feed stops scrolling
+  when the last row's bottom meets the viewport's, so the final stops can only ever be read at the
+  foot of the screen and stepping to the last one shows it where it already was. The tail test
+  subtracts the reserved space — a feed parked there is still parked at its tail.
+
 ## Following the tail
 
 A chat is pinned to its bottom, and that is a different anchor: the end of the document rather than a
