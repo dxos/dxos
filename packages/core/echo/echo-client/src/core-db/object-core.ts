@@ -17,6 +17,7 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { type Entity, type Type } from '@dxos/echo';
 import {
+  DATA_NAMESPACE,
   type DatabaseDirectory,
   EncodedReference,
   type EntityStructure,
@@ -436,6 +437,29 @@ export class ObjectCore {
     return upgradeMeta(path, decoded) as DecodedAutomergePrimaryValue;
   }
 
+  /**
+   * Names of the data fields that changed between `heads` and the current frontier.
+   *
+   * Asks automerge which fields moved rather than comparing values, so it stays exact for nested
+   * structures without needing a deep-equality rule of its own.
+   */
+  getChangedDataFieldsSince(heads: Heads): string[] {
+    const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
+    if (!doc) {
+      return [];
+    }
+
+    const prefix = [...this.mountPath, DATA_NAMESPACE];
+    const changed = new Set<string>();
+    for (const patch of A.diff(doc, heads, A.getHeads(doc))) {
+      if (patch.path.length > prefix.length && prefix.every((key, index) => patch.path[index] === key)) {
+        changed.add(String(patch.path[prefix.length]));
+      }
+    }
+
+    return [...changed];
+  }
+
   // TODO(dmaretskyi): Rename to `set`.
   setDecoded(path: Doc.KeyPath, value: DecodedAutomergePrimaryValue): void {
     this._setRaw(path, this.encode(value));
@@ -502,6 +526,99 @@ export class ObjectCore {
     } else {
       this._setRaw([SYSTEM_NAMESPACE, 'parent'], ref);
     }
+  }
+
+  /**
+   * The entity this one was merged into, set on the loser of a convergence-key merge.
+   * A bare id rather than an encoded reference, so reference-rewriting traversals do not mistake
+   * the redirect for a data ref.
+   */
+  getMergedInto(): EntityId | undefined {
+    const value = this._getRaw([SYSTEM_NAMESPACE, 'mergedInto']);
+    return typeof value === 'string' ? value : undefined;
+  }
+
+  /**
+   * Redirect the entity at `id` and record the heads it carried at that moment, so a later pass
+   * can fold in edits made by a peer that was offline during the merge.
+   */
+  setMergedInto(id: EntityId, heads: readonly string[]): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'mergedInto'], id);
+    this._setRaw([SYSTEM_NAMESPACE, 'mergedAtHeads'], [...heads]);
+  }
+
+  /**
+   * The fold watermark: the stored `mergedAtHeads` unioned with every conflicting value of the
+   * register. Peers merging concurrently each record their own watermark and automerge keeps one
+   * plus conflicts; a fold diffing from the union never re-presents an edit any peer already
+   * folded — a re-fold from a stale surviving watermark would overwrite newer winner edits.
+   */
+  getMergedAtHeads(): string[] | undefined {
+    const value = this._getRaw([SYSTEM_NAMESPACE, 'mergedAtHeads']);
+    if (!Array.isArray(value)) {
+      return undefined;
+    }
+    const hashes = new Set<string>();
+    const collect = (candidate: unknown): void => {
+      if (Array.isArray(candidate)) {
+        for (const hash of candidate) {
+          if (typeof hash === 'string') {
+            hashes.add(hash);
+          }
+        }
+      }
+    };
+    collect(value);
+    const doc = this.doc ?? this.docHandle?.doc();
+    const system = doc
+      ? getDeep<AutomergeDoc<{ mergedAtHeads?: string[] }>>(doc, [...this.mountPath, SYSTEM_NAMESPACE])
+      : undefined;
+    if (system !== undefined && typeof system === 'object') {
+      for (const conflicting of Object.values(A.getConflicts(system, 'mergedAtHeads') ?? {})) {
+        collect(conflicting);
+      }
+    }
+    return [...hashes];
+  }
+
+  /**
+   * Ids of the entities merged into this one, deduplicated and sorted.
+   *
+   * Peers merging concurrently on different views both append here, and automerge keeps both
+   * insertions, so the stored list can hold repeats; normalizing on read makes it a set.
+   */
+  getMergedFrom(): EntityId[] {
+    const value = this._getRaw([SYSTEM_NAMESPACE, 'mergedFrom']);
+    return Array.isArray(value) ? [...new Set(value)].sort() : [];
+  }
+
+  /**
+   * Record entities as having merged into this one. Idempotent: re-recording an id already
+   * present rewrites nothing, so a repeated merge pass is a no-op.
+   *
+   * Appends to the existing list rather than assigning a new one: concurrent assignments are
+   * whole-list conflicts and last-write-wins would drop one peer's ids, while concurrent inserts
+   * both survive — {@link getMergedFrom} deduplicates.
+   */
+  addMergedFrom(ids: readonly EntityId[]): void {
+    const existing = new Set(this.getMergedFrom());
+    const missing = [...new Set(ids)].filter((id) => !existing.has(id)).sort();
+    if (missing.length === 0) {
+      return;
+    }
+    if (existing.size === 0 && this._getRaw([SYSTEM_NAMESPACE, 'mergedFrom']) === undefined) {
+      this._setRaw([SYSTEM_NAMESPACE, 'mergedFrom'], missing);
+    } else {
+      this.arrayPush([SYSTEM_NAMESPACE, 'mergedFrom'], missing);
+    }
+  }
+
+  /**
+   * The document's current heads, recorded when the entity is merged away.
+   */
+  getHeads(): Heads {
+    const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
+    return doc ? A.getHeads(doc) : [];
   }
 
   getType(): EncodedReference | undefined {
@@ -601,6 +718,10 @@ export class ObjectCore {
    * unresolved references are treated as not-deleted. Strong dependencies guarantee parent/relation
    * endpoints load alongside the dependent entity, so this stays a synchronous core lookup —
    * `loadObjectCoreById` is avoided because it may be async.
+   *
+   * A merged-away dependency is a renamed one, not a removed one: the walk follows `mergedInto`
+   * redirects and judges deletion at the survivor, so relations and children anchored at a merge
+   * loser stay visible while the survivor lives.
    */
   private _isReferencedCoreDeleted(ref: EncodedReference | undefined, remainingDepth: number): boolean {
     if (!ref || !this.entityManager) {
@@ -612,8 +733,26 @@ export class ObjectCore {
     if (!entityId || (spaceId !== undefined && spaceId !== this.entityManager.spaceId)) {
       return false;
     }
-    const core = this.entityManager.getObjectCoreById(entityId);
+    const core = this._resolveMergeRedirect(this.entityManager.getObjectCoreById(entityId));
     return core != null && core.isDeleted(remainingDepth - 1);
+  }
+
+  /**
+   * Follow `mergedInto` redirects to the live end of the chain. Edges must strictly decrease the
+   * id — a non-decreasing edge is corrupt data and terminates the walk at the current entity,
+   * matching `resolveMergeRedirect` in `@dxos/echo/internal`. A hop whose core is not loaded returns `undefined`: the
+   * survivor cannot be judged synchronously, and an unresolvable dependency is treated as live.
+   */
+  private _resolveMergeRedirect(core: ObjectCore | undefined): ObjectCore | undefined {
+    let current = core;
+    while (current) {
+      const next = current.getMergedInto();
+      if (next === undefined || next >= current.id) {
+        return current;
+      }
+      current = this.entityManager?.getObjectCoreById(next);
+    }
+    return undefined;
   }
 
   setDeleted(value: boolean): void {
@@ -667,18 +806,38 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Dat
  * without an eager migration. Scoped strictly to the `meta` namespace so unrelated values in `data` are
  * untouched.
  */
+const dedupeForeignKeys = (keys: readonly unknown[]): unknown[] => {
+  const seen = new Set<string>();
+  return keys.filter((key) => {
+    const { source, id } = (key ?? {}) as { source?: string; id?: string };
+    // JSON-composite rather than concatenation, so a delimiter inside one part cannot collide.
+    const composite = JSON.stringify([source, id]);
+    if (seen.has(composite)) {
+      return false;
+    }
+    seen.add(composite);
+    return true;
+  });
+};
+
 const upgradeMeta = (path: Doc.KeyPath, value: unknown): unknown => {
   if (path[0] !== META_NAMESPACE) {
     return value;
   }
-  // Whole `meta` object: backfill required fields and upgrade tag ids.
+  // Whole `meta` object: backfill required fields, upgrade tag ids, deduplicate keys.
   if (path.length === 1 && value != null && typeof value === 'object') {
     const meta = value as Record<string, unknown>;
     return {
       ...meta,
+      keys: Array.isArray(meta.keys) ? dedupeForeignKeys(meta.keys) : meta.keys,
       tags: Array.isArray(meta.tags) ? meta.tags.map(upgradeTagRef) : [],
       annotations: meta.annotations ?? {},
     };
+  }
+  // `meta.keys`: peers merging concurrently both append the same missing key, and automerge keeps
+  // both insertions — normalizing on read makes the list a set.
+  if (path.length === 2 && path[1] === 'keys') {
+    return Array.isArray(value) ? dedupeForeignKeys(value) : value;
   }
   // `meta.tags`: default to an empty array when absent; upgrade string entries.
   if (path.length === 2 && path[1] === 'tags') {

@@ -129,4 +129,61 @@ describe('Entity', () => {
       expect(Type.getVersion(TestSchema.Person)).toBe('0.1.0');
     });
   });
+
+  describe('getConvergenceKey / setConvergenceKey', () => {
+    test('an entity declares no convergence key by default', () => {
+      expect(Entity.getConvergenceKey(makeObject())).toBeUndefined();
+    });
+
+    test('round-trips a convergence key', () => {
+      const object = makeObject();
+      Entity.setConvergenceKey(object, 'org.example.seed');
+      expect(Entity.getConvergenceKey(object)).toBe('org.example.seed');
+    });
+
+    test('re-setting replaces rather than accumulates', () => {
+      const object = makeObject();
+      Entity.setConvergenceKey(object, 'org.example.seed');
+      Entity.setConvergenceKey(object, 'org.example.seed@2');
+      expect(Entity.getConvergenceKey(object)).toBe('org.example.seed@2');
+    });
+
+    test('undefined clears the convergence key', () => {
+      const object = makeObject();
+      Entity.setConvergenceKey(object, 'org.example.seed');
+      Entity.setConvergenceKey(object, undefined);
+      expect(Entity.getConvergenceKey(object)).toBeUndefined();
+    });
+
+    test('the convergence key is independent of the registry key and version', () => {
+      const object = makeObject();
+      Obj.update(object, (object) => {
+        Obj.getMeta(object).key = 'org.example.registry.entry';
+        Obj.getMeta(object).version = '1.2.0';
+      });
+      Entity.setConvergenceKey(object, 'org.example.seed@2');
+      expect(Entity.getConvergenceKey(object)).toBe('org.example.seed@2');
+      expect(Obj.getMeta(object).key).toBe('org.example.registry.entry');
+      expect(Obj.getMeta(object).version).toBe('1.2.0');
+    });
+
+    test('survives a snapshot round-trip', () => {
+      const object = makeObject();
+      Entity.setConvergenceKey(object, 'org.example.seed');
+      expect(Entity.getConvergenceKey(Obj.getSnapshot(object))).toBe('org.example.seed');
+    });
+
+    test('rejects relations — they are not merge subjects', () => {
+      const relation = makeRelation(makeObject());
+      expect(() => Entity.setConvergenceKey(relation, 'org.example.employment')).toThrow(TypeError);
+    });
+
+    test('rejects type entities — they are not merge subjects', () => {
+      expect(() => Entity.setConvergenceKey(TestSchema.Person, 'org.example.person')).toThrow(TypeError);
+    });
+
+    test('rejects an empty-string key', () => {
+      expect(() => Entity.setConvergenceKey(makeObject(), '')).toThrow(TypeError);
+    });
+  });
 });
