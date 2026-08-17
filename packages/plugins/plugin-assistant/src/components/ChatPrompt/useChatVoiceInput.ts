@@ -32,6 +32,10 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
   const active = !!session?.recording && session.id === docId;
 
   const streamerRef = useRef<PendingTextStreamer | null>(null);
+  // Where the pending block will be opened, captured when recording begins: by the time the first
+  // transcription lands the selection may have moved.
+  const anchorRef = useRef<number | undefined>(undefined);
+  const startedRef = useRef(false);
 
   // Create/destroy the streamer when active transitions.
   useEffect(() => {
@@ -49,12 +53,19 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
       mode: settings?.streamMode ?? 'batch',
       wordIntervalMs: settings?.wordIntervalMs ?? 80,
     });
-    streamer.start({ anchor: view.state.selection.main.head, placeholder: t('recording.placeholder') });
+    // Deliberately not started here. `start` opens the pending-text block, which paints the
+    // "Recording…" placeholder and its confirm/discard affordances the moment the mic is tapped —
+    // occupying the prompt before there is anything to confirm. The block is opened lazily by the
+    // first transcription instead (see `handleSegments`), so tapping the mic changes nothing visible
+    // and text simply appears when it arrives.
+    anchorRef.current = view.state.selection.main.head;
+    startedRef.current = false;
     streamerRef.current = streamer;
 
     return () => {
       streamer.dispose();
       streamerRef.current = null;
+      startedRef.current = false;
       // Drop the placeholder if nothing was transcribed; otherwise leave it for review.
       const currentView = editorRef.current?.view;
       if (currentView) {
@@ -72,6 +83,11 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
       .join(' ')
       .trim();
     if (text.length > 0) {
+      if (!startedRef.current) {
+        startedRef.current = true;
+        // No placeholder: the arriving text is the feedback.
+        streamerRef.current?.start({ anchor: anchorRef.current });
+      }
       streamerRef.current?.push(text);
     }
   }, []);
