@@ -190,7 +190,7 @@ const createPlainMessages = (count: number): Message.Message[] =>
     Message.make({
       created: at(index),
       sender: { role: index % 2 === 0 ? 'user' : 'assistant', name: index % 2 === 0 ? 'Alice' : 'Assistant' },
-      blocks: [{ _tag: 'text', text: `${index}. ${random.lorem.sentence(6)}` }],
+      blocks: [{ _tag: 'text', text: random.lorem.sentence(6) }],
       properties: { height: PLAIN_HEIGHTS[index % PLAIN_HEIGHTS.length] },
     }),
   );
@@ -201,7 +201,9 @@ const createUniformMessages = (count: number): Message.Message[] =>
     Message.make({
       created: at(index),
       sender: { role: index % 2 === 0 ? 'user' : 'assistant', name: index % 2 === 0 ? 'Alice' : 'Assistant' },
-      blocks: [{ _tag: 'text', text: `${index}. Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do.` }],
+      // Not `${index}. …`: markdown reads a leading number and a dot as an ordered list and renumbers
+      // it, so the row would show a number that is not its index. The index is in the chrome.
+      blocks: [{ _tag: 'text', text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do.' }],
     }),
   );
 
