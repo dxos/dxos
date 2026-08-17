@@ -19,14 +19,14 @@ export const translations = [
         'settings.channel.nightly.label': 'Nightly',
         'settings.channel.stable.description': 'Released builds. Switch to Nightly to try changes before they ship.',
         'settings.channel.nightly.description':
-          'A build of the latest development work, published daily. Switching back to Stable reinstalls the released version.',
+          'A build of the latest development work, published daily. Nightly can upgrade your spaces to a format Stable cannot open, and there is currently no supported way back.',
         'settings.channel.confirm.nightly.title': 'Switch to Nightly?',
         'settings.channel.confirm.nightly.message':
-          'Composer will download and install the latest nightly build now. Nightly is published daily from unreleased work and may be unstable.',
+          'Composer will download and install the latest nightly build now. Nightly is published daily from unreleased work and may be unstable. It can also upgrade your spaces to a format Stable cannot open — that upgrade syncs to your other devices and to everyone you share those spaces with, and reinstalling Stable does not undo it. There is currently no supported way back.',
         'settings.channel.confirm.nightly.label': 'Switch to Nightly',
         'settings.channel.confirm.stable.title': 'Switch to Stable?',
         'settings.channel.confirm.stable.message':
-          'Composer will download and install the latest released build now. That build is older than the nightly you are running, and anything the newer build wrote stays on disk.',
+          'Composer will download and install the latest released build now. It is older than the nightly you are running, so any space nightly has already upgraded may fail to open — reinstalling does not undo an upgrade.',
         'settings.channel.confirm.stable.label': 'Switch to Stable',
         'settings.updates.label': 'Updates',
         'settings.updates.check.label': 'Check for updates',
