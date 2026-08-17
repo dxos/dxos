@@ -10,14 +10,14 @@ import { expect } from 'vitest';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { AgentRegistry } from './AgentRegistry';
+import * as AgentRegistry from './AgentRegistry';
 
-const suite = (name: string, layer: Layer.Layer<AgentRegistry>) =>
+const suite = (name: string, layer: Layer.Layer<AgentRegistry.AgentRegistry>) =>
   describe(name, () => {
     it.effect(
       'resolves by stable id and treats the display name as an alias',
       Effect.fnUntraced(function* () {
-        const registry = yield* AgentRegistry;
+        const registry = yield* AgentRegistry.AgentRegistry;
         const first = yield* registry.observe({
           identifiers: [
             { namespace: 'discord-user', value: '123' },
@@ -44,7 +44,7 @@ const suite = (name: string, layer: Layer.Layer<AgentRegistry>) =>
     it.effect(
       'merges two agents under one canonical id (cross-namespace normalization)',
       Effect.fnUntraced(function* () {
-        const registry = yield* AgentRegistry;
+        const registry = yield* AgentRegistry.AgentRegistry;
         const discord = yield* registry.observe({
           identifiers: [{ namespace: 'discord-user', value: '123' }],
           label: 'Alice',
@@ -72,7 +72,7 @@ const suite = (name: string, layer: Layer.Layer<AgentRegistry>) =>
     it.effect(
       'setRef records the canonical ECHO object DXN on the profile',
       Effect.fnUntraced(function* () {
-        const registry = yield* AgentRegistry;
+        const registry = yield* AgentRegistry.AgentRegistry;
         const agent = yield* registry.observe({
           identifiers: [{ namespace: 'discord-user', value: '123' }],
           label: 'Alice',
@@ -84,10 +84,10 @@ const suite = (name: string, layer: Layer.Layer<AgentRegistry>) =>
   });
 
 describe('AgentRegistry', () => {
-  suite('memory', AgentRegistry.layerMemory);
+  suite('memory', AgentRegistry.AgentRegistry.layerMemory);
   suite(
     'sql',
-    AgentRegistry.layerSql.pipe(
+    AgentRegistry.AgentRegistry.layerSql.pipe(
       Layer.provideMerge(SqlTransaction.layer),
       Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie)),
     ),

@@ -10,14 +10,14 @@ import { expect } from 'vitest';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { QuestionStore } from './question-store';
+import * as QuestionStore from './QuestionStore';
 
-const suite = (name: string, layer: Layer.Layer<QuestionStore>) =>
+const suite = (name: string, layer: Layer.Layer<QuestionStore.QuestionStore>) =>
   describe(name, () => {
     it.effect(
       'adds and lists open questions',
       Effect.fnUntraced(function* () {
-        const store = yield* QuestionStore;
+        const store = yield* QuestionStore.QuestionStore;
         const added = yield* store.add('Who works on OPFS?');
         expect(added.status).toBe('open');
         expect(added.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
@@ -30,7 +30,7 @@ const suite = (name: string, layer: Layer.Layer<QuestionStore>) =>
     it.effect(
       'answering closes the question with supporting ids',
       Effect.fnUntraced(function* () {
-        const store = yield* QuestionStore;
+        const store = yield* QuestionStore.QuestionStore;
         const added = yield* store.add('Who works on OPFS?', 'q-1');
         yield* store.answer('q-1', 'Carol and Alice.', ['fact-1', 'fact-2']);
         const answered = yield* store.get(added.id);
@@ -44,10 +44,10 @@ const suite = (name: string, layer: Layer.Layer<QuestionStore>) =>
   });
 
 describe('QuestionStore', () => {
-  suite('memory', QuestionStore.layerMemory);
+  suite('memory', QuestionStore.QuestionStore.layerMemory);
   suite(
     'sql',
-    QuestionStore.layerSql.pipe(
+    QuestionStore.QuestionStore.layerSql.pipe(
       Layer.provideMerge(SqlTransaction.layer),
       Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie)),
     ),

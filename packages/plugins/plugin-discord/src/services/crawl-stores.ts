@@ -12,23 +12,23 @@ import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 export type CrawlStores =
-  | StateStore
-  | AgentRegistry
+  | StateStore.StateStore
+  | AgentRegistry.AgentRegistry
   | FactStore
-  | MessageStore
-  | QuestionStore
-  | ExtractedQuestionStore;
+  | MessageStore.MessageStore
+  | QuestionStore.QuestionStore
+  | ExtractedQuestionStore.ExtractedQuestionStore;
 
 // In-memory wasm SQLite shared for the app session: crawl state survives across operation
 // invocations (pause/resume) but not reloads. The durable OPFS client is worker-only, so
 // durable-across-reload storage lands with the EDGE/worker phase.
 const storesLayer: Layer.Layer<CrawlStores> = Layer.mergeAll(
-  StateStore.layerSql,
-  AgentRegistry.layerSql,
+  StateStore.StateStore.layerSql,
+  AgentRegistry.AgentRegistry.layerSql,
   FactStoreLive.layer,
-  MessageStore.layerSql,
-  QuestionStore.layerSql,
-  ExtractedQuestionStore.layerSql,
+  MessageStore.MessageStore.layerSql,
+  QuestionStore.QuestionStore.layerSql,
+  ExtractedQuestionStore.ExtractedQuestionStore.layerSql,
 ).pipe(
   // Store migrations run inside the SqlTransaction service; derive it from the same client.
   Layer.provide(SqlTransaction.layer),

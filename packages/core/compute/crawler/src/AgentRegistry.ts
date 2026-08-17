@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -12,8 +14,6 @@ import { type SqlTransaction } from '@dxos/sql-sqlite';
 import { StateError } from './errors';
 import { makeSql, migrate } from './internal/agent-registry-sql';
 import type * as Type from './types';
-
-// @import-as-namespace
 
 /** A single identifier for an agent, in some namespace (e.g. discord-user:1234567890). */
 export type Identifier = {
@@ -50,7 +50,7 @@ export type Observation = {
 };
 
 // TODO(burdon): Rename Actor?
-export interface AgentRegistryApi {
+export interface Service {
   /** Resolve identifiers to a canonical agent, creating one if none of them is known. */
   readonly resolve: (identifiers: readonly Identifier[], label?: string) => Effect.Effect<Profile, StateError>;
   /** Resolve (or create) and fold an observation into the agent's stats. */
@@ -64,7 +64,7 @@ export interface AgentRegistryApi {
   readonly setRef: (id: string, ref: string) => Effect.Effect<void, StateError>;
 }
 
-export class AgentRegistry extends Context.Service<AgentRegistry, AgentRegistryApi>()('@dxos/crawler/AgentRegistry') {
+export class AgentRegistry extends Context.Service<AgentRegistry, Service>()('@dxos/crawler/AgentRegistry') {
   /** In-memory registry (tests, demos). Browser path will back this with ECHO Person objects. */
   static layerMemory: Layer.Layer<AgentRegistry> = Layer.sync(AgentRegistry, () => makeMemory());
 
@@ -80,6 +80,17 @@ export class AgentRegistry extends Context.Service<AgentRegistry, AgentRegistryA
       }),
     );
 }
+
+export const resolve = (...args: Parameters<Service['resolve']>) =>
+  AgentRegistry.use((registry) => registry.resolve(...args));
+export const observe = (...args: Parameters<Service['observe']>) =>
+  AgentRegistry.use((registry) => registry.observe(...args));
+export const get = (...args: Parameters<Service['get']>) => AgentRegistry.use((registry) => registry.get(...args));
+export const list = (...args: Parameters<Service['list']>) => AgentRegistry.use((registry) => registry.list(...args));
+export const merge = (...args: Parameters<Service['merge']>) =>
+  AgentRegistry.use((registry) => registry.merge(...args));
+export const setRef = (...args: Parameters<Service['setRef']>) =>
+  AgentRegistry.use((registry) => registry.setRef(...args));
 
 /**
  * Identifiers for a source user, stable id FIRST so it becomes the canonical token (the display
@@ -98,7 +109,7 @@ const key = (identifier: Identifier) => `${identifier.namespace}:${identifier.va
 const earliest = (a?: string, b?: string) => (a === undefined ? b : b === undefined ? a : a < b ? a : b);
 const latest = (a?: string, b?: string) => (a === undefined ? b : b === undefined ? a : a > b ? a : b);
 
-const makeMemory = (): AgentRegistryApi => {
+const makeMemory = (): Service => {
   const agents = new Map<string, Profile>();
   // identifier key -> canonical agent id (also serves as the sameAs alias map after merges).
   const index = new Map<string, string>();

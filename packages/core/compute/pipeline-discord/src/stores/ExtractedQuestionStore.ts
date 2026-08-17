@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -26,7 +28,7 @@ export type ExtractedQuestion = {
   readonly askedAt?: string;
 };
 
-export interface ExtractedQuestionStoreApi {
+export interface Service {
   /** Idempotent upsert keyed on (messageId, question). */
   readonly put: (question: ExtractedQuestion) => Effect.Effect<void, StoreError>;
   readonly list: (targetId?: string) => Effect.Effect<ExtractedQuestion[], StoreError>;
@@ -67,7 +69,7 @@ const toQuestion = (row: Row): ExtractedQuestion => ({
   ...(row.asked_at !== null ? { askedAt: row.asked_at } : {}),
 });
 
-export class ExtractedQuestionStore extends Context.Service<ExtractedQuestionStore, ExtractedQuestionStoreApi>()(
+export class ExtractedQuestionStore extends Context.Service<ExtractedQuestionStore, Service>()(
   '@dxos/pipeline-discord/ExtractedQuestionStore',
 ) {
   static layerSql: Layer.Layer<ExtractedQuestionStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
@@ -110,3 +112,7 @@ export class ExtractedQuestionStore extends Context.Service<ExtractedQuestionSto
     };
   });
 }
+
+export const put = (...args: Parameters<Service['put']>) => ExtractedQuestionStore.use((store) => store.put(...args));
+export const list = (...args: Parameters<Service['list']>) =>
+  ExtractedQuestionStore.use((store) => store.list(...args));

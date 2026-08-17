@@ -16,14 +16,22 @@ export { type Fixture, THREADED_FIXTURE, deterministicAiService, fixtureSourceLa
 /** Every pipeline store over ONE shared SqlClient (bind the client per environment). */
 export const storesLayer = <E>(
   client: Layer.Layer<SqlClient.SqlClient, E>,
-): Layer.Layer<StateStore | AgentRegistry | FactStore | MessageStore | QuestionStore | ExtractedQuestionStore, E> =>
+): Layer.Layer<
+  | StateStore.StateStore
+  | AgentRegistry.AgentRegistry
+  | FactStore
+  | MessageStore.MessageStore
+  | QuestionStore.QuestionStore
+  | ExtractedQuestionStore.ExtractedQuestionStore,
+  E
+> =>
   Layer.mergeAll(
-    StateStore.layerSql,
-    AgentRegistry.layerSql,
+    StateStore.StateStore.layerSql,
+    AgentRegistry.AgentRegistry.layerSql,
     FactStoreLive.layer,
-    MessageStore.layerSql,
-    QuestionStore.layerSql,
-    ExtractedQuestionStore.layerSql,
+    MessageStore.MessageStore.layerSql,
+    QuestionStore.QuestionStore.layerSql,
+    ExtractedQuestionStore.ExtractedQuestionStore.layerSql,
   ).pipe(
     // Store migrations run inside the SqlTransaction service; derive it from the same client.
     Layer.provide(SqlTransaction.layer),

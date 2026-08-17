@@ -16,14 +16,14 @@ import { QuestionStore } from '../stores';
 import { answerOpenQuestions } from './answer-questions';
 
 const TestLayer = (answer?: string) =>
-  Layer.mergeAll(QuestionStore.layerMemory, FactStoreLive.layerMemory, fakeAi(answer));
+  Layer.mergeAll(QuestionStore.QuestionStore.layerMemory, FactStoreLive.layerMemory, fakeAi(answer));
 
 describe('answerOpenQuestions', () => {
   it.effect(
     'answers an open question from matching facts with citations',
     Effect.fnUntraced(
       function* () {
-        const questions = yield* QuestionStore;
+        const questions = yield* QuestionStore.QuestionStore;
         const facts = yield* FactStore;
         yield* facts.putFacts([fact('f1'), fact('f2')]);
         yield* questions.add('Who works on OPFS?', 'q-1');
@@ -44,7 +44,7 @@ describe('answerOpenQuestions', () => {
     'leaves a question open when there are no facts',
     Effect.fnUntraced(
       function* () {
-        const questions = yield* QuestionStore;
+        const questions = yield* QuestionStore.QuestionStore;
         yield* questions.add('Who works on OPFS?', 'q-1');
         const answered = yield* answerOpenQuestions();
         expect(answered).toBe(0);
@@ -58,7 +58,7 @@ describe('answerOpenQuestions', () => {
     'leaves a question open when the model declines to answer',
     Effect.fnUntraced(
       function* () {
-        const questions = yield* QuestionStore;
+        const questions = yield* QuestionStore.QuestionStore;
         const facts = yield* FactStore;
         yield* facts.putFacts([fact('f1')]);
         yield* questions.add('Who works on OPFS?', 'q-1');
@@ -74,7 +74,7 @@ describe('answerOpenQuestions', () => {
     'counts failed attempts and stops retrying past the cap',
     Effect.fnUntraced(
       function* () {
-        const questions = yield* QuestionStore;
+        const questions = yield* QuestionStore.QuestionStore;
         const facts = yield* FactStore;
         yield* facts.putFacts([fact('f1')]);
         yield* questions.add('Who works on OPFS?', 'q-1');

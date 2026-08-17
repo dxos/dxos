@@ -50,9 +50,9 @@ describe('crawl demo', () => {
       const result = await EffectEx.runPromise(
         Effect.gen(function* () {
           const summary = yield* DiscordPipeline.run({ channels, descendThreads: true, seed: { maxDays } });
-          const stored = yield* (yield* MessageStore).count();
-          const agents = yield* (yield* AgentRegistry).list();
-          const targets = yield* (yield* StateStore).listTargets();
+          const stored = yield* MessageStore.count();
+          const agents = yield* AgentRegistry.list();
+          const targets = yield* StateStore.listTargets();
           return { summary, stored, agents, targets };
         }).pipe(Effect.provide(layer)),
       );

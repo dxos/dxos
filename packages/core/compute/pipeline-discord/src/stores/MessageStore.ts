@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -13,8 +15,6 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { StoreError } from '../errors';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/message';
-
-// @import-as-namespace
 
 /** A crawled message persisted outside ECHO — the pipeline's replayable working set. */
 export type StoredMessage = {
@@ -34,7 +34,7 @@ export type StoredMessage = {
   readonly raw: string;
 };
 
-export interface MessageStoreApi {
+export interface Service {
   readonly has: (id: string) => Effect.Effect<boolean, StoreError>;
   /** Idempotent upsert keyed on id. */
   readonly put: (message: StoredMessage) => Effect.Effect<void, StoreError>;
@@ -86,9 +86,7 @@ const toMessage = (row: Row): StoredMessage => ({
   raw: row.raw,
 });
 
-export class MessageStore extends Context.Service<MessageStore, MessageStoreApi>()(
-  '@dxos/pipeline-discord/MessageStore',
-) {
+export class MessageStore extends Context.Service<MessageStore, Service>()('@dxos/pipeline-discord/MessageStore') {
   static layerSql: Layer.Layer<MessageStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.effect(
     MessageStore,
     Effect.gen(function* () {
@@ -150,3 +148,10 @@ export class MessageStore extends Context.Service<MessageStore, MessageStoreApi>
     };
   });
 }
+
+export const has = (...args: Parameters<Service['has']>) => MessageStore.use((store) => store.has(...args));
+export const put = (...args: Parameters<Service['put']>) => MessageStore.use((store) => store.put(...args));
+export const get = (...args: Parameters<Service['get']>) => MessageStore.use((store) => store.get(...args));
+export const listByTarget = (...args: Parameters<Service['listByTarget']>) =>
+  MessageStore.use((store) => store.listByTarget(...args));
+export const count = (...args: Parameters<Service['count']>) => MessageStore.use((store) => store.count(...args));

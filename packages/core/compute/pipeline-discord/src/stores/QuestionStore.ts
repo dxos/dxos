@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Clock from 'effect/Clock';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -31,7 +33,7 @@ export type Question = {
   readonly updatedAt: string;
 };
 
-export interface QuestionStoreApi {
+export interface Service {
   /** Register a question (id defaults to a random UUID); returns the stored record. */
   readonly add: (text: string, id?: string) => Effect.Effect<Question, StoreError>;
   readonly get: (id: string) => Effect.Effect<Question | undefined, StoreError>;
@@ -93,9 +95,7 @@ const toQuestion = (row: Row): Question => ({
   updatedAt: row.updated_at,
 });
 
-export class QuestionStore extends Context.Service<QuestionStore, QuestionStoreApi>()(
-  '@dxos/pipeline-discord/QuestionStore',
-) {
+export class QuestionStore extends Context.Service<QuestionStore, Service>()('@dxos/pipeline-discord/QuestionStore') {
   static layerSql: Layer.Layer<QuestionStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
     Layer.effect(
       QuestionStore,
@@ -197,3 +197,10 @@ export class QuestionStore extends Context.Service<QuestionStore, QuestionStoreA
     };
   });
 }
+
+export const add = (...args: Parameters<Service['add']>) => QuestionStore.use((store) => store.add(...args));
+export const get = (...args: Parameters<Service['get']>) => QuestionStore.use((store) => store.get(...args));
+export const list = (...args: Parameters<Service['list']>) => QuestionStore.use((store) => store.list(...args));
+export const answer = (...args: Parameters<Service['answer']>) => QuestionStore.use((store) => store.answer(...args));
+export const recordAttempt = (...args: Parameters<Service['recordAttempt']>) =>
+  QuestionStore.use((store) => store.recordAttempt(...args));
