@@ -103,6 +103,16 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       `MessageList`, and so any fix can be offered upstream as a patch rather than stranded here.
       `virtualizer.test.ts` drives the real `Virtualizer` through that surface, so it doubles as the
       conformance test for a replacement.
+- [ ] **NEXT STEP on the jump, precisely.** `virtualizer.test.ts` (2 skipped tests) is the harness;
+      un-skip and work against it. The suspicion to test first is double-counting in the adjustment
+      accounting: `resizeItem` compensates via
+      `_scrollToOffset(getScrollOffset(), { adjustments: scrollAdjustments += delta })`, and the DOM
+      adapter then computes `toOffset = offset + adjustments` — but `getScrollOffset()` already
+      reflects earlier adjustments, so a second correction in the same gesture may add a delta that
+      is already in the offset. Instrument by logging `(scrollOffset, scrollAdjustments, delta,
+    resulting offset)` on each `resizeItem` in the harness and checking the offset against what a
+      correct compensation would give. If confirmed, that is the upstream patch (and the reason our
+      own anchor made things worse — it corrects a correction).
 - [ ] Widget state does not survive virtualization — an expanded panel scrolled out of the window
       remounts collapsed, because the open flag is React state inside the widget. Either the state
       moves into the message, or the item keeps a per-widget map.
