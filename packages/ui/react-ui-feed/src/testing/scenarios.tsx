@@ -320,12 +320,25 @@ const createTranscriptMessages = (count: number): Message.Message[] =>
     }),
   );
 
-/** A row of a known height: the content is a box, not a document. */
-const PlainItem = ({ content, message }: { content: { data?: unknown }; message: Message.Message }) => (
-  <div className='grid items-center px-2 text-sm' style={{ height: Number(content.data ?? 120) }}>
-    {Message.extractText(message)}
-  </div>
-);
+/**
+ * A row of a known height: the content is a box, not a document.
+ *
+ * The height is the point — it is declared, never measured — so it is stated in the row rather than
+ * left to be inferred, and the text sits at the top like every other scenario's does.
+ */
+const PlainItem = ({ content, message }: { content: { data?: unknown }; message: Message.Message }) => {
+  const height = Number(content.data ?? 120);
+
+  return (
+    <div className='flex flex-col gap-1 py-2 text-sm' style={{ height }}>
+      <div className='flex items-center gap-2 text-xs text-description'>
+        <span className='font-medium'>{message.sender.name}</span>
+        <span className='tabular-nums'>{height}px</span>
+      </div>
+      <p>{Message.extractText(message)}</p>
+    </div>
+  );
+};
 
 //
 // Chrome
