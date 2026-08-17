@@ -11,9 +11,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 // evaluation floor (this def chunk was 177 kB when the bodies were inline).
 export const ProgressRegistry = Capability.lazyModule(
   'ProgressRegistry',
-  // Startup, not demand: every consumer reads the registry optionally (`useProgressMonitor`,
-  // the trace sinks' lazy getters), so no dependency edge ever pulls this module — left to the
-  // opportunistic idle wave it frequently never activates and progress silently has nowhere to go.
+  // Startup: every consumer reads the registry optionally, so no dependency edge ever pulls this module.
   {
     requires: [Capabilities.AtomRegistry],
     provides: [AppCapabilities.ProgressRegistry],

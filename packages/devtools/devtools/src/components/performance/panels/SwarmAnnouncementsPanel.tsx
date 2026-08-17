@@ -28,13 +28,8 @@ type ReceivedMessage = {
 };
 
 /**
- * Every ephemeral message remote runtimes announce over the space swarm (DX-1125), shown raw.
- *
- * Deliberately unfiltered: the swarm is a general announcement channel that progress happens to ride
- * on, so surfacing whole messages — meta plus every event — is what makes a delivery fault legible
- * (announcements arriving here while a consumer stays empty localises the fault to that consumer).
- * An empty {@link Trace.Filter} derives no swarm tag, so subscription is per-space, the coarsest
- * available.
+ * Raw view of every ephemeral trace message remote runtimes announce over the space swarm (DX-1125),
+ * subscribed per space because an empty {@link Trace.Filter} derives no swarm tag.
  */
 export const SwarmAnnouncementsPanel = (props: CustomPanelProps<{}>) => {
   const monitor = useOptionalCapability(Capabilities.RemoteTraceMonitor);
@@ -73,7 +68,7 @@ export const SwarmAnnouncementsPanel = (props: CustomPanelProps<{}>) => {
 
     return () => {
       for (const fiber of fibers) {
-        void runtime.runPromise(Fiber.interrupt(fiber));
+        runtime.runFork(Fiber.interrupt(fiber));
       }
     };
   }, [monitor, runtime, spaceIds]);
@@ -101,9 +96,7 @@ export const SwarmAnnouncementsPanel = (props: CustomPanelProps<{}>) => {
       ) : messages.length === 0 ? (
         <Toolbar.Text>No announcements received.</Toolbar.Text>
       ) : (
-        // Collapsed by default: a burst is hundreds of messages, and mounting every payload makes
-        // the list unreadable and slow (`JsonHighlighter` is costly). Radix unmounts a closed body,
-        // so only expanded rows pay for it.
+        // Collapsed by default so a burst does not mount hundreds of costly payload renders.
         <Accordion.Root items={messages}>
           {({ items }) =>
             items.map((received) => (
