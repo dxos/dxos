@@ -42,7 +42,8 @@ export const Minimap = ({ classNames, state, width = DEFAULT_WIDTH, onSelect }: 
 
   return (
     <div
-      className={mx('relative w-4 h-full bg-input-surface overflow-hidden', onSelect && 'cursor-pointer', classNames)}
+      className={mx('relative h-full bg-input-surface overflow-hidden', onSelect && 'cursor-pointer', classNames)}
+      style={{ width }}
       title={total ? `${Math.round(total)}px over ${state?.count} rows` : 'empty'}
       data-testid='minimap'
       onClick={

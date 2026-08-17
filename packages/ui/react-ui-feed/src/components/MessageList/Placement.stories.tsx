@@ -46,7 +46,7 @@ type StoryProps = {
   declared?: (index: number) => number;
 };
 
-const EXTENT = (index: number) => 40 + (index % 5) * 30;
+const EXTENT = (index: number) => 40 + (index % 8) * 30;
 
 const Harness = ({
   count = 500,
@@ -148,7 +148,6 @@ const Harness = ({
         <div className='h-full grid grid-rows-[1fr_3fr_1fr]'>
           <div className='flex items-center row-start-2'>
             <Outline
-              classNames='border'
               markers={markers}
               visibleRange={state ? { from: state.visible.first, to: state.visible.last } : undefined}
               onSelect={(marker) => controller.current?.scrollToIndex(marker.range.from)}
@@ -183,7 +182,6 @@ const Harness = ({
         </Window>
 
         <Minimap
-          classNames='border'
           state={state}
           onSelect={(fraction) => controller.current?.scrollToIndex(Math.round(fraction * (count - 1)))}
         />
@@ -479,7 +477,12 @@ export const Chrome: Story = {
       backToTop: read('window.index'),
       range: /^\d+–\d+ of 200$/.test(read('window.range')),
       map: canvasElement.querySelectorAll('[data-testid="minimap.viewport"]').length,
-    }).toEqual({ filled: true, moved: true, atEnd: true, backToTop: '0', range: true, map: 1 });
+      // The two rails flank the same list and default to the same width; a prop that is accepted and
+      // ignored looks exactly like one that works until they are put side by side.
+      railsMatch:
+        Math.round(canvasElement.querySelector('[data-testid="minimap"]')!.getBoundingClientRect().width) ===
+        Math.round(canvasElement.querySelector('[role="navigation"]')!.getBoundingClientRect().width),
+    }).toEqual({ filled: true, moved: true, atEnd: true, backToTop: '0', range: true, map: 1, railsMatch: true });
   },
 };
 
