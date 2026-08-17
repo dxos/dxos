@@ -5,6 +5,7 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
@@ -39,6 +40,17 @@ const suite = (name: string, layer: Layer.Layer<QuestionStore.QuestionStore>) =>
         expect(answered?.supportingIds).toEqual(['fact-1', 'fact-2']);
         expect(yield* store.list('open')).toEqual([]);
         expect((yield* store.list()).length).toBe(1);
+      }, Effect.provide(layer)),
+    );
+
+    it.effect(
+      'a duplicate id fails rather than replacing the stored question',
+      Effect.fnUntraced(function* () {
+        const store = yield* QuestionStore.QuestionStore;
+        yield* store.add('Who works on OPFS?', 'q-1');
+        const result = yield* Effect.exit(store.add('Something else entirely?', 'q-1'));
+        expect(Exit.isFailure(result)).toBe(true);
+        expect((yield* store.get('q-1'))?.text).toBe('Who works on OPFS?');
       }, Effect.provide(layer)),
     );
   });

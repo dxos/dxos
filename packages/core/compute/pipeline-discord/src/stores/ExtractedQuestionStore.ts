@@ -103,7 +103,14 @@ export const layerSql: Layer.Layer<ExtractedQuestionStore, never, SqlClient.SqlC
 export const layerMemory: Layer.Layer<ExtractedQuestionStore> = Layer.sync(ExtractedQuestionStore, () => {
   const byKey = new Map<string, ExtractedQuestion>();
   return {
-    put: (question) => Effect.sync(() => void byKey.set(`${question.messageId}#${question.question}`, question)),
+    put: (question) =>
+      Effect.sync(() => {
+        // First write wins, matching the SQL layer's `ON CONFLICT … DO NOTHING`.
+        const key = `${question.messageId}#${question.question}`;
+        if (!byKey.has(key)) {
+          byKey.set(key, question);
+        }
+      }),
     list: (targetId) =>
       Effect.sync(() =>
         [...byKey.values()]

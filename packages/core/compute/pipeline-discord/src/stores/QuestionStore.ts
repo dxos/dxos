@@ -163,6 +163,12 @@ export const layerMemory: Layer.Layer<QuestionStore> = Layer.sync(QuestionStore,
           createdAt: timestamp,
           updatedAt: timestamp,
         };
+        if (byId.has(question.id)) {
+          // `question.id` is a primary key, so the SQL layer fails this insert rather than replacing.
+          return yield* Effect.fail(
+            new StoreError({ message: 'Failed to add question', cause: `duplicate question id ${question.id}` }),
+          );
+        }
         byId.set(question.id, question);
         return question;
       }),
