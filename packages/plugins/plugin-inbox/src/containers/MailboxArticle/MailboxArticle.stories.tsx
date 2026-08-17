@@ -185,6 +185,7 @@ const DefaultStory = ({ conversations, progress }: StoryArgs) => {
 
   // Summaries are immutable annotations on a second feed, keyed by `parentMessage` — shown here
   // because they are not on the message and would otherwise be invisible in this story.
+  // TODO(wittjosiah): This additional hook call shouldn't be necessary, useResolveRef should handle this case.
   useObject(mailbox, 'annotations');
   const annotationsFeed = useResolveRef(mailbox?.annotations);
   const annotations = useQuery(

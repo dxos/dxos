@@ -73,6 +73,7 @@ const DefaultStory = () => {
 
   // Summaries live on the mailbox's annotation feed, keyed by `parentMessage`, so the JSON shows
   // everything the article knows about the message rather than just the message object.
+  // TODO(wittjosiah): This additional hook call shouldn't be necessary, useResolveRef should handle this case.
   useObject(mailbox, 'annotations');
   const annotationsFeed = useResolveRef(mailbox?.annotations);
   const annotations = useQuery(

@@ -100,6 +100,7 @@ export const MessageArticle = ({
   // Subscribed to as a property, because the feed is provisioned lazily on the first annotation and a
   // bare read establishes no subscription — the component would never re-render to see it. The ref is
   // then taken from the live object, since the subscription yields a snapshot that cannot be resolved.
+  // TODO(wittjosiah): This additional hook call shouldn't be necessary, useResolveRef should handle this case.
   useObject(mailbox, 'annotations');
   const annotationsFeed = useResolveRef(mailbox?.annotations);
   const annotationsUri = annotationsFeed ? Obj.getURI(annotationsFeed, { prefer: 'absolute' }) : undefined;
