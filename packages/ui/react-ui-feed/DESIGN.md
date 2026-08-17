@@ -145,6 +145,24 @@ the follow is dropped only when a scroll is preceded by an input gesture, and re
 the tail. `ScrollFollower` carries velocity across frames so a tail that keeps growing produces one
 continuous travel rather than an animation restarted per chunk.
 
+## Opening at the tail
+
+A chat opens showing its last message, and does not then travel. Both halves have been broken, and
+`baseline/tail` guards them at six points — plain, uniform and assistant, each with and without
+`scrollPastEnd`.
+
+It reads the **last row's own bottom edge** against the viewport's, never the scroll offset. An
+offset can be at the document's end while the last message is nowhere near the screen, which is
+exactly what both defects looked like:
+
+- The opening jump is computed from estimates, so it lands where the estimate put the tail. Marking
+  the feed positioned there left the rest — ten thousand pixels — to the follow, at two rows a
+  second. Anything more than a screen behind therefore jumps rather than travels: the follow is for
+  content arriving at a tail the reader is watching, not for closing a gap the estimate opened.
+- With space reserved past the end, the element's maximum is no longer the last row, so everything
+  that opens or follows has to stop short of it: the follow's target, the tail test, the opening
+  offset. Chasing the maximum walks the feed off the end of the conversation and keeps going.
+
 ## Streaming
 
 An item reconciles by **appending** when the new text extends the old, and replaces the document
