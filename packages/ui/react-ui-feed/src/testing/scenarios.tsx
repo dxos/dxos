@@ -289,16 +289,14 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
   return (
     <Row classNames={mx(selected && 'bg-hover-surface')}>
       {prompt ? (
-        <div className='min-is-0'>
+        <div className='min-w-0'>
           {/* The reader's own words, framed: a prompt is an instruction the thread can be rewound
               to, and it reads as one only if it is visibly not the model's prose. */}
-          <div className='pis-2 pie-2 pbs-1 pbe-1 border-is-2 border-accent-bg rounded-sm bg-input-surface'>
-            {children}
-          </div>
+          <div className='ps-2 pe-2 pt-1 pb-1 border-s-2 border-accent-bg rounded-sm bg-input-surface'>{children}</div>
           {/* Revealed on hover, but never removed from flow: chrome that appears and disappears
               changes the row's height, and a pointer travelling down a scrolling list would then
               move every row below it. Opacity costs nothing to measure. */}
-          <div className='flex items-center gap-1 pbs-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
+          <div className='flex items-center gap-1 pt-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
             <IconButton icon='ph--arrow-counter-clockwise--regular' iconOnly label='Rewind' variant='ghost' size={3} />
             <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size={3} />
             <span>{timeOf(message)}</span>
@@ -306,9 +304,9 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
           </div>
         </div>
       ) : (
-        <div className='min-is-0'>
+        <div className='min-w-0'>
           {children}
-          <div className='flex items-center gap-2 pbs-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
+          <div className='flex items-center gap-2 pt-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
             <span className='font-medium'>{message.sender.name}</span>
             <span>{timeOf(message)}</span>
             <span className='text-subdued'>#{index}</span>
@@ -341,7 +339,7 @@ const ThreadChrome = ({ message, children }: MessageChromeProps) => (
     <div className='w-6 h-6 rounded-full bg-input-surface grid place-items-center text-xs'>
       {message.sender.name?.[0]}
     </div>
-    <div className='min-is-0'>
+    <div className='min-w-0'>
       <div className='flex items-center gap-2 text-xs text-description'>
         <span className='font-medium'>{message.sender.name}</span>
         <span>{timeOf(message)}</span>
@@ -354,7 +352,7 @@ const ThreadChrome = ({ message, children }: MessageChromeProps) => (
 /** Comments: the quoted anchor above the comment, and a resolve control. */
 const CommentChrome = ({ message, children }: MessageChromeProps) => (
   <Row classNames={mx('border-b border-subdued-separator', message.properties?.resolved && 'opacity-50')}>
-    <p className='mbe-1 pis-2 border-is-2 border-separator text-xs text-description line-clamp-1'>
+    <p className='mb-1 ps-2 border-s-2 border-separator text-xs text-description line-clamp-1'>
       {String(message.properties?.anchor ?? '')}
     </p>
     <div className='flex items-center gap-2 text-xs text-description'>
@@ -379,8 +377,8 @@ const TranscriptChrome = ({ message, children }: MessageChromeProps) => (
     <div className='text-xs text-description tabular-nums'>
       {timeOf(message, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
     </div>
-    <div className='min-is-0'>
-      <span className='mie-2 text-xs font-medium text-description'>{message.sender.name}</span>
+    <div className='min-w-0'>
+      <span className='me-2 text-xs font-medium text-description'>{message.sender.name}</span>
       {children}
     </div>
   </Row>

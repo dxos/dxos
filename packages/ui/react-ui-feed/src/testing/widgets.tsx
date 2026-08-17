@@ -52,7 +52,7 @@ const Panel = ({
           frame later — a row jumping under the reader. `estimatedHeight` in the registry looks like
           the answer and is not: it sets `height` and `overflow: hidden` on the widget root, which
           pins the panel shut. */}
-      <TogglePanel.Content classNames={mx('min-bs-[2.125rem] rounded border border-subdued-separator', classNames)}>
+      <TogglePanel.Content classNames={mx('min-h-[2.125rem] rounded border border-subdued-separator', classNames)}>
         <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
           <span className='grow text-description truncate'>{title}</span>
           <IconBlock>
@@ -60,7 +60,7 @@ const Panel = ({
           </IconBlock>
         </TogglePanel.Header>
         <TogglePanel.Body>
-          <TogglePanel.Viewport classNames='px-2 pbe-1 text-sm'>{children}</TogglePanel.Viewport>
+          <TogglePanel.Viewport classNames='px-2 pb-1 text-sm'>{children}</TogglePanel.Viewport>
         </TogglePanel.Body>
       </TogglePanel.Content>
     </TogglePanel.Root>
@@ -70,7 +70,7 @@ const Panel = ({
 const Frame = ({ icon, title, children, classNames }: XmlWidgetProps<any> & { classNames?: string }) => (
   <div className={mx('flex gap-2 px-2 py-1 rounded border border-subdued-separator text-sm', classNames)}>
     {icon && <Icon icon={icon} size={4} classNames='mt-1 shrink-0 text-description' />}
-    <div className='min-is-0'>
+    <div className='min-w-0'>
       {title && <p className='text-xs text-description'>{title}</p>}
       {children}
     </div>
@@ -104,7 +104,7 @@ const ToolResult = ({ children, for: tool }: XmlWidgetProps<{ for?: string }>) =
 
 // Inline, so a run of them wraps as chips rather than stacking one per line.
 const Suggestion = ({ children }: XmlWidgetProps) => (
-  <button type='button' className='mie-1 px-2 py-0.5 rounded-full border border-separator text-sm'>
+  <button type='button' className='me-1 px-2 py-0.5 rounded-full border border-separator text-sm'>
     {getXmlTextChild(children ?? [])}
   </button>
 );

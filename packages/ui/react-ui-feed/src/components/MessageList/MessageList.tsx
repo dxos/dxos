@@ -14,7 +14,7 @@ import React, {
   useState,
 } from 'react';
 
-import { ScrollArea, type ScrollAreaRootProps, composable, composableProps, setRef } from '@dxos/react-ui';
+import { Column, ScrollArea, type ScrollAreaRootProps, composable, composableProps, setRef } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
@@ -738,7 +738,17 @@ const MESSAGE_LIST_VIEWPORT_NAME = 'MessageList.Viewport';
 type MessageListViewportExtra = Pick<
   ScrollAreaRootProps,
   'autoHide' | 'centered' | 'native' | 'padding' | 'scrollbars' | 'thin'
->;
+> & {
+  /**
+   * Gutter size for the three-track layout each row is laid out on (`gutter | content | gutter`).
+   *
+   * The tracks live inside the row rather than on the container, because rows are placed at the
+   * offsets the virtualizer computes and cannot be items of an outer grid. Chrome that wants the
+   * gutters — a fork control, an avatar, a resolve toggle — opts in with `Column.Row`; everything
+   * else sits in the centre track.
+   */
+  gutter?: 'sm' | 'md' | 'lg';
+};
 
 /**
  * The scroll container and the mounted window of rows.
@@ -747,7 +757,7 @@ type MessageListViewportExtra = Pick<
  * virtualizer needs only the element being scrolled, which `ScrollArea.Viewport` publishes.
  */
 const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
-  ({ autoHide, centered, native, padding, scrollbars, thin, ...props }, forwardedRef) => {
+  ({ autoHide, centered, native, padding, scrollbars, thin, gutter, ...props }, forwardedRef) => {
     const { messages, Chrome, selectedIds, virtualizer, measureItem, setViewport, onSelect } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
 
@@ -793,14 +803,18 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
                   className='absolute inset-x-0 top-0'
                   style={{ transform: `translateY(${item.start}px)` }}
                 >
-                  <Chrome
-                    message={message}
-                    index={item.index}
-                    selected={selectedIds?.has(message.id) ?? false}
-                    onSelect={onSelect}
-                  >
-                    <MessageListItem message={message} />
-                  </Chrome>
+                  <Column.Root gutter={gutter}>
+                    <Column.Center>
+                      <Chrome
+                        message={message}
+                        index={item.index}
+                        selected={selectedIds?.has(message.id) ?? false}
+                        onSelect={onSelect}
+                      >
+                        <MessageListItem message={message} />
+                      </Chrome>
+                    </Column.Center>
+                  </Column.Root>
                 </div>
               );
             })}

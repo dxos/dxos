@@ -69,16 +69,9 @@ export const MarkdownItem = memo(({ text, editable = false, registry, hits, onWi
         registry ? extendedMarkdown({ registry }) : createMarkdownExtensions(),
         registry && xmlFormatting({ skip: ['prompt'] }),
         decorateMarkdown(),
-        // The reader's own words stay in the document rather than becoming a widget, so they can be
-        // selected and searched; the bubble around them is a line decoration.
-        registry?.prompt &&
-          xmlBlockDecoration({
-            tag: 'prompt',
-            lineClass: 'cm-prompt-line bg-input-surface border-is-4 border-separator pis-2 pie-2',
-            firstLineClass: 'pbs-1 rounded-t-sm',
-            lastLineClass: 'pbe-1 rounded-b-sm',
-            hideTags: true,
-          }),
+        // The tags are hidden but the prompt is NOT framed here: the frame is chrome's, which also
+        // owns the rewind toolbar under it. Styling it in both places drew the border twice.
+        registry?.prompt && xmlBlockDecoration({ tag: 'prompt', hideTags: true }),
         registry && xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
         EditorView.updateListener.of((update) => {
           if (update.selectionSet && !update.state.selection.main.empty) {

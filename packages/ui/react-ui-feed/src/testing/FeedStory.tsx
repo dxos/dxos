@@ -85,7 +85,7 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
         <IconButton icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' size={3} />
       </div>
 
-      <div className='min-is-0'>
+      <div className='min-w-0'>
         <div className='flex items-center gap-2 text-xs text-description'>
           <span className='font-medium'>{message.sender.name ?? role}</span>
           <span>{time}</span>
@@ -132,8 +132,8 @@ export type FeedStoryProps = {
 export const FeedStory = ({
   scenario,
   count = 0,
-  debug: debugDefault = true,
-  streaming: autoStart = false,
+  debug: debugProp,
+  streaming: streamingProp = false,
   wordsPerChunk = 4,
   chunkDelay = 120,
   estimateSize,
@@ -143,8 +143,8 @@ export const FeedStory = ({
 }: FeedStoryProps) => {
   const definition = useMemo(() => (scenario ? createScenario({ scenario, count }) : undefined), [scenario, count]);
   const [messages, setMessages] = useState<Message.Message[]>(() => definition?.messages ?? createMessages({ count }));
-  const [streaming, setStreaming] = useState(autoStart);
-  const [debug, setDebug] = useState(debugDefault);
+  const [streaming, setStreaming] = useState(streamingProp);
+  const [debug, setDebug] = useState(debugProp);
   const [answerId, setAnswerId] = useState<string | undefined>();
   const [query, setQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
@@ -336,15 +336,11 @@ export const FeedStory = ({
           </Toolbar.Root>
         </Panel.Toolbar>
 
-        {/* Panel.Content is itself the two-column grid — the rail sits beside the viewport without
-            another box in the height chain. */}
-        {/* `minmax(0, 1fr)` on the row: without it the grid sizes to its tallest child, the rail
-            grows the panel instead of being bounded by it, and the rail never learns to thin. */}
-        <Panel.Content classNames='grid grid-cols-[2rem_1fr] grid-rows-[minmax(0,1fr)]'>
-          <div className='dx-expander grid grid-rows-[1fr_4fr_1fr] justify-center'>
+        <Panel.Content classNames='relative dx-container'>
+          <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
             <FeedMinimap classNames='row-start-2' messages={messages} />
           </div>
-          <MessageList.Viewport classNames='dx-document' ref={viewportRef} />
+          <MessageList.Viewport classNames='absolute inset-0' padding ref={viewportRef} />
         </Panel.Content>
 
         <Panel.Statusbar>
