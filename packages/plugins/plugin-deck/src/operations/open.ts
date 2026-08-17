@@ -21,7 +21,13 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 import { DeckCapabilities } from '#types';
 
 import { addSubjectsToActiveDeck, resolveLevelOpen, resolveSeededPlanks, updatePlankNames } from '../layout';
-import { computeActiveUpdates, openableChildren, resolveDeckSpec } from '../util';
+import {
+  carryCompanion,
+  computeActiveUpdates,
+  openableChildren,
+  resolveCompanionAnchor,
+  resolveDeckSpec,
+} from '../util';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
@@ -130,9 +136,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // Holding shift forces any disposition into an add (callers forward the raw modifier rather than
       // encoding the policy). Only 'auto' falls back to the attended plank; a shift-forced add from the
       // nav-tree (a 'solo' gesture with no pivot) appends at the end.
-      const navigateSolo = (active: readonly string[]): string[] =>
-        input.subject.every((id) => active.includes(id)) ? [...active] : [...input.subject];
-
       let previouslyOpenIds: Set<string>;
       {
         const deck = yield* DeckCapabilities.getDeck();
@@ -170,8 +173,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             : undefined;
 
         let next: string[];
+        // The plank the open stands in for, when it replaces one — see `carryCompanion`.
+        let replacedId: string | undefined;
         if (levelOpen) {
           next = levelOpen.next;
+          replacedId = levelOpen.replacedId;
         } else if (seeded) {
           next = seeded;
         } else if (addBesideOrigin) {
@@ -181,7 +187,12 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           const replaceId = input.name ? deck.plankNames[input.name] : undefined;
           next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId, replaceId });
         } else {
-          next = navigateSolo(deck.active);
+          // Subjects that are all already open are only scrolled into view; anything else replaces the
+          // deck, so the plank the companion sat beside stands replaced by the subject — anchored the same
+          // way the companion is rendered and serialized.
+          const alreadyOpen = input.subject.every((id) => deck.active.includes(id));
+          next = alreadyOpen ? [...deck.active] : [...input.subject];
+          replacedId = alreadyOpen ? undefined : resolveCompanionAnchor(deck.active, attention.getCurrent());
         }
 
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention });
@@ -194,13 +205,12 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           next,
           boundName && input.subject[0] ? { name: boundName, plankId: input.subject[0] } : undefined,
         );
-        // The companion follows a level swap: the new plank stands in for the replaced one, and closing
-        // it mid-read would also narrow the deck, which the browser answers by clamping the scroll — a
-        // one-frame snap measured at exactly the lost width.
-        const companionPlanks =
-          levelOpen?.replacedId && input.subject[0] && deck.companionPlanks.includes(levelOpen.replacedId)
-            ? [...deckUpdates.companionPlanks, input.subject[0]]
-            : deckUpdates.companionPlanks;
+        const companionPlanks = carryCompanion({
+          pruned: deckUpdates.companionPlanks,
+          previous: deck.companionPlanks,
+          replacedId,
+          replacementId: input.subject[0],
+        });
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, { ...deckUpdates, companionPlanks, plankNames }),
         );
