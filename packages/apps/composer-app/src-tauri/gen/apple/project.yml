@@ -71,6 +71,7 @@ targets:
     dependencies:
       - framework: libapp.a
         embed: false
+      - sdk: AVFAudio.framework
       - sdk: CoreGraphics.framework
       - sdk: Metal.framework
       - sdk: MetalKit.framework

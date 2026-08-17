@@ -5,23 +5,20 @@
 import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
 import { useOperationInvoker, useOptionalAtomCapabilityState, useOptionalCapabilities } from '@dxos/app-framework/ui';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Settings from '@dxos/plugin-transcription/Settings';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { DropdownMenu, Icon, IconButton, MicButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import {
+  type AudioInputDevice,
+  installMicrophoneBridge,
+  listAudioInputs,
+  setPreferredAudioInput,
+} from '@dxos/react-ui-transcription';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
 import { type ChatEvent } from '../Chat/events';
-
-/** Shared so a repeated refusal updates the toast in place rather than stacking copies. */
-const MICROPHONE_TOAST_ID = 'assistant.microphone-denied';
-
-type AudioInputDevice = {
-  deviceId: string;
-  label: string;
-};
 
 export type ChatActionsProps = ThemedClassName<
   PropsWithChildren<{
@@ -56,26 +53,23 @@ export const ChatActions = ({
   const selectedDeviceId = settings?.audioDeviceId ?? '';
 
   const [devices, setDevices] = useState<AudioInputDevice[]>([]);
+  // Bumped once the microphone is granted. WebKit withholds both `deviceId` and `label` from
+  // `enumerateDevices` until a capture permission exists, so the list enumerated at mount is empty
+  // and `devicechange` does not fire for a permission grant — leaving the picker permanently blank.
+  const [devicesToken, setDevicesToken] = useState(0);
+  // Set when the microphone was refused, so the control can say so where a toast cannot reach.
+  const [microphoneDenied, setMicrophoneDenied] = useState(false);
   useEffect(() => {
     // Only touch media APIs when the recording controls are actually shown.
-    if (!microphone || !transcriptionAvailable || !navigator.mediaDevices?.enumerateDevices) {
+    if (!microphone || !transcriptionAvailable) {
       return;
     }
     let cancelled = false;
     const refresh = async () => {
-      const all = await navigator.mediaDevices.enumerateDevices();
-      if (cancelled) {
-        return;
+      const available = await listAudioInputs();
+      if (!cancelled) {
+        setDevices(available);
       }
-      // Labels are blank until microphone permission is granted; fall back to an ordinal name.
-      setDevices(
-        all
-          .filter((device) => device.kind === 'audioinput' && device.deviceId)
-          .map((device, index) => ({
-            deviceId: device.deviceId,
-            label: device.label || `Microphone ${index + 1}`,
-          })),
-      );
     };
     void refresh();
     navigator.mediaDevices.addEventListener('devicechange', refresh);
@@ -83,7 +77,7 @@ export const ChatActions = ({
       cancelled = true;
       navigator.mediaDevices.removeEventListener('devicechange', refresh);
     };
-  }, [microphone, transcriptionAvailable]);
+  }, [microphone, transcriptionAvailable, devicesToken]);
 
   // Recording must not begin until the microphone has actually been granted. Asking here rather than
   // letting the driver open the stream is what makes the refusal legible: the OS prompt is raised by
@@ -95,19 +89,24 @@ export const ChatActions = ({
     if (!navigator.mediaDevices?.getUserMedia) {
       return false;
     }
+    // Installed from the tap, not at mount: the bridge builds an AudioContext, and WebKit only
+    // resumes one inside a user gesture. A no-op wherever native capture is unavailable.
+    if (import.meta.env.DEV) {
+      await installMicrophoneBridge();
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       for (const track of stream.getTracks()) {
         track.stop();
       }
+      // The grant is what makes the device list readable; re-enumerate now that it exists.
+      setDevicesToken((token) => token + 1);
+      setMicrophoneDenied(false);
       return true;
     } catch {
-      void invokePromise(LayoutOperation.AddToast, {
-        id: MICROPHONE_TOAST_ID,
-        icon: 'ph--microphone-slash--regular',
-        title: ['microphone-denied.toast.title', { ns: meta.profile.key }],
-        description: ['microphone-denied.toast.description', { ns: meta.profile.key }],
-      });
+      // Surfaced on the button rather than as a toast: the mobile layout renders no toast surface, so
+      // a refusal there produced no feedback at all — the microphone simply did nothing.
+      setMicrophoneDenied(true);
       return false;
     }
   }, [invokePromise]);
@@ -146,15 +145,22 @@ export const ChatActions = ({
   );
 
   const handleSelectDevice = useCallback(
-    (deviceId: string) => setSettings((current) => ({ ...current, audioDeviceId: deviceId || undefined })),
+    (deviceId: string) => {
+      // Applied natively where the platform routes capture by session (iOS); elsewhere the id is
+      // carried into `getUserMedia` constraints by the recorder.
+      void setPreferredAudioInput(deviceId);
+      setSettings((current) => ({ ...current, audioDeviceId: deviceId || undefined }));
+    },
     [setSettings],
   );
 
-  const recordLabel = recording
-    ? t('stop-recording.label')
-    : recordMode === 'hold'
-      ? t('hold-to-record.label')
-      : t('start-recording.label');
+  const recordLabel = microphoneDenied
+    ? t('microphone-denied.label')
+    : recording
+      ? t('stop-recording.label')
+      : recordMode === 'hold'
+        ? t('hold-to-record.label')
+        : t('start-recording.label');
 
   return (
     <div className={mx('flex items-center', classNames)}>
@@ -165,6 +171,7 @@ export const ChatActions = ({
           <MicButton
             iconOnly
             variant='ghost'
+            disabled={microphoneDenied}
             label={recordLabel}
             recording={recording}
             mode={recordMode}

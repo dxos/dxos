@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { useTranslation } from '@dxos/react-ui';
 import { type ChatEditorController } from '@dxos/react-ui-chat';
-import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
+import { isNativeAudioInput, useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
@@ -107,7 +107,12 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
   const recorderConfig = useMemo(() => ({ interval: RECORDER_INTERVAL_MS }), []);
 
   const audioConstraints = useMemo<MediaTrackConstraints | undefined>(
-    () => (settings?.audioDeviceId ? { deviceId: { exact: settings.audioDeviceId } } : undefined),
+    () =>
+      // A native selection is routed through the audio session, not through constraints: WebKit
+      // rejects an id it did not issue, and the rejection stops capture entirely.
+      settings?.audioDeviceId && !isNativeAudioInput(settings.audioDeviceId)
+        ? { deviceId: { exact: settings.audioDeviceId } }
+        : undefined,
     [settings?.audioDeviceId],
   );
 
