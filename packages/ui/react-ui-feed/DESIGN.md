@@ -71,6 +71,19 @@ resize against a scroll offset that trails the element's real one; forcing it on
 worse (8.8% → 11.3% of frames), so anchoring is done here instead, once per layout, against the
 offsets that layout actually used.
 
+## Navigation
+
+A feed is messages of many blocks, and what a reader moves through is rarely "the next message". In
+an AI chat a turn is a prompt plus everything the model said in reply, so the stops are the
+**prompts**; stopping on each of the model's messages would step the reader through one answer
+instead of through the conversation.
+
+`isAnchor(message, index)` names the stops, and the arrow keys, the previous/next buttons and any
+other control share them (`stepAnchor`) — a reader switching between keyboard and mouse must not
+change places. Absent the prop, every message is a stop. Steps are taken from the **cursor**, not
+from the last stop, so a reader who scrolled between two prompts moves to the one they are
+approaching. `Cmd/Ctrl + Arrow` still jumps to either end of the feed.
+
 ## Following the tail
 
 A chat is pinned to its bottom, and that is a different anchor: the end of the document rather than a

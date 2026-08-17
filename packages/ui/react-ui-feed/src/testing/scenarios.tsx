@@ -37,6 +37,8 @@ export type ScenarioDefinition = {
    * have never been measured.
    */
   estimateSize: number | ((message: Message.Message, index: number) => number);
+  /** Which messages the arrows and the navigation buttons stop on. */
+  isAnchor?: (message: Message.Message, index: number) => boolean;
 };
 
 export type ScenarioOptions = {
@@ -56,6 +58,9 @@ export const createScenario = ({ scenario, count, seed = 999 }: ScenarioOptions)
         Chrome: AssistantChrome,
         stickyBottom: true,
         estimateSize: estimateAssistantRow,
+        // A turn is a prompt and everything the model said in reply; stopping on each of the model's
+        // messages would make the reader step through an answer rather than through the conversation.
+        isAnchor: (message) => message.sender.role === 'user',
       };
 
     case 'email':

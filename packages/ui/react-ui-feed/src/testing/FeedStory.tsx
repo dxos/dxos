@@ -275,6 +275,7 @@ export const FeedStory = ({
       messages={messages}
       renderer={definition?.renderer}
       debug={debug}
+      isAnchor={definition?.isAnchor}
       Chrome={definition?.Chrome ?? TestChrome}
       registry={definition?.registry}
       hits={hits}
@@ -427,14 +428,17 @@ const FindButton = ({ hits }: { hits: readonly SearchHit[] }) => {
 
 /** Move by one message, or to either end, from the list's cursor (what the arrow keys also move). */
 const NavButtons = () => {
-  const { currentIndex: current, count, scrollToIndex, scrollToBottom } = useMessageList('NavButtons');
+  const {
+    currentIndex: current,
+    anchors,
+    count,
+    stepAnchor,
+    scrollToIndex,
+    scrollToBottom,
+  } = useMessageList('NavButtons');
 
-  const step = useCallback(
-    (delta: number) => {
-      scrollToIndex(Math.min(Math.max(current + delta, 0), count - 1), { align: 'start', behavior: 'smooth' });
-    },
-    [current, count, scrollToIndex],
-  );
+  // The same stops the arrow keys use, so a reader who switches between them does not change places.
+  const step = stepAnchor;
 
   return (
     <>
@@ -454,7 +458,7 @@ const NavButtons = () => {
         iconOnly
         label='Previous message'
         variant='ghost'
-        disabled={current <= 0}
+        disabled={current <= (anchors[0] ?? 0)}
         data-testid='feed.nav.back'
         onClick={() => step(-1)}
       />
@@ -463,7 +467,7 @@ const NavButtons = () => {
         iconOnly
         label='Next message'
         variant='ghost'
-        disabled={current >= count - 1}
+        disabled={current >= (anchors[anchors.length - 1] ?? count - 1)}
         data-testid='feed.nav.forward'
         onClick={() => step(1)}
       />

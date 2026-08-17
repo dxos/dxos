@@ -53,6 +53,10 @@ type MessageListContextValue = {
   range?: MessageRange;
   /** Index the reader is on: moved by the arrow keys and by any navigation, tracked while scrolling. */
   currentIndex: number;
+  /** Indices the reader navigates between; every index when the host names no anchors. */
+  anchors: readonly number[];
+  /** Move by `delta` anchors from the cursor, and scroll there. */
+  stepAnchor: (delta: number) => void;
   /** Block widgets mounted across every mounted item — what the visible window actually costs. */
   mountedWidgets: number;
   reportWidgets: (id: string, count: number) => void;
@@ -81,11 +85,24 @@ const [MessageListProvider, useMessageListContext] = createContext<MessageListCo
  * find-next, a statusbar's range readout.
  */
 export const useMessageList = (consumerName = 'useMessageList') => {
-  const { range, currentIndex, mountedWidgets, shifts, breaks, resetShifts, messages, scrollToIndex, scrollToBottom } =
-    useMessageListContext(consumerName);
+  const {
+    range,
+    currentIndex,
+    anchors,
+    stepAnchor,
+    mountedWidgets,
+    shifts,
+    breaks,
+    resetShifts,
+    messages,
+    scrollToIndex,
+    scrollToBottom,
+  } = useMessageListContext(consumerName);
   return {
     range,
     currentIndex,
+    anchors,
+    stepAnchor,
     mountedWidgets,
     shifts,
     breaks,
@@ -118,6 +135,15 @@ export type MessageListRootProps = PropsWithChildren<{
   onSelectedIdsChange?: (ids: ReadonlySet<string>) => void;
   /** Search hits from the model; the list routes them to the items that own them. */
   hits?: readonly SearchHit[];
+  /**
+   * Which messages the arrow keys and the navigation controls step between.
+   *
+   * A feed is messages of many blocks, and what a reader navigates by is rarely "the next message":
+   * in an AI chat it is the next **prompt**, since the answer between two prompts is one thing to
+   * read, not several stops. The host decides, because only it knows which block carries the
+   * meaning. Absent, every message is a stop.
+   */
+  isAnchor?: (message: Message.Message, index: number) => boolean;
   /** Outline each item and the blocks inside it, so what the layout is measuring is visible. */
   debug?: boolean;
   /**
@@ -186,6 +212,7 @@ const MessageListRoot = ({
   selectedIds,
   onSelectedIdsChange,
   hits,
+  isAnchor,
   debug,
   estimateSize = DEFAULT_ESTIMATE,
   stickyBottom = false,
@@ -443,6 +470,21 @@ const MessageListRoot = ({
     [virtualizer, viewport, follower, messages.length, setCurrent],
   );
 
+  // Ordered stops. Recomputed with the feed rather than searched on each keypress: a long thread is
+  // scanned once here, and every step afterwards is a lookup.
+  const anchors = useMemo(
+    () =>
+      isAnchor
+        ? messages.reduce<number[]>((list, message, index) => {
+            if (isAnchor(message, index)) {
+              list.push(index);
+            }
+            return list;
+          }, [])
+        : messages.map((_, index) => index),
+    [messages, isAnchor],
+  );
+
   const scrollToBottom = useCallback(
     (options?: ScrollToOptions) => {
       if (messages.length) {
@@ -562,6 +604,25 @@ const MessageListRoot = ({
     follower.start();
   }, [viewport, follower, stickyBottom, stickyBehavior, messages.length, totalSize, scrollToBottom]);
 
+  // From the cursor rather than from the last stop: a reader who scrolled between two prompts expects
+  // the next press to take them to the one they are approaching, not back to where they last stopped.
+  const stepAnchor = useCallback(
+    (delta: number) => {
+      if (!anchors.length) {
+        return;
+      }
+
+      const current = currentIndexRef.current;
+      const next =
+        delta > 0
+          ? (anchors.find((index) => index > current) ?? anchors[anchors.length - 1])
+          : ([...anchors].reverse().find((index) => index < current) ?? anchors[0]);
+
+      scrollToIndex(next, { align: next === messages.length - 1 ? 'end' : 'start', behavior: 'smooth' });
+    },
+    [anchors, scrollToIndex, messages.length],
+  );
+
   // Arrow keys move by message, not by line: a plain arrow steps the cursor to the adjacent message
   // and Cmd/Ctrl + Arrow jumps to the first or last. Stepping the index rather than letting the
   // container scroll by a notch is what makes the position readable — a few pixels into a tall
@@ -588,20 +649,19 @@ const MessageListRoot = ({
         return;
       }
 
-      const jump = event.metaKey || event.ctrlKey;
-      const target = jump
-        ? delta > 0
-          ? messages.length - 1
-          : 0
-        : Math.min(Math.max(currentIndexRef.current + delta, 0), messages.length - 1);
-
       event.preventDefault();
-      scrollToIndex(target, { align: target === messages.length - 1 ? 'end' : 'start', behavior: 'smooth' });
+      if (event.metaKey || event.ctrlKey) {
+        const target = delta > 0 ? messages.length - 1 : 0;
+        scrollToIndex(target, { align: target === messages.length - 1 ? 'end' : 'start', behavior: 'smooth' });
+        return;
+      }
+
+      stepAnchor(delta);
     };
 
     viewport.addEventListener('keydown', onKeyDown);
     return () => viewport.removeEventListener('keydown', onKeyDown);
-  }, [viewport, messages.length, scrollToIndex]);
+  }, [viewport, messages.length, scrollToIndex, stepAnchor]);
 
   // Hits are grouped once per pass rather than filtered per item, so a search over a long feed
   // stays O(hits) instead of O(hits × visible messages).
@@ -647,6 +707,8 @@ const MessageListRoot = ({
         debug={debug}
         range={range}
         currentIndex={currentIndex}
+        anchors={anchors}
+        stepAnchor={stepAnchor}
         mountedWidgets={mountedWidgets}
         reportWidgets={reportWidgets}
         shifts={shifts}
