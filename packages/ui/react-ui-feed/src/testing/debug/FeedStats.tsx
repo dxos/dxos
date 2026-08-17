@@ -80,21 +80,27 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
     [mountedRows, mountedWidgets, selected, hits, meter, jumps.count, shifts, breaks],
   );
 
+  const label = `${meter.label} — p50 ${meter.p50} · ${meter.frames} frames · ${(meter.duration / 1000).toFixed(1)}s`;
+
   return (
     <div
+      // Fixed width, not fitted: the widest line is the pass summary, whose length changes with the
+      // elapsed time, so a panel sized to its content would resize once a second while being read.
       className={mx(
-        'z-10 absolute bottom-2 right-2 grid gap-1 p-2 rounded-sm border border-separator bg-base-surface text-xs text-description shadow-sm',
+        'z-10 absolute bottom-2 right-2 w-[18rem] grid gap-1 p-2 rounded-sm border border-separator bg-base-surface text-xs text-description shadow-sm',
         classNames,
       )}
       data-testid='feed.stats'
     >
-      <div className='flex items-center gap-2'>
-        <span className='tabular-nums'>{range ? `${range.startIndex}–${range.endIndex}` : '—'}</span>
-        <span className='tabular-nums'>
+      <div className='flex items-center gap-2 min-w-0'>
+        <span className='tabular-nums truncate'>{range ? `${range.startIndex}–${range.endIndex}` : '—'}</span>
+        <span className='tabular-nums truncate'>
           {currentIndex} / {count}
         </span>
         <span className='grow' />
-        <span data-testid='feed.stream.state'>{streaming ? 'streaming…' : 'idle'}</span>
+        <span className='truncate' data-testid='feed.stream.state'>
+          {streaming ? 'streaming…' : 'idle'}
+        </span>
         <IconButton
           icon={recording ? 'ph--stop--regular' : 'ph--record--regular'}
           iconOnly
@@ -120,9 +126,9 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
       <div className='grid gap-1 border-t border-subdued-separator pt-1' data-testid='feed.frames'>
         <Stats stats={FRAME_STATS} values={values} />
         {/* Below the readings rather than among them: the pass's extent is context for the numbers,
-            not one of them. */}
-        <span className='text-subdued'>
-          {meter.label} — p50 {meter.p50} · {meter.frames} frames · {(meter.duration / 1000).toFixed(1)}s
+            not one of them. Truncated, so a growing duration cannot rewrap the panel. */}
+        <span className='text-subdued truncate' title={label}>
+          {label}
         </span>
       </div>
     </div>

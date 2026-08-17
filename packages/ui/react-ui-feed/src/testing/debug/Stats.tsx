@@ -25,14 +25,14 @@ export type StatsProps = ThemedClassName<{
 /**
  * A block of readouts, in fixed tracks.
  *
- * Every number here changes while the feed scrolls, so the columns are sized by the grid rather than
- * by their contents: cells that resize to fit shuffle the whole block on each update, and an
- * instrument that moves cannot be read at a glance.
+ * Every number here changes while the feed scrolls, so the value and unit columns are given widths
+ * rather than sized to their contents: a column that fits itself to `4` and then to `1054` moves
+ * every digit beside it, and an instrument that moves cannot be read at a glance.
  */
 export const Stats = ({ stats, values, columns = 1, classNames }: StatsProps) => (
   <div
     className={mx('grid gap-x-2 tabular-nums whitespace-nowrap', classNames)}
-    style={{ gridTemplateColumns: `repeat(${columns}, auto 1fr auto)` }}
+    style={{ gridTemplateColumns: `repeat(${columns}, 1fr 3.5rem 1.5rem)` }}
   >
     {stats.map(({ id, label, unit, classNames }) => (
       <Fragment key={id}>
