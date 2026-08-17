@@ -19,20 +19,20 @@
 
 /** Dead prefix → what Tailwind v4 actually ships. */
 const REPLACEMENTS = {
-  pis: 'ps',
-  pie: 'pe',
-  pbs: 'pt',
-  pbe: 'pb',
-  pli: 'px',
-  plb: 'py',
-  mis: 'ms',
-  mie: 'me',
-  mbs: 'mt',
-  mbe: 'mb',
-  mli: 'mx',
-  mlb: 'my',
-  is: 'w',
-  bs: 'h',
+  'pis': 'ps',
+  'pie': 'pe',
+  'pbs': 'pt',
+  'pbe': 'pb',
+  'pli': 'px',
+  'plb': 'py',
+  'mis': 'ms',
+  'mie': 'me',
+  'mbs': 'mt',
+  'mbe': 'mb',
+  'mli': 'mx',
+  'mlb': 'my',
+  'is': 'w',
+  'bs': 'h',
   'min-is': 'min-w',
   'min-bs': 'min-h',
   'max-is': 'max-w',
@@ -117,7 +117,9 @@ export default {
         }
       },
       'JSXAttribute JSXExpressionContainer Literal': (node) => {
-        const attribute = context.sourceCode.getAncestors(node).findLast((ancestor) => ancestor.type === 'JSXAttribute');
+        const attribute = context.sourceCode
+          .getAncestors(node)
+          .findLast((ancestor) => ancestor.type === 'JSXAttribute');
         if (attribute && ATTRIBUTES.has(attribute.name?.name)) {
           checkLiteral(node);
         }

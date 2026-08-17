@@ -257,7 +257,7 @@ const UploadPrompt = ({ busy, inputRef, onFile, label, message, accept }: Upload
       }}
     />
     <Button disabled={busy} onClick={() => inputRef.current?.click()}>
-      <Icon icon='ph--upload-simple--regular' size={4} classNames='mie-2' />
+      <Icon icon='ph--upload-simple--regular' size={4} classNames='me-2' />
       {label}
     </Button>
   </div>

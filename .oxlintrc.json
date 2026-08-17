@@ -34,18 +34,7 @@
     "denyWarnings": true,
     "typeAware": true
   },
-  "plugins": [
-    "eslint",
-    "typescript",
-    "unicorn",
-    "oxc",
-    "react",
-    "react-perf",
-    "promise",
-    "vitest",
-    "jsdoc",
-    "node"
-  ],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "react-perf", "promise", "vitest", "jsdoc", "node"],
   "rules": {
     "@dxos/eslint-plugin-rules/consistent-update-param": "warn",
     "@dxos/eslint-plugin-rules/dxos-package-imports": "warn",
@@ -59,10 +48,7 @@
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
     "@dxos/eslint-plugin-rules/translation-key-format": "warn",
-    "eslint/curly": [
-      "error",
-      "all"
-    ],
+    "eslint/curly": ["error", "all"],
     "eslint/no-async-promise-executor": "off",
     "eslint/no-constant-binary-expression": "off",
     "eslint/no-constant-condition": "off",
@@ -104,10 +90,7 @@
             "groupName": "lowercase"
           }
         ],
-        "groups": [
-          "capitalized",
-          "lowercase"
-        ],
+        "groups": ["capitalized", "lowercase"],
         "order": "asc",
         "type": "natural"
       }
@@ -125,10 +108,7 @@
             "groupName": "lowercase"
           }
         ],
-        "groups": [
-          "capitalized",
-          "lowercase"
-        ],
+        "groups": ["capitalized", "lowercase"],
         "order": "asc",
         "type": "natural"
       }
