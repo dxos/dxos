@@ -278,7 +278,8 @@ Independent of everything else; three consumers, no AI involvement.
 - [ ] Migrate email (`ConversationStack`) — gains virtualization it lacks today.
 - [ ] Migrate human chat + comments (`react-ui-thread` keeps its chrome).
 - [ ] Migrate transcription.
-- [ ] Migrate the AI thread (last — most behaviour rides on the current syncer).
+- [ ] Migrate the AI thread (last — most behaviour rides on the current syncer). Plan and seam map
+      in [`DESIGN.md`](DESIGN.md); blocked on widget state surviving virtualization.
 - [ ] Retire `MessageSyncer`, the second tile stack, `TranscriptModel`'s document half.
 
 ## Then
