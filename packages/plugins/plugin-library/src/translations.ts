@@ -7,8 +7,7 @@ import { type Resource } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { meta } from '#meta';
-
-import * as Book from './types/Book';
+import { Book } from '#types';
 
 export const translations = [
   ...formTranslations,

@@ -2,16 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { CapabilityManager } from '@dxos/app-framework';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 
-import * as ConnectorSpec from '../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
+
 import { connectorIdsForTarget } from './target-connectors';
 
 class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.test.targetConnectors.mailbox', '0.1.0'))(

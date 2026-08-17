@@ -105,7 +105,7 @@ export const makeActiveTopicsDeps = (policy?: ModelPolicy): ActiveTopicsDeps => 
               strict: factsVariant.strict,
             }).pipe(
               Effect.timeout('120 seconds'),
-              Effect.orElse(() => Effect.succeed([] as RDF.Fact[])),
+              Effect.catch(() => Effect.succeed([] as RDF.Fact[])),
             );
             collected.push(...extracted.map(renderFact));
           }

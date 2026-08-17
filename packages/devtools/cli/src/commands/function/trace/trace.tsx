@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as BunContext from '@effect/platform-bun/BunContext';
+import * as BunServices from '@effect/platform-bun/BunServices';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, spaceIdWithDefault, spaceLayer, withTypes } from '@dxos/cli-util';
 import { ClientService, ConfigService } from '@dxos/client';
@@ -31,7 +31,7 @@ export const trace = Command.make(
   {
     functionId: Common.functionId.pipe(Options.optional),
     spaceId: Common.spaceId.pipe(Options.optional),
-    localTriggers: Options.boolean('local-triggers', { ifPresent: true }).pipe(
+    localTriggers: Options.boolean('local-triggers').pipe(
       Options.withDescription('Enable local trigger runtime to run functions in the background.'),
     ),
   },
@@ -117,7 +117,7 @@ const createTriggerRuntime = Effect.fn((spaceId: Option.Option<Key.SpaceId>, pro
       Layer.provide(Layer.succeed(ClientService, client)),
       Layer.provide(Layer.succeed(ConfigService, config)),
       Layer.provide(Layer.succeed(Database.Service, dbService)),
-      Layer.provide(BunContext.layer),
+      Layer.provide(BunServices.layer),
     );
 
     // Create managed runtime and start trigger dispatcher in background

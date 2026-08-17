@@ -83,15 +83,20 @@ describe('buildThreadSemiJoin', () => {
       const viewFilter = buildMailboxSelection('', undefined);
       const query = buildThreadSemiJoin(viewFilter, Scope.feed(Obj.getURI(feed, { prefer: 'absolute' })));
 
-      expect(query.ast).toMatchObject({
+      // A union of the semi-join and the direct matches, so a threadless message still reaches the list.
+      expect(query.ast).toMatchObject({ type: 'union' });
+      expect((query.ast as any).queries).toHaveLength(2);
+      expect(semiJoinArm(query)).toMatchObject({
         type: 'select',
         filter: {
           type: 'object',
           props: { threadId: { type: 'in-query', property: 'threadId' } },
         },
       });
+      // The second arm is the view filter itself, unscoped — the caller's own `.from` scopes it.
+      expect((query.ast as any).queries[1]).toMatchObject({ type: 'select', filter: viewFilter.ast });
       // The subquery carries the view filter over exactly the given matches scope.
-      const subquery = (query.ast as any).filter.props.threadId.subquery;
+      const subquery = semiJoinArm(query).filter.props.threadId.subquery;
       expect(subquery.query.filter).toEqual(viewFilter.ast);
       expect(subquery.from).toMatchObject({ _tag: 'scope', scopes: [{ _tag: 'feed' }] });
     } finally {
@@ -108,7 +113,7 @@ describe('buildThreadSemiJoin', () => {
         Scope.space(),
       ]);
 
-      const subquery = (query.ast as any).filter.props.threadId.subquery;
+      const subquery = semiJoinArm(query).filter.props.threadId.subquery;
       expect(subquery.from).toMatchObject({
         _tag: 'scope',
         scopes: [{ _tag: 'feed' }, { _tag: 'space' }],
@@ -189,17 +194,49 @@ describe('buildThreadSemiJoin (results)', () => {
     }
   });
 
-  test('a message with no threadId is dropped by the semi-join (documents the bug thread-of-one keying avoids)', async () => {
+  test('a message with no threadId still reaches the list', async () => {
     const fixture = await setup();
     try {
       const t1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
-      const standalone = message('two', '2020-01-02T00:00:00.000Z'); // no threadId — the shape a compose draft must avoid
+      const standalone = message('two', '2020-01-02T00:00:00.000Z'); // No threadId (draft/transcription/assistant).
       await append(fixture, [t1, standalone]);
 
-      // The `threadId IN (…)` semi-join excludes the null-threadId row — the exact failure this fix prevents.
-      expect(await runSemiJoin(fixture, buildMailboxSelection('', undefined))).toEqual(ids(t1));
+      // `threadId IN (…)` can never admit the threadless row, so the union's direct-match arm is the
+      // only thing that carries it. Without that arm this returns `[t1]` and the message is invisible.
+      expect(await runSemiJoin(fixture, buildMailboxSelection('', undefined))).toEqual(ids(t1, standalone));
+    } finally {
+      await fixture.builder.close();
+    }
+  });
+
+  test('a threadless message is returned once, not duplicated by the union', async () => {
+    const fixture = await setup();
+    try {
+      const standalone = message('only', '2020-01-01T00:00:00.000Z');
+      await append(fixture, [standalone]);
+
+      const results = await runSemiJoin(fixture, buildMailboxSelection('', undefined));
+      expect(results).toEqual(ids(standalone));
+    } finally {
+      await fixture.builder.close();
+    }
+  });
+
+  test('a threaded message matching both union arms is returned once', async () => {
+    const fixture = await setup();
+    try {
+      // `t1` matches the view filter directly AND is pulled in by the semi-join as a member of its own
+      // thread, so it arrives from both arms — the union must de-duplicate it.
+      const t1 = message('one', '2020-01-01T00:00:00.000Z', 'thread-a');
+      const t2 = message('two', '2020-01-02T00:00:00.000Z', 'thread-a');
+      await append(fixture, [t1, t2]);
+
+      expect(await runSemiJoin(fixture, buildMailboxSelection('', undefined))).toEqual(ids(t1, t2));
     } finally {
       await fixture.builder.close();
     }
   });
 });
+
+/** The semi-join arm of the union (the other arm is the bare view filter). */
+const semiJoinArm = (query: ReturnType<typeof buildThreadSemiJoin>): any => (query.ast as any).queries[0];

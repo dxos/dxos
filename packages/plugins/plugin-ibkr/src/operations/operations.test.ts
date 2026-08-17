@@ -14,9 +14,9 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
+import { Ibkr, IbkrOperation } from '#types';
+
 import { CUSIP_SOURCE, IBKR_SOURCE, TRADINGVIEW_SOURCE, tickerSource } from '../constants';
-import * as Ibkr from '../types/Ibkr';
-import * as IbkrOperation from '../types/IbkrOperation';
 import GetInstrumentFundamentalsHandler from './get-instrument-fundamentals';
 import GetPortfolioHandler from './get-portfolio';
 import GetTradesHandler from './get-trades';
@@ -290,7 +290,9 @@ const runSyncLots = (
     SyncLotsHandler.handler(input).pipe(
       Effect.provideService(Operation.Service, {
         invoke: (operation, invokeInput) => {
-          if (operation === IbkrOperation.MaterializeInstrument) {
+          // Compared by key: v4 types the invoked operation generically, so the two `Definition`
+          // instantiations no longer overlap for a reference comparison.
+          if (operation.meta.key === IbkrOperation.MaterializeInstrument.meta.key) {
             return MaterializeInstrumentHandler.handler(
               invokeInput as Parameters<typeof MaterializeInstrumentHandler.handler>[0],
             ).pipe(Effect.provide(Database.layer(db)));
@@ -299,7 +301,7 @@ const runSyncLots = (
         },
         schedule: () => Effect.void,
         invokePromise: async () => ({ error: new Error('Not available') }),
-      } as Context.Tag.Service<typeof Operation.Service>),
+      } as Context.Service.Shape<typeof Operation.Service>),
     ),
     db,
   );

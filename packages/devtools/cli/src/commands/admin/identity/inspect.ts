@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { type InspectIdentityResponse, type LegacyInspectIdentityResponse } from '@dxos/protocols';
@@ -14,12 +14,12 @@ import { adminRequest, formatAdminError, readIdentityDid } from '../util';
 
 export const inspect = Command.make(
   'inspect',
-  { identityKey: Args.text({ name: 'identityKey' }) },
+  { identityKey: Args.string('identityKey') },
   Effect.fn(function* ({ identityKey }) {
     const result = yield* adminRequest<InspectIdentityResponse | LegacyInspectIdentityResponse>(
       'GET',
       `/admin/identities/${identityKey}`,
-    ).pipe(Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))));
+    ).pipe(Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))));
 
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(result, null, 2));

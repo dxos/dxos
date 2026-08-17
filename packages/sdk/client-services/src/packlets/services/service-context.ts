@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import {
   EchoEdgeReplicatorLayer,
@@ -29,7 +29,6 @@ import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { FeedProtocol } from '@dxos/protocols';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { SqlTransaction } from '@dxos/sql-sqlite';
-import { BlobStoreApiService, SqliteBlobStore, SqliteBlobStoreLayer } from '@dxos/teleport-extension-object-sync';
 
 import { EdgeAgentManagerLayer, EdgeAgentManagerService } from '../agents';
 import {
@@ -84,10 +83,10 @@ export type ServiceContextRuntimeProps = Pick<
  * Combined storage migration effect gathered from the concrete SQLite stores.
  * Run by {@link ClientServicesHost} during open (storage migration stage).
  */
-export class StorageMigrationService extends EffectContext.Tag('@dxos/client-services/StorageMigration')<
+export class StorageMigrationService extends EffectContext.Service<
   StorageMigrationService,
   Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag>
->() {}
+>()('@dxos/client-services/StorageMigration') {}
 
 export type ServiceContextLayerOptions = ServiceContextRuntimeProps & {
   edgeFeatures?: Runtime.Client.EdgeFeatures;
@@ -113,7 +112,6 @@ export type ServiceContextStackContext =
   | CrossDeviceSpaceSynchronizerService
   | SigningContextProviderService
   | IMetadataStoreService
-  | BlobStoreApiService
   | FeedStoreService
   | StorageMigrationService;
 
@@ -206,7 +204,6 @@ const storageMigrationLayer = Layer.effect(
     return Effect.all(
       [
         new SqliteMetadataStore({ runtime }).migrate,
-        new SqliteBlobStore({ runtime }).migrate,
         new SqliteKeyring({ runtime }).migrate,
         new SqliteStorage({ runtime }).migrate,
       ],
@@ -223,7 +220,6 @@ const storageLayer = Layer.empty.pipe(
   Layer.provideMerge(FeedFactoryLayer({ hypercore: { valueEncoding, stats: true } })),
   Layer.provideMerge(FeedStorageDirectoryLayer()),
   Layer.provideMerge(SqliteMetadataStoreLayer()),
-  Layer.provideMerge(SqliteBlobStoreLayer()),
   Layer.provideMerge(SqliteKeyringLayer()),
   Layer.provideMerge(SqliteStorageLayer()),
   Layer.provideMerge(storageMigrationLayer),
@@ -238,7 +234,7 @@ const storageLayer = Layer.empty.pipe(
  * runtime is disposed. Identity-, network-, and storage-bound lifecycle stays in `ClientServicesHost`.
  */
 const echoHostLayer = (options: { useSubduction?: boolean }) =>
-  Layer.scopedDiscard(
+  Layer.effectDiscard(
     Effect.gen(function* () {
       const echoHost = yield* EchoHostService;
       yield* Effect.acquireRelease(
@@ -248,7 +244,7 @@ const echoHostLayer = (options: { useSubduction?: boolean }) =>
     }),
   ).pipe(
     Layer.provideMerge(
-      Layer.unwrapEffect(
+      Layer.unwrap(
         Effect.gen(function* () {
           const identityManager = yield* IdentityManagerService;
           const spaceManager = yield* SpaceManagerService;

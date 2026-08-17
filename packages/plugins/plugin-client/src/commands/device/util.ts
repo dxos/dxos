@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FormBuilder } from '@dxos/cli-util';
+import { Doc, FormBuilder } from '@dxos/cli-util';
 import { Device, DeviceKind, DeviceType } from '@dxos/client/halo';
 
 const maybeTruncateKey = (key: { toHex(): string; truncate(): string }, truncate = false) =>
@@ -32,7 +32,7 @@ export const mapDevices = (devices: Device[], truncateKeys = false) => {
   }));
 };
 
-export const printDevice = (device: Device) =>
+export const printDevice = (device: Device): Doc.Doc<any> =>
   FormBuilder.make({ title: getDeviceTitle(device) }).pipe(
     FormBuilder.set('deviceKey', device.deviceKey.truncate()),
     FormBuilder.set('label', device.profile?.label ?? '<none>'),

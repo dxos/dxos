@@ -6,7 +6,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 
-import * as AssistantOperation from '../types/AssistantOperation';
+import { AssistantOperation } from '#types';
 
 export const AssistantOperationHandlerSet = OperationHandlerSet.lazy([
   AssistantOperation.CreateChat.pipe(Operation.lazyHandler(() => import('./create-chat'))),

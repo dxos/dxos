@@ -10,10 +10,10 @@ tasks:
     # one, so the constraint is enforced rather than assumed.
     command: >-
       pnpm exec dx-trace-imports
-      --export ./plugin
+      --export ./GooglePlugin
       --to "@dxos/react-ui"
       --to react
-      --conditions workerd,worker,node
+      --conditions workerd,worker
       --fail-on present
     deps:
       - dx-trace-imports:build

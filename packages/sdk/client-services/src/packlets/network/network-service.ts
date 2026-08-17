@@ -7,20 +7,16 @@ import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
+import { EffectEx } from '@dxos/effect';
 import { type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
-import {
-  type NetworkStatus,
-  type SubscribeSwarmStateRequest,
-  type UpdateConfigRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import {
   type JoinRequest,
   type LeaveRequest,
   type Message,
   type QueryRequest,
-  type SubscribeMessagesRequest,
 } from '@dxos/protocols/proto/dxos/edge/signal';
 import { type NetworkService } from '@dxos/protocols/rpc';
 
@@ -32,7 +28,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
   ) {}
 
   ['NetworkService.queryStatus'](): EffectStream.Stream<NetworkStatus, Error> {
-    return EffectStream.async<NetworkStatus, Error>((emit) => {
+    return EffectEx.streamFromEmitter<NetworkStatus, Error>((emit) => {
       const ctx = Context.default();
       const update = () => {
         void emit.single({
@@ -50,7 +46,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 
-  ['NetworkService.updateConfig'](request: UpdateConfigRequest): Effect.Effect<void, Error> {
+  ['NetworkService.updateConfig'](request: NetworkService.UpdateConfigRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         await this.networkManager.setConnectionState(request.swarm);
@@ -87,9 +83,9 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
   }
 
   ['NetworkService.subscribeSwarmState'](
-    request: SubscribeSwarmStateRequest,
+    request: NetworkService.SubscribeSwarmStateRequest,
   ): EffectStream.Stream<SwarmResponse, Error> {
-    return EffectStream.async<SwarmResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<SwarmResponse, Error>((emit) => {
       const ctx = Context.default();
       this.signalManager.swarmState?.on(ctx, (state) => {
         if (request.topic.equals(state.swarmKey)) {
@@ -110,9 +106,11 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     });
   }
 
-  ['NetworkService.subscribeMessages'](request: SubscribeMessagesRequest): EffectStream.Stream<Message, Error> {
+  ['NetworkService.subscribeMessages'](
+    request: NetworkService.SubscribeMessagesRequest,
+  ): EffectStream.Stream<Message, Error> {
     const { peer, tags = [] } = request;
-    return EffectStream.async<Message, Error>((emit) => {
+    return EffectEx.streamFromEmitter<Message, Error>((emit) => {
       const ctx = Context.default();
 
       // This stream crosses the client-services RPC (protobufjs codec, e.g. dedicated worker → main

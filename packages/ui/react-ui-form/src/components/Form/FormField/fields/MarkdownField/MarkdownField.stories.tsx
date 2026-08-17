@@ -24,7 +24,7 @@ import { Form } from '../../../Form';
 //
 
 const TestSchema = Schema.Struct({
-  notes: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown)).annotations({ title: 'Notes' }),
+  notes: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown)).annotate({ title: 'Notes' }),
 });
 
 const StringStory = () => (
@@ -46,7 +46,7 @@ const StringStory = () => (
 const TextNoteHolder = Schema.Struct({
   instructions: Ref.Ref(Text.Text)
     .pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown))
-    .annotations({ title: 'Instructions' }),
+    .annotate({ title: 'Instructions' }),
 });
 
 const RefStory = () => {
@@ -83,7 +83,7 @@ const EmptyRefSchema = Schema.Struct({
   instructions: Schema.optional(
     Ref.Ref(Text.Text)
       .pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown))
-      .annotations({ title: 'Instructions' }),
+      .annotate({ title: 'Instructions' }),
   ),
 });
 

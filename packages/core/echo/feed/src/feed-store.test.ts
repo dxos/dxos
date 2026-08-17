@@ -5,7 +5,9 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
 
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -306,20 +308,9 @@ describe('Feed V2', () => {
         .pipe(Effect.exit);
 
       expect(result._tag).toBe('Failure');
-      if (result._tag === 'Failure') {
-        const cause: any = result.cause;
-
-        // Handling Effect Cause structure which might be diff in this version
-        // Ideally we use Cause.isDie(cause) -> error
-        // But for quick check:
-        let error = cause.value || cause.defect || cause;
-        if (cause._tag === 'Die') {
-          error = cause.value || cause.defect;
-        }
-
-        expect(error).toBeDefined();
-        expect(error.message).toBe('Cursor token mismatch');
-      }
+      const defect = Exit.findDefect(result);
+      expect(Result.isSuccess(defect)).toBe(true);
+      expect(Result.isSuccess(defect) && (defect.success as Error).message).toBe('Cursor token mismatch');
 
       // Test Query with VALID cursor
       // Use the cursor from the first block of feed-1 to get the second block

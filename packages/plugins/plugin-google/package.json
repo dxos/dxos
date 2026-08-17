@@ -34,9 +34,9 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/GooglePlugin.ts",
-      "types": "./dist/types/src/GooglePlugin.d.ts",
-      "default": "./dist/lib/GooglePlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#services": {
       "source": "./src/services/index.ts",
@@ -47,6 +47,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -54,11 +59,6 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
     },
     "./testing": {
       "source": {
@@ -73,6 +73,21 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
+    },
+    "./GooglePlugin": {
+      "source": "./src/GooglePlugin.ts",
+      "types": "./dist/types/src/GooglePlugin.d.ts",
+      "import": "./dist/lib/GooglePlugin.mjs"
+    },
+    "./GoogleOperation": {
+      "source": "./src/types/GoogleOperation.ts",
+      "types": "./dist/types/src/types/GoogleOperation.d.ts",
+      "import": "./dist/lib/GoogleOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -81,6 +96,9 @@
     "dx.config.ts",
     "src"
   ],
+  "scripts": {
+    "import-mbox": "vite-node ./scripts/import-mbox-space.ts --"
+  },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -115,18 +133,18 @@
     "@dxos/edge-compute": "workspace:*",
     "@dxos/random": "workspace:*",
     "@effect/opentelemetry": "catalog:",
-    "@effect/platform": "catalog:",
     "@effect/vitest": "catalog:",
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/resources": "catalog:",
     "@opentelemetry/sdk-node": "catalog:",
     "@opentelemetry/sdk-trace-base": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
+    "@types/mailparser": "catalog:",
     "effect": "catalog:",
+    "mailparser": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

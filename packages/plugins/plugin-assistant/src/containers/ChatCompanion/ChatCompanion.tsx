@@ -14,13 +14,13 @@ import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useRegistry } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useContextBinder } from '#hooks';
+import { AssistantOperation } from '#types';
 
-import * as AssistantOperation from '../../types/AssistantOperation';
 import ChatArticle from '../ChatArticle';
 
 export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unknown>;

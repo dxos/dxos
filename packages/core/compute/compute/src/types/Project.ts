@@ -18,10 +18,14 @@ import type * as Skill from './Skill';
 export const Goal = Schema.Struct({
   id: Schema.String,
   text: Schema.String,
-  status: Schema.optional(Schema.Literal('open', 'met', 'dropped')),
+  status: Schema.optional(Schema.Literals(['open', 'met', 'dropped'])),
 });
 
 export type Goal = Schema.Schema.Type<typeof Goal>;
+
+/** Work-stream lifecycle state; complements per-goal {@link Goal} status. */
+export const ProjectStatus = Schema.Literals(['active', 'paused', 'blocked', 'ended']);
+export type ProjectStatus = Schema.Schema.Type<typeof ProjectStatus>;
 
 /**
  * A user-facing container for interactive, long-running work: instructions (skills + commands),
@@ -32,6 +36,9 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
   Schema.Struct({
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
+
+    /** Work-stream lifecycle state; complements per-goal `Goal.status`. */
+    status: Schema.optional(ProjectStatus),
 
     /** Owned agent instructions (created + parented at the plugin layer). */
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true))),
@@ -51,7 +58,7 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     /** Owned (or adopted synced) task container; membership is the ECHO parent edge. */
     taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
   }).pipe(
-    Schema.annotations({ title: 'Project' }),
+    Schema.annotate({ title: 'Project' }),
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
   ),

@@ -12,7 +12,7 @@ import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
 
-import * as ReviewCapabilities from '../types/ReviewCapabilities';
+import { ReviewCapabilities } from '#types';
 
 export type UseVersioningResult = {
   document?: Markdown.Document;

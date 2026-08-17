@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
-import * as Atom from '@effect-atom/atom/Atom';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -15,9 +15,7 @@ import { Board, type BoardController, type BoardRootProps, type Layout, resizeTo
 
 import { ArtifactCard } from '#components';
 import { meta } from '#meta';
-
-import * as Artifact from '../../types/Artifact';
-import type * as Lightbox from '../../types/Lightbox';
+import { Artifact, Lightbox } from '#types';
 
 const isArtifact = Obj.instanceOf(Artifact.Artifact);
 

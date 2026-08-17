@@ -14,8 +14,8 @@ import { Position } from '@dxos/util';
 
 import { EditableMarkdownCard, MarkdownCard, MarkdownSettings } from '#containers';
 import { meta } from '#meta';
+import { Markdown } from '#types';
 
-import * as Markdown from '../types/Markdown';
 import { MarkdownContainer } from './MarkdownContainer';
 
 export default Capability.makeModule(() =>

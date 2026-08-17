@@ -21,6 +21,20 @@ export const translations = [
         'logs.label': 'Logs',
         'open-logs.label': 'Show logs',
 
+        'remove-all-objects.confirm.description': 'Remove all objects from this space? This cannot be undone.',
+        'remove-all-objects.error.title': 'Failed to remove objects.',
+        'remove-all-objects.toast.title': 'Space cleared',
+        'remove-all-objects.toast.description_one': 'Removed {{count}} object.',
+        'remove-all-objects.toast.description_other': 'Removed {{count}} objects.',
+
+        'collect-garbage.confirm.description':
+          "Permanently reclaim this space's deleted objects? This cannot be undone.",
+        'collect-garbage.error.title': 'Garbage collection failed.',
+        'collect-garbage.toast.title': 'Garbage collected',
+        'collect-garbage.toast.empty.description': 'Nothing to reclaim.',
+        'collect-garbage.toast.description_one': 'Reclaimed {{count}} document.',
+        'collect-garbage.toast.description_other': 'Reclaimed {{count}} documents.',
+
         'settings.wireframe.label': 'Show wireframes.',
         'settings.wireframe.description': 'Overlay wireframe outlines on UI components for debugging layout.',
         'settings.trace-all.label': 'Trace all requests (100% sampling).',

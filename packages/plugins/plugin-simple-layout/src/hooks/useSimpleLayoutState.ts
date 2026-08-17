@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { useCallback, useContext } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 
-import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
+import { SimpleLayoutCapabilities } from '#types';
 
 export type UseSimpleLayoutState = {
   state: SimpleLayoutCapabilities.SimpleLayoutState;

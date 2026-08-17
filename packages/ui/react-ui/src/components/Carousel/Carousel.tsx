@@ -19,8 +19,9 @@ import React, {
 
 import { mx } from '@dxos/ui-theme';
 
+import { translationKey } from '#translations';
+
 import { useTranslation } from '../../primitives';
-import { translationKey } from '../../translations';
 import { type ThemedClassName, composable, composableProps } from '../../util';
 import { IconButton } from '../Button';
 import { type MediaKind, MediaPlayer } from '../MediaPlayer';

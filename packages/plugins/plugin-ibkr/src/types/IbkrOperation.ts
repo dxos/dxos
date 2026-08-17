@@ -139,7 +139,7 @@ export const SyncLots = Operation.make({
   },
   input: Schema.Struct({
     account: Ref.Ref(Ibkr.Portfolio),
-    report: Schema.optional(Ref.Ref(Ibkr.Report)).annotations({
+    report: Schema.optional(Ref.Ref(Ibkr.Report)).annotate({
       description: 'When set, sync lots from this report instead of the latest feed snapshot.',
     }),
   }),

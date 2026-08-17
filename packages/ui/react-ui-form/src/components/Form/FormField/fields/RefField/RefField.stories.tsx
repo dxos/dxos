@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 
 import { Annotation, Obj, Ref } from '@dxos/echo';
@@ -18,18 +19,18 @@ import { Form } from '../../../Form';
 
 // Picker: select an existing Organization.
 const RefSchema = Schema.Struct({
-  employer: Ref.Ref(Organization).annotations({ title: 'Employer' }),
-}).pipe(Schema.mutable);
+  employer: Ref.Ref(Organization).annotate({ title: 'Employer' }),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 // Inline: edit the referenced Organization's fields in a nested form.
 const InlineSchema = Schema.Struct({
   employer: Ref.Ref(Organization).pipe(
-    Schema.annotations({ title: 'Employer' }),
+    Schema.annotate({ title: 'Employer' }),
     Annotation.FormInlineAnnotation.set(true),
   ),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
-const RefStory = ({ schema }: { schema: Schema.Schema<any> }) => {
+const RefStory = ({ schema }: { schema: Schema.Codec<any, any> }) => {
   const spaces = useSpaces();
   const space = spaces[0];
   const [values, setValues] = useState<Record<string, unknown>>({});

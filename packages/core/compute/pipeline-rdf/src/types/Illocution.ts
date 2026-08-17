@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
  * or an answer from the addressee (requests and questions); `commissive` commits the author to a
  * future action (offers/promises); `expressive` conveys a psychological state (thanks/apology).
  */
-export const IllocutionaryForce = Schema.Literal('assertive', 'directive', 'commissive', 'expressive');
+export const IllocutionaryForce = Schema.Literals(['assertive', 'directive', 'commissive', 'expressive']);
 export type IllocutionaryForce = Schema.Schema.Type<typeof IllocutionaryForce>;
 
 /**
@@ -24,7 +24,7 @@ export type IllocutionaryForce = Schema.Schema.Type<typeof IllocutionaryForce>;
  */
 export const Illocution = Schema.Struct({
   force: IllocutionaryForce,
-  mood: Schema.optional(Schema.Literal('declarative', 'interrogative', 'imperative')),
+  mood: Schema.optional(Schema.Literals(['declarative', 'interrogative', 'imperative'])),
   // Kept as a free string rather than a `Term` to avoid a schema cycle; the entity slug or email.
   addressee: Schema.optional(Schema.String),
 });

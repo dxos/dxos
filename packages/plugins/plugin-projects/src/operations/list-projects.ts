@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Filter } from '@dxos/echo';
 
-import * as ProjectMcpOperation from '../types/ProjectMcpOperation';
+import { ProjectMcpOperation } from '#types';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
@@ -25,6 +25,7 @@ const handler: Operation.WithHandler<typeof ProjectMcpOperation.ListProjects> = 
         projects: matched.slice(0, Math.min(Math.max(limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT)).map((project) => ({
           id: project.id,
           name: project.name,
+          status: project.status,
           description: project.description,
           hasTaskSet: project.taskSet !== undefined,
           goalCount: project.goals?.length ?? 0,

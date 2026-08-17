@@ -2,10 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { type DependencyList, useCallback, useContext, useMemo } from 'react';
 
-import { Graph, Node } from '@dxos/app-graph';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 
 import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
 
@@ -53,7 +56,10 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
  *
  * Read reactive state via `get` inside the builder; `deps` should hold only stable references.
  */
-export const useMenuBuilder = (build: (get: Atom.Context) => ActionGraphProps, deps: DependencyList): MenuActions => {
+export const useMenuBuilder = (
+  build: (get: Atom.AtomContext) => ActionGraphProps,
+  deps: DependencyList,
+): MenuActions => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const atom = useMemo(() => Atom.make(build), deps);
   return useMenuActions(atom);

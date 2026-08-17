@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { afterEach, beforeEach, vi } from 'vitest';
 
+import { Jmap, JmapMail } from '#apis';
+import { JmapCredentials } from '#services';
+
 import { JmapApiError } from '../errors';
-import { JmapCredentials } from '../services';
-import { Jmap, JmapMail } from './index';
 
 const HOST = 'api.fastmail.com';
 const ACCOUNT_ID = 'u9999';

@@ -14,8 +14,9 @@ import { type Resolver } from '@dxos/extractor';
 import { MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/sync';
 import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 
+import { type JmapDataset, JmapMailApi } from '#services';
+
 import { jmapMailSyncProvider } from '../operations/mail/sync/sync-provider';
-import { type JmapDataset, JmapMailApi } from '../services';
 
 /**
  * Test entry point for the JMAP sync — `runMailSync` with this provider's layer, leaving the API for the

@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test';
 
 import { log } from '@dxos/log';
 // TODO(wittjosiah): Importing this causes tests to fail.
-// import { StackPlugin } from '@dxos/plugin-stack/plugin';
+// import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
 
 import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager';
 import { Markdown, StackPlugin } from './plugins';
@@ -30,8 +30,10 @@ test.describe('Basic tests', () => {
 
   test('create identity, space is created by default', async () => {
     await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1);
+    // First run lands on Home, and onboarding seeds the README, so it appears under Recent.
     const plank = host.deck.plank();
-    await expect(plank.locator.getByRole('heading', { name: 'Welcome to Composer' })).toBeVisible();
+    await expect(plank.locator.getByRole('heading', { name: 'Recent' })).toBeVisible();
+    await expect(plank.locator.getByText('README')).toBeVisible();
   });
 
   test('create space, which is displayed in tree', async () => {

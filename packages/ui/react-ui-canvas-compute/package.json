@@ -45,8 +45,7 @@
     "@dxos/react-ui-experimental": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",

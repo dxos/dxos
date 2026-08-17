@@ -47,7 +47,7 @@ export const extractDocFactsForMessages = (
           strict: variant.strict,
         }).pipe(
           Effect.timeout('120 seconds'),
-          Effect.orElse(() => Effect.succeed(noFacts)),
+          Effect.catch(() => Effect.succeed(noFacts)),
         );
         facts += extracted.length;
         onMessage?.();
@@ -93,7 +93,7 @@ export const extractFactsForVariant = (
           }).pipe(
             Effect.provideService(AiService.AiService, aiService),
             Effect.timeout('120 seconds'),
-            Effect.orElse(() => Effect.succeed(noFacts)),
+            Effect.catch(() => Effect.succeed(noFacts)),
             Effect.tap(() => Effect.sync(() => onMessage?.())),
           ),
         );

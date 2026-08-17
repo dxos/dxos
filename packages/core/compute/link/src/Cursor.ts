@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -41,15 +40,24 @@ export const ExternalSpec = Schema.Struct({
   /** Cached display label for the remote target. */
   label: Schema.String.pipe(Schema.optional),
   /** Provider-specific options; opaque here — providers validate their shape. */
-  options: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
+  options: Schema.Record(Schema.String, Schema.Any).pipe(Schema.optional),
   /** Last-seen remote fields keyed by foreign id (matches `Obj.Meta.keys`); drives 3-way merge. */
-  snapshots: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
+  snapshots: Schema.Record(Schema.String, Schema.Any).pipe(Schema.optional),
   /**
    * Opaque provider delta-resume token (Gmail `historyId`, JMAP `Email/get` `state`). An optional
    * fast-path alongside `max`/`min`: when valid the provider fetches an exact delta, else it falls back
    * to the date-window scan. Forward-only, so it cannot drive backfill.
    */
   token: Schema.String.pipe(Schema.optional),
+  /**
+   * Automerge heads of the target's tag index as of the last completed sync — the base for
+   * bidirectional tag reconciliation (`plugin-inbox/docs/TAG-SYNC.md`). Read back with
+   * `Obj.getVersion` to recover what the index looked like then, without storing a shadow copy.
+   *
+   * Written only together with {@link token} (see {@link writeSyncState}): the two describe the same
+   * position, and advancing one without the other lets a run diff a fresh delta against a stale base.
+   */
+  tagHeads: Schema.Array(Schema.String).pipe(Schema.optional),
 });
 export type ExternalSpec = Schema.Schema.Type<typeof ExternalSpec>;
 
@@ -63,7 +71,7 @@ export const FeedSpec = Schema.Struct({
 export type FeedSpec = Schema.Schema.Type<typeof FeedSpec>;
 
 /** Discriminated union of what a cursor tracks progress against. Distinguished by `kind`. */
-export const Spec = Schema.Union(ExternalSpec, FeedSpec);
+export const Spec = Schema.Union([ExternalSpec, FeedSpec]);
 export type Spec = Schema.Schema.Type<typeof Spec>;
 
 /**
@@ -76,23 +84,23 @@ export type Spec = Schema.Schema.Type<typeof Spec>;
  */
 export class Cursor extends Type.makeObject<Cursor>(DXN.make('org.dxos.type.cursor', '0.2.0'))(
   Schema.Struct({
-    max: Schema.String.annotations({
+    max: Schema.String.annotate({
       title: 'Max',
       description: 'Opaque, provider-defined high-water mark identifying the newest consumed position.',
     }).pipe(Schema.optional),
-    min: Schema.String.annotations({
+    min: Schema.String.annotate({
       title: 'Min',
       description:
         'Opaque, provider-defined low-water mark some consumers maintain alongside `max`; unused by ' +
         'single-directional consumers.',
     }).pipe(Schema.optional),
-    lastTick: Format.DateTime.pipe(Schema.annotations({ title: 'Last tick' }), Schema.optional),
-    lastError: Schema.String.pipe(Schema.annotations({ title: 'Last error' }), Schema.optional),
+    lastTick: Format.DateTime.pipe(Schema.annotate({ title: 'Last tick' }), Schema.optional),
+    lastError: Schema.String.pipe(Schema.annotate({ title: 'Last error' }), Schema.optional),
     spec: Spec,
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--map-pin--regular', hue: 'amber' }),
     HiddenAnnotation.set(true),
-    Schema.annotations({ description: 'Durable progress cursor for a source-driven pipeline.' }),
+    Schema.annotate({ description: 'Durable progress cursor for a source-driven pipeline.' }),
   ),
 ) {}
 
@@ -205,6 +213,38 @@ export const writeToken = (cursor: ExternalCursor, token: string): void => {
       return;
     }
     cursor.spec.token = token;
+  });
+};
+
+/** Reads the tag-reconciliation base heads, or undefined before the first tag-aware sync completed. */
+export const readTagHeads = (cursor: ExternalCursor): readonly string[] | undefined => cursor.spec.tagHeads;
+
+/**
+ * Advances the delta token and the tag-reconciliation base **together**, in one `Obj.update`.
+ *
+ * They describe the same position, so a crash between two separate writes leaves the cursor
+ * self-inconsistent. The damaging order is token-then-heads: the next run reads its delta from the
+ * advanced token while diffing against stale heads, so every tag the previous run pulled reads as a
+ * local-only change. Usually that re-pushes a tag the provider already has (a no-op), but if the
+ * remote moved in between it re-applies a tag the provider deliberately removed — and the diff sees no
+ * conflict, so nothing catches it. One update makes the pair advance or neither.
+ *
+ * Omitted fields are left untouched, so a provider with no delta token can still record heads.
+ */
+export const writeSyncState = (
+  cursor: ExternalCursor,
+  { token, tagHeads }: { token?: string; tagHeads?: readonly string[] },
+): void => {
+  Obj.update(cursor, (cursor) => {
+    if (cursor.spec.kind !== 'external') {
+      return;
+    }
+    if (token !== undefined) {
+      cursor.spec.token = token;
+    }
+    if (tagHeads !== undefined) {
+      cursor.spec.tagHeads = [...tagHeads];
+    }
   });
 };
 
@@ -437,7 +477,7 @@ export type CommitUnit = {
 export type CommitEffect = (units: readonly CommitUnit[]) => Effect.Effect<void, never, Database.Service>;
 
 /** Effect Requirements tag carrying the per-run {@link State}. */
-export class Service extends Context.Tag('@dxos/link/Cursor')<Service, State>() {}
+export class Service extends Context.Service<Service, State>()('@dxos/link/Cursor') {}
 
 /**
  * Dependencies supplied by the caller; the Layer seeds `dedupSet` and defaults `formatCursor`,
@@ -569,9 +609,9 @@ const recordCommitted = Effect.fn('cursor.commit.recordCommitted')(function* (
  * flushes were O(n²)); the caller flushes once at the end, so a crash only loses this run's in-memory
  * cursor advance + space mutations.
  */
-export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never, Service | Database.Service> =>
+export const commit = (page: ReadonlyArray<CommitUnit>): Effect.Effect<void, never, Service | Database.Service> =>
   Effect.gen(function* () {
-    const units = Chunk.toReadonlyArray(page);
+    const units = page;
     if (units.length === 0) {
       return;
     }
@@ -597,9 +637,9 @@ export type UpsertUnit<T> = { readonly item: T; readonly foreignId: string; read
  */
 export const upsertCommit =
   <T>(write: (item: T) => Effect.Effect<boolean, never, Database.Service>) =>
-  (page: Chunk.Chunk<UpsertUnit<T>>): Effect.Effect<void, never, Service | Database.Service> =>
+  (page: ReadonlyArray<UpsertUnit<T>>): Effect.Effect<void, never, Service | Database.Service> =>
     Effect.gen(function* () {
-      const units = Chunk.toReadonlyArray(page);
+      const units = page;
       if (units.length === 0) {
         return;
       }

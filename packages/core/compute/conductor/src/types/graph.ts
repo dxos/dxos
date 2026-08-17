@@ -3,12 +3,13 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { Graph } from '@dxos/graph';
 
-export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
+export const ComputeValueType = Schema.Literals(['string', 'number', 'boolean', 'object']);
 
 export type ComputeValueType = Schema.Schema.Type<typeof ComputeValueType>;
 
@@ -16,59 +17,59 @@ export type ComputeValueType = Schema.Schema.Type<typeof ComputeValueType>;
  * GraphNode.
  * NOTE: We have a mixin of properties for different node types for simplicity, rather than a discriminated union.
  */
-export const ComputeNode = Schema.extend(
-  Graph.Node,
-  Schema.Struct({
-    /** For template nodes. */
-    // TODO(dmaretskyi): Compute at runtime (don't persist).
-    inputSchema: Schema.optional(JsonSchema.JsonSchema),
-    outputSchema: Schema.optional(JsonSchema.JsonSchema),
+export const ComputeNode = Graph.Node.pipe(
+  Schema.fieldsAssign(
+    Schema.Struct({
+      /** For template nodes. */
+      // TODO(dmaretskyi): Compute at runtime (don't persist).
+      inputSchema: Schema.optional(JsonSchema.JsonSchema),
+      outputSchema: Schema.optional(JsonSchema.JsonSchema),
 
-    /**
-     * For composition nodes.
-     */
-    subgraph: Schema.optional(Schema.suspend((): Ref.RefSchema<ComputeGraph> => Ref.Ref(ComputeGraph))),
+      /**
+       * For composition nodes.
+       */
+      subgraph: Schema.optional(Schema.suspend((): Ref.RefSchema<ComputeGraph> => Ref.Ref(ComputeGraph))),
 
-    /**
-     * For composition of function nodes.
-     */
-    function: Schema.optional(Ref.Ref(Operation.PersistentOperation)),
+      /**
+       * For composition of function nodes.
+       */
+      function: Schema.optional(Ref.Ref(Operation.PersistentOperation)),
 
-    /**
-     * For template nodes determines the type of the value.
-     * We cannot rely on `typeof value` as for object nodes we want to store potentially broken JSON as text.
-     * For valueType === 'object' we store the JSON as text in `value`.
-     */
-    valueType: Schema.optional(ComputeValueType),
+      /**
+       * For template nodes determines the type of the value.
+       * We cannot rely on `typeof value` as for object nodes we want to store potentially broken JSON as text.
+       * For valueType === 'object' we store the JSON as text in `value`.
+       */
+      valueType: Schema.optional(ComputeValueType),
 
-    /**
-     * For constant and template nodes.
-     */
-    value: Schema.optional(Schema.Any),
+      /**
+       * For constant and template nodes.
+       */
+      value: Schema.optional(Schema.Any),
 
-    /**
-     * For switch nodes.
-     * @deprecated
-     */
-    // TODO(dmaretskyi): Reuse `value`.
-    enabled: Schema.optional(Schema.Boolean),
-  }),
-).pipe(Schema.mutable);
+      /**
+       * For switch nodes.
+       * @deprecated
+       */
+      // TODO(dmaretskyi): Reuse `value`.
+      enabled: Schema.optional(Schema.Boolean),
+    }).fields,
+  ),
+).mapFields(Struct.map(Schema.mutableKey));
 
 export interface ComputeNode extends Schema.Schema.Type<typeof ComputeNode> {}
 
 // TODO(dmaretskyi): To effect schema.
 export type ComputeNodeMeta = {
-  input: Schema.Schema.AnyNoContext;
-  output: Schema.Schema.AnyNoContext;
+  input: Schema.Codec<any, any>;
+  output: Schema.Codec<any, any>;
 };
 
 /**
  * GraphEdge.
  */
-export const ComputeEdge = Schema.extend(
-  Graph.Edge,
-  Schema.Struct({
+export const ComputeEdge = Graph.Edge.mapFields(
+  Struct.assign({
     // TODO(burdon): Rename sourceProp, targetProp?
 
     /** Input property to target. */

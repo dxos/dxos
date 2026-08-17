@@ -59,7 +59,9 @@ const AUXILIARY_ENTRY = [
   // Solid and Lit storybooks use their own suffix so the react storybook does not pick them up.
   'src/**/*.{stories,solid-stories,lit-stories}.{ts,tsx}',
   'src/**/*.eval.{ts,tsx}',
-  'src/testing/**/*.{ts,tsx}',
+  // `.js` too: a testing helper can be a plain script a package runs by path (`node
+  // ./src/testing/build.js`), which nothing imports.
+  'src/testing/**/*.{ts,tsx,js,mjs,cjs}',
   'src/playwright/**/*.{ts,tsx}',
   'src/vitest-setup.{ts,tsx}',
   // Spawned as their own process, so nothing imports them.
@@ -104,6 +106,9 @@ const configuredDependencies = (dir: string, names: string[]): string[] => {
   const sources = globSync([
     `${dir}/*.config.{ts,mts,cts,js,mjs,cjs}`,
     `${dir}/.storybook/*.{ts,mts,mjs}`,
+    // A list too long to inline lives beside the config it feeds (composer-app's generated
+    // `optimizeDeps.include`), and the names in it are load-bearing all the same.
+    `${dir}/src/vite/*.{ts,mts}`,
     // Ambient `declare module` shims: knip skips declaration files, so an `import ... from 'pkg'`
     // inside one is invisible to it even though the types would not resolve without the package.
     `${dir}/src/**/*.d.ts`,
@@ -320,12 +325,37 @@ for (const manifest of globSync(['packages/**/package.json', 'tools/**/package.j
  * that imports `marked` and declares no dependencies at all, so unlike `--bundlePackage` this
  * cannot be read off a manifest — only an app bundle surfaces it.
  */
+/**
+ * Dependencies knip's `--production` traversal does not credit. It stops short of a file whose only
+ * route to an entry point is a barrel's `export *`, so a package whose single use of a dependency
+ * sits behind one reads as unused even though the symbol is called at runtime and the build resolves
+ * it. Verified per entry by adding a direct import at the package entry, which clears the finding.
+ */
+const TRAVERSAL_MISSED: Record<string, string[]> = {
+  // `functions/edge-function.ts` calls `SchemaAST.getPropertySignatures`, and reaches the entry only
+  // as `src/index.ts` -> `./functions` -> `./edge-function`.
+  'packages/core/compute/compute-hyperformula': ['@dxos/effect'],
+};
+
+/**
+ * Resolved from the workspace store by a checked-in developer script rather than declared, so a
+ * package is not made to install a heavy native dependency for a generator that runs only when its
+ * checked-in output changes.
+ */
+const SCRIPT_STORE_RESOLVED: Record<string, string[]> = {
+  // `scripts/generate-icon.mjs` rasterises the DXOS mark with sharp when the brand asset changes.
+  'packages/core/compute/mcp-server': ['sharp'],
+};
+
 const BUNDLER_RESOLVED: Record<string, string[]> = {
   'packages/plugins/plugin-presenter': ['marked'],
   // edge-compute generates a function entrypoint containing
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.
   'packages/core/compute/edge-compute': ['@dxos/functions-runtime-cloudflare'],
+  // `index.html` links these by path rather than importing them, so no module graph reaches them —
+  // and unstyled, `#spaces` becomes a full-flow block over the todo list that swallows every click.
+  'packages/apps/todomvc': ['todomvc-app-css', 'todomvc-common'],
   // Astro's default image service is emitted into `docs/dist/.prerender/` and `import('sharp')`s
   // from there, so the package has to resolve from `docs/node_modules` — astro's own optional
   // dependency is not reachable from the emitted chunk.
@@ -423,6 +453,8 @@ for (const manifest of globSync(
       ...typeOnlyDependencies(dir, Object.keys(dependencies)),
       ...bundledDependencies(dir),
       ...(BUNDLER_RESOLVED[dir] ?? []),
+      ...(TRAVERSAL_MISSED[dir] ?? []),
+      ...(SCRIPT_STORE_RESOLVED[dir] ?? []),
     ],
   };
 }

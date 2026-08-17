@@ -15,8 +15,12 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/workerd.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -36,19 +40,24 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/SequencerPlugin.workerd.ts",
-        "node": "./src/SequencerPlugin.node.ts",
-        "default": "./src/SequencerPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/SequencerPlugin.d.ts",
-      "workerd": "./dist/lib/SequencerPlugin.workerd.mjs",
-      "node": "./dist/lib/SequencerPlugin.node.mjs",
-      "default": "./dist/lib/SequencerPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -58,15 +67,21 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./package.json": "./package.json",
+    "./Note": {
+      "source": "./src/types/Note.ts",
+      "types": "./dist/types/src/types/Note.d.ts",
+      "import": "./dist/lib/Note.mjs"
+    },
+    "./Patch": {
+      "source": "./src/types/Patch.ts",
+      "types": "./dist/types/src/types/Patch.d.ts",
+      "import": "./dist/lib/Patch.mjs"
     },
     "./Score": {
       "source": "./src/types/Score.ts",
@@ -88,22 +103,16 @@
       "types": "./dist/types/src/types/SequencerEvents.d.ts",
       "import": "./dist/lib/SequencerEvents.mjs"
     },
+    "./SequencerPlugin": {
+      "source": "./src/SequencerPlugin.ts",
+      "types": "./dist/types/src/SequencerPlugin.d.ts",
+      "import": "./dist/lib/SequencerPlugin.mjs"
+    },
     "./Track": {
       "source": "./src/types/Track.ts",
       "types": "./dist/types/src/types/Track.d.ts",
       "import": "./dist/lib/Track.mjs"
-    },
-    "./Note": {
-      "source": "./src/types/Note.ts",
-      "types": "./dist/types/src/types/Note.d.ts",
-      "import": "./dist/lib/Note.mjs"
-    },
-    "./Patch": {
-      "source": "./src/types/Patch.ts",
-      "types": "./dist/types/src/types/Patch.d.ts",
-      "import": "./dist/lib/Patch.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -150,7 +159,7 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react-resize-detector": "catalog:",
     "tone": "catalog:"

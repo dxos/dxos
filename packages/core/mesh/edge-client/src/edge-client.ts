@@ -15,11 +15,13 @@ import {
 import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
+import { EdgeCredentialsHeaderCodec } from '@dxos/protocols';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 
+import { authenticateViaChallengeEndpoint, presentCredentialsForChallenge, readAuthChallenge } from './auth-challenge';
 import { protocol } from './defs';
-import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
+import { type EdgeIdentity } from './edge-identity';
 import { EdgeWsConnection } from './edge-ws-connection';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
 import { type Protocol } from './protocol';
@@ -40,6 +42,13 @@ export type MessengerConfig = {
   disableAuth?: boolean;
   /** Sent as `X-DXOS-Client-Tag` on the WebSocket upgrade (Node/`ws` only; ignored in browsers). */
   clientTag?: string;
+  /**
+   * When set, `open()` does not dial; the owner must call {@link EdgeClient.startNetworking}. Lets a
+   * host that shares this thread with latency-sensitive work decide when connecting is safe — the
+   * policy (and any delay) belongs to that owner, not here. Reconnects are unaffected.
+   * @default false (dial on open)
+   */
+  deferConnect?: boolean;
 };
 
 export interface EdgeConnection extends Required<Lifecycle> {
@@ -51,6 +60,8 @@ export interface EdgeConnection extends Required<Lifecycle> {
   get isOpen(): boolean;
   get status(): EdgeStatus;
   setIdentity(identity: EdgeIdentity): void;
+  /** Begins dialing. Required only when constructed with `deferConnect`; otherwise a no-op repeat. */
+  startNetworking(): void;
   send(ctx: Context, message: Message): Promise<void>;
   onMessage(listener: MessageListener): () => void;
   /**
@@ -67,10 +78,9 @@ export interface EdgeConnection extends Required<Lifecycle> {
 /**
  * Effect service tag for {@link EdgeConnection}.
  */
-export class EdgeConnectionService extends EffectContext.Tag('@dxos/edge-client/EdgeConnection')<
-  EdgeConnectionService,
-  EdgeConnection
->() {}
+export class EdgeConnectionService extends EffectContext.Service<EdgeConnectionService, EdgeConnection>()(
+  '@dxos/edge-client/EdgeConnection',
+) {}
 
 /**
  * Messenger client for EDGE:
@@ -87,6 +97,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
   });
 
   private readonly _messageListeners = new Set<MessageListener>();
+
+  /** Guards {@link startNetworking} so the connection loop is only ever started once. */
+  private _networkingStarted = false;
   private readonly _reconnectListeners = new Set<ReconnectListener>();
   private readonly _baseWsUrl: string;
   private readonly _baseHttpUrl: string;
@@ -203,13 +216,29 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   /**
+   * Begins dialing (and keeps reconnecting). Idempotent, so an owner that calls it explicitly and a
+   * later `open()` cannot start two connection loops. Returns without waiting for the socket.
+   */
+  startNetworking(): void {
+    if (this._networkingStarted) {
+      return;
+    }
+    this._networkingStarted = true;
+    this._persistentLifecycle.open().catch((err) => {
+      log.warn('Error while opening connection', { err });
+    });
+  }
+
+  /**
    * Open connection to messaging service.
    */
   protected override async _open(): Promise<void> {
     log('opening...', { info: this.info });
-    this._persistentLifecycle.open().catch((err) => {
-      log.warn('Error while opening connection', { err });
-    });
+    if (this._config.deferConnect) {
+      log('deferring connection until startNetworking');
+    } else {
+      this.startNetworking();
+    }
 
     // Notify about status changes (rtt, rate counters).
     scheduleTaskInterval(
@@ -342,23 +371,38 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
   }
 
+  /**
+   * Obtain the challenge from `/auth` and sign it into the WebSocket subprotocol auth header.
+   *
+   * This used to fire a GET at the `/ws/:identityDid/:peerKey` upgrade path itself and harvest the
+   * challenge off the resulting 401 — a request sent specifically to be rejected, which surfaced as
+   * a console error on every connect and as a routine auth failure in the server's audit trail.
+   * `/auth` answers the same challenge with a 200. The nonce is not bound to a path, so the
+   * challenge issued at `/auth` is equally valid for the upgrade request.
+   *
+   * Falls back to the old behaviour when `/auth` yields nothing, so this still connects to servers
+   * that predate the challenge endpoint.
+   */
   private async _createAuthHeader(path: string): Promise<string | undefined> {
-    const httpUrl = new URL(path, this._baseHttpUrl);
-    httpUrl.protocol = getEdgeUrlWithProtocol(this._baseWsUrl.toString(), 'http');
-    const response = await fetch(httpUrl, { method: 'GET' });
-    if (response.status === 401) {
-      return encodePresentationWsAuthHeader(await handleAuthChallenge(response, this._identity));
-    } else {
-      log.warn('no auth challenge from edge', { status: response.status, statusText: response.statusText });
-      return undefined;
+    const authentication = await authenticateViaChallengeEndpoint(this._baseHttpUrl, this._identity);
+    if (authentication) {
+      return encodePresentationWsAuthHeader(authentication.presentation);
     }
+
+    const response = await fetch(new URL(path, this._baseHttpUrl), { method: 'GET' });
+    // Gate on a parsed VP challenge, not merely on a 401. A 401 forwarded from upstream can carry
+    // an unrelated `WWW-Authenticate` (or none), and signing a challenge that isn't there would
+    // throw instead of degrading to an unauthenticated attempt.
+    const challenge = response.status === 401 ? await readAuthChallenge(response) : undefined;
+    if (challenge) {
+      return encodePresentationWsAuthHeader(await presentCredentialsForChallenge(this._identity, challenge));
+    }
+    log.warn('no auth challenge from edge', { status: response.status, statusText: response.statusText });
+    return undefined;
   }
 
   private _isActive = (connection: EdgeWsConnection) => connection === this._currentConnection;
 }
 
-const encodePresentationWsAuthHeader = (encodedPresentation: Uint8Array): string => {
-  // '=' and '/' characters are not allowed in the WebSocket subprotocol header.
-  const encodedToken = Buffer.from(encodedPresentation).toString('base64').replace(/=*$/, '').replaceAll('/', '|');
-  return `base64url.bearer.authorization.dxos.org.${encodedToken}`;
-};
+const encodePresentationWsAuthHeader = (encodedPresentation: Uint8Array): string =>
+  EdgeCredentialsHeaderCodec.encodeWebSocketProtocol(encodedPresentation);

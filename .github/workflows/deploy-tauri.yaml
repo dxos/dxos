@@ -165,13 +165,28 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           # IMPORTANT: Keep in-sync with .prototools
-          moon-version: '2.2.3'
+          moon-version: '2.4.5'
+          proto-version: '0.58.2'
 
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
-          cache: true
+          # The lone crate is composer-app's, so at the repo root rust-cache's `cargo metadata` finds no
+          # Cargo.toml; it keys on an empty lockfile hash and restores its own `~/.cargo/bin` snapshot over
+          # rustup's, leaving `cargo` a symlink to `rustup-init` ("unexpected argument 'metadata'"). Pointing
+          # it at the crate would fix the key but restore a `target/` any CI job can write to into a signed,
+          # notarized release — the same reason MOON_REMOTE_HOST is empty above.
+          cache: false
+
+      # `cargo metadata` is the first thing `tauri build`/`tauri ios init` run, ~10 min into the job.
+      # Assert it here so a toolchain that resolves to the wrong binary fails in a second, with the
+      # resolved path in the log, rather than as an opaque tauri error.
+      - name: Verify Rust toolchain
+        run: |
+          echo "cargo resolves to: $(command -v cargo)"
+          cargo metadata --no-deps --format-version 1 > /dev/null
+        working-directory: ./packages/apps/composer-app/src-tauri
 
       - name: Import Apple Developer Certificate
         if: matrix.os == 'depot-macos-latest'
@@ -361,16 +376,24 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           # IMPORTANT: Keep in-sync with .prototools
-          moon-version: '2.2.3'
+          moon-version: '2.4.5'
+          proto-version: '0.58.2'
 
       - name: Install stable toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
-          cache: true
+          # Disabled for the reasons spelled out in build_tauri's copy of this step.
+          cache: false
 
       - name: Install iOS target
         run: rustup target add aarch64-apple-ios
+
+      - name: Verify Rust toolchain
+        run: |
+          echo "cargo resolves to: $(command -v cargo)"
+          cargo metadata --no-deps --format-version 1 > /dev/null
+        working-directory: ./packages/apps/composer-app/src-tauri
 
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1

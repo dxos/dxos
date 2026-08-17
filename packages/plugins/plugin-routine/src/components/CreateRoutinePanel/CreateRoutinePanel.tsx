@@ -10,8 +10,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
-
-import * as RoutineCapabilities from '../../types/RoutineCapabilities';
+import { RoutineCapabilities } from '#types';
 
 export type CreateRoutinePanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override (primarily for stories/tests). Defaults to RoutineCapabilities.Template. */

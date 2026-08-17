@@ -11,10 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Observability } from '@dxos/observability';
 
 import { meta } from '#meta';
-
-import * as ObservabilityCapabilities from '../types/ObservabilityCapabilities';
-import * as ObservabilityOperation from '../types/ObservabilityOperation';
-import type * as Settings from '../types/Settings';
+import { ObservabilityCapabilities, ObservabilityOperation, Settings } from '#types';
 
 const handler: Operation.WithHandler<typeof ObservabilityOperation.Toggle> = ObservabilityOperation.Toggle.pipe(
   Operation.withHandler(

@@ -6,13 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
-import {
-  type AcceptInvitationRequest,
-  type AuthenticationRequest,
-  type CancelInvitationRequest,
-  type Invitation,
-  QueryInvitationsResponse,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { EffectEx } from '@dxos/effect';
+import { type Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
@@ -32,7 +27,7 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
   }
 
   ['InvitationsService.createInvitation'](request: Invitation): EffectStream.Stream<Invitation, Error> {
-    return EffectStream.async<Invitation, Error>((emit) => {
+    return EffectEx.streamFromEmitter<Invitation, Error>((emit) => {
       const ctx = Context.default();
       void this._invitationsManager
         .createInvitation(ctx, request)
@@ -49,8 +44,10 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
     });
   }
 
-  ['InvitationsService.acceptInvitation'](request: AcceptInvitationRequest): EffectStream.Stream<Invitation, Error> {
-    return EffectStream.async<Invitation, Error>((emit) => {
+  ['InvitationsService.acceptInvitation'](
+    request: InvitationsService.AcceptInvitationRequest,
+  ): EffectStream.Stream<Invitation, Error> {
+    return EffectEx.streamFromEmitter<Invitation, Error>((emit) => {
       const ctx = Context.default();
       const invitation = this._invitationsManager.acceptInvitation(ctx, request);
       invitation.subscribe(
@@ -62,14 +59,16 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
     });
   }
 
-  ['InvitationsService.authenticate'](request: AuthenticationRequest): Effect.Effect<void, Error> {
+  ['InvitationsService.authenticate'](request: InvitationsService.AuthenticationRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: () => this._invitationsManager.authenticate(request),
       catch: (error) => error as Error,
     });
   }
 
-  ['InvitationsService.cancelInvitation'](request: CancelInvitationRequest): Effect.Effect<void, Error> {
+  ['InvitationsService.cancelInvitation'](
+    request: InvitationsService.CancelInvitationRequest,
+  ): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: () => this._invitationsManager.cancelInvitation(request),
       catch: (error) => error as Error,
@@ -77,7 +76,7 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
   }
 
   ['InvitationsService.queryInvitations'](): EffectStream.Stream<QueryInvitationsResponse, Error> {
-    return EffectStream.async<QueryInvitationsResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<QueryInvitationsResponse, Error>((emit) => {
       const ctx = Context.default();
 
       // Push added invitations to the stream.

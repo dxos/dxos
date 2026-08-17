@@ -10,10 +10,9 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
+import { SpaceCapabilities, SpaceCapability, SpaceSchema } from '#types';
+
 import { SpaceOperationConfig } from '../operations/helpers';
-import * as SpaceCapabilities from '../types/SpaceCapabilities';
-import * as SpaceCapability from '../types/SpaceCapability';
-import * as SpaceSchema from '../types/SpaceSchema';
 import { makeCreateInvitationUrl } from './helpers';
 
 export * from './app-graph-builder';
@@ -62,6 +61,7 @@ export const Repair = Capability.lazyModule(
   },
   () => import('./repair'),
 );
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SpaceCapabilities.SettingsAtom],
 });

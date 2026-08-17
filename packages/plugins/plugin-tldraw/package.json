@@ -33,26 +33,31 @@
       "types": "./dist/types/src/hooks/index.d.ts",
       "default": "./dist/lib/hooks.mjs"
     },
-    "#model": {
-      "source": "./src/model/index.ts",
-      "types": "./dist/types/src/model/index.d.ts",
-      "default": "./dist/lib/model.mjs"
-    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
       "default": "./dist/lib/meta.mjs"
     },
+    "#model": {
+      "source": "./src/model/index.ts",
+      "types": "./dist/types/src/model/index.d.ts",
+      "default": "./dist/lib/model.mjs"
+    },
     "#plugin": {
-      "source": "./src/TldrawPlugin.tsx",
-      "types": "./dist/types/src/TldrawPlugin.d.ts",
-      "default": "./dist/lib/TldrawPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#testing": "./src/testing/index.ts",
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -60,6 +65,18 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     },
     "./Settings": {
       "source": "./src/types/Settings.ts",
@@ -81,22 +98,15 @@
       "types": "./dist/types/src/types/TldrawEvents.d.ts",
       "import": "./dist/lib/TldrawEvents.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./TldrawModel": {
+      "source": "./src/model/index.ts",
+      "types": "./dist/types/src/model/index.d.ts",
+      "import": "./dist/lib/model.mjs"
     },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./TldrawPlugin": {
+      "source": "./src/TldrawPlugin.ts",
+      "types": "./dist/types/src/TldrawPlugin.d.ts",
+      "import": "./dist/lib/TldrawPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -140,7 +150,6 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@tldraw/assets": "catalog:",
     "@tldraw/editor": "catalog:",
     "@tldraw/state": "catalog:",
@@ -157,7 +166,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@tldraw/store": "catalog:",

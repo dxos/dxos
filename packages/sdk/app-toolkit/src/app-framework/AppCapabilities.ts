@@ -4,16 +4,17 @@
 
 // @import-as-namespace
 
-import { Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
 import * as Schema$ from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
 import * as Capability$ from '@dxos/app-framework/Capability';
-import type { BuilderExtensions, GraphBuilder } from '@dxos/app-graph';
+import { BuilderExtensions } from '@dxos/app-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -93,10 +94,9 @@ export const Translator = Capability$.makeSingleton<Translator$>()('org.dxos.app
  * Effect service for the {@link Translator} capability, consumable via `yield* TranslatorService`
  * once {@link translatorLayer} is provided.
  */
-export class TranslatorService extends Context.Tag('@dxos/app-toolkit/TranslatorService')<
-  TranslatorService,
-  Translator$
->() {}
+export class TranslatorService extends Context.Service<TranslatorService, Translator$>()(
+  '@dxos/app-toolkit/TranslatorService',
+) {}
 
 /**
  * Layer that resolves {@link TranslatorService} from the {@link Translator} capability.
@@ -160,7 +160,7 @@ export type Settings = {
   prefix: string;
   // Settings are persisted as plain atoms, so the schema is always context-free
   // (`R = never`); this lets a schema-driven form decode/validate it directly.
-  schema: Schema$.Schema.AnyNoContext;
+  schema: Schema$.Codec<any, any, never, never>;
   atom: Atom.Writable<any>;
 };
 
@@ -328,17 +328,28 @@ export const NavigationTargetResolver = Capability$.make<NavigationTargetResolve
 );
 
 /**
+ * What a {@link NavigationTargetLoader} was able to determine about a target.
+ *
+ * Three-valued because the caller's responses to a missing node are opposites: it waits for one that
+ * is merely late and fails fast on one that is absent. `absent` is therefore reserved for a store
+ * that actually answered — an unreachable edge or an unparseable id is `unknown`.
+ * @category Capability
+ */
+export type NavigationTargetVerdict = 'exists' | 'absent' | 'unknown';
+
+/**
  * Loads/verifies a navigation target by its `(spaceId, entityId)` so graph resolution can materialize
  * its node. Contributed by the plugin that owns object storage (plugin-client), consumed by layout
  * plugins — this is the abstraction that keeps layout plugins from depending on the client for
  * loading. `load` loads the object into local ECHO when present locally (so a URL-driven restore
- * materializes the plank's node), and resolves `true` if the object exists locally or, as a fallback,
- * remotely. A remote-only object resolves `true` but cannot render until it replicates locally.
+ * materializes the plank's node), and resolves `exists` if the object is present locally or, as a
+ * fallback, remotely. A remote-only object resolves `exists` but cannot render until it replicates
+ * locally.
  * @category Capability
  */
 export type NavigationTargetLoader = Readonly<{
   id: string;
-  load: (target: { spaceId: string; entityId: string }) => Effect$.Effect<boolean>;
+  load: (target: { spaceId: string; entityId: string }) => Effect$.Effect<NavigationTargetVerdict>;
 }>;
 
 export const NavigationTargetLoader = Capability$.make<NavigationTargetLoader>()(

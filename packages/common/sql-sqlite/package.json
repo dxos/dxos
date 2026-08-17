@@ -65,12 +65,10 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/effect": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/wa-sqlite": "catalog:",
-    "@effect/experimental": "catalog:",
-    "@effect/platform": "catalog:",
-    "@effect/sql": "catalog:",
     "@effect/sql-sqlite-bun": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
     "effect": "catalog:"

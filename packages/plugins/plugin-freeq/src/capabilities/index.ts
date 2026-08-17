@@ -3,6 +3,7 @@
 //
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 
@@ -17,3 +18,4 @@ export const ChannelBackend = Capability.lazyModule(
   },
   () => import('./channel-backend'),
 );
+export const Schema = AppCapability.schema(() => import('./schema'));

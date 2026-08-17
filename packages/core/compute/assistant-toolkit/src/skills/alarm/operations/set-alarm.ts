@@ -5,7 +5,7 @@
 import * as Clock from 'effect/Clock';
 import * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 
 import { Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
@@ -22,12 +22,12 @@ export default SetAlarm.pipe(
     Effect.fn(function* ({ in: inDuration, at, message }) {
       const now = yield* Clock.currentTimeMillis;
       const resolved = resolveWakeAt({ in: inDuration, at }, now);
-      if (Either.isLeft(resolved)) {
-        return resolved.left;
+      if (Result.isFailure(resolved)) {
+        return resolved.failure;
       }
-      const wakeAt = DateTime.unsafeMake(resolved.right);
+      const wakeAt = DateTime.makeUnsafe(resolved.success);
       yield* Harness.setAlarm({ at: wakeAt, message: message ?? null });
-      return `Alarm scheduled to wake you at ${new Date(resolved.right).toISOString()}.`;
+      return `Alarm scheduled to wake you at ${new Date(resolved.success).toISOString()}.`;
     }),
   ),
 );

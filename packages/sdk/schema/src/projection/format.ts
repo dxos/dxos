@@ -3,6 +3,8 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
+import type * as Types from 'effect/Types';
 
 import { Format } from '@dxos/echo';
 import { DecimalPrecision, SelectOption, TypeEnum } from '@dxos/echo/Format';
@@ -13,21 +15,21 @@ import { SchemaEx } from '@dxos/effect';
  * Base schema.
  */
 export const BaseProperty = Schema.Struct({
-  property: SchemaEx.JsonProp.annotations({
+  property: SchemaEx.JsonProp.annotate({
     title: 'Property',
     description: 'Property name',
   }),
 
   // TODO(wittjosiah): Rename label?
   title: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Label',
       description: 'Property label',
     }),
   ),
 
   description: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       title: 'Description',
       description: 'Property description',
     }),
@@ -37,16 +39,15 @@ export const BaseProperty = Schema.Struct({
 export type BaseProperty = Schema.Schema.Type<typeof BaseProperty>;
 
 const extend = <Fields extends Schema.Struct.Fields>(format: Format.TypeFormat, type: TypeEnum, fields?: Fields) =>
-  Schema.extend(
-    BaseProperty,
-    Schema.Struct({
+  BaseProperty.mapFields(
+    Struct.assign({
       type: Schema.Literal(type),
-      format: Schema.Literal(format).annotations({
+      format: Schema.Literal(format).annotate({
         title: 'Type format',
       }),
       ...fields,
     }),
-  ).pipe(Schema.mutable);
+  ).mapFields(Struct.map(Schema.mutableKey));
 
 interface FormatSchemaCommon extends BaseProperty {
   type: TypeEnum;
@@ -62,14 +63,13 @@ interface FormatSchemaCommon extends BaseProperty {
  * Map of schema definitions.
  */
 // TODO(burdon): Translations?
-export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchemaCommon>> = {
-  [Format.TypeFormat.None]: Schema.extend(
-    BaseProperty,
-    Schema.Struct({
-      type: Schema.Enums(TypeEnum),
-      format: Schema.Literal(Format.TypeFormat.None) as Schema.Schema<Format.TypeFormat>,
+export const formatToSchema: Record<Format.TypeFormat, Schema.Codec<FormatSchemaCommon, any>> = {
+  [Format.TypeFormat.None]: BaseProperty.mapFields(
+    Struct.assign({
+      type: Schema.Enum(TypeEnum),
+      format: Schema.Literal(Format.TypeFormat.None) as Schema.Codec<Format.TypeFormat, any>,
     }),
-  ).pipe(Schema.mutable),
+  ).mapFields(Struct.map(Schema.mutableKey)),
 
   //
   // Scalars
@@ -79,12 +79,12 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
   [Format.TypeFormat.Number]: extend(Format.TypeFormat.Number, TypeEnum.Number),
   [Format.TypeFormat.Boolean]: extend(Format.TypeFormat.Boolean, TypeEnum.Boolean),
   [Format.TypeFormat.Ref]: extend(Format.TypeFormat.Ref, TypeEnum.Ref, {
-    referenceSchema: Schema.NonEmptyString.annotations({
+    referenceSchema: Schema.NonEmptyString.annotate({
       title: 'Record type',
       description: 'Name of the record type',
     }),
     referencePath: Schema.optional(
-      SchemaEx.JsonProp.annotations({
+      SchemaEx.JsonProp.annotate({
         title: 'Lookup property',
         description: 'Referenced property',
       }),
@@ -113,14 +113,14 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
   //
 
   [Format.TypeFormat.SingleSelect]: extend(Format.TypeFormat.SingleSelect, TypeEnum.String, {
-    options: Schema.Array(SelectOption).annotations({
+    options: Schema.Array(SelectOption).annotate({
       title: 'Options',
       description: 'Available choices',
     }),
   }),
 
   [Format.TypeFormat.MultiSelect]: extend(Format.TypeFormat.MultiSelect, TypeEnum.Object, {
-    options: Schema.Array(SelectOption).annotations({
+    options: Schema.Array(SelectOption).annotate({
       title: 'Options',
       description: 'Available choices',
     }),
@@ -133,7 +133,7 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
   [Format.TypeFormat.Currency]: extend(Format.TypeFormat.Currency, TypeEnum.Number, {
     multipleOf: Schema.optional(DecimalPrecision),
     currency: Schema.optional(
-      Schema.String.annotations({
+      Schema.String.annotate({
         title: 'Currency code',
         description: 'ISO 4217 currency code.',
       }),
@@ -172,7 +172,7 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
  * This is the schema used by the ViewEditor's Form.
  * It is mapped to/from the View's Field AND Schema properties via the ViewProjection.
  */
-export const PropertySchema = Schema.Union(
+export const PropertySchema = Schema.Union([
   formatToSchema[Format.TypeFormat.None],
   formatToSchema[Format.TypeFormat.String],
   formatToSchema[Format.TypeFormat.Number],
@@ -220,9 +220,9 @@ export const PropertySchema = Schema.Union(
   //
 
   formatToSchema[Format.TypeFormat.GeoPoint],
-);
+]);
 
-export interface PropertyType extends Schema.Simplify<Schema.Schema.Type<typeof PropertySchema>> {}
+export interface PropertyType extends Types.Simplify<Schema.Schema.Type<typeof PropertySchema>> {}
 
 export const formatToAdditionalPropertyAttributes: Record<Format.TypeFormat, Partial<JsonSchemaType>> = {
   [Format.TypeFormat.None]: {},
@@ -263,7 +263,7 @@ export const formatToAdditionalPropertyAttributes: Record<Format.TypeFormat, Par
   },
 };
 
-export const getFormatSchema = (format?: Format.TypeFormat): Schema.Schema.AnyNoContext => {
+export const getFormatSchema = (format?: Format.TypeFormat): Schema.Codec<any, any> => {
   if (format === undefined) {
     return formatToSchema[Format.TypeFormat.None];
   }

@@ -59,6 +59,109 @@ describe('EdgeHttpClient.anthropicAiRequest', () => {
   });
 });
 
+describe('EdgeHttpClient auth refresh', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  const identity = {
+    peerKey: 'peer-key',
+    identityDid: 'did:halo:test',
+    presentCredentials: async (): Promise<Presentation> => ({}),
+  };
+
+  const makeFetchMock = (authData: Record<string, unknown>) =>
+    vi.fn(async (input: any, _init?: RequestInit) => {
+      const url = String(input instanceof URL ? input : (input.url ?? input));
+      if (url.endsWith('/auth')) {
+        return new Response(JSON.stringify({ success: true, data: authData }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(null, { status: 200 });
+    });
+
+  const authCalls = (fetchMock: { mock: { calls: unknown[][] } }) =>
+    fetchMock.mock.calls.filter((call) => String(call[0]).endsWith('/auth')).length;
+
+  test('re-authenticates via /auth before the advertised TTL elapses', async ({ expect }) => {
+    vi.useFakeTimers();
+    const fetchMock = makeFetchMock({ challenge: 'Y2hhbGxlbmdl', expiresInMs: 300_000 });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    client.setIdentity(identity);
+
+    await client.putBlob(Context.default(), 'one', new Uint8Array([1]), { contentType: 'application/octet-stream' });
+    expect(authCalls(fetchMock)).toBe(1);
+
+    // Inside the window the cached header is reused.
+    vi.advanceTimersByTime(60_000);
+    await client.putBlob(Context.default(), 'two', new Uint8Array([2]), { contentType: 'application/octet-stream' });
+    expect(authCalls(fetchMock)).toBe(1);
+
+    // Past the refresh point (TTL minus margin) a fresh challenge is fetched — no 401 involved.
+    vi.advanceTimersByTime(300_000);
+    await client.putBlob(Context.default(), 'three', new Uint8Array([3]), { contentType: 'application/octet-stream' });
+    expect(authCalls(fetchMock)).toBe(2);
+  });
+
+  test('an identity swap mid-prefetch discards the stale header', async ({ expect }) => {
+    let releaseAuth = () => {};
+    const gate = new Promise<void>((resolve) => {
+      releaseAuth = resolve;
+    });
+    let signalAuthStarted = () => {};
+    const authStarted = new Promise<void>((resolve) => {
+      signalAuthStarted = resolve;
+    });
+    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
+      const url = String(input instanceof URL ? input : (input.url ?? input));
+      if (url.endsWith('/auth')) {
+        signalAuthStarted();
+        await gate;
+        return new Response(JSON.stringify({ success: true, data: { challenge: 'Y2hhbGxlbmdl' } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(null, { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    client.setIdentity(identity);
+    const inFlight = client.putBlob(Context.default(), 'one', new Uint8Array([1]), {
+      contentType: 'application/octet-stream',
+    });
+    // Swap identities only once the prefetch is provably parked inside the gated /auth round trip.
+    await authStarted;
+    client.setIdentity({ ...identity, identityDid: 'did:halo:other' });
+    releaseAuth();
+    await inFlight;
+
+    // The stale presentation was discarded: the request went out without it.
+    const putCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/api/file/one'));
+    expect((putCall![1]?.headers as Record<string, string> | undefined)?.Authorization).toBeUndefined();
+  });
+
+  test('no advertised TTL means no proactive refresh', async ({ expect }) => {
+    vi.useFakeTimers();
+    const fetchMock = makeFetchMock({ challenge: 'Y2hhbGxlbmdl' });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    client.setIdentity(identity);
+
+    await client.putBlob(Context.default(), 'one', new Uint8Array([1]), { contentType: 'application/octet-stream' });
+    vi.advanceTimersByTime(3_600_000);
+    await client.putBlob(Context.default(), 'two', new Uint8Array([2]), { contentType: 'application/octet-stream' });
+    expect(authCalls(fetchMock)).toBe(1);
+  });
+});
+
 describe('EdgeHttpClient blobs', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -74,13 +177,21 @@ describe('EdgeHttpClient blobs', () => {
     const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
       if (url.endsWith('/auth')) {
-        return new Response(null, { status: 200 });
+        return new Response(JSON.stringify({ success: true, data: { challenge: 'Y2hhbGxlbmdl' } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
       return new Response(null, { status: 200 });
     });
     vi.stubGlobal('fetch', fetchMock);
 
     const client = new EdgeHttpClient('https://edge.example.com');
+    client.setIdentity({
+      peerKey: 'peer-key',
+      identityDid: 'did:halo:test',
+      presentCredentials: async (): Promise<Presentation> => ({}),
+    });
     const bytes = new Uint8Array([1, 2, 3]);
     await client.putBlob(Context.default(), 'abc123', bytes, { contentType: 'application/octet-stream' });
 
@@ -126,6 +237,40 @@ describe('EdgeHttpClient blobs', () => {
     expect(fileCalls.length).toBe(2);
     expect((fileCalls[1][1]?.headers as Record<string, string>).Authorization).toMatch(/^VerifiablePresentation/);
   });
+
+  // A 401 whose `WWW-Authenticate` yields nothing signable must surface as itself. Gating on
+  // header presence alone sent these through the auth path, where the missing challenge threw and
+  // was rewrapped as a generic 'Error processing request.', hiding the actual status.
+  for (const { name, header } of [
+    { name: 'an unrelated scheme', header: 'Bearer realm="upstream"' },
+    // Edge emits this when its server keypair is unconfigured.
+    { name: 'an empty VP challenge', header: 'VerifiablePresentation challenge=""' },
+  ]) {
+    test(`a 401 carrying ${name} is not retried through the auth path`, async ({ expect }) => {
+      const identity: EdgeIdentity = {
+        peerKey: 'peer-key',
+        identityDid: 'did:halo:test',
+        presentCredentials: async (): Promise<Presentation> => ({}),
+      };
+
+      const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+        if (requestUrl(input).endsWith('/auth')) {
+          return new Response(null, { status: 404 });
+        }
+        return new Response(null, { status: 401, headers: { 'WWW-Authenticate': header } });
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      const client = new EdgeHttpClient('https://edge.example.com');
+      client.setIdentity(identity);
+
+      await expect(client.getBlob(Context.default(), 'abc123')).rejects.toThrow(/HTTP code 401/);
+
+      // Exactly one attempt at the resource: no auth retry.
+      const fileCalls = fetchMock.mock.calls.filter((call) => String(call[0]).includes('/api/file/abc123'));
+      expect(fileCalls.length).toBe(1);
+    });
+  }
 
   test('getBlob returns bytes on success', async ({ expect }) => {
     const fetchMock = vi.fn(async (input: any) => {
@@ -231,3 +376,7 @@ describe('EdgeHttpClient api key', () => {
     expect((putCall![1]?.headers as Record<string, string>).Authorization).toBe('Bearer secret-key');
   });
 });
+
+/** Narrow a `fetch` input to its URL string, covering all three shapes the contract allows. */
+const requestUrl = (input: RequestInfo | URL): string =>
+  input instanceof URL ? input.toString() : typeof input === 'string' ? input : input.url;

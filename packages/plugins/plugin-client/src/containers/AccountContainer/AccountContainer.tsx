@@ -2,21 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtom, useAtomSet } from '@effect-atom/atom-react';
+import { useAtom, useAtomSet } from '@effect/atom-react/Hooks';
 import React, { type FormEvent, useCallback, useState } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Context } from '@dxos/context';
 import { useIdentity } from '@dxos/halo-react';
-import { Button, Icon, IconButton, Input, Message, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Icon, IconButton, Input, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+import { ClientCapabilities } from '#types';
 
 import { RESET_DIALOG } from '../../constants';
 import { useAccountUrl, useHubHttpClient } from '../../hooks';
-import * as ClientCapabilities from '../../types/ClientCapabilities';
 
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
 
@@ -120,12 +120,12 @@ export const AccountContainer = () => {
           <Form.Section title={t('account-section.title')} description={t('account-section.description')}>
             {accountState === 'loading' ? null : accountState === 'missing' ? (
               <>
-                <Message.Root valence='warning'>
-                  <Message.Content>
-                    <Message.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Message.Title>
-                    <Message.Body>{t('no-edge-access.description')}</Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence='warning'>
+                  <Banner.Content>
+                    <Banner.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Banner.Title>
+                    <Banner.Body>{t('no-edge-access.description')}</Banner.Body>
+                  </Banner.Content>
+                </Banner.Root>
                 <Form.Row label={t('request-access.label')} description={t('request-access.description')}>
                   {requestSubmitted ? (
                     <span className='text-sm text-description'>{t('access-request-submitted.message')}</span>
@@ -149,12 +149,12 @@ export const AccountContainer = () => {
                 </Form.Row>
               </>
             ) : accountState === 'error' && !account ? (
-              <Message.Root valence='error'>
-                <Message.Content>
-                  <Message.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Message.Title>
-                  <Message.Body>{t('account-offline.description')}</Message.Body>
-                </Message.Content>
-              </Message.Root>
+              <Banner.Root valence='error'>
+                <Banner.Content>
+                  <Banner.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Banner.Title>
+                  <Banner.Body>{t('account-offline.description')}</Banner.Body>
+                </Banner.Content>
+              </Banner.Root>
             ) : account ? (
               <>
                 <Form.Row label={t('email.label')} description={account.email}>

@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { afterEach, beforeEach, describe, test } from 'vitest';
@@ -67,7 +66,7 @@ describe('Cursor.layer', () => {
     });
 
     await EffectEx.runPromise(
-      Cursor.commit(Chunk.fromIterable([makeUnit(50), makeUnit(40)])).pipe(
+      Cursor.commit([makeUnit(50), makeUnit(40)]).pipe(
         Effect.provide(Cursor.layer({ cursor, feed, foreignKeySource: 'test', maxKey: 0, stats: { newMessages: 0 } })),
         Effect.provide(Database.layer(db)),
       ),
@@ -92,7 +91,7 @@ describe('Cursor.layer', () => {
     });
 
     await EffectEx.runPromise(
-      Cursor.commit(Chunk.fromIterable([makeUnit(50), makeUnit(40)])).pipe(
+      Cursor.commit([makeUnit(50), makeUnit(40)]).pipe(
         Effect.provide(
           Cursor.layer({
             cursor,
@@ -112,7 +111,7 @@ describe('Cursor.layer', () => {
     expect(cursor.min).toBe('40');
 
     await EffectEx.runPromise(
-      Cursor.commit(Chunk.fromIterable([makeUnit(60), makeUnit(70)])).pipe(
+      Cursor.commit([makeUnit(60), makeUnit(70)]).pipe(
         Effect.provide(
           Cursor.layer({
             cursor,
@@ -336,6 +335,44 @@ describe('token accessors', () => {
     expect(Cursor.readToken(cursor)).toBeUndefined();
   });
 
+  test('writeSyncState advances the token and tag heads together', async ({ expect }) => {
+    const cursor = await makeExternalCursor();
+    expect(Cursor.readTagHeads(cursor)).toBeUndefined();
+
+    Cursor.writeSyncState(cursor, { token: 'history-1', tagHeads: ['head-a'] });
+    expect(Cursor.readToken(cursor)).toBe('history-1');
+    expect([...Cursor.readTagHeads(cursor)!]).toEqual(['head-a']);
+
+    Cursor.writeSyncState(cursor, { token: 'history-2', tagHeads: ['head-b', 'head-c'] });
+    expect(Cursor.readToken(cursor)).toBe('history-2');
+    expect([...Cursor.readTagHeads(cursor)!]).toEqual(['head-b', 'head-c']);
+  });
+
+  test('writeSyncState leaves an omitted field untouched', async ({ expect }) => {
+    const cursor = await makeExternalCursor();
+    Cursor.writeSyncState(cursor, { token: 'history-1', tagHeads: ['head-a'] });
+
+    // A provider with no delta token still records heads, and vice versa.
+    Cursor.writeSyncState(cursor, { tagHeads: ['head-b'] });
+    expect(Cursor.readToken(cursor)).toBe('history-1');
+    expect([...Cursor.readTagHeads(cursor)!]).toEqual(['head-b']);
+
+    Cursor.writeSyncState(cursor, { token: 'history-2' });
+    expect(Cursor.readToken(cursor)).toBe('history-2');
+    expect([...Cursor.readTagHeads(cursor)!]).toEqual(['head-b']);
+  });
+
+  test('tag heads survive a token clear — a stale delta does not invalidate the base', async ({ expect }) => {
+    const cursor = await makeExternalCursor();
+    Cursor.writeSyncState(cursor, { token: 'history-1', tagHeads: ['head-a'] });
+
+    // Gmail answers 404 for a stale historyId and the run falls back to a window scan; the tag base
+    // is still a valid description of what the index looked like, so it must not be dropped with it.
+    Cursor.clearToken(cursor);
+    expect(Cursor.readToken(cursor)).toBeUndefined();
+    expect([...Cursor.readTagHeads(cursor)!]).toEqual(['head-a']);
+  });
+
   test('the token is preserved alongside snapshots (both are opaque spec fields)', async ({ expect }) => {
     const cursor = await makeExternalCursor();
     Cursor.writeToken(cursor, 'state-abc');
@@ -444,7 +481,7 @@ describe('commit with objectless units', () => {
     };
 
     await EffectEx.runPromise(
-      Cursor.commit(Chunk.fromIterable([retagUnit])).pipe(
+      Cursor.commit([retagUnit]).pipe(
         Effect.provide(
           Cursor.layer({
             cursor,
@@ -485,7 +522,7 @@ describe('commit with objectless units', () => {
     const retagUnit: Cursor.CommitUnit = { foreignId: 'id-existing', key: 0 };
 
     await EffectEx.runPromise(
-      Cursor.commit(Chunk.fromIterable([appendUnit, retagUnit])).pipe(
+      Cursor.commit([appendUnit, retagUnit]).pipe(
         Effect.provide(
           Cursor.layer({
             cursor,

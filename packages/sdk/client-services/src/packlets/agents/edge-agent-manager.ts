@@ -30,10 +30,9 @@ export type EdgeAgentManagerConfig = {};
 /**
  * Effect service tag for {@link EdgeAgentManager}.
  */
-export class EdgeAgentManagerService extends EffectContext.Tag('@dxos/client-services/EdgeAgentManager')<
-  EdgeAgentManagerService,
-  EdgeAgentManager
->() {}
+export class EdgeAgentManagerService extends EffectContext.Service<EdgeAgentManagerService, EdgeAgentManager>()(
+  '@dxos/client-services/EdgeAgentManager',
+) {}
 
 export class EdgeAgentManager extends Resource {
   public agentStatusChanged = new Event<EdgeAgentStatus>();

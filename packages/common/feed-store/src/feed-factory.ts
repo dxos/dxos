@@ -38,18 +38,16 @@ export type FeedOptions = HypercoreOptions & {
 /**
  * Effect service tag for {@link FeedFactory}.
  */
-export class FeedFactoryService extends EffectContext.Tag('@dxos/feed-store/FeedFactory')<
-  FeedFactoryService,
-  FeedFactory<any>
->() {}
+export class FeedFactoryService extends EffectContext.Service<FeedFactoryService, FeedFactory<any>>()(
+  '@dxos/feed-store/FeedFactory',
+) {}
 
 /**
  * Root directory for hypercore feed files.
  */
-export class FeedStorageDirectoryService extends EffectContext.Tag('@dxos/feed-store/FeedStorageDirectory')<
-  FeedStorageDirectoryService,
-  Directory
->() {}
+export class FeedStorageDirectoryService extends EffectContext.Service<FeedStorageDirectoryService, Directory>()(
+  '@dxos/feed-store/FeedStorageDirectory',
+) {}
 
 /**
  * Hypercore factory.

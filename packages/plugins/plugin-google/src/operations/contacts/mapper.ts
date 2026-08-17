@@ -5,7 +5,8 @@
 import { Obj } from '@dxos/echo';
 import { Person } from '@dxos/types';
 
-import { GoogleContacts } from '../../apis';
+import { GoogleContacts } from '#apis';
+
 import { GOOGLE_INTEGRATION_SOURCE } from '../../constants';
 
 /**

@@ -17,7 +17,7 @@ export const SyncIssues = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    team: Schema.String.annotations({
+    team: Schema.String.annotate({
       description: 'Linear team id.',
     }),
   }),

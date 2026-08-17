@@ -3,4 +3,5 @@
 //
 
 export * as AccessToken from './AccessToken';
+export * as Connection from './Connection';
 export * as Cursor from './Cursor';

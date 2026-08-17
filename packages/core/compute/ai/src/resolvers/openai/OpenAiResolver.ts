@@ -3,9 +3,9 @@
 //
 
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
-import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
+import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { DXN } from '@dxos/keys';
 
@@ -26,7 +26,7 @@ export const make = () =>
         Record<DXN.DXN, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>
       > = {};
       for (const model of Model.forProvider(Provider.openai.id)) {
-        modelMap[model.id] = yield* OpenAiLanguageModel.model(model.backend);
+        modelMap[model.id] = yield* OpenAiLanguageModel.model(model.backend).captureRequirements;
       }
       return modelMap;
     }),

@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { XMLParser } from 'fast-xml-parser';
 
 import { normalizeText } from '@dxos/markdown';
 
-import * as Subscription from '../../types/Subscription';
+import { Subscription } from '#types';
+
 import { decodeEntities } from '../../util/text';
 import { type FeedFetcher, FeedFetchError, type FetchResult } from './feed-fetcher';
 import { getText } from './http';

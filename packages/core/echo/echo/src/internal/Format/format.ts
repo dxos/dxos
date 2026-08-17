@@ -31,7 +31,7 @@ export namespace Format {
   export const Hostname = StringUtil.Hostname;
   export const Regex = StringUtil.Regex;
   export const URL = StringUtil.URL;
-  export const UUID = Schema.UUID;
+  export const UUID = Schema.String.check(Schema.isUUID());
 
   // Numbers
   // TODO(burdon): BigInt.

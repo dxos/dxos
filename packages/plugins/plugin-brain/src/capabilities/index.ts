@@ -11,7 +11,7 @@ import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 
-import * as BrainCapabilities from '../types/BrainCapabilities';
+import { BrainCapabilities } from '#types';
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
@@ -32,14 +32,19 @@ export const Settings = AppCapability.settings(() => import('./settings'), {
   activatesOn: ActivationEvents.Idle,
   provides: [BrainCapabilities.Settings],
 });
-export const MailboxAction = Capability.lazyModule(
-  'MailboxAction',
+export const MailboxProcessor = Capability.lazyModule(
+  'MailboxProcessor',
   {
     requires: [Capabilities.AtomRegistry],
-    provides: [InboxCapabilities.MailboxAction],
+    provides: [InboxCapabilities.MailboxProcessor],
     activatesOn: InboxEvents.Start,
   },
-  () => import('./mailbox-action'),
+  () => import('./mailbox-processor'),
+);
+export const ReplyGenerator = Capability.lazyModule(
+  'ReplyGenerator',
+  { provides: [InboxCapabilities.ReplyGenerator], activatesOn: InboxEvents.Start },
+  () => import('./reply-generator'),
 );
 export const ProjectTemplates = Capability.lazyModule(
   'ProjectTemplates',

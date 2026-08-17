@@ -3,18 +3,18 @@
 //
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
-import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { DebugPlugin } from '@dxos/plugin-debug/plugin';
-import { DevtoolsPlugin } from '@dxos/plugin-devtools/plugin';
-import { GooglePlugin } from '@dxos/plugin-google/plugin';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
-import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
-import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
-import { ReviewPlugin } from '@dxos/plugin-review/plugin';
-import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
-import { TasksPlugin } from '@dxos/plugin-tasks/plugin';
-import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
+import * as DebugPlugin from '@dxos/plugin-debug/DebugPlugin';
+import * as DevtoolsPlugin from '@dxos/plugin-devtools/DevtoolsPlugin';
+import * as GooglePlugin from '@dxos/plugin-google/GooglePlugin';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
+import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
+import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { isTruthy } from '@dxos/util';
 
 import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
@@ -43,7 +43,7 @@ export const getDefaults = ({ isDev }: PluginConfig): string[] =>
     .flat();
 
 /**
- * Minimal plugin registry for fast dev startup (`serve-min`, DX_PLUGIN_SET=minimal):
+ * Minimal plugin registry for fast dev startup (opt-in via DX_PLUGIN_SET=minimal):
  * core infrastructure + Assistant, Debug, Devtools, Google, Inbox, Markdown, Preview,
  * Projects, Review, Routine, Tasks, and Thread. Google is the Inbox's mail provider —
  * a mailbox is inert without one, and the provider is a separate plugin.
@@ -52,17 +52,17 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
   const { logStore } = config;
   return [
     ...getCorePlugins(config),
-    AssistantPlugin(),
-    DebugPlugin({ logStore }),
-    DevtoolsPlugin(),
-    GooglePlugin(),
-    InboxPlugin(),
-    MarkdownPlugin(),
-    TasksPlugin(),
-    PreviewPlugin(),
-    ProjectsPlugin(),
-    RoutinePlugin(),
-    ThreadPlugin(),
-    ReviewPlugin(),
+    AssistantPlugin.make(),
+    DebugPlugin.make({ logStore }),
+    DevtoolsPlugin.make(),
+    GooglePlugin.make(),
+    InboxPlugin.make(),
+    MarkdownPlugin.make(),
+    TasksPlugin.make(),
+    PreviewPlugin.make(),
+    ProjectsPlugin.make(),
+    RoutinePlugin.make(),
+    ThreadPlugin.make(),
+    ReviewPlugin.make(),
   ];
 };

@@ -12,6 +12,9 @@ runtime:
       dataRoot: /tmp/dx/run
 
   services:
+    # The account commands resolve the hub from here on node, where nothing sets `DX_HUB_URL`.
+    hub:
+      url: https://hub-staging.dxos.workers.dev/
     edge:
       url: https://edge.dxos.workers.dev/
     iceProviders:

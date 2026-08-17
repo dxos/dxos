@@ -20,6 +20,7 @@
     "@babel/parser": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-claude": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/storybook-addon-logger": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

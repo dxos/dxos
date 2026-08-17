@@ -8,21 +8,20 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import * as Provider from '../types/Provider';
-import * as Search from '../types/Search';
+import { Provider, Search } from '#types';
 
 /** Input schema for creating a Search; types the `props` passed to createObject. */
 const CreateSearchSchema = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
 });
 
 /** Input schema for creating a Provider; types the `props` passed to createObject. */
 const CreateProviderSchema = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-  url: Schema.optional(Schema.String.annotations({ title: 'URL' })),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  url: Schema.optional(Schema.String.annotate({ title: 'URL' })),
 });
 
 export default Capability.makeModule(

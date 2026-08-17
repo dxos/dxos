@@ -30,14 +30,19 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/GitHubPlugin.ts",
-      "types": "./dist/types/src/GitHubPlugin.d.ts",
-      "default": "./dist/lib/GitHubPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -47,16 +52,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./GitHubEvents": {
       "source": "./src/types/GitHubEvents.ts",
       "types": "./dist/types/src/types/GitHubEvents.d.ts",
@@ -67,7 +68,11 @@
       "types": "./dist/types/src/types/GitHubOperation.d.ts",
       "import": "./dist/lib/GitHubOperation.mjs"
     },
-    "./package.json": "./package.json"
+    "./GitHubPlugin": {
+      "source": "./src/GitHubPlugin.ts",
+      "types": "./dist/types/src/GitHubPlugin.d.ts",
+      "import": "./dist/lib/GitHubPlugin.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -99,7 +104,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

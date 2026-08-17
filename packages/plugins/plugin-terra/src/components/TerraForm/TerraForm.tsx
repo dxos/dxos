@@ -3,12 +3,13 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useCallback } from 'react';
 
 import { IconButton, Input, Slider } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
-import * as Terra from '../../types/Terra';
+import { Terra } from '#types';
 
 export type TerraFormProps = {
   config: Terra.TerraConfig;
@@ -32,8 +33,8 @@ const SLIDER_SPECS: Record<SliderKey, SliderSpec> = {
   resolution: { min: 64, max: 512, step: 64, decimals: 0, label: 'Resolution' },
 };
 
-const FORM_SCHEMA = Terra.TerraConfig.pipe(
-  Schema.pick('seed', 'waterLevel', 'elevationScale', 'mountainScale', 'treeDensity', 'resolution'),
+const FORM_SCHEMA = Terra.TerraConfig.mapFields(
+  Struct.pick(['seed', 'waterLevel', 'elevationScale', 'mountainScale', 'treeDensity', 'resolution']),
 );
 
 type TerraFormValues = Schema.Schema.Type<typeof FORM_SCHEMA>;

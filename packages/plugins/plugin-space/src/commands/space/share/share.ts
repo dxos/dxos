@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import type * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import {
   CommandConfig,
@@ -55,7 +55,7 @@ export const handler = Effect.fn(function* ({
           const authCode = invitation.authCode!;
 
           // Copy auth code to clipboard
-          yield* copyToClipboard(authCode).pipe(Effect.catchAll(() => Effect.void));
+          yield* copyToClipboard(authCode).pipe(Effect.catch(() => Effect.void));
 
           if (!json) {
             yield* Console.log(`\nSecret: ${authCode} (copied to clipboard)\n`);
@@ -64,7 +64,7 @@ export const handler = Effect.fn(function* ({
           if (open) {
             const url = new URL(host);
             url.searchParams.append('spaceInvitationCode', invitationCode);
-            yield* openBrowser(url.toString()).pipe(Effect.catchAll(() => Effect.void));
+            yield* openBrowser(url.toString()).pipe(Effect.catch(() => Effect.void));
           } else if (!json) {
             yield* Console.log(`\nInvitation: ${invitationCode}\n`);
           }
@@ -99,11 +99,9 @@ export const share = Command.make(
   'share',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    multiple: Options.boolean('multiple', { ifPresent: true }).pipe(
-      Options.withDescription('Create a multi-use invitation.'),
-    ),
-    open: Options.boolean('open', { ifPresent: true }).pipe(Options.withDescription('Open browser with invitation.')),
-    host: Options.text('host').pipe(
+    multiple: Options.boolean('multiple').pipe(Options.withDescription('Create a multi-use invitation.')),
+    open: Options.boolean('open').pipe(Options.withDescription('Open browser with invitation.')),
+    host: Options.string('host').pipe(
       Options.withDescription('Application Host URL.'),
       Options.withDefault('https://composer.space'),
     ),

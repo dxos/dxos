@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import type * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 
-import * as Connection from '../../types/Connection';
-import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { ConnectorSpec } from '#types';
+
 import { ensureSyncTrigger, isCursorForConnection } from '../../util';
 
 /** A user-chosen remote target to bind. */

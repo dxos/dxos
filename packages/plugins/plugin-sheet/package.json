@@ -15,10 +15,12 @@
   "imports": {
     "#capabilities": {
       "source": {
+        "workerd": "./src/capabilities/workerd.ts",
         "node": "./src/capabilities/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
@@ -39,23 +41,25 @@
     },
     "#operations": {
       "source": {
+        "workerd": "./src/operations/node.ts",
         "node": "./src/operations/node.ts",
         "default": "./src/operations/index.ts"
       },
       "types": "./dist/types/src/operations/index.d.ts",
+      "workerd": "./dist/lib/operations/node.mjs",
       "node": "./dist/lib/operations/node.mjs",
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/SheetPlugin.workerd.ts",
-        "node": "./src/SheetPlugin.node.ts",
-        "default": "./src/SheetPlugin.tsx"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.tsx"
       },
-      "types": "./dist/types/src/SheetPlugin.d.ts",
-      "workerd": "./dist/lib/SheetPlugin.workerd.mjs",
-      "node": "./dist/lib/SheetPlugin.node.mjs",
-      "default": "./dist/lib/SheetPlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -67,6 +71,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -74,6 +83,18 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
     },
     "./Sheet": {
       "source": "./src/types/Sheet.ts",
@@ -95,6 +116,11 @@
       "types": "./dist/types/src/types/SheetOperation.d.ts",
       "import": "./dist/lib/SheetOperation.mjs"
     },
+    "./SheetPlugin": {
+      "source": "./src/SheetPlugin.ts",
+      "types": "./dist/types/src/SheetPlugin.d.ts",
+      "import": "./dist/lib/SheetPlugin.mjs"
+    },
     "./SheetRange": {
       "source": "./src/types/SheetRange.ts",
       "types": "./dist/types/src/types/SheetRange.d.ts",
@@ -104,18 +130,6 @@
       "source": "./src/types/SheetUtil.ts",
       "types": "./dist/types/src/types/SheetUtil.d.ts",
       "import": "./dist/lib/SheetUtil.mjs"
-    },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -196,8 +210,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@lezer/generator": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
@@ -210,8 +223,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

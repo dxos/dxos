@@ -446,6 +446,52 @@ describe('Query', () => {
       expect(byKey.get('b')?.items).to.have.length(1);
     });
 
+    test('a coalesce group key gives each member without the leading property its own group', async () => {
+      const { db } = await builder.createDatabase();
+      // One thread of 3 messages, plus 5 messages carrying no threadId at all.
+      for (let rank = 0; rank < 3; rank++) {
+        db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-a', rank }));
+      }
+      const loose = range(5).map((index) => db.add(Obj.make(TestSchema.Expando, { rank: 10 + index })));
+      await db.flush();
+
+      const grouped = Query.select(Filter.everything())
+        .orderBy(Order.property('rank', 'asc'))
+        .aggregate({
+          threadId: Aggregate.group({ coalesce: ['threadId', 'id'] }),
+          count: Aggregate.count(),
+          items: Aggregate.items({ limit: 2 }),
+        });
+      const groups = await db.query(grouped).run();
+
+      // The real thread stays one (capped) group; every threadless message becomes its own group,
+      // so the `items` limit never drops any of them.
+      expect(groups).to.have.length(6);
+      const thread = groups.find((group) => group.threadId === 'thread-a');
+      expect(thread?.count).to.equal(3);
+      expect(thread?.items).to.have.length(2);
+      const singletons = groups.filter((group) => group.threadId !== 'thread-a');
+      expect(singletons.map((group) => group.threadId).sort()).to.deep.equal(loose.map((obj) => obj.id).sort());
+      expect(singletons.every((group) => group.count === 1 && group.items.length === 1)).to.be.true;
+
+      // Without the fallback the same query collapses all five into the single `null` group, where
+      // the limit exposes only 2 of them — the truncation the coalesce chain avoids.
+      const collapsed = await db
+        .query(
+          Query.select(Filter.everything())
+            .orderBy(Order.property('rank', 'asc'))
+            .aggregate({
+              threadId: Aggregate.group('threadId'),
+              count: Aggregate.count(),
+              items: Aggregate.items({ limit: 2 }),
+            }),
+        )
+        .run();
+      const nullGroup = collapsed.find((group) => group.threadId === null);
+      expect(nullGroup?.count).to.equal(5);
+      expect(nullGroup?.items).to.have.length(2);
+    });
+
     test('items order is its own per-group ordering, independent of a differently-ordered orderBy', async () => {
       const { db } = await builder.createDatabase();
       for (let i = 0; i < 5; i++) {
@@ -816,6 +862,11 @@ describe('Query', () => {
           boundary.category = 'b';
         });
         await db.flush({ updates: true });
+
+        // `orderBy` makes this host-routed (the working set does not serve windowed queries), and
+        // `db.flush({ updates: true })` does not await that round trip — poll, as the feed-scoped
+        // reactivity tests below do.
+        await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
         const lastResult = query.results;
 
         expect(lastResult).to.have.length(1);

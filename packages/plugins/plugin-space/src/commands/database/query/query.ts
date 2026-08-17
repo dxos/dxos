@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, printList, spaceLayer } from '@dxos/cli-util';
 import { Database, Filter } from '@dxos/echo';
@@ -36,7 +36,7 @@ export const query = Command.make(
   'query',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    typename: Options.text('typename').pipe(Options.optional, Options.withDescription('The typename to query.')),
+    typename: Options.string('typename').pipe(Options.optional, Options.withDescription('The typename to query.')),
   },
   handler,
 ).pipe(

@@ -11,7 +11,7 @@ import { Dialog } from '@dxos/react-ui';
 
 import { translations } from '#translations';
 
-import { ClientPlugin } from '../../ClientPlugin';
+import { ClientPlugin } from '../../plugin';
 import { JoinDialog } from './JoinDialog';
 
 const DefaultStory = () => (

@@ -11,7 +11,8 @@ import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
 import { Expando } from '@dxos/schema';
 
-import * as SpaceSchema from '../types/SpaceSchema';
+import { SpaceSchema } from '#types';
+
 import { ensureSettingsSpace } from '../util/settings-space';
 import { migrateToSettingsSpace, readSpacesOrder } from './settings-space';
 

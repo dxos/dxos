@@ -2,15 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useCallback, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapability } from '@dxos/app-framework/ui';
 import { invariant } from '@dxos/invariant';
 
-import * as DeckCapabilities from '../types/DeckCapabilities';
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckCapabilities, DeckSchema } from '#types';
 
 export type DeckStateHook = {
   /** Combined state value (reactive). Includes both persisted and ephemeral state. */

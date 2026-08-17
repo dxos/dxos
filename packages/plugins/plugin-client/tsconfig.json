@@ -49,10 +49,10 @@
       "path": "../../core/compute/compute-runtime"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../core/compute/link"
     },
     {
-      "path": "../../core/echo/echo-protocol"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/halo/halo"
@@ -74,6 +74,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -110,9 +113,6 @@
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-observability"

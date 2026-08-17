@@ -2,22 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import { runMailSync } from '@dxos/plugin-inbox/sync';
 
-import { JmapCredentials, JmapMailApi } from '../../../services';
+import { JmapCredentials, JmapMailApi } from '#services';
+import { JmapOperation } from '#types';
+
 import { jmapMailSyncProvider } from './sync-provider';
 
-const handler = InboxOperation.JmapSync.pipe(
+const handler = JmapOperation.JmapSync.pipe(
   Operation.withHandler(({ binding: bindingRef }) =>
     Effect.gen(function* () {
       const bindingObj = bindingRef.target;

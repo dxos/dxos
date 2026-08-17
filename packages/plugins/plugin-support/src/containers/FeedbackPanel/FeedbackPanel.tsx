@@ -14,8 +14,8 @@ import { Panel } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { FeedbackForm, type FeedbackPluginOption } from '#components';
+import { SupportCapabilities } from '#types';
 
-import * as SupportCapabilities from '../../types/SupportCapabilities';
 import { DiscordAction } from './DiscordAction';
 import { DownloadLogsAction } from './DownloadLogsAction';
 import { FeedbackSubmitAction } from './FeedbackSubmitAction';
@@ -47,8 +47,8 @@ export const FeedbackPanel = () => {
   useAsyncEffect(
     async (controller) => {
       const available = await observability.isAvailable('feedback').pipe(
-        Effect.catchAll(() => Effect.succeed(false)),
-        Effect.catchAllDefect(() => Effect.succeed(false)),
+        Effect.catch(() => Effect.succeed(false)),
+        Effect.catchDefect(() => Effect.succeed(false)),
         EffectEx.runAndForwardErrors,
       );
       if (!controller.signal.aborted) {

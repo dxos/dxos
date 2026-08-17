@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
 import { Provider } from '@dxos/ai';
@@ -13,11 +13,9 @@ import { useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+import { Assistant, AssistantCapabilities, Ollama } from '#types';
 
 import { presetsForProvider, resolveProvider } from '../../processor';
-import * as Assistant from '../../types/Assistant';
-import * as AssistantCapabilities from '../../types/AssistantCapabilities';
-import * as Ollama from '../../types/Ollama';
 import { OllamaModels } from './OllamaModels';
 
 export type AssistantSettingsProps = AppSurface.SettingsProps<Assistant.Settings>;

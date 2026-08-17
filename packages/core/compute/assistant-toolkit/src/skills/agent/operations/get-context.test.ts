@@ -73,7 +73,7 @@ const setupBoundAgent = Effect.fnUntraced(function* () {
   const chat = yield* Agent.loadChat(agent);
   const chatFeed = chat?.feed?.target;
   invariant(chatFeed, 'Agent chat feed not found.');
-  const runtime = yield* Effect.runtime<Database.Service>();
+  const runtime = yield* Effect.context<Database.Service>();
   const binder = new AiContext.Binder({ feed: chatFeed, runtime });
   yield* Effect.promise(() => binder.bind({ objects: [Ref.make(agent)] }));
 

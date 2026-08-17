@@ -12,19 +12,16 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
 import { Button, Dialog, DropdownMenu, Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
-
-import * as SpaceCapabilities from '../../types/SpaceCapabilities';
-import * as SpaceSchema from '../../types/SpaceSchema';
+import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
 
 const SpaceFormSchema = SpaceSchema.SpaceForm;
 
@@ -156,10 +153,10 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
   );
 
   const handleBackupBinary = useCallback(async () => {
-    await invokePromise(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.BINARY });
+    await invokePromise(SpaceOperation.ExportSpace, { space, format: SpacesService.SpaceArchiveFormat.enums.BINARY });
   }, [space, invokePromise]);
   const handleBackupJson = useCallback(async () => {
-    await invokePromise(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.JSON });
+    await invokePromise(SpaceOperation.ExportSpace, { space, format: SpacesService.SpaceArchiveFormat.enums.JSON });
   }, [space, invokePromise]);
 
   const repairs = useCapabilities(SpaceCapabilities.Repair);

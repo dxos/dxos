@@ -4,16 +4,15 @@
 
 import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
-import * as Runtime from 'effect/Runtime';
+import * as Context from 'effect/Context';
 
-import { Event, UpdateScheduler, sleep } from '@dxos/async';
+import { Event, Trigger, UpdateScheduler, sleep } from '@dxos/async';
 import { type Struct } from '@dxos/codec-protobuf';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { DocHandleProxy } from './doc-handle-proxy';
@@ -43,6 +42,13 @@ export class RepoProxy extends Resource {
    * {@link _subscriptionId}).
    */
   private _subscriptionCleanup?: () => void = undefined;
+
+  /**
+   * Woken by the first batch the host sends on `DataService.subscribe`, which it emits once the
+   * subscription is registered. `updateSubscription` before that point fails with
+   * "Subscription not found", since the host registers asynchronously.
+   */
+  private _subscriptionReady = new Trigger();
 
   private readonly _pendingCreations = new Map<string, Promise<void>>();
 
@@ -87,7 +93,7 @@ export class RepoProxy extends Resource {
 
   constructor(
     private _dataService: DataService.Client,
-    private readonly _runtime: Runtime.Runtime<never>,
+    private readonly _runtime: Context.Context<never>,
     private readonly _spaceId: SpaceId,
   ) {
     super();
@@ -152,9 +158,10 @@ export class RepoProxy extends Resource {
       maxFrequency: MAX_UPDATE_FREQ,
     });
     // TODO(dmaretskyi): Set proper space id.
+    this._subscriptionReady.reset();
     this._subscriptionCleanup = subscribeStream(
       this._runtime,
-      this._dataService.DataService.subscribe({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
+      this._dataService['DataService.subscribe']({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
       { onData: (updates) => this._receiveUpdate(updates) },
     );
   }
@@ -203,23 +210,20 @@ export class RepoProxy extends Resource {
     this._subscriptionCleanup?.();
 
     // Create new subscription.
-    // TODO(dxos): The old PbStream path awaited `waitUntilReady()` here before `updateSubscription`
-    // below, because the host registers the subscription asynchronously (after `synchronizer.open()`).
-    // The effect-rpc Stream has no readiness channel yet, so on reconnect `updateSubscription` can
-    // race ahead of registration and fail with "Subscription not found". Add an in-band ready
-    // sentinel to the `subscribe` stream and await it here before re-adding documents.
+    this._subscriptionReady.reset();
     this._subscriptionCleanup = subscribeStream(
       this._runtime,
-      this._dataService.DataService.subscribe({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
+      this._dataService['DataService.subscribe']({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
       { onData: (updates) => this._receiveUpdate(updates) },
     );
 
     // Re-sync all existing documents.
     const documentIds = Object.keys(this._handles);
     if (documentIds.length > 0) {
+      await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
       await runServiceCall(
         this._runtime,
-        this._dataService.DataService.updateSubscription({
+        this._dataService['DataService.updateSubscription']({
           subscriptionId: this._subscriptionId,
           addIds: documentIds,
           removeIds: [],
@@ -325,7 +329,7 @@ export class RepoProxy extends Resource {
       handle._internalId,
       runServiceCall(
         this._runtime,
-        this._dataService.DataService.createDocument({
+        this._dataService['DataService.createDocument']({
           spaceId: this._spaceId,
           initialValue: initialValue as Struct,
         }),
@@ -351,7 +355,10 @@ export class RepoProxy extends Resource {
     return handle;
   }
 
-  private _receiveUpdate({ updates }: BatchedDocumentUpdates): void {
+  private _receiveUpdate({ updates }: DataService.BatchedDocumentUpdates): void {
+    // The host opens every subscription with an empty batch once it is registered; a real update
+    // always carries at least one entry, so this is unambiguous.
+    this._subscriptionReady.wake();
     if (!updates) {
       return;
     }
@@ -401,13 +408,18 @@ export class RepoProxy extends Resource {
     this._pendingUpdateIds.clear();
 
     try {
+      await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
       await runServiceCall(
         this._runtime,
-        this._dataService.DataService.updateSubscription({ subscriptionId: this._subscriptionId, addIds, removeIds }),
+        this._dataService['DataService.updateSubscription']({
+          subscriptionId: this._subscriptionId,
+          addIds,
+          removeIds,
+        }),
         { timeout: RPC_TIMEOUT },
       );
 
-      const updates: DocumentUpdate[] = [];
+      const updates: DataService.DocumentUpdate[] = [];
       const addMutations = (documentIds: DocumentId[]) => {
         for (const documentId of documentIds) {
           const handle = this._handles[documentId];
@@ -429,7 +441,7 @@ export class RepoProxy extends Resource {
       if (updates.length > 0) {
         await runServiceCall(
           this._runtime,
-          this._dataService.DataService.update({ subscriptionId: this._subscriptionId, updates }),
+          this._dataService['DataService.update']({ subscriptionId: this._subscriptionId, updates }),
           { timeout: RPC_TIMEOUT },
         );
         if (this._lifecycleState === LifecycleState.CLOSED) {

@@ -68,7 +68,6 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/sql": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
     "bs58check": "catalog:",
     "effect": "catalog:",

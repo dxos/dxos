@@ -21,6 +21,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Account": {
+      "source": "./src/account/Account.ts",
+      "types": "./dist/types/src/account/Account.d.ts",
+      "import": "./dist/lib/account/Account.mjs"
+    },
     "./AppActivationEvents": {
       "source": "./src/app-framework/AppActivationEvents.ts",
       "types": "./dist/types/src/app-framework/AppActivationEvents.d.ts",
@@ -70,6 +75,11 @@
       "source": "./src/types/ConnectorSync.ts",
       "types": "./dist/types/src/types/ConnectorSync.d.ts",
       "import": "./dist/lib/types/ConnectorSync.mjs"
+    },
+    "./DeckSpec": {
+      "source": "./src/app-graph/DeckSpec.ts",
+      "types": "./dist/types/src/app-graph/DeckSpec.d.ts",
+      "import": "./dist/lib/app-graph/DeckSpec.mjs"
     },
     "./GraphPath": {
       "source": "./src/app/GraphPath.ts",
@@ -171,13 +181,17 @@
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/i18n": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/progress": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -191,14 +205,13 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@tauri-apps/api": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "effect": "catalog:",
@@ -206,7 +219,7 @@
     "react-dom": "catalog:"
   },
   "peerDependencies": {
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:"
   },

@@ -9,8 +9,7 @@ import { Database, Obj, Ref, Text } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Branch } from '@dxos/versioning';
 
-import * as Markdown from '../types/Markdown';
-import * as MarkdownOperation from '../types/MarkdownOperation';
+import { Markdown, MarkdownOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = MarkdownOperation.Update.pipe(
   Operation.withHandler(

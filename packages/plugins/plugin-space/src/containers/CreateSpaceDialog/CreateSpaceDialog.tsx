@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useRef, useState } from 'react';
@@ -16,9 +17,7 @@ import { Form } from '@dxos/react-ui-form';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
-
-import * as SpaceSchema from '../../types/SpaceSchema';
+import { SpaceOperation, SpaceSchema } from '#types';
 
 export const CREATE_SPACE_DIALOG = `${meta.profile.key}.CreateSpaceDialog`;
 
@@ -45,9 +44,11 @@ export const CreateSpaceDialog = () => {
         });
         yield* invoke(LayoutOperation.UpdateDialog, { state: false });
       }).pipe(
-        Effect.catchAll((failure) =>
+        // `catchCause`, not `catch`: a defect (any rejected promise the create chain wraps with
+        // `Effect.promise`) is invisible to `catch`, leaving the dialog open with no error shown.
+        Effect.catchCause((cause) =>
           Effect.sync(() => {
-            log.catch(failure);
+            log.catch(Cause.squash(cause));
             setError(t('create-space-dialog.error.message'));
           }),
         ),

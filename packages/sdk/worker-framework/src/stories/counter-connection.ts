@@ -45,7 +45,7 @@ export type PingMeasurement = {
  */
 export class CounterConnection extends Resource {
   readonly #connection: Client.Connection;
-  #scope: Scope.CloseableScope | undefined;
+  #scope: Scope.Closeable | undefined;
   #rpc: CounterRpc | undefined;
   readonly #subscribeCleanups = new Set<() => Promise<void>>();
   #sessionInfo: CounterSessionInfo | undefined;
@@ -82,7 +82,7 @@ export class CounterConnection extends Resource {
         await clientServer.open();
 
         this.#rpc = (await EffectEx.runPromise(
-          Rpc.makeClient(clientToWorker, CounterRpcs, { timing: { minLogMs: 20 } }).pipe(Scope.extend(this.#scope)),
+          Rpc.makeClient(clientToWorker, CounterRpcs, { timing: { minLogMs: 20 } }).pipe(Scope.provide(this.#scope)),
         )) as CounterRpc;
         return {
           close: async () => {

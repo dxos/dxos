@@ -23,7 +23,7 @@ export const TogglePresentation = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    object: Schema.Union(Type.getSchema(Markdown.Document), Type.getSchema(Collection.Collection)),
+    object: Schema.Union([Type.getSchema(Markdown.Document), Type.getSchema(Collection.Collection)]),
     state: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,

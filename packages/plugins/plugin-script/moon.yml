@@ -13,9 +13,9 @@ tasks:
   check-module-structure:
     command: >-
       pnpm exec dx-trace-imports
-      --export ./plugin
+      --export ./ScriptPlugin
       --to "{react,react-dom}"
-      --conditions workerd,worker,node
+      --conditions workerd,worker
       --fail-on present
     deps:
       - dx-trace-imports:build

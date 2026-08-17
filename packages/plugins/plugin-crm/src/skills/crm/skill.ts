@@ -7,10 +7,9 @@ import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
 import { type ResearchSource, defaultResearchSources } from '#sources';
+import { CrmOperation } from '#types';
 
-import * as CrmOperation from '../../types/CrmOperation';
-
-const SKILL_KEY = 'org.dxos.skill.crm';
+import { CRM_SKILL_KEY as SKILL_KEY } from '../keys';
 
 /**
  * Skill instructions are deliberately thin: entity shapes, dedup, and profile structure are owned

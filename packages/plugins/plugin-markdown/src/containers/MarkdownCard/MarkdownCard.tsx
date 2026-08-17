@@ -13,8 +13,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { MarkdownEditor, MarkdownEditorProvider } from '#components';
 import { meta } from '#meta';
+import { Markdown } from '#types';
 
-import * as Markdown from '../../types/Markdown';
 import { getContentSnippet } from '../../util';
 import { snippet as snippetExtension } from './snippet';
 
@@ -53,11 +53,16 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
             <MarkdownEditorProvider key={snippet} id={subject.id} viewMode='readonly' extensions={extensions}>
               {(editorRootProps) => (
                 <Editor.Root {...editorRootProps}>
-                  <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'px-2!' } }} compact />
+                  <MarkdownEditor.Content
+                    classNames='dx-card-surface'
+                    initialValue={snippet}
+                    slots={{ content: { className: 'px-2!' } }}
+                    compact
+                  />
                 </Editor.Root>
               )}
             </MarkdownEditorProvider>
-            <Fade />
+            {/* <Fade /> */}
           </Card.Row>
         </Card.Section>
       )}

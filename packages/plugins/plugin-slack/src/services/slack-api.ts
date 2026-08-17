@@ -4,20 +4,18 @@
 
 // TODO(wittjosiah): Refactor to use a dfx-style Effect-native client.
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientError from '@effect/platform/HttpClientError';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientError from 'effect/unstable/http/HttpClientError';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Database, type Ref } from '@dxos/echo';
-import { type AccessToken } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { type AccessToken, Connection } from '@dxos/link';
 
 import { SLACK_API_BASE } from '../constants';
 import { SlackApiError } from '../errors';
@@ -124,10 +122,9 @@ const SlackUsersInfoResponseSchema = Schema.Struct({
  * `Connection` directly) or `Effect.provide(SlackApi.SlackCredentials.fromAccessToken(ref))`
  * (sync, given an external-sync cursor's `spec.source`) once at the operation boundary.
  */
-export class SlackCredentials extends Context.Tag('@dxos/plugin-slack/SlackCredentials')<
-  SlackCredentials,
-  SlackCredentialsValue
->() {
+export class SlackCredentials extends Context.Service<SlackCredentials, SlackCredentialsValue>()(
+  '@dxos/plugin-slack/SlackCredentials',
+) {
   /** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
   static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
     Layer.effect(
@@ -151,7 +148,7 @@ export class SlackCredentials extends Context.Tag('@dxos/plugin-slack/SlackCrede
 
 type SlackEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException | SlackApiError,
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | SlackApiError,
   HttpClient.HttpClient | SlackCredentials
 >;
 
@@ -166,30 +163,24 @@ type SlackEffect<T> = Effect.Effect<
  *  - 429 (rate limited) and 5xx: yes — Slack's rate limiter sets `Retry-After`,
  *    but exponential backoff is a reasonable default until we wire up the header.
  *  - 4xx other than 429: no — won't recover on retry.
- *  - TimeoutException: yes.
- *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
+ *  - TimeoutError: yes.
+ *  - Schema decode failures (`SchemaError`): no — payload won't become valid on retry.
  *  - SlackApiError: no — body-level "ok: false" is an application error, not transient.
  */
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException | SlackApiError,
+  error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | SlackApiError,
 ): boolean => {
-  if (error instanceof ParseResult.ParseError) {
-    return false;
+  // Matched positively on the HTTP error: v4's tagged-error classes do not narrow a union from the
+  // negative side. The specific failure hangs off `reason` -- a transport-level failure is always
+  // worth retrying, and a response failure only on 429/5xx.
+  if (HttpClientError.isHttpClientError(error)) {
+    if (error.reason._tag !== 'StatusCodeError') {
+      return true;
+    }
+    const status = error.reason.response.status;
+    return status === 429 || (status >= 500 && status <= 599);
   }
-  if (SlackApiError.is(error)) {
-    return false;
-  }
-  if (Cause.isTimeoutException(error)) {
-    return true;
-  }
-  if (error._tag === 'RequestError') {
-    return true;
-  }
-  if (error.reason !== 'StatusCode') {
-    return true;
-  }
-  const status = error.response.status;
-  return status === 429 || (status >= 500 && status <= 599);
+  return Cause.isTimeoutError(error);
 };
 
 /**
@@ -204,19 +195,21 @@ const shouldRetry = (
  */
 const runRequest = <T extends { ok: boolean; error?: string }>(
   request: HttpClientRequest.HttpClientRequest,
-  schema: Schema.Schema<T>,
+  schema: Schema.Codec<T>,
 ): SlackEffect<T> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
-    const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
     return yield* clientNoTracer.execute(request).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.flatMap((body) =>
         body.ok ? Effect.succeed(body) : Effect.fail(new SlackApiError({ context: { code: body.error ?? 'unknown' } })),
       ),
       Effect.timeout('15 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
         while: shouldRetry,
       }),
       Effect.scoped,
@@ -225,7 +218,7 @@ const runRequest = <T extends { ok: boolean; error?: string }>(
 
 const slackRequest = <T extends { ok: boolean; error?: string }>(
   build: (creds: SlackCredentialsValue) => HttpClientRequest.HttpClientRequest,
-  schema: Schema.Schema<T>,
+  schema: Schema.Codec<T>,
 ): SlackEffect<T> =>
   Effect.gen(function* () {
     const creds = yield* SlackCredentials;

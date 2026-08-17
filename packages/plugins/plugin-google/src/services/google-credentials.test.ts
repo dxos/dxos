@@ -11,8 +11,7 @@ import * as Credential from '@dxos/compute/Credential';
 import { Database, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { AccessToken } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { AccessToken, Connection } from '@dxos/link';
 import { MANAGED_ACCESS_TOKEN } from '@dxos/protocols';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../constants';

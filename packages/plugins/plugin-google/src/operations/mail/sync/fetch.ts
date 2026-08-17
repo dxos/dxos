@@ -3,10 +3,10 @@
 //
 
 import { addDays, format } from 'date-fns';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Result from 'effect/Result';
 import * as Stream from 'effect/Stream';
 
 import { Cursor } from '@dxos/link';
@@ -14,9 +14,10 @@ import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
 import * as SyncStreamConfig from '@dxos/plugin-inbox/SyncStreamConfig';
 
-import { GoogleMail } from '../../../apis';
+import { GoogleMail } from '#apis';
+import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '#services';
+
 import { GoogleApiError } from '../../../errors';
-import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '../../../services';
 import { type AttachmentMetadata } from '../mapper';
 
 /** Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
@@ -104,7 +105,8 @@ export const fetchMessages = (
         ),
       { concurrency: GOOGLE_SYNC_CONFIG.fetchConcurrency },
     ),
-    Stream.filterMap(Function.identity),
+    // v4's `filterMap` signals the drop with a `Result`, not an `Option`.
+    Stream.filterMap((message) => (Option.isSome(message) ? Result.succeed(message.value) : Result.failVoid)),
   );
 };
 
@@ -180,7 +182,7 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
       // `[horizon, low)` every run. `low` only moves down past committed territory, so an interrupted
       // page-stream resumes gap-free from the advanced `low`.
       if (direction === 'backward') {
-        return Stream.paginateChunkEffect(undefined as string | undefined, (pageToken) =>
+        return Stream.paginate(undefined as string | undefined, (pageToken: string | undefined) =>
           Effect.gen(function* () {
             log('fetching message IDs', { query, pageToken });
             const { messages, nextPageToken } = yield* listPage(pageToken);
@@ -188,7 +190,7 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
             log('fetched message IDs', { count: ids.length, done: !nextPageToken });
             // Report each page's count as it arrives so the meter's retrieval total leads the fetch.
             onEnumerated?.(ids.length);
-            return [Chunk.fromIterable(ids), Option.fromNullable(nextPageToken)];
+            return [ids, Option.fromNullishOr(nextPageToken)] as const;
           }),
         );
       }
@@ -238,10 +240,10 @@ type ForwardChunks = {
  * chunks — see {@link fetchMessageIds}.
  */
 const generateForwardChunks = (config: ForwardChunks): Stream.Stream<DateChunk> =>
-  Stream.unfoldChunkEffect(config.start, (position) =>
+  Stream.unfold(config.start, (position: Date) =>
     Effect.gen(function* () {
       if (position >= config.end) {
-        return Option.none();
+        return undefined;
       }
 
       const chunkEnd = addDays(position, config.chunkDays);
@@ -251,7 +253,7 @@ const generateForwardChunks = (config: ForwardChunks): Stream.Stream<DateChunk> 
         start: format(chunk.start, 'yyyy-MM-dd'),
         end: format(chunk.end, 'yyyy-MM-dd'),
       });
-      return Option.some([Chunk.of(chunk), end]);
+      return [chunk, end] as const;
     }),
   );
 
@@ -279,17 +281,15 @@ export const fetchAttachments = (
           Effect.flatMap((body) =>
             // The single-arg form suffices: `catchAll` below discards the error regardless of its
             // shape, so there's no reason to map it to a specific type here.
-            Effect.try(
-              (): EmailStage.Attachment => ({
-                name: attachment.filename,
-                mimeType: attachment.mimeType,
-                size: attachment.size,
-                bytes: Buffer.from(base64UrlToBase64(body.data ?? ''), 'base64'),
-                contentId: attachment.contentId,
-              }),
-            ),
+            Effect.try((): EmailStage.Attachment => ({
+              name: attachment.filename,
+              mimeType: attachment.mimeType,
+              size: attachment.size,
+              bytes: Buffer.from(base64UrlToBase64(body.data ?? ''), 'base64'),
+              contentId: attachment.contentId,
+            })),
           ),
-          Effect.catchAll((error) => {
+          Effect.catch((error) => {
             log.catch(error, { messageId, attachmentId: attachment.attachmentId });
             return Effect.succeed(undefined);
           }),

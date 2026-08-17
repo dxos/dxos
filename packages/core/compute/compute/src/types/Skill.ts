@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
@@ -33,14 +34,14 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     /**
      * Human-readable name of the skill.
      */
-    name: Schema.String.annotations({
+    name: Schema.String.annotate({
       description: 'Human-readable name of the skill',
     }),
 
     /**
      * Description of the skill's purpose and functionality.
      */
-    description: Schema.optional(Schema.String).annotations({
+    description: Schema.optional(Schema.String).annotate({
       description: "Description of the skill's purpose and functionality",
     }),
 
@@ -48,21 +49,21 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
      * Instructions that guide the AI assistant's behavior and responses.
      * These are system prompts or guidelines that the AI should follow.
      */
-    instructions: Template.Template.annotations({
+    instructions: Template.Template.annotate({
       description: "Instructions that guide the AI assistant's behavior and responses",
     }),
 
     /**
      * Array of tools that the AI assistant can use when this skill is active.
      */
-    tools: Schema.Array(ToolId).annotations({
+    tools: Schema.Array(ToolId).annotate({
       description: 'Array of tools that the AI assistant can use when this skill is active',
     }),
 
     /**
      * Whether an agent is allowed to auto-enable this skill in a conversation.
      */
-    agentCanEnable: Schema.optional(Schema.Boolean).annotations({
+    agentCanEnable: Schema.optional(Schema.Boolean).annotate({
       description: 'Whether an agent is allowed to auto-enable this skill in a conversation.',
     }),
 
@@ -84,7 +85,7 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
 /**
  * Controls when the hook is triggered.
  */
-export const HookSpec = Schema.Union(
+export const HookSpec = Schema.Union([
   /**
    * Triggered when the agent is about to start a request.
    * A request is a series of agent/tool turns that the model drives.
@@ -95,7 +96,7 @@ export const HookSpec = Schema.Union(
    * A request is a series of agent/tool turns that the model drives.
    */
   Schema.TaggedStruct('end-request', {}),
-);
+]);
 
 /**
  * Allows hooking into the agent's lifecycle.
@@ -107,7 +108,7 @@ export const Hook = Schema.Struct({
    *
    * Can be a Ref to a PersistentOperation.
    */
-  function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
+  function: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ title: 'Function' })),
 
   /**
    * Controls when the hook is triggered.
@@ -132,15 +133,45 @@ export const make: {
       key: [DXN.Name<T>] extends [never] ? `Invalid DXN name "${T}": final segment must be camelCase (no hyphens)` : T;
       version?: string;
       name: string;
+      /** Opt into MCP projection; see {@link McpPromptAnnotation}. Stored in meta, not as a field. */
+      mcpPrompt?: boolean;
     } & Partial<Skill>,
   ): Skill;
-} = ({ key, version, tools = [], instructions = Template.make(), ...props }) =>
-  Obj.make(Skill, {
-    [Obj.Meta]: { key, version },
+} = ({ key, version, mcpPrompt, tools = [], instructions = Template.make(), ...props }) => {
+  const annotations: Annotation.Dictionary = {};
+  if (mcpPrompt !== undefined) {
+    Annotation.setDictionary(annotations, McpPromptAnnotation, mcpPrompt);
+  }
+  return Obj.make(Skill, {
+    [Obj.Meta]: { key, version, annotations },
     tools,
     instructions,
     ...props,
   });
+};
+
+/**
+ * Annotation opting a skill into MCP projection: it becomes a prompt and is loadable by name
+ * through the server's `skillLoad` tool.
+ *
+ * Opt-in, for the same reason {@link Operation.McpToolAnnotation} is. A skill written for an
+ * in-app chat runtime assumes tools that an MCP client does not have — instructing an external
+ * agent to call an operation that was never projected, or to enable another skill through
+ * machinery MCP does not expose. Only the author can judge whether the workflow still holds when
+ * the available surface is the MCP one, so the projection asks rather than assumes. Absent ⇒ the
+ * skill stays internal to hosts that resolve skills directly.
+ *
+ * Rides in the object's meta rather than on `Definition`, so it survives into a persisted skill —
+ * `Definition` is a build-time factory type and cannot describe a skill stored in a space.
+ */
+export const McpPromptAnnotation = Annotation.make({
+  id: 'org.dxos.skill.mcp-prompt',
+  schema: Schema.Boolean,
+});
+
+/** Whether the skill opted into MCP projection; see {@link McpPromptAnnotation}. */
+export const isMcpPrompt = (skill: Skill): boolean =>
+  Annotation.get(skill, McpPromptAnnotation).pipe(Option.getOrElse(() => false));
 
 /**
  * Get the registry key for a skill.

@@ -14,14 +14,15 @@ import { Collection, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
+import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { TldrawModel } from '@dxos/plugin-tldraw';
-import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
+import { corePlugins } from '@dxos/plugin-testing';
+import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
+import * as TldrawModel from '@dxos/plugin-tldraw/TldrawModel';
+import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
@@ -60,7 +61,7 @@ const meta: Meta<typeof StackArticle> = {
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
-        ClientPlugin({
+        ClientPlugin.make({
           types: [Collection.Collection, Markdown.Document, Drawing.Drawing, Drawing.Canvas],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -103,11 +104,11 @@ const meta: Meta<typeof StackArticle> = {
               );
             }),
         }),
-        MarkdownPlugin(),
-        IllustratorPlugin(),
-        TldrawPlugin(),
+        MarkdownPlugin.make(),
+        IllustratorPlugin.make(),
+        TldrawPlugin.make(),
         SpacePlugin({}),
-        StorybookPlugin({}),
+        StorybookPlugin.make({}),
       ],
     }),
   ],

@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { PathResolution } from '@dxos/app-graph';
+import * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -19,7 +19,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
+import { SimpleLayoutCapabilities } from '#types';
 
 /** Strip the `root/` prefix off a qualified workspace path, back to the bare `UrlPath` workspace token. */
 const bareWorkspace = (qualifiedWorkspace: string): string => {
@@ -64,7 +64,7 @@ export default Capability.makeModule(
           .get()
           .map((handler) =>
             handler(url).pipe(
-              Effect.catchAllCause((cause) =>
+              Effect.catchCause((cause) =>
                 Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
               ),
             ),
@@ -145,7 +145,7 @@ export default Capability.makeModule(
           }),
         );
       }).pipe(
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.sync(() => log.warn('[UrlHandler] Failed to initialize deep link listener', { error })),
         ),
       );

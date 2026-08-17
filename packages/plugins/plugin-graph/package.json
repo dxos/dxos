@@ -24,9 +24,9 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/GraphPlugin.ts",
-      "types": "./dist/types/src/GraphPlugin.d.ts",
-      "default": "./dist/lib/GraphPlugin.mjs"
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
     }
   },
   "exports": {
@@ -40,15 +40,15 @@
       "types": "./dist/types/src/hooks/index.d.ts",
       "import": "./dist/lib/hooks.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./GraphPlugin": {
+      "source": "./src/GraphPlugin.ts",
+      "types": "./dist/types/src/GraphPlugin.d.ts",
+      "import": "./dist/lib/GraphPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -66,8 +66,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
@@ -76,8 +75,7 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

@@ -42,13 +42,13 @@ type Story = StoryObj<typeof meta>;
 export const WithMail: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { MarkdownPlugin }, { ThreadPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-thread/plugin'),
+      const [InboxPlugin, MarkdownPlugin, ThreadPlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-thread/ThreadPlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
+        plugins: [InboxPlugin.make(), MarkdownPlugin.make(), ThreadPlugin.make()],
       };
     },
     onInit: async ({ space }) => {
@@ -79,12 +79,12 @@ export const WithMail: Story = {
 export const WithGmail: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-connector/plugin'),
+      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-connector/ConnectorPlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), ConnectorPlugin()],
+        plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
     },
     config: config.persistent,
@@ -121,12 +121,12 @@ export const WithGmail: Story = {
 export const WithConnectorPrompt: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-connector/plugin'),
+      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-connector/ConnectorPlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), ConnectorPlugin()],
+        plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
     },
     types: [Feed.Feed, Mailbox.Mailbox],
@@ -153,12 +153,12 @@ export const WithConnectorPrompt: Story = {
 export const WithCalendar: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
-        import('@dxos/plugin-inbox/plugin'),
-        import('@dxos/plugin-connector/plugin'),
+      const [InboxPlugin, ConnectorPlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-connector/ConnectorPlugin'),
       ]);
       return {
-        plugins: [InboxPlugin(), ConnectorPlugin()],
+        plugins: [InboxPlugin.make(), ConnectorPlugin.make()],
       };
     },
     types: [Feed.Feed, Calendar.Calendar, Event.Event],
@@ -203,12 +203,12 @@ export const WithLinearSync: Story = {
 export const WithTranscription: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
-      const [{ TranscriptionPlugin }, { PreviewPlugin }] = await Promise.all([
-        import('@dxos/plugin-transcription/plugin'),
-        import('@dxos/plugin-preview/plugin'),
+      const [TranscriptionPlugin, PreviewPlugin] = await Promise.all([
+        import('@dxos/plugin-transcription/TranscriptionPlugin'),
+        import('@dxos/plugin-preview/PreviewPlugin'),
       ]);
       return {
-        plugins: [TranscriptionPlugin(), PreviewPlugin()],
+        plugins: [TranscriptionPlugin.make(), PreviewPlugin.make()],
       };
     },
     types: [Transcript.Transcript],

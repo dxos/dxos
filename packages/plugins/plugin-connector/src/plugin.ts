@@ -3,7 +3,43 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { meta } from './meta';
+import {
+  AppGraphBuilder,
+  BuiltinConnectors,
+  Coordinator,
+  CreateObject,
+  OAuthRedirect,
+  OperationHandler,
+  ReactSurface,
+  Schema,
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
 
-export const ConnectorPlugin = Plugin.lazy(meta, () => import('#plugin'));
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export const ConnectorPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Schema),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(BuiltinConnectors),
+  Plugin.addModule(Coordinator),
+  Plugin.addModule(OAuthRedirect),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
+  Plugin.make,
+);
+
+export default ConnectorPlugin;

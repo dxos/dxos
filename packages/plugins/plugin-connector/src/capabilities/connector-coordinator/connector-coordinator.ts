@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { createEdgeIdentity } from '@dxos/client/edge';
 import * as Credential from '@dxos/compute/Credential';
 import type * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -18,16 +18,15 @@ import { Database, EID, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
+import { meta } from '#meta';
+import { ConnectorCoordination, ConnectorSpec } from '#types';
+
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
-import { meta } from '../../meta';
-import * as Connection from '../../types/Connection';
-import * as ConnectorCoordination from '../../types/ConnectorCoordination';
-import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { autoSyncConnection } from './auto-sync';
 import { createSingleCursor } from './create-single-cursor';
 import {
@@ -115,10 +114,10 @@ const runOnTokenCreated = (
         Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
       ),
     ),
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => log.warn('onTokenCreated failed', { source: input.accessToken.source, error })),
     ),
-    Effect.catchAllDefect((defect) =>
+    Effect.catchDefect((defect) =>
       Effect.sync(() => log.warn('onTokenCreated defect', { source: input.accessToken.source, defect })),
     ),
   );
@@ -162,7 +161,7 @@ const navigateToNewConnection = (
       subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connectionId)],
       navigation: 'immediate',
     })
-    .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
+    .pipe(Effect.catch((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
 
 const openSyncTargetsDialogAfterConnectionCreated = (
   invoker: Operation.OperationService,
@@ -184,7 +183,7 @@ const openSyncTargetsDialogAfterConnectionCreated = (
       },
     });
   }).pipe(
-    Effect.catchAll((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
+    Effect.catch((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
   );
 
 const finalizePendingEntry = (
@@ -234,6 +233,7 @@ const finalizePendingEntry = (
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
+    const identityService = yield* ClientCapabilities.IdentityService;
     const invoker = yield* Capabilities.OperationInvoker;
     const serviceResolver = yield* Capabilities.ServiceResolver;
     const pluginContext = yield* Capability.Service;
@@ -244,7 +244,9 @@ export default Capability.makeModule(
         const edgeUrl = client.config.values.runtime?.services?.edge?.url;
         invariant(edgeUrl, 'EDGE services not configured.');
         const next = new EdgeHttpClient(edgeUrl);
-        next.setIdentity(createEdgeIdentity(client));
+        const edgeIdentity = identityService.getEdgeIdentity();
+        invariant(Option.isSome(edgeIdentity), 'Identity not available.');
+        next.setIdentity(edgeIdentity.value);
         cachedEdgeClient = next;
       }
       return cachedEdgeClient;

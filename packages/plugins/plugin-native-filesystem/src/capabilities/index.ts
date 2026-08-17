@@ -9,7 +9,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 
-import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
+import { NativeFilesystemCapabilities } from '#types';
 
 export * from './state';
 

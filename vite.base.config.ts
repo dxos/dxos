@@ -397,6 +397,23 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
 const VITEST_SUBCOMMAND = process.argv.slice(2).find((arg) => !arg.startsWith('-'));
 const IS_VITEST_RUN = process.env.VITEST === 'true' && (VITEST_SUBCOMMAND === 'run' || process.argv.includes('--run'));
 
+// The Claude Code cloud sandbox ships a Chromium older than Playwright's pin and proxies egress
+// through a gateway that resets Chromium's TLS 1.3 handshake, so browser mode cannot launch without
+// these; empty elsewhere, leaving dev and CI untouched.
+const SANDBOX_LAUNCH_OPTIONS = process.env.CLAUDE_CODE_REMOTE
+  ? {
+      launchOptions: {
+        executablePath: '/opt/pw-browsers/chromium',
+        args: [
+          '--no-sandbox',
+          `--proxy-server=${process.env.HTTPS_PROXY}`,
+          '--proxy-bypass-list=127.0.0.1;localhost',
+          '--ssl-version-max=tls1.2',
+        ],
+      },
+    }
+  : {};
+
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
     test: {
@@ -416,7 +433,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         // Pin the browser timezone so `Intl.DateTimeFormat().resolvedOptions().timeZone`
         // does not resolve to `Etc/Unknown` in headless CI containers — react-aria's
         // calendar feeds that value back into `Intl.DateTimeFormat`, which throws.
-        provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' } }),
+        provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' }, ...SANDBOX_LAUNCH_OPTIONS }),
         instances: [{ browser: 'chromium' }],
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
@@ -441,7 +458,13 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         storybookScript: 'storybook dev --ci',
         tags: {
           include: ['test'],
-          exclude: ['experimental'],
+          // `manual` mirrors the vitest tag of the same name (vitest.tags.ts) — storybook tags are
+          // not vitest tags, so the opt-in gate has to be repeated here. Stories needing local
+          // services or spending real tokens carry it and stay out of a default run.
+          exclude: [
+            'experimental',
+            ...(['1', 'true'].includes(process.env.DX_RUN_MANUAL_TESTS ?? '') ? [] : ['manual']),
+          ],
         },
       }),
     ],
@@ -528,7 +551,7 @@ const createBrowserProject = ({
         enabled: true,
         screenshotFailures: false,
         headless: !isDebug,
-        provider: playwright(),
+        provider: playwright({ ...SANDBOX_LAUNCH_OPTIONS }),
         instances: [{ browser: browserName }],
         isolate: false,
       },

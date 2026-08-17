@@ -3,9 +3,9 @@
 //
 
 import { type Heads } from '@automerge/automerge';
-import * as Runtime from 'effect/Runtime';
+import * as EffectContext from 'effect/Context';
+import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
@@ -45,8 +45,7 @@ import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { runServiceCall } from '@dxos/protocols';
-import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 import { defaultMap } from '@dxos/util';
 
@@ -95,12 +94,12 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Get the current per-peer automerge document sync state.
    */
-  getAutomergeSyncState(): Promise<SpaceSyncState>;
+  getAutomergeSyncState(): Promise<DataService.SpaceSyncState>;
 
   /**
    * Get notification about the per-peer automerge document sync progress.
    */
-  subscribeToAutomergeSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
+  subscribeToAutomergeSyncState(ctx: Context, callback: (state: DataService.SpaceSyncState) => void): CleanupFn;
 
   /**
    * Returns ids for all objects in the space (both loaded and unloaded).
@@ -179,7 +178,7 @@ export type EchoDatabaseProps = {
   dataService: DataService.Client;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: EffectContext.Context<never>;
   spaceId: SpaceId;
 
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
@@ -209,19 +208,35 @@ type SpaceFeedSyncState = Pick<Database.SyncState, 'blocksToPull' | 'blocksToPus
 const EMPTY_FEED_SYNC_STATE: SpaceFeedSyncState = { blocksToPull: '0', blocksToPush: '0', totalBlocks: '0' };
 
 /**
- * Poll interval for feed block backlog, which has no change stream.
+ * Sums per-namespace feed block backlog counts into the space-wide totals tracked by
+ * {@link SpaceFeedSyncState}. Shared by the one-shot {@link DatabaseImpl.getSyncState} and the
+ * streaming {@link DatabaseImpl.subscribeToSyncState}.
  */
-const FEED_SYNC_POLL_INTERVAL = 2_000;
+const aggregateFeedSyncState = (response: FeedService.GetSyncStateResponse): SpaceFeedSyncState => {
+  let blocksToPull = 0n;
+  let blocksToPush = 0n;
+  let totalBlocks = 0n;
+  for (const namespace of response.namespaces ?? []) {
+    blocksToPull += BigInt(namespace.blocksToPull);
+    blocksToPush += BigInt(namespace.blocksToPush);
+    totalBlocks += BigInt(namespace.totalBlocks);
+  }
+  return {
+    blocksToPull: String(blocksToPull),
+    blocksToPush: String(blocksToPush),
+    totalBlocks: String(totalBlocks),
+  };
+};
 
 /**
  * Selects the peer to report the automerge backlog against: the explicit `peerId` when given,
  * otherwise the EDGE peer.
  */
 const selectPeer = (
-  peers: readonly SpaceSyncState.PeerState[],
+  peers: readonly DataService.SpaceSyncState.PeerState[],
   spaceId: SpaceId,
   peerId?: string,
-): SpaceSyncState.PeerState | undefined =>
+): DataService.SpaceSyncState.PeerState | undefined =>
   peerId !== undefined
     ? peers.find((peer) => peer.peerId === peerId)
     : peers.find((peer) => isEdgePeerId(peer.peerId, spaceId));
@@ -230,7 +245,7 @@ const selectPeer = (
  * Flattens per-peer automerge state (for the selected peer) with aggregated feed state.
  */
 const combineSyncState = (
-  automerge: SpaceSyncState,
+  automerge: DataService.SpaceSyncState,
   feeds: SpaceFeedSyncState,
   spaceId: SpaceId,
   peerId?: string,
@@ -271,7 +286,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   #feedService: FeedService.Client | undefined;
 
   /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
-  readonly #runtime: Runtime.Runtime<never>;
+  readonly #runtime: EffectContext.Context<never>;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -299,6 +314,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     });
 
     this.saveStateChanged = this._entityManager.saveStateChanged;
+
+    // Effect hashes an unmarked object structurally, walking its prototype chain — on a database
+    // that recurses through the whole entity graph and throws on the first strict-mode function it
+    // reaches. Identity is the only sensible equality here, and it is what `Atom.family(db)` wants.
+    Equal.byReferenceUnsafe(this);
   }
 
   [inspect.custom]() {
@@ -402,12 +422,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return schema;
   }
 
-  private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext | Type.AnyEntity): Type.AnyEntity {
-    let schema: Schema.Schema.AnyNoContext;
+  private _addPersistentSchema(schemaInput: Schema.Codec<any, any> | Type.AnyEntity): Type.AnyEntity {
+    let schema: Schema.Codec<any, any>;
     let meta: TypeAnnotation | undefined;
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;
-      schema = Type.getSchema(entity).annotations({ [TypeIdentifierAnnotationId]: undefined });
+      schema = Type.getSchema(entity).annotate({ [TypeIdentifierAnnotationId]: undefined });
       meta =
         getTypeAnnotation(schema) ??
         ({
@@ -428,10 +448,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // Update jsonSchema with the full annotated schema.
     // TypeSchema.jsonSchema is readonly in the type but writable via change context.
     schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
-      schema.annotations({
+      schema.annotate({
         [TypeAnnotationId]: meta,
         [TypeIdentifierAnnotationId]: typeId,
-        [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+        ...makeTypeJsonSchemaAnnotation({
           identifier: typeId,
           kind: meta.kind,
           typename: meta.typename,
@@ -742,11 +762,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await this._entityManager.flush();
   }
 
-  getAutomergeSyncState(): Promise<SpaceSyncState> {
+  getAutomergeSyncState(): Promise<DataService.SpaceSyncState> {
     return this._entityManager.getSyncState();
   }
 
-  subscribeToAutomergeSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
+  subscribeToAutomergeSyncState(ctx: Context, callback: (state: DataService.SpaceSyncState) => void): CleanupFn {
     return this._entityManager.subscribeToSyncState(ctx, callback);
   }
 
@@ -757,8 +777,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   subscribeToSyncState(cb: (state: Database.SyncState) => void, options?: Database.GetSyncStateOptions): CleanupFn {
     const ctx = Context.default();
-    let cancelled = false;
-    let automerge: SpaceSyncState = { peers: [] };
+    let automerge: DataService.SpaceSyncState = { peers: [] };
     let feeds: SpaceFeedSyncState = EMPTY_FEED_SYNC_STATE;
     const emit = () => cb(combineSyncState(automerge, feeds, this.spaceId, options?.peerId));
 
@@ -770,35 +789,25 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    // Feed blocks have no change stream, so poll the backend.
-    let pollInFlight = false;
-    const pollFeeds = async () => {
-      // Skip overlapping ticks so a slow RPC can't emit stale state after a newer poll.
-      if (pollInFlight) {
-        return;
-      }
-      pollInFlight = true;
-      try {
-        const next = await this.#getSpaceFeedSyncState();
-        if (!cancelled) {
-          feeds = next;
-          emit();
-        }
-      } catch (error) {
-        // Keep the previous feeds state on failure rather than leaving an unhandled rejection.
-        if (!cancelled) {
-          log.warn('failed to poll feed sync state', { error });
-        }
-      } finally {
-        pollInFlight = false;
-      }
-    };
-    void pollFeeds();
-    const timer = setInterval(() => void pollFeeds(), FEED_SYNC_POLL_INTERVAL);
-    ctx.onDispose(() => {
-      cancelled = true;
-      clearInterval(timer);
-    });
+    if (this.#feedService) {
+      ctx.onDispose(
+        subscribeStream(
+          this.#runtime,
+          this.#feedService['FeedService.subscribeSyncState']({ spaceId: this.spaceId, namespaces: [] }),
+          {
+            onData: (response) => {
+              feeds = aggregateFeedSyncState(response);
+              emit();
+            },
+            onError: (error) => {
+              if (!(error instanceof RpcClosedError)) {
+                log.warn('feed sync state stream failed', { error });
+              }
+            },
+          },
+        ),
+      );
+    }
 
     return () => {
       void ctx.dispose();
@@ -814,21 +823,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     }
     const response = await runServiceCall(
       this.#runtime,
-      this.#feedService.FeedService.getSyncState({ spaceId: this.spaceId, namespaces: [] }),
+      this.#feedService['FeedService.getSyncState']({ spaceId: this.spaceId, namespaces: [] }),
     );
-    let blocksToPull = 0n;
-    let blocksToPush = 0n;
-    let totalBlocks = 0n;
-    for (const namespace of response.namespaces ?? []) {
-      blocksToPull += BigInt(namespace.blocksToPull);
-      blocksToPush += BigInt(namespace.blocksToPush);
-      totalBlocks += BigInt(namespace.totalBlocks);
-    }
-    return {
-      blocksToPull: String(blocksToPull),
-      blocksToPush: String(blocksToPush),
-      totalBlocks: String(totalBlocks),
-    };
+    return aggregateFeedSyncState(response);
   }
 
   getAllObjectIds(): string[] {
@@ -965,6 +962,18 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /** @deprecated Use `flush()`. */
   async updateIndexes(): Promise<void> {
     await this._entityManager.updateIndexes();
+  }
+
+  async stats(): Promise<Database.DatabaseStats> {
+    return this._entityManager.stats();
+  }
+
+  async runGarbageCollection(options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
+    return this._entityManager.runGarbageCollection(options);
+  }
+
+  retainObjects(keep: Iterable<string>): string[] {
+    return this._entityManager.retainObjects(keep);
   }
 
   /**

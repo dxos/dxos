@@ -2,22 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Database, Filter, Obj, Relation, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { type ExtractError, type ExtractResult, type ObjectExtractor } from '@dxos/extractor';
 import { Message } from '@dxos/types';
 
-import * as ExtractedFrom from '../../types/ExtractedFrom';
-import * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as InboxOperation from '../../types/InboxOperation';
+import { ExtractedFrom, InboxCapabilities, InboxOperation } from '#types';
+
 import handler from './extract-message';
 
 const runExtractMessage = (
@@ -97,10 +96,10 @@ describe('ExtractMessage operation handler', () => {
     const capabilityService = makeCapabilityService([noMatchExtractor]);
 
     const result = await runExtractMessage({ source: message }, { db, capabilityService })
-      .pipe(Effect.either)
+      .pipe(Effect.result)
       .pipe(Effect.runPromise);
 
-    expect(result._tag).toBe('Left');
+    expect(result._tag).toBe('Failure');
   });
 
   test('selects highest-confidence extractor', async ({ expect }) => {

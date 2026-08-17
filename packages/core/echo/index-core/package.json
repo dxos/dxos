@@ -30,9 +30,6 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
-    "@effect/experimental": "catalog:",
-    "@effect/platform": "catalog:",
-    "@effect/sql": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

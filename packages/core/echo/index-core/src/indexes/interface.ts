@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
-import type * as SqlError from '@effect/sql/SqlError';
 import type * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import type { Obj } from '@dxos/echo';
 import type { EntityId, SpaceId } from '@dxos/keys';
@@ -30,6 +30,13 @@ export interface IndexerObject {
    * If null, `queueId` must be set.
    */
   documentId: string | null;
+
+  /**
+   * Global position the position authority assigned this object's feed block — the monotonic
+   * insertion id a feed cursor names. Set only for queue objects that have been positioned; null
+   * for automerge objects and for local blocks not yet acknowledged.
+   */
+  queuePosition?: number | null;
 
   /**
    * Record id from the objectMeta index.

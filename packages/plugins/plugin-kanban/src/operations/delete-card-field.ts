@@ -9,7 +9,7 @@ import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ProjectionModel, createEchoChangeCallback, getTypeURIFromQuery } from '@dxos/schema';
 
-import * as KanbanOperation from '../types/KanbanOperation';
+import { KanbanOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof KanbanOperation.DeleteCardField> = KanbanOperation.DeleteCardField.pipe(
   Operation.withHandler(

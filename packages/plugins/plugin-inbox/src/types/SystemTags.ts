@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Database, Obj, Ref, Tag } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
@@ -78,6 +78,13 @@ export const SystemTag = {
     id: 'forums',
     label: 'Forums',
     hue: 'purple',
+  },
+  // Applied locally by the classification pipeline (`ClassifyMailbox`), and mappable from a
+  // provider's spam/junk folder by a future sync mapper.
+  spam: {
+    id: 'spam',
+    label: 'Spam',
+    hue: 'red',
   },
 } as const;
 export type SystemTagId = keyof typeof SystemTag;
@@ -155,4 +162,45 @@ export const toggleTag = Effect.fn('SystemTags.toggleTag')(function* (
   } else {
     Tagging.set(object, uri, { index });
   }
+});
+
+/**
+ * Applies a system tag to many objects at once, idempotently.
+ *
+ * Distinct from {@link toggleTag}: toggling a batch would UNTAG whichever members already carried
+ * the tag, so a second run would undo the first. Bulk labelling has to be a set, not a flip.
+ */
+export const applyTagToAll = Effect.fn('SystemTags.applyTagToAll')(function* (
+  container: Obj.Any & TagContainer,
+  objects: readonly (Obj.Any | Obj.Snapshot<Obj.Any>)[],
+  tagId: SystemTagId,
+) {
+  if (objects.length === 0) {
+    return 0;
+  }
+
+  const { db } = yield* Database.Service;
+
+  // Lazily provision the tag index, as `toggleTag` does: a mailbox created before the `tags` field
+  // existed has none, and bulk labelling should not be the one path that fails on it.
+  let index = container.tags?.target;
+  if (!index) {
+    index = db.add(TagIndex.make());
+    Obj.setParent(index, container);
+    Obj.update(container, (container) => {
+      container.tags = Ref.make(index!);
+    });
+  }
+
+  const tag = yield* Effect.promise(() => findOrCreateSystemTag(db, tagId));
+  const uri = Obj.getURI(tag).toString();
+  let applied = 0;
+  for (const object of objects) {
+    if (!Tagging.get(object, { index }).includes(uri)) {
+      Tagging.set(object, uri, { index });
+      applied++;
+    }
+  }
+
+  return applied;
 });

@@ -2,23 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as Operation from '@dxos/compute/Operation';
-import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
-import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
-import * as HelpCapabilities from '../types/HelpCapabilities';
-import * as SupportCapabilities from '../types/SupportCapabilities';
-import * as SupportOperation from '../types/SupportOperation';
-import type * as Tour from '../types/Tour';
+import { HelpCapabilities, SupportCapabilities, Tour } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [SupportCapabilities.Settings],
 });
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const HelpState = Capability.lazyModule(
@@ -47,15 +40,3 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 export const SupportSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SupportCapabilities.Settings],
 });
-
-// Genuine runtime event: fired imperatively by `plugin-space`'s create-space operation.
-export const OnSpaceCreated = Capability.inlineModule(
-  'on-space-created',
-  { provides: [SpaceCapabilities.OnCreateSpace], activatesOn: SpaceEvents.SpaceCreated },
-  () =>
-    Effect.succeed([
-      Capability.contribute(SpaceCapabilities.OnCreateSpace, (params) =>
-        Operation.invoke(SupportOperation.OnCreateSpace, params),
-      ),
-    ]),
-);

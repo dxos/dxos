@@ -12,9 +12,7 @@ import { Panel, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-
-import type * as Meeting from '../../types/Meeting';
-import * as MeetingOperation from '../../types/MeetingOperation';
+import { Meeting, MeetingOperation } from '#types';
 
 type MeetingTab = 'notes' | 'transcript' | 'summary' | 'call';
 

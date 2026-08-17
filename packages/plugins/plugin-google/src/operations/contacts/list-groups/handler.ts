@@ -2,19 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { withAuthorization } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
-import { GoogleContacts } from '../../../apis';
+import { GoogleContacts } from '#apis';
+import { GoogleOperation } from '#types';
+
 import { AccessTokenNotPopulatedError } from '../../../errors';
 
 const CONTACT_GROUPS_BASE_URL = 'https://people.googleapis.com/v1/contactGroups';
@@ -22,7 +23,9 @@ const CONTACT_GROUPS_BASE_URL = 'https://people.googleapis.com/v1/contactGroups'
 const listAllContactGroups = (token: string) =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
-    const client = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const client = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
 
     const groups: GoogleContacts.ContactGroup[] = [];
     let pageToken: string | undefined;
@@ -43,8 +46,8 @@ const listAllContactGroups = (token: string) =>
     return groups;
   });
 
-const handler: Operation.WithHandler<typeof InboxOperation.GetGoogleContactGroups> =
-  InboxOperation.GetGoogleContactGroups.pipe(
+const handler: Operation.WithHandler<typeof GoogleOperation.GetGoogleContactGroups> =
+  GoogleOperation.GetGoogleContactGroups.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ connection }) {
         const target = connection.target;

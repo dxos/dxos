@@ -9,7 +9,6 @@ import "google/protobuf/any.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/echo/snapshot.proto";
 import "dxos/echo/timeframe.proto";
-import "dxos/echo/object.proto";
 
 // TODO(burdon): Standardize position of "package" (i.e., before/after imports).
 // TODO(burdon): Move Item specific to echo.item?
@@ -25,7 +24,6 @@ message FeedMessage {
   message Payload{
     oneof payload {
       CredentialsMessage credential = 10;
-      DataMessage data = 11;
     }
   }
   Payload payload = 2;
@@ -36,11 +34,4 @@ message FeedMessage {
  */
 message CredentialsMessage {
   dxos.halo.credentials.Credential credential = 1;
-}
-
-/**
- * A container ECHO database messages in data feeds.
- */
-message DataMessage {
-  dxos.echo.object.EchoObjectBatch batch = 2;
 }

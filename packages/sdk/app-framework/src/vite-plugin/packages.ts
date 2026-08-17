@@ -29,8 +29,7 @@
  * Spread into {@link DEFAULT_PACKAGES} so the third-party set lives in one place.
  */
 const THIRD_PARTY_SHARED_PACKAGES = [
-  '@effect-atom/atom',
-  '@effect-atom/atom-react',
+  '@effect/atom-react',
   '@effect/platform',
   'effect',
   'lit',
@@ -91,7 +90,6 @@ export const DEFAULT_PACKAGES = [
   '@dxos/teleport',
   '@dxos/teleport-extension-automerge-replicator',
   '@dxos/teleport-extension-gossip',
-  '@dxos/teleport-extension-object-sync',
   '@dxos/teleport-extension-replicator',
   '@dxos/websocket-rpc',
 

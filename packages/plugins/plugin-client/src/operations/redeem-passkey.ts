@@ -5,15 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
-import * as Capability from '@dxos/app-framework/Capability';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
-import { PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
-import { invariant } from '@dxos/invariant';
+import { Identity } from '@dxos/halo';
+import { PublicKey } from '@dxos/keys';
 
-import * as ClientCapabilities from '../types/ClientCapabilities';
+import { PasskeyError } from '#types';
+
 import { RedeemPasskey } from './definitions';
-import { PasskeyDismissedError, PasskeyLoginError, PasskeyRejectedError, toPasskeyAssertionError } from './errors';
 
 /** Signed challenge presented to EDGE in exchange for admitting this device. */
 type Assertion = {
@@ -23,14 +22,18 @@ type Assertion = {
   authenticatorData: Buffer;
 };
 
-const nativeAssertion = (challenge: string): Effect.Effect<Assertion, PasskeyDismissedError | PasskeyLoginError> =>
+const nativeAssertion = (
+  challenge: string,
+): Effect.Effect<Assertion, PasskeyError.Dismissed | PasskeyError.LoginFailed> =>
   Effect.gen(function* () {
     const result = yield* Effect.tryPromise({
       try: () => NativePasskey.loginNativePasskey({ challenge: Uint8Array.from(Buffer.from(challenge, 'base64')) }),
-      catch: toPasskeyAssertionError,
+      catch: PasskeyError.fromAssertion,
     });
     if (!result?.user_handle || !result.signature) {
-      return yield* Effect.fail(new PasskeyLoginError({ message: 'Native passkey login returned no assertion.' }));
+      return yield* Effect.fail(
+        new PasskeyError.LoginFailed({ message: 'Native passkey login returned no assertion.' }),
+      );
     }
 
     return {
@@ -41,10 +44,12 @@ const nativeAssertion = (challenge: string): Effect.Effect<Assertion, PasskeyDis
     };
   });
 
-const webAssertion = (challenge: string): Effect.Effect<Assertion, PasskeyDismissedError | PasskeyLoginError> =>
+const webAssertion = (challenge: string): Effect.Effect<Assertion, PasskeyError.Dismissed | PasskeyError.LoginFailed> =>
   Effect.gen(function* () {
     if (typeof PublicKeyCredential === 'undefined') {
-      return yield* Effect.fail(new PasskeyLoginError({ message: 'WebAuthn is not available in this browser.' }));
+      return yield* Effect.fail(
+        new PasskeyError.LoginFailed({ message: 'WebAuthn is not available in this browser.' }),
+      );
     }
 
     const credential = yield* Effect.tryPromise({
@@ -56,20 +61,20 @@ const webAssertion = (challenge: string): Effect.Effect<Assertion, PasskeyDismis
             userVerification: 'required',
           },
         }),
-      catch: toPasskeyAssertionError,
+      catch: PasskeyError.fromAssertion,
     });
     // A null credential means the authenticator resolved without presenting one; same signal as a dismissal.
     if (
       !(credential instanceof PublicKeyCredential) ||
       !(credential.response instanceof AuthenticatorAssertionResponse)
     ) {
-      return yield* Effect.fail(new PasskeyDismissedError({ message: 'No passkey assertion was returned.' }));
+      return yield* Effect.fail(new PasskeyError.Dismissed({ message: 'No passkey assertion was returned.' }));
     }
 
     const { signature, clientDataJSON, authenticatorData, userHandle } = credential.response;
     // The user handle carries the lookup key; a passkey created without a resident key has none.
     if (!userHandle) {
-      return yield* Effect.fail(new PasskeyLoginError({ message: 'Passkey assertion has no user handle.' }));
+      return yield* Effect.fail(new PasskeyError.LoginFailed({ message: 'Passkey assertion has no user handle.' }));
     }
 
     return {
@@ -83,33 +88,25 @@ const webAssertion = (challenge: string): Effect.Effect<Assertion, PasskeyDismis
 const handler: Operation.WithHandler<typeof RedeemPasskey> = RedeemPasskey.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const identityService = client.services.services.IdentityService;
-      invariant(identityService, 'IdentityService not available');
-
-      const { deviceKey, controlFeedKey, challenge } = yield* Effect.tryPromise({
-        try: () => identityService.requestRecoveryChallenge(),
-        catch: PasskeyLoginError.wrap({ message: 'Failed to request a recovery challenge.' }),
-      });
+      const recoveryChallenge = yield* Effect.mapError(
+        Identity.requestRecoveryChallenge,
+        PasskeyError.LoginFailed.wrap({ message: 'Failed to request a recovery challenge.' }),
+      );
 
       const assertion = yield* Match.value(NativePasskey.supportsNativePasskeys()).pipe(
-        Match.when(true, () => nativeAssertion(challenge)),
-        Match.orElse(() => webAssertion(challenge)),
+        Match.when(true, () => nativeAssertion(recoveryChallenge.challenge)),
+        Match.orElse(() => webAssertion(recoveryChallenge.challenge)),
       );
 
       // EDGE refuses the assertion when the passkey isn't registered as a recovery credential.
-      yield* Effect.tryPromise({
-        try: () =>
-          identityService.recoverIdentity(
-            { external: { ...assertion, deviceKey, controlFeedKey } },
-            { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },
-          ),
-        catch: PasskeyRejectedError.wrap(),
-      });
+      yield* Effect.mapError(
+        Identity.recover({
+          passkey: { ...assertion, lookupKey: assertion.lookupKey.toHex(), challenge: recoveryChallenge },
+        }),
+        PasskeyError.Rejected.wrap(),
+      );
     }),
   ),
 );
 
 export default handler;
-
-const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;

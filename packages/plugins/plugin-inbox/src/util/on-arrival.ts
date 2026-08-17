@@ -17,10 +17,9 @@ import { log } from '@dxos/log';
 import { Stage } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
+import { InboxCapabilities, InboxOperation, Mailbox } from '#types';
+
 import { isAiServiceUnavailable } from '../operations/extractor';
-import * as InboxCapabilities from '../types/InboxCapabilities';
-import * as InboxOperation from '../types/InboxOperation';
-import type * as Mailbox from '../types/Mailbox';
 
 /**
  * Runs configured auto-on-arrival extractors for a batch of just-synced messages. Selects the
@@ -66,7 +65,7 @@ export const runOnArrivalExtractors = (mailbox: Mailbox.Mailbox, messages: reado
           { source: message, extractorId: best.extractor.id },
           { spaceId: db.spaceId },
         ).pipe(
-          Effect.catchAll((err) => {
+          Effect.catch((err) => {
             // The AI service can be momentarily absent from the process-manager LayerStack during
             // startup. Treat that as a deferrable skip — a later sync re-attempts.
             if (isAiServiceUnavailable(err)) {

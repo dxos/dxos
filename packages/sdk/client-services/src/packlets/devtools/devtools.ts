@@ -9,43 +9,14 @@ import { Event as AsyncEvent } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import {
-  type ClearSnapshotsRequest,
-  type EnableDebugLoggingRequest,
-  type EnableDebugLoggingResponse,
-  type Event,
-  type ExportSqliteDatabaseResponse,
-  type GetBlobsResponse,
-  type GetConfigResponse,
-  type GetNetworkPeersRequest,
-  type GetNetworkPeersResponse,
-  type GetSnapshotsResponse,
-  type GetSpaceSnapshotRequest,
   type GetSpaceSnapshotResponse,
-  type ResetStorageRequest,
-  type RunSqliteQueryRequest,
-  type RunSqliteQueryResponse,
-  type SaveSpaceSnapshotRequest,
   type SaveSpaceSnapshotResponse,
   type SignalResponse,
-  type StorageInfo,
-  type SubscribeToCredentialMessagesRequest,
-  type SubscribeToCredentialMessagesResponse,
-  type SubscribeToFeedBlocksRequest,
   type SubscribeToFeedBlocksResponse,
-  type SubscribeToFeedsRequest,
-  type SubscribeToFeedsResponse,
-  type SubscribeToItemsRequest,
-  type SubscribeToItemsResponse,
-  type SubscribeToKeyringKeysRequest,
-  type SubscribeToKeyringKeysResponse,
   type SubscribeToMetadataResponse,
-  type SubscribeToNetworkTopicsResponse,
-  type SubscribeToSignalStatusResponse,
-  type SubscribeToSpacesRequest,
   type SubscribeToSpacesResponse,
-  type SubscribeToSwarmInfoRequest,
-  type SubscribeToSwarmInfoResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
@@ -74,8 +45,8 @@ export type DevtoolsServiceProps = {
 export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   'constructor'(private readonly params: DevtoolsServiceProps) {}
 
-  ['DevtoolsHost.events'](): EffectStream.Stream<Event, Error> {
-    return EffectStream.async<Event, Error>((emit) => {
+  ['DevtoolsHost.events'](): EffectStream.Stream<DevtoolsHost.Event, Error> {
+    return EffectEx.streamFromEmitter<DevtoolsHost.Event, Error>((emit) => {
       const ctx = Context.default();
       this.params.events.ready.on(ctx, () => {
         void emit.single({ ready: {} });
@@ -85,11 +56,11 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
     });
   }
 
-  ['DevtoolsHost.getConfig'](): Effect.Effect<GetConfigResponse, Error> {
-    return Effect.sync(() => ({ config: JSON.stringify(this.params.config.values) })); // 😨
+  ['DevtoolsHost.getConfig'](): Effect.Effect<DevtoolsHost.GetConfigResponse, Error> {
+    return Effect.sync(() => ({ config: JSON.stringify(this.params.config.values) }));
   }
 
-  ['DevtoolsHost.getStorageInfo'](): Effect.Effect<StorageInfo, Error> {
+  ['DevtoolsHost.getStorageInfo'](): Effect.Effect<DevtoolsHost.StorageInfo, Error> {
     return Effect.tryPromise({
       try: async () => {
         const navigatorInfo = typeof navigator === 'object' ? await navigator.storage.estimate() : undefined;
@@ -105,69 +76,60 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
     });
   }
 
-  ['DevtoolsHost.getBlobs'](): Effect.Effect<GetBlobsResponse, Error> {
-    return Effect.tryPromise({
-      try: async () => ({
-        blobs: await this.params.context.blobStore.list(),
-      }),
-      catch: (error) => error as Error,
-    });
-  }
-
-  ['DevtoolsHost.getSnapshots'](): Effect.Effect<GetSnapshotsResponse, Error> {
+  ['DevtoolsHost.getSnapshots'](): Effect.Effect<DevtoolsHost.GetSnapshotsResponse, Error> {
     return Effect.sync(() => ({
       snapshots: [],
     }));
   }
 
-  ['DevtoolsHost.resetStorage'](_request: ResetStorageRequest): Effect.Effect<void, Error> {
+  ['DevtoolsHost.resetStorage'](_request: DevtoolsHost.ResetStorageRequest): Effect.Effect<void, Error> {
     return Effect.fail(new Error());
   }
 
   ['DevtoolsHost.enableDebugLogging'](
-    _request: EnableDebugLoggingRequest,
-  ): Effect.Effect<EnableDebugLoggingResponse, Error> {
+    _request: DevtoolsHost.EnableDebugLoggingRequest,
+  ): Effect.Effect<DevtoolsHost.EnableDebugLoggingResponse, Error> {
     return Effect.fail(new Error());
   }
 
   ['DevtoolsHost.disableDebugLogging'](
-    _request: EnableDebugLoggingRequest,
-  ): Effect.Effect<EnableDebugLoggingResponse, Error> {
+    _request: DevtoolsHost.EnableDebugLoggingRequest,
+  ): Effect.Effect<DevtoolsHost.EnableDebugLoggingResponse, Error> {
     return Effect.fail(new Error());
   }
 
   ['DevtoolsHost.subscribeToKeyringKeys'](
-    _request: SubscribeToKeyringKeysRequest,
-  ): EffectStream.Stream<SubscribeToKeyringKeysResponse, Error> {
+    _request: DevtoolsHost.SubscribeToKeyringKeysRequest,
+  ): EffectStream.Stream<DevtoolsHost.SubscribeToKeyringKeysResponse, Error> {
     return toEffectStream(subscribeToKeyringKeys({ keyring: this.params.context.keyring }));
   }
 
   ['DevtoolsHost.subscribeToCredentialMessages'](
-    _request: SubscribeToCredentialMessagesRequest,
-  ): EffectStream.Stream<SubscribeToCredentialMessagesResponse, Error> {
+    _request: DevtoolsHost.SubscribeToCredentialMessagesRequest,
+  ): EffectStream.Stream<DevtoolsHost.SubscribeToCredentialMessagesResponse, Error> {
     return EffectStream.fail(new Error());
   }
 
   ['DevtoolsHost.subscribeToSpaces'](
-    request: SubscribeToSpacesRequest,
+    request: DevtoolsHost.SubscribeToSpacesRequest,
   ): EffectStream.Stream<SubscribeToSpacesResponse, Error> {
     return toEffectStream(subscribeToSpaces(this.params.context, request));
   }
 
   ['DevtoolsHost.subscribeToItems'](
-    _request: SubscribeToItemsRequest,
-  ): EffectStream.Stream<SubscribeToItemsResponse, Error> {
+    _request: DevtoolsHost.SubscribeToItemsRequest,
+  ): EffectStream.Stream<DevtoolsHost.SubscribeToItemsResponse, Error> {
     return EffectStream.fail(new Error());
   }
 
   ['DevtoolsHost.subscribeToFeeds'](
-    request: SubscribeToFeedsRequest,
-  ): EffectStream.Stream<SubscribeToFeedsResponse, Error> {
+    request: DevtoolsHost.SubscribeToFeedsRequest,
+  ): EffectStream.Stream<DevtoolsHost.SubscribeToFeedsResponse, Error> {
     return toEffectStream(subscribeToFeeds(this.params.context, request));
   }
 
   ['DevtoolsHost.subscribeToFeedBlocks'](
-    request: SubscribeToFeedBlocksRequest,
+    request: DevtoolsHost.SubscribeToFeedBlocksRequest,
   ): EffectStream.Stream<SubscribeToFeedBlocksResponse, Error> {
     return toEffectStream(subscribeToFeedBlocks({ feedStore: this.params.context.feedStore }, request));
   }
@@ -176,29 +138,36 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
     return toEffectStream(subscribeToMetadata({ context: this.params.context }));
   }
 
-  ['DevtoolsHost.getSpaceSnapshot'](_request: GetSpaceSnapshotRequest): Effect.Effect<GetSpaceSnapshotResponse, Error> {
+  ['DevtoolsHost.getSpaceSnapshot'](
+    _request: DevtoolsHost.GetSpaceSnapshotRequest,
+  ): Effect.Effect<GetSpaceSnapshotResponse, Error> {
     return Effect.fail(new Error());
   }
 
   ['DevtoolsHost.saveSpaceSnapshot'](
-    _request: SaveSpaceSnapshotRequest,
+    _request: DevtoolsHost.SaveSpaceSnapshotRequest,
   ): Effect.Effect<SaveSpaceSnapshotResponse, Error> {
     return Effect.fail(new Error());
   }
 
-  ['DevtoolsHost.clearSnapshots'](_request: ClearSnapshotsRequest): Effect.Effect<void, Error> {
+  ['DevtoolsHost.clearSnapshots'](_request: DevtoolsHost.ClearSnapshotsRequest): Effect.Effect<void, Error> {
     return Effect.fail(new Error());
   }
 
-  ['DevtoolsHost.getNetworkPeers'](_request: GetNetworkPeersRequest): Effect.Effect<GetNetworkPeersResponse, Error> {
+  ['DevtoolsHost.getNetworkPeers'](
+    _request: DevtoolsHost.GetNetworkPeersRequest,
+  ): Effect.Effect<DevtoolsHost.GetNetworkPeersResponse, Error> {
     return Effect.fail(new Error());
   }
 
-  ['DevtoolsHost.subscribeToNetworkTopics'](): EffectStream.Stream<SubscribeToNetworkTopicsResponse, Error> {
+  ['DevtoolsHost.subscribeToNetworkTopics'](): EffectStream.Stream<
+    DevtoolsHost.SubscribeToNetworkTopicsResponse,
+    Error
+  > {
     return EffectStream.fail(new Error());
   }
 
-  ['DevtoolsHost.subscribeToSignalStatus'](): EffectStream.Stream<SubscribeToSignalStatusResponse, Error> {
+  ['DevtoolsHost.subscribeToSignalStatus'](): EffectStream.Stream<DevtoolsHost.SubscribeToSignalStatusResponse, Error> {
     return toEffectStream(subscribeToNetworkStatus({ signalManager: this.params.context.signalManager }));
   }
 
@@ -212,12 +181,12 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   }
 
   ['DevtoolsHost.subscribeToSwarmInfo'](
-    _request: SubscribeToSwarmInfoRequest,
-  ): EffectStream.Stream<SubscribeToSwarmInfoResponse, Error> {
+    _request: DevtoolsHost.SubscribeToSwarmInfoRequest,
+  ): EffectStream.Stream<DevtoolsHost.SubscribeToSwarmInfoResponse, Error> {
     return toEffectStream(subscribeToSwarmInfo({ networkManager: this.params.context.networkManager }));
   }
 
-  ['DevtoolsHost.exportSqliteDatabase'](): Effect.Effect<ExportSqliteDatabaseResponse, Error> {
+  ['DevtoolsHost.exportSqliteDatabase'](): Effect.Effect<DevtoolsHost.ExportSqliteDatabaseResponse, Error> {
     return Effect.tryPromise({
       try: async () => ({
         data: await this.params.exportSqliteDatabase(),
@@ -226,7 +195,9 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
     });
   }
 
-  ['DevtoolsHost.runSqliteQuery'](request: RunSqliteQueryRequest): Effect.Effect<RunSqliteQueryResponse, Error> {
+  ['DevtoolsHost.runSqliteQuery'](
+    request: DevtoolsHost.RunSqliteQueryRequest,
+  ): Effect.Effect<DevtoolsHost.RunSqliteQueryResponse, Error> {
     return Effect.promise(async () => {
       try {
         const parsedParams = request.params ? JSON.parse(request.params) : undefined;
@@ -247,7 +218,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
  * The underlying stream is closed (disposing its resources) when the Effect stream terminates.
  */
 const toEffectStream = <T>(stream: Stream<T>): EffectStream.Stream<T, Error> =>
-  EffectStream.async<T, Error>((emit) => {
+  EffectEx.streamFromEmitter<T, Error>((emit) => {
     stream.subscribe(
       (message) => void emit.single(message),
       (error) => (error ? void emit.fail(error) : void emit.end()),

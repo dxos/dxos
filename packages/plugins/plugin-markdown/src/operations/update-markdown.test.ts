@@ -20,8 +20,7 @@ import { HasSubject } from '@dxos/types';
 
 import { MarkdownOperationHandlerSet } from '#operations';
 import { OperationTestLayer } from '#testing';
-
-import * as MarkdownOperation from '../types/MarkdownOperation';
+import { MarkdownOperation } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
 

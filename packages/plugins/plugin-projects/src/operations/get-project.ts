@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, type Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
-import * as ProjectMcpOperation from '../types/ProjectMcpOperation';
+import { ProjectMcpOperation } from '#types';
 
 /**
  * The detail read behind `projectList`: goals, per-task-set open/total counts, the checklist
@@ -49,6 +49,7 @@ const handler: Operation.WithHandler<typeof ProjectMcpOperation.GetProject> = Pr
       return {
         id: project.id,
         name: project.name,
+        status: project.status,
         description: project.description,
         goals: [...(project.goals ?? [])],
         taskSet: taskSet

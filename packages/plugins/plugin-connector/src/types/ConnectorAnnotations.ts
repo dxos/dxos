@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type CapabilityManager } from '@dxos/app-framework';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { type Obj } from '@dxos/echo';
 import { createAnnotationHelper } from '@dxos/echo/internal';
 
@@ -18,7 +18,7 @@ import { createAnnotationHelper } from '@dxos/echo/internal';
  *
  * Pattern modeled after `PivotColumnAnnotationId` in `plugin-kanban`.
  */
-export const ConnectorAnnotationId = Symbol.for('@dxos/plugin-connector/annotation/Connector');
+export const ConnectorAnnotationId = '@dxos/plugin-connector/annotation/Connector';
 
 /**
  * Value of {@link ConnectorAuthAnnotation}: declares that objects of the annotated type offer
@@ -48,5 +48,5 @@ export type ConnectorAuthAnnotationValue = {
  * `Schema.Struct.pipe(...)`; the connector plugin's `connectorAuth` extension reads it off each
  * object's schema and contributes the connect action group.
  */
-export const ConnectorAuthAnnotationId = Symbol.for('@dxos/plugin-connector/annotation/ConnectorAuth');
+export const ConnectorAuthAnnotationId = '@dxos/plugin-connector/annotation/ConnectorAuth';
 export const ConnectorAuthAnnotation = createAnnotationHelper<ConnectorAuthAnnotationValue>(ConnectorAuthAnnotationId);

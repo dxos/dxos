@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Obj, Relation, Type } from '@dxos/echo';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { Connection } from '@dxos/link';
 
 /**
  * Record of an ECHO object published to an atproto repo. Source = the {@link Connection} that
@@ -38,7 +38,7 @@ export class AtprotoPublication extends Type.makeRelation<AtprotoPublication>(
      * flag which individual Published fields have since diverged (older publications lack it — the
      * companion then shows no per-field Published divergence).
      */
-    publishedValues: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
+    publishedValues: Schema.optional(Schema.Record(Schema.String, Schema.String)),
     /** ISO timestamp of the last publish. */
     publishedAt: Schema.String,
   }),

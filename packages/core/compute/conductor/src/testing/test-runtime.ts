@@ -61,7 +61,7 @@ export class TestRuntime {
     graphUri: URI.URI,
     input: ValueBag<any>,
   ): Effect.Effect<ValueBag<T>, ConductorError, Exclude<ComputeRequirements, ComputeNodeContext>> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const program = yield* Effect.promise(() => this._workflowLoader.load(graphUri));
       return yield* program.run(input);
     }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeNodeContext.layerNoop));
@@ -74,7 +74,7 @@ export class TestRuntime {
     inputNodeId: string,
     input: ValueBag<any>,
   ): Effect.Effect<Record<string, ValueBag<any>>, ConductorError, Exclude<ComputeRequirements, ComputeNodeContext>> {
-    return Effect.gen(this, function* () {
+    return Effect.gen({ self: this }, function* () {
       const workflow = yield* Effect.promise(() => this._workflowLoader.load(graphUri));
       const executor = new GraphExecutor({
         computeNodeResolver: async (node: ComputeNode) => workflow.getResolvedNode(node.id)!,

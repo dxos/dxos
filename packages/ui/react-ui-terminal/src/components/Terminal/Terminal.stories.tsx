@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as Prompt from '@effect/cli/Prompt';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 import React, { useMemo } from 'react';
 import { userEvent } from 'storybook/test';
 
@@ -31,8 +31,8 @@ const RESET = '\x1b[0m';
 const greet = Command.make(
   'greet',
   {
-    name: Args.text({ name: 'name' }),
-    loud: Options.boolean('loud', { ifPresent: true }).pipe(Options.withDescription('Shout the greeting.')),
+    name: Args.string('name'),
+    loud: Options.boolean('loud').pipe(Options.withDescription('Shout the greeting.')),
   },
   ({ name, loud }) => Console.log(loud ? `HELLO, ${name.toUpperCase()}!` : `Hello, ${name}.`),
 ).pipe(Command.withDescription('Greet someone by name.'));
@@ -103,9 +103,10 @@ export const Spec: Story = {
     await runCommand(canvasElement, 'greet ada --loud', keyboard);
     await waitForTerminal(canvasElement, 'HELLO, ADA!');
 
-    // An unknown command is reported once, by the CLI itself.
+    // An unknown command is reported once, by the CLI itself — which answers with the command's
+    // help rather than a one-line message.
     await runCommand(canvasElement, 'bogus', keyboard);
-    await waitForTerminal(canvasElement, 'Invalid subcommand');
+    await waitForTerminal(canvasElement, 'USAGE');
 
     // The shell survives the failure and keeps accepting commands.
     await runCommand(canvasElement, 'greet again', keyboard);

@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Agent } from '@dxos/assistant-toolkit';
@@ -12,7 +11,7 @@ import { useQuery } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { FeedAnnotation } from '@dxos/schema';
+import { isFeedOwnerSchema } from '@dxos/schema';
 
 import { meta } from '#meta';
 
@@ -37,10 +36,7 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
     }
 
     const schemas = db.graph.registry.list().filter(Type.isType);
-    const feedSchemas = schemas.filter((type) => {
-      const annotation = FeedAnnotation.get(Type.getSchema(type));
-      return Option.isSome(annotation) && annotation.value === true;
-    });
+    const feedSchemas = schemas.filter(isFeedOwnerSchema);
 
     return feedSchemas.length === 0
       ? Filter.nothing()

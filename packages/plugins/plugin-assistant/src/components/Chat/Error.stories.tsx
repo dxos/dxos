@@ -86,6 +86,16 @@ export const ModelUnavailable: Story = {
   },
 };
 
+/**
+ * The model resolver chain rejecting the configured model before the request leaves the browser —
+ * the user's fix is to pick a different model in settings, so the toast names the one that failed.
+ */
+export const ModelNotResolved: Story = {
+  args: {
+    rawError: 'AiModelNotAvailableError: AI Model not available: dxn:com.anthropic.model.claude-opus-4-8.default',
+  },
+};
+
 /** Any unrecognized failure falls back to a generic message rather than leaking implementation detail. */
 export const UnexpectedError: Story = {
   args: {

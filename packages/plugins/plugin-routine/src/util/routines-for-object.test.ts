@@ -60,7 +60,7 @@ const qualifiedRef = (db: Database.Database, object: Obj.Unknown) =>
 
 describe('routines connected to an object', () => {
   test('input-ref: trigger whose nested input references the object', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
 
     const target = db.add(Routine.make({ name: 'target', triggers: [] }));
@@ -82,7 +82,7 @@ describe('routines connected to an object', () => {
   test('cursor-ref: trigger bound (via `binding`) to a Cursor whose `spec.target` is the object', async ({
     expect,
   }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
 
     const target = db.add(Routine.make({ name: 'target', triggers: [] }));
@@ -104,7 +104,7 @@ describe('routines connected to an object', () => {
   });
 
   test("feed-ref: feed trigger bound to the object's feed", async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
 
     const feed = db.add(Feed.make());
@@ -124,7 +124,7 @@ describe('routines connected to an object', () => {
   test('instructions-ref: routine whose runnable instructions list the object in their `objects`', async ({
     expect,
   }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
 
     const target = db.add(Routine.make({ name: 'target', triggers: [] }));

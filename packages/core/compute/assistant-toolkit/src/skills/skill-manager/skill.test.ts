@@ -31,16 +31,15 @@ const TestLayer = AssistantTestLayer({
 });
 
 /** Conversation DXN for the scoped test harness feed. */
-class TestConversation extends Context.Tag('@dxos/assistant-toolkit/TestConversation')<
-  TestConversation,
-  { conversation: URI.URI }
->() {}
+class TestConversation extends Context.Service<TestConversation, { conversation: URI.URI }>()(
+  '@dxos/assistant-toolkit/TestConversation',
+) {}
 
-const ConversationHarnessLayer = Layer.unwrapScoped(
+const ConversationHarnessLayer = Layer.unwrap(
   Effect.gen(function* () {
     const feed = yield* Database.add(Feed.make());
     const conversation = Obj.getURI(feed);
-    const runtime = yield* Effect.runtime<Database.Service>();
+    const runtime = yield* Effect.context<Database.Service>();
     const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
     return Layer.mergeAll(
       Layer.succeed(TestConversation, { conversation }),

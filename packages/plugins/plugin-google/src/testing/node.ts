@@ -8,4 +8,4 @@
 // consumers get the deterministic fixtures plus the contracts needed to build a faithful HTTP mock.
 export * from './calendar-fixtures';
 export * from './gmail-fixtures';
-export type { GmailDataset } from '../services';
+export type { GmailDataset } from '#services';

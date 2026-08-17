@@ -4,12 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
 import { Annotation, DXN, JsonSchema, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../annotations';
 import { omitId } from './omit';
@@ -88,10 +87,10 @@ describe('getFormProperties', () => {
     const Route = Schema.Struct({ legs: Schema.Array(Leg) });
     const TestSchema = Type.makeObject(DXN.make('org.dxos.test.nestedHidden', '0.1.0'))(
       Schema.Struct({
-        details: Schema.Union(
+        details: Schema.Union([
           Schema.TaggedStruct('road', { routes: Schema.optional(Schema.Array(Route)) }),
           Schema.TaggedStruct('other', { note: Schema.optional(Schema.String) }),
-        ),
+        ]),
       }),
     );
 
@@ -100,7 +99,7 @@ describe('getFormProperties', () => {
     const findTypeLiteralWith = (ast: SchemaAST.AST, prop: string) =>
       SchemaEx.findNode(
         ast,
-        (node) => SchemaAST.isTypeLiteral(node) && SchemaAST.getPropertySignatures(node).some((p) => p.name === prop),
+        (node) => SchemaAST.isObjects(node) && SchemaAST.getPropertySignatures(node).some((p) => p.name === prop),
       )!;
     const propType = (ast: SchemaAST.AST, name: string) => getFormProperties(ast).find((p) => p.name === name)!.type;
 
@@ -108,11 +107,11 @@ describe('getFormProperties', () => {
     const roadTypeLiteral = findTypeLiteralWith(detailsType, 'routes');
     const routeTypeLiteral = SchemaEx.findNode(
       SchemaEx.getArrayElementType(propType(roadTypeLiteral, 'routes'))!,
-      SchemaAST.isTypeLiteral,
+      SchemaAST.isObjects,
     )!;
     const legTypeLiteral = SchemaEx.findNode(
       SchemaEx.getArrayElementType(propType(routeTypeLiteral, 'legs'))!,
-      SchemaAST.isTypeLiteral,
+      SchemaAST.isObjects,
     )!;
 
     const names = getFormProperties(legTypeLiteral).map((prop) => prop.name);
@@ -120,13 +119,13 @@ describe('getFormProperties', () => {
     expect(names).not.toContain('geometry');
   });
 
-  test('preserves annotation when chained with .annotations()', ({ expect }) => {
-    // Regression: `.pipe(FormInputAnnotation.set(false)).annotations({...})` must
+  test('preserves annotation when chained with .annotate()', ({ expect }) => {
+    // Regression: `.pipe(FormInputAnnotation.set(false)).annotate({...})` must
     // not lose the form-input annotation.
     const TestSchema = Type.makeObject(DXN.make('org.dxos.test.chainedHidden', '0.1.0'))(
       Schema.Struct({
         name: Schema.optional(Schema.String),
-        hidden: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
+        hidden: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotate({
           description: 'Hidden field',
         }),
       }),
@@ -141,7 +140,7 @@ describe('getFormProperties', () => {
 describe('getRootFormProperties', () => {
   const Timer = Schema.Struct({ kind: Schema.Literal('timer'), cron: Schema.String });
   const Feed = Schema.Struct({ kind: Schema.Literal('feed'), feed: Schema.String });
-  const Union = Schema.Union(Timer, Feed);
+  const Union = Schema.Union([Timer, Feed]);
 
   test('renders a non-union root unchanged', ({ expect }) => {
     const ast = Schema.Struct({ a: Schema.String, b: Schema.Number }).ast;
@@ -159,7 +158,7 @@ describe('getRootFormProperties', () => {
     expect,
   }) => {
     const kind = getRootFormProperties(Union.ast, { kind: 'feed' }).find((prop) => prop.name === 'kind');
-    expect(kind && SchemaEx.getLiteralValues(Schema.make(kind.type))).toEqual(['timer', 'feed']);
+    expect(kind && SchemaEx.getLiteralValues(Schema.make<Schema.Schema<string>>(kind.type))).toEqual(['timer', 'feed']);
   });
 
   test('falls back to the discriminator alone when no value selects a member', ({ expect }) => {
@@ -199,7 +198,7 @@ describe('getRootFormProperties', () => {
       ),
     });
 
-    const CreateUnion = Schema.Union(StandardSite, Rss);
+    const CreateUnion = Schema.Union([StandardSite, Rss]);
 
     test('expands to the standard-site member fields', ({ expect }) => {
       expect(getRootFormProperties(CreateUnion.ast, { type: 'standard-site' }).map((prop) => prop.name)).toEqual([

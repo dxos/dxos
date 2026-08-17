@@ -26,7 +26,7 @@ import { findSyncTriggerForBinding } from './sync-trigger';
 /** Stands in for a connector's declared `sync.trigger`. */
 const SYNC_SPEC = Trigger.specTimer('*/10 * * * *');
 
-// Stand-in for a connector's `sync.operation` (e.g. `InboxOperation.GoogleMailSync`): takes the same
+// Stand-in for a connector's `sync.operation` (e.g. `GoogleOperation.GoogleMailSync`): takes the same
 // `{ binding: Ref<Cursor> }` shape every real connector's sync declares.
 const TestSync = Operation.make({
   meta: { key: DXN.make('org.dxos.test.sync'), name: 'Test Sync' },
@@ -69,7 +69,7 @@ const findSyncRoutine = (db: Database.Database, target: Obj.Unknown) =>
 
 describe('createSyncRoutine', () => {
   test('creates a routine with a timer trigger bound to the target’s cursor', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
 
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
@@ -104,7 +104,7 @@ describe('createSyncRoutine', () => {
   });
 
   test('marks the trigger remote for a connector that syncs on EDGE', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
 
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
@@ -122,7 +122,7 @@ describe('createSyncRoutine', () => {
   });
 
   test('is idempotent: a second call is a no-op once a sync routine is connected', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
 
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
@@ -145,7 +145,7 @@ describe('createSyncRoutine', () => {
   });
 
   test('two calls racing on one binding create a single routine', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
 
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));

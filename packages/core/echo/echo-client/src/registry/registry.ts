@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { type Database, Entity, type Filter, Query, type QueryResult, Registry, Type } from '@dxos/echo';
@@ -299,13 +299,11 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
 
   runSyncEntries(): QueryResult.Entry<T>[] {
     const matches = executeQuery(this.#registry, this.#query.ast);
-    return matches.map(
-      (entity): QueryResult.Entry<T> => ({
-        id: getEntityId(entity),
-        result: entity as unknown as T,
-        resolution: { source: 'local', time: 0 },
-      }),
-    );
+    return matches.map((entity): QueryResult.Entry<T> => ({
+      id: getEntityId(entity),
+      result: entity as unknown as T,
+      resolution: { source: 'local', time: 0 },
+    }));
   }
 
   async first(): Promise<T> {

@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { ComputeGraph, ComputeGraphModel } from '@dxos/conductor';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
@@ -13,9 +14,9 @@ import { Graph } from '@dxos/graph';
 /**
  * Base type for all shapes.
  */
-export const Shape = Schema.extend(
-  Graph.Node.pipe(Schema.omit('type')), // TODO(burdon): Breaks graph contract?
-  Schema.Struct({
+export const Shape = Graph.Node.mapFields((fields) => Struct.omit(fields, ['type'])).pipe(
+  // TODO(burdon): Breaks graph contract?
+  Schema.fieldsAssign({
     type: Schema.String,
     text: Schema.optional(Schema.String),
     guide: Schema.optional(Schema.Boolean),
@@ -28,9 +29,8 @@ export type Shape = Schema.Schema.Type<typeof Shape>;
 /**
  * Connections between shapes.
  */
-export const Connection = Schema.extend(
-  Graph.Edge,
-  Schema.Struct({
+export const Connection = Graph.Edge.mapFields(
+  Struct.assign({
     input: Schema.optional(Schema.String),
     output: Schema.optional(Schema.String),
   }),

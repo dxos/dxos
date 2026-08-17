@@ -2,15 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { useAtomValue } from '@effect-atom/atom-react';
-import * as Data from 'effect/Data';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
 import { pipe } from 'effect/Function';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapabilityState, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import * as Process from '@dxos/compute/Process';
@@ -26,8 +25,10 @@ import { mx } from '@dxos/ui-theme';
 import { ProcessTree, ProcessTreeProps } from '#components';
 import { type ExecutionGraph, buildExecutionGraph } from '#execution-graph';
 import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
+import { AssistantCapabilities } from '#types';
 
-import * as AssistantCapabilities from '../../types/AssistantCapabilities';
+import { type ProcessEnvironment, filterProcesses, parseProcessEnvironments } from './trace-filter';
+import { TraceToolbar } from './TraceToolbar';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
 
@@ -35,8 +36,17 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
   ({ space, attendableId, onProcessTerminate, ...props }, forwardedRef) => {
     const attentionAttrs = useAttentionAttributes(attendableId);
     const { invokePromise } = useOperationInvoker();
-    const settings = useAtomCapability(AssistantCapabilities.Settings);
+    const [settings, updateSettings] = useAtomCapabilityState(AssistantCapabilities.Settings);
     const tracePanelDebug = settings.tracePanelDebug ?? false;
+    const environments = useMemo(
+      () => parseProcessEnvironments(settings.traceProcessEnvironments),
+      [settings.traceProcessEnvironments],
+    );
+    const handleEnvironmentsChange = useCallback(
+      (traceProcessEnvironments: ProcessEnvironment[]) =>
+        updateSettings((settings) => ({ ...settings, traceProcessEnvironments })),
+      [updateSettings],
+    );
 
     // `useDeferredValue` batches update bursts, works together with `React.memo`.
     // See the comment in `ProcessTreeContainer` for more details.
@@ -108,13 +118,19 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           classNames: mx(
             'h-full grid divide-y divide-subdued-separator',
             !tracePanelDebug && selectedCommit
-              ? 'grid-rows-[minmax(0,160px)_1fr_minmax(0,206px)]'
-              : 'grid-rows-[minmax(0,160px)_1fr]',
+              ? 'grid-rows-[min-content_minmax(0,160px)_1fr_minmax(0,206px)]'
+              : 'grid-rows-[min-content_minmax(0,160px)_1fr]',
           ),
         })}
         ref={forwardedRef}
       >
-        <ProcessTreeContainer onProcessSelect={handleProcessSelect} onProcessTerminate={onProcessTerminate} />
+        <TraceToolbar selected={environments} onSelectedChange={handleEnvironmentsChange} />
+
+        <ProcessTreeContainer
+          environments={environments}
+          onProcessSelect={handleProcessSelect}
+          onProcessTerminate={onProcessTerminate}
+        />
 
         <ScrollContainer.Root pin>
           <ScrollContainer.Content thin>
@@ -194,6 +210,11 @@ const useExecutionGraph = (
   return useAtomValue(atom);
 };
 
+/** Identity for the graph: only a process appearing, disappearing or changing state redraws it. */
+const sameProcesses = (left: readonly Process.Info[], right: readonly Process.Info[]): boolean =>
+  left.length === right.length &&
+  left.every((process, index) => process.pid === right[index].pid && process.state === right[index].state);
+
 const getExecutionGraph = (
   space: Space,
   processesAtom: Atom.Atom<readonly Process.Info[]>,
@@ -205,13 +226,13 @@ const getExecutionGraph = (
     processesAtom,
     Atom.debounce(Duration.millis(500)),
     Atom.map((processes) =>
-      // `Data.array` does structural comparison on the array elements.
-      Data.array(
-        processes
-          .filter((process) => process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING)
-          .map(Data.struct),
+      processes.filter(
+        (process) => process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING,
       ),
     ),
+    // The monitor rebuilds the process list on every poll, so without a structural comparison the
+    // graph would be rebuilt on each tick even when nothing moved.
+    Atom.withEquality(sameProcesses),
   );
 
   return Atom.make((get) =>
@@ -226,12 +247,13 @@ const getExecutionGraph = (
 };
 TracePanel.displayName = 'TracePanel';
 
+type ProcessTreeContainerProps = Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'> & {
+  environments: readonly ProcessEnvironment[];
+};
+
 // Isolate `ProcessTree` updates from the rest of the panel.
 // TODO(dmaretskyi): Currently not useful since `useExecutionGraph` also pulls in the updates.
-const ProcessTreeContainer = ({
-  onProcessSelect,
-  onProcessTerminate,
-}: Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'>) => {
+const ProcessTreeContainer = ({ environments, onProcessSelect, onProcessTerminate }: ProcessTreeContainerProps) => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processes = useAtomValue(
     useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),
@@ -241,9 +263,13 @@ const ProcessTreeContainer = ({
   // `useDeferredValue` will debounce update propagation, returning stale value for short periods.
   // NOTE: `ProcessTree` MUST use `React.memo`, otherwise this will not work.
   const processesDeferred = useDeferredValue(processes);
+  const visibleProcesses = useMemo(
+    () => filterProcesses(processesDeferred, environments),
+    [processesDeferred, environments],
+  );
   return (
     <ProcessTree
-      processes={processesDeferred}
+      processes={visibleProcesses}
       depth={3}
       onProcessSelect={onProcessSelect}
       onProcessTerminate={onProcessTerminate}

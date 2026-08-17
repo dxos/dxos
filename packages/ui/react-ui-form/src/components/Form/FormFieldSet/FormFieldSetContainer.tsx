@@ -9,10 +9,11 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
+import { useFormContext } from '../../../hooks';
 import { formTheme } from '../Form.theme';
 import { FormFieldHeader, type FormFieldPresentation } from '../FormField';
 
-const styles = formTheme.styles();
+const FORM_FIELDSET_CONTAINER_NAME = 'Form.FieldSetContainer';
 
 export type FormFieldSetContainerProps = ThemedClassName<
   PropsWithChildren<{
@@ -44,6 +45,11 @@ export const FormFieldSetContainer = ({
   children,
 }: FormFieldSetContainerProps) => {
   const { t } = useTranslation(translationKey);
+  // Resolved per render, not once at module scope: a module-scope `formTheme.styles()` silently pins
+  // the `default` variant, so a `settings` form's nested groups lost the gap between their sub-fields
+  // and rendered flush. Every path here passes through `Form.FieldSet`, which reads the same context.
+  const { variant = 'default' } = useFormContext(FORM_FIELDSET_CONTAINER_NAME);
+  const styles = formTheme.styles({ variant });
   // TODO(burdon): Generalize collapse state (cf. useSelection in react-ui-attention, plugin-markdown cursor state).
   const [collapsed, setCollapsed] = useState(false);
   // An empty object/array renders no sub-fields, so there is nothing to collapse — offering the

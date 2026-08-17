@@ -9,13 +9,11 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-
-import * as BrainCapabilities from '../types/BrainCapabilities';
-import * as BrainSettings from '../types/BrainSettings';
+import { BrainCapabilities, BrainSettings } from '#types';
 
 /**
  * Shared KVS-backed atom for the fact-analysis settings (model/provider/strict). Created at module
- * scope so the analyze mailbox action (`./mailbox-action`) can read it live via the atom registry
+ * scope so the analyze processor (`./mailbox-processor`) can read it live via the atom registry
  * without a cross-capability lookup or activation ordering.
  */
 export const settingsAtom = createKvsStore({

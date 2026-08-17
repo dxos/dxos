@@ -10,8 +10,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
-
-import * as IllustratorCapabilities from '../types/IllustratorCapabilities';
+import { IllustratorCapabilities } from '#types';
 
 export type CreateDrawingPanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override (primarily for stories/tests). Defaults to IllustratorCapabilities.VariantProvider. */

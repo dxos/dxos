@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type CapabilityManager } from '@dxos/app-framework';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
@@ -14,7 +14,7 @@ import { Text } from '@dxos/schema';
 import { PublisherService } from './BloggerCapabilities';
 
 /** Publication lifecycle of a post: local-only `draft` vs synced-to-a-publisher `published`. */
-export const PostStatus = Schema.Literal('draft', 'published');
+export const PostStatus = Schema.Literals(['draft', 'published']);
 export type PostStatus = Schema.Schema.Type<typeof PostStatus>;
 
 /**
@@ -29,7 +29,7 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.blogger.
     status: PostStatus.pipe(FormInputAnnotation.set(false)),
     outline: Ref.Ref(Text.Text)
       .pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown))
-      .annotations({ description: 'Post outline and/or instructions.' }),
+      .annotate({ description: 'Post outline and/or instructions.' }),
     content: Ref.Ref(Markdown.Document).pipe(FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['name']),
@@ -65,7 +65,7 @@ export class Publication extends Type.makeObject<Publication>(DXN.make('org.dxos
     name: Schema.optional(Schema.String),
     instructions: Ref.Ref(Text.Text)
       .pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown))
-      .annotations({ description: 'Publication instructions.' }),
+      .annotate({ description: 'Publication instructions.' }),
     posts: Schema.Array(Ref.Ref(Post)).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     LabelAnnotation.set(['name']),

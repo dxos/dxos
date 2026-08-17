@@ -10,8 +10,8 @@ import { type Collection, Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { PageNumber, Pager, PresentationShell, Layout as PresenterLayout } from '#components';
+import { Presenter } from '#types';
 
-import * as Presenter from '../../types/Presenter';
 import { useExitPresenter } from '../../useExitPresenter';
 
 export type CollectionArticleProps = AppSurface.ObjectArticleProps<Collection.Collection>;

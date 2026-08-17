@@ -6,10 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Graph from '@dxos/app-graph/Graph';
+import * as Node from '@dxos/app-graph/Node';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { debounce } from '@dxos/async';
 import { Keyboard } from '@dxos/keyboard';
-import { Graph, Node, runAction } from '@dxos/plugin-graph';
+import { runAction } from '@dxos/plugin-graph';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING } from '#meta';

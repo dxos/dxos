@@ -8,11 +8,16 @@ import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import {
+  // Unused by name, but the emitted declarations reference it — dropping the import breaks
+  // declaration emit (TS2742).
+  // eslint-disable-next-line unused-imports/no-unused-imports
+  Connection,
+  Cursor,
+} from '@dxos/link';
 // Unused by name, but the emitted declarations reference it — dropping the import breaks
 // declaration emit (TS2742). The suppression rode the pre-subpath barrel import too.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import type * as Connection from '@dxos/plugin-connector/Connection';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
@@ -61,7 +66,7 @@ export const MaterializeGitHubTarget = Operation.make({
  * everything ever opened or edited."
  */
 export const SyncOptions = Schema.Struct({
-  maxDaysBack: Schema.Number.annotations({
+  maxDaysBack: Schema.Number.annotate({
     title: 'Sync history (days)',
     description: 'Pull issues and PRs updated within this many days. Leave empty to sync everything.',
   }).pipe(Schema.optional),

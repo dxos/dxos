@@ -6,8 +6,7 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-
-import * as Score from './types/Score';
+import { Score } from '#types';
 
 export const translations = [
   {

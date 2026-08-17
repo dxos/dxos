@@ -7,8 +7,9 @@ import React, { type ReactNode, useState } from 'react';
 
 import { type Density } from '@dxos/ui-types';
 
+import { translations } from '#translations';
+
 import { withTheme } from '../../testing';
-import { translations } from '../../translations';
 import { Tooltip } from '../Tooltip';
 import { Button } from './Button';
 import { IconButton, type IconButtonProps } from './IconButton';

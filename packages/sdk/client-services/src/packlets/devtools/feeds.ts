@@ -7,27 +7,23 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  type SubscribeToFeedBlocksRequest,
-  type SubscribeToFeedBlocksResponse,
-  type SubscribeToFeedsRequest,
-  type SubscribeToFeedsResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { ComplexMap } from '@dxos/util';
 
 import { type SpaceManager } from '../space';
 
 type FeedInfo = {
   feed: FeedWrapper<FeedMessage>;
-  owner?: SubscribeToFeedsResponse.FeedOwner;
+  owner?: DevtoolsHost.SubscribeToFeedsResponse.FeedOwner;
 };
 
 export const subscribeToFeeds = (
   { feedStore, spaceManager }: { feedStore: FeedStore<FeedMessage>; spaceManager: SpaceManager },
-  { feedKeys }: SubscribeToFeedsRequest,
+  { feedKeys }: DevtoolsHost.SubscribeToFeedsRequest,
 ) => {
-  return new Stream<SubscribeToFeedsResponse>(({ next }) => {
+  return new Stream<DevtoolsHost.SubscribeToFeedsResponse>(({ next }) => {
     const subscriptions = new SubscriptionList();
     const feedMap = new ComplexMap<PublicKey, FeedInfo>(PublicKey.hash);
 
@@ -69,7 +65,7 @@ export const subscribeToFeeds = (
 const findFeedOwner = (
   spaceManager: SpaceManager,
   feedKey: PublicKey,
-): SubscribeToFeedsResponse.FeedOwner | undefined => {
+): DevtoolsHost.SubscribeToFeedsResponse.FeedOwner | undefined => {
   const feedInfo = [...spaceManager.spaces.values()]
     .flatMap((space) => [...space.spaceState.feeds.values()])
     .find((feed) => feed.key.equals(feedKey));
@@ -85,7 +81,7 @@ const findFeedOwner = (
 
 export const subscribeToFeedBlocks = (
   { feedStore }: { feedStore: FeedStore<FeedMessage> },
-  { feedKey, maxBlocks = 10 }: SubscribeToFeedBlocksRequest,
+  { feedKey, maxBlocks = 10 }: DevtoolsHost.SubscribeToFeedBlocksRequest,
 ) => {
   return new Stream<SubscribeToFeedBlocksResponse>(({ next }) => {
     if (!feedKey) {

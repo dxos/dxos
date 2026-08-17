@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import type * as Capability from '@dxos/app-framework/Capability';
 import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
@@ -14,12 +14,13 @@ import type * as Trace from '@dxos/compute/Trace';
 import { Database, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver } from '@dxos/extractor';
-import type * as Connection from '@dxos/plugin-connector/Connection';
+import { Connection } from '@dxos/link';
 import { MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/sync';
 import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 
+import { type GmailDataset, GoogleCredentials, GoogleMailApi } from '#services';
+
 import { googleMailSyncProvider } from '../operations/mail/sync/sync-provider';
-import { type GmailDataset, GoogleCredentials, GoogleMailApi } from '../services';
 
 /**
  * Test entry point for the Gmail sync — `runMailSync` with the Gmail provider layer, leaving the API for

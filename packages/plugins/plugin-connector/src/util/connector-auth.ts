@@ -5,14 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as Node from '@dxos/app-graph/Node';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Database, type Key, Obj, type Ref } from '@dxos/echo';
-import { type Node } from '@dxos/plugin-graph';
+import { Connection } from '@dxos/link';
 
-import { meta } from '../meta';
-import * as Connection from '../types/Connection';
-import * as ConnectorCoordination from '../types/ConnectorCoordination';
-import * as ConnectorSpec from '../types/ConnectorSpec';
+import { meta } from '#meta';
+import { ConnectorCoordination, ConnectorSpec } from '#types';
+
 import { bindConnectionToTarget } from './auto-bind';
 
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */

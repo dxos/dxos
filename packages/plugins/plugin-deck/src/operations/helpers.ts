@@ -4,7 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 
-import * as DeckSchema from '../types/DeckSchema';
+import { DeckSchema } from '#types';
 
 /** The active deck's `companionPlanks` with `plankId` marked open, idempotently. */
 export const addCompanionPlank = (current: DeckSchema.StoredDeckState, plankId: string): string[] => {

@@ -2,32 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { Registry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
 import * as Cause from 'effect/Cause';
-import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Cron from 'effect/Cron';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
+import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { RunAgainError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Database, Entity, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Annotation, Database, Entity, Feed, Filter, Obj, Query, QueryResult, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
@@ -58,7 +58,14 @@ export interface TriggerDispatcherOptions {
 
   /**
    * Poll interval for cron triggers in 'natural' time control mode.
-   * @default 1 second
+   *
+   * Bounds how late a cron trigger fires, so it is also the finest schedule the dispatcher can
+   * honour — a minute, matching the shortest interval any deployed trigger asks for. The tick now
+   * carries timer triggers alone (feed and subscription triggers are woken by their own data), so
+   * shortening it costs a cron sweep rather than a re-read of every feed; a caller that needs
+   * sub-minute firing passes a smaller value explicitly (tests do) rather than lowering the default.
+   *
+   * @default 1 minute
    */
   livePollInterval?: Duration.Duration;
 
@@ -185,7 +192,7 @@ const MAX_TRACKED_INVOCATIONS = 10;
 const MAX_TRACKED_ERRORS = 10;
 
 // TODO(dmaretskyi): Extract a separate TriggerMonmitor service to @dxos/compute that would work with both local and edge dispatcher.
-export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
+export class TriggerDispatcher extends Context.Service<
   TriggerDispatcher,
   {
     readonly timeControl: TimeControl;
@@ -219,10 +226,12 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
      * Invoke all scheduled triggers who are due.
      * @param opts.kinds - The kinds of triggers to invoke.
      * @param opts.untilExhausted - Invoke until no more triggers are due. By default only one feed/subscription item is processed at a time.
+     * @param opts.triggerIds - Restrict the sweep to these triggers. Defaults to every trigger of the given kinds.
      */
     invokeScheduledTriggers(opts?: {
       kinds?: Trigger.Kind[];
       untilExhausted?: boolean;
+      triggerIds?: readonly string[];
     }): Effect.Effect<TriggerExecutionResult[]>;
 
     /**
@@ -236,7 +245,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
      */
     getCurrentTime(): Date;
   }
->() {
+>()('@dxos/functions/TriggerDispatcher') {
   static layer = (
     options: Omit<TriggerDispatcherOptions, 'services'>,
   ): Layer.Layer<TriggerDispatcher, never, TriggerDispatcherServices> =>
@@ -250,9 +259,37 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
 }
 
 const DEFAULT_MAX_CONCURRENCY = 5;
+
+/** Enough consecutive occurrences to cross a cluster and back — one gap would miss `0,5 * * * * *`. */
+const CRON_PERIOD_SAMPLES = 8;
+
+/**
+ * The SHORTEST interval between consecutive occurrences, or `undefined` if it fires at most once more.
+ *
+ * The minimum is what a poll floor needs: a schedule is unhonourable if ANY adjacent pair is closer
+ * than the tick, not merely if its typical spacing is.
+ */
+const cronPeriod = (cron: Cron.Cron, now: Date): Duration.Duration | undefined => {
+  try {
+    let previous = Cron.next(cron, now);
+    let shortest: number | undefined;
+    for (let index = 0; index < CRON_PERIOD_SAMPLES; index += 1) {
+      const next = Cron.next(cron, previous);
+      const gap = next.getTime() - previous.getTime();
+      shortest = shortest === undefined ? gap : Math.min(shortest, gap);
+      previous = next;
+    }
+    return shortest === undefined ? undefined : Duration.millis(shortest);
+  } catch {
+    return undefined;
+  }
+};
+
+/** See {@link TriggerDispatcherOptions.livePollInterval}. */
+const DEFAULT_LIVE_POLL_INTERVAL = Duration.minutes(1);
 const DEFAULT_FAILURE_COOLDOWN = Duration.seconds(30);
 
-class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
+class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispatcher> {
   readonly livePollInterval: Duration.Duration;
   readonly timeControl: TimeControl;
 
@@ -261,6 +298,44 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   private _internalTime: Date;
   private _timerFiber: Fiber.Fiber<void, void> | undefined;
   private _triggers: Trigger.Trigger[] = [];
+
+  /**
+   * Live query over `Trigger` objects, subscribed once in {@link start} so the trigger list stays
+   * current reactively. While set, {@link _fetchTriggers} reads {@link QueryResult.results}
+   * directly instead of re-querying the database, so the natural-time poll loop no longer issues a
+   * fresh `Filter.type(Trigger)` query on every tick.
+   */
+  #triggerQuery: QueryResult.QueryResult<Trigger.Trigger> | undefined;
+  #triggerQueryUnsubscribe: (() => void) | undefined;
+
+  /**
+   * Fiber forked by the trigger-query subscription callback to run {@link refreshTriggers}
+   * reactively. Tracked so {@link stop} (and the natural-time-processing failure path) can
+   * interrupt an in-flight refresh instead of letting it repopulate state after shutdown.
+   */
+  #pendingRefreshFiber: Fiber.Fiber<void, never> | undefined;
+
+  /**
+   * Live queries that wake the non-timer kinds, keyed by trigger id: a feed trigger watches what
+   * follows its cursor, a subscription trigger watches its own query. Only `timer` genuinely needs
+   * a wall clock, so the poll tick drives that kind alone and the rest react to their data.
+   *
+   * `key` folds in whatever the query is derived from (a feed trigger's cursor), so a refresh
+   * rebuilds a subscription exactly when it has gone stale and leaves the rest untouched.
+   */
+  #reactiveSources = new Map<string, { key: string; unsubscribe: () => void }>();
+
+  /**
+   * Serializes reactive dispatch so two overlapping wake-ups cannot invoke the same trigger twice
+   * for one item — the cursor advances only after an invocation completes.
+   */
+  #reactiveDispatchLock = Semaphore.makeUnsafe(1);
+
+  /** Serializes reconciliation of {@link #reactiveSources}, which spans an await. */
+  #reactiveSourceLock = Semaphore.makeUnsafe(1);
+
+  /** Fibers forked by reactive subscriptions, interrupted on teardown. */
+  #reactiveDispatchFibers = new Set<Fiber.Fiber<void, never>>();
 
   /**
    * Unified runtime state for every trigger kind: cron schedule, failure cooldown, and pending
@@ -286,7 +361,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
    * manual, and retry drain). Enforces {@link _maxConcurrency} on top of any per-trigger
    * concurrency. Created eagerly so it can wrap invocations without an initialization effect.
    */
-  private _concurrencyLimiter: Effect.Semaphore;
+  private _concurrencyLimiter: Semaphore.Semaphore;
 
   /**
    * Monotonic counter assigning FIFO ordering to pending retries so re-enqueued retries land at
@@ -297,11 +372,11 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   constructor(options: TriggerDispatcherOptions) {
     this._services = options.services;
     this.timeControl = options.timeControl;
-    this.livePollInterval = options.livePollInterval ?? Duration.seconds(1);
+    this.livePollInterval = options.livePollInterval ?? DEFAULT_LIVE_POLL_INTERVAL;
     this._internalTime = options.startingTime ?? new Date();
     this._maxConcurrency = options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;
     this._failureCooldown = options.failureCooldown ?? DEFAULT_FAILURE_COOLDOWN;
-    this._concurrencyLimiter = Effect.unsafeMakeSemaphore(this._maxConcurrency);
+    this._concurrencyLimiter = Semaphore.makeUnsafe(this._maxConcurrency);
   }
 
   private _isInCooldown = (triggerId: string): boolean => {
@@ -337,7 +412,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
    * Publish the current per-trigger runtime state onto the observable dispatcher state so the UI
    * can render cursor/next-run/cooldown/retry status.
    */
-  private _publishRuntimeStatuses = (registry: Registry.Registry): void => {
+  private _publishRuntimeStatuses = (registry: Registry.AtomRegistry): void => {
     const triggers: TriggerRuntimeStatus[] = Array.fromIterable(this._runtimeState.values()).map((entry) => ({
       triggerId: entry.trigger.id,
       nextExecution: entry.nextExecution,
@@ -357,7 +432,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   }
 
   start = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       if (this._running) {
         return;
       }
@@ -374,31 +449,37 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
       // Start natural time processing if enabled
       if (this.timeControl === 'natural') {
+        yield* this.#subscribeToTriggers();
         this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(
-          Effect.tapErrorCause((cause) => {
-            const error = EffectEx.causeToError(cause);
-            log.error('trigger dispatcher error', { error });
-            this._running = false;
-            registry.update(
-              this._state,
-              Struct.evolve({
-                enabled: () => false,
-                errors: (errors) => [...errors, error].slice(-MAX_TRACKED_ERRORS),
-              }),
-            );
-            return Effect.void;
-          }),
-          Effect.forkDaemon,
+          Effect.tapCause((cause) =>
+            Effect.gen({ self: this }, function* () {
+              const error = EffectEx.causeToError(cause);
+              log.error('trigger dispatcher error', { error });
+              this._running = false;
+              this._timerFiber = undefined;
+              registry.update(
+                this._state,
+                Struct.evolve({
+                  enabled: () => false,
+                  errors: (errors) => [...errors, error].slice(-MAX_TRACKED_ERRORS),
+                }),
+              );
+              // A crash bypasses `stop()` (`_running` is already false, so a later `stop()` call
+              // would no-op) — tear the subscription down here so it doesn't outlive the dispatcher.
+              yield* this.#teardownTriggerSubscription();
+            }),
+          ),
+          Effect.forkDetach,
         );
       } else {
-        return yield* Effect.dieMessage('TriggerDispatcher started in manual time control mode');
+        return yield* Effect.die(new Error('TriggerDispatcher started in manual time control mode'));
       }
 
       log.info('TriggerDispatcher started', { timeControl: this.timeControl });
     }).pipe(Effect.provide(this._services));
 
   stop = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       if (!this._running) {
         return;
       }
@@ -418,6 +499,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         this._timerFiber = undefined;
       }
 
+      // Stop the reactive trigger query subscription.
+      yield* this.#teardownTriggerSubscription();
+
       // Clear runtime state for all triggers.
       this._runtimeState.clear();
       this._publishRuntimeStatuses(registry);
@@ -426,7 +510,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     }).pipe(Effect.provide(this._services));
 
   invokeTrigger = (options: InvokeTriggerOptions): Effect.Effect<TriggerExecutionResult> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const { trigger, event } = options;
       log('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
 
@@ -450,13 +534,13 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       // Sandboxed section. The global concurrency limiter wraps the actual op invocation so that
       // the total number of concurrent invocations across all triggers/kinds never exceeds
       // `_maxConcurrency`, on top of any per-trigger concurrency enforced at the call sites.
-      const result = yield* Effect.gen(this, function* () {
+      const result = yield* Effect.gen({ self: this }, function* () {
         if (!trigger.enabled) {
-          return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
+          return yield* Effect.die(new Error('Attempting to invoke disabled trigger'));
         }
 
         if (!trigger.runnable) {
-          return yield* Effect.dieMessage('Trigger has no runnable reference');
+          return yield* Effect.die(new Error('Trigger has no runnable reference'));
         }
 
         // Resolve the operation definition from the persistent record.
@@ -493,9 +577,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
         return yield* handle.runAndExit({ inputs: [inputData] }).pipe(
           Stream.runCollect,
-          Effect.map(Chunk.head),
-          Effect.flatten,
-          Effect.catchTag('NoSuchElementException', () => Effect.dieMessage('Trigger invocation produced no output')),
+          Effect.map(Array.head),
+          Effect.flatMap((result) => Effect.fromOption(result)),
+          Effect.catchTag('NoSuchElementError', () => Effect.die(new Error('Trigger invocation produced no output'))),
         );
       }).pipe(this._concurrencyLimiter.withPermits(1), Effect.exit);
 
@@ -522,7 +606,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       } else {
         // TODO(wittjosiah): A fiber interrupt (e.g. a scheduled timer fire colliding with an in-flight
         //   `runAgain` retry, or the dispatcher stopping) reaches here and arms a failure cooldown. An
-        //   interrupt is not a genuine failure — distinguish `Cause.isInterrupted(result.cause)` and
+        //   interrupt is not a genuine failure — distinguish `Cause.hasInterrupts(result.cause)` and
         //   treat it as neutral (re-schedulable, no cooldown) instead.
         const cooldownMs = Duration.toMillis(this._failureCooldown);
         const until = new Date(this.getCurrentTime().getTime() + cooldownMs);
@@ -535,14 +619,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         });
       }
       this._publishRuntimeStatuses(registry);
-      registry.update(
-        this._state,
-        Struct.evolve({
-          invocations: Array.map((_) =>
-            _.invocationId === invocation.invocationId ? { ..._, result: () => result } : _,
-          ),
-        }),
-      );
+      registry.update(this._state, (state): TriggerDispatcherState => ({
+        ...state,
+        invocations: state.invocations.map((_) => (_.invocationId === invocation.invocationId ? { ..._, result } : _)),
+      }));
 
       return triggerExecutionResult;
     }).pipe(Effect.provide(this._services));
@@ -554,11 +634,17 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   private _isRunAgainRequest = (result: Exit.Exit<unknown>): boolean =>
     Exit.isFailure(result) && RunAgainError.is(Cause.squash(result.cause));
 
-  invokeScheduledTriggers = ({ kinds = ['timer', 'feed', 'subscription'], untilExhausted = false } = {}): Effect.Effect<
+  invokeScheduledTriggers = ({
+    kinds = ['timer', 'feed', 'subscription'],
+    untilExhausted = false,
+    triggerIds,
+  }: { kinds?: Trigger.Kind[]; untilExhausted?: boolean; triggerIds?: readonly string[] } = {}): Effect.Effect<
     TriggerExecutionResult[]
   > =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       yield* this.refreshTriggers();
+      const selected = triggerIds !== undefined ? new Set(triggerIds) : undefined;
+      const isSelected = (triggerId: string) => selected === undefined || selected.has(triggerId);
       const invocations: TriggerExecutionResult[] = [];
       for (const kind of kinds) {
         switch (kind) {
@@ -568,6 +654,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               const triggersToInvoke: Trigger.Trigger[] = [];
 
               for (const [triggerId, entry] of this._runtimeState.entries()) {
+                if (!isSelected(triggerId)) {
+                  continue;
+                }
                 if (entry.cron && entry.nextExecution && entry.nextExecution <= now) {
                   // Update next execution time using Effect's Cron
                   entry.nextExecution = Cron.next(entry.cron, now);
@@ -598,7 +687,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           case 'feed': {
             for (const trigger of this._triggers) {
               const spec = trigger.spec;
-              if (spec?.kind !== 'feed') {
+              if (spec?.kind !== 'feed' || !isSelected(trigger.id)) {
                 continue;
               }
               if (this._isInCooldown(trigger.id)) {
@@ -610,27 +699,31 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 log('skipping feed trigger with no feed reference', { triggerId: trigger.id });
                 continue;
               }
-              const cursor = Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id;
               const feed = yield* Database.load(feedRef).pipe(Effect.orDie);
 
               const concurrency = Math.min(trigger.concurrency ?? 1, this._maxConcurrency);
 
-              // TODO(dmaretskyi): Include cursor & limit in the query.
-              const chunks = yield* Feed.query(feed, Filter.everything()).run.pipe(
-                Effect.map((objects) => filterReadyFeedItems(objects, cursor)),
-                Effect.map(Array.chunksOf(concurrency)),
-              );
+              // Read only what follows the cursor, one page at a time: the cursor is pushed into the
+              // index scan, so the cost of a tick is the size of the page rather than of the feed.
+              let cursor = readFeedCursor(trigger);
+              for (;;) {
+                const chunk = yield* Feed.query(
+                  feed,
+                  Query.select(Filter.feedCursor({ begin: cursor })).limit(concurrency),
+                ).run.pipe(Effect.map((objects) => filterReadyFeedItems(objects, cursor)));
+                if (chunk.length === 0) {
+                  break;
+                }
 
-              for (const chunk of chunks) {
                 const invocationsThisIteration = yield* Effect.forEach(
                   chunk,
-                  ({ item, position }) =>
+                  ({ item, cursor: itemCursor }) =>
                     this.invokeTrigger({
                       trigger,
                       event: {
                         feed: feedRef,
                         item,
-                        cursor: position,
+                        cursor: itemCursor,
                       } satisfies TriggerEvent.FeedEvent,
                     }),
                   { concurrency: 'unbounded' },
@@ -644,12 +737,12 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                   Array.last,
                 );
                 if (Option.isSome(lastSuccessfulInvocation)) {
+                  const advanced = Feed.Cursor.make(lastSuccessfulInvocation.value.feedCursor ?? failedInvariant());
+                  cursor = advanced;
                   Obj.update(trigger, (trigger) => {
-                    Obj.deleteKeys(trigger, KEY_FEED_CURSOR);
-                    Obj.getMeta(trigger).keys.push({
-                      source: KEY_FEED_CURSOR,
-                      id: lastSuccessfulInvocation.value.feedCursor ?? failedInvariant(),
-                    });
+                    Annotation.set(trigger, Feed.CursorAnnotation, advanced);
+                    // Drop any checkpoint left by the release that kept it as a foreign key.
+                    Obj.deleteKeys(trigger, LEGACY_KEY_FEED_CURSOR);
                   });
                   yield* Database.flush();
                 } else {
@@ -667,7 +760,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           case 'subscription': {
             for (const trigger of this._triggers) {
               const spec = trigger.spec;
-              if (spec?.kind !== 'subscription') {
+              if (spec?.kind !== 'subscription' || !isSelected(trigger.id)) {
                 continue;
               }
               if (this._isInCooldown(trigger.id)) {
@@ -758,7 +851,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             // Direct triggers are only invoked through invokeTrigger.
             break;
           default: {
-            return yield* Effect.dieMessage(`Unknown trigger kind: ${kind}`);
+            return yield* Effect.die(new Error(`Unknown trigger kind: ${kind}`));
           }
         }
       }
@@ -778,7 +871,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
    * concurrency limit (enforced within {@link invokeTrigger}) and are processed FIFO.
    */
   private _drainRetries = ({ untilExhausted }: { untilExhausted: boolean }): Effect.Effect<TriggerExecutionResult[]> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const invocations: TriggerExecutionResult[] = [];
       while (true) {
         const pending: { trigger: Trigger.Trigger; enqueuedAt: number; event: TriggerEvent.TriggerEvent }[] = [];
@@ -821,9 +914,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     });
 
   advanceTime = (duration: Duration.Duration): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       if (this.timeControl !== 'manual') {
-        return yield* Effect.dieMessage('advanceTime can only be used in manual time control mode');
+        return yield* Effect.die(new Error('advanceTime can only be used in manual time control mode'));
       }
 
       const millis = Duration.toMillis(duration);
@@ -844,7 +937,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   };
 
   refreshTriggers = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
       const triggers = yield* this._fetchTriggers();
       this._triggers = triggers;
       const currentTriggerIds = new Set(triggers.map((t) => t.id));
@@ -868,9 +961,28 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           // Parse cron expression using Effect's Cron module
           const cronEither = Cron.parse(timerSpec.cron);
 
-          if (Either.isRight(cronEither)) {
-            const cron = cronEither.right;
+          if (Result.isSuccess(cronEither)) {
+            const cron = cronEither.success;
             const now = this.getCurrentTime();
+            const period = cronPeriod(cron, now);
+
+            // A schedule finer than the poll cannot be honoured — the tick would find it due, fire it
+            // once and skip to the next occurrence after now, so the missed ones are dropped rather
+            // than delayed. Refusing it says that out loud instead of running at the poll rate while
+            // claiming a faster one. A caller that genuinely needs sub-minute firing (a test) shortens
+            // `livePollInterval`, which moves this floor with it.
+            if (period !== undefined && Duration.isLessThan(period, this.livePollInterval)) {
+              entry.cron = undefined;
+              entry.nextExecution = undefined;
+              log.error('Cron schedule is finer than the trigger poll interval; trigger will not run', {
+                triggerId: trigger.id,
+                cron: timerSpec.cron,
+                period: Duration.toMillis(period),
+                livePollInterval: Duration.toMillis(this.livePollInterval),
+              });
+              continue;
+            }
+
             const nextExecution = entry.nextExecution ?? Cron.next(cron, now);
 
             log('Updated scheduled trigger', {
@@ -888,7 +1000,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             log.error('Invalid cron expression', {
               triggerId: trigger.id,
               cron: timerSpec.cron,
-              error: cronEither.left.message,
+              error: cronEither.failure.message,
             });
           }
         } else {
@@ -896,6 +1008,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           entry.cron = undefined;
           entry.nextExecution = undefined;
         }
+      }
+
+      if (this._running && this.timeControl === 'natural') {
+        yield* this.#refreshReactiveSources();
       }
 
       const registry = yield* Registry.AtomRegistry;
@@ -907,17 +1023,200 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       .pipe(Effect.provide(this._services));
 
   private _fetchTriggers = () =>
-    Effect.gen(this, function* () {
+    Effect.gen({ self: this }, function* () {
+      // The local dispatcher only runs triggers that are not explicitly routed to edge.
+      if (this.#triggerQuery) {
+        // `#subscribeToTriggers` keeps this query current reactively — reuse its cached results
+        // instead of issuing a fresh database query on every poll tick.
+        return this.#triggerQuery.results.filter((t) => !t.remote);
+      }
       const objects = yield* Database.query(
         Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerDispatcher.fetchTriggers'),
       ).run;
-      // The local dispatcher only runs triggers that are not explicitly routed to edge.
       return objects.filter((t) => !t.remote);
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 
+  /**
+   * Subscribe once to a live `Trigger` query so trigger objects update reactively as they change,
+   * replacing the previous behavior of re-querying the database for the full trigger list on every
+   * natural-time poll tick (~1/s), the dominant contributor to `TriggerDispatcher`'s idle-time SQL
+   * churn. Torn down in {@link #teardownTriggerSubscription}.
+   */
+  #subscribeToTriggers = (): Effect.Effect<void> =>
+    Effect.gen({ self: this }, function* () {
+      const queryResult = yield* Database.query(
+        Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerDispatcher.watchTriggers'),
+      );
+      this.#triggerQuery = queryResult;
+      this.#triggerQueryUnsubscribe = queryResult.subscribe(
+        () => {
+          // Tracked so a subsequent `#teardownTriggerSubscription` can interrupt this fiber —
+          // otherwise a refresh forked just before shutdown could still complete afterward, see
+          // `this.#triggerQuery` as already cleared, fall back to a fresh one-shot query, and
+          // repopulate trigger state after the dispatcher has stopped.
+          this.#pendingRefreshFiber = Effect.runFork(
+            this.refreshTriggers().pipe(
+              Effect.tapCause((cause) =>
+                Effect.sync(() => log.error('failed to refresh triggers', { error: EffectEx.causeToError(cause) })),
+              ),
+            ),
+          );
+        },
+        { fire: true },
+      );
+    }).pipe(Effect.provide(this._services));
+
+  /**
+   * Rebuild the live queries that wake feed and subscription triggers so the set matches the
+   * current triggers: drop sources whose trigger is gone or whose query has gone stale, and
+   * subscribe the ones that are missing. Called from {@link refreshTriggers}, which the trigger
+   * query already re-runs whenever a trigger changes — including the cursor write that dispatch
+   * itself performs, which is what makes a feed source follow its cursor forward.
+   */
+  #refreshReactiveSources = (): Effect.Effect<void> =>
+    // Serialized: `refreshTriggers` runs both from the trigger-query callback and from
+    // `invokeScheduledTriggers`, and two interleaved reconciliations would each see a source as
+    // missing, subscribe it, and overwrite the other's entry — leaking the unsubscribe that the
+    // overwrite dropped.
+    this.#reactiveSourceLock.withPermits(1)(
+      Effect.gen({ self: this }, function* () {
+        const wanted = new Map<string, { key: string; trigger: Trigger.Trigger }>();
+        for (const trigger of this._triggers) {
+          const spec = trigger.spec;
+          if (!trigger.enabled || (spec?.kind !== 'feed' && spec?.kind !== 'subscription')) {
+            continue;
+          }
+          // Everything the live query is derived from, so an edit to the trigger's feed reference or
+          // its subscription query replaces the source instead of leaving a stale one watching the
+          // old data.
+          const key =
+            spec.kind === 'feed'
+              ? `feed:${spec.feed?.uri ?? ''}:${readFeedCursor(trigger) ?? ''}`
+              : `subscription:${JSON.stringify(spec.query.ast)}`;
+          wanted.set(trigger.id, { key, trigger });
+        }
+
+        for (const [triggerId, source] of this.#reactiveSources) {
+          if (wanted.get(triggerId)?.key !== source.key) {
+            source.unsubscribe();
+            this.#reactiveSources.delete(triggerId);
+          }
+        }
+
+        for (const [triggerId, { key, trigger }] of wanted) {
+          if (this.#reactiveSources.has(triggerId)) {
+            continue;
+          }
+          const unsubscribe = yield* this.#subscribeToTriggerSource(trigger);
+          if (unsubscribe) {
+            this.#reactiveSources.set(triggerId, { key, unsubscribe });
+          }
+        }
+      }).pipe(Effect.provide(this._services)),
+    );
+
+  /**
+   * Subscribe to whatever a non-timer trigger reacts to, dispatching its kind on every change.
+   * Returns `undefined` when the trigger has nothing to watch (e.g. a feed reference that no longer
+   * resolves), so no source is recorded and the next refresh retries.
+   */
+  #subscribeToTriggerSource = (trigger: Trigger.Trigger): Effect.Effect<(() => void) | undefined> =>
+    Effect.gen({ self: this }, function* () {
+      const spec = trigger.spec;
+      const queryResult = yield* spec?.kind === 'feed'
+        ? Effect.gen({ self: this }, function* () {
+            if (!spec.feed) {
+              return undefined;
+            }
+            const feed = yield* Database.load(spec.feed).pipe(Effect.orDie);
+            const cursor = readFeedCursor(trigger);
+            // One item past the cursor is enough to know there is work; the dispatch that follows
+            // reads the pages it needs. Watching the whole feed would restore the full scan this
+            // subscription exists to avoid.
+            return yield* Feed.query(feed, Query.select(Filter.feedCursor({ begin: cursor })).limit(1));
+          })
+        : spec?.kind === 'subscription'
+          ? Database.query(Query.fromAst(spec.query.ast).options({ deleted: 'include' }))
+          : Effect.succeed(undefined);
+      if (!queryResult) {
+        return undefined;
+      }
+
+      const kind = spec!.kind as 'feed' | 'subscription';
+      return queryResult.subscribe(() => this.#dispatchReactively(kind, trigger.id), { fire: true });
+    }).pipe(Effect.provide(this._services));
+
+  /**
+   * Fork a dispatch of the single trigger whose source fired, serialized so overlapping wake-ups
+   * never invoke a trigger twice for the same item. Scoping it to one trigger keeps one feed
+   * append from re-querying every other trigger of the same kind.
+   */
+  #dispatchReactively = (kind: 'feed' | 'subscription', triggerId: string): void => {
+    // Held in a cell rather than a plain binding: a dispatch that completes without an async
+    // boundary runs its finalizer before `runFork` returns, so the finalizer must tolerate not
+    // having the fiber yet — and the add below must not then resurrect a completed one.
+    const forked: { fiber?: Fiber.Fiber<void, never>; done?: boolean } = {};
+    forked.fiber = Effect.runFork(
+      this.#reactiveDispatchLock
+        .withPermits(1)(this.invokeScheduledTriggers({ kinds: [kind], triggerIds: [triggerId], untilExhausted: true }))
+        .pipe(
+          Effect.asVoid,
+          Effect.tapCause((cause) =>
+            Effect.sync(() =>
+              log.error('reactive trigger dispatch failed', { kind, triggerId, error: EffectEx.causeToError(cause) }),
+            ),
+          ),
+          Effect.catchCause(() => Effect.void),
+          Effect.ensuring(
+            Effect.sync(() => {
+              forked.done = true;
+              if (forked.fiber) {
+                this.#reactiveDispatchFibers.delete(forked.fiber);
+              }
+            }),
+          ),
+        ),
+    );
+    if (!forked.done) {
+      this.#reactiveDispatchFibers.add(forked.fiber);
+    }
+  };
+
+  /** Drop every reactive source and interrupt the dispatches they forked. */
+  #teardownReactiveSources = (): Effect.Effect<void> =>
+    Effect.gen({ self: this }, function* () {
+      for (const source of this.#reactiveSources.values()) {
+        source.unsubscribe();
+      }
+      this.#reactiveSources.clear();
+      const fibers = [...this.#reactiveDispatchFibers];
+      this.#reactiveDispatchFibers.clear();
+      yield* Effect.forEach(fibers, Fiber.interrupt, { discard: true });
+    });
+
+  /**
+   * Unsubscribe from the live trigger query and interrupt any refresh it forked, so neither can
+   * repopulate trigger state after the dispatcher has stopped — called from both {@link stop} and
+   * the natural-time-processing failure path in {@link start} (a crash bypasses `stop()` since it
+   * sets `_running` to `false` directly).
+   */
+  #teardownTriggerSubscription = (): Effect.Effect<void> =>
+    Effect.gen({ self: this }, function* () {
+      yield* this.#teardownReactiveSources();
+      this.#triggerQueryUnsubscribe?.();
+      this.#triggerQueryUnsubscribe = undefined;
+      this.#triggerQuery = undefined;
+      if (this.#pendingRefreshFiber) {
+        yield* Fiber.interrupt(this.#pendingRefreshFiber);
+        this.#pendingRefreshFiber = undefined;
+      }
+    });
+
   private _startNaturalTimeProcessing = (): Effect.Effect<void> =>
-    Effect.gen(this, function* () {
-      yield* this.invokeScheduledTriggers();
+    Effect.gen({ self: this }, function* () {
+      // Timer triggers only: feed and subscription triggers are woken by `#reactiveSources` when
+      // their data changes, so the wall clock no longer re-reads every feed on every tick.
+      yield* this.invokeScheduledTriggers({ kinds: ['timer'] });
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 
   private _prepareInputData = (trigger: Trigger.Trigger, event: TriggerEvent.TriggerEvent): any => {
@@ -926,9 +1225,20 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 }
 
 /**
- * Key for the current cursor for feed triggers.
+ * Foreign key a previous release stored a feed trigger's cursor under, before it became
+ * {@link Feed.CursorAnnotation}. Read so a trigger already in the field resumes where it left off
+ * instead of re-dispatching its whole feed; dropped the first time the cursor advances.
  */
-export const KEY_FEED_CURSOR = 'org.dxos.key.local-trigger-dispatcher.feed-cursor';
+export const LEGACY_KEY_FEED_CURSOR = 'org.dxos.key.local-trigger-dispatcher.feed-cursor';
+
+/**
+ * The cursor a feed trigger has dispatched up to, or `undefined` when it has dispatched nothing.
+ */
+const readFeedCursor = (trigger: Trigger.Trigger): Feed.Cursor | undefined => {
+  const annotated = Annotation.get(trigger, Feed.CursorAnnotation).pipe(Option.getOrUndefined);
+  const stored = annotated ?? Obj.getKeys(trigger, LEGACY_KEY_FEED_CURSOR).at(0)?.id;
+  return stored !== undefined ? Feed.Cursor.make(stored) : undefined;
+};
 
 /**
  * Canonical content signature of an entity, used by subscription triggers to detect changes across

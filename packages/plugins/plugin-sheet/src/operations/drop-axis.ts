@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import * as SheetOperation from '../types/SheetOperation';
+import { SheetOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SheetOperation.DropAxis> = SheetOperation.DropAxis.pipe(
   Operation.withHandler(({ model, axis, axisIndex }) =>

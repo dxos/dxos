@@ -18,7 +18,6 @@ import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { createSyncProgressKey } from '@dxos/plugin-inbox/sync';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
@@ -26,9 +25,11 @@ import { ambientSyncServices, seedMailboxBinding, seedSenderOrganizations } from
 import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
+import { type GmailDataset, GoogleMailApi } from '#services';
+import { GoogleOperation } from '#types';
+
 import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants';
 import { GoogleApiError } from '../../../errors';
-import { type GmailDataset, GoogleMailApi } from '../../../services';
 import { generateGmailDataset } from '../../../testing/gmail-fixtures';
 import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fixture';
 import { GMAIL_TAG_SOURCE } from '../tags';
@@ -290,7 +291,9 @@ describe('runGoogleSync against a mock Gmail API', () => {
       true,
     );
     expect(statusUpdates.every((update) => update.progress?.key === createSyncProgressKey(mailbox))).toBe(true);
-    expect(statusUpdates.some((update) => update.message === mailbox.name)).toBe(true);
+    // Names the phase as well as the mailbox: two meters run over one mailbox (sync, then analyze),
+    // so the bare name left the user unable to tell which was moving.
+    expect(statusUpdates.some((update) => update.message === `Syncing ${mailbox.name}`)).toBe(true);
   });
 
   // `Pipeline.abortWith` interrupts, so nothing after the pipeline runs — the terminal status has to
@@ -331,7 +334,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
       ),
     );
 
-    expect(Exit.isFailure(exit) && Cause.isInterruptedOnly(exit.cause)).toBe(true);
+    expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBe(true);
     expect(statusUpdates.at(-1)?.message).toBe(PROGRESS_STATUS_CANCELLED);
     expect(statusUpdates.at(-1)?.progress?.key).toBe(createSyncProgressKey(mailbox));
   });
@@ -414,12 +417,14 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const dataset = generateGmailDataset({ count: 20, seed: 23, start: subDays(now, 10), end: subDays(now, 2) });
     const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
 
-    // Fault after the first commit page (GOOGLE_SYNC_CONFIG.commitPageSize = 10) — simulates a crash partway
-    // through the initial backward (newest-first) walk.
+    // Fault partway through the initial backward (newest-first) walk, past the point where the first
+    // commit page (GOOGLE_SYNC_CONFIG.commitPageSize = 10) has reached the sink. Faulting at exactly
+    // the page boundary would only prove how far the stream prefetches ahead of the commit, not that
+    // a committed page is durable.
     const exit = await EffectEx.runPromise(
       Effect.exit(runGoogleSync({ binding: Ref.make(binding) })).pipe(
         Effect.provide(ambientSyncServices(db)),
-        Effect.provide(withFaultAfterMessages(10, dataset)),
+        Effect.provide(withFaultAfterMessages(18, dataset)),
       ),
     );
     expect(Exit.isFailure(exit)).toBe(true);
@@ -681,7 +686,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
   }, 30_000);
 
   test('GoogleMailSync is marked idempotent for durable-execution retry', ({ expect }) => {
-    expect(Operation.isIdempotent(InboxOperation.GoogleMailSync)).toBe(true);
+    expect(Operation.isIdempotent(GoogleOperation.GoogleMailSync)).toBe(true);
   });
 
   //

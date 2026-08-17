@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { withAuthorization } from '@dxos/compute-runtime';
@@ -18,11 +18,12 @@ import { Obj, Type } from '@dxos/echo';
 import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { MAIL_AUTO_SYNC, MAIL_REMOTE_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/sync';
 import * as SyncOptions from '@dxos/plugin-inbox/SyncOptions';
 import { OAuthProvider } from '@dxos/protocols';
+
+import { GoogleOperation } from '#types';
 
 import {
   GMAIL_CONNECTOR_ID,
@@ -46,7 +47,9 @@ const getAccountEmail = (token: string, account: string | undefined) =>
     }
 
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
-    const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const httpClientWithTracerDisabled = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+    );
 
     const userInfo = yield* HttpClientRequest.get('https://www.googleapis.com/oauth2/v3/userinfo').pipe(
       httpClientWithTracerDisabled.execute,
@@ -59,9 +62,9 @@ const getAccountEmail = (token: string, account: string | undefined) =>
 
 /** `HttpClient.filterStatusOk` failure whose response is a 401/403 — an actual rejected grant. */
 const isGoogleAuthRejection = (error: unknown): boolean =>
-  Predicate.isRecord(error) &&
+  Predicate.isObject(error) &&
   error._tag === 'ResponseError' &&
-  Predicate.isRecord(error.response) &&
+  Predicate.isObject(error.response) &&
   (error.response.status === 401 || error.response.status === 403);
 
 /**
@@ -76,7 +79,7 @@ const testGoogleConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
     const httpClientWithTracerDisabled = httpClient.pipe(
-      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
 
@@ -85,7 +88,7 @@ const testGoogleConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
       Effect.scoped,
       Effect.timeout('10 seconds'),
       Effect.retry({
-        schedule: Schedule.exponential('1 second').pipe(Schedule.compose(Schedule.recurs(2))),
+        schedule: Schedule.exponential('1 second').pipe(Schedule.upTo({ times: 2 })),
         while: (error) => !isGoogleAuthRejection(error),
       }),
     );
@@ -136,12 +139,12 @@ export default Capability.makeModule(
           ],
         },
         sync: {
-          operation: InboxOperation.GoogleMailSync,
+          operation: GoogleOperation.GoogleMailSync,
           // What this connector binds — how `Mailbox` discovers it without naming Gmail.
           targetTypename: Type.getTypename(Mailbox.Mailbox),
           // Single-target connector: no `getTargets`. The coordinator calls `materializeTarget`
           // (no remoteTarget) to create the Mailbox, then binds.
-          materializeTarget: InboxOperation.MaterializeGmailTarget,
+          materializeTarget: GoogleOperation.MaterializeGmailTarget,
           optionsSchema: SyncOptions.SyncOptions,
           auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
@@ -165,10 +168,10 @@ export default Capability.makeModule(
           ],
         },
         sync: {
-          operation: InboxOperation.GoogleCalendarSync,
+          operation: GoogleOperation.GoogleCalendarSync,
           targetTypename: Type.getTypename(Calendar.Calendar),
-          getTargets: InboxOperation.GetGoogleCalendars,
-          materializeTarget: InboxOperation.MaterializeCalendarTarget,
+          getTargets: GoogleOperation.GetGoogleCalendars,
+          materializeTarget: GoogleOperation.MaterializeGoogleCalendarTarget,
           optionsSchema: SyncOptions.CalendarSyncOptions,
         },
         onTokenCreated,
@@ -188,8 +191,8 @@ export default Capability.makeModule(
         sync: {
           // Targetless: no `targetTypename`, since synced `Person` objects land directly in the space
           // rather than under a bound root.
-          operation: InboxOperation.GoogleContactsSync,
-          getTargets: InboxOperation.GetGoogleContactGroups,
+          operation: GoogleOperation.GoogleContactsSync,
+          getTargets: GoogleOperation.GetGoogleContactGroups,
           // Targetless connector: no dedicated local root type, so no `materializeTarget`.
           // `reconcileCursors` binds the connection itself; synced `Person` objects land directly in
           // the space keyed by foreign id.

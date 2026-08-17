@@ -8,7 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import * as MarkdownCapabilities from '../types/MarkdownCapabilities';
+import { MarkdownCapabilities } from '#types';
 
 // Ordering-only: registers the anchor text resolver once the app graph exists (mirrors the
 // AppGraphReady ordering the event-mode module used previously); the body reads nothing.
@@ -24,6 +24,7 @@ export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort')
 });
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const Schema = AppCapability.schema(() => import('./schema'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {

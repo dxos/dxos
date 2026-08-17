@@ -2,18 +2,27 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import { createContext } from '@radix-ui/react-context';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import { type Graph } from '@dxos/app-graph';
+import type * as Graph from '@dxos/app-graph/Graph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
-import { Card, ScrollArea, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
-import { Avatar, Row } from '@dxos/react-ui-card';
+import {
+  Card,
+  Icon,
+  ScrollArea,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
+import { Avatar, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Html, emailDialect } from '@dxos/react-ui-components';
 import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
@@ -23,11 +32,10 @@ import { mx } from '@dxos/ui-theme';
 
 import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
 import { meta } from '#meta';
+import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
-import type * as InboxCapabilities from '../../types/InboxCapabilities';
-import * as Mailbox from '../../types/Mailbox';
-import * as SystemTags from '../../types/SystemTags';
-import { createDraftMessage, getMessageProps } from '../../util';
+import { parseAddressList } from '../../operations/correspondents/correspondence';
+import { createDraftMessage, formatAge, getMessageProps } from '../../util';
 import { EditMessage } from '../EditMessage';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
@@ -79,6 +87,16 @@ type ConversationMessageActions = {
   onAiReply?: (message: MessageType.Message) => void;
   onDelete?: (message: MessageType.Message) => void;
   onOpen?: (message: MessageType.Message) => void;
+  /** Creates a tracking Project from the message (container-invoked; the component holds no invoker). */
+  onCreateProject?: (message: MessageType.Message) => void;
+  /** Opens one of the message's attachments (by index) in its own plank. */
+  onOpenAttachment?: (message: Mailbox.MessageLike, index: number) => void;
+  /**
+   * Fired after a message is archived (never on restore). The tag toggle itself is tile-local so
+   * archiving works in every consumer; this is the container's hook for the layout consequence —
+   * a dedicated message view has nothing left to show once its message leaves the inbox.
+   */
+  onArchived?: (message: MessageType.Message) => void;
 };
 
 //
@@ -110,6 +128,12 @@ type ConversationStackContextValue = {
   sendOperations?: readonly InboxCapabilities.MailSendOperation[];
   /** Builds the extract menu items for a message (container-resolved from extractors + invoker). */
   getExtractActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
+  /** Builds the sender-scoped menu items for a message (container-resolved from `SenderAction`). */
+  getSenderActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
+  /** Derived summaries keyed by message id (container-resolved from the mailbox's annotation feed). */
+  summaries?: ReadonlyMap<string, string>;
+  /** Summary of the conversation as a whole, rendered as the last tile in the stack. */
+  conversationSummary?: Mailbox.ConversationSummary;
   onExpandedChange?: (id: string, expanded: boolean) => void;
   /** Folds every message (thread toolbar only). */
   onCollapseAll?: () => void;
@@ -140,6 +164,9 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'runtime'
     | 'sendOperations'
     | 'getExtractActions'
+    | 'getSenderActions'
+    | 'summaries'
+    | 'conversationSummary'
     | 'onExpandedChange'
     | 'onCollapseAll'
     | 'onExpandAll'
@@ -147,6 +174,9 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'onAiReply'
     | 'onDelete'
     | 'onOpen'
+    | 'onArchived'
+    | 'onCreateProject'
+    | 'onOpenAttachment'
   >
 >;
 
@@ -167,6 +197,9 @@ const ConversationStackRoot = ({
   runtime,
   sendOperations,
   getExtractActions,
+  getSenderActions,
+  summaries,
+  conversationSummary,
   onExpandedChange,
   onCollapseAll,
   onExpandAll,
@@ -174,6 +207,9 @@ const ConversationStackRoot = ({
   onAiReply,
   onDelete,
   onOpen,
+  onArchived,
+  onCreateProject,
+  onOpenAttachment,
 }: ConversationStackRootProps) => (
   <ConversationStackProvider
     attendableId={attendableId}
@@ -188,9 +224,15 @@ const ConversationStackRoot = ({
     onAiReply={onAiReply}
     onDelete={onDelete}
     onOpen={onOpen}
+    onArchived={onArchived}
+    onCreateProject={onCreateProject}
+    onOpenAttachment={onOpenAttachment}
     companion={companion}
     graph={graph}
     getExtractActions={getExtractActions}
+    getSenderActions={getSenderActions}
+    summaries={summaries}
+    conversationSummary={conversationSummary}
     runtime={runtime}
     sendOperations={sendOperations}
   >
@@ -216,7 +258,7 @@ export type ConversationStackContentProps = ThemedClassName<{ testId?: string }>
  */
 const ConversationStackContent = composable<HTMLDivElement, ConversationStackContentProps>(
   ({ testId, ...props }, forwardedRef) => {
-    const { items } = useConversationStackContext(CONVERSATION_STACK_CONTENT_NAME);
+    const { items, conversationSummary } = useConversationStackContext(CONVERSATION_STACK_CONTENT_NAME);
     const viewportRef = useRef<HTMLDivElement>(null);
 
     const tileItems = useMemo<ConversationTileData[]>(
@@ -286,11 +328,14 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
           <ScrollArea.Viewport ref={viewportRef}>
             <Mosaic.Stack
               Tile={ConversationMessageTile}
-              classNames='dx-document gap-2 pbs-2'
+              classNames='dx-document gap-2 py-2'
               items={tileItems}
               getId={getId}
               draggable={false}
             />
+            {/* Outside the stack: the summary describes the conversation, not a message, so it must not
+                be reorderable/selectable as a tile — but it shares the tile chrome and the document width. */}
+            {conversationSummary && <ConversationSummaryTile summary={conversationSummary} />}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>
@@ -303,6 +348,17 @@ ConversationStackContent.displayName = CONVERSATION_STACK_CONTENT_NAME;
 //
 // Message Tile
 //
+
+/** Column template established by the tile; message parts subgrid into it. */
+const MESSAGE_TILE_COLUMNS = 'grid grid-cols-[auto_1fr_auto]';
+
+/**
+ * Avatar footprint, which sets the width of column 1 — non-avatar tiles reserve the same gutter so
+ * their content aligns with the senders and bodies. `DxAvatar` renders `size * 4` px, matching `w-9`;
+ * `is-9` is not a real Tailwind utility (see the Slider regression guard).
+ */
+const MESSAGE_AVATAR_SIZE = 8;
+const MESSAGE_AVATAR_GUTTER = 'w-8';
 
 const MESSAGE_TILE_NAME = 'ConversationStack.MessageTile';
 
@@ -333,6 +389,66 @@ const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<Convers
 ConversationMessageTile.displayName = MESSAGE_TILE_NAME;
 
 //
+// Summary tile
+//
+
+const CONVERSATION_SUMMARY_TILE_NAME = 'ConversationStack.SummaryTile';
+
+type ConversationSummaryTileProps = {
+  summary: Mailbox.ConversationSummary;
+};
+
+/**
+ * Display form of a model id: `com.anthropic.model.claude-haiku-4-5.default` reads as
+ * `claude-haiku-4-5`. The full id is the reproducible one, so it stays as the title attribute.
+ */
+const modelLabel = (model: string): string => model.replace(/^.*\.model\./, '').replace(/\.default$/, '');
+
+/**
+ * The conversation's derived summary, as the last tile under the messages. Rendered as markdown: the
+ * summarization pipeline writes `text/markdown` blocks.
+ *
+ * The header carries the summary's provenance (model + when it was derived), which is what tells a
+ * reader whether it predates the newest replies — a summary is advisory, so it must be datable.
+ */
+const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  // Recomputed per render rather than ticked: the tile re-renders whenever the annotation feed does,
+  // and an age this coarse does not warrant a timer.
+  const age = formatAge(new Date(summary.created), new Date());
+  return (
+    <div
+      role='complementary'
+      aria-label={t('conversation-summary.title')}
+      // Same column template and gutter width as a message tile, so the heading and text line up with
+      // the senders and bodies above rather than starting at the tile edge.
+      className={mx(
+        'dx-document dx-attention-surface border border-subdued-separator rounded overflow-hidden mbs-2',
+        MESSAGE_TILE_COLUMNS,
+      )}
+      data-testid='conversation.summary'
+    >
+      <div className='p-2'>
+        <div className={mx('flex items-center justify-center', MESSAGE_AVATAR_GUTTER)}>
+          <Icon icon='ph--text-align-left--regular' size={5} classNames='text-subdued' />
+        </div>
+      </div>
+      <div className='col-start-2 col-span-2 flex flex-col gap-1 min-w-0 py-2 pe-3'>
+        <div className='flex items-baseline gap-2 text-sm text-description'>
+          <h2 className='font-medium'>{t('conversation-summary.title')}</h2>
+          <span className='text-subdued truncate' title={summary.model} data-testid='conversation.summary.provenance'>
+            {summary.model ? t('summary-provenance.label', { model: modelLabel(summary.model), age }) : age}
+          </span>
+        </div>
+        <MarkdownViewer content={summary.summary} />
+      </div>
+    </div>
+  );
+};
+
+ConversationSummaryTile.displayName = CONVERSATION_SUMMARY_TILE_NAME;
+
+//
 // Message (read tile)
 // https://www.radix-ui.com/primitives/docs/guides/composition
 //
@@ -342,9 +458,6 @@ ConversationMessageTile.displayName = MESSAGE_TILE_NAME;
 //
 
 const MESSAGE_TILE_COLUMNS_NAME = 'ConversationStack.MessageTile.Columns';
-
-/** Column template established by the tile; message parts subgrid into it. */
-const MESSAGE_TILE_COLUMNS = 'grid grid-cols-[auto_1fr_auto]';
 
 type MessageTileProps = {
   id: string;
@@ -364,9 +477,13 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     companion,
     graph,
     getExtractActions,
+    getSenderActions,
+    summaries,
     onAiReply,
     onDelete,
     onOpen,
+    onArchived,
+    onCreateProject,
     onExpandedChange,
     onContactCreate,
   } = useConversationStackContext(MESSAGE_TILE_NAME);
@@ -382,23 +499,71 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
     () => (target ? (getExtractActions?.(target) ?? []) : []),
     [getExtractActions, target],
   );
-  const menuActions = useMessageActions({ graph, extractActions, nodeId: attendableId, ...handlers });
+  const senderActions = useMemo(() => (target ? (getSenderActions?.(target) ?? []) : []), [getSenderActions, target]);
+  const db = mailbox && Obj.getDatabase(mailbox);
+
+  // Archiving is the `inbox` tag coming off (Gmail's model — INBOX is a label), so one toggle serves
+  // both directions and membership picks the menu label.
+  const [inInbox, toggleInbox] = useSystemTag(target, mailbox, 'inbox');
+  const handleArchive = useCallback(() => {
+    toggleInbox();
+    // Only archiving is a layout event; restoring leaves the message right where the user is looking.
+    if (inInbox && target) {
+      onArchived?.(target);
+    }
+  }, [toggleInbox, inInbox, target, onArchived]);
+  const handleCreateProject = useCallback(() => {
+    if (target) {
+      onCreateProject?.(target);
+    }
+  }, [onCreateProject, target]);
+
+  const menuActions = useMessageActions({
+    graph,
+    extractActions,
+    nodeId: attendableId,
+    inInbox,
+    // Without a db the toggle is a no-op, so offering an enabled action would be a dead affordance.
+    onArchive: db && target ? handleArchive : undefined,
+    onCreateProject: onCreateProject && target ? handleCreateProject : undefined,
+    senderActions,
+    ...handlers,
+  });
 
   const isExpanded = expanded.has(id);
   if (!message || !target) {
     return null;
   }
 
-  const { from, to, date, snippet, subject } = getMessageProps(target);
+  const { from, date, snippet, subject } = getMessageProps(target);
   const sender = from ?? target.sender?.email ?? '';
+  // Derived by the summarization pipeline; absent for most messages, which is the normal case —
+  // collapsed tiles fall back to the provider's snippet rather than showing an empty affordance.
+  const summary = summaries?.get(target.id);
 
   // One subgrid spanning the tile's columns, so the summary row and the detail/body row share them.
   return (
     <div className='contents'>
-      <div className='col-span-full grid grid-cols-subgrid items-start'>
+      <div className='col-span-full grid grid-cols-subgrid items-start pbs-1'>
         {/* Summary row: avatar (col 1) | title (col 2) | date + star (col 3) | menu (col 4). */}
-        <div className='p-2'>
-          <Avatar actor={target.sender} name={sender} size={9} />
+        {/* `db` (not `getContact`): a conversation holds few messages, so a query per tile is
+            affordable here — unlike the virtualized mailbox list, which resolves the whole page at once. */}
+        {/* Avatar centred on the title's FIRST line — the row is `items-start` (the title clamps to
+            two lines), so centring against the whole block would leave the avatar hanging below the
+            name it belongs to. The nesting mirrors the title column's own box: `py-1` on the OUTER
+            element, then an unpadded `1lh` line box to centre within. Putting both on one element
+            fails, because `h-[1lh]` is border-box and the padding then eats into the line height,
+            leaving the avatar high by exactly that padding. */}
+        <div className='px-2 py-1 text-lg'>
+          <div className='flex items-center h-[1lh]'>
+            <ContactAvatar
+              actor={target.sender}
+              role='from'
+              db={db}
+              size={MESSAGE_AVATAR_SIZE}
+              onContactCreate={onContactCreate}
+            />
+          </div>
         </div>
 
         <div className='col-start-2 flex flex-col py-1'>
@@ -424,12 +589,11 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
             {sender}
           </h2>
           {isExpanded ? (
-            <>
-              {subject && <div className='font-medium line-clamp-2'>{subject}</div>}
-              {to && <div className='text-sm text-description'>{to}</div>}
-            </>
+            <>{subject && <div className='font-medium line-clamp-2'>{subject}</div>}</>
           ) : (
-            <div className='text-sm text-description line-clamp-1'>{snippet}</div>
+            <div className='text-sm text-description line-clamp-1' data-testid={summary && 'message.summary'}>
+              {summary ?? snippet}
+            </div>
           )}
         </div>
 
@@ -452,7 +616,9 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
         <div className='col-span-full grid grid-cols-subgrid items-start'>
           {/* MessageDetails renders a `subgrid` Card.Root, so it spans and aligns to the tile columns. */}
           <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
-          <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pe-3'>
+          <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pb-1'>
+            {/* The summary is not repeated here: an expanded message shows its body, and the
+                conversation's summary is the last tile in the stack. */}
             <MessageBody message={message} mailbox={mailbox} options={options} />
           </div>
         </div>
@@ -469,8 +635,36 @@ MessageTile.displayName = MESSAGE_TILE_NAME;
 
 const MESSAGE_STAR_NAME = 'ConversationStack.MessageStar';
 
-// Stable fallback so `useAtomValue` always receives an atom when the message isn't starrable.
-const NOT_STARRED = Atom.make(false);
+// Stable fallback so `useAtomValue` always receives an atom when the message isn't taggable.
+const NOT_TAGGED = Atom.make(false);
+
+/**
+ * One message's membership of a canonical system tag, plus its toggle. Membership lives in the
+ * mailbox's `TagIndex` rather than the message (feed messages are immutable and have no `meta.tags`),
+ * so the atom scopes re-renders to this message's membership instead of the whole index.
+ */
+const useSystemTag = (
+  message: MessageType.Message | undefined,
+  mailbox: Mailbox.Mailbox | undefined,
+  tagId: SystemTags.SystemTagId,
+): [boolean, () => void] => {
+  const db = mailbox && Obj.getDatabase(mailbox);
+  const tag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey(tagId)]))[0];
+  const tagUri = tag && Obj.getURI(tag).toString();
+  const tagIndex = mailbox?.tags?.target;
+  const taggedAtom = useMemo(
+    () => (tagIndex && tagUri && message ? TagIndex.atom(tagIndex, message.id, tagUri) : NOT_TAGGED),
+    [tagIndex, message, tagUri],
+  );
+  const tagged = useAtomValue(taggedAtom);
+  const handleToggle = useCallback(() => {
+    if (db && message && mailbox) {
+      void Effect.runFork(SystemTags.toggleTag(mailbox, message, tagId).pipe(Effect.provide(Database.layer(db))));
+    }
+  }, [mailbox, message, tagId, db]);
+
+  return [tagged, handleToggle];
+};
 
 type MessageStarProps = {
   message: MessageType.Message;
@@ -479,20 +673,7 @@ type MessageStarProps = {
 
 /** Star toggle backed by the mailbox tag index (membership-scoped reactivity). */
 const MessageStar = ({ message, mailbox }: MessageStarProps) => {
-  const db = Obj.getDatabase(mailbox);
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
-  const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const tagIndex = mailbox.tags?.target;
-  const starredAtom = useMemo(
-    () => (tagIndex && starredUri ? TagIndex.atom(tagIndex, message.id, starredUri) : NOT_STARRED),
-    [tagIndex, message.id, starredUri],
-  );
-  const starred = useAtomValue(starredAtom);
-  const handleToggleStar = useCallback(() => {
-    if (db) {
-      void Effect.runFork(SystemTags.toggleTag(mailbox, message, 'starred').pipe(Effect.provide(Database.layer(db))));
-    }
-  }, [mailbox, message, db]);
+  const [starred, handleToggleStar] = useSystemTag(message, mailbox, 'starred');
 
   return <Row.Star starred={starred} onToggle={handleToggleStar} />;
 };
@@ -534,13 +715,39 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
   // Extracted objects — trips, people, etc.
   const objects = useMessageExtractedObjects(db, mailbox, message);
 
+  const recipients = useMemo(
+    () => parseAddressList(message.properties?.to).map(({ email }) => email),
+    [message.properties?.to],
+  );
+
+  const { onOpenAttachment } = useConversationStackContext(MESSAGE_DETAILS_NAME);
+  const handleOpenAttachment = useCallback(
+    (index: number) => onOpenAttachment?.(message, index),
+    [onOpenAttachment, message],
+  );
+
   // `subgrid` so the card adopts the tile's columns: row icons land in the avatar column and row
   // content aligns with the sender/subject/body, rather than the card defining its own gutters.
   return (
     <Card.Root subgrid classNames='bg-transparent' border={false} data-testid='message-header'>
       <Card.Body>
-        {/* TODO(burdon): List other To/CC/BCC (Message schema only models `sender` today). */}
-        {/* <Row.Person actor={message.sender} role='from' db={db} onContactCreate={onContactCreate} /> */}
+        {/* TODO(burdon): List CC/BCC too (Message schema only models `sender` today). */}
+        {/* Recipients, reduced to bare addresses — the display name in the raw header duplicates the
+            tile's own heading, so `"NAME" <addr>` would just repeat it. */}
+        {recipients.length > 0 && (
+          <Card.Row>
+            <Card.Block>
+              {/* One recipient reads as a person, so it gets the same avatar treatment as every other
+                  person row; several are a group, which an avatar would misrepresent. */}
+              {recipients.length === 1 ? (
+                <Avatar actor={{ email: recipients[0] }} size={5} />
+              ) : (
+                <Icon icon='ph--users--regular' />
+              )}
+            </Card.Block>
+            <Card.Text classNames='text-sm text-description'>{recipients.join(', ')}</Card.Text>
+          </Card.Row>
+        )}
 
         {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
         {objects.map((object) => (
@@ -548,7 +755,10 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
         ))}
 
         {/* Attachments row. */}
-        <Row.Attachments attachments={message.attachments} />
+        <Row.Attachments
+          attachments={message.attachments}
+          onAttachmentClick={onOpenAttachment && handleOpenAttachment}
+        />
 
         {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
         <Row.Tags tags={messageTags} />

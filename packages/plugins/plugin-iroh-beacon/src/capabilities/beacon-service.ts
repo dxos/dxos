@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -12,10 +12,10 @@ import { Identity } from '@dxos/halo';
 import { HaloServicesLayer } from '@dxos/plugin-client';
 
 import { meta } from '#meta';
+import { type BeaconState } from '#types';
 
 import { BeaconService } from '../beacon-service';
 import { BroadcastChannelTransport } from '../transport/broadcast-channel-transport';
-import { type BeaconState } from '../types';
 
 export namespace BeaconCapabilities {
   export const State = Capability.makeSingleton<Atom.Atom<BeaconState>>()(`${meta.profile.key}.capability.state`);

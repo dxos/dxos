@@ -10,7 +10,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { DXN } from '@dxos/keys';
 
 // TODO(dmaretskyi): Extract.
-const TimeRangeSchema = Schema.String.pipe(Schema.pattern(/\d+(s|m|h|d)/)).annotations({
+const TimeRangeSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/\d+(s|m|h|d)/))).annotate({
   description: 'Time range. 1d - 1 day, 2h - 2 hours, 30m - 30 minutes, 15s - 15 seconds.',
   examples: ['1d', '2h', '30m', '15s'],
 });
@@ -44,28 +44,28 @@ export const FetchMessages = Operation.make({
     icon: 'ph--hash--regular',
   },
   input: Schema.Struct({
-    serverId: Schema.String.annotations({
+    serverId: Schema.String.annotate({
       description: 'The ID of the server to fetch messages from.',
     }),
-    channelId: Schema.optional(Schema.String).annotations({
+    channelId: Schema.optional(Schema.String).annotate({
       description:
         'The ID of the channel to fetch messages from. Will crawl all channels from the server if not specified.',
     }),
-    after: Schema.optional(Schema.Number).annotations({
+    after: Schema.optional(Schema.Number).annotate({
       description:
         'Fetch messages that were sent after a given date. Unix timestamp in seconds. Exclusive with `last`.',
     }),
-    last: TimeRange.annotations({
+    last: TimeRange.annotate({
       description:
         'Time range to fetch most recent messages. Specifies the range in the past, from now. "1d" would fetch messages from the last 24 hours.',
     }),
-    limit: Schema.optional(Schema.Number).annotations({
+    limit: Schema.optional(Schema.Number).annotate({
       description: 'The maximum number of messages to fetch.',
     }),
-    pageSize: Schema.optional(Schema.Number).annotations({
+    pageSize: Schema.optional(Schema.Number).annotate({
       description: 'The number of messages to fetch per page.',
     }),
-    ignoreUsernames: Schema.optional(Schema.Array(Schema.String)).annotations({
+    ignoreUsernames: Schema.optional(Schema.Array(Schema.String)).annotate({
       description: 'Exclude messages from these usernames.',
     }),
   }),

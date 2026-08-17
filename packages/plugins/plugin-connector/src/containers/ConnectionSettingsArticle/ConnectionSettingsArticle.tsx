@@ -11,7 +11,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { SpaceOperation } from '@dxos/plugin-space';
+import { Connection } from '@dxos/link';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
@@ -19,7 +20,6 @@ import { Listbox } from '@dxos/react-ui-list';
 import { meta } from '#meta';
 
 import { connectionDeckSubject } from '../../constants';
-import * as Connection from '../../types/Connection';
 
 // The add-connection action uses Form's `settings` variant for its labeled-row chrome
 // (an action-mode `Form.Row`); there are no fields to bind, so the schema is empty.

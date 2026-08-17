@@ -2,4 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './meta';
+export * as PwaPlugin from './PwaPlugin';
+export * from '#meta';

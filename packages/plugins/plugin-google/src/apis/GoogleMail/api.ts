@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -23,18 +22,16 @@ import {
 
 // TODO(dmaretskyi): There's probably a better way to do it by moving this into the oauth client.
 const decodeAndHandleErrors =
-  <S extends Schema.Schema.Any>(schema: S) =>
-  (
-    data: unknown,
-  ): Effect.Effect<Schema.Schema.Type<S>, GoogleError | ParseResult.ParseError, Schema.Schema.Context<S>> =>
-    Schema.decodeUnknown(Schema.Union(schema, ErrorResponse))(data).pipe(
-      Effect.flatMap((response) => {
-        if ('error' in response) {
-          return Effect.fail(GoogleError.fromErrorResponse(response));
-        } else {
-          return Effect.succeed(response);
-        }
-      }),
+  <S extends Schema.Top>(schema: S) =>
+  (data: unknown): Effect.Effect<S['Type'], GoogleError | Schema.SchemaError, S['DecodingServices']> =>
+    // The API error envelope is checked first: v4 decodes the union to `S['Type'] | ErrorResponse`,
+    // and an `in` test cannot narrow a generic member out of that.
+    Schema.decodeUnknownEffect(Schema.Union([ErrorResponse, schema]))(data).pipe(
+      Effect.flatMap((response) =>
+        Schema.is(ErrorResponse)(response)
+          ? Effect.fail(GoogleError.fromErrorResponse(response))
+          : Effect.succeed(response as S['Type']),
+      ),
     );
 
 /**
@@ -152,6 +149,48 @@ export const sendMessage = Effect.fn('sendMessage')(function* (
       ),
     ),
   );
+});
+
+/**
+ * Adds and/or removes labels on one message (requires the `gmail.modify` scope).
+ * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/modify
+ *
+ * `SPAM` is accepted here as an ordinary label (verified against a live account); `TRASH` is not —
+ * that is {@link trashMessage}.
+ */
+export const modifyMessage = Effect.fn('modifyMessage')(function* (
+  userId: string,
+  messageId: string,
+  labels: { addLabelIds?: readonly string[]; removeLabelIds?: readonly string[] },
+) {
+  const url = createUrl([API_URL, 'users', userId, 'messages', messageId, 'modify']).toString();
+  return yield* makeGoogleApiRequest(url, {
+    method: 'POST',
+    body: JSON.stringify({ addLabelIds: labels.addLabelIds ?? [], removeLabelIds: labels.removeLabelIds ?? [] }),
+  }).pipe(Effect.flatMap(decodeAndHandleErrors(Message)));
+});
+
+/**
+ * Applies the same label changes to up to 1000 messages in one call (requires `gmail.modify`).
+ * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/batchModify
+ *
+ * Returns `204 No Content` with an empty body on success, so unlike {@link modifyMessage} there is
+ * nothing to decode — the response is discarded and only its status matters.
+ */
+export const batchModifyMessages = Effect.fn('batchModifyMessages')(function* (
+  userId: string,
+  messageIds: readonly string[],
+  labels: { addLabelIds?: readonly string[]; removeLabelIds?: readonly string[] },
+) {
+  const url = createUrl([API_URL, 'users', userId, 'messages', 'batchModify']).toString();
+  yield* makeGoogleApiRequest(url, {
+    method: 'POST',
+    body: JSON.stringify({
+      ids: [...messageIds],
+      addLabelIds: labels.addLabelIds ?? [],
+      removeLabelIds: labels.removeLabelIds ?? [],
+    }),
+  });
 });
 
 /**

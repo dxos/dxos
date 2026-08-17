@@ -2,16 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as InboxResolver from '@dxos/extractor-lib';
 
-import { Jmap, JmapMail } from '../../../apis';
-import { JmapCredentials } from '../../../services';
+import { Jmap, JmapMail } from '#apis';
+import { JmapCredentials } from '#services';
+
 import { mapEmail } from '../mapper';
 
 /**
@@ -54,7 +55,7 @@ describe.runIf(TOKEN)('JMAP live', { timeout: 30_000 }, () => {
         limit: 5,
       });
       const { list: emails } = yield* JmapMail.emailGet(target, ids);
-      const mapped = (yield* Effect.forEach(emails, (email) => mapEmail(email))).filter(Predicate.isNotNullable);
+      const mapped = (yield* Effect.forEach(emails, (email) => mapEmail(email))).filter(Predicate.isNotNullish);
 
       console.log(`JMAP live: ${folders.length} folders, ${ids.length} inbox ids, ${mapped.length} mapped messages`);
       expect(Array.isArray(ids)).toBe(true);

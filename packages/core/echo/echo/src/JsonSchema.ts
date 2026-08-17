@@ -23,4 +23,4 @@ export const toJsonSchema = jsonSchemaInternal.toJsonSchema;
  */
 export type JsonSchema = jsonSchemaInternal.JsonSchemaType;
 
-export const JsonSchema: Schema.Schema<jsonSchemaInternal.JsonSchemaType> = jsonSchemaInternal.JsonSchemaType;
+export const JsonSchema: Schema.Codec<jsonSchemaInternal.JsonSchemaType> = jsonSchemaInternal.JsonSchemaType;

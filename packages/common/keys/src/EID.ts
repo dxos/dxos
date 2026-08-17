@@ -33,7 +33,7 @@ const LOCAL_LEGACY_RE = /^echo:\/(?!\/)([^/]+)$/;
  * - `echo://<spaceId>` — space.
  * - `echo:///<objectId>` — local (space-less) object.
  *
- * @deprecated form: the single-slash local form `echo:/<objectId>` is retired in favour of the
+ * Deprecated form: the single-slash local form `echo:/<objectId>` is retired in favour of the
  * triple-slash `echo:///<objectId>` form. It is still accepted on read (and normalized by `parse`)
  * so existing persisted data keeps resolving, but it is no longer produced — do not emit it in new
  * code. Construct local EIDs with `make({ entityId })`.
@@ -153,17 +153,15 @@ export const equals = (a: EID, b: EID): boolean => parse(a) === parse(b);
 /**
  * Effect Schema for EID validation.
  */
-// Identity-encoded schema (`Schema<EID, EID>`) so consumers can refine generic
-// schemas without the encode/decode types diverging. `Schema.filter` produces a refinement
-// with `Encoded = string`; we narrow the encoded form too with `as unknown as` since the
-// runtime representation is identical (a branded string).
-const Schema_: Schema.Schema<EID, EID> = Schema.String.pipe(
-  Schema.filter((value): value is EID => isEID(value), {
-    message: () => 'Invalid EID: must start with echo:',
+// Identity-encoded (`Schema<EID, EID>`) so consumers can refine without the encode/decode types
+// diverging; `refine` leaves `Encoded = string`, and the runtime form is the same branded string.
+const Schema_: Schema.Codec<EID, EID> = Schema.String.pipe(
+  Schema.refine((value): value is EID => isEID(value), {
+    message: 'Invalid EID: must start with echo:',
   }),
-  Schema.annotations({
+  Schema.annotate({
     title: 'EID',
     description: 'ECHO object/space URI: echo://<spaceId>[/<objectId>] or echo:///<objectId>',
   }),
-) as unknown as Schema.Schema<EID, EID>;
+) as unknown as Schema.Codec<EID, EID>;
 export { Schema_ as Schema };

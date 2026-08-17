@@ -4,29 +4,30 @@ tasks:
     command: pnpm exec playwright test
     args:
       - --config=src/playwright/playwright.config.ts
-    # The service worker breaks `page.route` interception, and specs assert on this rather than
-    # silently running without it — set here so no caller has to remember it.
+    # Declared here, never in a workflow `env`: moon hashes the AMBIENT value of env-var `inputs`, so
+    # a job that sets them hashes `bundle-e2e` differently and cannot hydrate another job's entry.
     env:
+      # Production edge — e2e must exercise what users hit, not a dev-tier worker.
+      DX_EDGE_BASE_URL: 'https://dxos.network'
+      DX_TELEMETRY_TAG: e2e
+      # The service worker breaks `page.route` interception.
       DX_PWA: 'false'
     deps:
       - test-utils:build
       - vite-plugin-icons:build
       - target: ^:build
         optional: true
-      - target: bundle
+      # `bundle-e2e`, not `bundle` with an `env` override: an override is hashed into the dependency, so
+      # it yields a bundle no other invocation can hydrate. Optional — only two apps define it.
+      - target: bundle-e2e
         optional: true
-        env:
-          DX_EDGE_BASE_URL: 'https://main.dxos.network/'
-          DX_TELEMETRY_TAG: e2e
-          # Read at bundle time by `vite.config.ts` (VitePWA `selfDestroying`), so it belongs on the
-          # bundle as well as on the test process above.
-          DX_PWA: 'false'
     inputs:
       - src/playwright/playwright.config.ts
       - '@group(sources)'
       - '@group(tests)'
       - $CI
       - $CONFIG_DYNAMIC
+      - $DX_E2E_RUN_ID
       - $DX_ENVIRONMENT
       - $DX_HOST
       - $DX_HUB_URL

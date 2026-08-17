@@ -11,9 +11,7 @@ import { Collection, Type } from '@dxos/echo';
 import { createDefaultSchema } from '@dxos/schema';
 import { Organization, Person, Task } from '@dxos/types';
 
-import { SpaceOperation } from '#operations';
-
-import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

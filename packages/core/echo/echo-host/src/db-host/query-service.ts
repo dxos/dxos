@@ -2,15 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as EffectStream from 'effect/Stream';
+import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { QueryAST } from '@dxos/echo-protocol';
+import { EffectEx } from '@dxos/effect';
 import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
@@ -143,7 +144,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   }
 
   ['QueryService.execQuery'](request: QueryRequest): EffectStream.Stream<QueryResponse, Error> {
-    return EffectStream.async<QueryResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<QueryResponse, Error>((emit) => {
       const ctx = Context.default();
       const queryEntry = this._createQuery(
         ctx,

@@ -12,6 +12,10 @@ runtime:
       dataRoot: /tmp/dx/run
 
   services:
+    # Staging rather than localhost: hub-service is a separate worker that is not part of the
+    # local edge dev setup, so account flows against a local edge still talk to the deployed hub.
+    hub:
+      url: https://hub-staging.dxos.workers.dev/
     edge:
       url: http://localhost:8787/
     iceProviders:

@@ -15,8 +15,15 @@ export const DatabasePanel = ({ database, ...props }: CustomPanelProps<{ databas
 
   const storageStats = database?.dataStats?.storage;
   const rows: TableProps['rows'] = [
-    ['#', 'objects', database?.objects ?? 0],
-    ['#', 'documents', database?.documents ?? 0],
+    // Storage census (`db.stats()`), summed across open spaces.
+    ['#', 'objects', database?.objects?.alive ?? 0],
+    ['#', 'objects (deleted)', database?.objects?.deleted ?? 0],
+    ['#', 'documents', database?.storedDocuments ?? 0],
+    ['#', 'feeds', database?.feeds?.count ?? 0],
+    ['#', 'feed blocks', database?.feeds?.blocks ?? 0],
+
+    // Runtime counts — resident handles and replication backlog, not what is on disk.
+    ['#', 'documents (loaded)', database?.documents ?? 0],
     ['#', 'documents (syncing)', database?.documentsToReconcile ?? 0],
 
     ['μ', `read rate ${interval}`, storageStats?.reads?.countPerSecond ?? 0, 'op/s'],

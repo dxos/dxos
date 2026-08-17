@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import * as CrxOperation from '../types/CrxOperation';
+import { CrxOperation } from '#types';
 
 export const CrxOperationHandlerSet = OperationHandlerSet.lazy([
   CrxOperation.AddPersonFromSnapshot.pipe(Operation.lazyHandler(() => import('./add-person-from-snapshot'))),

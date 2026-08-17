@@ -21,11 +21,11 @@ import * as Provider from './Provider';
 export class Account extends Type.makeObject<Account>(DXN.make('org.dxos.type.account', '0.1.0'))(
   Schema.Struct({
     provider: Provider.Provider,
-    kind: Schema.Literal('airline', 'rail', 'hotel', 'car', 'cruise', 'travel', 'other').pipe(Schema.optional),
+    kind: Schema.Literals(['airline', 'rail', 'hotel', 'car', 'cruise', 'travel', 'other']).pipe(Schema.optional),
     accountNumber: Schema.optional(Schema.String),
     displayName: Schema.optional(Schema.String),
     tier: Schema.optional(Schema.String),
-    status: Schema.Literal('active', 'expired').pipe(Schema.optional),
+    status: Schema.Literals(['active', 'expired']).pipe(Schema.optional),
     notes: Schema.optional(Schema.String),
     accessTokens: Schema.Array(Ref.Ref(AccessToken.AccessToken)).pipe(Schema.optional),
   }).pipe(

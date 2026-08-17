@@ -20,8 +20,7 @@ import { Obj } from '@dxos/echo';
 import { type ContentBlock, DraftMessage, type Message } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import type * as Mailbox from '../types/Mailbox';
+import { Mailbox } from '#types';
 
 export const REPLY_DELIMITER = '\n\n---';
 export const REPLY_REGEXP = /^---\s*$/m;
@@ -311,7 +310,9 @@ export const getMessageProps = (
   // query), and `getMessageBodyText` already guards that.
   const text = getMessageBodyText(message);
   const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, options);
-  const from = message.sender?.contact?.target?.fullName ?? message.sender?.name;
+  // Falls through to the address, as `renderMarkdown` does: bulk senders often set no display name,
+  // and a row with an empty sender reads as a broken message rather than an unnamed one.
+  const from = message.sender?.contact?.target?.fullName ?? message.sender?.name ?? message.sender?.email;
   const to = message.properties?.to; // TODO(burdon): Ref?
   const email = message.sender?.email;
   const subject = message.properties?.subject;

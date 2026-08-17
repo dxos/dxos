@@ -15,10 +15,12 @@
   "imports": {
     "#capabilities": {
       "source": {
+        "workerd": "./src/capabilities/workerd.ts",
         "node": "./src/capabilities/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
@@ -54,19 +56,24 @@
     },
     "#plugin": {
       "source": {
-        "workerd": "./src/SpacePlugin.workerd.ts",
-        "node": "./src/SpacePlugin.node.ts",
-        "default": "./src/SpacePlugin.ts"
+        "workerd": "./src/plugin.workerd.ts",
+        "node": "./src/plugin.node.ts",
+        "default": "./src/plugin.ts"
       },
-      "types": "./dist/types/src/SpacePlugin.d.ts",
-      "workerd": "./dist/lib/SpacePlugin.workerd.mjs",
-      "node": "./dist/lib/SpacePlugin.node.mjs",
-      "default": "./dist/lib/SpacePlugin.mjs"
+      "types": "./dist/types/src/plugin.d.ts",
+      "workerd": "./dist/lib/plugin.workerd.mjs",
+      "node": "./dist/lib/plugin.node.mjs",
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -74,6 +81,43 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "import": "./dist/lib/components.mjs"
+    },
+    "./constants": {
+      "source": "./src/constants.ts",
+      "types": "./dist/types/src/constants.d.ts",
+      "import": "./dist/lib/constants.mjs"
+    },
+    "./containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "import": "./dist/lib/containers.mjs"
+    },
+    "./package.json": "./package.json",
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
+    "./CollectionOperation": {
+      "source": "./src/types/CollectionOperation.ts",
+      "types": "./dist/types/src/types/CollectionOperation.d.ts",
+      "import": "./dist/lib/CollectionOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/types/Settings.mjs"
     },
     "./SpaceCapabilities": {
       "source": "./src/types/SpaceCapabilities.ts",
@@ -95,6 +139,16 @@
       "types": "./dist/types/src/types/SpaceForm.d.ts",
       "import": "./dist/lib/SpaceForm.mjs"
     },
+    "./SpaceOperation": {
+      "source": "./src/types/SpaceOperation.ts",
+      "types": "./dist/types/src/types/SpaceOperation.d.ts",
+      "import": "./dist/lib/SpaceOperation.mjs"
+    },
+    "./SpacePlugin": {
+      "source": "./src/SpacePlugin.ts",
+      "types": "./dist/types/src/SpacePlugin.d.ts",
+      "import": "./dist/lib/SpacePlugin.mjs"
+    },
     "./SpaceSchema": {
       "source": "./src/types/SpaceSchema.ts",
       "types": "./dist/types/src/types/SpaceSchema.d.ts",
@@ -104,38 +158,6 @@
       "source": "./src/types/SpaceSurface.ts",
       "types": "./dist/types/src/types/SpaceSurface.d.ts",
       "import": "./dist/lib/SpaceSurface.mjs"
-    },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
-    },
-    "./constants": {
-      "source": "./src/constants.ts",
-      "types": "./dist/types/src/constants.d.ts",
-      "import": "./dist/lib/constants.mjs"
-    },
-    "./containers": {
-      "source": "./src/containers/index.ts",
-      "types": "./dist/types/src/containers/index.d.ts",
-      "import": "./dist/lib/containers.mjs"
-    },
-    "./package.json": "./package.json",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -169,6 +191,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/cli-util": "workspace:*",
@@ -217,9 +240,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/cli": "catalog:",
+    "@effect/atom-react": "catalog:",
     "react-drag-drop-files": "catalog:",
     "react-qr-rounded": "catalog:"
   },
@@ -231,8 +252,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@effect/platform-node": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
@@ -245,8 +265,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

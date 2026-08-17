@@ -9,7 +9,7 @@ import { createAnnotationHelper } from '@dxos/echo/internal';
  *  (i.e., a reference to a queue in the queue property).
  */
 // TODO(wittjosiah): This won't serialize in ECHO. Migrate to `Annotation.make` to store in `PropertyMeta`.
-export const QueueAnnotationId = Symbol.for('@dxos/schema/annotation/Queue');
+export const QueueAnnotationId = '@dxos/schema/annotation/Queue';
 
 /** @deprecated Use `Feed` objects instead. */
 export const QueueAnnotation = createAnnotationHelper<boolean>(QueueAnnotationId);

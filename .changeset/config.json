@@ -1,13 +1,15 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
+  "$schema": "https://unpkg.com/@changesets/config@4.0.0/schema.json",
   "changelog": "@changesets/changelog-git",
   "commit": false,
+  "format": "oxfmt",
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "bumpVersionsWithWorkspaceProtocolOnly": true,
   "fixed": [
     [
+      "@dxos/agent-claude",
       "@dxos/agent-runtime",
       "@dxos/ai",
       "@dxos/app-framework",
@@ -106,6 +108,7 @@
       "@dxos/log-store-idb",
       "@dxos/markdown",
       "@dxos/mcp-client",
+      "@dxos/mcp-server",
       "@dxos/merkle-search-tree",
       "@dxos/messaging",
       "@dxos/migrations",
@@ -193,7 +196,6 @@
       "@dxos/teleport-e2e",
       "@dxos/teleport-extension-automerge-replicator",
       "@dxos/teleport-extension-gossip",
-      "@dxos/teleport-extension-object-sync",
       "@dxos/teleport-extension-replicator",
       "@dxos/test-utils",
       "@dxos/timeframe",
@@ -240,6 +242,7 @@
       "@dxos/plugin-client",
       "@dxos/plugin-code",
       "@dxos/plugin-commerce",
+      "@dxos/plugin-computer",
       "@dxos/plugin-conductor",
       "@dxos/plugin-connector",
       "@dxos/plugin-crm",
@@ -345,8 +348,5 @@
   "snapshot": {
     "useCalculatedVersion": true,
     "prereleaseTemplate": "{tag}-{commit}"
-  },
-  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
-    "onlyUpdatePeerDependentsWhenOutOfRange": true
   }
 }

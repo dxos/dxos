@@ -3,15 +3,14 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { SpaceOperation } from './definitions';
-
-export { SpaceOperation } from './definitions';
+import { SpaceOperation } from '#types';
 
 export const SpaceOperationHandlerSet = OperationHandlerSet.lazy([
   SpaceOperation.AddObject.pipe(Operation.lazyHandler(() => import('./add-object'))),
   SpaceOperation.AddRelation.pipe(Operation.lazyHandler(() => import('./add-relation'))),
   SpaceOperation.AddType.pipe(Operation.lazyHandler(() => import('./add-type'))),
   SpaceOperation.Close.pipe(Operation.lazyHandler(() => import('./close'))),
+  SpaceOperation.CollectGarbage.pipe(Operation.lazyHandler(() => import('./collect-garbage'))),
   SpaceOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),
   SpaceOperation.Delete.pipe(Operation.lazyHandler(() => import('./delete'))),
   SpaceOperation.DeleteField.pipe(Operation.lazyHandler(() => import('./delete-field'))),

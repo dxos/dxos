@@ -2,10 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Note from '../types/Note';
-import type * as Score from '../types/Score';
-import type * as Sequence from '../types/Sequence';
-import type * as Track from '../types/Track';
+import { Note, Score, Sequence, Track } from '#types';
+
 import { type LeadSheetDocument } from './lead-sheet';
 
 /**

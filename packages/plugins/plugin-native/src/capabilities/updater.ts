@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { ask } from '@tauri-apps/plugin-dialog';
@@ -13,6 +12,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Match from 'effect/Match';
 import * as Schedule from 'effect/Schedule';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -21,11 +21,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
+import { NativeCapabilities, Settings, Update } from '#types';
 
 import { TAURI_LOCALHOST_PORT } from '../constants';
-import * as NativeCapabilities from '../types/NativeCapabilities';
-import type * as Settings from '../types/Settings';
-import type * as Update from '../types/Update';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
@@ -108,9 +106,11 @@ export default Capability.makeModule(
 
     const currentChannel = (): Settings.UpdateChannel => registry.get(settingsAtom).updateChannel ?? DEFAULT_CHANNEL;
 
-    const statusAtom = Atom.make<Update.Status>(enabled ? { kind: 'idle' } : { kind: 'unsupported' }).pipe(
-      Atom.keepAlive,
-    );
+    // The two disabled states are distinct to the reader: a dev server on macOS would update fine
+    // once packaged, so reporting it as an unsupported platform is wrong.
+    const disabledStatus: Update.Status = SUPPORTS_OTA.includes(platform) ? { kind: 'dev' } : { kind: 'unsupported' };
+
+    const statusAtom = Atom.make<Update.Status>(enabled ? { kind: 'idle' } : disabledStatus).pipe(Atom.keepAlive);
 
     // Whether the last check found something, so `install` knows there is work to do. The update
     // itself lives in Rust — it is re-resolved there rather than parked across two commands.
@@ -267,10 +267,11 @@ export default Capability.makeModule(
       return false;
     });
 
-    const schedule = Schedule.fixed(Duration.hours(1)).pipe(
-      Schedule.whileInput((keepChecking: boolean) => keepChecking),
+    // v4 moved the output predicate off the schedule and onto `repeat`.
+    const fiber = yield* backgroundAction.pipe(
+      Effect.repeat({ schedule: Schedule.fixed(Duration.hours(1)), while: (keepChecking) => keepChecking }),
+      Effect.forkDetach,
     );
-    const fiber = yield* backgroundAction.pipe(Effect.repeat(schedule), Effect.forkDaemon);
     log.info('updater module initialized, update check scheduled');
 
     // Fiber.interrupt is async and would throw AsyncFiberException if wrapped in Effect.runSync,

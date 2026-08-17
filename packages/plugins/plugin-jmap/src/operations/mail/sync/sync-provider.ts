@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
@@ -21,10 +20,11 @@ import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { TagIndex } from '@dxos/schema';
 import { Person } from '@dxos/types';
 
-import { Jmap, JmapMail } from '../../../apis';
+import { Jmap, JmapMail } from '#apis';
+import { JmapMailApi } from '#services';
+
 import { JMAP_DOMAIN } from '../../../constants';
 import { type JmapApiError } from '../../../errors';
-import { JmapMailApi } from '../../../services';
 import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
 import { findOrCreateJmapTag } from '../tags';
 import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
@@ -107,6 +107,14 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
               keywordTagMap.set(keyword, Mailbox.tagUri(tag));
             }
 
+            // Mail from someone the space already knows is worth surfacing, so it lands under the
+            // `important` folder on arrival. Resolved once per sync rather than per message, and
+            // reusing the shared canonical tag rather than a parallel one — the Gmail provider marks
+            // known senders the same way, so both read identically downstream.
+            const knownSenderTagUri = Mailbox.tagUri(
+              yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, 'important')),
+            );
+
             // Fused decode + map; `undefined` drops the item (no body, or unmappable). Constructs the
             // `Change` (an `insert`) directly, so no separate wrapping stage is needed downstream.
             const toMapped = (
@@ -132,6 +140,11 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                   return uri ? [uri] : [];
                 });
                 const tagUris = [...folderUris, ...keywordUris];
+                // `contact` is the Person the space already holds for this sender (resolved above to
+                // link `message.sender.contact`), so knowing they are known costs no extra lookup.
+                if (contact && !tagUris.includes(knownSenderTagUri)) {
+                  tagUris.push(knownSenderTagUri);
+                }
                 const attachments = yield* fetchAttachments(target, decoded.attachments);
                 return {
                   _tag: 'insert',
@@ -152,15 +165,12 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
             // The first-tick baseline (and stale-token fallback): the current `Email/get` state with no
             // delta applied (so mail arriving during backfill is caught by the next incremental, not
             // missed). Defined once so both call sites share the same capture.
-            const captureFreshDelta = Effect.map(
-              api.emailGet(target, []),
-              (result): DeltaPlan => ({
-                token: result.state,
-                createdIds: undefined,
-                updatedIds: [],
-                hasMoreDelta: false,
-              }),
-            );
+            const captureFreshDelta = Effect.map(api.emailGet(target, []), (result): DeltaPlan => ({
+              token: result.state,
+              createdIds: undefined,
+              updatedIds: [],
+              hasMoreDelta: false,
+            }));
 
             // Resolve the delta plan. An incremental run fetches one bounded `Email/changes` chunk since
             // the token (`maxChanges` = the per-run budget); `hasMoreChanges` drives `runAgain`, and
@@ -319,16 +329,14 @@ const fetchAttachments = (
       attachments,
       (attachment) =>
         api.downloadBlob(target, attachment.blobId, { name: attachment.name, type: attachment.mimeType }).pipe(
-          Effect.map(
-            (bytes): EmailStage.Attachment => ({
-              name: attachment.name,
-              mimeType: attachment.mimeType,
-              size: attachment.size ?? bytes.byteLength,
-              bytes,
-              contentId: attachment.contentId,
-            }),
-          ),
-          Effect.catchAll((error) => {
+          Effect.map((bytes): EmailStage.Attachment => ({
+            name: attachment.name,
+            mimeType: attachment.mimeType,
+            size: attachment.size ?? bytes.byteLength,
+            bytes,
+            contentId: attachment.contentId,
+          })),
+          Effect.catch((error) => {
             log.catch(error, { blobId: attachment.blobId, name: attachment.name });
             return Effect.succeed(undefined);
           }),
@@ -395,7 +403,7 @@ const jmapIds = (
         conditions: conditions.length,
       });
 
-      return Stream.paginateChunkEffect(0, (position: number) =>
+      return Stream.paginate(0, (position: number) =>
         Effect.gen(function* () {
           const { ids } = yield* api.emailQuery(target, {
             filter,
@@ -408,7 +416,7 @@ const jmapIds = (
           options.onEnumerated?.(ids.length);
           const next =
             ids.length < JMAP_SYNC_CONFIG.listPageSize ? Option.none<number>() : Option.some(position + ids.length);
-          return [Chunk.fromIterable(ids), next];
+          return [ids, next] as const;
         }),
       );
     }),
@@ -439,7 +447,7 @@ const jmapEmailsForIds = (
             options.onRetrieved?.();
             return list[0];
           }),
-        ).pipe(Stream.filter(Predicate.isNotNullable)),
+        ).pipe(Stream.filter(Predicate.isNotNullish)),
       { concurrency: JMAP_SYNC_CONFIG.fetchConcurrency, bufferSize: 10 },
     ),
   );

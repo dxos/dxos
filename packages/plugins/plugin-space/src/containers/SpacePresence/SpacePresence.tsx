@@ -27,9 +27,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import { ComplexMap, hexToFallback } from '@dxos/util';
 
 import { meta } from '#meta';
-
-import * as SpaceCapabilities from '../../types/SpaceCapabilities';
-import * as SpaceSchema from '../../types/SpaceSchema';
+import { SpaceCapabilities, SpaceSchema } from '#types';
 
 // TODO(thure): Get/derive these values from protocol
 const REFRESH_INTERVAL = 5000;

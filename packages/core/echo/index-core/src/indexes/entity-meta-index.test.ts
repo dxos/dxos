@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Reactivity from '@effect/experimental/Reactivity';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
@@ -528,6 +528,63 @@ describe('EntityMetaIndex', () => {
       const afterUpdate = yield* index.queryAll({ spaceIds: [spaceId], includeAllQueues: true });
       expect(afterUpdate).toHaveLength(1);
       expect(afterUpdate[0].queueNamespace).toBe('trace');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+  it.effect('windows a queue read by cursor position and limit', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const queueId = EntityId.random();
+      const positioned = [0, 1, 2, 3].map((position) => ({
+        position,
+        item: {
+          spaceId,
+          queueId,
+          queueNamespace: 'data',
+          documentId: null,
+          recordId: null,
+          queuePosition: position,
+          createdAt: null,
+          updatedAt: Date.now(),
+          data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
+        } satisfies IndexerObject,
+      }));
+      // A local block that has not been positioned yet — it has no place in the cursor ordering.
+      const unpositioned: IndexerObject = {
+        spaceId,
+        queueId,
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        queuePosition: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
+      };
+      yield* index.update([...positioned.map(({ item }) => item), unpositioned]);
+
+      const all = yield* index.queryAll({ spaceIds: [], queueIds: [queueId] });
+      expect(all).toHaveLength(5);
+
+      const afterCursor = yield* index.queryAll({ spaceIds: [], queueIds: [queueId], window: { after: 1 } });
+      expect(afterCursor.map((row) => row.queuePosition)).toEqual([2, 3]);
+
+      const page = yield* index.queryAll({ spaceIds: [], queueIds: [queueId], window: { after: 0, limit: 2 } });
+      expect(page.map((row) => row.queuePosition)).toEqual([1, 2]);
+
+      const typed = yield* index.queryTypes({
+        spaceIds: [],
+        queueIds: [queueId],
+        typeDxns: [TYPE_PERSON],
+        window: { after: 2 },
+      });
+      expect(typed.map((row) => row.queuePosition)).toEqual([3]);
+
+      // A cursor read never sees the unpositioned block, which has no place in the ordering yet.
+      const fromStart = yield* index.queryAll({ spaceIds: [], queueIds: [queueId], window: { after: -1 } });
+      expect(fromStart.map((row) => row.queuePosition)).toEqual([0, 1, 2, 3]);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

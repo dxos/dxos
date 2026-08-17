@@ -7,13 +7,11 @@ import React, { useCallback } from 'react';
 
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { useObject } from '@dxos/echo-react';
-import { Input, Message, useTranslation } from '@dxos/react-ui';
+import { Banner, Input, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-
-import * as Sheet from '../../types/Sheet';
-import * as SheetUtil from '../../types/SheetUtil';
+import { Sheet, SheetUtil } from '#types';
 
 export type RangeListProps = {
   sheet: Sheet.Sheet;
@@ -39,11 +37,11 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
         <Input.Label>{t('range-list.heading')}</Input.Label>
       </Input.Root>
       {sheet.ranges.length === 0 ? (
-        <Message.Root>
-          <Message.Content>
-            <Message.Title>{t('no-ranges.message')}</Message.Title>
-          </Message.Content>
-        </Message.Root>
+        <Banner.Root>
+          <Banner.Content>
+            <Banner.Title>{t('no-ranges.message')}</Banner.Title>
+          </Banner.Content>
+        </Banner.Root>
       ) : (
         <OrderedList.Root<Sheet.Range> items={sheet.ranges} isItem={Schema.is(Sheet.Range)}>
           {({ items: ranges }) => (

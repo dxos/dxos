@@ -3,4 +3,5 @@
 //
 
 export * from './author-hue';
+export * from './comment-state';
 export * from './message';

@@ -2,18 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import * as Calendar from '../types/Calendar';
-import * as InboxOperation from '../types/InboxOperation';
+import { Calendar } from '#types';
 
-const make = () =>
+export type CalendarSkillOptions = {
+  /** Sync operations of the connectors bound to a Calendar, resolved by the caller. */
+  syncOperations?: readonly Operation.Definition.Any[];
+};
+
+const make = ({ syncOperations = [] }: CalendarSkillOptions = {}) =>
   Skill.make({
     key: Calendar.SKILL_KEY,
     name: 'Calendar',
-    tools: Skill.toolDefinitions({ operations: [InboxOperation.GoogleCalendarSync], tools: [] }),
+    tools: Skill.toolDefinitions({ operations: [...syncOperations], tools: [] }),
     instructions: Template.make({
       source: trim`
         You manage my calendar.
@@ -21,9 +26,9 @@ const make = () =>
     }),
   });
 
-const skill: Skill.Definition = {
+const skill = {
   key: Calendar.SKILL_KEY,
   make,
-};
+} satisfies Skill.Definition;
 
 export default skill;

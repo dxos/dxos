@@ -4,12 +4,12 @@
 
 import '@xterm/xterm/css/xterm.css';
 
-import type * as Command from '@effect/cli/Command';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal as Xterm } from '@xterm/xterm';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import type * as Layer from 'effect/Layer';
+import type * as Command from 'effect/unstable/cli/Command';
 import React, { useEffect, useRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -18,11 +18,11 @@ import { mx } from '@dxos/ui-theme';
 import { XtermBridge, XtermContext, runShell } from '../../cli';
 import { createXtermTheme } from './theme';
 
-export type TerminalProps<Name extends string, R, E, A> = ThemedClassName<{
+export type TerminalProps<Name extends string, Input, ContextInput, E, R> = ThemedClassName<{
   /**
-   * Root of an `@effect/cli` command tree; typically built with `Command.withSubcommands`.
+   * Root of an Effect CLI command tree; typically built with `Command.withSubcommands`.
    */
-  command: Command.Command<Name, R, E, A>;
+  command: Command.Command<Name, Input, ContextInput, E, R>;
   /**
    * Services the command handlers need beyond the platform services provided internally, which is
    * why the terminal's own environment is excluded from what this must supply.
@@ -39,12 +39,12 @@ export type TerminalProps<Name extends string, R, E, A> = ThemedClassName<{
 }>;
 
 /**
- * Terminal emulator hosting an `@effect/cli` command tree entirely in the browser.
+ * Terminal emulator hosting an Effect CLI command tree entirely in the browser.
  *
  * The command tree and its layer are built once per mount, so state held by the services (a DXOS
  * client, for instance) persists across commands the way it does in a long-lived shell.
  */
-export const Terminal = <Name extends string, R, E, A>({
+export const Terminal = <Name extends string, Input, ContextInput, E, R>({
   classNames,
   command,
   layer,
@@ -53,7 +53,7 @@ export const Terminal = <Name extends string, R, E, A>({
   prompt,
   banner,
   fontSize = 13,
-}: TerminalProps<Name, R, E, A>) => {
+}: TerminalProps<Name, Input, ContextInput, E, R>) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

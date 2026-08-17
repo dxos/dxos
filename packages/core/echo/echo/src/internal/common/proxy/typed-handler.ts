@@ -2,16 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Equal from 'effect/Equal';
+import * as Hash from 'effect/Hash';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getSchemaURI } from '../../Annotation/annotations';
+import { isEntity } from '../../Entity/guard';
 import { toEffectSchema } from '../../JsonSchema/json-schema';
 import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types';
 import { executeChange, isInChangeContext, queueNotification } from './change-context';
@@ -38,7 +41,7 @@ import {
   symbolReactivePrototype,
 } from './proxy-utils';
 import { ReactiveArray } from './reactive-array';
-import { SchemaValidator } from './schema-validator';
+import { SchemaValidator, assertsWithDetail } from './schema-validator';
 import { ChangeId, EventId } from './symbols';
 
 // Re-export for external consumers.
@@ -53,7 +56,7 @@ type ProxyTarget = {
   /**
    * Schema for the root.
    */
-  [SchemaId]: Schema.Schema.AnyNoContext;
+  [SchemaId]: Schema.Top;
   [ParentId]?: any;
 
   /**
@@ -204,6 +207,25 @@ Object.defineProperties(TypedObjectPrototype, {
         return undefined;
       }
       return (callback: (obj: any) => void) => executeChange(target, target, this, callback);
+    },
+  },
+  // Effect `Hash`/`Equal` traits, keyed by entity id: an entity has exactly one live proxy, and the
+  // bare `id` spells that invariant without the throw a derived URI risks on a malformed id.
+  // Effect's structural default would instead deep-read the record and go stale on the next mutation.
+  // Selected by the `[KindId]` brand, not by the presence of an `id`, since a nested record sharing
+  // this prototype may carry an application-level one; those keep reference identity.
+  [Hash.symbol]: {
+    get(this: ProxyTarget) {
+      const target = getRawTarget(this);
+      return () => (isEntity(target) ? Hash.hash(target.id) : Hash.random(target));
+    },
+  },
+  [Equal.symbol]: {
+    get(this: ProxyTarget) {
+      const target = getRawTarget(this);
+      return isEntity(target)
+        ? (that: unknown) => isEntity(that) && that.id === target.id
+        : (that: unknown) => getRawTarget(that) === target;
     },
   },
   [StaticTypeSchemaSlot]: {
@@ -568,7 +590,11 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return value;
     }
     const schema = SchemaValidator.getTargetPropertySchema(target, prop);
-    const _ = Schema.asserts(schema)(value);
+    // Clearing an optional property is admitted here rather than by the property's own schema: v4
+    // keeps optionality on the property's context instead of widening its type to `T | undefined`.
+    if (value !== undefined || !SchemaValidator.isOptionalProperty(target, prop)) {
+      assertsWithDetail(schema, value);
+    }
     SchemaValidator.assertExactProperties(schema, value, (path) => getDeep(value, path));
     if (isValidProxyTarget(value)) {
       setSchemaProperties(value, schema);
@@ -613,7 +639,7 @@ const toJSON = (target: ProxyTarget): any => {
  *   - In-memory pre-persist (`Type.makeObjectFromJsonSchema`) — slot exposed
  *     via the `case StaticTypeSchemaSlot:` arm in this file's `get` trap.
  */
-export type TypeSource = { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext };
+export type TypeSource = { readonly [StaticTypeSchemaSlot]?: Schema.Top };
 
 /**
  * Recursively set AST on all potential proxy targets.
@@ -623,12 +649,7 @@ export type TypeSource = { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNo
  *   `SchemaId` are already set by `setTypename`/`setSchema` as `configurable: false` — redefining
  *   them here (with `configurable: true`) would throw.
  */
-const setSchemaProperties = (
-  obj: any,
-  schema: Schema.Schema.AnyNoContext,
-  typeSource?: TypeSource,
-  skipOwnStamp = false,
-) => {
+const setSchemaProperties = (obj: any, schema: Schema.Top, typeSource?: TypeSource, skipOwnStamp = false) => {
   if (!skipOwnStamp) {
     const schemaType = getSchemaURI(schema);
     if (schemaType != null) {
@@ -682,7 +703,7 @@ const setSchemaProperties = (
 
 // Accepts any encoded type: the typed handler operates on the decoded representation, so schemas
 // whose encoded form differs (e.g. refs encode as `{ '/': uri }`) are valid here.
-export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T, any>, typeSource?: TypeSource) => {
+export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>, typeSource?: TypeSource) => {
   // log.info('prepareTypedTarget', { target, schema });
   validateAndReactifyTarget(target, schema);
   setSchemaProperties(target, schema, typeSource);
@@ -692,13 +713,13 @@ export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T, any>, 
  * Validate a target against its schema and convert nested arrays to `ReactiveArray`. Shared by
  * {@link prepareTypedTarget} and {@link prepareDecodedTypedTarget}.
  */
-export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Schema<T, any>) => {
-  if (!SchemaAST.isTypeLiteral(schema.ast)) {
+export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Schema<T>) => {
+  if (!SchemaAST.isObjects(schema.ast)) {
     throw new Error('schema has to describe an object type');
   }
 
   SchemaValidator.validateSchema(schema);
-  const _ = Schema.asserts(schema)(target);
+  assertsWithDetail(schema, target);
   SchemaValidator.assertExactProperties(schema, target, (path) => getDeep(target, path));
   makeArraysReactive(target);
 };
@@ -709,7 +730,7 @@ export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Schema<T,
  * (see `objectFromJSON`). Validates and reactifies as usual, then stamps `SchemaId`/`TypeId` on
  * nested records/arrays only, leaving the target's own (locked) stamps untouched.
  */
-export const prepareDecodedTypedTarget = <T>(target: T, schema: Schema.Schema<T, any>) => {
+export const prepareDecodedTypedTarget = <T>(target: T, schema: Schema.Schema<T>) => {
   validateAndReactifyTarget(target, schema);
   setSchemaProperties(target, schema, undefined, true);
 };

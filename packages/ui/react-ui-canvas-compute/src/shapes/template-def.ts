@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { ComputeValueType, TemplateOutput, VoidInput } from '@dxos/conductor';
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
@@ -18,9 +19,8 @@ import { TemplateComponent } from './Template';
 // Data
 //
 
-export const TemplateShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
+export const TemplateShape = ComputeShape.mapFields(
+  Struct.assign({
     type: Schema.Literal('template'),
     valueType: Schema.optional(ComputeValueType),
   }),

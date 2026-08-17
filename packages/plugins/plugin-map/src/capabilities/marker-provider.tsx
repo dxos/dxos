@@ -15,8 +15,7 @@ import { type GeoMarker } from '@dxos/react-ui-geo';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
-import * as Map from '../types/Map';
-import * as MapCapabilities from '../types/MapCapabilities';
+import { Map, MapCapabilities } from '#types';
 
 /**
  * Reactive markers for a {@link Map.Map}: queries the map's backing view and plots each row at its
@@ -57,7 +56,7 @@ const useViewMarkers = (subject: Map.Map): MapCapabilities.MarkerSet => {
 
           return { id: row.id, location: { lat, lng } };
         })
-        .filter(Predicate.isNotNullable),
+        .filter(Predicate.isNotNullish),
     [objects, view?.projection.pivotFieldId, view?.projection.fields],
   );
 

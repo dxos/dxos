@@ -14,11 +14,6 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "default": "./dist/lib/skills.mjs"
-    },
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
@@ -50,14 +45,24 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/SupportPlugin.tsx",
-      "types": "./dist/types/src/SupportPlugin.d.ts",
-      "default": "./dist/lib/SupportPlugin.mjs"
+      "source": "./src/plugin.tsx",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -72,16 +77,12 @@
       "types": "./dist/types/src/components/index.d.ts",
       "import": "./dist/lib/components.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./package.json": "./package.json",
     "./HelpCapabilities": {
       "source": "./src/types/HelpCapabilities.ts",
       "types": "./dist/types/src/types/HelpCapabilities.d.ts",
@@ -112,12 +113,16 @@
       "types": "./dist/types/src/types/SupportOperation.d.ts",
       "import": "./dist/lib/SupportOperation.mjs"
     },
+    "./SupportPlugin": {
+      "source": "./src/SupportPlugin.ts",
+      "types": "./dist/types/src/SupportPlugin.d.ts",
+      "import": "./dist/lib/SupportPlugin.mjs"
+    },
     "./Tour": {
       "source": "./src/types/Tour.ts",
       "types": "./dist/types/src/types/Tour.d.ts",
       "import": "./dist/lib/Tour.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -157,7 +162,6 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/brand": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -178,8 +182,7 @@
     "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "date-fns": "catalog:",

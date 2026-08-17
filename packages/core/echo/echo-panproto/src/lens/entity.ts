@@ -17,7 +17,7 @@ import { type AnyLens, type Mapping } from './types';
 //
 
 /** One target property's serialized mapping. Inline functions are not serializable; see {@link toObject}. */
-const Entry = Schema.Union(
+const Entry = Schema.Union([
   Schema.Struct({ property: Schema.String, kind: Schema.Literal('rename'), from: Schema.String }),
   Schema.Struct({ property: Schema.String, kind: Schema.Literal('readOnly'), from: Schema.String }),
   Schema.Struct({
@@ -27,7 +27,7 @@ const Entry = Schema.Union(
     /** Name of a codec registered via `Lens.registerCodec`. */
     codec: Schema.String,
   }),
-);
+]);
 
 type Entry = Schema.Schema.Type<typeof Entry>;
 

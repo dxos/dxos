@@ -9,8 +9,7 @@ import { type Obj } from '@dxos/echo';
 import { type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 
-import * as KanbanConstants from '../../types/KanbanConstants';
-import * as KanbanLayout from '../../types/KanbanLayout';
+import { KanbanConstants, KanbanLayout } from '#types';
 
 const KANBAN_BOARD_NAME = 'KanbanBoard.Context';
 

@@ -9,14 +9,15 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { Connection } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Button, Message, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { Treegrid } from '@dxos/react-ui-list';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type PublishFieldNote } from '@dxos/schema';
 
 import { meta } from '#meta';
+import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
 import { getFieldPublishFlags } from '../../annotation';
 import { isAtprotoConnection } from '../../connection';
@@ -31,8 +32,6 @@ import {
   unpublishObject,
 } from '../../publish';
 import * as AtprotoRepo from '../../services/AtprotoRepo';
-import * as AtprotoCapabilities from '../../types/AtprotoCapabilities';
-import * as AtprotoPublication from '../../types/AtprotoPublication';
 
 export type AtprotoCompanionProps = AppSurface.ArticleProps<Obj.Unknown>;
 
@@ -216,44 +215,44 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
             <div role='none' className='flex flex-col gap-3 p-3'>
               {/* Publish status — the status icon overrides the Message's default valence icon. A
                   neutral "checking" state shows until the first async derivation resolves. */}
-              <Message.Root
+              <Banner.Root
                 valence={statusMeta?.valence ?? 'neutral'}
                 icon={statusMeta?.icon ?? 'ph--circle-notch--regular'}
               >
-                <Message.Content>
-                  <Message.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Message.Title>
-                </Message.Content>
-              </Message.Root>
+                <Banner.Content>
+                  <Banner.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Banner.Title>
+                </Banner.Content>
+              </Banner.Root>
 
               {/* Reasons publishing is unavailable. */}
               {!connection && (
-                <Message.Root valence='info'>
-                  <Message.Content>
-                    <Message.Body>{t('no-connection.label')}</Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence='info'>
+                  <Banner.Content>
+                    <Banner.Body>{t('no-connection.label')}</Banner.Body>
+                  </Banner.Content>
+                </Banner.Root>
               )}
               {ineligibleReason && (
-                <Message.Root valence={reasonValence}>
-                  <Message.Content>
-                    <Message.Body>{ineligibleReason}</Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence={reasonValence}>
+                  <Banner.Content>
+                    <Banner.Body>{ineligibleReason}</Banner.Body>
+                  </Banner.Content>
+                </Banner.Root>
               )}
               {error && (
-                <Message.Root valence='error'>
-                  <Message.Content>
-                    <Message.Body>{error}</Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence='error'>
+                  <Banner.Content>
+                    <Banner.Body>{error}</Banner.Body>
+                  </Banner.Content>
+                </Banner.Root>
               )}
 
               {/* First-publish confirmation. */}
               {confirming && (
-                <Message.Root valence='warning'>
-                  <Message.Content>
-                    <Message.Body>{t('confirm-publish.message')}</Message.Body>
-                    <Message.Body asChild>
+                <Banner.Root valence='warning'>
+                  <Banner.Content>
+                    <Banner.Body>{t('confirm-publish.message')}</Banner.Body>
+                    <Banner.Body asChild>
                       <div role='none' className='flex gap-2 pbs-2'>
                         <Button variant='primary' disabled={busy} onClick={handlePublish}>
                           {t('confirm-publish.label')}
@@ -262,9 +261,9 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                           {t('cancel.label')}
                         </Button>
                       </div>
-                    </Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                    </Banner.Body>
+                  </Banner.Content>
+                </Banner.Root>
               )}
 
               {/* Public projection: what the network sees, as a treegrid. Each leaf is tagged Published (we
@@ -273,11 +272,11 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
               <div role='none' className='flex flex-col gap-1'>
                 <h2 className='text-xs uppercase tracking-wide text-description'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
-                  <Message.Root valence='warning'>
-                    <Message.Content>
-                      <Message.Body>{t('mirror-unresolved.label')}</Message.Body>
-                    </Message.Content>
-                  </Message.Root>
+                  <Banner.Root valence='warning'>
+                    <Banner.Content>
+                      <Banner.Body>{t('mirror-unresolved.label')}</Banner.Body>
+                    </Banner.Content>
+                  </Banner.Root>
                 )}
                 <Treegrid.Root gridTemplateColumns='minmax(0, 1fr) minmax(0, 1fr) min-content' classNames='gap-x-3'>
                   {fields.map((field) => {

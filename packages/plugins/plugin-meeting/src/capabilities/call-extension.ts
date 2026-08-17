@@ -17,9 +17,7 @@ import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Channel } from '@dxos/types';
 
-import * as Meeting from '../types/Meeting';
-import * as MeetingCapabilities from '../types/MeetingCapabilities';
-import * as MeetingOperation from '../types/MeetingOperation';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?

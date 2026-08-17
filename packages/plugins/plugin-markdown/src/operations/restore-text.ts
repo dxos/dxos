@@ -12,7 +12,7 @@ import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
 
-import * as Markdown from '../types/Markdown';
+import { Markdown } from '#types';
 
 /** Splice `insert` over `[from, from+del)` on a Text and dispose any branch binding. */
 const splice = (text: Text.Text, from: number, del: number, insert: string) => {

@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type Database, Filter, Obj, Tag } from '@dxos/echo';
 import { TagIndex } from '@dxos/schema';
 
-import * as Subscription from '../types/Subscription';
+import { Subscription } from '#types';
 
 /** Per-Post tag slice (star/archive membership). */
 export type TagSlice = { starred: boolean; archived: boolean };

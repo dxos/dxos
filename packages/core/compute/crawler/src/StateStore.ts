@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as Clock from 'effect/Clock';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type SqlTransaction } from '@dxos/sql-sqlite';
 
@@ -39,12 +39,12 @@ export interface StateStoreApi {
   readonly getRunStatus: () => Effect.Effect<RunStatus, StateError>;
 }
 
-export class StateStore extends Context.Tag('@dxos/crawler/StateStore')<StateStore, StateStoreApi>() {
+export class StateStore extends Context.Service<StateStore, StateStoreApi>()('@dxos/crawler/StateStore') {
   /** In-memory frontier (tests, demos, single-process browser runs). */
   static layerMemory: Layer.Layer<StateStore> = Layer.sync(StateStore, () => makeMemory());
 
   /** SQLite-backed frontier over a shared SqlClient (browser wasm / node / DO SQLite). */
-  static layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.scoped(
+  static layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.effect(
     StateStore,
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;

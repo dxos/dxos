@@ -12,7 +12,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as TestClock from 'effect/TestClock';
+import * as TestClock from 'effect/testing/TestClock';
 import { describe, expect, test } from 'vitest';
 
 import { NoHandlerError } from '@dxos/compute';
@@ -40,7 +40,7 @@ const ToString = Operation.make({
 });
 
 const Add = Operation.make({
-  input: Schema.Tuple(Schema.Number, Schema.Number),
+  input: Schema.Tuple([Schema.Number, Schema.Number]),
   output: Schema.Number,
   meta: { key: DXN.make('org.example.test.add') },
 });
@@ -106,11 +106,11 @@ const createEventCollector = (invoker: OperationInvoker.OperationInvoker): Effec
           yield* checkWaiter;
         }),
       ),
-      Effect.fork,
+      Effect.forkChild,
     );
 
     // Yield to ensure subscription is established
-    yield* Effect.yieldNow();
+    yield* Effect.yieldNow;
 
     return {
       events,
@@ -133,11 +133,11 @@ describe('OperationInvoker', () => {
   it.effect('throws error if no handler found', () =>
     Effect.gen(function* () {
       const invoker = OperationInvoker.make(() => Effect.succeed([]), testRuntime);
-      const result = yield* invoker.invoke(Compute, { value: 1 }).pipe(Effect.either);
+      const result = yield* invoker.invoke(Compute, { value: 1 }).pipe(Effect.result);
 
-      expect(result._tag).toBe('Left');
-      if (result._tag === 'Left') {
-        expect(result.left).toBeInstanceOf(NoHandlerError);
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        expect(result.failure).toBeInstanceOf(NoHandlerError);
       }
     }),
   );
@@ -157,8 +157,8 @@ describe('OperationInvoker', () => {
       const invoker = OperationInvoker.make(() => Effect.succeed(handlers), testRuntime);
 
       // No handler registered.
-      const error1 = yield* invoker.invoke(ToString, { value: 1 }).pipe(Effect.either);
-      expect(error1._tag).toBe('Left');
+      const error1 = yield* invoker.invoke(ToString, { value: 1 }).pipe(Effect.result);
+      expect(error1._tag).toBe('Failure');
 
       // Add handler.
       handlers.push(toStringHandler);
@@ -167,8 +167,8 @@ describe('OperationInvoker', () => {
 
       // Remove handler.
       handlers.splice(handlers.indexOf(toStringHandler), 1);
-      const error2 = yield* invoker.invoke(ToString, { value: 1 }).pipe(Effect.either);
-      expect(error2._tag).toBe('Left');
+      const error2 = yield* invoker.invoke(ToString, { value: 1 }).pipe(Effect.result);
+      expect(error2._tag).toBe('Failure');
     }),
   );
 
@@ -177,12 +177,12 @@ describe('OperationInvoker', () => {
       const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler]), testRuntime);
 
       // Fork both operations.
-      const fiberA = yield* Effect.fork(invoker.invoke(Compute, { value: 1 }));
+      const fiberA = yield* Effect.forkChild(invoker.invoke(Compute, { value: 1 }));
       // Advance clock for first operation (1 * 10ms).
       yield* TestClock.adjust('10 millis');
       const a = yield* Fiber.join(fiberA);
 
-      const fiberB = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
+      const fiberB = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
       // Advance clock for second operation (2 * 10ms).
       yield* TestClock.adjust('20 millis');
       const b = yield* Fiber.join(fiberB);
@@ -196,13 +196,13 @@ describe('OperationInvoker', () => {
       const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler]), testRuntime);
 
       // Fork both operations concurrently.
-      const fiberA = yield* Effect.fork(invoker.invoke(Compute, { value: 5 }));
-      const fiberB = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
+      const fiberA = yield* Effect.forkChild(invoker.invoke(Compute, { value: 5 }));
+      const fiberB = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
 
       // Advance clock enough for both (max is 5 * 10ms = 50ms).
       yield* TestClock.adjust('50 millis');
 
-      const [a, b] = yield* Fiber.join(Fiber.zip(fiberA, fiberB));
+      const [a, b] = yield* Effect.zip(Fiber.join(fiberA), Fiber.join(fiberB));
       expect(b.value - a.value).toBe(-6);
     }),
   );
@@ -231,7 +231,7 @@ describe('OperationInvoker', () => {
       const collector = yield* createEventCollector(invoker);
 
       // Small delay to ensure subscription is ready.
-      yield* Effect.yieldNow();
+      yield* Effect.yieldNow;
 
       yield* invoker.invoke(ToString, { value: 42 });
 
@@ -250,13 +250,13 @@ describe('OperationInvoker', () => {
     Effect.gen(function* () {
       const invoker = OperationInvoker.make(() => Effect.succeed([failHandler]), testRuntime);
       const collector = yield* createEventCollector(invoker);
-      yield* Effect.yieldNow();
+      yield* Effect.yieldNow;
 
-      const result = yield* invoker.invoke(Fail, { value: 1 }).pipe(Effect.either);
-      expect(result._tag).toBe('Left');
+      const result = yield* invoker.invoke(Fail, { value: 1 }).pipe(Effect.result);
+      expect(result._tag).toBe('Failure');
 
       // Give any (unexpected) event a chance to arrive, then assert none was published.
-      yield* Effect.yieldNow();
+      yield* Effect.yieldNow;
       expect(collector.events.length).toBe(0);
 
       yield* collector.dispose;
@@ -283,16 +283,59 @@ describe('OperationInvoker.invokePromise', () => {
 });
 
 //
+// Platform contract: `invokePromise` dispatch is concurrent, so completion order is NOT issue
+// order — an earlier call that stalls (a lazy handler's chunk load, a busy runtime) applies after a
+// later, faster one. Callers owning last-write-wins state (e.g. a selection) must apply it
+// synchronously at the call site rather than routing it through `invokePromise`.
+
+describe('OperationInvoker.invokePromise concurrency contract', () => {
+  test('a stalled earlier call is overtaken by a later one', async ({ expect }) => {
+    const Write = Operation.make({
+      input: Schema.Struct({ value: Schema.String, stall: Schema.Boolean }),
+      output: Schema.Void,
+      meta: { key: DXN.make('org.example.test.write') },
+    });
+
+    const applied: string[] = [];
+    let release: (() => void) | undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = () => resolve();
+    });
+    const writeHandler = Operation.withHandler(Write, (input) =>
+      Effect.gen(function* () {
+        if (input.stall) {
+          yield* Effect.promise(() => gate);
+        }
+        applied.push(input.value);
+      }),
+    );
+    const invoker = OperationInvoker.make(() => Effect.succeed([writeHandler]), testRuntime);
+
+    const first = invoker.invokePromise(Write, { value: 'stale', stall: true });
+    const second = invoker.invokePromise(Write, { value: 'newest', stall: false });
+    await second;
+    expect(release).toBeDefined();
+    release?.();
+    await first;
+
+    // Issued [stale, newest]; applied [newest, stale] — with last-write-wins state the stale value
+    // wins, which is why such state must not be dispatched through invokePromise.
+    expect(applied).toEqual(['newest', 'stale']);
+  });
+});
+
+//
 // Type-level tests for Operation.withHandler service constraints.
 //
 
 describe('Operation.withHandler type safety', () => {
   test('handler using undeclared service is a type error', () => {
-    class DeclaredService extends Context.Tag('@test/DeclaredService')<DeclaredService, { declared: () => void }>() {}
-    class UndeclaredService extends Context.Tag('@test/UndeclaredService')<
-      UndeclaredService,
-      { undeclared: () => void }
-    >() {}
+    class DeclaredService extends Context.Service<DeclaredService, { declared: () => void }>()(
+      '@test/DeclaredService',
+    ) {}
+    class UndeclaredService extends Context.Service<UndeclaredService, { undeclared: () => void }>()(
+      '@test/UndeclaredService',
+    ) {}
 
     const opWithDeclaredService = Operation.make({
       input: Schema.Void,

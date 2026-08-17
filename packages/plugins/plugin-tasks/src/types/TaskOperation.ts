@@ -16,6 +16,8 @@ import { Actor, type Person, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 
+import { CODE_PROJECT_SKILL_KEY } from './skill-keys';
+
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
@@ -35,12 +37,12 @@ export const CreateTask = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    taskSet: Ref.Ref(TaskSet.TaskSet).annotations({
+    taskSet: Ref.Ref(TaskSet.TaskSet).annotate({
       description: 'The task set (container) the task files into.',
     }),
     title: Schema.String,
     description: Schema.optional(Schema.String),
-    priority: Schema.optional(Schema.Literal('none', 'low', 'medium', 'high', 'urgent')),
+    priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
     assignee: Schema.optional(Actor.Actor),
     /** Parent task for a sub-task; when set, the task is parented to it instead of the task set. */
     parent: Schema.optional(Ref.Ref(Task.Task)),
@@ -51,7 +53,7 @@ export const CreateTask = Operation.make({
   output: Schema.Struct({
     task: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'taskCreate', safety: 'write', aspect: 'tasks' }));
+}).pipe(Operation.mcpTool({ name: 'taskCreate', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
 
 export const UpdateTask = Operation.make({
   meta: {
@@ -65,8 +67,8 @@ export const UpdateTask = Operation.make({
     task: Ref.Ref(Task.Task),
     title: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
-    status: Schema.optional(Schema.Literal('todo', 'in-progress', 'done', 'failed', 'cancelled')),
-    priority: Schema.optional(Schema.Literal('none', 'low', 'medium', 'high', 'urgent')),
+    status: Schema.optional(Schema.Literals(['todo', 'in-progress', 'done', 'failed', 'cancelled'])),
+    priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
     estimate: Schema.optional(Schema.Number),
     assignee: Schema.optional(Actor.Actor),
   }),
@@ -76,7 +78,7 @@ export const UpdateTask = Operation.make({
   output: Schema.Struct({
     task: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'taskUpdate', safety: 'write', aspect: 'tasks' }));
+}).pipe(Operation.mcpTool({ name: 'taskUpdate', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
 
 export const CompleteTask = Operation.make({
   meta: {
@@ -95,7 +97,7 @@ export const CompleteTask = Operation.make({
   output: Schema.Struct({
     task: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'taskComplete', safety: 'write', aspect: 'tasks' }));
+}).pipe(Operation.mcpTool({ name: 'taskComplete', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
 
 export const AssignTask = Operation.make({
   meta: {
@@ -115,7 +117,7 @@ export const AssignTask = Operation.make({
   output: Schema.Struct({
     task: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'taskAssign', safety: 'write', aspect: 'tasks' }));
+}).pipe(Operation.mcpTool({ name: 'taskAssign', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
 
 /** Opaque forward cursor; currently an encoded offset, so the wire shape survives a key-cursor swap. */
 export const TaskCursor = Schema.String;
@@ -132,16 +134,16 @@ export const ListTasks = Operation.make({
   input: Schema.Struct({
     /** Container to list. Exactly one of `taskSet` / `project` — a project lists across its task sets. */
     taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
-    project: Schema.optional(Ref.Ref(Obj.Unknown)).annotations({
+    project: Schema.optional(Ref.Ref(Obj.Unknown)).annotate({
       description: 'Project whose task sets are listed (org.dxos.type.project).',
     }),
-    status: Schema.optional(Schema.Literal('todo', 'in-progress', 'done', 'failed', 'cancelled')),
+    status: Schema.optional(Schema.Literals(['todo', 'in-progress', 'done', 'failed', 'cancelled'])),
     /** Matches the assignee by DID, email, or display name — whichever the actor carries. */
     assignee: Schema.optional(Schema.String),
     /** Include sub-tasks (children of tasks); by default only root tasks of the container. */
     includeSubtasks: Schema.optional(Schema.Boolean),
     after: Schema.optional(TaskCursor),
-    limit: Schema.optional(Schema.Number).annotations({ description: 'Page size (default 50, max 200).' }),
+    limit: Schema.optional(Schema.Number).annotate({ description: 'Page size (default 50, max 200).' }),
   }),
   // JSON snapshots, not live objects — see the create/update verbs above.
   output: Schema.Struct({
@@ -149,4 +151,4 @@ export const ListTasks = Operation.make({
     /** Present when more results remain; pass back as `after`. */
     nextCursor: Schema.optional(TaskCursor),
   }),
-}).pipe(Operation.mcpTool({ name: 'taskList', safety: 'read', aspect: 'tasks' }));
+}).pipe(Operation.mcpTool({ name: 'taskList', safety: 'read', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));

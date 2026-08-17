@@ -6,7 +6,7 @@ import { describe, test } from '@effect/vitest';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import { ProjectOperationHandlerSet } from './index';
+import { ProjectOperationHandlerSet } from '#operations';
 
 describe('operation serialization', () => {
   // Remote hosts (edge operation-service) build a `PersistentOperation` record for every
@@ -39,6 +39,6 @@ describe('operation serialization', () => {
       .map((tool) => tool.name)
       .sort();
 
-    expect(projected).toEqual(['projectGet', 'projectList', 'projectUpdate']);
+    expect(projected).toEqual(['projectCreate', 'projectGet', 'projectList', 'projectUpdate']);
   });
 });

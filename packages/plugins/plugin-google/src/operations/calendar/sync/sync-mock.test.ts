@@ -10,14 +10,14 @@ import { Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import * as InboxResolver from '@dxos/extractor-lib';
-import { AccessToken, Cursor } from '@dxos/link';
-import * as Connection from '@dxos/plugin-connector/Connection';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { TagIndex } from '@dxos/schema';
 import { Event, Organization, Person } from '@dxos/types';
 
+import { GoogleCalendarApi } from '#services';
+
 import { GOOGLE_CALENDAR_CONNECTOR_ID, GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { GoogleCalendarApi } from '../../../services';
 import { generateCalendarDataset, generateRecurringSeries } from '../../../testing/calendar-fixtures';
 import { syncCalendar } from './sync';
 

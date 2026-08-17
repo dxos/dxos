@@ -2,14 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Pipeable from 'effect/Pipeable';
 import type * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
+import type * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 /**
  * Unique identifier for opaque toolkit instances.
@@ -72,7 +71,7 @@ export type Requirements<T extends Any> = T extends OpaqueToolkit<infer _TR, inf
 export const make = <Tools extends Record<string, Tool.Any>, E, R>(
   toolkit: Toolkit.Toolkit<Tools>,
   layer: Layer.Layer<Tool.HandlersFor<Tools>, E, R>,
-): OpaqueToolkit<Tool.Requirements<Tools>, E, R> =>
+): OpaqueToolkit<Tool.HandlerServices<Tools>, E, R> =>
   ({
     [TypeId]: TypeId,
     toolkit,
@@ -89,10 +88,9 @@ export const make = <Tools extends Record<string, Tool.Any>, E, R>(
  */
 export const fromContext = <Tools extends Record<string, Tool.Any>>(
   toolkit: Toolkit.Toolkit<Tools>,
-): Effect.Effect<OpaqueToolkit<Tool.Requirements<Tools>>, never, Tool.HandlersFor<Tools>> =>
-  Effect.map(
-    Effect.context<Tool.HandlersFor<Tools>>(),
-    (context): OpaqueToolkit<Tool.Requirements<Tools>> => make(toolkit, Layer.succeedContext(context)),
+): Effect.Effect<OpaqueToolkit<Tool.HandlerServices<Tools>>, never, Tool.HandlersFor<Tools>> =>
+  Effect.map(Effect.context<Tool.HandlersFor<Tools>>(), (context): OpaqueToolkit<Tool.HandlerServices<Tools>> =>
+    make(toolkit, Layer.succeedContext(context)),
   );
 
 /**
@@ -178,25 +176,14 @@ export type OpaqueTools<R = never> = Record<
   Tool.Tool<
     string,
     {
-      readonly parameters: AnyStructSchemaNoContext;
-      readonly success: Schema.Schema.AnyNoContext;
+      readonly parameters: Schema.Codec<any, any>;
+      readonly success: Schema.Codec<any, any>;
       readonly failure: typeof Schema.Never;
       readonly failureMode: Tool.FailureMode;
     },
     R
   >
 >;
-
-export interface AnyStructSchemaNoContext extends Pipeable.Pipeable {
-  readonly [Schema.TypeId]: any;
-  readonly make: any;
-  readonly Type: any;
-  readonly Encoded: any;
-  readonly Context: never;
-  readonly ast: SchemaAST.AST;
-  readonly fields: Schema.Struct.Fields;
-  readonly annotations: any;
-}
 
 /**
  * Provides an opaque toolkit to the agent.
@@ -205,12 +192,12 @@ export interface AnyStructSchemaNoContext extends Pipeable.Pipeable {
  * contributes to it: a headless routine reaches here with no assistant UI open, and a synchronous
  * read would return whatever happened to be registered at that instant.
  */
-export class OpaqueToolkitProvider extends Context.Tag('@dxos/ai/OpaqueToolkit.OpaqueToolkitProvider')<
+export class OpaqueToolkitProvider extends Context.Service<
   OpaqueToolkitProvider,
   {
     readonly getToolkit: () => Effect.Effect<OpaqueToolkit>;
   }
->() {}
+>()('@dxos/ai/OpaqueToolkit.OpaqueToolkitProvider') {}
 
 /**
  * Layer for providing an opaque toolkit to the agent.

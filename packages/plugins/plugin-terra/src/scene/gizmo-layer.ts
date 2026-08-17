@@ -10,9 +10,10 @@ import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder'
 import { type Mesh } from '@babylonjs/core/Meshes/mesh';
 import { type Scene } from '@babylonjs/core/scene';
 
+import { TerraObject } from '#types';
+
 import { scale } from '../engine';
 import { type SimObject } from '../sim';
-import type * as TerraObject from '../types/TerraObject';
 import { easeHeading } from './heading';
 import { SCALE_FACTOR, objectFrame } from './orientation';
 

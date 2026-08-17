@@ -14,6 +14,7 @@ export default defineConfig({
     translations: 'src/translations.ts',
     Settings: 'src/types/Settings.ts',
     ThemeCapabilities: 'src/types/ThemeCapabilities.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'jsdom' } },

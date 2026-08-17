@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { type CapabilityManager } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
@@ -15,8 +15,7 @@ import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ConfirmReset, type ConfirmResetProps } from '@dxos/shell/react';
 
 import { meta } from '#meta';
-
-import * as ClientOptions from '../../types/ClientOptions';
+import { ClientOptions } from '#types';
 
 export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
   Pick<ClientOptions.ClientPluginOptions, 'onReset'> & {
