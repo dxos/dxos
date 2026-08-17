@@ -88,6 +88,11 @@ export class Placement {
     return this.#scroll;
   }
 
+  /** The viewport is the binding's to know: it is the one thing here that comes from the DOM. */
+  setViewport(viewport: number): void {
+    this.#viewport = viewport;
+  }
+
   get anchor(): Readonly<{ id: string; index: number; start: number }> {
     return this.#anchor;
   }
