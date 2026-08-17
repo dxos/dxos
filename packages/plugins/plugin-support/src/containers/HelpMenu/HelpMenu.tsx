@@ -49,10 +49,8 @@ export const HelpMenu = () => {
   const channel = prereleaseChannel(config.values.runtime?.app?.env?.DX_ENVIRONMENT);
   const [downloadUrl, setDownloadUrl] = useState(DOWNLOAD_URL);
 
-  // Resolved ahead of the click rather than inside it: `window.open` called after an await has lost the
-  // click's transient activation and gets caught by popup blockers, and a real href keeps middle-click
-  // and cmd-click working. Until this resolves — or if it fails — the href stays the dashboard, which is
-  // the state a channel sits in until its first build is published.
+  // Resolved before the click, since opening a window after an await has lost its transient activation
+  // and gets blocked as a popup.
   useEffect(() => {
     if (!channel || isTauri()) {
       return;
