@@ -48,41 +48,24 @@ Four mechanisms address it, in the order the correction is made smaller:
    disclosure.
 4. **Scroll anchoring** — what remains after the estimate is as good as it can be.
 
-### Scroll anchoring
+### Scroll anchoring — the virtualizer's, not ours
 
-- Pick an **anchor**: the topmost row still visible.
-- Remember its layout offset (`item.start`); its distance from `scrollTop` is where it sits on screen.
-- After every layout, look the anchor up again and compute `delta = newStart − oldStart`.
-- Write `scrollTop += delta`. The anchor lands on the same pixel, and every row below it with it.
-- In a **layout effect**, before paint: a correction applied after the frame is drawn is the flicker.
-- Ignore the scroll event our own write produces, or it reads as the reader moving.
-- Re-pick on a real scroll: the reader's gesture decides what should stay put next.
+Measuring a row changes the offsets of everything after it, and the only thing that keeps the screen
+still is moving `scrollTop` by the same distance. **The virtualizer already does this**
+(`resizeItem` → `_scrollToOffset(offset, { adjustments })`, with the DOM adapter adding the
+adjustment to the target), and `virtualizer.test.ts` asserts it holds: a row the reader is on does
+not move when a row above it, below it, or a batch of rows entering during an upward scroll are
+measured.
 
-**Why the topmost _visible_ row and not the topmost _rendered_ row.** Overscan renders rows above the
-viewport, and they are exactly the rows being measured for the first time when scrolling up. An
-anchor is only useful if its own offset is settled: anchoring to a row that is itself being corrected
-compensates by that row's delta and moves the visible content by the difference. The topmost visible
-row has been rendered and measured, so corrections above it are precisely what we want to absorb, and
-corrections below it move nothing the reader can see. In code that is the first item satisfying
-`start + size > scrollTop` — not `items[0]`, which is the first _overscanned_ row.
+A second layer of anchoring was written here and then removed, because two things compensating for
+one correction produce a jump of exactly the correction's size — the signature seen in a screen
+recording (a clean glide, then two frames moving against the scroll). If a fix ever seems to need
+anchoring above the virtualizer, add the case to `virtualizer.test.ts` first: three earlier
+"reproductions" were faults in the harness, not the library.
 
-`shouldAdjustScrollPositionOnItemSizeChange` is the virtualizer's own attempt at this. It fires per
-resize against a scroll offset that trails the element's real one; forcing it on made the jumping
-worse (8.8% → 11.3% of frames), so anchoring is done here instead, once per layout, against the
-offsets that layout actually used.
-
-## Navigation
-
-A feed is messages of many blocks, and what a reader moves through is rarely "the next message". In
-an AI chat a turn is a prompt plus everything the model said in reply, so the stops are the
-**prompts**; stopping on each of the model's messages would step the reader through one answer
-instead of through the conversation.
-
-`isAnchor(message, index)` names the stops, and the arrow keys, the previous/next buttons and any
-other control share them (`stepAnchor`) — a reader switching between keyboard and mouse must not
-change places. Absent the prop, every message is a stop. Steps are taken from the **cursor**, not
-from the last stop, so a reader who scrolled between two prompts moves to the one they are
-approaching. `Cmd/Ctrl + Arrow` still jumps to either end of the feed.
+**Reading the invariant correctly matters.** When the reader scrolls 300px, the anchor row moves
+300px on screen and `scrollOffset` moves _less_, because compensation deliberately moved it back.
+Asserting against the offset asserts that compensation did not happen.
 
 ## Following the tail
 

@@ -103,16 +103,19 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       `MessageList`, and so any fix can be offered upstream as a patch rather than stranded here.
       `virtualizer.test.ts` drives the real `Virtualizer` through that surface, so it doubles as the
       conformance test for a replacement.
-- [ ] **NEXT STEP on the jump, precisely.** `virtualizer.test.ts` (2 skipped tests) is the harness;
-      un-skip and work against it. The suspicion to test first is double-counting in the adjustment
-      accounting: `resizeItem` compensates via
-      `_scrollToOffset(getScrollOffset(), { adjustments: scrollAdjustments += delta })`, and the DOM
-      adapter then computes `toOffset = offset + adjustments` — but `getScrollOffset()` already
-      reflects earlier adjustments, so a second correction in the same gesture may add a delta that
-      is already in the offset. Instrument by logging `(scrollOffset, scrollAdjustments, delta,
-    resulting offset)` on each `resizeItem` in the harness and checking the offset against what a
-      correct compensation would give. If confirmed, that is the upstream patch (and the reason our
-      own anchor made things worse — it corrects a correction).
+- [x] **The upward-scroll jump was ours, not TanStack's.** A headless harness driving the real
+      `Virtualizer` (`virtualizer.test.ts`, 3 tests) asserts the contract — a row the reader is on
+      does not move because another row was measured — and the virtualizer **meets** it: measuring a
+      row above, below, or a whole batch while scrolling up all keep the row exactly where the
+      gesture put it. Every earlier "reproduction" was a fault in the harness or the assertion:
+      a `scrollToFn` that dropped the `adjustments` argument (the compensation itself), a scroll
+      element stub too thin to be recognised as an element (3.17 then took the window path), a stub
+      window without `requestAnimationFrame` (3.17 reconciles the scroll on a frame), and an
+      invariant that asserted against the net change in `scrollOffset` — which compensation moves on
+      purpose — rather than against the gesture. So `useScrollAnchor` was correcting a correction,
+      which is why forcing compensation on made it worse, turning it off broke tail positioning, and
+      anchoring on screen position was worse still. REMOVED; the browser behaviour needs re-measuring
+      against the video method, and the jump should be gone.
 - [ ] Widget state does not survive virtualization — an expanded panel scrolled out of the window
       remounts collapsed, because the open flag is React state inside the widget. Either the state
       moves into the message, or the item keeps a per-widget map.

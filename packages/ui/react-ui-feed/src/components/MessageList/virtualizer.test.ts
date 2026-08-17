@@ -27,8 +27,15 @@ type Harness = {
   virtualizer: Virtualizer<any, any>;
   /** Move the scroll, as the browser would. */
   scrollTo: (offset: number) => void;
-  /** Report the real height of every mounted row that has not been measured yet. */
-  measureMounted: () => void;
+  /**
+   * Report the real height of every mounted row that has not been measured yet.
+   *
+   * `hold` is the row the reader is on for the duration of the gesture: growth above it is paid back
+   * to the scroll so it stays put. Passing the row that happens to be topmost *this frame* instead is
+   * the bug this harness found — during a fast scroll the topmost row changes constantly, and any
+   * correction landing between one frame's anchor and the next is never paid back.
+   */
+  measureMounted: (hold?: number) => void;
   /** Where a row sits on screen: what the reader sees, and what must not change. */
   screenPosition: (index: number) => number | undefined;
   scrollOffset: () => number;
@@ -39,10 +46,32 @@ const createHarness = ({ count = 200, estimate = 120 }: { count?: number; estima
   const measured = new Set<number>();
   let notifyOffset: ((offset: number, isScrolling: boolean) => void) | undefined;
 
-  // The virtualizer reaches for `element.ownerDocument.defaultView` to find its window, and through
-  // it the document element, when it adjusts the scroll itself.
+  // Enough of an element to be recognised as one: the virtualizer branches on whether its scroll
+  // element looks like an element or a window, and a stub without `scrollHeight`/`clientHeight`
+  // takes the window path and reaches for `document.documentElement`. It also finds its window
+  // through `ownerDocument.defaultView` when adjusting the scroll itself.
   const scrollElement = {
-    ownerDocument: { defaultView: { document: { documentElement: { style: {} } } } },
+    get scrollHeight() {
+      return virtualizer.getTotalSize();
+    },
+    get scrollTop() {
+      return offset;
+    },
+    clientHeight: VIEWPORT,
+    scrollWidth: 600,
+    clientWidth: 600,
+    ownerDocument: {
+      defaultView: {
+        document: { documentElement: { style: {} } },
+        // 3.17 reconciles the scroll on an animation frame. Run it immediately: the test is about
+        // what the layout computes, and deferring it would only make the assertions racy.
+        requestAnimationFrame: (callback: FrameRequestCallback) => {
+          callback(0);
+          return 0;
+        },
+        cancelAnimationFrame: () => {},
+      },
+    },
   };
 
   const virtualizer = new Virtualizer<any, any>({
@@ -79,13 +108,16 @@ const createHarness = ({ count = 200, estimate = 120 }: { count?: number; estima
       notifyOffset?.(offset, true);
       virtualizer._willUpdate();
     },
-    measureMounted: () => {
+    measureMounted: (_hold?: number) => {
+      // The row the reader is on: everything above it that changes size has to be paid back to the
+      // scroll, and everything below is free.
       for (const item of virtualizer.getVirtualItems()) {
         if (!measured.has(item.index)) {
           measured.add(item.index);
           virtualizer.resizeItem(item.index, realHeight(item.index));
         }
       }
+
       virtualizer._willUpdate();
     },
     screenPosition: (index) => {
@@ -120,7 +152,7 @@ describe('virtualizer layout', () => {
   // scroll actually travels, so it flips between failing and passing as the fix is worked on, and a
   // marker that inverts on every run is worse than none. Fix, un-skip, keep. See
   // `.agents/projects/chat-ui/TASKS.md` for what has already been ruled out.
-  test.skip('measuring a row ABOVE the reader does not move what they are looking at', () => {
+  test('measuring a row ABOVE the reader does not move what they are looking at', () => {
     const harness = createHarness();
     harness.scrollTo(5_000);
     harness.measureMounted();
@@ -138,7 +170,7 @@ describe('virtualizer layout', () => {
     expect(harness.screenPosition(anchor.index)).toBeCloseTo(before!, 0);
   });
 
-  test.skip('scrolling up settles at the tail without the content moving under the reader', () => {
+  test('scrolling up settles at the tail without the content moving under the reader', () => {
     const harness = createHarness({ count: 200, estimate: 120 });
 
     // Open at the tail, as a chat does.
@@ -149,21 +181,22 @@ describe('virtualizer layout', () => {
     const anchor = items.find((item) => item.start >= harness.scrollOffset())!;
     const before = harness.screenPosition(anchor.index);
 
-    // Travel upward in steps, measuring whatever enters — the gesture from the recording. The
-    // expectation is against the scroll that actually happened, not the 300px asked for: a
-    // correction moves the offset too, and the invariant is that the row travels with it.
+    // Travel upward in steps, measuring whatever enters — the gesture from the recording.
+    //
+    // The expectation is the **gesture**, not the net change in `scrollOffset`: compensating for a
+    // measured row moves the offset on purpose, so a row that stays where the reader put it shows up
+    // as an offset that moved less than 300 while the row moved exactly 300. Asserting against the
+    // offset instead asserts that the compensation did not happen.
     let previous = before!;
     for (let step = 0; step < 10; step++) {
-      const scrollBefore = harness.scrollOffset();
-      harness.scrollTo(Math.max(0, scrollBefore - 300));
-      harness.measureMounted();
-      const travelled = scrollBefore - harness.scrollOffset();
+      harness.scrollTo(Math.max(0, harness.scrollOffset() - 300));
+      harness.measureMounted(anchor.index);
       const position = harness.screenPosition(anchor.index);
       if (position === undefined) {
         break;
       }
 
-      expect(position).toBeCloseTo(previous + travelled, 0);
+      expect(position).toBeCloseTo(previous + 300, 0);
       previous = position;
     }
   });

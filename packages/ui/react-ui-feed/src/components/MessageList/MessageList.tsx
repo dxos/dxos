@@ -22,7 +22,6 @@ import { type MessageRenderer, type SearchHit, defaultRenderer } from '../../mod
 import { type HighlightRange, HtmlItem, MarkdownItem, SelectionGroupContext, createSelectionGroup } from '../Item';
 import { type FollowOptions, ScrollFollower } from './follow';
 import { useJumpDetector, usePositionLog } from './position-log';
-import { useScrollAnchor } from './scroll-anchor';
 
 //
 // Context
@@ -409,8 +408,6 @@ const MessageListRoot = ({
   // Hold the row the reader is on still while first-time measurements correct the layout under it.
   // Suspended while following the tail, where the bottom is the anchor and the follow owns the
   // scroll — two things writing `scrollTop` would fight.
-  useScrollAnchor({ viewport, virtualizer, disabled: stickyBottom && followRef.current });
-
   useEffect(() => {
     if (!viewport) {
       return;

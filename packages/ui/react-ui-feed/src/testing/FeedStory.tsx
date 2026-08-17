@@ -448,6 +448,8 @@ const NavButtons = () => {
   );
 };
 
+// TODO(burdon): Factor out reusable debugging hooks and components.
+
 type StatusBarProps = {
   hits: readonly SearchHit[];
   query: string;
