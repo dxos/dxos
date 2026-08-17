@@ -34,13 +34,11 @@ const createBunServerProvider = (): OAuthServerProvider => ({
         // token id and maps the captured `accessTokenId` / `accessToken` params to the result.
         waitForResult: (_accessTokenId: string, timeoutMs: number = OAUTH_TIMEOUT_MS) =>
           server.waitForResult(timeoutMs).pipe(
-            Effect.map(
-              (params): OAuthFlowResult => ({
-                success: true,
-                accessTokenId: params.accessTokenId,
-                accessToken: params.accessToken,
-              }),
-            ),
+            Effect.map((params): OAuthFlowResult => ({
+              success: true,
+              accessTokenId: params.accessTokenId,
+              accessToken: params.accessToken,
+            })),
           ),
       })),
     ),

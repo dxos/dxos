@@ -77,5 +77,12 @@ export const Settings = Schema.Struct({
       description: 'Show the raw span tree as JSON in the trace panel instead of the commit graph.',
     }),
   ),
+  traceProcessEnvironments: Schema.optional(
+    Schema.mutable(Schema.Array(Schema.String)).annotate({
+      title: 'Trace panel process environments',
+      description:
+        'Process environments (app, space, conversation) shown in the trace panel. Unset uses the default selection, which hides app-level chatter.',
+    }),
+  ),
 }).mapFields(Struct.map(Schema.mutableKey));
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

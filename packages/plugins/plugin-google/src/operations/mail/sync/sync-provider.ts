@@ -135,15 +135,12 @@ export const googleMailSyncProvider = (options: {
 
             // The first-tick baseline (and stale-token fallback): the mailbox's current `historyId`
             // with no delta applied. Defined once so both call sites share the same capture.
-            const captureFreshDelta = Effect.map(
-              api.getProfile(userId),
-              (profile): DeltaPlan => ({
-                token: profile.historyId,
-                createdIds: undefined,
-                reconcileItems: [],
-                hasMoreDelta: false,
-              }),
-            );
+            const captureFreshDelta = Effect.map(api.getProfile(userId), (profile): DeltaPlan => ({
+              token: profile.historyId,
+              createdIds: undefined,
+              reconcileItems: [],
+              hasMoreDelta: false,
+            }));
 
             // Resolve the delta plan. First tick captures the current `historyId` before backfill. An
             // incremental run fetches one bounded `history.list` page since the token (`maxResults` = the

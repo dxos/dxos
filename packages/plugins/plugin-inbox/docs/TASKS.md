@@ -476,12 +476,27 @@ Raised while driving the live mailbox. Grouped by owner, since half of these are
 
 ### plugin-inbox
 
-- [ ] **Analyze icon → sparkle, via `SystemIconButton`.** The toolbar action uses
+- [x] **Analyze icon → sparkle, via a constant AND a button preset** (2026-08-15). The framing needed
+      correcting: an AI action is DATA far more often than it is a button — 18 of the 21 sparkle uses
+      are an operation's `meta.icon` or a graph action's `properties.icon`, both plain strings that no
+      React component can constrain. So the mechanism is `AI_ACTION_ICON` in `@dxos/ui-types`
+      (React-free, so an operation definition can import it without pulling UI into a headless module),
+      with `SystemIconButton.Ai` sourcing the same constant for the 3 button call sites.
+      Analyze now uses it at all three of its sites, plus the two adjacent plugin-inbox uses whose
+      package already depended on `ui-types`.
+      LEFT DELIBERATELY: 13 literals across 10 packages. Converting each needs a new `ui-types`
+      dependency on that package — a poor trade for an icon string. The constant is there for new code
+      and for anyone already editing those files.
+      Original entry: **Analyze icon → sparkle, via `SystemIconButton`.** The toolbar action uses
       `ph--stack-simple--regular` (and `ph--stop--regular` while running); plugin-crm's Research
       already uses sparkle for the same "run AI over this subject" meaning. Promote it to the
       `SystemIconButton` primitive and apply it wherever an AI/agent action is offered — today each
       action sets a raw `icon` string in its graph properties, so nothing enforces the convention.
-- [ ] **Sync message tags back to Gmail (the P2 deferred in Phase 1 DECIDED).** CLAIMED — designed in
+- [x] **Sync message tags back to Gmail** — OFF THIS LEDGER, owned by
+      [#12611](https://github.com/dxos/dxos/pull/12611). **The write path is still unbuilt**: that PR is
+      open and design-only (`docs/TAG-SYNC.md` plus a Phase 6 entry), so a Gmail sync still restores an
+      archived message. Ticked here because the work is tracked there, not because it works.
+      Original entry: designed in
       [#12611](https://github.com/dxos/dxos/pull/12611) (branch `claude/mailbox-tag-sync-89f351`),
       which adds `docs/TAG-SYNC.md` and a Phase 6 entry to THIS file. Design-only so far; the write
       path is still unbuilt. Do not start it here. **That PR and this branch both edit this ledger, so
@@ -508,11 +523,13 @@ Raised while driving the live mailbox. Grouped by owner, since half of these are
 
 ### plugin-space / react-ui
 
-- [ ] **Type filter for Related Objects.** The Related Objects masonry mixes every related type in one
-      list; narrow it by type.
-- [ ] **Object avatars in cards.** STARTED: `ObjectAvatar` (react-ui-card) resolves picture → initials
-      → type glyph for any object, and `TypeArticle`'s tile uses it. Not yet applied to
-      `RecordArticle`'s own header, and has no story covering the three-way fallback.
+- [x] **Type filter for Related Objects** — landed as [#12613](https://github.com/dxos/dxos/pull/12613).
+      Also extracted `RelatedObjectCard` out of `RecordArticle`, which is why the `CardIconSlot` fix for
+      related tiles was already present by the time the follow-up PR went to re-apply it.
+- [x] **Object avatars in cards** — delivered by the `AppSurface.CardIcon` seam rather than by making
+      `ObjectAvatar` every card's default: the type glyph stays the default at all hosts and `Person`
+      alone contributes its photo-then-initials treatment. The remaining story/test coverage is its own
+      item, not this one.
 - [x] **A card header's depiction is now contributable per type** (`AppSurface.CardIcon`). Raised as
       "the avatar colour is wrong" — every person rendered on the same grey disc, because
       `ObjectAvatar` preferred the type's declared hue and both `Person` and `Organization` declare

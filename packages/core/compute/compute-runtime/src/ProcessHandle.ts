@@ -127,7 +127,7 @@ const fromPersistedChildEvent = (event: {
 export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, any> {
   readonly statusAtom: Atom.Writable<ProcessManager.Status>;
   readonly parentId: Process.ID | null;
-  readonly environment: ProcessManager.Environment;
+  readonly environment: Process.Environment;
 
   /** In-memory client for the process's declared RPC control surface. */
   readonly rpc: RpcClient.RpcClient<any>;
@@ -178,7 +178,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     storage: StorageService.Service,
     key: string,
     params: Process.Params,
-    environment: ProcessManager.Environment,
+    environment: Process.Environment,
     traceSink: Trace.Sink,
     clock: Clock.Clock,
     rpc: RpcClient.RpcClient<any>,
@@ -242,6 +242,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       parentPid: this.parentId,
       key: this.key,
       params: this.params,
+      environment: this.environment,
       state: status.state,
       error,
       startedAt: status.startedAt.getTime(),
