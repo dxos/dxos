@@ -17,6 +17,13 @@ export const DEFAULT_PROFILE = 'default';
 export const EXPECTED_CONFIG_VERSION = 1;
 export const defaultConfig = { version: 1 };
 
+/**
+ * Hub-service (accounts, invitations, email verification) fallback, used when neither
+ * `runtime.app.env.DX_HUB_URL` nor `runtime.services.hub.url` is configured. Deployments override
+ * it via `DX_HUB_URL` (see `.github/workflows/env/*`).
+ */
+export const DEFAULT_HUB_URL = 'https://hub.dxos.network/';
+
 // TODO(burdon): Allow override via env? Generalize since currently NodeJS only.
 const HOME = typeof process !== 'undefined' ? (process?.env?.HOME ?? '') : '';
 

@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import { dirname } from 'node:path';
 
-import { DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';
+import { DEFAULT_HUB_URL, DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
@@ -68,11 +68,23 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
 }
 
 /**
- * Both load branches (existing file, first-run write) must layer the same builtins over the file's
- * values, or a freshly created profile would come up without storage or edge features.
+ * Both load branches (existing file, first-run write) must layer env, file, and builtins in the same
+ * order, or a freshly created profile would come up without storage or the hub.
  */
 const withProfileDefaults = (configValues: ConfigProto, profile: string) =>
-  ConfigService.of(new Config(configValues, profileBuiltinDefaults(profile).values));
+  ConfigService.of(new Config(processEnvDefaults(), configValues, profileBuiltinDefaults(profile).values));
+
+/**
+ * `DX_*` process env projected onto `runtime.app.env`, mirroring what the bundler config plugin does
+ * for browser builds — without it those keys are unreachable on node, where nothing bundles the app.
+ * Takes precedence over the profile config file, so `DX_HUB_URL=… dx …` overrides for one command.
+ */
+const processEnvDefaults = (): ConfigProto => {
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(([key, value]) => key.startsWith('DX_') && value !== undefined),
+  );
+  return Object.keys(env).length > 0 ? { runtime: { app: { env } } } : {};
+};
 
 /**
  * Default config for a profile.
@@ -83,6 +95,14 @@ const profileBuiltinDefaults = (profile: string) => {
 
   return new Config({
     runtime: {
+      // Set here rather than in the file written for a new profile, and under the service key
+      // rather than `runtime.app.env`: the latter outranks it in the resolver, so a built-in there
+      // would shadow a hub URL the profile configures for itself.
+      services: {
+        hub: {
+          url: DEFAULT_HUB_URL,
+        },
+      },
       client: {
         edgeFeatures: {
           subductionReplicator: true,

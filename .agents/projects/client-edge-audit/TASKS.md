@@ -66,8 +66,10 @@ warnings/errors.
     ToolsExplorer (new config-driven container).
   - `react-ui-introspect`: `DEFAULT_INTROSPECT_MCP_URL` removed; explorer
     renders a "not configured" state.
-  - CLI hub commands: `?? 'https://hub.dxos.network'` (×2) → fail with
-    `HubApiError` when `runtime.services.hub.url` is unset.
+  - CLI hub commands: `?? 'https://hub.dxos.network'` (×2) → failed with
+    `HubApiError` when unset, **reverted on merge with main**: PR #12642 makes
+    the hub URL a named `DEFAULT_HUB_URL` builtin (env-overridable), so hub sits
+    outside this audit's no-defaults rule by that later decision.
   - `sdk/client` devtools hook: no more `https://halo.dxos.org` fallback target.
   - `client-protocol`: deprecated `DEFAULT_VAULT_URL` deleted (zero readers).
   - `edge-client/service/Image.ts`: `DEFAULT_IMAGE_SERVICE_URL` export deleted

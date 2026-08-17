@@ -70,8 +70,12 @@ Out-of-config endpoints (violations of goal 3 by spirit, as audited):
   TEMPORARY in-source. Only fires on explicit feature use, not boot. **Still
   open — Phase 4 follow-up.**
 - CLI hub util fell back to literal `'https://hub.dxos.network'`
-  ([cli hub/util.ts](packages/devtools/cli/src/commands/hub/util.ts)).
-  **Removed in this PR** — fails with `HubApiError` when unset.
+  ([cli hub/util.ts](packages/devtools/cli/src/commands/hub/util.ts)). Removed
+  in this PR, then **restored on merge by PR #12642** (2026-08-17), which
+  promotes it to a named `DEFAULT_HUB_URL` builtin applied in
+  `profileBuiltinDefaults` and overridable via `DX_HUB_URL`. **Hub is outside
+  this audit's no-defaults rule by that later decision**; only `edge.url` and
+  `edgeServices` are covered here.
 
 Notable secondary findings:
 
@@ -173,7 +177,7 @@ plugin-script `?? ''`, and the standalone feature-time literals remain open
 | [edge-services.ts:27](packages/sdk/config/src/edge-services.ts) `EDGE_SERVICE_DEFAULTS` | 6 production endpoints (calls, transcription, image, discord, cors-proxy, introspect); `getEdgeServiceEndpoint` returns `config ?? DEFAULT` typed `string` — absence is unrepresentable                                                                                                                                                                       | High — 7 consumers silently inherit production                 |
 | [preset.ts:41](packages/sdk/config/src/preset.ts) `configPreset`                        | zero-arg default `edge = 'main'` → `https://main.dxos.network`                                                                                                                                                                                                                                                                                                | Medium — exported SDK API; current consumers are tests/e2e     |
 | [config-service.ts:17](packages/sdk/config/src/config-service.ts) `memoryConfig`        | all 4 `edgeFeatures: true` with no URL                                                                                                                                                                                                                                                                                                                        | Low — flags without endpoint                                   |
-| Loose fallbacks                                                                         | CLI hub `?? 'https://hub.dxos.network'` (×2), [devtools.ts:224](packages/sdk/client/src/devtools/devtools.ts) `?? 'https://halo.dxos.org'`, GptRealtime + plugin-wnfs `?? 'http://localhost:8787'`, plugin-script `?? ''` (×3, masks absence)                                                                                                                 | Medium                                                         |
+| Loose fallbacks                                                                         | CLI hub `?? 'https://hub.dxos.network'` (×2, superseded by `DEFAULT_HUB_URL` in PR #12642), [devtools.ts:224](packages/sdk/client/src/devtools/devtools.ts) `?? 'https://halo.dxos.org'`, GptRealtime + plugin-wnfs `?? 'http://localhost:8787'`, plugin-script `?? ''` (×3, masks absence)                                                                   | Medium                                                         |
 | Standalone literals                                                                     | [cors-proxy.ts:9](packages/core/mesh/edge-client/src/cors-proxy.ts) `https://cors.dxos.network`; [service/Image.ts:22](packages/core/mesh/edge-client/src/service/Image.ts) image-service default; plugin-video transcription endpoint; plugin-code introspect MCP; deprecated `DEFAULT_VAULT_URL` (no readers); assistant-toolkit discord/browser skill URLs | Medium — feature-time, not boot                                |
 
 **Not violations (bundled config is clean):** `@dxos/config` ships no
