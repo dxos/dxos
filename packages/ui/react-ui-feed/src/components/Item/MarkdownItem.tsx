@@ -74,7 +74,7 @@ export const MarkdownItem = memo(({ text, editable = false, registry, hits, onWi
         registry?.prompt &&
           xmlBlockDecoration({
             tag: 'prompt',
-            lineClass: 'cm-prompt-line bg-groupSurface border-is-4 border-separator pis-2 pie-2',
+            lineClass: 'cm-prompt-line bg-input-surface border-is-4 border-separator pis-2 pie-2',
             firstLineClass: 'pbs-1 rounded-t-sm',
             lastLineClass: 'pbe-1 rounded-b-sm',
             hideTags: true,

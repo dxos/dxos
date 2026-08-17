@@ -5,7 +5,7 @@
 import React, { type ComponentType } from 'react';
 
 import { random } from '@dxos/random';
-import { IconButton, Input } from '@dxos/react-ui';
+import { IconButton } from '@dxos/react-ui';
 import { type ContentBlock, Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -158,11 +158,10 @@ const createAssistantMessages = (count: number): Message.Message[] =>
       });
     }
 
-    const blocks: ContentBlock.Any[] = [];
-    if (index % 6 === 1) {
-      blocks.push({ _tag: 'reasoning', reasoningText: random.lorem.paragraph() });
-    }
-    if (index % 6 === 3) {
+    // Every answer is several blocks — reasoning, sometimes a tool round-trip, prose, and closing
+    // affordances. A single text block is the easy case and the one the engine already handled.
+    const blocks: ContentBlock.Any[] = [{ _tag: 'reasoning', reasoningText: random.lorem.paragraph() }];
+    if (index % 4 === 1) {
       const toolCallId = `tool-${index}`;
       blocks.push({ _tag: 'toolCall', toolCallId, name: 'search', input: '{}', providerExecuted: false });
       blocks.push({
@@ -175,9 +174,11 @@ const createAssistantMessages = (count: number): Message.Message[] =>
     }
 
     blocks.push({ _tag: 'text', text: answerText(index) });
-    if (index % 6 === 5) {
-      blocks.push({ _tag: 'suggestion', text: 'List tools' });
-      blocks.push({ _tag: 'suggestion', text: 'Show details' });
+    if (index % 6 === 3) {
+      blocks.push({ _tag: 'suggestion', text: 'Tell me more' });
+      blocks.push({ _tag: 'suggestion', text: 'Show the sources' });
+    }
+    if (index % 8 === 5) {
       blocks.push({ _tag: 'select', options: ['Option 1', 'Option 2', 'Option 3'] });
     }
 
@@ -267,31 +268,53 @@ const Row = ({ children, classNames }: { children: React.ReactNode; classNames?:
   </div>
 );
 
-/** Assistant: a selectable message with fork / rewind / reply, and the role in the gutter. */
-const AssistantChrome = ({ message, index, selected, onSelect, children }: MessageChromeProps) => (
-  <Row
-    classNames={mx('grid grid-cols-[2rem_1fr] gap-2 border-b border-subdued-separator', selected && 'bg-hoverSurface')}
-  >
-    <Input.Root>
-      <Input.Checkbox checked={selected} onCheckedChange={() => onSelect(message.id, true)} />
-    </Input.Root>
-    <div className='min-is-0'>
-      <div className='flex items-center gap-2 text-xs text-description'>
-        <span className='font-medium'>{message.sender.name}</span>
-        <span>{timeOf(message)}</span>
-        <span className='text-subdued'>#{index}</span>
-      </div>
-      {children}
-    </div>
-    {/* Out of flow and toggled by opacity: chrome that changes a row's height on hover re-triggers
-        measurement, and a pointer travelling down a scrolling list then shifts every row below it. */}
-    <div className='absolute right-1 top-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100'>
-      <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size={3} />
-      <IconButton icon='ph--arrow-counter-clockwise--regular' iconOnly label='Rewind' variant='ghost' size={3} />
-      <IconButton icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' size={3} />
-    </div>
-  </Row>
-);
+/**
+ * Assistant: the reader's prompts and the model's answers are framed differently, because they are
+ * different kinds of thing — a prompt is an instruction that can be rewound to, an answer is a
+ * result that can be forked from.
+ *
+ * A prompt carries its rewind toolbar underneath; an answer carries its timestamp at the foot, where
+ * it reads as when the answer finished rather than when the turn began. Both are always in flow — a
+ * control that appears on hover changes the row's height, and a pointer travelling down a scrolling
+ * list then moves every row below it.
+ */
+const AssistantChrome = ({ message, index, selected, children }: MessageChromeProps) => {
+  const prompt = message.sender.role === 'user';
+
+  return (
+    <Row classNames={mx(selected && 'bg-hover-surface')}>
+      {prompt ? (
+        <div className='min-is-0'>
+          {/* The reader's own words, framed: a prompt is an instruction the thread can be rewound
+              to, and it reads as one only if it is visibly not the model's prose. */}
+          <div className='pis-2 pie-2 pbs-1 pbe-1 border-is-2 border-accent-bg rounded-sm bg-input-surface'>
+            {children}
+          </div>
+          {/* Revealed on hover, but never removed from flow: chrome that appears and disappears
+              changes the row's height, and a pointer travelling down a scrolling list would then
+              move every row below it. Opacity costs nothing to measure. */}
+          <div className='flex items-center gap-1 pbs-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
+            <IconButton icon='ph--arrow-counter-clockwise--regular' iconOnly label='Rewind' variant='ghost' size={3} />
+            <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size={3} />
+            <span>{timeOf(message)}</span>
+            <span className='text-subdued'>#{index}</span>
+          </div>
+        </div>
+      ) : (
+        <div className='min-is-0'>
+          {children}
+          <div className='flex items-center gap-2 pbs-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
+            <span className='font-medium'>{message.sender.name}</span>
+            <span>{timeOf(message)}</span>
+            <span className='text-subdued'>#{index}</span>
+            <span className='grow' />
+            <IconButton icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' size={3} />
+          </div>
+        </div>
+      )}
+    </Row>
+  );
+};
 
 /** Email: a header of its own — sender, address, date — and a card-like body. */
 const EmailChrome = ({ message, children }: MessageChromeProps) => (
@@ -310,7 +333,7 @@ const EmailChrome = ({ message, children }: MessageChromeProps) => (
 /** Human chat: an avatar, and consecutive turns from one speaker read as one block. */
 const ThreadChrome = ({ message, children }: MessageChromeProps) => (
   <Row classNames='grid grid-cols-[2rem_1fr] gap-2'>
-    <div className='w-6 h-6 rounded-full bg-groupSurface grid place-items-center text-xs'>
+    <div className='w-6 h-6 rounded-full bg-input-surface grid place-items-center text-xs'>
       {message.sender.name?.[0]}
     </div>
     <div className='min-is-0'>

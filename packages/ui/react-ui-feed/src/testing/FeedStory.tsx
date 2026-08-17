@@ -60,7 +60,7 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
     <div
       className={mx(
         'group relative grid grid-cols-[2rem_1fr] gap-2 px-2 py-2 border-b border-subdued-separator',
-        selected && 'bg-hoverSurface',
+        selected && 'bg-hover-surface',
       )}
       data-testid='feed.message'
     >
@@ -110,6 +110,8 @@ export type FeedStoryProps = {
   scenario?: FeedScenario;
   /** Messages of seeded history; 0 starts empty. */
   count?: number;
+  /** Outline every item and every block inside it. On by default: this is a harness. */
+  debug?: boolean;
   /** Begin streaming turns on mount. */
   streaming?: boolean;
   wordsPerChunk?: number;
@@ -130,6 +132,7 @@ export type FeedStoryProps = {
 export const FeedStory = ({
   scenario,
   count = 0,
+  debug = true,
   streaming: autoStart = false,
   wordsPerChunk = 4,
   chunkDelay = 120,
@@ -271,6 +274,7 @@ export const FeedStory = ({
     <MessageList.Root
       messages={messages}
       renderer={definition?.renderer}
+      debug={debug}
       Chrome={definition?.Chrome ?? TestChrome}
       registry={definition?.registry}
       hits={hits}

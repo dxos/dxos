@@ -48,6 +48,7 @@ type MessageListContextValue = {
   streamingId?: string;
   selectedIds?: ReadonlySet<string>;
   hitsByMessage: ReadonlyMap<string, HighlightRange[]>;
+  debug?: boolean;
   /** The mounted window; `undefined` until the viewport has measured. */
   range?: MessageRange;
   /** Index the reader is on: moved by the arrow keys and by any navigation, tracked while scrolling. */
@@ -117,6 +118,8 @@ export type MessageListRootProps = PropsWithChildren<{
   onSelectedIdsChange?: (ids: ReadonlySet<string>) => void;
   /** Search hits from the model; the list routes them to the items that own them. */
   hits?: readonly SearchHit[];
+  /** Outline each item and the blocks inside it, so what the layout is measuring is visible. */
+  debug?: boolean;
   /**
    * Estimated row height before measurement.
    *
@@ -183,6 +186,7 @@ const MessageListRoot = ({
   selectedIds,
   onSelectedIdsChange,
   hits,
+  debug,
   estimateSize = DEFAULT_ESTIMATE,
   stickyBottom = false,
   stickyBehavior = 'auto',
@@ -640,6 +644,7 @@ const MessageListRoot = ({
         streamingId={streamingId}
         selectedIds={selectedIds}
         hitsByMessage={hitsByMessage}
+        debug={debug}
         range={range}
         currentIndex={currentIndex}
         mountedWidgets={mountedWidgets}
@@ -761,7 +766,7 @@ type MessageListItemExtra = {
  * outside the scrolling window — a pinned message, a preview — through the same path.
  */
 const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ message, ...props }, forwardedRef) => {
-  const { renderer, registry, hitsByMessage, reportWidgets } = useMessageListContext(MESSAGE_LIST_ITEM_NAME);
+  const { renderer, registry, hitsByMessage, debug, reportWidgets } = useMessageListContext(MESSAGE_LIST_ITEM_NAME);
   const content = renderer(message);
   const hits = hitsByMessage.get(message.id);
   const handleWidgetsChange = useCallback(
@@ -770,7 +775,16 @@ const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ mess
   );
 
   return (
-    <div {...composableProps(props)} ref={forwardedRef}>
+    // The outlines are the item and the block-level children of its document — which is exactly what
+    // the virtualizer measures and what a widget's late paint changes.
+    <div
+      {...composableProps(props, {
+        classNames: debug
+          ? 'outline outline-1 outline-dashed outline-primary-500/50 [&_.cm-content>*]:outline [&_.cm-content>*]:outline-1 [&_.cm-content>*]:outline-dashed [&_.cm-content>*]:outline-neutral-500/40'
+          : undefined,
+      })}
+      ref={forwardedRef}
+    >
       {content.kind === 'markdown' && (
         <MarkdownItem text={content.text} registry={registry} hits={hits} onWidgetsChange={handleWidgetsChange} />
       )}

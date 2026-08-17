@@ -126,7 +126,7 @@ const Select = ({ children }: XmlWidgetProps) => {
 };
 
 const Json = ({ children }: XmlWidgetProps) => (
-  <pre className='px-2 py-1 overflow-x-auto rounded bg-groupSurface text-xs'>{getXmlTextChild(children ?? [])}</pre>
+  <pre className='px-2 py-1 overflow-x-auto rounded bg-input-surface text-xs'>{getXmlTextChild(children ?? [])}</pre>
 );
 
 /**
