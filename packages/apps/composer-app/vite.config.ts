@@ -381,6 +381,14 @@ export default defineConfig((env) => ({
       },
     },
 
+    // Hosts the computer harness — the shell route behind plugin-computer's bash and edit tools, the
+    // in-app alternative to delegating a turn to the Claude Agent SDK above. Unlike that host it is
+    // NOT mounted by default: it runs whatever the assistant asks for as the developer, so it stays
+    // inert until DX_COMPUTER_ROOT names the tree it may work in. Dynamically imported for the same
+    // reason as `dx-agent-claude` (this config's static imports are bundled as CJS `require`); a
+    // promise is a valid entry in the plugins array.
+    import('@dxos/plugin-computer/vite-plugin').then(({ ComputerShellPlugin }) => ComputerShellPlugin()),
+
     // RSS proxy middleware for CORS-free feed fetching.
     {
       name: 'rss-proxy',
