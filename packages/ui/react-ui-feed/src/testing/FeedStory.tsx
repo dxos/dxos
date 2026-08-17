@@ -12,12 +12,12 @@ import { mx } from '@dxos/ui-theme';
 
 import { type MessageChromeProps, MessageList, useMessageList } from '../components';
 import { SearchHit, defaultRenderer, searchFeed, sliceFeed } from '../model';
-import { type FrameMeter as FrameMeterState, useFrameMeter } from './frame-meter';
+import { type FrameMeter as FrameMeterState } from './frame-meter';
 import { createMessages } from './generator';
 import { type FeedScenario, createScenario } from './scenarios';
 import { createAnswer, textStream } from './stream';
-import { sweepScroll } from './sweep';
 import { streamTurn } from './turn';
+import { useFeedDebug } from './use-feed-debug';
 
 /** Pause between one answer finishing and the next question arriving. */
 const TURN_DELAY = 800;
@@ -144,61 +144,21 @@ export const FeedStory = ({
   const definition = useMemo(() => (scenario ? createScenario({ scenario, count }) : undefined), [scenario, count]);
   const [messages, setMessages] = useState<Message.Message[]>(() => definition?.messages ?? createMessages({ count }));
   const [streaming, setStreaming] = useState(streamingProp);
-  const [debug, setDebug] = useState(debugProp);
   const [answerId, setAnswerId] = useState<string | undefined>();
-  const [query, setQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
   const [copied, setCopied] = useState<string | null>(null);
-
+  const [query, setQuery] = useState('');
   const hits = useMemo(() => searchFeed(messages, defaultRenderer, query), [messages, query]);
 
-  // What distinguishes one measured pass from another is the arguments it ran under, so the
-  // recorded line carries them rather than a story name the component cannot see.
-  const label = useMemo(
-    () =>
-      [
-        scenario ?? 'mixed',
-        `${count} msgs`,
-        estimateSize ? `est ${estimateSize}` : undefined,
-        streaming ? 'streaming' : undefined,
-      ]
-        .filter(Boolean)
-        .join(' · '),
-    [scenario, count, estimateSize, streaming],
-  );
-
-  // The meter lives here rather than in the statusbar because the sweep has to record the pass it
-  // just ran, and the two controls sit on opposite sides of the panel.
-  const meter = useFrameMeter({ label });
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const [sweeping, setSweeping] = useState(false);
-  const cancelSweep = useRef<(() => void) | null>(null);
-
-  // A measured pass has to be one repeatable gesture. Flinging 2,000 rows by hand is neither, so
-  // the sweep runs the traversal and records what it cost: click, wait, read the clipboard.
-  const handleSweep = useCallback(() => {
-    if (sweeping) {
-      cancelSweep.current?.();
-      return;
-    }
-
-    const viewport = viewportRef.current;
-    if (!viewport) {
-      return;
-    }
-
-    meter.record();
-    setSweeping(true);
-    cancelSweep.current = sweepScroll(viewport, {
-      onDone: () => {
-        cancelSweep.current = null;
-        setSweeping(false);
-        meter.record();
-      },
-    });
-  }, [sweeping, meter]);
-
-  useEffect(() => () => cancelSweep.current?.(), []);
+  // Instrumentation as an aspect: the meter, the sweep, the outlines and the pass label live in
+  // `useFeedDebug` so this component stays about the feed.
+  const { debug, toggleDebug, meter, viewportRef, sweeping, onSweep } = useFeedDebug({
+    scenario,
+    count,
+    estimateSize,
+    streaming,
+    enabled: debugProp,
+  });
 
   const handleAppend = useCallback(() => setMessages((prev) => [...prev, makeQuestion()]), []);
 
@@ -311,7 +271,7 @@ export const FeedStory = ({
               iconOnly
               label={debug ? 'Hide block outlines' : 'Show block outlines'}
               data-testid='feed.debug.toggle'
-              onClick={() => setDebug((value) => !value)}
+              onClick={toggleDebug}
             />
             <Toolbar.Separator />
             <Input.Root>
@@ -329,7 +289,7 @@ export const FeedStory = ({
               iconOnly
               label={sweeping ? 'Stop sweep' : 'Sweep (measure a pass)'}
               data-testid='feed.sweep'
-              onClick={handleSweep}
+              onClick={onSweep}
             />
             <div className='grow' />
             <NavButtons />
@@ -542,12 +502,6 @@ const DebugBar = ({
     // content would shuffle the row on each update — an instrument that moves is hard to read.
     <div className='grid grid-cols-[repeat(6,6rem)_auto] items-center gap-2 px-2 text-xs text-description tabular-nums'>
       <FrameMeter meter={meter} />
-      <span className={mx('text-right', jumps.count > 0 && 'text-warning-text')} data-testid='feed.jumps'>
-        {jumps.count} jumps
-      </span>
-      <span className={mx('text-right', shifts > 0 && 'text-warning-text')} data-testid='feed.shifts'>
-        {shifts} shifts{breaks > 0 ? ` · ${breaks}!` : ''}
-      </span>
       <IconButton
         icon='ph--arrow-counter-clockwise--regular'
         iconOnly
@@ -557,6 +511,12 @@ const DebugBar = ({
         data-testid='feed.debug.reset'
         onClick={resetShifts}
       />
+      <span className={mx('text-right', jumps.count > 0 && 'text-warning-text')} data-testid='feed.jumps'>
+        {jumps.count} jumps
+      </span>
+      <span className={mx('text-right', shifts > 0 && 'text-warning-text')} data-testid='feed.shifts'>
+        {shifts} shifts{breaks > 0 ? ` · ${breaks}!` : ''}
+      </span>
     </div>
   );
 };

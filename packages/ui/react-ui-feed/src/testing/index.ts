@@ -9,4 +9,5 @@ export * from './scenarios';
 export * from './stream';
 export * from './sweep';
 export * from './turn';
+export * from './use-feed-debug';
 export * from './widgets';
