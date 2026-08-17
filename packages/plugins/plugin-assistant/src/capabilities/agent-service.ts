@@ -13,6 +13,8 @@ import * as AgentService from '@dxos/compute/AgentService';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
+import { AssistantCapabilities } from '#types';
+
 //
 // Capability Module
 //
@@ -30,8 +32,12 @@ const AgentServiceSpec = LayerSpec.make(
       Effect.gen(function* () {
         // Optional supervisor behaviour, contributed by a plugin that knows the agent/plan model.
         const strategies = yield* Capability.getAll(RoutineCapabilities.AgentDelegationStrategy);
+        // Optional alternative turn engine (e.g. the Claude Agent SDK host); absent by default, in
+        // which case the process runs turns through DXOS's own AiSession.
+        const producers = yield* Capability.getAll(AssistantCapabilities.AgentTurnProducer);
         return AgentServiceRuntime.layer({
           delegationStrategy: strategies[0],
+          makeTurnProducer: producers[0],
         });
       }),
     ),

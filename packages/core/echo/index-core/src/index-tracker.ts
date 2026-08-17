@@ -75,15 +75,13 @@ export class IndexTracker {
             AND (${resourceIdParam} IS NULL OR resourceId = ${resourceIdParam})
         `;
 
-        return rows.map(
-          (row): IndexCursor => ({
-            indexName: row.indexName,
-            spaceId: row.spaceId === '' ? null : Schema.decodeSync(SpaceId)(row.spaceId!),
-            sourceName: row.sourceName,
-            resourceId: row.resourceId === '' ? null : row.resourceId,
-            cursor: row.cursor,
-          }),
-        );
+        return rows.map((row): IndexCursor => ({
+          indexName: row.indexName,
+          spaceId: row.spaceId === '' ? null : Schema.decodeSync(SpaceId)(row.spaceId!),
+          sourceName: row.sourceName,
+          resourceId: row.resourceId === '' ? null : row.resourceId,
+          cursor: row.cursor,
+        }));
       }),
   );
 

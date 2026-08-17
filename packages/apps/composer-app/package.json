@@ -188,6 +188,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",
+    "@dxos/agent-claude": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo-solid": "workspace:*",
     "@dxos/effect-atom-solid": "workspace:*",

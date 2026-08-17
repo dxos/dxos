@@ -165,37 +165,36 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
 
     const tileItems = useMemo(
       () =>
-        items?.map(
-          (item): StackTileData =>
-            isMessageGroup(item)
-              ? {
-                  conversationId: item.id,
-                  messages: item.messages,
-                  total: item.total,
-                  // Conversations show the latest message; star reflects/toggles that message.
-                  starredAtom: starredAtom?.(item.messages[0]?.id),
-                  inboxAtom: inboxAtom?.(item.messages[0]?.id),
-                  enableArchive,
-                  enableIgnoreSender,
-                  enableCreateTopic,
-                  searchQuery,
-                  getContact,
-                  onContactCreate,
-                  onAction,
-                }
-              : {
-                  message: item,
-                  tagsAtom: tagsAtom?.(item.id),
-                  starredAtom: starredAtom?.(item.id),
-                  inboxAtom: inboxAtom?.(item.id),
-                  enableArchive,
-                  enableIgnoreSender,
-                  enableCreateTopic,
-                  searchQuery,
-                  getContact,
-                  onContactCreate,
-                  onAction,
-                },
+        items?.map((item): StackTileData =>
+          isMessageGroup(item)
+            ? {
+                conversationId: item.id,
+                messages: item.messages,
+                total: item.total,
+                // Conversations show the latest message; star reflects/toggles that message.
+                starredAtom: starredAtom?.(item.messages[0]?.id),
+                inboxAtom: inboxAtom?.(item.messages[0]?.id),
+                enableArchive,
+                enableIgnoreSender,
+                enableCreateTopic,
+                searchQuery,
+                getContact,
+                onContactCreate,
+                onAction,
+              }
+            : {
+                message: item,
+                tagsAtom: tagsAtom?.(item.id),
+                starredAtom: starredAtom?.(item.id),
+                inboxAtom: inboxAtom?.(item.id),
+                enableArchive,
+                enableIgnoreSender,
+                enableCreateTopic,
+                searchQuery,
+                getContact,
+                onContactCreate,
+                onAction,
+              },
         ),
       [
         items,

@@ -315,6 +315,28 @@ describe('TriggerDispatcher', () => {
       }, Effect.provide(TestLayer())),
     );
 
+    // The regression: sampling ONE gap is sample-dependent. `0,5 * * * * *` alternates 5s and 55s, so
+    // a measurement landing on the long gap reports a schedule that clears a one-minute floor while
+    // the 5s pair it also has would be dropped every minute. The floor reads the SHORTEST gap.
+    it.effect(
+      'refuses a clustered cron whose typical spacing clears the poll interval',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specTimer('0,5 * * * * *'),
+        });
+        yield* Database.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+        yield* dispatcher.advanceTime(Duration.minutes(1));
+
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] })).toEqual([]);
+      }, Effect.provide(TestLayer())),
+    );
+
     it.effect(
       'allows a sub-minute cron when the caller shortens the poll interval',
       Effect.fnUntraced(

@@ -260,17 +260,26 @@ export class TriggerDispatcher extends Context.Service<
 
 const DEFAULT_MAX_CONCURRENCY = 5;
 
+/** Enough consecutive occurrences to cross a cluster and back — one gap would miss `0,5 * * * * *`. */
+const CRON_PERIOD_SAMPLES = 8;
+
 /**
- * The interval between a cron's next two occurrences, or `undefined` if it fires at most once more.
+ * The SHORTEST interval between consecutive occurrences, or `undefined` if it fires at most once more.
  *
- * Cron has no period of its own — an expression is a predicate over instants — so the gap between
- * consecutive occurrences is the only way to ask how often it wants to run.
+ * The minimum is what a poll floor needs: a schedule is unhonourable if ANY adjacent pair is closer
+ * than the tick, not merely if its typical spacing is.
  */
 const cronPeriod = (cron: Cron.Cron, now: Date): Duration.Duration | undefined => {
   try {
-    const first = Cron.next(cron, now);
-    const second = Cron.next(cron, first);
-    return Duration.millis(second.getTime() - first.getTime());
+    let previous = Cron.next(cron, now);
+    let shortest: number | undefined;
+    for (let index = 0; index < CRON_PERIOD_SAMPLES; index += 1) {
+      const next = Cron.next(cron, previous);
+      const gap = next.getTime() - previous.getTime();
+      shortest = shortest === undefined ? gap : Math.min(shortest, gap);
+      previous = next;
+    }
+    return shortest === undefined ? undefined : Duration.millis(shortest);
   } catch {
     return undefined;
   }
@@ -610,15 +619,10 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         });
       }
       this._publishRuntimeStatuses(registry);
-      registry.update(
-        this._state,
-        (state): TriggerDispatcherState => ({
-          ...state,
-          invocations: state.invocations.map((_) =>
-            _.invocationId === invocation.invocationId ? { ..._, result } : _,
-          ),
-        }),
-      );
+      registry.update(this._state, (state): TriggerDispatcherState => ({
+        ...state,
+        invocations: state.invocations.map((_) => (_.invocationId === invocation.invocationId ? { ..._, result } : _)),
+      }));
 
       return triggerExecutionResult;
     }).pipe(Effect.provide(this._services));
