@@ -62,7 +62,32 @@ The corollary is the point: **there is no re-base.** The machinery that periodic
 layout from index 0 exists only to fix a total that principle 3 stops depending on, and it is the
 direct cause of the whole-page jump at ~700ms and of eighteen rows moving 111px on a rebuild.
 
-### 6. A row's height is a subscription, not a measurement
+### 6. Rows flow; only the window is placed
+
+A row that changes height — a panel opening, an image decoding, an answer growing — re-places every
+row after it. With rows positioned absolutely that re-placement is the list's job: opening one
+disclosure moved rows on **19 frames and cost 177 individual row re-placements**, about eleven rows a
+frame for the whole 250ms animation, each one a React render and a transform write driven from a
+`ResizeObserver`. In normal flow the browser does the same work in the same frame, for nothing.
+
+So the mounted window is a **flow container placed as a unit** — one positioned element, not N.
+
+It is also the more correct arrangement. N independent transforms accumulate sub-pixel error where
+flow sums exactly; and margins, gaps and separators work normally instead of having to be baked into
+an estimate, which is the class the plain feed's missing 1px separator belongs to.
+
+**The cost lands at the anchor**, and it decides the DOM shape. Flow means a row growing _above_ the
+anchor pushes the anchor down, so the anchor has to be the boundary between two blocks: rows after it
+flow forward, rows before it flow backward (a reversed block), so a height change on either side
+moves _away_ from the anchor rather than through it. A change in the before-block's total height is
+then one number to compensate — measured with a single `ResizeObserver` on that block — rather than N
+positions to recompute.
+
+Native CSS scroll anchoring becomes available here too, and should be turned **off**
+(`overflow-anchor: none`). Two things anchoring one thing is the defect this package keeps hitting;
+the browser doing it silently as well would make it unattributable.
+
+### 7. A row's height is a subscription, not a measurement
 
 A CodeMirror row cannot be measured before it renders — and it cannot be measured _once_, either.
 Its height changes after first paint when a font loads, when portaled widget content arrives a frame
@@ -72,7 +97,7 @@ CodeMirror specifically.
 This is why a block widget needs a reserved floor (`heightMode: 'min'`) rather than a fixed height:
 a fixed height pins the box and clips a disclosure open.
 
-### 7. Rows are moved, never rebuilt
+### 8. Rows are moved, never rebuilt
 
 Repositioning a row must not destroy what is inside it. A CodeMirror view removed from the DOM loses
 its measurement state, needs `requestMeasure()` on re-attach, and can drop focus and selection.
@@ -82,7 +107,7 @@ moving it is the same DOM move; what a portal preserves is React tree identity �
 survive, which is how widget state now survives virtualization. Moving a row without rebuilding it
 is: transform-based placement, stable keys, and a pool.
 
-### 8. Measure out of view, in context
+### 9. Measure out of view, in context
 
 Measuring a row before it is revealed is what stops the reader seeing it settle. The hazard to
 respect is that an element measured in a different containing block, width or style context measures
@@ -91,7 +116,7 @@ a different element — off-screen must mean _out of view_, not _out of context_
 `content-visibility: auto` with `contain-intrinsic-size` is the alternative worth weighing: it defers
 rendering while the row stays in flow, which makes the context question disappear.
 
-### 9. An invariant that cannot be observed from the DOM is not an invariant
+### 10. An invariant that cannot be observed from the DOM is not an invariant
 
 Two tests in this package passed while measuring nothing: one compared a field a later edit had
 deleted (`undefined !== undefined`), the other streamed into a feed too short to scroll. Both were
@@ -111,6 +136,7 @@ breaks it. A test is not trusted because it is green; it is trusted because it h
 | `initialOffset: count * nominalSize`       | Guesses where the tail is before anything measured | gone (§4)                              |
 | `trailing` / `scrollPastEnd` special cases | The element's maximum stops meaning the last row   | falls out of anchor-relative placement |
 | `ScrollFollower`'s tail-chasing            | Two parties anchoring one end                      | one anchor, held continuously          |
+| Per-row `transform: translateY(start)`     | Rows are placed individually                       | rows flow; the window is placed (§6)   |
 
 ### The order
 
@@ -118,7 +144,8 @@ breaks it. A test is not trusted because it is green; it is trusted because it h
    mounted, and survives a prepend, a truncate and a filter. This is testable against the _current_
    engine and is worth having either way.
 2. **A headless placement module**, no DOM: given an anchor, its offset, a measurement store and a
-   viewport height, produce the mounted window and each row's position. Pure, so it is unit-tested
+   viewport height, produce the mounted window and **the window's** offset — not each row's position,
+   which §6 hands to the browser. Pure, so it is unit-tested
    like `virtualizer.test.ts` — but this time against the code that actually runs (that test imported
    a version production never used, so its seven conclusions were about something else).
 3. **Swap the placement behind `MessageList.Viewport`.** The baselines are the acceptance suite and
@@ -127,6 +154,10 @@ breaks it. A test is not trusted because it is green; it is trusted because it h
 4. **Delete the rebase and the trailing special cases** once the baselines hold without them.
 5. **Pooling and `content-visibility`** last, as optimizations with `baseline/mount` as the judge —
    not before, because the current numbers say construction is not the bottleneck.
+
+`baseline/widget-state` carries the target for §6: it counts the row re-placements one disclosure
+costs and holds them under a ceiling of 260 (177 today). The flow change should take that to
+approximately zero, and the test is where it says so.
 
 ### What this is not
 

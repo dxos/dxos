@@ -30,6 +30,9 @@ type Story = StoryObj<FeedStoryProps>;
 
 const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve));
 
+/** Row re-placements one disclosure costs today: 177 over 19 frames, ~11 rows a frame. */
+const REPLACEMENT_CEILING = 260;
+
 const settle = async (frames = 30) => {
   for (let frame = 0; frame < frames; frame++) {
     await nextFrame();
@@ -49,7 +52,33 @@ export const Reopened: Story = {
     const id = row.dataset.objectId!;
     // The header is the toggle: `TogglePanel.Header` carries the click handler, and it is the first
     // element inside the panel's content.
+    // Sampled across the toggle's animation: a row that grows re-places every row after it, and with
+    // rows positioned absolutely that re-placement is ours to do, per frame, for every row below.
+    const tops = () =>
+      new Map(
+        [...viewport.querySelectorAll<HTMLElement>('[data-index]')].map((element) => [
+          Number(element.dataset.index),
+          Math.round(element.getBoundingClientRect().top),
+        ]),
+      );
+
+    const trace: number[] = [];
+    let previous = tops();
     (panel.querySelector('.cursor-pointer') as HTMLElement | null)?.click();
+    for (let frame = 0; frame < 40; frame++) {
+      await nextFrame();
+      const current = tops();
+      trace.push([...current].filter(([index, top]) => previous.has(index) && previous.get(index) !== top).length);
+      previous = current;
+    }
+
+    // Pinned, not aspired to: this is what absolute placement costs today, and it is the number the
+    // move to flow layout is meant to take to nearly zero. Rows are placed by transform, so every row
+    // below the one that grew is re-placed by us, on every frame of the animation. In normal flow the
+    // browser does it in the same frame for nothing. Kept as a ceiling so the cost cannot grow
+    // unnoticed before that change lands, and so the change has something to prove itself against.
+    const moves = trace.reduce((total, count) => total + count, 0);
+    await expect({ moves: moves <= REPLACEMENT_CEILING }).toEqual({ moves: true });
     await settle();
     await expect(panel.dataset.open).toEqual('true');
 
