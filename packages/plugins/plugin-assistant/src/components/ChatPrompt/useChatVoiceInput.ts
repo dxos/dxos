@@ -5,6 +5,7 @@
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOptionalAtomCapabilityState } from '@dxos/app-framework/ui';
+import { log } from '@dxos/log';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { useTranslation } from '@dxos/react-ui';
 import { type ChatEditorController } from '@dxos/react-ui-chat';
@@ -25,7 +26,7 @@ const RECORDER_INTERVAL_MS = 200;
 export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditorController | null>): void => {
   const { t } = useTranslation(meta.profile.key);
   // Voice input is optional: tolerate the transcription plugin being absent (no session ⇒ inactive).
-  const [session] = useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
+  const [session, setSession] = useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   const [settings] = useOptionalAtomCapabilityState(TranscriptionCapabilities.Settings);
 
   const active = !!session?.recording && session.id === docId;
@@ -43,7 +44,9 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
     }
 
     const streamer = new PendingTextStreamer(editorPendingTextSink(view), {
-      mode: settings?.streamMode ?? 'word',
+      // Batch by default: a transcription arrives as a finished phrase, and revealing it word by word
+      // lags the speaker by the length of what they just said.
+      mode: settings?.streamMode ?? 'batch',
       wordIntervalMs: settings?.wordIntervalMs ?? 80,
     });
     streamer.start({ anchor: view.state.selection.main.head, placeholder: t('recording.placeholder') });
@@ -94,10 +97,39 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
 
   const track = useAudioTrack(active, audioConstraints);
 
-  useTranscriber({
+  const transcriber = useTranscriber({
     audioStreamTrack: track,
     transcriberConfig,
     recorderConfig,
     onSegments: handleSegments,
   });
+
+  // `useTranscriber` only constructs (and eventually closes) the transcriber — opening it is the
+  // consumer's job, and this hook never did, so `Transcriber._open` never ran, its recorder never
+  // started, and no audio was captured. The placeholder appeared and nothing ever replaced it.
+  useEffect(() => {
+    if (!transcriber) {
+      return;
+    }
+    let cancelled = false;
+    void transcriber.open().then(
+      () => {
+        if (!cancelled && active) {
+          transcriber.startChunksRecording();
+        }
+      },
+      (err) => {
+        // Clear the session on failure (e.g. the microphone was refused) so the prompt does not sit
+        // showing "recording" against a transcriber that never opened.
+        if (!cancelled) {
+          log.catch(err);
+          setSession?.(() => null);
+        }
+      },
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [transcriber, active, setSession]);
 };

@@ -4,7 +4,8 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
-import { useOptionalAtomCapabilityState, useOptionalCapabilities } from '@dxos/app-framework/ui';
+import { useOperationInvoker, useOptionalAtomCapabilityState, useOptionalCapabilities } from '@dxos/app-framework/ui';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Settings from '@dxos/plugin-transcription/Settings';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { DropdownMenu, Icon, IconButton, MicButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -13,6 +14,9 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 
 import { type ChatEvent } from '../Chat/events';
+
+/** Shared so a repeated refusal updates the toast in place rather than stacking copies. */
+const MICROPHONE_TOAST_ID = 'assistant.microphone-denied';
 
 type AudioInputDevice = {
   deviceId: string;
@@ -43,6 +47,7 @@ export const ChatActions = ({
   // absence so the chat prompt still renders (e.g. in stories that do not load the plugin).
   const transcriptionAvailable = useOptionalCapabilities(TranscriptionCapabilities.RecordingSession).length > 0;
   const [session, setSession] = useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
+  const { invokePromise } = useOperationInvoker();
   const [settings, setSettings] = useOptionalAtomCapabilityState(TranscriptionCapabilities.Settings);
 
   const recording = !!session?.recording && session.id === docId;
@@ -80,19 +85,51 @@ export const ChatActions = ({
     };
   }, [microphone, transcriptionAvailable]);
 
-  const handleToggle = useCallback(() => {
+  // Recording must not begin until the microphone has actually been granted. Asking here rather than
+  // letting the driver open the stream is what makes the refusal legible: the OS prompt is raised by
+  // the tap that asked for it, and a denial stops the session instead of leaving a recording UI running
+  // against silence. `permissions.query` is not usable for this — WebKit does not support the
+  // `microphone` descriptor — so the request itself is the probe, and its stream is released again
+  // because the driver opens its own.
+  const ensureMicrophone = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      return false;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      for (const track of stream.getTracks()) {
+        track.stop();
+      }
+      return true;
+    } catch {
+      void invokePromise(LayoutOperation.AddToast, {
+        id: MICROPHONE_TOAST_ID,
+        icon: 'ph--microphone-slash--regular',
+        title: ['microphone-denied.toast.title', { ns: meta.profile.key }],
+        description: ['microphone-denied.toast.description', { ns: meta.profile.key }],
+      });
+      return false;
+    }
+  }, [invokePromise]);
+
+  const handleToggle = useCallback(async () => {
     if (!docId) {
+      return;
+    }
+    // Stopping never needs permission; only the start is gated.
+    const stopping = recording;
+    if (!stopping && !(await ensureMicrophone())) {
       return;
     }
     setSession((current) => (current?.recording && current.id === docId ? null : { id: docId, recording: true }));
-  }, [setSession, docId]);
+  }, [setSession, docId, recording, ensureMicrophone]);
 
-  const handlePressStart = useCallback(() => {
-    if (!docId) {
+  const handlePressStart = useCallback(async () => {
+    if (!docId || !(await ensureMicrophone())) {
       return;
     }
     setSession(() => ({ id: docId, recording: true }));
-  }, [setSession, docId]);
+  }, [setSession, docId, ensureMicrophone]);
 
   const handlePressEnd = useCallback(() => {
     setSession((current) => (current?.id === docId ? null : current));

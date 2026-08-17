@@ -136,6 +136,9 @@ export const translations: Resource[] = [
         'context-objects.button': 'Add to context',
         'context-settings.button': 'Chat settings',
         'microphone.button': 'Click to speak',
+        'microphone-denied.toast.title': 'Microphone blocked',
+        'microphone-denied.toast.description':
+          'Allow microphone access in system settings to dictate to the assistant.',
         'recording.placeholder': 'Recording…',
         'stop-recording.label': 'Stop recording',
         'hold-to-record.label': 'Hold to record',
