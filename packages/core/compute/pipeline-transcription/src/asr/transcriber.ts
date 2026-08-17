@@ -68,6 +68,13 @@ export type TranscribeConfig = {
 };
 
 /**
+ * Reported whenever a transcriber is built without a transport: both the open-time guard and the
+ * request path raise it, so the wording (and the config path it names) stays in one place.
+ */
+export const TRANSCRIPTION_ENDPOINT_NOT_CONFIGURED =
+  'Transcription endpoint is not configured (runtime.services.edgeServices: transcription).';
+
+/**
  * Function that converts a base64-encoded WAV payload into Whisper segments.
  * Allows callers to swap in alternative providers or mock the transport.
  */
@@ -120,7 +127,7 @@ export class Transcriber extends Resource {
     // Fail before any audio is captured: a missing transport discovered mid-drain would discard
     // the user's buffered speech.
     if (!this._transcribeFn && !this._config.endpoint) {
-      throw new Error('Transcription endpoint is not configured (runtime.services.edgeServices: transcription).');
+      throw new Error(TRANSCRIPTION_ENDPOINT_NOT_CONFIGURED);
     }
     log.info('opening');
     this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
@@ -248,7 +255,7 @@ export class Transcriber extends Resource {
       // TODO(burdon): Create separate endpoint?
       const endpoint = this._config.endpoint;
       if (!endpoint) {
-        throw new Error('Transcription endpoint is not configured (runtime.services.edgeServices: transcription).');
+        throw new Error(TRANSCRIPTION_ENDPOINT_NOT_CONFIGURED);
       }
       this._transcribeAbort = new AbortController();
       let response: Response;

@@ -24,9 +24,13 @@ import { createStoryDecorators } from '#testing';
 
 import { renderByline } from '../util';
 
+// The story names its transcription worker explicitly; the app reads it from
+// `runtime.services.edgeServices` and there is no built-in endpoint to fall back on.
+const TRANSCRIPTION_ENDPOINT = 'https://calls.dxos.network';
+
 // Small chunk threshold so the transcriber emits every few seconds while the file plays (streaming),
 // instead of only flushing the whole buffer on stop.
-const STREAMING_TRANSCRIBE_CONFIG: Partial<TranscribeConfig> = {
+const STREAMING_TRANSCRIBE_CONFIG: Partial<Omit<TranscribeConfig, 'endpoint'>> = {
   transcribeAfterChunksAmount: 25,
   prefixBufferChunksAmount: 10,
 };
@@ -112,6 +116,7 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
 
   const stages = useMemo(() => [makeCorrectionStage()], []);
   useRecordingPipeline({
+    endpoint: TRANSCRIPTION_ENDPOINT,
     config: STREAMING_TRANSCRIBE_CONFIG,
     segmentSentences: true,
     active: running,

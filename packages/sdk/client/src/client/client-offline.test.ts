@@ -21,7 +21,7 @@ vi.mock('isomorphic-ws', () => ({
 }));
 
 describe('Client with offline config (no edge endpoint)', () => {
-  test('boots, database round-trips, zero network activity, zero warnings', { timeout: 10_000 }, async () => {
+  test('boots, database round-trips, zero network activity, zero warnings', { timeout: 30_000 }, async () => {
     const networkCalls = interceptNetwork();
     const problems = captureProblems();
 

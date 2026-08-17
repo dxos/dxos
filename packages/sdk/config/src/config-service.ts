@@ -11,6 +11,7 @@ import { dirname } from 'node:path';
 
 import { DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
+import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
 import { Config } from './config';
 
@@ -42,7 +43,7 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
       const configPath = Option.getOrElse(args.config, () => defaultConfigPath);
       const configContent = yield* fs.readFileString(configPath);
       const configValues = Yaml.parse(configContent);
-      return ConfigService.of(new Config(configValues, profileBuiltinDefaults(args.profile).values));
+      return withProfileDefaults(configValues, args.profile);
     }).pipe(
       // If the config file doesn't exist, create it. v4 folds v3's `SystemError` and `BadArgument`
       // into one `PlatformError` tag; only the former was ever recovered here.
@@ -59,12 +60,19 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
               const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
               yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });
               yield* fs.writeFileString(pathToCreate, Yaml.stringify(configValues));
-              return ConfigService.of(new Config(configValues, profileBuiltinDefaults(args.profile).values));
+              return withProfileDefaults(configValues, args.profile);
             }),
       ),
     );
   };
 }
+
+/**
+ * Both load branches (existing file, first-run write) must layer the same builtins over the file's
+ * values, or a freshly created profile would come up without storage or edge features.
+ */
+const withProfileDefaults = (configValues: ConfigProto, profile: string) =>
+  ConfigService.of(new Config(configValues, profileBuiltinDefaults(profile).values));
 
 /**
  * Default config for a profile.

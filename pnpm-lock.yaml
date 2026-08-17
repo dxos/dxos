@@ -15872,6 +15872,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-calls':
         specifier: workspace:*
         version: link:../plugin-calls
@@ -16123,9 +16126,6 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@dxos/react-edge-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-edge-client
       '@dxos/react-ui-audio':
         specifier: workspace:*
         version: link:../../ui/react-ui-audio

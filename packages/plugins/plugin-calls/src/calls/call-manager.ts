@@ -9,7 +9,7 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
+import { EdgeServiceName, getRequiredEdgeServiceEndpoint } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
@@ -250,8 +250,7 @@ export class CallManager extends Resource {
   // TODO(mykola): Reconcile with _swarmSynchronizer.state.joined.
   @synchronized
   async join(): Promise<void> {
-    const callsServiceUrl = getEdgeServiceEndpoint(this._client.config, EdgeServiceName.Calls);
-    invariant(callsServiceUrl, 'Calls service is not configured (runtime.services.edgeServices: calls).');
+    const callsServiceUrl = getRequiredEdgeServiceEndpoint(this._client.config, EdgeServiceName.Calls);
     this._swarmSynchronizer.setJoined(true);
     await this._swarmSynchronizer.join();
     await this._mediaManager.join({

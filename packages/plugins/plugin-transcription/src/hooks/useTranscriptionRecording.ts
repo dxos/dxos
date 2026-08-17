@@ -15,6 +15,8 @@ import { Message, type Transcript } from '@dxos/types';
 
 import { TranscriptionCapabilities, TranscriptOperation } from '#types';
 
+import { useTranscriptionEndpoint } from './useTranscriptionEndpoint';
+
 export type TranscriptionRecording = {
   recording: boolean;
   toggleRecording: () => void;
@@ -34,6 +36,7 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
   const track = useAudioTrack(recording);
   const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(TranscriptionCapabilities.Settings);
+  const endpoint = useTranscriptionEndpoint();
 
   // Append a transcribed message batch to the transcript's feed, enriching it first (when entity
   // extraction is enabled) with references to known entities mentioned in the transcript.
@@ -70,7 +73,7 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
   );
 
   // Drive the transcriber lifecycle off the recording flag + audio track.
-  const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments });
+  const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments, endpoint });
   useEffect(() => {
     if (!transcriber) {
       return;

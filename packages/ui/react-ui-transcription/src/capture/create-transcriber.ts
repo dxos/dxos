@@ -17,7 +17,13 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 export type CreateTranscriberOptions = {
   audioStreamTrack: MediaStreamTrack;
   onSegments: (segments: ContentBlock.Transcript[]) => Promise<void>;
-  transcriberConfig?: Partial<TranscribeConfig>;
+  /**
+   * Transcription service base URL (`runtime.services.edgeServices: transcription`).
+   * A required key — there is no built-in endpoint, so every caller has to resolve one from config
+   * (or pass `transcribe`) rather than build a transcriber that rejects on `open()`.
+   */
+  endpoint: string | undefined;
+  transcriberConfig?: Partial<Omit<TranscribeConfig, 'endpoint'>>;
   recorderConfig?: { interval?: number };
   transcribe?: TranscribeFn;
 };
@@ -30,6 +36,7 @@ export type CreateTranscriberOptions = {
 export const createTranscriber = ({
   audioStreamTrack,
   onSegments,
+  endpoint,
   transcriberConfig,
   recorderConfig,
   transcribe,
@@ -39,6 +46,7 @@ export const createTranscriber = ({
       transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
       prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
       ...transcriberConfig,
+      endpoint,
     },
     recorder: new MediaStreamRecorder({
       mediaStreamTrack: audioStreamTrack,

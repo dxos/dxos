@@ -32,19 +32,23 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(({ s
   const [callError, setCallError] = useState<Error | null>(null);
   const [pickerOptions, setPickerOptions] = useState<Partial<Record<PickerKind, ReadonlyArray<string>>>>({});
 
+  // Parsed once for the whole component: the effect needs the URL object and the render needs to
+  // tell an absent endpoint (unconfigured) from a malformed one, which the config can now carry.
+  const [url, urlError] = useMemo<[URL | undefined, Error | undefined]>(() => {
+    if (!serverUrl) {
+      return [undefined, undefined];
+    }
+    try {
+      return [new URL(serverUrl), undefined];
+    } catch (err) {
+      return [undefined, err instanceof Error ? err : new Error(String(err))];
+    }
+  }, [serverUrl]);
+
   // One client per server URL. Re-running on URL change is rare in dev
   // (Storybook control flick) but the cleanup keeps it from leaking.
   useEffect(() => {
-    if (!serverUrl) {
-      return;
-    }
-    // The URL now comes from user config; surface a malformed value as a connection failure
-    // instead of throwing into the nearest error boundary.
-    let url: URL;
-    try {
-      url = new URL(serverUrl);
-    } catch (err) {
-      setConnectError(err instanceof Error ? err : new Error(String(err)));
+    if (!url) {
       return;
     }
     let cancelled = false;
@@ -100,7 +104,7 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(({ s
       cancelled = true;
       void next.close().catch(() => undefined);
     };
-  }, [serverUrl]);
+  }, [url]);
 
   const handleSelect = useCallback((name: string) => {
     setSelected(name);
@@ -142,13 +146,16 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(({ s
     );
   }
 
-  if (connectError) {
+  // A malformed configured URL reads as a connection failure rather than throwing into the nearest
+  // error boundary.
+  const error = urlError ?? connectError;
+  if (error) {
     return (
       <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
         <Banner.Root valence='error'>
           <Banner.Content classNames='m-trim-md'>
             <Banner.Title>{t('connection-failed.title')}</Banner.Title>
-            <Banner.Body>{connectError.message}</Banner.Body>
+            <Banner.Body>{error.message}</Banner.Body>
           </Banner.Content>
         </Banner.Root>
       </div>

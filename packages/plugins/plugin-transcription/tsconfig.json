@@ -85,9 +85,6 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-edge-client"
-    },
-    {
       "path": "../../sdk/schema"
     },
     {

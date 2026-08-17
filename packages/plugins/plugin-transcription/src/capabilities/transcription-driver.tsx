@@ -15,6 +15,7 @@ import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
+import { useTranscriptionEndpoint } from '#hooks';
 import { meta } from '#meta';
 import { TranscriptionCapabilities } from '#types';
 
@@ -34,6 +35,7 @@ const TranscriptionDriver = () => {
   // Injected entity resolver (full-text/vector/…); the driver stays decoupled from the database.
   const [lookup] = useCapabilities(TranscriptionCapabilities.EntityLookup);
   const settings = useAtomCapability(TranscriptionCapabilities.Settings);
+  const endpoint = useTranscriptionEndpoint();
 
   const [, setStatus] = useAtomCapabilityState(TranscriptionCapabilities.PipelineStatus);
 
@@ -179,6 +181,7 @@ const TranscriptionDriver = () => {
   const transcriber = useTranscriber({
     audioStreamTrack: track,
     onSegments: handleSegments,
+    endpoint,
     transcriberConfig,
     recorderConfig,
   });

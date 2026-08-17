@@ -5,6 +5,7 @@
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOptionalAtomCapabilityState } from '@dxos/app-framework/ui';
+import { useTranscriptionEndpoint } from '@dxos/plugin-transcription/hooks';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { useTranslation } from '@dxos/react-ui';
 import { type ChatEditorController } from '@dxos/react-ui-chat';
@@ -27,6 +28,7 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
   // Voice input is optional: tolerate the transcription plugin being absent (no session ⇒ inactive).
   const [session] = useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   const [settings] = useOptionalAtomCapabilityState(TranscriptionCapabilities.Settings);
+  const endpoint = useTranscriptionEndpoint();
 
   const active = !!session?.recording && session.id === docId;
 
@@ -96,6 +98,7 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
 
   useTranscriber({
     audioStreamTrack: track,
+    endpoint,
     transcriberConfig,
     recorderConfig,
     onSegments: handleSegments,

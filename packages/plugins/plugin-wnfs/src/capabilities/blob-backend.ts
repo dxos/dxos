@@ -82,15 +82,17 @@ export const createWnfsBlobBackend = ({ client, blockstore, instances }: CreateW
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
-    // Mirrors dependencies.ts: without EDGE there is no blockstore contribution, so requesting it
-    // here would hang until CapabilityNotFoundError; opt out the same way instead.
+    // Mirrors dependencies.ts: without EDGE there is no blockstore contribution, so this module must
+    // opt out before asking for one. The blockstore is therefore resolved here rather than declared
+    // in `requires` — the loader resolves declared requires before the module body runs, which would
+    // strand this check behind the activation timeout.
     yield* Effect.promise(() => client.waitUntilInitialized());
     if (!client.config.values.runtime?.services?.edge?.url) {
       log('wnfs blob backend disabled: EDGE services not configured');
       return [];
     }
-    const blockstore = yield* WnfsCapabilities.Blockstore;
-    const instances = yield* WnfsCapabilities.Instances;
+    const blockstore = yield* Capability.waitFor(WnfsCapabilities.Blockstore);
+    const instances = yield* Capability.waitFor(WnfsCapabilities.Instances);
 
     const cleanup = client.graph.registerBlobBackend(
       WnfsCapabilities.WNFS_BACKEND,

@@ -31,7 +31,8 @@ export default Capability.makeModule(
       const client = capabilities.get(ClientCapabilities.Client);
       const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
       const transcriptionManager = new TranscriptionManagerImpl({
-        edgeClient: client.edge.http,
+        // Deliberately no `client.edge`: its getter invariants when EDGE is unconfigured, which
+        // would preempt the transcription endpoint's own (actionable) error.
         transcriptionEndpoint: getEdgeServiceEndpoint(client.config, EdgeServiceName.Transcription),
         messageEnricher,
         registry,

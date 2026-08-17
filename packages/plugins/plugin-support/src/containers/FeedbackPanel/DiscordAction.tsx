@@ -43,10 +43,6 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
 
   const handleDiscord = useCallback<FeedbackSubmitHandler>(
     async (values) => {
-      if (!discordServiceUrl) {
-        return;
-      }
-
       const message = formatRequestMessage(values);
 
       // PostHog submission is the primary path — if it fails the error propagates
@@ -108,6 +104,12 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
     },
     [invokePromise, discordServiceUrl, posthogProjectId],
   );
+
+  // Nothing to offer without the service: rendering the button would submit into a no-op, and the
+  // panel's own "Send feedback" action already covers the PostHog-only path.
+  if (!discordServiceUrl) {
+    return null;
+  }
 
   return (
     <>
