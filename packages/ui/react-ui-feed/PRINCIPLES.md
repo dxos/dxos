@@ -76,18 +76,59 @@ It is also the more correct arrangement. N independent transforms accumulate sub
 flow sums exactly; and margins, gaps and separators work normally instead of having to be baked into
 an estimate, which is the class the plain feed's missing 1px separator belongs to.
 
-**The cost lands at the anchor**, and it decides the DOM shape. Flow means a row growing _above_ the
-anchor pushes the anchor down, so the anchor has to be the boundary between two blocks: rows after it
-flow forward, rows before it flow backward (a reversed block), so a height change on either side
-moves _away_ from the anchor rather than through it. A change in the before-block's total height is
-then one number to compensate — measured with a single `ResizeObserver` on that block — rather than N
-positions to recompute.
-
 Native CSS scroll anchoring becomes available here too, and should be turned **off**
 (`overflow-anchor: none`). Two things anchoring one thing is the defect this package keeps hitting;
 the browser doing it silently as well would make it unattributable.
 
-### 7. A row's height is a subscription, not a measurement
+The shape that follows is §7.
+
+### 7. One contiguous parent, absolutely positioned; corrections move it, never the scroll
+
+The mounted rows are children of a single parent laid out by the browser in flow, and that parent is
+absolutely positioned within the scroll container. The scroll thumb is computed from its offset and
+the estimates for what lies outside it.
+
+**This is better than the usual spacer arrangement**, and for a specific reason. With a before-spacer
+and an after-spacer in flow, revising the estimate for the unrendered region above changes the
+spacer's height, which moves every rendered row — the estimate and the content share a coordinate.
+With the parent positioned absolutely its offset is ours and exact, so revising an estimate changes
+only the thumb. Estimation loses the ability to move what the reader is looking at, which is
+principle 3's trade made concrete.
+
+**Appending is free.** Scrolling down, or a turn streaming into the tail, adds rows to the end of the
+parent: nothing above them moves and nothing needs compensating. That is the common case, and it
+costs nothing.
+
+**Prepending is the whole problem.** Scrolling up inserts rows at the start, pushing the rest down by
+their height, so the parent's offset must move up by the same amount. The two have to land in one
+frame or the reader sees the jump — achievable, but not in one step:
+
+1. Insert the rows in a commit.
+2. Measure them in the **parent's** layout effect: parents run after their children, so by then the
+   rows exist and nothing left to run writes to the DOM.
+3. Set the parent's offset in that same effect, before paint.
+
+The residual is §8 — a height is a subscription, not a measurement. A newly inserted editor can grow
+after that effect, when a font loads or a portaled widget paints, so the offset is re-adjusted
+whenever the prepended region's height changes rather than once.
+
+**And this is why the model earns the work:** the correction moves the parent's offset, not
+`scrollTop`. The reader's scroll and the list's corrections stop sharing a channel. Every "two things
+compensating for one change" defect in this package has been two writers of `scrollTop` — the follow
+against the virtualizer's adjustment, an arrow key's smooth scroll against a measurement landing
+mid-animation, the tail restore against a rebuild. A correction that never touches the scroll
+position cannot have that class of bug.
+
+Two things to keep honest:
+
+- **The before-estimate must not be revised under a scroll.** It feeds the container's height, so
+  changing it changes where the bottom is. Revise on quiet, as the current re-base gate does, or
+  accept a thumb that is approximate. This is the one place the old problem could return.
+- **`scrollPastEnd` stops being a special case.** Pinned to the tail means the parent's bottom sits at
+  the container's bottom less whatever is reserved — an offset, like every other position. The flag
+  that could not be stabilised on the current model is not a flag on this one.
+
+### 8. A row's height is a subscription, not a measurement
 
 A CodeMirror row cannot be measured before it renders — and it cannot be measured _once_, either.
 Its height changes after first paint when a font loads, when portaled widget content arrives a frame
@@ -97,7 +138,7 @@ CodeMirror specifically.
 This is why a block widget needs a reserved floor (`heightMode: 'min'`) rather than a fixed height:
 a fixed height pins the box and clips a disclosure open.
 
-### 8. Rows are moved, never rebuilt
+### 9. Rows are moved, never rebuilt
 
 Repositioning a row must not destroy what is inside it. A CodeMirror view removed from the DOM loses
 its measurement state, needs `requestMeasure()` on re-attach, and can drop focus and selection.
@@ -107,7 +148,7 @@ moving it is the same DOM move; what a portal preserves is React tree identity �
 survive, which is how widget state now survives virtualization. Moving a row without rebuilding it
 is: transform-based placement, stable keys, and a pool.
 
-### 9. Measure out of view, in context
+### 10. Measure out of view, in context
 
 Measuring a row before it is revealed is what stops the reader seeing it settle. The hazard to
 respect is that an element measured in a different containing block, width or style context measures
@@ -116,7 +157,7 @@ a different element — off-screen must mean _out of view_, not _out of context_
 `content-visibility: auto` with `contain-intrinsic-size` is the alternative worth weighing: it defers
 rendering while the row stays in flow, which makes the context question disappear.
 
-### 10. An invariant that cannot be observed from the DOM is not an invariant
+### 11. An invariant that cannot be observed from the DOM is not an invariant
 
 Two tests in this package passed while measuring nothing: one compared a field a later edit had
 deleted (`undefined !== undefined`), the other streamed into a feed too short to scroll. Both were
@@ -136,6 +177,7 @@ breaks it. A test is not trusted because it is green; it is trusted because it h
 | `initialOffset: count * nominalSize`       | Guesses where the tail is before anything measured | gone (§4)                              |
 | `trailing` / `scrollPastEnd` special cases | The element's maximum stops meaning the last row   | falls out of anchor-relative placement |
 | `ScrollFollower`'s tail-chasing            | Two parties anchoring one end                      | one anchor, held continuously          |
+| `scrollTop` writes in the correction path  | Corrections and the reader share one channel       | the parent's offset moves instead (§7) |
 | Per-row `transform: translateY(start)`     | Rows are placed individually                       | rows flow; the window is placed (§6)   |
 
 ### The order
@@ -144,8 +186,9 @@ breaks it. A test is not trusted because it is green; it is trusted because it h
    mounted, and survives a prepend, a truncate and a filter. This is testable against the _current_
    engine and is worth having either way.
 2. **A headless placement module**, no DOM: given an anchor, its offset, a measurement store and a
-   viewport height, produce the mounted window and **the window's** offset — not each row's position,
-   which §6 hands to the browser. Pure, so it is unit-tested
+   viewport height, produce the mounted window and **the parent's** offset — not each row's position,
+   which §6 hands to the browser. Its hard case is the prepend of §7, and that is what its unit tests
+   should be about. Pure, so it is unit-tested
    like `virtualizer.test.ts` — but this time against the code that actually runs (that test imported
    a version production never used, so its seven conclusions were about something else).
 3. **Swap the placement behind `MessageList.Viewport`.** The baselines are the acceptance suite and
