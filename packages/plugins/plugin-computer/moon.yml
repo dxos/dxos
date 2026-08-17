@@ -3,6 +3,7 @@ language: typescript
 tags:
   - ts-vite-build
   - ts-test
+  - vite-plugin
 tasks:
   # Fail when the browser entry can reach the host. `./vite-plugin` spawns processes and reads the
   # filesystem; the plugin, its skill and its client have to stay loadable in a page, and only the
