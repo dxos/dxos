@@ -18,6 +18,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import * as DebugPlugin from '@dxos/plugin-debug/DebugPlugin';
+import * as GooglePlugin from '@dxos/plugin-google/GooglePlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
@@ -80,6 +81,10 @@ const DECORATORS = [
       InboxPlugin(),
       ConnectorPlugin.make(),
       DebugPlugin.make({}),
+      // The Gmail provider. `Mailbox`'s connector-auth annotation resolves its providers from the
+      // registry, so without a registered connector claiming the type the toolbar offers no Connect
+      // action and the mailbox cannot be bound (see plugin-google's headless Connector module).
+      GooglePlugin.make(),
       AssistantPlugin.make(),
       PreviewPlugin.make(),
       ProgressPlugin.make(),

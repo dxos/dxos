@@ -18833,6 +18833,9 @@ importers:
       '@dxos/plugin-crm':
         specifier: workspace:*
         version: link:../../plugins/plugin-crm
+      '@dxos/plugin-google':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-google
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
