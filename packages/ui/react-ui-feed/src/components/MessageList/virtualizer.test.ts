@@ -200,4 +200,29 @@ describe('virtualizer layout', () => {
       previous = position;
     }
   });
+
+  test('a row measured before its content exists moves everything below it', () => {
+    const harness = createHarness();
+    harness.scrollTo(5_000);
+    harness.measureMounted();
+
+    const items = harness.virtualizer.getVirtualItems();
+    const anchor = items.find((item) => item.start >= harness.scrollOffset())!;
+    const before = harness.screenPosition(anchor.index);
+
+    // What React's ref callback does: it runs before any layout effect, so a row whose item builds
+    // its content in a layout effect — an editor, an image, a portal — is measured as an empty box
+    // and corrected a frame later. Two measurements, and the second is the jump.
+    const above = items[0].index;
+    harness.virtualizer.resizeItem(above, 46);
+    harness.virtualizer._willUpdate();
+    const afterEmpty = harness.screenPosition(anchor.index);
+    harness.virtualizer.resizeItem(above, realHeight(above));
+    harness.virtualizer._willUpdate();
+
+    // The virtualizer compensates for each measurement, so the row ends where it started — the cost
+    // is that it was somewhere else in between, which is one painted frame in the wrong place.
+    expect(harness.screenPosition(anchor.index)).toBeCloseTo(before!, 0);
+    expect(afterEmpty).toBeCloseTo(before!, 0);
+  });
 });

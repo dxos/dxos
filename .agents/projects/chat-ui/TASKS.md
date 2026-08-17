@@ -116,6 +116,14 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       which is why forcing compensation on made it worse, turning it off broke tail positioning, and
       anchoring on screen position was worse still. REMOVED; the browser behaviour needs re-measuring
       against the video method, and the jump should be gone.
+- [ ] **Flicker is a paint-order problem, not a layout one.** Four headless tests now cover every
+      suspected case including measure-empty-then-correct, and the layout holds the reader's row in
+      all of them. The remaining cause is that the intermediate state between two measurements is
+      painted. Fix applied: rows are measured in a layout effect on a `MessageListRow` component
+      instead of the element's ref callback (refs run before any layout effect, so a ref-measured row
+      is measured before its item builds anything). NEEDS A VISIBLE TAB TO VERIFY — a backgrounded
+      tab does not run the virtualizer's update loop at all, so no browser measurement is possible
+      there; `MessageList/{Plain,Uniform}` are the ladder for localizing whatever is left.
 - [ ] Widget state does not survive virtualization — an expanded panel scrolled out of the window
       remounts collapsed, because the open flag is React state inside the widget. Either the state
       moves into the message, or the item keeps a per-widget map.

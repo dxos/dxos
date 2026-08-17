@@ -63,6 +63,22 @@ recording (a clean glide, then two frames moving against the scroll). If a fix e
 anchoring above the virtualizer, add the case to `virtualizer.test.ts` first: three earlier
 "reproductions" were faults in the harness, not the library.
 
+**The layout is not where the flicker lives.** `virtualizer.test.ts` drives the real `Virtualizer`
+through every case that was suspected — a row measured above the reader, below, a batch entering
+during an upward scroll, and a row measured empty and then corrected (what a ref callback does to an
+item that builds its content in a layout effect) — and in all of them the reader's row ends exactly
+where the gesture put it. The arithmetic is self-consistent at every step.
+
+What remains is **paint order**: between two measurements there is a frame in which the DOM holds the
+intermediate offsets, and that frame is painted. So the cure is not better arithmetic but fewer
+measurements — measure once, correctly, before the frame is drawn. Rows are therefore measured in a
+layout effect on the row component rather than in its element's ref callback: refs run before any
+layout effect, so a ref-measured row is measured before its own item has built anything.
+
+`MessageList/Plain` (fixed-height divs, no editor) and `MessageList/Uniform` (one editor per row, all
+identical) exist to localize what is left: if `Plain` is still, the list is sound and the fault is in
+what an item builds after it mounts.
+
 **Reading the invariant correctly matters.** When the reader scrolls 300px, the anchor row moves
 300px on screen and `scrollOffset` moves _less_, because compensation deliberately moved it back.
 Asserting against the offset asserts that compensation did not happen.
