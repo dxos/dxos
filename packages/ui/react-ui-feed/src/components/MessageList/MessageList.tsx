@@ -9,6 +9,7 @@ import React, {
   type PropsWithChildren,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -18,7 +19,7 @@ import { Column, ScrollArea, type ScrollAreaRootProps, composable, composablePro
 import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { type MessageRenderer, type SearchHit, defaultRenderer } from '../../model';
+import { type ItemContent, type MessageRenderer, type SearchHit, defaultRenderer } from '../../model';
 import { type HighlightRange, HtmlItem, MarkdownItem, SelectionGroupContext, createSelectionGroup } from '../Item';
 import { type FollowOptions, ScrollFollower } from './follow';
 import { useJumpDetector, usePositionLog } from './position-log';
@@ -47,6 +48,7 @@ type MessageListContextValue = {
   streamingId?: string;
   selectedIds?: ReadonlySet<string>;
   hitsByMessage: ReadonlyMap<string, HighlightRange[]>;
+  Custom?: ComponentType<{ content: ItemContent & { kind: 'custom' }; message: Message.Message }>;
   debug?: boolean;
   /** The mounted window; `undefined` until the viewport has measured. */
   range?: MessageRange;
@@ -131,6 +133,13 @@ export type MessageListRootProps = PropsWithChildren<{
    * row below it. Toggle such affordances with opacity, or take them out of flow.
    */
   Chrome?: ComponentType<MessageChromeProps>;
+  /**
+   * Renders a `custom` item. The engine's own kinds are documents — markdown in CodeMirror, HTML —
+   * and both build their content asynchronously enough to be measured wrong once. A host component
+   * whose height is settled at first paint is the control case: if a feed of those still moves, the
+   * fault is the list; if it does not, the fault is in what the item is building.
+   */
+  Custom?: ComponentType<{ content: ItemContent & { kind: 'custom' }; message: Message.Message }>;
   /** Message currently streaming; its item reconciles by delta rather than remounting. */
   streamingId?: string;
   /** Message ids selected as a set (list-shaped gesture, distinct from text selection). */
@@ -211,6 +220,7 @@ const MessageListRoot = ({
   renderer = defaultRenderer,
   registry,
   Chrome = DefaultChrome,
+  Custom,
   streamingId,
   selectedIds,
   onSelectedIdsChange,
@@ -710,6 +720,7 @@ const MessageListRoot = ({
         streamingId={streamingId}
         selectedIds={selectedIds}
         hitsByMessage={hitsByMessage}
+        Custom={Custom}
         debug={debug}
         range={range}
         currentIndex={currentIndex}
@@ -799,16 +810,12 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
               }
 
               return (
-                <div
+                <MessageListRow
                   key={item.key}
-                  // Reads the real height after the item lays out, which is what keeps a
-                  // variable-height row from drifting against its estimate — and feeds the average
-                  // that stands in for every row still unmeasured.
-                  ref={measureItem}
-                  data-index={item.index}
-                  data-object-id={message.id}
-                  className='absolute inset-x-0 top-0'
-                  style={{ transform: `translateY(${item.start}px)` }}
+                  index={item.index}
+                  start={item.start}
+                  message={message}
+                  measure={measureItem}
                 >
                   <Column.Root gutter={gutter}>
                     <Column.Center>
@@ -822,7 +829,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
                       </Chrome>
                     </Column.Center>
                   </Column.Root>
-                </div>
+                </MessageListRow>
               );
             })}
           </div>
@@ -833,6 +840,49 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
 );
 
 MessageListViewport.displayName = MESSAGE_LIST_VIEWPORT_NAME;
+
+/**
+ * One placed row.
+ *
+ * The measurement is taken in a **layout effect**, not in the element's ref callback, and that is the
+ * whole point of this component. React attaches refs before it runs any layout effect, so a row
+ * measured from its ref is measured before its item has built anything — an editor is constructed in
+ * the item's own layout effect — and the virtualizer records the height of an empty box. The real
+ * height arrives a frame later as a correction, which moves every row below it: a jump per row, worst
+ * on first load and when scrolling up, where rows mount continuously.
+ *
+ * Layout effects run child-first, so by the time this one fires the item's content exists and the
+ * first measurement is the right one.
+ */
+const MessageListRow = ({
+  index,
+  start,
+  message,
+  measure,
+  children,
+}: PropsWithChildren<{
+  index: number;
+  start: number;
+  message: Message.Message;
+  measure: (element: HTMLElement | null) => void;
+}>) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    measure(ref.current);
+  }, [measure]);
+
+  return (
+    <div
+      ref={ref}
+      data-index={index}
+      data-object-id={message.id}
+      className='absolute inset-x-0 top-0'
+      style={{ transform: `translateY(${start}px)` }}
+    >
+      {children}
+    </div>
+  );
+};
 
 //
 // Item
@@ -849,7 +899,8 @@ type MessageListItemExtra = {
  * outside the scrolling window — a pinned message, a preview — through the same path.
  */
 const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ message, ...props }, forwardedRef) => {
-  const { renderer, registry, hitsByMessage, debug, reportWidgets } = useMessageListContext(MESSAGE_LIST_ITEM_NAME);
+  const { renderer, registry, hitsByMessage, Custom, debug, reportWidgets } =
+    useMessageListContext(MESSAGE_LIST_ITEM_NAME);
   const content = renderer(message);
   const hits = hitsByMessage.get(message.id);
   const handleWidgetsChange = useCallback(
@@ -872,6 +923,7 @@ const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ mess
         <MarkdownItem text={content.text} registry={registry} hits={hits} onWidgetsChange={handleWidgetsChange} />
       )}
       {content.kind === 'html' && <HtmlItem html={content.html} />}
+      {content.kind === 'custom' && Custom && <Custom content={content} message={message} />}
     </div>
   );
 });

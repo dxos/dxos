@@ -20,7 +20,16 @@ import { chatRegistry } from './widgets';
  * couple of options, while the list, the virtualization, the selection and the search are the same
  * code. Where a scenario needs something the engine does not have, that is the finding.
  */
-export type FeedScenario = 'assistant' | 'email' | 'thread' | 'comments' | 'transcript';
+export type FeedScenario =
+  /** No editor at all: fixed-height divs, so the list is measured against content that cannot move. */
+  | 'plain'
+  /** One editor per row, every row identical — the same document, so every height is the same. */
+  | 'uniform'
+  | 'assistant'
+  | 'email'
+  | 'thread'
+  | 'comments'
+  | 'transcript';
 
 export type ScenarioDefinition = {
   messages: Message.Message[];
@@ -28,6 +37,8 @@ export type ScenarioDefinition = {
   /** Widgets for the tags the renderer emits; only the assistant turn has non-prose blocks. */
   registry?: XmlWidgetRegistry;
   Chrome: ComponentType<MessageChromeProps>;
+  /** Renders a `custom` item, for the scenarios that deliberately avoid an editor. */
+  Custom?: ComponentType<{ content: any; message: Message.Message }>;
   /** Whether the feed follows its tail: true where messages arrive, false where they are read. */
   stickyBottom: boolean;
   /**
@@ -50,6 +61,29 @@ export type ScenarioOptions = {
 export const createScenario = ({ scenario, count, seed = 999 }: ScenarioOptions): ScenarioDefinition => {
   random.seed(seed);
   switch (scenario) {
+    // The control: nothing here builds anything after it mounts, so a row's first measurement is its
+    // last. Any movement in this feed belongs to the list, not to what it is rendering.
+    case 'plain':
+      return {
+        messages: createPlainMessages(count),
+        renderer: (message) => ({ kind: 'custom', key: 'plain', data: message.properties?.height ?? 120 }),
+        Chrome: PlainChrome,
+        Custom: PlainItem,
+        stickyBottom: true,
+        estimateSize: (message) => Number(message.properties?.height ?? 120),
+      };
+
+    // One rung up: a real editor per row, but every row the same single paragraph, so every row is
+    // the same height and the estimate can be exactly right.
+    case 'uniform':
+      return {
+        messages: createUniformMessages(count),
+        renderer: defaultRenderer,
+        Chrome: PlainChrome,
+        stickyBottom: true,
+        estimateSize: 84,
+      };
+
     case 'assistant':
       return {
         messages: createAssistantMessages(count),
@@ -147,6 +181,29 @@ const estimateAssistantRow = (message: Message.Message): number => {
 //
 // Fixtures
 //
+
+/** Fixed heights, cycling so the feed is uneven — but known in advance and never corrected. */
+const PLAIN_HEIGHTS = [64, 120, 200, 88, 320, 56];
+
+const createPlainMessages = (count: number): Message.Message[] =>
+  Array.from({ length: count }, (_, index) =>
+    Message.make({
+      created: at(index),
+      sender: { role: index % 2 === 0 ? 'user' : 'assistant', name: index % 2 === 0 ? 'Alice' : 'Assistant' },
+      blocks: [{ _tag: 'text', text: `${index}. ${random.lorem.sentence(6)}` }],
+      properties: { height: PLAIN_HEIGHTS[index % PLAIN_HEIGHTS.length] },
+    }),
+  );
+
+/** Every row the same document, so a single estimate is exactly right for all of them. */
+const createUniformMessages = (count: number): Message.Message[] =>
+  Array.from({ length: count }, (_, index) =>
+    Message.make({
+      created: at(index),
+      sender: { role: index % 2 === 0 ? 'user' : 'assistant', name: index % 2 === 0 ? 'Alice' : 'Assistant' },
+      blocks: [{ _tag: 'text', text: `${index}. Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do.` }],
+    }),
+  );
 
 const NAMES = ['Alice', 'Bob', 'Charlie', 'Dana'];
 
@@ -263,9 +320,21 @@ const createTranscriptMessages = (count: number): Message.Message[] =>
     }),
   );
 
+/** A row of a known height: the content is a box, not a document. */
+const PlainItem = ({ content, message }: { content: { data?: unknown }; message: Message.Message }) => (
+  <div className='grid items-center px-2 text-sm' style={{ height: Number(content.data ?? 120) }}>
+    {Message.extractText(message)}
+  </div>
+);
+
 //
 // Chrome
 //
+
+/** No hover controls and no separators: nothing here can change a row's height. */
+const PlainChrome = ({ children }: MessageChromeProps) => (
+  <Row classNames='border-b border-subdued-separator'>{children}</Row>
+);
 // Every scenario's difference that is not the renderer lives here — which is the claim being
 // tested: chrome is the host's, and the engine only has to keep it out of the measurement.
 //

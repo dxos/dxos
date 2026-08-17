@@ -238,6 +238,7 @@ export const FeedStory = ({
       debug={debug}
       isAnchor={definition?.isAnchor}
       Chrome={definition?.Chrome ?? TestChrome}
+      Custom={definition?.Custom}
       registry={definition?.registry}
       hits={hits}
       streamingId={streaming ? answerId : undefined}
