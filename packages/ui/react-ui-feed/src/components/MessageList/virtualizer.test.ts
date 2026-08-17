@@ -114,9 +114,10 @@ describe('virtualizer layout', () => {
     expect(harness.screenPosition(anchor.index)).toBeCloseTo(before!, 0);
   });
 
-  // `test.fails`: this states the contract and the virtualizer does not meet it, so the reproduction
-  // stays executable and CI stays honest — the day the layout is fixed it fails as an *unexpected
-  // pass* and must be flipped back to `test`.
+  // `test.fails`: these two state the contract and the virtualizer does not meet it, so the
+  // reproduction stays executable and CI stays honest — the day the layout is fixed they fail as
+  // *unexpected passes* and must be flipped back to `test`. Both were re-confirmed after the harness
+  // was corrected to apply `adjustments`, so neither is an artefact of the stub.
   test.fails('measuring a row ABOVE the reader does not move what they are looking at', () => {
     const harness = createHarness();
     harness.scrollTo(5_000);
