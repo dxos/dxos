@@ -155,17 +155,38 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
     [animatePose, items.length],
   );
 
-  // Seed every layer on mount, then animate on each push or pop. A layer mounted by this render is
-  // still at its natural position; `poseFor` gives an incoming panel an off-screen start, and the
-  // single-keyframe animation carries it home — which is what a CSS transition could not do, having
-  // no previous value to interpolate from on the mount frame.
-  const seededRef = useRef(false);
+  // Layers that have been given a pose at least once. A single-keyframe animation starts from the
+  // element's current computed transform, and a panel mounted by this render has none — it computes to
+  // identity, so animating it to its resting place is a no-op from 0% to 0% and the push does not move.
+  // Newly mounted layers are therefore planted at the pose they *would* have held before this
+  // navigation (offset measured against the previous index, so an incoming panel starts off-screen
+  // right) and animated home from there.
+  const posedRef = useRef<Set<number>>(new Set());
+  const previousIndexRef = useRef(index);
+  // Set when an interactive pop has already animated itself; the index change it triggers arrives a
+  // commit later and must not restart the motion that is still playing.
+  const settledRef = useRef(false);
+
   useLayoutEffect(() => {
-    if (!seededRef.current) {
-      seededRef.current = true;
-      for (let layer = 0; layer < items.length; layer++) {
-        applyPose(layer, poseFor(layer - index, 0));
+    const previous = previousIndexRef.current;
+    previousIndexRef.current = index;
+
+    for (let layer = 0; layer < items.length; layer++) {
+      if (!posedRef.current.has(layer)) {
+        posedRef.current.add(layer);
+        applyPose(layer, poseFor(layer - previous, 0));
       }
+    }
+    // Drop layers the stack no longer has, so a re-pushed position is planted again rather than
+    // animating from the pose its predecessor happened to leave behind.
+    for (const layer of [...posedRef.current]) {
+      if (layer >= items.length) {
+        posedRef.current.delete(layer);
+      }
+    }
+
+    if (settledRef.current) {
+      settledRef.current = false;
       return;
     }
     settle(index, reducedMotion ? 0 : TRANSITION_MS);
@@ -244,6 +265,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
         // arrives a commit later, and settling from the new index would restart the motion.
         animatePose(index, poseFor(1, 0), duration);
         animatePose(index - 1, poseFor(0, 0), duration);
+        settledRef.current = true;
         onIndexChange(index - 1);
       } else {
         animatePose(index, poseFor(0, 0), duration);
