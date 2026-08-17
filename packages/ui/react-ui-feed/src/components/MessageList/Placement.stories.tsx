@@ -146,8 +146,9 @@ const Harness = ({
 
       <div ref={bodyRef} className='grow min-h-0 flex gap-2'>
         <div className='h-full grid grid-rows-[1fr_3fr_1fr]'>
-          <div className='border flex items-center row-start-2'>
+          <div className='flex items-center row-start-2'>
             <Outline
+              classNames='border'
               markers={markers}
               visibleRange={state ? { from: state.visible.first, to: state.visible.last } : undefined}
               onSelect={(marker) => controller.current?.scrollToIndex(marker.range.from)}
