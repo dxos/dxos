@@ -124,6 +124,12 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       is measured before its item builds anything). NEEDS A VISIBLE TAB TO VERIFY — a backgrounded
       tab does not run the virtualizer's update loop at all, so no browser measurement is possible
       there; `MessageList/{Plain,Uniform}` are the ladder for localizing whatever is left.
+- [x] **The slow first fill is construction cost, not the layout.** Seven headless tests
+      (`virtualizer.test.ts`): one measurement pass already covers the viewport; the tail settles in
+      ≤3 passes whether rows are bigger or smaller than the estimate; and settling mounts 22 rows to
+      show 22 — no churn. So `baseline/Uniform` taking >1s to fill, bottom-up, is ~22 CodeMirror
+      constructions at roughly 45ms each, not a cascade. Fix belongs in the item: a cheaper editor
+      for simple content, or plain text upgraded to an editor only when it needs to be one.
 - [ ] Widget state does not survive virtualization — an expanded panel scrolled out of the window
       remounts collapsed, because the open flag is React state inside the widget. Either the state
       moves into the message, or the item keeps a per-widget map.

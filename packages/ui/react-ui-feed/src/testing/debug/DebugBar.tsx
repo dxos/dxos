@@ -37,15 +37,17 @@ export const DebugBar = ({
   return (
     // Fixed tracks, not flow: every number here changes while scrolling, and cells sized to their
     // content would shuffle the row on each update — an instrument that moves is hard to read.
-    <div className='grid grid-cols-[repeat(6,6rem)_auto] items-center gap-2 px-2 text-xs text-description tabular-nums'>
-      <FrameMeter meter={meter} />
+    <div className='grid grid-cols-7 items-center gap-2 px-2 text-xs text-description tabular-nums'>
+      <div className='col-span-4'>
+        <FrameMeter meter={meter} />
+      </div>
       <span className={mx('text-right', jumps.count > 0 && 'text-warning-text')} data-testid='feed.jumps'>
         {jumps.count} jumps
       </span>
       <span className={mx('text-right', shifts > 0 && 'text-warning-text')} data-testid='feed.shifts'>
         {shifts} shifts{breaks > 0 ? ` · ${breaks}!` : ''}
       </span>
-      <span className='flex gap-1'>
+      <span className='flex justify-end'>
         <IconButton
           icon={recording ? 'ph--stop--regular' : 'ph--record--regular'}
           iconOnly
@@ -85,16 +87,28 @@ const FrameMeter = ({ classNames, meter }: ThemedClassName<{ meter: FrameMeterSt
   // a click that resets what the reader is trying to read. Recording a pass is its own IconButton.
   return (
     <span
-      className={mx('col-span-4 grid grid-cols-subgrid tabular-nums whitespace-nowrap', classNames)}
+      className={mx('grid grid-cols-4 tabular-nums whitespace-nowrap', classNames)}
       title={`${label} — p50 ${p50} · ${frames} frames · ${(duration / 1000).toFixed(1)}s`}
       data-testid='feed.frames'
     >
       <span className={mx('text-right', fps > 0 && fps < 50 && 'text-warning-text')}>{fps} fps</span>
-      <span className={mx('text-right opacity-70', p95 > 0 && p95 < 50 && 'text-warning-text opacity-100')}>
-        p95 {p95}
+      <span className={mx('text-right', p95 > 0 && p95 < 50 && 'text-warning-text')}>
+        <span className='opacity-50'>p95</span> {p95}ms
       </span>
-      <span className='text-right opacity-70'>{worst}ms</span>
-      <span className={mx('text-right opacity-70', hitches > 0 && 'text-warning-text opacity-100')}>{hitches}</span>
+      <span className='text-right opacity-70'>
+        <span className='opacity-50'>worst</span> {worst}ms
+      </span>
+      <span className={mx('text-right opacity-70', hitches > 0 && 'text-warning-text opacity-100')}>
+        {hitches} hitches
+      </span>
     </span>
   );
 };
+
+const Value = ({ label, value, unit }: { label?: string; value: number; unit?: string }) => (
+  <div className='grid grid-cols-3 gap-1'>
+    <span className='opacity-50'>{label}</span>
+    <span className='text-right'>{value}</span>
+    {unit && <span className='opacity-50'>{unit}</span>}
+  </div>
+);

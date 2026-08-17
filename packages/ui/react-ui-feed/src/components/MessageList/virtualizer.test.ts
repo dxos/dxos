@@ -41,7 +41,11 @@ type Harness = {
   scrollOffset: () => number;
 };
 
-const createHarness = ({ count = 200, estimate = 120 }: { count?: number; estimate?: number } = {}): Harness => {
+const createHarness = ({
+  count = 200,
+  estimate = 120,
+  height = realHeight,
+}: { count?: number; estimate?: number; height?: (index: number) => number } = {}): Harness => {
   let offset = 0;
   const measured = new Set<number>();
   let notifyOffset: ((offset: number, isScrolling: boolean) => void) | undefined;
@@ -114,7 +118,7 @@ const createHarness = ({ count = 200, estimate = 120 }: { count?: number; estima
       for (const item of virtualizer.getVirtualItems()) {
         if (!measured.has(item.index)) {
           measured.add(item.index);
-          virtualizer.resizeItem(item.index, realHeight(item.index));
+          virtualizer.resizeItem(item.index, height(item.index));
         }
       }
 
@@ -224,5 +228,81 @@ describe('virtualizer layout', () => {
     // is that it was somewhere else in between, which is one painted frame in the wrong place.
     expect(harness.screenPosition(anchor.index)).toBeCloseTo(before!, 0);
     expect(afterEmpty).toBeCloseTo(before!, 0);
+  });
+
+  test('a feed opened at its tail settles there in a bounded number of passes', () => {
+    const harness = createHarness({ count: 500, estimate: 84 });
+
+    // What a chat does on load, and what the reader watches settle: jump to the end, then measure
+    // whatever mounted, then jump again because measuring moved the end.
+    const offsets: number[] = [];
+    for (let pass = 0; pass < 12; pass++) {
+      harness.virtualizer.scrollToIndex(499, { align: 'end' });
+      harness.measureMounted();
+      offsets.push(Math.round(harness.scrollOffset()));
+      if (pass > 0 && offsets[pass] === offsets[pass - 1]) {
+        break;
+      }
+    }
+
+    // Each pass paints, so the number of passes is how many frames the reader watches the feed
+    // rearrange itself. Anything above a couple is visible as the list filling in.
+    const settled = offsets.findIndex((offset, index) => index > 0 && offset === offsets[index - 1]);
+    expect(settled).toBeGreaterThan(0);
+    expect(settled).toBeLessThanOrEqual(3);
+
+    // And it lands on the end of the document, not near it.
+    expect(harness.scrollOffset() + VIEWPORT).toBeCloseTo(harness.virtualizer.getTotalSize(), 0);
+  });
+
+  test('a feed whose rows are SMALLER than the estimate still settles at its tail', () => {
+    // The direction that matters for a chat of one-line messages: the document shrinks as it is
+    // measured, so the tail moves *up* — towards the reader — on every pass, and the feed appears to
+    // rebuild itself from the bottom.
+    const harness = createHarness({ count: 500, estimate: 84, height: () => 46 });
+
+    const offsets: number[] = [];
+    for (let pass = 0; pass < 30; pass++) {
+      harness.virtualizer.scrollToIndex(499, { align: 'end' });
+      harness.measureMounted();
+      offsets.push(Math.round(harness.scrollOffset()));
+      if (pass > 0 && offsets[pass] === offsets[pass - 1]) {
+        break;
+      }
+    }
+
+    const settled = offsets.findIndex((offset, index) => index > 0 && offset === offsets[index - 1]);
+    expect(settled).toBeGreaterThan(0);
+    expect(settled).toBeLessThanOrEqual(3);
+  });
+
+  test('settling at the tail mounts far more rows than it ends up showing', () => {
+    const harness = createHarness({ count: 500, estimate: 84, height: () => 46 });
+
+    // Every row that enters the window is a row an item has to build — in the real list, an editor.
+    // Rows that enter during one pass and leave before the next are built for nothing, and this is
+    // where the second the reader waits actually goes.
+    const built = new Set<number>();
+    let mounts = 0;
+    const record = () => {
+      for (const item of harness.virtualizer.getVirtualItems()) {
+        if (!built.has(item.index)) {
+          built.add(item.index);
+          mounts++;
+        }
+      }
+    };
+
+    for (let pass = 0; pass < 6; pass++) {
+      harness.virtualizer.scrollToIndex(499, { align: 'end' });
+      record();
+      harness.measureMounted();
+      record();
+    }
+
+    const showing = harness.virtualizer.getVirtualItems().length;
+    // eslint-disable-next-line no-console
+    console.log('  built', mounts, 'to show', showing);
+    expect(mounts).toBeLessThanOrEqual(showing * 2);
   });
 });

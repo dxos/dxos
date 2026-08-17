@@ -466,12 +466,11 @@ const StatusBar = ({ hits, selected, streaming, meter }: StatusBarProps) => {
 
   return (
     <div className='w-full flex flex-col gap-1 py-1'>
-      <div className='[&>*]:border w-full overflow-hidden grid grid-cols-7 items-center gap-x-2 px-2 text-xs text-description tabular-nums'>
+      <div className='w-full overflow-hidden grid grid-cols-7 items-center gap-x-2 px-2 text-xs text-description tabular-nums'>
         <div>{range ? `${range.startIndex}–${range.endIndex}` : ''}</div>
         <div>
           {currentIndex} / {count}
         </div>
-        {/* What the window costs: rows mounted, and the block widgets inside them. */}
         <div data-testid='feed.rows'>{mountedRows} rows</div>
         <div data-testid='feed.widgets'>{mountedWidgets} widgets</div>
         <div>{selected} selected</div>
