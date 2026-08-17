@@ -129,7 +129,9 @@ const DeviceInvitation = (props: Pick<DeviceInvitationProps, 'createInvitationUr
       return;
     }
     setPending(true);
-    void EffectEx.runPromise(identityService.share())
+    // Requested explicitly because `share()` defaults to no authentication, which would leave the
+    // invitation code as the only factor guarding an identity.
+    void EffectEx.runPromise(identityService.share({ authMethod: 'shared-secret' }))
       .then(async (created) => {
         // Playwright reads this line off the console to drive the device-invitation flows.
         if (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
@@ -162,8 +164,20 @@ const DeviceInvitationImpl = ({
   onInvitationDone,
   onInvitationCreate,
 }: DeviceInvitationProps) => {
+  const client = useClient();
   const { event, code } = useInvitationFlow(flow);
   const url = code && createInvitationUrl(code);
+
+  // Logged separately from the invitation code Playwright reads on creation, because the host only
+  // learns the auth code once a guest has connected.
+  useEffect(() => {
+    if (
+      event?._tag === 'readyForAuthentication' &&
+      client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production'
+    ) {
+      log.info(JSON.stringify({ authCode: event.authCode }));
+    }
+  }, [event?._tag]);
 
   // Every terminal event returns to the creation view; parking on the completion icon would strand
   // a failed or cancelled invitation with no way to retry.
