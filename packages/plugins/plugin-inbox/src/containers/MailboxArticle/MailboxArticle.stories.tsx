@@ -19,7 +19,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Blob, Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
-import { useQuery, useResolveRef } from '@dxos/echo-react';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -185,6 +185,7 @@ const DefaultStory = ({ conversations, progress }: StoryArgs) => {
 
   // Summaries are immutable annotations on a second feed, keyed by `parentMessage` — shown here
   // because they are not on the message and would otherwise be invisible in this story.
+  useObject(mailbox, 'annotations');
   const annotationsFeed = useResolveRef(mailbox?.annotations);
   const annotations = useQuery(
     space?.db,
