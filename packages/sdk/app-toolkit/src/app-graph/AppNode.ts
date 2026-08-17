@@ -510,8 +510,10 @@ export const makeToolbarAction = <R = never>({
     properties: {
       label,
       disposition: TOOLBAR_DISPOSITION,
+      // Always emitted, for the same reason as in `makeToolbarActionGroup`: re-offering a node merges
+      // over its previous properties, so an omitted `disabled` cannot clear an earlier `true`.
+      disabled: disabled ?? false,
       ...(icon !== undefined && { icon }),
-      ...(disabled !== undefined && { disabled }),
       ...(testId !== undefined && { testId }),
       ...(keyBinding !== undefined && { keyBinding }),
     },
@@ -562,9 +564,13 @@ export const makeToolbarActionGroup = ({
       variant: 'dropdownMenu',
       iconOnly,
       disposition: TOOLBAR_DISPOSITION,
+      // `disabled` and `emphasis` are state, and a re-offered node merges its properties over the
+      // previous ones (see `addNode`), so omitting them cannot clear what an earlier generation set —
+      // a group that turned enabled after its providers registered stayed frozen disabled. Always
+      // emit both, even as `undefined`, so the latest generation is the whole truth.
+      disabled: disabled ?? false,
+      emphasis,
       ...(icon !== undefined && { icon }),
-      ...(disabled !== undefined && { disabled }),
-      ...(emphasis !== undefined && { emphasis }),
       ...(testId !== undefined && { testId }),
     },
   });

@@ -74,7 +74,7 @@ describe('connectorAuth graph extension', () => {
 
     expect(group).toBeDefined();
     // The regression: a provider is installed, so this must be actionable, not a disabled placeholder.
-    expect(group?.properties?.disabled).toBeUndefined();
+    expect(group?.properties?.disabled).toBe(false);
     expect(group?.properties?.emphasis).toBe('primary');
     // The group's children are materialized as its own actions by app-graph, not as an inline array.
     expect(await getGroupChildIds(group)).toContain(`connect-${provider.id}`);
@@ -95,7 +95,24 @@ describe('connectorAuth graph extension', () => {
     expect(group).toBeUndefined();
   });
 
+  test('re-enables the placeholder when a binding provider registers later', async ({ expect }) => {
+    // The reported bug, in sequence: a mailbox that loaded before plugin-google/plugin-jmap activated
+    // saw providers but none binding its type, so it got the disabled placeholder — and the live group
+    // that replaced it once they registered carries no `disabled` key of its own, so a graph node that
+    // merges properties over the previous generation kept showing the frozen `true`. A mailbox created
+    // after activation never had that first generation, which is why only pre-existing ones were dead.
+    const group = await getConnectGroup([{ ...provider, id: 'other', sync: undefined }]);
+    expect(group?.properties?.disabled).toBe(true);
+
+    const enabled = await registerConnectors([{ ...provider, id: 'other', sync: undefined }, provider]);
+
+    expect(enabled?.properties?.disabled).toBe(false);
+    expect(enabled?.properties?.emphasis).toBe('primary');
+    expect(await getGroupChildIds(enabled)).toContain(`connect-${provider.id}`);
+  });
+
   let lastContext: ReturnType<typeof setupGraphBuilder> | undefined;
+  let lastManager: CapabilityManager.CapabilityManager | undefined;
 
   /** Builds the graph the toolbar reads, with `connectors` registered as the provider list. */
   const getConnectGroup = async (connectors: ConnectorSpec.ConnectorEntry[]) => {
@@ -131,6 +148,15 @@ describe('connectorAuth graph extension', () => {
 
     const actions: any[] = context.registry.get(context.graph.actions(qualifyId(Node.RootId, SUBJECT_ID)));
     lastContext = context;
+    lastManager = manager;
+    return actions.find((action) => action.id.endsWith(CONNECTOR_AUTH_GROUP_ID));
+  };
+
+  /** Registers a later provider list on the standing graph and re-reads the group it produces. */
+  const registerConnectors = async (connectors: ConnectorSpec.ConnectorEntry[]) => {
+    lastManager!.contribute({ module: 'late', interface: ConnectorSpec.Connector, implementation: connectors });
+    await lastContext!.expand(qualifyId(Node.RootId, SUBJECT_ID), 'action');
+    const actions: any[] = lastContext!.registry.get(lastContext!.graph.actions(qualifyId(Node.RootId, SUBJECT_ID)));
     return actions.find((action) => action.id.endsWith(CONNECTOR_AUTH_GROUP_ID));
   };
 

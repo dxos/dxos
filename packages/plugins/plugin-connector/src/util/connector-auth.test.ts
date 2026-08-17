@@ -108,7 +108,9 @@ describe('connectorAuthActions', () => {
 
     // Connecting is the call to action on an unbound object; ghost styling read as disabled.
     expect(actions[0].properties?.emphasis).toBe('primary');
-    expect(actions[0].properties?.disabled).toBeUndefined();
+    // Explicitly `false`, not absent: the graph merges a node's properties over the previous
+    // generation's, so only an emitted key can clear an earlier disabled placeholder.
+    expect(actions[0].properties?.disabled).toBe(false);
   });
 
   test('always produces a single dropdown group', async ({ expect }) => {
