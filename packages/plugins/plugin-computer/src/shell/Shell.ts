@@ -127,10 +127,18 @@ export const exec = async (request: Request, { signal, path = PATH }: ExecOption
     });
   }
 
-  // Annotated rather than cast: the body is this package's own middleware answering, and the shape
-  // is the contract above.
-  const result: Result = await response.json();
-  return result;
+  try {
+    // Annotated rather than cast: the body is this package's own middleware answering, and the shape
+    // is the contract above.
+    const result: Result = await response.json();
+    return result;
+  } catch (error) {
+    throw new ComputerShellError({
+      message: 'the computer host answered with a non-JSON body',
+      context: { path },
+      cause: error,
+    });
+  }
 };
 
 /**

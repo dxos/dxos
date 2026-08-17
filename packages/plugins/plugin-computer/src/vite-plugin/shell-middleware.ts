@@ -64,8 +64,12 @@ export const make = ({
   path = Shell.PATH,
   shell = 'bash',
 }: MakeOptions) => {
+  // Canonicalized once, at mount: every path the host hands out (a request's `cwd`, and the root the
+  // editor checks its own paths against) has to be the same shape, or a symlinked root — `/tmp` on
+  // macOS — makes every file inside it look like an escape.
+  const realRoot = resolveWithin(root);
   const scriptsDir = materializeScripts();
-  log.info('computer shell mounted', { path, root, scriptsDir });
+  log.info('computer shell mounted', { path, root: realRoot, scriptsDir });
 
   return async (req: IncomingMessage, res: ServerResponse, next: () => void): Promise<void> => {
     if (req.method !== 'POST' || !req.url?.startsWith(path)) {
@@ -81,7 +85,7 @@ export const make = ({
 
     // Belt to the same braces, for a client that is not a browser and sends the header anyway.
     const origin = req.headers.origin;
-    if (origin && new URL(origin).host !== req.headers.host) {
+    if (origin && hostOf(origin) !== req.headers.host) {
       return fail(res, 403, 'cross-origin request');
     }
 
@@ -97,7 +101,7 @@ export const make = ({
 
     let cwd: string;
     try {
-      cwd = resolveWithin(root, request.cwd);
+      cwd = resolveWithin(realRoot, request.cwd);
     } catch (error) {
       return fail(res, 400, String(error));
     }
@@ -109,17 +113,36 @@ export const make = ({
     const result = await run({
       ...request,
       cwd,
-      root,
+      root: realRoot,
       scriptsDir,
       shell,
       maxOutputChars,
-      timeout: Math.min(request.timeout ?? defaultTimeout, maxTimeout),
+      timeout: clampTimeout(request.timeout, defaultTimeout, maxTimeout),
     });
 
     res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-cache' });
     res.end(JSON.stringify(result));
   };
 };
+
+/** An opaque origin — `null`, from a sandboxed frame — has no host, so it can never match. */
+const hostOf = (origin: string): string | undefined => {
+  try {
+    return new URL(origin).host;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * A requested timeout only narrows the host's default.
+ *
+ * Anything unusable falls back rather than clamping: `Math.min` propagates `NaN` from a malformed
+ * request, and `setTimeout(fn, NaN)` fires on the next tick — killing the script instantly and
+ * reporting a timeout that never happened.
+ */
+const clampTimeout = (requested: number | undefined, fallback: number, max: number): number =>
+  typeof requested === 'number' && Number.isFinite(requested) && requested > 0 ? Math.min(requested, max) : fallback;
 
 const fail = (res: ServerResponse, status: number, error: string): void => {
   res.writeHead(status, { 'content-type': 'application/json' });

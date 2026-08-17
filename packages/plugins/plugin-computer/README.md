@@ -9,7 +9,7 @@ transcript — and gains the two tools that loop was missing.
 
 ## How it fits together
 
-```
+```text
 browser                                    dev server (node)
 ─────────────────────────────────────      ────────────────────────────────────────
 skill "Computer"

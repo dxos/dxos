@@ -36,15 +36,6 @@ describe('apply edits', () => {
     }
   });
 
-  const write = (file: string, content: string) => {
-    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
-    fs.writeFileSync(path.join(root, file), content);
-  };
-
-  const read = (file: string) => fs.readFileSync(path.join(root, file), 'utf8');
-
-  const apply = (edits: readonly Shell.Edit[], cwd?: string) => Shell.applyEdits(edits, { path: host.path, cwd });
-
   test('applies a single edit', async ({ expect }) => {
     write('a.ts', 'const value = 1;\n');
 
@@ -150,4 +141,32 @@ describe('apply edits', () => {
     expect(result.applied).to.be.true;
     expect(read('nested/a.ts')).to.eq('ALPHA\n');
   });
+
+  test('accepts a root reached through a symlink', async ({ expect }) => {
+    // `DX_COMPUTER_ROOT` is whatever the developer typed, and on macOS `/tmp` is a symlink to
+    // `/private/tmp`. Unless the host canonicalizes it, every file inside the root reads as an escape.
+    const linked = path.join(os.tmpdir(), `dx-computer-link-${process.pid}`);
+    fs.symlinkSync(root, linked);
+    const linkedHost = await startHost({ root: linked });
+    try {
+      write('a.ts', 'alpha\n');
+      const result = await Shell.applyEdits([{ path: 'a.ts', oldString: 'alpha', newString: 'ALPHA' }], {
+        path: linkedHost.path,
+      });
+      expect(result.applied, result.error).to.be.true;
+      expect(read('a.ts')).to.eq('ALPHA\n');
+    } finally {
+      await linkedHost.close();
+      fs.unlinkSync(linked);
+    }
+  });
+
+  const write = (file: string, content: string) => {
+    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+    fs.writeFileSync(path.join(root, file), content);
+  };
+
+  const read = (file: string) => fs.readFileSync(path.join(root, file), 'utf8');
+
+  const apply = (edits: readonly Shell.Edit[], cwd?: string) => Shell.applyEdits(edits, { path: host.path, cwd });
 });

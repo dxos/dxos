@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -15,7 +14,7 @@ import { Shell } from '#shell';
  * The route's only verb is "run this script", so the editor has to arrive as a script — and a file
  * on disk cannot be located from both `src/` (dev) and `dist/lib/` (built) without guessing which
  * one loaded. A string constant is in the bundle either way, and {@link materializeScripts} writes
- * it out under a content-addressed directory so a changed program never reuses a stale copy.
+ * it out on mount.
  *
  * The program is deliberately dependency-free: `node` is the only thing it needs on PATH.
  */
@@ -130,19 +129,15 @@ await main();
 `;
 
 /**
- * Writes the prebaked scripts to a content-addressed directory under the OS temp dir and returns it.
+ * Writes the prebaked scripts to a private directory under the OS temp dir and returns it.
  *
- * Idempotent across dev-server restarts, and keyed by the program's own digest so an edit to
- * {@link APPLY_EDITS_PROGRAM} lands in a fresh directory rather than being masked by yesterday's file.
+ * `mkdtemp` rather than a name derived from the program: a predictable path under a world-writable
+ * temp dir lets another local user plant the file first — or symlink it — and the host would then run
+ * their program as the developer on every edit. An unguessable 0700 directory, written fresh on each
+ * mount, also means a changed program can never be masked by a stale copy.
  */
 export const materializeScripts = (): string => {
-  const digest = crypto.createHash('sha256').update(APPLY_EDITS_PROGRAM).digest('hex').slice(0, 12);
-  const dir = path.join(os.tmpdir(), `dx-computer-${digest}`);
-  fs.mkdirSync(dir, { recursive: true });
-  const file = path.join(dir, Shell.APPLY_EDITS_SCRIPT);
-  if (!fs.existsSync(file)) {
-    fs.writeFileSync(file, APPLY_EDITS_PROGRAM);
-  }
-
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-computer-'));
+  fs.writeFileSync(path.join(dir, Shell.APPLY_EDITS_SCRIPT), APPLY_EDITS_PROGRAM, { mode: 0o600 });
   return dir;
 };

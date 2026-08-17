@@ -24,9 +24,13 @@ export type Host = {
 export const startHost = async (options: ShellMiddleware.MakeOptions): Promise<Host> => {
   const middleware = ShellMiddleware.make(options);
   const server = http.createServer((req, res) => {
-    void middleware(req, res, () => {
+    middleware(req, res, () => {
       res.writeHead(404);
       res.end();
+    }).catch((error) => {
+      // A discarded rejection would leave the socket open and stall the run rather than fail it.
+      res.writeHead(500, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ error: String(error) }));
     });
   });
 

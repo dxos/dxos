@@ -101,6 +101,31 @@ describe('shell middleware', () => {
     expect(response.status).to.eq(403);
   });
 
+  test('treats an opaque origin as cross-origin', async ({ expect }) => {
+    // A sandboxed frame sends `Origin: null`, which is not a URL — parsing it unguarded rejects the
+    // handler, and the request then hangs instead of being refused.
+    const response = await fetch(host.path, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'origin': 'null' },
+      body: JSON.stringify({ script: 'echo pwned' }),
+    });
+    expect(response.status).to.eq(403);
+  });
+
+  test('falls back to the default timeout when the requested one is unusable', async ({ expect }) => {
+    // Straight over the wire: `Math.min(NaN, max)` is NaN, and `setTimeout(fn, NaN)` fires on the next
+    // tick — the script would be killed instantly and reported as a timeout that never happened.
+    const response = await fetch(host.path, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ script: 'echo hi', timeout: 'soon' }),
+    });
+    const result: Shell.Result = await response.json();
+    expect(result.timedOut).to.be.false;
+    expect(result.exitCode).to.eq(0);
+    expect(result.stdout).to.eq('hi\n');
+  });
+
   test('passes other requests through', async ({ expect }) => {
     const response = await fetch(host.path.replace(Shell.PATH, '/elsewhere'));
     expect(response.status).to.eq(404);
