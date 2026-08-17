@@ -60,9 +60,9 @@ offset is the one position in the list that is known exactly.
 This is the invariant that makes principle 3 work at all, and it is testable on its own: **the anchor
 is always mounted.**
 
-#### 5. Only rows near the anchor need accurate heights
+#### 5. Only rows near the anchor need accurate extents
 
-Rows far from the anchor need a height good enough for the scrollbar and nothing more, because
+Rows far from the anchor need an extent good enough for the scrollbar and nothing more, because
 nothing is placed relative to them. "Near" means near _the anchor_, not near the viewport — during a
 scroll the two diverge, and that divergence is where corrections land.
 
@@ -157,7 +157,7 @@ frame or the reader sees the jump — achievable, but not in one step:
    rows exist and nothing left to run writes to the DOM.
 3. Set the parent's offset in that same effect, before paint.
 
-The residual is §8 — a height is a subscription, not a measurement. A newly inserted editor can grow
+The residual is §8 — an estimated extent is a subscription, not a measurement. A newly inserted editor can grow
 after that effect, when a font loads or a portaled widget paints, so the offset is re-adjusted
 whenever the prepended region's height changes rather than once.
 
@@ -177,17 +177,60 @@ Two things to keep honest:
   the container's bottom less whatever is reserved — an offset, like every other position. The flag
   that could not be stabilised on the current model is not a flag on this one.
 
-#### 8. A row's height is a subscription, not a measurement
+#### 8. Extents, not heights — and the host says whether its answer is exact
 
-A CodeMirror row cannot be measured before it renders — and it cannot be measured _once_, either.
-Its height changes after first paint when a font loads, when portaled widget content arrives a frame
-later, when an image decodes. Anything that treats measurement as a one-time event is wrong about
-CodeMirror specifically.
+Placement works in one number per row: its **extent along the scroll axis**. Whether that number was
+measured, estimated or declared is the host's business and not the module's, which is §2 seen from
+the other side.
 
-This is why a block widget needs a reserved floor (`heightMode: 'min'`) rather than a fixed height:
-a fixed height pins the box and clips a disclosure open.
+Two ways to supply it, and the call site states its intent rather than configuring a mode:
 
-#### 9. Rows are moved, never rebuilt
+- **`estimateSize`** — a guess. Measurement corrects it, and the machinery of §3–§7 exists for this
+  case: an extent that is unknowable until the row renders, and that then changes again.
+- **`exactSize`** — a promise. The layout constrains the extent, so it is known before anything
+  renders: a horizontal feed of declared-width items, or a feed of fixed-height rows. Offsets are an
+  exact prefix sum, there is nothing to correct and nothing to drift, and no `ResizeObserver` is
+  attached at all.
+
+`exact` is one flag on one code path, not a second implementation. The arithmetic is identical; it
+decides only whether the DOM binding observes.
+
+**`exact` means "do not correct". It does not mean "do not check."** In dev and test the extent is
+measured anyway and a mismatch is reported; in production it is trusted. This session is the whole
+argument: a declared extent was wrong three times — a 1px separator left out, `uniform` declaring 84px
+against a real 24px, the assistant's estimator — and every one of them presented as a mysterious
+visual defect rather than as _your callback is wrong_. A drift report turns a day of bisection into a
+line naming the index and the delta.
+
+**Where the estimate is a guess, it is a subscription and not a measurement.** A CodeMirror row cannot
+be measured before it renders, and it cannot be measured _once_ either: its extent changes after
+first paint when a font loads, when portaled widget content arrives a frame later, when an image
+decodes. Anything treating measurement as a one-time event is wrong about CodeMirror specifically —
+which is why a block widget needs a reserved floor (`heightMode: 'min'`) rather than a fixed height,
+a fixed height being what pins the box and clips a disclosure open.
+
+#### 9. One axis, named not assumed
+
+The principles hold whichever way the list runs, so nothing below the call site names a direction.
+Placement is scalars — `start`, `extent`, `viewportExtent`, never `top` or `height` — and the DOM
+binding takes an axis and maps it to `overflow-y`/`overflow-x`, the sizer's `height`/`width` and the
+window's `translateY`/`translateX`. Free in the module, one small style map in the binding.
+
+Horizontal is the **easier** case, not the mirrored one: the layout constrains an item's width, so
+extents are `exact` (§8) and the whole correction apparatus stands down. That makes it a useful
+control — a feed whose extents cannot lie, exercising the same module, so any movement in it is the
+module's own fault. `baseline/plain` is the same control on the vertical axis.
+
+Two cautions. This repo's Tailwind dropped `tailwindcss-logical`, so `is-*` / `bs-*` / `pis-*`
+compile to nothing — a `min-bs-[2.125rem]` here was silently inert for weeks — and the axis switch has
+to be explicit rather than borrowed from logical properties. And **direction is not axis**: pinning to
+the bottom is a reader's expectation about recency, whose horizontal equivalent inverts under RTL, so
+the follow needs a direction of its own rather than inheriting one from the axis.
+
+Untested is untested: the axis is neutral in the API from the start, and horizontal is claimed only
+where a story proves it.
+
+#### 10. Rows are moved, never rebuilt
 
 Repositioning a row must not destroy what is inside it. A CodeMirror view removed from the DOM loses
 its measurement state, needs `requestMeasure()` on re-attach, and can drop focus and selection.
@@ -197,7 +240,7 @@ moving it is the same DOM move; what a portal preserves is React tree identity �
 survive, which is how widget state now survives virtualization. Moving a row without rebuilding it
 is: transform-based placement, stable keys, and a pool.
 
-#### 10. Measure out of view, in context
+#### 11. Measure out of view, in context
 
 Measuring a row before it is revealed is what stops the reader seeing it settle. The hazard to
 respect is that an element measured in a different containing block, width or style context measures
@@ -206,7 +249,7 @@ a different element — off-screen must mean _out of view_, not _out of context_
 `content-visibility: auto` with `contain-intrinsic-size` is the alternative worth weighing: it defers
 rendering while the row stays in flow, which makes the context question disappear.
 
-#### 11. An invariant that cannot be observed from the DOM is not an invariant
+#### 12. An invariant that cannot be observed from the DOM is not an invariant
 
 Two tests in this package passed while measuring nothing: one compared a field a later edit had
 deleted (`undefined !== undefined`), the other streamed into a feed too short to scroll. Both were
@@ -231,25 +274,48 @@ breaks it. A test is not trusted because it is green; it is trusted because it h
 
 #### The order
 
-1. **Anchor as a message id, with the invariant test first.** `baseline/anchor`: the anchor is
-   mounted, and survives a prepend, a truncate and a filter. This is testable against the _current_
-   engine and is worth having either way.
-2. **A headless placement module**, no DOM: given an anchor, its offset, a measurement store and a
-   viewport height, produce the mounted window and **the parent's** offset — not each row's position,
-   which §6 hands to the browser. Its hard case is the prepend of §7, and that is what its unit tests
-   should be about. Pure, so it is unit-tested
-   like `virtualizer.test.ts` — but this time against the code that actually runs (that test imported
-   a version production never used, so its seven conclusions were about something else).
-3. **Swap the placement behind `MessageList.Viewport`.** The baselines are the acceptance suite and
-   do not change: fill, tail, navigation, streaming, widget-state, mount, construction. A regression
-   shows up as a specific number moving.
-4. **Delete the rebase and the trailing special cases** once the baselines hold without them.
-5. **Pooling and `content-visibility`** last, as optimizations with `baseline/mount` as the judge —
-   not before, because the current numbers say construction is not the bottleneck.
+Three layers, each able to fail on its own, which is what says where a defect is.
 
-`baseline/widget-state` carries the target for §6: it counts the row re-placements one disclosure
-costs and holds them under a ceiling of 260 (177 today). The flow change should take that to
-approximately zero, and the test is where it says so.
+1. **`placement.ts` — pure, no DOM.** `place({ anchor, extents, viewport, overscan, count })` →
+   `{ first, last, offset, sizerExtent }`, with `measure`, `prepend`, `append`, `jumpTo`. Extents
+   keyed by **message id**, not index, so a prepend cannot invalidate them (§4); scalars only, so the
+   axis is never baked in (§9). Unit-tested in node, and it replaces `virtualizer.test.ts` — which
+   tested a library this would no longer place with, in a version production never ran.
+2. **`Window` — the DOM shape, no CodeMirror.** Sizer, window, plain rows of declared extent. Content
+   that cannot lie about its size, so anything that fails here is the shape and not the item.
+3. **The swap.** `MessageList.Viewport` renders `Window`. `baseline/*` is the acceptance suite and
+   **does not change** — that is what makes it evidence rather than decoration.
+4. **The deletions**, once the baselines hold without them: everything in _What dies_.
+5. **Pooling and `content-visibility`** last, judged by `baseline/mount` — not before, because the
+   current numbers say construction is not the bottleneck.
+
+#### The storybooks
+
+`ui/react-ui-feed/placement/*`, against `Window` alone:
+
+| Story        | Asserts                                                                                            |
+| ------------ | -------------------------------------------------------------------------------------------------- |
+| `Static`     | `offset === 0` at the top; `offset + window === sizer` at the bottom; the arithmetic               |
+| `Append`     | rows added at the end move nothing above them, and `offset` does not change                        |
+| `Prepend`    | no mounted row moves on the frame the insert lands — including under a scroll in flight            |
+| `Grow`       | a row changing extent moves those after it and none before, with **no re-placement written by us** |
+| `Jump`       | a far `jumpTo` lands, and both edge invariants hold afterwards                                     |
+| `Horizontal` | `Static` and `Grow` on the other axis, where extents are `exact` (§9)                              |
+| `Drift`      | a deliberately wrong `exactSize` is **reported**, not silently absorbed (§8)                       |
+
+`baseline/*` stays as it is: fill, tail, navigation, streaming, widget-state, mount, construction.
+`baseline/widget-state` carries §6's target — it counts the row re-placements one disclosure costs and
+holds them under a ceiling of 260 (177 today), which the move to flow should take to approximately
+zero.
+
+#### What could kill it
+
+1. **Prepend atomicity with late extents.** Plain divs cannot catch a CodeMirror row that grows after
+   the layout effect (§8); only `baseline/*` will.
+2. **A reader scrolling during a prepend.** The claim is that never writing `scrollTop` makes this
+   safe. It is a claim, and `placement/Prepend` is where it is tested.
+3. **Thumb drift** on long feeds, since `offset` is authoritative and the region above is derived
+   from it rather than the other way round (§7).
 
 #### What this is not
 
