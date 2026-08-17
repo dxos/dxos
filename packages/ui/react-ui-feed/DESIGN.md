@@ -212,8 +212,6 @@ the scroll's — anything else measures sampling skew.
 
 ## Open
 
-- An expanded widget scrolled out of the window comes back collapsed: the open flag is React state
-  inside the widget, which dies with the item.
 - Chrome sees only its own message and index, so it cannot group consecutive turns from one speaker.
 - `HtmlItem` has no prose styling — an email's `blockquote` and `ul` render flat.
 - Item pooling is deliberately not done: the measurements say the editors are not the bottleneck.

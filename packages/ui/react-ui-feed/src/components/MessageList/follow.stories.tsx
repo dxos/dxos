@@ -86,6 +86,7 @@ const FollowStory = ({
     if (!grow || !running) {
       return;
     }
+
     const interval = setInterval(() => setExtra((value) => value + 1), growInterval);
     return () => clearInterval(interval);
   }, [grow, running, growInterval]);
@@ -96,6 +97,7 @@ const FollowStory = ({
     if (!viewport || !follower) {
       return;
     }
+
     const timer = setInterval(() => {
       const velocity = Math.round(follower.velocity * 10) / 10;
       setReadout((prev) => ({

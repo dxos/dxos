@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React from 'react';
 
 import { Icon, IconBlock } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
+
+import { useWidgetState } from '../components';
 
 /**
  * Widgets for the block kinds an assistant turn contains.
@@ -33,37 +35,44 @@ import { mx } from '@dxos/ui-theme';
  * geometry stays consistent because `MarkdownItem` re-measures the document as the widget resizes.
  */
 const Panel = ({
+  stateKey,
   icon,
   title,
   children,
   classNames,
 }: {
+  /** Identifies this panel within its message, so its open flag can outlive the row. */
+  stateKey: string;
   icon: string;
   title: string;
   children: React.ReactNode;
   classNames?: string;
 }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useWidgetState(stateKey, false);
 
   return (
-    <TogglePanel.Root open={open} onChangeOpen={setOpen}>
-      {/* A minimum height, not a fixed one: the widget's content is portaled and paints after
+    // The open flag is published to the DOM so a test can ask whether it survived the row being
+    // unmounted — which is the whole question a virtualized feed raises about widget state.
+    <div data-testid='feed.widget' data-open={open}>
+      <TogglePanel.Root open={open} onChangeOpen={setOpen}>
+        {/* A minimum height, not a fixed one: the widget's content is portaled and paints after
           CodeMirror has placed the box, so without a floor the row is measured empty and grows a
           frame later — a row jumping under the reader. `estimatedHeight` in the registry looks like
           the answer and is not: it sets `height` and `overflow: hidden` on the widget root, which
           pins the panel shut. */}
-      <TogglePanel.Content classNames={mx('min-h-[2.125rem] rounded border border-subdued-separator', classNames)}>
-        <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
-          <span className='grow text-description truncate'>{title}</span>
-          <IconBlock>
-            <Icon icon={icon} size={4} />
-          </IconBlock>
-        </TogglePanel.Header>
-        <TogglePanel.Body>
-          <TogglePanel.Viewport classNames='px-2 pb-1 text-sm'>{children}</TogglePanel.Viewport>
-        </TogglePanel.Body>
-      </TogglePanel.Content>
-    </TogglePanel.Root>
+        <TogglePanel.Content classNames={mx('min-h-[2.125rem] rounded border border-subdued-separator', classNames)}>
+          <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
+            <span className='grow text-description truncate'>{title}</span>
+            <IconBlock>
+              <Icon icon={icon} size={4} />
+            </IconBlock>
+          </TogglePanel.Header>
+          <TogglePanel.Body>
+            <TogglePanel.Viewport classNames='px-2 pb-1 text-sm'>{children}</TogglePanel.Viewport>
+          </TogglePanel.Body>
+        </TogglePanel.Content>
+      </TogglePanel.Root>
+    </div>
   );
 };
 
@@ -77,10 +86,15 @@ const Frame = ({ icon, title, children, classNames }: XmlWidgetProps<any> & { cl
   </div>
 );
 
-const Reasoning = ({ children }: XmlWidgetProps) => {
+const Reasoning = ({ children, range }: XmlWidgetProps) => {
   const text = getXmlTextChild(children ?? []) ?? '';
   return (
-    <Panel icon='ph--brain--regular' title={text.slice(0, 80)} classNames='opacity-70'>
+    <Panel
+      stateKey={`reasoning:${range?.from}`}
+      icon='ph--brain--regular'
+      title={text.slice(0, 80)}
+      classNames='opacity-70'
+    >
       <p>{text}</p>
     </Panel>
   );
@@ -90,14 +104,18 @@ const Status = ({ children }: XmlWidgetProps) => (
   <p className='px-2 py-1 text-sm text-description animate-pulse'>{getXmlTextChild(children ?? [])}</p>
 );
 
-const ToolCall = ({ name, pending }: XmlWidgetProps<{ name?: string; pending?: string }>) => (
-  <Panel icon={pending ? 'ph--circle-notch--regular' : 'ph--wrench--regular'} title={`Calling ${name}`}>
+const ToolCall = ({ name, pending, range }: XmlWidgetProps<{ name?: string; pending?: string }>) => (
+  <Panel
+    stateKey={`toolCall:${range?.from}`}
+    icon={pending ? 'ph--circle-notch--regular' : 'ph--wrench--regular'}
+    title={`Calling ${name}`}
+  >
     <p className='font-mono text-xs'>{name}</p>
   </Panel>
 );
 
-const ToolResult = ({ children, for: tool }: XmlWidgetProps<{ for?: string }>) => (
-  <Panel icon='ph--check--regular' title={`${tool} returned`}>
+const ToolResult = ({ children, for: tool, range }: XmlWidgetProps<{ for?: string }>) => (
+  <Panel stateKey={`toolResult:${range?.from}`} icon='ph--check--regular' title={`${tool} returned`}>
     <p className='font-mono text-xs'>{getXmlTextChild(children ?? [])}</p>
   </Panel>
 );

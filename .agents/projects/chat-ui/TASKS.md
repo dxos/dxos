@@ -228,9 +228,12 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       the element's maximum, which the reserved space had moved past the last row, so a chat opened
       with its last message at the top of an empty screen. Needs the reserved space to be an input
       to the layout rather than an output of it.
-- [ ] Widget state does not survive virtualization — an expanded panel scrolled out of the window
-      remounts collapsed, because the open flag is React state inside the widget. Either the state
-      moves into the message, or the item keeps a per-widget map.
+- [x] **Widget state now survives virtualization** — the blocker on retrofitting `plugin-assistant`,
+      whose tool panels are exactly this. `useWidgetState(key, initial)` reads and writes a map owned
+      by `MessageList.Root`, scoped to the message automatically, and degrades to plain `useState`
+      outside a feed. Not stored on the message: whether a panel is open is the reader's business and
+      not part of what was said. `baseline/widget-state` opens a panel, scrolls until the row is
+      **verifiably unmounted**, returns, and asserts it is still open.
 - [ ] Reconcile a document that shrinks — `MarkdownItem` appends when the new text extends the old
       and otherwise **replaces the whole document**, which the block turn now triggers twice per
       turn (status removed, reasoning tag closed). A replace discards decorations and widget state;

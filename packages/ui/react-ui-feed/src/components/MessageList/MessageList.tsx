@@ -22,7 +22,16 @@ import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { type ItemContent, type MessageRenderer, type SearchHit, defaultRenderer } from '../../model';
-import { type HighlightRange, HtmlItem, MarkdownItem, SelectionGroupContext, createSelectionGroup } from '../Item';
+import {
+  type HighlightRange,
+  HtmlItem,
+  MarkdownItem,
+  SelectionGroupContext,
+  WidgetScopeProvider,
+  WidgetStateProvider,
+  createSelectionGroup,
+  createWidgetStateStore,
+} from '../Item';
 import { type FollowOptions, ScrollFollower } from './follow';
 import { useJumpDetector, usePositionLog } from './position-log';
 
@@ -257,6 +266,9 @@ const MessageListRoot = ({
   overscan = 8,
   onRangeChange,
 }: MessageListRootProps) => {
+  // Owned here so it outlives every row: a widget's state must survive its row being destroyed.
+  const widgetStore = useMemo(createWidgetStateStore, []);
+
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const [range, setRange] = useState<MessageRange | undefined>(undefined);
 
@@ -848,37 +860,39 @@ const MessageListRoot = ({
 
   return (
     <SelectionGroupContext.Provider value={selectionGroup}>
-      <MessageListProvider
-        messages={messages}
-        renderer={renderer}
-        registry={registry}
-        Chrome={Chrome}
-        streamingId={streamingId}
-        selectedIds={selectedIds}
-        hitsByMessage={hitsByMessage}
-        Custom={Custom}
-        debug={debug}
-        range={range}
-        currentIndex={currentIndex}
-        anchors={anchors}
-        stepAnchor={stepAnchor}
-        mountedRows={mounted}
-        mountedWidgets={mountedWidgets}
-        reportWidgets={reportWidgets}
-        jumps={jumps}
-        shifts={shifts}
-        breaks={breaks}
-        resetShifts={resetShifts}
-        virtualizer={virtualizer}
-        measureItems={measureItems}
-        trailing={trailing}
-        setViewport={setViewport}
-        onSelect={onSelect}
-        scrollToIndex={scrollToIndex}
-        scrollToBottom={scrollToBottom}
-      >
-        {children}
-      </MessageListProvider>
+      <WidgetStateProvider store={widgetStore}>
+        <MessageListProvider
+          messages={messages}
+          renderer={renderer}
+          registry={registry}
+          Chrome={Chrome}
+          streamingId={streamingId}
+          selectedIds={selectedIds}
+          hitsByMessage={hitsByMessage}
+          Custom={Custom}
+          debug={debug}
+          range={range}
+          currentIndex={currentIndex}
+          anchors={anchors}
+          stepAnchor={stepAnchor}
+          mountedRows={mounted}
+          mountedWidgets={mountedWidgets}
+          reportWidgets={reportWidgets}
+          jumps={jumps}
+          shifts={shifts}
+          breaks={breaks}
+          resetShifts={resetShifts}
+          virtualizer={virtualizer}
+          measureItems={measureItems}
+          trailing={trailing}
+          setViewport={setViewport}
+          onSelect={onSelect}
+          scrollToIndex={scrollToIndex}
+          scrollToBottom={scrollToBottom}
+        >
+          {children}
+        </MessageListProvider>
+      </WidgetStateProvider>
     </SelectionGroupContext.Provider>
   );
 };
@@ -1095,7 +1109,9 @@ const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ mess
       ref={forwardedRef}
     >
       {content.kind === 'markdown' && (
-        <MarkdownItem text={content.text} registry={registry} hits={hits} onWidgetsChange={handleWidgetsChange} />
+        <WidgetScopeProvider scope={message.id}>
+          <MarkdownItem text={content.text} registry={registry} hits={hits} onWidgetsChange={handleWidgetsChange} />
+        </WidgetScopeProvider>
       )}
       {content.kind === 'html' && <HtmlItem html={content.html} />}
       {content.kind === 'custom' && Custom && <Custom content={content} message={message} />}
