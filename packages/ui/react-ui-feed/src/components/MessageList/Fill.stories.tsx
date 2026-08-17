@@ -88,9 +88,36 @@ const sampleFill = async (viewport: HTMLElement): Promise<Sample[]> => {
 const unchanged = (a: Sample, b: Sample) =>
   a.rows === b.rows && a.scrollTop === b.scrollTop && a.scrollHeight === b.scrollHeight && !shifted(a, b);
 
+/** How far each row present in both frames has moved, by index; empty when nothing did. */
+const deltas = (a: Sample, b: Sample): Map<number, number> =>
+  new Map(
+    [...b.tops]
+      .filter(([index, top]) => a.tops.has(index) && Math.abs(a.tops.get(index)! - top) > 1)
+      .map(([index, top]) => [index, top - a.tops.get(index)!]),
+  );
+
 /** Rows present in both frames that are not where they were. */
-const shifted = (a: Sample, b: Sample): number =>
-  [...b.tops].filter(([index, top]) => a.tops.has(index) && Math.abs(a.tops.get(index)! - top) > 1).length;
+const shifted = (a: Sample, b: Sample): number => deltas(a, b).size;
+
+/**
+ * What a shift looks like, which is what says where it comes from.
+ *
+ * Every row moving by the same amount is the scroll and the offsets disagreeing — one number wrong.
+ * Rows moving by different amounts is the spacing between them changing, which is a measurement
+ * being discarded rather than a position being mis-set.
+ */
+const describe = (a: Sample, b: Sample): string => {
+  const moved = [...deltas(a, b)];
+  if (!moved.length) {
+    return '';
+  }
+
+  const values = moved.map(([, delta]) => delta);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const indexes = moved.map(([index]) => index);
+  return ` moved ${moved.length} rows ${min === max ? `all by ${min}` : `by ${min}..${max}`}, indexes ${Math.min(...indexes)}..${Math.max(...indexes)}`;
+};
 
 /** Only the frames where something moved: a run of identical frames says nothing. */
 const changes = (samples: Sample[]) =>
@@ -100,14 +127,14 @@ const report = (name: string, samples: Sample[]) => {
   const moved = changes(samples);
   const settled = samples.indexOf(moved.at(-1)!) + 1;
   const header = ['at ms', 'rows', 'scrollTop', 'scrollHeight', 'shifted'];
-  const body = moved.map((sample, index) => {
+  const body = moved.map((sample) => {
     const previous = samples[samples.indexOf(sample) - 1];
     return [
       sample.at,
       sample.rows,
       sample.scrollTop,
       sample.scrollHeight,
-      previous ? shifted(previous, sample) : 0,
+      previous ? `${shifted(previous, sample)}${describe(previous, sample)}` : '0',
     ].map(String);
   });
   const widths = header.map((_, column) => Math.max(...[header, ...body].map((row) => row[column].length)));
@@ -214,7 +241,7 @@ export const UniformPastEnd: Story = {
   // rebuilt. It is the combination that does it — `Uniform` rebuilds and holds still, `PlainPastEnd`
   // reserves space and never rebuilds (its estimator is per-row, which skips the re-base). Pinned at
   // what is measured so a regression past it fails; the diagnosis is in `chat-ui/TASKS.md`.
-  play: playFill('uniform past-end', 20),
+  play: playFill('uniform past-end', 18),
 };
 
 export const UniformShort: Story = {

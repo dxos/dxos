@@ -180,7 +180,29 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       story. It now records every mounted row's position **by index** and counts rows that are not
       where they were, which is the reader's invariant: nothing in these stories scrolls the feed, so
       a mounted row that moves is a defect. Under the corrected metric five of six stories are 0.
-- [ ] **`UniformPastEnd`: twenty rows travel on the frame the layout is rebuilt.** The only story
+- [x] **The headless virtualizer tests were testing a version that never ran.** `virtualizer.test.ts`
+      imports `@tanstack/virtual-core` directly, which the catalog pinned at `^3.17.7`, while the
+      component imports `useVirtualizer` from `@tanstack/react-virtual` pinned at `^3.13.18` — which
+      bundles core `3.13.18`. Every conclusion those seven tests reached was about a version
+      production does not run. `react-virtual` has no 3.17 line; its latest, `3.14.9`, depends on
+      core `3.17.7`, so bumping the pin to `^3.14.9` aligns runtime, types and tests on one version.
+      Verified against the other consumers: `react-ui` 29, `react-ui-mosaic` 3 + 18 storybook, all
+      passing.
+- [ ] **`UniformPastEnd`: eighteen rows move by 111px on the frame the layout is rebuilt.** The only
+      remaining movement in `baseline/fill`, on an opt-in flag that is off by default.
+      **Diagnosed, and the fix is a redesign rather than a patch.** Logged from inside the restore:
+      the element reports a height of 20,852 that settles at 20,412, and the model one of 19,803 that
+      settles at 19,576 — at the instant the layout is rebuilt _neither_ has its final size, so any
+      tail computed from either is wrong, painted, and corrected. Attempts, all measured and all
+      reverted: computing from the model (overshoot 377), from the element (overshoot 227), jumping
+      instead of following outside a stream (overshoot 227, worse than the single 111), and
+      `scrollToOffset` in place of a raw `scrollTop` write (no change; kept anyway on principle).
+      **The only correct approach is to hold the anchor continuously rather than aim at it once**,
+      which is `anchorTo: 'end'` — now reachable after the version alignment. Adopting it means
+      removing `ScrollFollower`'s tail role, the re-base restore's following branch, and the sticky
+      snap on measurement, because two parties anchoring the same end oscillate: enabling it while
+      ours remained took `baseline/fill` from 1 failure to 4 and `baseline/tail` from 0 to 4. That is
+      the next piece of work, and it is a redesign of the follow subsystem, not a fix to it. The only story
       that moves, and it is the _combination_ — `Uniform` rebuilds and holds still, `PlainPastEnd`
       reserves space but never rebuilds (a per-row estimator skips the re-base). Ruled out: routing
       the reserved-space scroll through `virtualizer.scrollToOffset` instead of writing `scrollTop`
