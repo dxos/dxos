@@ -81,9 +81,8 @@ const DECORATORS = [
       InboxPlugin(),
       ConnectorPlugin.make(),
       DebugPlugin.make({}),
-      // The Gmail provider. `Mailbox`'s connector-auth annotation resolves its providers from the
-      // registry, so without a registered connector claiming the type the toolbar offers no Connect
-      // action and the mailbox cannot be bound (see plugin-google's headless Connector module).
+      // `Mailbox` resolves its connector-auth providers from the registry, so without one registered
+      // the toolbar offers no Connect action.
       GooglePlugin.make(),
       AssistantPlugin.make(),
       PreviewPlugin.make(),
