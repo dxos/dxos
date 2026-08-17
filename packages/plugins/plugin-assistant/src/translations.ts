@@ -105,6 +105,13 @@ export const translations: Resource[] = [
         'invocations.label': 'Invocations',
         'trace.label': 'Trace',
 
+        'trace-filter.menu': 'Filter processes',
+        'trace-filter-all.label': 'Show all',
+        'trace-filter-none.label': 'Hide all',
+        'trace-environment-app.label': 'App',
+        'trace-environment-space.label': 'Space',
+        'trace-environment-conversation.label': 'Conversation',
+
         'assistant-dialog.title': 'Assistant',
         'open-assistant.label': 'Open assistant',
         'import-compute-operations.label': 'Import compute operations',

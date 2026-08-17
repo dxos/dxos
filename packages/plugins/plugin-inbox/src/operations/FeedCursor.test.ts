@@ -169,6 +169,38 @@ describe('feed cursors', () => {
       expect(again.id).toBe(cursor.id);
     });
 
+    /**
+     * The feed's owner and the cursor's SUBJECT are not the same thing. One mailbox feed read on
+     * behalf of several Projects gives each its own watermark, under one consumer id — without the
+     * subject in the cursor's identity they would adopt each other's position and silently skip each
+     * other's work, which is the same failure the consumer tags exist to prevent.
+     */
+    test('one feed, one consumer id, distinct subjects — distinct cursors', async ({ expect }) => {
+      const { db, mailbox } = await setup();
+      const first = db.add(Mailbox.make({ name: 'Alpha' }));
+      const second = db.add(Mailbox.make({ name: 'Beta' }));
+      await db.flush();
+
+      const alpha = await run(db, findOrCreateFeedCursor(mailbox, CLASSIFY_CURSOR_KEY_ID, first));
+      const beta = await run(db, findOrCreateFeedCursor(mailbox, CLASSIFY_CURSOR_KEY_ID, second));
+      expect(alpha.id).not.toBe(beta.id);
+      // Both read the same feed; only the subject differs.
+      expect(alpha.spec.source.uri).toBe(beta.spec.source.uri);
+
+      // And each is found again for its own subject, not the other's.
+      expect((await run(db, findFeedCursor(mailbox, CLASSIFY_CURSOR_KEY_ID, first)))?.id).toBe(alpha.id);
+      expect((await run(db, findFeedCursor(mailbox, CLASSIFY_CURSOR_KEY_ID, second)))?.id).toBe(beta.id);
+    });
+
+    test('the subject defaults to the owner, so an existing cursor is still found', async ({ expect }) => {
+      const { db, mailbox } = await setup();
+
+      // Pins the default that keeps every pre-existing call site working: a pass over a whole
+      // mailbox is about that mailbox.
+      const created = await run(db, findOrCreateFeedCursor(mailbox, CLASSIFY_CURSOR_KEY_ID));
+      expect((await run(db, findFeedCursor(mailbox, CLASSIFY_CURSOR_KEY_ID, mailbox)))?.id).toBe(created.id);
+    });
+
     test('an unannotated object has no cursor to find', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [Feed.Feed, Message.Message, Cursor.Cursor] });
       const message = db.add(

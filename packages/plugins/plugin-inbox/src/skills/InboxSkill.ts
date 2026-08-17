@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -10,7 +11,15 @@ import { InboxOperation, Mailbox } from '#types';
 
 export const key = Mailbox.SKILL_KEY;
 
-export const make = (): Skill.Skill =>
+export type InboxSkillOptions = {
+  /**
+   * Sync operations of the connectors bound to a Mailbox, passed in rather than named here so the
+   * skill never advertises a tool the deployment cannot run.
+   */
+  syncOperations?: readonly Operation.Definition.Any[];
+};
+
+export const make = ({ syncOperations = [] }: InboxSkillOptions = {}): Skill.Skill =>
   Skill.make({
     key: Mailbox.SKILL_KEY,
     name: 'Inbox',
@@ -20,8 +29,8 @@ export const make = (): Skill.Skill =>
         InboxOperation.ClassifyEmail,
         InboxOperation.DraftEmail,
         InboxOperation.ReadEmail,
-        InboxOperation.GoogleMailSync,
         InboxOperation.ExtractMessage,
+        ...syncOperations,
       ],
       tools: [],
     }),

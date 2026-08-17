@@ -10,7 +10,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Button, Message, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -108,12 +108,12 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
                 <pre className='text-xs whitespace-pre-wrap overflow-auto'>{status.text}</pre>
               )}
               {status.kind === 'error' && (
-                <Message.Root valence='error'>
-                  <Message.Content>
-                    <Message.Title>{t('error.label')}</Message.Title>
-                    <Message.Body>{status.text}</Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence='error'>
+                  <Banner.Content>
+                    <Banner.Title>{t('error.label')}</Banner.Title>
+                    <Banner.Body>{status.text}</Banner.Body>
+                  </Banner.Content>
+                </Banner.Root>
               )}
             </div>
           </Form.Section>

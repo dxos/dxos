@@ -47,6 +47,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -78,6 +83,11 @@
       "source": "./src/operations/GoogleOperationHandlerSet.ts",
       "types": "./dist/types/src/operations/GoogleOperationHandlerSet.d.ts",
       "import": "./dist/lib/GoogleOperationHandlerSet.mjs"
+    },
+    "./GoogleOperation": {
+      "source": "./src/types/GoogleOperation.ts",
+      "types": "./dist/types/src/types/GoogleOperation.d.ts",
+      "import": "./dist/lib/GoogleOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

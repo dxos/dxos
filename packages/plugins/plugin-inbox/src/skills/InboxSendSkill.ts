@@ -2,21 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
-
-import { InboxOperation } from '#types';
 
 const SKILL_KEY = 'org.dxos.skill.inboxSend';
 
 export const key = SKILL_KEY;
 
-export const make = (): Skill.Skill =>
+export type InboxSendSkillOptions = {
+  /** Send operations contributed by the installed mail providers, resolved by the caller. */
+  sendOperations?: readonly Operation.Definition.Any[];
+};
+
+export const make = ({ sendOperations = [] }: InboxSendSkillOptions = {}): Skill.Skill =>
   Skill.make({
     key: SKILL_KEY,
     name: 'Inbox (Send)',
-    tools: Skill.toolDefinitions({ operations: [InboxOperation.GmailSend], tools: [] }),
+    tools: Skill.toolDefinitions({ operations: [...sendOperations], tools: [] }),
     instructions: Template.make({
       source: trim`
         You can send emails.

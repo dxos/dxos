@@ -42,7 +42,7 @@ const handler = BrainOperation.AnalyzeMailbox.pipe(
       // ProgressRegistry — same seam as mail sync and the process pipeline. The pipeline's first
       // `onProgress` delivers the exact pending count, so the meter is determinate.
       const traceWriter = yield* Trace.TraceService;
-      const progressKey = InboxOperation.createAnalyzeProgressKey(mailbox);
+      const progressKey = InboxOperation.createFactsProgressKey(mailbox);
       let total: number | undefined;
       const reportStatus = (patch: { message?: string; current?: number; total?: number } = {}) => {
         total = patch.total ?? total;

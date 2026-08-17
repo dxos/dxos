@@ -11,14 +11,14 @@ import { Obj } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import { runMailSync } from '@dxos/plugin-inbox/sync';
 
 import { JmapCredentials, JmapMailApi } from '#services';
+import { JmapOperation } from '#types';
 
 import { jmapMailSyncProvider } from './sync-provider';
 
-const handler = InboxOperation.JmapSync.pipe(
+const handler = JmapOperation.JmapSync.pipe(
   Operation.withHandler(({ binding: bindingRef }) =>
     Effect.gen(function* () {
       const bindingObj = bindingRef.target;
