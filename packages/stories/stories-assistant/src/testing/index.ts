@@ -9,3 +9,4 @@ export * from './decorators';
 export * from './objects';
 export * from './schema';
 export * from './snapshot';
+export * from './agent-claude-plugin';
