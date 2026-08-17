@@ -173,9 +173,20 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       arriving at a tail the reader is watching; a gap the estimate opened is a correction, so
       anything more than a screen behind now jumps. `baseline/fill`'s `PlainPastEnd` settles in one
       frame at exactly the tail, and this also took `Varied`'s rebuild frame to zero.
-- [ ] **`UniformPastEnd` still moves for one frame on a rebuild.** Its rows are short, so the gap the
-      estimate opens stays under a screen and the correction is a follow rather than a jump, landing
-      a frame after the rebuild that caused it. Allowance of 1 pinned in the story. Restoring by index makes the
+- [x] **`baseline/fill` was measuring nothing.** Its movement reading was the viewport-relative top
+      of _the first mounted row_ — and a rebuild changes which row that is, so the number said
+      nothing about whether anything moved. Worse, the assertion still read a `firstTop` field that a
+      later edit had removed, so it compared `undefined !== undefined` and counted zero for every
+      story. It now records every mounted row's position **by index** and counts rows that are not
+      where they were, which is the reader's invariant: nothing in these stories scrolls the feed, so
+      a mounted row that moves is a defect. Under the corrected metric five of six stories are 0.
+- [ ] **`UniformPastEnd`: twenty rows travel on the frame the layout is rebuilt.** The only story
+      that moves, and it is the _combination_ — `Uniform` rebuilds and holds still, `PlainPastEnd`
+      reserves space but never rebuilds (a per-row estimator skips the re-base). Ruled out: routing
+      the reserved-space scroll through `virtualizer.scrollToOffset` instead of writing `scrollTop`
+      (no change — kept anyway, since writing the element behind the virtualizer's back is wrong
+      regardless). Next: log what the restore computes against where the element actually lands, on
+      the rebuild commit, to tell a wrong target from a target applied too late. Pinned at 20. Restoring by index makes the
       virtualizer retry while the offsets around the landing point are estimates. Allowance of 1 is
       pinned in the story so a regression past it fails.
 - [ ] **Every other arrow press travels ~2px instead of a row.** Direction is right and the feed

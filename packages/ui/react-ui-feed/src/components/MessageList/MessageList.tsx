@@ -528,7 +528,12 @@ const MessageListRoot = ({
         const tail = virtualizer.getTotalSize() - viewport.clientHeight;
         const past = align === 'end' ? reserved.end - viewport.clientHeight : reserved.start;
         if (align === 'end' ? index === messages.length - 1 : past > tail) {
-          viewport.scrollTo({ top: Math.max(0, past), behavior });
+          // Through the virtualizer rather than by writing `scrollTop`: it carries its own copy of
+          // the offset and the compensations it has applied, and an element written behind its back
+          // leaves the two disagreeing. (Not what causes the rows to move on a rebuild here — that
+          // is unresolved, see `chat-ui/TASKS.md` — but writing the element directly is wrong
+          // regardless of whether a test currently catches it.)
+          virtualizer.scrollToOffset(Math.max(0, past), { align: 'start', behavior });
           return;
         }
       }

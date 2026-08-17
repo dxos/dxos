@@ -36,8 +36,14 @@ type Sample = {
   rows: number;
   scrollTop: number;
   scrollHeight: number;
-  /** Viewport-relative top of the first mounted row: the reader's evidence that the list moved. */
-  firstTop: number;
+  /**
+   * Viewport-relative top of every mounted row, by index.
+   *
+   * Keyed, not positional. "The first mounted row" is not the same row from one frame to the next —
+   * a rebuild changes which rows are mounted — so its position moving says nothing about whether
+   * anything the reader is looking at moved. Comparing a row against itself does.
+   */
+  tops: Map<number, number>;
 };
 
 /**
@@ -63,14 +69,14 @@ const sampleFill = async (viewport: HTMLElement): Promise<Sample[]> => {
 
   for (let frame = 0; frame < WATCH_FRAMES; frame++) {
     await nextFrame();
-    const rows = viewport.querySelectorAll('[data-index]');
-    const first = rows[0]?.getBoundingClientRect().top ?? 0;
+    const rows = [...viewport.querySelectorAll<HTMLElement>('[data-index]')];
+    const top = viewport.getBoundingClientRect().top;
     const sample: Sample = {
       at: Math.round(performance.now() - start),
       rows: rows.length,
       scrollTop: Math.round(viewport.scrollTop),
       scrollHeight: Math.round(viewport.scrollHeight),
-      firstTop: Math.round(first - viewport.getBoundingClientRect().top),
+      tops: new Map(rows.map((row) => [Number(row.dataset.index), Math.round(row.getBoundingClientRect().top - top)])),
     };
 
     samples.push(sample);
@@ -80,7 +86,11 @@ const sampleFill = async (viewport: HTMLElement): Promise<Sample[]> => {
 };
 
 const unchanged = (a: Sample, b: Sample) =>
-  a.rows === b.rows && a.scrollTop === b.scrollTop && a.scrollHeight === b.scrollHeight && a.firstTop === b.firstTop;
+  a.rows === b.rows && a.scrollTop === b.scrollTop && a.scrollHeight === b.scrollHeight && !shifted(a, b);
+
+/** Rows present in both frames that are not where they were. */
+const shifted = (a: Sample, b: Sample): number =>
+  [...b.tops].filter(([index, top]) => a.tops.has(index) && Math.abs(a.tops.get(index)! - top) > 1).length;
 
 /** Only the frames where something moved: a run of identical frames says nothing. */
 const changes = (samples: Sample[]) =>
@@ -89,10 +99,17 @@ const changes = (samples: Sample[]) =>
 const report = (name: string, samples: Sample[]) => {
   const moved = changes(samples);
   const settled = samples.indexOf(moved.at(-1)!) + 1;
-  const header = ['at ms', 'rows', 'scrollTop', 'scrollHeight', 'firstTop'];
-  const body = moved.map(({ at, rows, scrollTop, scrollHeight, firstTop }) =>
-    [at, rows, scrollTop, scrollHeight, firstTop].map(String),
-  );
+  const header = ['at ms', 'rows', 'scrollTop', 'scrollHeight', 'shifted'];
+  const body = moved.map((sample, index) => {
+    const previous = samples[samples.indexOf(sample) - 1];
+    return [
+      sample.at,
+      sample.rows,
+      sample.scrollTop,
+      sample.scrollHeight,
+      previous ? shifted(previous, sample) : 0,
+    ].map(String);
+  });
   const widths = header.map((_, column) => Math.max(...[header, ...body].map((row) => row[column].length)));
   const table = [header, ...body]
     .map((row) => row.map((cell, column) => cell.padStart(widths[column])).join('  '))
@@ -131,18 +148,15 @@ const playFill = (name: string, allowed = 0) =>
       `[fill: ${name}] blocking ${blocking.reduce((sum, ms) => sum + ms, 0)}ms in ${blocking.length} long tasks ` +
         `[${blocking.join(', ')}]`,
     );
-    // The invariant is not that the document never changes — the layout is rebuilt when the measured
-    // average leaves the estimate behind, and that is correct. It is that a rebuild does not move
-    // what the reader is looking at: the document's height and the scroll offset have to change in
-    // the same frame, so the rows stay where they are. Anything else is the whole page jumping half
-    // a second after it settled.
-    const moved = samples.filter(
-      (sample, index) =>
-        index > 0 &&
-        sample.scrollHeight !== samples[index - 1].scrollHeight &&
-        sample.firstTop !== samples[index - 1].firstTop,
+    // Nothing here scrolls the feed, so a mounted row that moves is a defect — counted in rows, over
+    // every frame. The document *is* allowed to change: the layout is rebuilt once the measured
+    // average leaves the estimate behind, and that is correct. What the rebuild may not do is move
+    // the offsets and the scroll position in different frames, because the rows travel in between.
+    const jumped = samples.reduce(
+      (total, sample, index) => total + (index ? shifted(samples[index - 1], sample) : 0),
+      0,
     );
-    await expect({ name, jumped: moved.length }).toEqual({ name, jumped: allowed });
+    await expect({ name, jumped }).toEqual({ name, jumped: allowed });
   };
 
 const waitForViewport = async (canvasElement: HTMLElement): Promise<HTMLElement> => {
@@ -196,11 +210,11 @@ export const PlainPastEnd: Story = {
 
 export const UniformPastEnd: Story = {
   args: { scenario: 'uniform', count: 500, scrollPastEnd: true },
-  // The one rung still not atomic. Its rows are short, so the gap the estimate opens is under a
-  // screen and the correction is a follow rather than a jump — which lands a frame later than the
-  // rebuild that caused it. `Varied` and `PlainPastEnd`, whose rows are tall enough to put the tail
-  // more than a screen away, both reach zero. Pinned at what is measured today.
-  play: playFill('uniform past-end', 1),
+  // The one rung that still moves, and the only one: twenty rows travel on the frame the layout is
+  // rebuilt. It is the combination that does it — `Uniform` rebuilds and holds still, `PlainPastEnd`
+  // reserves space and never rebuilds (its estimator is per-row, which skips the re-base). Pinned at
+  // what is measured so a regression past it fails; the diagnosis is in `chat-ui/TASKS.md`.
+  play: playFill('uniform past-end', 20),
 };
 
 export const UniformShort: Story = {
