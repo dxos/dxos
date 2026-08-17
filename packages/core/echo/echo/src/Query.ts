@@ -91,6 +91,17 @@ export interface Query<T> {
   reference<K extends RefPropKey<T>>(key: K): Query<ReferenceTraversalTarget<T[K]>>;
 
   /**
+   * Traverse an outgoing reference held at a nested property path (e.g. `spec.source`), which
+   * {@link reference} cannot name because its key type covers top-level properties only.
+   *
+   * The path is not checked against `T`, so a wrong one yields no results rather than a type error —
+   * prefer {@link reference} whenever the ref is a top-level property.
+   * @param path - Dot-separated property path to the reference.
+   * @param target - Schema of the referenced object, naming the result type.
+   */
+  referenceAt<S extends Type$.AnyEntity>(path: string, target: S): Query<Type$.InstanceType<S>>;
+
+  /**
    * Find objects referencing this object.
    * @param target - Schema of the referencing object. If not provided, matches any type.
    * @param key - Property path inside the referencing object that is a reference. If not provided, matches any property.
@@ -348,6 +359,14 @@ class QueryClass implements Any {
       type: 'reference-traversal',
       anchor: this.ast,
       property: key,
+    });
+  }
+
+  referenceAt(path: string): Any {
+    return new QueryClass({
+      type: 'reference-traversal',
+      anchor: this.ast,
+      property: path,
     });
   }
 

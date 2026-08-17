@@ -666,6 +666,14 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  referenceAt(path: string): Query$.Any {
+    return new QueryClass({
+      type: 'reference-traversal',
+      anchor: this.ast,
+      property: path,
+    });
+  }
+
   referencedBy(target?: Type$.AnyEntity | string, key?: string): Query$.Any {
     if (target !== undefined && typeof target !== 'string') {
       throw new TypeError('referencedBy requires a typename string in query-lite');
