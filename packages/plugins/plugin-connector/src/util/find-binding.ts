@@ -69,7 +69,7 @@ export const findBindingForTarget = (
 /**
  * External cursors targeting `target` that no {@link Connection} backs — dormant bindings, holding the
  * progress of a sync whose credential was deleted. They are kept rather than discarded (see
- * `adoptOrphanedBinding`): the synced range and merge snapshots they carry are what let a re-bind of the
+ * `prepareTargetBinding`): the synced range and merge snapshots they carry are what let a re-bind of the
  * same account resume instead of re-walking the whole horizon.
  */
 export const findOrphanedBindings = (
