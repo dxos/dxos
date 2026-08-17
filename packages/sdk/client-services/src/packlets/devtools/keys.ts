@@ -5,10 +5,10 @@
 import { scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type KeyringApi } from '@dxos/keyring';
-import { type SubscribeToKeyringKeysResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
 export const subscribeToKeyringKeys = ({ keyring }: { keyring: KeyringApi }) =>
-  new Stream<SubscribeToKeyringKeysResponse>(({ next, ctx }) => {
+  new Stream<DevtoolsHost.SubscribeToKeyringKeysResponse>(({ next, ctx }) => {
     const update = async () => {
       next({
         keys: await keyring.list(),

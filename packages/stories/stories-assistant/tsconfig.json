@@ -35,6 +35,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-claude"
+    },
+    {
       "path": "../../core/compute/ai"
     },
     {

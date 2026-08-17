@@ -16,11 +16,11 @@ import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { syncConnectionBindings } from '@dxos/plugin-connector';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import { Person } from '@dxos/types';
 
 import { GoogleContacts } from '#apis';
 import { GoogleCredentials } from '#services';
+import { GoogleOperation } from '#types';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
 import { mapGooglePerson } from '../mapper';
@@ -168,7 +168,7 @@ const syncContactGroup = (binding: Cursor.ExternalCursor) =>
     return { upserted: stats.newMessages };
   });
 
-const handler = InboxOperation.GoogleContactsSync.pipe(
+const handler = GoogleOperation.GoogleContactsSync.pipe(
   Operation.withHandler(({ connection, priority }) =>
     syncConnectionBindings({
       connection,

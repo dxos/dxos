@@ -19,22 +19,13 @@ const SRC_DIR = join(dirname(fileURLToPath(import.meta.url)), '../src');
 /**
  * Services exposed over the client services RPC connection.
  * Keys double as the rpc tag prefix and must match the `ClientServices` keys in @dxos/client-protocol.
+ *
+ * Empty on purpose: every client service is now hand-authored (payload schemas inlined per
+ * `service-rpc-schemas.md`'s rule), so none can be safely regenerated from a proto descriptor
+ * without clobbering that work. Kept as the generator's entry point in case a genuinely new,
+ * not-yet-hand-authored service needs scaffolding from a proto `service {}` block in the future.
  */
-const SERVICES = [
-  { key: 'SystemService', fqn: 'dxos.client.services.SystemService' },
-  { key: 'NetworkService', fqn: 'dxos.client.services.NetworkService' },
-  { key: 'LoggingService', fqn: 'dxos.client.services.LoggingService' },
-  { key: 'IdentityService', fqn: 'dxos.client.services.IdentityService' },
-  { key: 'InvitationsService', fqn: 'dxos.client.services.InvitationsService' },
-  { key: 'DevicesService', fqn: 'dxos.client.services.DevicesService' },
-  { key: 'SpacesService', fqn: 'dxos.client.services.SpacesService' },
-  { key: 'DataService', fqn: 'dxos.echo.service.DataService' },
-  { key: 'QueryService', fqn: 'dxos.echo.query.QueryService' },
-  { key: 'FeedService', fqn: 'dxos.client.services.FeedService' },
-  { key: 'ContactsService', fqn: 'dxos.client.services.ContactsService' },
-  { key: 'EdgeAgentService', fqn: 'dxos.client.services.EdgeAgentService' },
-  { key: 'DevtoolsHost', fqn: 'dxos.devtools.host.DevtoolsHost' },
-] as const;
+const SERVICES: ReadonlyArray<{ key: string; fqn: string }> = [];
 
 const EMPTY = 'google.protobuf.Empty';
 

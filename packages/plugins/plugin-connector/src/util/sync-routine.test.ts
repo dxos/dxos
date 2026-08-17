@@ -23,7 +23,8 @@ import { findSyncTriggerForConnection } from './sync-trigger';
 /** Stands in for a connector's declared `sync.trigger`. */
 const SYNC_SPEC = Trigger.specTimer('*/10 * * * *');
 
-// Stand-in for a connector's account-level `sync.operation`.
+// Stand-in for a connector's account-level `sync.operation` (e.g. `GoogleOperation.GoogleMailSync`):
+// takes the same `{ connection, priority? }` shape every real connector's sync declares.
 const TestSync = Operation.make({
   meta: { key: DXN.make('org.dxos.test.syncRoutine.sync'), name: 'Test Sync' },
   input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),

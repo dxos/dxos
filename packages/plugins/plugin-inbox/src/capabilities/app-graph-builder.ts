@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
@@ -20,6 +21,7 @@ import { Connection, Cursor } from '@dxos/link';
 import { isCursorForTarget, syncTarget } from '@dxos/plugin-connector';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage, Event, Message } from '@dxos/types';
+import { AI_ACTION_ICON } from '@dxos/ui-types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -31,15 +33,53 @@ import {
   getAllMailId,
   getCalendarsPath,
   getDraftsId,
+  getImportantId,
+  getInboxId,
   getMailboxDraftsPath,
   getMailboxesPath,
   getMailboxesSectionId,
   getSentId,
+  getStarredId,
   getSubscriptionsId,
 } from '../paths';
 import { getMessageLabel } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
+
+/**
+ * Whether an external sync connection targets this mailbox. Gates the pipeline actions: with nothing
+ * connected there is no mail to act on, so offering them is a dead affordance. Mirrors the lookup the
+ * sync action does — the cursor no longer relates to a Connection directly, so the Connection is found
+ * by matching access tokens.
+ */
+const hasConnection = (mailbox: Mailbox.Mailbox, get: Atom.AtomContext): boolean => {
+  const db = Obj.getDatabase(mailbox);
+  if (!db) {
+    return false;
+  }
+  const cursor = get(db.query(Filter.type(Cursor.Cursor)).atom).find(
+    (candidate): candidate is Cursor.ExternalCursor =>
+      Cursor.isExternal(candidate) && isCursorForTarget(candidate, mailbox),
+  );
+  if (!cursor) {
+    return false;
+  }
+  return get(db.query(Filter.type(Connection.Connection, { accessToken: cursor.spec.source })).atom).length > 0;
+};
+
+export const ATTACHMENT_NODE_TYPE = `${Type.getTypename(Message.Message)}-attachment`;
+
+/**
+ * A single attachment, addressed as its owning message plus an index — an attachment is an entry in
+ * `message.attachments`, not an object, so it has no identity a surface could match on its own.
+ */
+export type AttachmentRef = { message: Message.Message; index: number };
+
+export const isAttachmentRef = (value: unknown): value is AttachmentRef =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as AttachmentRef).index === 'number' &&
+  Obj.instanceOf(Message.Message, (value as AttachmentRef).message);
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 
@@ -101,12 +141,51 @@ export default Capability.makeModule(
                   // Pre-seeded, non-removable filter nodes — same mechanism as a saved user filter, just
                   // static with no rename/delete actions.
                   Node.make({
+                    id: getInboxId(),
+                    type: FILTER_TYPE,
+                    data: mailbox,
+                    properties: {
+                      label: ['inbox.label', { ns: meta.profile.key }],
+                      icon: 'ph--tray--regular',
+                      iconHue: 'rose',
+                      // Gmail/JMAP both model the inbox as positive membership (Gmail's INBOX label,
+                      // JMAP's inbox role), so archiving removes this tag rather than adding one —
+                      // no complement operator is needed here or in `MailboxArticle`.
+                      filter: '#inbox',
+                      systemTag: 'inbox' satisfies SystemTags.SystemTagId,
+                    },
+                  }),
+                  Node.make({
+                    id: getStarredId(),
+                    type: FILTER_TYPE,
+                    data: mailbox,
+                    properties: {
+                      label: ['starred.label', { ns: meta.profile.key }],
+                      icon: 'ph--star--regular',
+                      iconHue: 'rose',
+                      filter: '#starred',
+                      systemTag: 'starred' satisfies SystemTags.SystemTagId,
+                    },
+                  }),
+                  Node.make({
+                    id: getImportantId(),
+                    type: FILTER_TYPE,
+                    data: mailbox,
+                    properties: {
+                      label: ['important.label', { ns: meta.profile.key }],
+                      icon: 'ph--bookmark-simple--regular',
+                      iconHue: 'rose',
+                      filter: '#important',
+                      systemTag: 'important' satisfies SystemTags.SystemTagId,
+                    },
+                  }),
+                  Node.make({
                     id: getAllMailId(),
                     type: FILTER_TYPE,
                     data: mailbox,
                     properties: {
                       label: ['all-mail.label', { ns: meta.profile.key }],
-                      icon: 'ph--tray--regular',
+                      icon: 'ph--stack--regular',
                       iconHue: 'rose',
                       filter: '',
                     },
@@ -271,6 +350,31 @@ export default Capability.makeModule(
         },
       }),
 
+      // One hidden child per attachment, so the deck can address an attachment plank by path. The node
+      // carries the MESSAGE plus an index: an attachment is an entry on the message, not an object.
+      GraphBuilder.createExtension({
+        id: 'messageAttachments',
+        match: (node) =>
+          node.type === Type.getTypename(Message.Message) && Obj.instanceOf(Message.Message, node.data)
+            ? Option.some(node.data)
+            : Option.none(),
+        connector: (message) =>
+          Effect.succeed(
+            (message.attachments ?? []).map((attachment, index) =>
+              Node.make({
+                id: `attachment-${index}`,
+                type: ATTACHMENT_NODE_TYPE,
+                data: { message, index } satisfies AttachmentRef,
+                properties: {
+                  label: attachment.name ?? 'Attachment',
+                  icon: 'ph--paperclip--regular',
+                  disposition: 'hidden',
+                },
+              }),
+            ),
+          ),
+      }),
+
       GraphBuilder.createExtension({
         id: 'mailboxesSectionActions',
         match: (node) => {
@@ -407,88 +511,42 @@ export default Capability.makeModule(
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
-          if (!db) {
+          // Gated on a connection, not rendered disabled: a disabled primary button still reads as the
+          // view's main call to action on a mailbox that has nothing to analyze yet.
+          if (!db || !hasConnection(mailbox, get)) {
             return Effect.succeed([]);
           }
           return Effect.gen(function* () {
-            // Same monitor MailboxArticle's statusbar meter reads, so the button's stop state agrees
-            // with a run kicked off from either surface (or a routine).
             const progressRegistry = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
-            const progressKey = InboxOperation.createProcessProgressKey(mailbox);
-            const isRunning = Option.match(progressRegistry, {
+            const scanKey = InboxOperation.createAnalyzeProgressKey(mailbox);
+            const isScanning = Option.match(progressRegistry, {
               onNone: () => false,
-              onSome: (registry) => get(registry.monitorAtom(progressKey))?.status === 'running',
-            });
-            const enrichKey = InboxOperation.createEnrichProgressKey(mailbox);
-            const isEnriching = Option.match(progressRegistry, {
-              onNone: () => false,
-              onSome: (registry) => get(registry.monitorAtom(enrichKey))?.status === 'running',
+              onSome: (registry) => get(registry.monitorAtom(scanKey))?.status === 'running',
             });
             return [
               {
                 // The pipeline cascade the user runs by hand after a first sync: deterministic
                 // extraction, then cheap LLM labelling. Each spawned tier keeps its own cursor, so
                 // a repeat run catches up rather than redoing the mailbox.
-                id: 'enrich',
+                id: 'analyze',
                 data: () =>
-                  isEnriching
-                    ? Effect.sync(() => Option.getOrUndefined(progressRegistry)?.cancel(enrichKey))
+                  isScanning
+                    ? Effect.sync(() => Option.getOrUndefined(progressRegistry)?.cancel(scanKey))
                     : // Scheduled (not invoked): the cascade is a long run the meter/stop can cancel
                       // between tiers.
                       Operation.schedule(
-                        InboxOperation.EnrichMailbox,
+                        InboxOperation.AnalyzeMailbox,
                         { mailbox: Ref.make(mailbox), me: Mailbox.identityAddresses(mailbox) },
                         { spaceId: db.spaceId },
                       ),
                 properties: {
-                  label: isEnriching
-                    ? ['stop-enrich-mailbox.label', { ns: meta.profile.key }]
-                    : ['enrich-mailbox.label', { ns: meta.profile.key }],
-                  icon: isEnriching ? 'ph--stop--regular' : 'ph--stack-simple--regular',
+                  label: isScanning
+                    ? ['stop-analyze-mailbox.label', { ns: meta.profile.key }]
+                    : ['analyze-mailbox.label', { ns: meta.profile.key }],
+                  icon: isScanning ? 'ph--stop--regular' : AI_ACTION_ICON,
                   disposition: ['toolbar', 'list-item'],
                   presentation: { toolbar: { variant: 'primary', iconOnly: false } },
-                  testId: 'inbox.mailbox.enrich',
-                },
-              },
-              {
-                // The cursored walking-skeleton pipeline. Kept out of the toolbar (`enrich` is the
-                // single pipeline trigger) but reachable from the context menu, since its durable
-                // cursor plus `resetProcessCursor` are what the cursor machinery is verified through.
-                id: 'process',
-                data: () =>
-                  isRunning
-                    ? // Cancel routes through the progress trace sink, terminating the emitting process.
-                      Effect.sync(() => Option.getOrUndefined(progressRegistry)?.cancel(progressKey))
-                    : // Scheduled (not invoked) so the run is a real process the meter/stop can cancel.
-                      Operation.schedule(
-                        InboxOperation.ProcessMailbox,
-                        { mailbox: Ref.make(mailbox) },
-                        { spaceId: db.spaceId },
-                      ),
-                properties: {
-                  label: isRunning
-                    ? ['stop-process-mailbox.label', { ns: meta.profile.key }]
-                    : ['process-mailbox.label', { ns: meta.profile.key }],
-                  icon: isRunning ? 'ph--stop--regular' : 'ph--play--regular',
-                  disposition: ['list-item'],
-                  testId: 'inbox.mailbox.process',
-                },
-              },
-              {
-                id: 'resetProcessCursor',
-                data: () =>
-                  Operation.invoke(
-                    InboxOperation.ResetProcessCursor,
-                    { mailbox: Ref.make(mailbox) },
-                    { spaceId: db.spaceId },
-                  ).pipe(Effect.asVoid),
-                properties: {
-                  label: ['reset-process-cursor.label', { ns: meta.profile.key }],
-                  icon: 'ph--arrow-counter-clockwise--regular',
-                  // Context menu only; disabled mid-run so a reset never races the advancing cursor.
-                  disposition: ['list-item'],
-                  disabled: isRunning,
-                  testId: 'inbox.mailbox.processReset',
+                  testId: 'inbox.mailbox.analyze',
                 },
               },
             ];

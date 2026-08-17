@@ -16,7 +16,6 @@ import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { createSyncProgressKey } from '@dxos/plugin-inbox/sync';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
@@ -25,6 +24,7 @@ import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
 import { type JmapDataset, JmapMailApi } from '#services';
+import { JmapOperation } from '#types';
 
 import { JMAP_DOMAIN, JMAP_MAIL_CONNECTOR_ID } from '../../../constants';
 import { generateJmapDataset } from '../../../testing/jmap-fixtures';
@@ -158,7 +158,8 @@ describe('runJmapSync against a mock JMAP API', () => {
 
     // Folder tags: well-known roles (inbox/sent) map onto shared canonical tags — dropped roles
     // (archive/drafts/trash/junk) produce none — and custom folders become provider-scoped tags.
-    // Keyword canonical tags (starred) are materialized up front alongside the folder tags.
+    // Keyword canonical tags (starred) are materialized up front alongside the folder tags, as is
+    // `important`, which sync applies to mail from a sender the space already has a Person for.
     const tags = await db.query(Filter.type(Tag.Tag)).run();
     const canonical = new Set([
       ...dataset.folders.flatMap((folder) => {
@@ -166,6 +167,7 @@ describe('runJmapSync against a mock JMAP API', () => {
         return id ? [id] : [];
       }),
       ...Object.values(JMAP_KEYWORD_TAGS).flatMap((id) => (id ? [id] : [])),
+      'important' as const,
     ]);
     const customCount = dataset.folders.filter((folder) => !folder.role).length;
     expect(tags.length).toBe(canonical.size + customCount);
@@ -247,7 +249,9 @@ describe('runJmapSync against a mock JMAP API', () => {
       true,
     );
     expect(statusUpdates.every((update) => update.progress?.key === createSyncProgressKey(mailbox))).toBe(true);
-    expect(statusUpdates.some((update) => update.message === mailbox.name)).toBe(true);
+    // Names the phase as well as the mailbox: two meters run over one mailbox (sync, then analyze),
+    // so the bare name left the user unable to tell which was moving.
+    expect(statusUpdates.some((update) => update.message === `Syncing ${mailbox.name}`)).toBe(true);
   });
 
   test('initial backward, incremental forward, and widening syncBackDays reopens backfill', async ({ expect }) => {
@@ -494,7 +498,7 @@ describe('runJmapSync against a mock JMAP API', () => {
   });
 
   test('JmapSync is marked idempotent for durable-execution retry', ({ expect }) => {
-    expect(Operation.isIdempotent(InboxOperation.JmapSync)).toBe(true);
+    expect(Operation.isIdempotent(JmapOperation.JmapSync)).toBe(true);
   });
 
   //
@@ -552,6 +556,44 @@ describe('runJmapSync against a mock JMAP API', () => {
     const ids = await syncedIdsOf(db, mailbox);
     expect(ids).toContain(arrival.id);
     expect(ids.length).toBe(base.emails.length + 1);
+  });
+
+  test('marks mail from an already-known sender as important', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const dataset = generateJmapDataset({ count: 3, seed: 91, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, connection } = await seed({ options: { syncBackDays: 14 } });
+
+    // Sync itself creates no contacts, so the Person has to pre-exist — which is the whole condition:
+    // mail is important because the space already knows who sent it.
+    const knownSender = dataset.emails[0]?.from?.[0]?.email;
+    expect(knownSender, 'fixture produced no sender').toBeDefined();
+    db.add(Person.make({ fullName: 'Known Sender', emails: [{ value: knownSender! }] }));
+    await db.flush({ indexes: true });
+
+    await EffectEx.runPromise(
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(Effect.provide(jmapSyncTestServices(db, dataset))),
+    );
+
+    const importantTag = (await db.query(Filter.type(Tag.Tag)).run()).find((tag) =>
+      Obj.getMeta(tag).keys.some((key) => key.source === SystemTags.SYSTEM_TAG_SOURCE && key.id === 'important'),
+    );
+    expect(importantTag, 'sync did not materialize the important tag').toBeDefined();
+    const importantUri = Obj.getURI(importantTag!).toString();
+    const index = TagIndex.bind(
+      await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db)))),
+    );
+
+    const messages = await queryFeedMessages(db, mailbox);
+    const fromKnown = messages.filter((message) => message.sender?.email === knownSender);
+    const fromOthers = messages.filter((message) => message.sender?.email !== knownSender);
+    expect(fromKnown.length).toBeGreaterThan(0);
+    for (const message of fromKnown) {
+      expect(index.tags(message.id), 'known sender not marked important').toContain(importantUri);
+    }
+    // The negative half matters as much: an unknown sender must NOT be marked, or the folder is noise.
+    for (const message of fromOthers) {
+      expect(index.tags(message.id), 'unknown sender wrongly marked important').not.toContain(importantUri);
+    }
   });
 
   test('a stale state token clears it, falls back to the window scan, and recaptures', async ({ expect }) => {

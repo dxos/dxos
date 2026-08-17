@@ -4,6 +4,110 @@ Goal: task-planning skill working with Composer so DESIGN and TASKS are Composer
 over the loop Claude ⇔ MCP ⇔ EDGE ⇔ Composer.
 Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md](../../../agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md)
 
+The tool-surface work-stream moved to the edge repo's `mcp-operations` project
+(`edge:.agents/projects/mcp-operations/{DESIGN,TASKS}.md`); its Phase 2b is the dxos-side work
+below. Dxos-side decisions — the two-host contract, third-party CLI plugins, and the two reload
+stages — are in [DESIGN.md](./DESIGN.md); the loop design stays in the superpowers spec above.
+
+## Milestone 6 — `dx mcp serve`, the local twin of the MCP server (mcp-operations Phase 2b)
+
+Kills the per-edit bridge toll (dxos build → publish → edge install → worker restart → MCP
+reconnect) and gives plugin authors a surface with no edge at all. Fidelity contract
+(mcp-operations DESIGN §0.5): deltas from the deployed server are host-layer only — anything that
+changes what a model sees lives in the shared package or it is a bug.
+
+- [x] **`@dxos/mcp-server`** — the projection extracted out of `mcp-space-service/src/mcp/`:
+      annotated operations as tools, opted-in skills as prompts, `skillLoad`, name/collision
+      rules, ref widening, and the wire response passes. Hosts supply a `Gateway` (reach the
+      registry, invoke an operation, name the session's spaces) and a transport; nothing else
+      about the surface is theirs. 32 unit tests, including a parity test that fails if the
+      annotation id drifts from `Operation.McpToolAnnotation`.
+- [x] **`dx mcp serve`** — stdio host over the CLI's own plugin registry. Verified live against a
+      real MCP handshake: 22 tools (project/task/outline verbs + `skillLoad`, plus the ported
+      static toolkits), `codeProject` as a prompt, `skillLoad` returning the skill body and the
+      identical text via `prompts/get`, ref parameters narrowed to their object shape, safety hints
+      on every tool, and the shared server instructions on `initialize`.
+- [x] **Static toolkits ported to the CLI** (2026-08-14) — `whoami`/`listSpaces`, the object CRUD,
+      and `listPlugins`/`listTypes`/`listOperations`. Serving the projection alone left a client
+      without the tools an agent reaches for first. Copied, not shared — see the factoring item
+      below. Object CRUD is advertised and argument-validated but **not verified end-to-end**; that
+      needs a profile with a space.
+- [x] plugin-projects + plugin-tasks added to the CLI plugin set (and to the default profile), so
+      the annotated operations are in the registry the command projects.
+- [x] **Edge consumes the package** (2026-08-14, edge#888) — `mcp-space-service` keeps OAuth,
+      grants, bindings and the trace feed; its copy of the projection is gone (966 lines deleted,
+      66 added) and `callOperation`'s trace-sink flush became the gateway's invoke. Verified
+      against the pkg.pr.new build of `26cadff6`: worker builds, workerd suite **90 passed**
+      (the ledger's "92" was stale — no test files changed). Acceptance: edge's 92-test suite stays green with the
+      package as the sole source of shape.
+- [ ] **Fidelity check in CI** — one test running the same registry fixture through both hosts
+      (edge worker + `dx mcp serve`), asserting identical `tools/list`, `prompts/list` and
+      `skillLoad`. The contract enforced, not documented.
+- [ ] **Static tool descriptors shared** (do this first) — the two hosts' `Tool.make` blocks are
+      byte-identical; only the handlers genuinely differ. Moving the descriptors into the package
+      deletes every existing copy and makes an unannotated tool impossible, with no dependency on
+      the operations work. The annotation drift this already caused is the argument: DESIGN §1.1.
+- [ ] **Static toolkits → plugin operations** — then the handlers. `whoami`, `listSpaces`, the
+      object CRUD and the discovery tools are hand-written twice (TODOs in
+      `cli/src/commands/mcp/{space,object,discovery}-tools.ts` and edge's `src/mcp/*-tools.ts`).
+      Contributed as annotated operations they would project through `@dxos/mcp-server` like the
+      project and task verbs. The object tools are the easy half — both hosts already only wrap
+      `database.*` operations, differing in the invoke seam alone.
+- [ ] **Space visibility factored out** — which spaces a session may target is decided twice and
+      differently: the CLI filters `client.spaces` through `AppSpace.isVisibleSpace`, while edge's
+      `space-tools.ts` hard-codes its own `SETTINGS_SPACE_TAG` constant plus `withoutHaloSpace` /
+      `withinSessionContext` against the grant's space ids. Same intent — never surface the HALO
+      space or the settings space as a target — reached by two unrelated code paths, so a change to
+      the rule (a new internal tag, say) silently applies to one host only. One predicate, shared;
+      it belongs wherever the tag constants live rather than in either host.
+- [ ] **Registry construction shared** — `dx mcp serve` merges the CLI's curated
+      `operationHandlers`; operation-service assembles its own list plus base types. Factor one
+      assembly so both hosts register the same operations, skills and types.
+- [ ] **Watch/reload** — see Milestone 7; today an edit still needs a restart.
+
+## Milestone 7 — third-party plugins and reload (design: [DESIGN.md](./DESIGN.md) §2-3)
+
+A shipped `dx` must load plugins it was not compiled with, and those plugins' operations and
+skills must reach the MCP surface. The MCP half is already done: the gateway reads
+`Capabilities.OperationHandler` and `AppCapabilities.SkillDefinition`, so an enabled plugin
+projects with no further work. The browser has the rest of the system (manifest, URL loader,
+shared-scope import map, registry publish); this milestone is its node/bun half.
+
+### Plugin loading
+
+- [ ] **Shared scope at startup** — register `DEFAULT_PACKAGES` through `Bun.plugin`'s module
+      registry so a plugin's bare specifiers resolve to the host's already-loaded instances.
+      Proven to work inside a compiled binary, and to win over a copy in the plugin's own
+      `node_modules` (DESIGN §2.1). Generate the list from the same source the Vite plugin reads —
+      two contracts would drift.
+- [ ] **`dx plugin add <url|name>`** — fetch manifest, download assets under
+      `~/.config/dx/plugins/<id>/`, import, validate `meta`, register. `enable/disable/list`
+      already exist but resolve only against compiled-in plugins.
+- [ ] **Installed-remote persistence** — `plugins/<profile>.yml` records enabled ids; the
+      `RemotePluginView` records (id, url, version) that live in `localStorage` in the browser need
+      a file-backed equivalent.
+- [ ] **Decide isolation** (DESIGN §2.3) — third-party code runs in-process with the user's HALO
+      keys, and MCP lets an external agent invoke it. Decide before third-party plugins ship:
+      trusted-publisher-and-explicit-enable, or a worker boundary (which would also solve reload).
+
+### Reload, stage 1 — our own dev loop
+
+- [ ] **`dx mcp serve --watch`** — supervise a child process, restart on change. The stdio session
+      dies with the process, so the client reconnects per edit; acceptable for our own loop.
+      `moon run cli:dev` already runs `dx` from source, so this is a supervisor plus a watcher.
+
+### Reload, stage 2 — external plugin authors
+
+- [ ] **`--dev-plugin <manifest-url>`** — the CLI equivalent of the browser's `devEntry` dev
+      manifest: re-import on change with a cache-busting query, rebuild the projected layer, emit
+      `tools/list_changed` / `prompts/list_changed` (already emitted at startup, already acted on
+      by clients).
+- [ ] **Upstream: tool/prompt removal in `McpServer`** — it exposes `addTool`/`addPrompt` only, so
+      a changed surface cannot replace the old one without rebuilding the server layer under the
+      live transport.
+- [ ] **Idempotent (or per-load scoped) type registration** — re-importing a plugin that registers
+      ECHO types throws "Schema version already registered".
+
 ## Milestone 1 — local round-trip (current)
 
 - [x] Leg 1: composer dev server syncing with local edge (ws 101, agents/create 200, live queue-replicator traffic)

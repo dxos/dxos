@@ -43,7 +43,7 @@ export const syncConnectionBindings = <A, E, R>({
   connection: Ref.Ref<Connection.Connection>;
   priority?: string | undefined;
   sync: (binding: Cursor.ExternalCursor) => Effect.Effect<A, E, R>;
-}): Effect.Effect<{ synced: number; outputs: A[] }, E | ConnectionAuthExpiredError, R> =>
+}): Effect.Effect<{ synced: number; outputs: A[] }, E | ConnectionAuthExpiredError, Exclude<R, Database.Service>> =>
   Effect.gen(function* () {
     const connectionTarget = connectionRef.target;
     const db = connectionTarget ? Obj.getDatabase(connectionTarget) : undefined;
@@ -75,6 +75,9 @@ export const syncConnectionBindings = <A, E, R>({
     const outputs = yield* Effect.all(
       ordered.map((binding) =>
         sync(binding).pipe(
+          // The connection's database, resolved once above: Composer's invoker is wired without a
+          // `databaseResolver`, so a per-binding sync would otherwise have no Database service.
+          Effect.provide(Database.layer(db)),
           // `Process.fromOperation` promotes any handler failure to a defect (`Effect.orDie`), so
           // retagging 401s must intercept the defect channel — `Effect.mapError` never sees it.
           Effect.catchDefect((defect) =>

@@ -3,8 +3,8 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { type ClientServices } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
-import { type SystemService } from '@dxos/protocols/proto/dxos/client/services';
 
 import {
   type CollectDiagnosticsBroadcastHandler,
@@ -56,7 +56,7 @@ export const createCollectDiagnosticsBroadcastSender = (): CollectDiagnosticsBro
 };
 
 export const createCollectDiagnosticsBroadcastHandler = (
-  systemService: SystemService,
+  systemService: ClientServices['SystemService'],
 ): CollectDiagnosticsBroadcastHandler => {
   let channel: BroadcastChannel | undefined;
   return {

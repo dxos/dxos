@@ -60,6 +60,7 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
     if (!(event instanceof DxAnchorActivate)) {
       return;
     }
+
     triggerRef.current = event.trigger;
     setLink({ dxn: event.dxn, label: event.label, title: event.title });
     setOpen(true);
@@ -121,13 +122,17 @@ const DefaultStory = () => {
     [],
   );
 
+  // `Row.Star` is controlled, so the story owns the state — without it the toggle renders but never moves.
+  const [starred, setStarred] = useState(true);
+  const handleToggleStar = useCallback(() => setStarred((current) => !current), []);
+
   return (
     <CardPreviewHost>
       <Card.Root border={false} fullWidth classNames='p-1'>
         <Card.Body>
           <Card.Row>
             <Card.Block>
-              <Row.Star starred onToggle={() => {}} />
+              <Row.Star starred={starred} onToggle={handleToggleStar} />
             </Card.Block>
             <Card.Text classNames='text-lg line-clamp-2'>Quarterly planning sync</Card.Text>
           </Card.Row>
@@ -148,13 +153,6 @@ const DefaultStory = () => {
             role='to'
             getContact={getContact}
             size={6}
-            onContactCreate={handleContactCreate}
-          />
-          <Row.Person
-            actor={UNKNOWN_ACTOR}
-            role='to'
-            getContact={getContact}
-            size={9}
             onContactCreate={handleContactCreate}
           />
           <Row.Date start={new Date('2025-11-19T12:00:00')} end={new Date('2025-11-19T13:30:00')} />

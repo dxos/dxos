@@ -13,10 +13,10 @@ import { Panel, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { DraftMessage, Message, Person } from '@dxos/types';
+import { type Actor, DraftMessage, Message, Person } from '@dxos/types';
 
 import { type MessageOptions } from '#components';
-import { initializeMailbox } from '#testing';
+import { ContactPreview, initializeMailbox } from '#testing';
 import { translations } from '#translations';
 import { Mailbox } from '#types';
 
@@ -75,6 +75,17 @@ const DefaultStory = ({ reply }: StoryArgs) => {
     });
   }, []);
 
+  // Creating the contact must actually add a Person, otherwise the create affordance appears to do
+  // nothing and the seeded 50/50 split can never be exercised.
+  const handleContactCreate = useCallback(
+    (actor: Actor.Actor) => {
+      if (space && actor.email) {
+        space.db.add(Person.make({ fullName: actor.name ?? actor.email, emails: [{ value: actor.email }] }));
+      }
+    },
+    [space],
+  );
+
   // Story-only stand-in for the message toolbar's Reply action: appends a reply draft to the
   // thread's last message, exercising the append-scroll-autofocus path in `ConversationStack.Content`.
   const handleReply = useCallback(() => {
@@ -89,32 +100,36 @@ const DefaultStory = ({ reply }: StoryArgs) => {
   }
 
   return (
-    <ConversationStack.Root
-      attendableId='story'
-      items={messages}
-      mailbox={mailbox}
-      options={optionsAtom}
-      expanded={expanded}
-      onExpandedChange={handleExpandedChange}
-      onContactCreate={() => {}}
-    >
-      <Dnd.Root>
-        <Panel.Root role='article'>
-          {reply && (
-            <Panel.Toolbar asChild>
-              <Toolbar.Root>
-                <Toolbar.Button onClick={handleReply} data-testid='story-reply'>
-                  Reply
-                </Toolbar.Button>
-              </Toolbar.Root>
-            </Panel.Toolbar>
-          )}
-          <Panel.Content asChild>
-            <ConversationStack.Content />
-          </Panel.Content>
-        </Panel.Root>
-      </Dnd.Root>
-    </ConversationStack.Root>
+    // Outside Composer nothing answers `DxAnchorActivate`, so without this host the avatar hover
+    // silently does nothing and the story would appear to show a broken affordance.
+    <ContactPreview db={space.db}>
+      <ConversationStack.Root
+        attendableId='story'
+        items={messages}
+        mailbox={mailbox}
+        options={optionsAtom}
+        expanded={expanded}
+        onExpandedChange={handleExpandedChange}
+        onContactCreate={handleContactCreate}
+      >
+        <Dnd.Root>
+          <Panel.Root role='article'>
+            {reply && (
+              <Panel.Toolbar asChild>
+                <Toolbar.Root>
+                  <Toolbar.Button onClick={handleReply} data-testid='story-reply'>
+                    Reply
+                  </Toolbar.Button>
+                </Toolbar.Root>
+              </Panel.Toolbar>
+            )}
+            <Panel.Content asChild>
+              <ConversationStack.Content />
+            </Panel.Content>
+          </Panel.Root>
+        </Dnd.Root>
+      </ConversationStack.Root>
+    </ContactPreview>
   );
 };
 
@@ -152,6 +167,23 @@ const meta = {
               await Mailbox.applyTag(mailbox, tag, message, space.db);
             }
           }
+
+          // Half the senders get a Person, so the avatar shows BOTH states side by side: a resolved
+          // contact whose card opens on hover, and an unknown one offering to create it. Seeding all or
+          // none leaves one of the two states untestable. Derived from the FEED-scoped messages above —
+          // a bare space query does not see feed messages, and would silently seed nobody.
+          const senders = [
+            ...new Set(
+              messages
+                .map((message) => message.sender?.email)
+                .filter((email): email is string => typeof email === 'string' && email.length > 0),
+            ),
+          ];
+          senders.forEach((email, index) => {
+            if (index % 2 === 0) {
+              space.db.add(Person.make({ fullName: email.split('@')[0], emails: [{ value: email }] }));
+            }
+          });
         }
 
         await space.db.flush({ indexes: true });

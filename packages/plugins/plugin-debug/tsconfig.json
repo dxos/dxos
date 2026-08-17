@@ -133,6 +133,9 @@
       "path": "../plugin-connector"
     },
     {
+      "path": "../plugin-google"
+    },
+    {
       "path": "../plugin-illustrator"
     },
     {

@@ -11,7 +11,7 @@ import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 
 import EXEMPLAR_SPACE_JSON from '../content/exemplar-space.dx.json?raw';
 import { ImportExemplarSpace } from './definitions';
@@ -34,10 +34,10 @@ const handler: Operation.WithHandler<typeof ImportExemplarSpace> = ImportExempla
       const space =
         existing ??
         (yield* Effect.tryPromise(() => {
-          const archive: SpaceArchive = {
+          const archive: SpacesService.SpaceArchive = {
             filename: EXEMPLAR_SPACE_ARCHIVE_FILENAME,
             contents: new TextEncoder().encode(EXEMPLAR_SPACE_JSON),
-            format: SpaceArchive.Format.JSON,
+            format: SpacesService.SpaceArchiveFormat.enums.JSON,
           };
           return client.spaces.import(archive, { tags: [AppSpace.EXEMPLAR_SPACE_TAG] });
         }));

@@ -14,7 +14,6 @@ import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
-import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
 import { MetadataStore } from '../../metadata';
@@ -91,11 +90,6 @@ export class TestAgent {
     return (this._metadataStore ??= new MetadataStore(this.storage.createDirectory('metadata')));
   }
 
-  private _blobStore?: BlobStore;
-  get blobStore() {
-    return (this._blobStore ??= new BlobStore(this.storage.createDirectory('blobs')));
-  }
-
   constructor(
     private readonly _networkManagerProvider: NetworkManagerProvider,
     private readonly _feedBuilder: TestFeedBuilder,
@@ -137,7 +131,6 @@ export class TestAgent {
       feedStore: this.feedStore,
       networkManager: this.networkManager,
       metadataStore: this.metadataStore,
-      blobStore: this.blobStore,
     }));
   }
 
@@ -210,7 +203,6 @@ export class TestAgent {
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
       networkManager: this.networkManager,
-      blobStore: this.blobStore,
       onSessionAuth: (session) => {
         session.addExtension(
           'dxos.mesh.teleport.gossip',

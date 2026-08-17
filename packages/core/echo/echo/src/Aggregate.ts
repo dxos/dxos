@@ -17,7 +17,7 @@ import type * as Query from './Query';
  * unused optional fields to guard against at read sites).
  */
 export type Spec =
-  | { kind: 'group'; property: string }
+  | { kind: 'group'; properties: readonly [string, ...string[]] }
   | { kind: 'max'; property: string }
   | { kind: 'min'; property: string }
   | { kind: 'items'; limit?: number; order?: readonly QueryAST.Order[] }
@@ -64,12 +64,24 @@ class AggregateClass<T, V> implements Aggregate<T, V> {
 }
 
 /**
- * Group members by a scalar property. The record key names the result field carrying the coerced
- * group-key value; multiple `group` entries form a composite key. Members whose property is missing,
- * `null`, `undefined`, or non-scalar group under the `null` key, so the field value is `T[K] | null`.
+ * Group members by a scalar property, or by the first property of a `coalesce` chain holding a
+ * scalar value (`threadId ?? id`). The record key names the result field carrying the coerced
+ * group-key value; multiple `group` entries form a composite key (a `coalesce` chain is one
+ * component, not several). Members whose key is missing, `null`, `undefined`, or non-scalar group
+ * under the `null` key, so the field value includes `null`.
+ *
+ * A chain ending in an always-present property (e.g. `{ coalesce: ['threadId', 'id'] }`) gives each
+ * member lacking the leading property its own singleton group instead of pooling them under `null`,
+ * where an {@link items} `limit` would truncate unrelated members. `id` qualifies: it resolves to
+ * the object's entity id even though documents don't store it as data.
  */
-export const group = <T, K extends keyof T & string>(property: K): Aggregate<T, T[K] | null> =>
-  new AggregateClass({ kind: 'group', property });
+export const group: {
+  <T, K extends keyof T & string>(property: K): Aggregate<T, T[K] | null>;
+  <T, const K extends readonly [keyof T & string, ...(keyof T & string)[]]>(key: {
+    coalesce: K;
+  }): Aggregate<T, T[K[number]] | null>;
+} = (key: string | { coalesce: readonly [string, ...string[]] }): Any =>
+  new AggregateClass({ kind: 'group', properties: typeof key === 'string' ? [key] : key.coalesce });
 
 /**
  * Aggregate the maximum of a scalar property across the group's members.

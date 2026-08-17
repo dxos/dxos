@@ -337,6 +337,16 @@ const TRAVERSAL_MISSED: Record<string, string[]> = {
   'packages/core/compute/compute-hyperformula': ['@dxos/effect'],
 };
 
+/**
+ * Resolved from the workspace store by a checked-in developer script rather than declared, so a
+ * package is not made to install a heavy native dependency for a generator that runs only when its
+ * checked-in output changes.
+ */
+const SCRIPT_STORE_RESOLVED: Record<string, string[]> = {
+  // `scripts/generate-icon.mjs` rasterises the DXOS mark with sharp when the brand asset changes.
+  'packages/core/compute/mcp-server': ['sharp'],
+};
+
 const BUNDLER_RESOLVED: Record<string, string[]> = {
   'packages/plugins/plugin-presenter': ['marked'],
   // edge-compute generates a function entrypoint containing
@@ -444,6 +454,7 @@ for (const manifest of globSync(
       ...bundledDependencies(dir),
       ...(BUNDLER_RESOLVED[dir] ?? []),
       ...(TRAVERSAL_MISSED[dir] ?? []),
+      ...(SCRIPT_STORE_RESOLVED[dir] ?? []),
     ],
   };
 }

@@ -290,6 +290,28 @@ describe('WorkingSetQueryExecutor', () => {
     expect(byId.get(charlie.id)).toEqual({ age: 40 });
   });
 
+  test('aggregate group key falls back through a coalesce chain, resolving `id` to the entity id', async ({
+    expect,
+  }) => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice', age: 30 });
+    const bob = Obj.make(TestSchema.Person, { name: 'Bob' });
+    const charlie = Obj.make(TestSchema.Person, { name: 'Charlie' });
+    db.add(alice);
+    db.add(bob);
+    db.add(charlie);
+    await db.flush();
+
+    const results = planAndExecute(
+      db,
+      Query.select(Filter.type(TestSchema.Person)).aggregate({ age: Aggregate.group({ coalesce: ['age', 'id'] }) }),
+    );
+    const byId = new Map(results.map((item) => [item.objectId, item.groupKey]));
+    expect(byId.get(alice.id)).toEqual({ age: 30 });
+    // Members without `age` key on their own id instead of sharing the `null` group.
+    expect(byId.get(bob.id)).toEqual({ age: bob.id });
+    expect(byId.get(charlie.id)).toEqual({ age: charlie.id });
+  });
+
   test('aggregate stable-partitions items so groups are contiguous', async ({ expect }) => {
     const alice = Obj.make(TestSchema.Person, { name: 'Alice', age: 30 });
     const bob = Obj.make(TestSchema.Person, { name: 'Bob', age: 40 });

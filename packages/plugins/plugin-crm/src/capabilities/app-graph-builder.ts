@@ -13,11 +13,21 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { Annotation, Filter, Type } from '@dxos/echo';
+import * as Operation from '@dxos/compute/Operation';
+import { Annotation, Filter, Obj, Ref, Type } from '@dxos/echo';
+import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
 import { Organization, Person } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
+import { CRM_SKILL_KEY } from '#skills';
+import { CrmOperation } from '#types';
+
+/** A node whose data is a researchable CRM object, tagged so the action can pick the right operation. */
+type ResearchSubject =
+  | { kind: 'person'; subject: Person.Person }
+  | { kind: 'organization'; subject: Organization.Organization };
 
 /** Node type for a CRM type-collection node (data is the ECHO Type). */
 const CRM_TYPE_NODE = `${meta.profile.key}/type-node`;
@@ -65,6 +75,83 @@ export default Capability.makeModule(
               (node): node is NonNullable<typeof node> => node !== null,
             ),
           );
+        },
+      }),
+
+      // Research on the object's own node, so any surface showing a Person/Organization (the record
+      // article's toolbar, the nav-tree context menu) offers it without depending on plugin-crm.
+      GraphBuilder.createExtension({
+        id: 'crmResearch',
+        match: (node): Option.Option<ResearchSubject> => {
+          if (Obj.instanceOf(Person.Person, node.data)) {
+            return Option.some({ kind: 'person', subject: node.data });
+          }
+          if (Obj.instanceOf(Organization.Organization, node.data)) {
+            return Option.some({ kind: 'organization', subject: node.data });
+          }
+          return Option.none();
+        },
+        actions: (matched) => {
+          const db = Obj.getDatabase(matched.subject);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
+            {
+              id: 'research',
+              // Scheduled, not invoked: research is a long run, and the pair is sequenced so the image
+              // pass sees whatever the profile step just wrote.
+              data: () =>
+                Effect.gen(function* () {
+                  // Branched rather than parameterised: the two operations take differently-typed
+                  // subject refs, and collapsing them would mean widening one of the inputs.
+                  if (matched.kind === 'person') {
+                    yield* Operation.schedule(
+                      CrmOperation.ResearchPerson,
+                      { subject: Ref.make(matched.subject) },
+                      { spaceId: db.spaceId },
+                    );
+                  } else {
+                    yield* Operation.schedule(
+                      CrmOperation.ResearchOrganization,
+                      { subject: Ref.make(matched.subject) },
+                      { spaceId: db.spaceId },
+                    );
+                  }
+                  // The operations above only render the skeleton from what ECHO already knows —
+                  // every section beyond Details is emitted empty on purpose. Filling them is the
+                  // agent's job, which the CRM skill already instructs ("Enrich Profile documents in
+                  // place…"), so the action runs both halves: skeleton first (instant, no model), then
+                  // the agent against it.
+                  //
+                  // The subject rides along as a bound context object rather than a persisted
+                  // `Instructions`, and `background` keeps the run in the process monitor instead of
+                  // opening a chat. Images are the agent's too, via the skill's `attach-image` tool —
+                  // `EnrichImages` is set-scoped (it walks everything missing an image) and would fire
+                  // at objects the user never asked about.
+                  yield* Operation.invoke(RoutineOperation.RunPromptInNewChat, {
+                    db,
+                    objects: [matched.subject],
+                    skills: [CRM_SKILL_KEY],
+                    background: true,
+                    instructions: trim`
+                      Research this ${matched.kind} and fill in its Profile document, which has just
+                      been created with an empty Overview, Key Links, Notes and Sources.
+                      Extend each section in place, record every contributing URL under Sources, and
+                      attach an avatar or logo if research surfaces a good https candidate.
+                      Do not invent facts you cannot source.
+                    `,
+                  });
+                }),
+              properties: {
+                label: ['research.label', { ns: meta.profile.key }],
+                icon: 'ph--sparkle--regular',
+                disposition: ['toolbar', 'list-item'],
+                presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                testId: 'crm.record.research',
+              },
+            },
+          ]);
         },
       }),
     ]);

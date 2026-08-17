@@ -3,7 +3,7 @@
 //
 
 import { format, intervalToDuration } from 'date-fns';
-import React, { type MouseEvent, useCallback, useEffect, useRef } from 'react';
+import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useRef } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
@@ -65,7 +65,13 @@ const HOVER_CARD_DELAY = 400;
  * aborts a pending open. Returned as bare callbacks rather than DOM props so a caller can compose
  * them with its own pointer handlers.
  */
-const useCardHover = (open: () => void, enabled: boolean) => {
+/**
+ * Arms a delayed `open` on hover, cancelling on unmount AND whenever the target changes.
+ *
+ * Exported for its regression test: the cancellation-on-target-change is a dependency-array property,
+ * not extractable logic, so it can only be pinned by rendering the hook.
+ */
+export const useCardHover = (open: () => void, enabled: boolean) => {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const cancel = useCallback(() => {
     if (timeoutRef.current !== undefined) {
@@ -297,7 +303,7 @@ export const ContactAvatar = ({
   role,
   db,
   getContact,
-  size = 6,
+  size = 5,
   onContactCreate,
   onClick,
 }: ContactAvatarProps) => {
@@ -336,7 +342,11 @@ export const ContactAvatar = ({
       onPointerLeave={cancelHover}
     >
       {/* Faded (not unmounted) while the create button covers it, so the gutter never resizes. */}
-      <div className={mx(canCreate && 'group-hover/contact:opacity-0 group-focus-within/contact:opacity-0')}>
+      {/* `grid`, not the default block: `dx-avatar` is `display: contents` and the frame inside it is
+          `inline-flex`, so in a block box it sits on the text baseline and the line box adds descender
+          space beneath it — making this wrapper taller than the avatar and pinning the face to its top.
+          Every caller that centres this against a line of text then reads as misaligned. */}
+      <div className={mx('grid', canCreate && 'group-hover/contact:opacity-0 group-focus-within/contact:opacity-0')}>
         <Avatar actor={actor} size={size} onClick={onClick} />
       </div>
       {canCreate && (
@@ -346,7 +356,7 @@ export const ContactAvatar = ({
           icon='ph--user-circle-plus--regular'
           // One step below the avatar it replaces, so the button reads as an affordance rather than
           // as a heavier stand-in for the face.
-          size={Number(size) >= 8 ? 6 : 5}
+          size={Number(size) >= 8 ? 5 : 4}
           label={t('create-contact.label')}
           classNames='absolute inset-0 opacity-0 group-hover/contact:opacity-100 focus-visible:opacity-100'
           onClick={handleContactCreate}
@@ -497,13 +507,15 @@ RowStar.displayName = 'Row.Star';
 type RowAttachmentsProps = {
   /** Optional — callers may pass an undefined/empty list (e.g. a message with no attachments). */
   attachments?: readonly Message.Attachment[];
+  /**
+   * Opens an attachment, by its index in `attachments`. The index rather than the attachment itself
+   * because an attachment has no identity of its own — it is an entry on the message.
+   */
+  onAttachmentClick?: (index: number) => void;
 };
 
-/**
- * A Card.Row listing a message's attachments by name with a generic file icon. Not yet clickable —
- * resolving the attachment's ref to open/preview it is a follow-up.
- */
-const RowAttachments = ({ attachments }: RowAttachmentsProps) => {
+/** A Card.Row listing a message's attachments by name; each chip opens its attachment when clickable. */
+const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps) => {
   if (!attachments?.length) {
     return null;
   }
@@ -514,8 +526,31 @@ const RowAttachments = ({ attachments }: RowAttachmentsProps) => {
         <Icon icon='ph--paperclip--regular' />
       </Card.Block>
       <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='message-attachments'>
-        {attachments.map((attachment) => (
-          <Tag key={attachment.ref.uri} hue='neutral' classNames='inline-flex items-center gap-1'>
+        {attachments.map((attachment, index) => (
+          <Tag
+            key={attachment.ref.uri}
+            hue='neutral'
+            classNames={mx('inline-flex items-center gap-1', onAttachmentClick && 'cursor-pointer')}
+            // `Tag` renders a span, so a bare `onClick` would be mouse-only. `role`/`tabIndex` plus the
+            // key handler give it the button semantics it needs to be reachable from the keyboard.
+            {...(onAttachmentClick && {
+              role: 'button',
+              tabIndex: 0,
+              onClick: (event: MouseEvent) => {
+                // The row sits inside a tile that also handles clicks; opening an attachment must not
+                // also select the message behind it.
+                event.stopPropagation();
+                onAttachmentClick(index);
+              },
+              onKeyDown: (event: KeyboardEvent) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onAttachmentClick(index);
+                }
+              },
+            })}
+          >
             <Icon icon='ph--file--regular' size={3} />
             {attachment.name ?? attachment.ref.uri}
           </Tag>

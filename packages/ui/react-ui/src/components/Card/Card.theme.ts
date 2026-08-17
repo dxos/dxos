@@ -16,7 +16,7 @@ export type CardStyleProps = {
   truncate?: boolean;
 };
 
-const subgrid = 'col-span-3 grid grid-cols-subgrid gap-1 items-center';
+const subgrid = 'col-span-3 grid grid-cols-subgrid gap-x-1 items-center';
 
 // Row gap comes from `Column.Root`'s `gap` prop (Card.Root defaults it to `sm`); only the
 // column gap is set here — the axes are separate tailwind-merge groups, so they compose.

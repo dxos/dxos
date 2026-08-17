@@ -4,12 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Capability from '@dxos/app-framework/Capability';
-import { PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
-import { invariant } from '@dxos/invariant';
-
-import { ClientCapabilities } from '#types';
+import { Identity } from '@dxos/halo';
 
 import { RevokeRecoveryCredential } from './definitions';
 
@@ -23,11 +19,7 @@ import { RevokeRecoveryCredential } from './definitions';
 const handler: Operation.WithHandler<typeof RevokeRecoveryCredential> = RevokeRecoveryCredential.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ lookupKey }) {
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const identityService = client.services.services.IdentityService;
-      invariant(identityService, 'IdentityService not available');
-
-      yield* Effect.promise(() => identityService.revokeRecoveryCredential({ lookupKey: PublicKey.from(lookupKey) }));
+      yield* Identity.revokeRecoveryCredential(lookupKey);
     }),
   ),
 );

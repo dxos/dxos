@@ -72,6 +72,21 @@ tasks:
   tauri-ios-build:
     deps:
       - bundle
+  # Both native dev loops run this app's `vite dev` through `beforeDevCommand` (`tauri.ios.conf.json`
+  # overrides only `bundle`), so they need exactly `serve`'s narrowed dependency set rather than the
+  # `tauri` tag's whole-graph `^:build` — extended so the three inner loops cannot drift.
+  tauri-dev:
+    extends: serve
+    command: pnpm exec tauri dev
+    options:
+      # Args merge by append, so both the extended `vite dev` and the tag's own `tauri dev` would
+      # otherwise be concatenated onto this command.
+      mergeArgs: replace
+  tauri-ios:
+    extends: serve
+    command: pnpm exec tauri ios dev
+    options:
+      mergeArgs: replace
   # Downloads the pinned macOS ollama runtime + triple-named sidecars embedded in the desktop app. Cacheable:
   # keyed on the fetch script (which pins the version + SHA-256), with the downloaded sidecar dir as the
   # output — so a cache hit restores it instead of re-downloading the (large) runtime.

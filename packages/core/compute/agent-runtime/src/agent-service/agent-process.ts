@@ -20,7 +20,6 @@ import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
   AgentRequestBegin,
   AgentRequestEnd,
-  AiSession,
   HarnessControl,
   SkillHooks,
   getOperationFromTool,
@@ -36,17 +35,24 @@ import * as Process from '@dxos/compute/Process';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type DelegationStrategy } from './delegation-strategy';
+import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer';
 
 interface AgentProcessOptions {
   // TODO(burdon): Instructions?
   systemPrompt?: string;
+
+  /**
+   * Produces each turn. Defaults to {@link makeAiSessionTurnProducer}; substituting it swaps the
+   * engine (e.g. a Claude Agent SDK host) while leaving the queue, alarms, redelivery, delegation
+   * and hydration around it untouched.
+   */
+  makeTurnProducer?: MakeTurnProducer;
 
   /** Model identifier. */
   model?: DXN.DXN;
@@ -125,9 +131,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             )
           : undefined;
         const runtime = yield* Effect.context<Database.Service>();
-        const session = yield* EffectEx.acquireReleaseResource(
-          () => new AiSession.Session({ feed, runtime, instructions: instructions ? [instructions] : [] }),
-        );
+        const makeTurnProducer = options.makeTurnProducer ?? makeAiSessionTurnProducer;
+        // Scoped acquisition: the producer's teardown registers with this process's scope.
+        const session = yield* makeTurnProducer({ feed, runtime, instructions: instructions ? [instructions] : [] });
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsCell.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
@@ -168,7 +174,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // keeps the process alive past this turn.
         const runEndRequestHooks = Effect.gen(function* () {
           yield* SkillHooks.runHooks({
-            skills: session.context.getSkills(),
+            skills: session.getSkills(),
             phase: 'end-request',
             invoke: (operation, input) =>
               Effect.gen(function* () {
@@ -262,7 +268,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               log('trace agent request begin');
               yield* Trace.write(AgentRequestBegin, {});
               yield* session
-                .createRequest({
+                .runTurn({
                   prompt,
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,

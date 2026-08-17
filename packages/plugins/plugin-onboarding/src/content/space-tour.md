@@ -18,7 +18,9 @@ Open **Contacts → People** to see the team and partner contacts. Each Person l
 
 ### Inbox
 
-Open **Inbox**. There are ~30 emails, grouped into conversations — supplier updates, wholesale reorders, internal memos, plus a few unrelated newsletters and shipping notifications, the kind of noise a real inbox has. The senders are the same people you saw in Contacts.
+Open **Inbox**. There are ~35 emails, grouped into conversations — supplier updates, wholesale reorders, internal memos, plus a few unrelated newsletters and shipping notifications, the kind of noise a real inbox has. The senders are the same people you saw in Contacts.
+
+Expand the mailbox in the sidebar for the folders it files into: **Starred** and **Important**, **Sent** for the mail you wrote, **All mail** for everything including the archived threads, and **Subscriptions** for the bulk senders you could unsubscribe from in one click. A few conversations already carry a summary above the messages.
 
 ```prompt
 Look through my inbox and tell me which contacts I haven't replied to yet.

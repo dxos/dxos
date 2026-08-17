@@ -10,13 +10,13 @@ import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { syncConnectionBindings } from '@dxos/plugin-connector';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
 import { GoogleCalendarApi, GoogleCredentials } from '#services';
+import { GoogleOperation } from '#types';
 
 import { syncCalendar } from './sync';
 
-const handler = InboxOperation.GoogleCalendarSync.pipe(
+const handler = GoogleOperation.GoogleCalendarSync.pipe(
   Operation.withHandler(({ connection, priority, googleCalendarId, syncBackDays, syncForwardDays, pageSize }) =>
     syncConnectionBindings({
       connection,
@@ -24,7 +24,7 @@ const handler = InboxOperation.GoogleCalendarSync.pipe(
       sync: (binding) =>
         // Layer stack, top-down: `syncCalendar` needs GoogleCalendarApi + Resolver (a test swaps the
         // API for `GoogleCalendarApi.mock`); `GoogleCalendarApi.Live` needs the HTTP client + the
-        // binding's credentials.
+        // binding's credentials. The Database service comes from the fan-out.
         syncCalendar({ binding: Ref.make(binding), googleCalendarId, syncBackDays, syncForwardDays, pageSize }).pipe(
           Effect.provide(
             Layer.mergeAll(

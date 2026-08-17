@@ -1445,7 +1445,7 @@ describe('QueryPlanner', () => {
       expect(orderStep).toMatchObject({ order: [{ kind: 'natural', direction: 'asc' }] });
 
       const aggregateStep = plan.steps.find((step) => step._tag === 'AggregateStep');
-      expect(aggregateStep).toMatchObject({ aggregates: [{ name: 'title', kind: 'group', property: 'title' }] });
+      expect(aggregateStep).toMatchObject({ aggregates: [{ name: 'title', kind: 'group', properties: ['title'] }] });
     });
 
     test('an explicit orderBy before aggregate is preserved (no natural order inserted)', () => {
@@ -1471,8 +1471,8 @@ describe('QueryPlanner', () => {
       const aggregateStep = plan.steps.find((step) => step._tag === 'AggregateStep');
       expect(aggregateStep).toMatchObject({
         aggregates: [
-          { name: 'title', kind: 'group', property: 'title' },
-          { name: 'id', kind: 'group', property: 'id' },
+          { name: 'title', kind: 'group', properties: ['title'] },
+          { name: 'id', kind: 'group', properties: ['id'] },
         ],
       });
     });
@@ -1553,7 +1553,7 @@ describe('QueryPlanner', () => {
       const aggregateStep = plan.steps.find((step) => step._tag === 'AggregateStep');
       expect(aggregateStep).toMatchObject({
         aggregates: [
-          { name: 'title', kind: 'group', property: 'title' },
+          { name: 'title', kind: 'group', properties: ['title'] },
           { name: 'latest', kind: 'max', property: 'title' },
         ],
       });
@@ -1593,7 +1593,7 @@ describe('QueryPlanner', () => {
       const query = Query.fromAst({
         type: 'aggregate',
         query: inner.ast,
-        aggregates: [{ name: 'id', kind: 'group', property: 'id' }],
+        aggregates: [{ name: 'id', kind: 'group', properties: ['id'] }],
       });
 
       expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Only one aggregate clause is supported');

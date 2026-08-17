@@ -127,6 +127,7 @@ export const ChatPrompt = ({
 
   return (
     <div
+      data-testid='assistant.prompt'
       role='group'
       className={mx(
         'flex flex-col w-full dx-density-md',

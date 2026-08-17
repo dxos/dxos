@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type GetProfileUsageResponse, type MeteringLimit, type MeteringUsageItem } from '@dxos/protocols';
-import { Message, Status, useTranslation } from '@dxos/react-ui';
+import { Banner, Status, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -214,12 +214,12 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
         <Form.Content>
           <Form.Section title={t('usage-section.title')} description={t('usage-section.description')}>
             {message ? (
-              <Message.Root valence={message.valence}>
-                <Message.Content>
-                  <Message.Title icon={message.icon}>{t(message.title)}</Message.Title>
-                  <Message.Body>{t(message.description)}</Message.Body>
-                </Message.Content>
-              </Message.Root>
+              <Banner.Root valence={message.valence}>
+                <Banner.Content>
+                  <Banner.Title icon={message.icon}>{t(message.title)}</Banner.Title>
+                  <Banner.Body>{t(message.description)}</Banner.Body>
+                </Banner.Content>
+              </Banner.Root>
             ) : (
               <Form.FieldSet fieldProvider={meterFieldProvider} />
             )}

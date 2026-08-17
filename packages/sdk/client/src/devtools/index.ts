@@ -2,8 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-export type { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
-export { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+export type { DevtoolsHostPromise as DevtoolsHost } from '@dxos/client-protocol';
 
 export * from './debug-port';
 export * from './debug-port-controller';

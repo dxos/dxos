@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN, EID } from '@dxos/keys';
 import { Connection, Cursor } from '@dxos/link';
 import { isCursorForTarget } from '@dxos/plugin-connector';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as GoogleOperation from '@dxos/plugin-google/GoogleOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Space } from '@dxos/react-client/echo';
@@ -150,7 +150,7 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               spec: Trigger.specTimer('* * * * *'), // Every minute.
-              runnable: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
+              runnable: Ref.make(Operation.serialize(GoogleOperation.GoogleMailSync)),
               input: {
                 connection: Ref.make(connection),
               },
@@ -319,7 +319,7 @@ export const generator = () => ({
           const { canvasModel, computeModel } = createQueueSinkPreset(
             space,
             'timer',
-            (triggerSpec) => (triggerSpec.cron = '*/5 * * * * *'),
+            (triggerSpec) => (triggerSpec.cron = '* * * * *'),
             'result',
           );
           return addToSpace(PresetName.TIMER_TICK_QUEUE, space, canvasModel, computeModel);

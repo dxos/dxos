@@ -90,7 +90,6 @@ export const DEFAULT_PACKAGES = [
   '@dxos/teleport',
   '@dxos/teleport-extension-automerge-replicator',
   '@dxos/teleport-extension-gossip',
-  '@dxos/teleport-extension-object-sync',
   '@dxos/teleport-extension-replicator',
   '@dxos/websocket-rpc',
 
