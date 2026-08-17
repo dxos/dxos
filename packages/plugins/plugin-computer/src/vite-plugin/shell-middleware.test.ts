@@ -72,10 +72,16 @@ describe('shell middleware', () => {
   });
 
   test('kills a script that outruns its timeout, and the group it spawned', async ({ expect }) => {
-    const result = await Shell.exec({ script: 'sleep 30 & wait', timeout: 250 }, { path: host.path });
+    // The backgrounded child would write `survivor` after the kill deadline, so its absence is what
+    // distinguishes killing the group from killing only the shell. Real time, not a TestClock: the
+    // thing under test is an OS process outliving the request.
+    const result = await Shell.exec({ script: '(sleep 1; touch survivor) & wait', timeout: 250 }, { path: host.path });
     expect(result.timedOut).to.be.true;
     expect(result.exitCode).to.be.null;
     expect(result.durationMs).to.be.lessThan(10_000);
+
+    await new Promise((resolve) => setTimeout(resolve, 1_500));
+    expect(fs.existsSync(path.join(root, 'survivor')), 'the spawned process group outlived the request').to.be.false;
   });
 
   test('refuses a working directory outside the root', async ({ expect }) => {
@@ -135,8 +141,7 @@ describe('shell middleware', () => {
   });
 
   test('a host without the route reads as not mounted', async ({ expect }) => {
-    // What a request to a path the plugin never mounted answers, and the one failure the skill's
-    // instructions tell the model to report rather than retry.
+    // The skill's instructions tell the model to report this failure rather than retry it.
     await expect(Shell.exec({ script: 'pwd' }, { path: host.path.replace(Shell.PATH, '/elsewhere') })).rejects.toThrow(
       /not mounted/,
     );
