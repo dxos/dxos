@@ -6874,6 +6874,12 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -18879,6 +18885,9 @@ importers:
       '@dxos/plugin-crm':
         specifier: workspace:*
         version: link:../../plugins/plugin-crm
+      '@dxos/plugin-google':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-google
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
