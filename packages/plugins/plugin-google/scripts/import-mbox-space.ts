@@ -34,7 +34,7 @@ import { TestBuilder } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Feed, Tag, Type } from '@dxos/echo';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 import { Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -165,7 +165,7 @@ try {
   await space.db.flush();
 
   console.log(`exporting…`);
-  const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+  const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
   const parsed = JSON.parse(new TextDecoder().decode(archive.contents));
   await writeFile(out, JSON.stringify(parsed) + '\n', 'utf8');
   console.log(`wrote ${out} — ${imported} messages imported, ${skipped} skipped`);

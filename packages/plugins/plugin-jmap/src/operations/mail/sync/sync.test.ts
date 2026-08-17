@@ -16,7 +16,6 @@ import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { createSyncProgressKey } from '@dxos/plugin-inbox/sync';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
@@ -25,6 +24,7 @@ import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
 import { type JmapDataset, JmapMailApi } from '#services';
+import { JmapOperation } from '#types';
 
 import { JMAP_DOMAIN, JMAP_MAIL_CONNECTOR_ID } from '../../../constants';
 import { generateJmapDataset } from '../../../testing/jmap-fixtures';
@@ -249,7 +249,9 @@ describe('runJmapSync against a mock JMAP API', () => {
       true,
     );
     expect(statusUpdates.every((update) => update.progress?.key === createSyncProgressKey(mailbox))).toBe(true);
-    expect(statusUpdates.some((update) => update.message === mailbox.name)).toBe(true);
+    // Names the phase as well as the mailbox: two meters run over one mailbox (sync, then analyze),
+    // so the bare name left the user unable to tell which was moving.
+    expect(statusUpdates.some((update) => update.message === `Syncing ${mailbox.name}`)).toBe(true);
   });
 
   test('initial backward, incremental forward, and widening syncBackDays reopens backfill', async ({ expect }) => {
@@ -494,7 +496,7 @@ describe('runJmapSync against a mock JMAP API', () => {
   });
 
   test('JmapSync is marked idempotent for durable-execution retry', ({ expect }) => {
-    expect(Operation.isIdempotent(InboxOperation.JmapSync)).toBe(true);
+    expect(Operation.isIdempotent(JmapOperation.JmapSync)).toBe(true);
   });
 
   //

@@ -49,6 +49,9 @@
       "path": "../../core/compute/extractor-lib"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

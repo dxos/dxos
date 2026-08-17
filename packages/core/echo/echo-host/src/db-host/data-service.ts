@@ -12,21 +12,6 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  type BatchedDocumentUpdates,
-  type CreateDocumentRequest,
-  type CreateDocumentResponse,
-  type FlushRequest,
-  type GetDocumentHeadsRequest,
-  type GetDocumentHeadsResponse,
-  type GetSpaceSyncStateRequest,
-  type ReIndexHeadsRequest,
-  type SpaceSyncState,
-  type SubscribeRequest,
-  type UpdateRequest,
-  type UpdateSubscriptionRequest,
-  type WaitUntilHeadsReplicatedRequest,
-} from '@dxos/protocols/proto/dxos/echo/service';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge';
@@ -72,8 +57,10 @@ export class DataServiceImpl implements DataService.Handlers {
     this._runGarbageCollection = params.runGarbageCollection;
   }
 
-  ['DataService.subscribe'](request: SubscribeRequest): EffectStream.Stream<BatchedDocumentUpdates, Error> {
-    return EffectEx.streamFromEmitter<BatchedDocumentUpdates, Error>((emit) => {
+  ['DataService.subscribe'](
+    request: DataService.SubscribeRequest,
+  ): EffectStream.Stream<DataService.BatchedDocumentUpdates, Error> {
+    return EffectEx.streamFromEmitter<DataService.BatchedDocumentUpdates, Error>((emit) => {
       const synchronizer = new DocumentsSynchronizer({
         automergeHost: this._automergeHost,
         sendUpdates: (updates) => void emit.single(updates),
@@ -95,7 +82,7 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.updateSubscription'](request: UpdateSubscriptionRequest): Effect.Effect<void, Error> {
+  ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, Error> {
     return Effect.promise(async () => {
       const synchronizer = this._subscriptions.get(request.subscriptionId);
       invariant(synchronizer, 'Subscription not found');
@@ -109,14 +96,16 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.createDocument'](request: CreateDocumentRequest): Effect.Effect<CreateDocumentResponse, Error> {
+  ['DataService.createDocument'](
+    request: DataService.CreateDocumentRequest,
+  ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
     return Effect.promise(async () => {
       const handle = await this._automergeHost.createDoc(request.initialValue);
       return { documentId: handle.documentId };
     });
   }
 
-  ['DataService.update'](request: UpdateRequest): Effect.Effect<void, Error> {
+  ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, Error> {
     return Effect.promise(async () => {
       if (!request.updates) {
         return;
@@ -128,13 +117,15 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.flush'](request: FlushRequest): Effect.Effect<void, Error> {
+  ['DataService.flush'](request: DataService.FlushRequest): Effect.Effect<void, Error> {
     return Effect.promise(async () => {
       await this._automergeHost.flush(Context.default(), request);
     });
   }
 
-  ['DataService.getDocumentHeads'](request: GetDocumentHeadsRequest): Effect.Effect<GetDocumentHeadsResponse, Error> {
+  ['DataService.getDocumentHeads'](
+    request: DataService.GetDocumentHeadsRequest,
+  ): Effect.Effect<DataService.GetDocumentHeadsResponse, Error> {
     return Effect.promise(async () => {
       const documentIds = request.documentIds;
       if (!documentIds) {
@@ -149,13 +140,15 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.waitUntilHeadsReplicated'](request: WaitUntilHeadsReplicatedRequest): Effect.Effect<void, Error> {
+  ['DataService.waitUntilHeadsReplicated'](
+    request: DataService.WaitUntilHeadsReplicatedRequest,
+  ): Effect.Effect<void, Error> {
     return Effect.promise(async () => {
       await this._automergeHost.waitUntilHeadsReplicated(Context.default(), request.heads);
     });
   }
 
-  ['DataService.reIndexHeads'](request: ReIndexHeadsRequest): Effect.Effect<void, Error> {
+  ['DataService.reIndexHeads'](request: DataService.ReIndexHeadsRequest): Effect.Effect<void, Error> {
     return Effect.promise(async () => {
       await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
     });
@@ -194,9 +187,9 @@ export class DataServiceImpl implements DataService.Handlers {
   }
 
   ['DataService.subscribeSpaceSyncState'](
-    request: GetSpaceSyncStateRequest,
-  ): EffectStream.Stream<SpaceSyncState, Error> {
-    return EffectEx.streamFromEmitter<SpaceSyncState, Error>((emit) => {
+    request: DataService.GetSpaceSyncStateRequest,
+  ): EffectStream.Stream<DataService.SpaceSyncState, Error> {
+    return EffectEx.streamFromEmitter<DataService.SpaceSyncState, Error>((emit) => {
       const ctx = Context.default();
       const spaceId = request.spaceId;
       invariant(SpaceId.isValid(spaceId));

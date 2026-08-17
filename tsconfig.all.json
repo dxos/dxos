@@ -4,6 +4,9 @@
   "compilerOptions": {},
   "references": [
     {
+      "path": "packages/core/compute/agent-claude/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/agent-runtime/tsconfig.json"
     },
     {
@@ -386,6 +389,9 @@
     },
     {
       "path": "packages/plugins/plugin-commerce/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-computer/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
