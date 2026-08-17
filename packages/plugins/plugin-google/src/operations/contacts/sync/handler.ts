@@ -15,7 +15,7 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { syncConnectionBindings } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import { Person } from '@dxos/types';
 
 import { GoogleContacts } from '#apis';
@@ -170,7 +170,7 @@ const syncContactGroup = (binding: Cursor.ExternalCursor) =>
 
 const handler = GoogleOperation.GoogleContactsSync.pipe(
   Operation.withHandler(({ connection, priority }) =>
-    syncConnectionBindings({
+    Binding.syncAll({
       connection,
       priority,
       sync: (binding) =>

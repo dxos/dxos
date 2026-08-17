@@ -13,7 +13,7 @@ import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, T
 import { invariant } from '@dxos/invariant';
 import { DXN, EID } from '@dxos/keys';
 import { Connection, Cursor } from '@dxos/link';
-import { isCursorForTarget } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as GoogleOperation from '@dxos/plugin-google/GoogleOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -134,7 +134,7 @@ export const generator = () => ({
         // authenticates the mailbox's binding, not the mailbox itself.
         const cursors = await space.db.query(Filter.type(Cursor.Cursor)).run();
         const binding = cursors.find(
-          (cursor): cursor is Cursor.ExternalCursor => Cursor.isExternal(cursor) && isCursorForTarget(cursor, mailbox),
+          (cursor): cursor is Cursor.ExternalCursor => Cursor.isExternal(cursor) && Binding.targets(cursor, mailbox),
         );
         invariant(binding, 'Mailbox has no sync binding');
         const connection = await space.db

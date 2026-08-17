@@ -13,7 +13,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { syncConnectionBindings } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -603,7 +603,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
 
 const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = LinearOperation.SyncLinearTeams.pipe(
   Operation.withHandler(({ connection, priority }) =>
-    syncConnectionBindings({
+    Binding.syncAll({
       connection,
       priority,
       sync: (binding) => syncTeamBinding(binding),

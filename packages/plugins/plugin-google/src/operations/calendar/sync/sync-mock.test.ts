@@ -11,7 +11,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
-import { syncConnectionBindings } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { TagIndex } from '@dxos/schema';
 import { Event, Organization, Person } from '@dxos/types';
@@ -62,7 +62,7 @@ const seedCalendarBinding = async (builder: EchoTestBuilder, { max }: { max?: st
 
 /** Mirrors the handler: fan out over the connection's bindings, folding per-binding event counts. */
 const syncConnection = (connection: Connection.Connection, props: Omit<SyncCalendarProps, 'binding'> = {}) =>
-  syncConnectionBindings({
+  Binding.syncAll({
     connection: Ref.make(connection),
     sync: (binding) => syncCalendar({ binding: Ref.make(binding), ...props }),
   }).pipe(

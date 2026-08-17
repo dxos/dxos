@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { syncConnectionBindings } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
 import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
   Operation.withHandler(
     Effect.fnUntraced(function* ({ connection, priority }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const { outputs } = yield* syncConnectionBindings({
+      const { outputs } = yield* Binding.syncAll({
         connection,
         priority,
         sync: (binding) =>

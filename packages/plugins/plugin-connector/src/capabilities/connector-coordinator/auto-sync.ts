@@ -13,13 +13,13 @@ import { log } from '@dxos/log';
 
 import { ConnectorSpec } from '#types';
 
+import * as Binding from '../../Binding';
 import { SyncRoutineMissingError } from '../../errors';
-import { runConnectionSync } from '../../util';
 
 /**
  * Run the first sync for a connection whose initial sync targets were just bound, so a new
  * connection populates without the user pressing "Sync now". No-op unless the connector opts in via
- * `sync.auto`. Runs through {@link runConnectionSync}, so a trigger-declaring connector's sync is
+ * `sync.auto`. Runs through {@link Binding.runSync}, so a trigger-declaring connector's sync is
  * driven by its routine's trigger (the dispatcher carries continuation for the unbounded first sync);
  * a missing routine — the user cancelled the create-routine form — skips the auto sync entirely.
  *
@@ -39,7 +39,7 @@ export const autoSyncConnection = (
     return Effect.void;
   }
 
-  return runConnectionSync({ connection, connector, spaceId: db.spaceId }).pipe(
+  return Binding.runSync({ connection, connector, spaceId: db.spaceId }).pipe(
     Effect.provide(Database.layer(db)),
     Effect.provideService(Operation.Service, invoker),
     Effect.provideService(Capability.Service, capabilities),

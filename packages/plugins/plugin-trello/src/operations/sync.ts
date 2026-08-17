@@ -14,7 +14,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { syncConnectionBindings } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import * as KanbanConstants from '@dxos/plugin-kanban/KanbanConstants';
 import { Expando } from '@dxos/schema';
@@ -612,7 +612,7 @@ const syncBoardBinding = Effect.fn(function* (bound: Cursor.ExternalCursor) {
 
 const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = TrelloOperation.SyncTrelloBoard.pipe(
   Operation.withHandler(({ connection, priority }) =>
-    syncConnectionBindings({
+    Binding.syncAll({
       connection,
       priority,
       sync: (bound) => syncBoardBinding(bound),

@@ -7,38 +7,26 @@ import { useMemo } from 'react';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Connection, Cursor } from '@dxos/link';
-import { isCursorForTarget } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 /**
  * Find the {@link Connection} bound to the given `target` object via an external-sync
  * {@link Cursor} (the cursor's `spec.source` access token authenticates sync for that target).
- * Returns the first matching connection (or `undefined` if the target is not yet bound).
- *
- * The cursor no longer relates to `Connection` directly (that coupling was removed), so this scans
- * every cursor in the space, finds the one targeting `target`, then matches its access token against
- * every `Connection` — fuzzy if a token is ever shared across connections.
+ * Returns the connection of the target's live binding, or `undefined` when the target is unbound —
+ * including when its cursor outlived the connection it was authenticated by (see
+ * {@link Binding.find}), which is the same state the Connect action keys on.
  */
 export const useTargetConnection = <T extends Obj.Any>(
   target: T | undefined,
 ): { connection: Connection.Connection | undefined } => {
   const db = target ? Obj.getDatabase(target) : undefined;
   const cursors = useQuery(db, Filter.type(Cursor.Cursor));
-  const cursor = useMemo(
-    () =>
-      target
-        ? cursors.find(
-            (candidate): candidate is Cursor.ExternalCursor =>
-              Cursor.isExternal(candidate) && isCursorForTarget(candidate, target),
-          )
-        : undefined,
-    [target, cursors],
+  const connections = useQuery(db, Filter.type(Connection.Connection));
+  return useMemo(
+    () => ({ connection: target ? Binding.find(cursors, connections, target)?.connection : undefined }),
+    [target, cursors, connections],
   );
-  const connections = useQuery(
-    db,
-    cursor ? Filter.type(Connection.Connection, { accessToken: cursor.spec.source }) : Filter.nothing(),
-  );
-  return { connection: connections[0] };
 };
 
 /**

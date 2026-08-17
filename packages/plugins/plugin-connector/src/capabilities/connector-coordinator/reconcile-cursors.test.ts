@@ -19,7 +19,7 @@ import { Expando } from '@dxos/schema';
 
 import { ConnectorSpec } from '#types';
 
-import { isCursorForConnection } from '../../util';
+import * as Binding from '../../Binding';
 import { type SyncTargetSelection, reconcileCursors } from './reconcile-cursors';
 
 describe('reconcileCursors', () => {
@@ -104,7 +104,7 @@ describe('reconcileCursors', () => {
   const queryCursors = (db: Database.Database, connection: Connection.Connection) =>
     Database.query(Filter.type(Cursor.Cursor)).run.pipe(
       Effect.provide(Database.layer(db)),
-      Effect.map((cursors) => cursors.filter((cursor) => isCursorForConnection(cursor, connection))),
+      Effect.map((cursors) => cursors.filter((cursor) => Binding.isForConnection(cursor, connection))),
       EffectEx.runAndForwardErrors,
     );
 

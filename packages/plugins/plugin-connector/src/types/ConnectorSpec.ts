@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type { Client } from '@dxos/client';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
@@ -65,7 +66,7 @@ export interface MaterializeTargetOutput extends Schema.Schema.Type<typeof Mater
 /**
  * Minimum input for provider {@link ConnectorSync.operation} operations: the account to reconcile.
  * Every connection is potentially multi-target, so a sync operation is account-level — it covers all
- * of the connection's bindings (see `syncConnectionBindings` for the shared fan-out).
+ * of the connection's bindings (see `Binding.syncAll` for the shared fan-out).
  */
 export type SyncInput = {
   connection: Ref.Ref<Connection.Connection>;
@@ -98,7 +99,7 @@ export type OnTokenCreated = (input: {
  * up to date in the background — the trigger spec to schedule that on.
  */
 export type ConnectorSync = {
-  /** Reconcile every binding of a connection with its remote (see `syncConnectionBindings`). */
+  /** Reconcile every binding of a connection with its remote (see `Binding.syncAll`). */
   operation: Operation.Definition<SyncInput, SyncOutput>;
   /**
    * Typename of the local object this connector binds as a sync target (e.g. a Mailbox for a mail
@@ -254,3 +255,36 @@ export type ConnectorEntry = {
  * own entry array alongside plugin-connector's built-ins.
  */
 export const Connector = Capability.make<ConnectorEntry[]>()('org.dxos.plugin.connector.capability.connector');
+
+/**
+ * The ids of the registered connectors that bind objects of this type, matched by their
+ * `sync.targetTypename`.
+ *
+ * Pass this as a bindable type's `ConnectorAnnotations.ConnectorAuthAnnotation.connectorIds` so the
+ * annotation resolves its providers from the registry instead of listing them:
+ *
+ * ```ts
+ * ConnectorAuthAnnotation.set({ connectorIds: ConnectorSpec.idsForTarget, bindTarget: true })
+ * ```
+ *
+ * That inverts the dependency. A domain type keeps no provider names, so adding a provider means
+ * registering a {@link Connector} — no edit to the type it binds — and a third-party provider can bind
+ * a built-in type without the domain plugin knowing it exists. It also removes the duplicate-constant
+ * problem the literal form creates: the id lived in both the provider and the domain plugin, kept in
+ * step by hand.
+ */
+export const idsForTarget = (
+  object: Obj.Unknown,
+  capabilities: CapabilityManager.CapabilityManager,
+): readonly string[] => {
+  const typename = Obj.getTypename(object);
+  if (!typename) {
+    return [];
+  }
+
+  return capabilities
+    .getAll(Connector)
+    .flat()
+    .filter((connector) => connector.sync?.targetTypename === typename)
+    .map((connector) => connector.id);
+};

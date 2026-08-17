@@ -9,7 +9,7 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
-import { syncConnectionBindings } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 
 import { GoogleCalendarApi, GoogleCredentials } from '#services';
 import { GoogleOperation } from '#types';
@@ -18,7 +18,7 @@ import { syncCalendar } from './sync';
 
 const handler = GoogleOperation.GoogleCalendarSync.pipe(
   Operation.withHandler(({ connection, priority, googleCalendarId, syncBackDays, syncForwardDays, pageSize }) =>
-    syncConnectionBindings({
+    Binding.syncAll({
       connection,
       priority,
       sync: (binding) =>

@@ -12,8 +12,9 @@ import { Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
-import { SyncTemplateId, findBindingForTarget } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as SyncTemplate from '@dxos/plugin-connector/SyncTemplate';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
@@ -97,14 +98,14 @@ export const useSyncTrigger = ({
     try {
       // The routine is created through the seeded create-routine form, never silently; the scaffold
       // needs the binding, so bail (rather than open a failing dialog) when the subject has none.
-      const cursor = await findBindingForTarget(subject).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
+      const cursor = await Binding.queryCursor(subject).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
       if (!cursor) {
         return;
       }
       await invokePromise(SpaceOperation.OpenCreateObject, {
         target: db,
         typename: Type.getTypename(Routine.Routine),
-        initialFormValues: { templateId: SyncTemplateId, subject },
+        initialFormValues: { templateId: SyncTemplate.ID, subject },
         navigable: false,
       });
     } finally {

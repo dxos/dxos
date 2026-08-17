@@ -9,7 +9,7 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
-import { syncConnectionBindings } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import { runMailSync } from '@dxos/plugin-inbox/sync';
 
 import { GoogleCredentials, GoogleMailApi } from '#services';
@@ -19,7 +19,7 @@ import { googleMailSyncProvider } from './sync-provider';
 
 const handler = GoogleOperation.GoogleMailSync.pipe(
   Operation.withHandler(({ connection, priority, userId = 'me', label = 'all' }) =>
-    syncConnectionBindings({
+    Binding.syncAll({
       connection,
       priority,
       sync: (binding) =>

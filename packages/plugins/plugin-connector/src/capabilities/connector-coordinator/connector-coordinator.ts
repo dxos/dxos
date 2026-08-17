@@ -28,10 +28,10 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
+import * as Binding from '../../Binding';
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
-import { SyncTemplateId } from '../../templates';
-import { findSyncTriggerForConnection } from '../../util';
+import * as SyncTemplate from '../../SyncTemplate';
 import { autoSyncConnection } from './auto-sync';
 import { createSingleCursor } from './create-single-cursor';
 import {
@@ -188,7 +188,7 @@ const openCreateSyncRoutineDialog = (
       target: db,
       typename: Type.getTypename(Routine.Routine),
       // `subject` may be the connection or a bound target — the template resolves either to the account.
-      initialFormValues: { templateId: SyncTemplateId, subject },
+      initialFormValues: { templateId: SyncTemplate.ID, subject },
       navigable: false,
       onCreateObject: () => {
         Effect.runFork(autoSyncConnection(invoker, capabilities, db, connector, connection));
@@ -700,7 +700,7 @@ export default Capability.makeModule(
         // submit, so this is the routine-offer / first-sync moment. A later change of targets is
         // left to the user — new bindings are covered by the account routine's fan-out.
         if (existing === 0 && added > 0) {
-          const trigger = connector.sync?.trigger ? yield* findSyncTriggerForConnection(connection) : undefined;
+          const trigger = connector.sync?.trigger ? yield* Binding.findTrigger(connection) : undefined;
           if (connector.sync?.trigger && !trigger) {
             // One form for the whole account, regardless of how many targets were picked; saving
             // runs the first sync.

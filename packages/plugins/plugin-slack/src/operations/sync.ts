@@ -12,7 +12,7 @@ import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { syncConnectionBindings } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -239,7 +239,7 @@ const resolveBots = (
 /**
  * Reconciles messages for every Slack channel bound to a connection.
  *
- * Fans out over the connection's external-sync cursors (see `syncConnectionBindings`);
+ * Fans out over the connection's external-sync cursors (see `Binding.syncAll`);
  * per binding, pull-only:
  *  1. Resolve the binding's credential (`spec.source`) and local Channel (`spec.target`).
  *  2. Ask Slack for messages since the binding's `value` (or all history on first sync).
@@ -253,7 +253,7 @@ const resolveBots = (
  */
 const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = SlackOperation.SyncSlackChannel.pipe(
   Operation.withHandler(({ connection, priority }) =>
-    syncConnectionBindings({
+    Binding.syncAll({
       connection,
       priority,
       sync: (binding) =>

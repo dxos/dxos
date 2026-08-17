@@ -9,8 +9,9 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import { dirname } from 'node:path';
 
-import { DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';
+import { DEFAULT_HUB_URL, DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
+import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
 import { Config } from './config';
 
@@ -72,7 +73,9 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
       const configPath = Option.getOrElse(args.config, () => defaultConfigPath);
       const configContent = yield* fs.readFileString(configPath);
       const configValues = Yaml.parse(configContent);
-      return ConfigService.of(new Config(configValues, profileBuiltinDefaults(args.profile).values));
+      return ConfigService.of(
+        new Config(processEnvDefaults(), configValues, profileBuiltinDefaults(args.profile).values),
+      );
     }).pipe(
       // If the config file doesn't exist, create it. v4 folds v3's `SystemError` and `BadArgument`
       // into one `PlatformError` tag; only the former was ever recovered here.
@@ -86,12 +89,28 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
               const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
               yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });
               yield* fs.writeFileString(pathToCreate, Yaml.stringify(configValues));
-              return ConfigService.of(new Config(configValues));
+              // The written file carries only `defaultConfig`; the profile defaults stay out of it so
+              // they keep tracking the code rather than freezing into every profile ever created.
+              return ConfigService.of(
+                new Config(processEnvDefaults(), configValues, profileBuiltinDefaults(args.profile).values),
+              );
             }),
       ),
     );
   };
 }
+
+/**
+ * `DX_*` process env projected onto `runtime.app.env`, mirroring what the bundler config plugin does
+ * for browser builds — without it those keys are unreachable on node, where nothing bundles the app.
+ * Takes precedence over the profile config file, so `DX_HUB_URL=… dx …` overrides for one command.
+ */
+const processEnvDefaults = (): ConfigProto => {
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(([key, value]) => key.startsWith('DX_') && value !== undefined),
+  );
+  return Object.keys(env).length > 0 ? { runtime: { app: { env } } } : {};
+};
 
 /**
  * Default config for a profile.
@@ -102,6 +121,14 @@ const profileBuiltinDefaults = (profile: string) => {
 
   return new Config({
     runtime: {
+      // Set here rather than in the file written for a new profile, and under the service key
+      // rather than `runtime.app.env`: the latter outranks it in the resolver, so a built-in there
+      // would shadow a hub URL the profile configures for itself.
+      services: {
+        hub: {
+          url: DEFAULT_HUB_URL,
+        },
+      },
       client: {
         edgeFeatures: {
           subductionReplicator: true,

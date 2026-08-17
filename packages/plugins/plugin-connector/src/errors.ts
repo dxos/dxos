@@ -20,7 +20,8 @@ const TEST_FAILED_MESSAGE = 'Connection test failed.' as const;
 
 const SYNC_FAILED_MESSAGE = 'Connection sync could not be run.' as const;
 
-const SYNC_ROUTINE_MISSING_MESSAGE = 'No sync routine exists for the binding.' as const;
+const SYNC_ROUTINE_MISSING_MESSAGE = 'No sync routine exists for the connection.' as const;
+const ACCOUNT_MISMATCH_MESSAGE = 'Target is already synced from a different account.' as const;
 
 /**
  * A connector's {@link TestConnection} probe rejected the stored credential or could not reach the
@@ -40,14 +41,29 @@ export class ConnectionSyncError extends BaseError.extend('ConnectionSyncError',
 }
 
 /**
- * A trigger-declaring connector's binding has no sync routine (deleted, or declined at creation).
+ * A trigger-declaring connector's connection has no sync routine (deleted, or declined at creation).
  * Sync is driven by the routine's trigger, and routines are only created through the create-routine
  * form — never silently — so the caller must (re)create it first: UI callers offer the seeded form
- * (see `syncTarget`), headless callers skip the binding.
+ * (see `Binding.syncOrOfferRoutine`), headless callers skip the connection.
  */
 export class SyncRoutineMissingError extends BaseError.extend('SyncRoutineMissingError', SYNC_ROUTINE_MISSING_MESSAGE) {
   constructor(input: { connectorId?: string } = {}) {
     super({ context: { connectorId: input.connectorId } });
+  }
+}
+
+/**
+ * A bind was attempted between a target and a credential for a different remote account than the one
+ * the target already syncs. Refused rather than reconciled: the target's feed holds the other account's
+ * data, and binding here would merge two accounts into one object. A new target is the way to sync a
+ * second account.
+ */
+export class TargetAccountMismatchError extends BaseError.extend(
+  'TargetAccountMismatchError',
+  ACCOUNT_MISMATCH_MESSAGE,
+) {
+  constructor(input: { targetId: string; expected: string; actual: string }) {
+    super({ context: { targetId: input.targetId, expected: input.expected, actual: input.actual } });
   }
 }
 

@@ -12,7 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { syncConnectionBindings } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import { Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -678,7 +678,7 @@ const syncRepoBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
 const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositories> =
   GitHubOperation.SyncGitHubRepositories.pipe(
     Operation.withHandler(({ connection, priority }) =>
-      syncConnectionBindings({
+      Binding.syncAll({
         connection,
         priority,
         sync: (binding) => syncRepoBinding(binding),

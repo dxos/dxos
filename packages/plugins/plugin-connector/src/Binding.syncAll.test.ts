@@ -28,10 +28,10 @@ import { Expando } from '@dxos/schema';
 
 import { ConnectorSpec } from '#types';
 
-import { autoSyncConnection } from '../capabilities/connector-coordinator/auto-sync';
-import { syncConnectionBindings } from './sync-fanout';
+import * as Binding from './Binding';
+import { autoSyncConnection } from './capabilities/connector-coordinator/auto-sync';
 
-describe('syncConnectionBindings', () => {
+describe('Binding.syncAll', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -61,7 +61,7 @@ describe('syncConnectionBindings', () => {
 
   const syncHandler = TestSync.pipe(
     Operation.withHandler(({ connection, priority }) =>
-      syncConnectionBindings({
+      Binding.syncAll({
         connection,
         priority,
         sync: (binding) =>

@@ -70,7 +70,7 @@ export const MaterializeSlackTarget = Operation.make({
 /**
  * Pull-only sync of every Slack channel bound to a connection.
  *
- * Fans out over the connection's external-sync cursors (see `syncConnectionBindings`):
+ * Fans out over the connection's external-sync cursors (see `Binding.syncAll`):
  * for each binding, resolves its credential (`spec.source`) and local `Channel`
  * (`spec.target`), asks Slack for messages newer than the binding's `value`,
  * and appends them to the channel's feed as `@dxos/types` `Message` objects.

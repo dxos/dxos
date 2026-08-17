@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
@@ -11,18 +13,13 @@ import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilit
 
 import { ConnectorSpec } from '#types';
 
-// Direct module imports, not the `../util` barrel: `util/sync-target` imports this file (to seed the
-// recreation dialog), so going through the barrel would create a module cycle.
-import { isCursorForConnection } from '../util/cursor-predicates';
-import { findBindingForTarget } from '../util/find-binding';
-import { scaffoldConnectionSyncRoutine } from '../util/sync-routine';
-import { connectorIdsForTarget } from '../util/target-connectors';
+import * as Binding from './Binding';
 
 /**
  * Id of the connector sync template. Declared here so the coordinator can seed the create-routine
  * dialog with it without importing the template module.
  */
-export const SyncTemplateId = 'org.dxos.routine.connectorSync';
+export const ID = 'org.dxos.routine.connectorSync';
 
 /**
  * "Sync" automation template: the account-level recurring sync routine for a Connection, built from
@@ -35,13 +32,13 @@ export const SyncTemplateId = 'org.dxos.routine.connectorSync';
  * connection. `appliesTo` can only check the subject's shape; the binding/connector lookups happen
  * in `scaffold` (a synchronous predicate cannot query).
  */
-export const makeSyncTemplate = (capabilities: CapabilityManager.CapabilityManager): RoutineCapabilities.Template => ({
-  id: SyncTemplateId,
+export const make = (capabilities: CapabilityManager.CapabilityManager): RoutineCapabilities.Template => ({
+  id: ID,
   label: 'Sync',
   icon: 'ph--arrows-clockwise--regular',
   appliesTo: (subject) =>
     subject != null &&
-    (Obj.instanceOf(Connection.Connection, subject) || connectorIdsForTarget(subject, capabilities).length > 0),
+    (Obj.instanceOf(Connection.Connection, subject) || ConnectorSpec.idsForTarget(subject, capabilities).length > 0),
   scaffold: ({ name, subject }) =>
     Effect.gen(function* () {
       if (!subject) {
@@ -62,7 +59,7 @@ export const makeSyncTemplate = (capabilities: CapabilityManager.CapabilityManag
         return yield* Effect.fail(new Error('Connector declares no sync schedule.'));
       }
 
-      return scaffoldConnectionSyncRoutine({
+      return Binding.scaffoldRoutine({
         name,
         connection,
         operation: sync.operation,
@@ -78,10 +75,10 @@ const resolveConnection = (subject: Obj.Unknown) =>
     if (Obj.instanceOf(Connection.Connection, subject)) {
       return subject;
     }
-    const cursor = yield* findBindingForTarget(subject);
+    const cursor = yield* Binding.queryCursor(subject);
     if (!cursor) {
       return undefined;
     }
     const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
-    return connections.find((connection) => isCursorForConnection(cursor, connection));
+    return connections.find((connection) => Binding.isForConnection(cursor, connection));
   });

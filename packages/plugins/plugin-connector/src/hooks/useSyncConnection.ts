@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 
 import { useConnector } from '#hooks';
 
-import { syncConnectionOrOfferRoutine } from '../util';
+import * as Binding from '../Binding';
 
 export type UseSyncConnectionResult = {
   /** True when the connection's connector exposes a `sync` operation. Drives sync button visibility. */
@@ -48,7 +48,7 @@ export const useSyncConnection = (connection: Connection.Connection | undefined)
     }
     setSyncing(true);
     try {
-      await syncConnectionOrOfferRoutine({ connection, connector, db }).pipe(
+      await Binding.syncOrOfferRoutine({ connection, connector, db }).pipe(
         Effect.provideService(Operation.Service, invoker),
         Effect.provideService(Capability.Service, manager.capabilities),
         EffectEx.runPromise,

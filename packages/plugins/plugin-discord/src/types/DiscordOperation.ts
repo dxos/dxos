@@ -57,7 +57,7 @@ export const MaterializeDiscordTarget = Operation.make({
 /**
  * Pull-only sync of every Discord channel bound to a connection.
  *
- * Fans out over the connection's external-sync cursors (see `syncConnectionBindings`):
+ * Fans out over the connection's external-sync cursors (see `Binding.syncAll`):
  * for each binding, asks Discord for messages newer than `binding.max`, maps each into
  * a `@dxos/types` `Message`, and appends them to the bound Channel's feed. Updates each
  * binding's `max`/`lastTick`/`lastError`.

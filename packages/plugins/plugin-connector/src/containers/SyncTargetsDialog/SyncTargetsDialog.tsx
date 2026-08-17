@@ -18,7 +18,7 @@ import { osTranslations } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
-import { isCursorForConnection } from '../../util';
+import * as Binding from '../../Binding';
 
 export type SyncTargetsDialogProps = {
   connection: Connection.Connection;
@@ -42,7 +42,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
   const initiallySelected = useMemo(() => {
     const ids = new Set<string>();
     for (const cursor of allCursors) {
-      if (isCursorForConnection(cursor, connection) && cursor.spec.externalId) {
+      if (Binding.isForConnection(cursor, connection) && cursor.spec.externalId) {
         ids.add(cursor.spec.externalId);
       }
     }

@@ -510,8 +510,10 @@ export const makeToolbarAction = <R = never>({
     properties: {
       label,
       disposition: TOOLBAR_DISPOSITION,
+      // Always emitted, since a re-offered node merges over its previous properties and an omitted
+      // `disabled` cannot clear an earlier `true`; the identity fields below never need clearing.
+      disabled: disabled ?? false,
       ...(icon !== undefined && { icon }),
-      ...(disabled !== undefined && { disabled }),
       ...(testId !== undefined && { testId }),
       ...(keyBinding !== undefined && { keyBinding }),
     },
@@ -531,6 +533,7 @@ export const makeToolbarActionGroup = ({
   label,
   icon,
   iconOnly = true,
+  disabled,
   testId,
   actions,
 }: {
@@ -540,6 +543,9 @@ export const makeToolbarActionGroup = ({
   /** Render the trigger as icon-only (label becomes tooltip/aria). Defaults to `true` for compact
    * toolbars; set `false` to show the label text next to the icon. */
   iconOnly?: boolean;
+  /** Render the trigger disabled, so the toolbar can keep showing an affordance that currently has
+   * nothing to offer (paired with an empty `actions`) rather than dropping the control entirely. */
+  disabled?: boolean;
   /** Test id for the group's dropdown trigger. */
   testId?: string;
   actions: Node.NodeArg<Node.ActionData<any>>[];
@@ -555,6 +561,9 @@ export const makeToolbarActionGroup = ({
       variant: 'dropdownMenu',
       iconOnly,
       disposition: TOOLBAR_DISPOSITION,
+      // Always emitted, since a re-offered node merges over its previous properties (see `addNode`) and
+      // an omitted `disabled` cannot clear an earlier `true`.
+      disabled: disabled ?? false,
       ...(icon !== undefined && { icon }),
       ...(testId !== undefined && { testId }),
     },

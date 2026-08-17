@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
-import { syncConnectionBindings } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -127,7 +127,7 @@ export const findChannelForDiscordChannel: (
 /**
  * Reconciles messages for every Discord channel bound to a connection.
  *
- * Fans out over the connection's external-sync cursors (see `syncConnectionBindings`);
+ * Fans out over the connection's external-sync cursors (see `Binding.syncAll`);
  * per binding, pull-only:
  *  1. Its source is the `AccessToken`, its target the local `Channel`, and
  *     `binding.spec.externalId` is the Discord channel id.
@@ -143,7 +143,7 @@ export const findChannelForDiscordChannel: (
 const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel> =
   DiscordOperation.SyncDiscordChannel.pipe(
     Operation.withHandler(({ connection, priority }) =>
-      syncConnectionBindings({
+      Binding.syncAll({
         connection,
         priority,
         sync: (binding) =>

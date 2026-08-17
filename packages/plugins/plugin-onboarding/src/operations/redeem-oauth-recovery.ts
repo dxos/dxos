@@ -10,10 +10,10 @@ import { Context as DxContext } from '@dxos/context';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
+import { ATPROTO_OAUTH_SCOPES, type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
 import { RedeemOAuthRecovery } from './definitions';
-import { ATPROTO_OAUTH_SCOPES, createEdgeHttpClient } from './shared';
+import { createEdgeHttpClient } from './shared';
 
 /**
  * Recover an existing identity by completing an OAuth flow with a registered recovery provider
