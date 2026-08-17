@@ -1,5 +1,9 @@
 # @dxos/plugin-computer
 
+> **Proof of concept, dev only.** Presented in the app as **Coding (Dev)**. The tools need a Composer
+> served by a vite dev server that mounted this package's plugin with `DX_COMPUTER_ROOT` set. A
+> deployed build has no dev server, so it has no shell: both tools fail with a configuration error.
+
 A minimal coding harness for Composer's assistant: a **bash** tool and a **multi-string-replace**
 edit tool that run in a working tree on the developer's machine.
 
@@ -12,7 +16,7 @@ transcript — and gains the two tools that loop was missing.
 ```text
 browser                                    dev server (node)
 ─────────────────────────────────────      ────────────────────────────────────────
-skill "Computer"
+skill "Coding (Dev)"
   ├── bash  ──┐                            POST /api/computer/exec
   └── edits ──┴──▶ @dxos/plugin-computer/shell ─────▶  bash -c <script>  in <root>
                      (fetch, same origin)              ▲
@@ -31,8 +35,8 @@ change what the shell runs.
 1. Start the Composer dev server from the tree the harness may work in (`moon run
    composer-app:serve`). The shell route mounts against that process's cwd.
 
-2. Enable the **Computer** plugin in Composer's settings (it is registered only in dev/labs builds
-   and is off by default), then enable the **Computer** skill in the conversation.
+2. Enable the **Coding (Dev)** plugin in Composer's settings (it is registered only in dev/labs
+   builds and is off by default), then enable the **Coding (Dev)** skill in the conversation.
 
 ## Packaging
 

@@ -151,11 +151,14 @@ const fail = (res: ServerResponse, status: number, error: string): void => {
 
 const readBody = (req: IncomingMessage): Promise<string> =>
   new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', (chunk) => {
-      body += chunk;
+    // Chunks are concatenated as bytes and decoded once: appending them as strings decodes each
+    // independently, so a multi-byte character split across two packets arrives as replacement
+    // characters — and an edit payload carries text destined for a file.
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => {
+      chunks.push(chunk);
     });
-    req.on('end', () => resolve(body));
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
 
