@@ -763,9 +763,13 @@ const MessageListRoot = ({
           ? (anchors.find((index) => index > at) ?? anchors[anchors.length - 1])
           : ([...anchors].reverse().find((index) => index < at) ?? anchors[0]);
 
+      // Instant, not smooth. A smooth scroll is a promise the list cannot keep: measurements keep
+      // landing while it travels, and each one writes `scrollTop` to the offset it has compensated,
+      // which cancels the animation wherever it had reached. Measured on `baseline/plain`, every
+      // other press was killed two pixels from where it started — a press that visibly did nothing.
+      // A step between two stops is a discrete move anyway; the glide belongs to the follow.
       scrollToIndex(next, {
         align: !scrollPastEnd && next === messages.length - 1 ? 'end' : 'start',
-        behavior: 'smooth',
       });
     },
     [anchors, viewport, virtualizer, scrollToIndex, messages.length, scrollPastEnd],

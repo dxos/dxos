@@ -211,14 +211,14 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       the rebuild commit, to tell a wrong target from a target applied too late. Pinned at 20. Restoring by index makes the
       virtualizer retry while the offsets around the landing point are estimates. Allowance of 1 is
       pinned in the story so a regression past it fails.
-- [ ] **Every other arrow press travels ~2px instead of a row.** Direction is right and the feed
-      always moves, but the distance alternates: `plain` measures `[224, 2, 119, 2, 63]`,
-      `assistant` `[108, 389, 510, 73, 270]`. Deterministic, not a timing artifact — 90 settle
-      frames give the same numbers. Ruled out: reading `virtualizer.scrollOffset` instead of the
-      element's `scrollTop` (the two agree here), and a larger comparison tolerance (papers over it,
-      and skips stops instead). Next: log the _target index_ `stepAnchor` chooses next to the row it
-      stepped from, which distinguishes "chose the row it is already on" from "chose correctly and
-      the scroll was clamped".
+- [x] **Every other arrow press travelled ~2px instead of a row.** The step was smooth, and a smooth
+      scroll is a promise the list cannot keep: measurements keep landing while it travels, and each
+      one writes `scrollTop` to the offset it has compensated, cancelling the animation wherever it
+      had reached. Logged from inside `stepAnchor` on `baseline/plain`: press four targeted 6890 and
+      the element came to rest at 7008, two pixels from where it started, so press five recomputed
+      from the same row and asked for the same target again — `[224, 2, 119, 2, 63]`. Anchor steps
+      are now instant, which a discrete move between two stops should be anyway; the glide belongs to
+      the follow. `baseline/navigation` asserts the distance now, not only the direction.
 - [ ] **`scrollPastEnd` reverted — it never settles.** Reserving the viewport less the last row so
       the tail can be brought to the top is right in principle and was implemented twice: once from
       the last row's measured size, once from the nominal. Both feed back — the reserved space is

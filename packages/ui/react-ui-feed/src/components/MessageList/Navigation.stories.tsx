@@ -60,10 +60,10 @@ const scrollOf = (canvasElement: HTMLElement): number =>
  * already on screen and scrolled nothing, and `getOffsetForIndex` then answered with an offset
  * *below* the current one, scrolling down in response to ArrowUp.
  *
- * Distance is deliberately not asserted: roughly every other press still travels ~2px where it
- * should travel a row — see `chat-ui/TASKS.md`. That is a separate, smaller defect than the one
- * these guard, and pinning a distance here would make them fail for the wrong reason.
+ * Distance is asserted too: a press moves by a stop, and a stop is at least a row, so anything
+ * smaller is the feed nudging itself inside a row it is already in.
  */
+const MIN_TRAVEL = 20;
 
 const press = async (viewport: HTMLElement, key: 'ArrowUp' | 'ArrowDown') => {
   viewport.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
@@ -98,6 +98,12 @@ export const Arrows: Story = {
       backwards: [],
     });
     await expect(scrolls.at(-1)!).toBeLessThan(scrolls[0]);
+    // A press moves by a stop, and a stop is at least a row. Anything smaller is the feed nudging
+    // itself inside a row it is already in, which reads as a press that did nothing.
+    await expect({ travel, stalled: travel.filter((distance) => distance < MIN_TRAVEL) }).toEqual({
+      travel,
+      stalled: [],
+    });
 
     const back: number[] = [];
     for (let step = 0; step < 5; step++) {
@@ -137,5 +143,9 @@ export const Plain: Story = {
       backwards: [],
     });
     await expect(scrolls.at(-1)!).toBeLessThan(scrolls[0]);
+    await expect({ travel, stalled: travel.filter((distance) => distance < MIN_TRAVEL) }).toEqual({
+      travel,
+      stalled: [],
+    });
   },
 };
