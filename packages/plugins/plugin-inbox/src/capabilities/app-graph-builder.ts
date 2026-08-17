@@ -18,7 +18,7 @@ import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
-import { findLiveBinding, syncTarget } from '@dxos/plugin-connector';
+import { type LiveBinding, findLiveBinding, syncTarget } from '@dxos/plugin-connector/binding';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage, Event, Message } from '@dxos/types';
@@ -48,23 +48,21 @@ import { getMessageLabel } from '../util';
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
 /**
- * Whether a live external sync binding targets this mailbox. Gates the pipeline actions: with nothing
- * connected there is no mail to act on, so offering them is a dead affordance. Keys on the same
- * `findLiveBinding` predicate as the sync action and the connector plugin's Connect action, so a
- * binding whose connection was deleted reads as unconnected here too.
+ * The live external sync binding targeting `target`, read reactively so the extension re-runs when a
+ * cursor or connection appears. Every affordance that depends on being connected goes through this one
+ * lookup — the sync actions, and the pipeline actions that would otherwise offer work on a mailbox with
+ * no mail — and it is the same predicate the connector plugin's Connect action keys on, so a binding
+ * whose connection was deleted reads as unconnected everywhere at once.
  */
-const hasConnection = (mailbox: Mailbox.Mailbox, get: Atom.AtomContext): boolean => {
-  const db = Obj.getDatabase(mailbox);
-  if (!db) {
-    return false;
-  }
-  return (
-    findLiveBinding(
-      get(db.query(Filter.type(Cursor.Cursor)).atom),
-      get(db.query(Filter.type(Connection.Connection)).atom),
-      mailbox,
-    ) !== undefined
-  );
+const liveBindingFor = (target: Obj.Unknown, get: Atom.AtomContext): LiveBinding | undefined => {
+  const db = Obj.getDatabase(target);
+  return db
+    ? findLiveBinding(
+        get(db.query(Filter.type(Cursor.Cursor)).atom),
+        get(db.query(Filter.type(Connection.Connection)).atom),
+        target,
+      )
+    : undefined;
 };
 
 export const ATTACHMENT_NODE_TYPE = `${Type.getTypename(Message.Message)}-attachment`;
@@ -464,13 +462,9 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
           // Sync appears only for a live binding — a cursor targeting this mailbox whose Connection
-          // still exists (reactive queries; loading synchronously isn't reliable here). The connector
-          // plugin's Connect action keys on the same predicate, so exactly one of the two is offered.
-          const binding = findLiveBinding(
-            get(db.query(Filter.type(Cursor.Cursor)).atom),
-            get(db.query(Filter.type(Connection.Connection)).atom),
-            mailbox,
-          );
+          // still exists. The connector plugin's Connect action keys on the same predicate, so exactly
+          // one of the two is offered.
+          const binding = liveBindingFor(mailbox, get);
           if (!binding) {
             return Effect.succeed([]);
           }
@@ -518,7 +512,7 @@ export default Capability.makeModule(
           const db = Obj.getDatabase(mailbox);
           // Gated on a connection, not rendered disabled: a disabled primary button still reads as the
           // view's main call to action on a mailbox that has nothing to analyze yet.
-          if (!db || !hasConnection(mailbox, get)) {
+          if (!db || liveBindingFor(mailbox, get) === undefined) {
             return Effect.succeed([]);
           }
           return Effect.gen(function* () {
@@ -567,14 +561,8 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // Sync appears only for a live binding — a cursor targeting this calendar whose Connection
-          // still exists (its `spec.source` access token authenticates the sync). The connector
-          // plugin's Connect action keys on the same predicate, so exactly one of the two is offered.
-          const binding = findLiveBinding(
-            get(db.query(Filter.type(Cursor.Cursor)).atom),
-            get(db.query(Filter.type(Connection.Connection)).atom),
-            calendar,
-          );
+          // Sync appears only for a live binding — see `syncMailbox`.
+          const binding = liveBindingFor(calendar, get);
           if (!binding) {
             return Effect.succeed([]);
           }

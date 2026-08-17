@@ -78,6 +78,11 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./binding": {
+      "source": "./src/binding.ts",
+      "types": "./dist/types/src/binding.d.ts",
+      "import": "./dist/lib/binding.mjs"
+    },
     "./components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",

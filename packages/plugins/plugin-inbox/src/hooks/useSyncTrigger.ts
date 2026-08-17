@@ -10,7 +10,7 @@ import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
-import { createSyncRoutine, findBindingForTarget } from '@dxos/plugin-connector';
+import { createSyncRoutine, findBindingForTarget } from '@dxos/plugin-connector/binding';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`

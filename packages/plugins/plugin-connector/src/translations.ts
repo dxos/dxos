@@ -22,7 +22,7 @@ export const translations = [
         'delete-token.menu': 'Delete Token',
         'add-connection.label': 'Add connection',
         'delete-connection.label': 'Delete connection',
-        'delete-connection.description': 'Remove this connection and its sync bindings.',
+        'delete-connection.description': 'Remove this connection and suspend its sync bindings.',
         'new-connection.label': 'New Connection',
         'connection-companion.label': 'Connection',
         'new-connection.description': 'Create a new custom access token.',
@@ -38,7 +38,7 @@ export const translations = [
         'oauth-failed.title': 'Sign-in failed',
         'account-mismatch.title': 'Connected to a different account',
         'account-mismatch.description':
-          'Nothing was connected: this already syncs a different account. To sync the account you just authorized, create a new item for it and connect that instead.',
+          'This was not connected, because it already syncs a different account. To sync the account you just authorized, create a new item for it and connect that instead.',
         'close.label': 'Close',
         'sync-connection.label': 'Sync now',
         'no-connector.message': 'No service plugin is registered for this connection.',

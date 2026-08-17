@@ -75,7 +75,6 @@ describe('connectorAuth graph extension', () => {
     expect(group).toBeDefined();
     // The regression: a provider is installed, so this must be actionable, not a disabled placeholder.
     expect(group?.properties?.disabled).toBe(false);
-    expect(group?.properties?.emphasis).toBe('primary');
     // The group's children are materialized as its own actions by app-graph, not as an inline array.
     expect(await getGroupChildIds(group)).toContain(`connect-${provider.id}`);
   });
@@ -107,7 +106,6 @@ describe('connectorAuth graph extension', () => {
     const enabled = await registerConnectors([{ ...provider, id: 'other', sync: undefined }, provider]);
 
     expect(enabled?.properties?.disabled).toBe(false);
-    expect(enabled?.properties?.emphasis).toBe('primary');
     expect(await getGroupChildIds(enabled)).toContain(`connect-${provider.id}`);
   });
 
@@ -129,11 +127,12 @@ describe('connectorAuth graph extension', () => {
       manager.contribute({ module: 'test', interface: ConnectorSpec.Connector, implementation: connectors });
     }
 
-    const contribution = await EffectEx.runPromise(
+    // The module's effect requires a Scope; the extensions it returns are plain values that outlive it.
+    const contribution: Capability.AnyContribution = await EffectEx.runPromise(
       Effect.scoped(connectorGraphBuilder().pipe(Effect.provideService(Capability.Service, manager))),
     );
     // A contribution carries its implementations in `values`; the graph builder wants the extensions.
-    const extensions = (contribution as any).values.flat() as GraphBuilder.BuilderExtensions;
+    const extensions = contribution.values.flat() as GraphBuilder.BuilderExtensions;
     const rootExtensions = await EffectEx.runPromise(
       GraphBuilder.createExtension({
         id: 'testRoot',

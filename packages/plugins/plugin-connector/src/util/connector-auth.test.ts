@@ -93,7 +93,6 @@ describe('connectorAuthActions', () => {
     expect(group.properties?.disabled).toBe(true);
     expect(group.actions).toEqual([]);
     // Ghost, so it reads as unavailable next to the live group's primary trigger.
-    expect(group.properties?.emphasis).toBeUndefined();
   });
 
   test('the live group renders as a primary trigger', async ({ expect }) => {
@@ -107,7 +106,6 @@ describe('connectorAuthActions', () => {
     });
 
     // Connecting is the call to action on an unbound object; ghost styling read as disabled.
-    expect(actions[0].properties?.emphasis).toBe('primary');
     // Explicitly `false`, not absent: the graph merges a node's properties over the previous
     // generation's, so only an emitted key can clear an earlier disabled placeholder.
     expect(actions[0].properties?.disabled).toBe(false);

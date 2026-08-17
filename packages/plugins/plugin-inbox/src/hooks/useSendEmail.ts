@@ -13,7 +13,7 @@ import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { findBindingForTarget } from '@dxos/plugin-connector';
+import { findBindingForTarget } from '@dxos/plugin-connector/binding';
 import { Tagging } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 

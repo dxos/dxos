@@ -11,7 +11,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { isCursorForTarget } from '@dxos/plugin-connector';
+import { isCursorForTarget } from '@dxos/plugin-connector/binding';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
 
 import { meta } from '#meta';

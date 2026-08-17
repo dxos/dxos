@@ -20,7 +20,7 @@ import { isCursorForConnection } from './cursor-predicates';
 import { findOrphanedBindingsForTarget } from './find-binding';
 import { ensureSyncTrigger } from './sync-routine';
 import { setSyncTriggerEnabled } from './sync-trigger';
-import { checkTargetAccount, recordTargetAccount } from './target-account';
+import { readTargetAccount, recordTargetAccount } from './target-account';
 
 /**
  * Suspends a connection's bindings ahead of deleting it: their sync triggers are disabled, the cursors
@@ -104,29 +104,33 @@ export const prepareTargetBinding = ({
 > =>
   Effect.gen(function* () {
     const account = accessToken.account;
-    const check = checkTargetAccount(target, accessToken.source, account);
-    if (check === 'mismatch') {
+    // Read the record before comparing so the refusal narrows both values by control flow; a
+    // `checkTargetAccount` verdict alone would leave them optional at the call site.
+    const recorded = readTargetAccount(target, accessToken.source);
+    if (recorded !== undefined && account !== undefined && recorded !== account) {
       return yield* Effect.fail(
-        new TargetAccountMismatchError({
-          targetId: target.id,
-          expected: readRecorded(target, accessToken.source),
-          actual: account!,
-        }),
+        new TargetAccountMismatchError({ targetId: target.id, expected: recorded, actual: account }),
       );
     }
+    const confirmed = recorded !== undefined && account !== undefined;
 
     const orphaned = yield* findOrphanedBindingsForTarget(target);
     // Only a confirmed account may inherit progress; an unrecorded one starts over.
-    const adopted =
-      check === 'match'
-        ? orphaned.find(
-            (cursor) =>
-              externalId === undefined || cursor.spec.externalId === undefined || cursor.spec.externalId === externalId,
-          )
-        : undefined;
-    for (const cursor of orphaned) {
-      if (cursor !== adopted) {
-        yield* removeBinding(cursor);
+    const adopted = confirmed
+      ? orphaned.find(
+          (cursor) =>
+            externalId === undefined || cursor.spec.externalId === undefined || cursor.spec.externalId === externalId,
+        )
+      : undefined;
+    // Removal is confined to the confirmed path: declining to inherit an unrecorded account's progress
+    // is right, but discarding it is not — every target bound before accounts were recorded reads as
+    // unrecorded, so deleting here would re-walk the whole horizon on its first reconnect, the exact
+    // cost this dormant-binding design exists to avoid. `findLiveBinding` already ignores them.
+    if (confirmed) {
+      for (const cursor of orphaned) {
+        if (cursor !== adopted) {
+          yield* removeBinding(cursor);
+        }
       }
     }
 
@@ -147,9 +151,6 @@ export const prepareTargetBinding = ({
     log.info('resumed dormant binding', { account, target: target.id, max: adopted.max });
     return adopted;
   });
-
-/** The account a target is recorded as syncing; only called where a mismatch proved one exists. */
-const readRecorded = (target: Obj.Unknown, source: string): string => Obj.getKeys(target, source)[0]!.id;
 
 /**
  * Tells the user why a completed sign-in bound nothing. The credential is real and the connection is

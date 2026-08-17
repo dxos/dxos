@@ -179,7 +179,13 @@ describe('binding lifecycle', () => {
 
     expect(rebound.id).not.toBe(legacy.id);
     expect(rebound.max).toBeUndefined();
-    expect((await cursors()).map((cursor) => cursor.id)).toEqual([rebound.id]);
+    // Declining to inherit an unverifiable watermark is not licence to destroy it: this is every
+    // mailbox bound before accounts were recorded, and deleting its range here would force the very
+    // full re-walk the dormant-binding design exists to avoid.
+    const remaining = (await cursors()).map((cursor) => cursor.id);
+    expect(remaining).toContain(legacy.id);
+    expect(remaining).toContain(rebound.id);
+    expect((await cursors()).find((cursor) => cursor.id === legacy.id)?.max).toBe('1700000000000');
     // Recorded now, so the next disconnect/reconnect cycle can resume.
     expect(readTargetAccount(target, SOURCE)).toBe('me@example.com');
   });
@@ -202,8 +208,10 @@ describe('binding lifecycle', () => {
     const rebound = await bind(anonymous, target);
     await db.flush({ indexes: true });
 
-    // Unknown is not a contradiction, so the bind succeeds — but nothing is inherited.
+    // Unknown is not a contradiction, so the bind succeeds — but nothing is inherited, and the
+    // dormant cursor is left intact for a later bind that can confirm the account.
     expect(rebound.max).toBeUndefined();
-    expect((await cursors()).map((cursor) => cursor.id)).toEqual([rebound.id]);
+    expect((await cursors()).map((cursor) => cursor.id)).toContain(rebound.id);
+    expect((await cursors()).length).toBe(2);
   });
 });

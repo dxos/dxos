@@ -12,8 +12,6 @@ import { checkTargetAccount, readTargetAccount, recordTargetAccount } from './ta
 const SOURCE = 'gmail.com';
 
 describe('target account', () => {
-  const makeTarget = () => Obj.make(Expando.Expando, { name: 'Inbox' });
-
   test('records and reads the account a target syncs', () => {
     const target = makeTarget();
     expect(readTargetAccount(target, SOURCE)).toBeUndefined();
@@ -49,3 +47,5 @@ describe('target account', () => {
     expect(checkTargetAccount(target, 'other.com', 'me@other.com')).toBe('unknown');
   });
 });
+
+const makeTarget = () => Obj.make(Expando.Expando, { name: 'Inbox' });

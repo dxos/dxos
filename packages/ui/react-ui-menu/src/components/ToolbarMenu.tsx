@@ -162,7 +162,6 @@ const DropdownMenuToolbarItem = ({
   const {
     iconOnly,
     disabled,
-    emphasis,
     testId,
     applyActive,
     caretDown = true,
@@ -170,7 +169,6 @@ const DropdownMenuToolbarItem = ({
     iconClassNames: groupIconClassNames,
     spin: groupSpin,
   } = group.properties;
-  const buttonVariant = emphasis === 'primary' ? ('primary' as const) : ('ghost' as const);
   const activeItem = items?.find((item) => !!(item as MenuAction).properties.checked) as MenuAction | undefined;
   const icon =
     (applyActive &&
@@ -184,7 +182,7 @@ const DropdownMenuToolbarItem = ({
 
   const trigger = icon ? (
     <NaturalToolbar.IconButton
-      variant={buttonVariant}
+      variant='ghost'
       disabled={disabled}
       icon={icon}
       size={iconSize}
@@ -196,7 +194,7 @@ const DropdownMenuToolbarItem = ({
     />
   ) : (
     <NaturalToolbar.Button
-      variant={buttonVariant}
+      variant='ghost'
       disabled={disabled}
       caretDown={caretDown && !disabled}
       {...(testId && { 'data-testid': testId })}

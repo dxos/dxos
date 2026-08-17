@@ -7,13 +7,16 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Node from '@dxos/app-graph/Node';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, type Key, Obj, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
+import { log } from '@dxos/log';
 
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
 import { bindConnectionToTarget } from './auto-bind';
+import { isTargetAccountMismatch, reportTargetAccountMismatch } from './binding-lifecycle';
 
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */
 const CONNECT_ICON = 'ph--plugs--regular';
@@ -106,7 +109,18 @@ export const connectorAuthActions = ({
             connection,
             connector: allConnectors.find((entry) => entry.id === connection.connectorId),
             target: existingTarget,
-          });
+          }).pipe(
+            // Reuse is a deliberate click, so a refusal has to say so — unlike the silent automatic
+            // bind. The graph extension filters contradicting connections out of this menu, but the
+            // standalone `ConnectorAuthMenu` offers them, and there the failure was invisible. The
+            // invoker is resolved inside the handler so a successful bind needs no toast service.
+            Effect.catchIf(isTargetAccountMismatch, (error) =>
+              Effect.gen(function* () {
+                log.warn('refusing to reuse: target syncs another account', { context: error.context });
+                yield* reportTargetAccountMismatch(yield* Operation.Service);
+              }),
+            ),
+          );
         }).pipe(Effect.provide(Database.layer(db))),
     });
 
@@ -117,9 +131,6 @@ export const connectorAuthActions = ({
       icon: CONNECT_ICON,
       // Show the "Connect" label next to the icon rather than icon-only.
       iconOnly: false,
-      // Connecting is the call to action on an unbound object, so the trigger matches the primary
-      // button Sync occupies once it is bound, instead of receding to ghost like an overflow menu.
-      emphasis: 'primary',
       testId: 'connectorPlugin.connect',
       actions: [
         ...connections.map(reuseAction),
@@ -141,9 +152,6 @@ export const CONNECTOR_AUTH_GROUP_ID = 'connectorAuth';
  * to another account. Dropping the control instead reads as "this kind of object cannot be connected",
  * which is wrong; a disabled Connect says the capability exists and is currently unavailable. Pairs
  * with {@link connectorAuthActions}, which returns `[]` in exactly that case.
- *
- * Left ghost rather than `emphasis: 'primary'` like the live group: faded grey against that group's
- * primary blue is what distinguishes "nothing to connect to" from "connect now" at a glance.
  */
 export const connectorAuthUnavailableActions = (): Node.NodeArg<typeof Node.actionGroupSymbol>[] => [
   AppNode.makeToolbarActionGroup({

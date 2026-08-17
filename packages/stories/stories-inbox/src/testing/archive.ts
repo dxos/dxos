@@ -8,7 +8,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Connection, Cursor } from '@dxos/link';
-import { isCursorForTarget } from '@dxos/plugin-connector';
+import { isCursorForTarget } from '@dxos/plugin-connector/binding';
 import type * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 

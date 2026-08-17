@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { connectorIdsForTarget } from '@dxos/plugin-connector';
+import { connectorIdsForTarget } from '@dxos/plugin-connector/binding';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 import { FeedAnnotation, TagIndex } from '@dxos/schema';
 

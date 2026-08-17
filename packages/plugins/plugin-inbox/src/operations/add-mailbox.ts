@@ -8,7 +8,7 @@ import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { autoBindSingleConnection } from '@dxos/plugin-connector';
+import { autoBindSingleConnection } from '@dxos/plugin-connector/binding';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { InboxOperation } from '#types';

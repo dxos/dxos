@@ -1,5 +1,4 @@
 ---
-'@dxos/app-toolkit': patch
 '@dxos/link': patch
 '@dxos/plugin-connector': patch
 ---

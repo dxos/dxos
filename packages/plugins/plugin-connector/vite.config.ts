@@ -7,6 +7,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
+    'binding': 'src/binding.ts',
     'ConnectorPlugin': 'src/ConnectorPlugin.ts',
     'plugin.node': 'src/plugin.node.ts',
     'plugin.workerd': 'src/plugin.workerd.ts',

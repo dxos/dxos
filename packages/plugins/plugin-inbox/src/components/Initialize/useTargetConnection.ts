@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Connection, Cursor } from '@dxos/link';
-import { findLiveBinding } from '@dxos/plugin-connector';
+import { findLiveBinding } from '@dxos/plugin-connector/binding';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 /**

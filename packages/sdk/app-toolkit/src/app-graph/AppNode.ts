@@ -534,7 +534,6 @@ export const makeToolbarActionGroup = ({
   icon,
   iconOnly = true,
   disabled,
-  emphasis,
   testId,
   actions,
 }: {
@@ -547,8 +546,6 @@ export const makeToolbarActionGroup = ({
   /** Render the trigger disabled, so the toolbar can keep showing an affordance that currently has
    * nothing to offer (paired with an empty `actions`) rather than dropping the control entirely. */
   disabled?: boolean;
-  /** Trigger emphasis; `'primary'` for a call-to-action dropdown, which is otherwise styled ghost. */
-  emphasis?: 'primary';
   /** Test id for the group's dropdown trigger. */
   testId?: string;
   actions: Node.NodeArg<Node.ActionData<any>>[];
@@ -564,12 +561,10 @@ export const makeToolbarActionGroup = ({
       variant: 'dropdownMenu',
       iconOnly,
       disposition: TOOLBAR_DISPOSITION,
-      // `disabled` and `emphasis` are state, and a re-offered node merges its properties over the
-      // previous ones (see `addNode`), so omitting them cannot clear what an earlier generation set —
-      // a group that turned enabled after its providers registered stayed frozen disabled. Always
-      // emit both, even as `undefined`, so the latest generation is the whole truth.
+      // `disabled` is state, and a re-offered node merges its properties over the previous ones (see
+      // `addNode`), so omitting it cannot clear what an earlier generation set — a group that turned
+      // enabled after its providers registered stayed frozen disabled. Always emit it.
       disabled: disabled ?? false,
-      emphasis,
       ...(icon !== undefined && { icon }),
       ...(testId !== undefined && { testId }),
     },

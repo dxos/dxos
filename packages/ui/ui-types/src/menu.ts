@@ -62,13 +62,6 @@ type DropdownMenuItemGroupChrome = MenuItemChrome & {
    * Set to `false` when the icon already signals a menu (e.g. an overflow ⋮).
    */
   caretDown?: boolean;
-  /**
-   * Emphasis of the trigger button; defaults to `ghost`. `'primary'` is the group's equivalent of a
-   * flat action's `variant: 'primary'`, which a group cannot reuse — `variant` names its render kind.
-   * Without this a group is always ghost, so a call-to-action dropdown reads as disabled next to the
-   * primary buttons beside it.
-   */
-  emphasis?: 'primary';
   /** When true, the trigger icon/label reflects the active child action. */
   applyActive?: boolean;
 };

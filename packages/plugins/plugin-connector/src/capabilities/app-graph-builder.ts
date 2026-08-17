@@ -186,13 +186,14 @@ export default Capability.makeModule(
             // early return that never touched the atom registered no dependency, so the action never
             // reappeared once the provider activated. That is why Connect showed up only right after
             // creating a mailbox: unrelated graph churn, not the capability arriving.
-            const observed = get(connectorAtom).flat();
+            get(connectorAtom);
             const capabilities = yield* Capability.Service;
-            // The atom can lag the manager — a provider module activating, or an atom resolved against a
-            // different registry — and reading it as "no providers" is what left a disabled Connect
-            // frozen on a toolbar whose provider was installed. The manager is the authority on what
-            // exists; the atom read above still registers the dependency that re-runs this on arrival.
-            const allConnectors = observed.length > 0 ? observed : capabilities.getAll(ConnectorSpec.Connector).flat();
+            // The manager is the authority on what is registered, and `connectorIds` below is derived
+            // from it — reading the providers from a lagging atom instead (a module still activating, or
+            // an atom resolved against a different registry) is what left a disabled Connect frozen on a
+            // toolbar whose provider was installed. The atom read above is kept purely for the reactive
+            // dependency that re-runs this when one arrives.
+            const allConnectors = capabilities.getAll(ConnectorSpec.Connector).flat();
             if (allConnectors.length === 0) {
               // Nothing known yet: indistinguishable from "none installed", so contribute nothing rather
               // than a disabled control that would stick once the registry fills in.
