@@ -69,6 +69,8 @@ export type WindowProps = ThemedClassName<{
   /** Which way the list runs. The principles hold either way; only this mapping differs (§9). */
   axis?: WindowAxis;
   overscan?: number;
+  /** Empty extent after the last row, so it can be scrolled to the top of the viewport (§7). */
+  reserve?: number;
   /** What an edge revealed about the estimates, if it revealed anything. */
   onEdge?: (drift: EdgeDrift) => void;
   /** A row whose declared extent was not the extent it rendered at. `exact` means do not correct — not do not check (§8). */
@@ -95,6 +97,7 @@ export const Window = ({
   extents,
   axis = 'block',
   overscan,
+  reserve = 0,
   onEdge,
   onMismatch,
   onChange,
@@ -150,6 +153,8 @@ export const Window = ({
     }),
     [placement, axis, invalidate],
   );
+
+  placement.setReserve(reserve);
 
   const main = axis === 'block' ? 'height' : 'width';
 
@@ -210,8 +215,12 @@ export const Window = ({
       }
     }
 
+    // Deduped for the same reason as a mismatch: an edge is news the first time it is reached, and
+    // a host that renders the report would otherwise re-render on it for ever.
     const drift = placement.drift();
-    if (drift) {
+    const key = drift && `${drift.edge}:${drift.delta}`;
+    if (drift && key && !reported.current.has(key)) {
+      reported.current.add(key);
       onEdge?.(drift);
     }
 

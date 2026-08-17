@@ -22,17 +22,35 @@ import { type WindowState } from '../../components';
  */
 export type WindowMapProps = ThemedClassName<{
   state?: WindowState;
+  /**
+   * Jump to where the reader pointed, as a fraction of the whole list.
+   *
+   * A fraction and not an index: the map is drawn in content space, so what a click names is a
+   * position, and turning that into a row is the host's business — it has the count.
+   */
+  onSelect?: (fraction: number) => void;
 }>;
 
-export const WindowMap = ({ classNames, state }: WindowMapProps) => {
+export const WindowMap = ({ classNames, state, onSelect }: WindowMapProps) => {
   const total = state?.geometry.total ?? 0;
   const scale = (value: number) => (total > 0 ? `${Math.max(0, Math.min(100, (value / total) * 100))}%` : '0%');
 
   return (
     <div
-      className={mx('relative w-3 h-full rounded-sm bg-input-surface overflow-hidden', classNames)}
+      className={mx(
+        'relative w-4 h-full rounded-sm bg-input-surface overflow-hidden',
+        onSelect && 'cursor-pointer',
+        classNames,
+      )}
       title={total ? `${Math.round(total)}px over ${state?.count} rows` : 'empty'}
       data-testid='window.map'
+      onClick={
+        onSelect &&
+        ((event) => {
+          const box = event.currentTarget.getBoundingClientRect();
+          onSelect(Math.max(0, Math.min(1, (event.clientY - box.top) / box.height)));
+        })
+      }
     >
       {state && total > 0 && (
         <>
@@ -43,6 +61,14 @@ export const WindowMap = ({ classNames, state }: WindowMapProps) => {
             style={{ top: scale(state.geometry.window.start), height: scale(state.geometry.window.extent) }}
             data-testid='window.map.mounted'
           />
+          {/* Tenths, so a glance says roughly where in the list a bar sits without reading a number. */}
+          {Array.from({ length: 9 }, (_, step) => (
+            <div
+              key={step}
+              className='absolute inset-x-0 border-t border-separator/40'
+              style={{ top: `${((step + 1) / 10) * 100}%` }}
+            />
+          ))}
           {/* The viewport, which is the reader. */}
           <div
             className='absolute inset-x-0 border-y border-accent-bg bg-accent-fill/70'

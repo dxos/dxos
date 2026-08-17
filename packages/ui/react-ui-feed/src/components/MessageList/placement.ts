@@ -38,6 +38,14 @@ export type PlacementOptions = {
   viewport: number;
   /** Rows to mount beyond the visible region, each side. */
   overscan?: number;
+  /**
+   * Empty extent after the last row, so the reader can scroll it up to the start of the viewport.
+   *
+   * A number the host supplies, not a mode the list has. On the old design this was a flag that
+   * special-cased the tail everywhere it was consulted, and it could not be made stable; here it is
+   * added to the sizer and nothing else knows about it (§7).
+   */
+  reserve?: number;
 };
 
 /** The mounted range and where its parent goes. */
@@ -74,6 +82,7 @@ export class Placement {
   #extents: Extents;
   #viewport: number;
   #overscan: number;
+  #reserve: number;
 
   /** Measured extents by message id, so that reordering the model cannot invalidate them. */
   readonly #measured = new Map<string, number>();
@@ -83,12 +92,13 @@ export class Placement {
 
   #scroll = 0;
 
-  constructor({ count, getId, extents, viewport, overscan = DEFAULT_OVERSCAN }: PlacementOptions) {
+  constructor({ count, getId, extents, viewport, overscan = DEFAULT_OVERSCAN, reserve = 0 }: PlacementOptions) {
     this.#count = count;
     this.#getId = getId;
     this.#extents = extents;
     this.#viewport = viewport;
     this.#overscan = overscan;
+    this.#reserve = reserve;
     this.#anchor = { id: count ? getId(0) : '', index: 0, start: 0 };
   }
 
@@ -99,6 +109,10 @@ export class Placement {
   /** The viewport is the binding's to know: it is the one thing here that comes from the DOM. */
   setViewport(viewport: number): void {
     this.#viewport = viewport;
+  }
+
+  setReserve(reserve: number): void {
+    this.#reserve = reserve;
   }
 
   get anchor(): Readonly<{ id: string; index: number; start: number }> {
@@ -199,7 +213,7 @@ export class Placement {
       after += this.extentOf(row);
     }
 
-    return { first, last, visible, offset, sizerExtent: offset + windowExtent + after };
+    return { first, last, visible, offset, sizerExtent: offset + windowExtent + after + this.#reserve };
   }
 
   /**
@@ -223,9 +237,12 @@ export class Placement {
 
     if (last === this.#count - 1) {
       const end = this.positionOf(last) + this.extentOf(last);
+      // Against the content's end, not the document's: reserved space is somewhere the reader may go
+      // and nowhere any row is, so counting it would report a drift the size of the reserve for ever.
       const { sizerExtent } = this.layout();
-      if (end !== sizerExtent) {
-        return { edge: 'end', delta: sizerExtent - end };
+      const content = sizerExtent - this.#reserve;
+      if (end !== content) {
+        return { edge: 'end', delta: content - end };
       }
     }
 

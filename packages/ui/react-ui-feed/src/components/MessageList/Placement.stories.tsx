@@ -27,6 +27,15 @@ type StoryProps = {
   exact?: boolean;
   /** Extent the row actually renders at — the story controls it, so the story knows the truth. */
   extent?: (index: number) => number;
+  /** Outline every row and label its extent, so what is being measured is visible. */
+  debug?: boolean;
+  /**
+   * Reserve a viewport's worth of space after the last row, so it can be read at the top.
+   *
+   * Computed **here**, from what the window publishes, and handed back as a number — which is the
+   * claim §7 makes: with the window placed rather than the rows, this is not a mode the list has.
+   */
+  scrollPastEnd?: boolean;
   /**
    * Extent the host *claims*, when that differs from what renders.
    *
@@ -38,7 +47,15 @@ type StoryProps = {
 
 const EXTENT = (index: number) => 40 + (index % 5) * 30;
 
-const Harness = ({ count = 500, axis = 'block', exact = true, extent = EXTENT, declared }: StoryProps) => {
+const Harness = ({
+  count = 500,
+  axis = 'block',
+  exact = true,
+  extent = EXTENT,
+  declared,
+  debug,
+  scrollPastEnd,
+}: StoryProps) => {
   const [edges, setEdges] = useState<EdgeDrift[]>([]);
   const [mismatches, setMismatches] = useState<string[]>([]);
   const [state, setState] = useState<WindowState>();
@@ -53,6 +70,30 @@ const Harness = ({ count = 500, axis = 'block', exact = true, extent = EXTENT, d
   // Everything here is *outside* the window, reading what it publishes: chrome is the host's, and a
   // toolbar that reached inside would be the engine growing an opinion about navigation (§2).
   const step = (delta: number) => controller.current?.scrollToIndex((state?.index ?? 0) + delta);
+
+  // Measured from the container this owns, not from what the window publishes.
+  //
+  // Deriving it from `state.geometry.viewport` looks equivalent and is not: the reserve changes the
+  // sizer, the sizer changes the layout, the layout is what publishes the viewport — and the whole
+  // thing oscillates. React said `Maximum update depth exceeded`, which is the same "two things
+  // compensating for one change" this design exists to remove, wearing a new hat. A reserve is an
+  // input to the layout; anything read back out of the layout cannot be one.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [available, setAvailable] = useState(0);
+  useEffect(() => {
+    const element = bodyRef.current;
+    if (!element) {
+      return;
+    }
+
+    const read = () => setAvailable(axis === 'block' ? element.clientHeight : element.clientWidth);
+    read();
+    const observer = new ResizeObserver(read);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [axis]);
+
+  const reserve = scrollPastEnd ? Math.max(0, available - extent(count - 1)) : 0;
 
   return (
     <div className='flex flex-col h-full'>
@@ -88,13 +129,14 @@ const Harness = ({ count = 500, axis = 'block', exact = true, extent = EXTENT, d
         />
       </Toolbar.Root>
 
-      <div className='grow min-h-0 flex gap-2'>
+      <div ref={bodyRef} className='grow min-h-0 flex gap-2'>
         <Window
           classNames='grow min-h-0'
           count={count}
           getId={(index) => `row-${index}`}
           extents={{ of: declared ?? extent, exact }}
           axis={axis}
+          reserve={reserve}
           controllerRef={controller}
           onChange={setState}
           onEdge={onEdge}
@@ -105,15 +147,19 @@ const Harness = ({ count = 500, axis = 'block', exact = true, extent = EXTENT, d
               className={mx(
                 'flex items-center justify-center border border-separator text-xs tabular-nums',
                 index % 2 ? 'bg-input-surface' : 'bg-base-surface',
+                debug && 'outline outline-1 outline-dashed outline-primary-500/50',
               )}
               style={axis === 'block' ? { height: extent(index) } : { width: extent(index) }}
             >
-              {index}
+              {debug ? `${index} · ${extent(index)}` : index}
             </div>
           )}
         </Window>
 
-        <WindowMap state={state} />
+        <WindowMap
+          state={state}
+          onSelect={(fraction) => controller.current?.scrollToIndex(Math.round(fraction * (count - 1)))}
+        />
       </div>
 
       <div className='px-2 py-1 flex gap-4 text-xs text-description tabular-nums' data-testid='placement.report'>
@@ -133,7 +179,13 @@ const meta: Meta<StoryProps> = {
   render: Harness,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },
-  args: { count: 500 },
+  // Listed in `args`, not only `argTypes`: the meta names no `component`, so storybook shows exactly
+  // the args that are set and a control declared only in `argTypes` never appears.
+  args: { count: 500, debug: false, scrollPastEnd: false },
+  argTypes: {
+    debug: { control: 'boolean' },
+    scrollPastEnd: { control: 'boolean' },
+  },
 };
 
 export default meta;
@@ -401,5 +453,39 @@ export const Chrome: Story = {
       range: /^\d+–\d+ of 200$/.test(read('window.range')),
       map: canvasElement.querySelectorAll('[data-testid="window.map.viewport"]').length,
     }).toEqual({ filled: true, moved: true, atEnd: true, backToTop: '0', range: true, map: 1 });
+  },
+};
+
+/**
+ * With space reserved, the last row can be brought to the top of the viewport.
+ *
+ * On the old design this was a flag that special-cased the tail wherever it was consulted, and it
+ * could never be stabilised. Here the host computes a number and the list adds it to the sizer;
+ * nothing else in the engine knows it happened (§7).
+ */
+export const PastEnd: Story = {
+  args: { count: 200, scrollPastEnd: true },
+  play: async ({ canvasElement }) => {
+    await settle();
+    const { scroller } = probe(canvasElement);
+    // Twice: the reserve is computed from the viewport the window publishes, so it exists one render
+    // after the first measurement — and the first scroll-to-end therefore lands before the sizer has
+    // grown to include it.
+    scroller.scrollTop = scroller.scrollHeight;
+    await settle();
+    scroller.scrollTop = scroller.scrollHeight;
+    await settle();
+
+    const last = canvasElement.querySelector<HTMLElement>('[data-index="199"]');
+    if (!last) {
+      throw new Error('the last row should be mounted at the end of the reserved space');
+    }
+
+    const origin = scroller.getBoundingClientRect();
+    // Reserved space means the last row can sit at the top rather than resting on the bottom.
+    await expect({ mounted: !!last, atTop: Math.abs(last.getBoundingClientRect().top - origin.top) <= 2 }).toEqual({
+      mounted: true,
+      atTop: true,
+    });
   },
 };
