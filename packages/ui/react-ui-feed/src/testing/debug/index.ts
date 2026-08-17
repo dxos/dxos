@@ -12,6 +12,7 @@
 
 export * from './FeedStats';
 export * from './Stats';
+export * from './WindowMap';
 
 export * from './frame-meter';
 export * from './sweep';

@@ -3,14 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
+import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
+import { WindowMap } from '../../testing/debug';
 import { type EdgeDrift } from './placement';
-import { Window, type WindowAxis } from './Window';
+import { Window, type WindowAxis, type WindowController, type WindowState } from './Window';
 
 /**
  * The DOM shape, driven by content that cannot lie about its size.
@@ -39,6 +41,8 @@ const EXTENT = (index: number) => 40 + (index % 5) * 30;
 const Harness = ({ count = 500, axis = 'block', exact = true, extent = EXTENT, declared }: StoryProps) => {
   const [edges, setEdges] = useState<EdgeDrift[]>([]);
   const [mismatches, setMismatches] = useState<string[]>([]);
+  const [state, setState] = useState<WindowState>();
+  const controller = useRef<WindowController>(null);
   const onEdge = useCallback((drift: EdgeDrift) => setEdges((all) => [...all.slice(-4), drift]), []);
   const onMismatch = useCallback(
     (mismatch: { index: number; declared: number; actual: number }) =>
@@ -46,32 +50,80 @@ const Harness = ({ count = 500, axis = 'block', exact = true, extent = EXTENT, d
     [],
   );
 
+  // Everything here is *outside* the window, reading what it publishes: chrome is the host's, and a
+  // toolbar that reached inside would be the engine growing an opinion about navigation (§2).
+  const step = (delta: number) => controller.current?.scrollToIndex((state?.index ?? 0) + delta);
+
   return (
     <div className='flex flex-col h-full'>
-      <div className='p-2 text-xs text-description tabular-nums' data-testid='placement.report'>
-        {`edges ${edges.map(({ edge, delta }) => `${edge}${delta}`).join(' ') || '—'} · mismatch ${mismatches.join(' ') || '—'}`}
+      <Toolbar.Root>
+        <IconButton
+          icon='ph--caret-up--regular'
+          iconOnly
+          label='Previous'
+          data-testid='window.prev'
+          onClick={() => step(-1)}
+        />
+        <IconButton
+          icon='ph--caret-down--regular'
+          iconOnly
+          label='Next'
+          data-testid='window.next'
+          onClick={() => step(1)}
+        />
+        <Toolbar.Separator />
+        <IconButton
+          icon='ph--arrow-line-up--regular'
+          iconOnly
+          label='Top'
+          data-testid='window.top'
+          onClick={() => controller.current?.scrollToIndex(0)}
+        />
+        <IconButton
+          icon='ph--arrow-line-down--regular'
+          iconOnly
+          label='Bottom'
+          data-testid='window.bottom'
+          onClick={() => controller.current?.scrollToIndex(count - 1, 'end')}
+        />
+      </Toolbar.Root>
+
+      <div className='grow min-h-0 flex gap-2'>
+        <Window
+          classNames='grow min-h-0'
+          count={count}
+          getId={(index) => `row-${index}`}
+          extents={{ of: declared ?? extent, exact }}
+          axis={axis}
+          controllerRef={controller}
+          onChange={setState}
+          onEdge={onEdge}
+          onMismatch={onMismatch}
+        >
+          {(index) => (
+            <div
+              className={mx(
+                'flex items-center justify-center border border-separator text-xs tabular-nums',
+                index % 2 ? 'bg-input-surface' : 'bg-base-surface',
+              )}
+              style={axis === 'block' ? { height: extent(index) } : { width: extent(index) }}
+            >
+              {index}
+            </div>
+          )}
+        </Window>
+
+        <WindowMap state={state} />
       </div>
-      <Window
-        classNames='grow min-h-0'
-        count={count}
-        getId={(index) => `row-${index}`}
-        extents={{ of: declared ?? extent, exact }}
-        axis={axis}
-        onEdge={onEdge}
-        onMismatch={onMismatch}
-      >
-        {(index) => (
-          <div
-            className={mx(
-              'flex items-center justify-center border border-separator text-xs tabular-nums',
-              index % 2 ? 'bg-input-surface' : 'bg-base-surface',
-            )}
-            style={axis === 'block' ? { height: extent(index) } : { width: extent(index) }}
-          >
-            {index}
-          </div>
-        )}
-      </Window>
+
+      <div className='px-2 py-1 flex gap-4 text-xs text-description tabular-nums' data-testid='placement.report'>
+        <span data-testid='window.index'>{state?.index ?? 0}</span>
+        <span data-testid='window.range'>
+          {state ? `${state.visible.first}–${state.visible.last}` : '—'} of {state?.count ?? 0}
+        </span>
+        <span className='grow' />
+        <span>{`edges ${edges.map(({ edge, delta }) => `${edge}${delta}`).join(' ') || '—'} · mismatch ${mismatches.join(' ') || '—'}`}</span>
+      </div>
     </div>
   );
 };
@@ -306,5 +358,48 @@ export const Drift: Story = {
 
     const report = canvasElement.querySelector('[data-testid="placement.report"]')!.textContent ?? '';
     await expect({ reported: /mismatch \d+:/.test(report) }).toEqual({ reported: true });
+  },
+};
+
+/**
+ * The chrome, which is outside the window and reads what it publishes.
+ *
+ * Tested because untested chrome is how a story ended up pinned to half the screen height without
+ * anything failing: the assertions were all about the rows, and nothing asked whether what surrounds
+ * them was right (§12).
+ */
+export const Chrome: Story = {
+  args: { count: 200 },
+  play: async ({ canvasElement }) => {
+    await settle();
+    const read = (testId: string) => canvasElement.querySelector(`[data-testid="${testId}"]`)!.textContent!.trim();
+    const click = (testId: string) => (canvasElement.querySelector(`[data-testid="${testId}"]`) as HTMLElement).click();
+    const { scroller } = probe(canvasElement);
+
+    // The scroller fills what it is given, rather than a height somebody typed.
+    const container = scroller.parentElement!.getBoundingClientRect();
+    const filled = scroller.getBoundingClientRect().height >= container.height - 1;
+
+    const start = read('window.index');
+    click('window.next');
+    await settle();
+    const next = read('window.index');
+
+    click('window.bottom');
+    await settle();
+    const bottom = probe(canvasElement);
+    const atEnd = bottom.scroller.scrollTop > 0;
+
+    click('window.top');
+    await settle();
+
+    await expect({
+      filled,
+      moved: next !== start,
+      atEnd,
+      backToTop: read('window.index'),
+      range: /^\d+–\d+ of 200$/.test(read('window.range')),
+      map: canvasElement.querySelectorAll('[data-testid="window.map.viewport"]').length,
+    }).toEqual({ filled: true, moved: true, atEnd: true, backToTop: '0', range: true, map: 1 });
   },
 };

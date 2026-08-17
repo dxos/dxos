@@ -41,10 +41,18 @@ export type PlacementOptions = {
 };
 
 /** The mounted range and where its parent goes. */
-export type Window = {
-  /** First and last mounted row, inclusive. */
+export type Layout = {
+  /** First and last mounted row, inclusive — the visible rows plus overscan. */
   first: number;
   last: number;
+  /**
+   * First and last row the reader can actually see.
+   *
+   * Reported separately because it is what a readout means by "where am I": the mounted range
+   * includes rows deliberately kept off screen, and naming one of those would be describing the
+   * overscan rather than the reader.
+   */
+  visible: { first: number; last: number };
   /** Absolute position of the first mounted row: what the parent is translated by (§7). */
   offset: number;
   /** Total extent of the scrollable content, which is what the thumb is computed from. */
@@ -174,12 +182,12 @@ export class Placement {
   }
 
   /** The mounted range, the parent's offset, and the extent the thumb is computed from. */
-  layout(): Window {
+  layout(): Layout {
     if (!this.#count) {
-      return { first: 0, last: -1, offset: 0, sizerExtent: 0 };
+      return { first: 0, last: -1, visible: { first: 0, last: -1 }, offset: 0, sizerExtent: 0 };
     }
 
-    const { first, last } = this.#range();
+    const { first, last, visible } = this.#range();
     const offset = this.positionOf(first);
     let windowExtent = 0;
     for (let row = first; row <= last; row++) {
@@ -191,7 +199,7 @@ export class Placement {
       after += this.extentOf(row);
     }
 
-    return { first, last, offset, sizerExtent: offset + windowExtent + after };
+    return { first, last, visible, offset, sizerExtent: offset + windowExtent + after };
   }
 
   /**
@@ -225,7 +233,7 @@ export class Placement {
   }
 
   /** Visible rows, plus overscan, clamped to the model. */
-  #range(): { first: number; last: number } {
+  #range(): { first: number; last: number; visible: { first: number; last: number } } {
     let first = this.#anchor.index;
     // Walk out from the anchor rather than searching from zero: the anchor is the only position
     // known exactly, so it is the only sound place to start.
@@ -246,6 +254,7 @@ export class Placement {
     return {
       first: Math.max(0, first - this.#overscan),
       last: Math.min(this.#count - 1, last + this.#overscan),
+      visible: { first, last },
     };
   }
 

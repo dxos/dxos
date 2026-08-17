@@ -2,7 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type ReactNode,
+  type Ref,
+  useCallback,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -26,6 +35,33 @@ import { type EdgeDrift, type Extents, Placement } from './placement';
  */
 export type WindowAxis = 'block' | 'inline';
 
+/**
+ * What a toolbar or a readout needs, and nothing more.
+ *
+ * Published rather than rendered: chrome belongs to the host (§2), so the window says where it is
+ * and the host decides what to draw about it.
+ */
+export type WindowState = {
+  /** The row at the top of the viewport — what "where am I" means to a reader. */
+  index: number;
+  visible: { first: number; last: number };
+  /** The mounted range, which includes the overscan the reader cannot see. */
+  mounted: { first: number; last: number };
+  count: number;
+  /**
+   * The same thing in pixels, which is what a map of the list has to draw.
+   *
+   * `window` is the mounted parent's span in content space — where the rows that exist actually are —
+   * and `total` is what the thumb is scaled against. A map drawn from indices instead would be a map
+   * of the model rather than of the layout, and it is the layout that goes wrong.
+   */
+  geometry: { scroll: number; viewport: number; total: number; window: { start: number; extent: number } };
+};
+
+export type WindowController = {
+  scrollToIndex: (index: number, align?: 'start' | 'end') => void;
+};
+
 export type WindowProps = ThemedClassName<{
   count: number;
   getId: (index: number) => string;
@@ -37,8 +73,20 @@ export type WindowProps = ThemedClassName<{
   onEdge?: (drift: EdgeDrift) => void;
   /** A row whose declared extent was not the extent it rendered at. `exact` means do not correct — not do not check (§8). */
   onMismatch?: (mismatch: { index: number; id: string; declared: number; actual: number }) => void;
+  onChange?: (state: WindowState) => void;
+  controllerRef?: Ref<WindowController>;
   children: (index: number, id: string) => ReactNode;
 }>;
+
+/** Extent of the mounted rows, which is the parent's own size in content space. */
+const windowExtentOf = (placement: Placement, first: number, last: number): number => {
+  let extent = 0;
+  for (let index = first; index <= last; index++) {
+    extent += placement.extentOf(index);
+  }
+
+  return extent;
+};
 
 export const Window = ({
   classNames,
@@ -49,6 +97,8 @@ export const Window = ({
   overscan,
   onEdge,
   onMismatch,
+  onChange,
+  controllerRef,
   children,
 }: WindowProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -77,6 +127,29 @@ export const Window = ({
     placement.setCount(count, { prepended: getId(0) !== placement.anchor.id && prepended ? prepended : 0 });
     previousCount.current = count;
   }
+
+  // Navigation, not correction. The rule that corrections never touch `scrollTop` (§7) is about the
+  // list moving itself; a reader asking to be somewhere is the one case where moving the scroll is
+  // the whole point.
+  useImperativeHandle(
+    controllerRef,
+    () => ({
+      scrollToIndex: (index, align) => {
+        const scroller = scrollerRef.current;
+        placement.jumpTo(index, align);
+        if (scroller) {
+          if (axis === 'block') {
+            scroller.scrollTop = placement.scroll;
+          } else {
+            scroller.scrollLeft = placement.scroll;
+          }
+        }
+
+        invalidate();
+      },
+    }),
+    [placement, axis, invalidate],
+  );
 
   const main = axis === 'block' ? 'height' : 'width';
 
@@ -147,7 +220,26 @@ export const Window = ({
     }
   });
 
-  const { first, last, offset, sizerExtent } = placement.layout();
+  const { first, last, visible, offset, sizerExtent } = placement.layout();
+  const announced = useRef<string>('');
+  const state = `${visible.first}:${visible.last}:${first}:${last}:${count}`;
+  if (onChange && announced.current !== state) {
+    announced.current = state;
+    // In render rather than an effect, so a readout never lags the frame it describes by one.
+    const scroller = scrollerRef.current;
+    const viewport = (axis === 'block' ? scroller?.clientHeight : scroller?.clientWidth) ?? 0;
+    const extent = windowExtentOf(placement, first, last);
+    queueMicrotask(() =>
+      onChange({
+        index: visible.first,
+        visible,
+        mounted: { first, last },
+        count,
+        geometry: { scroll: placement.scroll, viewport, total: sizerExtent, window: { start: offset, extent } },
+      }),
+    );
+  }
+
   const rows = [];
   for (let index = first; index <= last; index++) {
     rows.push(

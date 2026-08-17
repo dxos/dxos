@@ -72,9 +72,12 @@ describe('placement', () => {
     const { placement } = create({ extent: () => 100, overscan: 2 });
     placement.scrollTo(1_000);
 
-    const { first, last } = placement.layout();
+    const { first, last, visible } = placement.layout();
     expect(first).to.eq(8);
     expect(last).to.eq(19);
+    // What the reader can see, as against what is mounted: a readout that named a mounted row would
+    // be describing the overscan.
+    expect(visible).to.deep.eq({ first: 10, last: 17 });
   });
 
   test('the sizer spans the whole model', () => {
@@ -195,7 +198,13 @@ describe('placement', () => {
   test('an empty model has no window and no drift', () => {
     const { placement } = create({ count: 0 });
 
-    expect(placement.layout()).to.deep.eq({ first: 0, last: -1, offset: 0, sizerExtent: 0 });
+    expect(placement.layout()).to.deep.eq({
+      first: 0,
+      last: -1,
+      visible: { first: 0, last: -1 },
+      offset: 0,
+      sizerExtent: 0,
+    });
     expect(placement.drift()).to.be.undefined;
   });
 });
