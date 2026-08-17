@@ -14,6 +14,8 @@ import { type StateError } from './errors';
 import { makeSql, migrate } from './internal/state-store-sql';
 import type * as Type from './types';
 
+// @import-as-namespace
+
 export type RunStatus = 'idle' | 'running' | 'paused' | 'done' | 'error';
 
 /**

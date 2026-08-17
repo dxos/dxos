@@ -50,6 +50,7 @@ describe('replay over the crawled SQLite fixture', () => {
       const result = await EffectEx.runPromise(
         Effect.gen(function* () {
           // The fixture is a completed crawl: messages + terminal targets + agents are all present.
+          // TODO(dmaretskyi): Define functions with Effect.serviceMethod to avoid double yield*s
           const stored = yield* (yield* MessageStore).count();
           const targets = yield* (yield* StateStore).listTargets();
           const agents = yield* (yield* AgentRegistry).list();

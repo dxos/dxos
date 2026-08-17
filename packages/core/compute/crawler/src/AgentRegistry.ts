@@ -13,6 +13,8 @@ import { StateError } from './errors';
 import { makeSql, migrate } from './internal/agent-registry-sql';
 import type * as Type from './types';
 
+// @import-as-namespace
+
 /** A single identifier for an agent, in some namespace (e.g. discord-user:1234567890). */
 export type Identifier = {
   readonly namespace: string;

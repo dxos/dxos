@@ -14,6 +14,8 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 import { StoreError } from '../errors';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/message';
 
+// @import-as-namespace
+
 /** A crawled message persisted outside ECHO — the pipeline's replayable working set. */
 export type StoredMessage = {
   /** Source-native message id (snowflake); the primary key. */

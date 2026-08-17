@@ -3,6 +3,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// TODO(dmaretskyi): Replace this with a script from dxos/edge and config in secrets.jsonc
+
 // Populate Cloudflare Worker secrets (e.g. composer's SIGNOZ_INGESTION_KEY, docs' DX_POSTHOG_API_KEY) from
 // a 1Password item, for either local dev (`.dev.vars`, read by `wrangler dev`) or deployed Worker(s)
 // (`wrangler secret put`).
