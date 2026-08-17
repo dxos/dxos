@@ -136,6 +136,9 @@
       "path": "../../plugins/plugin-commerce"
     },
     {
+      "path": "../../plugins/plugin-computer"
+    },
+    {
       "path": "../../plugins/plugin-conductor"
     },
     {
