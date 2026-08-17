@@ -13,7 +13,7 @@ import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { findBindingForTarget } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import { Tagging } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
@@ -63,7 +63,7 @@ export const useSendEmail = (
       // invocation's `notify` option surfaces send success/failure as toasts.
       const sent = await runtime.runPromise(
         Effect.gen(function* () {
-          const binding = yield* findBindingForTarget(mailbox);
+          const binding = yield* Binding.queryCursor(mailbox);
           if (!binding) {
             return undefined;
           }

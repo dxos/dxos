@@ -11,9 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 
-import { ConnectorSpec } from '#types';
-
-import { connectorIdsForTarget } from './target-connectors';
+import * as ConnectorSpec from './ConnectorSpec';
 
 class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.test.targetConnectors.mailbox', '0.1.0'))(
   Schema.Struct({ name: Schema.optional(Schema.String) }),
@@ -42,7 +40,7 @@ const withConnectors = (...connectors: ConnectorSpec.ConnectorEntry[]) => {
   return capabilities;
 };
 
-describe('connectorIdsForTarget', () => {
+describe('ConnectorSpec.idsForTarget', () => {
   test('resolves every connector that binds the object type', ({ expect }) => {
     const capabilities = withConnectors(
       makeConnector('gmail', Type.getTypename(Mailbox)),
@@ -50,27 +48,27 @@ describe('connectorIdsForTarget', () => {
       makeConnector('google-calendar', Type.getTypename(Calendar)),
     );
 
-    expect(connectorIdsForTarget(Obj.make(Mailbox, {}), capabilities)).toEqual(['gmail', 'jmap-mail']);
-    expect(connectorIdsForTarget(Obj.make(Calendar, {}), capabilities)).toEqual(['google-calendar']);
+    expect(ConnectorSpec.idsForTarget(Obj.make(Mailbox, {}), capabilities)).toEqual(['gmail', 'jmap-mail']);
+    expect(ConnectorSpec.idsForTarget(Obj.make(Calendar, {}), capabilities)).toEqual(['google-calendar']);
   });
 
   test('a targetless connector binds nothing', ({ expect }) => {
     // No `sync.targetTypename` — e.g. Google Contacts, which writes Person objects into the space.
     const capabilities = withConnectors(makeConnector('google-contacts'));
-    expect(connectorIdsForTarget(Obj.make(Mailbox, {}), capabilities)).toEqual([]);
+    expect(ConnectorSpec.idsForTarget(Obj.make(Mailbox, {}), capabilities)).toEqual([]);
   });
 
   test('a type with no registered provider resolves to nothing', ({ expect }) => {
     const capabilities = withConnectors(makeConnector('google-calendar', Type.getTypename(Calendar)));
-    expect(connectorIdsForTarget(Obj.make(Mailbox, {}), capabilities)).toEqual([]);
+    expect(ConnectorSpec.idsForTarget(Obj.make(Mailbox, {}), capabilities)).toEqual([]);
   });
 
   test('registering a provider is all it takes for a target type to offer it', ({ expect }) => {
     // The point of the inversion: the type names no providers, so this needs no edit to `Mailbox`.
     const before = withConnectors();
-    expect(connectorIdsForTarget(Obj.make(Mailbox, {}), before)).toEqual([]);
+    expect(ConnectorSpec.idsForTarget(Obj.make(Mailbox, {}), before)).toEqual([]);
 
     const after = withConnectors(makeConnector('third-party-mail', Type.getTypename(Mailbox)));
-    expect(connectorIdsForTarget(Obj.make(Mailbox, {}), after)).toEqual(['third-party-mail']);
+    expect(ConnectorSpec.idsForTarget(Obj.make(Mailbox, {}), after)).toEqual(['third-party-mail']);
   });
 });

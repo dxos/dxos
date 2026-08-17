@@ -18,7 +18,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { ConnectorSpec } from '#types';
 
-import { connectorAuthActions } from './connector-auth';
+import * as ConnectorAuth from './ConnectorAuth';
 
 // A connector is "offered" (gets a Connect entry) when it has an auth flow; oauth is the simplest.
 const authFlow: Partial<ConnectorSpec.ConnectorEntry> = { oauth: { provider: OAuthProvider.GOOGLE, scopes: [] } };
@@ -44,7 +44,7 @@ const makeConnector = (
   ...extra,
 });
 
-describe('connectorAuthActions', () => {
+describe('ConnectorAuth.actions', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -73,7 +73,7 @@ describe('connectorAuthActions', () => {
 
   test('returns nothing when there is no auth flow and nothing to reuse', async ({ expect }) => {
     const { db } = await setup();
-    const actions = connectorAuthActions({
+    const actions = ConnectorAuth.actions({
       connectorIds: ['a'],
       db,
       spaceId: db.spaceId,
@@ -83,9 +83,37 @@ describe('connectorAuthActions', () => {
     expect(actions).toEqual([]);
   });
 
+  test('the unavailable form is a disabled, empty Connect group', async ({ expect }) => {
+    // What a bindable object's toolbar falls back to, so Connect is always present as an affordance
+    // even where the case above has nothing to offer.
+    const [group] = ConnectorAuth.unavailableActions();
+
+    expect(group.type).toBe(Node.ActionGroupType);
+    expect(group.id).toBe(ConnectorAuth.GROUP_ID);
+    expect(group.properties?.disabled).toBe(true);
+    expect(group.actions).toEqual([]);
+    // Ghost, so it reads as unavailable next to the live group's primary trigger.
+  });
+
+  test('the live group renders as a primary trigger', async ({ expect }) => {
+    const { db } = await setup();
+    const actions = ConnectorAuth.actions({
+      connectorIds: ['a'],
+      db,
+      spaceId: db.spaceId,
+      allConnectors: [makeConnector('a', authFlow)],
+      allConnections: [],
+    });
+
+    // Connecting is the call to action on an unbound object; ghost styling read as disabled.
+    // Explicitly `false`, not absent: the graph merges a node's properties over the previous
+    // generation's, so only an emitted key can clear an earlier disabled placeholder.
+    expect(actions[0].properties?.disabled).toBe(false);
+  });
+
   test('always produces a single dropdown group', async ({ expect }) => {
     const { db } = await setup();
-    const actions = connectorAuthActions({
+    const actions = ConnectorAuth.actions({
       connectorIds: ['a', 'b'],
       db,
       spaceId: db.spaceId,
@@ -103,7 +131,7 @@ describe('connectorAuthActions', () => {
     const connection = addConnection('b');
     // Reuse binds a target, so an `existingTarget` is required for reuse entries to appear.
     const target = db.add(Obj.make(AccessToken.AccessToken, { source: 'target.example', token: 'tok' }));
-    const actions = connectorAuthActions({
+    const actions = ConnectorAuth.actions({
       connectorIds: ['a', 'b'],
       db,
       spaceId: db.spaceId,
@@ -126,7 +154,7 @@ describe('connectorAuthActions', () => {
     const target = db.add(Obj.make(AccessToken.AccessToken, { source: 'target.example', token: 'tok' }));
     const connector: ConnectorSpec.ConnectorEntry = makeConnector('b', scheduledSync);
 
-    const actions = connectorAuthActions({
+    const actions = ConnectorAuth.actions({
       connectorIds: ['b'],
       db,
       spaceId: db.spaceId,
@@ -165,7 +193,7 @@ describe('connectorAuthActions', () => {
     const target = db.add(Obj.make(AccessToken.AccessToken, { source: 'target.example', token: 'tok' }));
     const connector: ConnectorSpec.ConnectorEntry = makeConnector('b');
 
-    const actions = connectorAuthActions({
+    const actions = ConnectorAuth.actions({
       connectorIds: ['b'],
       db,
       spaceId: db.spaceId,

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Connection, Cursor } from '@dxos/link';
@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 
 import { ConnectorSpec } from '#types';
 
-import { ensureSyncTrigger } from '../../util';
+import * as Binding from '../../Binding';
 
 /**
  * Create exactly one binding for a single-target connector (no `getSyncTargets`):
@@ -27,13 +27,23 @@ export const createSingleCursor = (
   existingTarget: Ref.Ref<Obj.Any> | undefined,
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
+    const accessToken = yield* Database.load(connection.accessToken);
+    const account = accessToken.account;
     let target: Obj.Unknown | undefined;
     if (existingTarget) {
       target = yield* Database.load(existingTarget);
-      const accessToken = yield* Database.load(connection.accessToken);
-      const name = accessToken.account;
-      if (name) {
-        Obj.update(target, (target) => Obj.setLabel(target, name));
+      // The account is only known once the sign-in completes, so this is where a user who authorized the
+      // wrong account finds out. The connection stays (the credential is real); the binding is refused.
+      if (Binding.checkAccount(target, accessToken.source, account) === 'mismatch') {
+        log.warn('refusing to bind: target syncs another account', {
+          target: target.id,
+          recorded: Binding.readAccount(target, accessToken.source),
+          account,
+        });
+        return yield* Binding.reportAccountMismatch.pipe(Effect.provideService(Operation.Service, invoker));
+      }
+      if (account) {
+        Obj.update(target, (target) => Obj.setLabel(target, account));
       }
     } else if (connector.sync?.materializeTarget) {
       const { target: materialized } = yield* invoker.invoke(
@@ -47,19 +57,28 @@ export const createSingleCursor = (
       log.warn('single-target connector cannot create a binding', { connectorId: connection.connectorId });
       return;
     }
-    const cursor = yield* Database.add(
-      Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }),
-    );
+    // A target the user is re-connecting may hold the dormant binding of an earlier connection; resuming
+    // it keeps the synced range so the sync picks up where it left off.
+    const adopted = yield* Binding.prepare({
+      target,
+      accessToken,
+      source: connection.accessToken,
+      connector,
+    });
+    const cursor =
+      adopted ??
+      (yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) })));
     invariant(Cursor.isExternal(cursor));
     log.info('bound single-target connector', {
       connectorId: connection.connectorId,
       target: target.id,
       bound: existingTarget ? 'existing' : 'materialized',
+      resumed: adopted !== undefined,
     });
     // Sets up recurring background sync for the binding, if the connector declares a trigger spec.
     // Its own failure is not special-cased — a defect here is caught by this function's own outer
     // `catchAllDefect` below, same as any other step in this flow.
-    yield* ensureSyncTrigger({ connector, cursor });
+    yield* Binding.ensureTrigger({ connector, cursor });
     // Flush the index so a caller that queries cursors right after (e.g. the mailbox/calendar
     // article this navigates to) observes the new binding immediately, matching `reconcileCursors`.
     yield* Database.flush({ indexes: true });

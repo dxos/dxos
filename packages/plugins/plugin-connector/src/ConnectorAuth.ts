@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -9,11 +11,19 @@ import type * as Node from '@dxos/app-graph/Node';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Database, type Key, Obj, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
+import { log } from '@dxos/log';
 
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
-import { bindConnectionToTarget } from './auto-bind';
+import * as Binding from './Binding';
+
+/**
+ * The "Connect" control for an object that can be bound to a remote account: one dropdown group whose
+ * children are the existing {@link Connection}s offered for reuse and a "Connect X" entry per connector
+ * with an auth flow. Shared by the standalone `ConnectorAuthMenu` (plugin-assistant) and the object
+ * toolbars contributed from `app-graph-builder`, so both render the same thing.
+ */
 
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */
 const CONNECT_ICON = 'ph--plugs--regular';
@@ -39,7 +49,7 @@ const reusableConnections = (
     (connection) => connection.connectorId !== undefined && connectorIds.includes(connection.connectorId),
   );
 
-export type ConnectorAuthActionsOptions = {
+export type ActionsOptions = {
   /** Stable ids of the {@link ConnectorSpec.ConnectorEntry} entries the menu offers: existing connections from any
    * of them are offered for reuse, and each (with an auth flow) gets a "Connect X" entry. */
   connectorIds: readonly string[];
@@ -64,14 +74,14 @@ export type ConnectorAuthActionsOptions = {
  * with the group's `type` intact. Children carry Effect `data`, so execute them with `useActionRunner`
  * (`Menu.Root onAction`) — for the coordinator/database context it provides.
  */
-export const connectorAuthActions = ({
+export const actions = ({
   connectorIds,
   db,
   spaceId,
   existingTarget,
   allConnectors,
   allConnections,
-}: ConnectorAuthActionsOptions): Node.NodeArg<typeof Node.actionGroupSymbol>[] => {
+}: ActionsOptions): Node.NodeArg<typeof Node.actionGroupSymbol>[] => {
   const offered = offeredConnectors(allConnectors, connectorIds);
   // Reuse binds the object as a new sync target, so only offer it when there is a target to bind.
   const connections = existingTarget ? reusableConnections(allConnections, connectorIds) : [];
@@ -102,17 +112,27 @@ export const connectorAuthActions = ({
           if (!existingTarget) {
             return;
           }
-          yield* bindConnectionToTarget({
+          yield* Binding.bind({
             connection,
             connector: allConnectors.find((entry) => entry.id === connection.connectorId),
             target: existingTarget,
-          });
+          }).pipe(
+            // Reuse is a deliberate click, so a refusal has to say so — unlike the silent automatic
+            // bind. The graph extension filters contradicting connections out of this menu, but the
+            // standalone `ConnectorAuthMenu` offers them, and there the failure was invisible.
+            Effect.catchTag('TargetAccountMismatchError', (error) =>
+              Effect.gen(function* () {
+                log.warn('refusing to reuse: target syncs another account', { context: error.context });
+                yield* Binding.reportAccountMismatch;
+              }),
+            ),
+          );
         }).pipe(Effect.provide(Database.layer(db))),
     });
 
   return [
     AppNode.makeToolbarActionGroup({
-      id: CONNECTOR_AUTH_GROUP_ID,
+      id: GROUP_ID,
       label: ['connect.label', { ns: meta.profile.key }],
       icon: CONNECT_ICON,
       // Show the "Connect" label next to the icon rather than icon-only.
@@ -129,8 +149,27 @@ export const connectorAuthActions = ({
   ];
 };
 
-/** Id of the dropdown group {@link connectorAuthActions} produces; the menu reads its children. */
-export const CONNECTOR_AUTH_GROUP_ID = 'connectorAuth';
+/** Id of the dropdown group {@link actions} produces; the menu reads its children. */
+export const GROUP_ID = 'connectorAuth';
+
+/**
+ * The Connect group as a disabled trigger with nothing inside it, for a bindable object that has
+ * nothing to offer — no provider plugin registered for its type, or every existing connection belongs
+ * to another account. Dropping the control instead reads as "this kind of object cannot be connected",
+ * which is wrong; a disabled Connect says the capability exists and is currently unavailable. Pairs
+ * with {@link actions}, which returns `[]` in exactly that case.
+ */
+export const unavailableActions = (): Node.NodeArg<typeof Node.actionGroupSymbol>[] => [
+  AppNode.makeToolbarActionGroup({
+    id: GROUP_ID,
+    label: ['connect.label', { ns: meta.profile.key }],
+    icon: CONNECT_ICON,
+    iconOnly: false,
+    disabled: true,
+    testId: 'connectorPlugin.connect',
+    actions: [],
+  }),
+];
 
 /** Label for a connection's connector, falling back to the connection id when unregistered. */
 const connectorLabel = (
