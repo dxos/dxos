@@ -3,11 +3,9 @@
 //
 
 export * from './FeedStory';
-export * from './frame-meter';
+export * from './debug';
 export * from './generator';
 export * from './scenarios';
 export * from './stream';
-export * from './sweep';
 export * from './turn';
-export * from './use-feed-debug';
 export * from './widgets';
