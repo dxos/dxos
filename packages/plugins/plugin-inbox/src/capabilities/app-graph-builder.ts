@@ -48,24 +48,23 @@ import { getMessageLabel } from '../util';
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
 /**
- * Whether an external sync connection targets this mailbox. Gates the pipeline actions: with nothing
- * connected there is no mail to act on, so offering them is a dead affordance. Mirrors the lookup the
- * sync action does — the cursor no longer relates to a Connection directly, so the Connection is found
- * by matching access tokens.
+ * Whether a live external sync binding targets this mailbox. Gates the pipeline actions: with nothing
+ * connected there is no mail to act on, so offering them is a dead affordance. Keys on the same
+ * `findLiveBinding` predicate as the sync action and the connector plugin's Connect action, so a
+ * binding whose connection was deleted reads as unconnected here too.
  */
 const hasConnection = (mailbox: Mailbox.Mailbox, get: Atom.AtomContext): boolean => {
   const db = Obj.getDatabase(mailbox);
   if (!db) {
     return false;
   }
-  const cursor = get(db.query(Filter.type(Cursor.Cursor)).atom).find(
-    (candidate): candidate is Cursor.ExternalCursor =>
-      Cursor.isExternal(candidate) && isCursorForTarget(candidate, mailbox),
+  return (
+    findLiveBinding(
+      get(db.query(Filter.type(Cursor.Cursor)).atom),
+      get(db.query(Filter.type(Connection.Connection)).atom),
+      mailbox,
+    ) !== undefined
   );
-  if (!cursor) {
-    return false;
-  }
-  return get(db.query(Filter.type(Connection.Connection, { accessToken: cursor.spec.source })).atom).length > 0;
 };
 
 export const ATTACHMENT_NODE_TYPE = `${Type.getTypename(Message.Message)}-attachment`;
