@@ -60,8 +60,11 @@ const createHarness = ({ count = 200, estimate = 120 }: { count?: number; estima
       cb(offset, false);
       return undefined;
     },
-    scrollToFn: (target) => {
-      offset = target;
+    // Compensation for a measured row arrives here, as `adjustments` — the DOM adapter adds it to
+    // the target (`elementScroll`: `toOffset = offset + adjustments`). A stub that ignores it drops
+    // every correction the virtualizer makes and manufactures the very defect it is meant to detect.
+    scrollToFn: (target, { adjustments = 0 } = {}) => {
+      offset = target + adjustments;
       notifyOffset?.(offset, false);
     },
     onChange: () => {},
@@ -111,9 +114,9 @@ describe('virtualizer layout', () => {
     expect(harness.screenPosition(anchor.index)).toBeCloseTo(before!, 0);
   });
 
-  // `test.fails`: these two state the contract and the virtualizer does not meet it yet, so the
-  // reproduction stays executable and CI stays honest — the day the layout is fixed, they fail as
-  // *unexpected passes* and must be flipped back to `test`.
+  // `test.fails`: this states the contract and the virtualizer does not meet it, so the reproduction
+  // stays executable and CI stays honest — the day the layout is fixed it fails as an *unexpected
+  // pass* and must be flipped back to `test`.
   test.fails('measuring a row ABOVE the reader does not move what they are looking at', () => {
     const harness = createHarness();
     harness.scrollTo(5_000);
@@ -132,7 +135,7 @@ describe('virtualizer layout', () => {
     expect(harness.screenPosition(anchor.index)).toBeCloseTo(before!, 0);
   });
 
-  test.fails('scrolling up settles at the tail without the content moving under the reader', () => {
+  test('scrolling up settles at the tail without the content moving under the reader', () => {
     const harness = createHarness({ count: 200, estimate: 120 });
 
     // Open at the tail, as a chat does.
