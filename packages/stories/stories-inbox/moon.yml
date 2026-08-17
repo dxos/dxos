@@ -7,9 +7,13 @@ tags:
   - pack
   - storybook
 tasks:
+  # `.storybook/main.mts` imports `fixturePath` from `@dxos/fixtures` to serve corpora to browser
+  # stories, and it is evaluated in Node without the `source` condition, so that resolves to dist.
+  # `@storybook/addon-vitest` evaluates it during vitest's *project resolution*, before `--project`
+  # filtering — so the plain `test` task loads it too, not just the storybook one.
+  test:
+    deps:
+      - fixtures:build
   test-storybook:
     deps:
-      # `.storybook/main.mts` imports `fixturePath` from `@dxos/fixtures` to serve corpora to browser
-      # stories. Storybook's config is bundled in Node without the `source` condition, so that
-      # resolves to dist and the tool has to be built before the run starts.
       - fixtures:build
