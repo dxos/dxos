@@ -81,6 +81,23 @@ export const Cursor = Schema.String.pipe(Schema.brand('@dxos/echo/Feed/Cursor'))
 export type Cursor = Schema.Schema.Type<typeof Cursor>;
 
 /**
+ * Annotation holding a reader's position in a feed — the cursor it has consumed up to.
+ *
+ * An annotation rather than a `@meta` foreign key: a key identifies the same entity in another
+ * system, which a checkpoint is not.
+ *
+ * @example
+ * ```ts
+ * const cursor = Annotation.get(reader, Feed.CursorAnnotation).pipe(Option.getOrElse(() => Feed.START));
+ * Obj.update(reader, (reader) => Annotation.set(reader, Feed.CursorAnnotation, Feed.getCursor(item)!));
+ * ```
+ */
+export const CursorAnnotation: Annotation.Annotation<Cursor> = Annotation.make({
+  id: 'org.dxos.annotation.feed-cursor',
+  schema: Cursor,
+});
+
+/**
  * Sentinel cursor preceding every item — "read from the beginning".
  *
  * A sentinel rather than `undefined` so a stored checkpoint is always a `Cursor`: a reader that has

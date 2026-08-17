@@ -27,7 +27,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Database, Entity, Feed, Filter, Obj, Query, QueryResult, Ref } from '@dxos/echo';
+import { Annotation, Database, Entity, Feed, Filter, Obj, Query, QueryResult, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
@@ -701,11 +701,11 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 
               // Read only what follows the cursor, one page at a time: the cursor is pushed into the
               // index scan, so the cost of a tick is the size of the page rather than of the feed.
-              let cursor = Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id;
+              let cursor = readFeedCursor(trigger);
               for (;;) {
                 const chunk = yield* Feed.query(
                   feed,
-                  Query.select(Filter.feedCursor(cursor ?? Feed.START)).limit(concurrency),
+                  Query.select(Filter.feedCursor({ begin: cursor })).limit(concurrency),
                 ).run.pipe(Effect.map((objects) => filterReadyFeedItems(objects, cursor)));
                 if (chunk.length === 0) {
                   break;
@@ -713,13 +713,13 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 
                 const invocationsThisIteration = yield* Effect.forEach(
                   chunk,
-                  ({ item, position }) =>
+                  ({ item, cursor: itemCursor }) =>
                     this.invokeTrigger({
                       trigger,
                       event: {
                         feed: feedRef,
                         item,
-                        cursor: position,
+                        cursor: itemCursor,
                       } satisfies TriggerEvent.FeedEvent,
                     }),
                   { concurrency: 'unbounded' },
@@ -733,11 +733,12 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
                   Array.last,
                 );
                 if (Option.isSome(lastSuccessfulInvocation)) {
-                  cursor = lastSuccessfulInvocation.value.feedCursor ?? failedInvariant();
-                  const advanced = cursor;
+                  const advanced = Feed.Cursor.make(lastSuccessfulInvocation.value.feedCursor ?? failedInvariant());
+                  cursor = advanced;
                   Obj.update(trigger, (trigger) => {
-                    Obj.deleteKeys(trigger, KEY_FEED_CURSOR);
-                    Obj.getMeta(trigger).keys.push({ source: KEY_FEED_CURSOR, id: advanced });
+                    Annotation.set(trigger, Feed.CursorAnnotation, advanced);
+                    // Drop any checkpoint left by the release that kept it as a foreign key.
+                    Obj.deleteKeys(trigger, LEGACY_KEY_FEED_CURSOR);
                   });
                   yield* Database.flush();
                 } else {
@@ -1086,7 +1087,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
           // old data.
           const key =
             spec.kind === 'feed'
-              ? `feed:${spec.feed?.uri ?? ''}:${Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id ?? ''}`
+              ? `feed:${spec.feed?.uri ?? ''}:${readFeedCursor(trigger) ?? ''}`
               : `subscription:${JSON.stringify(spec.query.ast)}`;
           wanted.set(trigger.id, { key, trigger });
         }
@@ -1124,11 +1125,11 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
               return undefined;
             }
             const feed = yield* Database.load(spec.feed).pipe(Effect.orDie);
-            const cursor = Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id;
+            const cursor = readFeedCursor(trigger);
             // One item past the cursor is enough to know there is work; the dispatch that follows
             // reads the pages it needs. Watching the whole feed would restore the full scan this
             // subscription exists to avoid.
-            return yield* Feed.query(feed, Query.select(Filter.feedCursor(cursor ?? Feed.START)).limit(1));
+            return yield* Feed.query(feed, Query.select(Filter.feedCursor({ begin: cursor })).limit(1));
           })
         : spec?.kind === 'subscription'
           ? Database.query(Query.fromAst(spec.query.ast).options({ deleted: 'include' }))
@@ -1220,9 +1221,20 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 }
 
 /**
- * Key for the current cursor for feed triggers.
+ * Foreign key a previous release stored a feed trigger's cursor under, before it became
+ * {@link Feed.CursorAnnotation}. Read so a trigger already in the field resumes where it left off
+ * instead of re-dispatching its whole feed; dropped the first time the cursor advances.
  */
-export const KEY_FEED_CURSOR = 'org.dxos.key.local-trigger-dispatcher.feed-cursor';
+export const LEGACY_KEY_FEED_CURSOR = 'org.dxos.key.local-trigger-dispatcher.feed-cursor';
+
+/**
+ * The cursor a feed trigger has dispatched up to, or `undefined` when it has dispatched nothing.
+ */
+const readFeedCursor = (trigger: Trigger.Trigger): Feed.Cursor | undefined => {
+  const annotated = Annotation.get(trigger, Feed.CursorAnnotation).pipe(Option.getOrUndefined);
+  const stored = annotated ?? Obj.getKeys(trigger, LEGACY_KEY_FEED_CURSOR).at(0)?.id;
+  return stored !== undefined ? Feed.Cursor.make(stored) : undefined;
+};
 
 /**
  * Canonical content signature of an entity, used by subscription triggers to detect changes across

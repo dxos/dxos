@@ -154,26 +154,51 @@ describe('Feed query pagination', () => {
       .run();
     const cursor = Feed.getCursor(all[1])!;
 
-    const after = await db.query(Query.select(Filter.feedCursor(cursor)).from(Scope.feed(feedUri))).run();
+    const after = await db.query(Query.select(Filter.feedCursor({ begin: cursor })).from(Scope.feed(feedUri))).run();
     expect(after.map((obj) => (obj as TestSchema.Task).title).sort()).toEqual(['c', 'd']);
 
-    const page = await db.query(Query.select(Filter.feedCursor(cursor)).limit(1).from(Scope.feed(feedUri))).run();
+    const page = await db
+      .query(
+        Query.select(Filter.feedCursor({ begin: cursor }))
+          .limit(1)
+          .from(Scope.feed(feedUri)),
+      )
+      .run();
     expect(page.map((obj) => (obj as TestSchema.Task).title)).toEqual(['c']);
 
     // The start sentinel bounds nothing, but still reads in append order.
-    const fromStart = await db.query(Query.select(Filter.feedCursor(Feed.START)).from(Scope.feed(feedUri))).run();
+    const fromStart = await db
+      .query(Query.select(Filter.feedCursor({ begin: Feed.START })).from(Scope.feed(feedUri)))
+      .run();
     expect(fromStart.map((obj) => (obj as TestSchema.Task).title)).toEqual(['a', 'b', 'c', 'd']);
 
     // A limited read from the start takes the first items by position, not whichever the scan met
     // first — a page of items a reader cannot act on would stall it with work still behind them.
     const firstPage = await db
-      .query(Query.select(Filter.feedCursor(Feed.START)).limit(2).from(Scope.feed(feedUri)))
+      .query(
+        Query.select(Filter.feedCursor({ begin: Feed.START }))
+          .limit(2)
+          .from(Scope.feed(feedUri)),
+      )
       .run();
     expect(firstPage.map((obj) => (obj as TestSchema.Task).title)).toEqual(['a', 'b']);
 
+    // `end` bounds the read from above, excluding the item it names.
+    const bounded = await db
+      .query(
+        Query.select(Filter.feedCursor({ begin: Feed.START, end: Feed.getCursor(all[2])! })).from(Scope.feed(feedUri)),
+      )
+      .run();
+    expect(bounded.map((obj) => (obj as TestSchema.Task).title)).toEqual(['a', 'b']);
+
+    const between = await db
+      .query(Query.select(Filter.feedCursor({ begin: cursor, end: Feed.getCursor(all[3])! })).from(Scope.feed(feedUri)))
+      .run();
+    expect(between.map((obj) => (obj as TestSchema.Task).title)).toEqual(['c']);
+
     // A cursor past the tail yields nothing rather than falling back to a full scan.
     const exhausted = await db
-      .query(Query.select(Filter.feedCursor(Feed.Cursor.make('1000'))).from(Scope.feed(feedUri)))
+      .query(Query.select(Filter.feedCursor({ begin: Feed.Cursor.make('1000') })).from(Scope.feed(feedUri)))
       .run();
     expect(exhausted).toHaveLength(0);
   });
@@ -197,7 +222,9 @@ describe('Feed query pagination', () => {
 
     const after = await db
       .query(
-        Query.select(Filter.and(Filter.type(TestSchema.Task), Filter.feedCursor(cursor))).from(Scope.feed(feedUri)),
+        Query.select(Filter.and(Filter.type(TestSchema.Task), Filter.feedCursor({ begin: cursor }))).from(
+          Scope.feed(feedUri),
+        ),
       )
       .run();
     expect(after.map((obj) => (obj as TestSchema.Task).title).sort()).toEqual(['b', 'c']);
@@ -215,11 +242,11 @@ describe('Feed query pagination', () => {
     // than a query that silently returns everything. The start sentinel bounds nothing, but it is
     // still a cursor and is refused just the same rather than quietly running unbounded.
     for (const cursor of [Feed.Cursor.make('0'), Feed.START]) {
-      await expect(db.query(Query.select(Filter.feedCursor(cursor)).from(Scope.space())).run()).rejects.toThrow(
-        /feed scope/,
-      );
       await expect(
-        db.query(Query.select(Filter.feedCursor(cursor)).from(Scope.feed(feedUri), Scope.space())).run(),
+        db.query(Query.select(Filter.feedCursor({ begin: cursor })).from(Scope.space())).run(),
+      ).rejects.toThrow(/feed scope/);
+      await expect(
+        db.query(Query.select(Filter.feedCursor({ begin: cursor })).from(Scope.feed(feedUri), Scope.space())).run(),
       ).rejects.toThrow(/feed scope/);
     }
   });

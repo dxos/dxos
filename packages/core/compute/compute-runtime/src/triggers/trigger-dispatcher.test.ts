@@ -7,6 +7,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
@@ -21,14 +22,14 @@ import { ExampleHandlers, Reply } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';
 import { Person, Task } from '@dxos/types';
 
 import * as ProcessManager from '../ProcessManager';
 import { credentialsLayerConfig } from '../services/credentials';
-import { TriggerDispatcher } from './trigger-dispatcher';
+import { LEGACY_KEY_FEED_CURSOR, TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 
 /**
@@ -687,6 +688,45 @@ describe('TriggerDispatcher', () => {
           const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(0);
         }
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'the cursor is an annotation, and a legacy foreign key is adopted',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed),
+        });
+        yield* Database.add(trigger);
+        yield* Feed.append(feed, [
+          Obj.make(Person.Person, { fullName: 'John Doe' }),
+          Obj.make(Person.Person, { fullName: 'Jane Smith' }),
+        ]);
+
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
+
+        // The checkpoint lands in the annotation, not in `@meta.keys`.
+        const cursor = Annotation.get(trigger, Feed.CursorAnnotation).pipe(Option.getOrUndefined);
+        expect(cursor).toBeDefined();
+        expect(Obj.getKeys(trigger, LEGACY_KEY_FEED_CURSOR)).toEqual([]);
+
+        // A trigger checkpointed by the release that used a foreign key resumes from it rather than
+        // re-dispatching its whole feed.
+        Obj.update(trigger, (trigger) => {
+          Obj.getMeta(trigger).annotations = {};
+          Obj.getMeta(trigger).keys.push({ source: LEGACY_KEY_FEED_CURSOR, id: cursor! });
+        });
+        yield* Database.flush();
+
+        const resumed = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
+        expect(resumed.length).toBe(1);
+        expect(resumed[0].feedCursor).not.toBe(cursor);
+        expect(Obj.getKeys(trigger, LEGACY_KEY_FEED_CURSOR)).toEqual([]);
       }, Effect.provide(TestLayer())),
     );
 

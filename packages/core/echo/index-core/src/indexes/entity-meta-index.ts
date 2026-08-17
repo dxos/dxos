@@ -129,6 +129,8 @@ const buildSourceCondition = (
 export interface QueueWindow {
   /** Exclusive lower bound: only blocks positioned strictly after this are returned. */
   after: number;
+  /** Exclusive upper bound: only blocks positioned strictly before this are returned. */
+  before?: number;
   /** Maximum rows to return, applied after ordering by position. */
   limit?: number;
 }
@@ -146,8 +148,9 @@ const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefi
   // A cursor read is over positioned blocks only — `queuePosition > ?` excludes the nulls, and
   // that is the intent: an unpositioned block has no place in the ordering yet, so admitting it
   // would let it slip past a later read that resumes beyond its eventual position.
+  const upper = window.before !== undefined ? sql` AND queuePosition < ${window.before}` : sql``;
   const limit = window.limit !== undefined ? sql` LIMIT ${window.limit}` : sql``;
-  return sql` AND queuePosition > ${window.after} ORDER BY queuePosition ASC${limit}`;
+  return sql` AND queuePosition > ${window.after}${upper} ORDER BY queuePosition ASC${limit}`;
 };
 
 export class EntityMetaIndex implements Index {

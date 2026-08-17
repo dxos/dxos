@@ -9,6 +9,7 @@ import { SqlMigrations } from '@dxos/sql-sqlite';
 
 import init from './0001_init.sql?raw';
 import indexes from './0003_indexes.sql?raw';
+import queuePosition from './0004_queue_position.sql?raw';
 
 /**
  * Columns added to `objectMeta` after it first shipped, with the DDL that adds them. Databases in
@@ -25,29 +26,15 @@ const LATER_COLUMNS: ReadonlyArray<readonly [name: string, ddl: string]> = [
   ['queueNamespace', "queueNamespace TEXT NOT NULL DEFAULT ''"],
 ];
 
-const addColumns = (columns: ReadonlyArray<readonly [name: string, ddl: string]>) =>
-  Effect.gen(function* () {
-    const sql = yield* SqlClient.SqlClient;
-    const existing = yield* sql.unsafe<{ name: string }>('PRAGMA table_info("objectMeta")');
-    const present = new Set(existing.map((column) => column.name));
-    for (const [name, ddl] of columns) {
-      if (!present.has(name)) {
-        yield* sql.unsafe(`ALTER TABLE objectMeta ADD COLUMN ${ddl}`);
-      }
-    }
-  });
-
-const addMissingColumns = addColumns(LATER_COLUMNS);
-
-/**
- * The global position a feed block was assigned, denormalized out of the indexed snapshot so a
- * cursor read (`queuePosition > ?` ordered and limited) is an index seek rather than a full feed
- * scan. Null for automerge objects and for local blocks not yet positioned.
- */
-const addQueuePosition = Effect.gen(function* () {
-  yield* addColumns([['queuePosition', 'queuePosition INTEGER']]);
+const addMissingColumns = Effect.gen(function* () {
   const sql = yield* SqlClient.SqlClient;
-  yield* sql.unsafe('CREATE INDEX IF NOT EXISTS idx_object_index_queuePosition ON objectMeta(queueId, queuePosition)');
+  const columns = yield* sql.unsafe<{ name: string }>('PRAGMA table_info("objectMeta")');
+  const present = new Set(columns.map((column) => column.name));
+  for (const [name, ddl] of LATER_COLUMNS) {
+    if (!present.has(name)) {
+      yield* sql.unsafe(`ALTER TABLE objectMeta ADD COLUMN ${ddl}`);
+    }
+  }
 });
 
 /**
@@ -60,7 +47,7 @@ export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
   '0002_missing_columns': addMissingColumns,
   '0003_indexes': SqlMigrations.apply(indexes),
-  '0004_queue_position': addQueuePosition,
+  '0004_queue_position': SqlMigrations.apply(queuePosition),
 };
 
 /** Own history table per store, since many stores share the client database. */

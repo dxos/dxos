@@ -154,14 +154,18 @@ export interface FilterTimestamp extends Schema.Schema.Type<typeof FilterTimesta
 export const FilterTimestamp: Schema.Codec<FilterTimestamp> = FilterTimestamp_;
 
 /**
- * Filter feed items to those appended after a cursor — the position the position authority assigned
- * a block (`Feed.getCursor`). Only meaningful against a feed scope: an automerge object has no
- * position, so the query planner rejects this filter over a space's documents.
+ * Filter feed items to a cursor range — cursors being the positions the position authority assigned
+ * the blocks (`Feed.getCursor`). Both bounds name an item and are exclusive of it, so a reader
+ * resumes with the last cursor it consumed as `begin` without re-reading that item. Only meaningful
+ * against a feed scope: an automerge object has no position, so the query planner rejects this
+ * filter over a space's documents.
  */
 const FilterFeedCursor_ = Schema.Struct({
   type: Schema.Literal('feed-cursor'),
-  /** Exclusive lower bound. The empty string is the start sentinel and bounds nothing. */
-  after: Schema.String,
+  /** Read after this cursor. The empty string is the start sentinel and bounds nothing. */
+  begin: Schema.optional(Schema.String),
+  /** Read up to but not including this cursor. */
+  end: Schema.optional(Schema.String),
 });
 
 export interface FilterFeedCursor extends Schema.Schema.Type<typeof FilterFeedCursor_> {}

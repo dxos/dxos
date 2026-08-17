@@ -15,6 +15,7 @@ import { assertArgument } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
+import type * as Feed from './Feed';
 import * as internal from './internal';
 import type * as Obj from './Obj';
 import * as Ref from './Ref';
@@ -389,10 +390,22 @@ export const updated = (range: TimeRange): Any => _timeRangeFilter('updatedAt', 
 export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', range);
 
 /**
- * Filter feed items to those appended after a cursor — see `Feed.getCursor` for reading one off an
- * item, and `Feed.START` for the sentinel that bounds nothing.
+ * Range of feed cursors, as read off items with `Feed.getCursor`.
+ * Both bounds name an item and exclude it: `begin` is the last item already consumed, `end` the
+ * first item not wanted.
+ */
+export type FeedCursorRange = {
+  /** Read after this cursor. Defaults to the start of the feed ({@link Feed.START}). */
+  begin?: Feed.Cursor;
+  /** Read up to but not including this cursor. Defaults to the end of the feed. */
+  end?: Feed.Cursor;
+};
+
+/**
+ * Filter feed items to a cursor range — see `Feed.getCursor` for reading a cursor off an item, and
+ * `Feed.START` for the sentinel that bounds nothing.
  *
- * The bound is pushed into the index scan, so a reader that keeps a cursor pays for what is new
+ * The range is pushed into the index scan, so a reader that keeps a cursor pays for what is new
  * rather than for the whole feed. Combine with `limit()` for a bounded page. Results come back in
  * append order and cover positioned items only — an item a peer wrote but the position authority
  * has not yet acknowledged has no place in that order, and `Feed.START` selects the same set from
@@ -401,13 +414,18 @@ export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', 
  *
  * @example
  * ```ts
- * db.query(Query.select(Filter.feedCursor(cursor)).limit(10).from(feed));
+ * // The next 10 items after the last one this reader consumed.
+ * db.query(Query.select(Filter.feedCursor({ begin: cursor })).limit(10).from(feed));
+ *
+ * // Everything between two known items, excluding both.
+ * db.query(Query.select(Filter.feedCursor({ begin: first, end: last })).from(feed));
  * ```
  */
-export const feedCursor = (after: string): Any =>
+export const feedCursor = (range: FeedCursorRange = {}): Any =>
   new FilterClass({
     type: 'feed-cursor',
-    after,
+    ...(range.begin !== undefined ? { begin: range.begin } : {}),
+    ...(range.end !== undefined ? { end: range.end } : {}),
   });
 
 export type ChildOfOptions = {

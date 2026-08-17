@@ -138,8 +138,8 @@ export class QueryPlanner {
     // A feed cursor bounds the scan rather than describing an object, so it is lifted out of the
     // filter tree and onto the select step it bounds; what remains plans exactly as it would
     // without it.
-    const { after, rest } = _splitFeedCursor(filter, context);
-    if (after !== undefined) {
+    const { range, rest } = _splitFeedCursor(filter, context);
+    if (range !== undefined) {
       // Checked here rather than where the bound is applied, so the start sentinel — which bounds
       // nothing and so reaches no window — is refused over a space's documents just the same. An
       // automerge object has no position for any cursor to name.
@@ -153,7 +153,7 @@ export class QueryPlanner {
       const selectIdx = plan.steps.findIndex((step) => step._tag === 'SelectStep');
       invariant(selectIdx !== -1, 'expected a select step to bound');
       const steps = [...plan.steps];
-      steps[selectIdx] = { ...(steps[selectIdx] as QueryPlan.SelectStep), afterFeedCursor: after };
+      steps[selectIdx] = { ...(steps[selectIdx] as QueryPlan.SelectStep), feedCursorRange: range };
       return QueryPlan.Plan.make(steps);
     }
 
@@ -1153,7 +1153,7 @@ export const filterContainsInQuery = (filter: QueryAST.Filter): boolean => {
 const _splitFeedCursor = (
   filter: QueryAST.Filter,
   context: GenerationContext,
-): { after?: string; rest?: QueryAST.Filter } => {
+): { range?: { begin?: string; end?: string }; rest?: QueryAST.Filter } => {
   const reject = () => {
     throw new QueryError({
       message: 'A feed cursor filter can only be combined with other filters via AND.',
@@ -1165,7 +1165,7 @@ const _splitFeedCursor = (
     if (context.selectionInverted) {
       reject();
     }
-    return { after: filter.after };
+    return { range: _feedCursorRange(filter) };
   }
 
   if (filter.type !== 'and') {
@@ -1189,10 +1189,15 @@ const _splitFeedCursor = (
   }
 
   return {
-    after: cursors[0].after,
+    range: _feedCursorRange(cursors[0]),
     rest: rest.length === 0 ? undefined : rest.length === 1 ? rest[0] : { type: 'and', filters: rest },
   };
 };
+
+const _feedCursorRange = (filter: QueryAST.FilterFeedCursor): { begin?: string; end?: string } => ({
+  ...(filter.begin !== undefined ? { begin: filter.begin } : {}),
+  ...(filter.end !== undefined ? { end: filter.end } : {}),
+});
 
 const _containsFeedCursor = (filter: QueryAST.Filter): boolean => {
   switch (filter.type) {

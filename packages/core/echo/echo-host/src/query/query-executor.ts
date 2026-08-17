@@ -2144,19 +2144,20 @@ const extractSpaceIdFromQueue = (feedUri: string): SpaceId | undefined => {
 const BEFORE_FIRST_POSITION = -1;
 
 /**
- * The index-level window for a select bounded by a feed cursor: resume after that position, in
- * position order, capped at the pushed-down limit.
+ * The index-level window for a select bounded by a cursor range: the positions strictly between its
+ * bounds, in position order, capped at the pushed-down limit.
  *
- * Every cursor windows the scan, the start sentinel included — it bounds nothing but still asks for
+ * Every cursor range windows the scan, an empty one included — it bounds nothing but still asks for
  * a cursor read, which is over positioned blocks in position order. A reader that paged the
  * unpositioned blocks in first would stop at a page of items it cannot act on while positioned ones
  * waited behind them.
  *
- * A cursor that is not a decimal position is treated as unsatisfiable rather than as "no cursor":
+ * A bound that is not a decimal position is treated as unsatisfiable rather than as absent:
  * resuming a corrupted checkpoint from the beginning would re-dispatch the whole feed.
  */
 const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined => {
-  if (step.afterFeedCursor === undefined) {
+  const range = step.feedCursorRange;
+  if (range === undefined) {
     return undefined;
   }
 
@@ -2168,12 +2169,18 @@ const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined
     });
   }
 
-  if (step.afterFeedCursor === '') {
-    return { after: BEFORE_FIRST_POSITION, limit: step.limit };
-  }
+  return {
+    // The empty string is the start sentinel (`Feed.START`), which bounds nothing.
+    after: range.begin ? parseCursor(range.begin, Number.MAX_SAFE_INTEGER) : BEFORE_FIRST_POSITION,
+    ...(range.end ? { before: parseCursor(range.end, BEFORE_FIRST_POSITION) } : {}),
+    ...(step.limit !== undefined ? { limit: step.limit } : {}),
+  };
+};
 
-  const after = /^\d+$/.test(step.afterFeedCursor) ? Number(step.afterFeedCursor) : Number.NaN;
-  return { after: Number.isSafeInteger(after) ? after : Number.MAX_SAFE_INTEGER, limit: step.limit };
+/** A cursor's position, or `unsatisfiable` when it does not name one. */
+const parseCursor = (cursor: string, unsatisfiable: number): number => {
+  const position = /^\d+$/.test(cursor) ? Number(cursor) : Number.NaN;
+  return Number.isSafeInteger(position) ? position : unsatisfiable;
 };
 
 const extractQueueIds = (queues: readonly string[]): EntityId[] | null => {

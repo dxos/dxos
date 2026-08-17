@@ -70,11 +70,12 @@ export namespace QueryPlan {
     limit?: number;
 
     /**
-     * Exclusive lower bound on feed position, from a `feed-cursor` filter. The scan returns only
-     * blocks positioned after it, in position order, so resuming a feed costs what is new rather
-     * than the whole feed.
+     * Cursor range from a `feed-cursor` filter, both bounds exclusive. The scan returns only blocks
+     * positioned inside it, in position order, so resuming a feed costs what is new rather than the
+     * whole feed. Present (possibly with no bounds set) whenever the filter was, since a cursor read
+     * covers positioned blocks only.
      */
-    afterFeedCursor?: string;
+    feedCursorRange?: { begin?: string; end?: string };
   };
 
   /**

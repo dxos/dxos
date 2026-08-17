@@ -401,11 +401,12 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  /** Selects the feed items appended after the supplied cursor. */
-  static feedCursor(after: string): Filter$.Any {
+  /** Selects the feed items inside the supplied cursor range, excluding the items its bounds name. */
+  static feedCursor(range: Filter$.FeedCursorRange = {}): Filter$.Any {
     return new FilterClass({
       type: 'feed-cursor',
-      after,
+      ...(range.begin !== undefined ? { begin: range.begin } : {}),
+      ...(range.end !== undefined ? { end: range.end } : {}),
     });
   }
 
@@ -897,7 +898,7 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
     case 'feed-cursor':
-      return `Filter.feedCursor(${JSON.stringify(filter.after)})`;
+      return `Filter.feedCursor(${JSON.stringify({ begin: filter.begin, end: filter.end })})`;
     case 'not':
       return `Filter.not(${prettyFilter(filter.filter)})`;
     case 'and':
