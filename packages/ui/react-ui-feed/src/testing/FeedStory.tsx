@@ -538,25 +538,25 @@ const DebugBar = ({
   const { resetShifts } = useMessageList('DebugBar');
 
   return (
-    <div className='flex items-center gap-4 px-2 text-xs text-description tabular-nums'>
+    // Fixed tracks, not flow: every number here changes while scrolling, and cells sized to their
+    // content would shuffle the row on each update — an instrument that moves is hard to read.
+    <div className='grid grid-cols-[repeat(6,6rem)_auto] items-center gap-2 px-2 text-xs text-description tabular-nums'>
       <FrameMeter meter={meter} />
-      <button
-        type='button'
-        className={mx('whitespace-nowrap', jumps.count > 0 && 'text-warning-text')}
-        title='Rows that moved on screen against the scroll, sampled per frame'
-        data-testid='feed.jumps'
-      >
-        {jumps.count} jumps{jumps.worst ? ` (${jumps.worst}px)` : ''}
-      </button>
-      <button
-        type='button'
-        className={mx('whitespace-nowrap', shifts > 0 && 'text-warning-text')}
-        title='Rows that moved after layout — click to reset'
-        data-testid='feed.shifts'
+      <span className={mx('text-right', jumps.count > 0 && 'text-warning-text')} data-testid='feed.jumps'>
+        {jumps.count} jumps
+      </span>
+      <span className={mx('text-right', shifts > 0 && 'text-warning-text')} data-testid='feed.shifts'>
+        {shifts} shifts{breaks > 0 ? ` · ${breaks}!` : ''}
+      </span>
+      <IconButton
+        icon='ph--arrow-counter-clockwise--regular'
+        iconOnly
+        label='Reset counters'
+        variant='ghost'
+        size={3}
+        data-testid='feed.debug.reset'
         onClick={resetShifts}
-      >
-        {shifts} shifts{breaks > 0 ? ` · ${breaks} breaks` : ''}
-      </button>
+      />
     </div>
   );
 };
@@ -576,7 +576,7 @@ const FrameMeter = ({ classNames, meter }: ThemedClassName<{ meter: FrameMeterSt
   return (
     <button
       type='button'
-      className={mx('grid grid-cols-4 gap-1 text-left tabular-nums whitespace-nowrap overflow-hidden', classNames)}
+      className={mx('col-span-4 grid grid-cols-subgrid text-left tabular-nums whitespace-nowrap', classNames)}
       title={`${label} — p50 ${p50} · ${frames} frames · ${(duration / 1000).toFixed(1)}s. Click to record the pass.`}
       data-testid='feed.frames'
       onClick={record}
