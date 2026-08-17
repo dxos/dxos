@@ -461,10 +461,11 @@ type StatusBarProps = {
 };
 
 const StatusBar = ({ hits, selected, streaming, meter }: StatusBarProps) => {
-  const { range, currentIndex, mountedWidgets, jumps, shifts, breaks, count } = useMessageList('StatusBar');
+  const { range, currentIndex, mountedRows, mountedWidgets, jumps, shifts, breaks, count } =
+    useMessageList('StatusBar');
 
   return (
-    <div className='w-full flex flex-col gap-1 py-1'>
+    <div className='w-full flex flex-col gap-1 py-1 [&>*]:border'>
       <div className='w-full overflow-hidden grid grid-cols-7 items-center gap-x-4 px-2 text-xs text-description tabular-nums'>
         <div>{range ? `${range.startIndex}–${range.endIndex}` : ''}</div>
         <div>
