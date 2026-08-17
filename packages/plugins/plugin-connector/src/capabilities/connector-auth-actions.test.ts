@@ -1,0 +1,146 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import { afterEach, beforeEach, describe, test } from 'vitest';
+
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import { qualifyId } from '@dxos/app-graph';
+import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as Node from '@dxos/app-graph/Node';
+import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import { setupGraphBuilder } from '@dxos/app-graph/testing';
+import * as Operation from '@dxos/compute/Operation';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EffectEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
+import { OAuthProvider } from '@dxos/protocols';
+
+import { ConnectorAnnotations, ConnectorSpec } from '#types';
+
+import { CONNECTOR_AUTH_GROUP_ID, connectorIdsForTarget } from '../util';
+import connectorGraphBuilder from './app-graph-builder';
+
+const SUBJECT_ID = 'subject';
+
+const TestSync = Operation.make({
+  meta: { key: DXN.make('org.dxos.test.connectorAuthGraph.sync'), name: 'Test Sync' },
+  input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+  output: Schema.Any,
+});
+
+/** A bindable target, annotated exactly as Mailbox and Calendar are. */
+class Target extends Type.makeObject<Target>(DXN.make('org.dxos.test.connectorAuthGraph.target', '0.1.0'))(
+  Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(
+    ConnectorAnnotations.ConnectorAuthAnnotation.set({ connectorIds: connectorIdsForTarget, bindTarget: true }),
+  ),
+) {}
+
+/** A provider for that target, with an auth flow so it is offered rather than merely reusable. */
+const provider: ConnectorSpec.ConnectorEntry = {
+  id: 'test-mail',
+  source: 'mail.test',
+  label: 'Test Mail',
+  oauth: { provider: OAuthProvider.GOOGLE, scopes: [] },
+  sync: { operation: TestSync, targetTypename: Type.getTypename(Target) },
+};
+
+/**
+ * The toolbar's Connect control, driven through the real extension.
+ *
+ * A unit test over `connectorAuthActions` cannot see what matters here: the extension decides from the
+ * reactive connector list, where a provider that has not activated yet looks exactly like one that is
+ * not installed — which is how a disabled placeholder came to stick on a toolbar whose provider was
+ * present all along.
+ */
+describe('connectorAuth graph extension', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('offers an enabled Connect group once a provider is registered', async ({ expect }) => {
+    const group = await getConnectGroup([provider]);
+
+    expect(group).toBeDefined();
+    // The regression: a provider is installed, so this must be actionable, not a disabled placeholder.
+    expect(group?.properties?.disabled).toBeUndefined();
+    expect(group?.properties?.emphasis).toBe('primary');
+    // The group's children are materialized as its own actions by app-graph, not as an inline array.
+    expect(await getGroupChildIds(group)).toContain(`connect-${provider.id}`);
+  });
+
+  test('offers a disabled Connect group when providers exist but none binds this type', async ({ expect }) => {
+    const group = await getConnectGroup([{ ...provider, id: 'other', sync: undefined }]);
+
+    expect(group?.properties?.disabled).toBe(true);
+    expect(await getGroupChildIds(group)).toEqual([]);
+  });
+
+  test('contributes nothing while the connector registry is still empty', async ({ expect }) => {
+    // Startup: provider modules activate lazily. An empty registry means "not yet", not "none
+    // installed", so a disabled control here would freeze into the toolbar and never recover.
+    const group = await getConnectGroup([]);
+
+    expect(group).toBeUndefined();
+  });
+
+  let lastContext: ReturnType<typeof setupGraphBuilder> | undefined;
+
+  /** Builds the graph the toolbar reads, with `connectors` registered as the provider list. */
+  const getConnectGroup = async (connectors: ConnectorSpec.ConnectorEntry[]) => {
+    const { db, graph: echoGraph } = await builder.createDatabase();
+    echoGraph.registry.add([Target, Cursor.Cursor]);
+    const target = db.add(Obj.make(Target, { name: 'Inbox' }));
+    await db.flush({ indexes: true });
+
+    // One registry for both: in the app the capability manager and the graph builder share it, and a
+    // capability atom read through a different registry never sees the contributions.
+    const registry = Registry.make();
+    const manager = CapabilityManager.make({ registry });
+    if (connectors.length > 0) {
+      manager.contribute({ module: 'test', interface: ConnectorSpec.Connector, implementation: connectors });
+    }
+
+    const contribution = await EffectEx.runPromise(
+      Effect.scoped(connectorGraphBuilder().pipe(Effect.provideService(Capability.Service, manager))),
+    );
+    // A contribution carries its implementations in `values`; the graph builder wants the extensions.
+    const extensions = (contribution as any).values.flat() as GraphBuilder.BuilderExtensions;
+    const rootExtensions = await EffectEx.runPromise(
+      GraphBuilder.createExtension({
+        id: 'testRoot',
+        match: NodeMatcher.whenRoot,
+        connector: () => Effect.succeed([{ id: SUBJECT_ID, type: 'test', data: target }]),
+      }),
+    );
+
+    const context = setupGraphBuilder({ registry, extensions: [rootExtensions, extensions].flat() });
+    await context.expand(Node.RootId);
+    await context.expand(qualifyId(Node.RootId, SUBJECT_ID), 'action');
+
+    const actions: any[] = context.registry.get(context.graph.actions(qualifyId(Node.RootId, SUBJECT_ID)));
+    lastContext = context;
+    return actions.find((action) => action.id.endsWith(CONNECTOR_AUTH_GROUP_ID));
+  };
+
+  /** Ids of the entries inside a Connect group, unqualified, as the dropdown renders them. */
+  const getGroupChildIds = async (group: any): Promise<string[]> => {
+    if (!group || !lastContext) {
+      return [];
+    }
+    await lastContext.expand(group.id, 'action');
+    const children: any[] = lastContext.registry.get(lastContext.graph.actions(group.id));
+    return children.map((child) => child.id.split('/').at(-1)!);
+  };
+});

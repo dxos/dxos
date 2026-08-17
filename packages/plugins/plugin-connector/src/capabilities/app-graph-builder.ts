@@ -186,16 +186,26 @@ export default Capability.makeModule(
             // early return that never touched the atom registered no dependency, so the action never
             // reappeared once the provider activated. That is why Connect showed up only right after
             // creating a mailbox: unrelated graph churn, not the capability arriving.
-            const allConnectors = get(connectorAtom).flat();
+            const observed = get(connectorAtom).flat();
             const capabilities = yield* Capability.Service;
+            // The atom can lag the manager — a provider module activating, or an atom resolved against a
+            // different registry — and reading it as "no providers" is what left a disabled Connect
+            // frozen on a toolbar whose provider was installed. The manager is the authority on what
+            // exists; the atom read above still registers the dependency that re-runs this on arrival.
+            const allConnectors = observed.length > 0 ? observed : capabilities.getAll(ConnectorSpec.Connector).flat();
+            if (allConnectors.length === 0) {
+              // Nothing known yet: indistinguishable from "none installed", so contribute nothing rather
+              // than a disabled control that would stick once the registry fills in.
+              return [];
+            }
             const connectorIds =
               typeof annotation.connectorIds === 'function'
                 ? annotation.connectorIds(object, capabilities)
                 : annotation.connectorIds;
             if (connectorIds.length === 0) {
-              // A bindable type with no registered provider still shows where connecting would happen;
-              // a resolver-based type (studio artifacts) legitimately has none for this object, so it
-              // keeps contributing nothing.
+              // Providers exist, none binds this type: a bindable type still shows where connecting
+              // would happen, while a resolver-based type (studio artifacts) legitimately has none for
+              // this object and keeps contributing nothing.
               return annotation.bindTarget ? connectorAuthUnavailableActions() : [];
             }
             const allConnections = get(db.query(Filter.type(Connection.Connection)).atom);
