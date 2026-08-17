@@ -4,6 +4,13 @@ tags:
   - typecheck
   - ts-test
 tasks:
+  test:
+    deps:
+      # These suites spawn `./bin/dx`, and that script resolves the standard way — `--conditions=source`
+      # is opt-in behind `DX_SOURCE=1` precisely because third-party packages advertise a `source` field
+      # they do not ship. So the CLI's own deps have to be built, whatever vitest resolves for the
+      # in-process part of the suite.
+      - ^:build
   # Fail when the CLI entrypoint pulls in React. The binary runs under bun with no DOM, and
   # React arrived here four separate ways before — a plugin's React surface, `@dxos/react-client`
   # re-exports, `@effect-atom/atom-react` in headless packages, and a string helper that happened

@@ -4,3 +4,11 @@ tags:
   - ts-vite-build
   - ts-test
   - pack
+tasks:
+  test:
+    deps:
+      # `build.test.ts` asserts what the *published* bundle contains — it runs its own `esbuild.build()`
+      # under `workerd`/`worker`/`browser` conditions, deliberately without `source`, so every package it
+      # names resolves through `"import": "./dist/lib/index.mjs"`. Reading dist is the subject of the
+      # test rather than an artifact of how it runs, so `^:source-deps` cannot serve it.
+      - ^:build
