@@ -15,6 +15,7 @@ import * as ChessComPlugin from '@dxos/plugin-chess-com/ChessComPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
 import * as CommercePlugin from '@dxos/plugin-commerce/CommercePlugin';
+import * as ComputerPlugin from '@dxos/plugin-computer/ComputerPlugin';
 import * as ConductorPlugin from '@dxos/plugin-conductor/ConductorPlugin';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
 import * as CrxPlugin from '@dxos/plugin-crx/CrxPlugin';
@@ -168,6 +169,10 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ChessComPlugin.make(),
     ReviewPlugin.make(),
     ConductorPlugin.make(),
+    // Dev-only coding harness: the assistant gets a bash tool and a file-edit tool. Deliberately
+    // absent from `getDefaults` — the developer enables it, and its tools stay unusable until the
+    // dev server mounts the route (see `ComputerShellPlugin` in vite.config.ts).
+    (isDev || isLabs) && ComputerPlugin.make(),
     !isTauri && CrxPlugin.make(),
     DebugPlugin.make({ logStore }),
     DevtoolsPlugin.make(),
