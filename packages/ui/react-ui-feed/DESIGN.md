@@ -172,6 +172,27 @@ Pending blocks are therefore emitted **unclosed** — a closing tag written befo
 complete would have to be rewritten on every chunk, and rewriting the document discards decorations
 and widget state.
 
+## What the baselines assert
+
+Six of them, each a rung, and each verified by mutation rather than trusted because it is green — a
+test written against a moving target is as likely to measure nothing as to measure the wrong thing,
+and two here did (`baseline/fill` compared a field that had been deleted; `baseline/streaming`
+watched a feed too short to scroll).
+
+| Story                   | Asserts                                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------- |
+| `baseline/construction` | Per-editor build cost, by extension set.                                                 |
+| `baseline/mount`        | Per-row mount cost, fixtures pre-built, up the ladder.                                   |
+| `baseline/fill`         | No mounted row moves while the feed settles.                                             |
+| `baseline/tail`         | The last row's bottom meets the viewport's, and holds — with and without reserved space. |
+| `baseline/navigation`   | Every arrow press moves, by a whole stop, in the right direction.                        |
+| `baseline/streaming`    | While a turn streams, no row moves _down_ except when the document shrinks.              |
+
+The streaming exception is the interesting one: a turn removes blocks as well as adding them — the
+status goes when the answer starts — and a feed pinned to its tail keeps the tail pinned by moving
+everything down. Measured as thirteen rows moving together by exactly 65px, landing the tail at zero.
+Counting it would be counting the feed doing its job.
+
 ## Instruments
 
 Both live in `#testing` and exist because the deciding criterion — smoothness — cannot be judged from
