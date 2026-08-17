@@ -37,6 +37,7 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-testing": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "effect": "catalog:",
@@ -44,6 +45,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-claude": "workspace:*",
     "@dxos/ai": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/echo-client": "workspace:*",
@@ -75,7 +77,6 @@
     "@dxos/react-ui-debug": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
