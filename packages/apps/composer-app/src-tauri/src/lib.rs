@@ -7,8 +7,6 @@ mod oauth;
 mod window_state;
 #[cfg(all(desktop, unix))]
 mod xattr_cmd;
-#[cfg(desktop)]
-mod update_channel;
 #[cfg(target_os = "macos")]
 mod menubar;
 #[cfg(target_os = "macos")]
@@ -121,8 +119,6 @@ pub fn run() {
         xattr_cmd::remove_xattr,
         #[cfg(target_os = "macos")]
         spotlight::hide_spotlight,
-        update_channel::check_channel_update,
-        update_channel::install_channel_update,
     ]);
 
     #[cfg(mobile)]
