@@ -8,17 +8,20 @@ import { trim } from '@dxos/util';
 export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.computer',
-    name: 'Computer',
+    name: 'Coding (Dev)',
     author: 'DXOS',
     description: trim`
+      PROOF OF CONCEPT — DEV ONLY. Works only in a Composer served by a vite dev server,
+      and only when that server was started with DX_COMPUTER_ROOT set. In any deployed
+      build there is no dev server, so both tools fail with a configuration error.
+
       A minimal coding harness for the assistant: a bash tool and a multi-string-replace
       edit tool that run on the developer's own machine.
 
       Both tools are carried by a single dev-server route — one POST that runs a shell
       script under a configured root and returns stdout, stderr and the exit code. The
-      route is mounted by this package's vite plugin and only exists while a vite dev
-      server is running, so a deployed Composer has no shell to reach: the tools fail
-      with a configuration error rather than silently doing nothing.
+      root scopes where a script starts; it does not sandbox the shell, so treat the
+      harness as a terminal left open on your own checkout.
 
       This is the in-app alternative to delegating a turn to an external agent harness —
       the assistant keeps its own loop, its own context and its own transcript, and gains

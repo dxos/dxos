@@ -15,11 +15,12 @@ const operations = [ComputerOperation.Bash, ComputerOperation.Edits];
 const make = () =>
   Skill.make({
     key: SKILL_KEY,
-    name: 'Computer',
+    name: 'Coding (Dev)',
     description: trim`
-      A minimal coding harness: run shell commands and apply exact file edits on the developer's own
-      machine, through the dev server serving this app. Enable it to read, change and verify code in
-      the working tree the dev server was started against.
+      Proof of concept, dev only. A minimal coding harness: run shell commands and apply exact file
+      edits on the developer's own machine, through the vite dev server serving this app. Enable it to
+      read, change and verify code in the working tree that server was started against. Outside a dev
+      server — any deployed Composer — there is no such route and both tools fail.
     `,
     // Not agent-enablable: shell access on the developer's machine is a decision for the developer,
     // and an agent that could turn it on mid-conversation would be making that decision for them.
@@ -27,11 +28,15 @@ const make = () =>
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
-        {{! Computer }}
+        {{! Coding (Dev) }}
 
         You can run shell commands and edit files in a working tree on the developer's machine. This
         is their real checkout, not a sandbox: an edit is immediately visible to their editor, their
         dev server and their git status.
+
+        This harness is a proof of concept and exists only while a vite dev server hosts it. If the
+        tools report that the host is not mounted, no command will work until the developer restarts
+        that server with DX_COMPUTER_ROOT set — say so rather than looking for another way in.
 
         How to work:
         - Orient first. Run one bash command to see where you are and what is there (pwd, ls, git

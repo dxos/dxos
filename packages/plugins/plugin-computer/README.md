@@ -1,5 +1,10 @@
 # @dxos/plugin-computer
 
+> **Proof of concept, dev only.** The tools work only in a Composer served by a vite dev server that
+> mounted this package's plugin with `DX_COMPUTER_ROOT` set. There is no dev server in a deployed
+> build, so there is no shell: both tools fail with a configuration error. Presented in the app as
+> **Coding (Dev)**.
+
 A minimal coding harness for Composer's assistant: a **bash** tool and a **multi-string-replace**
 edit tool that run in a working tree on the developer's machine.
 
