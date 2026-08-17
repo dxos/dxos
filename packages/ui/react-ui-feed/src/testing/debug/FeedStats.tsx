@@ -51,7 +51,8 @@ const FEED_STATS: Stat[] = [
 const FRAME_STATS: Stat[] = [
   {
     id: 'fps',
-    label: 'fps',
+    label: 'render',
+    unit: 'fps',
     classNames: (value) => Number(value) > 0 && Number(value) < 50 && 'text-warning-text',
   },
   {

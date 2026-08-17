@@ -8,6 +8,10 @@ is answered from the model rather than the DOM.
 The audit that motivates this, the five call sites it has to serve, and the measured verdict live in
 [`plugin-assistant/docs/AUDIT.md`](../../plugins/plugin-assistant/docs/AUDIT.md) §3.3–§3.4.
 
+This document describes what exists. [`PRINCIPLES.md`](./PRINCIPLES.md) describes what it should be
+built on — in particular that rows should be placed relative to an anchor rather than summed from the
+start of the list, which is where every defect still open here comes from.
+
 ## Shape
 
 | Part                   | Role                                                                                                                                                             |

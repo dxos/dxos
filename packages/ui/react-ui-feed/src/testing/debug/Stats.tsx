@@ -12,7 +12,7 @@ export type StatValue = number | string;
 
 export type Stat = {
   id: string;
-  label: string;
+  label?: string;
   unit?: string;
   /** Emphasis for a value that means something is wrong; called with the current value. */
   classNames?: (value: StatValue) => string | false | undefined;
