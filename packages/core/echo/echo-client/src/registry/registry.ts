@@ -299,13 +299,11 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
 
   runSyncEntries(): QueryResult.Entry<T>[] {
     const matches = executeQuery(this.#registry, this.#query.ast);
-    return matches.map(
-      (entity): QueryResult.Entry<T> => ({
-        id: getEntityId(entity),
-        result: entity as unknown as T,
-        resolution: { source: 'local', time: 0 },
-      }),
-    );
+    return matches.map((entity): QueryResult.Entry<T> => ({
+      id: getEntityId(entity),
+      result: entity as unknown as T,
+      resolution: { source: 'local', time: 0 },
+    }));
   }
 
   async first(): Promise<T> {

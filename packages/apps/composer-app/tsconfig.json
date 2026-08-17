@@ -79,6 +79,9 @@
       "path": "../../common/web-context-solid"
     },
     {
+      "path": "../../core/compute/agent-claude"
+    },
+    {
       "path": "../../core/echo/echo-solid"
     },
     {
