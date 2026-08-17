@@ -91,7 +91,7 @@ export type { PluginConfig, State } from './plugin-defs.core';
 /**
  * Plugin keys enabled by default for new users, per environment (dev/local/labs).
  */
-export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
+export const getDefaults = ({ isDev, isLocal, isLabs, isMobile }: PluginConfig): string[] =>
   [
     // Default
     AssistantPlugin.meta.profile.key,
@@ -115,6 +115,11 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
 
     // Local
     isLocal && SamplePlugin.meta.profile.key,
+
+    // Mobile. Transcription defaults on only here: the phone is where dictating to the assistant beats
+    // typing, and the chat prompt picks the microphone up on its own — it reads the plugin's
+    // capabilities optionally, so enabling it changes no other surface.
+    isMobile && TranscriptionPlugin.meta.profile.key,
 
     // Labs. Enabled only under the labs flag — a local dev build should not start with a
     // different (larger) default set than production, which is what `isDev` here used to produce.
@@ -149,7 +154,9 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     ],
   ]
     .filter(isTruthy)
-    .flat();
+    .flat()
+    // Deduped: a mobile labs build lists transcription in both sets.
+    .filter((key, index, keys) => keys.indexOf(key) === index);
 
 /**
  * Full Composer plugin registry: shared core infrastructure plus every content plugin.
