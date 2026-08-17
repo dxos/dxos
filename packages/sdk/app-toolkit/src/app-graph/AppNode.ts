@@ -510,11 +510,8 @@ export const makeToolbarAction = <R = never>({
     properties: {
       label,
       disposition: TOOLBAR_DISPOSITION,
-      // Always emitted, for the same reason as in `makeToolbarActionGroup`: re-offering a node merges
-      // over its previous properties, so an omitted `disabled` cannot clear an earlier `true`. The
-      // fields below stay conditional deliberately — they identify an action rather than varying with
-      // its state, so emitting them as `undefined` could only clear what another extension contributed
-      // to the same node.
+      // Always emitted, since a re-offered node merges over its previous properties and an omitted
+      // `disabled` cannot clear an earlier `true`; the identity fields below never need clearing.
       disabled: disabled ?? false,
       ...(icon !== undefined && { icon }),
       ...(testId !== undefined && { testId }),
@@ -564,9 +561,8 @@ export const makeToolbarActionGroup = ({
       variant: 'dropdownMenu',
       iconOnly,
       disposition: TOOLBAR_DISPOSITION,
-      // `disabled` is state, and a re-offered node merges its properties over the previous ones (see
-      // `addNode`), so omitting it cannot clear what an earlier generation set — a group that turned
-      // enabled after its providers registered stayed frozen disabled. Always emit it.
+      // Always emitted, since a re-offered node merges over its previous properties (see `addNode`) and
+      // an omitted `disabled` cannot clear an earlier `true`.
       disabled: disabled ?? false,
       ...(icon !== undefined && { icon }),
       ...(testId !== undefined && { testId }),

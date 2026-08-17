@@ -203,9 +203,8 @@ const DropdownMenuToolbarItem = ({
     </NaturalToolbar.Button>
   );
 
-  // A disabled group renders as a plain button, with no menu wired behind it: `disabled` on the trigger
-  // was not enough to stop the dropdown opening (nothing in the trigger chain gates Radix's own open
-  // handler), so it presented an empty menu. The affordance stays visible; there is just nothing to open.
+  // No menu behind a disabled trigger, since `disabled` alone does not gate Radix's open handler and the
+  // group presented an empty dropdown.
   if (disabled) {
     return trigger;
   }

@@ -8,9 +8,11 @@ import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { CapabilityNotFoundError } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { ServiceNotAvailableError } from '@dxos/compute/errors';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -254,7 +256,7 @@ export const setTriggerEnabled = (
  */
 export const triggerMonitorLayer = (
   spaceId: Key.SpaceId,
-): Layer.Layer<Trigger.TriggerMonitorService, Error, Capability.Service> =>
+): Layer.Layer<Trigger.TriggerMonitorService, CapabilityNotFoundError | ServiceNotAvailableError, Capability.Service> =>
   Layer.unwrap(
     Capability.get(Capabilities.ServiceResolver).pipe(
       Effect.map((resolver) =>
@@ -546,20 +548,21 @@ export const prepare = ({
     const confirmed = recorded !== undefined && account !== undefined;
 
     const orphaned = yield* queryDormant(target);
+    // Scoped to the remote target being bound: a dormant cursor carrying no `externalId` is a
+    // single-target binding, not a wildcard, so a multi-target connector must not inherit its `max` for
+    // an arbitrary calendar or board — that watermark is a provider timestamp, and everything older than
+    // it would stay unfetched.
+    const forThisTarget = (cursor: Cursor.ExternalCursor) =>
+      externalId === undefined ? cursor.spec.externalId === undefined : cursor.spec.externalId === externalId;
     // Only a confirmed account may inherit progress; an unrecorded one starts over.
-    const adopted = confirmed
-      ? orphaned.find(
-          (cursor) =>
-            externalId === undefined || cursor.spec.externalId === undefined || cursor.spec.externalId === externalId,
-        )
-      : undefined;
-    // Removal is confined to the confirmed path: declining to inherit an unrecorded account's progress
-    // is right, but discarding it is not — every target bound before accounts were recorded reads as
-    // unrecorded, so deleting here would re-walk the whole horizon on its first reconnect, the exact
-    // cost this dormant-binding design exists to avoid. `find` already ignores them.
+    const adopted = confirmed ? orphaned.find(forThisTarget) : undefined;
+    // Confined to the confirmed path: an unrecorded account (every target bound before accounts were
+    // recorded) declines to inherit progress, but discarding it would force a full re-walk.
     if (confirmed) {
       for (const cursor of orphaned) {
-        if (cursor !== adopted) {
+        // Only a duplicate for the *same* remote target is cleaned up; another target's progress, and a
+        // single-target cursor this multi-target bind declined to adopt, are left where they are.
+        if (cursor !== adopted && forThisTarget(cursor)) {
           yield* remove(cursor);
         }
       }

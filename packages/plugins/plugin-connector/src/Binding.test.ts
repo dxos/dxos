@@ -46,30 +46,28 @@ describe('Binding.targets', () => {
    * Sync: both the connect action and the sync action key on this one predicate.
    */
 
-  const makeTarget = () => Obj.make(Expando.Expando, { name: 'Inbox' });
-
   const makeCursor = (targetUri: string) =>
     Cursor.makeExternal({
       source: Ref.fromURI(URI.make('echo:///01J00J9B45YHYSGZQTQMSKMGJ6')),
       target: Ref.fromURI(URI.make(targetUri)),
     });
 
-  test('matches a target stored in the canonical local form', () => {
+  test('matches a target stored in the canonical local form', ({ expect }) => {
     const target = makeTarget();
     expect(Binding.targets(makeCursor(`echo:///${target.id}`), target)).toBe(true);
   });
 
-  test('matches a target stored in the legacy single-slash form', () => {
+  test('matches a target stored in the legacy single-slash form', ({ expect }) => {
     const target = makeTarget();
     expect(Binding.targets(makeCursor(`echo:/${target.id}`), target)).toBe(true);
   });
 
-  test('matches a target stored in the space-qualified form', () => {
+  test('matches a target stored in the space-qualified form', ({ expect }) => {
     const target = makeTarget();
     expect(Binding.targets(makeCursor(`echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE/${target.id}`), target)).toBe(true);
   });
 
-  test('does not match a different object', () => {
+  test('does not match a different object', ({ expect }) => {
     const target = makeTarget();
     const other = makeTarget();
     expect(Binding.targets(makeCursor(`echo:///${other.id}`), target)).toBe(false);
@@ -193,7 +191,7 @@ describe('live bindings', () => {
 describe('target account', () => {
   const SOURCE = 'gmail.com';
 
-  test('records and reads the account a target syncs', () => {
+  test('records and reads the account a target syncs', ({ expect }) => {
     const target = makeTarget();
     expect(Binding.readAccount(target, SOURCE)).toBeUndefined();
 
@@ -204,7 +202,7 @@ describe('target account', () => {
     expect(Binding.readAccount(target, 'other.com')).toBeUndefined();
   });
 
-  test('the first recorded account stands', () => {
+  test('the first recorded account stands', ({ expect }) => {
     const target = makeTarget();
     Binding.recordAccount(target, SOURCE, 'me@example.com');
     Binding.recordAccount(target, SOURCE, 'someone-else@example.com');
@@ -213,7 +211,7 @@ describe('target account', () => {
     expect(Binding.readAccount(target, SOURCE)).toBe('me@example.com');
   });
 
-  test('refuses only a contradiction', () => {
+  test('refuses only a contradiction', ({ expect }) => {
     const target = makeTarget();
     // Nothing recorded: no evidence either way, so bind and start fresh.
     expect(Binding.checkAccount(target, SOURCE, 'me@example.com')).toBe('unknown');
@@ -228,8 +226,6 @@ describe('target account', () => {
     expect(Binding.checkAccount(target, 'other.com', 'me@other.com')).toBe('unknown');
   });
 });
-
-const makeTarget = () => Obj.make(Expando.Expando, { name: 'Inbox' });
 
 describe('Binding.sync', () => {
   let builder: EchoTestBuilder;
@@ -657,3 +653,5 @@ describe('binding lifecycle', () => {
     expect((await cursors()).length).toBe(2);
   });
 });
+
+const makeTarget = () => Obj.make(Expando.Expando, { name: 'Inbox' });
