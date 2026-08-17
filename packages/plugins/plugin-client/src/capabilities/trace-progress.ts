@@ -16,7 +16,8 @@ import { log } from '@dxos/log';
 
 /**
  * Projects remote (edge-runtime) `status.update` trace events into the {@link AppCapabilities.ProgressRegistry}
- * (DX-1125). Subscribes to the swarm-backed {@link Capabilities.RemoteTraceMonitor} directly.
+ * (DX-1125). Subscribes to the aggregate {@link Process.Monitor.subscribeToTraceMessages}, whose remote
+ * source is the swarm-backed monitor contributed by `remote-trace-monitor`.
  *
  * Only edge-runtime messages are projected here: local progress already flows through the
  * `plugin-progress` trace sink, and both write the same progress keys — projecting local messages
@@ -29,10 +30,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
 
-    // The live swarm monitor, NOT the ProcessMonitor aggregate: the aggregate's remote half is a
-    // one-shot snapshot taken at process-manager setup, which the swarm monitor's contribution
-    // always postdates — through the aggregate this subscription is permanently empty.
-    const remoteTraceMonitor = yield* Capability.get(Capabilities.RemoteTraceMonitor);
+    const monitor = yield* Capabilities.ProcessMonitor;
     const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;
     const resolver = yield* Capabilities.ServiceResolver;
 
@@ -74,7 +72,7 @@ export default Capability.makeModule(
 
     // TODO(mykola): Possible bug source. Use `Effect.forkDetach`.
     const fiber = processManagerRuntime.runFork(
-      remoteTraceMonitor.subscribeToTraceMessages({ type: Trace.StatusUpdate.key }).pipe(
+      monitor.subscribeToTraceMessages({ type: Trace.StatusUpdate.key }).pipe(
         Stream.runForEach((message) =>
           Effect.sync(() => {
             const runtimeName = message.meta.runtimeName;
