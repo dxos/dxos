@@ -168,10 +168,8 @@ export class AppManager {
     await expect(confirmButton).toBeEnabled();
     await confirmButton.click();
 
-    // Confirming reloads into the join dialog mid-boot; wait for the input the reload produces with a
-    // budget sized to the boot rather than to a single interaction. A polling assertion rather than
-    // `waitFor`: the reset reloads the page and the booting app then rewrites the URL, and a single
-    // `waitFor` issued before that settles binds to the document being torn down and never retries.
+    // A polling assertion rather than `waitFor`, because confirming reloads the page and a single
+    // wait issued beforehand binds to the document being torn down.
     await expect(this.shell.shell.getByTestId('halo-invitation-input')).toBeVisible({
       timeout: JOIN_IDENTITY_BOOT_TIMEOUT,
     });

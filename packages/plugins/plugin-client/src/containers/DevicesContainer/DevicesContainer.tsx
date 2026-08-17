@@ -129,10 +129,8 @@ const DeviceInvitation = (props: Pick<DeviceInvitationProps, 'createInvitationUr
       return;
     }
     setPending(true);
-    // Ask for the auth code explicitly: `share()` defaults to no authentication so programmatic
-    // flows can complete unattended, but a device invitation a human accepts is exactly the case
-    // that needs the second factor — without it the flow reports `readyForAuthentication` carrying
-    // no code, this panel falls back to the QR view, and anyone holding the code joins unchallenged.
+    // Requested explicitly because `share()` defaults to no authentication, which would leave the
+    // invitation code as the only factor guarding an identity.
     void EffectEx.runPromise(identityService.share({ authMethod: 'shared-secret' }))
       .then(async (created) => {
         // Playwright reads this line off the console to drive the device-invitation flows.
@@ -170,9 +168,8 @@ const DeviceInvitationImpl = ({
   const { event, code } = useInvitationFlow(flow);
   const url = code && createInvitationUrl(code);
 
-  // Companion to the invitation-code line logged on creation; Playwright reads both off the console
-  // to drive the device-invitation flows. It cannot ride that line: the auth code reaches the host
-  // only once a guest has connected, which is also when this view first renders it.
+  // Logged separately from the invitation code Playwright reads on creation, because the host only
+  // learns the auth code once a guest has connected.
   useEffect(() => {
     if (
       event?._tag === 'readyForAuthentication' &&

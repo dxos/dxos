@@ -19,8 +19,8 @@ export const createEchoChangeCallback = <T extends Obj.Unknown>(
   setItemField: (item, field, value) => {
     Obj.update(item, (item: any) => {
       if (value === undefined) {
-        // Delete rather than assign: assigning asserts the value against the property schema, and a
-        // stored schema carries optionality in `required`, so clearing an optional field is rejected.
+        // Deleted rather than assigned, because assigning asserts against the property schema, which
+        // rejects clearing an optional field of a stored schema.
         delete item[field];
       } else {
         item[field] = value;
