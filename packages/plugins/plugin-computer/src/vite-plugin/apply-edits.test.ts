@@ -143,7 +143,7 @@ describe('apply edits', () => {
   });
 
   test('accepts a root reached through a symlink', async ({ expect }) => {
-    // `DX_COMPUTER_ROOT` is whatever the developer typed, and on macOS `/tmp` is a symlink to
+    // The root is whatever cwd the vite process started in, and on macOS `/tmp` is a symlink to
     // `/private/tmp`. Unless the host canonicalizes it, every file inside the root reads as an escape.
     const linked = path.join(os.tmpdir(), `dx-computer-link-${process.pid}`);
     fs.symlinkSync(root, linked);

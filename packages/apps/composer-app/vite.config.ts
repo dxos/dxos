@@ -381,9 +381,8 @@ export default defineConfig((env) => ({
       },
     },
 
-    // Hosts the computer harness's shell route, which stays unmounted until DX_COMPUTER_ROOT names a
-    // tree — it runs whatever the assistant asks for as the developer. Imported dynamically because
-    // this config's static imports are bundled as CJS `require` and the package is ESM-only.
+    // Hosts the computer harness's shell route against the vite process cwd. Imported dynamically
+    // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
     import('@dxos/plugin-computer/vite-plugin').then(({ ComputerShellPlugin }) => ComputerShellPlugin()),
 
     // RSS proxy middleware for CORS-free feed fetching.

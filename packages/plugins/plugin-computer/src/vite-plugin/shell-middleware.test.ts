@@ -19,7 +19,7 @@ describe('shell middleware', () => {
     root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'dx-computer-exec-')));
     fs.mkdirSync(path.join(root, 'nested'));
     fs.writeFileSync(path.join(root, 'nested', 'marker.txt'), 'found me\n');
-    host = await startHost({ root, maxOutputChars: 64 });
+    host = await startHost({ root });
   });
 
   afterAll(async () => {
@@ -61,9 +61,14 @@ describe('shell middleware', () => {
   });
 
   test('clips output at the host cap', async ({ expect }) => {
-    const result = await Shell.exec({ script: "printf 'a%.0s' {1..200}" }, { path: host.path });
-    expect(result.truncated).to.be.true;
-    expect(result.stdout).to.have.length(64);
+    const clipped = await startHost({ root, maxOutputChars: 64 });
+    try {
+      const result = await Shell.exec({ script: "printf 'a%.0s' {1..200}" }, { path: clipped.path });
+      expect(result.truncated).to.be.true;
+      expect(result.stdout).to.have.length(64);
+    } finally {
+      await clipped.close();
+    }
   });
 
   test('kills a script that outruns its timeout, and the group it spawned', async ({ expect }) => {
@@ -132,7 +137,7 @@ describe('shell middleware', () => {
   });
 
   test('a host without the route reads as not mounted', async ({ expect }) => {
-    // What a dev server started without DX_COMPUTER_ROOT answers, and the one failure the skill's
+    // What a request to a path the plugin never mounted answers, and the one failure the skill's
     // instructions tell the model to report rather than retry.
     await expect(Shell.exec({ script: 'pwd' }, { path: host.path.replace(Shell.PATH, '/elsewhere') })).rejects.toThrow(
       /not mounted/,

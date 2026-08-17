@@ -65,8 +65,8 @@ const make = () =>
         - When a task needs one of the above, say what you would run and why, and wait.
 
         If a tool reports that the host is unreachable, the harness is not mounted: the app is not
-        being served by a dev server with the computer vite plugin and DX_COMPUTER_ROOT set. Say so
-        plainly — no command will work until the developer fixes it.
+        being served by a dev server with the computer vite plugin. Say so plainly — no command
+        will work until the developer fixes it.
       `,
     }),
   });

@@ -24,8 +24,9 @@ export const SCRIPTS_ENV = 'DX_COMPUTER_SCRIPTS';
 export const APPLY_EDITS_SCRIPT = 'apply-edits.mjs';
 
 /**
- * Env var naming the host's root, exported to every script. The vite plugin also reads it to decide
- * whether to mount at all, which is what keeps the route off a dev server nobody opted in on.
+ * Env var naming the host's root, injected into every script by the middleware. Not a developer
+ * setting — the vite plugin decides the root (cwd by default) and writes it here so the prebaked
+ * editor can refuse paths outside it.
  */
 export const ROOT_ENV = 'DX_COMPUTER_ROOT';
 
@@ -105,7 +106,7 @@ export const exec = async (request: Request, { signal, path = PATH }: ExecOption
     });
   } catch (error) {
     throw new ComputerShellError({
-      message: 'the computer host is unreachable; mount the vite plugin and set DX_COMPUTER_ROOT',
+      message: 'the computer host is unreachable; mount the computer vite plugin on the dev server',
       context: { path },
       cause: error,
     });
@@ -115,7 +116,7 @@ export const exec = async (request: Request, { signal, path = PATH }: ExecOption
   // worth naming, since "404" on its own reads as a bug in the caller.
   if (response.status === 404) {
     throw new ComputerShellError({
-      message: 'the computer host is not mounted; add the vite plugin and set DX_COMPUTER_ROOT',
+      message: 'the computer host is not mounted; add the computer vite plugin to the dev server',
       context: { path },
     });
   }

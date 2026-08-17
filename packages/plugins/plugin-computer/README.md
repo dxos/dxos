@@ -28,13 +28,8 @@ change what the shell runs.
 
 ## Enabling it
 
-1. Start the dev server with the tree the harness may work in:
-
-   ```bash
-   DX_COMPUTER_ROOT=$PWD moon run composer-app:serve
-   ```
-
-   Without `DX_COMPUTER_ROOT` the route is never mounted, and the tools report that plainly.
+1. Start the Composer dev server from the tree the harness may work in (`moon run
+   composer-app:serve`). The shell route mounts against that process's cwd.
 
 2. Enable the **Computer** plugin in Composer's settings (it is registered only in dev/labs builds
    and is off by default), then enable the **Computer** skill in the conversation.
@@ -56,7 +51,8 @@ is an error rather than a quietly substituted directory.
 
 The protections that are real:
 
-- **Opt-in.** No `DX_COMPUTER_ROOT`, no route. Adding the vite plugin is not on its own consent.
+- **Dev only, settings-gated.** The vite plugin mounts the route in `serve`; the Composer plugin
+  is off by default and registered only in dev/labs builds.
 - **Same-origin only.** The route requires a JSON content type, which a cross-origin page cannot
   send without a preflight this route never answers, and it refuses a request whose `Origin` names
   another host.
