@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useConnections } from '@dxos/plugin-graph/hooks';
-import { Avatar, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, Input, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
-import { Position, getHostPlatform, isTauri } from '@dxos/util';
+import { DevFlag, Position, getDevFlag, getHostPlatform, isTauri, setDevFlag } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -59,7 +59,34 @@ export const Home = (_: HomeProps) => {
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>
+      <DebugControls />
     </SearchPanel>
+  );
+};
+
+/**
+ * Developer toggles, rendered only in a dev build — `import.meta.env.DEV` is statically false in
+ * production, so the bundler drops both the switch and its state.
+ */
+const DebugControls = () => {
+  const [remotePull, setRemotePull] = useState(() => getDevFlag(DevFlag.RemoteFeedPull));
+
+  const handleToggle = useCallback((checked: boolean) => {
+    setDevFlag(DevFlag.RemoteFeedPull, checked);
+    setRemotePull(checked);
+  }, []);
+
+  if (!import.meta.env.DEV) {
+    return null;
+  }
+
+  return (
+    <div role='group' className='flex items-center gap-2 pli-2 plb-1 text-description text-sm'>
+      <Input.Root>
+        <Input.Checkbox checked={remotePull} onCheckedChange={handleToggle} />
+        <Input.Label>Pull remote news feeds</Input.Label>
+      </Input.Root>
+    </div>
   );
 };
 
