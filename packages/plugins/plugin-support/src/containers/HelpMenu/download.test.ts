@@ -6,9 +6,6 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { prereleaseChannel, resolveDownloadUrl } from './download';
 
-const mockFetch = (response: Partial<Response> & { json?: () => Promise<unknown> }) =>
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue(response as Response);
-
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -32,15 +29,28 @@ describe('prereleaseChannel', () => {
 
 describe('resolveDownloadUrl', () => {
   test('returns the asset url for the requested channel', async () => {
-    const fetchSpy = mockFetch({ ok: true, json: () => Promise.resolve({ url: 'https://cdn/asset/01ABC' }) });
-    await expect(resolveDownloadUrl('nightly')).resolves.toBe('https://cdn/asset/01ABC');
+    const fetchSpy = mockFetch({ ok: true, json: () => Promise.resolve({ url: `${ASSET_ORIGIN}/asset/01ABC` }) });
+    await expect(resolveDownloadUrl('nightly')).resolves.toBe(`${ASSET_ORIGIN}/asset/01ABC`);
     expect(fetchSpy.mock.calls[0][0]).toContain('?channel=nightly');
   });
 
   test('asks for 0.0.0 so any published build reads as an upgrade', async () => {
-    const fetchSpy = mockFetch({ ok: true, json: () => Promise.resolve({ url: 'https://cdn/asset/01ABC' }) });
+    const fetchSpy = mockFetch({ ok: true, json: () => Promise.resolve({ url: `${ASSET_ORIGIN}/asset/01ABC` }) });
     await resolveDownloadUrl('dev');
     expect(fetchSpy.mock.calls[0][0]).toContain('/0.0.0?');
+  });
+
+  test('encodes the channel so a name with url syntax reaches the endpoint intact', async () => {
+    const fetchSpy = mockFetch({ ok: true, json: () => Promise.resolve({ url: `${ASSET_ORIGIN}/asset/01ABC` }) });
+    await resolveDownloadUrl('a&b#c');
+    const requested = new URL(String(fetchSpy.mock.calls[0][0]));
+    expect(requested.searchParams.get('channel')).toBe('a&b#c');
+  });
+
+  test('bounds the request so a hanging endpoint cannot leave the link unresolved', async () => {
+    const fetchSpy = mockFetch({ ok: true, json: () => Promise.resolve({ url: `${ASSET_ORIGIN}/asset/01ABC` }) });
+    await resolveDownloadUrl('nightly');
+    expect((fetchSpy.mock.calls[0][1] as RequestInit).signal).toBeInstanceOf(AbortSignal);
   });
 
   // The state every channel starts in: `nightly` 404s until its first deploy publishes to it, so the
@@ -54,4 +64,19 @@ describe('resolveDownloadUrl', () => {
     mockFetch({ ok: true, json: () => Promise.resolve({ version: '0.10.5' }) });
     await expect(resolveDownloadUrl('nightly')).rejects.toThrow('no asset url');
   });
+
+  test('throws when the asset url is malformed', async () => {
+    mockFetch({ ok: true, json: () => Promise.resolve({ url: 'not a url' }) });
+    await expect(resolveDownloadUrl('nightly')).rejects.toThrow('malformed asset url');
+  });
+
+  test('throws when the asset url points somewhere other than the CDN', async () => {
+    mockFetch({ ok: true, json: () => Promise.resolve({ url: 'https://evil.example/download' }) });
+    await expect(resolveDownloadUrl('nightly')).rejects.toThrow('unexpected asset origin');
+  });
 });
+
+const ASSET_ORIGIN = 'https://cdn.crabnebula.app';
+
+const mockFetch = (response: Partial<Response> & { json?: () => Promise<unknown> }) =>
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(response as Response);

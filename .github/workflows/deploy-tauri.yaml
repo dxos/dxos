@@ -340,7 +340,10 @@ jobs:
   build_tauri_ios:
     needs: draft_tauri
 
-    if: inputs.ios
+    # Belt and braces on the environment as well as the flag: this job uploads to App Store Connect, and
+    # `dev` is the only environment with a TestFlight target. A caller passing `ios: true` for another
+    # environment should fail to build, not ship somewhere unintended.
+    if: inputs.ios && inputs.environment == 'dev'
 
     runs-on: depot-macos-latest
 

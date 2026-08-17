@@ -10,9 +10,15 @@ export const DOWNLOAD_URL = 'https://web.crabnebula.cloud/dxos/composer/releases
 // returns names the platform asset — enough to send someone straight at the binary.
 const UPDATE_ENDPOINT = 'https://cdn.crabnebula.app/update/dxos/composer';
 
+/** Assets are served from the same CDN; anything else is not something to hand a browser. */
+const ASSET_ORIGIN = 'https://cdn.crabnebula.app';
+
 // TODO(wittjosiah): Only macOS is built today; derive this once Windows and Linux ship (`windows-x86_64`,
 // `linux-x86_64`, `darwin-x86_64`).
 const UPDATE_PLATFORM = 'darwin-aarch64';
+
+/** The lookup backs a link, so it must fail fast enough to fall back rather than leave a dead control. */
+const TIMEOUT = 10_000;
 
 /**
  * The CrabNebula channel a deploy environment publishes to, or undefined for the one the dashboard lists.
@@ -28,7 +34,9 @@ export const prereleaseChannel = (environment?: string): string | undefined =>
  * returned — this only reads the metadata, it never installs.
  */
 export const resolveDownloadUrl = async (channel: string): Promise<string> => {
-  const response = await fetch(`${UPDATE_ENDPOINT}/${UPDATE_PLATFORM}/0.0.0?channel=${channel}`);
+  const response = await fetch(`${UPDATE_ENDPOINT}/${UPDATE_PLATFORM}/0.0.0?channel=${encodeURIComponent(channel)}`, {
+    signal: AbortSignal.timeout(TIMEOUT),
+  });
   if (!response.ok) {
     // A channel with no published build yet answers 404, which is the state every new channel starts in.
     throw new Error(`update endpoint returned ${response.status}`);
@@ -36,6 +44,16 @@ export const resolveDownloadUrl = async (channel: string): Promise<string> => {
   const { url } = (await response.json()) as { url?: string };
   if (!url) {
     throw new Error('update endpoint returned no asset url');
+  }
+  // The response decides where a click sends someone, so confirm it names the CDN before trusting it.
+  let origin: string;
+  try {
+    origin = new URL(url).origin;
+  } catch {
+    throw new Error('update endpoint returned a malformed asset url');
+  }
+  if (origin !== ASSET_ORIGIN) {
+    throw new Error(`update endpoint returned an unexpected asset origin: ${origin}`);
   }
   return url;
 };

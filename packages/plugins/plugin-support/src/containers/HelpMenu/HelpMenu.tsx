@@ -3,7 +3,7 @@
 //
 
 import { formatDistance, isValid } from 'date-fns';
-import React, { type MouseEvent, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -45,25 +45,30 @@ export const HelpMenu = () => {
     [invokePromise],
   );
 
-  // Undefined on production, where the anchor's href — the dashboard — is already right.
+  // Undefined on production, where the dashboard is already the right destination.
   const channel = prereleaseChannel(config.values.runtime?.app?.env?.DX_ENVIRONMENT);
+  const [downloadUrl, setDownloadUrl] = useState(DOWNLOAD_URL);
 
-  const handleDownload = useCallback(
-    (event: MouseEvent<HTMLAnchorElement>) => {
-      if (!channel) {
-        return;
-      }
-      event.preventDefault();
-      void resolveDownloadUrl(channel)
-        .then((url) => window.open(url, '_blank', 'noopener,noreferrer'))
-        .catch((err) => {
-          // The dashboard has no page for this channel, but it beats a dead click.
-          log.catch(err);
-          window.open(DOWNLOAD_URL, '_blank', 'noopener,noreferrer');
-        });
-    },
-    [channel],
-  );
+  // Resolved ahead of the click rather than inside it: `window.open` called after an await has lost the
+  // click's transient activation and gets caught by popup blockers, and a real href keeps middle-click
+  // and cmd-click working. Until this resolves — or if it fails — the href stays the dashboard, which is
+  // the state a channel sits in until its first build is published.
+  useEffect(() => {
+    if (!channel || isTauri()) {
+      return;
+    }
+    let active = true;
+    void resolveDownloadUrl(channel)
+      .then((url) => {
+        if (active) {
+          setDownloadUrl(url);
+        }
+      })
+      .catch((err) => log.catch(err));
+    return () => {
+      active = false;
+    };
+  }, [channel]);
 
   return (
     <DropdownMenu.Root>
@@ -100,7 +105,7 @@ export const HelpMenu = () => {
             </DropdownMenu.Item>
             {!isTauri() && (
               <DropdownMenu.Item asChild>
-                <a href={DOWNLOAD_URL} target='_blank' rel='noopener noreferrer' onClick={handleDownload}>
+                <a href={downloadUrl} target='_blank' rel='noopener noreferrer'>
                   <Icon icon='ph--download-simple--regular' size={4} />
                   <span>{t('download-apps.label')}</span>
                 </a>
