@@ -1,6 +1,12 @@
 version: 1
 
 runtime:
+  # Staging rather than localhost: hub-service is a separate worker that is not part of the local
+  # edge dev setup, so account flows against a local edge still talk to the deployed hub.
+  app:
+    env:
+      DX_HUB_URL: https://hub-staging.dxos.workers.dev/
+
   client:
     edgeFeatures:
       subductionReplicator: true

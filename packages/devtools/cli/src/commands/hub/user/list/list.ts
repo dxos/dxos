@@ -13,6 +13,7 @@ import path from 'node:path';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { ConfigService } from '@dxos/client';
+import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
 import { withRetry } from '@dxos/edge-client';
 
 export const list = Command.make(
@@ -20,7 +21,7 @@ export const list = Command.make(
   {},
   Effect.fn(function* () {
     const config = yield* ConfigService;
-    const baseUrl = config.values?.runtime?.services?.hub?.url ?? 'https://hub.dxos.network';
+    const baseUrl = config.values?.runtime?.services?.hub?.url ?? DEFAULT_HUB_URL;
     const url = path.join(baseUrl, '/api/waitlist');
     if (yield* CommandConfig.isVerbose) {
       yield* Effect.log(`Calling: ${url}`);

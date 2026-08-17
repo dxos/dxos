@@ -83,6 +83,8 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
+    "@effect/platform-node": "catalog:",
+    "@effect/vitest": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/lodash.ismatch": "catalog:"
   },
