@@ -110,7 +110,7 @@ export const createScenario = ({ scenario, count, seed = 999 }: ScenarioOptions)
         renderer: defaultRenderer,
         Chrome: PlainChrome,
         stickyBottom: true,
-        estimateSize: 84,
+        estimateSize: UNIFORM_HEIGHT,
       };
 
     // The controls for `uniform`: identical messages, identical chrome, identical estimate — only
@@ -249,6 +249,17 @@ const createPlainMessages = (count: number): Message.Message[] =>
       properties: { height: PLAIN_HEIGHTS[index % PLAIN_HEIGHTS.length] },
     }),
   );
+
+/**
+ * What one uniform row measures, chrome included.
+ *
+ * Exact on purpose, and checked against the DOM rather than guessed: this scenario's whole job is to
+ * be the case where the estimate is right, and it was declared at 84 against a real 24. A viewport
+ * filled from an estimate three times too large covers a third of the screen once the rows measure,
+ * so the feed arrived in two visible pieces — in the one story that exists to have nothing wrong
+ * with it.
+ */
+const UNIFORM_HEIGHT = 24;
 
 /** Every row the same document, so a single estimate is exactly right for all of them. */
 const createUniformMessages = (count: number): Message.Message[] =>

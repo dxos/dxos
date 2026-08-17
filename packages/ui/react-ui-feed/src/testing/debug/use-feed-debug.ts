@@ -13,7 +13,7 @@ export type FeedDebugOptions = {
   count: number;
   estimateSize?: number;
   streaming: boolean;
-  /** Outlines on by default: this is a harness. */
+  /** Whether the outlines start on. Off: they are for a question, not for every reading. */
   enabled?: boolean;
 };
 
@@ -38,8 +38,14 @@ export type FeedDebug = {
  * the component. As an aspect the story stays about the feed, and what is being measured can be
  * read, changed or dropped in one file.
  */
-export const useFeedDebug = ({ scenario, count, estimateSize, streaming, enabled }: FeedDebugOptions): FeedDebug => {
-  const [debug, setDebug] = useState(enabled ?? true);
+export const useFeedDebug = ({
+  scenario,
+  count,
+  estimateSize,
+  streaming,
+  enabled = false,
+}: FeedDebugOptions): FeedDebug => {
+  const [debug, setDebug] = useState(enabled);
   const toggleDebug = useCallback(() => setDebug((value) => !value), []);
 
   const label = useMemo(

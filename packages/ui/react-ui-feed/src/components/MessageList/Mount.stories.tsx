@@ -80,8 +80,11 @@ const MountProfile = ({ count = 200, runs = 3 }: MountProfileProps) => {
 
     // Measured to the last frame that changed anything, not to the end of the loop: the trailing
     // stable frames are the sampler waiting, and charging them to the mount reports its patience.
-    const settle = async (): Promise<{ elapsed: number; frames: number; rows: number }> => {
+    const settle = async (): Promise<{ elapsed: number; frames: number; rows: number; fill: number[] }> => {
       const start = performance.now();
+      // Rows mounted on each frame until the count holds. A feed that fills in one commit reads as a
+      // single number; anything else is the reader watching it arrive in pieces.
+      const fill: number[] = [];
       let rows = 0;
       let stable = 0;
       let elapsed = 0;
@@ -95,12 +98,13 @@ const MountProfile = ({ count = 200, runs = 3 }: MountProfileProps) => {
           stable = 0;
           elapsed = performance.now() - start;
           frames = frame + 1;
+          fill.push(mounted);
         }
 
         rows = mounted;
       }
 
-      return { elapsed, frames, rows };
+      return { elapsed, frames, rows, fill };
     };
 
     void (async () => {
@@ -116,6 +120,8 @@ const MountProfile = ({ count = 200, runs = 3 }: MountProfileProps) => {
           if (run >= WARMUP) {
             times.push(settled.elapsed);
             frames.push(settled.frames);
+            // eslint-disable-next-line no-console
+            console.log(`[fill: ${scenario}]`, JSON.stringify(settled.fill));
           }
 
           setShown(null);

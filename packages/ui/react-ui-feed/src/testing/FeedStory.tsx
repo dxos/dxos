@@ -106,13 +106,15 @@ export type FeedStoryProps = {
   scenario?: FeedScenario;
   /** Messages of seeded history; 0 starts empty. */
   count?: number;
-  /** Outline every item and every block inside it. On by default: this is a harness. */
+  /** Outline every item and every block inside it; the toolbar toggles it too. */
   debug?: boolean;
   /** Begin streaming turns on mount. */
   streaming?: boolean;
   wordsPerChunk?: number;
   chunkDelay?: number;
   estimateSize?: number;
+  /** Reserve space below the last row so any message can be brought to the top. Known unstable. */
+  scrollPastEnd?: boolean;
   maxSpeed?: number;
   acceleration?: number;
   deceleration?: number;
@@ -127,6 +129,7 @@ export type FeedStoryProps = {
  */
 export const FeedStory = ({
   scenario,
+  scrollPastEnd,
   count = 0,
   debug: debugProp,
   streaming: streamingProp = false,
@@ -244,6 +247,7 @@ export const FeedStory = ({
       onSelectedIdsChange={setSelectedIds}
       estimateSize={estimateSize ?? definition?.estimateSize}
       stickyBottom={definition?.stickyBottom ?? true}
+      scrollPastEnd={scrollPastEnd}
       stickyBehavior='smooth'
       follow={{ maxSpeed, acceleration, deceleration }}
     >

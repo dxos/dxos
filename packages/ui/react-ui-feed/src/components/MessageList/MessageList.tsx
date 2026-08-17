@@ -74,6 +74,8 @@ type MessageListContextValue = {
   virtualizer: Virtualizer<HTMLElement, HTMLElement>;
   /** Measures a commit's rows in one pass, feeding the running average behind `estimateSize`. */
   measureItems: (elements: Iterable<HTMLElement>) => void;
+  /** Empty space below the last row, so the tail can be scrolled up to the top of the viewport. */
+  trailing: number;
   setViewport: (viewport: HTMLElement | null) => void;
   onSelect: (id: string, additive: boolean) => void;
   scrollToIndex: (index: number, options?: ScrollToOptions) => void;
@@ -179,6 +181,20 @@ export type MessageListRootProps = PropsWithChildren<{
   /** Pin to the bottom as messages arrive, and as a streaming message grows (chat behaviour). */
   stickyBottom?: boolean;
   /**
+   * Reserve empty space below the last row, so that any message — including the last — can be
+   * brought to the top of the viewport.
+   *
+   * Without it the feed stops scrolling when the last row's bottom reaches the viewport's, so the
+   * final messages can only be read at the foot of the screen and stepping to the last stop shows it
+   * where it already was.
+   *
+   * **Known unstable, which is why it is off by default.** The reserved space is part of the scroll
+   * container's height, so whatever it is computed from it also changes; `baseline/fill` shows a
+   * short feed taking 230 frames to settle with it on. Sized from a nominal row rather than the last
+   * row's measurement, which removes the worst of the feedback but not all of it.
+   */
+  scrollPastEnd?: boolean;
+  /**
    * How the sticky follow moves while `streamingId` is set; every other height change snaps, so a
    * populated feed opens already at the tail rather than travelling there. @default 'auto'
    */
@@ -235,6 +251,7 @@ const MessageListRoot = ({
   debug,
   estimateSize = DEFAULT_ESTIMATE,
   stickyBottom = false,
+  scrollPastEnd = false,
   stickyBehavior = 'auto',
   follow: followOptions,
   overscan = 8,
@@ -250,6 +267,10 @@ const MessageListRoot = ({
   // The reader's position as an index rather than a pixel offset: what the arrow keys step through,
   // what navigation sets, and what a minimap or a counter reports. Mirrored in a ref because the
   // keymap is bound to the element once and would otherwise step from a captured value.
+  // Read by the scroll listener, which is bound to the element once and would otherwise close over
+  // the space reserved at the time it was bound.
+  const trailingRef = useRef(0);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const currentIndexRef = useRef(0);
   const setCurrent = useCallback((index: number) => {
@@ -448,7 +469,10 @@ const MessageListRoot = ({
 
     const onScroll = () => {
       scrolledAt.current = performance.now();
-      const atTail = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < STICKY_THRESHOLD;
+      // Against the last row's bottom, not the document's: the space reserved below it is somewhere
+      // the reader may go, and a feed parked there is still parked at its tail.
+      const atTail =
+        viewport.scrollHeight - trailingRef.current - viewport.scrollTop - viewport.clientHeight < STICKY_THRESHOLD;
       if (atTail) {
         followRef.current = true;
       } else if (performance.now() - gestureRef.current < GESTURE_WINDOW) {
@@ -489,6 +513,21 @@ const MessageListRoot = ({
       // Beyond a few rows that offset is an estimate for everything not yet measured, so the
       // animation travels to the wrong place and corrects on arrival. A far jump therefore goes
       // instantly — the reader loses no continuity across a distance they could not have followed.
+      // Reserved space past the end puts two offsets out of the virtualizer's reach: it clamps every
+      // offset it computes to the element's maximum — which is now that space rather than the last
+      // row — and returns the maximum outright for an end-aligned last row. Taken literally the
+      // first makes a row near the tail unreachable at the top of the viewport, and the second opens
+      // a chat with its last message at the top of an otherwise empty screen.
+      const reserved = scrollPastEnd && viewport ? virtualizer.measurementsCache[index] : undefined;
+      if (reserved && viewport) {
+        const tail = virtualizer.getTotalSize() - viewport.clientHeight;
+        const past = align === 'end' ? reserved.end - viewport.clientHeight : reserved.start;
+        if (align === 'end' ? index === messages.length - 1 : past > tail) {
+          viewport.scrollTo({ top: Math.max(0, past), behavior });
+          return;
+        }
+      }
+
       const distance = Math.abs(index - (virtualizer.range?.startIndex ?? 0));
       const offset =
         behavior === 'smooth' && distance <= SMOOTH_SCROLL_LIMIT
@@ -500,7 +539,7 @@ const MessageListRoot = ({
         virtualizer.scrollToIndex(index, { align });
       }
     },
-    [virtualizer, viewport, follower, messages.length, setCurrent],
+    [virtualizer, viewport, follower, messages.length, setCurrent, scrollPastEnd],
   );
 
   // Ordered stops. Recomputed with the feed rather than searched on each keypress: a long thread is
@@ -591,6 +630,18 @@ const MessageListRoot = ({
   const positioned = useRef(false);
   const totalSize = virtualizer.getTotalSize();
 
+  // The viewport less a nominal row: enough for the reader to bring the last row to the top.
+  //
+  // Deliberately *not* the last row's measured size. The reserved space is part of the scroll
+  // container's height, so anything it depends on it also feeds: a size that follows the
+  // measurements changes the document, which moves the tail, which re-measures.
+  const trailing = useMemo(
+    () => (scrollPastEnd && viewport && messages.length ? Math.max(0, viewport.clientHeight - nominalSize) : 0),
+    [scrollPastEnd, viewport, messages.length, nominalSize],
+  );
+
+  trailingRef.current = trailing;
+
   useEffect(() => {
     // Why a follow is or is not running is invisible from the outside — the state lives in refs and
     // an animation frame — and every wrong guess about it costs a round of debugging. Published on
@@ -673,11 +724,11 @@ const MessageListRoot = ({
           : ([...anchors].reverse().find((index) => index < at) ?? anchors[0]);
 
       scrollToIndex(next, {
-        align: next === messages.length - 1 ? 'end' : 'start',
+        align: !scrollPastEnd && next === messages.length - 1 ? 'end' : 'start',
         behavior: 'smooth',
       });
     },
-    [anchors, viewport, virtualizer, scrollToIndex, messages.length],
+    [anchors, viewport, virtualizer, scrollToIndex, messages.length, scrollPastEnd],
   );
 
   // Arrow keys move by message, not by line: a plain arrow steps the cursor to the adjacent message
@@ -776,6 +827,7 @@ const MessageListRoot = ({
         resetShifts={resetShifts}
         virtualizer={virtualizer}
         measureItems={measureItems}
+        trailing={trailing}
         setViewport={setViewport}
         onSelect={onSelect}
         scrollToIndex={scrollToIndex}
@@ -818,7 +870,7 @@ type MessageListViewportExtra = Pick<
  */
 const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
   ({ autoHide, centered, native, padding, scrollbars, thin, gutter, ...props }, forwardedRef) => {
-    const { messages, Chrome, selectedIds, virtualizer, measureItems, setViewport, onSelect } =
+    const { messages, Chrome, selectedIds, virtualizer, measureItems, trailing, setViewport, onSelect } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
 
     const handleViewportRef = useCallback(
@@ -841,7 +893,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         thin={thin}
       >
         <ScrollArea.Viewport data-testid='feed.viewport' ref={handleViewportRef}>
-          <div className='relative w-full' style={{ height: virtualizer.getTotalSize() }}>
+          <div className='relative w-full' style={{ height: virtualizer.getTotalSize() + trailing }}>
             <MessageRows measure={measureItems}>
               {virtualizer.getVirtualItems().map((item) => {
                 // The virtualizer can still report items for the previous count on the render after

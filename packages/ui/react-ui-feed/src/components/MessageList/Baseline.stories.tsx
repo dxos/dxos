@@ -31,7 +31,16 @@ const meta: Meta<FeedStoryProps> = {
   render: FeedStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },
-  args: { count: 500 },
+  // Listed in `args`, not only in `argTypes`: the meta names no `component`, so storybook has no
+  // props to infer controls from and shows exactly the args that are set.
+  args: { count: 500, debug: false, scrollPastEnd: false },
+  argTypes: {
+    // Off by default and offered as a control rather than turned on: reserving space past the end
+    // is what lets the last messages be read at the top of the screen, and it is also what stops a
+    // short feed settling (`baseline/fill`). Worth toggling by hand, not worth defaulting to.
+    debug: { control: 'boolean' },
+    scrollPastEnd: { control: 'boolean' },
+  },
 };
 
 export default meta;
