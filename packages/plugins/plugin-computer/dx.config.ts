@@ -12,14 +12,14 @@ export default Config2.make({
     author: 'DXOS',
     description: trim`
       PROOF OF CONCEPT — DEV ONLY. Works only in a Composer served by a vite dev server,
-      and only when that server was started with DX_COMPUTER_ROOT set. In any deployed
-      build there is no dev server, so both tools fail with a configuration error.
+      whose working directory is the tree the tools operate on. In any deployed build there
+      is no dev server, so both tools fail with a configuration error.
 
       A minimal coding harness for the assistant: a bash tool and a multi-string-replace
       edit tool that run on the developer's own machine.
 
       Both tools are carried by a single dev-server route — one POST that runs a shell
-      script under a configured root and returns stdout, stderr and the exit code. The
+      script under the server's own root and returns stdout, stderr and the exit code. The
       root scopes where a script starts; it does not sandbox the shell, so treat the
       harness as a terminal left open on your own checkout.
 

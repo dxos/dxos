@@ -19,10 +19,7 @@ export type ComputerShellPluginOptions = Omit<ShellMiddleware.MakeOptions, 'root
  *
  * `apply: 'serve'` keeps it out of a production build, where there is no server to mount it on.
  */
-export const ComputerShellPlugin = ({
-  root = process.cwd(),
-  ...options
-}: ComputerShellPluginOptions = {}): Plugin => ({
+export const ComputerShellPlugin = ({ root = process.cwd(), ...options }: ComputerShellPluginOptions = {}): Plugin => ({
   name: 'dx-computer-shell',
   apply: 'serve',
   configureServer: (server) => {
