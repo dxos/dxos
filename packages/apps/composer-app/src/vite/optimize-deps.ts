@@ -119,8 +119,6 @@ export const optimizeDepsInclude: string[] = [
   '@dxos/plugin-assistant > @dxos/react-ui-markdown > remark-gfm',
   '@dxos/plugin-assistant > @dxos/react-ui-search > command-score',
   '@dxos/plugin-assistant > @dxos/react-ui-transcription > date-fns/intervalToDuration',
-  '@dxos/plugin-assistant > @dxos/react-ui-transcription > extendable-media-recorder',
-  '@dxos/plugin-assistant > @dxos/react-ui-transcription > extendable-media-recorder-wav-encoder',
   '@dxos/plugin-assistant > @dxos/ui-editor > @codemirror/lang-xml',
   '@dxos/plugin-assistant > @dxos/ui-editor > @codemirror/language-data',
   '@dxos/plugin-assistant > @dxos/ui-editor > @codemirror/merge',

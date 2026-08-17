@@ -116,10 +116,10 @@ export const getDefaults = ({ isDev, isLocal, isLabs, isMobile }: PluginConfig):
     // Local
     isLocal && SamplePlugin.meta.profile.key,
 
-    // Mobile. Transcription defaults on only here: the phone is where dictating to the assistant beats
-    // typing, and the chat prompt picks the microphone up on its own — it reads the plugin's
-    // capabilities optionally, so enabling it changes no other surface.
-    isMobile && TranscriptionPlugin.meta.profile.key,
+    // Transcription. On by default everywhere: the chat prompt picks the microphone up on its own —
+    // it reads the plugin's capabilities optionally, so enabling it changes no other surface. Still
+    // listed under labs below; the dedupe at the end collapses the two entries.
+    TranscriptionPlugin.meta.profile.key,
 
     // Labs. Enabled only under the labs flag — a local dev build should not start with a
     // different (larger) default set than production, which is what `isDev` here used to produce.
