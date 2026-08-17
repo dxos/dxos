@@ -419,10 +419,7 @@ const PlainItem = ({ content, message }: { content: { data?: unknown }; message:
  */
 const PlainChrome = ({ index, children }: MessageChromeProps) => (
   <Row classNames='py-0 grid grid-cols-[3rem_1fr] gap-2'>
-    {/* One line of body text, taken from the text itself rather than set: the gutter meets the
-        row's first line because it *is* a line, so it stays aligned when the type scale changes. A
-        pinned height would have to be re-chosen every time it did. */}
-    <div className='flex items-center text-base leading-normal'>
+    <div className='self-start flex items-center h-[1lh] text-base leading-normal'>
       <span className='text-xs text-subdued tabular-nums'>{index}</span>
     </div>
     <div className='min-w-0'>{children}</div>
