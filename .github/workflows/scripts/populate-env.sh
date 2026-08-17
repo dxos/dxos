@@ -23,20 +23,22 @@ fi
 # newline, so a bare `while read` silently drops it. That dropped `DX_EDGE_BASE_URL` — the last line of
 # the old `main` env file — and the deploy fell back to dx.yml's default EDGE instead of the one the
 # environment asked for, with nothing in the log to say so.
+expanded=""
 while read -r line || [[ -n "$line" ]]; do
-  eval echo "$line"
+  expanded+="$(eval echo "$line")"$'\n'
 done < "$envfile"
 
+printf '%s' "$expanded"
 echo "DX_ENVIRONMENT=${1//\//-}"
 echo "BRANCH=$1"
 
 # Names only, to stderr so it stays out of $GITHUB_ENV — the values are secrets, but "which overrides did
 # this deploy actually apply?" should be answerable from the run log without decompiling the bundle.
+# Read from the captured expansion rather than re-running the loop: `eval` must happen exactly once, or a
+# file whose value contained a substitution would run it twice.
 {
   echo "populate-env: $envfile ->"
-  while read -r line || [[ -n "$line" ]]; do
-    eval echo "$line"
-  done < "$envfile" | sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/  \1/p'
+  printf '%s' "$expanded" | sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/  \1/p'
   echo "  DX_ENVIRONMENT"
   echo "  BRANCH"
 } >&2

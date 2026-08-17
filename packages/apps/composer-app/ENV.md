@@ -21,7 +21,10 @@ nightly; override with `DX_EDGE_BASE_URL` to reach EDGE dev or a local EDGE.
 ## Notes
 
 - Bindings are **not** inherited by `env.*` sections — each environment repeats them in full.
-- Cloudflare-side, each environment's Worker needs its R2 bucket and the `SIGNOZ_INGESTION_KEY` secret
-  (`pnpm secrets remote <env> composer`).
+- Cloudflare-side, `wrangler deploy` creates the Worker itself, and every R2 bucket the `env.*` sections
+  bind already exists — `nightly` and `dev` deliberately share `composer-feedback-logs-dev`, while
+  `production` and `staging` have their own. What each new Worker does need is its own
+  `SIGNOZ_INGESTION_KEY` secret (`pnpm secrets remote <env> composer`), matched by a 1Password section
+  named after the raw Worker name.
 - Secrets are managed via [`scripts/secrets.mjs`](../../../scripts/secrets.mjs) (`pnpm secrets`), sourced
   from 1Password.
