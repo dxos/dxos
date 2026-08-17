@@ -124,12 +124,21 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       is measured before its item builds anything). NEEDS A VISIBLE TAB TO VERIFY — a backgrounded
       tab does not run the virtualizer's update loop at all, so no browser measurement is possible
       there; `MessageList/{Plain,Uniform}` are the ladder for localizing whatever is left.
-- [x] **The slow first fill is construction cost, not the layout.** Seven headless tests
-      (`virtualizer.test.ts`): one measurement pass already covers the viewport; the tail settles in
-      ≤3 passes whether rows are bigger or smaller than the estimate; and settling mounts 22 rows to
-      show 22 — no churn. So `baseline/Uniform` taking >1s to fill, bottom-up, is ~22 CodeMirror
-      constructions at roughly 45ms each, not a cascade. Fix belongs in the item: a cheaper editor
-      for simple content, or plain text upgraded to an editor only when it needs to be one.
+- [x] **The slow first fill was the item rebuilding its extension set per row.** `EditorView.theme()`
+      mints a new `StyleModule` and generated class on every call, so a set built per item injects a
+      stylesheet per row and invalidates the whole document's style each time. `createItemExtensions`
+      now caches on `(registry, editable, themeMode)`; only `setWidgets` is per-item. `baseline/mount`:
+      `uniform` 628ms → 102ms (14.28 → 2.31 ms/row), `assistant` 591ms → 137ms (53.7 → 12.46).
+      Found by bisection, each rung ruling out the last one's explanation. Ruled out along the way:
+      the layout (seven headless tests — one pass covers the viewport, the tail settles in ≤3 passes
+      in both directions, 22 rows built to show 22); construction cost (0.37ms per editor offscreen,
+      so ~8ms for a viewport — the earlier "45ms each" estimate was wrong by 100×); the number of
+      frames (`baseline/fill` settles in 1–2, so no cascade); batching the row measurement into one
+      parent-level pass (14.6 → 14.2, no effect); an empty highlight dispatch on mount (14.19 → 13.88,
+      kept anyway — it is a pointless transaction); and `setView` state in the layout effect
+      (13.83 → 13.51, reverted). The rule: **an extension set is built once per configuration, never
+      per item**, and `baseline/mount` is what catches a regression — a row costing ten times a
+      probe's row is a set being rebuilt somewhere.
 - [ ] Widget state does not survive virtualization — an expanded panel scrolled out of the window
       remounts collapsed, because the open flag is React state inside the widget. Either the state
       moves into the message, or the item keeps a per-widget map.
