@@ -88,6 +88,15 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       is active, or a directional `rangeExtractor` so rows are measured before they enter from above.
       NOTE the follow suspends anchoring, so a probe must dispatch a gesture first or it measures
       nothing.
+      MEASURED FROM A SCREEN RECORDING (the strongest evidence yet, since it is what was painted):
+      extract frames with `ffmpeg -vsync 0`, reduce each to a 1px-wide grey column
+      (`crop=…,scale=1:H,format=gray`), and cross-correlate consecutive columns for the vertical
+      shift. An upward glide read 148/118/110/104/96/90px per frame, then **−92 and −100** (against
+      the scroll), then 70/64/60 — two frames of reversal, residual 0.02, so a rigid shift rather
+      than a mis-match. Size matches the in-page residual (median 67, worst 91). ALSO TRIED AND
+      REVERTED: `shouldAdjustScrollPositionOnItemSizeChange = () => false` (leave compensation to the
+      anchor alone) — the feed then opens with a large blank area below the content, because the
+      tail positioning depends on that adjustment.
 - [ ] Widget state does not survive virtualization — an expanded panel scrolled out of the window
       remounts collapsed, because the open flag is React state inside the widget. Either the state
       moves into the message, or the item keeps a per-widget map.

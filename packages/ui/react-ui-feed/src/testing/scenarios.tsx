@@ -159,7 +159,7 @@ const createAssistantMessages = (count: number): Message.Message[] =>
       return Message.make({
         created: at(index),
         sender: { role: 'user', name: 'Alice' },
-        blocks: [{ _tag: 'text', text: random.lorem.sentence(8) }],
+        blocks: [{ _tag: 'text', text: random.lorem.paragraph() }],
       });
     }
 
@@ -173,7 +173,7 @@ const createAssistantMessages = (count: number): Message.Message[] =>
         _tag: 'toolResult',
         toolCallId,
         name: 'search',
-        result: random.lorem.sentence(10),
+        result: random.lorem.paragraph(),
         providerExecuted: false,
       });
     }
@@ -214,7 +214,7 @@ const createEmailMessages = (count: number): Message.Message[] => {
           mimeType: 'text/html',
           text: [
             `<p>${random.lorem.paragraph()}</p>`,
-            `<p>${random.lorem.sentence(12)}</p>`,
+            `<p>${random.lorem.paragraph()}</p>`,
             '<ul><li>attachment.pdf</li><li>invoice.csv</li></ul>',
             `<blockquote>${random.lorem.sentence(16)}</blockquote>`,
           ].join(''),
