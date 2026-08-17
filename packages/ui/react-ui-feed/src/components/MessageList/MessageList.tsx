@@ -228,6 +228,17 @@ const MessageListRoot = ({
   // through it. Averaging the real heights replaces the guess after the first handful of rows.
   const measured = useRef({ sizes: new Map<string, number>(), total: 0 });
 
+  // Read through a ref: the virtualizer is constructed before the anchor exists, and its options are
+  // captured once per render.
+  const anchoredMeasureRef = useRef<
+    | ((
+        element: Element,
+        entry: ResizeObserverEntry | undefined,
+        instance: Virtualizer<HTMLElement, HTMLElement>,
+      ) => number)
+    | null
+  >(null);
+
   const virtualizer = useVirtualizer<HTMLElement, HTMLElement>({
     count: messages.length,
     getScrollElement: () => viewport,

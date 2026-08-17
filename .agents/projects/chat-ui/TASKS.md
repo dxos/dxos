@@ -82,9 +82,12 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       itself being measured and cannot anchor anything) halves it: 8.8% → 5.0% of frames. The
       remainder are full-size (88px) jumps, so they are corrections applied a frame late: the
       measurement lands in a `ResizeObserver`, the virtualizer notifies, React re-renders, and our
-      layout effect compensates only on that next render. Next: compensate inside the measurement
-      path rather than in a React effect. NOTE the follow suspends anchoring, so a probe must
-      dispatch a gesture first or it measures nothing.
+      layout effect compensates only on that next render. TRIED AND REVERTED: compensating inside a
+      custom `measureElement` made it worse (5.0% → 13.2%), since it double-corrects against the
+      virtualizer's own adjustment. Next candidates: suppress TanStack's adjustment while our anchor
+      is active, or a directional `rangeExtractor` so rows are measured before they enter from above.
+      NOTE the follow suspends anchoring, so a probe must dispatch a gesture first or it measures
+      nothing.
 - [ ] Widget state does not survive virtualization — an expanded panel scrolled out of the window
       remounts collapsed, because the open flag is React state inside the widget. Either the state
       moves into the message, or the item keeps a per-widget map.

@@ -36,7 +36,7 @@ export type ScrollAnchorOptions = {
  * offsets that layout actually used.
  */
 export const useScrollAnchor = ({ viewport, virtualizer, disabled }: ScrollAnchorOptions) => {
-  const anchor = useRef<{ key: PositionKey; start: number } | null>(null);
+  const anchor = useRef<{ key: PositionKey; start: number; index: number } | null>(null);
   const adjusting = useRef(false);
 
   // The reader moving is what decides which row should stay put next, so their scroll drops the old
@@ -81,7 +81,7 @@ export const useScrollAnchor = ({ viewport, virtualizer, disabled }: ScrollAncho
           viewport.scrollTop += delta;
         }
 
-        anchor.current = { key: item.key, start: item.start };
+        anchor.current = { key: item.key, start: item.start, index: item.index };
         return;
       }
     }
@@ -89,6 +89,6 @@ export const useScrollAnchor = ({ viewport, virtualizer, disabled }: ScrollAncho
     // Topmost row still on screen: the one whose displacement the reader would notice first.
     const offset = viewport.scrollTop;
     const item = items.find(({ start, size }) => start + size > offset) ?? items[0];
-    anchor.current = { key: item.key, start: item.start };
+    anchor.current = { key: item.key, start: item.start, index: item.index };
   });
 };
