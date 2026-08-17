@@ -497,30 +497,29 @@ type StatusBarProps = {
   meter: FrameMeterState;
 };
 
-const StatusBar = ({ hits, query, selected, streaming, meter }: StatusBarProps) => {
-  const { range, currentIndex, mountedWidgets, jumps, shifts, breaks, resetShifts, count } =
-    useMessageList('StatusBar');
+const StatusBar = ({ hits, selected, streaming, meter }: StatusBarProps) => {
+  const { range, currentIndex, mountedWidgets, jumps, shifts, breaks, count } = useMessageList('StatusBar');
 
   return (
-    // The frame readout gets a double-width column: it is the longest cell, and an equal share
-    // wrapped it onto a second line, which an `h-6` bar renders as clipped.
-    <div className='w-full overflow-hidden grid grid-cols-4 items-center gap-x-4 gap-y-1 py-1 px-2 text-xs text-description tabular-nums'>
-      <div>{range ? `${range.startIndex}–${range.endIndex}` : ''}</div>
-      <div>
-        {currentIndex} / {count}
+    <div className='w-full flex flex-col gap-1 py-1'>
+      <div className='w-full overflow-hidden grid grid-cols-6 items-center gap-x-4 px-2 text-xs text-description tabular-nums'>
+        <div>{range ? `${range.startIndex}–${range.endIndex}` : ''}</div>
+        <div>
+          {currentIndex} / {count}
+        </div>
+        <div data-testid='feed.widgets'>{mountedWidgets} blocks</div>
+        <div>{selected} selected</div>
+        <div>{hits.length} hits</div>
+        <div className='text-right' data-testid='feed.stream.state'>
+          {streaming ? 'streaming…' : 'idle'}
+        </div>
       </div>
-      {/* Block widgets mounted right now: what the visible window costs beyond its text. */}
-      <div data-testid='feed.widgets'>{mountedWidgets} blocks</div>
-      {/* Rows that moved after they were laid out — the reader calls this flicker. */}
-      <div className={mx(shifts > 0 && 'text-warning-text')} data-testid='feed.shifts'>
-        {jumps.count} jumps{jumps.worst ? ` (${jumps.worst}px)` : ''} · {shifts} shifts
-        {breaks > 0 ? ` · ${breaks} breaks` : ''}
-      </div>
-      <FrameMeter meter={meter} />
-      <div>{selected} selected</div>
-      {query ? <div>{hits.length} hits</div> : <div />}
-      <div className='text-right' data-testid='feed.stream.state'>
-        {streaming ? 'streaming…' : 'idle'}
+      <div className='grid grid-cols-2 gap-x-4 px-2 text-xs text-description tabular-nums'>
+        <div className={mx(shifts > 0 && 'text-warning-text')} data-testid='feed.shifts'>
+          {jumps.count} jumps{jumps.worst ? ` (${jumps.worst}px)` : ''} · {shifts} shifts
+          {breaks > 0 ? ` · ${breaks} breaks` : ''}
+        </div>
+        <FrameMeter meter={meter} />
       </div>
     </div>
   );
