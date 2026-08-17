@@ -111,8 +111,11 @@ export const TraceProgress = Capability.lazyModule(
   'TraceProgress',
   {
     // ProgressRegistry is resolved lazily per trace message, so a host without it degrades to a
-    // no-op sink rather than failing to activate.
-    requires: [Capabilities.ProcessMonitor, Capabilities.ProcessManagerRuntime, Capabilities.ServiceResolver],
+    // no-op sink rather than failing to activate. RemoteTraceMonitor is a hard requirement so the
+    // scheduler activates the swarm monitor BEFORE this module — the process-manager aggregate bakes
+    // its remote half from a setup-time snapshot the monitor always misses, so subscribing through
+    // the aggregate yields a permanently empty stream.
+    requires: [Capabilities.RemoteTraceMonitor, Capabilities.ProcessManagerRuntime, Capabilities.ServiceResolver],
     provides: [],
     // Same activation as SpaceReplicationProgress: process-manager runtime, monitor, and
     // registry are all available by the time spaces are observed.

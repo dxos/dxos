@@ -16,8 +16,7 @@ import { log } from '@dxos/log';
 
 /**
  * Projects remote (edge-runtime) `status.update` trace events into the {@link AppCapabilities.ProgressRegistry}
- * (DX-1125). Subscribes to the aggregate {@link Process.Monitor.subscribeToTraceMessages}, whose remote
- * source is the swarm-backed monitor contributed by `remote-trace-monitor`.
+ * (DX-1125). Subscribes to the swarm-backed {@link Capabilities.RemoteTraceMonitor} directly.
  *
  * Only edge-runtime messages are projected here: local progress already flows through the
  * `plugin-progress` trace sink, and both write the same progress keys — projecting local messages
@@ -30,13 +29,10 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
 
-    // Optional: without a progress registry there is nowhere to project into, so subscribe to
-    // nothing rather than run a sink that resolves undefined on every message.
-    if (capabilityManager.getAll(AppCapabilities.ProgressRegistry).length === 0) {
-      return [];
-    }
-
-    const monitor = yield* Capabilities.ProcessMonitor;
+    // The live swarm monitor, NOT the ProcessMonitor aggregate: the aggregate's remote half is a
+    // one-shot snapshot taken at process-manager setup, which the swarm monitor's contribution
+    // always postdates — through the aggregate this subscription is permanently empty.
+    const remoteTraceMonitor = yield* Capability.get(Capabilities.RemoteTraceMonitor);
     const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;
     const resolver = yield* Capabilities.ServiceResolver;
 
@@ -53,6 +49,8 @@ export default Capability.makeModule(
         ),
       );
 
+    // Resolved per message, never up front: an activation-time existence check races the registry's
+    // own activation, and losing it would leave the subscription permanently unstarted.
     const progressSink = createProgressTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
       // An edge run is a chain of bounded invocations, each with a fresh pid, so a pid tombstone
       // would only mask one chain link and the next would resurrect the meter — suppress the key
@@ -76,7 +74,7 @@ export default Capability.makeModule(
 
     // TODO(mykola): Possible bug source. Use `Effect.forkDetach`.
     const fiber = processManagerRuntime.runFork(
-      monitor.subscribeToTraceMessages({ type: Trace.StatusUpdate.key }).pipe(
+      remoteTraceMonitor.subscribeToTraceMessages({ type: Trace.StatusUpdate.key }).pipe(
         Stream.runForEach((message) =>
           Effect.sync(() => {
             const runtimeName = message.meta.runtimeName;
