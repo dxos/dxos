@@ -170,7 +170,44 @@ projects:
     tasks: packages/plugins/plugin-inbox/docs/TASKS.md
     design: packages/plugins/plugin-inbox/docs/PIPELINE.md
     prs: [12555, 12574, 12575, 12577, 12605, 12612, 12613, 12621]
-    resume: '#12555, #12574, #12575, #12577, #12605, #12612 and #12613 MERGED. #12621 (the review follow-up) MERGED 2026-08-16. No PR open; next piece starts clean. D6 IS BUILT, and it was not the thing it was named after. Framed as "generalize off Mailbox" it had no second consumer and every costing said wait; the real defect was that findOrCreateFeedCursor took ONE object playing two roles — the feed OWNER and the cursor SUBJECT. isConsumerCursor matched on (feed, tag) and ignored spec.target, which was the ENTIRETY of the "cursor identity" problem PIPELINE.md called blocking and specified a composite key for: the write side already stored the target and the predicate was missing a conjunct. createInvocation became createInvocations so a processor covers N subjects. First consumer: syncProjectTasks keeps a cursor per Project over a shared mailbox feed. No Ref.byAnnotation (dropped for good in #12612), no generic feed host, no change to AnalyzeMailbox input. ALSO CORRECTED: the projects trio was filed as needing fan-out — it ALREADY fans out via per-project routines; what it lacked was cursors, and only one of the three should have one (the other two regenerate their document from the whole feed, same reasoning as ExtractSubscriptions). SHIPPED BESIDES: AppSurface.CardIcon + CardIconSlot so a type contributes its card depiction (type glyph stays the default at all hosts; Person alone contributes photo-then-initials); AI_ACTION_ICON in ui-types + SystemIconButton.Ai for the AI-action glyph; provider ops moved to plugin-google/plugin-jmap; Banner rename + Deferred; dev startup abort; trigger poll floor at one minute with a minimum-gap cron check. NEW DOC: packages/plugins/plugin-inbox/docs/PIPELINE-AUDIT.md indexes all 24 pipelines/operations against their tests and storybooks. Its headline finding drives the next work: NOTHING drives Sync -> Analyze -> Research end to end. The cascade is tested with STUB operations while the real passes are tested WITHOUT the cascade. FeedPipeline.stories was renamed MailboxAnalyze.stories — it already is a workbench (cascade, every pass, brain+crm, projects trio, 4 seeds, live OPFS); the gap is the JOIN with MailboxSync, which writes a feed live while MailboxAnalyze reads a seeded one. HARD-WON GOTCHAS: (1) vite.config.ts lists build entrypoints EXPLICITLY — a new subpath without one builds fine and dies at runtime module resolution in a consumer; this cost 11 CLI tests and a full CI cycle, and five more packages on main have the same latent defect (plugin-atproto, plugin-library, plugin-brain ./containers, plugin-projects ./templates, storybook-testing ./modules). (2) A CONTRIBUTION SEAM has no package boundary — searching "the packages I am working in" missed plugin-crm's processor and plugin-jmap's twin test, four times over. Grep the whole tree. (3) Counting by EXCLUSION rather than identity bit twice in one PR (results dropping subject; skipped sweeping up cancelled). (4) A squash merge leaves the branch with a stale merge base — every touched file conflicts and a naive merge shows the whole PR again; take main side and re-apply the delta. UNRESOLVED: CodeRabbit Major on #12605 — moving provider operations changed released DXNs, so existing triggers bound to old keys will not resolve (mechanism verified: PersistentOperation carries the key in object meta and Operation.deserialize rebuilds from it). Consistent with the pre-1.0 trade accepted twice before, declared in the changeset, but it is a real user-visible break awaiting a human call. ALSO UNRESOLVED: the mailbox empty-panel flicker root cause (Deferred masks it); the CRM research agent has never been observed running; NOTHING from this session has been seen in a running app. NEXT: #19 the Sync->Analyze join, or #11 dashed placeholder icons (hypothesis recorded: deferred plugin activation means getSchema returns null so Obj.getIcon yields undefined).'
+    resume: >-
+      #12555, #12574, #12575, #12577, #12605, #12612 and #12613 MERGED. #12621 (the review follow-up) MERGED
+      2026-08-16. No PR open; next piece starts clean. D6 IS BUILT, and it was not the thing it was named after.
+      Framed as "generalize off Mailbox" it had no second consumer and every costing said wait; the real defect was
+      that findOrCreateFeedCursor took ONE object playing two roles — the feed OWNER and the cursor SUBJECT.
+      isConsumerCursor matched on (feed, tag) and ignored spec.target, which was the ENTIRETY of the "cursor
+      identity" problem PIPELINE.md called blocking and specified a composite key for: the write side already stored
+      the target and the predicate was missing a conjunct. createInvocation became createInvocations so a processor
+      covers N subjects. First consumer: syncProjectTasks keeps a cursor per Project over a shared mailbox feed. No
+      Ref.byAnnotation (dropped for good in #12612), no generic feed host, no change to AnalyzeMailbox input. ALSO
+      CORRECTED: the projects trio was filed as needing fan-out — it ALREADY fans out via per-project routines; what
+      it lacked was cursors, and only one of the three should have one (the other two regenerate their document from
+      the whole feed, same reasoning as ExtractSubscriptions). SHIPPED BESIDES: AppSurface.CardIcon + CardIconSlot
+      so a type contributes its card depiction (type glyph stays the default at all hosts; Person alone contributes
+      photo-then-initials); AI_ACTION_ICON in ui-types + SystemIconButton.Ai for the AI-action glyph; provider ops
+      moved to plugin-google/plugin-jmap; Banner rename + Deferred; dev startup abort; trigger poll floor at one
+      minute with a minimum-gap cron check. NEW DOC: packages/plugins/plugin-inbox/docs/PIPELINE-AUDIT.md indexes
+      all 24 pipelines/operations against their tests and storybooks. Its headline finding drives the next work:
+      NOTHING drives Sync -> Analyze -> Research end to end. The cascade is tested with STUB operations while the
+      real passes are tested WITHOUT the cascade. FeedPipeline.stories was renamed MailboxAnalyze.stories — it
+      already is a workbench (cascade, every pass, brain+crm, projects trio, 4 seeds, live OPFS); the gap is the
+      JOIN with MailboxSync, which writes a feed live while MailboxAnalyze reads a seeded one. HARD-WON GOTCHAS: (1)
+      vite.config.ts lists build entrypoints EXPLICITLY — a new subpath without one builds fine and dies at runtime
+      module resolution in a consumer; this cost 11 CLI tests and a full CI cycle, and five more packages on main
+      have the same latent defect (plugin-atproto, plugin-library, plugin-brain ./containers, plugin-projects
+      ./templates, storybook-testing ./modules). (2) A CONTRIBUTION SEAM has no package boundary — searching "the
+      packages I am working in" missed plugin-crm's processor and plugin-jmap's twin test, four times over. Grep the
+      whole tree. (3) Counting by EXCLUSION rather than identity bit twice in one PR (results dropping subject;
+      skipped sweeping up cancelled). (4) A squash merge leaves the branch with a stale merge base — every touched
+      file conflicts and a naive merge shows the whole PR again; take main side and re-apply the delta. UNRESOLVED:
+      CodeRabbit Major on #12605 — moving provider operations changed released DXNs, so existing triggers bound to
+      old keys will not resolve (mechanism verified: PersistentOperation carries the key in object meta and
+      Operation.deserialize rebuilds from it). Consistent with the pre-1.0 trade accepted twice before, declared in
+      the changeset, but it is a real user-visible break awaiting a human call. ALSO UNRESOLVED: the mailbox
+      empty-panel flicker root cause (Deferred masks it); the CRM research agent has never been observed running;
+      NOTHING from this session has been seen in a running app. NEXT: #19 the Sync->Analyze join, or #11 dashed
+      placeholder icons (hypothesis recorded: deferred plugin activation means getSchema returns null so Obj.getIcon
+      yields undefined).
   - name: mailbox-research
     status: active
     user: burdon
