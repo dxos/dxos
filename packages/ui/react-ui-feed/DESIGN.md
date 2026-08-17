@@ -79,6 +79,37 @@ layout effect, so a ref-measured row is measured before its own item has built a
 identical) exist to localize what is left: if `Plain` is still, the list is sound and the fault is in
 what an item builds after it mounts.
 
+## What a row costs
+
+The first fill mounts a viewport of rows in one frame, so its wall-clock cost is the per-row cost
+times the rows on screen. Three instruments, each ruling out an explanation the one before it
+suggested — all under `baseline/*`, all needing a real browser:
+
+| Instrument              | Answers                                                              |
+| ----------------------- | -------------------------------------------------------------------- |
+| `baseline/construction` | What one editor costs to build offscreen, by extension set.          |
+| `baseline/fill`         | How many frames the list takes to settle, and how long they blocked. |
+| `baseline/mount`        | What a whole feed costs to mount, fixtures already built, per rung.  |
+
+What they established, in order:
+
+1. **The layout is not the cost.** The fill settles in one or two frames, so there is no cascade of
+   corrections — but each of those frames blocked for hundreds of milliseconds.
+2. **Construction is not the cost either.** One editor offscreen is 0.37ms (uniform) / 1.48ms (long
+   prose), so a viewport of them is ~8ms, not a second.
+3. **Nor is the extension set.** The bisection rungs (`uniform-text` → `-bare` → `-themed` →
+   `-markdown` → `-decorated`) all sit at 0.6–2.5ms per row, with the _same_ extensions the item
+   uses. Only the real item was slow, at 14ms.
+4. **It was building the extensions per item.** `EditorView.theme()` mints a new `StyleModule` and a
+   new generated class on every call, so a set built per row injects one stylesheet per row and
+   invalidates the whole document's style each time. Sharing the set — everything except the
+   `setWidgets` callback, which is genuinely per-item — took `uniform` from 628ms to 102ms and
+   `assistant` from 591ms to 137ms.
+
+The rule that follows: **an extension set is built once per (registry, editable, themeMode), never
+per item.** `createItemExtensions` caches on exactly that, and `baseline/mount` is what would catch a
+regression — a row that costs ten times a probe's row is a set being rebuilt somewhere.
+
 **Reading the invariant correctly matters.** When the reader scrolls 300px, the anchor row moves
 300px on screen and `scrollOffset` moves _less_, because compensation deliberately moved it back.
 Asserting against the offset asserts that compensation did not happen.

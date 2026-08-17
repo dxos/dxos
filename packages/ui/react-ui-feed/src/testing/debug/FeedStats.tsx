@@ -13,12 +13,30 @@ import { type Stat, Stats, warnAbove } from './Stats';
 
 /** What the feed currently holds, as opposed to how well it is holding it. */
 const FEED_STATS: Stat[] = [
-  { id: 'range', label: 'range' },
-  { id: 'index', label: 'index' },
-  { id: 'rows', label: 'rows' },
-  { id: 'widgets', label: 'widgets' },
-  { id: 'selected', label: 'selected' },
-  { id: 'hits', label: 'hits' },
+  {
+    id: 'range',
+    label: 'range',
+  },
+  {
+    id: 'index',
+    label: 'index',
+  },
+  {
+    id: 'rows',
+    label: 'rows',
+  },
+  {
+    id: 'widgets',
+    label: 'widgets',
+  },
+  {
+    id: 'selected',
+    label: 'selected',
+  },
+  {
+    id: 'hits',
+    label: 'hits',
+  },
 ];
 
 /**
@@ -31,13 +49,41 @@ const FEED_STATS: Stat[] = [
  * zero on a still feed, so each is coloured the moment it is not.
  */
 const FRAME_STATS: Stat[] = [
-  { id: 'fps', label: 'fps', classNames: (value) => Number(value) > 0 && Number(value) < 50 && 'text-warning-text' },
-  { id: 'p95', label: 'p95', unit: 'ms' },
-  { id: 'worst', label: 'worst', unit: 'ms' },
-  { id: 'hitches', label: 'hitches', classNames: warnAbove },
-  { id: 'jumps', label: 'jumps', classNames: warnAbove },
-  { id: 'shifts', label: 'shifts', classNames: warnAbove },
-  { id: 'breaks', label: 'breaks', classNames: warnAbove },
+  {
+    id: 'fps',
+    label: 'fps',
+    classNames: (value) => Number(value) > 0 && Number(value) < 50 && 'text-warning-text',
+  },
+  {
+    id: 'p95',
+    label: 'p95',
+    unit: 'ms',
+  },
+  {
+    id: 'worst',
+    label: 'worst',
+    unit: 'ms',
+  },
+  {
+    id: 'hitches',
+    label: 'hitches',
+    classNames: warnAbove,
+  },
+  {
+    id: 'jumps',
+    label: 'jumps',
+    classNames: warnAbove,
+  },
+  {
+    id: 'shifts',
+    label: 'shifts',
+    classNames: warnAbove,
+  },
+  {
+    id: 'breaks',
+    label: 'breaks',
+    classNames: warnAbove,
+  },
 ];
 
 export type FeedStatsProps = ThemedClassName<{
@@ -67,7 +113,7 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
 
   const values = useMemo(
     () => ({
-      range: range ? `${range.startIndex}–${range.endIndex}` : '—',
+      range: range ? `${range.startIndex} / ${range.endIndex}` : '—',
       index: `${currentIndex} / ${count}`,
       rows: mountedRows,
       widgets: mountedWidgets,
@@ -91,7 +137,7 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
       // Fixed width, not fitted: the widest line is the pass summary, whose length changes with the
       // elapsed time, so a panel sized to its content would resize once a second while being read.
       className={mx(
-        'z-10 absolute bottom-2 right-2 w-[18rem] grid gap-1 p-2 rounded-sm border border-separator bg-base-surface text-xs text-description shadow-sm',
+        'z-10 absolute bottom-3 right-3 w-[12rem] grid gap-1 p-2 rounded-sm border border-separator bg-base-surface text-xs text-description shadow-sm',
         classNames,
       )}
       data-testid='feed.stats'
@@ -122,14 +168,15 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
 
       <Stats stats={FEED_STATS} values={values} />
 
-      <div className='grid gap-1 border-t border-subdued-separator pt-1' data-testid='feed.frames'>
-        <Stats stats={FRAME_STATS} values={values} />
-        {/* Below the readings rather than among them: the pass's extent is context for the numbers,
-            not one of them. Truncated, so a growing duration cannot rewrap the panel. */}
-        <span className='text-subdued truncate' title={label}>
-          {label}
-        </span>
-      </div>
+      {/* The pass's extent rides in the tooltip: it is context for the readings rather than one of
+          them, and its width changes with the elapsed time. */}
+      <Stats
+        stats={FRAME_STATS}
+        values={values}
+        classNames='border-t border-subdued-separator pt-1'
+        title={label}
+        data-testid='feed.frames'
+      />
     </div>
   );
 };

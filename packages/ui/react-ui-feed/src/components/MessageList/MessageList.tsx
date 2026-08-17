@@ -7,7 +7,9 @@ import { type Virtualizer, useVirtualizer } from '@tanstack/react-virtual';
 import React, {
   type ComponentType,
   type PropsWithChildren,
+  createContext as createReactContext,
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -70,8 +72,8 @@ type MessageListContextValue = {
   breaks: number;
   resetShifts: () => void;
   virtualizer: Virtualizer<HTMLElement, HTMLElement>;
-  /** Row ref: measures the element and feeds the running average behind `estimateSize`. */
-  measureItem: (element: HTMLElement | null) => void;
+  /** Measures a commit's rows in one pass, feeding the running average behind `estimateSize`. */
+  measureItems: (elements: Iterable<HTMLElement>) => void;
   setViewport: (viewport: HTMLElement | null) => void;
   onSelect: (id: string, additive: boolean) => void;
   scrollToIndex: (index: number, options?: ScrollToOptions) => void;
@@ -321,9 +323,12 @@ const MessageListRoot = ({
 
   // Keyed by message id rather than index, so a row counted once is not counted again when the feed
   // shifts beneath it.
-  const measureItem = useCallback(
-    (element: HTMLElement | null) => {
-      if (element) {
+  //
+  // Every row of a commit in one call, because each of these reads forces the document to lay out:
+  // interleaved with the rows building their own content, that is one forced layout per row.
+  const measureItems = useCallback(
+    (elements: Iterable<HTMLElement>) => {
+      for (const element of elements) {
         const id = element.dataset.objectId;
         const size = element.offsetHeight;
         if (id && size) {
@@ -331,9 +336,13 @@ const MessageListRoot = ({
           measured.current.total = total + size - (sizes.get(id) ?? 0);
           sizes.set(id, size);
         }
+
+        virtualizer.measureElement(element);
       }
 
-      virtualizer.measureElement(element);
+      // Drops the cache entries of rows that have left the DOM; the virtualizer's own ref-callback
+      // contract does this by being called with `null`, which a batch never is.
+      virtualizer.measureElement(null);
     },
     [virtualizer],
   );
@@ -738,7 +747,7 @@ const MessageListRoot = ({
         breaks={breaks}
         resetShifts={resetShifts}
         virtualizer={virtualizer}
-        measureItem={measureItem}
+        measureItems={measureItems}
         setViewport={setViewport}
         onSelect={onSelect}
         scrollToIndex={scrollToIndex}
@@ -781,7 +790,7 @@ type MessageListViewportExtra = Pick<
  */
 const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
   ({ autoHide, centered, native, padding, scrollbars, thin, gutter, ...props }, forwardedRef) => {
-    const { messages, Chrome, selectedIds, virtualizer, measureItem, setViewport, onSelect } =
+    const { messages, Chrome, selectedIds, virtualizer, measureItems, setViewport, onSelect } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
 
     const handleViewportRef = useCallback(
@@ -805,38 +814,34 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
       >
         <ScrollArea.Viewport data-testid='feed.viewport' ref={handleViewportRef}>
           <div className='relative w-full' style={{ height: virtualizer.getTotalSize() }}>
-            {virtualizer.getVirtualItems().map((item) => {
-              // The virtualizer can still report items for the previous count on the render after a
-              // feed truncates — a rewind, a filter, a space switch — and the row would throw on a
-              // message that is no longer there.
-              const message = messages[item.index];
-              if (!message) {
-                return null;
-              }
+            <MessageRows measure={measureItems}>
+              {virtualizer.getVirtualItems().map((item) => {
+                // The virtualizer can still report items for the previous count on the render after
+                // a feed truncates — a rewind, a filter, a space switch — and the row would throw on
+                // a message that is no longer there.
+                const message = messages[item.index];
+                if (!message) {
+                  return null;
+                }
 
-              return (
-                <MessageListRow
-                  key={item.key}
-                  index={item.index}
-                  start={item.start}
-                  message={message}
-                  measure={measureItem}
-                >
-                  <Column.Root gutter={gutter}>
-                    <Column.Center>
-                      <Chrome
-                        message={message}
-                        index={item.index}
-                        selected={selectedIds?.has(message.id) ?? false}
-                        onSelect={onSelect}
-                      >
-                        <MessageListItem message={message} />
-                      </Chrome>
-                    </Column.Center>
-                  </Column.Root>
-                </MessageListRow>
-              );
-            })}
+                return (
+                  <MessageListRow key={item.key} index={item.index} start={item.start} message={message}>
+                    <Column.Root gutter={gutter}>
+                      <Column.Center>
+                        <Chrome
+                          message={message}
+                          index={item.index}
+                          selected={selectedIds?.has(message.id) ?? false}
+                          onSelect={onSelect}
+                        >
+                          <MessageListItem message={message} />
+                        </Chrome>
+                      </Column.Center>
+                    </Column.Root>
+                  </MessageListRow>
+                );
+              })}
+            </MessageRows>
           </div>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
@@ -849,32 +854,36 @@ MessageListViewport.displayName = MESSAGE_LIST_VIEWPORT_NAME;
 /**
  * One placed row.
  *
- * The measurement is taken in a **layout effect**, not in the element's ref callback, and that is the
- * whole point of this component. React attaches refs before it runs any layout effect, so a row
- * measured from its ref is measured before its item has built anything — an editor is constructed in
- * the item's own layout effect — and the virtualizer records the height of an empty box. The real
- * height arrives a frame later as a correction, which moves every row below it: a jump per row, worst
- * on first load and when scrolling up, where rows mount continuously.
+ * It registers its element rather than measuring it, and that is the whole point of this component.
+ * React attaches refs before it runs any layout effect, so a row measured from its ref is measured
+ * before its item has built anything — an editor is constructed in the item's own layout effect —
+ * and the virtualizer records the height of an empty box. The real height arrives a frame later as a
+ * correction, which moves every row below it: a jump per row, worst on first load and when scrolling
+ * up, where rows mount continuously.
  *
- * Layout effects run child-first, so by the time this one fires the item's content exists and the
- * first measurement is the right one.
+ * Measuring in this component's own layout effect fixes that but costs more than it looks. Layout
+ * effects run child-first and sibling by sibling, so the commit alternates *write* — this row's
+ * editor building its DOM — with *read*, and every read forces the whole document to lay out again.
+ * A viewport of rows is then a viewport of forced layouts: ~15ms per row, against ~0.4ms to
+ * construct the editor itself. `MessageRows` does all the reading instead, once, after every row has
+ * finished writing.
  */
 const MessageListRow = ({
   index,
   start,
   message,
-  measure,
   children,
 }: PropsWithChildren<{
   index: number;
   start: number;
   message: Message.Message;
-  measure: (element: HTMLElement | null) => void;
 }>) => {
+  const register = useContext(MessageRowsContext);
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
-    measure(ref.current);
-  }, [measure]);
+    register(index, ref.current);
+    return () => register(index, null);
+  }, [register, index]);
 
   return (
     <div
@@ -887,6 +896,43 @@ const MessageListRow = ({
       {children}
     </div>
   );
+};
+
+type RegisterRow = (index: number, element: HTMLElement | null) => void;
+
+const MessageRowsContext = createReactContext<RegisterRow>(() => {});
+
+/**
+ * The rows of one commit, measured together.
+ *
+ * A parent's layout effect runs after all of its children's, so by the time this one fires every row
+ * has built its content and nothing left to run writes to the DOM. Reading them here turns a forced
+ * layout per row into one for the whole commit, which is most of what mounting a viewport costs.
+ *
+ * The effect deliberately declares no dependencies: rows register and unregister during the same
+ * commit this reads, so what has to be re-measured is exactly what changed in it.
+ */
+const MessageRows = ({
+  measure,
+  children,
+}: PropsWithChildren<{ measure: (elements: Iterable<HTMLElement>) => void }>) => {
+  const elements = useRef(new Map<number, HTMLElement>()).current;
+  const register = useCallback<RegisterRow>(
+    (index, element) => {
+      if (element) {
+        elements.set(index, element);
+      } else {
+        elements.delete(index);
+      }
+    },
+    [elements],
+  );
+
+  useLayoutEffect(() => {
+    measure(elements.values());
+  });
+
+  return <MessageRowsContext.Provider value={register}>{children}</MessageRowsContext.Provider>;
 };
 
 //

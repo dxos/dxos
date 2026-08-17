@@ -171,6 +171,7 @@ export const FeedStory = ({
     if (messages.length < 3) {
       return;
     }
+
     setCopied(
       sliceFeed(messages, defaultRenderer, {
         from: { messageId: messages[0].id, offset: 0 },
@@ -299,9 +300,9 @@ export const FeedStory = ({
             <FeedMinimap classNames='row-start-2' messages={messages} />
           </div>
           <MessageList.Viewport classNames='absolute inset-0' padding ref={viewportRef} />
-          <FeedStats meter={meter} streaming={streaming} selected={selectedIds.size} hits={hits.length} />
         </Panel.Content>
       </Panel.Root>
+      <FeedStats meter={meter} streaming={streaming} selected={selectedIds.size} hits={hits.length} />
     </MessageList.Root>
   );
 };

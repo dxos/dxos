@@ -19,7 +19,17 @@ import { MessageList } from './MessageList';
  * scenarios are built once, before anything is timed, and each feed is then mounted and torn down
  * repeatedly. What is left is the cost of putting rows on screen.
  */
-const SCENARIOS: FeedScenario[] = ['plain', 'uniform', 'assistant'];
+const SCENARIOS: FeedScenario[] = [
+  'plain',
+  'uniform-text',
+  'uniform-bare',
+  'uniform-themed',
+  'uniform-markdown',
+  'uniform-decorated',
+  'uniform-item',
+  'uniform',
+  'assistant',
+];
 
 /** Warm-up mounts, discarded: the first feed of a run pays for style sheets the rest reuse. */
 const WARMUP = 1;
@@ -38,6 +48,14 @@ type Result = {
   /** Mean milliseconds from mount until the row count stops changing. */
   mean: number;
   worst: number;
+  /**
+   * Mean animation frames over the same interval.
+   *
+   * The number that separates the two explanations: a fill that takes as many frames as it has rows
+   * is mounting them one per frame and the fix is to stop doing that, where a fill that takes a
+   * handful of very long frames is doing too much work per row.
+   */
+  frames: number;
 };
 
 type MountProfileProps = {
@@ -45,7 +63,7 @@ type MountProfileProps = {
   runs?: number;
 };
 
-const MountProfile = ({ count = 200, runs = 4 }: MountProfileProps) => {
+const MountProfile = ({ count = 200, runs = 3 }: MountProfileProps) => {
   // Built before anything is timed. Generating the fixtures is the story's cost, not the list's, and
   // it is the larger number of the two at this length.
   const scenarios = useMemo(
@@ -60,26 +78,36 @@ const MountProfile = ({ count = 200, runs = 4 }: MountProfileProps) => {
   useEffect(() => {
     let cancelled = false;
 
-    const settle = async (): Promise<{ elapsed: number; rows: number }> => {
+    // Measured to the last frame that changed anything, not to the end of the loop: the trailing
+    // stable frames are the sampler waiting, and charging them to the mount reports its patience.
+    const settle = async (): Promise<{ elapsed: number; frames: number; rows: number }> => {
       const start = performance.now();
       let rows = 0;
       let stable = 0;
+      let elapsed = 0;
+      let frames = 0;
       for (let frame = 0; frame < MAX_FRAMES && stable < STABLE_FRAMES; frame++) {
         await nextFrame();
         const mounted = containerRef.current?.querySelectorAll('[data-index]').length ?? 0;
-        stable = mounted > 0 && mounted === rows ? stable + 1 : 0;
+        if (mounted > 0 && mounted === rows) {
+          stable += 1;
+        } else {
+          stable = 0;
+          elapsed = performance.now() - start;
+          frames = frame + 1;
+        }
+
         rows = mounted;
       }
 
-      // The stable frames are waiting, not work; charging them to the mount would report the
-      // sampler's own patience.
-      return { elapsed: performance.now() - start, rows };
+      return { elapsed, frames, rows };
     };
 
     void (async () => {
       const measured: Result[] = [];
       for (const scenario of SCENARIOS) {
         const times: number[] = [];
+        const frames: number[] = [];
         let rows = 0;
         for (let run = 0; run < runs + WARMUP && !cancelled; run++) {
           setShown(scenario);
@@ -87,6 +115,7 @@ const MountProfile = ({ count = 200, runs = 4 }: MountProfileProps) => {
           rows = settled.rows;
           if (run >= WARMUP) {
             times.push(settled.elapsed);
+            frames.push(settled.frames);
           }
 
           setShown(null);
@@ -100,8 +129,9 @@ const MountProfile = ({ count = 200, runs = 4 }: MountProfileProps) => {
         measured.push({
           scenario,
           rows,
-          mean: times.reduce((sum, ms) => sum + ms, 0) / times.length,
+          mean: mean(times),
           worst: Math.max(...times),
+          frames: mean(frames),
         });
       }
 
@@ -142,14 +172,18 @@ const MountProfile = ({ count = 200, runs = 4 }: MountProfileProps) => {
   );
 };
 
+const mean = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length);
+
 const format = (results: Result[]): string => {
-  const header = ['scenario', 'rows', 'mean ms', 'worst ms', 'ms/row'];
-  const body = results.map(({ scenario, rows, mean, worst }) => [
+  const header = ['scenario', 'rows', 'mean ms', 'worst ms', 'ms/row', 'frames', 'ms/frame'];
+  const body = results.map(({ scenario, rows, mean, worst, frames }) => [
     scenario,
     String(rows),
     mean.toFixed(1),
     worst.toFixed(1),
     (mean / Math.max(1, rows)).toFixed(2),
+    frames.toFixed(1),
+    (mean / Math.max(1, frames)).toFixed(1),
   ]);
   const widths = header.map((_, column) => Math.max(...[header, ...body].map((row) => row[column].length)));
 

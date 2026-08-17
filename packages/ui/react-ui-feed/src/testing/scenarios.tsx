@@ -11,7 +11,24 @@ import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { type MessageChromeProps, type MessageRenderer, chatRenderer, defaultRenderer } from '../';
+import {
+  BareEditorItem,
+  DecoratedEditorItem,
+  MarkdownEditorItem,
+  MarkdownProbeItem,
+  TextItem,
+  ThemedEditorItem,
+} from './controls';
 import { chatRegistry } from './widgets';
+
+const UNIFORM_CONTROLS = {
+  'uniform-text': TextItem,
+  'uniform-bare': BareEditorItem,
+  'uniform-themed': ThemedEditorItem,
+  'uniform-markdown': MarkdownEditorItem,
+  'uniform-decorated': DecoratedEditorItem,
+  'uniform-item': MarkdownProbeItem,
+} as const;
 
 /**
  * The five places in the repo that render a thread of messages, approximated against one engine.
@@ -25,6 +42,18 @@ export type FeedScenario =
   | 'plain'
   /** One editor per row, every row identical — the same document, so every height is the same. */
   | 'uniform'
+  /** The `uniform` rows with their text as a paragraph: the same feed without a document at all. */
+  | 'uniform-text'
+  /** The `uniform` rows with an editor carrying nothing but line wrapping. */
+  | 'uniform-bare'
+  /** The `uniform` rows with wrapping and the theme, but no markdown and no decoration. */
+  | 'uniform-themed'
+  /** The `uniform` rows with the markdown language, but nothing drawn from what it parses. */
+  | 'uniform-markdown'
+  /** The `uniform` rows with markdown drawn as itself: headings, lists, links. */
+  | 'uniform-decorated'
+  /** The `uniform` rows rendered by the real item, reached through `Custom` like the probes. */
+  | 'uniform-item'
   | 'assistant'
   | 'email'
   | 'thread'
@@ -80,6 +109,23 @@ export const createScenario = ({ scenario, count, seed = 999 }: ScenarioOptions)
         messages: createUniformMessages(count),
         renderer: defaultRenderer,
         Chrome: PlainChrome,
+        stickyBottom: true,
+        estimateSize: 84,
+      };
+
+    // The controls for `uniform`: identical messages, identical chrome, identical estimate — only
+    // what the row contains changes, so the difference between any two of them is that content.
+    case 'uniform-text':
+    case 'uniform-bare':
+    case 'uniform-themed':
+    case 'uniform-markdown':
+    case 'uniform-decorated':
+    case 'uniform-item':
+      return {
+        messages: createUniformMessages(count),
+        renderer: (message) => ({ kind: 'custom', key: scenario, data: Message.extractText(message) }),
+        Chrome: PlainChrome,
+        Custom: UNIFORM_CONTROLS[scenario],
         stickyBottom: true,
         estimateSize: 84,
       };

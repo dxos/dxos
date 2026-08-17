@@ -105,8 +105,17 @@ export const MarkdownItem = memo(({ text, editable = false, registry, hits, onWi
     );
   }, [view, text]);
 
+  // Nothing is dispatched to clear highlights that were never set: a transaction makes CodeMirror
+  // re-measure the document, and a viewport of rows mounting is a viewport of forced layouts for a
+  // search that is not running.
+  const highlighted = useRef(false);
   useEffect(() => {
-    view?.dispatch({ effects: setHighlights.of(hits ?? []) });
+    if (!view || (!hits?.length && !highlighted.current)) {
+      return;
+    }
+
+    highlighted.current = Boolean(hits?.length);
+    view.dispatch({ effects: setHighlights.of(hits ?? []) });
   }, [view, hits]);
 
   // Reported rather than derived: the widgets are portals into the item's own document, so nothing

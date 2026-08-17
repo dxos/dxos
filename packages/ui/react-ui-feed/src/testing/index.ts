@@ -3,6 +3,7 @@
 //
 
 export * from './FeedStory';
+export * from './controls';
 export * from './debug';
 export * from './generator';
 export * from './scenarios';

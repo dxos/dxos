@@ -19,10 +19,12 @@ export type Stat = {
 };
 
 export type StatsProps = ThemedClassName<{
-  stats: Stat[];
-  values: Record<string, StatValue>;
+  'stats': Stat[];
+  'values': Record<string, StatValue>;
   /** Readouts side by side, for a panel that is wider than it is tall. @default 1 */
-  columns?: number;
+  'columns'?: number;
+  'title'?: string;
+  'data-testid'?: string;
 }>;
 
 /**
@@ -32,8 +34,10 @@ export type StatsProps = ThemedClassName<{
  * rather than sized to their contents: a column that fits itself to `4` and then to `1054` moves
  * every digit beside it, and an instrument that moves cannot be read at a glance.
  */
-export const Stats = ({ stats, values, columns = 1, classNames }: StatsProps) => (
+export const Stats = ({ stats, values, columns = 1, classNames, title, ...props }: StatsProps) => (
   <div
+    {...props}
+    title={title}
     className={mx('grid gap-x-2 tabular-nums whitespace-nowrap', classNames)}
     style={{ gridTemplateColumns: `repeat(${columns}, 1fr 5rem 1.5rem)` }}
   >
