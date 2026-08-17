@@ -303,7 +303,9 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
             // Panels off the top keep their DOM (and scroll offsets) but must not take focus or
             // hit-test, or a tap can land on a panel the user cannot see.
             inert={offset > 0 || offset < -1 || undefined}
-            className={mx('absolute inset-0', nearby ? 'will-change-transform' : 'invisible')}
+            // Opaque per layer: the outgoing panel only travels a third of the width, so the rest of it
+            // stays underneath the incoming one and shows straight through a transparent panel.
+            className={mx('absolute inset-0 dx-base-surface', nearby ? 'will-change-transform' : 'invisible')}
             style={{
               zIndex: itemIndex,
               // Each panel composites independently; without containment a heavy subtree re-laying out
