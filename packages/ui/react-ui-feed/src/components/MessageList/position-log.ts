@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /** Movement below this is sub-pixel rounding, not a row changing place. */
 const EPSILON = 1;
@@ -53,6 +53,64 @@ const EMPTY: PositionStats = { shifts: 0, breaks: 0 };
  * The count is what a reader means by "flicker". Deliberately kept as a count rather than a log:
  * a scroll produces thousands of samples, and the number is the signal.
  */
+/**
+ * Watches for jumps in what was actually painted, once per animation frame.
+ *
+ * The counting above is done per React render, which cannot separate a row moving from the sampling
+ * happening at a different moment than the layout. This reads the scroll and every row's box in the
+ * **same** frame and compares each row's travel against the scroll's: a row that keeps its place in
+ * the document travels exactly as far as the scroll did, so anything else is the reader seeing a
+ * jump. It is the in-page form of measuring a screen recording frame by frame, and it is what a
+ * developer should have running while working on the list.
+ */
+export const useJumpDetector = (viewport: HTMLElement | null, enabled = true) => {
+  const [jumps, setJumps] = useState({ count: 0, worst: 0 });
+
+  useEffect(() => {
+    if (!viewport || !enabled) {
+      return;
+    }
+
+    let handle = 0;
+    let previous = new Map<string, number>();
+    let previousScroll = viewport.scrollTop;
+    let count = 0;
+    let worst = 0;
+
+    const tick = () => {
+      const scroll = viewport.scrollTop;
+      const travelled = previousScroll - scroll;
+      const current = new Map<string, number>();
+      for (const row of viewport.querySelectorAll<HTMLElement>('[data-index]')) {
+        const top = row.getBoundingClientRect().top;
+        const index = row.dataset.index!;
+        current.set(index, top);
+        const before = previous.get(index);
+        if (before !== undefined) {
+          const residual = Math.abs(top - (before + travelled));
+          if (residual > EPSILON) {
+            count++;
+            worst = Math.max(worst, Math.round(residual));
+          }
+        }
+      }
+
+      previous = current;
+      previousScroll = scroll;
+      handle = requestAnimationFrame(tick);
+    };
+
+    handle = requestAnimationFrame(tick);
+    const timer = setInterval(() => setJumps({ count, worst }), 250);
+    return () => {
+      cancelAnimationFrame(handle);
+      clearInterval(timer);
+    };
+  }, [viewport, enabled]);
+
+  return jumps;
+};
+
 export const usePositionLog = () => {
   const positions = useRef(new Map<PositionKey, number>());
   const trace = useRef<PositionShift[]>([]);

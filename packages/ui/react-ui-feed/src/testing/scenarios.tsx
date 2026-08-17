@@ -168,12 +168,18 @@ const createAssistantMessages = (count: number): Message.Message[] =>
     const blocks: ContentBlock.Any[] = [{ _tag: 'reasoning', reasoningText: random.lorem.paragraph() }];
     if (index % 4 === 1) {
       const toolCallId = `tool-${index}`;
-      blocks.push({ _tag: 'toolCall', toolCallId, name: 'search', input: '{}', providerExecuted: false });
+      blocks.push({
+        _tag: 'toolCall',
+        toolCallId,
+        name: 'search',
+        input: '{}',
+        providerExecuted: false,
+      });
       blocks.push({
         _tag: 'toolResult',
         toolCallId,
         name: 'search',
-        result: random.lorem.paragraph(),
+        result: random.lorem.paragraphs(2),
         providerExecuted: false,
       });
     }

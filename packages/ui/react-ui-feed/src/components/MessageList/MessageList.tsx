@@ -21,7 +21,7 @@ import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { type MessageRenderer, type SearchHit, defaultRenderer } from '../../model';
 import { type HighlightRange, HtmlItem, MarkdownItem, SelectionGroupContext, createSelectionGroup } from '../Item';
 import { type FollowOptions, ScrollFollower } from './follow';
-import { usePositionLog } from './position-log';
+import { useJumpDetector, usePositionLog } from './position-log';
 import { useScrollAnchor } from './scroll-anchor';
 
 //
@@ -60,6 +60,8 @@ type MessageListContextValue = {
   /** Block widgets mounted across every mounted item — what the visible window actually costs. */
   mountedWidgets: number;
   reportWidgets: (id: string, count: number) => void;
+  /** Rows that moved on screen against the scroll, counted per animation frame. */
+  jumps: { count: number; worst: number };
   /** Rows that moved after being laid out, and windows whose offsets were out of order. */
   shifts: number;
   breaks: number;
@@ -91,6 +93,7 @@ export const useMessageList = (consumerName = 'useMessageList') => {
     anchors,
     stepAnchor,
     mountedWidgets,
+    jumps,
     shifts,
     breaks,
     resetShifts,
@@ -104,6 +107,7 @@ export const useMessageList = (consumerName = 'useMessageList') => {
     anchors,
     stepAnchor,
     mountedWidgets,
+    jumps,
     shifts,
     breaks,
     resetShifts,
@@ -342,6 +346,11 @@ const MessageListRoot = ({
     [viewport, followOptions?.maxSpeed, followOptions?.acceleration, followOptions?.deceleration, rowHeight],
   );
   useEffect(() => () => follower?.cancel(), [follower]);
+
+  // What a reader would call flicker: a row moving on screen by more than the scroll moved, sampled
+  // once per frame so the reading is of what was painted. Only while debugging — it reads every
+  // mounted row's box every frame.
+  const jumps = useJumpDetector(viewport, debug);
 
   // Where each row was placed, and whether it stayed there. A row that moves after it was laid out
   // is what the reader sees as flicker, and it happens scrolling up, where unmeasured rows enter.
@@ -711,6 +720,7 @@ const MessageListRoot = ({
         stepAnchor={stepAnchor}
         mountedWidgets={mountedWidgets}
         reportWidgets={reportWidgets}
+        jumps={jumps}
         shifts={shifts}
         breaks={breaks}
         resetShifts={resetShifts}

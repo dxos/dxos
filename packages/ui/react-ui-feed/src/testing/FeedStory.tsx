@@ -498,7 +498,8 @@ type StatusBarProps = {
 };
 
 const StatusBar = ({ hits, query, selected, streaming, meter }: StatusBarProps) => {
-  const { range, currentIndex, mountedWidgets, shifts, breaks, resetShifts, count } = useMessageList('StatusBar');
+  const { range, currentIndex, mountedWidgets, jumps, shifts, breaks, resetShifts, count } =
+    useMessageList('StatusBar');
 
   return (
     // The frame readout gets a double-width column: it is the longest cell, and an equal share
@@ -512,7 +513,8 @@ const StatusBar = ({ hits, query, selected, streaming, meter }: StatusBarProps) 
       <div data-testid='feed.widgets'>{mountedWidgets} blocks</div>
       {/* Rows that moved after they were laid out — the reader calls this flicker. */}
       <div className={mx(shifts > 0 && 'text-warning-text')} data-testid='feed.shifts'>
-        {shifts} shifts{breaks > 0 ? ` · ${breaks} breaks` : ''}
+        {jumps.count} jumps{jumps.worst ? ` (${jumps.worst}px)` : ''} · {shifts} shifts
+        {breaks > 0 ? ` · ${breaks} breaks` : ''}
       </div>
       <FrameMeter meter={meter} />
       <div>{selected} selected</div>
