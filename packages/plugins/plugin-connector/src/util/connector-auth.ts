@@ -117,6 +117,9 @@ export const connectorAuthActions = ({
       icon: CONNECT_ICON,
       // Show the "Connect" label next to the icon rather than icon-only.
       iconOnly: false,
+      // Connecting is the call to action on an unbound object, so the trigger matches the primary
+      // button Sync occupies once it is bound, instead of receding to ghost like an overflow menu.
+      emphasis: 'primary',
       testId: 'connectorPlugin.connect',
       actions: [
         ...connections.map(reuseAction),
@@ -138,6 +141,9 @@ export const CONNECTOR_AUTH_GROUP_ID = 'connectorAuth';
  * to another account. Dropping the control instead reads as "this kind of object cannot be connected",
  * which is wrong; a disabled Connect says the capability exists and is currently unavailable. Pairs
  * with {@link connectorAuthActions}, which returns `[]` in exactly that case.
+ *
+ * Left ghost rather than `emphasis: 'primary'` like the live group: faded grey against that group's
+ * primary blue is what distinguishes "nothing to connect to" from "connect now" at a glance.
  */
 export const connectorAuthUnavailableActions = (): Node.NodeArg<typeof Node.actionGroupSymbol>[] => [
   AppNode.makeToolbarActionGroup({

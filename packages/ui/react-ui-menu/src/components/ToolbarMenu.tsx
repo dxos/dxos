@@ -162,6 +162,7 @@ const DropdownMenuToolbarItem = ({
   const {
     iconOnly,
     disabled,
+    emphasis,
     testId,
     applyActive,
     caretDown = true,
@@ -169,6 +170,7 @@ const DropdownMenuToolbarItem = ({
     iconClassNames: groupIconClassNames,
     spin: groupSpin,
   } = group.properties;
+  const buttonVariant = emphasis === 'primary' ? ('primary' as const) : ('ghost' as const);
   const activeItem = items?.find((item) => !!(item as MenuAction).properties.checked) as MenuAction | undefined;
   const icon =
     (applyActive &&
@@ -180,32 +182,39 @@ const DropdownMenuToolbarItem = ({
   const spin = (applyActive && activeItem?.properties.spin) || groupSpin;
   const labelAction = applyActive && activeItem ? activeItem : group;
 
+  const trigger = icon ? (
+    <NaturalToolbar.IconButton
+      variant={buttonVariant}
+      disabled={disabled}
+      icon={icon}
+      size={iconSize}
+      iconOnly={iconOnly}
+      iconClassNames={mx(spin && 'animate-spin', iconClassNames)}
+      label={actionLabel(labelAction, t)}
+      caretDown={caretDown && !disabled}
+      {...(testId && { 'data-testid': testId })}
+    />
+  ) : (
+    <NaturalToolbar.Button
+      variant={buttonVariant}
+      disabled={disabled}
+      caretDown={caretDown && !disabled}
+      {...(testId && { 'data-testid': testId })}
+    >
+      <ActionLabel action={labelAction} />
+    </NaturalToolbar.Button>
+  );
+
+  // A disabled group renders as a plain button, with no menu wired behind it: `disabled` on the trigger
+  // was not enough to stop the dropdown opening (nothing in the trigger chain gates Radix's own open
+  // handler), so it presented an empty menu. The affordance stays visible; there is just nothing to open.
+  if (disabled) {
+    return trigger;
+  }
+
   return (
     <DropdownMenu.Root group={group} items={items}>
-      <DropdownMenu.Trigger asChild>
-        {icon ? (
-          <NaturalToolbar.IconButton
-            variant='ghost'
-            disabled={disabled}
-            icon={icon}
-            size={iconSize}
-            iconOnly={iconOnly}
-            iconClassNames={mx(spin && 'animate-spin', iconClassNames)}
-            label={actionLabel(labelAction, t)}
-            caretDown={caretDown}
-            {...(testId && { 'data-testid': testId })}
-          />
-        ) : (
-          <NaturalToolbar.Button
-            variant='ghost'
-            disabled={disabled}
-            caretDown={caretDown}
-            {...(testId && { 'data-testid': testId })}
-          >
-            <ActionLabel action={labelAction} />
-          </NaturalToolbar.Button>
-        )}
-      </DropdownMenu.Trigger>
+      <DropdownMenu.Trigger asChild>{trigger}</DropdownMenu.Trigger>
     </DropdownMenu.Root>
   );
 };

@@ -92,6 +92,23 @@ describe('connectorAuthActions', () => {
     expect(group.id).toBe(CONNECTOR_AUTH_GROUP_ID);
     expect(group.properties?.disabled).toBe(true);
     expect(group.actions).toEqual([]);
+    // Ghost, so it reads as unavailable next to the live group's primary trigger.
+    expect(group.properties?.emphasis).toBeUndefined();
+  });
+
+  test('the live group renders as a primary trigger', async ({ expect }) => {
+    const { db } = await setup();
+    const actions = connectorAuthActions({
+      connectorIds: ['a'],
+      db,
+      spaceId: db.spaceId,
+      allConnectors: [makeConnector('a', authFlow)],
+      allConnections: [],
+    });
+
+    // Connecting is the call to action on an unbound object; ghost styling read as disabled.
+    expect(actions[0].properties?.emphasis).toBe('primary');
+    expect(actions[0].properties?.disabled).toBeUndefined();
   });
 
   test('always produces a single dropdown group', async ({ expect }) => {
