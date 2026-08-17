@@ -22,7 +22,7 @@ import {
   ReplicatorPanel,
   SurfaceProfilerPanel,
   type SurfaceProfilerStats,
-  SwarmAnnouncementsPanel,
+  SwarmTracePanel,
   SyncStatusPanel,
 } from './panels';
 
@@ -135,7 +135,7 @@ export const StatsPanel = ({
               <NetworkPanel id='network' network={stats?.network} />
               <EdgePanel id='edge' edge={stats?.edge} />
               <PerformancePanel id='performance' entries={stats?.performanceEntries} />
-              <SwarmAnnouncementsPanel id='swarm' />
+              <SwarmTracePanel id='swarm' />
               <SurfaceProfilerPanel
                 id='surfaceProfiler'
                 stats={surfaceProfilerStats}

@@ -31,7 +31,7 @@ type ReceivedMessage = {
  * Raw view of every ephemeral trace message remote runtimes announce over the space swarm (DX-1125),
  * subscribed per space because an empty {@link Trace.Filter} derives no swarm tag.
  */
-export const SwarmAnnouncementsPanel = (props: CustomPanelProps<{}>) => {
+export const SwarmTracePanel = (props: CustomPanelProps<{}>) => {
   const monitor = useOptionalCapability(Capabilities.RemoteTraceMonitor);
   const runtime = useOptionalCapability(Capabilities.ProcessManagerRuntime);
   const spaces = useSpaces();

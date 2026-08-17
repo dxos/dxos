@@ -14,7 +14,7 @@ export * from './PerformancePanel';
 export * from './QueriesPanel';
 export * from './RawQueriesPanel';
 export * from './SurfaceProfilerPanel';
-export * from './SwarmAnnouncementsPanel';
+export * from './SwarmTracePanel';
 export * from './SyncStatus';
 
 /**
