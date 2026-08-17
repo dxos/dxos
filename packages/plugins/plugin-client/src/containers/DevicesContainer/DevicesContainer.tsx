@@ -129,7 +129,11 @@ const DeviceInvitation = (props: Pick<DeviceInvitationProps, 'createInvitationUr
       return;
     }
     setPending(true);
-    void EffectEx.runPromise(identityService.share())
+    // Ask for the auth code explicitly: `share()` defaults to no authentication so programmatic
+    // flows can complete unattended, but a device invitation a human accepts is exactly the case
+    // that needs the second factor — without it the flow reports `readyForAuthentication` carrying
+    // no code, this panel falls back to the QR view, and anyone holding the code joins unchallenged.
+    void EffectEx.runPromise(identityService.share({ authMethod: 'shared-secret' }))
       .then(async (created) => {
         // Playwright reads this line off the console to drive the device-invitation flows.
         if (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {

@@ -169,10 +169,12 @@ export class AppManager {
     await confirmButton.click();
 
     // Confirming reloads into the join dialog mid-boot; wait for the input the reload produces with a
-    // budget sized to the boot rather than to a single interaction.
-    await this.shell.shell
-      .getByTestId('halo-invitation-input')
-      .waitFor({ state: 'visible', timeout: JOIN_IDENTITY_BOOT_TIMEOUT });
+    // budget sized to the boot rather than to a single interaction. A polling assertion rather than
+    // `waitFor`: the reset reloads the page and the booting app then rewrites the URL, and a single
+    // `waitFor` issued before that settles binds to the document being torn down and never retries.
+    await expect(this.shell.shell.getByTestId('halo-invitation-input')).toBeVisible({
+      timeout: JOIN_IDENTITY_BOOT_TIMEOUT,
+    });
   }
 
   async shareSpace(): Promise<void> {
