@@ -162,8 +162,21 @@ const DeviceInvitationImpl = ({
   onInvitationDone,
   onInvitationCreate,
 }: DeviceInvitationProps) => {
+  const client = useClient();
   const { event, code } = useInvitationFlow(flow);
   const url = code && createInvitationUrl(code);
+
+  // Companion to the invitation-code line logged on creation; Playwright reads both off the console
+  // to drive the device-invitation flows. It cannot ride that line: the auth code reaches the host
+  // only once a guest has connected, which is also when this view first renders it.
+  useEffect(() => {
+    if (
+      event?._tag === 'readyForAuthentication' &&
+      client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production'
+    ) {
+      log.info(JSON.stringify({ authCode: event.authCode }));
+    }
+  }, [event?._tag]);
 
   // Every terminal event returns to the creation view; parking on the completion icon would strand
   // a failed or cancelled invitation with no way to retry.
