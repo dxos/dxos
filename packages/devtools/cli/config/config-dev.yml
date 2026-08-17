@@ -1,11 +1,6 @@
 version: 1
 
 runtime:
-  # Read as `runtime.app.env` on node too, so the account commands resolve a hub without a bundler.
-  app:
-    env:
-      DX_HUB_URL: https://hub-staging.dxos.workers.dev/
-
   client:
     edgeFeatures:
       subductionReplicator: true
@@ -17,6 +12,9 @@ runtime:
       dataRoot: /tmp/dx/run
 
   services:
+    # The account commands resolve the hub from here on node, where nothing sets `DX_HUB_URL`.
+    hub:
+      url: https://hub-staging.dxos.workers.dev/
     edge:
       url: wss://edge.dxos.workers.dev/
     iceProviders:

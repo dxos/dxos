@@ -121,11 +121,12 @@ const profileBuiltinDefaults = (profile: string) => {
 
   return new Config({
     runtime: {
-      // Set here rather than in the file written for a new profile: `runtime.app.env` is a
-      // build-time namespace everywhere else, so on node it has to come from the code.
-      app: {
-        env: {
-          DX_HUB_URL: DEFAULT_HUB_URL,
+      // Set here rather than in the file written for a new profile, and under the service key
+      // rather than `runtime.app.env`: the latter outranks it in the resolver, so a built-in there
+      // would shadow a hub URL the profile configures for itself.
+      services: {
+        hub: {
+          url: DEFAULT_HUB_URL,
         },
       },
       client: {

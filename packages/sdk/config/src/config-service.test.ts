@@ -3,17 +3,75 @@
 //
 
 import * as NodeServices from '@effect/platform-node/NodeServices';
-import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
-import { afterEach } from 'vitest';
+import { afterEach, describe, test } from 'vitest';
 
 import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
+import { EffectEx } from '@dxos/effect';
 
 import { ConfigService } from './config-service';
 
-const HUB_URL = 'runtime.app.env.DX_HUB_URL';
+const HUB_SERVICE_URL = 'runtime.services.hub.url';
+const HUB_ENV_URL = 'runtime.app.env.DX_HUB_URL';
+
+let restoreEnv: (() => void) | undefined;
+
+describe('ConfigService.load', () => {
+  afterEach(() => {
+    restoreEnv?.();
+    restoreEnv = undefined;
+  });
+
+  test('falls back to the built-in hub for a profile that configures none', async ({ expect }) => {
+    restoreEnv = withEnv({ DX_HUB_URL: undefined });
+    const config = await load('version: 1\n');
+    expect(config.get(HUB_SERVICE_URL)).toEqual(DEFAULT_HUB_URL);
+    expect(config.get(HUB_ENV_URL)).toBeUndefined();
+  });
+
+  test('keeps the hub a profile configures for itself', async ({ expect }) => {
+    restoreEnv = withEnv({ DX_HUB_URL: undefined });
+    const config = await load('version: 1\nruntime:\n  services:\n    hub:\n      url: https://hub.test/\n');
+    expect(config.get(HUB_SERVICE_URL)).toEqual('https://hub.test/');
+    // Nothing may write the higher-precedence key, or the configured URL would never be read.
+    expect(config.get(HUB_ENV_URL)).toBeUndefined();
+  });
+
+  test('lets DX_* env override the profile config file', async ({ expect }) => {
+    restoreEnv = withEnv({ DX_HUB_URL: 'https://hub.env/' });
+    const config = await load('version: 1\nruntime:\n  app:\n    env:\n      DX_HUB_URL: https://hub.file/\n');
+    expect(config.get(HUB_ENV_URL)).toEqual('https://hub.env/');
+  });
+
+  test('applies the profile defaults to a freshly created config file', async ({ expect }) => {
+    restoreEnv = withEnv({ DX_HUB_URL: undefined });
+    const { config, contents } = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = `${yield* fs.makeTempDirectoryScoped()}/missing/config.yml`;
+        const config = yield* ConfigService.load({ config: Option.some(path), profile: 'test' });
+        return { config, contents: yield* fs.readFileString(path) };
+      }).pipe(Effect.provide(NodeServices.layer), Effect.scoped),
+    );
+
+    expect(config.get(HUB_SERVICE_URL)).toEqual(DEFAULT_HUB_URL);
+    // The defaults track the code, so they are not baked into the file that was just written.
+    expect(contents).not.toContain('hub');
+  });
+});
+
+/** Loads a profile config from `contents` written to a temp file. */
+const load = (contents: string) =>
+  EffectEx.runPromise(
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = `${yield* fs.makeTempDirectoryScoped()}/config.yml`;
+      yield* fs.writeFileString(path, contents);
+      return yield* ConfigService.load({ config: Option.some(path), profile: 'test' });
+    }).pipe(Effect.provide(NodeServices.layer), Effect.scoped),
+  );
 
 /** Applies `values` to `process.env` (undefined deletes) and returns the undo. */
 const withEnv = (values: Record<string, string | undefined>) => {
@@ -31,53 +89,3 @@ const withEnv = (values: Record<string, string | undefined>) => {
   apply(values);
   return () => apply(previous);
 };
-
-let restoreEnv: (() => void) | undefined;
-afterEach(() => {
-  restoreEnv?.();
-  restoreEnv = undefined;
-});
-
-const writeConfig = Effect.fn(function* (contents: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = `${yield* fs.makeTempDirectoryScoped()}/config.yml`;
-  yield* fs.writeFileString(path, contents);
-  return path;
-});
-
-describe('ConfigService.load', () => {
-  it('resolves a hub URL for a profile that does not configure one', () =>
-    Effect.gen(function* () {
-      restoreEnv = withEnv({ DX_HUB_URL: undefined });
-      const path = yield* writeConfig('version: 1\n');
-      const config = yield* ConfigService.load({ config: Option.some(path), profile: 'test' });
-      expect(config.get(HUB_URL)).toEqual(DEFAULT_HUB_URL);
-    }).pipe(Effect.provide(NodeServices.layer), Effect.scoped));
-
-  it('prefers the profile config file over the built-in default', () =>
-    Effect.gen(function* () {
-      restoreEnv = withEnv({ DX_HUB_URL: undefined });
-      const path = yield* writeConfig('version: 1\nruntime:\n  app:\n    env:\n      DX_HUB_URL: https://hub.test/\n');
-      const config = yield* ConfigService.load({ config: Option.some(path), profile: 'test' });
-      expect(config.get(HUB_URL)).toEqual('https://hub.test/');
-    }).pipe(Effect.provide(NodeServices.layer), Effect.scoped));
-
-  it('lets DX_* env override the profile config file', () =>
-    Effect.gen(function* () {
-      restoreEnv = withEnv({ DX_HUB_URL: 'https://hub.env/' });
-      const path = yield* writeConfig('version: 1\nruntime:\n  app:\n    env:\n      DX_HUB_URL: https://hub.test/\n');
-      const config = yield* ConfigService.load({ config: Option.some(path), profile: 'test' });
-      expect(config.get(HUB_URL)).toEqual('https://hub.env/');
-    }).pipe(Effect.provide(NodeServices.layer), Effect.scoped));
-
-  it('applies the profile defaults to a freshly created config file', () =>
-    Effect.gen(function* () {
-      restoreEnv = withEnv({ DX_HUB_URL: undefined });
-      const fs = yield* FileSystem.FileSystem;
-      const path = `${yield* fs.makeTempDirectoryScoped()}/missing/config.yml`;
-      const config = yield* ConfigService.load({ config: Option.some(path), profile: 'test' });
-      expect(config.get(HUB_URL)).toEqual(DEFAULT_HUB_URL);
-      // The defaults track the code, so they are not baked into the file that was just written.
-      expect(yield* fs.readFileString(path)).not.toContain('DX_HUB_URL');
-    }).pipe(Effect.provide(NodeServices.layer), Effect.scoped));
-});
