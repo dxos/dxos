@@ -14,7 +14,7 @@ import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Button, Icon, IconButton, Input, Panel, Select, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Icon, IconButton, Input, Panel, Select, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -380,7 +380,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
       <Panel.Content classNames='grid grid-rows-[1fr_1fr] gap-2'>
         <div className='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
           {/* A produced (frozen) variant can be designated the artifact's cover default. */}
-          <div className='flex flex-col gap-1 pt-3 px-2'>
+          <Flex column gap='xs' classNames='pt-3 px-2'>
             {/* Artifact-level name (independent of the selected variant). */}
             <Input.Root>
               <Input.TextInput
@@ -389,20 +389,20 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
                 onChange={handleNameChange}
               />
             </Input.Root>
-            <div className='h-6 flex justify-end'>
+            <Flex justify='end' classNames='h-6'>
               {selectedVariant && !selectedVariant.jobId && (
                 <Input.Root>
-                  <div className='flex items-center gap-2'>
+                  <Flex gap='sm' align='center'>
                     <Input.Checkbox
                       checked={isCover}
                       onCheckedChange={(checked) => handleCoverChange(checked === true)}
                     />
                     <Input.Label>{t('cover.label')}</Input.Label>
-                  </div>
+                  </Flex>
                 </Input.Root>
               )}
-            </div>
-          </div>
+            </Flex>
+          </Flex>
 
           {/* Schema-driven request-config form (prompt + kind-specific knobs, from the generator's
               requestSchema). Composing edits the draft; a produced variant is read-only. */}
@@ -440,9 +440,9 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
           ) : (
             selectedVariant &&
             (selectedVariant.jobId ? (
-              <div role='status' className='flex items-center justify-center h-full text-subdued'>
+              <Flex role='status' center classNames='h-full text-subdued'>
                 {t('generating.label')}
-              </div>
+              </Flex>
             ) : (
               <div className='dx-expander p-2'>
                 <Surface.Surface

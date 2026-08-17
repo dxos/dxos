@@ -15,7 +15,7 @@ import { useObject, useObjects } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Icon, Panel, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -175,9 +175,9 @@ ProjectArticle.displayName = 'ProjectArticle';
  */
 const GoalList = ({ goals }: { goals: ReadonlyArray<Project.Goal> }) => {
   return (
-    <div role='list' className='flex flex-col gap-1'>
+    <Flex role='list' column gap='xs'>
       {goals.map((goal) => (
-        <div key={goal.id} role='listitem' className='flex items-center gap-2 min-w-0'>
+        <Flex key={goal.id} role='listitem' gap='sm' align='center' classNames='min-w-0'>
           <Icon
             icon={
               goal.status === 'met'
@@ -194,9 +194,9 @@ const GoalList = ({ goals }: { goals: ReadonlyArray<Project.Goal> }) => {
           <span className={goal.status === 'dropped' ? 'line-through text-subdued truncate' : 'truncate'}>
             {goal.text}
           </span>
-        </div>
+        </Flex>
       ))}
-    </div>
+    </Flex>
   );
 };
 
