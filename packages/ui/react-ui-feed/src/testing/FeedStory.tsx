@@ -132,7 +132,7 @@ export type FeedStoryProps = {
 export const FeedStory = ({
   scenario,
   count = 0,
-  debug = true,
+  debug: debugDefault = true,
   streaming: autoStart = false,
   wordsPerChunk = 4,
   chunkDelay = 120,
@@ -144,6 +144,7 @@ export const FeedStory = ({
   const definition = useMemo(() => (scenario ? createScenario({ scenario, count }) : undefined), [scenario, count]);
   const [messages, setMessages] = useState<Message.Message[]>(() => definition?.messages ?? createMessages({ count }));
   const [streaming, setStreaming] = useState(autoStart);
+  const [debug, setDebug] = useState(debugDefault);
   const [answerId, setAnswerId] = useState<string | undefined>();
   const [query, setQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
@@ -305,6 +306,13 @@ export const FeedStory = ({
               onClick={handleAppend}
             />
             <IconButton icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
+            <IconButton
+              icon={debug ? 'ph--bounding-box--fill' : 'ph--bounding-box--regular'}
+              iconOnly
+              label={debug ? 'Hide block outlines' : 'Show block outlines'}
+              data-testid='feed.debug.toggle'
+              onClick={() => setDebug((value) => !value)}
+            />
             <Toolbar.Separator />
             <Input.Root>
               <Input.TextInput
