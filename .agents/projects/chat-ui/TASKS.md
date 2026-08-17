@@ -149,6 +149,20 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       writes it; a step is taken from the row containing the offset rather than by comparing
       positions, which is immune to the few pixels of drift left after a landing settles.
       `baseline/navigation` covers it and fails without the fix.
+- [x] **The whole page jumped half a second after it settled.** The re-base rebuilds the layout from
+      index 0 when the measured average leaves the estimate behind, and it restored the reader in the
+      same effect that requested the rebuild — before the document had grown, so the scroll was
+      clamped against a height the element did not have yet and the correction arrived frames later
+      as a second jump. Measured in `baseline/fill`: `scrollHeight` 12576 → 18218 at 692ms with
+      `scrollTop` not corrected until 748ms. The restore now runs in a layout effect keyed on the
+      total size, so it happens in the commit that applied the rebuild, before paint — `uniform` is
+      one frame with `firstTop` unchanged. Ruled out: restoring by raw `scrollTop` (69–96 of 150
+      frames changing afterwards, because the element and the virtualizer's own offset disagree) and
+      `scrollToOffset` (same). `baseline/fill` now asserts the invariant that matters — a frame that
+      changes the document's height must not change where the rows are.
+- [ ] **`baseline/varied` still moves for one frame on a rebuild.** Restoring by index makes the
+      virtualizer retry while the offsets around the landing point are estimates. Allowance of 1 is
+      pinned in the story so a regression past it fails.
 - [ ] **Every other arrow press travels ~2px instead of a row.** Direction is right and the feed
       always moves, but the distance alternates: `plain` measures `[224, 2, 119, 2, 63]`,
       `assistant` `[108, 389, 510, 73, 270]`. Deterministic, not a timing artifact — 90 settle

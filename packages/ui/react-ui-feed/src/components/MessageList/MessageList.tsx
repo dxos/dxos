@@ -586,6 +586,7 @@ const MessageListRoot = ({
   // so the next comparison is against itself.
   const basis = useRef(nominalSize);
   const rebases = useRef(0);
+  const pendingRebase = useRef<{ index: number; following: boolean } | null>(null);
   useEffect(() => {
     // A caller estimating per row is already better informed than an average over every row.
     const { sizes, total } = measured.current;
@@ -609,13 +610,13 @@ const MessageListRoot = ({
     rebases.current++;
 
     basis.current = average;
-    const anchor = currentIndexRef.current;
+    // Recorded, not restored here. `resizeItem` only asks for a rebuild: the document grows on the
+    // commit that follows, and a scroll issued now is clamped against a height the element does not
+    // have yet — so the page moves, and the correction arrives frames later as a second jump. The
+    // measured trace was `scrollHeight` 12576 → 18218 at 692ms with `scrollTop` not corrected until
+    // 748ms, which is the whole page flickering half a second after it settled.
+    pendingRebase.current = { index: currentIndexRef.current, following: stickyBottom && followRef.current };
     virtualizer.resizeItem(0, average);
-    if (stickyBottom && followRef.current) {
-      scrollToBottom();
-    } else {
-      virtualizer.scrollToIndex(anchor, { align: 'start' });
-    }
   });
 
   // Keyed on the total size as well as the count: a growing tail extends the last row without
@@ -629,6 +630,27 @@ const MessageListRoot = ({
   // stream ended, discarding exactly the distance it had left to cover.
   const positioned = useRef(false);
   const totalSize = virtualizer.getTotalSize();
+
+  // Put the reader back in the same commit that resized the document, before it is painted.
+  useLayoutEffect(() => {
+    const pending = pendingRebase.current;
+    if (!pending) {
+      return;
+    }
+
+    pendingRebase.current = null;
+    // Restored the same way any other navigation is. Writing the offset directly — either on the
+    // element or through `scrollToOffset` — reaches the tail in one frame but leaves a feed of
+    // uneven rows correcting itself for the next second, because the rows the new offset lands among
+    // have never been measured. Tried both; both were worse.
+    if (pending.following) {
+      scrollToBottom();
+    } else {
+      virtualizer.scrollToIndex(pending.index, { align: 'start' });
+    }
+    // Keyed on the total size: it is what the rebuild changes, so this runs on the commit that
+    // applied it and on no other.
+  }, [totalSize, virtualizer, scrollToBottom]);
 
   // The viewport less a nominal row: enough for the reader to bring the last row to the top.
   //

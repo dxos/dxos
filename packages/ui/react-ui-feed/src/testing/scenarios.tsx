@@ -245,7 +245,7 @@ const createPlainMessages = (count: number): Message.Message[] =>
     Message.make({
       created: at(index),
       sender: { role: index % 2 === 0 ? 'user' : 'assistant', name: index % 2 === 0 ? 'Alice' : 'Assistant' },
-      blocks: [{ _tag: 'text', text: random.lorem.sentence(6) }],
+      blocks: [{ _tag: 'text', text: random.lorem.sentence(index % 8) }],
       properties: { height: PLAIN_HEIGHTS[index % PLAIN_HEIGHTS.length] },
     }),
   );
@@ -269,7 +269,7 @@ const createUniformMessages = (count: number): Message.Message[] =>
       sender: { role: index % 2 === 0 ? 'user' : 'assistant', name: index % 2 === 0 ? 'Alice' : 'Assistant' },
       // Not `${index}. …`: markdown reads a leading number and a dot as an ordered list and renumbers
       // it, so the row would show a number that is not its index. The index is in the chrome.
-      blocks: [{ _tag: 'text', text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do.' }],
+      blocks: [{ _tag: 'text', text: random.lorem.sentence(index % 16 === 0 ? 100 : 1) }],
     }),
   );
 
@@ -419,7 +419,12 @@ const PlainItem = ({ content, message }: { content: { data?: unknown }; message:
  */
 const PlainChrome = ({ index, children }: MessageChromeProps) => (
   <Row classNames='py-0 grid grid-cols-[3rem_1fr] gap-2'>
-    <span className='pt-2 text-xs text-subdued tabular-nums'>{index}</span>
+    {/* One line of body text, taken from the text itself rather than set: the gutter meets the
+        row's first line because it *is* a line, so it stays aligned when the type scale changes. A
+        pinned height would have to be re-chosen every time it did. */}
+    <div className='flex items-center text-base leading-normal'>
+      <span className='text-xs text-subdued tabular-nums'>{index}</span>
+    </div>
     <div className='min-w-0'>{children}</div>
   </Row>
 );
