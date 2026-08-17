@@ -252,6 +252,7 @@ const extractFromPrompt = (prompt: string) => {
  * model — so the crawler builds a real fact graph from real message content with no token. Swap in
  * a live `AiService` to get model-quality extraction over the same pipeline.
  */
+// TODO(dmaretskyi): Extract to ai package as MockAiServiceLayer -- where you're able to configure prebaked replies in options. See about unifiying with scripted model.
 export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
   Layer.succeed(AiService.AiService, {
     // The @effect/ai LanguageModel surface is large and external; a test/offline fake fills only

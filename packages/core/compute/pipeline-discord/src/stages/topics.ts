@@ -145,6 +145,7 @@ export const buildTopicsForTarget = (
       log.info('topic', {
         target: segment.targetId,
         name,
+        summary,
         participants: segment.participantLabels,
         start: segment.startMessageId,
         end: segment.endMessageId,
