@@ -361,11 +361,13 @@ const PlainItem = ({ content, message }: { content: { data?: unknown }; message:
  * first question is *which* row, and reading it off the screen beats hunting for it in the DOM.
  */
 const PlainChrome = ({ index, children }: MessageChromeProps) => (
-  <Row classNames='py-0 grid grid-cols-[3rem_1fr] gap-2 border-b border-subdued-separator'>
+  <Row classNames='py-0 grid grid-cols-[3rem_1fr] gap-2'>
     <span className='pt-2 text-xs text-subdued tabular-nums'>{index}</span>
     <div className='min-w-0'>{children}</div>
   </Row>
 );
+
+//
 // Every scenario's difference that is not the renderer lives here — which is the claim being
 // tested: chrome is the host's, and the engine only has to keep it out of the measurement.
 //

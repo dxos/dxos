@@ -8,20 +8,10 @@ import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from 'react-dom';
 
 import { useThemeContext } from '@dxos/react-ui';
-import {
-  type XmlWidgetRegistry,
-  type XmlWidgetState,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  decorateMarkdown,
-  extendedMarkdown,
-  xmlBlockDecoration,
-  xmlFormatting,
-  xmlTags,
-} from '@dxos/ui-editor';
+import { type XmlWidgetRegistry, type XmlWidgetState } from '@dxos/ui-editor';
 
-import { type HighlightRange, highlights, highlightTheme, setHighlights } from './highlight';
+import { createItemExtensions } from './extensions';
+import { type HighlightRange, setHighlights } from './highlight';
 import { useSelectionGroup } from './selection-group';
 
 export type MarkdownItemProps = {
@@ -59,28 +49,14 @@ export const MarkdownItem = memo(({ text, editable = false, registry, hits, onWi
   selectionGroupRef.current = selectionGroup;
 
   const extensions = useMemo<Extension[]>(
-    () =>
-      [
-        createBasicExtensions({ readOnly: !editable, editable, lineWrapping: true }),
-        createThemeExtensions({ themeMode }),
-        // A registry changes how the document is *parsed*, not only how it is decorated: registered
-        // tags have to survive as single blocks through the markdown parser before `xmlTags` can
-        // replace them, and without that they render as the literal angle brackets they are.
-        registry ? extendedMarkdown({ registry }) : createMarkdownExtensions(),
-        registry && xmlFormatting({ skip: ['prompt'] }),
-        decorateMarkdown(),
-        // The tags are hidden but the prompt is NOT framed here: the frame is chrome's, which also
-        // owns the rewind toolbar under it. Styling it in both places drew the border twice.
-        registry?.prompt && xmlBlockDecoration({ tag: 'prompt', hideTags: true }),
-        registry && xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-        EditorView.updateListener.of((update) => {
-          if (update.selectionSet && !update.state.selection.main.empty) {
-            selectionGroupRef.current.claim(update.view);
-          }
-        }),
-        highlights,
-        highlightTheme,
-      ].filter(Boolean) as Extension[],
+    () => [
+      ...createItemExtensions({ registry, editable, themeMode, setWidgets }),
+      EditorView.updateListener.of((update) => {
+        if (update.selectionSet && !update.state.selection.main.empty) {
+          selectionGroupRef.current.claim(update.view);
+        }
+      }),
+    ],
     [editable, themeMode, registry],
   );
 

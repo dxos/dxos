@@ -10,7 +10,8 @@
 // and threaded through the story it slowly becomes the story.
 //
 
-export * from './DebugBar';
+export * from './FeedStats';
+export * from './Stats';
 
 export * from './frame-meter';
 export * from './sweep';

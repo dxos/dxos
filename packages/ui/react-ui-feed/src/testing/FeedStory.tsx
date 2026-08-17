@@ -12,7 +12,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type MessageChromeProps, MessageList, useMessageList } from '../components';
 import { SearchHit, defaultRenderer, searchFeed, sliceFeed } from '../model';
-import { DebugBar, type FrameMeter as FrameMeterState, useFeedDebug } from './debug';
+import { FeedStats, useFeedDebug } from './debug';
 import { createMessages } from './generator';
 import { type FeedScenario, createScenario } from './scenarios';
 import { createAnswer, textStream } from './stream';
@@ -57,10 +57,7 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
 
   return (
     <div
-      className={mx(
-        'group relative grid grid-cols-[2rem_1fr] gap-2 px-2 py-2 border-b border-subdued-separator',
-        selected && 'bg-hover-surface',
-      )}
+      className={mx('group relative grid grid-cols-[2rem_1fr] gap-2 px-2 py-2', selected && 'bg-hover-surface')}
       data-testid='feed.message'
     >
       <div className='flex flex-col items-center gap-1'>
@@ -302,18 +299,8 @@ export const FeedStory = ({
             <FeedMinimap classNames='row-start-2' messages={messages} />
           </div>
           <MessageList.Viewport classNames='absolute inset-0' padding ref={viewportRef} />
+          <FeedStats meter={meter} streaming={streaming} selected={selectedIds.size} hits={hits.length} />
         </Panel.Content>
-
-        <Panel.Statusbar>
-          <StatusBar
-            streaming={streaming}
-            selected={selectedIds.size}
-            query={query}
-            hits={hits}
-            copied={copied}
-            meter={meter}
-          />
-        </Panel.Statusbar>
       </Panel.Root>
     </MessageList.Root>
   );
@@ -446,40 +433,5 @@ const NavButtons = () => {
         onClick={() => scrollToBottom({ behavior: 'smooth' })}
       />
     </>
-  );
-};
-
-// TODO(burdon): Factor out reusable debugging hooks and components.
-
-type StatusBarProps = {
-  hits: readonly SearchHit[];
-  query: string;
-  selected: number;
-  copied: string | null;
-  streaming: boolean;
-  meter: FrameMeterState;
-};
-
-const StatusBar = ({ hits, selected, streaming, meter }: StatusBarProps) => {
-  const { range, currentIndex, mountedRows, mountedWidgets, jumps, shifts, breaks, count } =
-    useMessageList('StatusBar');
-
-  return (
-    <div className='w-full flex flex-col gap-1 py-1'>
-      <div className='w-full overflow-hidden grid grid-cols-7 items-center gap-x-2 px-2 text-xs text-description tabular-nums'>
-        <div>{range ? `${range.startIndex}–${range.endIndex}` : ''}</div>
-        <div>
-          {currentIndex} / {count}
-        </div>
-        <div data-testid='feed.rows'>{mountedRows} rows</div>
-        <div data-testid='feed.widgets'>{mountedWidgets} widgets</div>
-        <div>{selected} selected</div>
-        <div>{hits.length} hits</div>
-        <div className='text-right' data-testid='feed.stream.state'>
-          {streaming ? 'streaming…' : 'idle'}
-        </div>
-      </div>
-      <DebugBar meter={meter} jumps={jumps} shifts={shifts} breaks={breaks} />
-    </div>
   );
 };

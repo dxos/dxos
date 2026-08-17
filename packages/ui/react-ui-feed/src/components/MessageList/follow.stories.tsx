@@ -139,10 +139,7 @@ const FollowStory = ({
               <div
                 key={index}
                 style={{ height: ROW_HEIGHT }}
-                className={mx(
-                  'flex items-center px-3 border-b border-subdued-separator',
-                  index % 2 === 0 && 'bg-input-surface',
-                )}
+                className={mx('flex items-center px-3', index % 2 === 0 && 'bg-input-surface')}
               >
                 <span className='text-sm text-description'>{index}</span>
               </div>
