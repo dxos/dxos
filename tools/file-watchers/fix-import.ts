@@ -8,8 +8,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import fs from 'node:fs';
-
+const fs = require('fs');
 const filePath = process.argv[2]; // File path is passed as an argument.
 
 const regex = /import\s+(?:(?:\{[^}]*\}|\*)\s+from\s+)?['"](@[^'"]+)\/src(?:\/[^'"]*)?['"]/gm;

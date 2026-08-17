@@ -95,12 +95,18 @@ imports (here: `vite.base.config.ts`, `vitest.base.config.ts`, `vitest.tags.ts` 
 - relative imports carry their `.ts` extension, and directory-index imports name the index file;
 - `import.meta.dirname` / `import.meta.filename` rather than `__dirname` / `__filename`;
 - type-only named imports are marked `type`, since nothing erases them for node;
-- JSON imports need `with { type: 'json' }`;
-- the root `package.json` declares `"type": "module"` so root-level `.ts` config files are not
-  parsed as CommonJS and reparsed. `.ncurc.cjs` keeps its extension for that reason.
+- JSON imports need `with { type: 'json' }`.
 
 Packages still on the default `bundle` loader get these same rules as a warning at config-load
 time, listing every offending line — Vite emits it whenever a config would not survive the switch.
+
+Vite also asks for `"type": "module"` on the root `package.json`, which the root-level `.ts`
+configs would otherwise miss (node reparses each as ESM after failing to parse it as CommonJS, and
+says so). **Do not add it.** Rolldown picks a module's interop mode from the nearest `package.json`
+that actually carries a `type` field, not the nearest one that exists — so declaring it at the root
+flips every package that does not declare its own, and their `bundle`-loaded configs then read a
+default-exported plugin as `{ __esModule, default }` instead of the function
+(`PluginImportSource is not a function`). The reparse notice is the cheaper cost.
 
 ## Test commands
 

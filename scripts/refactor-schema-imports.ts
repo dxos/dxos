@@ -3,9 +3,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import glob from 'glob';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+const glob = require('glob');
 
 /**
  * Script to refactor imports from @dxos/schema to @dxos/types
