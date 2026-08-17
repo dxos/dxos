@@ -8,9 +8,263 @@ is answered from the model rather than the DOM.
 The audit that motivates this, the five call sites it has to serve, and the measured verdict live in
 [`plugin-assistant/docs/AUDIT.md`](../../plugins/plugin-assistant/docs/AUDIT.md) §3.3–§3.4.
 
-This document describes what exists. [`PRINCIPLES.md`](./PRINCIPLES.md) describes what it should be
-built on — in particular that rows should be placed relative to an anchor rather than summed from the
-start of the list, which is where every defect still open here comes from.
+## Principles
+
+What the list is allowed to assume, and what follows from it. Everything below this section
+describes what exists today; this describes what it should be built on, and the plan that follows.
+
+Every claim here is either an invariant a test asserts or a measurement taken in a real browser. The
+numbers are from `baseline/*` and are quoted so a future change can be checked against them rather
+than argued with.
+
+#### 1. Build up from sub-modules, and accept only at the composed level
+
+A list has too many corner cases to be got right in one piece, so it is built from parts that can
+each be tested — and the bisection ladder (`uniform-text` → `-bare` → `-themed` → `-markdown` →
+`-decorated` → `-item`) is what located a 6× cost that inspection would not have.
+
+**But isolation lies.** The same editor measured 0.37ms built into an offscreen container and 14ms
+built into a real row. A sub-module's number is evidence about the sub-module, never about the
+system; the acceptance test is always at the composed level.
+
+#### 2. The renderer owns the box; the host owns everything inside it
+
+Container, viewport, rows. What a row _means_ — a prompt, a stop the arrow keys land on, a speaker
+change — belongs to layers above. Five call sites (chat, email, human chat, comments, transcription)
+differ only in a renderer and a chrome, which is the evidence that the seam is in the right place.
+
+**Therefore the host owns the estimate.** Chrome is the host's, chrome has height, and a height the
+renderer cannot see is a height it cannot estimate. Got wrong three times: a 1px separator left out
+of the plain estimate, `uniform` declaring 84px against a real 24px, and the assistant's per-message
+estimator.
+
+#### 3. Rows are placed relative to an anchor, not from the start of the list
+
+An absolute offset computed by summing every row before it makes the total a fiction that changes
+whenever anything measures. Every defect this package has not been able to close descends from that
+one fact: the layout has to be rebuilt from index 0 when the average drifts (`resizeItem(0, …)`),
+the rebuild moves every offset, and a tail computed at that instant is wrong in both directions —
+measured with the element reporting 20,852 settling to 20,412 while the model reported 19,803
+settling to 19,576.
+
+Anchor-relative placement does not remove estimation. It **moves it from row placement to scrollbar
+geometry**, which is the trade worth making: a placement error is a row jumping under the reader, a
+scrollbar error is a thumb that is slightly the wrong size.
+
+#### 4. The anchor is a message, never an index
+
+An index is invalidated by anything that prepends, truncates or reorders — a rewind, a filter, a
+space switch. The anchor must survive all of those, so it is identified by message id, and its
+offset is the one position in the list that is known exactly.
+
+This is the invariant that makes principle 3 work at all, and it is testable on its own: **the anchor
+is always mounted.**
+
+#### 5. Only rows near the anchor need accurate heights
+
+Rows far from the anchor need a height good enough for the scrollbar and nothing more, because
+nothing is placed relative to them. "Near" means near _the anchor_, not near the viewport — during a
+scroll the two diverge, and that divergence is where corrections land.
+
+The corollary is the point: **there is no re-base.** The machinery that periodically rebuilds the
+layout from index 0 exists only to fix a total that principle 3 stops depending on, and it is the
+direct cause of the whole-page jump at ~700ms and of eighteen rows moving 111px on a rebuild.
+
+#### 6. Rows flow; only the window is placed
+
+A row that changes height — a panel opening, an image decoding, an answer growing — re-places every
+row after it. With rows positioned absolutely that re-placement is the list's job: opening one
+disclosure moved rows on **19 frames and cost 177 individual row re-placements**, about eleven rows a
+frame for the whole 250ms animation, each one a React render and a transform write driven from a
+`ResizeObserver`. In normal flow the browser does the same work in the same frame, for nothing.
+
+So the mounted window is a **flow container placed as a unit** — one positioned element, not N.
+
+It is also the more correct arrangement. N independent transforms accumulate sub-pixel error where
+flow sums exactly; and margins, gaps and separators work normally instead of having to be baked into
+an estimate, which is the class the plain feed's missing 1px separator belongs to.
+
+Native CSS scroll anchoring becomes available here too, and should be turned **off**
+(`overflow-anchor: none`). Two things anchoring one thing is the defect this package keeps hitting;
+the browser doing it silently as well would make it unattributable.
+
+The shape that follows is §7.
+
+#### 7. One contiguous parent, absolutely positioned; corrections move it, never the scroll
+
+The mounted rows are children of a single parent laid out by the browser in flow, and that parent is
+absolutely positioned within the scroll container. The scroll thumb is computed from its offset and
+the estimates for what lies outside it.
+
+```html
+<div class="scroller">
+  <!-- overflow-y:auto; position:relative; overflow-anchor:none -->
+  <div class="sizer"></div>
+  <!-- height only: gives the thumb something to measure -->
+  <div class="window">
+    <!-- position:absolute; inset-inline:0; top:0; transform:translateY(offset) -->
+    <div class="row">…</div>
+    <!-- static, in flow, no positioning -->
+    <div class="row">…</div>
+  </div>
+</div>
+```
+
+Four things make it work. The **sizer holds no rows**, so changing it can never move content.
+**`transform`, not `top`**, because the offset changes on every prepend and correction and transform
+skips layout. **Rows are unpositioned**, which is the whole of §6. And the **scroller is the only
+scrollable box**, with nothing but the reader writing `scrollTop`.
+
+**One sizer, not two.** A second, top sizer is what the classic in-flow arrangement needs to push the
+window down; here the offset does that job, so a top sizer would be a competing way to say the same
+thing.
+
+```
+sizer.height = offset + window.height + estimateAfter
+```
+
+**`offset` is authoritative; the estimate for the region above is derived from it, not the reverse.**
+This is the whole reason to position the window rather than use spacers, and it only holds stated
+this way. Compute `offset` _from_ an estimate of what is above and revising that estimate moves the
+window — the spacer problem, wearing a different hat. Derive it the other way and the offset is
+whatever real scrolling and real measurement produced, the region above is merely _described_ by it,
+and nothing outside the window can move what is on screen. The thumb drifts slightly from true
+instead, which is the trade §3 asks for.
+
+The exception is a jump to a distant index, where there is no measured path and `offset` has to come
+from estimates — but a jump is a discontinuity the reader expects.
+
+**Two edge invariants** replace the second sizer, and they are where estimate meets ground truth:
+
+1. When the model's **first** row is mounted, `offset === 0`.
+2. When the model's **last** row is mounted, `offset + window.height === sizer.height`.
+
+If the reader scrolls to the top and `offset` is not zero, the region above was shorter than
+estimated — and the correction goes to the **sizer**, never the window, so nothing on screen moves. A
+negative `offset` is the same discovery arriving as a bug signal. Reserved tail space folds into
+`estimateAfter`, which is what stops `scrollPastEnd` being a special case.
+
+**Appending is free.** Scrolling down, or a turn streaming into the tail, adds rows to the end of the
+parent: nothing above them moves and nothing needs compensating. That is the common case, and it
+costs nothing.
+
+**Prepending is the whole problem.** Scrolling up inserts rows at the start, pushing the rest down by
+their height, so the parent's offset must move up by the same amount. The two have to land in one
+frame or the reader sees the jump — achievable, but not in one step:
+
+1. Insert the rows in a commit.
+2. Measure them in the **parent's** layout effect: parents run after their children, so by then the
+   rows exist and nothing left to run writes to the DOM.
+3. Set the parent's offset in that same effect, before paint.
+
+The residual is §8 — a height is a subscription, not a measurement. A newly inserted editor can grow
+after that effect, when a font loads or a portaled widget paints, so the offset is re-adjusted
+whenever the prepended region's height changes rather than once.
+
+**And this is why the model earns the work:** the correction moves the parent's offset, not
+`scrollTop`. The reader's scroll and the list's corrections stop sharing a channel. Every "two things
+compensating for one change" defect in this package has been two writers of `scrollTop` — the follow
+against the virtualizer's adjustment, an arrow key's smooth scroll against a measurement landing
+mid-animation, the tail restore against a rebuild. A correction that never touches the scroll
+position cannot have that class of bug.
+
+Two things to keep honest:
+
+- **The before-estimate must not be revised under a scroll.** It feeds the container's height, so
+  changing it changes where the bottom is. Revise on quiet, as the current re-base gate does, or
+  accept a thumb that is approximate. This is the one place the old problem could return.
+- **`scrollPastEnd` stops being a special case.** Pinned to the tail means the parent's bottom sits at
+  the container's bottom less whatever is reserved — an offset, like every other position. The flag
+  that could not be stabilised on the current model is not a flag on this one.
+
+#### 8. A row's height is a subscription, not a measurement
+
+A CodeMirror row cannot be measured before it renders — and it cannot be measured _once_, either.
+Its height changes after first paint when a font loads, when portaled widget content arrives a frame
+later, when an image decodes. Anything that treats measurement as a one-time event is wrong about
+CodeMirror specifically.
+
+This is why a block widget needs a reserved floor (`heightMode: 'min'`) rather than a fixed height:
+a fixed height pins the box and clips a disclosure open.
+
+#### 9. Rows are moved, never rebuilt
+
+Repositioning a row must not destroy what is inside it. A CodeMirror view removed from the DOM loses
+its measurement state, needs `requestMeasure()` on re-attach, and can drop focus and selection.
+
+**Portals are not the mechanism for this.** A portal's node lives wherever its host element is, so
+moving it is the same DOM move; what a portal preserves is React tree identity — state and context
+survive, which is how widget state now survives virtualization. Moving a row without rebuilding it
+is: transform-based placement, stable keys, and a pool.
+
+#### 10. Measure out of view, in context
+
+Measuring a row before it is revealed is what stops the reader seeing it settle. The hazard to
+respect is that an element measured in a different containing block, width or style context measures
+a different element — off-screen must mean _out of view_, not _out of context_.
+
+`content-visibility: auto` with `contain-intrinsic-size` is the alternative worth weighing: it defers
+rendering while the row stays in flow, which makes the context question disappear.
+
+#### 11. An invariant that cannot be observed from the DOM is not an invariant
+
+Two tests in this package passed while measuring nothing: one compared a field a later edit had
+deleted (`undefined !== undefined`), the other streamed into a feed too short to scroll. Both were
+green for weeks of work and cited as evidence.
+
+So: every invariant is a property readable from the DOM, and every test carries a known mutation that
+breaks it. A test is not trusted because it is green; it is trusted because it has been seen to fail.
+
+### What follows
+
+#### What dies
+
+| Today                                      | Why it exists                                      | After                                  |
+| ------------------------------------------ | -------------------------------------------------- | -------------------------------------- |
+| `resizeItem(0, average)` + the rebase gate | The total is a prefix sum and drifts               | gone (§5)                              |
+| The rebase restore + `pendingRebase`       | Repairs the damage the rebase does                 | gone                                   |
+| `initialOffset: count * nominalSize`       | Guesses where the tail is before anything measured | gone (§4)                              |
+| `trailing` / `scrollPastEnd` special cases | The element's maximum stops meaning the last row   | falls out of anchor-relative placement |
+| `ScrollFollower`'s tail-chasing            | Two parties anchoring one end                      | one anchor, held continuously          |
+| `scrollTop` writes in the correction path  | Corrections and the reader share one channel       | the parent's offset moves instead (§7) |
+| Per-row `transform: translateY(start)`     | Rows are placed individually                       | rows flow; the window is placed (§6)   |
+
+#### The order
+
+1. **Anchor as a message id, with the invariant test first.** `baseline/anchor`: the anchor is
+   mounted, and survives a prepend, a truncate and a filter. This is testable against the _current_
+   engine and is worth having either way.
+2. **A headless placement module**, no DOM: given an anchor, its offset, a measurement store and a
+   viewport height, produce the mounted window and **the parent's** offset — not each row's position,
+   which §6 hands to the browser. Its hard case is the prepend of §7, and that is what its unit tests
+   should be about. Pure, so it is unit-tested
+   like `virtualizer.test.ts` — but this time against the code that actually runs (that test imported
+   a version production never used, so its seven conclusions were about something else).
+3. **Swap the placement behind `MessageList.Viewport`.** The baselines are the acceptance suite and
+   do not change: fill, tail, navigation, streaming, widget-state, mount, construction. A regression
+   shows up as a specific number moving.
+4. **Delete the rebase and the trailing special cases** once the baselines hold without them.
+5. **Pooling and `content-visibility`** last, as optimizations with `baseline/mount` as the judge —
+   not before, because the current numbers say construction is not the bottleneck.
+
+`baseline/widget-state` carries the target for §6: it counts the row re-placements one disclosure
+costs and holds them under a ceiling of 260 (177 today). The flow change should take that to
+approximately zero, and the test is where it says so.
+
+#### What this is not
+
+Not a rewrite of the whole package. `MessageList.Root`'s API, the chrome seam, the renderers, the
+selection group, the widget-state store and the six baselines all survive; the change is confined to
+how a row's position is computed. If step 2's module cannot make the baselines pass, the swap is
+one file to revert.
+
+#### The evidence that this is the right direction
+
+A half-measure was tried and measured: adopting the virtualizer's own end-anchoring (`anchorTo:
+'end'`) while keeping the existing follow took `baseline/fill` from 1 failure to 4 and `baseline/tail`
+from 0 to 4, because two parties were anchoring the same end. That is not an argument against
+anchor-relative placement — it is an argument that there must be exactly one anchor, owned in one
+place, which is what §3 and §5 say.
 
 ## Shape
 
