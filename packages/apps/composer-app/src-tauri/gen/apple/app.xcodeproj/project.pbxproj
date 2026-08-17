@@ -40,6 +40,8 @@
 		426A6AA3A324524105DF8699 /* server.rs */ = {isa = PBXFileReference; path = server.rs; sourceTree = "<group>"; };
 		682535EEFE1DA20BE07B123C /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		81E326B61ED92E1D1EECF952 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		825DF9A2E3A1FAE194238F42 /* xattr_cmd.rs */ = {isa = PBXFileReference; path = xattr_cmd.rs; sourceTree = "<group>"; };
+		86742E13D1D5A792B4B27430 /* asset_cache.rs */ = {isa = PBXFileReference; path = asset_cache.rs; sourceTree = "<group>"; };
 		8C764003772D249B5F60A148 /* config.rs */ = {isa = PBXFileReference; path = config.rs; sourceTree = "<group>"; };
 		9FACFFCB6E3743955F72464C /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		AF1DE57E7D9CF13BB2E0E038 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -148,10 +150,12 @@
 		855775165ACE55D883F89EB3 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				86742E13D1D5A792B4B27430 /* asset_cache.rs */,
 				17B52554D60D361AFE791C3E /* lib.rs */,
 				1631E4CFBB715FFDBF919C8C /* main.rs */,
 				F1114037344C4CD1ED0EA50F /* menubar.rs */,
 				33208EB49CA0E3DDDF73D0C4 /* window_state.rs */,
+				825DF9A2E3A1FAE194238F42 /* xattr_cmd.rs */,
 				15830A2FDD2F009F73C9F802 /* oauth */,
 				57A3B3AFAA9D9EC94907DB1F /* spotlight */,
 			);
@@ -200,7 +204,7 @@
 			path = app;
 			sourceTree = "<group>";
 		};
-		"TEMP_28A49CEA-F183-4A9A-BC7F-1B0374CA9436" /* x86_64 */ = {
+		"TEMP_47395E12-551A-42F9-86BE-768DDF5BB4D5" /* x86_64 */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -245,7 +249,6 @@
 				};
 			};
 			buildConfigurationList = B302E784349268C93E6F0A36 /* Build configuration list for PBXProject "app" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -255,6 +258,7 @@
 			mainGroup = 87648061424F20D5D4871E9E;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
+			productRefGroup = EE72B6AC647386A11F795E44 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
