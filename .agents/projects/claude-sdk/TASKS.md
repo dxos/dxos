@@ -247,8 +247,15 @@ failed in-suite at 60s). Captures are now keyed per story.
 - [ ] `Projection` fidelity: `model` came back `undefined` on the live run
       because `soleModel` only reports when `modelUsage` has exactly one key.
       Needs a real `modelUsage` payload inspected.
-- [ ] Standalone managed sidecar process for Composer proper, following the
-      `Provider.builtIn` lifecycle.
+- [ ] Standalone managed sidecar process for Composer proper. **The host already
+      exists** (tracked by burdon 2026-08-16): `composer-app/src-tauri` is a
+      Tauri native app that bundles a local model runtime as a Tauri sidecar —
+      `tauri.conf.json` declares `externalBin: ["sidecar/ollama"]` plus its
+      Metal framework, fetched by `scripts/fetch-ollama.mjs`. So production
+      process supervision is a solved problem in-tree: the Claude SDK host
+      becomes a second Tauri sidecar (or a Rust-spawned node process) rather
+      than a new `Provider.builtIn`-style manager, and the wire protocol,
+      client, and producer carry over unchanged since they already speak HTTP.
 - [ ] Permission surface (M3), designed from collected `permission_denials`.
 
 ## Notes
