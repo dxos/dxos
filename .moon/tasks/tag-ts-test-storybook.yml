@@ -9,7 +9,10 @@ tasks:
       - vite-plugin-icons:build
       - vite-plugin-import-source:build
       - vite-plugin-log:build
-      - ^:build
+      # Narrowed like `:test` — the storybook project resolves `@dxos/*` to source too. See
+      # `source-deps` in `.moon/tasks/all.yml`.
+      - target: ^:source-deps
+        cacheStrategy: hash
     inputs:
       - '@group(sources)'
       - /tools/storybook-react/.storybook/main.ts
