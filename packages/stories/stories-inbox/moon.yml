@@ -6,3 +6,10 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
+tasks:
+  test-storybook:
+    deps:
+      # `.storybook/main.mts` imports `fixturePath` from `@dxos/fixtures` to serve corpora to browser
+      # stories. Storybook's config is bundled in Node without the `source` condition, so that
+      # resolves to dist and the tool has to be built before the run starts.
+      - fixtures:build

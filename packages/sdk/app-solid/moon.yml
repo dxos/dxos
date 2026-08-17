@@ -7,6 +7,12 @@ tags:
 tasks:
   # TODO(wittjosiah): Get working with vitest.base.config.ts.
   test:
+    deps:
+      # The only `ts-test` project whose suites resolve `@dxos/*` to dist: `vitest.config.ts` takes
+      # precedence over `vite.config.ts`, and this one is standalone, so it never picks up the base
+      # config's `PluginImportSource`. Until the TODO above lands it needs the whole upstream graph
+      # built, not the `^:source-deps` subset the tag contributes.
+      - ^:build
     options:
       mergeOutputs: replace
     outputs: []

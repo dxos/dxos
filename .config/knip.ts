@@ -495,6 +495,8 @@ const config: KnipConfig = {
     'tailwindcss',
     // Provided by @storybook/test-runner, which the storybook harness installs on demand.
     'test-storybook',
+    // moon's built-in sentinel for a task that only aggregates deps (`source-deps`), not a binary.
+    'noop',
   ],
   ignoreDependencies: [
     //
