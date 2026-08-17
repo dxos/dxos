@@ -3,10 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
 import { IconButton, Toolbar } from '@dxos/react-ui';
+import { Minimap, type MinimapMarker } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -95,6 +96,20 @@ const Harness = ({
 
   const reserve = scrollPastEnd ? Math.max(0, available - extent(count - 1)) : 0;
 
+  // The product minimap, in **index** space: a tick per marker, and the mounted window as the
+  // visible range. Beside `WindowMap`, which is the same list in **content** space — the pair is the
+  // point, since an index-space rail cannot show a layout that has gone wrong and a content-space
+  // one cannot show which message you are near.
+  const markers = useMemo<MinimapMarker[]>(
+    () =>
+      Array.from({ length: Math.ceil(count / 10) }, (_, step) => ({
+        id: `marker-${step * 10}`,
+        title: `#${step * 10}`,
+        range: { from: step * 10, to: step * 10 + 10 },
+      })),
+    [count],
+  );
+
   return (
     <div className='flex flex-col h-full'>
       <Toolbar.Root>
@@ -130,6 +145,16 @@ const Harness = ({
       </Toolbar.Root>
 
       <div ref={bodyRef} className='grow min-h-0 flex gap-2'>
+        <div className='h-full grid grid-rows-[1fr_3fr_1fr]'>
+          <div className='flex items-center row-start-2'>
+            <Minimap
+              markers={markers}
+              visibleRange={state ? { from: state.visible.first, to: state.visible.last } : undefined}
+              onSelect={(marker) => controller.current?.scrollToIndex(marker.range.from)}
+            />
+          </div>
+        </div>
+
         <Window
           classNames='grow min-h-0'
           count={count}
@@ -468,24 +493,26 @@ export const PastEnd: Story = {
   play: async ({ canvasElement }) => {
     await settle();
     const { scroller } = probe(canvasElement);
-    // Twice: the reserve is computed from the viewport the window publishes, so it exists one render
-    // after the first measurement — and the first scroll-to-end therefore lands before the sizer has
-    // grown to include it.
+
+    // "Bottom" means the last message resting on the bottom of the screen, not the end of the
+    // scrollable range: reserved space is somewhere the reader may go, not somewhere to be sent.
+    // Parking the last row at the top of an empty screen is exactly what the old design did.
+    (canvasElement.querySelector('[data-testid="window.bottom"]') as HTMLElement).click();
+    await settle();
+    const atBottom = canvasElement.querySelector<HTMLElement>('[data-index="199"]');
+    const rests =
+      !!atBottom && Math.abs(atBottom.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom) <= 2;
+
+    // And the reserve is what lets the reader take that same row to the top. Scrolled twice: the
+    // reserve is measured from the container, so it exists one render after the first layout.
     scroller.scrollTop = scroller.scrollHeight;
     await settle();
     scroller.scrollTop = scroller.scrollHeight;
     await settle();
+    const atEnd = canvasElement.querySelector<HTMLElement>('[data-index="199"]');
+    const reachesTheTop =
+      !!atEnd && Math.abs(atEnd.getBoundingClientRect().top - scroller.getBoundingClientRect().top) <= 2;
 
-    const last = canvasElement.querySelector<HTMLElement>('[data-index="199"]');
-    if (!last) {
-      throw new Error('the last row should be mounted at the end of the reserved space');
-    }
-
-    const origin = scroller.getBoundingClientRect();
-    // Reserved space means the last row can sit at the top rather than resting on the bottom.
-    await expect({ mounted: !!last, atTop: Math.abs(last.getBoundingClientRect().top - origin.top) <= 2 }).toEqual({
-      mounted: true,
-      atTop: true,
-    });
+    await expect({ rests, reachesTheTop }).toEqual({ rests: true, reachesTheTop: true });
   },
 };

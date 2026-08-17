@@ -37,11 +37,7 @@ export const WindowMap = ({ classNames, state, onSelect }: WindowMapProps) => {
 
   return (
     <div
-      className={mx(
-        'relative w-4 h-full rounded-sm bg-input-surface overflow-hidden',
-        onSelect && 'cursor-pointer',
-        classNames,
-      )}
+      className={mx('relative w-4 h-full bg-input-surface overflow-hidden', onSelect && 'cursor-pointer', classNames)}
       title={total ? `${Math.round(total)}px over ${state?.count} rows` : 'empty'}
       data-testid='window.map'
       onClick={
