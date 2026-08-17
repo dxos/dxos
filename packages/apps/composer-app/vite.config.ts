@@ -5,7 +5,6 @@
 import react from '@vitejs/plugin-react';
 import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
@@ -25,10 +24,10 @@ import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
-import { createConfig as createTestConfig } from '../../../vitest.base.config';
-import { bootChunking } from './src/vite/boot-chunking';
-import { optimizeDepsInclude } from './src/vite/optimize-deps';
-import { traceBootLeak } from './src/vite/trace-boot-leak';
+import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
+import { bootChunking } from './src/vite/boot-chunking.ts';
+import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
+import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
@@ -42,7 +41,7 @@ const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
 
-const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+const dirname = import.meta.dirname;
 
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
 const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
@@ -373,8 +372,8 @@ export default defineConfig((env) => ({
     {
       name: 'dx-agent-claude',
       apply: 'serve',
-      // Imported dynamically: vite bundles this config's static imports as CJS `require`, and
-      // `@dxos/agent-claude` is ESM-only.
+      // Imported dynamically so only `serve` pays for it: a static import would load the agent SDK
+      // whenever this config is evaluated, including every `vite build` and `vite preview`.
       configureServer: async (server) => {
         const { Middleware } = await import('@dxos/agent-claude');
         server.middlewares.use(Middleware.make({ cwd: process.env.DX_AGENT_CWD ?? rootDir }));

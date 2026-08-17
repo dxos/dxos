@@ -80,6 +80,28 @@ Examples of ways to start up different workloads in dev mode:
 Use `--quiet` to suppress progress output (recommended for LLMs to keep context fresh).
 Use `--on-failure=continue` to continue running other unrelated tasks even if some fail.
 
+### Vite's native config loader
+
+`composer-app` loads `vite.config.ts` with `--configLoader native`, so node imports the config
+directly (type stripping only) instead of Vite pre-bundling it with Rolldown first. Vite plans to
+make this the default. Every `vite` invocation for the app passes the flag — `serve`, `bundle` and
+`preview` in `moon.yml`, the Playwright `webServer` commands, and Tauri's `beforeDevCommand` — so
+dev and production evaluate the config identically.
+
+A config loaded this way is an ordinary ESM module in node, which constrains it and everything it
+imports (here: `vite.base.config.ts`, `vitest.base.config.ts`, `vitest.tags.ts` and
+`src/vite/*.ts`):
+
+- relative imports carry their `.ts` extension, and directory-index imports name the index file;
+- `import.meta.dirname` / `import.meta.filename` rather than `__dirname` / `__filename`;
+- type-only named imports are marked `type`, since nothing erases them for node;
+- JSON imports need `with { type: 'json' }`;
+- the root `package.json` declares `"type": "module"` so root-level `.ts` config files are not
+  parsed as CommonJS and reparsed. `.ncurc.cjs` keeps its extension for that reason.
+
+Packages still on the default `bundle` loader get these same rules as a warning at config-load
+time, listing every offending line — Vite emits it whenever a config would not survive the switch.
+
 ## Test commands
 
 Examples of ways to run different test workloads:
