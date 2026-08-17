@@ -31,6 +31,17 @@ type StoryProps = {
   /** Outline every row and label its extent, so what is being measured is visible. */
   debug?: boolean;
   /**
+   * Controls a story needs to drive the list, rendered in the toolbar when supplied.
+   *
+   * Buttons rather than a global the play function calls: a story is rendered more than once, so a
+   * `window.__grow` captured in an effect goes stale and the press lands on a previous mount's
+   * state — which presented as `Prepend` and `Grow` passing or failing depending on what else ran.
+   * A button is the same thing the reader has, and there is only ever one of it.
+   */
+  onAppend?: () => void;
+  onPrepend?: () => void;
+  onGrow?: () => void;
+  /**
    * Reserve a viewport's worth of space after the last row, so it can be read at the top.
    *
    * Computed **here**, from what the window publishes, and handed back as a number — which is the
@@ -56,6 +67,9 @@ const Harness = ({
   declared,
   debug,
   scrollPastEnd,
+  onAppend,
+  onPrepend,
+  onGrow,
 }: StoryProps) => {
   const [edges, setEdges] = useState<EdgeDrift[]>([]);
   const [mismatches, setMismatches] = useState<string[]>([]);
@@ -142,6 +156,34 @@ const Harness = ({
           data-testid='window.bottom'
           onClick={() => controller.current?.scrollToIndex(count - 1, 'end')}
         />
+        {(onAppend || onPrepend || onGrow) && <Toolbar.Separator />}
+        {onPrepend && (
+          <IconButton
+            icon='ph--arrow-u-left-up--regular'
+            iconOnly
+            label='Prepend'
+            data-testid='window.prepend'
+            onClick={onPrepend}
+          />
+        )}
+        {onAppend && (
+          <IconButton
+            icon='ph--arrow-u-right-down--regular'
+            iconOnly
+            label='Append'
+            data-testid='window.append'
+            onClick={onAppend}
+          />
+        )}
+        {onGrow && (
+          <IconButton
+            icon='ph--arrows-out-line-vertical--regular'
+            iconOnly
+            label='Grow'
+            data-testid='window.grow'
+            onClick={onGrow}
+          />
+        )}
       </Toolbar.Root>
 
       <div ref={bodyRef} className='grow min-h-0 flex gap-2'>
@@ -151,6 +193,7 @@ const Harness = ({
               markers={markers}
               visibleRange={state ? { from: state.visible.first, to: state.visible.last } : undefined}
               onSelect={(marker) => controller.current?.scrollToIndex(marker.range.from)}
+              onNavigate={step}
             />
           </div>
         </div>
@@ -290,16 +333,13 @@ export const Static: Story = {
 export const Append: Story = {
   render: (args) => {
     const [count, setCount] = useState(200);
-    useEffect(() => {
-      (window as any).__append = () => setCount((value) => value + 20);
-    }, []);
-    return <Harness {...args} count={count} />;
+    return <Harness {...args} count={count} onAppend={() => setCount((value) => value + 20)} />;
   },
   play: async ({ canvasElement }) => {
     await settle();
     const before = probe(canvasElement);
 
-    (window as any).__append();
+    (canvasElement.querySelector('[data-testid="window.append"]') as HTMLElement).click();
     await settle();
 
     const after = probe(canvasElement);
@@ -319,10 +359,14 @@ export const Append: Story = {
 export const Prepend: Story = {
   render: (args) => {
     const [before, setBefore] = useState(0);
-    useEffect(() => {
-      (window as any).__prepend = () => setBefore((value) => value + 20);
-    }, []);
-    return <Harness {...args} count={200 + before} extent={(index) => EXTENT(index - before)} />;
+    return (
+      <Harness
+        {...args}
+        count={200 + before}
+        extent={(index) => EXTENT(index - before)}
+        onPrepend={() => setBefore((value) => value + 20)}
+      />
+    );
   },
   play: async ({ canvasElement }) => {
     await settle();
@@ -331,7 +375,7 @@ export const Prepend: Story = {
     await settle();
     const before = probe(canvasElement);
 
-    (window as any).__prepend();
+    (canvasElement.querySelector('[data-testid="window.prepend"]') as HTMLElement).click();
     await settle();
 
     // Compared by the row's own identity, shifted by the insert: index 40 became index 60.
@@ -354,25 +398,43 @@ export const Prepend: Story = {
 export const Grow: Story = {
   render: (args) => {
     const [grown, setGrown] = useState(false);
-    useEffect(() => {
-      (window as any).__grow = () => setGrown(true);
-    }, []);
     return (
-      <Harness {...args} count={200} exact={false} extent={(index) => (grown && index === 30 ? 400 : EXTENT(index))} />
+      <Harness
+        {...args}
+        count={200}
+        exact={false}
+        extent={(index) => (grown && index === 30 ? 400 : EXTENT(index))}
+        onGrow={() => setGrown(true)}
+      />
     );
   },
   play: async ({ canvasElement }) => {
     await settle();
     const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="window.scroller"]')!;
+    // Asserted, not assumed: the story names row 30, and a scroll that did not arrive leaves it
+    // unmounted — which reads as "the grow did nothing" and is really "the test looked elsewhere".
     scroller.scrollTop = 2_000;
     await settle();
     const before = probe(canvasElement);
+    if (!before.rows.has(30)) {
+      throw new Error(`row 30 should be mounted at this scroll; mounted ${[...before.rows.keys()].join(',')}`);
+    }
 
-    (window as any).__grow();
+    (canvasElement.querySelector('[data-testid="window.grow"]') as HTMLElement).click();
     await settle();
 
     const after = probe(canvasElement);
     const displaced = moved(before, after);
+    // eslint-disable-next-line no-console
+    console.log(
+      '[grow]',
+      JSON.stringify({
+        button: !!canvasElement.querySelector('[data-testid="window.grow"]'),
+        rows: [...before.rows.keys()].slice(0, 3),
+        has30: before.rows.has(30),
+        displaced,
+      }),
+    );
     await expect({
       before: displaced.filter((index) => index < 30),
       after: displaced.some((index) => index > 30),
@@ -469,20 +531,41 @@ export const Chrome: Story = {
 
     click('window.top');
     await settle();
+    // Read before the keyboard step below, which moves it again.
+    const backToTop = read('window.index');
+
+    const tick = canvasElement.querySelector<HTMLElement>('[role="navigation"] button')!;
+    tick.focus();
+    const before = read('window.index');
+    tick.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+    await settle();
+    const outlineStepped = read('window.index') !== before;
 
     await expect({
       filled,
       moved: next !== start,
       atEnd,
-      backToTop: read('window.index'),
+      backToTop,
       range: /^\d+–\d+ of 200$/.test(read('window.range')),
       map: canvasElement.querySelectorAll('[data-testid="minimap.viewport"]').length,
       // The two rails flank the same list and default to the same width; a prop that is accepted and
       // ignored looks exactly like one that works until they are put side by side.
+      // Arrows from a focused tick step the document, not the rail: the rail thins its markers, so
+      // stepping ticks would jump ten items at a time.
+      outlineNavigates: outlineStepped,
       railsMatch:
         Math.round(canvasElement.querySelector('[data-testid="minimap"]')!.getBoundingClientRect().width) ===
         Math.round(canvasElement.querySelector('[role="navigation"]')!.getBoundingClientRect().width),
-    }).toEqual({ filled: true, moved: true, atEnd: true, backToTop: '0', range: true, map: 1, railsMatch: true });
+    }).toEqual({
+      filled: true,
+      moved: true,
+      atEnd: true,
+      backToTop: '0',
+      range: true,
+      map: 1,
+      outlineNavigates: true,
+      railsMatch: true,
+    });
   },
 };
 

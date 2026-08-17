@@ -54,6 +54,15 @@ export type OutlineProps = ThemedClassName<{
   /** Width of the rail, in px, which is also how far a tick extends at the peak of the wave. @default 32 (2rem) */
   width?: number;
   onSelect?: (marker: OutlineMarker, index: number) => void;
+  /**
+   * Step one item, in whatever the host counts items in.
+   *
+   * Not one tick: the rail thins its markers to what fits, so the next tick can be ten items away,
+   * and a reader pressing an arrow means "the next one" rather than "the next thing I can see". The
+   * host steps it with the same mechanism its toolbar uses, which is why this is a callback rather
+   * than something the rail decides.
+   */
+  onNavigate?: (delta: number) => void;
 }>;
 
 /**
@@ -95,16 +104,11 @@ export const Outline = ({
   tickSize = TICK_SIZE,
   width = DEFAULT_WIDTH,
   onSelect,
+  onNavigate,
 }: OutlineProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rowsRef = useRef<Array<HTMLButtonElement | null>>([]);
   const [hovered, setHovered] = useState<number | null>(null);
-  // Offset (px, from the rail top) of the hovered row's centre. A zero-height anchor is placed
-  // there and the popover centres on it, which is the only way to centre on a row without knowing
-  // the popover's height: `alignOffset` is ignored for centre alignment, so offsetting the rail
-  // itself lands the popover on the rail's middle whatever row is hovered.
-  const [anchorOffset, setAnchorOffset] = useState(0);
-
   // The rail is bounded by whatever contains it. Measured rather than assumed, because the same
   // component is used both in a sized grid cell and floating over a document, where nothing
   // constrains it and its natural height is the right one.
@@ -152,16 +156,6 @@ export const Outline = ({
     [hovered, width],
   );
 
-  const handleEnter = useCallback((index: number, row: HTMLElement) => {
-    setHovered(index);
-    const container = containerRef.current;
-    if (container) {
-      const containerRect = container.getBoundingClientRect();
-      const rowRect = row.getBoundingClientRect();
-      setAnchorOffset(rowRect.top - containerRect.top + rowRect.height / 2);
-    }
-  }, []);
-
   // Arrow keys walk the rail. The ticks are buttons, so tab reaches the rail and the arrows then
   // move within it — the roving behaviour a vertical list of controls is expected to have. The step
   // is taken from the focused row rather than `hovered`, which the pointer leaving the rail clears
@@ -170,8 +164,25 @@ export const Outline = ({
   const handleKeyDown = useCallback(
     (event: ReactKeyboardEvent<HTMLDivElement>) => {
       const delta = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+      if (!delta) {
+        return;
+      }
+
+      // Navigation wins where the host offers it: a focused tick is a place in the document, so the
+      // arrows move through the document rather than through the rail's own ticks — which are
+      // thinned, and so are not one-to-one with anything the reader is counting.
+      if (onNavigate) {
+        event.preventDefault();
+        onNavigate(delta);
+        return;
+      }
+
+      // Otherwise they walk the rail, the roving behaviour a vertical list of controls is expected
+      // to have. Taken from the focused row rather than `hovered`, which the pointer leaving clears
+      // while the keyboard is still on a tick; and clamped to `rows`, since thinning can leave the
+      // ref array longer than the rail it now renders.
       const current = rowsRef.current.findIndex((element) => element === event.target);
-      if (!delta || current < 0) {
+      if (current < 0) {
         return;
       }
 
@@ -179,8 +190,25 @@ export const Outline = ({
       event.preventDefault();
       rowsRef.current[next]?.focus();
     },
-    [rows.length],
+    [rows.length, onNavigate],
   );
+
+  // While the rail has focus, the shown tick follows where the reader has got to.
+  //
+  // Navigation steps items and the rail shows ticks, and the two are not one-to-one — so after an
+  // arrow press the popover would otherwise describe the tick the pointer last touched rather than
+  // the place the reader is now. Derived from the visible range, so it tracks the list however the
+  // reader moved: the arrows, the toolbar, or the scrollbar.
+  const [focused, setFocused] = useState(false);
+  const visibleFrom = visibleRange?.from;
+  useEffect(() => {
+    if (!focused || visibleFrom == null) {
+      return;
+    }
+
+    const index = rows.findIndex((row) => visibleFrom < row.span.to);
+    setHovered(index < 0 ? rows.length - 1 : index);
+  }, [focused, visibleFrom, rows]);
 
   const hoveredMarker = hovered == null ? undefined : rows[hovered]?.marker;
 
@@ -193,7 +221,14 @@ export const Outline = ({
           width: `${width}px`,
           height: bounded ? '100%' : `${natural}px`,
         }}
-        onPointerLeave={() => setHovered(null)}
+        onPointerLeave={() => !focused && setHovered(null)}
+        onFocusCapture={() => setFocused(true)}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setFocused(false);
+            setHovered(null);
+          }
+        }}
         onKeyDown={handleKeyDown}
         ref={containerRef}
       >
@@ -204,7 +239,12 @@ export const Outline = ({
         {rows.map((row, index) => {
           const marker = row.marker;
           const active = isActive(row);
-          return (
+          // The hovered row *is* the anchor, rather than a floating point kept in sync with it: a
+          // popover measures its anchor when it opens, so an anchor element that merely moves leaves
+          // the popover behind — which showed as the card sitting several ticks below the one under
+          // the pointer. Anchoring to the row makes the element identity change with the hover,
+          // which is what makes it re-measure.
+          const tick = (
             <button
               key={marker.id}
               type='button'
@@ -221,8 +261,8 @@ export const Outline = ({
               ref={(element) => {
                 rowsRef.current[index] = element;
               }}
-              onPointerEnter={(event) => handleEnter(index, event.currentTarget)}
-              onFocus={(event) => handleEnter(index, event.currentTarget)}
+              onPointerEnter={() => setHovered(index)}
+              onFocus={() => setHovered(index)}
               onClick={() => onSelect?.(marker, row.index)}
             >
               <div
@@ -235,16 +275,23 @@ export const Outline = ({
               />
             </button>
           );
-        })}
 
-        {/* Zero-height anchor at the hovered row's centre: the popover centres on a point, so it
-            needs no knowledge of its own height to line up with the tick. */}
-        <Popover.Anchor asChild>
-          <div className='absolute left-0' style={{ top: anchorOffset, width, height: 0 }} />
-        </Popover.Anchor>
+          return index === hovered ? (
+            <Popover.Anchor asChild key={marker.id}>
+              {tick}
+            </Popover.Anchor>
+          ) : (
+            tick
+          );
+        })}
       </div>
       {hoveredMarker && (
         <Popover.Content
+          // Keyed to the tick: the popover measures its anchor when it mounts, and moving the anchor
+          // to a different element does not make it measure again — the card stayed put while the
+          // pointer walked the rail, drifting further from the tick with every step. Remounting per
+          // tick is what makes it re-measure.
+          key={hoveredMarker.id}
           side='right'
           align='center'
           // Pinned to the anchor point rather than flipped into view, so it tracks the tick.
