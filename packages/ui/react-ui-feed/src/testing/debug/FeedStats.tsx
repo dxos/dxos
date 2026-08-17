@@ -13,6 +13,8 @@ import { type Stat, Stats, warnAbove } from './Stats';
 
 /** What the feed currently holds, as opposed to how well it is holding it. */
 const FEED_STATS: Stat[] = [
+  { id: 'range', label: 'range' },
+  { id: 'index', label: 'index' },
   { id: 'rows', label: 'rows' },
   { id: 'widgets', label: 'widgets' },
   { id: 'selected', label: 'selected' },
@@ -29,7 +31,7 @@ const FEED_STATS: Stat[] = [
  * zero on a still feed, so each is coloured the moment it is not.
  */
 const FRAME_STATS: Stat[] = [
-  { id: 'fps', label: 'fps', classNames: (value) => value > 0 && value < 50 && 'text-warning-text' },
+  { id: 'fps', label: 'fps', classNames: (value) => Number(value) > 0 && Number(value) < 50 && 'text-warning-text' },
   { id: 'p95', label: 'p95', unit: 'ms' },
   { id: 'worst', label: 'worst', unit: 'ms' },
   { id: 'hitches', label: 'hitches', classNames: warnAbove },
@@ -65,6 +67,8 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
 
   const values = useMemo(
     () => ({
+      range: range ? `${range.startIndex}–${range.endIndex}` : '—',
+      index: `${currentIndex} / ${count}`,
       rows: mountedRows,
       widgets: mountedWidgets,
       selected,
@@ -77,7 +81,7 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
       shifts,
       breaks,
     }),
-    [mountedRows, mountedWidgets, selected, hits, meter, jumps.count, shifts, breaks],
+    [range, currentIndex, count, mountedRows, mountedWidgets, selected, hits, meter, jumps.count, shifts, breaks],
   );
 
   const label = `${meter.label} — p50 ${meter.p50} · ${meter.frames} frames · ${(meter.duration / 1000).toFixed(1)}s`;
@@ -93,12 +97,7 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
       data-testid='feed.stats'
     >
       <div className='flex items-center gap-2 min-w-0'>
-        <span className='tabular-nums truncate'>{range ? `${range.startIndex}–${range.endIndex}` : '—'}</span>
-        <span className='tabular-nums truncate'>
-          {currentIndex} / {count}
-        </span>
-        <span className='grow' />
-        <span className='truncate' data-testid='feed.stream.state'>
+        <span className='grow truncate' data-testid='feed.stream.state'>
           {streaming ? 'streaming…' : 'idle'}
         </span>
         <IconButton

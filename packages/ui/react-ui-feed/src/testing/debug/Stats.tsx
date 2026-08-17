@@ -7,17 +7,20 @@ import React, { Fragment } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+/** Readouts are mostly counts, but a range (`463–499`) is one reading and reads as one cell. */
+export type StatValue = number | string;
+
 export type Stat = {
   id: string;
   label: string;
   unit?: string;
   /** Emphasis for a value that means something is wrong; called with the current value. */
-  classNames?: (value: number) => string | false | undefined;
+  classNames?: (value: StatValue) => string | false | undefined;
 };
 
 export type StatsProps = ThemedClassName<{
   stats: Stat[];
-  values: Record<string, number>;
+  values: Record<string, StatValue>;
   /** Readouts side by side, for a panel that is wider than it is tall. @default 1 */
   columns?: number;
 }>;
@@ -32,7 +35,7 @@ export type StatsProps = ThemedClassName<{
 export const Stats = ({ stats, values, columns = 1, classNames }: StatsProps) => (
   <div
     className={mx('grid gap-x-2 tabular-nums whitespace-nowrap', classNames)}
-    style={{ gridTemplateColumns: `repeat(${columns}, 1fr 3.5rem 1.5rem)` }}
+    style={{ gridTemplateColumns: `repeat(${columns}, 1fr 5rem 1.5rem)` }}
   >
     {stats.map(({ id, label, unit, classNames }) => (
       <Fragment key={id}>
@@ -47,4 +50,4 @@ export const Stats = ({ stats, values, columns = 1, classNames }: StatsProps) =>
 );
 
 /** Anything above zero is a defect, not a reading. */
-export const warnAbove = (value: number) => value > 0 && 'text-warning-text';
+export const warnAbove = (value: StatValue) => Number(value) > 0 && 'text-warning-text';
