@@ -79,7 +79,7 @@ const Harness = ({ count = 500, axis = 'block', exact = true, extent = EXTENT, d
 const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-feed/placement',
   render: Harness,
-  decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem] h-[30rem]' }), withTheme()],
+  decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },
   args: { count: 500 },
 };
