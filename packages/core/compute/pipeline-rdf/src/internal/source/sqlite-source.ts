@@ -66,6 +66,7 @@ export const makeSqliteSource = (sql: SqlClient.SqlClient) => {
     if (bound(g)) {
       filters.push(sql`g = ${g.termType === 'DefaultGraph' ? '' : g.value}`);
     }
+    // TODO(dmaretskyi): Consider using sql`...`.stream to not materialize all rows in memory.
     const query = filters.length
       ? sql<Row>`SELECT s, p, o, oType, g FROM triples WHERE ${sql.and(filters)}`
       : sql<Row>`SELECT s, p, o, oType, g FROM triples`;
