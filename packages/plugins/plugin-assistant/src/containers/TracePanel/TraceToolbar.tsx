@@ -21,12 +21,7 @@ export type TraceToolbarProps = {
   onSelectedChange: (environments: ProcessEnvironment[]) => void;
 };
 
-/**
- * Trace panel toolbar.
- *
- * The trigger is a bare funnel: the panel opens already filtered, and the selection that produced
- * it is one click away rather than spelled out across the toolbar.
- */
+/** The filter collapses to a funnel trigger, so the panel's own rows keep the width. */
 export const TraceToolbar = ({ selected, onSelectedChange }: TraceToolbarProps) => {
   const handleToggle = useCallback(
     (environment: ProcessEnvironment) => onSelectedChange(toggleProcessEnvironment(selected, environment)),

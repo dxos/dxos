@@ -161,9 +161,7 @@ export interface Params {
 /**
  * What the process is running on behalf of, fixed at spawn and inherited by child processes.
  *
- * Determines which services the runtime can provide (a space-scoped database, a conversation's
- * harness), and — since it is the only structural context a process carries — is also what
- * consumers group a process tree by.
+ * Determines which services the runtime can provide (a space-scoped database, a conversation's harness).
  */
 export interface Environment {
   /** Space the process is scoped to; absent for app-level work. */

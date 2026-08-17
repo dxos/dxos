@@ -22,9 +22,6 @@ import {
 const SPACE_ID = SpaceId.random();
 const CONVERSATION = URI.make('eid:BA25QRC2FWNUGWENQZ26MK5W6C64ZQPTC:01J00000000000000000000000');
 
-const makeInfo = (name: string, environment: Process.Environment): Process.Info =>
-  makeProcess({ pid: Process.ID.make(name), name, state: Process.State.RUNNING, environment });
-
 describe('processEnvironment', () => {
   test('an unscoped process is app-level', ({ expect }) => {
     expect(processEnvironment(makeInfo('layout', {}))).toBe(ProcessEnvironment.App);
@@ -98,3 +95,6 @@ describe('parseProcessEnvironments', () => {
     ]);
   });
 });
+
+const makeInfo = (name: string, environment: Process.Environment): Process.Info =>
+  makeProcess({ pid: Process.ID.make(name), name, state: Process.State.RUNNING, environment });

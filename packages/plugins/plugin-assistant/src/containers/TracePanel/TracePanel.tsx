@@ -248,7 +248,6 @@ const getExecutionGraph = (
 TracePanel.displayName = 'TracePanel';
 
 type ProcessTreeContainerProps = Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'> & {
-  /** Process environments to show. See `./trace-filter`. */
   environments: readonly ProcessEnvironment[];
 };
 
