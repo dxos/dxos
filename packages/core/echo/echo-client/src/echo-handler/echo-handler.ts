@@ -242,10 +242,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     const fullPath = [getNamespace(target), ...target[symbolPath], prop];
-    const validatedValue = this._validateValue(target, [...target[symbolPath], prop], value);
-    if (validatedValue === undefined) {
+    // `undefined` clears the property, so the key is deleted rather than stored. Asserting it against
+    // the property schema first would reject the clear: an optional property's schema describes the
+    // value the key holds when present, not its absence.
+    if (value === undefined) {
+      this._assertWritablePath([...target[symbolPath], prop]);
       target[symbolInternals].delete(fullPath);
     } else {
+      const validatedValue = this._validateValue(target, [...target[symbolPath], prop], value);
       const withLinks = this._handleLinksAssignment(target, validatedValue);
       target[symbolInternals].setDecoded(fullPath, withLinks);
     }
@@ -346,7 +350,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return Reflect.has(target, prop);
   }
 
-  private _validateValue(target: ProxyTarget, path: Doc.KeyPath, value: any): any {
+  /** Path-level write guards, shared by assignment and by clearing a property. */
+  private _assertWritablePath(path: Doc.KeyPath): void {
     invariant(path.length > 0);
     if (typeof path.at(-1) === 'symbol') {
       throw new Error('Invalid path');
@@ -354,6 +359,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (path.length === 1 && path[0] === 'id') {
       throw new Error('Object Id is readonly');
     }
+  }
+
+  private _validateValue(target: ProxyTarget, path: Doc.KeyPath, value: any): any {
+    this._assertWritablePath(path);
     throwIfCustomClass(path[path.length - 1], value);
     const rootObjectSchema = getSchema(target);
     if (rootObjectSchema == null) {
@@ -447,7 +456,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       returnValue = array.pop();
     });
 
-    return returnValue;
+    return this._decodeRemoved(target, returnValue);
   }
 
   arrayShift(target: ProxyTarget, path: Doc.KeyPath): any {
@@ -461,7 +470,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       returnValue = array.shift();
     });
 
-    return returnValue;
+    return this._decodeRemoved(target, returnValue);
   }
 
   arrayUnshift(target: ProxyTarget, path: Doc.KeyPath, ...items: any[]): number {
@@ -500,7 +509,25 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
 
     invariant(deletedElements);
-    return deletedElements;
+    return deletedElements.map((element) => this._decodeRemoved(target, element));
+  }
+
+  /**
+   * Decodes an element removed from an array so it reads — and re-inserts — like one obtained through
+   * the array's own accessors. Automerge hands back the stored encoding, whose references and strings
+   * fail the property schema, so a plain `splice` out and back in (every reorder) would destroy the
+   * element after the removal had already committed. Detached from the document, so records and nested
+   * arrays come back as plain values rather than proxies; references still resolve to `Ref`.
+   */
+  private _decodeRemoved(target: ProxyTarget, value: any): any {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    const decoded = target[symbolInternals].decode(value);
+    return deepMapValues(decoded, (value, recurse) =>
+      isEncodedReference(value) ? lookupRef(target, value) : recurse(value),
+    );
   }
 
   arraySort(target: ProxyTarget, path: Doc.KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {

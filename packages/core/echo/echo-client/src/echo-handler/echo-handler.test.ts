@@ -1140,3 +1140,139 @@ describe('Reactive Object with ECHO database', () => {
     });
   });
 });
+
+describe('array element removal', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const setup = async () => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+    const targets = [0, 1, 2].map((index) => db.add(Obj.make(TestSchema.Example, { string: `t${index}` })));
+    const owner = db.add(
+      Obj.make(TestSchema.Example, {
+        string: 'owner',
+        referenceArray: targets.map((target) => Ref.make(target)),
+        stringArray: ['a', 'b', 'c'],
+      }),
+    );
+
+    return { owner, targets };
+  };
+
+  test('splice returns refs, not the stored encoding', async ({ expect }) => {
+    const { owner, targets } = await setup();
+
+    let removed: any;
+    Obj.update(owner, (owner) => {
+      [removed] = owner.referenceArray!.splice(0, 1);
+    });
+
+    expect(Ref.isRef(removed)).toBe(true);
+    expect(removed.uri.toString()).toEqual(Ref.make(targets[0]).uri.toString());
+  });
+
+  test('a spliced-out ref can be spliced back in', async ({ expect }) => {
+    const { owner, targets } = await setup();
+
+    // The reorder every drag-and-drop consumer performs: remove, then re-insert at the new index.
+    Obj.update(owner, (owner) => {
+      const items = owner.referenceArray!;
+      const [item] = items.splice(0, 1);
+      items.splice(1, 0, item);
+    });
+
+    expect(owner.referenceArray).toHaveLength(3);
+    expect(owner.referenceArray!.every((ref) => Ref.isRef(ref))).toBe(true);
+    expect(owner.referenceArray!.map((ref) => ref.uri.toString())).toEqual(
+      [targets[1], targets[0], targets[2]].map((target) => Ref.make(target).uri.toString()),
+    );
+  });
+
+  test('a popped or shifted ref can be pushed back', async ({ expect }) => {
+    const { owner, targets } = await setup();
+
+    Obj.update(owner, (owner) => {
+      const items = owner.referenceArray!;
+      const popped = items.pop();
+      const shifted = items.shift();
+      items.push(popped!, shifted!);
+    });
+
+    expect(owner.referenceArray!.map((ref) => ref.uri.toString())).toEqual(
+      [targets[1], targets[2], targets[0]].map((target) => Ref.make(target).uri.toString()),
+    );
+  });
+
+  test('a spliced-out string can be spliced back in', async ({ expect }) => {
+    const { owner } = await setup();
+
+    Obj.update(owner, (owner) => {
+      const items = owner.stringArray!;
+      const [item] = items.splice(0, 1);
+      items.splice(1, 0, item);
+    });
+
+    expect(owner.stringArray).toEqual(['b', 'a', 'c']);
+  });
+});
+
+describe('clearing a property', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const Card = Type.makeObject(DXN.make('com.example.type.card', '0.1.0'))(
+    Schema.Struct({ title: Schema.String, stage: Schema.optional(Schema.String) }),
+  );
+
+  test('assigning undefined removes an optional property', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Card] });
+    const card = db.add(Obj.make(Card, { title: 'card', stage: 'prospect' }));
+
+    Obj.update(card, (card) => {
+      card.stage = undefined;
+    });
+
+    expect(card.stage).toBeUndefined();
+    expect('stage' in card).toBe(false);
+  });
+
+  // The stored form of a schema carries optionality in `required`, not in the property schema, so
+  // asserting the cleared value against that property rejected it — the path every kanban drag to
+  // the uncategorized column takes.
+  test('assigning undefined removes an optional property of a stored schema', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const type = await db.addType(Card);
+    const card = db.add(Obj.make(type, { title: 'card', stage: 'prospect' }) as any);
+
+    Obj.update(card, (card: any) => {
+      card.stage = undefined;
+    });
+
+    expect((card as any).stage).toBeUndefined();
+  });
+
+  test('the object id stays readonly when cleared', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+    const obj = db.add(Obj.make(TestSchema.Example, { string: 'foo' }));
+
+    expect(() =>
+      Obj.update(obj, (obj: any) => {
+        obj.id = undefined;
+      }),
+    ).toThrow(/readonly/);
+  });
+});
