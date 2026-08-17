@@ -8,15 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
-import {
-  Connection,
-  // Referenced only from JSDoc {@link}s, which the rule cannot see.
-  // eslint-disable-next-line unused-imports/no-unused-imports
-  Cursor,
-} from '@dxos/link';
-// Unused by name, but the emitted declarations reference it — dropping the import breaks
-// declaration emit (TS2742). The suppression rode the pre-subpath barrel import too.
-// eslint-disable-next-line unused-imports/no-unused-imports
+import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
@@ -45,7 +37,7 @@ export const GetGitHubRepositories = Operation.make({
 
 /**
  * Find-or-create the empty local root Project for a selected GitHub repo so a
- * {@link Cursor} can reference it as its `spec.target`. Keyed by the repo's
+ * cursor can reference it as its `spec.target`. Keyed by the repo's
  * GitHub foreign id (`remoteTarget.id`), so it is idempotent across re-selection.
  */
 export const MaterializeGitHubTarget = Operation.make({
@@ -74,7 +66,7 @@ export const SyncOptions = Schema.Struct({
 export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
 
 /**
- * Reconcile GitHub data for every repo bound to a connection (one {@link Cursor} per repo).
+ * Reconcile GitHub data for every repo bound to a connection (one cursor per repo).
  *
  * Pull-then-push per bound repo: auto-upsert its owning org + members,
  * three-way merge the repo as a Project and its issues/PRs as Tasks (respecting

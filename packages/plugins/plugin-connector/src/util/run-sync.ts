@@ -17,7 +17,12 @@ import { ConnectorSpec } from '#types';
 
 import { ConnectionSyncError, SyncRoutineMissingError } from '../errors';
 import { SyncTemplateId } from '../templates/sync';
-import { findSyncTriggerForConnection, fireSyncTrigger, syncTriggerMonitorLayer } from './sync-trigger';
+import {
+  findSyncTriggerForConnection,
+  fireSyncTrigger,
+  syncTriggerMonitorLayer,
+  syncTriggerOfRoutine,
+} from './sync-trigger';
 
 /**
  * Runs a connection's sync, by whichever path its connector declares.
@@ -115,11 +120,11 @@ export const syncConnectionOrOfferRoutine = ({
             typename: Type.getTypename(Routine.Routine),
             initialFormValues: { templateId: SyncTemplateId, subject: subject ?? connection },
             navigable: false,
-            onCreateObject: () => {
+            onCreateObject: (created: Obj.Unknown) => {
               // The dialog's save callback is a plain function; re-enter the Effect world with the
               // services captured above.
               Effect.runFork(
-                syncConnectionOrOfferRoutine({ connection, connector, db, priority, subject }).pipe(
+                syncCreatedRoutine({ created, connector, spaceId: db.spaceId, priority }).pipe(
                   Effect.provideService(Operation.Service, invoker),
                   Effect.provideService(Capability.Service, capabilities),
                   Effect.catch((error) => Effect.sync(() => log.warn('sync after routine created failed', { error }))),
@@ -131,3 +136,36 @@ export const syncConnectionOrOfferRoutine = ({
     ),
     Effect.provide(Database.layer(db)),
   );
+
+/**
+ * Run the sync the user asked for when they pressed Sync, now that they have saved the routine the
+ * press offered them.
+ *
+ * The trigger comes off the created routine rather than from a lookup: the reverse-ref index lags the
+ * write, so `findSyncTriggerForConnection` called this early reports the routine as missing — which is
+ * what silently dropped this sync. Nothing re-opens the dialog from here either; a save that somehow
+ * produced no trigger logs and stops, rather than looping the user back into the form.
+ */
+const syncCreatedRoutine = ({
+  created,
+  connector,
+  spaceId,
+  priority,
+}: {
+  created: Obj.Unknown;
+  connector: ConnectorSpec.ConnectorEntry;
+  spaceId: Key.SpaceId;
+  priority?: string;
+}): Effect.Effect<void, ConnectionSyncError, Capability.Service> =>
+  Effect.gen(function* () {
+    const trigger = Obj.instanceOf(Routine.Routine, created) ? syncTriggerOfRoutine(created) : undefined;
+    if (!trigger) {
+      log.warn('saved routine carries no sync trigger; nothing to run', { connectorId: connector.id });
+      return;
+    }
+
+    yield* fireSyncTrigger(trigger, priority ? { priority } : undefined).pipe(
+      Effect.provide(syncTriggerMonitorLayer(spaceId)),
+      Effect.mapError((cause) => new ConnectionSyncError({ connectorId: connector.id, cause })),
+    );
+  });

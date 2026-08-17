@@ -39,7 +39,7 @@ export const magazineCuration: RoutineCapabilities.Template = {
         // Bind the CurateMagazine operation directly as the action (an operation action, not instructions-based).
         spec: { kind: 'runnable', runnable: Ref.fromURI(FeedOperation.CurateMagazine.meta.key) },
         trigger: Trigger.make({
-          enabled: false,
+          enabled: true,
           spec: Trigger.specTimer(DEFAULT_CRON),
           input: { magazine: Ref.make(magazine) },
         }),

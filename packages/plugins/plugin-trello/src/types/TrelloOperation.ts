@@ -8,15 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
-import {
-  Connection,
-  // Referenced only from JSDoc {@link}s, which the rule cannot see.
-  // eslint-disable-next-line unused-imports/no-unused-imports
-  Cursor,
-} from '@dxos/link';
-// Unused by name, but the emitted declarations reference it — dropping the import breaks
-// declaration emit (TS2742). The suppression rode the pre-subpath barrel import too.
-// eslint-disable-next-line unused-imports/no-unused-imports
+import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
@@ -48,7 +40,7 @@ export const GetTrelloBoards = Operation.make({
 
 /**
  * Find-or-create the empty local Kanban for a selected Trello board so an
- * external-sync {@link Cursor.Cursor} can be created eagerly. Keyed by the
+ * external-sync cursor can be created eagerly. Keyed by the
  * board's foreign key, so it is idempotent across re-selection.
  */
 export const MaterializeTrelloTarget = Operation.make({
@@ -64,7 +56,7 @@ export const MaterializeTrelloTarget = Operation.make({
 
 /**
  * Bidirectional reconcile of every Trello board bound to a connection (one
- * external-sync {@link Cursor.Cursor} per board).
+ * external-sync cursor per board).
  *
  * Does **not** discover boards. Pulls cards from Trello into local Expando cards
  * (keyed by foreign id), pushes locally-created and locally-edited cards back to

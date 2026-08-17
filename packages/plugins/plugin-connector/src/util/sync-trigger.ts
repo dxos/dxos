@@ -7,10 +7,11 @@ import * as Layer from 'effect/Layer';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trigger from '@dxos/compute/Trigger';
 import type * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Database, Filter, type Key, Query } from '@dxos/echo';
+import { Database, Filter, type Key, Obj, Query } from '@dxos/echo';
 import { type Connection, type Cursor } from '@dxos/link';
 
 /**
@@ -35,6 +36,18 @@ export const findSyncTriggerForConnection = (connection: Connection.Connection) 
     const triggers = yield* Database.query(Query.select(Filter.id(connection.id)).referencedBy(Trigger.Trigger)).run;
     return triggers.find((trigger) => !!trigger.spec);
   });
+
+/**
+ * The sync trigger a Routine owns, read straight off its `triggers` array.
+ *
+ * Unlike {@link findSyncTriggerForConnection} this needs no query, so it sees a routine the caller
+ * just persisted — the reverse-ref index lags a write, and a lookup that races it reports the routine
+ * as missing.
+ */
+export const syncTriggerOfRoutine = (routine: Routine.Routine): Trigger.Trigger | undefined =>
+  routine.triggers
+    .map((ref) => ref.target)
+    .find((trigger): trigger is Trigger.Trigger => Obj.instanceOf(Trigger.Trigger, trigger) && !!trigger.spec);
 
 /**
  * The space's {@link Trigger.TriggerMonitorService}. The monitor has space affinity, so it is
