@@ -365,6 +365,10 @@ jobs:
           environment: ${{ inputs.environment }}
           version: ${{ needs.draft_tauri.outputs.version }}
           ios-bundle-version: ${{ needs.draft_tauri.outputs.ios_bundle_version }}
+          # Keep the bare identifier: an iOS App ID must be registered with Apple and carried by a
+          # provisioning profile, so a suffixed one would fail to sign and strand TestFlight. Running two
+          # builds side by side is a desktop concern anyway.
+          suffix-identifier: 'false'
           working-directory: ./packages/apps/composer-app/src-tauri/
 
       # TODO(wittjosiah): Having pnpm install run through moon was causing OOM issues.

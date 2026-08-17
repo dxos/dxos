@@ -3,10 +3,11 @@
 //
 
 import { formatDistance, isValid } from 'date-fns';
-import React, { useCallback } from 'react';
+import React, { type MouseEvent, useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { log } from '@dxos/log';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { useConfig } from '@dxos/react-client';
 import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
@@ -25,6 +26,32 @@ const DISCORD_URL = 'https://dxos.org/discord';
 const GITHUB_URL = 'https://github.com/dxos/dxos';
 const DOWNLOAD_URL = 'https://web.crabnebula.cloud/dxos/composer/releases';
 
+// CrabNebula's dashboard only lists the primary channel, so a prerelease build cannot link there for its
+// own installer. Its update endpoint is public and channel-addressable, and the JSON it returns names the
+// platform asset — enough to send someone straight at the binary without a release page existing.
+const UPDATE_ENDPOINT = 'https://cdn.crabnebula.app/update/dxos/composer';
+
+// TODO(wittjosiah): Only macOS is built today; derive this once Windows and Linux ship (`windows-x86_64`,
+// `linux-x86_64`, `darwin-x86_64`).
+const UPDATE_PLATFORM = 'darwin-aarch64';
+
+/**
+ * Resolve a channel's current download URL.
+ * `0.0.0` as the current version so every build reads as an upgrade and the asset is always returned —
+ * this only reads the metadata, it never installs.
+ */
+const resolveDownloadUrl = async (channel: string): Promise<string> => {
+  const response = await fetch(`${UPDATE_ENDPOINT}/${UPDATE_PLATFORM}/0.0.0?channel=${channel}`);
+  if (!response.ok) {
+    throw new Error(`update endpoint returned ${response.status}`);
+  }
+  const { url } = (await response.json()) as { url?: string };
+  if (!url) {
+    throw new Error('update endpoint returned no asset url');
+  }
+  return url;
+};
+
 export const HelpMenu = () => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
@@ -42,6 +69,28 @@ export const HelpMenu = () => {
       void invokePromise(LayoutOperation.UpdateDialog, { subject });
     },
     [invokePromise],
+  );
+
+  // Production ships on CrabNebula's `main` channel and is the only one its dashboard lists; every other
+  // environment resolves its own asset below. Undefined on production so the anchor's href just works.
+  const environment = config.values.runtime?.app?.env?.DX_ENVIRONMENT;
+  const prereleaseChannel = environment && environment !== 'production' ? environment : undefined;
+
+  const handleDownload = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>) => {
+      if (!prereleaseChannel) {
+        return;
+      }
+      event.preventDefault();
+      void resolveDownloadUrl(prereleaseChannel)
+        .then((url) => window.open(url, '_blank', 'noopener,noreferrer'))
+        .catch((err) => {
+          // The dashboard has no page for this channel, but it is a better answer than a dead click.
+          log.catch(err);
+          window.open(DOWNLOAD_URL, '_blank', 'noopener,noreferrer');
+        });
+    },
+    [prereleaseChannel],
   );
 
   return (
@@ -79,7 +128,7 @@ export const HelpMenu = () => {
             </DropdownMenu.Item>
             {!isTauri() && (
               <DropdownMenu.Item asChild>
-                <a href={DOWNLOAD_URL} target='_blank' rel='noopener noreferrer'>
+                <a href={DOWNLOAD_URL} target='_blank' rel='noopener noreferrer' onClick={handleDownload}>
                   <Icon icon='ph--download-simple--regular' size={4} />
                   <span>{t('download-apps.label')}</span>
                 </a>

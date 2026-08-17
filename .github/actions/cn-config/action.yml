@@ -8,6 +8,14 @@ inputs:
   environment:
     description: Target environment (dev | nightly | staging | production) — selects the updater channel.
     required: true
+  suffix-identifier:
+    description: >-
+      Set "false" to keep the bare bundle identifier on a non-production build. iOS does this: an App ID
+      must be registered with Apple and carried by a provisioning profile, so suffixing it would break
+      TestFlight until that registration exists. Desktop wants the suffix — it is what gives each channel
+      its own data container.
+    required: false
+    default: 'true'
   ios-bundle-version:
     description: >-
       Optional override for bundle.iOS.bundleVersion (Apple's CFBundleVersion, which must be plain digits
@@ -46,6 +54,29 @@ runs:
           ]' \
           "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}" > "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}.tmp" && \
         mv "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}.tmp" "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}"
+      shell: bash
+
+    # Each non-production channel installs as its own app. macOS keys both the application container and
+    # the WKWebView data store on the bundle identifier, so a distinct one is what lets a nightly build
+    # run beside the released one instead of sharing — and migrating — its storage. Production keeps the
+    # bare identifier every existing install already carries.
+    - name: Update identity in tauri.conf.json
+      if: inputs.environment != 'production' && inputs.suffix-identifier != 'false'
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        TAURI_CONF: ${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}
+      run: |
+        case "$ENVIRONMENT" in
+          dev | nightly | staging) ;;
+          *) echo "::error::cn-config: unknown environment: $ENVIRONMENT" && exit 1 ;;
+        esac
+        label="$(printf '%s' "${ENVIRONMENT:0:1}" | tr '[:lower:]' '[:upper:]')${ENVIRONMENT:1}"
+        jq \
+          --arg env "$ENVIRONMENT" \
+          --arg label "$label" \
+          '.identifier += "." + $env | .productName += " " + $label' \
+          "$TAURI_CONF" > temp.json && mv temp.json "$TAURI_CONF"
+        echo "identity -> $(jq -r '.identifier + " / " + .productName' "$TAURI_CONF")"
       shell: bash
 
     - name: Update version in tauri.conf.json
