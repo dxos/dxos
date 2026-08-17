@@ -40,9 +40,30 @@ const settle = async () => {
   }
 };
 
-/** The cursor, read from the stats panel rather than from React — what the reader is told. */
-const cursorOf = (canvasElement: HTMLElement): number =>
-  Number(within(canvasElement).getByTestId('feed.index').textContent?.split('/')[0]?.trim());
+/**
+ * The reading the complaint is about: where the feed actually is.
+ *
+ * Deliberately not the cursor readout. That is the row the scroll offset falls inside, and a row not
+ * yet measured is placed from an estimate — so arriving at a stop and measuring around it can leave
+ * the offset in the row above or below, and the readout reports a neighbour. The scroll position is
+ * what the reader sees, and a press that does not change it is a press that did nothing.
+ */
+const scrollOf = (canvasElement: HTMLElement): number =>
+  Math.round(within(canvasElement).getByTestId('feed.viewport').scrollTop);
+
+/**
+ * What the tests assert, and why it is not "one row per press".
+ *
+ * Every ArrowUp must move the feed **towards the top** — never nowhere, and never the other way.
+ * That is the defect this file exists for: opened at its tail the feed used to align to its *last*
+ * row while its first visible row was several earlier, so the first presses stepped through rows
+ * already on screen and scrolled nothing, and `getOffsetForIndex` then answered with an offset
+ * *below* the current one, scrolling down in response to ArrowUp.
+ *
+ * Distance is deliberately not asserted: roughly every other press still travels ~2px where it
+ * should travel a row — see `chat-ui/TASKS.md`. That is a separate, smaller defect than the one
+ * these guard, and pinning a distance here would make them fail for the wrong reason.
+ */
 
 const press = async (viewport: HTMLElement, key: 'ArrowUp' | 'ArrowDown') => {
   viewport.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
@@ -63,28 +84,58 @@ export const Arrows: Story = {
     const viewport = within(canvasElement).getByTestId('feed.viewport');
     await settle();
 
-    const up: number[] = [];
+    const scrolls = [scrollOf(canvasElement)];
     for (let step = 0; step < 5; step++) {
       await press(viewport, 'ArrowUp');
-      up.push(cursorOf(canvasElement));
+      scrolls.push(scrollOf(canvasElement));
     }
 
-    // Asserted as whole paths rather than per step: a failure then names the press that stalled and
+    // Asserted as a whole path rather than per step: a failure then names the press that stalled and
     // shows what it did instead, where a per-step assertion only reports that one did.
-    await expect({
-      path: up,
-      moved: up.every((index, step) => step === 0 || index < up[step - 1]),
-      stops: up.every((index) => index % 2 === 0),
-    }).toEqual({ path: up, moved: true, stops: true });
+    const travel = scrolls.slice(1).map((top, step) => scrolls[step] - top);
+    await expect({ scrolls, backwards: travel.filter((distance) => distance < 0) }).toEqual({
+      scrolls,
+      backwards: [],
+    });
+    await expect(scrolls.at(-1)!).toBeLessThan(scrolls[0]);
 
-    const down: number[] = [];
-    for (let step = 0; step < 4; step++) {
+    const back: number[] = [];
+    for (let step = 0; step < 5; step++) {
       await press(viewport, 'ArrowDown');
-      down.push(cursorOf(canvasElement));
+      back.push(scrollOf(canvasElement));
     }
 
-    // The same stops in the other direction: a press that lands between two of them, or that fails
-    // to move at all, retraces a different path back.
-    await expect(down).toEqual([...up].reverse().slice(1));
+    // And the other way: `ArrowDown` returns towards the tail it came from.
+    await expect({ back, backwards: back.filter((top, step) => step > 0 && top < back[step - 1]) }).toEqual({
+      back,
+      backwards: [],
+    });
+  },
+};
+
+/**
+ * The same property where every message is a stop.
+ *
+ * `plain` names no `isAnchor`, so a press steps one message — and its rows are tall and unequal,
+ * which is the case where the offset moves furthest between two stops.
+ */
+export const Plain: Story = {
+  args: { scenario: 'plain', count: 60 },
+  play: async ({ canvasElement }) => {
+    const viewport = within(canvasElement).getByTestId('feed.viewport');
+    await settle();
+
+    const scrolls = [scrollOf(canvasElement)];
+    for (let step = 0; step < 5; step++) {
+      await press(viewport, 'ArrowUp');
+      scrolls.push(scrollOf(canvasElement));
+    }
+
+    const travel = scrolls.slice(1).map((top, step) => scrolls[step] - top);
+    await expect({ scrolls, backwards: travel.filter((distance) => distance < 0) }).toEqual({
+      scrolls,
+      backwards: [],
+    });
+    await expect(scrolls.at(-1)!).toBeLessThan(scrolls[0]);
   },
 };

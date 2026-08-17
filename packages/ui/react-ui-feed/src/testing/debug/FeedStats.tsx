@@ -137,12 +137,12 @@ export const FeedStats = ({ classNames, meter, streaming, selected = 0, hits = 0
       // Fixed width, not fitted: the widest line is the pass summary, whose length changes with the
       // elapsed time, so a panel sized to its content would resize once a second while being read.
       className={mx(
-        'z-10 absolute bottom-3 right-3 w-[12rem] grid gap-1 p-2 rounded-sm border border-separator bg-base-surface text-xs text-description shadow-sm',
+        'z-10 absolute bottom-3 right-3 w-[12rem] grid p-2 rounded-sm border border-separator bg-base-surface text-xs text-description',
         classNames,
       )}
       data-testid='feed.stats'
     >
-      <div className='flex items-center gap-2 min-w-0'>
+      <div className='flex items-center min-w-0'>
         <span className='grow truncate' data-testid='feed.stream.state'>
           {streaming ? 'streaming…' : 'idle'}
         </span>

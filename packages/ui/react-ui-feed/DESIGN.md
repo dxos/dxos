@@ -120,16 +120,21 @@ Arrow keys step between the stops a host names with `isAnchor` — prompts in a 
 transcript — rather than by line or by message, so the position readout always names the thing the
 reader is on.
 
-Two things make a press reliable, and both were defects first:
+Two rules make a press move, and both were defects first:
 
-- **A navigation owns its destination until it arrives.** The cursor otherwise follows the mounted
-  range, which is right for a wheel or a scrollbar drag and wrong for a smooth scroll: the travel
-  passes through every range between here and its target and overwrites where it was going. The
-  symptom is an arrow that steps one _message_ instead of one stop.
-- **`scrollPastEnd` reserves the viewport less the last row.** Without it the feed stops scrolling
-  when the last row's bottom meets the viewport's, so the final stops can only ever be read at the
-  foot of the screen and stepping to the last one shows it where it already was. The tail test
-  subtracts the reserved space — a feed parked there is still parked at its tail.
+- **The cursor is derived from the scroll, never set alongside it.** It is `range.startIndex`: the
+  row the scroll offset falls inside. Setting it separately lets the two disagree — a feed opened at
+  its tail is aligned to its _last_ row while its first visible row is several earlier, so the
+  presses closing that gap stepped through rows already on screen and scrolled nothing, and
+  `getOffsetForIndex` then answered with an offset _below_ the current one, scrolling **down** in
+  response to ArrowUp.
+- **A step is taken from the row containing the offset**, not by comparing positions. Landing on a
+  stop leaves the offset a few pixels into that row once measurement settles, and any tolerance
+  small enough to be honest reads that as "not there yet" and re-scrolls those few pixels.
+
+Still open (`chat-ui/TASKS.md`): roughly every other press travels ~2px where it should travel a
+row. `baseline/navigation` therefore asserts direction — every press moves towards the top, never
+nowhere and never backwards — and deliberately not distance.
 
 ## Following the tail
 

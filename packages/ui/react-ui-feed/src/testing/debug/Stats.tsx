@@ -38,7 +38,7 @@ export const Stats = ({ stats, values, columns = 1, classNames, title, ...props 
   <div
     {...props}
     title={title}
-    className={mx('grid gap-x-2 tabular-nums whitespace-nowrap', classNames)}
+    className={mx('grid gap-x-1 tabular-nums whitespace-nowrap', classNames)}
     style={{ gridTemplateColumns: `repeat(${columns}, 1fr 5rem 1.5rem)` }}
   >
     {stats.map(({ id, label, unit, classNames }) => (

@@ -139,6 +139,33 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       (13.83 → 13.51, reverted). The rule: **an extension set is built once per configuration, never
       per item**, and `baseline/mount` is what catches a regression — a row costing ten times a
       probe's row is a set being rebuilt somewhere.
+- [x] **Arrow navigation scrolled the wrong way, or not at all.** The cursor was set by
+      `scrollToIndex` as well as derived from the mounted range, so the two disagreed: a feed opened
+      at its tail aligns to its _last_ row while its first visible row is several earlier, and the
+      presses closing that gap stepped through rows already on screen — then `getOffsetForIndex`
+      answered with an offset _below_ the current one and ArrowUp scrolled **down**. Confirmed in the
+      browser at `baseline/plain`: cursor 499 → 498 → 497 with `scrollTop` unmoved at 70751, and
+      `getOffsetForIndex(497,'start')` = 70816. The cursor is now `range.startIndex` and nothing else
+      writes it; a step is taken from the row containing the offset rather than by comparing
+      positions, which is immune to the few pixels of drift left after a landing settles.
+      `baseline/navigation` covers it and fails without the fix.
+- [ ] **Every other arrow press travels ~2px instead of a row.** Direction is right and the feed
+      always moves, but the distance alternates: `plain` measures `[224, 2, 119, 2, 63]`,
+      `assistant` `[108, 389, 510, 73, 270]`. Deterministic, not a timing artifact — 90 settle
+      frames give the same numbers. Ruled out: reading `virtualizer.scrollOffset` instead of the
+      element's `scrollTop` (the two agree here), and a larger comparison tolerance (papers over it,
+      and skips stops instead). Next: log the _target index_ `stepAnchor` chooses next to the row it
+      stepped from, which distinguishes "chose the row it is already on" from "chose correctly and
+      the scroll was clamped".
+- [ ] **`scrollPastEnd` reverted — it never settles.** Reserving the viewport less the last row so
+      the tail can be brought to the top is right in principle and was implemented twice: once from
+      the last row's measured size, once from the nominal. Both feed back — the reserved space is
+      part of the scroll container's height, so anything it depends on it also changes, and
+      `baseline/fill` showed `plain 50` taking 230 frames with 237 of 240 changing something. The
+      measured-size version also broke the tail outright: `getOffsetForIndex(last, 'end')` returns
+      the element's maximum, which the reserved space had moved past the last row, so a chat opened
+      with its last message at the top of an empty screen. Needs the reserved space to be an input
+      to the layout rather than an output of it.
 - [ ] Widget state does not survive virtualization — an expanded panel scrolled out of the window
       remounts collapsed, because the open flag is React state inside the widget. Either the state
       moves into the message, or the item keeps a per-widget map.
