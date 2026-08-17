@@ -23,7 +23,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { ConnectorAnnotations, ConnectorSpec } from '#types';
 
-import { CONNECTOR_AUTH_GROUP_ID, connectorIdsForTarget } from '../util';
+import * as ConnectorAuth from '../ConnectorAuth';
 import connectorGraphBuilder from './app-graph-builder';
 
 const SUBJECT_ID = 'subject';
@@ -37,7 +37,7 @@ const TestSync = Operation.make({
 /** A bindable target, annotated exactly as Mailbox and Calendar are. */
 class Target extends Type.makeObject<Target>(DXN.make('org.dxos.test.connectorAuthGraph.target', '0.1.0'))(
   Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(
-    ConnectorAnnotations.ConnectorAuthAnnotation.set({ connectorIds: connectorIdsForTarget, bindTarget: true }),
+    ConnectorAnnotations.ConnectorAuthAnnotation.set({ connectorIds: ConnectorSpec.idsForTarget, bindTarget: true }),
   ),
 ) {}
 
@@ -53,7 +53,7 @@ const provider: ConnectorSpec.ConnectorEntry = {
 /**
  * The toolbar's Connect control, driven through the real extension.
  *
- * A unit test over `connectorAuthActions` cannot see what matters here: the extension decides from the
+ * A unit test over `ConnectorAuth.actions` cannot see what matters here: the extension decides from the
  * reactive connector list, where a provider that has not activated yet looks exactly like one that is
  * not installed — which is how a disabled placeholder came to stick on a toolbar whose provider was
  * present all along.
@@ -148,7 +148,7 @@ describe('connectorAuth graph extension', () => {
     const actions: any[] = context.registry.get(context.graph.actions(qualifyId(Node.RootId, SUBJECT_ID)));
     lastContext = context;
     lastManager = manager;
-    return actions.find((action) => action.id.endsWith(CONNECTOR_AUTH_GROUP_ID));
+    return actions.find((action) => action.id.endsWith(ConnectorAuth.GROUP_ID));
   };
 
   /** Registers a later provider list on the standing graph and re-reads the group it produces. */
@@ -156,7 +156,7 @@ describe('connectorAuth graph extension', () => {
     lastManager!.contribute({ module: 'late', interface: ConnectorSpec.Connector, implementation: connectors });
     await lastContext!.expand(qualifyId(Node.RootId, SUBJECT_ID), 'action');
     const actions: any[] = lastContext!.registry.get(lastContext!.graph.actions(qualifyId(Node.RootId, SUBJECT_ID)));
-    return actions.find((action) => action.id.endsWith(CONNECTOR_AUTH_GROUP_ID));
+    return actions.find((action) => action.id.endsWith(ConnectorAuth.GROUP_ID));
   };
 
   /** Ids of the entries inside a Connect group, unqualified, as the dropdown renders them. */

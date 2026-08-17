@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Connection, Cursor } from '@dxos/link';
@@ -12,15 +12,7 @@ import { log } from '@dxos/log';
 
 import { ConnectorSpec } from '#types';
 
-import {
-  checkTargetAccount,
-  ensureSyncTrigger,
-  isCursorForConnection,
-  prepareTargetBinding,
-  readTargetAccount,
-  recordTargetAccount,
-  reportTargetAccountMismatch,
-} from '../../util';
+import * as Binding from '../../Binding';
 
 /** A user-chosen remote target to bind. */
 export type SyncTargetSelection = { externalId: string; name?: string };
@@ -62,7 +54,7 @@ export const reconcileCursors = ({
     const accessToken = yield* Database.load(connection.accessToken);
     const account = accessToken.account;
     const existingCursors = (yield* Database.query(Filter.type(Cursor.Cursor)).run).filter(
-      (cursor): cursor is Cursor.ExternalCursor => isCursorForConnection(cursor, connection),
+      (cursor): cursor is Cursor.ExternalCursor => Binding.isForConnection(cursor, connection),
     );
     const existingByRemote = new Map<string, Cursor.ExternalCursor>();
     for (const cursor of existingCursors) {
@@ -95,20 +87,20 @@ export const reconcileCursors = ({
         target = yield* Database.load(existingTarget);
         // Refuse a pre-existing target that already syncs another account, leaving the rest of the
         // selection to bind normally into targets of their own.
-        if (checkTargetAccount(target, accessToken.source, account) === 'mismatch') {
+        if (Binding.checkAccount(target, accessToken.source, account) === 'mismatch') {
           log.warn('refusing to bind: target syncs another account', {
             target: target.id,
-            recorded: readTargetAccount(target, accessToken.source),
+            recorded: Binding.readAccount(target, accessToken.source),
             account,
           });
-          yield* reportTargetAccountMismatch(invoker);
+          yield* Binding.reportAccountMismatch.pipe(Effect.provideService(Operation.Service, invoker));
           continue;
         }
         if (sel.name) {
           Obj.update(target, (target) => Obj.setLabel(target, sel.name!));
         }
         // Only a pre-existing target can carry a dormant binding; resuming it keeps the synced range.
-        const adopted = yield* prepareTargetBinding({
+        const adopted = yield* Binding.prepare({
           target,
           accessToken,
           source: connection.accessToken,
@@ -116,7 +108,7 @@ export const reconcileCursors = ({
           connector,
         });
         if (adopted) {
-          // `prepareTargetBinding` restores the schedule; nothing else to wire.
+          // `Binding.prepare` restores the schedule; nothing else to wire.
           added++;
           continue;
         }
@@ -150,12 +142,12 @@ export const reconcileCursors = ({
       // A materialized target records the account too, so a later re-bind can tell whose data it holds.
       // Skipped for a targetless connector, whose "target" is the connection itself.
       if (account && target !== connection) {
-        recordTargetAccount(target, accessToken.source, account);
+        Binding.recordAccount(target, accessToken.source, account);
       }
       // Sets up recurring background sync for the binding, if the connector declares a trigger
       // spec. Not specially protected — a failure here propagates like any other step in this loop
       // (e.g. a `materializeTarget` failure); this function has no blanket catch of its own today.
-      yield* ensureSyncTrigger({ connector, cursor });
+      yield* Binding.ensureTrigger({ connector, cursor });
       added++;
     }
 

@@ -40,28 +40,6 @@ export const SyncConnection = Operation.make({
 });
 
 /**
- * Deletes a Connection, leaving its sync bindings dormant: their cursors survive (the synced range and
- * merge state describe the remote account, not the credential, and a later re-connect of the same
- * account resumes from them) with their sync Routines disabled so nothing fires without a credential.
- * The single delete path for both the nav-tree action and the connection settings panel — when they had
- * one each, they disagreed about the cursors.
- */
-export const DeleteConnection = Operation.make({
-  meta: {
-    key: makeKey('deleteConnection'),
-    name: 'Delete Connection',
-    description: 'Deletes a Connection and suspends its sync bindings.',
-    icon: 'ph--trash--regular',
-  },
-  input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection),
-  }),
-  output: Schema.Struct({
-    suspended: Schema.Number.annotate({ description: 'Bindings left dormant by the deletion.' }),
-  }),
-});
-
-/**
  * Generic create operation: produces a Connection bound to the given AccessToken.
  */
 export const CreateConnection = Operation.make({

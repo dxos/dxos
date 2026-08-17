@@ -11,7 +11,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { isCursorForTarget } from '@dxos/plugin-connector/binding';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
 
 import { meta } from '#meta';
@@ -51,7 +51,7 @@ export default Capability.makeModule(
           const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
           const binding = cursors.find(
             (candidate): candidate is Cursor.ExternalCursor =>
-              Cursor.isExternal(candidate) && isCursorForTarget(candidate, kanban),
+              Cursor.isExternal(candidate) && Binding.targets(candidate, kanban),
           );
           if (!binding) {
             return Effect.succeed([]);

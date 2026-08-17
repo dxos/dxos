@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection, Cursor } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -14,8 +14,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ConnectionView } from '#components';
 import { useConnector, useReauthenticate, useSyncConnection, useSyncTargetsChecklist, useTestConnection } from '#hooks';
 
-import * as ConnectorOperation from '../../types/ConnectorOperation';
-import { isCursorForConnection } from '../../util';
+import * as Binding from '../../Binding';
 
 export type ConnectionArticleProps = AppSurface.ObjectArticleProps<Connection.Connection>;
 
@@ -33,7 +32,7 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
   const db = Obj.getDatabase(subject);
   const allCursors = useQuery(db, Filter.type(Cursor.Cursor));
   const bindings = useMemo(
-    () => allCursors.filter((cursor): cursor is Cursor.ExternalCursor => isCursorForConnection(cursor, subject)),
+    () => allCursors.filter((cursor): cursor is Cursor.ExternalCursor => Binding.isForConnection(cursor, subject)),
     [allCursors, subject],
   );
   const { invokePromise } = useOperationInvoker();
@@ -44,9 +43,9 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
   const { available: canReauthenticate, reauthenticating, reauthenticate } = useReauthenticate(subject);
 
   const handleDelete = useCallback(() => {
-    // Deleting a connection suspends its bindings rather than removing them; the operation is the single
-    // path both this button and the nav-tree action take.
-    void invokePromise(ConnectorOperation.DeleteConnection, { connection: Ref.make(subject) });
+    // Only the connection: its cursors are left dormant, holding the sync progress a later re-connect of
+    // the same account resumes from.
+    void invokePromise(SpaceOperation.RemoveObjects, { objects: [subject] });
   }, [invokePromise, subject]);
 
   const handleRemoveBinding = useCallback(

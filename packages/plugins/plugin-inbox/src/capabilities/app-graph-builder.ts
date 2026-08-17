@@ -18,7 +18,7 @@ import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
-import { type LiveBinding, findLiveBinding, syncTarget } from '@dxos/plugin-connector/binding';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage, Event, Message } from '@dxos/types';
@@ -54,10 +54,10 @@ const calendarTypename = Type.getTypename(Calendar.Calendar);
  * no mail — and it is the same predicate the connector plugin's Connect action keys on, so a binding
  * whose connection was deleted reads as unconnected everywhere at once.
  */
-const liveBindingFor = (target: Obj.Unknown, get: Atom.AtomContext): LiveBinding | undefined => {
+const liveBindingFor = (target: Obj.Unknown, get: Atom.AtomContext): Binding.Binding | undefined => {
   const db = Obj.getDatabase(target);
   return db
-    ? findLiveBinding(
+    ? Binding.find(
         get(db.query(Filter.type(Cursor.Cursor)).atom),
         get(db.query(Filter.type(Connection.Connection)).atom),
         target,
@@ -468,7 +468,7 @@ export default Capability.makeModule(
           if (!binding) {
             return Effect.succeed([]);
           }
-          // A bound mailbox whose provider plugin is not registered cannot sync — `syncTarget` resolves
+          // A bound mailbox whose provider plugin is not registered cannot sync — `Binding.sync` resolves
           // no connector and returns — so the button stays as the toolbar's affordance but disabled,
           // rather than looking functional and doing nothing.
           const hasConnector = get(connectorAtom)
@@ -486,7 +486,7 @@ export default Capability.makeModule(
             return [
               {
                 id: 'sync',
-                data: () => syncTarget(mailbox),
+                data: () => Binding.sync(mailbox),
                 properties: {
                   label: ['sync-mailbox.label', { ns: meta.profile.key }],
                   icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
@@ -573,7 +573,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             {
               id: 'sync',
-              data: () => syncTarget(calendar),
+              data: () => Binding.sync(calendar),
               properties: {
                 label: ['sync-calendar.label', { ns: meta.profile.key }],
                 icon: 'ph--arrows-clockwise--regular',

@@ -78,11 +78,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./binding": {
-      "source": "./src/binding.ts",
-      "types": "./dist/types/src/binding.d.ts",
-      "import": "./dist/lib/binding.mjs"
-    },
     "./components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -93,6 +88,16 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./Binding": {
+      "source": "./src/Binding.ts",
+      "types": "./dist/types/src/Binding.d.ts",
+      "import": "./dist/lib/Binding.mjs"
+    },
+    "./ConnectorAuth": {
+      "source": "./src/ConnectorAuth.ts",
+      "types": "./dist/types/src/ConnectorAuth.d.ts",
+      "import": "./dist/lib/ConnectorAuth.mjs"
     },
     "./ConnectorAnnotations": {
       "source": "./src/types/ConnectorAnnotations.ts",

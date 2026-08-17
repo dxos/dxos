@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Connection, Cursor } from '@dxos/link';
-import { findLiveBinding } from '@dxos/plugin-connector/binding';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 /**
@@ -15,7 +15,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
  * {@link Cursor} (the cursor's `spec.source` access token authenticates sync for that target).
  * Returns the connection of the target's live binding, or `undefined` when the target is unbound —
  * including when its cursor outlived the connection it was authenticated by (see
- * {@link findLiveBinding}), which is the same state the Connect action keys on.
+ * {@link Binding.find}), which is the same state the Connect action keys on.
  */
 export const useTargetConnection = <T extends Obj.Any>(
   target: T | undefined,
@@ -24,7 +24,7 @@ export const useTargetConnection = <T extends Obj.Any>(
   const cursors = useQuery(db, Filter.type(Cursor.Cursor));
   const connections = useQuery(db, Filter.type(Connection.Connection));
   return useMemo(
-    () => ({ connection: target ? findLiveBinding(cursors, connections, target)?.connection : undefined }),
+    () => ({ connection: target ? Binding.find(cursors, connections, target)?.connection : undefined }),
     [target, cursors, connections],
   );
 };

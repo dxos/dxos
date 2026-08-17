@@ -10,7 +10,7 @@ import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
-import { createSyncRoutine, findBindingForTarget } from '@dxos/plugin-connector/binding';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
@@ -19,7 +19,7 @@ import { useConnectorEntry, useTargetConnection } from '../components/Initialize
 
 /**
  * Hook to find, create, and toggle a timer-based sync Routine for a mailbox or calendar. Creation
- * wires the trigger to the bound connector's own `sync` operation via {@link createSyncRoutine} — the
+ * wires the trigger to the bound connector's own `sync` operation via {@link Binding.createRoutine} — the
  * trigger a manual sync force-runs.
  *
  * `connectors` (the registered `Connector` capability list) is resolved by the calling container and
@@ -77,11 +77,11 @@ export const useSyncTrigger = ({
     setPending(true);
     try {
       await Effect.gen(function* () {
-        const cursor = yield* findBindingForTarget(subject);
+        const cursor = yield* Binding.queryCursor(subject);
         if (!cursor) {
           return;
         }
-        yield* createSyncRoutine({ target: subject, cursor, operation, spec });
+        yield* Binding.createRoutine({ target: subject, cursor, operation, spec });
       }).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
     } finally {
       setPending(false);

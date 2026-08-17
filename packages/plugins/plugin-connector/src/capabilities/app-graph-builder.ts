@@ -16,24 +16,19 @@ import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
 import { meta } from '#meta';
 import { ConnectorAnnotations, ConnectorOperation, ConnectorSpec } from '#types';
 
+import * as Binding from '../Binding';
+import * as ConnectorAuth from '../ConnectorAuth';
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
-import {
-  checkTargetAccount,
-  connectorAuthActions,
-  connectorAuthUnavailableActions,
-  findLiveBinding,
-  isCursorForTarget,
-  isTokenForConnection,
-} from '../util';
 
 /**
  * True when `connection`'s credential is for a different remote account than `target` already syncs, so
- * binding the two would be refused (see `checkTargetAccount`). Unknown either way is not a
+ * binding the two would be refused (see `Binding.checkAccount`). Unknown either way is not a
  * contradiction: the connection stays on offer and the bind decides.
  */
 const contradictsTargetAccount = (
@@ -41,9 +36,9 @@ const contradictsTargetAccount = (
   accessTokens: readonly AccessToken.AccessToken[],
   target: Obj.Unknown,
 ): boolean => {
-  const accessToken = accessTokens.find((candidate) => isTokenForConnection(candidate, connection));
+  const accessToken = accessTokens.find((candidate) => Binding.isTokenFor(candidate, connection));
   return (
-    accessToken !== undefined && checkTargetAccount(target, accessToken.source, accessToken.account) === 'mismatch'
+    accessToken !== undefined && Binding.checkAccount(target, accessToken.source, accessToken.account) === 'mismatch'
   );
 };
 
@@ -62,7 +57,7 @@ const whenObjectHasCursor: NodeMatcher.NodeMatcher<Cursor.Cursor> = (node, get) 
     return Option.none();
   }
   const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
-  const cursor = cursors.find((candidate) => isCursorForTarget(candidate, node.data));
+  const cursor = cursors.find((candidate) => Binding.targets(candidate, node.data));
   return cursor ? Option.some(cursor) : Option.none();
 };
 
@@ -103,7 +98,9 @@ export default Capability.makeModule(
             actions.push(
               Node.makeAction({
                 id: `${meta.profile.key}.delete-connection.${connection.id}`,
-                data: () => Operation.invoke(ConnectorOperation.DeleteConnection, { connection: Ref.make(connection) }),
+                // Only the connection: its cursors are left dormant rather than deleted with it, so a
+                // re-connect of the same account resumes instead of re-walking the whole horizon.
+                data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [connection] }),
                 properties: {
                   label: ['delete-connection.label', { ns: meta.profile.key }],
                   icon: 'ph--trash--regular',
@@ -207,7 +204,7 @@ export default Capability.makeModule(
               // Providers exist, none binds this type: a bindable type still shows where connecting
               // would happen, while a resolver-based type (studio artifacts) legitimately has none for
               // this object and keeps contributing nothing.
-              return annotation.bindTarget ? connectorAuthUnavailableActions() : [];
+              return annotation.bindTarget ? ConnectorAuth.unavailableActions() : [];
             }
             const allConnections = get(db.query(Filter.type(Connection.Connection)).atom);
             const accessTokens = get(db.query(Filter.type(AccessToken.AccessToken)).atom);
@@ -217,7 +214,7 @@ export default Capability.makeModule(
             // connection, hid too. Space-level types (no bindTarget) are connected once any Connection
             // for one of the connectorIds exists.
             const connected = annotation.bindTarget
-              ? findLiveBinding(get(db.query(Filter.type(Cursor.Cursor)).atom), allConnections, object) !== undefined
+              ? Binding.find(get(db.query(Filter.type(Cursor.Cursor)).atom), allConnections, object) !== undefined
               : allConnections.some(
                   (connection) => connection.connectorId !== undefined && connectorIds.includes(connection.connectorId),
                 );
@@ -225,7 +222,7 @@ export default Capability.makeModule(
               // Connected: the owning plugin's own sync/generate action covers this state.
               return [];
             }
-            const groups = connectorAuthActions({
+            const groups = ConnectorAuth.actions({
               connectorIds,
               db,
               spaceId: db.spaceId,
@@ -239,7 +236,7 @@ export default Capability.makeModule(
             });
             // An unconnected bindable object always keeps a Connect control, disabled when the
             // registered providers have no auth flow and no connection is left to reuse.
-            return groups.length > 0 || !annotation.bindTarget ? groups : connectorAuthUnavailableActions();
+            return groups.length > 0 || !annotation.bindTarget ? groups : ConnectorAuth.unavailableActions();
           }),
       }),
 

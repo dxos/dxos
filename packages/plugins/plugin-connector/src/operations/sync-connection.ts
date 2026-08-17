@@ -14,9 +14,9 @@ import { Cursor } from '@dxos/link';
 
 import { ConnectorOperation, ConnectorSpec } from '#types';
 
+import * as Binding from '../Binding';
 import { connectionDeckSubject } from '../constants';
 import { ConnectionAuthExpiredError, isUnauthorizedError } from '../errors';
-import { isCursorForConnection, syncBinding } from '../util';
 
 /** How many of a connection's bindings sync at once. */
 const SYNC_CONCURRENCY = 2;
@@ -40,7 +40,7 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
       const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run.pipe(
         Effect.provide(Database.layer(db)),
         Effect.map((results) =>
-          results.filter((cursor): cursor is Cursor.ExternalCursor => isCursorForConnection(cursor, connection)),
+          results.filter((cursor): cursor is Cursor.ExternalCursor => Binding.isForConnection(cursor, connection)),
         ),
         Effect.orElseSucceed((): Cursor.ExternalCursor[] => []),
       );
@@ -55,7 +55,7 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
 
       yield* Effect.all(
         cursors.map((cursor) =>
-          syncBinding({ connector, cursor, spaceId }).pipe(
+          Binding.runSync({ connector, cursor, spaceId }).pipe(
             Effect.provide(Database.layer(db)),
             // `Process.fromOperation` promotes any handler failure to a defect (`Effect.orDie`), so
             // retagging 401s must intercept the defect channel — `Effect.mapError` never sees it.

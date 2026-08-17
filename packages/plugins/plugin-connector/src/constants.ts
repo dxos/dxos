@@ -4,7 +4,6 @@
 
 import { DXN } from '@dxos/keys';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
-import { ATPROTO_OAUTH_SCOPES } from '@dxos/protocols';
 
 import { meta } from '#meta';
 
@@ -16,8 +15,6 @@ export const PROVIDER_FORM_DIALOG = DXN.make(`${meta.profile.key}.providerFormDi
 
 /** Provider id for manually entered access tokens. */
 export const CUSTOM_PROVIDER_ID = 'custom';
-
-export { ATPROTO_OAUTH_SCOPES };
 
 /**
  * `localStorage` key prefix for redirect-flow OAuth pending state. The key

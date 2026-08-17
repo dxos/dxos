@@ -8,7 +8,7 @@ import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { autoBindSingleConnection } from '@dxos/plugin-connector/binding';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { InboxOperation } from '#types';
@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
       // A mailbox is inert until a provider binds it, so when exactly one account is already
       // authorized for this type there is nothing for the user to choose — bind it here rather than
       // leaving a Connect menu whose single entry is the only possible answer.
-      yield* autoBindSingleConnection({ target: object }).pipe(Effect.provide(Database.layer(db)));
+      yield* Binding.autoBind({ target: object }).pipe(Effect.provide(Database.layer(db)));
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
         name: 'space.object.add',
