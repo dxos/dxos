@@ -58,6 +58,8 @@ type MessageListContextValue = {
   anchors: readonly number[];
   /** Move by `delta` anchors from the cursor, and scroll there. */
   stepAnchor: (delta: number) => void;
+  /** Rows mounted right now: the window the reader is paying for. */
+  mountedRows: number;
   /** Block widgets mounted across every mounted item — what the visible window actually costs. */
   mountedWidgets: number;
   reportWidgets: (id: string, count: number) => void;
@@ -93,6 +95,7 @@ export const useMessageList = (consumerName = 'useMessageList') => {
     currentIndex,
     anchors,
     stepAnchor,
+    mountedRows,
     mountedWidgets,
     jumps,
     shifts,
@@ -107,6 +110,7 @@ export const useMessageList = (consumerName = 'useMessageList') => {
     currentIndex,
     anchors,
     stepAnchor,
+    mountedRows,
     mountedWidgets,
     jumps,
     shifts,
@@ -726,6 +730,7 @@ const MessageListRoot = ({
         currentIndex={currentIndex}
         anchors={anchors}
         stepAnchor={stepAnchor}
+        mountedRows={mounted}
         mountedWidgets={mountedWidgets}
         reportWidgets={reportWidgets}
         jumps={jumps}
