@@ -28,25 +28,6 @@ type Story = StoryObj<FeedStoryProps>;
 // `plugin-assistant/docs/AUDIT.md` §3.4.
 //
 
-/**
- * The control: no editor, fixed row heights. If this feed moves, the list is at fault; if it does
- * not, the fault is in what an item builds after it mounts. Bisect from here.
- */
-export const Plain: Story = {
-  args: {
-    scenario: 'plain',
-    count: 500,
-  },
-};
-
-/** One editor per row, every row the same document — the first rung above the control. */
-export const Uniform: Story = {
-  args: {
-    scenario: 'uniform',
-    count: 500,
-  },
-};
-
 /** AI chat (`plugin-assistant`): prompts, answers, reasoning, tool calls, suggestions. */
 export const Assistant: Story = {
   args: {

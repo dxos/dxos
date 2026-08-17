@@ -70,7 +70,7 @@ export const createScenario = ({ scenario, count, seed = 999 }: ScenarioOptions)
         Chrome: PlainChrome,
         Custom: PlainItem,
         stickyBottom: true,
-        estimateSize: (message) => Number(message.properties?.height ?? 120),
+        estimateSize: (message) => Number(message.properties?.height ?? 120) + PLAIN_CHROME,
       };
 
     // One rung up: a real editor per row, but every row the same single paragraph, so every row is
@@ -184,6 +184,15 @@ const estimateAssistantRow = (message: Message.Message): number => {
 
 /** Fixed heights, cycling so the feed is uneven — but known in advance and never corrected. */
 const PLAIN_HEIGHTS = [64, 120, 200, 88, 320, 56];
+
+/**
+ * What the chrome adds to a plain row: the separator beneath it.
+ *
+ * The estimate has to include this. A control scenario whose estimate is the *content* height is off
+ * by the chrome on every single row, and the list corrects each one — which looks exactly like the
+ * defect the control exists to rule out.
+ */
+const PLAIN_CHROME = 1;
 
 const createPlainMessages = (count: number): Message.Message[] =>
   Array.from({ length: count }, (_, index) =>
