@@ -54,7 +54,6 @@ export type PlainMenuItemGroupProperties = MenuItemChrome & {
   variant?: undefined;
 };
 
-/** Presentation fields shared by both dropdown cardinalities. */
 type DropdownMenuItemGroupChrome = MenuItemChrome & {
   variant: 'dropdownMenu';
   icon: string;
@@ -67,14 +66,12 @@ type DropdownMenuItemGroupChrome = MenuItemChrome & {
   applyActive?: boolean;
 };
 
-/** Dropdown trigger whose children are mutually exclusive. */
 export type DropdownSingleSelectMenuItemGroupProperties = DropdownMenuItemGroupChrome & {
   selectCardinality?: 'single';
   /** Used with `applyActive` to track the selected child. */
   value?: string;
 };
 
-/** Dropdown trigger whose children are independent toggles, rendered as checkboxes. */
 export type DropdownMultipleSelectMenuItemGroupProperties = DropdownMenuItemGroupChrome & {
   selectCardinality: 'multiple';
   /** Used with `applyActive` to track the selected children. */
@@ -84,9 +81,8 @@ export type DropdownMultipleSelectMenuItemGroupProperties = DropdownMenuItemGrou
 /**
  * Dropdown trigger opening a menu of child actions.
  *
- * Split by cardinality because the two are not interchangeable at runtime: a `'multiple'` group
- * suppresses close-on-select so several children can be toggled in one visit, so pairing an array
- * value with single-select would silently close the menu after the first toggle.
+ * Split by cardinality because a `'multiple'` group suppresses close-on-select, so a mismatched
+ * pair would close the menu after the first toggle.
  */
 export type DropdownMenuItemGroupProperties =
   | DropdownSingleSelectMenuItemGroupProperties
