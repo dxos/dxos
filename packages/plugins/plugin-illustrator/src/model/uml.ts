@@ -219,15 +219,26 @@ const measure = (entry: UmlClass, maxWidth: number): ClassBox => {
 };
 
 /** Arrow styling per relation kind; dependency and realization render dashed, as in UML. */
-const relationStyle = (kind: RelationKind): { stroke?: Scene.Stroke } =>
+export const relationStyle = (kind: RelationKind): { stroke?: Scene.Stroke } =>
   kind === 'dependency' || kind === 'realization' ? { stroke: 'dashed' } : {};
 
 /** Mid-arrow label: cardinalities and the diamond glyph UML puts at the whole end. */
-const relationText = (relation: UmlRelation): string | undefined => {
+export const relationText = (relation: UmlRelation): string | undefined => {
   const glyph = relation.kind === 'composition' ? '◆' : relation.kind === 'aggregation' ? '◇' : undefined;
   const text = [relation.fromCardinality, relation.label ?? glyph, relation.toCardinality].filter(Boolean).join(' ');
   return text || undefined;
 };
+
+/** Rank flows supertype → subtype for inheritance/realization, source → target otherwise. */
+export const relationRanks = (model: UmlModel): Map<string, number> =>
+  Layout.rank(
+    model.classes.map((entry) => entry.id),
+    model.relations.map((relation) =>
+      relation.kind === 'inheritance' || relation.kind === 'realization'
+        ? { from: relation.to, to: relation.from }
+        : { from: relation.from, to: relation.to },
+    ),
+  );
 
 export type CompileOptions = {
   /** Canvas position of the diagram's top-left, in canvas px. */
@@ -252,15 +263,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
   const { origin = { x: 0, y: 0 }, scale = 1, gapMain = GAP_MAIN, gapCross = GAP_CROSS, maxWidth = MAX_W } = options;
   const horizontal = model.direction === 'LR' || model.direction === 'RL';
 
-  // Rank flows supertype → subtype for inheritance/realization, source → target otherwise.
-  const ranks = Layout.rank(
-    model.classes.map((entry) => entry.id),
-    model.relations.map((relation) =>
-      relation.kind === 'inheritance' || relation.kind === 'realization'
-        ? { from: relation.to, to: relation.from }
-        : { from: relation.from, to: relation.to },
-    ),
-  );
+  const ranks = relationRanks(model);
 
   const boxes = new Map(model.classes.map((entry) => [entry.id, measure(entry, maxWidth)]));
 

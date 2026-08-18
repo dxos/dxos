@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-client';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type ContentMap, Mermaid, Uml } from '@dxos/plugin-illustrator/model';
+import { type ContentMap, Mermaid, Uml, UmlGrid } from '@dxos/plugin-illustrator/model';
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
@@ -77,12 +77,14 @@ const CLASS_DIAGRAM = trim`
 type StoryArgs = {
   source: string;
   scale?: number;
+  /** Grid layout: equal-size cells on the document grid with orthogonal connectors. */
+  grid?: boolean;
 };
 
-const DefaultStory = ({ source, scale = 2 }: StoryArgs) => {
+const DefaultStory = ({ source, scale = 2, grid }: StoryArgs) => {
   const [canvas] = useState(() => {
     const content: ContentMap = {};
-    const compile = Uml.isClassDiagram(source) ? Uml.compile : Mermaid.compile;
+    const compile = !Uml.isClassDiagram(source) ? Mermaid.compile : grid ? UmlGrid.compile : Uml.compile;
     applyCommands(content, compile(source, { scale }));
     return createObject(Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content }));
   });
@@ -114,4 +116,9 @@ export const Default: Story = {
 /** The UML dialect rendering its own architecture: dialect → scene → variant builders. */
 export const ClassDiagram: Story = {
   args: { source: CLASS_DIAGRAM, scale: 1 },
+};
+
+/** Grid variant: equal-size nodes aligned to the document grid, orthogonal connectors. */
+export const ClassDiagramGrid: Story = {
+  args: { source: CLASS_DIAGRAM, scale: 1, grid: true },
 };
