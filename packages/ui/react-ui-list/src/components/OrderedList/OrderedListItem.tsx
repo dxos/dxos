@@ -23,7 +23,7 @@ import {
 } from '@dxos/react-ui';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
-import { useListGrid, useReorderItem } from '../../aspects';
+import { useListGrid, useReorderItem } from '../../hooks';
 import { DropIndicator } from '../DropIndicator';
 import { listTheme } from '../List.theme';
 import { type ListItemRecord, useOrderedListContext } from './OrderedListContext';

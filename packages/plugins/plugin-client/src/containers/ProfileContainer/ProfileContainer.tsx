@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, Clipboard, Flex, Input, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -145,9 +145,9 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Row label={label} description={t('hue.description')}>
-            <div className='flex justify-self-end'>
+            <Flex classNames='justify-self-end'>
               <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
-            </div>
+            </Flex>
           </Form.Row>
         );
       },

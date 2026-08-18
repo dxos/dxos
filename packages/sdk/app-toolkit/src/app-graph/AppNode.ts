@@ -12,7 +12,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Node from '@dxos/app-graph/Node';
 import { type Space } from '@dxos/client/echo';
-import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, type Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
 import { CollectionItemAnnotation } from '@dxos/schema';
@@ -218,16 +218,14 @@ export const makeObject = ({
     return null;
   }
 
+  // Read through the atom because `Obj.getType` is a live but non-reactive lookup, so a node built
+  // before its schema registered would keep the fallback icon.
+  const registered = get(Registry.typeAtom(db.graph.registry, typename));
   // Obj.getType uses the stored type URI to look up the schema. For database-registered
   // (dynamic) schemas the stored TypeSchema jsonSchema.$id is the echo:/<objectId> EID, so an
-  // id-based lookup can miss. Fall back to a typename query against the registry which matches
+  // id-based lookup can miss. Fall back to the typename-keyed registry entry, which matches
   // the TypeSchema.typename field.
-  const type =
-    Obj.getType(object) ??
-    db.graph.registry
-      .list()
-      .filter(Type.isType)
-      .find((t) => Type.getTypename(t) === typename);
+  const type = Obj.getType(object) ?? registered;
   const schema = type && Type.getSchema(type);
   const staticIcon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
   const iconFromRefProp = schema ? Option.getOrUndefined(Annotation.IconFromRefAnnotation.get(schema)) : undefined;
@@ -510,8 +508,10 @@ export const makeToolbarAction = <R = never>({
     properties: {
       label,
       disposition: TOOLBAR_DISPOSITION,
+      // Always emitted, since a re-offered node merges over its previous properties and an omitted
+      // `disabled` cannot clear an earlier `true`; the identity fields below never need clearing.
+      disabled: disabled ?? false,
       ...(icon !== undefined && { icon }),
-      ...(disabled !== undefined && { disabled }),
       ...(testId !== undefined && { testId }),
       ...(keyBinding !== undefined && { keyBinding }),
     },
@@ -531,6 +531,7 @@ export const makeToolbarActionGroup = ({
   label,
   icon,
   iconOnly = true,
+  disabled,
   testId,
   actions,
 }: {
@@ -540,6 +541,9 @@ export const makeToolbarActionGroup = ({
   /** Render the trigger as icon-only (label becomes tooltip/aria). Defaults to `true` for compact
    * toolbars; set `false` to show the label text next to the icon. */
   iconOnly?: boolean;
+  /** Render the trigger disabled, so the toolbar can keep showing an affordance that currently has
+   * nothing to offer (paired with an empty `actions`) rather than dropping the control entirely. */
+  disabled?: boolean;
   /** Test id for the group's dropdown trigger. */
   testId?: string;
   actions: Node.NodeArg<Node.ActionData<any>>[];
@@ -555,6 +559,9 @@ export const makeToolbarActionGroup = ({
       variant: 'dropdownMenu',
       iconOnly,
       disposition: TOOLBAR_DISPOSITION,
+      // Always emitted, since a re-offered node merges over its previous properties (see `addNode`) and
+      // an omitted `disabled` cannot clear an earlier `true`.
+      disabled: disabled ?? false,
       ...(icon !== undefined && { icon }),
       ...(testId !== undefined && { testId }),
     },

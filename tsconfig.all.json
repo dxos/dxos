@@ -691,6 +691,9 @@
       "path": "packages/ui/react-ui/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-assistant/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-attention/tsconfig.json"
     },
     {
@@ -737,6 +740,9 @@
     },
     {
       "path": "packages/ui/react-ui-experimental/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-feed/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-form/tsconfig.json"
@@ -803,6 +809,9 @@
     },
     {
       "path": "packages/ui/react-ui-transcription/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-virtual/tsconfig.json"
     },
     {
       "path": "packages/core/mesh/rpc/tsconfig.json"

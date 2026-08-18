@@ -16,12 +16,12 @@ import { Settings } from '#types';
 
 import { ObservabilitySettings } from './ObservabilitySettings';
 
-type StoryProps = {
+type StoryArgs = {
   settings: Settings.Settings;
 };
 
 // The container reads and writes the contributed settings entry, so the story owns one per render.
-const DefaultStory = ({ settings }: StoryProps) => {
+const DefaultStory = ({ settings }: StoryArgs) => {
   const subject = useMemo(
     () => ({
       prefix: pluginMeta.profile.key,

@@ -40,7 +40,7 @@ const factViewerStyles = tv({
   variants: {
     // Conflicting facts get a warning rule on the inline-start edge.
     conflicting: {
-      true: { row: 'border-is-2 border-warning-border' },
+      true: { row: 'border-s-2 border-warning-border' },
     },
   },
 });

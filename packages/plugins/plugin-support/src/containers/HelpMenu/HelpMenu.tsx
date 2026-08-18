@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { useConfig } from '@dxos/react-client';
-import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, Flex, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -94,7 +94,7 @@ export const HelpMenu = () => {
               <span>{t('about.label')}</span>
             </DropdownMenu.Item>
             {version && (
-              <div className='ps-8 pe-2 pb-2 flex flex-col text-xs text-description'>
+              <Flex column classNames='ps-8 pe-2 pb-2 text-xs text-description'>
                 <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
                   {version}
                 </a>
@@ -105,7 +105,7 @@ export const HelpMenu = () => {
                     })}
                   </span>
                 )}
-              </div>
+              </Flex>
             )}
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />

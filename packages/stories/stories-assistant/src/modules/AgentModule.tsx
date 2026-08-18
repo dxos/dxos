@@ -138,7 +138,7 @@ export const AgentModule = () => {
   );
 
   return (
-    <Panel.Root classNames='bs-full is-full min-bs-0 min-is-0 flex flex-col gap-2 p-2 overflow-hidden'>
+    <Panel.Root classNames='h-full w-full min-h-0 min-w-0 flex flex-col gap-2 p-2 overflow-hidden'>
       <Panel.Toolbar classNames='shrink-0 justify-end'>
         <div className='flex items-center gap-1 text-xs text-description'>
           <Icon icon='ph--git-commit--regular' size={4} />
@@ -146,7 +146,7 @@ export const AgentModule = () => {
         </div>
       </Panel.Toolbar>
 
-      <div ref={scroller} className='flex-1 min-bs-0 overflow-y-auto p-2'>
+      <div ref={scroller} className='flex-1 min-h-0 overflow-y-auto p-2'>
         <div className='flex flex-col gap-3'>
           {rows.map(({ role, block, superseded }, index) => (
             <div key={index} className='flex flex-col gap-1'>
@@ -169,7 +169,7 @@ export const AgentModule = () => {
       <div className='flex gap-2 items-center shrink-0'>
         <Input.Root>
           <Input.TextInput
-            classNames='flex-1 min-is-0'
+            classNames='flex-1 min-w-0'
             placeholder='Ask the agent…'
             value={prompt}
             disabled={running}

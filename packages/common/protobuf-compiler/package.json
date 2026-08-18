@@ -37,12 +37,12 @@
   "devDependencies": {
     "@types/argparse": "catalog:",
     "@types/mocha": "catalog:",
+    "@typescript/typescript6": "catalog:",
     "expect": "catalog:",
-    "mocha": "catalog:",
-    "typescript": "catalog:"
+    "mocha": "catalog:"
   },
   "peerDependencies": {
-    "typescript": "catalog:"
+    "@typescript/typescript6": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -28,7 +28,6 @@ const handler: Operation.WithHandler<typeof ProjectMcpOperation.ListProjects> = 
           status: project.status,
           description: project.description,
           hasTaskSet: project.taskSet !== undefined,
-          goalCount: project.goals?.length ?? 0,
         })),
       };
     }),
