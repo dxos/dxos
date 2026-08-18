@@ -22,6 +22,11 @@ Decisions taken:
 - Search is **not** the list's concern. Cross-cutting per-item data — search highlights, selection —
   reaches items through provider + hook (the decoration pattern, §Aspects); the list neither knows
   nor routes it.
+- The rails live in **this package**: `Minimap` is promoted here, and `Outline` moves here from
+  `react-ui-components` — call sites updated, no compatibility re-export.
+- The horizontal axis is in scope for the **virtualizer** (axis-neutral arithmetic, an inline
+  acceptance story against real content) and out of scope for the **feed list** (vertical only;
+  rails stay vertical until a horizontal consumer exists).
 
 ## Extensions
 
@@ -211,7 +216,8 @@ component Outline
   desc: >
     Index-space rail: one tick per stop, thinned to a fixed pitch, each tick standing for the span
     to the next. One popover card tracks the shown tick's center via a separate zero-height anchor —
-    ticks are never wrapped, element identity must stay stable.
+    ticks are never wrapped, element identity must stay stable. MOVES here from react-ui-components
+    (call sites updated, no re-export).
   props:
     markers: Marker[]
     visibleRange?: { from, to }       # markers intersecting it render active
@@ -232,8 +238,8 @@ component Outline
 component Minimap
   desc: >
     Content-space rail: the document in miniature, drawn from WindowState.geometry only. Track =
-    total extent (reserve included); faint band = mounted window; solid band = viewport. Promote
-    from testing/debug to a sibling of Outline. Debug overlays (per-row extents, drift) stay in
+    total extent (reserve included); faint band = mounted window; solid band = viewport. Promoted
+    from testing/debug to a sibling of Outline in this package. Debug overlays (per-row extents, drift) stay in
     testing/debug.
   props:
     state: WindowState
@@ -332,7 +338,9 @@ feat F-1: Virtualizer invariants
     where unmeasured rows enter.
   req F-1.5: Reserve is a sizer term; the last row rests at the content's end, not the document's.
   req F-1.6: Edge drift is reported (onEdge), never silently applied.
-  req F-1.7: Axis-neutral: block and inline are the same arithmetic; only the binding differs.
+  req F-1.7: Axis-neutral: block and inline are the same arithmetic; only the binding differs. In
+    scope for the virtualizer including an inline acceptance story with real content; the feed list
+    and rails stay vertical until a horizontal consumer exists.
 ```
 
 ```mdl
@@ -383,6 +391,8 @@ feat F-6: Rails
   req F-6.2: Minimap draws only from WindowState.geometry; viewport band stays inside the mounted
     band.
   req F-6.3: Both rails are 2rem wide by default; asserted equal.
+  req F-6.4: Both rails live in react-ui-feed; Outline moves from react-ui-components with its
+    call sites, leaving no re-export behind.
 ```
 
 ```mdl
