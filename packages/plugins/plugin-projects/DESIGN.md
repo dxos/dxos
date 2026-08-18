@@ -239,7 +239,10 @@ The two-forms model gets teeth for agents:
   carry checkbox state into `task.status`, rewrite the markdown line with the
   `echo://` backlink (label follows renames — the existing convert-to-task contract),
   and **milestone-aware**: a line under a `## <heading>` that corresponds to a
-  milestone find-or-creates the `Milestone` and sets `task.milestone`. The outline's
+  milestone find-or-creates the `Milestone`, appends it to `TaskSet.milestones`
+  (`addMilestoneToSet`) and only then sets `task.milestone` — a milestone absent from
+  the array is invisible to the derived views, and `taskCreate`/`taskUpdate` reject a
+  milestone that is not a member of the task's own set. The outline's
   structure seeds the TaskSet's structure lazily, one promotion at a time.
 
 ## Background: Project, Agent, Chat, AiSession
@@ -318,8 +321,8 @@ for the full shape and rationale — this table is not repeated there.
 ### `Project` (`@dxos/compute`)
 
 See "Cleanup project data model" (top of this document) for the current shape —
-`artifacts`/`goals`/`routines` — and the rationale. Not repeated here to avoid the
-two copies drifting.
+`instructions`/`artifacts`/`outline`/`taskSet` — and the rationale. Not repeated here
+to avoid the two copies drifting.
 
 ### `Routine` (`@dxos/compute`)
 
@@ -634,8 +637,11 @@ meaningful (`warn` alone: "3 chats reference this"; `warn`+alt: the routines cas
 - **Choosing an alternative is confirm-convenient**: it runs the operation, re-runs
   the guards, and **completes the deletion automatically** — one click, done. The
   re-check (not the click) is what authorizes: the alternative clears the condition,
-  and the loop verifies it, which keeps the flow correct under concurrent edits and
-  needs no recursion policy (an alternative's own deletions surface in the next round).
+  and the loop verifies it, which needs no recursion policy (an alternative's own
+  deletions surface in the next round). OPEN: the re-check narrows the concurrent-edit
+  window but does not close it — a reference added between the re-check and the delete
+  slips past the guard, so the two need one serialized transaction or a version
+  precondition that aborts on a changed graph.
 - **Agents get the same contract**: the delete operation fails typed
   (`DeleteGuarded { verdicts }`) with the same structured verdicts; the agent may
   cancel, invoke the alternative operation and retry, or — warn-level only — retry
