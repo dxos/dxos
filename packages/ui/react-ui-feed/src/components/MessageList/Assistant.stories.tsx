@@ -298,28 +298,44 @@ export const Assistant: StoryObject = {
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     await settle(10);
 
-    // 2. The answer streams in blocks while the tail rests on the bottom.
+    // 2. The answer streams in blocks while the follow keeps the tail near rest. The glide is
+    // allowed to lag a growing tail by a bounded distance — that is what travelling means — so the
+    // reading is the worst lag during the stream, and exact rest once the turn lands.
+    const lag = () => {
+      const rows = [...scroller.querySelectorAll<HTMLElement>('[data-index]')];
+      const last = rows[rows.length - 1];
+      return last ? last.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom : 0;
+    };
+
     let sawStream = false;
-    let held = true;
+    let worst = 0;
     for (let frame = 0; frame < 600; frame++) {
       await nextFrame();
-      const streaming = !!scroller.querySelector('[data-index]') && atTail();
-      sawStream = sawStream || streaming;
-      // Once seen at the tail, it must stay there for the rest of the stream.
-      if (sawStream && !streaming && frame % 5 === 0) {
-        held = false;
-      }
-
+      sawStream = sawStream || atTail();
+      worst = Math.max(worst, lag());
       // The turn is over when the input re-enables.
       if (sawStream && input.placeholder !== 'Answering…') {
         break;
       }
     }
 
-    await expect({ asked: modelCount() >= before, sawStream, held, rests: atTail(), mounted: countRows() }).toEqual({
+    // Landed: arrival is by deceleration, so rest is polled rather than sampled.
+    let rests = false;
+    for (let frame = 0; frame < 300 && !rests; frame++) {
+      await nextFrame();
+      rests = atTail();
+    }
+
+    await expect({
+      asked: modelCount() >= before,
+      sawStream,
+      bounded: worst < scroller.clientHeight,
+      rests,
+      mounted: countRows(),
+    }).toEqual({
       asked: true,
       sawStream: true,
-      held: true,
+      bounded: true,
       rests: true,
       mounted: true,
     });

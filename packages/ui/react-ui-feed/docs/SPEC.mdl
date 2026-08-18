@@ -11,6 +11,12 @@ manual evidence). This document specifies the four parts to consolidate — **vi
 swap, exposed as a reusable hook per the `react-ui-list` pattern) versus an internal (an invariant
 the engine must hold, never exposed).
 
+Status 2026-08-18: **implemented** — the virtualizer and debug entry points exist, the model and
+the five aspects are in, the rails moved, and the flagship `assistant/Assistant` story exercises
+the whole loop. Additions found by building: `ListModel.patch` (streaming for frozen items — an
+identity-preserving replacement announced as `updated`), and the follow's speeds raised for
+streaming (8 rows/s; the class defaults were tuned for a single arrival).
+
 Decisions taken:
 
 - The virtualizer ships as an entry point of this package first (`@dxos/react-ui-feed/virtualizer`);
