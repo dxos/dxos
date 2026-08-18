@@ -9,7 +9,6 @@ import * as Schema from 'effect/Schema';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { Config2, PLUGIN_ENTRY_FILENAME, PluginManifestSchema } from '@dxos/protocols';
 
@@ -46,6 +45,13 @@ export type Resolved = {
   record: PluginRecord;
   /** Absolute URLs of every file to download. Empty for a linked install. */
   assetUrls: readonly string[];
+  /**
+   * The manifest verbatim, persisted alongside the downloaded assets.
+   *
+   * Kept as the original text rather than re-serialized from the decoded value so fields this CLI
+   * does not model survive the round trip.
+   */
+  manifest?: string;
 };
 
 /**
@@ -104,7 +110,15 @@ const resolveUrl = (manifestUrl: string): Effect.Effect<Resolved, PluginInstallE
         }),
       );
     }
-    const manifest = yield* HttpClientResponse.schemaBodyJson(Manifest)(response).pipe(
+    // Read as text rather than `schemaBodyJson` so the body can be written into the install
+    // directory as it was served.
+    const body = yield* response.text.pipe(
+      Effect.mapError(
+        (cause) => new PluginInstallError({ context: { locator: manifestUrl, reason: 'fetch-failed' }, cause }),
+      ),
+    );
+    const manifest = yield* Effect.try(() => JSON.parse(body)).pipe(
+      Effect.flatMap(Schema.decodeUnknownEffect(Manifest)),
       Effect.mapError(
         (cause) => new PluginInstallError({ context: { locator: manifestUrl, reason: 'manifest-invalid' }, cause }),
       ),
@@ -118,7 +132,7 @@ const resolveUrl = (manifestUrl: string): Effect.Effect<Resolved, PluginInstallE
       source: { kind: 'copy', origin: manifestUrl, version: manifest.version },
       meta: plugin,
     };
-    return { record, assetUrls: assetPaths.map((asset) => new URL(asset, manifestUrl).toString()) };
+    return { record, assetUrls: assetPaths.map((asset) => new URL(asset, manifestUrl).toString()), manifest: body };
   }).pipe(Effect.scoped, Effect.provide(FetchHttpClient.layer));
 
 /**

@@ -5,6 +5,7 @@
 import { describe, test } from '@effect/vitest';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -166,6 +167,28 @@ describe('plugin add <url>', () => {
           expect(row?.status).toBe('enabled');
         });
       });
+    },
+    TIMEOUT,
+  );
+
+  test(
+    'persists the manifest so the install is self-describing and works offline',
+    async ({ expect }) => {
+      const home = await withFixtureServer((baseUrl) => {
+        const isolated = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-test-'));
+        expect(runDx(['plugin', 'add', `${baseUrl}/manifest.json`], { home: isolated }).status).toBe(0);
+        return isolated;
+      });
+      try {
+        // The server is gone by now. A snapshot that needed the network to say what it is would be
+        // useless offline, and could not be rebuilt if the profile's record were lost.
+        expect(fs.existsSync(path.join(installDir(home), 'manifest.json'))).toBe(true);
+        const row = findFixture(home);
+        expect(row?.status).toBe('enabled');
+        expect(row?.failure).toBeUndefined();
+      } finally {
+        fs.rmSync(home, { recursive: true, force: true });
+      }
     },
     TIMEOUT,
   );

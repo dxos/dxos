@@ -26,7 +26,7 @@ export const handler = Effect.fn(function* ({
   const { json, profile } = yield* CommandConfig;
   const manager = yield* Plugin.Service;
 
-  const { record, assetUrls } = yield* resolveLocator(locator, { dev });
+  const { record, assetUrls, manifest } = yield* resolveLocator(locator, { dev });
 
   // A third-party plugin claiming a compiled-in id would make the builtin permanently
   // unreachable. `--dev` is allowed to collide because that is what overriding a builtin while
@@ -41,7 +41,7 @@ export const handler = Effect.fn(function* ({
   }
 
   if (record.source?.kind === 'copy') {
-    yield* downloadAssets({ id: record.id, baseUrl: record.source.origin, assetUrls });
+    yield* downloadAssets({ id: record.id, baseUrl: record.source.origin, assetUrls, manifest });
   }
 
   const existing = (yield* loadPlugins({ profile })) ?? [];

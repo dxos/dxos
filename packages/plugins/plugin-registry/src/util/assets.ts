@@ -11,10 +11,15 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { getPluginInstallPath } from '../storage';
 import { PluginInstallError } from './errors';
+import { MANIFEST_FILENAME } from './resolve';
 
 /**
  * Downloads a plugin's files into `plugins/<id>/`, mirroring each asset's path relative to its
  * manifest so a bundle's internal imports resolve the same way they did when it was built.
+ *
+ * The manifest is written alongside them, so an installed plugin is self-describing on disk and
+ * needs no network to say what it is: a snapshot ends up the same shape as a directory `add --dev`
+ * would accept, and the install survives losing the profile's record.
  *
  * Writes into a sibling staging directory and swaps it in at the end: a half-downloaded install
  * that the loader would later try to import is worse than no install, and a failed `add` must
@@ -24,10 +29,12 @@ export const downloadAssets = ({
   id,
   baseUrl,
   assetUrls,
+  manifest,
 }: {
   id: string;
   baseUrl: string;
   assetUrls: readonly string[];
+  manifest?: string;
 }): Effect.Effect<string, PluginInstallError, any> =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
@@ -87,6 +94,16 @@ export const downloadAssets = ({
         .pipe(
           Effect.mapError(
             (cause) => new PluginInstallError({ context: { locator: assetUrl, reason: 'write-failed' }, cause }),
+          ),
+        );
+    }
+
+    if (manifest !== undefined) {
+      yield* fs
+        .writeFileString(path.join(staging, MANIFEST_FILENAME), manifest)
+        .pipe(
+          Effect.mapError(
+            (cause) => new PluginInstallError({ context: { locator: baseUrl, reason: 'write-failed' }, cause }),
           ),
         );
     }
