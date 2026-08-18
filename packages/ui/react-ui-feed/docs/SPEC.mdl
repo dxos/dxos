@@ -78,10 +78,9 @@ virtualizer. Composite: `Root` (headless) / `Viewport` (DOM) / `Item`.
   - `Column` three-track layout (gutter | content | gutter) inside the row, not on the container
 - **Row selection**
   - today: set-of-ids + additive click, one `SelectionGroup` for text selection across editors
-  - spec: extract a **selection controller/model** with interchangeable policies —
-    `single`, `multi` (toggle), `range` (shift-click, anchor+focus over the *anchors* sequence);
-    align with `react-ui-list` Listbox semantics (`aria-selected`, `dx-selected`) so styling and
-    a11y come from one place
+  - spec: consume `react-ui-list`'s `useListSelection` aspect (single/multi exist; add `range` —
+    shift-click, anchor+focus over the stops sequence) so semantics, ARIA and styling come from
+    one place (§5)
   - selection is model-space (ids), never DOM-space — must survive virtualization
 - **Navigation**
   - **pluggable stops**: `isAnchor(message, index)` today; generalize to a `stops` provider —
@@ -155,7 +154,38 @@ real component next to `Outline`.
 
 ---
 
-## 5. Precedents and retrofit
+## 5. Aspects vs internals
+
+`react-ui-list` sets the precedent: standalone, tested hooks in `aspects/` (`useListSelection`,
+`useListNavigation`, `useListDisclosure`, `useReorder`) that components compose. The dividing rule
+for the feed: **a policy the host may swap is an aspect; an invariant the engine must hold is an
+internal.** Exposing an invariant as a hook invites a second party into a seam the design exists to
+keep single-owner (one anchor, one writer of the scroll).
+
+- **Aspects (reusable hooks)**
+  - `useWindow` — already is one: the virtualizer aspect. `Window` is just its trivial binding
+  - `useListSelection` — **adopt, not rebuild**: react-ui-list's hook already does single/multi
+    with ARIA; contribute a `range` mode there and have the feed consume it (ids are model-space,
+    so it composes with virtualization untouched)
+  - `useStops(items, policy)` — the pluggable navigation stops (§2): per message / prompt / block /
+    hit; pure, shared by list, outliner, minimap
+  - `useFeedNavigation(controller, stops)` — step/jump intents over a `WindowController`; the one
+    seam every driver (toolbar, arrows, rails) calls. Distinct from tabster `useListNavigation`
+    (focus traversal over mounted rows) — different problem, same naming family
+  - `useFollow(scrollerRef, { glide? })` — sticky intent + optional `ScrollFollower` feel;
+    reusable for any streaming container (transcripts, logs), not just chat
+- **Internals (not exposed)**
+  - anchor management, prepend detection, re-anchoring — the correctness core of `Placement`
+  - the post-commit measurement pass and its id-keyed cache — a second measurer is the two-writers
+    defect class
+  - edge drift and mismatch *reporting* stays callback-based (`onEdge`/`onMismatch`) — observability
+    without a seam
+  - Outline's popover/wave mechanics, debug instrumentation (jump detector, position log)
+- **Consequence for §2**: `MessageList.Root` shrinks to composition — `useWindow` + `useFollow` +
+  `useFeedNavigation` + `useListSelection` + renderer/registry wiring — and each aspect carries its
+  own tests instead of being testable only through the feed.
+
+## 6. Precedents and retrofit
 
 - **react-ui-list**
   - `useListNavigation` (tabster) is *focus* navigation for fully-mounted lists; the feed's
