@@ -8,11 +8,11 @@ import { trim } from '@dxos/util';
 
 import { BrainOperation } from '#types';
 
-export const SKILL_KEY = 'org.dxos.skill.brain';
+export const key = 'org.dxos.skill.brain';
 
-const make = () =>
+export const make = (): Skill.Skill =>
   Skill.make({
-    key: SKILL_KEY,
+    key,
     name: 'Brain',
     agentCanEnable: true,
     tools: Skill.toolDefinitions({
@@ -53,10 +53,3 @@ const make = () =>
       `,
     }),
   });
-
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;

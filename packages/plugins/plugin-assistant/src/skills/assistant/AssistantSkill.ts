@@ -7,11 +7,11 @@ import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import { templates } from '@dxos/assistant';
 import * as Skill from '@dxos/compute/Skill';
 
-const SKILL_KEY = 'org.dxos.skill.assistant';
+export const key = 'org.dxos.skill.assistant';
 
-const make = () =>
+export const make = (): Skill.Skill =>
   Skill.make({
-    key: SKILL_KEY,
+    key,
     name: 'Assistant',
     tools: Skill.toolDefinitions({
       // TODO(wittjosiah): LayoutOperation.Open requires Capability.Service which is only available
@@ -21,10 +21,3 @@ const make = () =>
     }),
     instructions: templates.system,
   });
-
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;

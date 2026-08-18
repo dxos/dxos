@@ -12,7 +12,7 @@ import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
-import { CodeProjectSkillDefinition } from '#skills';
+import { CodeProjectSkill } from '#skills';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
@@ -56,9 +56,7 @@ export const ListProjects = Operation.make({
       }),
     ),
   }),
-}).pipe(
-  Operation.mcpTool({ name: 'projectList', safety: 'read', aspect: 'projects', skill: CodeProjectSkillDefinition }),
-);
+}).pipe(Operation.mcpTool({ name: 'projectList', safety: 'read', aspect: 'projects', skill: CodeProjectSkill }));
 
 export const GetProject = Operation.make({
   meta: {
@@ -90,9 +88,7 @@ export const GetProject = Operation.make({
     outline: Schema.optional(Schema.Struct({ id: Schema.String, content: Schema.String })),
     artifacts: Schema.Array(Schema.Struct({ id: Schema.String, typename: Schema.String })),
   }),
-}).pipe(
-  Operation.mcpTool({ name: 'projectGet', safety: 'read', aspect: 'projects', skill: CodeProjectSkillDefinition }),
-);
+}).pipe(Operation.mcpTool({ name: 'projectGet', safety: 'read', aspect: 'projects', skill: CodeProjectSkill }));
 
 export const UpdateProject = Operation.make({
   meta: {
@@ -114,6 +110,4 @@ export const UpdateProject = Operation.make({
   output: Schema.Struct({
     project: Schema.Unknown,
   }),
-}).pipe(
-  Operation.mcpTool({ name: 'projectUpdate', safety: 'write', aspect: 'projects', skill: CodeProjectSkillDefinition }),
-);
+}).pipe(Operation.mcpTool({ name: 'projectUpdate', safety: 'write', aspect: 'projects', skill: CodeProjectSkill }));

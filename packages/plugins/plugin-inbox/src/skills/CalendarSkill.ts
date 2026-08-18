@@ -9,12 +9,14 @@ import { trim } from '@dxos/util';
 
 import { Calendar } from '#types';
 
+export const key = Calendar.SKILL_KEY;
+
 export type CalendarSkillOptions = {
   /** Sync operations of the connectors bound to a Calendar, resolved by the caller. */
   syncOperations?: readonly Operation.Definition.Any[];
 };
 
-const make = ({ syncOperations = [] }: CalendarSkillOptions = {}) =>
+export const make = ({ syncOperations = [] }: CalendarSkillOptions = {}): Skill.Skill =>
   Skill.make({
     key: Calendar.SKILL_KEY,
     name: 'Calendar',
@@ -25,10 +27,3 @@ const make = ({ syncOperations = [] }: CalendarSkillOptions = {}) =>
       `,
     }),
   });
-
-const skill = {
-  key: Calendar.SKILL_KEY,
-  make,
-} satisfies Skill.Definition;
-
-export default skill;

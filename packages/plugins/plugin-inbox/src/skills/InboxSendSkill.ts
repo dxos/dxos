@@ -9,12 +9,14 @@ import { trim } from '@dxos/util';
 
 const SKILL_KEY = 'org.dxos.skill.inboxSend';
 
+export const key = SKILL_KEY;
+
 export type InboxSendSkillOptions = {
   /** Send operations contributed by the installed mail providers, resolved by the caller. */
   sendOperations?: readonly Operation.Definition.Any[];
 };
 
-const make = ({ sendOperations = [] }: InboxSendSkillOptions = {}) =>
+export const make = ({ sendOperations = [] }: InboxSendSkillOptions = {}): Skill.Skill =>
   Skill.make({
     key: SKILL_KEY,
     name: 'Inbox (Send)',
@@ -28,10 +30,3 @@ const make = ({ sendOperations = [] }: InboxSendSkillOptions = {}) =>
       `,
     }),
   });
-
-const skill = {
-  key: SKILL_KEY,
-  make,
-} satisfies Skill.Definition;
-
-export default skill;

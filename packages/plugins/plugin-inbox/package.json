@@ -98,17 +98,7 @@
       "types": "./dist/types/src/containers/index.d.ts",
       "import": "./dist/lib/containers.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
     "./package.json": "./package.json",
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
-    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -193,6 +183,36 @@
       "source": "./src/types/ReplyGeneration.ts",
       "types": "./dist/types/src/types/ReplyGeneration.d.ts",
       "import": "./dist/lib/ReplyGeneration.mjs"
+    },
+    "./InboxOperationHandlerSet": {
+      "source": "./src/operations/InboxOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/InboxOperationHandlerSet.d.ts",
+      "import": "./dist/lib/InboxOperationHandlerSet.mjs"
+    },
+    "./FeedCursor": {
+      "source": "./src/operations/FeedCursor.ts",
+      "types": "./dist/types/src/operations/FeedCursor.d.ts",
+      "import": "./dist/lib/FeedCursor.mjs"
+    },
+    "./MessageExtractor": {
+      "source": "./src/operations/extractor/index.ts",
+      "types": "./dist/types/src/operations/extractor/index.d.ts",
+      "import": "./dist/lib/MessageExtractor.mjs"
+    },
+    "./CalendarSkill": {
+      "source": "./src/skills/CalendarSkill.ts",
+      "types": "./dist/types/src/skills/CalendarSkill.d.ts",
+      "import": "./dist/lib/CalendarSkill.mjs"
+    },
+    "./InboxSkill": {
+      "source": "./src/skills/InboxSkill.ts",
+      "types": "./dist/types/src/skills/InboxSkill.d.ts",
+      "import": "./dist/lib/InboxSkill.mjs"
+    },
+    "./InboxSendSkill": {
+      "source": "./src/skills/InboxSendSkill.ts",
+      "types": "./dist/types/src/skills/InboxSendSkill.d.ts",
+      "import": "./dist/lib/InboxSendSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

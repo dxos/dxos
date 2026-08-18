@@ -9,6 +9,8 @@ import { trim } from '@dxos/util';
 
 import { InboxOperation, Mailbox } from '#types';
 
+export const key = Mailbox.SKILL_KEY;
+
 export type InboxSkillOptions = {
   /**
    * Sync operations of the connectors bound to a Mailbox, passed in rather than named here so the
@@ -17,7 +19,7 @@ export type InboxSkillOptions = {
   syncOperations?: readonly Operation.Definition.Any[];
 };
 
-const make = ({ syncOperations = [] }: InboxSkillOptions = {}) =>
+export const make = ({ syncOperations = [] }: InboxSkillOptions = {}): Skill.Skill =>
   Skill.make({
     key: Mailbox.SKILL_KEY,
     name: 'Inbox',
@@ -72,10 +74,3 @@ const make = ({ syncOperations = [] }: InboxSkillOptions = {}) =>
       `,
     }),
   });
-
-const skill = {
-  key: Mailbox.SKILL_KEY,
-  make,
-} satisfies Skill.Definition;
-
-export default skill;

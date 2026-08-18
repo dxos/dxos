@@ -9,7 +9,7 @@ import { Text } from '@dxos/schema';
 // The workflow content lives beside this module as markdown so it can be edited as prose.
 import instructions from './code-project-skill.md?raw';
 
-const SKILL_KEY = 'org.dxos.plugin.projects.skill.codeProject';
+export const key = 'org.dxos.plugin.projects.skill.codeProject';
 
 /**
  * Project-management workflow for agents driving the projected MCP verbs: work-stream projects
@@ -20,9 +20,9 @@ const SKILL_KEY = 'org.dxos.plugin.projects.skill.codeProject';
  * chat-context skill for filing artifacts; a shared segment would be a prompt-name collision, which
  * the projection raises rather than resolving silently.
  */
-const make = () =>
+export const make = (): Skill.Skill =>
   Skill.make({
-    key: SKILL_KEY,
+    key,
     name: 'Projects',
     description:
       'Track multi-step work as projects, tasks and design docs in a DXOS space. Use when work spans 3+ steps ' +
@@ -35,10 +35,3 @@ const make = () =>
     },
     tools: [],
   });
-
-export const CodeProjectSkillDefinition: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default CodeProjectSkillDefinition;
