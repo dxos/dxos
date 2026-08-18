@@ -16,23 +16,23 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { TriggerEditor } from './TriggerEditor';
+import { RoutineForm } from './RoutineForm';
 
-// Exposes the live automation to the play function so it can assert the primary trigger's spec kind.
-const DEBUG_SYMBOL = Symbol.for('dxos.test.triggerEditor');
+// Exposes the live automation to the play function (module scope is shared with the story render)
+// so it can assert the primary trigger's spec kind.
+let liveAutomation: Routine.Routine | undefined;
 
 const DefaultStory = () => {
   const { space } = useClientStory();
   const [automation] = useQuery(space?.db, Filter.type(Routine.Routine));
-  const [trigger] = useQuery(space?.db, Filter.type(Trigger.Trigger));
-  if (space?.db && automation && typeof window !== 'undefined') {
-    (window as any)[DEBUG_SYMBOL] = { automation };
+  if (space?.db && automation) {
+    liveAutomation = automation;
   }
   if (!space || !automation) {
     return <Loading />;
   }
 
-  return <TriggerEditor classNames='p-2' db={space.db} routine={automation} trigger={trigger} />;
+  return <RoutineForm db={space.db} routine={automation} />;
 };
 
 const withSeededSpace = (seed: (space: Space) => void) =>
@@ -44,7 +44,7 @@ const withSeededSpace = (seed: (space: Space) => void) =>
   });
 
 const meta = {
-  title: 'plugins/plugin-routine/components/TriggerEditor',
+  title: 'plugins/plugin-routine/components/RoutineForm',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
@@ -56,7 +56,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** No trigger yet: the editor shows the variant picker (nothing selected). */
+/** No trigger yet: the trigger section shows the variant picker (nothing selected). */
 export const Empty: Story = {
   decorators: [
     withSeededSpace((space) => {
@@ -68,8 +68,7 @@ export const Empty: Story = {
 // Reads the automation's primary trigger spec kind. `Routine.triggers` is typed `Ref.Ref(Obj.Unknown)`,
 // so the target is narrowed before reading its spec.
 const primaryTriggerKind = (): string | undefined => {
-  const automation = (window as any)[DEBUG_SYMBOL]?.automation as Routine.Routine | undefined;
-  const target = automation?.triggers?.[0]?.target;
+  const target = liveAutomation?.triggers?.[0]?.target;
   return target && Obj.instanceOf(Trigger.Trigger, target) ? target.spec?.kind : undefined;
 };
 

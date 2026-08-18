@@ -6,6 +6,12 @@ import * as Predicate from 'effect/Predicate';
 
 import { BaseError } from '@dxos/errors';
 
+/** The binding names no Linear team: its cursor carries no `externalId`. */
+export class LinearTeamUnresolvedError extends BaseError.extend(
+  'LinearTeamUnresolvedError',
+  'Binding does not name a Linear team.',
+) {}
+
 /** Linear GraphQL replied 200 OK with a non-empty `errors` array. */
 export class LinearGraphQLError extends BaseError.extend('LinearGraphQLError', 'Linear GraphQL request failed.') {}
 

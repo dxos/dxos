@@ -4,6 +4,8 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
@@ -22,17 +24,18 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
+import { OperationInvoker } from '@dxos/operation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Expando } from '@dxos/schema';
 
 import { ConnectorSpec } from '#types';
 
 import * as Binding from './Binding';
-import { TargetAccountMismatchError } from './errors';
+import { autoSyncConnection } from './capabilities/connector-coordinator/auto-sync';
+import { ConnectionAuthExpiredError, TargetAccountMismatchError } from './errors';
 /**
  * The binding namespace: pairing an object with the feed a connection syncs into it, the account that
  * gates a resume, the schedule that drives it, and what a disconnect leaves behind.
@@ -243,7 +246,7 @@ describe('Binding.sync', () => {
 
   const TestSync = Operation.make({
     meta: { key: DXN.make('org.dxos.test.Binding.sync.sync'), name: 'Test Sync' },
-    input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+    input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });
 
@@ -259,7 +262,7 @@ describe('Binding.sync', () => {
     invokeTrigger: ({ trigger }) => Effect.sync(() => void fired.push(trigger.id)),
   };
 
-  test('force-runs the sync trigger of the target’s binding', async ({ expect }) => {
+  test('force-runs the sync trigger of the target’s account', async ({ expect }) => {
     const { target, trigger } = await setup();
 
     await run(target);
@@ -299,12 +302,19 @@ describe('Binding.sync', () => {
       Expando.Expando,
     ]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok' }));
-    db.add(Obj.make(Connection.Connection, { connectorId: 'example', accessToken: Ref.make(token) }));
+    const connection = db.add(
+      Obj.make(Connection.Connection, { connectorId: 'example', accessToken: Ref.make(token) }),
+    );
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
     const cursor = db.add(Cursor.makeExternal({ source: Ref.make(token), target: Ref.make(target) }));
     invariant(Cursor.isExternal(cursor));
+    // The account's routine, not the binding's: its trigger names the connection.
     const trigger = db.add(
-      Trigger.make({ enabled: true, spec: Trigger.specTimer('*/10 * * * *'), input: { binding: Ref.make(cursor) } }),
+      Trigger.make({
+        enabled: true,
+        spec: Trigger.specTimer('*/10 * * * *'),
+        input: { connection: Ref.make(connection) },
+      }),
     );
     await db.flush({ indexes: true });
     return { db, target, trigger };
@@ -319,15 +329,15 @@ describe('Binding.sync', () => {
     );
 });
 
-describe('Binding.createRoutine', () => {
+describe('Binding.scaffoldRoutine', () => {
   /** Stands in for a connector's declared `sync.trigger`. */
   const SYNC_SPEC = Trigger.specTimer('*/10 * * * *');
 
-  // Stand-in for a connector's `sync.operation` (e.g. `GoogleOperation.GoogleMailSync`): takes the same
-  // `{ binding: Ref<Cursor> }` shape every real connector's sync declares.
+  // Stand-in for a connector's `sync.operation` (e.g. `GoogleOperation.GoogleMailSync`): account-level,
+  // taking the same `{ connection, priority? }` shape every real connector's sync declares.
   const TestSync = Operation.make({
     meta: { key: DXN.make('org.dxos.test.sync'), name: 'Test Sync' },
-    input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+    input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });
 
@@ -336,129 +346,99 @@ describe('Binding.createRoutine', () => {
     Trigger.Trigger,
     Operation.PersistentOperation,
     AccessToken.AccessToken,
+    Connection.Connection,
     Cursor.Cursor,
     Expando.Expando,
   ];
 
-  const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
-    const { defaultSpace } = await EffectEx.runAndForwardErrors(
-      initializeIdentity(harness.get(ClientCapabilities.Client)),
-    );
-    await harness.waitForEvent(ClientEvents.SpacesReady);
-    return defaultSpace.db;
-  };
-
-  /** Persists an external-sync cursor targeting `target`, standing in for a connector-created binding. */
-  const makeCursor = (db: Database.Database, target: Obj.Unknown): Cursor.ExternalCursor => {
-    const accessToken = db.add(Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok' }));
-    const cursor = db.add(Cursor.makeExternal({ source: Ref.make(accessToken), target: Ref.make(target) }));
-    invariant(Cursor.isExternal(cursor));
-    return cursor;
-  };
-
-  const findSyncRoutine = (db: Database.Database, target: Obj.Unknown) =>
-    db
-      .query(connectedRoutinesQuery(target))
-      .run()
-      .then((routines) =>
-        routines.filter((routine) => routine.triggers.some((ref) => ref.target?.spec?.kind === 'timer')),
-      );
-
-  test('creates a routine with a timer trigger bound to the target’s cursor', async ({ expect }) => {
+  test('wires an account-level trigger to the connector’s sync operation', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
+    const connection = makeConnection(db);
 
-    const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
-    const cursor = makeCursor(db, target);
-    const created = await Binding.createRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC }).pipe(
-      Effect.provide(Database.layer(db)),
-      EffectEx.runPromise,
-    );
-    await db.flush();
+    const routine = Binding.scaffoldRoutine({ connection, operation: TestSync, spec: SYNC_SPEC });
 
-    await expect.poll(() => findSyncRoutine(db, target), { timeout: 5_000 }).toHaveLength(1);
-    const [routine] = await findSyncRoutine(db, target);
-    const [triggerRef] = routine.triggers;
-    const trigger = triggerRef.target;
+    const trigger = Binding.triggerOfRoutine(routine);
     expect(trigger?.spec).toEqual({ kind: 'timer', cron: '*/10 * * * *' });
+    // Enabled on save: the create-routine dialog is the review step, so a saved routine is one the
+    // user has already approved.
     expect(trigger?.enabled).toBe(true);
     // A connector that does not declare `sync.remote` gets a local trigger, with nothing stored.
     expect(trigger?.remote).toBeUndefined();
-    // `input` carries only `binding` (matching the sync operation's input schema); the target is reached
-    // through the binding cursor's `spec.target`, not smuggled in as an extra input key.
-    expect(Object.keys(trigger?.input ?? {})).toEqual(['binding']);
-    expect(trigger?.input?.binding?.uri).toBe(Ref.make(cursor).uri);
-    expect(created?.id).toBe(trigger?.id);
+    // The input names the account, not any one binding — the operation fans out over the bindings at
+    // run time — plus the pressed-first hint the fire event resolves.
+    expect(Object.keys(trigger?.input ?? {}).sort()).toEqual(['connection', 'priority']);
+    expect(trigger?.input?.connection?.uri).toBe(Ref.make(connection).uri);
+    expect(trigger?.input?.priority).toBe('{{event.data.priority}}');
 
     // The action refers to the statically-defined operation by key; nothing is persisted into the space.
     expect(routine.spec?.kind === 'runnable' && routine.spec.runnable.uri).toBe(TestSync.meta.key);
-    expect(await db.query(Filter.type(Operation.PersistentOperation)).run()).toHaveLength(0);
-
-    // The reverse-ref from the cursor is how a manual sync finds this trigger to force-run.
-    const found = await Binding.findTrigger(cursor).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
-    expect(found?.id).toBe(trigger?.id);
   });
 
   test('marks the trigger remote for a connector that syncs on EDGE', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
+    const connection = makeConnection(db);
 
-    const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
-    const cursor = makeCursor(db, target);
-    await Binding.createRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC, remote: true }).pipe(
-      Effect.provide(Database.layer(db)),
-      EffectEx.runPromise,
-    );
-    await db.flush();
+    const routine = Binding.scaffoldRoutine({ connection, operation: TestSync, spec: SYNC_SPEC, remote: true });
 
-    await expect.poll(() => findSyncRoutine(db, target), { timeout: 5_000 }).toHaveLength(1);
-    const [routine] = await findSyncRoutine(db, target);
-    // The monitor routes a `remote` trigger to EDGE, so the schedule keeps running with the app closed.
-    expect(routine.triggers[0].target?.remote).toBe(true);
+    expect(Binding.triggerOfRoutine(routine)?.remote).toBe(true);
   });
 
-  test('is idempotent: a second call is a no-op once a sync routine is connected', async ({ expect }) => {
+  test('persists nothing until the caller adds the draft', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
+    const connection = makeConnection(db);
 
-    const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
-    const cursor = makeCursor(db, target);
-    const run = () =>
-      Binding.createRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC }).pipe(
-        Effect.provide(Database.layer(db)),
-        EffectEx.runPromise,
-      );
-    const first = await run();
-    await db.flush();
-    await expect.poll(() => findSyncRoutine(db, target), { timeout: 5_000 }).toHaveLength(1);
+    const routine = Binding.scaffoldRoutine({ connection, operation: TestSync, spec: SYNC_SPEC });
+    await db.flush({ indexes: true });
 
-    const second = await run();
-    await db.flush();
+    // The draft is in memory only: the dialog shows it for editing, and Save is what writes it. Nothing
+    // creates a sync routine behind the user's back, which is why there is no in-flight dedupe here.
+    expect(await db.query(Filter.type(Routine.Routine)).run()).toHaveLength(0);
+    expect(
+      await Binding.findTrigger(connection).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise),
+    ).toBeUndefined();
 
-    expect(await findSyncRoutine(db, target)).toHaveLength(1);
-    // The second call returns the same, pre-existing trigger rather than creating another.
-    expect(second?.id).toBe(first?.id);
+    // Adding the draft cascades to its owned trigger, and the account's trigger is then findable —
+    // the reverse-ref the sync button uses.
+    db.add(routine);
+    await db.flush({ indexes: true });
+    await expect
+      .poll(
+        () =>
+          Binding.findTrigger(connection)
+            .pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise)
+            .then((trigger) => trigger?.id),
+        { timeout: 5_000 },
+      )
+      .toBe(Binding.triggerOfRoutine(routine)?.id);
   });
 
-  test('two calls racing on one binding create a single routine', async ({ expect }) => {
+  test('names the routine after the account so several connections stay distinguishable', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
+    const connection = makeConnection(db);
+    Obj.update(connection, (connection) => Obj.setLabel(connection, 'work@example.com'));
 
-    const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
-    const cursor = makeCursor(db, target);
-    // The existence check is an index query, so it cannot see a routine added moments earlier: without
-    // a guard both callers observe none and each persists a schedule, syncing the binding twice a period.
-    const [first, second] = await Effect.all(
-      [
-        Binding.createRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC }),
-        Binding.createRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC }),
-      ],
-      { concurrency: 'unbounded' },
-    ).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
-    await db.flush();
+    const routine = Binding.scaffoldRoutine({ connection, operation: TestSync, spec: SYNC_SPEC });
 
-    expect(second?.id).toBe(first?.id);
-    await expect.poll(() => findSyncRoutine(db, target), { timeout: 5_000 }).toHaveLength(1);
+    expect(routine.name).toBe('Sync — work@example.com');
+  });
+
+  test('findRoutine locates the saved routine so deleting the connection takes it too', async ({ expect }) => {
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    const db = await initSpace(harness);
+    const connection = makeConnection(db);
+
+    const routine = Binding.scaffoldRoutine({ connection, operation: TestSync, spec: SYNC_SPEC });
+    const saved = db.add(routine);
+    await db.flush({ indexes: true });
+
+    const found = await EffectEx.runPromise(Binding.findRoutine(connection).pipe(Effect.provide(Database.layer(db))));
+
+    // Reached through the trigger's `input.connection` reverse-ref, then its owner.
+    expect(found?.id).toBe(saved.id);
   });
 });
 
@@ -467,11 +447,11 @@ describe('binding lifecycle', () => {
 
   const TestSync = Operation.make({
     meta: { key: DXN.make('org.dxos.test.bindingLifecycle.sync'), name: 'Test Sync' },
-    input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+    input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });
 
-  /** A scheduled connector, so each binding gets a sync Routine whose trigger can be suspended. */
+  /** A scheduled connector, so binding a target is expected to leave a Routine to be offered. */
   const connector: ConnectorSpec.ConnectorEntry = {
     id: 'gmail',
     source: SOURCE,
@@ -563,7 +543,7 @@ describe('binding lifecycle', () => {
   });
 
   test('re-connecting the same account resumes the dormant binding', async ({ expect }) => {
-    const { db, addConnection, bind, dormantBinding, triggers, cursors } = await setup();
+    const { db, addConnection, run, bind, dormantBinding, triggers, cursors } = await setup();
     const { target, cursor } = await dormantBinding('me@example.com');
 
     const connection = addConnection('me@example.com');
@@ -576,10 +556,11 @@ describe('binding lifecycle', () => {
     expect(rebound.max).toBe('1700000000000');
     expect(rebound.spec.source.uri).toBe(connection.accessToken.uri);
     expect((await cursors()).map((cursor) => cursor.id)).toEqual([cursor.id]);
-    // One schedule, still pointed at the resumed cursor rather than a duplicate.
-    const restored = await triggers();
-    expect(restored.map((trigger) => trigger.enabled)).toEqual([true]);
-    expect(restored[0].input?.binding?.uri).toBe(Ref.make(cursor).uri);
+    // No schedule is restored, and none is created: the sync Routine belonged to the connection the
+    // disconnect deleted, and a Routine for the new one is only ever made through the create-routine
+    // form — which the next sync affordance offers, since `findTrigger` reports none.
+    expect(await triggers()).toHaveLength(0);
+    expect(await run(Binding.findTrigger(connection))).toBeUndefined();
   });
 
   test('re-connecting a different account is refused, leaving the target untouched', async ({ expect }) => {
@@ -653,5 +634,369 @@ describe('binding lifecycle', () => {
     expect((await cursors()).length).toBe(2);
   });
 });
+
+describe('Binding.syncAll', () => {
+  let builder: EchoTestBuilder;
+  // One runtime per test, disposed below: `makeInvoker` is called per invocation, so building a
+  // runtime there would leak one for every call.
+  let runtime: ManagedRuntime.ManagedRuntime<Capability.Service, never>;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+    runtime = ManagedRuntime.make(Layer.succeed(Capability.Service, makeCapabilities({ scheduled: false })));
+    // Reset here rather than in `setup`, so a test seeding its own database cannot inherit state.
+    synced.length = 0;
+    fired.length = 0;
+    runAgainFor.clear();
+    failFor.clear();
+    dieFor.clear();
+  });
+
+  afterEach(async () => {
+    await runtime.dispose();
+    await builder.close();
+  });
+
+  /** Bindings synced, in invocation order. */
+  const synced: string[] = [];
+
+  /** Trigger ids force-run through the monitor. */
+  const fired: string[] = [];
+
+  /** Binding uris whose sync should request `Operation.runAgain()` (a capped run with work left). */
+  const runAgainFor = new Set<string>();
+
+  /** Binding uris whose sync should fail on the typed channel, by error. */
+  const failFor = new Map<string, unknown>();
+
+  /** Binding uris whose sync should die (defect channel), by defect. */
+  const dieFor = new Map<string, unknown>();
+
+  /** Records each binding, then applies whichever fault is configured for it. */
+  const recordingSync = (binding: Cursor.ExternalCursor) =>
+    Effect.gen(function* () {
+      const uri = Ref.make(binding).uri;
+      synced.push(uri);
+      if (runAgainFor.has(uri)) {
+        yield* Operation.runAgain();
+      }
+      if (dieFor.has(uri)) {
+        yield* Effect.die(dieFor.get(uri));
+      }
+      if (failFor.has(uri)) {
+        yield* Effect.fail(failFor.get(uri));
+      }
+    });
+
+  // Stand-in for a connector's account-level `sync.operation`: its handler wraps the shared
+  // fan-out over a per-binding sync, the shape every migrated connector follows.
+  const TestSync = Operation.make({
+    meta: { key: DXN.make('org.dxos.test.syncFanout.sync'), name: 'Test Sync' },
+    input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
+    output: Schema.Any,
+  });
+
+  const syncHandler = TestSync.pipe(
+    Operation.withHandler(({ connection, priority }) =>
+      Binding.syncAll({
+        connection,
+        priority,
+        sync: recordingSync,
+      }),
+    ),
+  );
+
+  const recordingMonitor: Trigger.Monitor = {
+    triggers: Atom.make<readonly Trigger.State[]>([]),
+    localDispatcherEnabled: false,
+    invokeTrigger: ({ trigger }) => Effect.sync(() => void fired.push(trigger.id)),
+  };
+
+  test('fans out to each binding', async ({ expect }) => {
+    const { db, connection, cursor } = await setup();
+    // A trigger in the space changes nothing: the operation is the routine's runnable, so its
+    // handler never routes through triggers (that would recurse) — it always syncs the bindings.
+    await addConnectionSyncTrigger(db, connection);
+
+    const result = await invokeSync(connection);
+
+    expect(result.synced).toBe(1);
+    expect(synced).toEqual([Ref.make(cursor).uri]);
+    expect(fired).toEqual([]);
+  });
+
+  test('syncs the priority binding first', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const second = await addCursor(db, token);
+
+    await invokeSync(connection, second.id);
+
+    // Pressed-first ordering: the priority cursor grabs a fan-out slot immediately.
+    expect(synced[0]).toBe(Ref.make(second).uri);
+    expect(synced).toHaveLength(2);
+    expect(synced).toContain(Ref.make(cursor).uri);
+  });
+
+  test('re-raises runAgain after every binding had its turn', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const second = await addCursor(db, token);
+    runAgainFor.add(Ref.make(cursor).uri);
+
+    // Continuation is re-raised at the operation level so a dispatcher-driven run resumes; a direct
+    // invocation like this one surfaces it as a defect.
+    await expect(invokeSync(connection)).rejects.toThrow();
+
+    // The capped binding never starves its siblings: both were attempted before the re-raise.
+    expect(synced).toContain(Ref.make(cursor).uri);
+    expect(synced).toContain(Ref.make(second).uri);
+  });
+
+  test('collects every binding before surfacing a failure', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const second = await addCursor(db, token);
+    failFor.set(Ref.make(cursor).uri, { message: 'boom' });
+
+    const outcome = await runFanOut(connection);
+
+    // A failing binding must not stop its sibling from running.
+    expect(synced).toContain(Ref.make(cursor).uri);
+    expect(synced).toContain(Ref.make(second).uri);
+    expect(outcome._tag).toBe('Failure');
+  });
+
+  test('retags a 401 raised on the typed channel', async ({ expect }) => {
+    const { connection, cursor } = await setup();
+    failFor.set(Ref.make(cursor).uri, { code: 401 });
+
+    const outcome = await runFanOut(connection);
+
+    invariant(outcome._tag === 'Failure');
+    expect(outcome.failure).toBeInstanceOf(ConnectionAuthExpiredError);
+  });
+
+  test('retags a 401 raised as a defect', async ({ expect }) => {
+    const { connection, cursor } = await setup();
+    dieFor.set(Ref.make(cursor).uri, { status: 401 });
+
+    const outcome = await runFanOut(connection);
+
+    invariant(outcome._tag === 'Failure');
+    expect(outcome.failure).toBeInstanceOf(ConnectionAuthExpiredError);
+  });
+
+  test('retags a 401 buried in a wrapper’s cause', async ({ expect }) => {
+    const { connection, cursor } = await setup();
+    // `MailSyncError.wrap()` leaves the provider's 401 reachable only via `cause`.
+    failFor.set(Ref.make(cursor).uri, { _tag: 'MailSyncError', cause: { code: 401 } });
+
+    const outcome = await runFanOut(connection);
+
+    invariant(outcome._tag === 'Failure');
+    expect(outcome.failure).toBeInstanceOf(ConnectionAuthExpiredError);
+  });
+
+  test('auth expiry outranks a plain failure from another binding', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const second = await addCursor(db, token);
+    failFor.set(Ref.make(cursor).uri, { message: 'boom' });
+    failFor.set(Ref.make(second).uri, { code: 401 });
+
+    const outcome = await runFanOut(connection);
+
+    // Auth expiry carries the reauthenticate affordance, so it outranks an ordinary failure.
+    invariant(outcome._tag === 'Failure');
+    expect(outcome.failure).toBeInstanceOf(ConnectionAuthExpiredError);
+  });
+
+  test('keeps one output per binding for a void-returning sync', async ({ expect }) => {
+    const { db, connection, token } = await setup();
+    await addCursor(db, token);
+
+    const outcome = await runFanOut(connection);
+
+    // A void sync's `undefined` is a real output, not a sentinel to filter.
+    invariant(outcome._tag === 'Success');
+    expect(outcome.success.synced).toBe(2);
+    expect(outcome.success.outputs).toHaveLength(2);
+  });
+
+  test('a failure outranks a sibling’s runAgain', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const second = await addCursor(db, token);
+    runAgainFor.add(Ref.make(cursor).uri);
+    failFor.set(Ref.make(second).uri, { message: 'boom' });
+
+    const outcome = await runFanOut(connection);
+
+    // The capped binding resumes on the next scheduled run, so the failure is what needs reporting.
+    invariant(outcome._tag === 'Failure');
+    expect(outcome.failure).not.toBeInstanceOf(ConnectionAuthExpiredError);
+  });
+
+  test('auto-syncs a new connection when its connector opts in', async ({ expect }) => {
+    const { db, connection, cursor } = await setup();
+    const connector = makeConnector({ scheduled: false, auto: true });
+
+    await EffectEx.runPromise(
+      autoSyncConnection(makeInvoker(), makeCapabilities({ scheduled: false }), db, connector, connection),
+    );
+
+    // Forked so connection setup returns without waiting, so the sync lands after this call.
+    await expect.poll(() => synced).toEqual([Ref.make(cursor).uri]);
+  });
+
+  test('auto-sync of a scheduled connector force-runs the account routine’s trigger', async ({ expect }) => {
+    const { db, connection } = await setup();
+    const trigger = await addConnectionSyncTrigger(db, connection);
+    const connector = makeConnector({ scheduled: true, auto: true });
+
+    await EffectEx.runPromise(
+      autoSyncConnection(makeInvoker(), makeCapabilities({ scheduled: true }), db, connector, connection),
+    );
+
+    // The trigger dispatcher runs the sync (durable execution), so the operation is not invoked here.
+    await expect.poll(() => fired).toEqual([trigger.id]);
+    expect(synced).toEqual([]);
+  });
+
+  test('auto-sync skips a scheduled connector whose routine is missing', async ({ expect }) => {
+    const { db, connection } = await setup();
+    const connector = makeConnector({ scheduled: true, auto: true });
+
+    await EffectEx.runPromise(
+      autoSyncConnection(makeInvoker(), makeCapabilities({ scheduled: true }), db, connector, connection),
+    );
+
+    // The user declined the routine: no silent recreation, no sync.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(synced).toEqual([]);
+    expect(fired).toEqual([]);
+  });
+
+  test('does not auto-sync a connection whose connector omits the flag', async ({ expect }) => {
+    const { db, connection } = await setup();
+    const connector = makeConnector({ scheduled: false });
+
+    await EffectEx.runPromise(
+      autoSyncConnection(makeInvoker(), makeCapabilities({ scheduled: false }), db, connector, connection),
+    );
+
+    expect(synced).toEqual([]);
+    expect(fired).toEqual([]);
+  });
+
+  /**
+   * A connector that keeps its bindings in sync on a schedule (`scheduled`) declares a trigger spec
+   * for its account routine; one without a spec syncs on demand only.
+   */
+  const makeConnector = ({
+    scheduled,
+    auto,
+  }: {
+    scheduled: boolean;
+    auto?: boolean;
+  }): ConnectorSpec.ConnectorEntry => ({
+    id: 'example',
+    source: 'example.com',
+    sync: {
+      operation: TestSync,
+      ...(auto ? { auto: true } : {}),
+      ...(scheduled ? { trigger: Trigger.specTimer('*/10 * * * *') } : {}),
+    },
+  });
+
+  /**
+   * Capabilities `Binding.runSync` reads: the connector registry, plus a `ServiceResolver` that
+   * resolves the space's trigger monitor.
+   */
+  const makeCapabilities = ({ scheduled }: { scheduled: boolean }) => {
+    const manager = CapabilityManager.make({ registry: Registry.make() });
+    manager.contribute({
+      module: 'test',
+      interface: ConnectorSpec.Connector,
+      implementation: [makeConnector({ scheduled })],
+    });
+    manager.contribute({
+      module: 'test',
+      interface: Capabilities.ServiceResolver,
+      implementation: ServiceResolver.fromContext(Context.make(Trigger.TriggerMonitorService, recordingMonitor)),
+    });
+    return manager;
+  };
+
+  const makeInvoker = () => OperationInvoker.make(() => Effect.succeed([syncHandler]), runtime);
+
+  const setup = async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([
+      Connection.Connection,
+      Cursor.Cursor,
+      AccessToken.AccessToken,
+      Trigger.Trigger,
+      Routine.Routine,
+      Expando.Expando,
+    ]);
+    const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok' }));
+    const connection = db.add(
+      Obj.make(Connection.Connection, { connectorId: 'example', accessToken: Ref.make(token) }),
+    );
+    const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
+    const cursor = db.add(Cursor.makeExternal({ source: Ref.make(token), target: Ref.make(target) }));
+    invariant(Cursor.isExternal(cursor));
+    await db.flush({ indexes: true });
+    return { db, connection, cursor, token };
+  };
+
+  /** An additional binding on the same account. */
+  const addCursor = async (db: Database.Database, token: AccessToken.AccessToken) => {
+    const target = db.add(Obj.make(Expando.Expando, { name: 'Second' }));
+    const cursor = db.add(Cursor.makeExternal({ source: Ref.make(token), target: Ref.make(target) }));
+    invariant(Cursor.isExternal(cursor));
+    await db.flush({ indexes: true });
+    return cursor;
+  };
+
+  /** The account routine's trigger, as `Binding.scaffoldRoutine` wires it. */
+  const addConnectionSyncTrigger = async (db: Database.Database, connection: Connection.Connection) => {
+    const trigger = db.add(
+      Trigger.make({
+        enabled: true,
+        spec: Trigger.specTimer('*/10 * * * *'),
+        input: { connection: Ref.make(connection), priority: '{{event.data.priority}}' },
+      }),
+    );
+    await db.flush({ indexes: true });
+    return trigger;
+  };
+
+  /** Runs the fan-out directly, since the invoker `orDie`s handler failures out of view. */
+  const runFanOut = (connection: Connection.Connection, priority?: string) =>
+    EffectEx.runPromise(
+      Binding.syncAll({
+        connection: Ref.make(connection),
+        priority,
+        sync: recordingSync,
+      }).pipe(Effect.result),
+    );
+
+  const invokeSync = (
+    connection: Connection.Connection,
+    priority?: string,
+  ): Promise<{ synced: number; outputs: unknown[] }> =>
+    EffectEx.runPromise(makeInvoker().invoke(TestSync, { connection: Ref.make(connection), priority }));
+});
+
+const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
+  const { defaultSpace } = await EffectEx.runAndForwardErrors(
+    initializeIdentity(harness.get(ClientCapabilities.Client)),
+  );
+  await harness.waitForEvent(ClientEvents.SpacesReady);
+  return defaultSpace.db;
+};
+
+const makeConnection = (db: Database.Database) => {
+  const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok', account: 'a@b.c' }));
+  return db.add(Obj.make(Connection.Connection, { connectorId: 'example', accessToken: Ref.make(token) }));
+};
 
 const makeTarget = () => Obj.make(Expando.Expando, { name: 'Inbox' });
