@@ -20,7 +20,9 @@ export const list = Command.make(
   'list',
   {},
   Effect.fn(function* () {
-    const baseUrl = yield* hubBaseUrl;
+    // Formatted here too: the siblings resolve the URL inside `hubApiRequest`, so their
+    // hub-not-configured failure is already wrapped by the time it surfaces.
+    const baseUrl = yield* hubBaseUrl.pipe(Effect.catch((error) => Effect.fail(new Error(formatHubError(error)))));
     const url = path.join(baseUrl, '/api/waitlist');
     if (yield* CommandConfig.isVerbose) {
       yield* Effect.log(`Calling: ${url}`);
