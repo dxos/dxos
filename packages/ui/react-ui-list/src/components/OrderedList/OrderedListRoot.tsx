@@ -13,7 +13,7 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useListDisclosure, useListNavigation, useReorderAutoScroll, useReorderList } from '../../aspects';
+import { useListDisclosure, useListNavigation, useReorderAutoScroll, useReorderList } from '../../hooks';
 import { listTheme } from '../List.theme';
 import { type ListItemRecord, OrderedListProvider, useOrderedListContext } from './OrderedListContext';
 

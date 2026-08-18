@@ -4,6 +4,9 @@
   "compilerOptions": {},
   "references": [
     {
+      "path": "packages/core/compute/agent-claude/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/agent-runtime/tsconfig.json"
     },
     {
@@ -301,6 +304,9 @@
       "path": "packages/core/compute/mcp-client/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/mcp-server/tsconfig.json"
+    },
+    {
       "path": "packages/common/merkle-search-tree/tsconfig.json"
     },
     {
@@ -383,6 +389,9 @@
     },
     {
       "path": "packages/plugins/plugin-commerce/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-computer/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
@@ -728,6 +737,9 @@
     },
     {
       "path": "packages/ui/react-ui-experimental/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-feed/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-form/tsconfig.json"

@@ -42,8 +42,7 @@ import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
-import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService } from '@dxos/protocols/rpc';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, bufferToArray, defaultMap, isNonNullable, range } from '@dxos/util';
@@ -647,7 +646,7 @@ export class AutomergeHost extends Resource {
     }
   }
 
-  async waitUntilHeadsReplicated(ctx: Context, heads: DocHeadsList): Promise<void> {
+  async waitUntilHeadsReplicated(ctx: Context, heads: DataService.DocHeadsList): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     const entries = heads.entries;
     if (!entries?.length) {
@@ -923,7 +922,7 @@ export class AutomergeHost extends Resource {
    * {@link collectionStateUpdated} rather than sampling immediately after flush.
    */
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
-  async flush(ctx: Context, { documentIds }: FlushRequest = {}): Promise<void> {
+  async flush(ctx: Context, { documentIds }: DataService.FlushRequest = {}): Promise<void> {
     if (!this.isOpen) {
       return;
     }
@@ -998,8 +997,8 @@ export class AutomergeHost extends Resource {
    * converge.
    *
    */
-  async getCollectionSyncState(collectionId: string): Promise<SpaceSyncState> {
-    const result: SpaceSyncState = {
+  async getCollectionSyncState(collectionId: string): Promise<DataService.SpaceSyncState> {
+    const result: DataService.SpaceSyncState = {
       peers: [],
     };
 

@@ -4,11 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
-import { type Obj, Type, View } from '@dxos/echo';
-import { type AnnotationHelper, createAnnotationHelper } from '@dxos/echo/internal';
+import { Annotation, type Obj, Type, View } from '@dxos/echo';
 
-// TODO(wittjosiah): This won't serialize into echo. Migrate to `Annotation.make` to store in `PropertyMeta`.
 export const ViewAnnotationId = '@dxos/schema/annotation/View';
 
 /** Ref-like Echo field to a persisted View document. */
@@ -20,7 +19,7 @@ type EchoViewRefLike = { load?: () => Promise<View.View>; target?: View.View };
  */
 export type EchoViewRefPath = readonly string[];
 
-export type ViewAnnotationModule = AnnotationHelper<EchoViewRefPath> & {
+export type ViewAnnotationModule = Annotation.Annotation<EchoViewRefPath> & {
   /**
    * True when schema declares where a View-backed ref may live (`path.length > 0`).
    */
@@ -35,7 +34,7 @@ export type ViewAnnotationModule = AnnotationHelper<EchoViewRefPath> & {
   tryLoadAtPath: (object: Obj.Unknown, path: EchoViewRefPath) => Effect.Effect<View.View | undefined, never, never>;
 };
 
-const viewAnnotation = createAnnotationHelper<EchoViewRefPath>(ViewAnnotationId);
+const viewAnnotation = Annotation.make({ id: ViewAnnotationId, schema: Schema.Array(Schema.String), legacyId: true });
 
 const getHolderAtPath = (object: unknown, path: EchoViewRefPath): unknown => {
   let current: unknown = object;
@@ -48,7 +47,7 @@ const getHolderAtPath = (object: unknown, path: EchoViewRefPath): unknown => {
   return current;
 };
 
-const viewMethods: Omit<ViewAnnotationModule, keyof AnnotationHelper<EchoViewRefPath>> = {
+const viewMethods: Omit<ViewAnnotationModule, keyof Annotation.Annotation<EchoViewRefPath>> = {
   has(schema: Type.AnyEntity): boolean {
     const effectSchema = Type.getSchema(schema);
     return viewAnnotation.get(effectSchema).pipe(

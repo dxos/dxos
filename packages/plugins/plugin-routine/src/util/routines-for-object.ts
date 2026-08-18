@@ -6,17 +6,37 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 
 /**
- * Reactive query for all routines connected to an object O, via three structural paths:
+ * Traverses an outgoing reference held at a nested property path (here `Cursor.spec.source`), which the
+ * typed {@link Query.Query.reference} cannot name — its key type covers top-level properties only, while
+ * the query executor already resolves dot-paths. Built from the AST rather than added to the core query
+ * builder, so an unchecked path string stays local to this one call site; chain a `Filter.type` to restore
+ * the result type.
+ *
+ * TODO(wittjosiah): Replace with a typed nested-path hop on the query builder — a recursive
+ *   template-literal path type would resolve `'spec.source'` to `Ref<AccessToken> | Ref<Feed>`, making a
+ *   wrong path a compile error and the type filter a narrowing rather than a repair.
+ */
+const referenceAtPath = (query: Query.Any, path: string): Query.Any =>
+  Query.fromAst({ type: 'reference-traversal', anchor: query.ast, property: path });
+
+/**
+ * Reactive query for all routines connected to an object O, via four structural paths:
  *
  * 1. **Trigger path** (two hops): O is referenced by a Trigger (via `input` or `spec.feed`), and that
  *    Trigger is referenced by a Routine's `triggers` array.
- * 2. **Cursor path** (three hops): a sync Trigger doesn't reference its synced target directly — its `binding`
- *    references an external-sync {@link Cursor}, and the Cursor's `spec.target` references O. So O is reached
- *    one hop further out (O ← Cursor ← Trigger ← Routine), keeping the target ref out of the operation input.
- * 3. **Instructions path** (two hops): O is listed in an Instructions' `objects` context array, and those
+ * 2. **Cursor path** (three hops): a per-binding sync Trigger doesn't reference its synced target
+ *    directly — its `binding` references an external-sync {@link Cursor}, and the Cursor's `spec.target`
+ *    references O. So O is reached one hop further out (O ← Cursor ← Trigger ← Routine), keeping the target
+ *    ref out of the operation input.
+ * 3. **Connection path** (four hops): an account-level sync Trigger names only the {@link Connection} — it
+ *    fans out over every binding of that account, so no binding (and hence no target) appears in its input.
+ *    O is reached by joining on the credential the binding authenticates with:
+ *    O ← Cursor → `spec.source` (AccessToken) ← Connection ← Trigger ← Routine. This is what surfaces one
+ *    account's sync routine on each of its synced objects (e.g. a Mailbox's routines companion).
+ * 4. **Instructions path** (two hops): O is listed in an Instructions' `objects` context array, and those
  *    Instructions are the Routine's action (`spec.instructions`). Both hops traverse `Ref` fields, so they are
  *    fully queryable — no JavaScript parent-symbol traversal needed.
  *
@@ -31,7 +51,15 @@ export const connectedRoutinesQuery = (object: Obj.Unknown): Query.Query<Routine
   const byFeed = Query.select(Filter.id(object.id)).reference('feed').referencedBy(Trigger.Trigger);
   // Cursor variant: O ← Cursor (spec.target) ← Trigger (input.binding) ← Routine.triggers.
   const byCursor = Query.select(Filter.id(object.id)).referencedBy(Cursor.Cursor).referencedBy(Trigger.Trigger);
-  const byTrigger = Query.all(byInput, byFeed, byCursor).referencedBy(Routine.Routine, 'triggers');
+  // Connection variant: O ← Cursor → spec.source (AccessToken) ← Connection ← Trigger (input.connection).
+  // The forward hop is what makes this work without the trigger naming any binding.
+  const byConnection = referenceAtPath(Query.select(Filter.id(object.id)).referencedBy(Cursor.Cursor), 'spec.source')
+    // The traversal is untyped, so the type is restored by a real filter rather than an assertion — and
+    // it is load-bearing: a feed cursor's `spec.source` is a `Ref<Feed>`, which this drops.
+    .select(Filter.type(AccessToken.AccessToken))
+    .referencedBy(Connection.Connection)
+    .referencedBy(Trigger.Trigger);
+  const byTrigger = Query.all(byInput, byFeed, byCursor, byConnection).referencedBy(Routine.Routine, 'triggers');
 
   // Instructions path: O ← Instructions.objects ← Routine (via `spec.instructions`). The second hop drops the
   // property key: the instructions ref is nested in the `spec` union, and the reverse-ref index is structural,
@@ -46,6 +74,10 @@ export const connectedRoutinesQuery = (object: Obj.Unknown): Query.Query<Routine
 /**
  * Pure predicate equivalent of {@link connectedRoutinesQuery}, over a pre-queried list of routines.
  * Kept for unit tests (asserting the query and predicate agree) and the deferred quick-association check.
+ *
+ * Covers every path but the connection one: that path starts by walking O's *incoming* refs to find its
+ * bindings, which a predicate holding only O and a routine list cannot do. Callers that must see an
+ * account-level sync routine (the routines companion) use the query.
  */
 export const routinesForObject = (object: Obj.Unknown, routines: Routine.Routine[]): Routine.Routine[] =>
   routines.filter((routine) => routineReferencesObject(routine, object));

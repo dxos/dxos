@@ -102,7 +102,10 @@ export const useEventHandlerAdapter = <TItem = any, TObject extends Obj.Unknown 
             // append, and the removal has already committed, destroying the item.
             onSome: (insertIndex) => {
               if (from !== -1) {
-                const [item] = items.splice(from, 1);
+                // Read before removing, because an ECHO array's `splice` returns the stored wire form,
+                // which its own schema rejects on re-insert.
+                const item = items[from];
+                items.splice(from, 1);
                 items.splice(Math.min(insertIndex, items.length), 0, item);
               } else {
                 // TODO(burdon): This should be the responsibility of the source container.

@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // TypeScript compiler API
-const ts = require('typescript');
+const ts = require('@typescript/typescript6');
 
 /**
  * API Diff Tool

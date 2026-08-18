@@ -13,6 +13,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';
+import { Cursor } from '@dxos/link';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { TagIndex, Text } from '@dxos/schema';
@@ -28,6 +29,8 @@ import updateTravelLog from './update-travel-log';
 const testLayer = () =>
   TestDatabaseLayer({
     types: [
+      // The task pipeline keeps a per-project cursor over the mailbox feed.
+      Cursor.Cursor,
       Feed.Feed,
       Instructions.Instructions,
       Mailbox.Mailbox,
@@ -132,6 +135,64 @@ describe('mailbox project pipelines', () => {
         senders: ['kirkconsult.com'],
       });
       expect(incremental.created).toBe(1);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('a message sharing the cursor’s timestamp is not dropped', () =>
+    Effect.gen(function* () {
+      // Two messages at the SAME instant: once the first advances the cursor to that timestamp, an
+      // exclusive boundary would exclude the second forever and its task would never be created.
+      const { db, feed, mailbox, project } = yield* seed([{ email: 'first@kirkconsult.com', subject: 'First at T' }]);
+
+      const first = yield* updateProjectTasks.handler({
+        project: Ref.make(project),
+        mailbox: Ref.make(mailbox),
+        senders: ['kirkconsult.com'],
+      });
+      expect(first).toMatchObject({ created: 1 });
+
+      // Appended after the cursor advanced, carrying the identical `created` instant.
+      yield* Effect.promise(() =>
+        db.appendToFeed(feed, [makeMessage({ email: 'second@kirkconsult.com', subject: 'Second at T' }, 0)]),
+      );
+      const second = yield* updateProjectTasks.handler({
+        project: Ref.make(project),
+        mailbox: Ref.make(mailbox),
+        senders: ['kirkconsult.com'],
+      });
+      expect(second).toMatchObject({ created: 1 });
+      expect((yield* Database.query(Filter.type(Task.Task)).run).length).toBe(2);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('two projects tracking one mailbox keep independent cursors', () =>
+    Effect.gen(function* () {
+      // The cursor is keyed on the PROJECT, not the mailbox feed. A shared watermark would let
+      // whichever project ran first advance past messages the other had never examined, and the
+      // second would silently never create their tasks — the failure the cursor tags exist to
+      // prevent, arriving through the subject rather than the tag.
+      const { db, mailbox, project } = yield* seed([
+        { email: 'ngudmand@kirkconsult.com', subject: 'Kirk approval' },
+        { email: 'billing@acme.com', subject: 'Acme invoice' },
+      ]);
+      const second = db.add(scaffoldProject({ name: 'Acme Project' }));
+      yield* Effect.promise(() => db.flush());
+
+      // The first project runs to completion, advancing ITS cursor over the whole feed.
+      const kirk = yield* updateProjectTasks.handler({
+        project: Ref.make(project),
+        mailbox: Ref.make(mailbox),
+        senders: ['kirkconsult.com'],
+      });
+      expect(kirk).toMatchObject({ matched: 1, created: 1 });
+
+      // The second project has its own watermark, so it still sees the message meant for it.
+      const acme = yield* updateProjectTasks.handler({
+        project: Ref.make(second),
+        mailbox: Ref.make(mailbox),
+        senders: ['acme.com'],
+      });
+      expect(acme).toMatchObject({ matched: 1, created: 1 });
     }).pipe(Effect.provide(testLayer())),
   );
 

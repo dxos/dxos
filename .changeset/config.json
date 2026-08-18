@@ -9,6 +9,7 @@
   "bumpVersionsWithWorkspaceProtocolOnly": true,
   "fixed": [
     [
+      "@dxos/agent-claude",
       "@dxos/agent-runtime",
       "@dxos/ai",
       "@dxos/app-framework",
@@ -107,6 +108,7 @@
       "@dxos/log-store-idb",
       "@dxos/markdown",
       "@dxos/mcp-client",
+      "@dxos/mcp-server",
       "@dxos/merkle-search-tree",
       "@dxos/messaging",
       "@dxos/migrations",
@@ -152,6 +154,7 @@
       "@dxos/react-ui-dnd",
       "@dxos/react-ui-editor",
       "@dxos/react-ui-experimental",
+      "@dxos/react-ui-feed",
       "@dxos/react-ui-form",
       "@dxos/react-ui-gameboard",
       "@dxos/react-ui-geo",
@@ -240,6 +243,7 @@
       "@dxos/plugin-client",
       "@dxos/plugin-code",
       "@dxos/plugin-commerce",
+      "@dxos/plugin-computer",
       "@dxos/plugin-conductor",
       "@dxos/plugin-connector",
       "@dxos/plugin-crm",

@@ -18,7 +18,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
-import { CodeProjectSkillDefinition } from '#skills';
+import { CodeProjectSkill } from '#skills';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
@@ -51,7 +51,7 @@ export const Create = Operation.make({
       'to taskCreate to record work against it.',
     safety: 'write',
     aspect: 'projects',
-    skill: CodeProjectSkillDefinition,
+    skill: CodeProjectSkill,
   }),
 );
 

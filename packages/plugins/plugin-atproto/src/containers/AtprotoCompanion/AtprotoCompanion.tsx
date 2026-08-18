@@ -11,7 +11,7 @@ import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Connection } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Button, Message, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Flex, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { Treegrid } from '@dxos/react-ui-list';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type PublishFieldNote } from '@dxos/schema';
@@ -212,71 +212,71 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            <div role='none' className='flex flex-col gap-3 p-3'>
+            <Flex column gap='md' classNames='p-3'>
               {/* Publish status — the status icon overrides the Message's default valence icon. A
                   neutral "checking" state shows until the first async derivation resolves. */}
-              <Message.Root
+              <Banner.Root
                 valence={statusMeta?.valence ?? 'neutral'}
                 icon={statusMeta?.icon ?? 'ph--circle-notch--regular'}
               >
-                <Message.Content>
-                  <Message.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Message.Title>
-                </Message.Content>
-              </Message.Root>
+                <Banner.Content>
+                  <Banner.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Banner.Title>
+                </Banner.Content>
+              </Banner.Root>
 
               {/* Reasons publishing is unavailable. */}
               {!connection && (
-                <Message.Root valence='info'>
-                  <Message.Content>
-                    <Message.Body>{t('no-connection.label')}</Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence='info'>
+                  <Banner.Content>
+                    <Banner.Body>{t('no-connection.label')}</Banner.Body>
+                  </Banner.Content>
+                </Banner.Root>
               )}
               {ineligibleReason && (
-                <Message.Root valence={reasonValence}>
-                  <Message.Content>
-                    <Message.Body>{ineligibleReason}</Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence={reasonValence}>
+                  <Banner.Content>
+                    <Banner.Body>{ineligibleReason}</Banner.Body>
+                  </Banner.Content>
+                </Banner.Root>
               )}
               {error && (
-                <Message.Root valence='error'>
-                  <Message.Content>
-                    <Message.Body>{error}</Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence='error'>
+                  <Banner.Content>
+                    <Banner.Body>{error}</Banner.Body>
+                  </Banner.Content>
+                </Banner.Root>
               )}
 
               {/* First-publish confirmation. */}
               {confirming && (
-                <Message.Root valence='warning'>
-                  <Message.Content>
-                    <Message.Body>{t('confirm-publish.message')}</Message.Body>
-                    <Message.Body asChild>
-                      <div role='none' className='flex gap-2 pbs-2'>
+                <Banner.Root valence='warning'>
+                  <Banner.Content>
+                    <Banner.Body>{t('confirm-publish.message')}</Banner.Body>
+                    <Banner.Body asChild>
+                      <Flex gap='sm' classNames='pt-2'>
                         <Button variant='primary' disabled={busy} onClick={handlePublish}>
                           {t('confirm-publish.label')}
                         </Button>
                         <Button disabled={busy} onClick={() => setConfirming(false)}>
                           {t('cancel.label')}
                         </Button>
-                      </div>
-                    </Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                      </Flex>
+                    </Banner.Body>
+                  </Banner.Content>
+                </Banner.Root>
               )}
 
               {/* Public projection: what the network sees, as a treegrid. Each leaf is tagged Published (we
                   publish it), Mirrored (the network sees it via a linked upstream record), or Private;
                   fields whose local value diverges from the mirrored record are flagged Diverged (not pushed). */}
-              <div role='none' className='flex flex-col gap-1'>
+              <Flex column gap='xs'>
                 <h2 className='text-xs uppercase tracking-wide text-description'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
-                  <Message.Root valence='warning'>
-                    <Message.Content>
-                      <Message.Body>{t('mirror-unresolved.label')}</Message.Body>
-                    </Message.Content>
-                  </Message.Root>
+                  <Banner.Root valence='warning'>
+                    <Banner.Content>
+                      <Banner.Body>{t('mirror-unresolved.label')}</Banner.Body>
+                    </Banner.Content>
+                  </Banner.Root>
                 )}
                 <Treegrid.Root gridTemplateColumns='minmax(0, 1fr) minmax(0, 1fr) min-content' classNames='gap-x-3'>
                   {fields.map((field) => {
@@ -332,8 +332,8 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                     );
                   })}
                 </Treegrid.Root>
-              </div>
-            </div>
+              </Flex>
+            </Flex>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>

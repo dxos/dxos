@@ -4,6 +4,191 @@ Goal: task-planning skill working with Composer so DESIGN and TASKS are Composer
 over the loop Claude ⇔ MCP ⇔ EDGE ⇔ Composer.
 Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md](../../../agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md)
 
+The tool-surface work-stream moved to the edge repo's `mcp-operations` project
+(`edge:.agents/projects/mcp-operations/{DESIGN,TASKS}.md`); its Phase 2b is the dxos-side work
+below. Dxos-side decisions — the two-host contract, third-party CLI plugins, and the two reload
+stages — are in [DESIGN.md](./DESIGN.md); the loop design stays in the superpowers spec above.
+
+## Milestone 6 — `dx mcp serve`, the local twin of the MCP server (mcp-operations Phase 2b)
+
+Kills the per-edit bridge toll (dxos build → publish → edge install → worker restart → MCP
+reconnect) and gives plugin authors a surface with no edge at all. Fidelity contract
+(mcp-operations DESIGN §0.5): deltas from the deployed server are host-layer only — anything that
+changes what a model sees lives in the shared package or it is a bug.
+
+- [x] **`@dxos/mcp-server`** — the projection extracted out of `mcp-space-service/src/mcp/`:
+      annotated operations as tools, opted-in skills as prompts, `skillLoad`, name/collision
+      rules, ref widening, and the wire response passes. Hosts supply a `Gateway` (reach the
+      registry, invoke an operation, name the session's spaces) and a transport; nothing else
+      about the surface is theirs. 32 unit tests, including a parity test that fails if the
+      annotation id drifts from `Operation.McpToolAnnotation`.
+- [x] **`dx mcp serve`** — stdio host over the CLI's own plugin registry. Verified live against a
+      real MCP handshake: 22 tools (project/task/outline verbs + `skillLoad`, plus the ported
+      static toolkits), `codeProject` as a prompt, `skillLoad` returning the skill body and the
+      identical text via `prompts/get`, ref parameters narrowed to their object shape, safety hints
+      on every tool, and the shared server instructions on `initialize`.
+- [x] **Static toolkits ported to the CLI** (2026-08-14) — `whoami`/`listSpaces`, the object CRUD,
+      and `listPlugins`/`listTypes`/`listOperations`. Serving the projection alone left a client
+      without the tools an agent reaches for first. Copied, not shared — see the factoring item
+      below. Object CRUD is advertised and argument-validated but **not verified end-to-end**; that
+      needs a profile with a space.
+- [x] plugin-projects + plugin-tasks added to the CLI plugin set (and to the default profile), so
+      the annotated operations are in the registry the command projects.
+- [x] **Edge consumes the package** (2026-08-14, edge#888) — `mcp-space-service` keeps OAuth,
+      grants, bindings and the trace feed; its copy of the projection is gone (966 lines deleted,
+      66 added) and `callOperation`'s trace-sink flush became the gateway's invoke. Verified
+      against the pkg.pr.new build of `26cadff6`: worker builds, workerd suite **90 passed**
+      (the ledger's "92" was stale — no test files changed). Acceptance: edge's 92-test suite stays green with the
+      package as the sole source of shape.
+- [ ] **Fidelity check in CI** — one test running the same registry fixture through both hosts
+      (edge worker + `dx mcp serve`), asserting identical `tools/list`, `prompts/list` and
+      `skillLoad`. The contract enforced, not documented.
+- [ ] **Static tool descriptors shared** (do this first) — the two hosts' `Tool.make` blocks are
+      byte-identical; only the handlers genuinely differ. Moving the descriptors into the package
+      deletes every existing copy and makes an unannotated tool impossible, with no dependency on
+      the operations work. The annotation drift this already caused is the argument: DESIGN §1.1.
+- [ ] **Static toolkits → plugin operations** — then the handlers. `whoami`, `listSpaces`, the
+      object CRUD and the discovery tools are hand-written twice (TODOs in
+      `cli/src/commands/mcp/{space,object,discovery}-tools.ts` and edge's `src/mcp/*-tools.ts`).
+      Contributed as annotated operations they would project through `@dxos/mcp-server` like the
+      project and task verbs. The object tools are the easy half — both hosts already only wrap
+      `database.*` operations, differing in the invoke seam alone.
+- [ ] **Space visibility factored out** — which spaces a session may target is decided twice and
+      differently: the CLI filters `client.spaces` through `AppSpace.isVisibleSpace`, while edge's
+      `space-tools.ts` hard-codes its own `SETTINGS_SPACE_TAG` constant plus `withoutHaloSpace` /
+      `withinSessionContext` against the grant's space ids. Same intent — never surface the HALO
+      space or the settings space as a target — reached by two unrelated code paths, so a change to
+      the rule (a new internal tag, say) silently applies to one host only. One predicate, shared;
+      it belongs wherever the tag constants live rather than in either host.
+- [ ] **Registry construction shared** — `dx mcp serve` merges the CLI's curated
+      `operationHandlers`; operation-service assembles its own list plus base types. Factor one
+      assembly so both hosts register the same operations, skills and types.
+- [x] **Watch/reload** — `dx mcp serve --watch` (Milestone 7); an edit no longer needs a restart.
+
+## Milestone 7 — third-party plugins and reload (design: [DESIGN.md](./DESIGN.md) §2-3)
+
+A shipped `dx` must load plugins it was not compiled with, and those plugins' operations and
+skills must reach the MCP surface. The MCP half is already done: the gateway reads
+`Capabilities.OperationHandler` and `AppCapabilities.SkillDefinition`, so an enabled plugin
+projects with no further work. The browser has the rest of the system (manifest, URL loader,
+shared-scope import map, registry publish); this milestone is its node/bun half.
+
+**Decided 2026-08-15 (user):** plugin management reaches **Composer parity** — a real default
+enabled set, enable/disable, install from registry or URL, and a dev-plugin loop. The CLI does not
+get its own lifecycle model. DESIGN §2.3.
+
+### Plugin management (Composer parity)
+
+Today `enable|disable|list` exist (contributed by the `system`-tagged `plugin-registry`, so always
+reachable) and persist to `plugins/<profile>.yml` — but **no compiled-in plugin can occupy the
+installed-but-disabled state**: of the 11 in `commands/plugin-defs.ts`, 7 are `system`-tagged core
+(client, registry, space, connector, routine, observability, process-manager) and the other 4 are
+`getDefaults()` (chess, sample, inbox, markdown). Every built-in is always on, which is why it
+reads as though disabling does not exist. DESIGN §2.3.
+
+- [x] **CLI-owned core set** (2026-08-15, PR #12606) — `ManagerOptions.core` added to
+      app-framework, defaulting to the old `system`-tag derivation and dropping ids that name no
+      registered plugin; threaded through `createCliApp`. `dx` now pins only client, registry,
+      space and process-manager, so observability, connector and routine became disableable. 3 unit
+      tests.
+- [x] **Real default set** (2026-08-15, PR #12606) — the default set became an editorial choice:
+      chess and sample are installed but off, so a fresh `dx --help` lists work verbs rather than a
+      chess game. A `DX_LABS` env gate was tried and dropped (user, 2026-08-17) — the CLI does not
+      need a labs channel; `dx plugin enable` is the way to turn a demo on.
+- [x] **Persistence fix found on the way** (2026-08-15, PR #12606) — `loadEnabledPlugins` returned
+      `[]` both for "no file" and "empty list", and `bin.ts` read `length > 0 ? saved : defaults`,
+      so disabling every optional plugin silently restored the defaults on the next command. It now
+      returns `undefined` for unconfigured; core ids are no longer persisted, since they are host
+      policy rather than a user choice. Regression test included.
+
+### Plugin loading
+
+- [x] **Shared scope at startup** (2026-08-17, PR #12606) — `Bun.plugin`'s `build.module` over
+      `DEFAULT_PACKAGES` and their enumerated subpaths, read from the new
+      `@dxos/app-framework/SharedPackages` export so the CLI and the Vite plugin share one list.
+      **A URL-installed plugin now loads**, which it did not before: bun auto-installs an
+      unresolvable bare specifier from its own cache, and `build.module` takes precedence over
+      that. An `onResolve` filter was tried first and measured to receive **zero** invocations —
+      bun's runtime loader never consults it. Details and numbers in DESIGN §2.1.
+- [x] **`dx plugin add` / `remove`** (2026-08-15, PR #12606) — `add <url>` fetches the manifest and
+      snapshots the assets under `plugins/<id>/` via a staging directory (a half-downloaded install
+      the loader would later import is worse than none); `add --dev <path>` reads a directory in
+      place, falling back to its `dx.config.ts` when there is no built manifest. Enables by default,
+      `--no-enable` stops at install, prints the resolved NSID, and refuses an id a builtin already
+      claims unless `--dev`. `remove` deletes a copy or forgets a link by record kind and refuses a
+      compiled-in plugin, pointing at `disable`. The two unbuilt cells (snapshot-from-path,
+      live-from-URL) are refused with a message rather than half-implemented. 10 subprocess tests
+      against a fixture plugin, including a real loopback manifest fetch + asset download.
+- [x] **Register without importing** (2026-08-15, PR #12606) — the record caches the plugin's
+      `Config2.Plugin` meta at install time, and startup builds a `Plugin.lazy` stub from it, so a
+      `dx` invocation evaluates a plugin's module only once something enables it. Deliberately
+      unlike the browser, where `UrlLoader.preload` imports every persisted remote entry at boot.
+- [x] **Installed-remote persistence, one file** (2026-08-15, PR #12606) — `plugins/<profile>.yml`
+      now holds `{ plugins: [{ id, enabled, source, meta }] }`, decoded as a union that still
+      accepts the legacy bare `string[]` (without it, a decode failure falls through to the defaults
+      and silently discards the user's choices). `source` is `copy` or `link` — copy versus
+      reference is the distinction that decides what `remove` does.
+- [x] **Never crash on a broken install** (2026-08-15, PR #12606) — the manager resolves lazy
+      plugins inside its initialization chain, so a failed import became a `PluginInitializationError`
+      that killed _every_ `dx` command, including the `plugin list` and `plugin remove` needed to
+      recover. A failed import now degrades to a plugin contributing nothing, and `plugin list`
+      reports it as `failed` with the underlying message. Regression test moves a linked checkout
+      out from under its record.
+- [x] **`plugin list` shows both axes** (2026-08-15, PR #12606) — installed / enabled / core plus
+      any load-or-activation failure, in text and `--json`, replacing the collapsed status string;
+      `--enabled` filters to the active set. `enable`/`disable` also became idempotent and now fail
+      with typed, actionable errors instead of bare invariants. 11 subprocess tests over `runDx`.
+- [ ] **`plugin remove`** — one verb for both install kinds: deletes the copy for a URL/registry
+      install, forgets the reference for a `--dev` one, by the record's kind. Fails on a
+      compiled-in plugin pointing at `disable`, mirroring `disable.ts`'s existing core check.
+- [ ] **Decide isolation** (DESIGN §2.6) — third-party code runs in-process with the user's HALO
+      keys, and MCP lets an external agent invoke it. Decide before third-party plugins ship:
+      trusted-publisher-and-explicit-enable, or a worker boundary (which would also solve reload).
+      The install/enable boundary above makes the cheap end a real consent step, but bounds
+      nothing after enable.
+
+### Reload, stage 1 — our own dev loop
+
+- [x] **`dx mcp serve --watch`** — DONE, both builds. A supervisor holds the client's stdio and
+      replays the MCP handshake into each reloaded child, so an edit is invisible to the client — no
+      reconnect, and `tools/list_changed` / `prompts/list_changed` follow every reload. The planned
+      "session dies with the process, client reconnects per edit" is not what happens: `bun --watch`
+      reloads in place (same pid, same pipes, wiped realm), so the connection survives and only the
+      session state is lost. The child also runs with `--conditions=source`, without which the
+      watcher tracked `dist` and a plugin source edit reloaded nothing until a rebuild. Cost is a
+      full server start per reload. Details in [DESIGN.md](./DESIGN.md) §3.
+- [x] **`--watch` in the released binary** — DONE, and the reason the flag matters to plugin
+      authors, who have `dx` rather than a checkout. A binary takes `--watch` as ordinary argv, so
+      the supervisor re-runs it via `process.execPath` and arms recursive `fs.watch` over the
+      directories the child reports: its `add --dev` (`link`) installs, the only on-disk code a
+      shipped `dx` can see change. `copy` installs are skipped. Verified against a real compiled
+      binary: `plugin add --dev` the fixture plugin, `mcp serve --watch`, edit the plugin, and the
+      session keeps its 22 tools across the restart with no reconnect.
+
+### Reload, stage 2 — external plugin authors
+
+- [ ] **`dx plugin add --dev <path|url>`** — the dev loop is a flag on `add`, not a `link` verb
+      (decided 2026-08-15, DESIGN §2.5): the locator dispatches itself, and the one bit that
+      actually varies is copy-vs-reference. `--dev` sets `LoadedPlugin.dev`, which the manager
+      already keys shadow-on-id-collision off (`PluginCatalog.#devPlugins` stashes the displaced
+      plugin with its `wasEnabled` and restores it on remove), so
+      `add --dev ./packages/plugins/plugin-markdown` tests the working copy rather than the
+      compiled-in one. A path needs no manifest — every in-repo plugin's meta already comes from
+      its `dx.config.ts`, the same `Config2.Plugin` shape a published manifest carries. Persist the
+      reference per profile; one `remove` deletes a copy or forgets a reference by record kind.
+- [ ] **Measure: can a compiled `dx` binary import on-disk TypeScript at runtime?** §2.1 measured
+      ESM import from a compiled binary; TS transpilation inside a standalone executable is a
+      separate question and it decides whether `add --dev <path>` needs a build step at all.
+      Measure before designing around either answer.
+- [ ] **Watch a dev install** — re-import on change with a cache-busting query, rebuild the
+      projected layer, emit `tools/list_changed` / `prompts/list_changed` (already emitted at
+      startup, already acted on by clients). Same machinery as `add --dev`, driven by a watcher.
+- [ ] **Upstream: tool/prompt removal in `McpServer`** — it exposes `addTool`/`addPrompt` only, so
+      a changed surface cannot replace the old one without rebuilding the server layer under the
+      live transport.
+- [ ] **Idempotent (or per-load scoped) type registration** — re-importing a plugin that registers
+      ECHO types throws "Schema version already registered".
+
 ## Milestone 1 — local round-trip (current)
 
 - [x] Leg 1: composer dev server syncing with local edge (ws 101, agents/create 200, live queue-replicator traffic)

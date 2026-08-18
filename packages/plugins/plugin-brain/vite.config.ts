@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    BrainSkill: 'src/skills/BrainSkill.ts',
+    BrainOperationHandlerSet: 'src/operations/BrainOperationHandlerSet.ts',
     index: 'src/index.ts',
     BrainPlugin: 'src/BrainPlugin.ts',
     plugin: 'src/plugin.tsx',

@@ -217,7 +217,7 @@ const rewriteExports = (pkgJson, entryPoints) => {
   const oldExports = pkgJson.exports ?? {};
   const newExports = {};
   // Map entry name (e.g. "playwright") → source path ("src/playwright.ts" or "src/playwright/index.ts").
-  // Determines the .d.ts location: tsgo mirrors the src layout, so `src/playwright.ts` →
+  // Determines the .d.ts location: tsc mirrors the src layout, so `src/playwright.ts` →
   // `dist/types/src/playwright.d.ts`, `src/playwright/index.ts` → `dist/types/src/playwright/index.d.ts`.
   // Two-pass build to disambiguate collisions between `src/foo.ts` and `src/foo/index.ts`
   // (both would default to `foo`, silently overwriting each other in the map).

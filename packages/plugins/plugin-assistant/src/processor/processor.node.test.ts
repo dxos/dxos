@@ -10,6 +10,7 @@ import * as AiError from 'effect/unstable/ai/AiError';
 import { test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { AiModelNotAvailableError } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { AiSession } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
@@ -17,6 +18,7 @@ import { Database, Feed } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
+import { DXN } from '@dxos/keys';
 
 import { AiChatProcessor, AiUsageQuotaError, parseError } from './processor';
 
@@ -88,6 +90,28 @@ describe('parseError', () => {
   test('still surfaces the unavailable model from a string', ({ expect }) => {
     const err = "UnknownError: ChatCompletionsClient.streamText: model 'gemma3:27b' not found";
     expect(parseError(err).message).toBe('The model is not available: gemma3:27b');
+  });
+
+  // Raised by the model resolver chain before the request leaves the browser, so the user sees it
+  // whenever the configured model is not served by the configured provider.
+  test('names the model of a typed AiModelNotAvailableError (direct path)', ({ expect }) => {
+    const err = new AiModelNotAvailableError(DXN.make('com.anthropic.model.claude-opus-4-8.default'));
+    expect(parseError(err).message).toBe('The model is not available: dxn:com.anthropic.model.claude-opus-4-8.default');
+  });
+
+  test('names the model of an AiModelNotAvailableError nested in the cause chain', ({ expect }) => {
+    const err = new Error('request failed', {
+      cause: new AiModelNotAvailableError(DXN.make('com.anthropic.model.claude-opus-4-8.default')),
+    });
+    expect(parseError(err).message).toBe('The model is not available: dxn:com.anthropic.model.claude-opus-4-8.default');
+  });
+
+  // The stringified form appends the error's context, so the model is not the end of the string —
+  // the trailing separator must not be captured as part of the model id.
+  test('names the model once the failure has been stringified by the process boundary', ({ expect }) => {
+    const err =
+      'AiModelNotAvailableError: AI Model not available: dxn:com.anthropic.model.claude-opus-4-8.default: {"model":"dxn:com.anthropic.model.claude-opus-4-8.default"}';
+    expect(parseError(err).message).toBe('The model is not available: dxn:com.anthropic.model.claude-opus-4-8.default');
   });
 
   test('passes through a non-quota AiError description', ({ expect }) => {
