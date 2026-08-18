@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { Config } from './config';
-import { EdgeServiceName, getEdgeServiceEndpoint, getRequiredEdgeServiceEndpoint } from './edge-services';
+import { EdgeServiceName, getEdgeServiceEndpoint } from './edge-services';
 
 // Unconfigured lookups must never inject an endpoint (configPreset is exempt: calling the factory is the opt-in).
 describe('no default endpoints', () => {
@@ -26,11 +26,5 @@ describe('no default endpoints', () => {
     });
     expect(getEdgeServiceEndpoint(config, EdgeServiceName.Calls)).toEqual('https://calls-override.example.com');
     expect(getEdgeServiceEndpoint(config, EdgeServiceName.Image)).toBeUndefined();
-  });
-
-  test('getRequiredEdgeServiceEndpoint names the service and the config path when unconfigured', ({ expect }) => {
-    expect(() => getRequiredEdgeServiceEndpoint(new Config(), EdgeServiceName.Calls)).toThrow(
-      'The calls service is not configured (runtime.services.edgeServices: calls).',
-    );
   });
 });

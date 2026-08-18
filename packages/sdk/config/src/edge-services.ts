@@ -26,22 +26,3 @@ export type EdgeServiceName = (typeof EdgeServiceName)[keyof typeof EdgeServiceN
  */
 export const getEdgeServiceEndpoint = (config: Config, name: EdgeServiceName): string | undefined =>
   config.values.runtime?.services?.edgeServices?.findLast((service) => service.name === name)?.endpoint;
-
-/**
- * Canonical wording for an unconfigured EDGE service, naming the config path so every consumer
- * reports the same actionable fix instead of inventing its own.
- */
-export const edgeServiceNotConfiguredMessage = (name: EdgeServiceName): string =>
-  `The ${name} service is not configured (runtime.services.edgeServices: ${name}).`;
-
-/**
- * {@link getEdgeServiceEndpoint} for call sites that cannot proceed without the service, throwing
- * before absence can surface as a generic invariant or a request against an `undefined/...` URL.
- */
-export const getRequiredEdgeServiceEndpoint = (config: Config, name: EdgeServiceName): string => {
-  const endpoint = getEdgeServiceEndpoint(config, name);
-  if (!endpoint) {
-    throw new Error(edgeServiceNotConfiguredMessage(name));
-  }
-  return endpoint;
-};
