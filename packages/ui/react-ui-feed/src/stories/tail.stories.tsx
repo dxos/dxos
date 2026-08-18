@@ -61,6 +61,16 @@ const tailOf = (viewport: HTMLElement, last: number): number | null => {
   return row ? Math.round(row.getBoundingClientRect().bottom - viewport.getBoundingClientRect().bottom) : null;
 };
 
+/** The reserve trailing the last row, read from the placement the list itself is driven by. */
+const reserveOf = (viewport: HTMLElement, last: number): number => {
+  const placement = (viewport as any).__feed?.placement;
+  if (!placement) {
+    return 0;
+  }
+
+  return Math.round(placement.layout().sizerExtent - (placement.positionOf(last) + placement.extentOf(last)));
+};
+
 const playTail = (count: number) =>
   async function play({ canvasElement }: { canvasElement: HTMLElement }) {
     const viewport = canvasElement.querySelector<HTMLElement>('[data-testid="feed.viewport"]')!;
@@ -70,12 +80,14 @@ const playTail = (count: number) =>
       samples.push(tailOf(viewport, count - 1));
     }
 
+    // The rest position includes the reserve: the tail sits its tail-lines clear of the edge.
+    const rest = -reserveOf(viewport, count - 1);
     const settled = samples.slice(ARRIVING);
     // Reported as a set rather than a count: a failure then shows what the tail was doing — absent
     // (`null`), below the fold, or drifting a pixel at a time — instead of only that it was wrong.
     await expect({
       distinct: [...new Set(settled)].sort(),
-      offBy: [...new Set(settled.map((value) => (value === null || Math.abs(value) > TOLERANCE ? value : 0)))],
+      offBy: [...new Set(settled.map((value) => (value === null || Math.abs(value - rest) > TOLERANCE ? value : 0)))],
     }).toEqual({ distinct: [...new Set(settled)].sort(), offBy: [0] });
   };
 
@@ -87,7 +99,7 @@ const playTail = (count: number) =>
 
 /** Passive: open at the tail and look. */
 export const Default: Story = {
-  args: { scenario: 'thread', count: 500, scrollPastEnd: true },
+  args: { scenario: 'thread', count: 500, tailLines: 4 },
 };
 
 /** Tall, uneven rows: the case where the estimate is furthest from the truth. */
@@ -97,7 +109,7 @@ export const Plain: Story = {
 };
 
 export const PlainPastEnd: Story = {
-  args: { scenario: 'plain', count: 500, scrollPastEnd: true },
+  args: { scenario: 'plain', count: 500, tailLines: 4 },
   play: playTail(500),
 };
 
@@ -108,7 +120,7 @@ export const Uniform: Story = {
 };
 
 export const UniformPastEnd: Story = {
-  args: { scenario: 'uniform', count: 500, scrollPastEnd: true },
+  args: { scenario: 'uniform', count: 500, tailLines: 4 },
   play: playTail(500),
 };
 
@@ -119,7 +131,7 @@ export const Assistant: Story = {
 };
 
 export const AssistantPastEnd: Story = {
-  args: { scenario: 'assistant', count: 200, scrollPastEnd: true },
+  args: { scenario: 'assistant', count: 200, tailLines: 4 },
   play: playTail(200),
 };
 
@@ -144,6 +156,6 @@ export const Varied: Story = {
 };
 
 export const VariedPastEnd: Story = {
-  args: { scenario: 'thread', count: 500, scrollPastEnd: true },
+  args: { scenario: 'thread', count: 500, tailLines: 4 },
   play: playTail(500),
 };

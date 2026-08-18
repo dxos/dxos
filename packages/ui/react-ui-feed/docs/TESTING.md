@@ -29,12 +29,15 @@ rm -rf .cache/storybook
 
 ---
 
-## 1. The flagship — the plugin-assistant loop
+## 1. The flagship — the assistant loop
 
-http://localhost:9009/?path=/story/ui-react-ui-feed-assistant--assistant
+The canonical assistant story now lives in `@dxos/react-ui-assistant`
+(`moon run react-ui-assistant:storybook -- -p 9010`):
 
-This is the rewrite, end to end: `FeedModel` + the aspects + the debug endpoint, on the shipping
-path. Everything you asked for is on this one page.
+http://localhost:9010/?path=/story/ui-react-ui-assistant-chatthread--default
+
+This is the rewrite, end to end: `FeedModel` + the aspects + the debug endpoint + the real
+registry and chrome, on the shipping path. Everything you asked for is on this one page.
 
 1. Type a prompt and press Enter. Your message lands, and the agent answers in **blocks** — a
    status that disappears, reasoning that closes, a tool call and its result, then the answer
@@ -74,7 +77,7 @@ Then `--plain` (no editors — the floor) and `--uniform` for comparison.
 
 ## 3. The virtualizer on its own
 
-http://localhost:9009/?path=/story/ui-react-ui-feed-virtualizer--static
+http://localhost:9009/?path=/story/ui-react-ui-virtual-window--static
 
 Boxes of known size; anything that moves is the placement. The toolbar drives the **model** now —
 append/prepend are told to it, nothing is inferred.
@@ -84,8 +87,8 @@ append/prepend are told to it, nothing is inferred.
 2. `--grow`: the row's extent changes in the model; rows after it move, rows before it must not.
 3. `--sticky`: drive to the end, press append. The tail follows with the glide; away from the end,
    append must not drag you.
-4. `--past-end` and the `scrollPastEnd` control: the last row rests on the bottom; the reserve is
-   scrollable to bring it to the top, and no further.
+4. `--past-end` and the reserve control: the reserve is part of the resting view — "bottom" lands
+   at the scroll maximum with the reserved space on screen below the tail.
 5. `--inline-content`: the horizontal axis with real editors (in scope for the virtualizer only).
    Scroll it; nothing should judder or jump.
 
@@ -93,7 +96,7 @@ append/prepend are told to it, nothing is inferred.
 
 ## 4. The rails
 
-Flagship page (§1) for the Outline; `virtualizer/--static` for both rails.
+Flagship page (§1) for the Outline; `react-ui-virtual/window/--static` for the window (the rails pair lives in `components/minimap`).
 
 1. Outline: hover tracks, leaving dismisses, **click then leave dismisses**, click then arrows
    steps the feed one stop per press with the card following.
@@ -108,7 +111,7 @@ Flagship page (§1) for the Outline; `virtualizer/--static` for both rails.
 
 - `MessageList.Root` takes a **`FeedModel`**, not messages: stops, streaming, and paging live on
   it; `useFeedModel(messages)` adapts the array case. tanstack is gone entirely.
-- The virtualizer is an entry point — `@dxos/react-ui-feed/virtualizer` — placement + `useWindow`
+- The virtualizer is its own package — `@dxos/react-ui-virtual` — placement + `useWindow`
   - `Window`, told about changes by the model (a prepend is never inferred).
 - Aspects, each with tests: `useFollow` (glide on by default), `useFeedNavigation` (the one seam),
   `useDecorations` (search left the list's API — it is one producer of decorations), item
@@ -127,5 +130,5 @@ Flagship page (§1) for the Outline; `virtualizer/--static` for both rails.
 
 1. **§1.1–1.4** — does the flagship loop feel right? That page is the product.
 2. **§2** — is it smooth? Nothing else matters if not.
-3. **§1.2** — the glide's speed. One number (`maxSpeed: 8` in `use-follow.ts`), easily tuned.
+3. **§1.2** — the glide's speed. One number (`maxSpeed: 8` in react-ui-virtual’s `useFollow.ts`), easily tuned.
 4. **§3.1** — does a prepend really move nothing?
