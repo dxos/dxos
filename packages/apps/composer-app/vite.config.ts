@@ -53,12 +53,17 @@ const SYNC_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-subduc
 
 /**
  * Resolves {@link SYNC_WASM_PACKAGES} without the `browser` condition, selecting their
- * synchronous-init entrypoints so no top-level await enters the module graph.
+ * synchronous-init entrypoints so no top-level await enters the dev module graph.
+ *
+ * Dev-server counterpart of the WebKit hazard the production bundle is structurally immune to
+ * (see `resolveLazy` in app-framework): under `serve` nothing is bundled, plugin definitions are
+ * imported concurrently, and WebKit before Safari 27 evaluates a module before a shared
+ * top-level-await dependency has settled — https://bugs.webkit.org/show_bug.cgi?id=242740, fixed by
+ * https://github.com/WebKit/WebKit/pull/57827 (Safari 27; not in 26.x).
  */
-// TODO(wittjosiah): Remove the need for this rather than waiting on a WebKit fix — either the
-//  automerge wasm packages stop requiring top-level await, or our bundling and dependencies change
-//  so the TDZ is unreachable. Only `serve` needs it, but the Tauri app renders in a WebKit web
-//  view, so that covers dev there too.
+// TODO(wittjosiah): Retire once Safari 27 is the dev floor (the Tauri webview is the system WebKit,
+//  so macOS 27 / iOS 27 dev hosts get the fix), or sooner if the automerge packages drop top-level
+//  await from their `browser` entry.
 const syncWasmInit = (): PluginOption => {
   // `browser` is deliberately absent; the rest mirrors what vite would apply for the client.
   const resolver = new ResolverFactory({ conditionNames: ['source', 'import', 'module', 'default'] });
@@ -132,8 +137,8 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   importSource({
     include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
   }),
-  // WebKit evaluates a module before its dependencies when a graph reached by concurrent dynamic
-  // imports contains top-level await, leaving bindings in TDZ.
+  // WebKit < 27 evaluates a module before its dependencies when a graph reached by concurrent dynamic
+  // imports contains top-level await, leaving bindings in TDZ (bug 242740; see the plugin's doc).
   syncWasmInit(),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
