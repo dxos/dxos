@@ -136,7 +136,7 @@ type ChatThreadViewportProps = ComponentPropsWithoutRef<typeof MessageList.Viewp
  * `data-action="submit"` buttons; one delegated listener here turns those clicks into `submit`
  * events, which is what keeps the widgets renderable from the tag alone.
  */
-const ChatThreadViewport = ({ children, ...props }: ChatThreadViewportProps) => {
+const ChatThreadViewport = ({ children, classNames, ...props }: ChatThreadViewportProps) => {
   const { userHue, onEvent } = useChatThreadContext(CHAT_THREAD_VIEWPORT_NAME);
 
   const handleClick = useCallback(
@@ -154,7 +154,11 @@ const ChatThreadViewport = ({ children, ...props }: ChatThreadViewportProps) => 
 
   return (
     <div className='contents' data-testid='assistant.thread' data-hue={userHue} onClickCapture={handleClick}>
-      <MessageList.Viewport {...props}>{children}</MessageList.Viewport>
+      {/* Every chat host is a flex column with a composer below: the scroll-container pair is the
+          default, and a caller's classNames extend or override it. */}
+      <MessageList.Viewport {...props} classNames={['grow min-h-0', classNames]}>
+        {children}
+      </MessageList.Viewport>
     </div>
   );
 };

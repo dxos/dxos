@@ -139,7 +139,9 @@ export default meta;
 type Story = StoryObj<StoryArgs>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    debug: true,
+  },
 };
 
 /**

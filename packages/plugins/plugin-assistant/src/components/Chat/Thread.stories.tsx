@@ -53,7 +53,7 @@ const Thread = ({ messages, viewType }: { messages: MessageType.Message[]; viewT
   const model = useFeedModel(messages, { stops: 'prompt' });
   return (
     <ChatThread.Root model={model} viewType={viewType} onEvent={(event) => recordedEvents.push(event)}>
-      <ChatThread.Viewport classNames='grow min-h-0' padding />
+      <ChatThread.Viewport padding />
     </ChatThread.Root>
   );
 };

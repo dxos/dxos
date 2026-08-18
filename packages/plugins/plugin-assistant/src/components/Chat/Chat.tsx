@@ -427,7 +427,7 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}
       >
-        <NaturalChatThread.Viewport classNames={['grow min-h-0', classNames]} padding />
+        <NaturalChatThread.Viewport classNames={classNames} padding />
       </NaturalChatThread.Root>
 
       {/* TODO(burdon): Why is this required? */}
