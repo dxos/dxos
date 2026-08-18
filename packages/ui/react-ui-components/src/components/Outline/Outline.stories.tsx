@@ -41,6 +41,11 @@ const DefaultStory = ({ markers, ...props }: OutlineProps) => {
             {...props}
             markers={markers}
             visibleRange={visibleRange}
+            // The wiring a host actually uses: arrows step the *document*, not the rail's ticks,
+            // because the rail thins its markers and the two are not one-to-one.
+            onNavigate={(delta) =>
+              setStart((current) => Math.max(0, Math.min(current + delta * (DOC_LENGTH / 14), DOC_LENGTH - WINDOW)))
+            }
             onSelect={(marker) => {
               setSelected(marker);
               // Clicking a tick moves the visible range to that marker.
@@ -129,5 +134,62 @@ export const Dismissal: Story = {
       focused: canvasElement.ownerDocument.activeElement === tick,
       navigated: rail.dataset.navigated,
     }).toEqual({ focused: true, navigated: '' });
+  },
+};
+
+/**
+ * The arrows take the card over from the pointer, and pointing takes it back.
+ *
+ * A reader clicks a tick and then presses an arrow without moving the mouse — which is the whole
+ * point of clicking one. The pointer is still resting on the tick they clicked, so a rule of
+ * "the pointer always wins" pins the card to a place they have already left, and the feed scrolls
+ * under a card describing somewhere else. Reported from a real session as "card does not move".
+ */
+export const KeyboardTakeover: Story = {
+  args: { markers: defaultMarkers },
+  play: async ({ canvasElement }) => {
+    const rail = canvasElement.querySelector<HTMLElement>('[role="navigation"]')!;
+    const tick = rail.querySelectorAll('button')[3] as HTMLElement;
+    const settle = async () => {
+      for (let frame = 0; frame < 20; frame++) {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+    };
+
+    // `pointerover`, not `pointerenter`: React synthesises enter from over/out pairs, so over is the
+    // event a handler actually hears.
+    tick.dispatchEvent(new PointerEvent('pointerover', { bubbles: true }));
+    await settle();
+    const hovered = { pointer: rail.dataset.pointer, shown: rail.dataset.shown };
+
+    tick.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    tick.focus();
+    tick.click();
+    await settle();
+
+    // Three presses, with the pointer never moving off the tick that was clicked.
+    for (let press = 0; press < 3; press++) {
+      tick.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      await settle();
+    }
+
+    const navigated = { pointer: rail.dataset.pointer, shown: rail.dataset.shown };
+
+    // Pointing again hands it back: the pointer is the more direct statement while it is being made.
+    tick.dispatchEvent(new PointerEvent('pointerover', { bubbles: true }));
+    await settle();
+
+    await expect({
+      hovered,
+      // The card moved with the arrows even though the pointer had not moved at all.
+      moved: navigated.shown !== hovered.shown,
+      pointerHeld: navigated.pointer === hovered.pointer,
+      returned: rail.dataset.shown === rail.dataset.pointer,
+    }).toEqual({
+      hovered: { pointer: '3', shown: '3' },
+      moved: true,
+      pointerHeld: true,
+      returned: true,
+    });
   },
 };

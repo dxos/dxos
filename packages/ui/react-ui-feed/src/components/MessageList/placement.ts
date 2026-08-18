@@ -225,6 +225,20 @@ export class Placement {
   }
 
   /**
+   * Where the reader has to be for `index` to sit at the start (or end) of the viewport.
+   *
+   * Reports; does not move. `jumpTo` re-anchors as well, which is right for a discontinuity and
+   * wrong for a glide: the anchor would arrive at the destination while the element was still
+   * travelling, so the reader would watch the rows they were scrolling *through* unmount and the
+   * journey happen over nothing.
+   */
+  offsetOf(index: number, align: 'start' | 'end' = 'start'): number {
+    const clamped = Math.max(0, Math.min(index, this.#count - 1));
+    const start = this.positionOf(clamped);
+    return Math.max(0, align === 'end' ? start + this.extentOf(clamped) - this.#viewport : start);
+  }
+
+  /**
    * Where the reader has to be for the last row to rest against the end of the viewport.
    *
    * Derived from the anchor, like every other position, and deliberately **not** from a sum over the

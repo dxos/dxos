@@ -62,7 +62,11 @@ export type WindowState = {
 };
 
 export type WindowController = {
-  scrollToIndex: (index: number, align?: 'start' | 'end') => void;
+  /**
+   * `behavior: 'smooth'` glides, and only over content that is mounted — a glide across rows that do
+   * not exist is a journey over a blank screen, so a far target is taken instantly (§7).
+   */
+  scrollToIndex: (index: number, align?: 'start' | 'end', behavior?: ScrollBehavior) => void;
 };
 
 export type WindowProps = ThemedClassName<{
@@ -170,8 +174,20 @@ export const Window = ({
   useImperativeHandle(
     controllerRef,
     () => ({
-      scrollToIndex: (index, align) => {
+      scrollToIndex: (index, align, behavior = 'auto') => {
         const scroller = scrollerRef.current;
+        const { first, last } = placement.layout();
+        // A glide only over rows that are already there. Beyond them the offset is a sum of
+        // estimates, so the travel would cross content that does not exist and land somewhere the
+        // measurement then corrects — a step the reader watched go to the wrong place.
+        if (behavior === 'smooth' && scroller && index >= first && index <= last) {
+          const target = placement.offsetOf(index, align);
+          // Reported, not applied: the element animates and its scroll events drive the placement,
+          // one frame at a time, so the mounted window stays under the reader for the whole journey.
+          scroller.scrollTo(axis === 'block' ? { top: target, behavior } : { left: target, behavior });
+          return;
+        }
+
         placement.jumpTo(index, align);
         if (scroller) {
           if (axis === 'block') {
@@ -320,7 +336,7 @@ export const Window = ({
       }
 
       if (actual && actual !== declared) {
-          placement.measure(id, actual);
+        placement.measure(id, actual);
         changed = true;
       }
     }

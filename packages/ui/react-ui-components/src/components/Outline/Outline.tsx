@@ -145,8 +145,16 @@ export const Outline = ({
     [visibleRange],
   );
 
-  // The pointer wins where there is one: it is the more direct statement of what the reader means.
-  const shown = pointer ?? navigated;
+  // Not "has focus" — "is being driven by the keyboard". A click focuses a tick too, and gating on
+  // focus left the card up after the pointer had gone: the reader clicked, moved away, and the
+  // keyboard position they never asked for kept it open.
+  const [keyboard, setKeyboard] = useState(false);
+
+  // Whichever the reader is actually using. The pointer is the more direct statement, so it wins by
+  // default — but not once the arrows are in play: clicking a tick and then pressing an arrow leaves
+  // the pointer resting where it was clicked, and a pointer that always wins pins the card to a tick
+  // the reader has already navigated away from. Pointing again takes it back (`onPointerEnter`).
+  const shown = keyboard ? (navigated ?? pointer) : (pointer ?? navigated);
 
   // A backstop while a card is up: the pointer arriving anywhere outside the rail clears it.
   //
@@ -243,10 +251,6 @@ export const Outline = ({
   // arrow press the popover would otherwise describe the tick the pointer last touched rather than
   // the place the reader is now. Derived from the visible range, so it tracks the list however the
   // reader moved: the arrows, the toolbar, or the scrollbar.
-  // Not "has focus" — "is being driven by the keyboard". A click focuses a tick too, and gating on
-  // focus left the card up after the pointer had gone: the reader clicked, moved away, and the
-  // keyboard position they never asked for kept it open.
-  const [keyboard, setKeyboard] = useState(false);
   const visibleFrom = visibleRange?.from;
   useEffect(() => {
     if (!keyboard || visibleFrom == null) {
@@ -273,6 +277,9 @@ export const Outline = ({
         // keyboard having navigated to one — rather than only that it is (§12).
         data-pointer={pointer ?? ''}
         data-navigated={navigated ?? ''}
+        // And which of the two is actually being shown, since that is the invariant — the reader
+        // sees one card, not two states (§12).
+        data-shown={shown ?? ''}
         // A pointer anywhere in the rail ends the keyboard's claim on what is shown: the reader has
         // gone back to pointing, and the two should not both assert a position.
         onPointerDown={() => setKeyboard(false)}
@@ -308,7 +315,12 @@ export const Outline = ({
               ref={(element) => {
                 rowsRef.current[index] = element;
               }}
-              onPointerEnter={() => setPointer(index)}
+              onPointerEnter={() => {
+                setPointer(index);
+                // The reader has gone back to pointing, so the keyboard's claim on what is shown
+                // ends here rather than at a blur that a mouse never causes.
+                setKeyboard(false);
+              }}
               // Cleared on the tick that set it, rather than on the rail. A rail-level leave is
               // synthesised from over/out pairs and was observed not firing at all — the card
               // stayed up after the pointer had gone, in the browser and in a test. Moving between

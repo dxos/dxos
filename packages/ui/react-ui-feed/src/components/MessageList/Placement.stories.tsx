@@ -99,7 +99,10 @@ const Harness = ({
 
   // Everything here is *outside* the window, reading what it publishes: chrome is the host's, and a
   // toolbar that reached inside would be the engine growing an opinion about navigation (§2).
-  const step = (delta: number) => controller.current?.scrollToIndex((state?.index ?? 0) + delta);
+  // Smooth, because a step is a move the reader should be able to follow with their eyes — and it
+  // can be here: corrections move the window rather than the scroll (§7), so nothing cancels the
+  // animation halfway. The old engine had to make this instant for exactly that reason.
+  const step = (delta: number) => controller.current?.scrollToIndex((state?.index ?? 0) + delta, 'start', 'smooth');
 
   // Measured from the container this owns, not from what the window publishes.
   //
