@@ -13,7 +13,7 @@ const handler: Operation.WithHandler<typeof SpaceObjectOperation.RemoveTag> = Sp
   Operation.withHandler(
     Effect.fnUntraced(function* ({ tag, object }) {
       const resolved = yield* Database.load(object);
-      Entity.update(resolved, (entity) => Entity.removeTag(entity, tag));
+      Entity.update(resolved, (resolved) => Entity.removeTag(resolved, tag));
       return { object: Entity.toJSON(resolved) };
     }),
   ),

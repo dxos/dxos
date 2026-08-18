@@ -63,8 +63,8 @@ export default Capability.makeModule(
         ObservabilityMapping.make({
           operation: SpaceOperation.AddType,
           event: 'space.type.add',
-          properties: (input, output) => ({
-            spaceId: input.db.spaceId,
+          properties: (_input, output) => ({
+            spaceId: Obj.getDatabase(output.object)?.spaceId,
             objectId: output.object.id,
             typename: Type.getTypename(output.object),
           }),

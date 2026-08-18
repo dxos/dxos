@@ -10,13 +10,15 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj, Query, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EID } from '@dxos/keys';
 
-import { SpaceObjectOperation } from '#types';
+import { SpaceObjectOperation, SpaceOperation } from '#types';
 
+import AddRelationHandler from './add-relation';
 import AddTagHandler from './add-tag';
+import AddTypeHandler from './add-type';
 import GetObjectsHandler from './get-objects';
 import QueryObjectsHandler from './query-objects';
 import QueryTypesHandler from './query-types';
@@ -37,15 +39,22 @@ class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.
   }),
 ) {}
 
+const TestRelation = Type.makeRelation(DXN.make('com.example.relation.testRelation', '0.1.0'))({
+  source: Obj.Unknown,
+  target: Obj.Unknown,
+})(Schema.Struct({ id: Obj.ID, note: Schema.optional(Schema.String) }));
+
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.make(
+    AddRelationHandler,
     AddTagHandler,
+    AddTypeHandler,
     GetObjectsHandler,
     QueryObjectsHandler,
     QueryTypesHandler,
     RemoveTagHandler,
   ),
-  types: [Skill.Skill, Feed.Feed, Tag.Tag, TestObject],
+  types: [Skill.Skill, Feed.Feed, Tag.Tag, TestObject, TestRelation],
   disableLlmMemoization: true,
 });
 
@@ -160,6 +169,81 @@ describe('object verbs', () => {
         });
         expect(types).toHaveLength(1);
         expect(decodeTypeRow(types[0]).jsonSchema).toBeDefined();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+  it.effect(
+    'addRelation takes a live schema and live ends, as an in-process caller has them',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const source = yield* Database.add(Obj.make(TestObject, { name: 'source' }));
+        const target = yield* Database.add(Obj.make(TestObject, { name: 'target' }));
+        yield* Database.flush();
+
+        yield* Operation.invoke(SpaceOperation.AddRelation, {
+          schema: TestRelation,
+          source,
+          target,
+          fields: { note: 'live' },
+        });
+
+        const [relation] = yield* Database.query(Query.select(Filter.type(TestRelation))).run;
+        expect(Relation.getSource(relation).id).toBe(source.id);
+        expect(Relation.getTarget(relation).id).toBe(target.id);
+        expect(relation.note).toBe('live');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'addRelation takes a typename and references, as a remote caller has them',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const source = yield* Database.add(Obj.make(TestObject, { name: 'ref source' }));
+        const target = yield* Database.add(Obj.make(TestObject, { name: 'ref target' }));
+        yield* Database.flush();
+
+        yield* Operation.invoke(SpaceOperation.AddRelation, {
+          typename: 'com.example.relation.testRelation',
+          source: Ref.make(source),
+          target: Ref.make(target),
+          fields: { note: 'remote' },
+        });
+
+        const relations = yield* Database.query(Query.select(Filter.type(TestRelation))).run;
+        const relation = relations.find((candidate) => Relation.getSource(candidate).id === source.id);
+        expect(relation).toBeDefined();
+        expect(relation?.note).toBe('remote');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'addType builds the type from JSON Schema, as a remote caller supplies it',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { object } = yield* Operation.invoke(SpaceOperation.AddType, {
+          typename: 'com.example.type.project',
+          name: 'Project',
+          jsonSchema: {
+            $schema: 'http://json-schema.org/draft-07/schema#',
+            type: 'object',
+            title: 'Project',
+            properties: { name: { type: 'string' }, status: { type: 'string' } },
+            required: ['name'],
+          },
+        });
+
+        expect(Type.getTypename(object)).toBe('com.example.type.project');
+        // Registered in the space, so the object verbs can create instances of it next.
+        const { types } = yield* Operation.invoke(SpaceObjectOperation.QueryTypes, {});
+        expect(types.map((type) => decodeTypeRow(type).typename)).toContain('com.example.type.project');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

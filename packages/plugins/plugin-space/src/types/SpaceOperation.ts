@@ -492,42 +492,64 @@ export const AddType = Operation.make({
     description: 'Add a type to the space.',
     icon: 'ph--code--regular',
   },
-  services: [Capability.Service, Plugin.Service],
   input: Schema.Struct({
-    db: Database.Database,
-    name: Schema.optional(Schema.String),
-    typename: Schema.optional(Schema.String),
-    version: Schema.optional(Schema.String),
+    // The live schema an in-process caller holds; a remote caller sends the JSON Schema and the
+    // handler builds the type from it. Exactly one is required.
     // TODO(wittjosiah): Schema for type?
-    type: Schema.Any,
+    type: Schema.optional(Schema.Any),
+    // Typed as a record so the tool parameter advertises `type: object`, forcing the model to emit
+    // the JSON Schema as an object rather than a JSON-encoded string.
+    jsonSchema: Schema.optional(Schema.Record(Schema.String, Schema.Any)).annotate({
+      description: 'JSON Schema (draft-07) describing the fields of the new type.',
+    }),
+    name: Schema.optional(Schema.String).annotate({ description: 'Display name for the type.' }),
+    typename: Schema.optional(Schema.String).annotate({
+      description: 'Typename in reverse-domain form (e.g. com.example.type.project); required with `jsonSchema`.',
+    }),
+    version: Schema.optional(Schema.String),
     show: Schema.optional(Schema.Boolean),
+    // Absent, the database comes from the ambient context.
+    db: Schema.optional(Database.Database),
   }),
   output: Schema.Struct({
     id: Schema.String,
     object: Type.getSchema(Type.Type),
   }),
-});
+}).pipe(Operation.mcpTool({ name: 'addType', safety: 'write', aspect: 'space' }));
+
+/** An object of the relation, live for an in-process caller and a reference for a remote one. */
+const RelationEnd = Schema.Union([Obj.Unknown, Ref.Ref(Obj.Unknown)]);
 
 export const AddRelation = Operation.make({
   meta: {
     key: makeKey('addRelation'),
     name: 'Add Relation',
-    description: 'Add a relation between objects.',
+    description:
+      'Relate two objects. The relation is itself typed, so name a relation type the space knows — ' +
+      'query the types to find one.',
     icon: 'ph--link--regular',
   },
   input: Schema.Struct({
-    db: Database.Database,
+    source: RelationEnd,
+    target: RelationEnd,
+    // The live schema an in-process caller holds; a remote caller names the type instead and the
+    // handler resolves it against the space's registry. Exactly one is required.
     // TODO(wittjosiah): Relation schema.
-    schema: Schema.Any,
-    source: Obj.Unknown,
-    target: Obj.Unknown,
+    schema: Schema.optional(Schema.Any),
+    typename: Schema.optional(Schema.String).annotate({
+      description: 'Typename of the relation to create (e.g. org.dxos.type.hasConnection).',
+    }),
     // TODO(wittjosiah): Type based on relation schema.
-    fields: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+    fields: Schema.optional(Schema.Record(Schema.String, Schema.Any)).annotate({
+      description: "The relation's own properties, matching its type schema.",
+    }),
+    // Absent, the database comes from the source object.
+    db: Schema.optional(Database.Database),
   }),
   output: Schema.Struct({
     relation: Schema.Any,
   }),
-});
+}).pipe(Operation.mcpTool({ name: 'addRelation', safety: 'write', aspect: 'space' }));
 
 // TODO(wittjosiah): This appears to be unused.
 export const DuplicateObject = Operation.make({

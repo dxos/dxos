@@ -55,6 +55,8 @@ const PROJECTED_OBJECT_TOOLS = [
   'queryTypes',
   'addTag',
   'removeTag',
+  'addRelation',
+  'addType',
 ];
 
 type Response = { id?: number; result?: any };

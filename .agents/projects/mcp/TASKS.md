@@ -112,17 +112,21 @@ changes what a model sees lives in the shared package or it is a bug.
           They answer different questions — `listTypes` reports the types the _host registry_
           carries (typename + version, no space, no `Database.Service`), `queryTypes` queries the
           _space_ and returns schemas. Hence the distinct name; both survive.
-    - [ ] `RelationCreate` → merge into `AddRelation` as its remote branch. Same shape relationship
-          as `create` is to `object`: `AddRelation` takes a live `schema: Schema.Any` plus live
-          `source`/`target` (not remotely callable), `RelationCreate` takes `typename` + refs +
-          `properties` (is). Three in-process call sites (plugin-review `add-message`,
-          plugin-assistant `ChatCompanion` and `fork-chat`) keep the live form.
-    - [ ] `SchemaAdd` → merge into `AddType` the same way — **blocked on services first.** `AddType`
-          declares `Capability.Service` + `Plugin.Service` (it fires `SpaceEvents.TypeAdded` and the
-          `OnTypeAdded` callbacks), so it dies on a headless host until those are read optionally.
-          Biggest of the five; do last.
-    - [ ] `contextAdd`/`contextRemove` stay (they bind `Harness.HarnessService`); once the rest
-          leaves, the toolkit skill is a chat-context skill and should be keyed as one.
+    - [x] `RelationCreate` → **merged into `AddRelation`**, which now takes a live schema or a
+          `typename`, and live ends or references. The three in-process call sites are unchanged.
+          Output stays `Schema.Any`: the ends type as `unknown` while the schema input is
+          `Schema.Any` (the pre-existing relation-schema TODO owns that), so the tests assert
+          through a database query instead.
+    - [x] `SchemaAdd` → **merged into `AddType`**, which now takes a live `type` or a `jsonSchema`,
+          and reads its database from the ambient context when none is passed. The service blocker
+          is gone: `Capability.getAllAvailable` and `Plugin.activateIfAvailable` (new in
+          app-framework) read the app's contributions where they exist and return nothing where they
+          do not, so `AddType` declares no services at all. The `addType` test proves it — it runs
+          in `AssistantTestLayer`, which binds neither manager.
+    - [x] `contextAdd`/`contextRemove` stayed; the toolkit skill is now **Chat context** by name and
+          description.
+    - [ ] Follow-up: its key is still `org.dxos.skill.database`. Renaming it is a migration for
+          chats already bound to that key, so it carries a TODO rather than a rename.
   - [ ] **Model fixtures need regenerating** (needs `DX_ANTHROPIC_API_KEY`, absent from the cloud
         sandbox). `parameters.tools` is part of the fixture match key, so shrinking `DatabaseSkill`'s
         tool list invalidated all 134 conversations under

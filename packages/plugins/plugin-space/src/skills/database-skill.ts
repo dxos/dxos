@@ -25,6 +25,8 @@ const make = () =>
     tools: Skill.toolDefinitions({
       operations: [
         SpaceOperation.AddObject,
+        SpaceOperation.AddRelation,
+        SpaceOperation.AddType,
         SpaceObjectOperation.GetObjects,
         SpaceObjectOperation.QueryObjects,
         SpaceObjectOperation.QueryTypes,
@@ -58,6 +60,8 @@ const make = () =>
         - Query the types before writing an object of an unfamiliar type: the summary lists what the
           space knows, and asking for a typename returns the schema its fields must match.
         - Tags are themselves objects, so query for one before creating another.
+        - A relation is typed too: name a relation type the space knows and pass its own fields.
+        - No type fits? Add one from its JSON Schema, then create objects of it.
       `,
     }),
   });

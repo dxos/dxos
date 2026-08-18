@@ -7,26 +7,28 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { ContextAdd, ContextRemove, RelationCreate, SchemaAdd } from './operations/definitions';
+import { ContextAdd, ContextRemove } from './operations/definitions';
 
 const SKILL_KEY = 'org.dxos.skill.database';
 
 const instructions = trim`
-  You can manage the schemas, relations and tags of the ECHO database, and bind objects into the
-  chat context. Reading and writing the objects themselves is the Database skill's job (plugin-space).
+  You can bind objects into the chat's context so later turns can see them, and unbind them again.
+  Reading and writing the objects themselves — including types, relations and tags — is the
+  Database skill's job (plugin-space).
 `;
 
 const make = () =>
   Skill.make({
     key: SKILL_KEY,
-    name: 'Database schema',
-    description: 'Manage schemas, relations and tags, and bind objects into the chat context.',
+    // TODO(wittjosiah): Key still says `database` — renaming it is a migration for bound chats.
+    name: 'Chat context',
+    description: "Bind objects into the chat's context, and unbind them.",
     agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make({ content: instructions })),
     },
     tools: Skill.toolDefinitions({
-      operations: [ContextAdd, ContextRemove, RelationCreate, SchemaAdd],
+      operations: [ContextAdd, ContextRemove],
     }),
   });
 

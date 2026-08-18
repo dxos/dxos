@@ -16,7 +16,9 @@ import { SpaceOperationHandlerSet } from '#operations';
  */
 const PROJECTED_KEYS = [
   'org.dxos.plugin.space.operation.addObject',
+  'org.dxos.plugin.space.operation.addRelation',
   'org.dxos.plugin.space.operation.addTag',
+  'org.dxos.plugin.space.operation.addType',
   'org.dxos.plugin.space.operation.getObjects',
   'org.dxos.plugin.space.operation.queryObjects',
   'org.dxos.plugin.space.operation.queryTypes',
@@ -60,7 +62,9 @@ describe('operation serialization', () => {
 
     expect(projected).toEqual([
       'addObject',
+      'addRelation',
       'addTag',
+      'addType',
       'getObjects',
       'queryObjects',
       'queryTypes',

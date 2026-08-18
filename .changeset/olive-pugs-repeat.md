@@ -31,12 +31,19 @@ Skills move to the plugins that own their subject. `@dxos/plugin-connector` now 
 `@dxos/plugin-space` owns the **Database** skill — object CRUD over the projected verbs, exported as
 `DatabaseSkill` from `@dxos/plugin-space/skills`.
 
-`@dxos/assistant-toolkit`'s own `DatabaseSkill` keeps its key but drops the operations plugin-space
-now covers and is renamed **Database schema** for what remains: schema and relation creation, and
-chat-context binding. Gone from it: `objectCreate`, `objectDelete`, `objectUpdate`, `query` and
-`load` (covered by the projected verbs); `relationDelete` (covered by `removeObjects`, which already
-accepts relations); and `tagAdd`, `tagRemove` and `schemaList`, which moved to plugin-space as the
-annotated `addTag`, `removeTag` and `queryTypes`. Two
+`@dxos/assistant-toolkit`'s own `DatabaseSkill` keeps its key but is now chat-context binding alone
+(`contextAdd`/`contextRemove`) and is renamed **Chat context**. Everything else either moved to
+plugin-space or was retired as a duplicate: `objectCreate`, `objectDelete`, `objectUpdate`, `query`
+and `load` are covered by the projected verbs; `relationDelete` by `removeObjects`, which already
+accepts relations; `tagAdd`, `tagRemove` and `schemaList` moved as the annotated `addTag`,
+`removeTag` and `queryTypes`; and `relationCreate` and `schemaAdd` merged into plugin-space's
+existing `addRelation` and `addType`, each gaining the described form (a typename, references, or a
+JSON Schema) beside the live one, so the same verb serves an in-process and a remote caller.
+
+`Capability.getAllAvailable` and `Plugin.activateIfAvailable` are new: they read the app's
+contributions where they exist and return nothing where they do not, declaring no requirement. This
+is what lets `addType` fire `SpaceEvents.TypeAdded` and its `OnTypeAdded` callbacks in the app while
+still running on a host that has neither. Two
 capabilities moved onto the plugin-space verbs with the operations: `queryObjects` gained `in` (scope
 results to objects reachable from the given ones — how queue-backed mail is addressed), and
 `getObject` became `getObjects`, taking an array so a batch of references resolves in one call.

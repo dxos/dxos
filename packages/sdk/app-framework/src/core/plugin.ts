@@ -46,6 +46,16 @@ export const activate = (event: ActivationEvent.ActivationEvent): Effect.Effect<
   Effect.flatMap(Service, (manager) => manager.activate(event));
 
 /**
+ * {@link activate}, or `false` when no plugin manager is bound at all — there are no modules to
+ * activate on a headless host, and a declared service would resolve eagerly and die there.
+ */
+export const activateIfAvailable = (event: ActivationEvent.ActivationEvent): Effect.Effect<boolean, Error> =>
+  Effect.flatMap(
+    Effect.serviceOption(Service),
+    Option.match({ onNone: () => Effect.succeed(false), onSome: (manager) => manager.activate(event) }),
+  );
+
+/**
  * Re-activates the modules that were activated by the event.
  * Accesses the PluginManager via the Effect layer system.
  * @param event The activation event.
