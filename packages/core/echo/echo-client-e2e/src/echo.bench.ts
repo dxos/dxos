@@ -12,15 +12,11 @@ import { TestSchema } from '@dxos/echo/testing';
 
 import { parseBenchCount } from './testing/bench-util';
 
-// Same 5 operations as `sqlite.bench.ts`, run through the ECHO API instead of raw SQL, against a
-// real file-backed SQLite database (`storagePath`, not `:memory:`), using vitest's standard
-// `bench()` API. Run once per object storage kind: automerge objects (`db.add`, the default
-// CRDT-backed document tree) and feed objects (`db.add(obj, { to: feed })`, the append-only queue
-// path) — the matrix the task asked for. Opt-in ('manual' tag); run via
-// `DX_RUN_MANUAL_TESTS=1 pnpm exec vitest bench --project=node`.
+// Same 5 operations as `sqlite.bench.ts`, run through the ECHO API instead of raw SQL, over the
+// two object storage kinds: automerge objects (`db.add`) and feed objects (`db.add(obj, { to:
+// feed })`) — the matrix the task asked for.
 const SEED_COUNT = parseBenchCount('ECHO_BENCH_SEED_COUNT', 200);
-// See the sizing note in `sqlite.bench.ts` — tinybench's `time` is a floor, not a cap, so the
-// delete pool is sized well past what a 1s budget could plausibly consume.
+// See the sizing note in `sqlite.bench.ts`.
 const DELETE_POOL = parseBenchCount('ECHO_BENCH_DELETE_POOL', 300);
 const BENCH_OPTIONS = { time: 1_000 };
 
@@ -32,9 +28,8 @@ type Variant = {
 
 /**
  * Registers the shared insert/select/update/delete benches against whatever `makeVariant` builds.
- * `beforeAll`/`afterAll` aren't reliable with vitest's experimental `bench()` API — a bench's
- * warmup can start before `beforeAll` resolves — so both the ECHO peer/database and each variant's
- * seed data are memoized lazy singletons every bench awaits first.
+ * `beforeAll` isn't reliable with vitest's experimental `bench()` API, so setup is memoized lazy
+ * singletons every bench awaits first instead.
  */
 const defineOperationBenches = (
   makeVariant: (db: EchoDatabase, feed: Feed.Feed) => Variant,
@@ -51,12 +46,12 @@ const defineOperationBenches = (
         const { db, feed } = await ensureEcho();
         const variant = makeVariant(db, feed);
         const seeded: TestSchema.Expando[] = [];
-        for (let i = 0; i < SEED_COUNT; i++) {
-          seeded.push(await variant.insert(i));
+        for (let index = 0; index < SEED_COUNT; index++) {
+          seeded.push(await variant.insert(index));
         }
         const deletePool: TestSchema.Expando[] = [];
-        for (let i = 0; i < DELETE_POOL; i++) {
-          deletePool.push(await variant.insert(20_000_000 + i));
+        for (let index = 0; index < DELETE_POOL; index++) {
+          deletePool.push(await variant.insert(20_000_000 + index));
         }
         return { seeded, deletePool };
       })();

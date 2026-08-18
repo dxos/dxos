@@ -8,11 +8,7 @@ const assertPositiveInteger = (value: number, label: string): void => {
   }
 };
 
-/**
- * Reads a benchmark data-set size from an env var, falling back to `fallback` when unset.
- * Rejects non-positive/non-finite values so a bad override fails loudly instead of seeding an
- * empty or malformed pool.
- */
+/** Reads a benchmark data-set size from an env var (or `fallback`), rejecting invalid overrides. */
 export const parseBenchCount = (envVar: string, fallback: number): number => {
   const value = Number(process.env[envVar] ?? fallback);
   assertPositiveInteger(value, envVar);
