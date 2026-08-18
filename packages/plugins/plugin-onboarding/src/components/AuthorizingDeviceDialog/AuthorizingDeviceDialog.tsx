@@ -12,11 +12,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-/**
- * Shown while a magic-link token is being redeemed and this device admitted to the existing
- * identity. Mirrors the Welcome card's chrome (border, gradient, logo, footer) so swapping between
- * the two dialogs reads as a continuation of the login gate rather than a different screen.
- */
+/** Mirrors the Welcome card's chrome so swapping between the two dialogs reads as continuous. */
 export const AuthorizingDeviceDialog = () => {
   const { t } = useTranslation(meta.profile.key);
 
@@ -52,5 +48,3 @@ export const AuthorizingDeviceDialog = () => {
     </div>
   );
 };
-
-export default AuthorizingDeviceDialog;
