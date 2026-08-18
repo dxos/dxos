@@ -70,6 +70,11 @@ const press = async (viewport: HTMLElement, key: 'ArrowUp' | 'ArrowDown') => {
   await settle();
 };
 
+/** Passive: the feed with its stops, for driving by hand. */
+export const Default: Story = {
+  args: { scenario: 'assistant', count: 200 },
+};
+
 /**
  * Every press moves, and lands on a stop.
  *

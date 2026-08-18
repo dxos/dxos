@@ -27,7 +27,7 @@ import { MessageList, useMessageList } from './MessageList';
  * The `debug` arg turns on the generic Debug table (`@dxos/react-ui-feed/debug`), with probes over
  * the frame rate, the model, the window and the widget census — every aspect readable live.
  */
-type StoryProps = {
+type StoryArgs = {
   count?: number;
   debug?: boolean;
   scrollPastEnd?: boolean;
@@ -35,7 +35,7 @@ type StoryProps = {
   chunkDelay?: number;
 };
 
-const Story = ({ count = 30, debug, scrollPastEnd, wordsPerChunk = 4, chunkDelay = 120 }: StoryProps) => {
+const DefaultStory = ({ count = 30, debug, scrollPastEnd, wordsPerChunk = 4, chunkDelay = 120 }: StoryArgs) => {
   const definition = useMemo(() => createScenario({ scenario: 'assistant', count }), [count]);
   // The model, not an array: prompts and answers are told to it, and the window is told in turn.
   const model = useMemo(() => new FeedModel({ messages: definition.messages, stops: 'prompt' }), [definition]);
@@ -111,7 +111,7 @@ const Story = ({ count = 30, debug, scrollPastEnd, wordsPerChunk = 4, chunkDelay
             </Toolbar.Root>
           </Panel.Toolbar>
 
-          <Panel.Content classNames='relative dx-container'>
+          <Panel.Content classNames='relative dx-container grow min-h-0'>
             <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
               <PromptOutline classNames='row-start-2' model={model} />
             </div>
@@ -240,9 +240,9 @@ const Probes = ({ model }: { model: FeedModel }) => {
   return null;
 };
 
-const meta: Meta<StoryProps> = {
+const meta: Meta<StoryArgs> = {
   title: 'ui/react-ui-feed/assistant',
-  render: Story,
+  render: DefaultStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },
   argTypes: {
@@ -254,7 +254,7 @@ const meta: Meta<StoryProps> = {
 
 export default meta;
 
-type StoryObject = StoryObj<StoryProps>;
+type Story = StoryObj<StoryArgs>;
 
 const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve));
 
@@ -271,6 +271,9 @@ const type = (input: HTMLInputElement, value: string) => {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
+/** The loop, hands on: type a prompt, or press ▶ and watch. No play — this one is for people. */
+export const Default: Story = {};
+
 /**
  * The whole conversation loop, driven as a reader would drive it.
  *
@@ -278,7 +281,7 @@ const type = (input: HTMLInputElement, value: string) => {
  * stream (the follow at work); scrolling up mid-answer withdraws the follow and the feed holds
  * still under a growing document.
  */
-export const Assistant: StoryObject = {
+export const Assistant: Story = {
   args: { chunkDelay: 40 },
   play: async ({ canvasElement }) => {
     await settle(40);
@@ -346,7 +349,7 @@ export const Assistant: StoryObject = {
  * Scrolling away mid-answer stops the follow, and it stays stopped: a reader looking at history is
  * not dragged back by the stream. Returning to the tail opts back in.
  */
-export const Interrupted: StoryObject = {
+export const Interrupted: Story = {
   args: { chunkDelay: 40, count: 60 },
   play: async ({ canvasElement }) => {
     await settle(40);

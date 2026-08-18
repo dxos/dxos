@@ -51,6 +51,11 @@ export default meta;
 
 type Story = StoryObj<FeedStoryProps>;
 
+/** The feed at rest — the varied rung, which is the one that matters. No play. */
+export const Default: Story = {
+  args: { scenario: 'thread' },
+};
+
 /** Rung 1: fixed heights, no editor. If this moves, the list is at fault. */
 export const Plain: Story = {
   args: {

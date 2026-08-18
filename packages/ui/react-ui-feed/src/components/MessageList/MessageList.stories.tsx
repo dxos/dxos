@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { FeedStory, type FeedStoryProps } from '../../testing';
 
 const meta: Meta<FeedStoryProps> = {
-  title: 'ui/react-ui-feed/MessageList',
+  title: 'ui/react-ui-feed/components/MessageList',
   render: FeedStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },
@@ -38,6 +38,11 @@ type Story = StoryObj<FeedStoryProps>;
 //
 // The engine's own stories: a synthetic mixed feed, which is what the measurements were taken over.
 //
+
+/** Passive: the assistant-shaped feed under the shared harness. */
+export const Default: Story = {
+  args: { scenario: 'assistant', count: 200 },
+};
 
 /** Mixed markdown / html / code items — the realistic feed. */
 export const Small: Story = {

@@ -77,7 +77,7 @@ const DefaultStory = ({ markers, ...props }: OutlineProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-feed/Outline',
+  title: 'ui/react-ui-feed/components/Outline',
   component: Outline,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
@@ -150,43 +150,41 @@ export const KeyboardTakeover: Story = {
   play: async ({ canvasElement }) => {
     const rail = canvasElement.querySelector<HTMLElement>('[role="navigation"]')!;
     const tick = rail.querySelectorAll('button')[3] as HTMLElement;
-    const settle = async () => {
-      for (let frame = 0; frame < 20; frame++) {
+    // Polled to the condition rather than settled by frame count: the transitions run through
+    // effects whose commit timing differs between a laptop and CI, and a fixed wait encodes
+    // whichever machine wrote it.
+    const until = async (condition: () => boolean, frames = 300) => {
+      for (let frame = 0; frame < frames && !condition(); frame++) {
         await new Promise((resolve) => requestAnimationFrame(resolve));
       }
+      return condition();
     };
 
     // `pointerover`, not `pointerenter`: React synthesises enter from over/out pairs, so over is the
     // event a handler actually hears.
     tick.dispatchEvent(new PointerEvent('pointerover', { bubbles: true }));
-    await settle();
-    const hovered = { pointer: rail.dataset.pointer, shown: rail.dataset.shown };
+    const hovered = await until(() => rail.dataset.pointer === '3' && rail.dataset.shown === '3');
 
     tick.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     tick.focus();
     tick.click();
-    await settle();
 
-    // Three presses, with the pointer never moving off the tick that was clicked.
+    // Three presses, with the pointer never moving off the tick that was clicked; the card must
+    // move with the keyboard even though the pointer has not moved at all.
+    let moved = false;
     for (let press = 0; press < 3; press++) {
       tick.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
-      await settle();
+      moved = (await until(() => rail.dataset.shown !== '3', 60)) || moved;
     }
 
-    const navigated = { pointer: rail.dataset.pointer, shown: rail.dataset.shown };
+    const pointerHeld = rail.dataset.pointer === '3';
 
     // Pointing again hands it back: the pointer is the more direct statement while it is being made.
     tick.dispatchEvent(new PointerEvent('pointerover', { bubbles: true }));
-    await settle();
+    const returned = await until(() => rail.dataset.shown === rail.dataset.pointer);
 
-    await expect({
-      hovered,
-      // The card moved with the arrows even though the pointer had not moved at all.
-      moved: navigated.shown !== hovered.shown,
-      pointerHeld: navigated.pointer === hovered.pointer,
-      returned: rail.dataset.shown === rail.dataset.pointer,
-    }).toEqual({
-      hovered: { pointer: '3', shown: '3' },
+    await expect({ hovered, moved, pointerHeld, returned }).toEqual({
+      hovered: true,
       moved: true,
       pointerHeld: true,
       returned: true,

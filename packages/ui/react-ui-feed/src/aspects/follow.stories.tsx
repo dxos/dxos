@@ -151,7 +151,7 @@ const FollowStory = ({
       </Panel.Content>
 
       <Panel.Statusbar>
-        <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-description'>
+        <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-description tabular-nums'>
           <span data-testid='follow.items'>{items.length} items</span>
           <span data-testid='follow.position'>
             {readout.top} / {readout.target}

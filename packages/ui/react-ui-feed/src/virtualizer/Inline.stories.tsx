@@ -32,7 +32,7 @@ const documents = Array.from({ length: CARDS }, (_, index) => {
 /** Declared widths, deliberately wrong for most cards so measurement is exercised. */
 const extent = (index: number) => 240 + (index % 5) * 40;
 
-const Story = () => {
+const DefaultStory = () => {
   const controller = useRef<WindowController>(null);
   const extents = useMemo(() => ({ of: extent }), []);
   const model = useMemo(
@@ -61,16 +61,16 @@ const Story = () => {
   );
 };
 
-const meta: Meta<typeof Story> = {
-  title: 'ui/react-ui-feed/virtualizer',
-  component: Story,
+const meta: Meta<typeof DefaultStory> = {
+  title: 'ui/react-ui-feed/virtualizer/inline',
+  render: DefaultStory,
   decorators: [withLayout({ layout: 'column' }), withTheme()],
   parameters: { layout: 'fullscreen' },
 };
 
 export default meta;
 
-type StoryObject = StoryObj<typeof Story>;
+type Story = StoryObj<typeof DefaultStory>;
 
 const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve));
 
@@ -80,6 +80,9 @@ const settle = async (frames = 30) => {
   }
 };
 
+/** The horizontal strip, passively. No play. */
+export const Default: Story = {};
+
 /**
  * The block-axis invariants, on the inline axis, with editors.
  *
@@ -87,7 +90,7 @@ const settle = async (frames = 30) => {
  * scroll must move them by what was scrolled, and the far end must be reachable — the same three
  * readings `bridge/*` takes vertically.
  */
-export const InlineContent: StoryObject = {
+export const InlineContent: Story = {
   play: async ({ canvasElement }) => {
     await settle();
     const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="window.scroller"]')!;

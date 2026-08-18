@@ -198,6 +198,11 @@ const waitForViewport = async (canvasElement: HTMLElement): Promise<HTMLElement>
   throw new Error('feed viewport never mounted a row');
 };
 
+/** Passive: the first fill, watched rather than measured. */
+export const Default: Story = {
+  args: { scenario: 'uniform', count: 500 },
+};
+
 /** No editor at all: the floor, and what every other case is compared against. */
 export const Plain: Story = {
   args: { scenario: 'plain', count: 500 },

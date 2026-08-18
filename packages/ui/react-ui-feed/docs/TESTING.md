@@ -31,7 +31,7 @@ rm -rf .cache/storybook
 
 ## 1. The flagship — the plugin-assistant loop
 
-`http://localhost:9009/?path=/story/ui-react-ui-feed-assistant--assistant`
+http://localhost:9009/?path=/story/ui-react-ui-feed-assistant--assistant
 
 This is the rewrite, end to end: `FeedModel` + the aspects + the debug endpoint, on the shipping
 path. Everything you asked for is on this one page.
@@ -56,7 +56,7 @@ numbers from 5 during a fast fling.
 
 ## 2. Smoothness — the deciding criterion
 
-`http://localhost:9009/?path=/story/ui-react-ui-feed-baseline--varied`
+http://localhost:9009/?path=/story/ui-react-ui-feed-baseline--varied
 
 The whole spike exists to answer this, and it now runs on the rewritten engine. The stats panel is
 bottom right.
@@ -74,7 +74,7 @@ Then `--plain` (no editors — the floor) and `--uniform` for comparison.
 
 ## 3. The virtualizer on its own
 
-`http://localhost:9009/?path=/story/ui-react-ui-feed-virtualizer--static`
+http://localhost:9009/?path=/story/ui-react-ui-feed-virtualizer--static
 
 Boxes of known size; anything that moves is the placement. The toolbar drives the **model** now —
 append/prepend are told to it, nothing is inferred.

@@ -89,6 +89,9 @@ const descended = (a: Sample, b: Sample): number =>
     ? 0
     : [...b.tops].filter(([index, top]) => a.tops.has(index) && top - a.tops.get(index)! > 1).length;
 
+/** Passive: press ▶ yourself. */
+export const Default: Story = {};
+
 export const Streaming: Story = {
   play: async ({ canvasElement }) => {
     const viewport = canvasElement.querySelector<HTMLElement>('[data-testid="feed.viewport"]')!;

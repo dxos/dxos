@@ -29,7 +29,7 @@ import { type WindowController } from '../../virtualizer';
 /** A row's worth of space kept at the bottom, so the reserve cannot swallow the tail entirely. */
 const NOMINAL_ROW = 64;
 
-const Story = ({
+const DefaultStory = ({
   scenario,
   count,
   sticky,
@@ -104,16 +104,16 @@ const Story = ({
   );
 };
 
-const meta: Meta<typeof Story> = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-feed/bridge',
-  component: Story,
+  render: DefaultStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },
 };
 
 export default meta;
 
-type StoryObject = StoryObj<typeof Story>;
+type Story = StoryObj<typeof DefaultStory>;
 
 const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve));
 
@@ -131,7 +131,7 @@ const settle = async (frames = 40) => {
  * replacement has to satisfy, and the one the old engine could only satisfy by correcting itself
  * afterwards.
  */
-const holdsStill = (scenario: FeedScenario, count: number): StoryObject => ({
+const holdsStill = (scenario: FeedScenario, count: number): Story => ({
   args: { scenario, count },
   play: async ({ canvasElement }) => {
     const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="window.scroller"]')!;
@@ -179,14 +179,19 @@ const holdsStill = (scenario: FeedScenario, count: number): StoryObject => ({
   },
 });
 
+/** The bridge passively: real messages on the window, nothing asserted. */
+export const Default: Story = {
+  args: { scenario: 'assistant', count: 200, sticky: true },
+};
+
 /** Fixed-height rows, no editor: whatever moves here is the placement and nothing else. */
-export const Plain: StoryObject = holdsStill('plain', 200);
+export const Plain: Story = holdsStill('plain', 200);
 
 /** One editor per row, all identical. */
-export const Uniform: StoryObject = holdsStill('uniform', 200);
+export const Uniform: Story = holdsStill('uniform', 200);
 
 /** A chat's shape: per-message renderers, block widgets, a per-message estimate. */
-export const Assistant: StoryObject = holdsStill('assistant', 200);
+export const Assistant: Story = holdsStill('assistant', 200);
 
 /**
  * A chat's tail: the last message rests on the bottom, and stays there as answers arrive.
@@ -202,7 +207,7 @@ export const Assistant: StoryObject = holdsStill('assistant', 200);
  * React ends by exceeding the update limit. Then a follow re-derived from proximity, which its own
  * corrections disengage. Both presented as "the tail is in the wrong place".
  */
-export const Tail: StoryObject = {
+export const Tail: Story = {
   args: { scenario: 'assistant', count: 200, sticky: true },
   play: async ({ canvasElement }) => {
     await settle();
@@ -242,7 +247,7 @@ export const Tail: StoryObject = {
  * the content" and "the end of the document" are two numbers in one coordinate system rather than
  * two systems.
  */
-export const VariedPastEnd: StoryObject = {
+export const VariedPastEnd: Story = {
   args: { scenario: 'thread', count: 500, sticky: true, scrollPastEnd: true },
   play: async ({ canvasElement }) => {
     await settle(60);
@@ -284,7 +289,7 @@ export const VariedPastEnd: StoryObject = {
  * That is what a re-base breaks and what an anchor cannot: re-basing the document rewrites every
  * position including the ones above the reader, so a correction anywhere lands as a jump here.
  */
-export const Scrolling: StoryObject = {
+export const Scrolling: Story = {
   args: { scenario: 'thread', count: 500 },
   play: async ({ canvasElement }) => {
     await settle();

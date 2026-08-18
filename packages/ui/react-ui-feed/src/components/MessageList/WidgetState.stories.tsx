@@ -44,6 +44,11 @@ const settle = async (frames = 30) => {
   }
 };
 
+/** Passive: toggle the panels by hand. */
+export const Default: Story = {
+  args: { scenario: 'assistant', count: 200, debug: false },
+};
+
 export const Reopened: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

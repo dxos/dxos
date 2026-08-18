@@ -23,7 +23,7 @@ import { Window, type WindowAxis, type WindowController, type WindowState } from
  * this: plain boxes of declared extent, so anything that moves here is the shape and not the item.
  * The layer exists because the two things fail differently and a single suite cannot say which.
  */
-type StoryProps = {
+type StoryArgs = {
   /** Rows the model is seeded with; the append/prepend buttons then drive the model directly. */
   count?: number;
   axis?: WindowAxis;
@@ -41,11 +41,11 @@ type StoryProps = {
    * A button is the same thing the reader has, and there is only ever one of it.
    */
   /** Render the append button; 'few' appends 5 rows per press instead of 20 (the sticky story). */
-  onAppend?: boolean | 'few';
+  append?: boolean | 'few';
   /** Keep the last row against the bottom of the viewport as content arrives. */
   sticky?: boolean;
-  onPrepend?: boolean;
-  onGrow?: boolean;
+  prepend?: boolean;
+  grow?: boolean;
   /**
    * Reserve a viewport's worth of space after the last row, so it can be read at the top.
    *
@@ -70,7 +70,7 @@ type Row = { id: string; extent: number };
 /** The row `Grow` changes; near the top, so it is mounted whatever the extents turn out to be. */
 const GROWN = 5;
 
-const Harness = ({
+const DefaultStory = ({
   count = 500,
   axis = 'block',
   exact = true,
@@ -78,11 +78,11 @@ const Harness = ({
   declared,
   debug,
   scrollPastEnd,
-  onAppend,
-  onPrepend,
-  onGrow,
+  append,
+  prepend,
+  grow,
   sticky,
-}: StoryProps) => {
+}: StoryArgs) => {
   // The model the window binds to: the buttons drive it directly, so a prepend is *told* and the
   // stories exercise the told path rather than the replace-adapter's inference (SPEC F-7.1).
   // Items carry their extent — keyed by identity, so a prepend moves rows without resizing them.
@@ -189,8 +189,8 @@ const Harness = ({
           data-testid='window.bottom'
           onClick={() => controller.current?.scrollToIndex(total - 1, 'end')}
         />
-        {(onAppend || onPrepend || onGrow) && <Toolbar.Separator />}
-        {onPrepend && (
+        {(append || prepend || grow) && <Toolbar.Separator />}
+        {prepend && (
           <IconButton
             icon='ph--arrow-u-left-up--regular'
             iconOnly
@@ -206,7 +206,7 @@ const Harness = ({
             }
           />
         )}
-        {onAppend && (
+        {append && (
           <IconButton
             icon='ph--arrow-u-right-down--regular'
             iconOnly
@@ -214,7 +214,7 @@ const Harness = ({
             data-testid='window.append'
             onClick={() =>
               model.append(
-                Array.from({ length: onAppend === 'few' ? 5 : 20 }, (_, index) => ({
+                Array.from({ length: append === 'few' ? 5 : 20 }, (_, index) => ({
                   id: `later-${model.count}-${index}`,
                   extent: EXTENT(index),
                 })),
@@ -222,7 +222,7 @@ const Harness = ({
             }
           />
         )}
-        {onGrow && (
+        {grow && (
           <IconButton
             icon='ph--arrows-out-line-vertical--regular'
             iconOnly
@@ -300,9 +300,9 @@ const Harness = ({
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta: Meta<StoryArgs> = {
   title: 'ui/react-ui-feed/virtualizer',
-  render: Harness,
+  render: DefaultStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },
   // Listed in `args`, not only `argTypes`: the meta names no `component`, so storybook shows exactly
@@ -316,7 +316,7 @@ const meta: Meta<StoryProps> = {
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<StoryArgs>;
 
 const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve));
 
@@ -362,6 +362,11 @@ const moved = (before: Probe, after: Probe): number[] =>
 // The properties, one story each.
 //
 
+/** The harness at rest, for the eye and the controls panel. No play. */
+export const Default: Story = {
+  args: { append: true, prepend: true, grow: true },
+};
+
 /**
  * The window is placed where the arithmetic says, and the edges agree with the model.
  *
@@ -389,7 +394,7 @@ export const Static: Story = {
 
 /** Rows arriving at the end move nothing that is already on screen, and do not move the window. */
 export const Append: Story = {
-  render: (args) => <Harness {...args} count={200} onAppend />,
+  args: { count: 200, append: true },
   play: async ({ canvasElement }) => {
     await settle();
     const before = probe(canvasElement);
@@ -412,7 +417,7 @@ export const Append: Story = {
  * which is the whole reason placement is anchor-relative rather than summed from index 0.
  */
 export const Prepend: Story = {
-  render: (args) => <Harness {...args} count={200} onPrepend />,
+  args: { count: 200, prepend: true },
   play: async ({ canvasElement }) => {
     await settle();
     const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="window.scroller"]')!;
@@ -441,7 +446,7 @@ export const Prepend: Story = {
  * was 177 re-placements written by us for one disclosure.
  */
 export const Grow: Story = {
-  render: (args) => <Harness {...args} count={200} exact={false} onGrow />,
+  args: { count: 200, exact: false, grow: true },
   play: async ({ canvasElement }) => {
     await settle();
     const before = probe(canvasElement);
@@ -505,16 +510,13 @@ export const Horizontal: Story = {
  * of bisection (§8). The row renders at a size the callback did not claim; the mismatch names it.
  */
 export const Drift: Story = {
-  args: { count: 100 },
   // Rows render at their real extent; the callback under-reports by 20px on every third row.
-  render: (args) => (
-    <Harness
-      {...args}
-      exact
-      extent={EXTENT}
-      declared={(index) => (index % 3 === 0 ? EXTENT(index) - 20 : EXTENT(index))}
-    />
-  ),
+  args: {
+    count: 100,
+    exact: true,
+    extent: EXTENT,
+    declared: (index: number) => (index % 3 === 0 ? EXTENT(index) - 20 : EXTENT(index)),
+  },
   play: async ({ canvasElement }) => {
     await settle();
 
@@ -636,8 +638,7 @@ export const PastEnd: Story = {
  * the end, appending keeps you at the end; away from it, appending does not move you.
  */
 export const Sticky: Story = {
-  args: { count: 200, sticky: true },
-  render: (args) => <Harness {...args} onAppend='few' />,
+  args: { count: 200, sticky: true, append: 'few' },
   play: async ({ canvasElement }) => {
     await settle();
     const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="window.scroller"]')!;

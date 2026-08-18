@@ -85,6 +85,11 @@ const playTail = (count: number) =>
 // short of it — which is exactly what a test of the offset alone would not notice.
 //
 
+/** Passive: open at the tail and look. */
+export const Default: Story = {
+  args: { scenario: 'thread', count: 500, scrollPastEnd: true },
+};
+
 /** Tall, uneven rows: the case where the estimate is furthest from the truth. */
 export const Plain: Story = {
   args: { scenario: 'plain', count: 500 },
