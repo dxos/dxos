@@ -81,7 +81,8 @@ runs:
       shell: bash
 
     # Side-by-side installs are only useful if you can tell them apart: nightly gets the purple mark, every
-    # other prerelease the greyscale one, and the blue mark stays the released app's alone.
+    # other prerelease the rust one, and the blue mark stays the released app's alone. The web bundle
+    # brands its favicon and boot loader to match (`src/vite/channel-branding.ts`).
     - name: Update icon in tauri.conf.json
       if: inputs.environment != 'production' && inputs.suffix-identifier != 'false'
       env:
@@ -91,7 +92,7 @@ runs:
       run: |
         case "$ENVIRONMENT" in
           nightly) icons=icons-nightly ;;
-          *) icons=icons-grey ;;
+          *) icons=icons-rust ;;
         esac
         for file in 32x32.png 128x128.png 128x128@2x.png icon.icns icon.ico; do
           if [ ! -f "$WORKING_DIRECTORY/$icons/$file" ]; then

@@ -10,13 +10,22 @@ Run the following to generate the Windows icon.
 pnpm run icons:mstile
 ```
 
-## Per-channel icons
+## Per-channel brand artwork
 
-Each non-production channel installs as its own app, so it ships its own recolouring of the mark —
-purple for `nightly`, greyscale for everything else. `.github/actions/cn-config` points `bundle.icon`
-at the matching `src-tauri/icons-*` directory at build time.
+Every non-production channel deploys as its own app and installs beside the released one, so each ships a
+recoloured mark rather than sharing production's blue: **purple** for `nightly`, **rust** for `dev`,
+`staging`, and anything else. Three places carry it, all generated from the same four-colour ramp:
 
-To regenerate the variants and their icon sets from `icon.svg`:
+| Artwork | Source | Generated | Selected by |
+| --- | --- | --- | --- |
+| Desktop app icon | `icon.svg` | `src-tauri/icons-nightly`, `src-tauri/icons-rust` | `.github/actions/cn-config` |
+| Favicons | `favicon.svg` | `favicons-purple/`, `favicons-rust/` | `src/vite/channel-branding.ts` |
+| Boot loader mark | `@dxos/brand`'s `composer-icon.svg` | `boot-mark-purple.svg`, `boot-mark-rust.svg` | `src/vite/channel-branding.ts` |
+
+The web ones key off `DX_ENVIRONMENT`, which the deploy sets via `.github/workflows/scripts/populate-env.sh`;
+a local build leaves it unset and gets production's artwork.
+
+To regenerate everything after the mark or the ramp changes:
 
 ```bash
 pnpm icons:variants

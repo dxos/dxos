@@ -3,11 +3,17 @@
 // Copyright 2026 DXOS.org
 //
 
-// Regenerate the per-channel icon sources from `assets/icon.svg`.
+// Regenerate the per-channel brand artwork.
 //
-// Each channel installs as its own app (see `.github/actions/cn-config`), so it needs its own icon or a
-// dock holds several identical tiles. These are recolourings rather than redraws: only the hue and
-// saturation of the four-colour ramp change, so every variant keeps production's geometry and contrast.
+// Each non-production channel installs and runs as its own app (see `.github/actions/cn-config`), so it
+// needs its own mark or a dock — and a row of browser tabs — holds several identical tiles. These are
+// recolourings rather than redraws: only the hue and saturation of the shared four-colour ramp change, so
+// every variant keeps production's geometry and contrast.
+//
+// Three pieces of artwork carry the mark, all drawn from the same ramp:
+//   - the desktop app icon        (`assets/icon.svg`, on its near-black tile)
+//   - the favicon set             (`assets/favicon.svg`, transparent)
+//   - the boot loader's mark      (`@dxos/brand`'s `composer-icon.svg`, transparent)
 //
 // Usage: pnpm icons:variants
 
@@ -20,6 +26,37 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const assets = join(root, 'assets');
 const tauri = join(root, 'node_modules', '.bin', 'tauri');
+const brandMark = join(root, '..', '..', 'ui', 'brand', 'assets', 'icons', 'composer-icon.svg');
+
+/**
+ * `hue` in degrees replaces the ramp's own hue; `saturation` and `lightness` scale what is there.
+ * Lightness is scaled rather than set so the four steps stay proportional to one another.
+ * `icons` is the `src-tauri` directory `cn-config` points `bundle.icon` at.
+ */
+const VARIANTS = {
+  purple: {
+    icons: 'icons-nightly',
+    hue: 282,
+    saturation: 1,
+    lightness: 1,
+  },
+  rust: {
+    icons: 'icons-rust',
+    hue: 20,
+    // Held below the source ramp's near-full saturation: at full it reads as a warning colour rather
+    // than as rust, and competes with the app's own error states.
+    saturation: 0.75,
+    lightness: 1,
+  },
+};
+
+/** The ramp shared by all three pieces of artwork, brightest first. */
+const RAMP = [
+  [6, 197, 253],
+  [1, 122, 183],
+  [10, 75, 105],
+  [5, 40, 61],
+];
 
 /**
  * The only icons `bundle.icon` names. `tauri icon` also writes Windows Store, Android and iOS sets, which
@@ -28,13 +65,16 @@ const tauri = join(root, 'node_modules', '.bin', 'tauri');
  */
 const BUNDLE_ICONS = ['32x32.png', '128x128.png', '128x128@2x.png', 'icon.icns', 'icon.ico'];
 
-/** The ramp in `icon.svg`, brightest first. */
-const RAMP = [
-  [6, 197, 253],
-  [1, 122, 183],
-  [10, 75, 105],
-  [5, 40, 61],
-];
+/**
+ * The favicons `index.html` references, mapped to the `tauri icon` output that happens to be drawn at
+ * that size. Reusing the icon generator keeps this script free of a second rasterizer; the sizes line up
+ * because Android's xhdpi launcher is 96px and iOS's 60pt @3x is 180px.
+ */
+const FAVICONS = {
+  'favicon-96x96.png': join('android', 'mipmap-xhdpi', 'ic_launcher.png'),
+  'apple-touch-icon.png': join('ios', 'AppIcon-60x60@3x.png'),
+  'favicon.ico': 'icon.ico',
+};
 
 const toHsl = ([r, g, b]) => {
   const [rn, gn, bn] = [r / 255, g / 255, b / 255];
@@ -71,52 +111,69 @@ const toRgb = (h, s, l) => {
 };
 
 /**
- * `hue` in degrees replaces the ramp's own hue; `saturation` and `lightness` scale what is there.
- * Lightness is scaled rather than set so the four steps stay proportional to one another.
- * `out` is the icon directory `cn-config` points `bundle.icon` at for that environment.
+ * Apply a variant's transform to every ramp colour in an SVG, leaving the rest of the markup alone.
+ * `source` names the artwork this was derived from, stamped into the output so a hand edit here is
+ * visibly the wrong place to make one.
  */
-const VARIANTS = {
-  purple: {
-    out: 'icons-nightly',
-    hue: 282,
-    saturation: 1,
-    lightness: 1,
-    note: "Nightly. Hue only, so the ramp keeps production's contrast steps and only the colour differs.",
-  },
-  grey: {
-    out: 'icons-grey',
-    hue: undefined,
-    saturation: 0,
-    lightness: 1.35,
-    note: 'dev and staging. The original ramp leaned on hue to hold the outer rings apart from the near-black tile; without it they disappear below 32px, hence the lift.',
-  },
+const recolour = (svg, source, { hue, saturation, lightness }) => {
+  const recoloured = RAMP.reduce((acc, colour) => {
+    const [h, s, l] = toHsl(colour);
+    const [r, g, b] = toRgb(hue / 360, s * saturation, Math.min(1, l * lightness));
+    return acc.replace(`fill:rgb(${colour.join(',')})`, `fill:rgb(${r},${g},${b})`);
+  }, svg);
+  return recoloured.replace(
+    '<svg ',
+    `<!-- Generated from ${source} by scripts/gen-icon-variants.mjs; run \`pnpm icons:variants\` to update. -->\n<svg `,
+  );
 };
 
-const source = readFileSync(join(assets, 'icon.svg'), 'utf8');
-
-for (const [name, { out, hue, saturation, lightness, note }] of Object.entries(VARIANTS)) {
-  let svg = source;
-  for (const colour of RAMP) {
-    const [h, s, l] = toHsl(colour);
-    const [r, g, b] = toRgb(hue === undefined ? h : hue / 360, s * saturation, Math.min(1, l * lightness));
-    svg = svg.replace(`fill:rgb(${colour.join(',')})`, `fill:rgb(${r},${g},${b})`);
-  }
-  svg = svg.replace('<svg ', `<!-- Generated by scripts/gen-icon-variants.mjs from icon.svg. ${note} -->\n<svg `);
-
-  writeFileSync(join(assets, `icon-${name}.svg`), svg);
-
-  // Run from a scratch directory: `tauri icon` also rewrites `gen/apple`'s asset catalog whenever it finds
-  // one next to it, so pointing `-o` elsewhere is not enough to keep it off the iOS icons.
-  const scratch = mkdtempSync(join(tmpdir(), `icon-${name}-`));
+/**
+ * Rasterize an SVG through `tauri icon` and hand the output directory to `collect`.
+ * Runs from a scratch directory: `tauri icon` also rewrites `gen/apple`'s asset catalog whenever it finds
+ * one next to it, so pointing `-o` elsewhere is not enough to keep it off the iOS icons.
+ */
+const rasterize = (svg, collect) => {
+  const scratch = mkdtempSync(join(tmpdir(), 'icon-variant-'));
   try {
-    copyFileSync(join(assets, `icon-${name}.svg`), join(scratch, 'icon.svg'));
+    writeFileSync(join(scratch, 'icon.svg'), svg);
     execFileSync(tauri, ['icon', 'icon.svg', '-o', 'out'], { cwd: scratch, stdio: 'inherit' });
-    mkdirSync(join(root, 'src-tauri', out), { recursive: true });
-    for (const icon of BUNDLE_ICONS) {
-      copyFileSync(join(scratch, 'out', icon), join(root, 'src-tauri', out, icon));
-    }
+    collect(join(scratch, 'out'));
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
-  console.log(`assets/icon-${name}.svg -> src-tauri/${out}`);
+};
+
+const write = (dir, name, contents) => {
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, name), contents);
+};
+
+const appSource = readFileSync(join(assets, 'icon.svg'), 'utf8');
+const faviconSource = readFileSync(join(assets, 'favicon.svg'), 'utf8');
+const bootSource = readFileSync(brandMark, 'utf8');
+
+for (const [name, variant] of Object.entries(VARIANTS)) {
+  const appSvg = recolour(appSource, 'assets/icon.svg', variant);
+  writeFileSync(join(assets, `icon-${name}.svg`), appSvg);
+  rasterize(appSvg, (out) => {
+    const dir = join(root, 'src-tauri', variant.icons);
+    mkdirSync(dir, { recursive: true });
+    for (const icon of BUNDLE_ICONS) {
+      copyFileSync(join(out, icon), join(dir, icon));
+    }
+  });
+  console.log(`assets/icon-${name}.svg -> src-tauri/${variant.icons}`);
+
+  const faviconSvg = recolour(faviconSource, 'assets/favicon.svg', variant);
+  const favicons = join(assets, `favicons-${name}`);
+  write(favicons, 'favicon.svg', faviconSvg);
+  rasterize(faviconSvg, (out) => {
+    for (const [target, source] of Object.entries(FAVICONS)) {
+      copyFileSync(join(out, source), join(favicons, target));
+    }
+  });
+  console.log(`assets/favicon.svg -> assets/favicons-${name}`);
+
+  writeFileSync(join(assets, `boot-mark-${name}.svg`), recolour(bootSource, '@dxos/brand composer-icon.svg', variant));
+  console.log(`@dxos/brand composer-icon.svg -> assets/boot-mark-${name}.svg`);
 }
