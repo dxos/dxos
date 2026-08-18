@@ -27,11 +27,12 @@ to be one of the core aspects of Composer.
   link back and its label follows renames. Tasks are assignable (`assignee: Actor` —
   human by Person ref, agent by DID), syncable (GitHub/Linear mirrors), and queryable.
 - **Structure is uni-directional refs; the parent edge is lifecycle bookkeeping only**
-  (REVISED 2026-08-14 — see [Task model v2](#task-model-v2-decided-2026-08-14)): a
-  `TaskSet` enumerates ALL its tasks (flat) and its milestones in ordered ref arrays;
+  (REVISED 2026-08-14 — see [Cleanup project data model](#cleanup-project-data-model-decided-2026-08-14-implemented-2026-08-15)):
+  a `TaskSet` enumerates ALL its tasks (flat) and its milestones in ordered ref arrays;
   hierarchy (`task.parentTask`) and milestone assignment (`task.milestone`) are
   many-to-one refs on the task, Linear-shaped. Parent edges are still set — but only
-  for deletion cascade, never as the queryable data model.
+  for deletion cascade, never as the queryable data model. This is the task-model slice
+  of a broader `Project` slimming — see that section for the full scope.
 - **Delegation is the promotion moment for agents**: only a durable `Task` can be
   delegated to a sub-agent — delegating is exactly when scratch becomes real. There is
   no separate `Plan` type; the conversation's working set IS its outline plus the open
@@ -49,11 +50,77 @@ checks it off). **Open gap:** promotion is still delegation-only — there is no
 except by delegating it. Human convert-to-task is the only other path. (Verb specced
 2026-08-14 — see "Promotion and the outline-first rule" below; tracked as M6 Phase 3.)
 
-## Task model v2 (decided 2026-08-14, implemented 2026-08-15)
+## Cleanup project data model (decided 2026-08-14, implemented 2026-08-15)
 
-Third revision of task containment (backref plan → parent edge in M5 → this), so the
-rationale is recorded in full. Decided in design session (josiah × claude), session
-branch `claude/projects-task-sets-modeling-b5rk70`.
+Slims `Project` down to the refs it actually owns and orders, and reshapes the task
+model underneath it so structure is stated once, as uni-directional refs in the
+schema, rather than through the ECHO parent edge. Decided in design session
+(josiah × claude), session branch `claude/projects-task-sets-modeling-b5rk70`.
+
+The through-line: **a container should state its contents in its schema, and state
+them once.** Everything below follows from applying that to `Project` and then to
+the task graph it points at. The parent edge is demoted to what it really is —
+deletion cascade — and is no longer the membership or hierarchy mechanism.
+
+### `Project` (`@dxos/compute`) — the slimming
+
+Today (`org.dxos.type.project@0.3.0`): `name?`, `description?`, `status?`, `goals?`
+(embedded structs), `instructions?: Ref(Instructions)` (owned), `routines: Ref[]`,
+`artifacts?: Ref(Collection)`, `outline?: Ref(Outline)`, `taskSet?: Ref(TaskSet)`.
+
+Target (`0.4.0`):
+
+```text
+name?: string
+description?: string
+status?: active | paused | blocked | ended
+instructions?: Ref(Instructions)     // owned (Obj.setParent), cascade-delete/clone
+artifacts: Ref(Obj.Unknown)[]        // INLINE ordered ref array — Collection dropped
+outline?: Ref(Outline)               // shared scratch checklist (all project chats write here)
+taskSet?: Ref(TaskSet)               // owned, or adopted synced mirror
+```
+
+Three fields change:
+
+- **`artifacts` inlines.** The `Collection` indirection was never load-bearing:
+  `ObjectGallery` already renders plain ref arrays (the routines gallery proved it),
+  and `Instructions.objects` is precedent for an inline heterogeneous ref array.
+  `ProjectSkill.artifact-add/-list` retarget to the field.
+- **`goals` is REMOVED.** A milestone with a description and derived progress _is_ a
+  goal with the tasks that get it done attached, so the embedded `Goal` struct was a
+  second, weaker "what done means" surface. One "what done means" surface instead of
+  two — see "The task model underneath" for what replaces it. The `Goal` struct and
+  the read-only GoalList section go; the milestone sequence renders in their place.
+- **`routines` is REMOVED.** The array duplicated what already exists: routines
+  connect to their project via `instructions.objects` (seeded at creation), and
+  `connectedRoutinesQuery` / `RoutineCompanion` discover them through the structural
+  reverse-ref index — same as for any other object. The field and the routine→project
+  parent edge were a project-shaped special case over the canonical model. The
+  ProjectArticle routines gallery goes with it; routines surface in the project's
+  companion only. **Sequencing (2026-08-14):** the removal lands FIRST, without
+  waiting for the deletion-guard/staleness machinery below — those are planned
+  follow-ups tracked separately, and the interim (deleting a project silently strands
+  its routines, discoverable only via the companion of a deleted object or the
+  routines list) is accepted; preferring the canonical routine model over a
+  project-shaped special case is worth the window.
+
+What's left is the line worth keeping: **refs for what the project owns and orders**
+(instructions, artifacts, outline, taskSet); **queries for what accumulates around
+it** (chats by parent edge, routines by companion join, agents via their chats).
+Chats stay parent-edge attached — numerous, append-only, naturally time-ordered, so a
+ref array would be a CRDT hot spot with no ordering benefit; this is the recorded
+justification for the one deviation from schema-visible structure.
+
+The type lives in `@dxos/compute` (next to Instructions, Skill, Trigger) so
+brain/inbox/EDGE-side code can reference it without a plugin dependency.
+
+### The task model underneath (subset of the above)
+
+Applying the same rule one level down, to `TaskSet` — whose membership was
+previously the parent edge, not reactive, not schema-visible, traversable only
+child→parent, so enumerating a set meant a tree walk and `Query.children()` never
+re-emitted on a member's property change. Third revision of task containment
+(backref plan → parent edge in M5 → this), so the rationale is recorded in full.
 
 ### Principle
 
@@ -241,63 +308,18 @@ Outline surfaces and `TaskOperation.*`; **plugin-projects** owns Project lifecyc
 wiring, and composition; **plugin-github / plugin-linear** sync into `TaskSet`/`Task` via meta
 foreign keys; **plugin-kanban** adopts the plugin-tasks model.
 
-M6 (task model v2, 2026-08-14) revises this table's M5 targets: `TaskSet` gains
-`milestones`/`tasks` arrays and `Task` gains `milestone`/`parentTask` refs (see "Task
-model v2"); `Project.artifacts` becomes an inline ref array (`Collection` no longer
-used there); `Project.routines` is REMOVED (companion join replaces it) and
-`Project.goals` is REMOVED (milestones replace goals) — see "`Project`" below.
+M6 ("Cleanup project data model", 2026-08-14) revises this table's M5 targets:
+`Project.artifacts` becomes an inline ref array (`Collection` no longer used there);
+`Project.routines` is REMOVED (companion join replaces it); `Project.goals` is
+REMOVED (milestones replace goals); `TaskSet` gains `milestones`/`tasks` arrays and
+`Task` gains `milestone`/`parentTask` refs. See "Cleanup project data model" above
+for the full shape and rationale — this table is not repeated there.
 
 ### `Project` (`@dxos/compute`)
 
-Today (`org.dxos.type.project@0.3.0`): `name?`, `description?`, `status?`, `goals?`
-(embedded structs), `instructions?: Ref(Instructions)` (owned), `routines: Ref[]`,
-`artifacts?: Ref(Collection)`, `outline?: Ref(Outline)`, `taskSet?: Ref(TaskSet)`.
-
-M6 target (project slimming, decided 2026-08-14):
-
-```text
-name?: string
-description?: string
-status?: active | paused | blocked | ended
-instructions?: Ref(Instructions)     // owned (Obj.setParent), cascade-delete/clone
-artifacts: Ref(Obj.Unknown)[]        // INLINE ordered ref array — Collection dropped
-outline?: Ref(Outline)               // shared scratch checklist (all project chats write here)
-taskSet?: Ref(TaskSet)               // owned, or adopted synced mirror
-```
-
-Three fields change:
-
-- **`artifacts` inlines.** The `Collection` indirection was never load-bearing:
-  `ObjectGallery` already renders plain ref arrays (the routines gallery proved it),
-  and `Instructions.objects` is precedent for an inline heterogeneous ref array.
-  `ProjectSkill.artifact-add/-list` retarget to the field.
-- **`goals` is REMOVED.** Milestones replace goals: a `Milestone` (name, description =
-  "what done means", target date, derived % complete) in the project's TaskSet carries
-  everything the embedded `Goal` struct did, plus the tasks that get it done. One
-  "what done means" surface instead of two. The `Goal` struct and the read-only
-  GoalList section go; the milestone sequence renders in their place.
-- **`routines` is REMOVED.** The array duplicated what already exists: routines
-  connect to their project via `instructions.objects` (seeded at creation), and
-  `connectedRoutinesQuery` / `RoutineCompanion` discover them through the structural
-  reverse-ref index — same as for any other object. The ProjectArticle routines
-  gallery goes with it; routines surface in the project's companion only. The
-  routine's parent edge to the project also goes: deleting a project no longer
-  cascades its routines. **Sequencing (2026-08-14):** the removal lands FIRST, without
-  waiting for the deletion-guard/staleness machinery below — those are planned
-  follow-ups tracked separately, and the interim (deleting a project silently strands
-  its routines, discoverable only via the companion of a deleted object or the
-  routines list) is accepted; preferring the canonical routine model over a
-  project-shaped special case is worth the window.
-
-The resulting line: **refs for what the project owns and orders (instructions,
-artifacts, outline, taskSet); queries for what accumulates around it (chats by parent
-edge, routines by companion join, agents via their chats).** Chats stay parent-edge
-attached — numerous, append-only, naturally time-ordered, so a ref array would be a
-CRDT hot spot with no ordering benefit; this is the recorded justification for the one
-deviation from schema-visible structure.
-
-The type lives in `@dxos/compute` (next to Instructions, Skill, Trigger) so
-brain/inbox/EDGE-side code can reference it without a plugin dependency.
+See "Cleanup project data model" (top of this document) for the current shape —
+`artifacts`/`goals`/`routines` — and the rationale. Not repeated here to avoid the
+two copies drifting.
 
 ### `Routine` (`@dxos/compute`)
 

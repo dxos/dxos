@@ -579,9 +579,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
           let pulledTasks = 0;
           for (const issue of issues) {
             const project = issue.project ? projectByRemoteId.get(issue.project.id) : undefined;
-            const milestone = issue.projectMilestone
-              ? milestoneByRemoteId.get(issue.projectMilestone.id)
-              : undefined;
+            const milestone = issue.projectMilestone ? milestoneByRemoteId.get(issue.projectMilestone.id) : undefined;
             const { created } = yield* upsertTask(binding, issue, project, milestone);
             remoteIssuesById.set(issue.id, issue);
             if (created) {

@@ -1,13 +1,15 @@
 # plugin-projects — Tasks
 
 _Resume (2026-08-15, branch `claude/projects-task-sets-modeling-b5rk70`, PR #12595):
-**M6 Phases 1–2 IMPLEMENTED** (design + code). Task model v2 is live: `Milestone`
-(`org.dxos.type.milestone@0.1.0`, no status — progress derived), `TaskSet@0.3.0` with required
-ordered `tasks` (flat, sub-tasks included) + `milestones` arrays and derived-view helpers,
-`Task@0.3.0` with `milestone`/`parentTask` refs, `Project@0.4.0` with inline `artifacts` and NO
-`goals`/`routines`. Eight new/reworked task verbs (taskDelete/taskMove + milestone CRUD/Move/List)
-enforce the cross-object invariants; linear+github now mirror remote milestones. Full repo build
-green; affected-package tests green (types 28, plugin-tasks 29, plugin-projects 28,
+**M6 Phases 1–2 IMPLEMENTED** (design + code). "Cleanup project data model" is live:
+`Project@0.4.0` with inline `artifacts` and NO `goals`/`routines`; underneath it, the task model —
+`Milestone` (`org.dxos.type.milestone@0.1.0`, no status — progress derived), `TaskSet@0.3.0` with
+required ordered `tasks` (flat, sub-tasks included) + `milestones` arrays and derived-view helpers,
+`Task@0.3.0` with `milestone`/`parentTask` refs. Eight new/reworked task verbs
+(taskDelete/taskMove + milestone CRUD/Move/List) enforce the cross-object invariants; linear+github
+now mirror remote milestones. Full repo build green after merging main (two large connector-sync
+conflicts reconciled — main's `Binding`/`ConnectorSync` refactor kept, milestone logic reapplied on
+top); affected-package tests green (types 28, plugin-tasks 29, plugin-projects 28,
 assistant-toolkit 71, linear 18, github 13, crm 15, brain 18, space 54). Exemplar fixture
 regenerated at the new versions.
 GOTCHAS worth remembering: (1) a suspended optional schema (`Task.parentTask`) rejects
@@ -432,13 +434,15 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
       shared space; goals/tasks mirrored; task-planning skill registry `tasksDxn` once the sync
       spec lands; Claude Desktop demo over the tunnel.
 
-## Milestone 6: task model v2 — uni-directional refs, milestones, delete guards
+## Milestone 6: cleanup project data model — uni-directional refs, milestones, delete guards
 
 Designed 2026-08-14 (josiah × claude, session branch `claude/projects-task-sets-modeling-b5rk70`).
-Design: DESIGN.md §§ "Task model v2", "`Project` (`@dxos/compute`)" (M6 target), "Routine staleness
-and deletion guards". Supersedes M5's parent-edge containment; un-defers M5's `Milestone` under its
-original name — `Milestone` over `Phase` (second pass, same day): ecosystem term, and **milestones
-replace `Project.goals`** (Goal struct removed). Carries the M5 "NO MIGRATIONS (nothing deployed)"
+Design: DESIGN.md § "Cleanup project data model" (covers `Project` slimming and, as a subset, the
+task/milestone model) and § "Routine staleness and deletion guards". `Project` slimming is the
+overarching change; the task model is the piece of it that reaches one level down into `TaskSet`.
+Supersedes M5's parent-edge containment; un-defers M5's `Milestone` under its original name —
+`Milestone` over `Phase` (second pass, same day): ecosystem term, and **milestones replace
+`Project.goals`** (Goal struct removed). Carries the M5 "NO MIGRATIONS (nothing deployed)"
 assumption — re-confirm at Phase 1. **Sequencing (user, 2026-08-14): Phases 1–2 (basic model
 changes + simplification) come first; skill/outline-first/promotion work is deliberately LATER
 (Phase 3); routines are pulled out in Phase 2 WITHOUT waiting for guards — staleness (Phase 4) and

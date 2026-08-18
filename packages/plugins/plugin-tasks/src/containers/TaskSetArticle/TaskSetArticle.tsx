@@ -97,7 +97,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       <>
         {groups.milestoneGroups.map(({ milestone, tasks: milestoneTasks, progress }) => (
           <Fragment key={milestone.id}>
-            <h2 className='flex items-baseline gap-2 mlb-2 pli-3 text-sm font-medium text-subdued'>
+            <h2 className='flex items-baseline gap-2 my-2 px-3 text-sm font-medium text-subdued'>
               <span className='text-baseText'>{milestone.name}</span>
               <span>{t('milestone-progress.label', { done: progress.done, total: progress.total })}</span>
             </h2>
@@ -111,7 +111,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
             />
           </Fragment>
         ))}
-        <h2 className='mlb-2 pli-3 text-sm font-medium text-subdued'>{t('backlog.label')}</h2>
+        <h2 className='my-2 px-3 text-sm font-medium text-subdued'>{t('backlog.label')}</h2>
         <TaskGroup
           tasks={groups.backlog}
           statusLabel={statusLabel}
