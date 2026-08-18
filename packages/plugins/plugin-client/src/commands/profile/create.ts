@@ -38,9 +38,6 @@ const makeTemplate = (edgeUrl: string) => trim`
 
 const TEMPLATES = {
   default: makeTemplate('https://dxos.network'),
-  // Matches `localDevConfig` in packages/sdk/config/src/config-service.ts — the `main`/staging
-  // override Composer's `dx-local.yml` applies on top of `dx.yml` for its local dev server, and
-  // what a fresh profile auto-bootstraps to under `DX_LOCAL_DEV`.
   main: makeTemplate('https://main.dxos.network'),
   dev: makeTemplate('https://edge.dxos.workers.dev'),
   local: makeTemplate('http://localhost:8787'),
