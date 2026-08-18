@@ -12,7 +12,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
@@ -107,9 +107,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       <Panel.Content>
         {noPosts ? (
           // TODO(burdon): Factor out common EmptyState component; of push into Masonry, List, etc.
-          <div className='h-full flex items-center justify-center text-subdued text-sm'>
+          <Flex center classNames='h-full text-subdued text-sm'>
             {t('empty-magazine.message')}
-          </div>
+          </Flex>
         ) : (
           <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
             <Masonry.Content thin centered padding>

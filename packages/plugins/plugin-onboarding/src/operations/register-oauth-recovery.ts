@@ -10,10 +10,10 @@ import { Context as DxContext } from '@dxos/context';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
+import { ATPROTO_OAUTH_SCOPES, type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
 import { RegisterOAuthRecovery } from './definitions';
-import { ATPROTO_OAUTH_SCOPES, createEdgeHttpClient, oauthRecoveryPendingKey } from './shared';
+import { createEdgeHttpClient, oauthRecoveryPendingKey } from './shared';
 
 /**
  * Begins OAuth recovery registration (redirect flow).

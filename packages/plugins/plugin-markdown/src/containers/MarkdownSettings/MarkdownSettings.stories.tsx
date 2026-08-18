@@ -14,12 +14,12 @@ import { Markdown } from '#types';
 
 import { MarkdownSettings } from './MarkdownSettings';
 
-type StoryProps = {
+type StoryArgs = {
   settings: Markdown.Settings;
 };
 
 // The container reads and writes the contributed settings entry, so the story owns one per render.
-const DefaultStory = ({ settings }: StoryProps) => {
+const DefaultStory = ({ settings }: StoryArgs) => {
   const subject = useMemo(
     () => ({
       prefix: pluginMeta.profile.key,

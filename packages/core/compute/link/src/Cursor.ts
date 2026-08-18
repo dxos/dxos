@@ -203,6 +203,22 @@ export const writeSnapshot = (cursor: ExternalCursor, foreignId: string, snapsho
   });
 };
 
+/**
+ * Points an external cursor at a new credential, keeping every progress field (`max`/`min`,
+ * `snapshots`, `token`) so the next run resumes instead of re-walking the horizon. Clears `lastError`,
+ * which described the run that failed under the old credential. The caller owns the check that the new
+ * credential is for the same remote account — resuming another account's watermark would skip its data.
+ */
+export const rebindSource = (cursor: ExternalCursor, source: Ref.Ref<AccessToken.AccessToken>): void => {
+  Obj.update(cursor, (cursor) => {
+    if (cursor.spec.kind !== 'external') {
+      return;
+    }
+    cursor.spec.source = source;
+    cursor.lastError = undefined;
+  });
+};
+
 /** Reads the opaque delta-resume token, or undefined when no incremental sync has captured one yet. */
 export const readToken = (cursor: ExternalCursor): string | undefined => cursor.spec.token;
 

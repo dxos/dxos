@@ -93,16 +93,6 @@
       "types": "./dist/types/src/hooks/index.d.ts",
       "import": "./dist/lib/hooks.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -133,6 +123,16 @@
       "source": "./src/TranscriptionPlugin.ts",
       "types": "./dist/types/src/TranscriptionPlugin.d.ts",
       "import": "./dist/lib/TranscriptionPlugin.mjs"
+    },
+    "./TranscriptionOperationHandlerSet": {
+      "source": "./src/operations/TranscriptionOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/TranscriptionOperationHandlerSet.d.ts",
+      "import": "./dist/lib/TranscriptionOperationHandlerSet.mjs"
+    },
+    "./TranscriptionSkill": {
+      "source": "./src/skills/TranscriptionSkill.ts",
+      "types": "./dist/types/src/skills/TranscriptionSkill.d.ts",
+      "import": "./dist/lib/TranscriptionSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

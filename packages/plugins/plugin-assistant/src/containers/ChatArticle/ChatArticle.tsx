@@ -14,7 +14,7 @@ import { type Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import { Flex, Panel } from '@dxos/react-ui';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
 import { useChatProcessor, useChatServices, usePresets, useSelectionContext } from '#hooks';
@@ -96,7 +96,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
             <ChatComponent.Content>
               <div className='dx-container relative'>
                 {viewType !== 'summary' && (
-                  <ChatComponent.Minimap classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />
+                  <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />
                 )}
                 <ChatComponent.Thread viewType={viewType} onViewUsage={handleViewUsage} />
                 {viewType !== 'summary' && (
@@ -108,9 +108,9 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 )}
               </div>
               <div className='dx-document px-4 pb-4'>
-                <div className='flex flex-col items-center py-2 overflow-hidden'>
+                <Flex column align='center' classNames='py-2 overflow-hidden'>
                   <ChatComponent.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
-                </div>
+                </Flex>
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline

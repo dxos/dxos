@@ -739,6 +739,9 @@
       "path": "packages/ui/react-ui-experimental/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-feed/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-form/tsconfig.json"
     },
     {

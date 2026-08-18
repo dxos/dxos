@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import * as ts from '@typescript/typescript6';
 import type * as protobufjs from 'protobufjs';
-import * as ts from 'typescript';
 
 import {
   convertNameToIdentifier,

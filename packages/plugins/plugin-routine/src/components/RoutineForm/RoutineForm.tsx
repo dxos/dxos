@@ -111,7 +111,7 @@ export const RoutineForm = composable<HTMLDivElement, RoutineFormProps>(
 
 /** Lightweight labelled grouping for a sub-form (no `Settings` chrome). */
 const Section = ({ title, children }: PropsWithChildren<{ title: string }>) => (
-  <div className='flex flex-col mbs-4'>
+  <div className='flex flex-col mt-4'>
     <Form.Label standalone label={title} />
     {children}
   </div>

@@ -4,7 +4,5 @@
 
 export * as MarkdownPlugin from './MarkdownPlugin';
 export * from '#meta';
-export * from '#operations';
-export * from '#skills';
 export * from '#types';
 export * from './util';

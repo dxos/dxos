@@ -89,6 +89,16 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./Binding": {
+      "source": "./src/Binding.ts",
+      "types": "./dist/types/src/Binding.d.ts",
+      "import": "./dist/lib/Binding.mjs"
+    },
+    "./ConnectorAuth": {
+      "source": "./src/ConnectorAuth.ts",
+      "types": "./dist/types/src/ConnectorAuth.d.ts",
+      "import": "./dist/lib/ConnectorAuth.mjs"
+    },
     "./ConnectorAnnotations": {
       "source": "./src/types/ConnectorAnnotations.ts",
       "types": "./dist/types/src/types/ConnectorAnnotations.d.ts",

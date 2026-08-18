@@ -76,7 +76,7 @@ const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
   await userEvent.keyboard('{Enter}');
 };
 
-type StoryProps = {
+type StoryArgs = {
   /** Turns the story drives: each prompt is submitted, and its reply is what the scripted model returns. */
   messages?: { prompt: string; reply: string }[];
 };
@@ -96,7 +96,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withPluginManager<StoryProps>(({ args: { messages = [] } }) => {
+    withPluginManager<StoryArgs>(({ args: { messages = [] } }) => {
       return {
         plugins: [
           ...corePlugins(),
@@ -132,11 +132,11 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<StoryProps>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<StoryArgs>;
 
 export const Default: Story = {};
 

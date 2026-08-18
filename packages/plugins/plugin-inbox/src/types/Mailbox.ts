@@ -8,8 +8,8 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { connectorIdsForTarget } from '@dxos/plugin-connector';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -155,7 +155,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
      * type), so a mail provider registers itself rather than being named here.
      */
     ConnectorAnnotations.ConnectorAuthAnnotation.set({
-      connectorIds: connectorIdsForTarget,
+      connectorIds: ConnectorSpec.idsForTarget,
       bindTarget: true,
     }),
   ),

@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Card, Icon, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Card, Flex, Icon, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
   type ActionExecutor,
@@ -79,12 +79,12 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 
             {/* TODO(burdon): Only show label if surface exists? */}
             {/* TODO(burdon): Remove this section — move the related actions into the object menu. */}
-            <div className='flex flex-col gap-form-gap'>
+            <Flex column gap='form'>
               <Input.Root>
                 <Input.Label>{t('related-actions.label')}</Input.Label>
               </Input.Root>
               <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
-            </div>
+            </Flex>
 
             {/* Gated on the unfiltered set so hiding every type does not remove the filter itself. */}
             {relatedObjects.length > 0 && (
