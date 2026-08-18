@@ -45,7 +45,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/credentials": "workspace:*"
+    "@dxos/credentials": "workspace:*",
+    "@dxos/test-utils": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
