@@ -17,6 +17,7 @@ import React, {
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { useFollow } from '../aspects/use-follow';
 import { type EdgeDrift, type Extents, type Layout, Placement } from './placement';
 
 /**
@@ -31,9 +32,6 @@ export type WindowModel = {
     listener: (change: { prepended?: number; appended?: number; updated?: readonly string[] }) => void,
   ) => () => void;
 };
-
-/** Distance from the end within which the reader counts as being at it. */
-const STICKY_THRESHOLD = 32;
 
 /**
  * The DOM shape, and nothing else.
@@ -94,9 +92,8 @@ export type WindowProps = ThemedClassName<{
   /**
    * Keep the last row against the end of the viewport as content arrives.
    *
-   * A standing intent, not a mode the list enters: at the end, appending keeps you at the end; away
-   * from it, appending does not move you. The old engine spent a follow, a sticky flag, a re-base
-   * and a scroll listener that had to tell the reader apart from itself on this.
+   * Consumed by the trivial `Window` binding, which composes `useFollow`; `useWindow` itself knows
+   * nothing about following — the intent, the withdrawal and the glide are the aspect's (SPEC §Aspects).
    */
   sticky?: boolean;
   /** What an edge revealed about the estimates, if it revealed anything. */
@@ -151,7 +148,6 @@ export const useWindow = ({
   axis = 'block',
   overscan,
   reserve = 0,
-  sticky,
   onEdge,
   onMismatch,
   onChange,
@@ -244,36 +240,6 @@ export const useWindow = ({
 
   const { first, last, visible, offset, sizerExtent } = placement.layout();
 
-  const atEnd = useCallback(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller) {
-      return false;
-    }
-
-    const viewport = axis === 'block' ? scroller.clientHeight : scroller.clientWidth;
-    const offset = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
-    return scroller.scrollHeight - reserve - offset - viewport <= STICKY_THRESHOLD;
-  }, [axis, reserve]);
-
-  /**
-   * Whether the reader wants the tail — an intent they hold, not a position they happen to be at.
-   *
-   * Re-derived from proximity on every commit it cannot survive its own corrections: measuring the
-   * rows at the tail grows the document under a reader who has not moved, the gap opens past any
-   * threshold worth having, and the follow reads that as the reader leaving and disengages for good.
-   * The tail then rests a measurement's worth above the bottom for ever, which is what `bridge/Tail`
-   * was seeing once the render loop above it was gone.
-   *
-   * So it is withdrawn by one thing only: a scroll that moves *backwards*. That is the reader; a
-   * correction never moves the offset back, it moves the end away.
-   */
-  const following = useRef(!!sticky);
-  const wasSticky = useRef(sticky);
-  if (wasSticky.current !== sticky) {
-    wasSticky.current = sticky;
-    following.current = !!sticky;
-  }
-
   // Declared before the follow, so the follow's first run has a viewport to compute an end against:
   // effects run in order, and an end measured against a viewport of zero is the whole document.
   useLayoutEffect(() => {
@@ -291,15 +257,7 @@ export const useWindow = ({
 
     observer.observe(scroller);
     const onScroll = () => {
-      const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
-      const back = current < placement.scroll - 1;
-      placement.scrollTo(current);
-      if (atEnd()) {
-        following.current = true;
-      } else if (back) {
-        following.current = false;
-      }
-
+      placement.scrollTo(axis === 'block' ? scroller.scrollTop : scroller.scrollLeft);
       invalidate();
     };
 
@@ -309,39 +267,7 @@ export const useWindow = ({
       observer.disconnect();
       scroller.removeEventListener('scroll', onScroll);
     };
-  }, [placement, axis, atEnd, invalidate]);
-
-  useLayoutEffect(() => {
-    const scroller = scrollerRef.current;
-    if (!sticky || !following.current || !count || !scroller) {
-      return;
-    }
-
-    // Following is a navigation, not a correction: the content the reader is pinned to has moved, so
-    // the scroll has to as well. What corrections must never do is touch it (§7).
-    //
-    // Through `endOffset` rather than `jumpTo`: a jump re-bases the model on a sum of estimates, and
-    // this effect runs again every time the document's extent changes — so each answer mounted rows
-    // whose measurement changed the sum the next answer was drawn from. That does not converge, it
-    // recurs, and React ends it by exceeding the update limit rather than by settling.
-    //
-    // Written only when it is actually off, and never followed by an invalidate: the write raises a
-    // scroll event, which re-renders, which changes the extent this effect watches. Invalidating
-    // here as well is a second loop, and React says so.
-    const target = placement.endOffset();
-    const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
-    if (Math.abs(current - target) > 1) {
-      placement.scrollTo(target);
-      if (axis === 'block') {
-        scroller.scrollTop = target;
-      } else {
-        scroller.scrollLeft = target;
-      }
-    }
-
-    // Keyed on the document's extent as well as the count: measuring the rows a scroll reveals moves
-    // the end, so a tail pinned once drifts off it as the estimates are replaced.
-  }, [sticky, count, sizerExtent, placement, axis]);
+  }, [placement, axis, invalidate]);
 
   // Measured after every commit, so a row that grows later — a font, a portaled widget, an image —
   // is not a special case but the same case arriving again (§8).
@@ -425,10 +351,22 @@ export const useWindow = ({
  */
 export const Window = ({ classNames, children, ...options }: WindowProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const { windowRef, offset, sizerExtent, first, last } = useWindow({ ...options, scrollerRef });
+  const { placement, windowRef, offset, sizerExtent, first, last } = useWindow({ ...options, scrollerRef });
   const axis = options.axis ?? 'block';
   const main = axis === 'block' ? 'height' : 'width';
   const { getId } = options.model;
+
+  // The binding composes the aspect; the hook knows nothing about following. Graduates with the
+  // virtualizer — nothing in it is about messages.
+  useFollow({
+    scrollerRef,
+    placement,
+    extent: sizerExtent,
+    count: options.model.count,
+    axis,
+    reserve: options.reserve,
+    enabled: options.sticky,
+  });
 
   const rows = [];
   for (let index = first; index <= last; index++) {

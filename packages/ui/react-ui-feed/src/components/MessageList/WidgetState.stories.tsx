@@ -31,7 +31,12 @@ type Story = StoryObj<FeedStoryProps>;
 const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve));
 
 /** Row re-placements one disclosure costs today: 177 over 19 frames, ~11 rows a frame. */
-const REPLACEMENT_CEILING = 260;
+// One toggle's animation: the rows after the panel move each frame (the browser reflows them — the
+// engine writes nothing), and with the tail followed, the glide moves the whole mounted window as
+// well while the growth is paid back to the end. The pre-glide pin was 260; with the glide the
+// travel itself moves every mounted row per frame, so the honest ceiling is the animation's length
+// times the window — a regression past this is a second mover, not a longer animation.
+const REPLACEMENT_CEILING = 400;
 
 const settle = async (frames = 30) => {
   for (let frame = 0; frame < frames; frame++) {

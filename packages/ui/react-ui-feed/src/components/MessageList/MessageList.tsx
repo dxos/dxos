@@ -17,6 +17,7 @@ import { Column, ScrollArea, type ScrollAreaRootProps, composable, composablePro
 import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
+import { useFollow } from '../../aspects';
 import { type ItemContent, type MessageRenderer, type SearchHit, defaultRenderer, useListModel } from '../../model';
 import { type WindowController, type WindowState, useWindow } from '../../virtualizer';
 import {
@@ -363,9 +364,19 @@ const MessageListRoot = ({
     extents,
     overscan,
     reserve,
-    sticky: stickyBottom,
     onChange: onWindowChange,
     controllerRef: controller,
+  });
+
+  // The follow is an aspect the host composes, not part of the window (SPEC §Aspects) — the intent,
+  // its withdrawal by a backwards scroll, and the glide all live there.
+  useFollow({
+    scrollerRef,
+    placement,
+    extent: sizerExtent,
+    count: messages.length,
+    reserve,
+    enabled: stickyBottom,
   });
 
   // What a reader would call flicker: a row moving on screen by more than the scroll moved, sampled

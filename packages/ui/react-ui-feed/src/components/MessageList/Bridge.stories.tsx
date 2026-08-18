@@ -216,10 +216,14 @@ export const Tail: StoryObject = {
     await settle();
     const arrived = rests(200);
 
-    // An answer arrives while the reader is at the tail.
+    // An answer arrives while the reader is at the tail. The follow glides (~2 rows/s), so the
+    // reading polls to landing — arrival by deceleration is the contract, not instant arrival.
     (canvasElement.querySelector('[data-testid="bridge.append"]') as HTMLElement).click();
-    await settle();
-    const followed = rests(201);
+    let followed = false;
+    for (let frame = 0; frame < 300 && !followed; frame++) {
+      await nextFrame();
+      followed = rests(201);
+    }
 
     await expect({ arrived, followed }).toEqual({ arrived: true, followed: true });
   },
@@ -243,11 +247,20 @@ export const VariedPastEnd: StoryObject = {
   play: async ({ canvasElement }) => {
     await settle(60);
     const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="window.scroller"]')!;
-    const last = canvasElement.querySelector<HTMLElement>('[data-index="499"]');
 
     // Read from the last row's own bottom edge: an offset can be at the document's end while the
     // last message is nowhere near the screen, which is exactly what the defect looked like.
-    const resting = last && Math.round(last.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom);
+    // Polled to landing: the follow glides over measurement corrections rather than teleporting.
+    const restingOf = () => {
+      const last = canvasElement.querySelector<HTMLElement>('[data-index="499"]');
+      return last && Math.round(last.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom);
+    };
+    let resting = restingOf();
+    for (let frame = 0; frame < 300 && Math.abs(resting ?? 999) > 2; frame++) {
+      await nextFrame();
+      resting = restingOf();
+    }
+    const last = canvasElement.querySelector<HTMLElement>('[data-index="499"]');
 
     // And the reserve is still there to be scrolled into — the point of reserving it.
     const room = scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop;

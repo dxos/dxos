@@ -655,8 +655,13 @@ export const Sticky: Story = {
 
     const arrived = atTail(200);
     append();
-    await settle();
-    const followed = atTail(205);
+    // The follow *travels* now (glide, ~2 rows/s) — arrival is by deceleration, not teleport, so
+    // the reading is "lands and stays", polled to landing rather than sampled mid-flight.
+    let followed = false;
+    for (let frame = 0; frame < 300 && !followed; frame++) {
+      await nextFrame();
+      followed = atTail(205);
+    }
 
     // And away from the tail it must not drag the reader: a feed that follows whatever the reader is
     // doing is a feed that cannot be read while it is busy.
