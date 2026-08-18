@@ -27,7 +27,7 @@ const TestLayer = AssistantTestLayer({
   aiServicePreset: 'direct',
 });
 
-describe('Database Skill', { tags: ['model-fixture'] }, () => {
+describe('Chat Context Skill', { tags: ['model-fixture'] }, () => {
   //
   // Schema
   //

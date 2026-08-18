@@ -132,12 +132,13 @@ changes what a model sees lives in the shared package or it is a bug.
           `org.dxos.plugin.<name>.skill.<x>` form is the exception, not the rule. Note DXN names
           reject hyphens in the final segment, hence `chatContext`.
   - [ ] **Model fixtures need regenerating** (needs `DX_ANTHROPIC_API_KEY`, absent from the cloud
-        sandbox). `parameters.tools` is part of the fixture match key, so shrinking `DatabaseSkill`'s
-        tool list invalidated all 134 conversations under
-        `.store/conversations/packages_core_compute_assistant-toolkit_src_skills_database_skill/`.
-        `DX_UPDATE_MODEL_FIXTURES=1 moon run '#model-fixture:test'`, then commit `.store/**`. The
-        `Model Fixture` workflow is deliberately **not** a required check, so this reports red without
-        blocking merge.
+        sandbox). Down to the two `chat-context` tests: `parameters.tools` is part of the match key,
+        so the skill's changed tool list invalidated them. `DX_UPDATE_MODEL_FIXTURES=1 moon run
+    '#model-fixture:test'`, then commit `.store/**`. The `Model Fixture` workflow is deliberately
+        **not** a required check, so this reports red without blocking merge. The 134 conversations
+        under `..._skills_database_skill/` were deleted: the suite segment is the test file's path
+        flattened, so moving the file to `skills/chat-context/` made them unreachable on top of being
+        stale.
   - [x] `connectors` → **plugin-connector**. Done. Instructions-only skill (no operations), moved to
         the plugin that owns the connectors it tells the model to prompt for; ConnectorPlugin
         contributes it through `AppCapabilities.SkillDefinition` and re-exports `ConnectorsSkill`.
