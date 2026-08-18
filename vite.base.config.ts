@@ -196,7 +196,7 @@ const runDxBuild = async (): Promise<void> => {
       process.stderr.write(err.stderr);
     }
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`dx-build (tsc) failed: ${message} cwd=${process.cwd()}`);
+    throw new Error(`dx-build failed: ${message} cwd=${process.cwd()}`);
   }
 };
 
