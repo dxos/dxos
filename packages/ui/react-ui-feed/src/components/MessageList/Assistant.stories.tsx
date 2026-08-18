@@ -13,7 +13,7 @@ import { Message } from '@dxos/types';
 import { Debug, DebugProvider, useDebugProbes, useFrameMeter } from '../../debug';
 import { FeedModel } from '../../model';
 import { createScenario, streamTurn } from '../../testing';
-import { type OutlineMarker, Outline } from '../Outline';
+import { Outline, type OutlineMarker } from '../Outline';
 import { MessageList, useMessageList } from './MessageList';
 
 /**
