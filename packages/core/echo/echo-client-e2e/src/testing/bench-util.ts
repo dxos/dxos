@@ -10,6 +10,12 @@ export type BenchResult = {
   opsPerSec: number;
 };
 
+const assertPositiveInteger = (value: number, label: string): void => {
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${label} must be a positive integer, got ${value}`);
+  }
+};
+
 /**
  * Reads a benchmark size (op count) from an env var, falling back to `fallback` when unset.
  * Rejects non-positive/non-finite values so a bad override fails loudly instead of producing a
@@ -21,9 +27,7 @@ export const parseBenchCount = (envVar: string, fallback: number): number => {
     return fallback;
   }
   const value = Number(raw);
-  if (!Number.isSafeInteger(value) || value <= 0) {
-    throw new Error(`${envVar} must be a positive integer, got ${raw}`);
-  }
+  assertPositiveInteger(value, envVar);
   return value;
 };
 
@@ -37,6 +41,7 @@ export const runBench = async (
   ops: number,
   fn: (i: number) => Promise<void> | void,
 ): Promise<BenchResult> => {
+  assertPositiveInteger(ops, `${name} ops`);
   const start = performance.now();
   for (let i = 0; i < ops; i++) {
     await fn(i);
