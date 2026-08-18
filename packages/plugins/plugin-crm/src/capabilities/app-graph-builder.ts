@@ -168,8 +168,8 @@ const createTypeNode = ({
     return null;
   }
 
-  // Prefer the registry copy of the schema: raw schema classes don't carry annotations reliably.
-  // Read reactively so a schema registered after this node was built still lands.
+  // Raw schema classes don't carry annotations reliably, and schemas register lazily, so read
+  // the registry copy through the atom.
   const entity = get(Registry.typeAtom(space.db.graph.registry, typename)) ?? type;
   const annotation = Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(entity)));
 

@@ -33,14 +33,11 @@ describe('makeObject', () => {
     await testBuilder.close();
   });
 
-  const iconAtom = (object: Obj.Unknown) =>
-    Atom.make((get) => AppNode.makeObject({ get, db, object })?.properties.icon);
-
   test('reads the icon annotation from the registered type', async ({ expect }) => {
     const object = db.add(Obj.make(Doc, { name: 'New document' }));
     await db.flush();
 
-    expect(AtomRegistry.make().get(iconAtom(object))).toBe('ph--text-aa--regular');
+    expect(AtomRegistry.make().get(iconAtom(db, object))).toBe('ph--text-aa--regular');
   });
 
   test('recomputes the icon when the type registers after the node is built', async ({ expect }) => {
@@ -55,7 +52,7 @@ describe('makeObject', () => {
     expect(db.graph.registry.remove(type!.id)).toBe(true);
 
     const registry = AtomRegistry.make();
-    const atom = iconAtom(object);
+    const atom = iconAtom(db, object);
     // Subscribe so the atom stays mounted and observes the registration.
     const unsubscribe = registry.subscribe(atom, () => {});
     expect(registry.get(atom)).toBe('ph--circle-dashed--regular');
@@ -66,3 +63,6 @@ describe('makeObject', () => {
     unsubscribe();
   });
 });
+
+const iconAtom = (db: Database.Database, object: Obj.Unknown) =>
+  Atom.make((get) => AppNode.makeObject({ get, db, object })?.properties.icon);

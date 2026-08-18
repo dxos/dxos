@@ -172,9 +172,8 @@ export const createTypeSectionExtension = (
         return Effect.succeed([]);
       }
 
-      // Mirror AppNode.makeObject: look up the registered Type.Type entity to read icon/hue.
-      // Raw schema classes don't carry annotations reliably; the registry copy does. Read it
-      // through the atom so a schema registered after this node was built still lands.
+      // Raw schema classes don't carry annotations reliably, and schemas register lazily, so read
+      // the registry copy through the atom.
       const typeEntity = get(Registry.typeAtom(space.db.graph.registry, typename));
       const registeredSchema = typeEntity ? Type.getSchema(typeEntity) : undefined;
       const annotation = (() => {

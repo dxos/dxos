@@ -160,12 +160,11 @@ export const runQuery: {
 //
 
 /**
- * Reactive lookup of the type entity registered under `typename`. Memoized per (registry, typename),
- * so every consumer of a typename shares one atom and one `changed` subscription.
+ * Reactive lookup of the type entity registered under `typename`, or `undefined` while unregistered.
+ * Memoized per (registry, typename), so consumers share one atom and one `changed` subscription.
  *
- * Registration is asynchronous — plugin schema modules activate lazily and `client.addTypes` is
- * awaited — so anything that derives display state from a schema (icon, annotations) must read it
- * through this atom or it freezes at whatever the registry happened to hold on first evaluation.
+ * Registration is asynchronous, so anything deriving display state from a schema must read it here
+ * rather than through a plain lookup, which freezes at whatever was registered on first evaluation.
  *
  * @example `const type = get(Registry.typeAtom(db.graph.registry, typename));`
  */

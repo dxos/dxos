@@ -218,9 +218,8 @@ export const makeObject = ({
     return null;
   }
 
-  // Schemas register asynchronously (plugin schema modules activate lazily), so subscribe to the
-  // registry: `Obj.getType` is a live but non-reactive lookup, and without this dependency a node
-  // built before its schema landed keeps the fallback icon until an unrelated change rebuilds it.
+  // Read through the atom because `Obj.getType` is a live but non-reactive lookup, so a node built
+  // before its schema registered would keep the fallback icon.
   const registered = get(Registry.typeAtom(db.graph.registry, typename));
   // Obj.getType uses the stored type URI to look up the schema. For database-registered
   // (dynamic) schemas the stored TypeSchema jsonSchema.$id is the echo:/<objectId> EID, so an
