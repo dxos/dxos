@@ -557,7 +557,7 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
       return null;
     }
 
-    return <TaskList {...props} outline={outline} ref={forwardedRef} />;
+    return <TaskList {...composableProps(props)} outline={outline} ref={forwardedRef} />;
   },
 );
 

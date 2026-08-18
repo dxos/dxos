@@ -116,11 +116,10 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                   </div>
                 )}
               </div>
-              <div className='dx-document px-4 pb-4'>
-                {/* <Flex column align='center'> */}
-                {/* TODO: Fix number of lines. */}
-                <ChatComponent.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
-                {/* </Flex> */}
+              <div className='dx-document flex flex-col px-4 pb-4'>
+                <div className='px-4'>
+                  <ChatComponent.TaskList classNames='border border-separator border-b-0 rounded-sm rounded-b-none text-description' />
+                </div>
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline
