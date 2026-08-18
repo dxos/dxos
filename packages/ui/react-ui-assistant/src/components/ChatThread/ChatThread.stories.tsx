@@ -8,36 +8,35 @@ import { expect } from 'storybook/test';
 
 import { IconButton, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { FeedModel, MessageList, Outline, type OutlineMarker, useMessageList } from '@dxos/react-ui-feed';
+import { Debug, DebugProvider, useDebugProbes, useFrameMeter } from '@dxos/react-ui-feed/debug';
+import { createScenario, streamTurn } from '@dxos/react-ui-feed/testing';
 import { Message } from '@dxos/types';
 
-import { Outline, type OutlineMarker } from '../components';
-import { MessageList, useMessageList } from '../components';
-import { Debug, DebugProvider, useDebugProbes, useFrameMeter } from '../debug';
-import { FeedModel } from '../model';
-import { createScenario, streamTurn } from '../testing';
+import { translations } from '../../translations';
+import { type ChatThreadEvent, type ChatView } from '../../types';
+import { ChatThread } from './ChatThread';
 
 /**
- * The plugin-assistant use case, end to end: a reader typing prompts into a conversation while an
- * agent streams multi-block answers into its tail — status, reasoning, a tool call and its result,
- * then the answer, exactly the block sequence a model emits (`streamTurn`).
+ * The canonical assistant thread: `ChatThread` end to end — the view-typed renderer, the real
+ * widget registry, the prompt/answer chrome — with a reader typing prompts while an agent streams
+ * multi-block answers into the tail (status, reasoning, a tool run, then the answer: exactly the
+ * block sequence a model emits, via `streamTurn`).
  *
- * Everything here goes through the shipping path and the model's *told* APIs: a typed prompt is
- * `model.append`, the agent's turn mutates one identity via `model.stream`, and the follow keeps
+ * Everything goes through the shipping path and the model's *told* APIs: a typed prompt is
+ * `model.append`, the agent's turn mutates one identity via `model.patch`, and the follow keeps
  * the tail at rest because the reader is there — scrolling up withdraws it, returning restores it.
- * The `debug` arg turns on the generic Debug table (`@dxos/react-ui-feed/debug`), with probes over
- * the frame rate, the model, the window and the widget census — every aspect readable live.
  */
 type StoryArgs = {
   count?: number;
+  viewType?: ChatView;
   debug?: boolean;
-  scrollPastEnd?: boolean;
   wordsPerChunk?: number;
   chunkDelay?: number;
 };
 
-const DefaultStory = ({ count = 30, debug, scrollPastEnd, wordsPerChunk = 4, chunkDelay = 120 }: StoryArgs) => {
+const DefaultStory = ({ count = 30, viewType = 'thinking', debug, wordsPerChunk = 4, chunkDelay = 120 }: StoryArgs) => {
   const definition = useMemo(() => createScenario({ scenario: 'assistant', count }), [count]);
-  // The model, not an array: prompts and answers are told to it, and the window is told in turn.
   const model = useMemo(() => new FeedModel({ messages: definition.messages, stops: 'prompt' }), [definition]);
 
   const [busy, setBusy] = useState(false);
@@ -69,6 +68,29 @@ const DefaultStory = ({ count = 30, debug, scrollPastEnd, wordsPerChunk = 4, chu
     [model, wordsPerChunk, chunkDelay],
   );
 
+  // The thread's outward events: a suggestion or select click is a submit; the prompt toolbar's
+  // rewind truncates the thread back to that prompt — the host shapes both, which is the point.
+  const handleEvent = useCallback(
+    (event: ChatThreadEvent) => {
+      switch (event.type) {
+        case 'submit': {
+          if (!autoRef.current && !busy) {
+            void answer(event.text);
+          }
+          break;
+        }
+        case 'rewind': {
+          const index = model.indexOf(event.id);
+          if (index >= 0) {
+            model.replace(model.messages.slice(0, index));
+          }
+          break;
+        }
+      }
+    },
+    [model, answer, busy],
+  );
+
   // Hands-off mode for review: turns keep arriving until stopped, as an unbounded conversation.
   const toggleAuto = useCallback(() => {
     const next = !autoRef.current;
@@ -87,15 +109,7 @@ const DefaultStory = ({ count = 30, debug, scrollPastEnd, wordsPerChunk = 4, chu
 
   return (
     <DebugProvider>
-      <MessageList.Root
-        model={model}
-        renderer={definition.renderer}
-        registry={definition.registry}
-        Chrome={definition.Chrome}
-        estimateSize={definition.estimateSize}
-        stickyBottom
-        scrollPastEnd={scrollPastEnd}
-      >
+      <ChatThread.Root model={model} viewType={viewType} onEvent={handleEvent}>
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
@@ -111,19 +125,17 @@ const DefaultStory = ({ count = 30, debug, scrollPastEnd, wordsPerChunk = 4, chu
             </Toolbar.Root>
           </Panel.Toolbar>
 
-          {/* Inside Panel.Content, not a sibling: Panel.Root is a grid whose rows are its slots, so
-              a loose child lands in an implicit row under the toolbar rather than at the bottom. */}
           <Panel.Content classNames='dx-container flex flex-col min-h-0'>
             <div className='relative grow min-h-0'>
               <PromptOutline model={model} />
-              <MessageList.Viewport classNames='absolute inset-0' padding />
+              <ChatThread.Viewport classNames='absolute inset-0' padding />
               {debug && <Probes model={model} />}
             </div>
             <PromptInput busy={busy} onSubmit={(prompt) => void answer(prompt)} />
           </Panel.Content>
         </Panel.Root>
         {debug && <Debug />}
-      </MessageList.Root>
+      </ChatThread.Root>
     </DebugProvider>
   );
 };
@@ -253,18 +265,18 @@ const Probes = ({ model }: { model: FeedModel }) => {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-feed/stories/assistant',
+  title: 'ui/react-ui-assistant/ChatThread',
   render: DefaultStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
-  parameters: { layout: 'fullscreen' },
+  parameters: { layout: 'fullscreen', translations },
   argTypes: {
+    viewType: { control: 'select', options: ['normal', 'summary', 'thinking', 'debug'] },
     debug: { control: 'boolean' },
-    scrollPastEnd: { control: 'boolean' },
   },
   args: {
     count: 30,
+    viewType: 'thinking',
     debug: true,
-    scrollPastEnd: true,
   },
 };
 

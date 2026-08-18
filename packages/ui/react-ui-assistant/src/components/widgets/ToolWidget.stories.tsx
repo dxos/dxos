@@ -7,12 +7,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ContentBlock } from '@dxos/types';
 
-import { translations } from '#translations';
+import { translations } from '../../translations';
 
 import { ToolWidget, type ToolWidgetProps } from './ToolWidget';
 
 const baseWidgetProps = {
-  _tag: 'toolCall',
+  _tag: 'toolkit',
   range: { from: 0, to: 1 },
 } satisfies Pick<ToolWidgetProps, '_tag' | 'range'>;
 
@@ -34,7 +34,7 @@ const toolCallAndResult: ContentBlock.Any[] = [
 ];
 
 const meta = {
-  title: 'plugins/plugin-assistant/components/ChatWidgets/ToolWidget',
+  title: 'ui/react-ui-assistant/widgets/ToolWidget',
   component: ToolWidget,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
@@ -50,6 +50,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     ...baseWidgetProps,
-    blocks: toolCallAndResult,
+    // The tag carries the run as JSON text; the widget parses it back out.
+    children: [JSON.stringify(toolCallAndResult)],
   },
 };

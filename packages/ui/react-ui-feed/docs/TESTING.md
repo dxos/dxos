@@ -29,12 +29,15 @@ rm -rf .cache/storybook
 
 ---
 
-## 1. The flagship — the plugin-assistant loop
+## 1. The flagship — the assistant loop
 
-http://localhost:9009/?path=/story/ui-react-ui-feed-assistant--assistant
+The canonical assistant story now lives in `@dxos/react-ui-assistant`
+(`moon run react-ui-assistant:storybook -- -p 9010`):
 
-This is the rewrite, end to end: `FeedModel` + the aspects + the debug endpoint, on the shipping
-path. Everything you asked for is on this one page.
+http://localhost:9010/?path=/story/ui-react-ui-assistant-chatthread--default
+
+This is the rewrite, end to end: `FeedModel` + the aspects + the debug endpoint + the real
+registry and chrome, on the shipping path. Everything you asked for is on this one page.
 
 1. Type a prompt and press Enter. Your message lands, and the agent answers in **blocks** — a
    status that disappears, reasoning that closes, a tool call and its result, then the answer

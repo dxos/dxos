@@ -8,9 +8,7 @@ import { TogglePanel } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
 
-import { type MessageThreadContext } from '../sync';
-
-export const FallbackWidget = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
+export const FallbackWidget = ({ _tag, ...props }: XmlWidgetProps) => {
   return (
     <TogglePanel.Root>
       <TogglePanel.Content>

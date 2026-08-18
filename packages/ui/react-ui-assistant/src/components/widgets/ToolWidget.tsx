@@ -9,22 +9,28 @@ import { Icon, IconBlock, useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock } from '@dxos/types';
-import { type XmlWidgetProps } from '@dxos/ui-editor';
+import { type XmlWidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 import { isNonNullable, safeParseJson } from '@dxos/util';
 
-import { meta } from '#meta';
+import { translationKey } from '../../translations';
 
-export type ToolWidgetProps = XmlWidgetProps<{
-  blocks: ContentBlock.Any[];
-}>;
+export type ToolWidgetProps = XmlWidgetProps;
 
-export const ToolWidget = ({ view, blocks = [] }: ToolWidgetProps) => {
-  const { t } = useTranslation(meta.profile.key);
+/**
+ * A run of tool blocks as one collapsible panel with a tab per call. The `<toolkit>` tag carries
+ * the run as JSON — the item is rebuilt from its message alone, so there is no widget-state side
+ * channel to accumulate blocks through.
+ */
+export const ToolWidget = ({ view, children }: ToolWidgetProps) => {
+  const { t } = useTranslation(translationKey);
+  const blocks = useMemo<ContentBlock.Any[]>(() => {
+    const parsed = safeParseJson(getXmlTextChild(children ?? []) ?? '');
+    return Array.isArray(parsed) ? (parsed as ContentBlock.Any[]) : [];
+  }, [children]);
 
   const items = useMemo<ToolPanelProps['items']>(() => {
     let lastToolCall: { tool: Tool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
-    // TODO(burdon): Get from context?
-    const tools: Tool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
+    const tools: Tool.Any[] = [];
     return blocks
       .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'stats')
       .map((block) => {

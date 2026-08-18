@@ -37,7 +37,7 @@ const DefaultStory = ({ text }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/components/ChatWidgets/ReasoningWidget',
+  title: 'ui/react-ui-assistant/widgets/ReasoningWidget',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

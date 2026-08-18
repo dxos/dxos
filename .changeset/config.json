@@ -138,6 +138,7 @@
       "@dxos/react-input",
       "@dxos/react-list",
       "@dxos/react-ui",
+      "@dxos/react-ui-assistant",
       "@dxos/react-ui-attention",
       "@dxos/react-ui-audio",
       "@dxos/react-ui-board",
