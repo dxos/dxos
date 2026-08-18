@@ -134,7 +134,7 @@ changes what a model sees lives in the shared package or it is a bug.
   - [ ] **Model fixtures need regenerating** (needs `DX_ANTHROPIC_API_KEY`, absent from the cloud
         sandbox). Down to the two `chat-context` tests: `parameters.tools` is part of the match key,
         so the skill's changed tool list invalidated them. `DX_UPDATE_MODEL_FIXTURES=1 moon run
-    '#model-fixture:test'`, then commit `.store/**`. The `Model Fixture` workflow is deliberately
+'#model-fixture:test'`, then commit `.store/**`. The `Model Fixture` workflow is deliberately
         **not** a required check, so this reports red without blocking merge. The 134 conversations
         under `..._skills_database_skill/` were deleted: the suite segment is the test file's path
         flattened, so moving the file to `skills/chat-context/` made them unreachable on top of being
