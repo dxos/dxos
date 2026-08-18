@@ -1727,7 +1727,7 @@ overrides:
   '@automerge/automerge': 3.3.0-fragments.2
   '@automerge/automerge-subduction': 0.16.0
   '@dxos/docs>vite': ^7.3.2
-  '@dxos/edge-protocol': https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@fe42692
+  '@dxos/edge-protocol': https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@d5cfa61
   '@dxos/edge-protocol>@dxos/compute': workspace:*
   '@dxos/edge-protocol>@dxos/echo': workspace:*
   '@dxos/edge-protocol>@dxos/echo-protocol': workspace:*
@@ -6205,8 +6205,8 @@ importers:
         specifier: workspace:*
         version: link:../../echo/echo-protocol
       '@dxos/edge-protocol':
-        specifier: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@fe42692
-        version: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@fe42692(@dxos/echo-protocol@packages+core+echo+echo-protocol)(@dxos/echo@packages+core+echo+echo)
+        specifier: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@d5cfa61
+        version: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@d5cfa61(@dxos/echo-protocol@packages+core+echo+echo-protocol)(@dxos/echo@packages+core+echo+echo)
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -25517,8 +25517,8 @@ packages:
     resolution: {tarball: https://pkg.pr.new/dxos/dxos/@dxos/debug@4f55909}
     version: 0.11.1
 
-  '@dxos/edge-protocol@https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@fe42692':
-    resolution: {integrity: sha512-pygRd8r9ktHaH13HVxVYjuke2BAEjZPQFhVRC7m1xSgDWU1pAHV1oCd8CF7+Lj8SSA2gffwGE+7J9B28HudQ8w==, tarball: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@fe42692}
+  '@dxos/edge-protocol@https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@d5cfa61':
+    resolution: {integrity: sha512-OghJafnE5IT6iFmQEN+SFW2Q/CxmqfxsphvkQcJTbq0nS5BvXXk6yp2eAGzzPqFitc4ioTPL6fZfvNq11iWSYA==, tarball: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@d5cfa61}
     version: 0.1.0
     peerDependencies:
       '@dxos/compute': workspace:*
@@ -47570,7 +47570,7 @@ snapshots:
     dependencies:
       '@dxos/node-std': https://pkg.pr.new/dxos/dxos/@dxos/node-std@4f55909
 
-  '@dxos/edge-protocol@https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@fe42692(@dxos/echo-protocol@packages+core+echo+echo-protocol)(@dxos/echo@packages+core+echo+echo)':
+  '@dxos/edge-protocol@https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@d5cfa61(@dxos/echo-protocol@packages+core+echo+echo-protocol)(@dxos/echo@packages+core+echo+echo)':
     dependencies:
       '@dxos/echo': link:packages/core/echo/echo
       '@dxos/echo-protocol': link:packages/core/echo/echo-protocol
@@ -52774,7 +52774,7 @@ snapshots:
       '@textlint/types': 15.5.0
       chalk: 4.1.2
       debug: 4.4.3
-      js-yaml: 4.1.1
+      js-yaml: 4.3.1
       lodash: 4.17.23
       pluralize: 2.0.0
       string-width: 4.2.3
@@ -62932,7 +62932,7 @@ snapshots:
   rc-config-loader@4.1.3:
     dependencies:
       debug: 4.4.3
-      js-yaml: 4.1.1
+      js-yaml: 4.3.1
       json5: 2.2.3
       require-from-string: 2.0.2
     transitivePeerDependencies:
