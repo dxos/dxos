@@ -39,6 +39,16 @@ type StoryProps = {
    * A button is the same thing the reader has, and there is only ever one of it.
    */
   onAppend?: () => void;
+  /** Keep the last row against the bottom of the viewport as content arrives. */
+  sticky?: boolean;
+  /**
+   * Identity of the row at `index`.
+   *
+   * A story that prepends has to *move* its rows, not renumber them: an index-to-id map that never
+   * changes describes a list where inserting at the front renames everything, and placement keys its
+   * extents — and its anchor — by identity.
+   */
+  getId?: (index: number) => string;
   onPrepend?: () => void;
   onGrow?: () => void;
   /**
@@ -73,6 +83,8 @@ const Harness = ({
   onAppend,
   onPrepend,
   onGrow,
+  sticky,
+  getId = (index) => `row-${index}`,
 }: StoryProps) => {
   const [edges, setEdges] = useState<EdgeDrift[]>([]);
   const [mismatches, setMismatches] = useState<string[]>([]);
@@ -204,10 +216,11 @@ const Harness = ({
         <Window
           classNames='grow min-h-0'
           count={count}
-          getId={(index) => `row-${index}`}
+          getId={getId}
           extents={{ of: declared ?? extent, exact }}
           axis={axis}
           reserve={reserve}
+          sticky={sticky}
           controllerRef={controller}
           onChange={setState}
           onEdge={onEdge}
@@ -366,6 +379,7 @@ export const Prepend: Story = {
       <Harness
         {...args}
         count={200 + before}
+        getId={(index) => `row-${index - before}`}
         extent={(index) => EXTENT(index - before)}
         onPrepend={() => setBefore((value) => value + 20)}
       />
@@ -594,5 +608,51 @@ export const PastEnd: Story = {
       !!atEnd && Math.abs(atEnd.getBoundingClientRect().top - scroller.getBoundingClientRect().top) <= 2;
 
     await expect({ rests, reachesTheTop }).toEqual({ rests: true, reachesTheTop: true });
+  },
+};
+
+/**
+ * A feed pinned to its tail stays there as content arrives.
+ *
+ * The one thing the old engine spent the most machinery on — a follow, a sticky flag, a re-base and
+ * a scroll listener that had to tell the reader apart from itself. Here it is a standing intent: at
+ * the end, appending keeps you at the end; away from it, appending does not move you.
+ */
+export const Sticky: Story = {
+  args: { count: 200, sticky: true },
+  render: (args) => {
+    const [count, setCount] = useState(200);
+    return <Harness {...args} count={count} onAppend={() => setCount((value) => value + 5)} />;
+  },
+  play: async ({ canvasElement }) => {
+    await settle();
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="window.scroller"]')!;
+    const append = () => (canvasElement.querySelector('[data-testid="window.append"]') as HTMLElement).click();
+    const atTail = (count: number) => {
+      const last = canvasElement.querySelector<HTMLElement>(`[data-index="${count - 1}"]`);
+      return !!last && Math.abs(last.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom) <= 2;
+    };
+
+    // Driven to the end first: the reader has to *be* at the tail for following it to mean anything.
+    for (let attempt = 0; attempt < 8; attempt++) {
+      scroller.scrollTop = scroller.scrollHeight;
+      await settle(20);
+    }
+
+    const arrived = atTail(200);
+    append();
+    await settle();
+    const followed = atTail(205);
+
+    // And away from the tail it must not drag the reader: a feed that follows whatever the reader is
+    // doing is a feed that cannot be read while it is busy.
+    scroller.scrollTop = 0;
+    await settle();
+    const away = Math.round(scroller.scrollTop);
+    append();
+    await settle();
+    const stayed = Math.abs(scroller.scrollTop - away) <= 2;
+
+    await expect({ arrived, followed, stayed }).toEqual({ arrived: true, followed: true, stayed: true });
   },
 };

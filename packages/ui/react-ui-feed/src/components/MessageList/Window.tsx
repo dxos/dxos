@@ -18,6 +18,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { type EdgeDrift, type Extents, Placement } from './placement';
 
+/** Distance from the end within which the reader counts as being at it. */
+const STICKY_THRESHOLD = 32;
+
 /**
  * The DOM shape, and nothing else.
  *
@@ -71,6 +74,14 @@ export type WindowProps = ThemedClassName<{
   overscan?: number;
   /** Empty extent after the last row, so it can be scrolled to the top of the viewport (§7). */
   reserve?: number;
+  /**
+   * Keep the last row against the end of the viewport as content arrives.
+   *
+   * A standing intent, not a mode the list enters: at the end, appending keeps you at the end; away
+   * from it, appending does not move you. The old engine spent a follow, a sticky flag, a re-base
+   * and a scroll listener that had to tell the reader apart from itself on this.
+   */
+  sticky?: boolean;
   /** What an edge revealed about the estimates, if it revealed anything. */
   onEdge?: (drift: EdgeDrift) => void;
   /** A row whose declared extent was not the extent it rendered at. `exact` means do not correct — not do not check (§8). */
@@ -98,6 +109,7 @@ export const Window = ({
   axis = 'block',
   overscan,
   reserve = 0,
+  sticky,
   onEdge,
   onMismatch,
   onChange,
@@ -122,13 +134,30 @@ export const Window = ({
   // found by `placement/Drift` on its first run.
   const reported = useRef(new Set<string>());
 
+  // Which end the model grew at, decided by identity rather than guessed at.
+  //
+  // Rows arriving *before* the reader shift every index, and the anchor has to shift with them or it
+  // names a different message; rows arriving after change nothing. Comparing the first id to the
+  // anchor's cannot tell those apart — it says "prepended" for every append made while the reader is
+  // anywhere but the top, which shifts the anchor and moves the feed under them. Found by a sticky
+  // test that passed with no sticky implementation at all, because the wrong shift happened to land
+  // the tail where the test looked for it.
   const previousCount = useRef(count);
+  const previousFirstId = useRef(count ? getId(0) : '');
   if (previousCount.current !== count) {
-    // Rows arriving before the reader shift every index; the anchor's *position* is untouched, which
-    // is why a prepend moves nothing at or after it.
-    const prepended = Math.max(0, count - previousCount.current);
-    placement.setCount(count, { prepended: getId(0) !== placement.anchor.id && prepended ? prepended : 0 });
+    const grew = Math.max(0, count - previousCount.current);
+    // The old first row, if it is still there, has moved down by exactly the number prepended.
+    let prepended = 0;
+    for (let index = 1; index <= grew; index++) {
+      if (getId(index) === previousFirstId.current) {
+        prepended = index;
+        break;
+      }
+    }
+
+    placement.setCount(count, { prepended });
     previousCount.current = count;
+    previousFirstId.current = count ? getId(0) : '';
   }
 
   // Navigation, not correction. The rule that corrections never touch `scrollTop` (§7) is about the
@@ -159,6 +188,43 @@ export const Window = ({
   placement.setExtents(extents);
   placement.setReserve(reserve);
 
+  // Whether the reader was at the end *before* the model changed. Read from the element, since that
+  // is what they were looking at, and remembered because by the time new rows exist it is too late
+  // to ask.
+  const wasAtEnd = useRef(false);
+  const atEnd = useCallback(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) {
+      return false;
+    }
+
+    const viewport = axis === 'block' ? scroller.clientHeight : scroller.clientWidth;
+    const offset = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
+    return scroller.scrollHeight - reserve - offset - viewport <= STICKY_THRESHOLD;
+  }, [axis, reserve]);
+
+  useLayoutEffect(() => {
+    if (!sticky || !wasAtEnd.current || !count) {
+      wasAtEnd.current = atEnd();
+      return;
+    }
+
+    // Following is a navigation, not a correction: the content the reader is pinned to has moved, so
+    // the scroll has to as well. What corrections must never do is touch it (§7).
+    const scroller = scrollerRef.current;
+    placement.jumpTo(count - 1, 'end');
+    if (scroller) {
+      if (axis === 'block') {
+        scroller.scrollTop = placement.scroll;
+      } else {
+        scroller.scrollLeft = placement.scroll;
+      }
+    }
+
+    invalidate();
+    wasAtEnd.current = true;
+  }, [sticky, count, placement, axis, atEnd, invalidate]);
+
   const main = axis === 'block' ? 'height' : 'width';
 
   useLayoutEffect(() => {
@@ -177,6 +243,7 @@ export const Window = ({
     observer.observe(scroller);
     const onScroll = () => {
       placement.scrollTo(axis === 'block' ? scroller.scrollTop : scroller.scrollLeft);
+      wasAtEnd.current = atEnd();
       invalidate();
     };
 
@@ -186,7 +253,7 @@ export const Window = ({
       observer.disconnect();
       scroller.removeEventListener('scroll', onScroll);
     };
-  }, [placement, axis, invalidate]);
+  }, [placement, axis, atEnd, invalidate]);
 
   // Measured after every commit, so a row that grows later — a font, a portaled widget, an image —
   // is not a special case but the same case arriving again (§8).

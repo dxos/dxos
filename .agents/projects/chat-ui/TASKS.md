@@ -258,6 +258,15 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
 
 ## Placement engine — open defects
 
+- [x] **`Window` could not tell an append from a prepend.** It compared the first row's id to the
+      anchor's, which says "prepended" for every append made while the reader is anywhere but the
+      top — shifting the anchor and moving the feed under them. It now finds where the previous first
+      row has moved to, which is the number prepended by definition. Found by a sticky test that
+      passed with no sticky implementation at all, because the wrong shift happened to land the tail
+      where the test looked for it.
+- [x] **Sticky tail.** At the end, appending keeps you at the end; away from it, appending does not
+      move you. `placement/Sticky` asserts both, and mutation-checked: disabling it fails.
+
 Found while building the replacement placement layer (`DESIGN.md` §Principles). None block stage 3.
 
 - [x] **`Window` held the extents it was given at construction.** `extents` is a function the host
