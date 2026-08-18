@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RefObject, useCallback, useRef } from 'react';
+import { type RefObject, useCallback, useMemo, useRef } from 'react';
 
 import { type WindowController } from '@dxos/react-ui-virtual';
 
@@ -67,18 +67,26 @@ export const useFeedNavigation = ({
   // waiting on arrival, because a scroll the reader takes over is theirs again.
   const pending = useRef<{ index: number; at: number } | undefined>(undefined);
 
+  // Hosts hand the accessors as inline closures, so their identity churns per render; read through
+  // a ref so the seam itself is stable — a controller derived from it and stored in a host's state
+  // otherwise republishes every render, which is a setState-in-effect loop.
+  const optionsRef = useRef({ stops, current, count, scrollPastEnd, onNavigate });
+  optionsRef.current = { stops, current, count, scrollPastEnd, onNavigate };
+
   const jumpTo = useCallback(
     (index: number, behavior: ScrollBehavior = 'auto') => {
+      const { count, scrollPastEnd, onNavigate } = optionsRef.current;
       pending.current = { index, at: performance.now() };
       onNavigate?.(index);
       const align = !scrollPastEnd && index >= count() - 1 ? 'end' : 'start';
       controller.current?.scrollToIndex(index, align, behavior);
     },
-    [controller, count, scrollPastEnd, onNavigate],
+    [controller],
   );
 
   const step = useCallback(
     (delta: number) => {
+      const { stops, current } = optionsRef.current;
       const all = stops();
       if (!all.length) {
         return;
@@ -96,7 +104,7 @@ export const useFeedNavigation = ({
 
       jumpTo(next.index, 'smooth');
     },
-    [stops, current, jumpTo],
+    [jumpTo],
   );
 
   const first = useCallback(() => jumpTo(0), [jumpTo]);
@@ -104,10 +112,11 @@ export const useFeedNavigation = ({
   // With space reserved past the end, "the bottom" is the reading position the reserve exists for:
   // the last stop (the final prompt) at the top of the viewport — not the last row's start.
   const last = useCallback(() => {
+    const { stops, count, scrollPastEnd } = optionsRef.current;
     const all = stops();
     const target = scrollPastEnd && all.length ? all[all.length - 1].index : count() - 1;
     jumpTo(target);
-  }, [jumpTo, count, stops, scrollPastEnd]);
+  }, [jumpTo]);
 
-  return { step, jumpTo, first, last };
+  return useMemo(() => ({ step, jumpTo, first, last }), [step, jumpTo, first, last]);
 };

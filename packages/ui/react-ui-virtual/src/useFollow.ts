@@ -91,6 +91,12 @@ export const useFollow = ({
     following.current = !!enabled;
   }
 
+  // Read through a ref by the stable callbacks below: the count changes on every append, and a
+  // handle rebuilt per append republishes every controller derived from it — a host that stores
+  // that controller in state then loops on its own effect (`Maximum update depth exceeded`).
+  const countRef = useRef(count);
+  countRef.current = count;
+
   /**
    * Where the reader has to be for the last row's rendered edge to rest on the viewport's.
    *
@@ -105,7 +111,7 @@ export const useFollow = ({
       return 0;
     }
 
-    const last = scroller.querySelector<HTMLElement>(`[data-index="${count - 1}"]`);
+    const last = scroller.querySelector<HTMLElement>(`[data-index="${countRef.current - 1}"]`);
     if (last) {
       const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
       const delta =
@@ -117,7 +123,7 @@ export const useFollow = ({
 
     return placement.endOffset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count, axis, placement, scrollerRef.current]);
+  }, [axis, placement, scrollerRef.current]);
 
   // The glide, built once per scroller. Speeds are in rows, so it asks the placement for a live
   // median of what is mounted rather than being handed a constant.
@@ -300,14 +306,15 @@ export const useFollow = ({
 
   const onNavigate = useCallback(
     (index: number) => {
-      const wants = index >= count - 1;
+      const wants = index >= countRef.current - 1;
       following.current = !!enabled && wants;
       if (!wants) {
         follower?.cancel();
       }
     },
-    [enabled, count, follower],
+    [enabled, follower],
   );
 
-  return { onNavigate };
+  // Stable across appends, so controllers built over it do not churn per model change.
+  return useMemo(() => ({ onNavigate }), [onNavigate]);
 };
