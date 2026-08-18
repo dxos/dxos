@@ -91,19 +91,6 @@ export interface Query<T> {
   reference<K extends RefPropKey<T>>(key: K): Query<ReferenceTraversalTarget<T[K]>>;
 
   /**
-   * Traverse an outgoing reference held at a nested property path (e.g. `spec.source`), which
-   * {@link reference} cannot name because its key type covers top-level properties only.
-   *
-   * The path is not checked against `T`, so a wrong one yields no results rather than a type error —
-   * prefer {@link reference} whenever the ref is a top-level property. A path segment containing a
-   * literal `.` must be escaped as `\.`.
-   * @param path - Dot-separated property path to the reference.
-   * @param target - Schema of the referenced object; results are filtered to it, so a path that
-   *   reaches refs of another type yields nothing rather than mistyped objects.
-   */
-  referenceAt<S extends Type$.AnyEntity>(path: string, target: S): Query<Type$.InstanceType<S>>;
-
-  /**
    * Find objects referencing this object.
    * @param target - Schema of the referencing object. If not provided, matches any type.
    * @param key - Property path inside the referencing object that is a reference. If not provided, matches any property.
@@ -362,16 +349,6 @@ class QueryClass implements Any {
       anchor: this.ast,
       property: key,
     });
-  }
-
-  referenceAt(path: string, target: Type$.AnyEntity): Any {
-    // The traversal itself is untyped (same AST node as `reference`); the type filter makes the
-    // declared result type hold at runtime, matching `referencedBy`'s behavior.
-    return new QueryClass({
-      type: 'reference-traversal',
-      anchor: this.ast,
-      property: path,
-    }).select(Filter.type(target));
   }
 
   referencedBy(target?: Type$.AnyEntity | URI.URI, key?: string): Any {

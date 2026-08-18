@@ -11,7 +11,6 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
-import { Cursor } from '@dxos/link';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SyncTemplate from '@dxos/plugin-connector/SyncTemplate';
@@ -50,9 +49,8 @@ export const useSyncTrigger = ({
   const { connection } = useTargetConnection(subject);
   const connector = useConnectorEntry(connection, connectors);
 
-  // The account-level sync trigger references the connection as its `input.connection`; a legacy
-  // per-binding trigger references the subject's Cursor as its `input.binding`. Query both reverse-ref
-  // chains and prefer the account-level trigger.
+  // The sync trigger references the connection as its `input.connection`, so it is reached by the
+  // reverse-ref from the connection rather than from the subject.
   const connectionTriggers = useQuery(
     // Skip until the connection resolves — passing no db yields no results without breaking hook order.
     connection ? db : undefined,
@@ -60,19 +58,10 @@ export const useSyncTrigger = ({
       .referencedBy(Trigger.Trigger)
       .debugLabel('plugin-inbox.useSyncTrigger.connection'),
   );
-  const legacyTriggers = useQuery(
-    db,
-    Query.select(Filter.id(subject.id))
-      .referencedBy(Cursor.Cursor)
-      .referencedBy(Trigger.Trigger)
-      .debugLabel('plugin-inbox.useSyncTrigger.binding'),
-  );
 
   const syncTrigger = useMemo(
-    () =>
-      connectionTriggers.find((trigger) => trigger.spec?.kind === 'timer') ??
-      legacyTriggers.find((trigger) => trigger.spec?.kind === 'timer'),
-    [connectionTriggers, legacyTriggers],
+    () => connectionTriggers.find((trigger) => trigger.spec?.kind === 'timer'),
+    [connectionTriggers],
   );
 
   const [syncEnabled, setSyncEnabled] = useObject(syncTrigger, 'enabled');

@@ -9,11 +9,25 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 
 /**
+ * Traverses an outgoing reference held at a nested property path (here `Cursor.spec.source`), which the
+ * typed {@link Query.Query.reference} cannot name — its key type covers top-level properties only, while
+ * the query executor already resolves dot-paths. Built from the AST rather than added to the core query
+ * builder, so an unchecked path string stays local to this one call site; chain a `Filter.type` to restore
+ * the result type.
+ *
+ * TODO(wittjosiah): Replace with a typed nested-path hop on the query builder — a recursive
+ *   template-literal path type would resolve `'spec.source'` to `Ref<AccessToken> | Ref<Feed>`, making a
+ *   wrong path a compile error and the type filter a narrowing rather than a repair.
+ */
+const referenceAtPath = (query: Query.Any, path: string): Query.Any =>
+  Query.fromAst({ type: 'reference-traversal', anchor: query.ast, property: path });
+
+/**
  * Reactive query for all routines connected to an object O, via four structural paths:
  *
  * 1. **Trigger path** (two hops): O is referenced by a Trigger (via `input` or `spec.feed`), and that
  *    Trigger is referenced by a Routine's `triggers` array.
- * 2. **Cursor path** (three hops): a legacy per-binding sync Trigger doesn't reference its synced target
+ * 2. **Cursor path** (three hops): a per-binding sync Trigger doesn't reference its synced target
  *    directly — its `binding` references an external-sync {@link Cursor}, and the Cursor's `spec.target`
  *    references O. So O is reached one hop further out (O ← Cursor ← Trigger ← Routine), keeping the target
  *    ref out of the operation input.
@@ -39,9 +53,10 @@ export const connectedRoutinesQuery = (object: Obj.Unknown): Query.Query<Routine
   const byCursor = Query.select(Filter.id(object.id)).referencedBy(Cursor.Cursor).referencedBy(Trigger.Trigger);
   // Connection variant: O ← Cursor → spec.source (AccessToken) ← Connection ← Trigger (input.connection).
   // The forward hop is what makes this work without the trigger naming any binding.
-  const byConnection = Query.select(Filter.id(object.id))
-    .referencedBy(Cursor.Cursor)
-    .referenceAt('spec.source', AccessToken.AccessToken)
+  const byConnection = referenceAtPath(Query.select(Filter.id(object.id)).referencedBy(Cursor.Cursor), 'spec.source')
+    // The traversal is untyped, so the type is restored by a real filter rather than an assertion — and
+    // it is load-bearing: a feed cursor's `spec.source` is a `Ref<Feed>`, which this drops.
+    .select(Filter.type(AccessToken.AccessToken))
     .referencedBy(Connection.Connection)
     .referencedBy(Trigger.Trigger);
   const byTrigger = Query.all(byInput, byFeed, byCursor, byConnection).referencedBy(Routine.Routine, 'triggers');

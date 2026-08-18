@@ -14,7 +14,7 @@ import { DatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
 import { type WorkingSetDataProvider, WorkingSetQueryExecutor } from './working-set-executor';
 
-/** Ref at a nested path — unreachable by `reference`'s top-level key type; exercises `referenceAt`. */
+/** Ref at a nested path — unreachable by `reference`'s top-level key type. */
 class Wrapper extends Type.makeObject<Wrapper>(DXN.make('com.example.type.wrapper', '0.1.0'))(
   Schema.Struct({
     spec: Schema.optional(
@@ -141,7 +141,7 @@ describe('WorkingSetQueryExecutor', () => {
     expect(ids).toContain(alice.id);
   });
 
-  test('referenceAt follows a ref at a nested path and filters to the target type', async ({ expect }) => {
+  test('reference traversal resolves a nested property path', async ({ expect }) => {
     const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
     // Same type as the hop's result, but unreferenced — so a traversal that ignored the path and
     // returned every Person would fail this test.
@@ -156,14 +156,19 @@ describe('WorkingSetQueryExecutor', () => {
     db.add(taskWrapper);
     await db.flush();
 
-    const results = planAndExecute(
-      db,
-      Query.select(Filter.type(Wrapper)).referenceAt('spec.source', TestSchema.Person),
-    );
+    // The executor unescapes dot-paths and deep-gets, so a nested ref traverses even though the typed
+    // `reference` key cannot name it; `plugin-routine` reaches this via `Query.fromAst`.
+    const nestedHop = Query.fromAst({
+      type: 'reference-traversal',
+      anchor: Query.select(Filter.type(Wrapper)).ast,
+      property: 'spec.source',
+    });
+
+    const results = planAndExecute(db, nestedHop.select(Filter.type(TestSchema.Person)));
     const ids = results.map((item) => item.objectId);
     expect(ids).toContain(alice.id);
     expect(ids).not.toContain(unreferenced.id);
-    // The target filter drops the ref that reaches a Task.
+    // The type filter drops the ref that reaches a Task.
     expect(ids).not.toContain(task.id);
   });
 

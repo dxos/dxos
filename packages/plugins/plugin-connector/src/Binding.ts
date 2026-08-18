@@ -680,10 +680,10 @@ export const sync = (
 //
 
 /**
- * Removes a dormant binding, plus any legacy per-binding sync Routine still pointed at it (an
- * account-level Routine references the connection, never the cursor, and is removed with the
- * connection — see {@link findRoutine}). The Routine owns its trigger, so removing it takes the
- * trigger too.
+ * Removes a dormant binding, plus any per-binding sync Routine still pointed at it. The Routine owns its
+ * trigger, so removing it takes the trigger too. An account-level Routine is not reached from here — it
+ * references the connection, never the cursor, so it is removed with the connection (see
+ * {@link findRoutine}).
  */
 export const remove = (cursor: Cursor.ExternalCursor): Effect.Effect<void, never, Database.Service> =>
   Effect.gen(function* () {

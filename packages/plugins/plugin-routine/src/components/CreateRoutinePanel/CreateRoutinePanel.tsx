@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Routine from '@dxos/compute/Routine';
 import { Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -48,10 +49,10 @@ export const CreateRoutinePanel = ({
 }: CreateRoutinePanelProps) => {
   const { t } = useTranslation(meta.profile.key);
   const capabilityTemplates = useCapabilities(RoutineCapabilities.Template);
+  const { invokePromise } = useOperationInvoker();
   const templates = templatesProp ?? capabilityTemplates;
   const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
   const [draft, setDraft] = useState<Draft | undefined>();
-  const [scaffoldFailed, setScaffoldFailed] = useState(false);
   const seededTemplateId: string | undefined = initialFormValues?.templateId;
   const subject: Obj.Unknown | undefined = initialFormValues?.subject;
 
@@ -79,16 +80,19 @@ export const CreateRoutinePanel = ({
         const scaffolded = await EffectEx.runPromise(
           template.scaffold({ subject }).pipe(Effect.provideService(Database.Service, Database.makeService(db))),
         );
-        setScaffoldFailed(false);
         setDraft({ templateId, routine: scaffolded });
       } catch (error) {
         // A scaffold that requires context the subject lacks (e.g. a sync binding) fails typed; keep the
-        // picker up — with a visible reason, or the click looks ignored — rather than crashing the dialog.
+        // picker up and toast the reason, or the click looks ignored.
         log.catch(error);
-        setScaffoldFailed(true);
+        void invokePromise?.(LayoutOperation.AddToast, {
+          id: `${meta.profile.key}.scaffold-failed`,
+          icon: 'ph--warning--regular',
+          title: ['create-panel.scaffold-error.label', { ns: meta.profile.key }],
+        });
       }
     },
-    [templates, db, subject],
+    [templates, db, subject, invokePromise],
   );
 
   // Seeded flow: skip the picker and scaffold the named template immediately (once per mount).
@@ -116,15 +120,6 @@ export const CreateRoutinePanel = ({
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      {scaffoldFailed && (
-        <p
-          role='alert'
-          className='mb-form-gap text-sm text-error-text'
-          data-testid='create-automation-panel.scaffold-error'
-        >
-          {t('create-panel.scaffold-error.label')}
-        </p>
-      )}
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus
