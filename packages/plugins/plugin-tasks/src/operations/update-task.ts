@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Obj, Ref } from '@dxos/echo';
-import { type Task } from '@dxos/types';
+import { type Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors';
-import { collectSubtree, findTaskSet } from './task-set-membership';
+import { collectSubtree, findTaskSet, refEntityId } from './task-set-membership';
 
 const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOperation.UpdateTask.pipe(
   Operation.withHandler(
@@ -29,8 +29,10 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
       const task = yield* Database.load(taskRef);
       const taskSet = milestone !== undefined || parentTask !== undefined ? yield* findTaskSet(task) : undefined;
 
+      // Compared by entity id: the same object may be addressed local or space-qualified.
       if (milestone) {
-        const belongs = taskSet?.milestones.some((ref) => ref.uri === milestone.uri) ?? false;
+        const milestoneId = refEntityId(milestone);
+        const belongs = taskSet?.milestones.some((ref) => refEntityId(ref) === milestoneId) ?? false;
         if (!belongs) {
           return yield* Effect.fail(
             new InvalidOperationInput({ message: 'The milestone does not belong to this task set.' }),
@@ -38,16 +40,25 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
         }
       }
 
-      // Re-parenting into the task's own subtree would orphan the whole branch from the set's roots.
       let newParent: Task.Task | undefined;
       if (parentTask) {
-        newParent = yield* Database.load(parentTask);
+        const candidate = yield* Database.load(parentTask);
+        // Re-parenting into the task's own subtree would orphan the whole branch from the set's roots.
         const subtree = taskSet ? collectSubtree(taskSet, task) : [task];
-        if (subtree.some((member) => member.id === newParent!.id)) {
+        if (subtree.some((member) => member.id === candidate.id)) {
           return yield* Effect.fail(
             new InvalidOperationInput({ message: 'A task cannot be re-parented under itself or its own sub-tasks.' }),
           );
         }
+        // A cross-set parent would flatten the hierarchy here and hand the task's lifecycle to the
+        // other set's cascade, leaving this set holding a ref to a removed object.
+        const members = taskSet ? TaskSet.resolveTasks(taskSet) : [];
+        if (!members.some((member) => member.id === candidate.id)) {
+          return yield* Effect.fail(
+            new InvalidOperationInput({ message: 'The parent task does not belong to this task set.' }),
+          );
+        }
+        newParent = candidate;
       }
 
       Obj.update(task, (task) => {

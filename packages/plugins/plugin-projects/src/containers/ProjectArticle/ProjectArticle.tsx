@@ -157,11 +157,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 
 ProjectArticle.displayName = 'ProjectArticle';
 
-/**
- * Read-only view of the task set's milestones, at parity with the retired `GoalList`: milestones
- * replaced goals, and authoring is still agent/MCP-only. No status icon — a milestone stores none,
- * because progress is derived from the tasks filed under it; wiring that in is a follow-up.
- */
+/** Read-only: milestones are authored through the agent/MCP verbs, and store no status to render. */
 const MilestoneList = ({ refs }: { refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>> }) => (
   <Flex role='list' column gap='xs'>
     {refs.map((milestoneRef) => (

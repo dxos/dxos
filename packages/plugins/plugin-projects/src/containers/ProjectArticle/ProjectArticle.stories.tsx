@@ -209,10 +209,9 @@ export const Updates: Story = {
     });
     const MILESTONE_TASK = 'Filed under the milestone';
     addTask(space, taskSet, MILESTONE_TASK, milestone);
-    // The milestone appears in its own read-only section (parity with the retired Goals list) …
+    // The milestone renders in its own section.
     await expect(canvas.findByText(MILESTONE_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    // … while its task is just a row in the flat list: the task list does not group by milestone
-    // yet (see TASKS.md), so no backlog split appears.
+    // Its task is only a row: the task list does not group by milestone, so no backlog split appears.
     await expect(canvas.findByText(MILESTONE_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
 

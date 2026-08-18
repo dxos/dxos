@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Format, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 // Person is referenced in Actor.Actor's inferred type (via the contact ref); importing it lets
 // the compiler name the operation types portably (TS2883).
@@ -220,7 +220,7 @@ export const CreateMilestone = Operation.make({
     name: Schema.String,
     /** What done means for this milestone. */
     description: Schema.optional(Schema.String),
-    targetDate: Schema.optional(Schema.String).annotate({ description: 'Target date as YYYY-MM-DD.' }),
+    targetDate: Schema.optional(Format.DateOnly).annotate({ description: 'Target date as YYYY-MM-DD.' }),
   }),
   output: Schema.Struct({
     milestone: Schema.Unknown,
@@ -241,7 +241,7 @@ export const UpdateMilestone = Operation.make({
     milestone: Ref.Ref(Milestone.Milestone),
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
-    targetDate: Schema.optional(Schema.NullOr(Schema.String)).annotate({
+    targetDate: Schema.optional(Schema.NullOr(Format.DateOnly)).annotate({
       description: 'Target date as YYYY-MM-DD; null clears it.',
     }),
   }),
@@ -314,7 +314,7 @@ export const ListMilestones = Operation.make({
         id: Schema.String,
         name: Schema.String,
         description: Schema.optional(Schema.String),
-        targetDate: Schema.optional(Schema.String),
+        targetDate: Schema.optional(Format.DateOnly),
         /** Tasks owed (cancelled ones excluded) and how many are done — a milestone stores no status. */
         total: Schema.Number,
         done: Schema.Number,

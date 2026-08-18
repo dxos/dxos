@@ -11,6 +11,7 @@ import * as Routine from '@dxos/compute/Routine';
 import { Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
+import { TaskSet } from '@dxos/types';
 
 /**
  * Deleting a project must take its owned graph with it. The navtree's ⋮ Delete resolves to
@@ -31,7 +32,15 @@ describe('deleting a project', () => {
 
   const setup = async () => {
     const { db } = await builder.createDatabase({
-      types: [Project.Project, Instructions.Instructions, Chat.Chat, Feed.Feed, Text.Text, Routine.Routine],
+      types: [
+        Project.Project,
+        Instructions.Instructions,
+        Chat.Chat,
+        Feed.Feed,
+        Text.Text,
+        Routine.Routine,
+        TaskSet.TaskSet,
+      ],
     });
 
     // Mirrors the create-object capability: owned instructions, artifacts listed by ref.
@@ -47,9 +56,16 @@ describe('deleting a project', () => {
     const chat = db.add(Chat.make({ name: 'Chat', feed: Ref.make(feed) }));
     Obj.setParent(chat, project);
 
-    // Mirrors the routine-template create flow: neither owned nor referenced — the routine reaches
-    // its project only through its own instructions.
-    const routine = db.add(Routine.make({ name: 'Routine', triggers: [] }));
+    // Mirrors the routine-template create flow: neither owned nor referenced by the project — the
+    // routine reaches it only through its own instructions, which is the edge the companion queries.
+    const routineInstructions = db.add(Instructions.make({ objects: [Ref.make(project)] }));
+    const routine = db.add(
+      Routine.make({
+        name: 'Routine',
+        triggers: [],
+        spec: { kind: 'instructions', instructions: Ref.make(routineInstructions) },
+      }),
+    );
     await db.flush();
 
     return { db, project, instructions, chat, routine };
@@ -84,17 +100,19 @@ describe('deleting a project', () => {
   };
 
   test('the owned instructions and chats are removed with it', async ({ expect }) => {
-    const { db, project } = await setup();
+    const { db, project, instructions } = await setup();
     expect(await countOf(db, Filter.type(Project.Project))).toEqual(1);
-    expect(await countOf(db, Filter.type(Instructions.Instructions))).toEqual(1);
     expect(await countOf(db, Filter.type(Chat.Chat))).toEqual(1);
+    // By id, not by a type count: the connected routine owns Instructions of its own, and only the
+    // project's are supposed to go.
+    expect(await countOf(db, Filter.id(instructions.id))).toEqual(1);
 
     db.remove(project);
     await db.flush();
 
     expect(await countOf(db, Filter.type(Project.Project))).toEqual(0);
-    expect(await countOf(db, Filter.type(Instructions.Instructions))).toEqual(0);
     expect(await countOf(db, Filter.type(Chat.Chat))).toEqual(0);
+    expect(await countOf(db, Filter.id(instructions.id))).toEqual(0);
   });
 
   // Deliberate: `Project.routines` and the routine→project parent edge are gone, so a routine is a

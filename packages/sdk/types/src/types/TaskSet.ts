@@ -79,11 +79,15 @@ const refId = <T extends Obj.Unknown>(ref: Ref.Ref<T> | undefined): string | und
  * The set's tasks in array order, dropping unresolved refs and de-duplicating by id — concurrent
  * edits can merge a ref into the array twice, and a reader must not show the task twice.
  */
-export const resolveTasks = (taskSet: TaskSet): Task.Task[] => dedupeById(taskSet.tasks.map((ref) => ref.target));
+export const resolveTasks = (taskSet: TaskSet): Task.Task[] => dedupeById(resolveRefs(taskSet.tasks));
 
 /** The set's milestones in sequence, dropping unresolved refs and de-duplicating by id. */
 export const resolveMilestones = (taskSet: TaskSet): Milestone.Milestone[] =>
-  dedupeById(taskSet.milestones.map((ref) => ref.target));
+  dedupeById(resolveRefs(taskSet.milestones));
+
+/** `.target` throws on a ref carrying neither an inlined target nor a resolver, so gate on `isAvailable`. */
+const resolveRefs = <T extends Obj.Unknown>(refs: ReadonlyArray<Ref.Ref<T>>): Array<T | undefined> =>
+  refs.filter((ref) => ref.isAvailable).map((ref) => ref.target);
 
 /**
  * Drops unresolved entries and de-duplicates by id. Exported because a React caller resolves the
@@ -127,11 +131,13 @@ export const effectiveMilestoneId = (tasks: readonly Task.Task[], task: Task.Tas
 
 /**
  * Every task's effective milestone in one pass, keyed by task id — the per-task walk is otherwise
- * quadratic when grouping a whole set.
+ * quadratic when grouping a whole set. Exported so a caller filtering the whole set builds it once.
+ * Tasks with no milestone anywhere up their chain map to `undefined`, memoized like any other result
+ * so a long backlog chain is still walked once.
  */
-const effectiveMilestoneIds = (tasks: readonly Task.Task[]): Map<string, string> => {
+export const effectiveMilestoneIds = (tasks: readonly Task.Task[]): Map<string, string | undefined> => {
   const byId = new Map(tasks.map((task) => [task.id, task] as const));
-  const resolved = new Map<string, string>();
+  const resolved = new Map<string, string | undefined>();
 
   for (const task of tasks) {
     // Walk to the nearest ancestor carrying a milestone, remembering the path so the whole chain
@@ -147,9 +153,8 @@ const effectiveMilestoneIds = (tasks: readonly Task.Task[]): Map<string, string>
         break;
       }
       visited.add(cursorId);
-      const memo = resolved.get(cursorId);
-      if (memo !== undefined) {
-        found = memo;
+      if (resolved.has(cursorId)) {
+        found = resolved.get(cursorId);
         break;
       }
       path.push(cursorId);
@@ -162,10 +167,8 @@ const effectiveMilestoneIds = (tasks: readonly Task.Task[]): Map<string, string>
       cursor = parentId === undefined ? undefined : byId.get(parentId);
     }
 
-    if (found !== undefined) {
-      for (const id of path) {
-        resolved.set(id, found);
-      }
+    for (const id of path) {
+      resolved.set(id, found);
     }
   }
 

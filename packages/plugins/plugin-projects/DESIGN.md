@@ -300,7 +300,7 @@ end-state per [`MILESTONE-5.md`](./MILESTONE-5.md) (Phase 0 decided 2026-08-01);
 | `Plan`            | `@dxos/assistant-toolkit` | Conversation working set: embedded tasks driving supervisor loop                      | `Plan.Task` gains `taskRef?: Ref<Task>` (promotion / write-through)                                               |
 | `Chat`            | `@dxos/assistant-toolkit` | Conversation: feed + `instructions` ref + `plan`                                      |                                                                                                                   |
 | `Agent`           | `@dxos/assistant-toolkit` | Identity/preset owning no conversation state                                          | Assignment target only via DID on `Actor`                                                                         |
-| `Collection`      | `@dxos/echo`              | Ordered ref collection (used by `Project.artifacts`)                                  |                                                                                                                   |
+| `Collection`      | `@dxos/echo`              | Ordered ref collection (no longer used by `Project.artifacts`)                        |                                                                                                                   |
 | `Text`            | `@dxos/schema`            | CRDT text (content of `Outline`, documents)                                           |                                                                                                                   |
 
 Plugin ownership after M5: **plugin-tasks** (renamed plugin-outliner) owns the TaskSet/Task/
@@ -371,10 +371,10 @@ shape:
 
 - `meta`, `types/` (`ProjectOperation`, capabilities, events), `translations`.
 - `capabilities/`: `create-object` (navtree "+ Project": creates a Project with
-  owned Instructions + empty artifacts Collection), `app-graph-builder`,
+  owned Instructions + task set; artifacts start empty), `app-graph-builder`,
   `navigation-resolver`, `react-surface`, `operation-handler`.
 - `containers/ProjectArticle/`: header (name/description), instructions editor
-  (Form + markdown text), routines list, artifacts collection section, and a
+  (Form + markdown text), milestone list, task set section, artifacts gallery, and a
   toolbar. Storybook story + play test.
 
 ### Extension points (seminal-plugin posture)
@@ -445,11 +445,11 @@ feed replays, so history is preserved.
 
 ## Artifacts and the project skill
 
-The artifacts Collection is only useful if the model can both **file** into it and
+The artifacts array is only useful if the model can both **file** into it and
 **find** from it. A `ProjectSkill`, bound into every project chat, owns that:
 
-- **Add** an object ref to the project's artifacts Collection.
-- **List** the collection, so the model can find what the project already holds
+- **Add** an object ref to the project's artifacts array.
+- **List** them, so the model can find what the project already holds
   without falling back to a space-wide search.
 
 Filing is explicit rather than automatic: the skill's instructions tell the model

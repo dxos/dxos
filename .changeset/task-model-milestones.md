@@ -1,7 +1,5 @@
 ---
 '@dxos/echo': minor
-'@dxos/compute': minor
-'@dxos/app-toolkit': minor
 ---
 
 Tasks, task sets and milestones are now modelled with uni-directional refs. A `TaskSet` carries an ordered `tasks` array holding **every** task in the set — sub-tasks included, so listing a set is one read rather than a tree walk — plus an ordered `milestones` array. A task states its own place with two many-to-one refs: `parentTask` for the sub-task hierarchy and `milestone` for what it counts toward (unset means backlog; a sub-task inherits its nearest ancestor's milestone unless it sets its own). The ECHO parent edge is still set alongside, but only so deletion cascades — it is no longer the membership or hierarchy mechanism.

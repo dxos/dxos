@@ -111,6 +111,10 @@ export const reorder = <T extends Obj.Unknown>(
   id: EntityId,
   beforeId: EntityId | undefined,
 ): Ref.Ref<T>[] => {
+  // Anchoring an entry on itself is a no-op; removing it first would strand it at the end.
+  if (beforeId === id) {
+    return [...refs];
+  }
   const index = refs.findIndex((ref) => refEntityId(ref) === id);
   if (index === -1) {
     return [...refs];

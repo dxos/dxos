@@ -469,11 +469,12 @@ deletion guards (Phase 5) are separate planned follow-ups.**
       `milestoneCreate`/`Update`/`Delete`/`Move`/`List`. `taskCreate` gained `parentTask` (renamed
       from `parent`) + `milestone`; `taskUpdate` gained nullable `milestone`/`parentTask` (null =
       backlog / promote to root) and refuses a re-parent into the task's own subtree.
-- [x] **`TaskSetArticle` renders from the flat array** — milestone sections (with derived
-      `done/total`) then Backlog; a set with no milestones renders as one flat list, as before.
-      Delete now routes through `taskDelete` rather than `db.remove`, which is what sweeps the
-      array. NOT DONE: sub-tasks are still not rendered nested (root tasks only, matching the
-      previous behavior) — `react-ui-task`'s `TaskList` is flat; nesting is a follow-up.
+- [x] **`TaskSetArticle` renders from the flat array** — one flat list of every task in the set,
+      in array order. Delete routes through `taskDelete` rather than `db.remove`, which is what
+      sweeps the array. Milestone sections with derived `done/total` were built and then removed
+      (2026-08-18, user): the article shows tasks only, and `ProjectArticle` carries a read-only
+      milestone list in place of the retired Goals section. NOT DONE, both follow-ups below:
+      milestone grouping in the task list, and nested sub-tasks (`react-ui-task`'s `TaskList` is flat).
 - [x] **Sync mapping** — linear/github: milestones now mirror as `Milestone` objects keyed by
       foreign key (both API layers extended to fetch them), `task.milestone` set from the remote
       issue and cleared on remote unassignment, membership reconciled through a shared

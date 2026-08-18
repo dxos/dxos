@@ -30,7 +30,7 @@ describe('project templates', () => {
 
   const createDatabase = async () => {
     const { db } = await builder.createDatabase({
-      types: [Project.Project, Instructions.Instructions, Text.Text],
+      types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet],
     });
     return db;
   };
