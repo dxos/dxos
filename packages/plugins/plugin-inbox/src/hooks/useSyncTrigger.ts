@@ -5,12 +5,14 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Capability from '@dxos/app-framework/Capability';
+import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
+import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SyncTemplate from '@dxos/plugin-connector/SyncTemplate';
@@ -24,7 +26,7 @@ import { useConnectorEntry, useTargetConnection } from '../components/Initialize
  * Hook to find, create, and toggle a timer-based sync Routine for a mailbox or calendar. An existing
  * routine's trigger is toggled in place; when none exists, toggling on opens the create-object dialog
  * seeded with the connector's sync routine template, so the routine is created through the form the
- * user can see and edit rather than silently.
+ * user can see and edit rather than silently, and saving it runs the first sync.
  *
  * `connectors` (the registered `Connector` capability list) is resolved by the calling container and
  * threaded down to `useConnectorEntry` — components and the hooks they use must not resolve
@@ -46,6 +48,7 @@ export const useSyncTrigger = ({
 } => {
   const [pending, setPending] = useState(false);
   const { invokePromise } = useOperationInvoker();
+  const manager = usePluginManager();
   const { connection } = useTargetConnection(subject);
   const connector = useConnectorEntry(connection, connectors);
 
@@ -97,11 +100,29 @@ export const useSyncTrigger = ({
         typename: Type.getTypename(Routine.Routine),
         initialFormValues: { templateId: SyncTemplate.ID, subject },
         navigable: false,
+        // Turning sync on is the ask, so the save runs the first sync rather than leaving the
+        // mailbox empty until the schedule comes round. The trigger is read off the saved routine —
+        // a lookup here would race the reverse-ref index.
+        onCreateObject: (created: Obj.Unknown) => {
+          Effect.runFork(
+            Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId }).pipe(
+              Effect.provideService(Capability.Service, manager.capabilities),
+              Effect.catch((error) =>
+                Effect.sync(() => log.warn('first sync after routine created failed', { error })),
+              ),
+              // An EDGE force-run that outlives its replication backoff arrives as a defect
+              // (`Effect.orDie`), which the typed catch above would let escape unreported.
+              Effect.catchDefect((defect) =>
+                Effect.sync(() => log.warn('first sync after routine created died', { defect })),
+              ),
+            ),
+          );
+        },
       });
     } finally {
       setPending(false);
     }
-  }, [syncTrigger, db, subject, connection, connector, invokePromise]);
+  }, [syncTrigger, db, subject, connection, connector, invokePromise, manager.capabilities]);
 
   return { syncEnabled, syncTrigger, pending, handleToggleSync };
 };

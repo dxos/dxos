@@ -637,9 +637,13 @@ describe('binding lifecycle', () => {
 
 describe('Binding.syncAll', () => {
   let builder: EchoTestBuilder;
+  // One runtime per test, disposed below: `makeInvoker` is called per invocation, so building a
+  // runtime there would leak one for every call.
+  let runtime: ManagedRuntime.ManagedRuntime<Capability.Service, never>;
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
+    runtime = ManagedRuntime.make(Layer.succeed(Capability.Service, makeCapabilities({ scheduled: false })));
     // Reset here rather than in `setup`, so a test seeding its own database cannot inherit state.
     synced.length = 0;
     fired.length = 0;
@@ -649,6 +653,7 @@ describe('Binding.syncAll', () => {
   });
 
   afterEach(async () => {
+    await runtime.dispose();
     await builder.close();
   });
 
@@ -919,11 +924,7 @@ describe('Binding.syncAll', () => {
     return manager;
   };
 
-  const makeInvoker = () =>
-    OperationInvoker.make(
-      () => Effect.succeed([syncHandler]),
-      ManagedRuntime.make(Layer.succeed(Capability.Service, makeCapabilities({ scheduled: false }))),
-    );
+  const makeInvoker = () => OperationInvoker.make(() => Effect.succeed([syncHandler]), runtime);
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();

@@ -288,6 +288,11 @@ export const triggerMonitorLayer = (
  * one to the trigger dispatcher — the dispatcher being what carries the run's durable execution, so
  * a batched sync continues past its first capped run. The synthetic tick stands in for the timer
  * event a scheduled fire would have supplied.
+ *
+ * `data` only reaches a *local* run: EDGE's force-run endpoint takes a trigger id and nothing else
+ * (`EdgeTriggerManager.invokeTrigger` -> `forceRunCronTrigger(ctx, spaceId, triggerId)`), so a remote
+ * trigger's run sees no event and resolves its `{{event.data.*}}` input templates to `undefined`.
+ * TODO(wittjosiah): Carry the fire event to EDGE so a remote sync honours pressed-first ordering.
  */
 export const fireTrigger = (
   trigger: Trigger.Trigger,
@@ -313,7 +318,9 @@ export const fireTrigger = (
  * without touching the Routine.
  *
  * `priority` is an event template: a manual sync from one target's button carries that binding on the
- * fire event for pressed-first ordering, while a scheduled fire resolves it to nothing.
+ * fire event for pressed-first ordering, while a scheduled fire resolves it to nothing. It is inert
+ * for a `remote` trigger, whose fire event EDGE's force-run endpoint cannot accept — see
+ * {@link fireTrigger}.
  *
  * Nothing is written here. The draft is shown editable in the create-routine form and persisted on
  * Save, so a sync Routine is never created behind the user's back — which is also why there is no
@@ -592,6 +599,11 @@ export const syncOrOfferRoutine = ({
                 Effect.provideService(Operation.Service, invoker),
                 Effect.provideService(Capability.Service, capabilities),
                 Effect.catch((error) => Effect.sync(() => log.warn('sync after routine created failed', { error }))),
+                // An EDGE force-run that outlives its replication backoff arrives as a defect
+                // (`Effect.orDie`), which the typed catch above would let escape unreported.
+                Effect.catchDefect((defect) =>
+                  Effect.sync(() => log.warn('sync after routine created died', { defect })),
+                ),
               ),
             );
           },
