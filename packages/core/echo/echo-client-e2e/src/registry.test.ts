@@ -199,6 +199,10 @@ describe('Registry', () => {
     const registry = makeRegistry();
     const atoms = AtomRegistry.make();
     const atom = Registry.typeAtom(registry, 'org.example.type.late');
+    // Memoized per (registry, typename), so consumers share one atom and one subscription.
+    expect(Registry.typeAtom(registry, 'org.example.type.late')).toBe(atom);
+    expect(Registry.typeAtom(registry, 'org.example.type.other')).not.toBe(atom);
+    expect(Registry.typeAtom(makeRegistry(), 'org.example.type.late')).not.toBe(atom);
     let emissions = 0;
     const unsubscribe = atoms.subscribe(atom, () => emissions++);
 
