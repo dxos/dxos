@@ -82,7 +82,8 @@ Initial priority (user, 2026-07-24):
       STILL OPEN: the intermittent "first click into empty deck attends but opens no plank" (repro needed).
 - [x] **Tool-call churn in project chats** — (#12386) the skill-manager prompt no longer mandates a
       `query-skills` call before every `enable-skills` (the list is already rendered into the prompt), project
-      chats pre-bind the artifact-type skills, and `create-object` points at type-specific create tools.
+      chats pre-bind the artifact-type skills (pre-binding since removed, 2026-08-18 — `Project`'s
+      `SkillsAnnotation` carries only the project skill), and `create-object` points at type-specific create tools.
       USER-VERIFIED LIVE on the #12386 preview, 2026-07-29. Model-behavioral, so a single run is not a
       guarantee — `assistant-evals` `projects.eval.ts` is the repeatable check: RUN LIVE 2026-07-29, 100% (all three scorers, 24s).
 - [x] **PR strategy decision** — moot: the three MS2 commits shipped inside #12335's squash; verified present on main (ProjectArticle `getReactiveOrUndefined`, format.ts `## Instructions` + `<label>`, Projects.stories.tsx, minimal plugin set).
@@ -574,7 +575,8 @@ deletion guards (Phase 5) are separate planned follow-ups.**
 - [x] **Companion-created routines miss project scope seeding** — resolved 2026-08-18 via the
       annotation route: `SkillsAnnotation` moved from `@dxos/app-toolkit/AppAnnotation` to
       `@dxos/compute/Skill` (id-keyed, so only import paths changed — ~14 call sites), and `Project`
-      now carries it (`org.dxos.skill.project` + the artifact-type keys, plain-key idiom). The blank
+      now carries it (just `org.dxos.skill.project`, plain-key idiom — the artifact-type pre-binding
+      was a latency optimization, dropped per user call; sessions enable those on demand). The blank
       routine template's scaffold already reads the subject type's annotation, so project routines
       seed correctly with no project-specific template. `ProjectOperation.CreateRoutine` (zero
       invokers after the toolbar change: not MCP-exposed, no UI) deleted along with

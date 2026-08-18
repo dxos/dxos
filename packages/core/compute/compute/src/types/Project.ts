@@ -48,16 +48,10 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     Schema.annotate({ title: 'Project' }),
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
-    // Skills any project-scoped session carries: the project skill (so created objects can be filed
-    // into `artifacts` — filing is a deliberate tool call) plus the artifact-type skills (so producing
-    // the artifact the user asked for does not cost a query-skills/enable-skills round trip first).
-    // Plain dotted keys, so the type does not depend on the plugins that own each skill.
-    Skill.SkillsAnnotation.set([
-      'org.dxos.skill.project',
-      'org.dxos.skill.markdown',
-      'org.dxos.skill.table',
-      'org.dxos.skill.sheet',
-    ]),
+    // Only the project skill: filing created objects into `artifacts` is what a project-scoped
+    // session structurally needs; artifact-type skills are enabled on demand. Plain dotted key, so
+    // the type does not depend on the plugin that owns the skill.
+    Skill.SkillsAnnotation.set(['org.dxos.skill.project']),
   ),
 ) {}
 
