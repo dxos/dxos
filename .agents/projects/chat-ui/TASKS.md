@@ -17,6 +17,7 @@ rendering layer. Track B and C touch `react-ui-thread`, so coordinate before mov
 - [x] plugin-assistant rewired: ChatThread dir deleted, MessageSyncer retired, Chat.tsx inlines the
       package thread, SurfaceWidget injected, ChatView moved to the package.
 - [x] Defect: useFollow/useFeedNavigation identities stabilized (controller-in-state loop).
+- [ ] Update storybook to show tasks (Chat.TaskList in the assistant stories).
 - [ ] mosaic VirtualStack rebind onto react-ui-virtual (SPEC F-8.2).
 - [ ] npm publish of react-ui-virtual / react-ui-feed / react-ui-assistant (changesets post-merge).
 

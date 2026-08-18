@@ -101,10 +101,13 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           <Panel.Content asChild>
             <ChatComponent.Content>
               <div className='dx-container relative'>
+                {/* Thread outline. */}
                 {viewType !== 'summary' && (
                   <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />
                 )}
-                <ChatComponent.Thread classNames='dx-document' viewType={viewType} onViewUsage={handleViewUsage} />
+                {/* Main thread. */}
+                <ChatComponent.Thread viewType={viewType} onViewUsage={handleViewUsage} />
+                {/* Thrad status. */}
                 {viewType !== 'summary' && (
                   <div className='absolute bottom-2 left-0 right-0'>
                     <div className='dx-document px-4'>
@@ -114,9 +117,9 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 )}
               </div>
               <div className='dx-document px-4 pb-4'>
-                <Flex column align='center' classNames='py-2 overflow-hidden'>
-                  <ChatComponent.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
-                </Flex>
+                {/* <Flex column align='center'> */}
+                <ChatComponent.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
+                {/* </Flex> */}
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline

@@ -428,8 +428,13 @@ const MessageListRoot = ({
       } else {
         scrollToIndex(model.count - 1, { align: 'end', ...options });
       }
+
+      // The bottom is the tail whichever position expresses it: pin the follow, after the jump's
+      // own onNavigate — under scrollPastEnd the target is the last *stop*, which reads as "not
+      // the tail" and would leave a submitted prompt unpinned while its answer streams.
+      follow.onNavigate(model.count - 1);
     },
-    [scrollToIndex, model, scrollPastEnd],
+    [scrollToIndex, model, scrollPastEnd, follow],
   );
 
   useEffect(() => {
@@ -583,12 +588,14 @@ type MessageListViewportExtra = Pick<
  * stops, search all see it); only its chrome is withheld, so the reader is not shown an empty row
  * with a toolbar.
  */
-const isEmptyContent = (content: ItemContent): boolean =>
-  (content.kind === 'markdown' && !content.text.trim()) || (content.kind === 'html' && !content.html.trim());
+const isEmptyContent = (content: ItemContent, hasCustomRenderer: boolean): boolean =>
+  (content.kind === 'markdown' && !content.text.trim()) ||
+  (content.kind === 'html' && !content.html.trim()) ||
+  (content.kind === 'custom' && !hasCustomRenderer);
 
 const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
   ({ autoHide, centered, native, padding, scrollbars, thin, gutter, ...props }, forwardedRef) => {
-    const { model, renderer, Chrome, windowRef, offset, sizerExtent, first, last, setViewport } =
+    const { model, renderer, Chrome, Custom, windowRef, offset, sizerExtent, first, last, setViewport } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
     // The value once, per-row state derived: hooks do not run in loops, and the row loop below is
     // one. Item-shaped chrome uses `useItemSelection(id)` instead.
@@ -611,7 +618,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
 
       // The row div always exists — the measurement pass walks the window's children by index —
       // but an empty render mounts no chrome inside it, so it measures at zero and takes no space.
-      const empty = isEmptyContent(renderer(message));
+      const empty = isEmptyContent(renderer(message), Boolean(Custom));
       rows.push(
         // Unpositioned, and that is the point. A row that changes extent reflows the ones after it,
         // in the browser, in the same frame; placing each row ourselves meant re-placing every row
@@ -651,6 +658,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
           // Off deliberately: the browser adjusting the scroll as well would be a second party
           // anchoring the same thing, and the defect this design exists to remove is exactly that.
           style={{ position: 'relative', overflowAnchor: 'none' }}
+          classNames='dx-document'
           ref={handleViewportRef}
         >
           {/* Holds no rows: it exists only to give the thumb something to measure. */}
