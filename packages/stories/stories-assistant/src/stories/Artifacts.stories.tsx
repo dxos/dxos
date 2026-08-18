@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { Filter, Ref, Type, View } from '@dxos/echo';
-import { AssistantSkill } from '@dxos/plugin-assistant';
-import { ChessSkill } from '@dxos/plugin-chess';
-import { MapSkill } from '@dxos/plugin-map';
+import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
+import * as ChessSkill from '@dxos/plugin-chess/ChessSkill';
+import * as MapSkill from '@dxos/plugin-map/MapSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { ViewModel } from '@dxos/schema';
 import { trim } from '@dxos/util';

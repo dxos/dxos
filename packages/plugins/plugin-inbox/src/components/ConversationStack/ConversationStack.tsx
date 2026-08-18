@@ -423,7 +423,7 @@ const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
       // Same column template and gutter width as a message tile, so the heading and text line up with
       // the senders and bodies above rather than starting at the tile edge.
       className={mx(
-        'dx-document dx-attention-surface border border-subdued-separator rounded overflow-hidden mbs-2',
+        'dx-document dx-attention-surface border border-subdued-separator rounded overflow-hidden mt-2',
         MESSAGE_TILE_COLUMNS,
       )}
       data-testid='conversation.summary'
@@ -544,7 +544,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
   // One subgrid spanning the tile's columns, so the summary row and the detail/body row share them.
   return (
     <div className='contents'>
-      <div className='col-span-full grid grid-cols-subgrid items-start pbs-1'>
+      <div className='col-span-full grid grid-cols-subgrid items-start pt-1'>
         {/* Summary row: avatar (col 1) | title (col 2) | date + star (col 3) | menu (col 4). */}
         {/* `db` (not `getContact`): a conversation holds few messages, so a query per tile is
             affordable here — unlike the virtualized mailbox list, which resolves the whole page at once. */}

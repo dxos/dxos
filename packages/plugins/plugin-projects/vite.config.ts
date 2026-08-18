@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'CodeProjectSkill': 'src/skills/CodeProjectSkill.ts',
+    'ProjectOperationHandlerSet': 'src/operations/ProjectOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'ProjectsPlugin': 'src/ProjectsPlugin.ts',
     'plugin': 'src/plugin.tsx',

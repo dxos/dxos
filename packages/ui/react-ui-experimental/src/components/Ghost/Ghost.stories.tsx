@@ -338,14 +338,14 @@ const circleTrajectory = (radiusFraction = 0.4): Trajectory => ({
   },
 });
 
-type TrailStoryProps = Partial<GhostProps> & {
+type TrailStoryArgs = Partial<GhostProps> & {
   trajectory: Trajectory;
   speed?: number;
   wiggleAmplitude?: number;
 };
 
 // Generic trail story: drives the GhostController along any Trajectory with jitter and wiggle.
-const TrailStory = ({ trajectory, speed = 10, wiggleAmplitude = 10, ...props }: TrailStoryProps) => {
+const TrailStory = ({ trajectory, speed = 10, wiggleAmplitude = 10, ...props }: TrailStoryArgs) => {
   const ghostRef = useRef<GhostController>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   // Keep mutable state in a ref so the effect closure always sees the latest values.

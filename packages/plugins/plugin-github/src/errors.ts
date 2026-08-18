@@ -6,6 +6,24 @@ import * as Predicate from 'effect/Predicate';
 
 import { BaseError } from '@dxos/errors';
 
+/** The binding names no repository: no `externalId` and no GitHub foreign key on the target. */
+export class GitHubRepoUnresolvedError extends BaseError.extend(
+  'GitHubRepoUnresolvedError',
+  'Binding does not name a GitHub repository.',
+) {}
+
+/** The connection's token cannot see the repository the binding names (un-shared or revoked). */
+export class GitHubRepoInaccessibleError extends BaseError.extend(
+  'GitHubRepoInaccessibleError',
+  'Repository is not accessible to the connection token.',
+) {}
+
+/** The local Project could not be re-resolved after its upsert. */
+export class GitHubProjectMissingError extends BaseError.extend(
+  'GitHubProjectMissingError',
+  'Local project missing after upsert.',
+) {}
+
 /**
  * User-facing / persisted diagnostic string for failures from GitHub sync paths.
  */

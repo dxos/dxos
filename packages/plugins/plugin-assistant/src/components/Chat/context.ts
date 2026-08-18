@@ -33,7 +33,7 @@ export type ChatContextValue = {
   messages: Message.Message[];
   processor: AiChatProcessor;
   requestTiming: ChatRequestTiming | null;
-  /** The thread's editor controller, shared between `Chat.Thread` and `Chat.Minimap`. */
+  /** The thread's editor controller, shared between `Chat.Thread` and `Chat.Outline`. */
   controller: MarkdownStreamController | null;
   setController: (controller: MarkdownStreamController | null) => void;
   /** Per-message document offset ranges, published by `Chat.Thread`'s syncer. */

@@ -17,7 +17,7 @@ import { InboxOperationHandlerSet } from '#operations';
 import { InboxOperation, Mailbox } from '#types';
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: InboxOperationHandlerSet,
+  operationHandlers: InboxOperationHandlerSet.handlers,
   types: [Cursor.Cursor, Feed.Feed, Mailbox.Mailbox, Message.Message, TagIndex.TagIndex],
   disableLlmMemoization: true,
 });

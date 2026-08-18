@@ -1,0 +1,51 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
+import { trim } from '@dxos/util';
+
+import {
+  Create,
+  Delete,
+  Deploy,
+  InspectInvocations,
+  InstallFunction,
+  Invoke,
+  QueryDeployedFunctions,
+  Read,
+  Update,
+} from './functions';
+
+const SKILL_KEY = 'org.dxos.skill.script';
+
+export const key = SKILL_KEY;
+
+export const make = (): Skill.Skill =>
+  Skill.make({
+    key: SKILL_KEY,
+    name: 'Script',
+    agentCanEnable: true,
+    tools: Skill.toolDefinitions({
+      operations: [
+        Create,
+        Read,
+        Update,
+        Delete,
+        Deploy,
+        Invoke,
+        InspectInvocations,
+        QueryDeployedFunctions,
+        InstallFunction,
+      ],
+    }),
+    instructions: Template.make({
+      source: trim`
+        You can create, read, update, and delete scripts which contain TypeScript code.
+        You can deploy scripts to the Edge runtime and invoke deployed scripts.
+        You can inspect the invocation history of a deployed script.
+        You can query all functions deployed to the EDGE runtime and install them into the current space.
+      `,
+    }),
+  });

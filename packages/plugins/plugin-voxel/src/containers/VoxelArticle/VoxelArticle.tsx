@@ -159,7 +159,7 @@ export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: Vo
 
 const Hint = ({ toolMode }: { toolMode: ToolMode }) => {
   return (
-    <div className='px-3 py-1.5 text-xs text-description bg-base-surface backdrop-blur-sm rounded-full shadow-md border border-separator'>
+    <div className='px-trim-md py-trim-xs text-xs text-description bg-base-surface backdrop-blur-sm rounded-full shadow-md border border-separator'>
       {TOOL_HINTS[toolMode]}
     </div>
   );

@@ -14,8 +14,8 @@ import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { type RDF } from '@dxos/pipeline-rdf';
-import { BrainSkill } from '@dxos/plugin-brain';
-import { BrainOperationHandlerSet } from '@dxos/plugin-brain/operations';
+import * as BrainOperationHandlerSet from '@dxos/plugin-brain/BrainOperationHandlerSet';
+import * as BrainSkill from '@dxos/plugin-brain/BrainSkill';
 import { Message } from '@dxos/types';
 
 import { type ModelVariant } from '../models';
@@ -71,7 +71,7 @@ export const runAgentEval = async (config: AgentEvalConfig, testContext: TestCon
   ];
   const operationHandlers = [
     DatabaseHandlers,
-    ...(usesFactStore(config.mode) ? [BrainOperationHandlerSet] : []),
+    ...(usesFactStore(config.mode) ? [BrainOperationHandlerSet.handlers] : []),
     ...(config.mode === 'rag' ? [RagOperationHandlerSet] : []),
     ...(config.mode === 'hybrid' ? [HybridOperationHandlerSet] : []),
   ];

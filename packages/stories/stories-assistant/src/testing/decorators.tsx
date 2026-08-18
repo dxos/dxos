@@ -56,9 +56,9 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as ClientOptions from '@dxos/plugin-client/ClientOptions';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { MarkdownSkill } from '@dxos/plugin-markdown';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
+import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOperationHandlerSet';
+import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
@@ -485,7 +485,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         // against `AgentService`'s layer — that layer reads this capability once, at build time.
         Capability.contribute(RoutineCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
         Capability.contributeAll(Capabilities.OperationHandler, [
-          MarkdownOperationHandlerSet,
+          MarkdownOperationHandlerSet.handlers,
           PlanningHandlers,
           DelegationHandlers,
           AgentHandlers,

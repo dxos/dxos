@@ -38,12 +38,12 @@ const CONTENT = trim`
   - [ ] Schedule the retro
 `;
 
-type DefaultStoryProps = {
+type StoryArgs = {
   content?: string;
   name?: string;
 };
 
-const DefaultStory = ({ content, name }: DefaultStoryProps) => {
+const DefaultStory = ({ content, name }: StoryArgs) => {
   const [space] = useSpaces();
   const outline = useMemo(() => space && space.db.add(Outline.make({ name, content })), [space, name, content]);
   if (!outline?.content.target) {
