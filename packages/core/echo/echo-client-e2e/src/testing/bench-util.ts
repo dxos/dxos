@@ -22,11 +22,7 @@ const assertPositiveInteger = (value: number, label: string): void => {
  * `NaN`/negative-latency report or (for a scan's `i % ops`) a division by zero.
  */
 export const parseBenchCount = (envVar: string, fallback: number): number => {
-  const raw = process.env[envVar];
-  if (raw === undefined) {
-    return fallback;
-  }
-  const value = Number(raw);
+  const value = Number(process.env[envVar] ?? fallback);
   assertPositiveInteger(value, envVar);
   return value;
 };
