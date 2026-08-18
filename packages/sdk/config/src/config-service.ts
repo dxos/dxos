@@ -58,6 +58,45 @@ export const defaultConfig = new Config({
   },
 });
 
+/**
+ * Same as {@link defaultConfig}, but pointed at the `main` (staging) edge worker and its sandbox —
+ * the same overrides Composer's local dev server applies via `dx-local.yml` on top of `dx.yml`.
+ * Bootstraps a profile when {@link ConfigService.load} runs with `DX_LOCAL_DEV` set, so a fresh CLI
+ * profile in a dev checkout talks to the same backend as a locally-run Composer instead of production.
+ */
+export const localDevConfig = new Config({
+  runtime: {
+    client: {
+      edgeFeatures: {
+        subductionReplicator: true,
+        feedReplicator: true,
+        signaling: true,
+        agents: true,
+      },
+      storage: {
+        persistent: true,
+      },
+    },
+    services: {
+      edge: {
+        url: 'https://main.dxos.network',
+      },
+      iceProviders: [
+        {
+          urls: 'https://dxos.network/ice',
+        },
+      ],
+      sandbox: {
+        url: 'https://sandbox-service.dxos.workers.dev',
+      },
+      ipfs: {
+        server: 'https://api.ipfs.dxos.network/api/v0',
+        gateway: 'https://gateway.ipfs.dxos.network/ipfs',
+      },
+    },
+  },
+});
+
 export class ConfigService extends Context.Service<ConfigService, Config>()('ConfigService') {
   static layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
 
@@ -84,7 +123,10 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
           ? Effect.fail(error)
           : Effect.gen(function* () {
               const Yaml = yield* Effect.promise(() => import('yaml'));
-              const configValues = defaultConfig.values;
+              // `DX_LOCAL_DEV` is set only by the monorepo's `bin/dx` wrapper, never by the
+              // published binary, so this never redirects a real user's first run to staging.
+              const useLocalDev = process.env.DX_LOCAL_DEV !== undefined && process.env.DX_LOCAL_DEV !== '0';
+              const configValues = (useLocalDev ? localDevConfig : defaultConfig).values;
               const fs = yield* FileSystem.FileSystem;
               const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
               yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });
