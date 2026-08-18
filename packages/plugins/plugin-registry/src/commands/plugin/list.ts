@@ -11,8 +11,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import { CommandConfig, printList } from '@dxos/cli-util';
 
 import { loadPlugins } from '../../storage';
-import { getLoadFailure } from '../../util';
-import { type FormattedPlugin, getPluginStatus, printPlugin } from './util';
+import { type FormattedPlugin, getLoadFailure, getPluginStatus, printPlugin } from '../../util';
 
 export const handler = Effect.fn(function* ({ enabled: enabledOnly }: { enabled: boolean }) {
   const { json, profile } = yield* CommandConfig;
