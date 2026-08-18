@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { Fragment, useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { useObject, useObjects } from '@dxos/echo-react';
+import { useObject } from '@dxos/echo-react';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -33,33 +35,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const spaceId = space?.id;
   const { invokePromise } = useOperationInvoker();
 
-  // Subscribe to the set, then resolve its refs, rather than reading `taskSet.tasks[i].target`
-  // directly: without the subscription a task appended to the array never re-renders (only the
-  // rows already mounted stay live), and refs read off the resulting snapshot carry no resolver,
-  // so their `.target` is undefined even once loaded.
-  const [taskSetSnapshot] = useObject(taskSet);
-  const taskSnapshots = useObjects(taskSetSnapshot?.tasks ?? []);
-  const milestoneSnapshots = useObjects(taskSetSnapshot?.milestones ?? []);
-  const tasks = useMemo(
-    () => TaskSet.dedupeById(taskSnapshots.map((snapshot) => Obj.getReactiveOrUndefined(snapshot))),
-    [taskSnapshots],
-  );
-  const milestones = useMemo(
-    () => TaskSet.dedupeById(milestoneSnapshots.map((snapshot) => Obj.getReactiveOrUndefined(snapshot))),
-    [milestoneSnapshots],
-  );
-  // Only root tasks are listed: a sub-task appears under its parent, and the flat array holds both.
-  const roots = useMemo(() => TaskSet.rootTasks(tasks), [tasks]);
-
-  const groups = useMemo(() => {
-    const backlog = TaskSet.backlogTasks(roots);
-    const milestoneGroups = milestones.map((milestone) => ({
-      milestone,
-      tasks: TaskSet.tasksForMilestone(roots, milestone),
-      progress: TaskSet.milestoneProgress(tasks, milestone),
-    }));
-    return { backlog, milestoneGroups };
-  }, [roots, tasks, milestones]);
+  const groups = useTaskSetGroups(taskSet);
 
   const statusLabel = useCallback((status: TaskStatus) => t(`task-status.${status}.label`), [t]);
   const handleCreate = useCallback(
@@ -95,11 +71,11 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       />
     ) : (
       <>
-        {groups.milestoneGroups.map(({ milestone, tasks: milestoneTasks, progress }) => (
+        {groups.milestoneGroups.map(({ milestone, tasks: milestoneTasks, allTasks: allMilestoneTasks }) => (
           <Fragment key={milestone.id}>
             <h2 className='flex items-baseline gap-2 my-2 px-3 text-sm font-medium text-subdued'>
               <span className='text-baseText'>{milestone.name}</span>
-              <span>{t('milestone-progress.label', { done: progress.done, total: progress.total })}</span>
+              <MilestoneProgress tasks={allMilestoneTasks} />
             </h2>
             <TaskGroup
               tasks={milestoneTasks}
@@ -165,3 +141,69 @@ const TaskGroup = ({ tasks, statusLabel, placeholder, onCreate, onUpdate, onDele
     <TaskList.Create placeholder={placeholder} />
   </TaskList.Root>
 );
+
+type MilestoneGroup = {
+  milestone: Milestone.Milestone;
+  /** Root tasks shown under the milestone. */
+  tasks: Task.Task[];
+  /** Every task counting toward it, sub-tasks included — what progress is derived from. */
+  allTasks: Task.Task[];
+};
+
+/**
+ * The set's partition into milestone groups and backlog.
+ *
+ * Subscribes to set membership and to each task's two structural fields only — never to a whole
+ * task — so editing a title or ticking a status re-renders the row that owns it (`TaskList` rows
+ * subscribe themselves) and the affected milestone's {@link MilestoneProgress}, not the article.
+ * Refs are resolved through `ref.atom`, which tracks loading without tracking mutations.
+ */
+const useTaskSetGroups = (taskSet: TaskSet.TaskSet): { backlog: Task.Task[]; milestoneGroups: MilestoneGroup[] } => {
+  const [taskSetSnapshot] = useObject(taskSet);
+  const taskRefs = taskSetSnapshot?.tasks;
+  const milestoneRefs = taskSetSnapshot?.milestones;
+
+  const atom = useMemo(
+    () =>
+      Atom.make((get) => {
+        const tasks = TaskSet.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)));
+        const milestones = TaskSet.dedupeById((milestoneRefs ?? []).map((ref) => get(ref.atom)));
+        // Read the structural fields through property atoms so a re-file or re-parent re-partitions,
+        // while title/status edits stay local to their row.
+        for (const task of tasks) {
+          get(Obj.atomProperty(task, 'milestone'));
+          get(Obj.atomProperty(task, 'parentTask'));
+        }
+
+        // Only root tasks are listed: a sub-task appears under its parent, and the flat array holds both.
+        const roots = TaskSet.rootTasks(tasks);
+        return {
+          backlog: TaskSet.backlogTasks(roots),
+          milestoneGroups: milestones.map((milestone) => ({
+            milestone,
+            tasks: TaskSet.tasksForMilestone(roots, milestone),
+            allTasks: TaskSet.tasksForMilestone(tasks, milestone),
+          })),
+        };
+      }),
+    [taskRefs, milestoneRefs],
+  );
+
+  return useAtomValue(atom);
+};
+
+/** A milestone's derived done/total, subscribed to just its own tasks' statuses. */
+const MilestoneProgress = ({ tasks }: { tasks: readonly Task.Task[] }) => {
+  const { t } = useTranslation(meta.profile.key);
+  const atom = useMemo(
+    () =>
+      Atom.make((get) => {
+        const statuses = tasks.map((task) => get(Obj.atomProperty(task, 'status')));
+        const counted = statuses.filter((status) => status !== 'cancelled');
+        return { total: counted.length, done: counted.filter((status) => status === 'done').length };
+      }),
+    [tasks],
+  );
+  const { total, done } = useAtomValue(atom);
+  return <span>{t('milestone-progress.label', { done, total })}</span>;
+};

@@ -58,8 +58,8 @@ export const instanceOf = (value: unknown): value is TaskSet => Obj.instanceOf(T
 //
 // Relationships are compared by ref URI rather than by dereferencing, so the same helpers serve a
 // live database and a React snapshot (whose refs carry no resolver and whose `.target` is
-// undefined). Each takes an already-resolved task list — `resolveTasks` in a handler,
-// `useObjects` in a component.
+// undefined). Each takes an already-resolved task list — `resolveTasks` in a handler, refs resolved
+// through their own atoms in a component.
 //
 
 /**
@@ -87,7 +87,7 @@ export const resolveMilestones = (taskSet: TaskSet): Milestone.Milestone[] =>
 
 /**
  * Drops unresolved entries and de-duplicates by id. Exported because a React caller resolves the
- * arrays itself (`useObjects`, so membership changes re-render) and still needs the same cleanup.
+ * arrays through per-ref atoms and still needs the same cleanup.
  */
 export const dedupeById = <T extends Obj.Unknown>(objects: ReadonlyArray<T | undefined>): T[] => {
   const seen = new Set<string>();
