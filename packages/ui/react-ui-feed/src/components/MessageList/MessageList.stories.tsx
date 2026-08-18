@@ -28,15 +28,10 @@ export default meta;
 type Story = StoryObj<FeedStoryProps>;
 
 //
-// The five downstream call sites, approximated.
-//
-// One engine, five hosts: each story changes only the renderer, the chrome and whether the feed
-// follows its tail. What differs — and what each one still needs from the engine — is tabulated in
-// `plugin-assistant/docs/AUDIT.md` §3.4.
-//
-
-//
-// The engine's own stories: a synthetic mixed feed, which is what the measurements were taken over.
+// Size and stress variants of the one realistic feed. Everything here renders the assistant
+// scenario — real chat turns, per-message chrome, block widgets — because a size story over
+// synthetic filler answers questions about the filler. The call-site sims (email, thread,
+// comments, transcript) were dropped by decision; the flagship (`assistant/*`) is the use case.
 //
 
 /** Passive: the assistant-shaped feed under the shared harness. */
@@ -44,15 +39,16 @@ export const Default: Story = {
   args: { scenario: 'assistant', count: 200 },
 };
 
-/** Mixed markdown / html / code items — the realistic feed. */
 export const Small: Story = {
   args: {
+    scenario: 'assistant',
     count: 20,
   },
 };
 
 export const Medium: Story = {
   args: {
+    scenario: 'assistant',
     count: 100,
   },
 };
@@ -73,6 +69,7 @@ export const Medium: Story = {
  */
 export const Large: Story = {
   args: {
+    scenario: 'assistant',
     count: 2_000,
   },
 };
@@ -88,6 +85,7 @@ export const Large: Story = {
  */
 export const BadEstimate: Story = {
   args: {
+    scenario: 'assistant',
     count: 2_000,
     estimateSize: 24,
   },
@@ -106,6 +104,7 @@ export const BadEstimate: Story = {
  */
 export const Streaming: Story = {
   args: {
+    scenario: 'assistant',
     count: 0,
     streaming: true,
   },

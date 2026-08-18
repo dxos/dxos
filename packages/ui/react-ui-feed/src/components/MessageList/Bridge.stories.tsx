@@ -218,8 +218,13 @@ export const Tail: Story = {
     };
 
     (canvasElement.querySelector('[data-testid="bridge.bottom"]') as HTMLElement).click();
-    await settle();
-    const arrived = rests(200);
+    // Arrival is by correction rounds — the jump lands on estimates and the follow finishes the
+    // journey against the rendered edge — so it is polled, not sampled.
+    let arrived = false;
+    for (let frame = 0; frame < 300 && !arrived; frame++) {
+      await nextFrame();
+      arrived = rests(200);
+    }
 
     // An answer arrives while the reader is at the tail. The follow glides (~2 rows/s), so the
     // reading polls to landing — arrival by deceleration is the contract, not instant arrival.

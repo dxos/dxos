@@ -321,7 +321,7 @@ const MessageListRoot = ({
 
   // The follow is an aspect the host composes, not part of the window (SPEC §Aspects) — the intent,
   // its withdrawal by a backwards scroll, and the glide all live there.
-  useFollow({
+  const follow = useFollow({
     scrollerRef,
     placement,
     extent: sizerExtent,
@@ -349,9 +349,15 @@ const MessageListRoot = ({
     recordPositions(rows, { scrollOffset: placement.scroll });
   }, [first, last, offset, sizerExtent, model, placement, recordPositions]);
 
-  const scrollToIndex = useCallback((index: number, { align = 'start', behavior = 'auto' }: ScrollToOptions = {}) => {
-    controller.current?.scrollToIndex(index, align === 'center' ? 'start' : align, behavior);
-  }, []);
+  const scrollToIndex = useCallback(
+    (index: number, { align = 'start', behavior = 'auto' }: ScrollToOptions = {}) => {
+      // Before the write, not via the scroll event it raises: asking to be somewhere answers "do
+      // you want the tail?", and the correction effect must not get a word in first.
+      follow.onNavigate(index);
+      controller.current?.scrollToIndex(index, align === 'center' ? 'start' : align, behavior);
+    },
+    [follow],
+  );
 
   const scrollToBottom = useCallback(
     (options?: ScrollToOptions) => {
@@ -385,6 +391,9 @@ const MessageListRoot = ({
     current: () => currentIndexRef.current,
     count: () => model.count,
     scrollPastEnd,
+    // The follow scrolls only while content arrives AND the reader is pinned to the bottom;
+    // navigating anywhere but the last row un-pins, before the jump's own scroll event fires.
+    onNavigate: follow.onNavigate,
   });
 
   // Arrow keys move by message, not by line: a plain arrow steps the cursor to the adjacent message

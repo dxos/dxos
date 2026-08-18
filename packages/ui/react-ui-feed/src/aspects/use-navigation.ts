@@ -16,6 +16,14 @@ export type UseFeedNavigationOptions = {
   count: () => number;
   /** Align the last stop to the end unless space is reserved past it (the reserve is scrollable). */
   scrollPastEnd?: boolean;
+  /**
+   * Told before every jump, with the target index — the follow's `onNavigate` goes here. Without
+   * it a navigation races the follow's correction effect, which runs before the jump's scroll
+   * event can withdraw the intent and snaps the reader straight back to the tail they just left.
+   * The follow may move the view only while content is arriving AND the reader has pinned
+   * themselves to the bottom; navigating into the feed un-pins by definition.
+   */
+  onNavigate?: (index: number) => void;
 };
 
 export type FeedNavigation = {
@@ -46,13 +54,15 @@ export const useFeedNavigation = ({
   current,
   count,
   scrollPastEnd,
+  onNavigate,
 }: UseFeedNavigationOptions): FeedNavigation => {
   const jumpTo = useCallback(
     (index: number, behavior: ScrollBehavior = 'auto') => {
+      onNavigate?.(index);
       const align = !scrollPastEnd && index >= count() - 1 ? 'end' : 'start';
       controller.current?.scrollToIndex(index, align, behavior);
     },
-    [controller, count, scrollPastEnd],
+    [controller, count, scrollPastEnd, onNavigate],
   );
 
   const step = useCallback(

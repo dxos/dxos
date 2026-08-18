@@ -256,6 +256,12 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       yields markdown source. Two paths producing different content is a defect waiting to happen.
 - [ ] Record the findings back into AUDIT.md §3.3.
 
+## Tracked follow-ups
+
+- [ ] New project idea (2026-08-18): **structured message hub with AI — open-weight models on
+      Cloudflare.** Parked here from the rewrite session; not part of chat-ui's scope. Candidate
+      for `/dxos:project new` when picked up.
+
 ## Rewrite plan (2026-08-17, approved; user offline until morning)
 
 Decisions: MessageList name kept; @effect/atom with plain-subscribe fallback; PR at the end;

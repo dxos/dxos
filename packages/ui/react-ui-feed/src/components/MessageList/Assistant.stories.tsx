@@ -111,15 +111,18 @@ const DefaultStory = ({ count = 30, debug, scrollPastEnd, wordsPerChunk = 4, chu
             </Toolbar.Root>
           </Panel.Toolbar>
 
-          <Panel.Content classNames='relative dx-container grow min-h-0'>
-            <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
-              <PromptOutline classNames='row-start-2' model={model} />
+          {/* Inside Panel.Content, not a sibling: Panel.Root is a grid whose rows are its slots, so
+              a loose child lands in an implicit row under the toolbar rather than at the bottom. */}
+          <Panel.Content classNames='dx-container flex flex-col min-h-0'>
+            <div className='relative grow min-h-0'>
+              <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
+                <PromptOutline classNames='row-start-2' model={model} />
+              </div>
+              <MessageList.Viewport classNames='absolute inset-0' padding />
+              {debug && <Probes model={model} />}
             </div>
-            <MessageList.Viewport classNames='absolute inset-0' padding />
-            {debug && <Probes model={model} />}
+            <PromptInput busy={busy} onSubmit={(prompt) => void answer(prompt)} />
           </Panel.Content>
-
-          <PromptInput busy={busy} onSubmit={(prompt) => void answer(prompt)} />
         </Panel.Root>
         {debug && <Debug />}
       </MessageList.Root>
@@ -292,14 +295,15 @@ export const Assistant: Story = {
       return !!last && Math.abs(last.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom) <= 2;
     };
     const countRows = () => scroller.querySelectorAll('[data-index]').length > 0;
-    const modelCount = () => Number(scroller.querySelectorAll('[data-index]').length);
 
-    // 1. The reader asks.
+    // 1. The reader asks. "Asked" is read from what a reader would see: the input cleared on
+    // submit, and the turn started (the placeholder flips while the agent answers) — never from
+    // mounted-row counts, which *shrink* as taller streamed rows fill the window.
     const input = canvasElement.querySelector<HTMLInputElement>('[data-testid="assistant.prompt"]')!;
-    const before = modelCount();
     type(input, 'What is an anchor-relative placement?');
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     await settle(10);
+    const asked = input.value === '';
 
     // 2. The answer streams in blocks while the follow keeps the tail near rest. The glide is
     // allowed to lag a growing tail by a bounded distance — that is what travelling means — so the
@@ -330,7 +334,7 @@ export const Assistant: Story = {
     }
 
     await expect({
-      asked: modelCount() >= before,
+      asked,
       sawStream,
       bounded: worst < scroller.clientHeight,
       rests,
@@ -358,6 +362,8 @@ export const Interrupted: Story = {
     // Start a hands-off turn, then leave for history mid-stream.
     (canvasElement.querySelector('[data-testid="assistant.auto"]') as HTMLElement).click();
     await settle(30);
+    // The wheel first: a scroll the follow cannot attribute to the reader is one it will undo.
+    scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: -100 }));
     scroller.scrollTop = Math.max(0, scroller.scrollTop - 3 * scroller.clientHeight);
     await settle(10);
 

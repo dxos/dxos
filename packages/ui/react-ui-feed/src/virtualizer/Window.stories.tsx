@@ -665,7 +665,9 @@ export const Sticky: Story = {
     }
 
     // And away from the tail it must not drag the reader: a feed that follows whatever the reader is
-    // doing is a feed that cannot be read while it is busy.
+    // doing is a feed that cannot be read while it is busy. The wheel first — a scroll with no
+    // gesture behind it is the machinery's, and the follow would undo it.
+    scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: -100 }));
     scroller.scrollTop = 0;
     await settle();
     const away = Math.round(scroller.scrollTop);

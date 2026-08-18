@@ -42,9 +42,14 @@ const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(r
 type Sample = {
   /** The furthest-on row mounted, and how far its bottom is below the viewport's. */
   behind: number;
-  /** The document's height, which a turn can *reduce* — see below. */
-  height: number;
-  /** Viewport-relative top of every mounted row, by index. */
+  /**
+   * Content-space top of every mounted row: viewport-relative top plus the scroll offset.
+   *
+   * Viewport space cannot be the reading, because the follow *writes the scroll* — every mounted
+   * row then moves on screen while nothing about the layout is wrong, and a shrink-and-regrow turn
+   * torn across two samples reads as thirteen rows jumping. In content space the follow's writes
+   * are invisible, a shrinking turn moves later rows up, and nothing has any business moving down.
+   */
   tops: Map<number, number>;
 };
 
@@ -65,9 +70,11 @@ const sample = (viewport: HTMLElement): Sample | null => {
 
   return {
     behind: Math.round(last.getBoundingClientRect().bottom - box.bottom),
-    height: viewport.scrollHeight,
     tops: new Map(
-      rows.map((row) => [Number(row.dataset.index), Math.round(row.getBoundingClientRect().top - box.top)]),
+      rows.map((row) => [
+        Number(row.dataset.index),
+        Math.round(row.getBoundingClientRect().top - box.top + viewport.scrollTop),
+      ]),
     ),
   };
 };
@@ -84,10 +91,9 @@ const sample = (viewport: HTMLElement): Sample | null => {
  * everything down. Measured here as thirteen rows moving together by exactly 65px, landing the tail
  * at zero. Counting that would be counting the feed doing its job.
  */
+/** Rows that moved down in content space — which nothing in a streaming feed may do. */
 const descended = (a: Sample, b: Sample): number =>
-  b.height < a.height
-    ? 0
-    : [...b.tops].filter(([index, top]) => a.tops.has(index) && top - a.tops.get(index)! > 1).length;
+  [...b.tops].filter(([index, top]) => a.tops.has(index) && top - a.tops.get(index)! > 1).length;
 
 /** Passive: press ▶ yourself. */
 export const Default: Story = {};
@@ -110,14 +116,17 @@ export const Streaming: Story = {
     );
 
     // The follow is allowed to lag — it accelerates into a travel rather than teleporting — but it
-    // has to be closing the gap, not opening one: a tail further away at the end than it ever was in
-    // the middle is a follow that has given up.
-    const worst = Math.max(...samples.map(({ behind }) => behind));
-    const landed = samples.at(-1)!.behind;
+    // has to land: polled past the watch, because a slow runner stretches every frame while the
+    // stream's timers run on the wall clock, and sampling mid-turn measures the runner.
+    let landed = samples.at(-1)!.behind;
+    for (let frame = 0; frame < 600 && landed > TOLERANCE; frame++) {
+      await nextFrame();
+      landed = sample(viewport)?.behind ?? landed;
+    }
 
-    await expect({ backwards, landedWithin: landed <= TOLERANCE || landed < worst }).toEqual({
+    await expect({ backwards, landed: landed <= TOLERANCE }).toEqual({
       backwards: 0,
-      landedWithin: true,
+      landed: true,
     });
   },
 };

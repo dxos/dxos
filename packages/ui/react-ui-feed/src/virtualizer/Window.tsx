@@ -349,16 +349,21 @@ export const useWindow = ({
  * Three elements: a **sizer** that holds no rows and exists only to give the thumb something to
  * measure, a **window** holding the mounted rows in normal flow, and the scroller around them.
  */
-export const Window = ({ classNames, children, ...options }: WindowProps) => {
+export const Window = ({ classNames, children, controllerRef, ...options }: WindowProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const { placement, windowRef, offset, sizerExtent, first, last } = useWindow({ ...options, scrollerRef });
+  const inner = useRef<WindowController>(null);
+  const { placement, windowRef, offset, sizerExtent, first, last } = useWindow({
+    ...options,
+    scrollerRef,
+    controllerRef: inner,
+  });
   const axis = options.axis ?? 'block';
   const main = axis === 'block' ? 'height' : 'width';
   const { getId } = options.model;
 
   // The binding composes the aspect; the hook knows nothing about following. Graduates with the
   // virtualizer — nothing in it is about messages.
-  useFollow({
+  const follow = useFollow({
     scrollerRef,
     placement,
     extent: sizerExtent,
@@ -367,6 +372,18 @@ export const Window = ({ classNames, children, ...options }: WindowProps) => {
     reserve: options.reserve,
     enabled: options.sticky,
   });
+
+  // The exposed controller answers the follow before it moves (see FollowHandle.onNavigate).
+  useImperativeHandle(
+    controllerRef,
+    () => ({
+      scrollToIndex: (index, align, behavior) => {
+        follow.onNavigate(index);
+        inner.current?.scrollToIndex(index, align, behavior);
+      },
+    }),
+    [follow],
+  );
 
   const rows = [];
   for (let index = first; index <= last; index++) {

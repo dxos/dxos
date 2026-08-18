@@ -345,23 +345,27 @@ export class Placement {
   }
 
   /**
-   * Keep the anchor inside the mounted range.
+   * The anchor is the first row the reader can see — always, not merely when the old one leaves
+   * the window.
    *
-   * An anchor outside the window is an anchor whose position is derived through rows nobody has
-   * measured, which is the drift this design exists to avoid. Re-anchoring preserves the new
-   * anchor's computed position exactly, so nothing moves when it happens.
+   * The anchor is the row held still while others are measured, so it must be the reader's
+   * reference point. Clamping the old anchor into the mounted range let it drift to the window's
+   * *far* edge after an upward scroll — below everything on screen — and a widget toggled open
+   * above it then pushed the whole viewport up by its own growth: the engine held a row the reader
+   * could not see still, at the expense of every row they could. Re-anchoring preserves the new
+   * anchor's computed position exactly, so the move itself shifts nothing.
    */
   #reanchor(): void {
     if (!this.#count) {
       return;
     }
 
-    const { first, last } = this.#range();
-    if (this.#anchor.index >= first && this.#anchor.index <= last) {
+    const { visible } = this.#range();
+    if (this.#anchor.index === visible.first) {
       return;
     }
 
-    const index = Math.max(first, Math.min(this.#anchor.index, last));
+    const index = visible.first;
     this.#anchor = { id: this.#getId(index), index, start: this.positionOf(index) };
   }
 }

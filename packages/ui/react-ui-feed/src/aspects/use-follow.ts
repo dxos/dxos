@@ -10,6 +10,20 @@ import { ScrollFollower } from './follow';
 /** Distance from the end within which the reader counts as being at it. */
 const STICKY_THRESHOLD = 32;
 
+/** How long after a gesture a scroll is still attributable to the reader. */
+const GESTURE_WINDOW = 300;
+
+export type FollowHandle = {
+  /**
+   * A navigation is the reader answering "do you want the tail?" — and it must answer *before* the
+   * scroll moves. The intent is otherwise withdrawn by the scroll event the jump raises, which is
+   * asynchronous: the correction effect can run in between, still believe the reader is following,
+   * and snap them straight back to the tail they just left. Found by the outline rail — a click
+   * near the top of a sticky feed moved the list a few pixels and no further.
+   */
+  onNavigate: (index: number) => void;
+};
+
 export type UseFollowOptions = {
   scrollerRef: RefObject<HTMLElement | null>;
   /** The placement whose `endOffset` is the tail's resting place. */
@@ -52,7 +66,7 @@ export const useFollow = ({
   reserve = 0,
   enabled,
   glide = true,
-}: UseFollowOptions): void => {
+}: UseFollowOptions): FollowHandle => {
   const following = useRef(!!enabled);
   const wasEnabled = useRef(enabled);
   if (wasEnabled.current !== enabled) {
@@ -128,28 +142,51 @@ export const useFollow = ({
   // The intent, read from gestures. Own listener and own last-offset, deliberately: the window's
   // scroll handler updates `placement.scroll` before this runs, so comparing against it would read
   // every scroll as stationary.
+  // Why a backwards scroll alone cannot be the withdrawal: the machinery scrolls backwards too. A
+  // shrinking turn makes the browser clamp the offset by itself; a correction can move up; and none
+  // of it is the reader. Direction plus pre-announcement was tried and kept dying in races — this
+  // is the old engine's proven rule instead: the follow writes `scrollTop`, it does not turn wheels
+  // or press keys, so a scroll counts as the reader's only when a gesture preceded it. Returning to
+  // the tail, by any means, opts back in.
   const lastOffset = useRef(0);
+  const gestureAt = useRef(0);
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller || !enabled) {
       return;
     }
 
+    const onGesture = () => {
+      gestureAt.current = performance.now();
+    };
+
     const onScroll = () => {
       const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
       const viewport = axis === 'block' ? scroller.clientHeight : scroller.clientWidth;
+      const total = axis === 'block' ? scroller.scrollHeight : scroller.scrollWidth;
       const back = current < lastOffset.current - 1;
       lastOffset.current = current;
-      if (scroller.scrollHeight - reserve - current - viewport <= STICKY_THRESHOLD) {
+      if (total - reserve - current - viewport <= STICKY_THRESHOLD) {
         following.current = true;
-      } else if (back) {
+      } else if (back && performance.now() - gestureAt.current < GESTURE_WINDOW) {
         following.current = false;
         follower?.cancel();
       }
     };
 
     scroller.addEventListener('scroll', onScroll, { passive: true });
-    return () => scroller.removeEventListener('scroll', onScroll);
+    // Every way a reader can move a scroll container by hand: the wheel, a touch drag, the
+    // keyboard, and a pointer on the scrollbar itself.
+    for (const event of ['wheel', 'touchmove', 'keydown', 'pointerdown'] as const) {
+      scroller.addEventListener(event, onGesture, { passive: true });
+    }
+
+    return () => {
+      scroller.removeEventListener('scroll', onScroll);
+      for (const event of ['wheel', 'touchmove', 'keydown', 'pointerdown'] as const) {
+        scroller.removeEventListener(event, onGesture);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollerRef.current, enabled, axis, reserve, follower]);
 
@@ -205,4 +242,17 @@ export const useFollow = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, count, extent, placement, axis, glide, follower, endTarget, scrollerRef.current]);
+
+  const onNavigate = useCallback(
+    (index: number) => {
+      const wants = index >= count - 1;
+      following.current = !!enabled && wants;
+      if (!wants) {
+        follower?.cancel();
+      }
+    },
+    [enabled, count, follower],
+  );
+
+  return { onNavigate };
 };
