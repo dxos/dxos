@@ -10,7 +10,6 @@ import { ProjectMcpOperation, ProjectOperation } from '#types';
 export const handlers = OperationHandlerSet.lazy([
   ProjectOperation.CreateChat.pipe(Operation.lazyHandler(() => import('./create-chat'))),
   ProjectOperation.Create.pipe(Operation.lazyHandler(() => import('./create-project'))),
-  ProjectOperation.CreateRoutine.pipe(Operation.lazyHandler(() => import('./create-routine'))),
   ProjectOperation.CreateTrackingProject.pipe(Operation.lazyHandler(() => import('./mailbox/create-tracking-project'))),
   ProjectOperation.UpdateInvestorLog.pipe(Operation.lazyHandler(() => import('./mailbox/update-investor-log'))),
   ProjectOperation.UpdateProjectTasks.pipe(Operation.lazyHandler(() => import('./mailbox/update-project-tasks'))),
