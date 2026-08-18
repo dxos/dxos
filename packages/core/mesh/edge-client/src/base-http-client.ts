@@ -259,11 +259,20 @@ export abstract class BaseHttpClient {
    * Best-effort: a failure here leaves `_authHeader` unset and the request proceeds
    * unauthenticated, falling back to the 401-and-retry path below. That fallback is what keeps
    * this working against servers whose `/auth` only issues a challenge by rejecting.
+   *
+   * The `catch` is what makes that true for *signing* failures, not just network ones:
+   * `fetchAuthChallengeInfo` swallows its own fetch errors, but `presentCredentials` throws on a
+   * device with no HALO chain (mid-invitation), and without this the rejection would surface from
+   * `_call` as a failed request — turning a call that used to succeed unauthenticated into an error.
    */
   private _prefetchAuthHeader(): Promise<void> {
-    return (this._authPrefetch ??= this._prefetchAuthHeaderOnce().finally(() => {
-      this._authPrefetch = undefined;
-    }));
+    return (this._authPrefetch ??= this._prefetchAuthHeaderOnce()
+      .catch((err) => {
+        log.verbose('auth prefetch failed; proceeding unauthenticated', { err });
+      })
+      .finally(() => {
+        this._authPrefetch = undefined;
+      }));
   }
 
   private async _prefetchAuthHeaderOnce(): Promise<void> {

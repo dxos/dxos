@@ -86,6 +86,31 @@ describe('EdgeHttpClient auth refresh', () => {
   const authCalls = (fetchMock: { mock: { calls: unknown[][] } }) =>
     fetchMock.mock.calls.filter((call) => String(call[0]).endsWith('/auth')).length;
 
+  // `presentCredentials` throws on a device with no HALO chain (`invariant(chain)` in `auth.ts`,
+  // reachable mid-invitation). The prefetch is documented as best-effort, so that must leave the
+  // request unauthenticated rather than failing it -- the behaviour before `auth: true` was set.
+  test('a signing failure during prefetch does not fail the request', async ({ expect }) => {
+    const fetchMock = makeFetchMock({ challenge: 'Y2hhbGxlbmdl', expiresInMs: 300_000 });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const chainless: EdgeIdentity = {
+      peerKey: 'peer-key',
+      identityDid: 'did:halo:test',
+      presentCredentials: async () => {
+        throw new Error('chain is required');
+      },
+    };
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    client.setIdentity(chainless);
+
+    await client.putBlob(Context.default(), 'one', new Uint8Array([1]), { contentType: 'application/octet-stream' });
+
+    const targetCall = fetchMock.mock.calls.find((call) => !String(call[0]).endsWith('/auth'));
+    expect(targetCall).toBeDefined();
+    expect((targetCall![1] as RequestInit | undefined)?.headers).not.toHaveProperty('Authorization');
+  });
+
   test('re-authenticates via /auth before the advertised TTL elapses', async ({ expect }) => {
     vi.useFakeTimers();
     const fetchMock = makeFetchMock({ challenge: 'Y2hhbGxlbmdl', expiresInMs: 300_000 });
