@@ -659,7 +659,7 @@ type MessageListItemExtra = {
  * outside the scrolling window — a pinned message, a preview — through the same path.
  */
 const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ message, ...props }, forwardedRef) => {
-  const { renderer, registry, Custom, debug, reportWidgets } = useMessageListContext(MESSAGE_LIST_ITEM_NAME);
+  const { model, renderer, registry, Custom, debug, reportWidgets } = useMessageListContext(MESSAGE_LIST_ITEM_NAME);
   const content = renderer(message);
   // The item asks for its own cross-cutting data by id (SPEC §Aspects); the list never routed it.
   const decorations = useDecorations(message.id);
@@ -688,7 +688,15 @@ const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ mess
     >
       {content.kind === 'markdown' && (
         <WidgetScopeProvider scope={message.id}>
-          <MarkdownBlock text={content.text} registry={registry} hits={hits} onWidgetsChange={handleWidgetsChange} />
+          <MarkdownBlock
+            text={content.text}
+            // The typewriter runs only for the tail the model says is streaming; every other
+            // change (an edit, a view switch) lands atomically.
+            stream={model.streamingId === message.id}
+            registry={registry}
+            hits={hits}
+            onWidgetsChange={handleWidgetsChange}
+          />
         </WidgetScopeProvider>
       )}
       {content.kind === 'html' && <HtmlBlock html={content.html} />}
