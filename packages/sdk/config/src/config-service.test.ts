@@ -15,6 +15,7 @@ import { ConfigService } from './config-service';
 
 const HUB_SERVICE_URL = 'runtime.services.hub.url';
 const HUB_ENV_URL = 'runtime.app.env.DX_HUB_URL';
+const EDGE_URL = 'runtime.services.edge.url';
 
 let restoreEnv: (() => void) | undefined;
 
@@ -60,7 +61,38 @@ describe('ConfigService.load', () => {
     // The defaults track the code, so they are not baked into the file that was just written.
     expect(contents).not.toContain('hub');
   });
+
+  test('bootstraps against production when a config file is missing', async ({ expect }) => {
+    restoreEnv = withEnv({ DX_LOCAL_DEV: undefined });
+    const { config } = await createMissing('production');
+    expect(config.get(EDGE_URL)).toEqual('wss://dxos.network/');
+  });
+
+  test('bootstraps against the main/staging edge under DX_LOCAL_DEV, matching Composer local dev', async ({
+    expect,
+  }) => {
+    restoreEnv = withEnv({ DX_LOCAL_DEV: '1' });
+    const { config } = await createMissing('local-dev');
+    expect(config.get(EDGE_URL)).toEqual('https://main.dxos.network');
+  });
+
+  test('DX_LOCAL_DEV=0 opts back out to production', async ({ expect }) => {
+    restoreEnv = withEnv({ DX_LOCAL_DEV: '0' });
+    const { config } = await createMissing('opt-out');
+    expect(config.get(EDGE_URL)).toEqual('wss://dxos.network/');
+  });
 });
+
+/** Bootstraps a fresh profile config (no existing file) and returns the loaded result. */
+const createMissing = (profile: string) =>
+  EffectEx.runPromise(
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = `${yield* fs.makeTempDirectoryScoped()}/missing/config.yml`;
+      const config = yield* ConfigService.load({ config: Option.some(path), profile });
+      return { config, contents: yield* fs.readFileString(path) };
+    }).pipe(Effect.provide(NodeServices.layer), Effect.scoped),
+  );
 
 /** Loads a profile config from `contents` written to a temp file. */
 const load = (contents: string) =>
