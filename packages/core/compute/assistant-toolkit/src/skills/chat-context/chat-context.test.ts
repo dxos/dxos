@@ -39,11 +39,14 @@ describe('Chat Context Skill', { tags: ['model-fixture'] }, () => {
         const agent = yield* AgentService.createSession({
           skills: [ChatContextSkill.make()],
         });
-        yield* Database.add(Obj.make(Organization.Organization, { name: 'Context Corp' }));
-        yield* agent.submitPrompt(`Add the organization "Context Corp" to the chat context.`);
+        const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Context Corp' }));
+        // The skill binds and unbinds context only; resolving a name to a URI is the Database
+        // skill's job, so the prompt supplies the URI directly.
+        yield* agent.submitPrompt(`Add the object ${Obj.getURI(org)} to the chat context.`);
         yield* agent.waitForCompletion();
         const contextRefs = yield* agent.getContext();
-        expect(contextRefs.length).toBeGreaterThanOrEqual(1);
+        // Context refs come back space-relative (`echo:///<id>`), so identity is the object id.
+        expect(contextRefs.map((each) => each.uri.split('/').at(-1))).toContain(org.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -63,11 +66,15 @@ describe('Chat Context Skill', { tags: ['model-fixture'] }, () => {
         const ref = db.makeRef<Organization.Organization>(Obj.getURI(org));
         yield* agent.addContext([ref]);
         const uri = Obj.getURI(org);
-        yield* agent.submitPrompt(`Remove the organization "Remove Context Corp" from the chat context.`);
+        // Context refs come back space-relative (`echo:///<id>`) while `getURI` is space-qualified,
+        // so identity is compared on the object id.
+        const contextIds = () =>
+          agent.getContext().pipe(Effect.map((refs) => refs.map((each) => each.uri.split('/').at(-1))));
+        // Absence alone would also hold if the tool never ran, so pin the starting state.
+        expect(yield* contextIds()).toContain(org.id);
+        yield* agent.submitPrompt(`Remove the object ${uri} from the chat context.`);
         yield* agent.waitForCompletion();
-        const contextRefs = yield* agent.getContext();
-        const found = contextRefs.find((contextRef) => contextRef.uri === uri);
-        expect(found).toBeUndefined();
+        expect(yield* contextIds()).not.toContain(org.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
