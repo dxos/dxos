@@ -20,4 +20,5 @@ export const getIconAnnotation = (schema: Schema.Codec<any, any>): string | unde
  * @param icon string icon name from phosphor-icons (e.g., 'ph--user--regular')
  */
 // TODO(burdon): Probably best not to include in type system? Instead incl. in plugin metadata.
+/** Set a schema's icon annotation. */
 export const withIcon = (icon: string) => IconAnnotation.set(icon);

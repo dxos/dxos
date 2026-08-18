@@ -474,12 +474,7 @@ export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationVal
 interface MakeAnnoationsProps<T> {
   id: string;
   schema: Schema.Codec<T, any, never>;
-  /**
-   * Skip the FQN format check on `id`. Escape hatch for adopting a pre-existing, already-in-use
-   * id (e.g. migrating an annotation off `createAnnotationHelper`) whose value may already be
-   * embedded in persisted schemas — renaming it would silently orphan that stored state instead
-   * of reading it. New annotations should use a proper FQN id rather than this flag.
-   */
+  /** Skips the FQN format check on `id`, for a pre-existing id that may already be embedded in persisted schemas. */
   legacyId?: boolean;
 }
 

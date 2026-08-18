@@ -102,12 +102,7 @@ export type Key = Schema.Schema.Type<typeof Key>;
 interface MakeProps<T> {
   id: string;
   schema: Schema.Codec<T, any, never>;
-  /**
-   * Skip the FQN id-format check. Use only when adopting a pre-existing, already-in-use
-   * annotation id (e.g. migrating off `createAnnotationHelper`) whose value may already be
-   * embedded in persisted schemas — renaming it would silently orphan that stored state.
-   * New annotations should pick a proper FQN id instead of reaching for this flag.
-   */
+  /** Skips the FQN id-format check, for a pre-existing id that may already be embedded in persisted schemas. */
   legacyId?: boolean;
 }
 

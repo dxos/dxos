@@ -100,8 +100,10 @@ const mergeBase = (a, b) => git(['merge-base', a, b], { allowFail: true });
  * under a new SHA (or, in a shallow clone, was simply never fetched) — even
  * though the review's own files are plainly present in `ref`'s history.
  */
-export const lastCommitTouching = (path, ref = 'HEAD') =>
-  git(['log', '-1', '--format=%H', ref, '--', path], { allowFail: true });
+export const lastCommitTouching = (path, ref = 'HEAD') => {
+  const commit = git(['log', '-1', '--format=%H', ref, '--', path], { allowFail: true });
+  return commit || null;
+};
 
 /**
  * Repo-relative paths changed between `base` and the working tree: committed
