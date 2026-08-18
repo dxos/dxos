@@ -6,6 +6,7 @@ import React, {
   type ReactNode,
   type Ref,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
@@ -17,6 +18,19 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type EdgeDrift, type Extents, type Layout, Placement } from './placement';
+
+/**
+ * What the window needs from a model, structurally — `ListModel`/`FeedModel` satisfy it, and the
+ * virtualizer stays importable without the model layer. The contract is SPEC F-7.1: a change says
+ * what it was (`prepended`), so the anchor is told rather than left to infer it from identities.
+ */
+export type WindowModel = {
+  readonly count: number;
+  getId: (index: number) => string;
+  subscribe: (
+    listener: (change: { prepended?: number; appended?: number; updated?: readonly string[] }) => void,
+  ) => () => void;
+};
 
 /** Distance from the end within which the reader counts as being at it. */
 const STICKY_THRESHOLD = 32;
@@ -70,8 +84,7 @@ export type WindowController = {
 };
 
 export type WindowProps = ThemedClassName<{
-  count: number;
-  getId: (index: number) => string;
+  model: WindowModel;
   extents: Extents;
   /** Which way the list runs. The principles hold either way; only this mapping differs (§9). */
   axis?: WindowAxis;
@@ -133,8 +146,7 @@ export type UseWindowResult = {
 
 export const useWindow = ({
   scrollerRef,
-  count,
-  getId,
+  model,
   extents,
   axis = 'block',
   overscan,
@@ -149,6 +161,9 @@ export const useWindow = ({
   const [, render] = useState(0);
   const invalidate = useCallback(() => render((value) => value + 1), []);
 
+  const count = model.count;
+  const getId = model.getId;
+
   // Held across renders, and told about the model rather than rebuilt from it: the anchor is state,
   // and rebuilding would discard the one position that is known exactly.
   const placement = useMemo(
@@ -162,34 +177,29 @@ export const useWindow = ({
   // found by `placement/Drift` on its first run.
   const reported = useRef(new Set<string>());
 
-  // Which end the model grew at, decided by identity rather than guessed at.
-  //
-  // Rows arriving *before* the reader shift every index, and the anchor has to shift with them or it
-  // names a different message; rows arriving after change nothing. Comparing the first id to the
-  // anchor's cannot tell those apart — it says "prepended" for every append made while the reader is
-  // anywhere but the top, which shifts the anchor and moves the feed under them. Found by a sticky
-  // test that passed with no sticky implementation at all, because the wrong shift happened to land
-  // the tail where the test looked for it.
   // Told before anything consults the model: `getId` is a closure over the host's list, so the one
   // captured at construction names rows that no longer exist there.
   placement.setGetId(getId);
 
-  const previousCount = useRef(count);
-  const previousFirstId = useRef(count ? getId(0) : '');
-  if (previousCount.current !== count) {
-    const grew = Math.max(0, count - previousCount.current);
-    // The old first row, if it is still there, has moved down by exactly the number prepended.
-    let prepended = 0;
-    for (let index = 1; index <= grew; index++) {
-      if (getId(index) === previousFirstId.current) {
-        prepended = index;
-        break;
-      }
-    }
+  // Which end the model grew at, told by the model (SPEC F-7.1). The engine used to reconstruct
+  // this by scanning for the previous first id — the model's own knowledge, recovered from its
+  // absence; the scan survives only in `ListModel.replace`, the adapter for hosts that hand over a
+  // whole new array and genuinely do not know what changed. The model publishes synchronously, so
+  // a prepend reaches the anchor in the same tick it happens; the render-time guard below covers
+  // the one gap — a *new* model instance arriving mid-render, before the effect re-subscribes.
+  useEffect(() => {
+    const unsubscribe = model.subscribe((change) => {
+      placement.setCount(model.count, { prepended: change.prepended ?? 0 });
+      invalidate();
+    });
 
-    placement.setCount(count, { prepended });
-    previousCount.current = count;
-    previousFirstId.current = count ? getId(0) : '';
+    placement.setCount(model.count, {});
+    invalidate();
+    return unsubscribe;
+  }, [model, placement, invalidate]);
+
+  if (placement.count !== model.count) {
+    placement.setCount(model.count, {});
   }
 
   // Navigation, not correction. The rule that corrections never touch `scrollTop` (§7) is about the
@@ -418,7 +428,7 @@ export const Window = ({ classNames, children, ...options }: WindowProps) => {
   const { windowRef, offset, sizerExtent, first, last } = useWindow({ ...options, scrollerRef });
   const axis = options.axis ?? 'block';
   const main = axis === 'block' ? 'height' : 'width';
-  const { getId } = options;
+  const { getId } = options.model;
 
   const rows = [];
   for (let index = first; index <= last; index++) {

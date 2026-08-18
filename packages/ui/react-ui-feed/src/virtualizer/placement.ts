@@ -106,6 +106,10 @@ export class Placement {
     return this.#scroll;
   }
 
+  get count(): number {
+    return this.#count;
+  }
+
   /** The viewport is the binding's to know: it is the one thing here that comes from the DOM. */
   setViewport(viewport: number): void {
     this.#viewport = viewport;

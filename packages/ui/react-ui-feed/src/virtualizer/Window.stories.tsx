@@ -11,6 +11,7 @@ import { Outline, type OutlineMarker } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
+import { ListModel } from '../model';
 import { Minimap } from '../testing/debug';
 import { type EdgeDrift } from './placement';
 import { Window, type WindowAxis, type WindowController, type WindowState } from './Window';
@@ -23,6 +24,7 @@ import { Window, type WindowAxis, type WindowController, type WindowState } from
  * The layer exists because the two things fail differently and a single suite cannot say which.
  */
 type StoryProps = {
+  /** Rows the model is seeded with; the append/prepend buttons then drive the model directly. */
   count?: number;
   axis?: WindowAxis;
   exact?: boolean;
@@ -38,19 +40,12 @@ type StoryProps = {
    * state — which presented as `Prepend` and `Grow` passing or failing depending on what else ran.
    * A button is the same thing the reader has, and there is only ever one of it.
    */
-  onAppend?: () => void;
+  /** Render the append button; 'few' appends 5 rows per press instead of 20 (the sticky story). */
+  onAppend?: boolean | 'few';
   /** Keep the last row against the bottom of the viewport as content arrives. */
   sticky?: boolean;
-  /**
-   * Identity of the row at `index`.
-   *
-   * A story that prepends has to *move* its rows, not renumber them: an index-to-id map that never
-   * changes describes a list where inserting at the front renames everything, and placement keys its
-   * extents — and its anchor — by identity.
-   */
-  getId?: (index: number) => string;
-  onPrepend?: () => void;
-  onGrow?: () => void;
+  onPrepend?: boolean;
+  onGrow?: boolean;
   /**
    * Reserve a viewport's worth of space after the last row, so it can be read at the top.
    *
@@ -69,6 +64,9 @@ type StoryProps = {
 
 const EXTENT = (index: number) => 40 + (index % 8) * 30;
 
+/** One harness row: identity plus the extent it renders at, so a prepend moves rows, not sizes. */
+type Row = { id: string; extent: number };
+
 /** The row `Grow` changes; near the top, so it is mounted whatever the extents turn out to be. */
 const GROWN = 5;
 
@@ -84,8 +82,25 @@ const Harness = ({
   onPrepend,
   onGrow,
   sticky,
-  getId = (index) => `row-${index}`,
 }: StoryProps) => {
+  // The model the window binds to: the buttons drive it directly, so a prepend is *told* and the
+  // stories exercise the told path rather than the replace-adapter's inference (SPEC F-7.1).
+  // Items carry their extent — keyed by identity, so a prepend moves rows without resizing them.
+  const model = useMemo(
+    () =>
+      new ListModel<Row>({
+        items: Array.from({ length: count }, (_, index) => ({ id: `row-${index}`, extent: extent(index) })),
+        getId: (item) => item.id,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  // The harness re-renders on structural changes; the window subscribes on its own.
+  const [, setVersion] = useState(0);
+  useEffect(() => model.subscribe(() => setVersion((version) => version + 1)), [model]);
+  const total = model.count;
+
   const [edges, setEdges] = useState<EdgeDrift[]>([]);
   const [mismatches, setMismatches] = useState<string[]>([]);
   const [state, setState] = useState<WindowState>();
@@ -126,7 +141,7 @@ const Harness = ({
     return () => observer.disconnect();
   }, [axis]);
 
-  const reserve = scrollPastEnd ? Math.max(0, available - extent(count - 1)) : 0;
+  const reserve = scrollPastEnd ? Math.max(0, available - (model.at(total - 1)?.extent ?? 100)) : 0;
 
   // The product minimap, in **index** space: a tick per marker, and the mounted window as the
   // visible range. Beside `Minimap`, which is the same list in **content** space — the pair is the
@@ -134,12 +149,12 @@ const Harness = ({
   // one cannot show which message you are near.
   const markers = useMemo<OutlineMarker[]>(
     () =>
-      Array.from({ length: Math.ceil(count / 10) }, (_, step) => ({
+      Array.from({ length: Math.ceil(total / 10) }, (_, step) => ({
         id: `marker-${step * 10}`,
         title: `#${step * 10}`,
         range: { from: step * 10, to: step * 10 + 10 },
       })),
-    [count],
+    [total],
   );
 
   return (
@@ -172,7 +187,7 @@ const Harness = ({
           iconOnly
           label='Bottom'
           data-testid='window.bottom'
-          onClick={() => controller.current?.scrollToIndex(count - 1, 'end')}
+          onClick={() => controller.current?.scrollToIndex(total - 1, 'end')}
         />
         {(onAppend || onPrepend || onGrow) && <Toolbar.Separator />}
         {onPrepend && (
@@ -181,7 +196,14 @@ const Harness = ({
             iconOnly
             label='Prepend'
             data-testid='window.prepend'
-            onClick={onPrepend}
+            onClick={() =>
+              model.prepend(
+                Array.from({ length: 20 }, (_, index) => ({
+                  id: `earlier-${model.count}-${index}`,
+                  extent: EXTENT(index),
+                })),
+              )
+            }
           />
         )}
         {onAppend && (
@@ -190,7 +212,14 @@ const Harness = ({
             iconOnly
             label='Append'
             data-testid='window.append'
-            onClick={onAppend}
+            onClick={() =>
+              model.append(
+                Array.from({ length: onAppend === 'few' ? 5 : 20 }, (_, index) => ({
+                  id: `later-${model.count}-${index}`,
+                  extent: EXTENT(index),
+                })),
+              )
+            }
           />
         )}
         {onGrow && (
@@ -199,7 +228,15 @@ const Harness = ({
             iconOnly
             label='Grow'
             data-testid='window.grow'
-            onClick={onGrow}
+            // A change in place: same identity, new extent — the model says which row, and the
+            // measurement pass finds the new size (§8).
+            onClick={() => {
+              const item = model.at(GROWN);
+              if (item) {
+                item.extent = 400;
+                model.update(item.id);
+              }
+            }}
           />
         )}
       </Toolbar.Root>
@@ -218,9 +255,8 @@ const Harness = ({
 
         <Window
           classNames='grow min-h-0'
-          count={count}
-          getId={getId}
-          extents={{ of: declared ?? extent, exact }}
+          model={model}
+          extents={{ of: declared ?? ((index) => model.at(index)?.extent ?? 100), exact }}
           axis={axis}
           reserve={reserve}
           sticky={sticky}
@@ -229,23 +265,26 @@ const Harness = ({
           onEdge={onEdge}
           onMismatch={onMismatch}
         >
-          {(index) => (
-            <div
-              className={mx(
-                'flex items-center justify-center border border-separator text-xs tabular-nums',
-                index % 2 ? 'bg-input-surface' : 'bg-base-surface',
-                debug && 'outline outline-1 outline-dashed outline-primary-500/50',
-              )}
-              style={axis === 'block' ? { height: extent(index) } : { width: extent(index) }}
-            >
-              {debug ? `${index} · ${extent(index)}` : index}
-            </div>
-          )}
+          {(index) => {
+            const size = model.at(index)?.extent ?? 100;
+            return (
+              <div
+                className={mx(
+                  'flex items-center justify-center border border-separator text-xs tabular-nums',
+                  index % 2 ? 'bg-input-surface' : 'bg-base-surface',
+                  debug && 'outline outline-1 outline-dashed outline-primary-500/50',
+                )}
+                style={axis === 'block' ? { height: size } : { width: size }}
+              >
+                {debug ? `${index} · ${size}` : index}
+              </div>
+            );
+          }}
         </Window>
 
         <Minimap
           state={state}
-          onSelect={(fraction) => controller.current?.scrollToIndex(Math.round(fraction * (count - 1)))}
+          onSelect={(fraction) => controller.current?.scrollToIndex(Math.round(fraction * (total - 1)))}
         />
       </div>
 
@@ -350,10 +389,7 @@ export const Static: Story = {
 
 /** Rows arriving at the end move nothing that is already on screen, and do not move the window. */
 export const Append: Story = {
-  render: (args) => {
-    const [count, setCount] = useState(200);
-    return <Harness {...args} count={count} onAppend={() => setCount((value) => value + 20)} />;
-  },
+  render: (args) => <Harness {...args} count={200} onAppend />,
   play: async ({ canvasElement }) => {
     await settle();
     const before = probe(canvasElement);
@@ -376,18 +412,7 @@ export const Append: Story = {
  * which is the whole reason placement is anchor-relative rather than summed from index 0.
  */
 export const Prepend: Story = {
-  render: (args) => {
-    const [before, setBefore] = useState(0);
-    return (
-      <Harness
-        {...args}
-        count={200 + before}
-        getId={(index) => `row-${index - before}`}
-        extent={(index) => EXTENT(index - before)}
-        onPrepend={() => setBefore((value) => value + 20)}
-      />
-    );
-  },
+  render: (args) => <Harness {...args} count={200} onPrepend />,
   play: async ({ canvasElement }) => {
     await settle();
     const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="window.scroller"]')!;
@@ -416,18 +441,7 @@ export const Prepend: Story = {
  * was 177 re-placements written by us for one disclosure.
  */
 export const Grow: Story = {
-  render: (args) => {
-    const [grown, setGrown] = useState(false);
-    return (
-      <Harness
-        {...args}
-        count={200}
-        exact={false}
-        extent={(index) => (grown && index === GROWN ? 400 : EXTENT(index))}
-        onGrow={() => setGrown(true)}
-      />
-    );
-  },
+  render: (args) => <Harness {...args} count={200} exact={false} onGrow />,
   play: async ({ canvasElement }) => {
     await settle();
     const before = probe(canvasElement);
@@ -623,10 +637,7 @@ export const PastEnd: Story = {
  */
 export const Sticky: Story = {
   args: { count: 200, sticky: true },
-  render: (args) => {
-    const [count, setCount] = useState(200);
-    return <Harness {...args} count={count} onAppend={() => setCount((value) => value + 5)} />;
-  },
+  render: (args) => <Harness {...args} onAppend='few' />,
   play: async ({ canvasElement }) => {
     await settle();
     const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="window.scroller"]')!;

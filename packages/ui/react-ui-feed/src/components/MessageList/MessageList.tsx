@@ -17,7 +17,7 @@ import { Column, ScrollArea, type ScrollAreaRootProps, composable, composablePro
 import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { type ItemContent, type MessageRenderer, type SearchHit, defaultRenderer } from '../../model';
+import { type ItemContent, type MessageRenderer, type SearchHit, defaultRenderer, useListModel } from '../../model';
 import { type WindowController, type WindowState, useWindow } from '../../virtualizer';
 import {
   type HighlightRange,
@@ -356,10 +356,10 @@ const MessageListRoot = ({
     [onRangeChange, setCurrent],
   );
 
+  const windowModel = useListModel(messages as Message.Message[], (message) => message.id);
   const { placement, windowRef, offset, sizerExtent, first, last } = useWindow({
     scrollerRef,
-    count: messages.length,
-    getId,
+    model: windowModel,
     extents,
     overscan,
     reserve,

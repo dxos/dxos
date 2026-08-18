@@ -9,6 +9,7 @@ import { expect } from 'storybook/test';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MarkdownItem } from '../components';
+import { ListModel } from '../model';
 import { Window, type WindowController } from './Window';
 
 /**
@@ -34,17 +35,18 @@ const extent = (index: number) => 240 + (index % 5) * 40;
 const Story = () => {
   const controller = useRef<WindowController>(null);
   const extents = useMemo(() => ({ of: extent }), []);
+  const model = useMemo(
+    () =>
+      new ListModel({
+        items: Array.from({ length: CARDS }, (_, index) => ({ id: `card-${index}` })),
+        getId: (item) => item.id,
+      }),
+    [],
+  );
 
   return (
     <div className='flex flex-col h-full p-4'>
-      <Window
-        classNames='grow min-h-0'
-        axis='inline'
-        count={CARDS}
-        getId={(index) => `card-${index}`}
-        extents={extents}
-        controllerRef={controller}
-      >
+      <Window classNames='grow min-h-0' axis='inline' model={model} extents={extents} controllerRef={controller}>
         {(index) => (
           // Padding, never margin: a child's margin is outside its parent's offsetWidth, so the
           // measured extent would disagree with the rendered pitch by exactly the gap.

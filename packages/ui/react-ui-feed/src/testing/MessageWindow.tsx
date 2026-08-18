@@ -8,6 +8,7 @@ import { Column } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
 import { HtmlItem, MarkdownItem, type MessageChromeProps } from '../components';
+import { useListModel } from '../model';
 import { type MessageRenderer, defaultRenderer } from '../model';
 import { Window, type WindowController, type WindowState } from '../virtualizer';
 
@@ -65,7 +66,7 @@ export const MessageWindow = ({
   const [selectedIds, setSelectedIds] = useState(new Set<string>());
   const onSelect = useCallback((id: string) => setSelectedIds((current) => new Set(current).add(id)), []);
 
-  const getId = useCallback((index: number) => messages[index]?.id ?? `missing-${index}`, [messages]);
+  const model = useListModel(messages, (message: Message.Message) => message.id);
   const extents = useMemo(
     () => ({
       of: (index: number) => {
@@ -83,8 +84,7 @@ export const MessageWindow = ({
   return (
     <Window
       classNames='h-full'
-      count={messages.length}
-      getId={getId}
+      model={model}
       extents={extents}
       sticky={sticky}
       reserve={reserve}
