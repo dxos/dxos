@@ -18,10 +18,10 @@ export type CreateTranscriberOptions = {
   audioStreamTrack: MediaStreamTrack;
   onSegments: (segments: ContentBlock.Transcript[]) => Promise<void>;
   /**
-   * Transcriber configuration. `endpoint` is nullable rather than optional: omitting it silently
-   * would build a transcriber that rejects on `open()`.
+   * Transcriber configuration. Must carry `endpoint` unless `transcribe` is provided; a
+   * transcriber with neither rejects on `open()` with `TranscriptionEndpointNotConfiguredError`.
    */
-  transcriberConfig: Partial<TranscribeConfig> & { endpoint: string | undefined };
+  transcriberConfig?: Partial<TranscribeConfig>;
   recorderConfig?: { interval?: number };
   transcribe?: TranscribeFn;
 };

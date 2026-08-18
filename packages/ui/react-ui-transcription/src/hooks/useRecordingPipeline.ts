@@ -32,10 +32,10 @@ const DEFAULT_TRANSCRIBE_CONFIG: TranscribeConfig = {
 
 export type RecordingPipelineOptions = {
   /**
-   * Transcriber configuration. `endpoint` is nullable rather than optional: omitting it silently
-   * would build a transcriber that rejects on `open()`.
+   * Transcriber configuration. Must carry `endpoint` (there is no built-in one); a transcriber
+   * without it rejects on `open()` with `TranscriptionEndpointNotConfiguredError`.
    */
-  config: Partial<TranscribeConfig> & { endpoint: string | undefined };
+  config?: Partial<TranscribeConfig>;
   /** Re-segment ASR output into complete sentences before the pipeline (merges mid-sentence cuts). */
   segmentSentences?: boolean;
   /**

@@ -9,8 +9,7 @@ import { type Transcriber } from '@dxos/pipeline-transcription';
 import { type CreateTranscriberOptions, createTranscriber } from '../capture';
 
 /** As {@link CreateTranscriberOptions}, but the hook returns `undefined` until a track and handler exist. */
-export type UseTranscriberOptions = Omit<CreateTranscriberOptions, 'audioStreamTrack' | 'onSegments'> &
-  Partial<Pick<CreateTranscriberOptions, 'audioStreamTrack' | 'onSegments'>>;
+export type UseTranscriberOptions = Partial<CreateTranscriberOptions>;
 
 /**
  * Records audio while the user is speaking and transcribes it after they pause. Builds a
