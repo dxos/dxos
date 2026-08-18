@@ -125,6 +125,20 @@ export class Placement {
     this.#reserve = reserve;
   }
 
+  /**
+   * The host's identity function, which is a closure over the host's own list.
+   *
+   * Appending a message gives a *new* `getId`, and a placement holding the one it was constructed
+   * with resolves the new row's index to an id nobody will ever measure. The binding then stores
+   * that row's measurement under the id the DOM carries and reads it back under the stale one, so
+   * the row is measured, found to disagree, measured again — every commit, for ever. It presents as
+   * a render loop rather than as a wrong size, which is what made `bridge/Tail` look like a tail
+   * defect (§8: measurement is only a correction if it can be read back).
+   */
+  setGetId(getId: (index: number) => string): void {
+    this.#getId = getId;
+  }
+
   get anchor(): Readonly<{ id: string; index: number; start: number }> {
     return this.#anchor;
   }
@@ -208,6 +222,28 @@ export class Placement {
     this.#scroll = align === 'end' ? end - this.#viewport : start;
     this.#scroll = Math.max(0, this.#scroll);
     this.#reanchor();
+  }
+
+  /**
+   * Where the reader has to be for the last row to rest against the end of the viewport.
+   *
+   * Derived from the anchor, like every other position, and deliberately **not** from a sum over the
+   * model: a follow asks this again on every commit, and each answer mounts rows whose measurement
+   * replaces the estimates that sum is over — so a sum-based end moves every time it is consulted,
+   * and consulting it is what moves it. That is not slow convergence, it is a feedback loop, and in
+   * React it terminates by exceeding the update limit rather than by settling (`bridge/Tail`).
+   *
+   * Anchor-relative, the answer only changes as the rows *between the anchor and the last row* are
+   * measured — each of them once — so a follow settles in a couple of commits and rows the reader
+   * has already passed cannot disturb it.
+   */
+  endOffset(): number {
+    if (!this.#count) {
+      return 0;
+    }
+
+    const last = this.#count - 1;
+    return Math.max(0, this.positionOf(last) + this.extentOf(last) - this.#viewport);
   }
 
   /** The mounted range, the parent's offset, and the extent the thumb is computed from. */

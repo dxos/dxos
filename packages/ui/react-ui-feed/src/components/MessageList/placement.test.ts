@@ -195,6 +195,85 @@ describe('placement', () => {
     expect(drift?.delta).to.eq(2_500);
   });
 
+  //
+  // Following the end, which is where a chat lives.
+  //
+
+  test('the end is where the last row rests against the end of the viewport', () => {
+    const { placement } = create({ count: 20, extent: () => 100, exact: true });
+
+    // Twenty rows of 100 is 2,000 of content, and the last of them rests when the final 800 is on
+    // screen — not when the document's end is, which is a different number as soon as anything is
+    // reserved past it.
+    expect(placement.endOffset()).to.eq(1_200);
+  });
+
+  test('reserved space is somewhere the reader may go, not where the end is', () => {
+    const { placement } = create({ count: 20, extent: () => 100, exact: true });
+    placement.setReserve(700);
+
+    expect(placement.endOffset()).to.eq(1_200);
+    expect(placement.layout().sizerExtent).to.eq(2_700);
+  });
+
+  test('following the end settles once the rows it reveals have been measured', () => {
+    const { placement } = create({ count: 200, extent: () => 100 });
+    const offsets: number[] = [];
+
+    // What a sticky feed does on every commit: go to the end, measure whatever that mounted, ask
+    // again. The rows are half again as tall as assumed, so the first answer cannot be right.
+    for (let round = 0; round < 6; round++) {
+      placement.scrollTo(placement.endOffset());
+      const { first, last } = placement.layout();
+      for (let index = first; index <= last; index++) {
+        placement.measure(`row-${index}`, 150);
+      }
+
+      offsets.push(placement.endOffset());
+    }
+
+    // Settled, and settled *quickly*: a round here is a React commit, and fifty of them is the
+    // update limit — which is the wall `bridge/Tail` was hitting rather than converging.
+    expect(offsets.at(-1)).to.eq(offsets.at(-2));
+    expect(offsets.indexOf(offsets.at(-1)!)).to.be.lessThan(3);
+  });
+
+  test('following the end is not disturbed by rows the reader has already passed', () => {
+    const { placement } = create({ count: 200, extent: () => 100 });
+    placement.scrollTo(placement.endOffset());
+    const { first } = placement.layout();
+    const before = { end: placement.endOffset(), first: placement.positionOf(first) };
+
+    // A row far above the window turns out to be twice its estimate, as history is measured on the
+    // way through. Summing the model from index 0 to find the end would carry that 100 into the
+    // tail's position and move what the reader is looking at, for a row they cannot see.
+    placement.measure('row-3', 200);
+
+    expect({ end: placement.endOffset(), first: placement.positionOf(first) }).to.deep.eq(before);
+  });
+
+  test('replacing the model keeps measurement and its lookup on the same row', () => {
+    const ids = ['a', 'b', 'c'];
+    const placement = new Placement({
+      count: 3,
+      getId: (index) => ids[index],
+      extents: { of: () => 100 },
+      viewport: VIEWPORT,
+    });
+
+    // The host appends, which in React means a *new* closure over a *new* list — the same shape as
+    // `messages.map` giving a fresh `getId` on every render.
+    const grown = ['a', 'b', 'c', 'd'];
+    placement.setGetId((index) => grown[index]);
+    placement.setCount(4);
+    placement.measure('d', 250);
+
+    // Stored against the id the binding read off the row, and read back for the same row. Held to
+    // the stale closure, index 3 resolves to `undefined` and the measurement is never found again —
+    // the binding re-measures it every commit, which is a render loop, not a size error.
+    expect(placement.extentOf(3)).to.eq(250);
+  });
+
   test('an empty model has no window and no drift', () => {
     const { placement } = create({ count: 0 });
 

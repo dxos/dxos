@@ -142,6 +142,10 @@ export const Window = ({
   // anywhere but the top, which shifts the anchor and moves the feed under them. Found by a sticky
   // test that passed with no sticky implementation at all, because the wrong shift happened to land
   // the tail where the test looked for it.
+  // Told before anything consults the model: `getId` is a closure over the host's list, so the one
+  // captured at construction names rows that no longer exist there.
+  placement.setGetId(getId);
+
   const previousCount = useRef(count);
   const previousFirstId = useRef(count ? getId(0) : '');
   if (previousCount.current !== count) {
@@ -190,10 +194,6 @@ export const Window = ({
 
   const { first, last, visible, offset, sizerExtent } = placement.layout();
 
-  // Whether the reader was at the end *before* the model changed. Read from the element, since that
-  // is what they were looking at, and remembered because by the time new rows exist it is too late
-  // to ask.
-  const wasAtEnd = useRef(false);
   const atEnd = useCallback(() => {
     const scroller = scrollerRef.current;
     if (!scroller) {
@@ -205,36 +205,29 @@ export const Window = ({
     return scroller.scrollHeight - reserve - offset - viewport <= STICKY_THRESHOLD;
   }, [axis, reserve]);
 
-  useLayoutEffect(() => {
-    const scroller = scrollerRef.current;
-    if (!sticky || !wasAtEnd.current || !count || !scroller) {
-      wasAtEnd.current = atEnd();
-      return;
-    }
-
-    // Following is a navigation, not a correction: the content the reader is pinned to has moved, so
-    // the scroll has to as well. What corrections must never do is touch it (§7).
-    //
-    // Written only when it is actually off, and never followed by an invalidate: the write raises a
-    // scroll event, which re-renders, which changes the extent this effect watches. Invalidating
-    // here as well is a loop, and React says so.
-    placement.jumpTo(count - 1, 'end');
-    const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
-    if (Math.abs(current - placement.scroll) > 1) {
-      if (axis === 'block') {
-        scroller.scrollTop = placement.scroll;
-      } else {
-        scroller.scrollLeft = placement.scroll;
-      }
-    }
-
-    wasAtEnd.current = true;
-    // Keyed on the document's extent as well as the count: measuring the rows a scroll reveals moves
-    // the end, so a tail pinned once drifts off it as the estimates are replaced.
-  }, [sticky, count, sizerExtent, placement, axis, atEnd]);
+  /**
+   * Whether the reader wants the tail — an intent they hold, not a position they happen to be at.
+   *
+   * Re-derived from proximity on every commit it cannot survive its own corrections: measuring the
+   * rows at the tail grows the document under a reader who has not moved, the gap opens past any
+   * threshold worth having, and the follow reads that as the reader leaving and disengages for good.
+   * The tail then rests a measurement's worth above the bottom for ever, which is what `bridge/Tail`
+   * was seeing once the render loop above it was gone.
+   *
+   * So it is withdrawn by one thing only: a scroll that moves *backwards*. That is the reader; a
+   * correction never moves the offset back, it moves the end away.
+   */
+  const following = useRef(!!sticky);
+  const wasSticky = useRef(sticky);
+  if (wasSticky.current !== sticky) {
+    wasSticky.current = sticky;
+    following.current = !!sticky;
+  }
 
   const main = axis === 'block' ? 'height' : 'width';
 
+  // Declared before the follow, so the follow's first run has a viewport to compute an end against:
+  // effects run in order, and an end measured against a viewport of zero is the whole document.
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller) {
@@ -250,8 +243,15 @@ export const Window = ({
 
     observer.observe(scroller);
     const onScroll = () => {
-      placement.scrollTo(axis === 'block' ? scroller.scrollTop : scroller.scrollLeft);
-      wasAtEnd.current = atEnd();
+      const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
+      const back = current < placement.scroll - 1;
+      placement.scrollTo(current);
+      if (atEnd()) {
+        following.current = true;
+      } else if (back) {
+        following.current = false;
+      }
+
       invalidate();
     };
 
@@ -262,6 +262,38 @@ export const Window = ({
       scroller.removeEventListener('scroll', onScroll);
     };
   }, [placement, axis, atEnd, invalidate]);
+
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!sticky || !following.current || !count || !scroller) {
+      return;
+    }
+
+    // Following is a navigation, not a correction: the content the reader is pinned to has moved, so
+    // the scroll has to as well. What corrections must never do is touch it (§7).
+    //
+    // Through `endOffset` rather than `jumpTo`: a jump re-bases the model on a sum of estimates, and
+    // this effect runs again every time the document's extent changes — so each answer mounted rows
+    // whose measurement changed the sum the next answer was drawn from. That does not converge, it
+    // recurs, and React ends it by exceeding the update limit rather than by settling.
+    //
+    // Written only when it is actually off, and never followed by an invalidate: the write raises a
+    // scroll event, which re-renders, which changes the extent this effect watches. Invalidating
+    // here as well is a second loop, and React says so.
+    const target = placement.endOffset();
+    const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
+    if (Math.abs(current - target) > 1) {
+      placement.scrollTo(target);
+      if (axis === 'block') {
+        scroller.scrollTop = target;
+      } else {
+        scroller.scrollLeft = target;
+      }
+    }
+
+    // Keyed on the document's extent as well as the count: measuring the rows a scroll reveals moves
+    // the end, so a tail pinned once drifts off it as the estimates are replaced.
+  }, [sticky, count, sizerExtent, placement, axis]);
 
   // Measured after every commit, so a row that grows later — a font, a portaled widget, an image —
   // is not a special case but the same case arriving again (§8).
@@ -288,7 +320,7 @@ export const Window = ({
       }
 
       if (actual && actual !== declared) {
-        placement.measure(id, actual);
+          placement.measure(id, actual);
         changed = true;
       }
     }

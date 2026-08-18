@@ -160,16 +160,16 @@ export const Assistant: StoryObject = holdsStill('assistant', 200);
 /**
  * A chat's tail: the last message rests on the bottom, and stays there as answers arrive.
  *
- * **Failing, and left failing deliberately** — it states a requirement the swap has to meet. The
- * scroller reports no scrollable extent at all in this story (`scrollHeight === clientHeight`, no
- * last row mounted) while the three above it, which share the same component and differ only in
- * `sticky`, are fine. So the fault is in how sticky interacts with the first layout, not in the tail
- * arithmetic. See `chat-ui/TASKS.md`.
- *
  * The invariant `baseline/tail` holds the current engine to, pointed at the new one. Read from the
  * last row's own bottom edge rather than the scroll offset: an offset can be at the document's end
  * while the last message is nowhere near the screen, which is what both of that story's defects
  * looked like from outside.
+ *
+ * It failed for a while, and what it caught was not the tail arithmetic either time. First a stale
+ * `getId` — `Window` held the closure it was constructed with, so an appended row's measurement was
+ * filed under one id and read back under another and the row was re-measured every commit, which
+ * React ends by exceeding the update limit. Then a follow re-derived from proximity, which its own
+ * corrections disengage. Both presented as "the tail is in the wrong place".
  */
 export const Tail: StoryObject = {
   args: { scenario: 'assistant', count: 200, sticky: true },
