@@ -24,6 +24,8 @@ type MessageChromeContextValue = {
   onRewind?: (id: string) => void;
   /** While an answer is streaming the toolbars stay hidden — still in flow, never revealed. */
   streaming?: boolean;
+  /** Show the message id in the toolbars — one turn is several messages, and ids say which. */
+  debug?: boolean;
 };
 
 const [MessageChromeProvider, useMessageChromeContext] = createContext<MessageChromeContextValue>(MESSAGE_CHROME_NAME);
@@ -46,6 +48,19 @@ const CopyButton = ({ message }: { message: Message.Message }) => {
       density='sm'
       onClick={() => void navigator.clipboard?.writeText(Message.extractText(message))}
     />
+  );
+};
+
+const MessageId = ({ message }: { message: Message.Message }) => {
+  const { debug } = useMessageChromeContext('MessageId');
+  if (!debug) {
+    return null;
+  }
+
+  return (
+    <span className='font-mono text-subdued' title={message.id}>
+      {message.id.slice(-8)}
+    </span>
   );
 };
 
@@ -86,6 +101,7 @@ export const PromptToolbar = ({ classNames, message }: MessageToolbarProps) => {
           onClick={() => onRewind(message.id)}
         />
       )}
+      <MessageId message={message} />
       <Time message={message} />
     </div>
   );
@@ -98,6 +114,7 @@ export const AssistantToolbar = ({ classNames, message }: MessageToolbarProps) =
   return (
     <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-description', classNames)}>
       <CopyButton message={message} />
+      <MessageId message={message} />
       <Time message={message} />
     </div>
   );

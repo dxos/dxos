@@ -416,7 +416,8 @@ const ChatThread = ({ classNames, viewType, debug: debugProp, onViewUsage }: Cha
         viewType={viewType}
         registry={chatRegistry}
         userHue={userHue}
-        debug={debugProp ?? debug}
+        debug={true}
+        // debug={debugProp ?? debug}
         onEvent={handleEvent}
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}
@@ -424,6 +425,7 @@ const ChatThread = ({ classNames, viewType, debug: debugProp, onViewUsage }: Cha
         <NaturalChatThread.Viewport classNames={['bordergrow min-h-0', classNames]} padding />
       </NaturalChatThread.Root>
 
+      {/* TODO(burdon): Why is this required? */}
       <Toast.Root
         data-testid='assistant.error'
         type='foreground'
@@ -481,7 +483,7 @@ const ChatOutline = ({ classNames }: ChatOutlineProps) => {
   );
   const handleNavigate = useCallback((delta: number) => controller?.navigation.step(delta), [controller]);
 
-  if (!markers.length) {
+  if (markers.length < 2) {
     return null;
   }
 
