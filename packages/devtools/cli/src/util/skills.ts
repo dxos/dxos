@@ -6,7 +6,7 @@ import * as Layer from 'effect/Layer';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
-import { DatabaseHandlers, DatabaseSkill as DatabaseSchemaSkill } from '@dxos/assistant-toolkit';
+import { ChatContextHandlers, ChatContextSkill } from '@dxos/assistant-toolkit';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Feed, Tag, type Type } from '@dxos/echo';
@@ -66,7 +66,7 @@ export const skillRegistry = makeRegistry({
     // Skills available to the chat.
     AssistantSkill.make(),
     DatabaseSkill.make(),
-    DatabaseSchemaSkill.make(),
+    ChatContextSkill.make(),
     CalendarSkill.make(),
     ChessSkill.make(),
     InboxSkill.make(),
@@ -88,7 +88,7 @@ export const skillRegistry = makeRegistry({
 
 export const operationHandlers = OperationHandlerSet.merge(
   // NOTE: Operation handlers referenced by skills above need to be added here.
-  DatabaseHandlers,
+  ChatContextHandlers,
   SpaceObjectOperationHandlerSet,
   ChessOperationHandlerSet,
   InboxOperationHandlerSet,

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { DatabaseSkill, RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
+import { ChatContextSkill, RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
@@ -403,7 +403,7 @@ export const WithCRM: Story = {
     skills: [
       AssistantSkill.key,
       CrmSkill.key,
-      DatabaseSkill.key,
+      ChatContextSkill.key,
       InboxSkill.key,
       MarkdownSkill.key,
       WebSearchSkill.key,

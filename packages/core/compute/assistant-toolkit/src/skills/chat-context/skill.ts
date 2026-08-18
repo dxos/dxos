@@ -9,7 +9,7 @@ import { trim } from '@dxos/util';
 
 import { ContextAdd, ContextRemove } from './operations/definitions';
 
-const SKILL_KEY = 'org.dxos.skill.database';
+const SKILL_KEY = 'org.dxos.skill.chatContext';
 
 const instructions = trim`
   You can bind objects into the chat's context so later turns can see them, and unbind them again.
@@ -20,7 +20,6 @@ const instructions = trim`
 const make = () =>
   Skill.make({
     key: SKILL_KEY,
-    // TODO(wittjosiah): Key still says `database` — renaming it is a migration for bound chats.
     name: 'Chat context',
     description: "Bind objects into the chat's context, and unbind them.",
     agentCanEnable: true,

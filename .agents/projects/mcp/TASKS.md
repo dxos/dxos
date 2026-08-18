@@ -123,10 +123,14 @@ changes what a model sees lives in the shared package or it is a bug.
           app-framework) read the app's contributions where they exist and return nothing where they
           do not, so `AddType` declares no services at all. The `addType` test proves it — it runs
           in `AssistantTestLayer`, which binds neither manager.
-    - [x] `contextAdd`/`contextRemove` stayed; the toolkit skill is now **Chat context** by name and
-          description.
-    - [ ] Follow-up: its key is still `org.dxos.skill.database`. Renaming it is a migration for
-          chats already bound to that key, so it carries a TODO rather than a rename.
+    - [x] `contextAdd`/`contextRemove` stayed, as `ChatContextSkill` (`org.dxos.skill.chatContext`).
+          **The identity follows the verbs**, not the package: plugin-space's Database skill takes
+          `org.dxos.skill.database`, so a chat already bound to that key keeps object CRUD instead of
+          silently losing it. Same as `org.dxos.skill.connectors` keeping its key into
+          plugin-connector, and matching how plugin-owned skills are keyed generally
+          (`org.dxos.skill.inbox`, `.markdown`, `.chess`) — the long
+          `org.dxos.plugin.<name>.skill.<x>` form is the exception, not the rule. Note DXN names
+          reject hyphens in the final segment, hence `chatContext`.
   - [ ] **Model fixtures need regenerating** (needs `DX_ANTHROPIC_API_KEY`, absent from the cloud
         sandbox). `parameters.tools` is part of the fixture match key, so shrinking `DatabaseSkill`'s
         tool list invalidated all 134 conversations under

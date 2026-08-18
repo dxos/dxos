@@ -21,16 +21,16 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { Person } from '@dxos/types';
 
-import { DatabaseHandlers, DatabaseSkill } from '../database';
+import { ChatContextHandlers, ChatContextSkill } from '../chat-context';
 import BrowserSkill from './skill';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  operationHandlers: OperationHandlerSet.merge(DatabaseHandlers, MarkdownOperationHandlerSet),
+  operationHandlers: OperationHandlerSet.merge(ChatContextHandlers, MarkdownOperationHandlerSet),
   types: [Skill.Skill, Person.Person, Markdown.Document, SpaceProperties, Collection.Collection, Feed.Feed],
-  skills: [BrowserSkill.make(), MarkdownSkill.make(), DatabaseSkill.make()],
+  skills: [BrowserSkill.make(), MarkdownSkill.make(), ChatContextSkill.make()],
   tracing: 'pretty',
 });
 
@@ -41,7 +41,7 @@ describe('Browser', { tags: ['manual'] }, () => {
     Effect.fnUntraced(
       function* (_) {
         const agent = yield* AgentService.createSession({
-          skills: [BrowserSkill.make(), MarkdownSkill.make(), DatabaseSkill.make()],
+          skills: [BrowserSkill.make(), MarkdownSkill.make(), ChatContextSkill.make()],
         });
         yield* agent.submitPrompt(`
           Scrape effect blog at https://effect.website/blog and find the content of last 3 articles.

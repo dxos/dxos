@@ -8,7 +8,7 @@ export * from './alarm';
 export * from './automation';
 export * from './skill-manager';
 export * from './browser';
-export * from './database';
+export * from './chat-context';
 export * from './delegation';
 export * from './memory';
 export * from './planning';

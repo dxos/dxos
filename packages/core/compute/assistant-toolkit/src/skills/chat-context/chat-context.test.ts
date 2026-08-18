@@ -13,15 +13,15 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 
-import { DatabaseHandlers } from './operations';
-import DatabaseSkill from './skill';
+import { ChatContextHandlers } from './operations';
+import ChatContextSkill from './skill';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: DatabaseHandlers,
+  operationHandlers: ChatContextHandlers,
   types: [Organization.Organization, Person.Person, Employer.Employer, Tag.Tag, Skill.Skill, Feed.Feed],
-  skills: [DatabaseSkill.make()],
+  skills: [ChatContextSkill.make()],
   tracing: 'pretty',
   model: DXN.make('com.anthropic.model.claude-sonnet-4-6.default'),
   aiServicePreset: 'direct',
@@ -37,7 +37,7 @@ describe('Database Skill', { tags: ['model-fixture'] }, () => {
     Effect.fnUntraced(
       function* (_) {
         const agent = yield* AgentService.createSession({
-          skills: [DatabaseSkill.make()],
+          skills: [ChatContextSkill.make()],
         });
         yield* Database.add(Obj.make(Organization.Organization, { name: 'Context Corp' }));
         yield* agent.submitPrompt(`Add the organization "Context Corp" to the chat context.`);
@@ -56,7 +56,7 @@ describe('Database Skill', { tags: ['model-fixture'] }, () => {
     Effect.fnUntraced(
       function* (_) {
         const agent = yield* AgentService.createSession({
-          skills: [DatabaseSkill.make()],
+          skills: [ChatContextSkill.make()],
         });
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Remove Context Corp' }));
         const { db } = yield* Database.Service;

@@ -15,7 +15,7 @@ import { AiService } from '@dxos/ai';
 import { LanguageModelFixture, TestAiService } from '@dxos/ai/testing';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { Chat, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import { Chat, ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -44,7 +44,7 @@ const MEMOIZED_TEST_TIMEOUT = 60_000;
 
 export const getDefaultSkills = (): Ref.Ref<Skill.Skill>[] => [
   Ref.make(SkillManagerSkill.make()),
-  Ref.make(DatabaseSkill.make()),
+  Ref.make(ChatContextSkill.make()),
 ];
 
 const INSTRUCTIONS = trim`

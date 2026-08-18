@@ -31,8 +31,11 @@ Skills move to the plugins that own their subject. `@dxos/plugin-connector` now 
 `@dxos/plugin-space` owns the **Database** skill — object CRUD over the projected verbs, exported as
 `DatabaseSkill` from `@dxos/plugin-space/skills`.
 
-`@dxos/assistant-toolkit`'s own `DatabaseSkill` keeps its key but is now chat-context binding alone
-(`contextAdd`/`contextRemove`) and is renamed **Chat context**. Everything else either moved to
+`@dxos/assistant-toolkit`'s own database skill is now chat-context binding alone
+(`contextAdd`/`contextRemove`), so it is renamed: `ChatContextSkill`, keyed `org.dxos.skill.chatContext`,
+exporting `ChatContextHandlers` and `ChatContextOperations`. The `org.dxos.skill.database` key goes
+with the verbs to plugin-space's Database skill, so a chat already bound to it keeps reading and
+writing objects. Everything else either moved to
 plugin-space or was retired as a duplicate: `objectCreate`, `objectDelete`, `objectUpdate`, `query`
 and `load` are covered by the projected verbs; `relationDelete` by `removeObjects`, which already
 accepts relations; `tagAdd`, `tagRemove` and `schemaList` moved as the annotated `addTag`,

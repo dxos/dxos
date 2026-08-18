@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Chat, DatabaseSkill, RunInstructions } from '@dxos/assistant-toolkit';
+import { Chat, ChatContextSkill, RunInstructions } from '@dxos/assistant-toolkit';
 import { Client } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -58,7 +58,7 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
     space.db.add(Obj.make(TestSchema.Organization, { name: 'Globex Industries' }));
     space.db.add(Obj.make(TestSchema.Organization, { name: 'Initech' }));
 
-    const databaseSkill = space.db.add(DatabaseSkill.make());
+    const databaseSkill = space.db.add(ChatContextSkill.make());
 
     const instructions = space.db.add(
       Instructions.make({

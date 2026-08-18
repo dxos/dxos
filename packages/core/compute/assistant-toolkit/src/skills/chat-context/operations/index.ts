@@ -7,9 +7,9 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { ContextAdd, ContextRemove } from './definitions';
 
-export * as DatabaseOperations from './definitions';
+export * as ChatContextOperations from './definitions';
 
-export const DatabaseHandlers = OperationHandlerSet.lazy([
+export const ChatContextHandlers = OperationHandlerSet.lazy([
   ContextAdd.pipe(Operation.lazyHandler(() => import('./context-add'))),
   ContextRemove.pipe(Operation.lazyHandler(() => import('./context-remove'))),
 ]);
