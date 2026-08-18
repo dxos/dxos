@@ -748,7 +748,7 @@ export const MessageList = {
 };
 
 export type {
-  MessageListNavExtra as MessageListNavProps,
   MessageListItemExtra as MessageListItemProps,
+  MessageListNavExtra as MessageListNavProps,
   MessageListViewportExtra as MessageListViewportProps,
 };
