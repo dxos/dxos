@@ -6,6 +6,7 @@ import { WaveFile } from 'wavefile';
 
 import { DeferredTask, Trigger, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { type ContentBlock } from '@dxos/types';
@@ -68,11 +69,13 @@ export type TranscribeConfig = {
 };
 
 /**
- * Reported whenever a transcriber is built without a transport: both the open-time guard and the
- * request path raise it, so the wording (and the config path it names) stays in one place.
+ * Raised when a transcriber is built without a transport — no `transcribe` fn and no endpoint.
+ * Typed so a caller can tell an unconfigured service from a transcription that failed in flight.
  */
-export const TRANSCRIPTION_ENDPOINT_NOT_CONFIGURED =
-  'Transcription endpoint is not configured (runtime.services.edgeServices: transcription).';
+export class TranscriptionEndpointNotConfiguredError extends BaseError.extend(
+  'TranscriptionEndpointNotConfiguredError',
+  'Transcription endpoint is not configured (runtime.services.edgeServices: transcription).',
+) {}
 
 /**
  * Function that converts a base64-encoded WAV payload into Whisper segments.
@@ -127,7 +130,7 @@ export class Transcriber extends Resource {
     // Fail before any audio is captured: a missing transport discovered mid-drain would discard
     // the user's buffered speech.
     if (!this._transcribeFn && !this._config.endpoint) {
-      throw new Error(TRANSCRIPTION_ENDPOINT_NOT_CONFIGURED);
+      throw new TranscriptionEndpointNotConfiguredError();
     }
     log.info('opening');
     this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
@@ -255,7 +258,7 @@ export class Transcriber extends Resource {
       // TODO(burdon): Create separate endpoint?
       const endpoint = this._config.endpoint;
       if (!endpoint) {
-        throw new Error(TRANSCRIPTION_ENDPOINT_NOT_CONFIGURED);
+        throw new TranscriptionEndpointNotConfiguredError();
       }
       this._transcribeAbort = new AbortController();
       let response: Response;
