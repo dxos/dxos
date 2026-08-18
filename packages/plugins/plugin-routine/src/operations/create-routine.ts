@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import * as Routine from '@dxos/compute/Routine';
-import { Database, Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
