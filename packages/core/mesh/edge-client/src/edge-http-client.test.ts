@@ -183,7 +183,7 @@ describe('EdgeHttpClient auth refresh', () => {
     const releases: Array<() => void> = [];
     const started: Array<Promise<void>> = [];
     const startSignals: Array<() => void> = [];
-    for (let i = 0; i < 2; i++) {
+    for (let authRequestIndex = 0; authRequestIndex < 2; authRequestIndex++) {
       started.push(new Promise<void>((resolve) => startSignals.push(resolve)));
     }
     let authCallCount = 0;
