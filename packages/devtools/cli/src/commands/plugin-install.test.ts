@@ -74,8 +74,7 @@ describe('plugin add --dev', () => {
     '--no-enable records the plugin without activating it',
     ({ expect }) => {
       withIsolatedHome((home) => {
-        // The fixture ships a built `manifest.json`, so nothing of the plugin is read but its
-        // metadata. An unbuilt checkout would instead have its `dx.config.ts` evaluated here.
+        // The fixture ships a built `manifest.json`, so only its metadata is read.
         expect(runDx(['plugin', 'add', '--dev', FIXTURE_DIR, '--no-enable'], { home }).status).toBe(0);
         const row = findFixture(home);
         expect(row?.enabled).toBe(false);
@@ -97,14 +96,18 @@ describe('plugin add <url>', () => {
         expect(dev.status).toBe(1);
         expect(dev.stdout + dev.stderr).toContain('directory');
 
-        // A manifest is untrusted input, and an asset entry that names another host would turn
-        // `plugin add` into a fetch the user never asked for. Refused before anything is written.
+        // An asset naming another host would make `add` fetch somewhere the user never named.
         const hostile = runDx(['plugin', 'add', `${baseUrl}/hostile-manifest.json`], { home: isolated });
         expect(hostile.status).toBe(1);
         expect(hostile.stdout + hostile.stderr).toContain('origin');
         expect(fs.existsSync(path.join(isolated, '.config', 'dx', 'plugins', 'com.example.plugin.hostile'))).toBe(
           false,
         );
+
+        // `..%5C` survives URL normalization and is a separator once decoded on Windows.
+        const traversal = runDx(['plugin', 'add', `${baseUrl}/traversal-manifest.json`], { home: isolated });
+        expect(traversal.status).toBe(1);
+        expect(traversal.stdout + traversal.stderr).toContain('below its manifest');
 
         expect(runDx(['plugin', 'add', `${baseUrl}/manifest.json`], { home: isolated }).status).toBe(0);
         return isolated;
@@ -202,9 +205,8 @@ const installDir = (home: string) => path.join(home, '.config', 'dx', 'plugins',
 /**
  * Serves the fixture directory on a loopback port for the duration of `fn`.
  *
- * The server runs in a child process because `runDx` spawns synchronously: an in-process server
- * could never answer the CLI's request, since the event loop that would serve it is blocked
- * waiting for the very subprocess making the request.
+ * The server runs in a child process because `runDx` spawns synchronously, so an in-process server
+ * would be blocked by the very subprocess making the request.
  */
 const withFixtureServer = async <T>(fn: (baseUrl: string) => T): Promise<T> => {
   const source = `

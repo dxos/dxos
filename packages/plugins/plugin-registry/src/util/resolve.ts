@@ -89,10 +89,8 @@ const resolveDirectory = (locator: string): Effect.Effect<Resolved, PluginInstal
       return { record, assets: [] };
     }
 
-    // Reached only for `--dev`, and only when the checkout has no built manifest: reading the
-    // metadata means evaluating the developer's own config module. That is a weaker bar than the
-    // one `add <url>` holds to — where nothing is imported until `enable` — and it is the same bar
-    // as running the checkout's build, which is what produces the manifest this branch is missing.
+    // Only `--dev` on an unbuilt checkout reaches here, where reading the metadata means evaluating
+    // the developer's own config module — the same bar as running the build that would emit a manifest.
     const configPath = path.join(directory, 'dx.config.ts');
     const config = yield* Effect.tryPromise(() => import(/* @vite-ignore */ configPath)).pipe(
       Effect.flatMap((mod) => Schema.decodeUnknownEffect(DxConfig)(mod.default)),
@@ -112,12 +110,9 @@ const MANIFEST_TIMEOUT = '30 seconds';
 /**
  * Resolves one manifest-declared asset against the URL the manifest was served from.
  *
- * The manifest is untrusted — it is the first thing `add <url>` reads, before anything about the
- * plugin is known — and `new URL(asset, base)` ignores the base for anything absolute. So an entry
- * of `https://elsewhere.example/x.js` would make `dx plugin add` fetch a host the user never named,
- * and `../../../x.js` would write outside the install directory. An asset must therefore be served
- * from the same origin as its manifest and sit at or below it, which is what a published bundle
- * looks like anyway.
+ * The manifest is untrusted and `new URL(asset, base)` ignores the base for anything absolute, so
+ * an asset is confined here to the same origin as its manifest and to a path at or below it —
+ * which is what a published bundle looks like anyway.
  */
 const resolveAsset = (asset: string, manifestUrl: string): Effect.Effect<PluginAsset, PluginInstallError> =>
   Effect.gen(function* () {
@@ -137,14 +132,15 @@ const resolveAsset = (asset: string, manifestUrl: string): Effect.Effect<PluginA
     if (!url.pathname.startsWith(directory)) {
       return yield* reject(`Plugin asset resolves above its manifest: ${asset}`);
     }
-    // Decoded, because the path becomes a filename and a bundle's internal imports use the decoded
-    // form. Segment-checked afterwards, because percent-encoding can hide a traversal from `URL`.
+    // Decoded because the path becomes a filename, then segment-checked because percent-encoding
+    // hides traversal from `URL` — `..%5Cx` survives as one path-looking segment.
     const relative = yield* Effect.try(() => decodeURIComponent(url.pathname.slice(directory.length))).pipe(
       Effect.catch(() => reject(`Plugin asset path is not decodable: ${asset}`)),
     );
+    // A backslash is a separator on Windows, so it must be rejected rather than treated as a name.
     const segments = relative.split('/');
-    if (segments.some((segment) => segment === '' || segment === '.' || segment === '..')) {
-      return yield* reject(`Plugin asset does not name a file: ${asset}`);
+    if (relative.includes('\\') || segments.some((segment) => segment === '' || segment === '.' || segment === '..')) {
+      return yield* reject(`Plugin asset does not name a file below its manifest: ${asset}`);
     }
 
     return { url: url.toString(), path: relative };
@@ -202,10 +198,9 @@ const resolveUrl = (manifestUrl: string): Effect.Effect<Resolved, PluginInstallE
  * code. The one exception is `--dev` against a checkout with no built manifest, which reads that
  * directory's `dx.config.ts` — see {@link resolveDirectory}.
  *
- * Only two of the four locator/mode combinations install today. A snapshot of a local directory
- * and a live install from a dev server are both expressible in this command's shape (that is why
- * `--dev` is a flag rather than a second verb) but neither has a consumer yet, so they are refused
- * with a message rather than half-built.
+ * Two of the four locator/mode combinations are refused with a message rather than half-built:
+ * both are expressible in this command's shape — which is why `--dev` is a flag and not a second
+ * verb — but neither has a consumer yet.
  */
 export const resolveLocator = (
   locator: string,

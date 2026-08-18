@@ -80,6 +80,16 @@ export const downloadAssets = ({
       );
 
       const destination = path.join(staging, asset.path);
+      // Belt to `resolveAsset`'s braces: nothing may be written outside the staging directory, and
+      // this is the check that holds whatever the platform's separators turn out to be.
+      if (destination !== staging && !destination.startsWith(staging + path.sep)) {
+        return yield* Effect.fail(
+          new PluginInstallError({
+            message: `Plugin asset escapes its install directory: ${asset.path}`,
+            context: { locator: asset.url, reason: 'manifest-invalid' },
+          }),
+        );
+      }
       yield* fs
         .makeDirectory(path.dirname(destination), { recursive: true })
         .pipe(
@@ -106,14 +116,21 @@ export const downloadAssets = ({
         );
     }
 
-    yield* fs.remove(target, { recursive: true }).pipe(Effect.catch(() => Effect.void));
-    yield* fs
-      .rename(staging, target)
-      .pipe(
-        Effect.mapError(
-          (cause) => new PluginInstallError({ context: { locator: baseUrl, reason: 'write-failed' }, cause }),
-        ),
-      );
+    // The previous version is moved aside rather than deleted, so a failed commit leaves the user
+    // with the plugin they already had instead of nothing.
+    const backup = `${target}.backup`;
+    yield* fs.remove(backup, { recursive: true }).pipe(Effect.catch(() => Effect.void));
+    const restore = yield* fs.rename(target, backup).pipe(
+      Effect.as(true),
+      Effect.catch(() => Effect.succeed(false)),
+    );
+    yield* fs.rename(staging, target).pipe(
+      Effect.tapCause(() => (restore ? fs.rename(backup, target).pipe(Effect.catch(() => Effect.void)) : Effect.void)),
+      Effect.mapError(
+        (cause) => new PluginInstallError({ context: { locator: baseUrl, reason: 'write-failed' }, cause }),
+      ),
+    );
+    yield* fs.remove(backup, { recursive: true }).pipe(Effect.catch(() => Effect.void));
     return target;
   }).pipe(Effect.scoped, Effect.provide(FetchHttpClient.layer));
 

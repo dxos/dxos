@@ -147,11 +147,9 @@ export const loadEnabledPlugins = Effect.fn(function* ({ profile }: { profile: s
  * Takes the manager's enabled set rather than a single id so the caller does not have to reason
  * about dependency closures — enabling one plugin can enable several.
  *
- * `registered` names every plugin the host actually holds. A record outside it — an install whose
- * metadata could not be read, or a plugin compiled out of this build — is left exactly as the user
- * last set it, because the enabled set could never have contained it and rewriting from that set
- * would turn a load failure into a silent, permanent disable. Omitting `registered` rewrites every
- * record, which is only correct when the caller knows the file and the host agree.
+ * A record outside `registered` keeps its stored value, because the enabled set could never have
+ * contained a plugin the host failed to register and rewriting from it would turn a load failure
+ * into a silent, permanent disable.
  */
 export const saveEnabledPlugins = Effect.fn(function* ({
   profile,
