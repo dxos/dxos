@@ -226,7 +226,14 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
         if (process.env.DX_SOURCE !== '0') {
           bunArgs.push('--conditions=source');
         }
+        // Pinned to the package that owns the entry because bun resolves `tsconfig.json` from the
+        // cwd, not from the file it is compiling. `--conditions=source` makes it transpile every
+        // `@dxos/*` package from TypeScript, and without the `experimentalDecorators` that tsconfig
+        // carries it applies TC39 semantics to legacy decorators — `@synchronized` then dies on
+        // `descriptor.value` deep in client startup. An MCP client launches `dx` from the user's
+        // own project, so inheriting that cwd broke the child every time.
         child = spawn('bun', [...bunArgs, 'run', childEntry, ...childArgs], {
+          cwd: fileURLToPath(new URL('../../..', import.meta.url)),
           env: { ...process.env, [WATCH_CHILD_ENV]: '1' },
         });
       }

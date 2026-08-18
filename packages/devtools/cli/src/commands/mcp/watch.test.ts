@@ -20,6 +20,7 @@ import { WATCH_READY_SENTINEL } from './watch-protocol';
  */
 
 const RUNNER = fileURLToPath(new URL('../../testing/watch-runner.ts', import.meta.url));
+const BIN = fileURLToPath(new URL('../../../bin/dx', import.meta.url));
 
 /** Answers just enough of the protocol to show which realm replied. */
 const PROTOCOL = `
@@ -79,8 +80,8 @@ const driver = (child: ChildProcessWithoutNullStreams) => {
   });
 
   const send = (message: unknown) => child.stdin.write(`${JSON.stringify(message)}\n`);
-  const waitFor = async (label: string, match: (message: Message) => boolean): Promise<Message> => {
-    const deadline = Date.now() + 30_000;
+  const waitFor = async (label: string, match: (message: Message) => boolean, timeout = 30_000): Promise<Message> => {
+    const deadline = Date.now() + timeout;
     while (Date.now() < deadline) {
       const found = messages.find(match);
       if (found) {
@@ -167,4 +168,30 @@ describe('dx mcp serve --watch', () => {
       fs.rmSync(dir, { recursive: true, force: true });
     }
   }, 60_000);
+
+  // The two tests above drive the supervisor directly, which is fast but skips the CLI runtime and
+  // runs from whatever cwd vitest has — so it missed the defect this covers. `--watch` runs its
+  // child with `--conditions=source`, bun resolves `tsconfig.json` from the cwd rather than from
+  // the file it compiles, and an MCP client launches `dx` from the user's own project. Without a
+  // tsconfig carrying `experimentalDecorators`, `@synchronized` died on `descriptor.value` during
+  // client startup, the ready sentinel never arrived, and the client saw only a timeout.
+  test('answers a real handshake when launched from an unrelated directory', async ({ expect }) => {
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-mcp-cwd-'));
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-mcp-home-'));
+    const child = spawn(BIN, ['mcp', 'serve', '--watch'], {
+      cwd,
+      env: { ...process.env, HOME: home, DX_DEBUG: 'error', NO_COLOR: '1' },
+    });
+    const { send, waitFor } = driver(child);
+
+    try {
+      send(initialize);
+      const answer = await waitFor('initialize', (message) => message.id === 1, 120_000);
+      expect(answer.result.serverInfo).to.be.an('object');
+    } finally {
+      child.kill('SIGKILL');
+      fs.rmSync(cwd, { recursive: true, force: true });
+      fs.rmSync(home, { recursive: true, force: true });
+    }
+  }, 180_000);
 });

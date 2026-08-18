@@ -75,8 +75,32 @@ const readRootFlag = (name: string, alias: string): string | undefined => {
   return undefined;
 };
 
+/**
+ * True for `dx mcp serve --watch`, which is dispatched before anything else is built.
+ *
+ * The supervisor only proxies stdio to a child that does the real work, so booting the plugin
+ * layer and command tree for it would pay the CLI's whole startup twice in sequence — measured at
+ * 6.5s to 11s warm, and far worse cold, which pushes the first connection past an MCP client's
+ * startup timeout and reads as a hang.
+ */
+const isWatchSupervisor = (argv: readonly string[]): boolean => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    return false;
+  }
+  const serve = argv.indexOf('serve');
+  return serve > 0 && argv[serve - 1] === 'mcp' && argv.some((arg) => arg === '--watch' || arg.startsWith('--watch='));
+};
+
 const program = Effect.gen(function* () {
   const argv = process.argv.slice(2);
+
+  // Before `ConfigService.load` and the command tree: see `isWatchSupervisor`. `serve.ts` keeps an
+  // equivalent branch so a miss here degrades to a slow start rather than an unknown flag.
+  if (isWatchSupervisor(argv)) {
+    const { runWatchSupervisor } = yield* Effect.promise(() => import('./commands/mcp/watch'));
+    return yield* runWatchSupervisor();
+  }
+
   const profile = readRootFlag('profile', 'p') ?? DEFAULT_PROFILE;
   const configPath = readRootFlag('config', 'c');
   const config = yield* ConfigService.load({ config: Option.fromNullishOr(configPath), profile });
