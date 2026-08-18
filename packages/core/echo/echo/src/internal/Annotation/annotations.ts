@@ -474,19 +474,28 @@ export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationVal
 interface MakeAnnoationsProps<T> {
   id: string;
   schema: Schema.Codec<T, any, never>;
+  /**
+   * Skip the FQN format check on `id`. Escape hatch for adopting a pre-existing, already-in-use
+   * id (e.g. migrating an annotation off `createAnnotationHelper`) whose value may already be
+   * embedded in persisted schemas — renaming it would silently orphan that stored state instead
+   * of reading it. New annotations should use a proper FQN id rather than this flag.
+   */
+  legacyId?: boolean;
 }
 
 // Annotation ids use the same NSID / reverse-DNS format as TypenameSchema —
 // dot-separated segments, middle segments may be hyphenated, final segment may be camelCase.
 // At least 3 segments are required (e.g. org.dxos.annotation.example).
 export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation.Annotation<T> => {
-  assertArgument(
-    /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?){2,}(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)?$/.test(
-      props.id,
-    ),
-    'id',
-    'Annotation id must be in the FQN format (org.dxos.annotation.example or org.dxos.space.rootCollection).',
-  );
+  if (!props.legacyId) {
+    assertArgument(
+      /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?){2,}(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)?$/.test(
+        props.id,
+      ),
+      'id',
+      'Annotation id must be in the FQN format (org.dxos.annotation.example or org.dxos.space.rootCollection). Pass `legacyId: true` to keep an existing non-FQN id.',
+    );
+  }
 
   const annotation: Annotation.Annotation<T> = {
     [ANNOTATION_TYPE_ID]: { _Type: {} as T },
