@@ -3,13 +3,13 @@
 //
 
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 
-import { createAnnotationHelper } from '@dxos/echo/internal';
+import { Annotation } from '@dxos/echo';
 
 export const IconAnnotationId = '@dxos/schema/IconAnnotationId';
 
-export const IconAnnotation = createAnnotationHelper<string>(IconAnnotationId);
+export const IconAnnotation = Annotation.make({ id: IconAnnotationId, schema: Schema.String, legacyId: true });
 
 export const getIconAnnotation = (schema: Schema.Codec<any, any>): string | undefined =>
   IconAnnotation.get(schema).pipe(Option.getOrUndefined) as string | undefined;
@@ -20,9 +20,5 @@ export const getIconAnnotation = (schema: Schema.Codec<any, any>): string | unde
  * @param icon string icon name from phosphor-icons (e.g., 'ph--user--regular')
  */
 // TODO(burdon): Probably best not to include in type system? Instead incl. in plugin metadata.
-export const withIcon =
-  (icon: string) =>
-  <Self extends Schema.Top>(schema: Self) =>
-    schema.annotate({
-      [IconAnnotationId]: icon,
-    });
+/** Set a schema's icon annotation. */
+export const withIcon = (icon: string) => IconAnnotation.set(icon);

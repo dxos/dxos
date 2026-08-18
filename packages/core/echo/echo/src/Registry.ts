@@ -10,6 +10,7 @@ import { type ReadOnlyEvent } from '@dxos/async';
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import type * as Filter from './Filter';
+import * as registryAtoms from './internal/Registry/atoms';
 import type * as Query from './Query';
 
 /**
@@ -153,3 +154,18 @@ export const runQuery: {
     const registry = yield* Service;
     return (yield* Effect.promise(() => registry.query(queryOrFilter as any).run())) as any;
   });
+
+//
+// Atoms
+//
+
+/**
+ * Reactive lookup of the type entity registered under `typename`, or `undefined` while unregistered.
+ * Memoized per (registry, typename), so consumers share one atom and one `changed` subscription.
+ *
+ * Registration is asynchronous, so anything deriving display state from a schema must read it here
+ * rather than through a plain lookup, which freezes at whatever was registered on first evaluation.
+ *
+ * @example `const type = get(Registry.typeAtom(db.graph.registry, typename));`
+ */
+export const typeAtom = registryAtoms.makeTypeAtom;
