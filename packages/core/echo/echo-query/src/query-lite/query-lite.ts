@@ -666,12 +666,14 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  referenceAt(path: string): Query$.Any {
+  referenceAt(path: string, target: Type$.AnyEntity): Query$.Any {
+    // The traversal itself is untyped (same AST node as `reference`); the type filter makes the
+    // declared result type hold at runtime, matching `referencedBy`'s behavior.
     return new QueryClass({
       type: 'reference-traversal',
       anchor: this.ast,
       property: path,
-    });
+    }).select(FilterClass.type(target));
   }
 
   referencedBy(target?: Type$.AnyEntity | string, key?: string): Query$.Any {

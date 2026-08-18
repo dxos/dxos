@@ -38,7 +38,7 @@ const handler = JmapOperation.JmapSync.pipe(
         ),
     }).pipe(
       Effect.map(({ outputs }) => ({
-        newMessages: outputs.reduce((total, output) => total + (output?.newMessages ?? 0), 0),
+        newMessages: outputs.reduce((total, output) => total + output.newMessages, 0),
       })),
     ),
   ),

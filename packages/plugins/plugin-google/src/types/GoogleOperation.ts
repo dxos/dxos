@@ -65,13 +65,7 @@ export const GoogleMailSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotate({
-      description: 'Connection whose credentials sync every bound Mailbox.',
-    }),
-    priority: Schema.String.pipe(
-      Schema.annotate({ description: 'Cursor id of the binding to sync first.' }),
-      Schema.optional,
-    ),
+    ...ConnectorSpec.SyncInput.fields,
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
       Schema.annotate({
@@ -106,13 +100,7 @@ export const GoogleCalendarSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotate({
-      description: 'Connection whose credentials sync every bound Calendar.',
-    }),
-    priority: Schema.String.pipe(
-      Schema.annotate({ description: 'Cursor id of the binding to sync first.' }),
-      Schema.optional,
-    ),
+    ...ConnectorSpec.SyncInput.fields,
     googleCalendarId: Schema.optional(Schema.String),
     syncBackDays: Schema.optional(Schema.Number),
     syncForwardDays: Schema.optional(Schema.Number),
@@ -174,13 +162,7 @@ export const GoogleContactsSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotate({
-      description: 'Connection whose credentials sync every bound contact group.',
-    }),
-    priority: Schema.String.pipe(
-      Schema.annotate({ description: 'Cursor id of the binding to sync first.' }),
-      Schema.optional,
-    ),
+    ...ConnectorSpec.SyncInput.fields,
     pageSize: Schema.optional(Schema.Number),
   }),
   output: Schema.Struct({

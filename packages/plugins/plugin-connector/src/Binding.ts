@@ -241,6 +241,19 @@ export const findTrigger = (connection: Connection.Connection) =>
   });
 
 /**
+ * Finds `connection`'s sync Routine — the owner of its sync trigger. Deleting a connection must take
+ * this Routine with it, or the schedule keeps firing against a connection that is gone.
+ */
+export const findRoutine = (
+  connection: Connection.Connection,
+): Effect.Effect<Routine.Routine | undefined, never, Database.Service> =>
+  Effect.gen(function* () {
+    const trigger = yield* findTrigger(connection);
+    const owner = trigger ? Obj.getParent(trigger) : undefined;
+    return owner && Obj.instanceOf(Routine.Routine, owner) ? owner : undefined;
+  });
+
+/**
  * The sync trigger a Routine owns, read straight off its `triggers` array.
  *
  * Unlike {@link findTrigger} this needs no query, so it sees a Routine the caller just persisted — the
@@ -250,22 +263,6 @@ export const triggerOfRoutine = (routine: Routine.Routine): Trigger.Trigger | un
   routine.triggers
     .map((ref) => ref.target)
     .find((trigger): trigger is Trigger.Trigger => Obj.instanceOf(Trigger.Trigger, trigger) && !!trigger.spec);
-
-/** Enables or disables a connection's sync trigger, reporting whether one was found. */
-export const setTriggerEnabled = (
-  connection: Connection.Connection,
-  enabled: boolean,
-): Effect.Effect<boolean, never, Database.Service> =>
-  Effect.gen(function* () {
-    const trigger = yield* findTrigger(connection);
-    if (!trigger) {
-      return false;
-    }
-    Obj.update(trigger, (trigger) => {
-      trigger.enabled = enabled;
-    });
-    return true;
-  });
 
 /**
  * The space's {@link Trigger.TriggerMonitorService}. The monitor has space affinity, so it is
@@ -294,7 +291,7 @@ export const triggerMonitorLayer = (
  */
 export const fireTrigger = (
   trigger: Trigger.Trigger,
-  data?: Record<string, any>,
+  data?: TriggerEvent.DirectEvent['data'],
 ): Effect.Effect<void, never, Trigger.TriggerMonitorService> =>
   Effect.gen(function* () {
     const monitor = yield* Trigger.TriggerMonitorService;
@@ -373,11 +370,17 @@ const SYNC_CONCURRENCY = 2;
  * event) sorts that binding to the front, so the pressed target grabs a slot immediately while its
  * siblings queue.
  *
- * Continuation: a binding's `Operation.runAgain()` (a capped run with work left) is collected rather
- * than propagated, so one capped binding never starves the rest; after every binding has had its turn
- * it is re-raised once at the operation level — a dispatcher-driven run re-invokes the operation with
- * the same event, and the durable per-binding cursors resume where they left off. HTTP 401s are
- * retagged {@link ConnectionAuthExpiredError} so the failure toast offers reauthentication.
+ * Isolation: every binding's outcome — output, typed failure, or defect — is collected, so one broken
+ * binding neither interrupts a concurrent sibling mid-run (which could tear a feed-append from its
+ * cursor advance) nor starves the queued rest. After every binding has had its turn, the worst outcome
+ * is surfaced once: an auth expiry first (it is actionable), then the first failure, then the first
+ * defect. HTTP 401s — arriving as typed provider failures or as defects — are retagged
+ * {@link ConnectionAuthExpiredError} so the failure toast offers reauthentication.
+ *
+ * Continuation: a binding's `Operation.runAgain()` (a capped run with work left) is likewise collected
+ * and re-raised once at the operation level — a dispatcher-driven run re-invokes the operation with
+ * the same event, and the durable per-binding cursors resume where they left off. A failure outranks
+ * the re-raise; the capped binding's cursor resumes on the next scheduled run regardless.
  *
  * `outputs` collects each binding's result in fan-out order, so an operation with a meaningful output
  * (new-message counts, say) can fold them.
@@ -392,13 +395,18 @@ export const syncAll = <A, E, R>({
   sync: (binding: Cursor.ExternalCursor) => Effect.Effect<A, E, R>;
 }): Effect.Effect<{ synced: number; outputs: A[] }, E | ConnectionAuthExpiredError, Exclude<R, Database.Service>> =>
   Effect.gen(function* () {
-    const connectionTarget = connectionRef.target;
-    const db = connectionTarget ? Obj.getDatabase(connectionTarget) : undefined;
-    if (!db) {
+    // `Database.load` resolves through the ref's own resolver, so a trigger-delivered input whose
+    // target is not yet in the working set still loads; only a ref with no resolver at all cannot.
+    const connection = connectionRef.isAvailable
+      ? yield* Database.load(connectionRef).pipe(
+          Effect.orElseSucceed((): Connection.Connection | undefined => undefined),
+        )
+      : undefined;
+    const db = connection ? Obj.getDatabase(connection) : undefined;
+    if (!connection || !db) {
+      log.warn('sync skipped: connection is not resolvable', { uri: connectionRef.uri });
       return { synced: 0, outputs: [] };
     }
-
-    const connection = yield* Database.load(connectionRef).pipe(Effect.provide(Database.layer(db)), Effect.orDie);
     const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run.pipe(
       Effect.provide(Database.layer(db)),
       Effect.map((results) =>
@@ -416,46 +424,64 @@ export const syncAll = <A, E, R>({
       navigation: 'immediate',
     });
 
-    // Whether any binding requested continuation — re-raised once at the end (see the doc comment).
-    let wantsRerun = false;
+    const retag401 = (cause: unknown): ConnectionAuthExpiredError =>
+      new ConnectionAuthExpiredError({ connectionId: connection.id, action: openConnection, cause });
 
-    const outputs = yield* Effect.all(
+    // Every binding resolves to a tagged outcome so the fan-out never fails or dies mid-flight — one
+    // broken binding must not interrupt a sibling between its feed append and cursor advance. Tagged
+    // (rather than sentinel `undefined`) so a `void`-returning sync's outputs survive collection.
+    type Outcome =
+      | { kind: 'output'; output: A }
+      | { kind: 'rerun' }
+      | { kind: 'failure'; failure: E | ConnectionAuthExpiredError }
+      | { kind: 'defect'; defect: unknown };
+    const outcomes: Outcome[] = yield* Effect.all(
       ordered.map((binding) =>
         syncBinding(binding).pipe(
           // The connection's database, resolved once above: Composer's invoker is wired without a
           // `databaseResolver`, so a per-binding sync would otherwise have no Database service.
           Effect.provide(Database.layer(db)),
-          // `Process.fromOperation` promotes any handler failure to a defect (`Effect.orDie`), so
-          // retagging 401s must intercept the defect channel — `Effect.mapError` never sees it.
+          Effect.map((output): Outcome => ({ kind: 'output', output })),
+          // Provider 401s reach here typed (a handler that `Effect.result`s its API calls re-fails
+          // them) or as defects (a handler whose nested operation invocation `orDie`d them) — retag
+          // on both channels.
+          Effect.catch((error) =>
+            Effect.succeed<Outcome>({ kind: 'failure', failure: isUnauthorizedError(error) ? retag401(error) : error }),
+          ),
           Effect.catchDefect((defect) =>
-            RunAgainError.is(defect)
-              ? Effect.sync((): A | undefined => {
-                  wantsRerun = true;
-                  return undefined;
-                })
-              : isUnauthorizedError(defect)
-                ? Effect.fail(
-                    new ConnectionAuthExpiredError({
-                      connectionId: connection.id,
-                      action: openConnection,
-                      cause: defect,
-                    }),
-                  )
-                : Effect.die(defect),
+            Effect.succeed<Outcome>(
+              RunAgainError.is(defect)
+                ? { kind: 'rerun' }
+                : isUnauthorizedError(defect)
+                  ? { kind: 'failure', failure: retag401(defect) }
+                  : { kind: 'defect', defect },
+            ),
           ),
         ),
       ),
       { concurrency: SYNC_CONCURRENCY },
     );
 
-    if (wantsRerun) {
+    // Auth expiry outranks other failures (it carries the reauthenticate affordance); any failure
+    // outranks a continuation re-raise. Per-binding state (`Cursor.recordError`/`advance`) was already
+    // stamped by the handler, so surfacing one error loses nothing durable.
+    const failures = outcomes.filter((outcome): outcome is Outcome & { kind: 'failure' } => outcome.kind === 'failure');
+    const failure = failures.find((outcome) => outcome.failure instanceof ConnectionAuthExpiredError) ?? failures.at(0);
+    if (failure) {
+      return yield* Effect.fail(failure.failure);
+    }
+    const defect = outcomes.find((outcome): outcome is Outcome & { kind: 'defect' } => outcome.kind === 'defect');
+    if (defect) {
+      return yield* Effect.die(defect.defect);
+    }
+    if (outcomes.some((outcome) => outcome.kind === 'rerun')) {
       // `runAgain` raises a defect; `orDie` collapses its phantom `void` error type.
       return yield* Operation.runAgain().pipe(Effect.orDie);
     }
 
     return {
       synced: cursors.length,
-      outputs: outputs.filter((output): output is A => output !== undefined),
+      outputs: outcomes.flatMap((outcome) => (outcome.kind === 'output' ? [outcome.output] : [])),
     };
   });
 
@@ -576,15 +602,15 @@ export const syncOrOfferRoutine = ({
   );
 
 /**
- * Runs the sync the user asked for when they pressed Sync, now that they have saved the Routine the
- * press offered them.
+ * Runs the sync the user asked for by saving the offered create-routine form — the Sync button's
+ * recreation path and the connect flow's dialog both land here.
  *
  * The trigger comes off the created Routine rather than from a lookup: the reverse-ref index lags the
  * write, so {@link findTrigger} called this early reports the Routine as missing — which is what
  * silently dropped this sync. Nothing re-opens the dialog from here either; a save that somehow
  * produced no trigger logs and stops, rather than looping the user back into the form.
  */
-const syncCreatedRoutine = ({
+export const syncCreatedRoutine = ({
   created,
   connector,
   spaceId,
@@ -654,10 +680,10 @@ export const sync = (
 //
 
 /**
- * Removes a dormant binding and the sync Routine driving it. The Routine owns its trigger, so removing
- * it takes the trigger too; leaving either behind would keep a schedule pointed at a cursor that is
- * gone, and would shadow the target's new Routine (a sync Routine is matched to its target *through*
- * the cursor).
+ * Removes a dormant binding, plus any legacy per-binding sync Routine still pointed at it (an
+ * account-level Routine references the connection, never the cursor, and is removed with the
+ * connection — see {@link findRoutine}). The Routine owns its trigger, so removing it takes the
+ * trigger too.
  */
 export const remove = (cursor: Cursor.ExternalCursor): Effect.Effect<void, never, Database.Service> =>
   Effect.gen(function* () {

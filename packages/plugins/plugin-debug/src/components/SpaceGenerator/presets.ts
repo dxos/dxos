@@ -137,9 +137,11 @@ export const generator = () => ({
           (cursor): cursor is Cursor.ExternalCursor => Cursor.isExternal(cursor) && Binding.targets(cursor, mailbox),
         );
         invariant(binding, 'Mailbox has no sync binding');
-        const connection = await space.db
-          .query(Filter.type(Connection.Connection, { accessToken: binding.spec.source }))
-          .first();
+        // Matched by entity id (`Binding.isForConnection`), not by ref-prop equality — a raw filter
+        // compares `echo:` URI spellings, which vary for one object and can never-match.
+        const connections = await space.db.query(Filter.type(Connection.Connection)).run();
+        const connection = connections.find((candidate) => Binding.isForConnection(binding, candidate));
+        invariant(connection, 'Mailbox binding has no connection');
 
         const objects = range(n, () => {
           const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagUri));

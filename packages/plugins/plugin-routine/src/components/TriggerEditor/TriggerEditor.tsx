@@ -191,8 +191,10 @@ export const applyTriggerValues = (
   }
 
   const spec = triggerFormSpec(values);
-  const enabled = values.enabled === true;
-  const remote = values.remote;
+  // Fall back to the trigger's stored state: a spec-less trigger (`manual`, or cleared) seeds no form
+  // values, so a kind picked afterwards must not silently disable it or strip its EDGE routing.
+  const enabled = values.enabled ?? trigger?.enabled ?? false;
+  const remote = values.remote ?? trigger?.remote;
   // The trigger's `function` and `input` (including the instructions binding and any operation-specific
   // bindings like `{ magazine }`) are wired once by `makeRoutine`, so they are not re-derived here.
   if (trigger) {

@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo, useRef } from 'react';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -82,8 +82,11 @@ export type RoutineFormProps = {
   routine: Routine.Routine;
   /** Render the form for display only (e.g. an enabled routine, locked until disabled). */
   readonly?: boolean;
-  /** Commit the edit session; when set, the form renders a Save/Cancel action row (the companion's create flow). */
-  onSave?: () => void;
+  /**
+   * Commit the edit session; when set, the form renders a Save/Cancel action row (the companion's create
+   * flow). A returned promise keeps the Save button disabled until it settles (double-click guard).
+   */
+  onSave?: () => void | Promise<void>;
   /** Discard the edit session. */
   onCancel?: () => void;
 };
@@ -177,6 +180,11 @@ const RoutineFormImpl = ({
     [db, operations],
   );
 
+  // Preserves authored instructions across an instructions→operation→instructions round-trip within
+  // this mount: switching away clears `spec` (orphaning the owned instructions, unreachable on an
+  // unpersisted draft), so the ref is remembered here and reattached on the way back.
+  const stashedInstructions = useRef<Ref.Ref<Instructions.Instructions> | undefined>(undefined);
+
   // Route each change to the part of the graph it edits: the general fields autosave onto the routine, the
   // action rewires `spec` (and its owned instructions), and the trigger writes the primary trigger's spec.
   const handleValuesChanged = useCallback(
@@ -193,7 +201,11 @@ const RoutineFormImpl = ({
             routine.description = values.description;
           });
         } else if (path === 'action.kind') {
-          applyActionKind(routine, action?.kind ?? 'runnable');
+          const next = action?.kind ?? 'runnable';
+          if (next === 'runnable') {
+            stashedInstructions.current = Routine.instructionsRef(auto) ?? stashedInstructions.current;
+          }
+          applyActionKind(routine, next, stashedInstructions.current);
         } else if (path === 'action.operation') {
           applyActionOperation(routine, action?.operation);
         } else if (path.startsWith('trigger')) {
@@ -201,7 +213,7 @@ const RoutineFormImpl = ({
         }
       }
     },
-    [updateAuto, routine, trigger],
+    [updateAuto, auto, routine, trigger],
   );
 
   // Revert the trigger kind selection: clearing the spec changes the remount key, so the form re-seeds
@@ -311,18 +323,27 @@ const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: 
 /**
  * Switch the action kind. Switching to an operation clears the spec (the operation is chosen via the picker);
  * a previously-owned instructions stays parented to the routine (cascade-deleted with it) but is no longer
- * the action. Switching to instructions seeds an owned instructions action (the executing operation is the
- * implicit RunInstructions). `makeRoutine` establishes the owned-instructions wiring when the routine is
- * scaffolded.
+ * the action. Switching to instructions reattaches `previousInstructions` (the caller's stash from the last
+ * switch away, so authored text survives a round-trip) or seeds a fresh owned instructions action (the
+ * executing operation is the implicit RunInstructions). `makeRoutine` establishes the owned-instructions
+ * wiring when the routine is scaffolded.
  */
-const applyActionKind = (routine: Routine.Routine, next: Routine.Kind): void => {
+const applyActionKind = (
+  routine: Routine.Routine,
+  next: Routine.Kind,
+  previousInstructions?: Ref.Ref<Instructions.Instructions>,
+): void => {
   Obj.update(routine, (routine) => {
     if (next === 'runnable') {
       routine.spec = undefined;
     } else if (routine.spec?.kind !== 'instructions') {
-      const instructions = Instructions.make({});
-      Obj.setParent(instructions, routine);
-      routine.spec = { kind: 'instructions', instructions: Ref.make(instructions) };
+      if (previousInstructions) {
+        routine.spec = { kind: 'instructions', instructions: previousInstructions };
+      } else {
+        const instructions = Instructions.make({});
+        Obj.setParent(instructions, routine);
+        routine.spec = { kind: 'instructions', instructions: Ref.make(instructions) };
+      }
     }
   });
   // Re-wire the owned trigger to dispatch the new action (RunInstructions vs the operation).

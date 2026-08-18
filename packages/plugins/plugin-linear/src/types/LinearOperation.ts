@@ -7,11 +7,11 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { DXN, Ref } from '@dxos/echo';
-import { Connection, Cursor } from '@dxos/link';
-// Referenced only from a JSDoc {@link}, which the rule cannot see; the suppression rode the
-// pre-subpath barrel import too.
+import { DXN } from '@dxos/echo';
+// Referenced in the emitted .d.ts of the operations (via `ConnectorSpec`'s schemas); importing it
+// lets TypeScript name it (TS2883).
 // eslint-disable-next-line unused-imports/no-unused-imports
+import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
@@ -37,7 +37,7 @@ export const GetLinearTeams = Operation.make({
 
 /**
  * Find-or-create the empty local root Project for a Linear team so an
- * external-sync {@link Cursor.Cursor} can be created eagerly. Idempotent: keyed by the
+ * external-sync cursor can be created eagerly. Idempotent: keyed by the
  * team's `LINEAR_SOURCE` foreign id (`remoteTarget.id`), it returns the existing
  * Project when one already carries that key. The team's projects and issues are
  * pulled under it on sync; here we only stamp the foreign key + a display name.
@@ -68,9 +68,9 @@ export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
 
 /**
  * Reconcile Linear data for every team bound to a connection (one external-sync
- * {@link Cursor.Cursor} per team).
+ * external-sync cursor per team).
  *
- * Each binding's `spec.source` is the {@link Connection}'s access token that authenticates the sync;
+ * Each binding's `spec.source` is the connection's access token that authenticates the sync;
  * its `spec.target` is the team's local root Project; its `spec.externalId` is the Linear
  * team UUID. Bidirectional (pull-then-push): upsert the team's projects as
  * Project objects, upsert issues as Tasks (respecting `maxDaysBack` if set),
@@ -85,15 +85,7 @@ export const SyncLinearTeams = Operation.make({
     description: 'Reconcile every bound Linear team — projects and issues.',
     icon: 'ph--arrows-clockwise--regular',
   },
-  input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotate({
-      description: 'Connection whose credentials sync every bound team.',
-    }),
-    priority: Schema.String.pipe(
-      Schema.annotate({ description: 'Cursor id of the binding to sync first.' }),
-      Schema.optional,
-    ),
-  }),
+  input: ConnectorSpec.SyncInput,
   output: Schema.Struct({
     pulled: Schema.Struct({
       teams: Schema.Number,

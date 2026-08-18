@@ -107,7 +107,7 @@ export const reconcileCursors = ({
           externalId: sel.externalId,
         });
         if (adopted) {
-          // `Binding.prepare` restores the schedule; nothing else to wire.
+          // Resumed with its synced range intact; the account routine's fan-out covers it.
           added++;
           continue;
         }

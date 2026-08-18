@@ -18,14 +18,15 @@ import { translations } from '#translations';
 
 import { RoutineForm } from './RoutineForm';
 
-// Exposes the live automation to the play function so it can assert the primary trigger's spec kind.
-const DEBUG_SYMBOL = Symbol.for('dxos.test.routineForm');
+// Exposes the live automation to the play function (module scope is shared with the story render)
+// so it can assert the primary trigger's spec kind.
+let liveAutomation: Routine.Routine | undefined;
 
 const DefaultStory = () => {
   const { space } = useClientStory();
   const [automation] = useQuery(space?.db, Filter.type(Routine.Routine));
-  if (space?.db && automation && typeof window !== 'undefined') {
-    (window as any)[DEBUG_SYMBOL] = { automation };
+  if (space?.db && automation) {
+    liveAutomation = automation;
   }
   if (!space || !automation) {
     return <Loading />;
@@ -67,8 +68,7 @@ export const Empty: Story = {
 // Reads the automation's primary trigger spec kind. `Routine.triggers` is typed `Ref.Ref(Obj.Unknown)`,
 // so the target is narrowed before reading its spec.
 const primaryTriggerKind = (): string | undefined => {
-  const automation = (window as any)[DEBUG_SYMBOL]?.automation as Routine.Routine | undefined;
-  const target = automation?.triggers?.[0]?.target;
+  const target = liveAutomation?.triggers?.[0]?.target;
   return target && Obj.instanceOf(Trigger.Trigger, target) ? target.spec?.kind : undefined;
 };
 

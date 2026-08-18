@@ -51,6 +51,7 @@ export const CreateRoutinePanel = ({
   const templates = templatesProp ?? capabilityTemplates;
   const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
   const [draft, setDraft] = useState<Draft | undefined>();
+  const [scaffoldFailed, setScaffoldFailed] = useState(false);
   const seededTemplateId: string | undefined = initialFormValues?.templateId;
   const subject: Obj.Unknown | undefined = initialFormValues?.subject;
 
@@ -78,11 +79,13 @@ export const CreateRoutinePanel = ({
         const scaffolded = await EffectEx.runPromise(
           template.scaffold({ subject }).pipe(Effect.provideService(Database.Service, Database.makeService(db))),
         );
+        setScaffoldFailed(false);
         setDraft({ templateId, routine: scaffolded });
       } catch (error) {
         // A scaffold that requires context the subject lacks (e.g. a sync binding) fails typed; keep the
-        // picker up rather than crashing the dialog.
+        // picker up — with a visible reason, or the click looks ignored — rather than crashing the dialog.
         log.catch(error);
+        setScaffoldFailed(true);
       }
     },
     [templates, db, subject],
@@ -97,9 +100,11 @@ export const CreateRoutinePanel = ({
     }
   }, [seededTemplateId, handleSelect]);
 
-  const handleSave = useCallback(() => {
+  // Returns the promise so the form's `saving` guard disables Save until creation settles — a
+  // discarded promise would let a double-click create (and sync) the routine twice.
+  const handleSave = useCallback(async () => {
     if (draft) {
-      void onCreateObject({ templateId: draft.templateId, draft: draft.routine });
+      await onCreateObject({ templateId: draft.templateId, draft: draft.routine });
     }
   }, [draft, onCreateObject]);
 
@@ -111,6 +116,15 @@ export const CreateRoutinePanel = ({
 
   return (
     <SearchList.Root onSearch={handleSearch}>
+      {scaffoldFailed && (
+        <p
+          role='alert'
+          className='mb-form-gap text-sm text-error-text'
+          data-testid='create-automation-panel.scaffold-error'
+        >
+          {t('create-panel.scaffold-error.label')}
+        </p>
+      )}
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus

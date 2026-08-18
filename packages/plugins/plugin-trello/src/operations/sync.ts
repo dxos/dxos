@@ -515,8 +515,6 @@ const syncBoardBinding = Effect.fn(function* (bound: Cursor.ExternalCursor) {
     return yield* Effect.fail(new SyncDatabaseMissingError());
   }
 
-  const toastIdSuffix = bound.id;
-
   // Wrap the body in `Effect.result` so we can emit a toast on either path
   // before returning. The toast distinguishes "the sync ran" from "the sync
   // crashed" (e.g. credential parse, fetch boards, no db); the persisted
@@ -590,7 +588,7 @@ const syncBoardBinding = Effect.fn(function* (bound: Cursor.ExternalCursor) {
   if (outcome._tag === 'Success') {
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
+        id: `${meta.profile.key}.sync-success`,
         icon: 'ph--check--regular',
         title: ['sync-toast.success.label', { ns: meta.profile.key }],
       }),
@@ -600,7 +598,7 @@ const syncBoardBinding = Effect.fn(function* (bound: Cursor.ExternalCursor) {
     const message = formatTrelloSyncFailure(outcome.failure);
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
+        id: `${meta.profile.key}.sync-error`,
         icon: 'ph--warning--regular',
         title: ['sync-toast.error.label', { ns: meta.profile.key }],
         description: message,

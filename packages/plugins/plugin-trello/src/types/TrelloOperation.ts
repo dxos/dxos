@@ -7,7 +7,10 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { DXN, Ref } from '@dxos/echo';
+import { DXN } from '@dxos/echo';
+// Referenced in the emitted .d.ts of the operations (via `ConnectorSpec`'s schemas); importing it
+// lets TypeScript name it (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
@@ -69,15 +72,7 @@ export const SyncTrelloBoard = Operation.make({
     description: 'Reconcile cards for every Trello board bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',
   },
-  input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotate({
-      description: 'Connection whose credentials sync every bound board.',
-    }),
-    priority: Schema.String.pipe(
-      Schema.annotate({ description: 'Cursor id of the binding to sync first.' }),
-      Schema.optional,
-    ),
-  }),
+  input: ConnectorSpec.SyncInput,
   output: Schema.Struct({
     pulled: Schema.Struct({
       added: Schema.Number,

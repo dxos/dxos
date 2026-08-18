@@ -66,13 +66,21 @@ export interface MaterializeTargetOutput extends Schema.Schema.Type<typeof Mater
 /**
  * Minimum input for provider {@link ConnectorSync.operation} operations: the account to reconcile.
  * Every connection is potentially multi-target, so a sync operation is account-level — it covers all
- * of the connection's bindings (see `Binding.syncAll` for the shared fan-out).
+ * of the connection's bindings (see `Binding.syncAll` for the shared fan-out). A connector uses this
+ * schema as its sync operation's `input` directly, or spreads `SyncInput.fields` to extend it — so a
+ * change to the contract lands in every connector at once.
  */
-export type SyncInput = {
-  connection: Ref.Ref<Connection.Connection>;
+export const SyncInput = Schema.Struct({
+  connection: Ref.Ref(Connection.Connection).annotate({
+    description: 'Connection whose credentials sync every bound target.',
+  }),
   /** Cursor id of the binding to sync first (pressed-first ordering); unset on scheduled fires. */
-  priority?: string | undefined;
-};
+  priority: Schema.String.pipe(
+    Schema.annotate({ description: 'Cursor id of the binding to sync first.' }),
+    Schema.optional,
+  ),
+});
+export interface SyncInput extends Schema.Schema.Type<typeof SyncInput> {}
 
 /**
  * Result shape for provider sync operations (not consumed by connector UI yet).

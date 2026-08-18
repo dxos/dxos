@@ -42,46 +42,6 @@ const TYPES = [
 
 const REMOTE_CALENDAR_ID = 'primary';
 
-/** Seeds a Calendar bound to a remote Google calendar, mirroring what `MaterializeCalendarTarget` builds. */
-const seedCalendarBinding = async (builder: EchoTestBuilder, { max }: { max?: string } = {}) => {
-  const { db } = await builder.createDatabase({ types: TYPES });
-  const calendar = db.add(
-    Calendar.make({
-      [Obj.Meta]: { keys: [{ source: GOOGLE_INTEGRATION_SOURCE, id: REMOTE_CALENDAR_ID }] },
-      name: 'Test',
-    }),
-  );
-  const accessToken = db.add(AccessToken.make({ source: GOOGLE_INTEGRATION_SOURCE, token: 'token' }));
-  const connection = db.add(
-    Connection.make({ connectorId: GOOGLE_CALENDAR_CONNECTOR_ID, accessToken: Ref.make(accessToken) }),
-  );
-  const binding = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(calendar), max }));
-  await db.flush({ indexes: true });
-  return { db, calendar, connection, binding };
-};
-
-/** Mirrors the handler: fan out over the connection's bindings, folding per-binding event counts. */
-const syncConnection = (connection: Connection.Connection, props: Omit<SyncCalendarProps, 'binding'> = {}) =>
-  Binding.syncAll({
-    connection: Ref.make(connection),
-    sync: (binding) => syncCalendar({ binding: Ref.make(binding), ...props }),
-  }).pipe(
-    Effect.map(({ outputs }) => ({
-      newEvents: outputs.reduce((total, output) => total + (output?.newEvents ?? 0), 0),
-    })),
-  );
-
-/** Reads the events the sync committed to the calendar's feed (same shape as the Gmail suite's helper). */
-const queryFeedEvents = (db: Database.Database, calendar: Calendar.Calendar) =>
-  db.query(Query.select(Filter.type(Event.Event)).from(Scope.feed(Feed.getFeedUri(calendar.feed.target!)!))).run();
-
-const services = (db: Database.Database, dataset: Parameters<typeof GoogleCalendarApi.mock>[0]) =>
-  Layer.mergeAll(
-    GoogleCalendarApi.mock(dataset),
-    Database.layer(db),
-    InboxResolver.Live.pipe(Layer.provide(Database.layer(db))),
-  );
-
 describe('calendar sync against a mock Google Calendar API', () => {
   let builder: EchoTestBuilder;
 
@@ -172,3 +132,43 @@ describe('calendar sync against a mock Google Calendar API', () => {
     expect((await queryFeedEvents(db, calendar)).length).toBe(7);
   });
 });
+
+/** Seeds a Calendar bound to a remote Google calendar, mirroring what `MaterializeCalendarTarget` builds. */
+const seedCalendarBinding = async (builder: EchoTestBuilder, { max }: { max?: string } = {}) => {
+  const { db } = await builder.createDatabase({ types: TYPES });
+  const calendar = db.add(
+    Calendar.make({
+      [Obj.Meta]: { keys: [{ source: GOOGLE_INTEGRATION_SOURCE, id: REMOTE_CALENDAR_ID }] },
+      name: 'Test',
+    }),
+  );
+  const accessToken = db.add(AccessToken.make({ source: GOOGLE_INTEGRATION_SOURCE, token: 'token' }));
+  const connection = db.add(
+    Connection.make({ connectorId: GOOGLE_CALENDAR_CONNECTOR_ID, accessToken: Ref.make(accessToken) }),
+  );
+  const binding = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(calendar), max }));
+  await db.flush({ indexes: true });
+  return { db, calendar, connection, binding };
+};
+
+/** Mirrors the handler: fan out over the connection's bindings, folding per-binding event counts. */
+const syncConnection = (connection: Connection.Connection, props: Omit<SyncCalendarProps, 'binding'> = {}) =>
+  Binding.syncAll({
+    connection: Ref.make(connection),
+    sync: (binding) => syncCalendar({ binding: Ref.make(binding), ...props }),
+  }).pipe(
+    Effect.map(({ outputs }) => ({
+      newEvents: outputs.reduce((total, output) => total + output.newEvents, 0),
+    })),
+  );
+
+/** Reads the events the sync committed to the calendar's feed (same shape as the Gmail suite's helper). */
+const queryFeedEvents = (db: Database.Database, calendar: Calendar.Calendar) =>
+  db.query(Query.select(Filter.type(Event.Event)).from(Scope.feed(Feed.getFeedUri(calendar.feed.target!)!))).run();
+
+const services = (db: Database.Database, dataset: Parameters<typeof GoogleCalendarApi.mock>[0]) =>
+  Layer.mergeAll(
+    GoogleCalendarApi.mock(dataset),
+    Database.layer(db),
+    InboxResolver.Live.pipe(Layer.provide(Database.layer(db))),
+  );

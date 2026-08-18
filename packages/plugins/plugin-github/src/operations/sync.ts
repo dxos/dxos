@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Semaphore from 'effect/Semaphore';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
@@ -19,7 +20,12 @@ import { meta } from '#meta';
 import { GitHubOperation } from '#types';
 
 import { GITHUB_SOURCE } from '../constants';
-import { formatGitHubSyncFailure } from '../errors';
+import {
+  GitHubProjectMissingError,
+  GitHubRepoInaccessibleError,
+  GitHubRepoUnresolvedError,
+  formatGitHubSyncFailure,
+} from '../errors';
 import { GitHubApi } from '../services';
 
 const { mergeField, snapshotField } = ConnectorSync;
@@ -506,11 +512,11 @@ export const pushRepoUpdates: <E, R>(
  * Per-binding sync body run by the account-level fan-out: reconcile the one repo the
  * binding targets, stamping success/failure onto the binding and toasting either way.
  */
-const syncRepoBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
+const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.ExternalCursor) {
   const project = yield* Database.load(binding.spec.target);
   const db = Obj.getDatabase(binding) ?? Obj.getDatabase(project);
   if (!db) {
-    return yield* Effect.die(new Error('Binding must be database-attached (no database derivable).'));
+    return yield* Effect.fail(new SyncDatabaseMissingError());
   }
 
   // The repo's foreign id: prefer the binding's `externalId`, falling back
@@ -518,12 +524,10 @@ const syncRepoBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
   const externalId =
     binding.spec.externalId ?? Obj.getMeta(project).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
 
-  const bindingId = binding.id;
-
   const outcome = yield* Effect.result(
     Effect.gen(function* () {
       if (externalId === undefined) {
-        return yield* Effect.die(new Error('Cursor has no externalId and the target has no GitHub foreign key.'));
+        return yield* Effect.fail(new GitHubRepoUnresolvedError());
       }
 
       // Fetch all repos visible to the token once so the binding can
@@ -535,7 +539,7 @@ const syncRepoBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
       const allRepos = yield* GitHubApi.fetchUserRepos();
       const remoteRepo = allRepos.find((repo) => String(repo.id) === externalId);
       if (!remoteRepo) {
-        return yield* Effect.die(new Error('Repository not accessible to connection token'));
+        return yield* Effect.fail(new GitHubRepoInaccessibleError());
       }
 
       const options = (binding.spec.options ?? undefined) as GitHubOperation.SyncOptions | undefined;
@@ -586,7 +590,7 @@ const syncRepoBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
       // pushes operate on the persisted record.
       const localProject = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, remoteRepo.id);
       if (!localProject) {
-        return yield* Effect.die(new Error('Local Project missing after upsert.'));
+        return yield* Effect.fail(new GitHubProjectMissingError());
       }
 
       let pulledTasks = 0;
@@ -653,7 +657,7 @@ const syncRepoBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
     Cursor.advance(binding);
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.sync-success.${bindingId}`,
+        id: `${meta.profile.key}.sync-success`,
         icon: 'ph--check--regular',
         title: ['sync-toast.success.label', { ns: meta.profile.key }],
       }),
@@ -665,7 +669,7 @@ const syncRepoBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
     log.warn('github sync: binding failed', { error: outcome.failure });
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.sync-error.${bindingId}`,
+        id: `${meta.profile.key}.sync-error`,
         icon: 'ph--warning--regular',
         title: ['sync-toast.error.label', { ns: meta.profile.key }],
         description: message,

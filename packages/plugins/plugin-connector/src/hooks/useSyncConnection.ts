@@ -32,7 +32,7 @@ export type UseSyncConnectionResult = {
 
 /**
  * Trigger a sync for every external-sync cursor authenticated by a {@link Connection}.
- * Delegates to {@link syncConnectionOrOfferRoutine} so the graph-builder actions, the target's sync
+ * Delegates to {@link Binding.syncOrOfferRoutine} so the graph-builder actions, the target's sync
  * button, and this hook share one code path (and one recreation offer).
  */
 export const useSyncConnection = (connection: Connection.Connection | undefined): UseSyncConnectionResult => {

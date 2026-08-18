@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
@@ -20,7 +21,7 @@ import { meta } from '#meta';
 import { LinearOperation } from '#types';
 
 import { LINEAR_SOURCE } from '../constants';
-import { formatLinearSyncFailure } from '../errors';
+import { LinearTeamUnresolvedError, formatLinearSyncFailure } from '../errors';
 import { LinearApi } from '../services';
 
 //
@@ -451,16 +452,14 @@ export const pushTeamUpdates: <E, R>(
 const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
   const db = Obj.getDatabase(binding);
   if (!db) {
-    return yield* Effect.die(new Error('Binding must be database-attached (no database derivable).'));
+    return yield* Effect.fail(new SyncDatabaseMissingError());
   }
-
-  const toastIdSuffix = binding.id;
 
   const outcome = yield* Effect.result(
     Effect.gen(function* () {
       const externalId = binding.spec.externalId;
       if (!externalId) {
-        return yield* Effect.die(new Error('Cursor has no externalId; cannot resolve a Linear team.'));
+        return yield* Effect.fail(new LinearTeamUnresolvedError());
       }
       // `binding.spec.options` is an opaque provider-defined record in the
       // shared contract; this connector owns and validates its shape.
@@ -519,7 +518,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
             // Match by category. Workspaces commonly have multiple states
             // per category (e.g. "In Review" + "In Progress" both
             // `started`); pick the first match for stability.
-            return states.find((s) => s.type === desiredType)?.id;
+            return states.find((state) => state.type === desiredType)?.id;
           };
 
           // Lazy fetch: we only need workflow states if there are candidate
@@ -581,7 +580,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
   if (outcome._tag === 'Success') {
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
+        id: `${meta.profile.key}.sync-success`,
         icon: 'ph--check--regular',
         title: ['sync-toast.success.label', { ns: meta.profile.key }],
       }),
@@ -591,7 +590,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
     const message = formatLinearSyncFailure(outcome.failure);
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
+        id: `${meta.profile.key}.sync-error`,
         icon: 'ph--warning--regular',
         title: ['sync-toast.error.label', { ns: meta.profile.key }],
         description: message,

@@ -129,6 +129,8 @@ const syncContactGroup = (binding: Cursor.ExternalCursor) =>
     const db = Obj.getDatabase(binding);
     const groupResourceName = binding.spec.externalId;
     if (!db || !groupResourceName) {
+      // A misconfigured binding, not an empty group — visible in the log rather than a silent zero.
+      log.warn('contact-group binding skipped', { binding: binding.id, hasDb: !!db, groupResourceName });
       return { upserted: 0 };
     }
     log('syncing google contact group', { groupResourceName });
@@ -185,7 +187,7 @@ const handler = GoogleOperation.GoogleContactsSync.pipe(
         ),
     }).pipe(
       Effect.map(({ outputs }) => ({
-        upserted: outputs.reduce((total, output) => total + (output?.upserted ?? 0), 0),
+        upserted: outputs.reduce((total, output) => total + output.upserted, 0),
       })),
     ),
   ),

@@ -347,19 +347,6 @@ describe('Binding.scaffoldRoutine', () => {
     Expando.Expando,
   ];
 
-  const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
-    const { defaultSpace } = await EffectEx.runAndForwardErrors(
-      initializeIdentity(harness.get(ClientCapabilities.Client)),
-    );
-    await harness.waitForEvent(ClientEvents.SpacesReady);
-    return defaultSpace.db;
-  };
-
-  const makeConnection = (db: Database.Database) => {
-    const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok', account: 'a@b.c' }));
-    return db.add(Obj.make(Connection.Connection, { connectorId: 'example', accessToken: Ref.make(token) }));
-  };
-
   test('wires an account-level trigger to the connector’s sync operation', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
@@ -433,6 +420,21 @@ describe('Binding.scaffoldRoutine', () => {
     const routine = Binding.scaffoldRoutine({ connection, operation: TestSync, spec: SYNC_SPEC });
 
     expect(routine.name).toBe('Sync — work@example.com');
+  });
+
+  test('findRoutine locates the saved routine so deleting the connection takes it too', async ({ expect }) => {
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    const db = await initSpace(harness);
+    const connection = makeConnection(db);
+
+    const routine = Binding.scaffoldRoutine({ connection, operation: TestSync, spec: SYNC_SPEC });
+    const saved = db.add(routine);
+    await db.flush({ indexes: true });
+
+    const found = await EffectEx.runPromise(Binding.findRoutine(connection).pipe(Effect.provide(Database.layer(db))));
+
+    // Reached through the trigger's `input.connection` reverse-ref, then its owner.
+    expect(found?.id).toBe(saved.id);
   });
 });
 
@@ -628,5 +630,18 @@ describe('binding lifecycle', () => {
     expect((await cursors()).length).toBe(2);
   });
 });
+
+const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
+  const { defaultSpace } = await EffectEx.runAndForwardErrors(
+    initializeIdentity(harness.get(ClientCapabilities.Client)),
+  );
+  await harness.waitForEvent(ClientEvents.SpacesReady);
+  return defaultSpace.db;
+};
+
+const makeConnection = (db: Database.Database) => {
+  const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok', account: 'a@b.c' }));
+  return db.add(Obj.make(Connection.Connection, { connectorId: 'example', accessToken: Ref.make(token) }));
+};
 
 const makeTarget = () => Obj.make(Expando.Expando, { name: 'Inbox' });

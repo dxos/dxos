@@ -169,11 +169,9 @@ const navigateToNewConnection = (
     .pipe(Effect.catch((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
 
 /**
- * Offer the recurring sync routine through the seeded create-routine form instead of persisting it
- * silently: the dialog opens directly on the routine form over the sync template's draft, and the
- * first sync runs only once the user saves — it must go through the persisted trigger, since the
- * dispatcher is what drives `Operation.runAgain()` continuation for a capped first sync. Cancelling
- * creates no routine and runs no initial sync (the target's own Sync affordance remains).
+ * Offer the recurring sync routine through the seeded create-routine form, so nothing is persisted
+ * without the user seeing it; saving runs the first sync through the saved trigger (the dispatcher
+ * drives `Operation.runAgain()` continuation for a capped first sync), cancelling runs nothing.
  */
 const openCreateSyncRoutineDialog = (
   invoker: Operation.OperationService,
@@ -190,8 +188,15 @@ const openCreateSyncRoutineDialog = (
       // `subject` may be the connection or a bound target — the template resolves either to the account.
       initialFormValues: { templateId: SyncTemplate.ID, subject },
       navigable: false,
-      onCreateObject: () => {
-        Effect.runFork(autoSyncConnection(invoker, capabilities, db, connector, connection));
+      // The trigger is read off the saved routine — a `findTrigger` lookup here would race the
+      // reverse-ref index — and the user's save is the ask, so `sync.auto` does not gate it.
+      onCreateObject: (created: Obj.Unknown) => {
+        Effect.runFork(
+          Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId }).pipe(
+            Effect.provideService(Capability.Service, capabilities),
+            Effect.catch((error) => Effect.sync(() => log.warn('first sync after routine created failed', { error }))),
+          ),
+        );
       },
     })
     .pipe(Effect.catch((error) => Effect.sync(() => log.warn('open create sync routine dialog failed', { error }))));

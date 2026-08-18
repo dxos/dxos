@@ -27,13 +27,9 @@ export type SingleCursorResult = {
 };
 
 /**
- * Create exactly one binding for a single-target connector (no `getSyncTargets`):
- * bind a supplied `existingTarget` or materialize a fresh local root. Replaces
- * the old `onTokenCreated`-creates-the-target path (e.g. Gmail's Mailbox).
- *
- * The recurring sync routine is NOT created here — the caller surfaces it through the seeded
- * create-routine form so the user sees (and can edit) what is being created, instead of it being
- * persisted silently in the background.
+ * Create exactly one binding for a single-target connector (no `getSyncTargets`): bind a supplied
+ * `existingTarget` or materialize a fresh local root. The sync routine stays with the caller's
+ * create-routine form, so nothing is persisted without the user seeing it.
  */
 export const createSingleCursor = (
   invoker: Operation.OperationService,
@@ -91,8 +87,6 @@ export const createSingleCursor = (
       bound: existingTarget ? 'existing' : 'materialized',
       resumed: adopted !== undefined,
     });
-    // The recurring schedule is not created here — the caller offers it through the create-routine
-    // form so the user sees what is being made.
     const needsSyncRoutine = !!connector.sync?.trigger && !(yield* Binding.findTrigger(connection));
     // Flush the index so a caller that queries cursors right after (e.g. the mailbox/calendar
     // article this navigates to, or the sync template's scaffold) observes the new binding

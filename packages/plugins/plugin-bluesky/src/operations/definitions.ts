@@ -6,11 +6,11 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { DXN, Ref } from '@dxos/echo';
-import { Connection } from '@dxos/link';
-// Unused by name, but the emitted declarations reference it — dropping the import breaks
-// declaration emit (TS2742). The suppression rode the pre-subpath barrel import too.
+import { DXN } from '@dxos/echo';
+// Referenced in the emitted .d.ts of the operations (via `ConnectorSpec`'s schemas); importing it
+// lets TypeScript name it (TS2883).
 // eslint-disable-next-line unused-imports/no-unused-imports
+import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
@@ -73,15 +73,7 @@ export const SyncBlueskyTargets = Operation.make({
   },
   // Handler resolves the Composer `Client` via `Capability.get`.
   services: [Capability.Service],
-  input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotate({
-      description: 'Connection whose credentials sync every bound Bluesky target.',
-    }),
-    priority: Schema.String.pipe(
-      Schema.annotate({ description: 'Cursor id of the binding to sync first.' }),
-      Schema.optional,
-    ),
-  }),
+  input: ConnectorSpec.SyncInput,
   output: Schema.Struct({
     /** Total posts appended across the connection's targets. */
     appended: Schema.Number,

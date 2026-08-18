@@ -216,7 +216,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               Cursor.advance(binding, newestId);
               yield* Effect.ignore(
                 Operation.invoke(LayoutOperation.AddToast, {
-                  id: `${meta.profile.key}.sync-success.${binding.id}`,
+                  id: `${meta.profile.key}.sync-success`,
                   icon: 'ph--check--regular',
                   title: ['sync-toast.success.label', { ns: meta.profile.key }],
                 }),
@@ -227,7 +227,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               Cursor.recordError(binding, message);
               yield* Effect.ignore(
                 Operation.invoke(LayoutOperation.AddToast, {
-                  id: `${meta.profile.key}.sync-error.${binding.id}`,
+                  id: `${meta.profile.key}.sync-error`,
                   icon: 'ph--warning--regular',
                   title: ['sync-toast.error.label', { ns: meta.profile.key }],
                   description: message,

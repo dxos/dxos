@@ -14,7 +14,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
@@ -100,9 +100,19 @@ export default Capability.makeModule(
             actions.push(
               Node.makeAction({
                 id: `${meta.profile.key}.delete-connection.${connection.id}`,
-                // Only the connection: its cursors are left dormant rather than deleted with it, so a
-                // re-connect of the same account resumes instead of re-walking the whole horizon.
-                data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [connection] }),
+                // Cursors are left dormant rather than deleted, so a re-connect of the same account
+                // resumes instead of re-walking the whole horizon; the sync Routine goes with the
+                // connection, or its schedule would keep firing against a connection that is gone.
+                data: () =>
+                  Effect.gen(function* () {
+                    const db = Obj.getDatabase(connection);
+                    const routine = db
+                      ? yield* Binding.findRoutine(connection).pipe(Effect.provide(Database.layer(db)))
+                      : undefined;
+                    yield* Operation.invoke(SpaceOperation.RemoveObjects, {
+                      objects: routine ? [connection, routine] : [connection],
+                    });
+                  }),
                 properties: {
                   label: ['delete-connection.label', { ns: meta.profile.key }],
                   icon: 'ph--trash--regular',

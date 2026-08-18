@@ -2,15 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Aggregate, Filter, Obj, Order, Query, Ref, Relation, Scope } from '@dxos/echo';
+import { Aggregate, Filter, Obj, Order, Query, Ref, Relation, Scope, Type } from '@dxos/echo';
 import { QueryPlanner } from '@dxos/echo-host/query';
 import { TestSchema } from '@dxos/echo/testing';
+import { DXN } from '@dxos/keys';
 
 import { DatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
 import { type WorkingSetDataProvider, WorkingSetQueryExecutor } from './working-set-executor';
+
+/** Ref at a nested path — unreachable by `reference`'s top-level key type; exercises `referenceAt`. */
+class Wrapper extends Type.makeObject<Wrapper>(DXN.make('com.example.type.wrapper', '0.1.0'))(
+  Schema.Struct({
+    spec: Schema.optional(
+      Schema.Struct({
+        source: Schema.optional(Schema.Union([Ref.Ref(TestSchema.Person), Ref.Ref(TestSchema.Task)])),
+      }),
+    ),
+  }),
+) {}
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
@@ -21,7 +34,9 @@ describe('WorkingSetQueryExecutor', () => {
   beforeEach(async () => {
     builder = new EchoTestBuilder();
     await builder.open();
-    const peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task, TestSchema.HasManager] });
+    const peer = await builder.createPeer({
+      types: [TestSchema.Person, TestSchema.Task, TestSchema.HasManager, Wrapper],
+    });
     db = await peer.createDatabase();
   });
 
@@ -124,6 +139,27 @@ describe('WorkingSetQueryExecutor', () => {
     const results = planAndExecute(db, Query.select(Filter.type(TestSchema.Task)).reference('assignee'));
     const ids = results.map((item) => item.objectId);
     expect(ids).toContain(alice.id);
+  });
+
+  test('referenceAt follows a ref at a nested path and filters to the target type', async ({ expect }) => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    const task = Obj.make(TestSchema.Task, { title: 'Task 1' });
+    const personWrapper = Obj.make(Wrapper, { spec: { source: Ref.make(alice) } });
+    const taskWrapper = Obj.make(Wrapper, { spec: { source: Ref.make(task) } });
+    db.add(alice);
+    db.add(task);
+    db.add(personWrapper);
+    db.add(taskWrapper);
+    await db.flush();
+
+    const results = planAndExecute(
+      db,
+      Query.select(Filter.type(Wrapper)).referenceAt('spec.source', TestSchema.Person),
+    );
+    const ids = results.map((item) => item.objectId);
+    // The nested hop resolves, and the target filter drops the ref that reaches a Task.
+    expect(ids).toContain(alice.id);
+    expect(ids).not.toContain(task.id);
   });
 
   test('incoming reference traversal finds referencing objects', async ({ expect }) => {

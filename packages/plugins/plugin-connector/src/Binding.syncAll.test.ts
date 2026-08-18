@@ -30,6 +30,7 @@ import { ConnectorSpec } from '#types';
 
 import * as Binding from './Binding';
 import { autoSyncConnection } from './capabilities/connector-coordinator/auto-sync';
+import { ConnectionAuthExpiredError } from './errors';
 
 describe('Binding.syncAll', () => {
   let builder: EchoTestBuilder;
@@ -51,6 +52,12 @@ describe('Binding.syncAll', () => {
   /** Binding uris whose sync should request `Operation.runAgain()` (a capped run with work left). */
   const runAgainFor = new Set<string>();
 
+  /** Binding uris whose sync should fail on the typed channel, by error. */
+  const failFor = new Map<string, unknown>();
+
+  /** Binding uris whose sync should die (defect channel), by defect. */
+  const dieFor = new Map<string, unknown>();
+
   // Stand-in for a connector's account-level `sync.operation`: its handler wraps the shared
   // fan-out over a per-binding sync, the shape every migrated connector follows.
   const TestSync = Operation.make({
@@ -70,6 +77,12 @@ describe('Binding.syncAll', () => {
             synced.push(uri);
             if (runAgainFor.has(uri)) {
               yield* Operation.runAgain();
+            }
+            if (dieFor.has(uri)) {
+              yield* Effect.die(dieFor.get(uri));
+            }
+            if (failFor.has(uri)) {
+              yield* Effect.fail(failFor.get(uri));
             }
           }),
       }),
@@ -119,6 +132,89 @@ describe('Binding.syncAll', () => {
     // The capped binding never starves its siblings: both were attempted before the re-raise.
     expect(synced).toContain(Ref.make(cursor).uri);
     expect(synced).toContain(Ref.make(second).uri);
+  });
+
+  test('collects every binding before surfacing a failure', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const second = await addCursor(db, token);
+    failFor.set(Ref.make(cursor).uri, { message: 'boom' });
+
+    const outcome = await runFanOut(connection);
+
+    // The broken binding neither interrupts nor starves its sibling — both ran — and the failure is
+    // still reported rather than swallowed.
+    expect(synced).toContain(Ref.make(cursor).uri);
+    expect(synced).toContain(Ref.make(second).uri);
+    expect(outcome._tag).toBe('Failure');
+  });
+
+  test('retags a 401 raised on the typed channel', async ({ expect }) => {
+    const { connection, cursor } = await setup();
+    failFor.set(Ref.make(cursor).uri, { code: 401 });
+
+    const outcome = await runFanOut(connection);
+
+    invariant(outcome._tag === 'Failure');
+    expect(outcome.failure).toBeInstanceOf(ConnectionAuthExpiredError);
+  });
+
+  test('retags a 401 raised as a defect', async ({ expect }) => {
+    const { connection, cursor } = await setup();
+    dieFor.set(Ref.make(cursor).uri, { status: 401 });
+
+    const outcome = await runFanOut(connection);
+
+    invariant(outcome._tag === 'Failure');
+    expect(outcome.failure).toBeInstanceOf(ConnectionAuthExpiredError);
+  });
+
+  test('retags a 401 buried in a wrapper’s cause', async ({ expect }) => {
+    const { connection, cursor } = await setup();
+    // The shape `MailSyncError.wrap()` produces: the provider's 401 is only reachable via `cause`.
+    failFor.set(Ref.make(cursor).uri, { _tag: 'MailSyncError', cause: { code: 401 } });
+
+    const outcome = await runFanOut(connection);
+
+    invariant(outcome._tag === 'Failure');
+    expect(outcome.failure).toBeInstanceOf(ConnectionAuthExpiredError);
+  });
+
+  test('auth expiry outranks a plain failure from another binding', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const second = await addCursor(db, token);
+    failFor.set(Ref.make(cursor).uri, { message: 'boom' });
+    failFor.set(Ref.make(second).uri, { code: 401 });
+
+    const outcome = await runFanOut(connection);
+
+    // The reauthenticate affordance is the actionable one, whichever binding failed first.
+    invariant(outcome._tag === 'Failure');
+    expect(outcome.failure).toBeInstanceOf(ConnectionAuthExpiredError);
+  });
+
+  test('keeps one output per binding for a void-returning sync', async ({ expect }) => {
+    const { db, connection, token } = await setup();
+    await addCursor(db, token);
+
+    const outcome = await runFanOut(connection);
+
+    // `undefined` is a legitimate output, not a sentinel — collection must not drop it.
+    invariant(outcome._tag === 'Success');
+    expect(outcome.success.synced).toBe(2);
+    expect(outcome.success.outputs).toHaveLength(2);
+  });
+
+  test('a failure outranks a sibling’s runAgain', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const second = await addCursor(db, token);
+    runAgainFor.add(Ref.make(cursor).uri);
+    failFor.set(Ref.make(second).uri, { message: 'boom' });
+
+    const outcome = await runFanOut(connection);
+
+    // Reported as a failure (the capped binding resumes on the next scheduled run anyway).
+    invariant(outcome._tag === 'Failure');
+    expect(outcome.failure).not.toBeInstanceOf(ConnectionAuthExpiredError);
   });
 
   test('auto-syncs a new connection when its connector opts in', async ({ expect }) => {
@@ -222,6 +318,8 @@ describe('Binding.syncAll', () => {
     synced.length = 0;
     fired.length = 0;
     runAgainFor.clear();
+    failFor.clear();
+    dieFor.clear();
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([
       Connection.Connection,
@@ -263,6 +361,32 @@ describe('Binding.syncAll', () => {
     await db.flush({ indexes: true });
     return trigger;
   };
+
+  /**
+   * Runs the fan-out directly rather than through the invoker (which `orDie`s handler failures), so a
+   * per-binding typed failure and the retagged error are observable.
+   */
+  const runFanOut = (connection: Connection.Connection, priority?: string) =>
+    EffectEx.runPromise(
+      Binding.syncAll({
+        connection: Ref.make(connection),
+        priority,
+        sync: (binding) =>
+          Effect.gen(function* () {
+            const uri = Ref.make(binding).uri;
+            synced.push(uri);
+            if (runAgainFor.has(uri)) {
+              yield* Operation.runAgain();
+            }
+            if (dieFor.has(uri)) {
+              yield* Effect.die(dieFor.get(uri));
+            }
+            if (failFor.has(uri)) {
+              yield* Effect.fail(failFor.get(uri));
+            }
+          }),
+      }).pipe(Effect.result),
+    );
 
   const invokeSync = (
     connection: Connection.Connection,

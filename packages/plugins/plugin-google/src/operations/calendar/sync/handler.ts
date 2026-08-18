@@ -38,7 +38,7 @@ const handler = GoogleOperation.GoogleCalendarSync.pipe(
         ),
     }).pipe(
       Effect.map(({ outputs }) => ({
-        newEvents: outputs.reduce((total, output) => total + (output?.newEvents ?? 0), 0),
+        newEvents: outputs.reduce((total, output) => total + output.newEvents, 0),
       })),
     ),
   ),

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -25,12 +25,14 @@ import { CreateRoutinePanel } from './CreateRoutinePanel';
 
 const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions];
 
-// Exposes the submitted create payload to the play functions.
-const DEBUG_SYMBOL = Symbol.for('dxos.test.createRoutinePanel');
-
 type SubmittedPayload = { templateId?: string; draft?: unknown };
 
-const submitted = (): SubmittedPayload | undefined => (window as any)[DEBUG_SYMBOL];
+// Exposes the submitted create payload to the play functions — module scope is shared between the
+// story render and its play, so no window global (and no cast) is needed.
+let submittedPayload: SubmittedPayload | undefined;
+
+// Accessor defeats control-flow narrowing from the plays' reset assignment.
+const submitted = (): SubmittedPayload | undefined => submittedPayload;
 
 const DefaultStory = ({ initialFormValues }: { initialFormValues?: Record<string, any> }) => {
   const spaces = useSpaces();
@@ -44,7 +46,7 @@ const DefaultStory = ({ initialFormValues }: { initialFormValues?: Record<string
       target={space.db}
       initialFormValues={initialFormValues}
       onCreateObject={(data) => {
-        (window as any)[DEBUG_SYMBOL] = data;
+        submittedPayload = data;
       }}
     />
   );
@@ -92,7 +94,7 @@ export const Default: Story = {
 export const CreateFromTemplate: Story = {
   decorators: [withRoutinePlugins()],
   play: async ({ canvasElement }) => {
-    delete (window as any)[DEBUG_SYMBOL];
+    submittedPayload = undefined;
     const canvas = within(canvasElement);
 
     // Step 1: the picker lists the Blank template; selecting it scaffolds a draft.
@@ -103,9 +105,9 @@ export const CreateFromTemplate: Story = {
     const save = await canvas.findByTestId('save-button', undefined, { timeout: 10_000 });
     await userEvent.click(save);
 
-    const payload = submitted();
-    await expect(payload?.templateId).toBe(RoutineCapabilities.BlankTemplateId);
-    await expect(Obj.instanceOf(Routine.Routine, payload?.draft)).toBe(true);
+    // The save handler submits asynchronously; retry until the payload lands.
+    await waitFor(() => expect(submitted()?.templateId).toBe(RoutineCapabilities.BlankTemplateId));
+    await expect(Obj.instanceOf(Routine.Routine, submitted()?.draft)).toBe(true);
   },
 };
 
@@ -119,7 +121,7 @@ export const Seeded: Story = {
   },
   decorators: [withRoutinePlugins()],
   play: async ({ canvasElement }) => {
-    delete (window as any)[DEBUG_SYMBOL];
+    submittedPayload = undefined;
     const canvas = within(canvasElement);
 
     // The form (not the picker) is the first thing shown.

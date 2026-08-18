@@ -23,6 +23,8 @@ const SYNC_FAILED_MESSAGE = 'Connection sync could not be run.' as const;
 const SYNC_ROUTINE_MISSING_MESSAGE = 'No sync routine exists for the connection.' as const;
 const ACCOUNT_MISMATCH_MESSAGE = 'Target is already synced from a different account.' as const;
 
+const SYNC_SCAFFOLD_MESSAGE = 'Sync routine could not be scaffolded.' as const;
+
 /**
  * A connector's {@link TestConnection} probe rejected the stored credential or could not reach the
  * service. Its `message` is the user-facing reason shown in the connection UI.
@@ -66,6 +68,13 @@ export class TargetAccountMismatchError extends BaseError.extend(
     super({ context: { targetId: input.targetId, expected: input.expected, actual: input.actual } });
   }
 }
+
+/**
+ * The sync template could not build its routine draft: no subject, a subject with no connection to
+ * sync, or a connector that declares no sync schedule. `message` carries the specific reason; one tag
+ * suffices since every caller (the create-routine picker) handles the cases identically.
+ */
+export class SyncTemplateScaffoldError extends BaseError.extend('SyncTemplateScaffoldError', SYNC_SCAFFOLD_MESSAGE) {}
 
 /** No Connector capability row matches the requested `connectorId`. */
 export class ConnectorNotFoundError extends BaseError.extend('ConnectorNotFoundError', NO_CONNECTOR_MESSAGE) {
@@ -129,9 +138,10 @@ export class ConnectionAuthExpiredError extends BaseError.extend('ConnectionAuth
 /**
  * Detects HTTP 401 across the ad-hoc error shapes providers raise for auth failures: `GoogleApiError`/
  * `JmapApiError`-style `code`/`status` fields (mirrored onto `BaseError.context`), and
- * `@effect/platform`'s `ResponseError`.
+ * `@effect/platform`'s `ResponseError`. Walks the `cause` chain (bounded), since wrappers like
+ * `MailSyncError.wrap` bury the provider error one level down without copying its fields.
  */
-export const isUnauthorizedError = (error: unknown): boolean => {
+export const isUnauthorizedError = (error: unknown, depth: number = 4): boolean => {
   if (!Predicate.isObject(error)) {
     return false;
   }
@@ -141,5 +151,8 @@ export const isUnauthorizedError = (error: unknown): boolean => {
   if (Predicate.isObject(error.context) && (error.context.code === 401 || error.context.status === 401)) {
     return true;
   }
-  return error._tag === 'ResponseError' && Predicate.isObject(error.response) && error.response.status === 401;
+  if (error._tag === 'ResponseError' && Predicate.isObject(error.response) && error.response.status === 401) {
+    return true;
+  }
+  return depth > 0 && isUnauthorizedError(error.cause, depth - 1);
 };

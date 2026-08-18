@@ -69,16 +69,7 @@ export const SyncDiscordChannel = Operation.make({
     description: 'Reconcile messages for every Discord channel bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',
   },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection).annotate({
-      description: 'Connection whose credentials sync every bound Channel.',
-    }),
-    priority: Schema.String.pipe(
-      Schema.annotate({ description: 'Cursor id of the binding to sync first.' }),
-      Schema.optional,
-    ),
-  }),
+  input: ConnectorSpec.SyncInput,
   output: Schema.Struct({
     pulled: Schema.Struct({
       added: Schema.Number,

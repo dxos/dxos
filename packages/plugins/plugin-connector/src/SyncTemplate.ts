@@ -14,6 +14,7 @@ import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilit
 import { ConnectorSpec } from '#types';
 
 import * as Binding from './Binding';
+import { SyncTemplateScaffoldError } from './errors';
 
 /**
  * Id of the connector sync template. Declared here so the coordinator can seed the create-routine
@@ -42,12 +43,12 @@ export const make = (capabilities: CapabilityManager.CapabilityManager): Routine
   scaffold: ({ name, subject }) =>
     Effect.gen(function* () {
       if (!subject) {
-        return yield* Effect.fail(new Error('Sync template requires a subject.'));
+        return yield* Effect.fail(new SyncTemplateScaffoldError({ message: 'Sync template requires a subject.' }));
       }
 
       const connection = yield* resolveConnection(subject);
       if (!connection) {
-        return yield* Effect.fail(new Error('Subject has no connection to sync.'));
+        return yield* Effect.fail(new SyncTemplateScaffoldError({ message: 'Subject has no connection to sync.' }));
       }
 
       const connector = capabilities
@@ -56,7 +57,7 @@ export const make = (capabilities: CapabilityManager.CapabilityManager): Routine
         .find((entry) => entry.id === connection.connectorId);
       const sync = connector?.sync;
       if (!sync?.trigger) {
-        return yield* Effect.fail(new Error('Connector declares no sync schedule.'));
+        return yield* Effect.fail(new SyncTemplateScaffoldError({ message: 'Connector declares no sync schedule.' }));
       }
 
       return Binding.scaffoldRoutine({
