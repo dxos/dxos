@@ -101,8 +101,8 @@ export const PromptToolbar = ({ classNames, message }: MessageToolbarProps) => {
           onClick={() => onRewind(message.id)}
         />
       )}
-      <MessageId message={message} />
       <Time message={message} />
+      <MessageId message={message} />
     </div>
   );
 };
@@ -114,8 +114,8 @@ export const AssistantToolbar = ({ classNames, message }: MessageToolbarProps) =
   return (
     <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-description', classNames)}>
       <CopyButton message={message} />
-      <MessageId message={message} />
       <Time message={message} />
+      <MessageId message={message} />
     </div>
   );
 };
