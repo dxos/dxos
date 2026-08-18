@@ -142,6 +142,10 @@ export type CompileOptions = {
   origin?: Scene.Point;
   /** Canvas px per scene unit. */
   scale?: number;
+  /** Gap between ranks along the flow direction, in scene units (default 60). */
+  gapMain?: number;
+  /** Gap between nodes within a rank, in scene units (default 40). */
+  gapCross?: number;
 };
 
 /**
@@ -150,7 +154,7 @@ export type CompileOptions = {
  */
 export const compile = (source: string, options: CompileOptions = {}): Scene.Command[] => {
   const graph = parse(source);
-  const { origin = { x: 0, y: 0 }, scale = 1 } = options;
+  const { origin = { x: 0, y: 0 }, scale = 1, gapMain = GAP_MAIN, gapCross = GAP_CROSS } = options;
   const ranks = rank(graph);
   const horizontal = graph.direction === 'LR' || graph.direction === 'RL';
 
@@ -164,11 +168,11 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
 
   const positions = new Map<string, Scene.Point>();
   for (const [lane, members] of lanes) {
-    const span = members.length * NODE_W + (members.length - 1) * GAP_CROSS;
-    const offset = (widest * NODE_W + (widest - 1) * GAP_CROSS - span) / 2;
+    const span = members.length * NODE_W + (members.length - 1) * gapCross;
+    const offset = (widest * NODE_W + (widest - 1) * gapCross - span) / 2;
     members.forEach((node, index) => {
-      const cross = offset + index * (NODE_W + GAP_CROSS);
-      const main = lane * (NODE_H + GAP_MAIN);
+      const cross = offset + index * (NODE_W + gapCross);
+      const main = lane * (NODE_H + gapMain);
       positions.set(node.id, horizontal ? { x: main, y: cross } : { x: cross, y: main });
     });
   }

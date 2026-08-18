@@ -106,6 +106,19 @@ describe('mermaid', () => {
     }
   });
 
+  test('gap options spread the layout', ({ expect }) => {
+    const compact = objectsOf(compile(FLOWCHART));
+    const spread = objectsOf(compile(FLOWCHART, { gapMain: 200, gapCross: 120 }));
+    const origin = (objects: Scene.WorldObject[], id: string) => objects.find((object) => object.id === id)!.origin!;
+
+    expect(origin(spread, 'A').y - origin(spread, 'X').y).toBeGreaterThan(
+      origin(compact, 'A').y - origin(compact, 'X').y,
+    );
+    expect(Math.abs(origin(spread, 'C').x - origin(spread, 'B').x)).toBeGreaterThan(
+      Math.abs(origin(compact, 'C').x - origin(compact, 'B').x),
+    );
+  });
+
   test('ignores comments and tolerates unknown syntax', ({ expect }) => {
     const graph = parse(['flowchart LR', '%% a comment', 'A[A]', 'A --> B', 'click A callback'].join('\n'));
 

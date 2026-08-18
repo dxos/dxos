@@ -134,19 +134,60 @@ describe('uml', () => {
     expect(y('Dog')).toBeLessThan(y('Bone'));
   });
 
-  test('binds arrows to class title compartments with UML styling', ({ expect }) => {
+  test('binds arrows to the compartments facing the peer, with UML styling', ({ expect }) => {
     const edges = objectsOf(compile(CLASS_DIAGRAM)).find((object) => object.id === 'edges')!;
     const arrows = edges.elements as Scene.Arrow[];
 
     expect(arrows.every((arrow) => arrow.kind === 'arrow')).toBe(true);
-    const inheritance = arrows.find((arrow) => arrow.from === 'Dog/title' && arrow.to === 'Animal/title')!;
+    // Dog sits below Animal: the arrow leaves Dog's top compartment and meets Animal's bottom
+    // one, so the visible segment stays in the rank gap instead of crossing Animal's members.
+    const inheritance = arrows.find((arrow) => arrow.from === 'Dog/title' && arrow.to === 'Animal/methods')!;
     expect(inheritance.stroke).toBeUndefined();
-    const realization = arrows.find((arrow) => arrow.to === 'Serializable/title')!;
+    const realization = arrows.find((arrow) => arrow.to === 'Serializable/methods')!;
     expect(realization.stroke).toBe('dashed');
     const aggregation = arrows.find((arrow) => arrow.from === 'Owner/title')!;
+    expect(aggregation.to).toBe('Dog/title');
     expect(aggregation.text).toBe('1 owns *');
+    // Memberless classes below Dog bind to their only compartment; Dog faces them with its last.
     const composition = arrows.find((arrow) => arrow.to === 'Leg/title')!;
+    expect(composition.from).toBe('Dog/methods');
     expect(composition.text).toBe('◆');
+  });
+
+  test('wraps long member lines into taller compartments, capped at maxWidth', ({ expect }) => {
+    const diagram = (member: string) => ['classDiagram', 'class A {', `  +${member}`, '}'].join('\n');
+    const short = objectsOf(compile(diagram('id() string')))[0];
+    const long = objectsOf(
+      compile(diagram('reallyQuiteLongMethodName(withSomeArguments, andMoreArguments, andEvenMore) ReturnType')),
+    )[0];
+
+    const shortMethods = short.elements.find((element) => element.id === 'methods') as Scene.Box;
+    const longMethods = long.elements.find((element) => element.id === 'methods') as Scene.Box;
+    expect(longMethods.w).toBeLessThanOrEqual(400);
+    expect(longMethods.h).toBeGreaterThan(shortMethods.h);
+
+    // A tighter maxWidth narrows the box and wraps into even more lines.
+    const narrow = objectsOf(
+      compile(diagram('reallyQuiteLongMethodName(withSomeArguments, andMoreArguments, andEvenMore) ReturnType'), {
+        maxWidth: 240,
+      }),
+    )[0];
+    const narrowMethods = narrow.elements.find((element) => element.id === 'methods') as Scene.Box;
+    expect(narrowMethods.w).toBeLessThanOrEqual(240);
+    expect(narrowMethods.h).toBeGreaterThan(longMethods.h);
+  });
+
+  test('gap options spread the layout', ({ expect }) => {
+    const compact = objectsOf(compile(CLASS_DIAGRAM));
+    const spread = objectsOf(compile(CLASS_DIAGRAM, { gapMain: 200, gapCross: 150 }));
+    const origin = (objects: Scene.WorldObject[], id: string) => objects.find((object) => object.id === id)!.origin!;
+
+    expect(origin(spread, 'Dog').y - origin(spread, 'Animal').y).toBeGreaterThan(
+      origin(compact, 'Dog').y - origin(compact, 'Animal').y,
+    );
+    expect(Math.abs(origin(spread, 'Serializable').x - origin(spread, 'Animal').x)).toBeGreaterThan(
+      Math.abs(origin(compact, 'Serializable').x - origin(compact, 'Animal').x),
+    );
   });
 
   test('ignores comments and tolerates unknown syntax', ({ expect }) => {

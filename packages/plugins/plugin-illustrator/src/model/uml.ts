@@ -176,17 +176,15 @@ export const parse = (source: string): UmlModel => {
 };
 
 /**
- * Layout constants in scene units, calibrated to tldraw's font metrics: `weight` maps to tldraw
- * `size`, where the title's default (m) runs ~25px and the members' (s) ~18px per line.
+ * Box geometry in scene units; text sizes come from the shared per-weight metrics table
+ * (`Layout.FONT_METRICS`): the title renders at the default weight (m), members at s.
  */
+const TITLE_FONT = Layout.FONT_METRICS.m;
+const MEMBER_FONT = Layout.FONT_METRICS.s;
 const MIN_W = 160;
 const MAX_W = 400;
-const TITLE_CHAR_W = 15;
-const MEMBER_CHAR_W = 12;
 const PAD_X = 24;
-const TITLE_H = 44;
-const STEREOTYPE_H = 32;
-const LINE_H = 26;
+const TITLE_PAD = 10;
 const SECTION_PAD = 14;
 const GAP_MAIN = 90;
 const GAP_CROSS = 60;
@@ -200,14 +198,23 @@ type ClassBox = {
   methodsH: number;
 };
 
-/** Compartment sizes derived from member counts and the longest line, per compartment font. */
-const measure = (entry: UmlClass): ClassBox => {
-  const titleW = Math.max(entry.label.length, (entry.stereotype?.length ?? 0) + 2) * TITLE_CHAR_W;
-  const memberW = Math.max(0, ...[...entry.attributes, ...entry.methods].map((line) => line.length)) * MEMBER_CHAR_W;
-  const w = Math.min(MAX_W, Math.max(MIN_W, Math.ceil(Math.max(titleW, memberW)) + PAD_X));
-  const titleH = TITLE_H + (entry.stereotype ? STEREOTYPE_H : 0);
-  const attributesH = entry.attributes.length ? entry.attributes.length * LINE_H + SECTION_PAD : 0;
-  const methodsH = entry.methods.length ? entry.methods.length * LINE_H + SECTION_PAD : 0;
+/** Compartment sizes derived from member counts and line lengths, per compartment font. */
+const measure = (entry: UmlClass, maxWidth: number): ClassBox => {
+  const titleW = Math.max(entry.label.length, (entry.stereotype?.length ?? 0) + 2) * TITLE_FONT.charW;
+  const memberW =
+    Math.max(0, ...[...entry.attributes, ...entry.methods].map((line) => line.length)) * MEMBER_FONT.charW;
+  const w = Math.min(maxWidth, Math.max(MIN_W, Math.ceil(Math.max(titleW, memberW)) + PAD_X));
+  // Lines wider than the clamped box wrap in the renderer; count the extra lines so the
+  // compartment is tall enough and tldraw does not grow it over the one below.
+  const lines = (text: string, font: Layout.FontMetrics) =>
+    Math.max(1, Math.ceil((text.length * font.charW) / (w - PAD_X)));
+  const memberH = (members: string[]) =>
+    members.length
+      ? members.reduce((sum, line) => sum + lines(line, MEMBER_FONT), 0) * MEMBER_FONT.lineH + SECTION_PAD
+      : 0;
+  const titleH = (lines(entry.label, TITLE_FONT) + (entry.stereotype ? 1 : 0)) * TITLE_FONT.lineH + TITLE_PAD;
+  const attributesH = memberH(entry.attributes);
+  const methodsH = memberH(entry.methods);
   return { entry, w, h: titleH + attributesH + methodsH, titleH, attributesH, methodsH };
 };
 
@@ -227,6 +234,12 @@ export type CompileOptions = {
   origin?: Scene.Point;
   /** Canvas px per scene unit. */
   scale?: number;
+  /** Gap between ranks along the flow direction, in scene units (default 90). */
+  gapMain?: number;
+  /** Gap between classes within a rank, in scene units (default 60). */
+  gapCross?: number;
+  /** Maximum class-box width, in scene units (default 400); longer lines wrap. */
+  maxWidth?: number;
 };
 
 /**
@@ -236,7 +249,7 @@ export type CompileOptions = {
  */
 export const compile = (source: string, options: CompileOptions = {}): Scene.Command[] => {
   const model = parse(source);
-  const { origin = { x: 0, y: 0 }, scale = 1 } = options;
+  const { origin = { x: 0, y: 0 }, scale = 1, gapMain = GAP_MAIN, gapCross = GAP_CROSS, maxWidth = MAX_W } = options;
   const horizontal = model.direction === 'LR' || model.direction === 'RL';
 
   // Rank flows supertype → subtype for inheritance/realization, source → target otherwise.
@@ -249,7 +262,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
     ),
   );
 
-  const boxes = new Map(model.classes.map((entry) => [entry.id, measure(entry)]));
+  const boxes = new Map(model.classes.map((entry) => [entry.id, measure(entry, maxWidth)]));
 
   // Group classes by rank, preserving declaration order within each lane.
   const lanes = new Map<number, ClassBox[]>();
@@ -261,7 +274,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
   const cross = (box: ClassBox) => (horizontal ? box.h : box.w);
   const main = (box: ClassBox) => (horizontal ? box.w : box.h);
   const laneSpan = (members: ClassBox[]) =>
-    members.reduce((sum, box) => sum + cross(box), 0) + (members.length - 1) * GAP_CROSS;
+    members.reduce((sum, box) => sum + cross(box), 0) + (members.length - 1) * gapCross;
   const widest = Math.max(...[...lanes.values()].map(laneSpan), 0);
 
   // Lanes advance along the main axis by their tallest member; members center on the widest lane.
@@ -272,10 +285,30 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
     let crossOffset = (widest - laneSpan(members)) / 2;
     for (const box of members) {
       positions.set(box.entry.id, horizontal ? { x: mainOffset, y: crossOffset } : { x: crossOffset, y: mainOffset });
-      crossOffset += cross(box) + GAP_CROSS;
+      crossOffset += cross(box) + gapCross;
     }
-    mainOffset += Math.max(...members.map(main)) + GAP_MAIN;
+    mainOffset += Math.max(...members.map(main)) + gapMain;
   }
+
+  // Arrow terminals clip at the bound compartment, so each endpoint binds to the compartment
+  // nearest the peer's center — the arrow meets the box's outer edge instead of crossing the
+  // compartments between that edge and the title, and mid-arrow labels land in the rank gap.
+  const facing = (id: string, peerId: string): string => {
+    const box = boxes.get(id)!;
+    const peer = boxes.get(peerId)!;
+    const targetY = positions.get(peerId)!.y + peer.h / 2;
+    const baseY = positions.get(id)!.y;
+    const compartments: [elementId: string, centerY: number][] = [['title', box.titleH / 2]];
+    if (box.attributesH) {
+      compartments.push(['attributes', box.titleH + box.attributesH / 2]);
+    }
+    if (box.methodsH) {
+      compartments.push(['methods', box.titleH + box.attributesH + box.methodsH / 2]);
+    }
+    return compartments.reduce((best, candidate) =>
+      Math.abs(baseY + candidate[1] - targetY) < Math.abs(baseY + best[1] - targetY) ? candidate : best,
+    )[0];
+  };
 
   const commands: Scene.Command[] = [];
 
@@ -333,8 +366,8 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
           return {
             kind: 'arrow' as const,
             id: `${relation.from}-${relation.to}-${index}`,
-            from: `${relation.from}/title`,
-            to: `${relation.to}/title`,
+            from: `${relation.from}/${facing(relation.from, relation.to)}`,
+            to: `${relation.to}/${facing(relation.to, relation.from)}`,
             ...relationStyle(relation.kind),
             ...(text ? { text } : {}),
           };
