@@ -7,10 +7,9 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Filter, Query, Scope, Type } from '@dxos/echo';
+import { Annotation, Filter, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
-import { createAnnotationHelper } from '@dxos/echo/internal';
 import { type URI } from '@dxos/keys';
 
 export const TypeInputOptions = Schema.Struct({
@@ -24,7 +23,11 @@ export type TypeInputOptions = Schema.Schema.Type<typeof TypeInputOptions>;
  * Used in forms to identify the field representing an object's type and determine which types are shown as options.
  */
 export const TypeInputOptionsAnnotationId = '@dxos/schema/annotation/TypeInputOptions';
-export const TypeInputOptionsAnnotation = createAnnotationHelper<TypeInputOptions>(TypeInputOptionsAnnotationId);
+export const TypeInputOptionsAnnotation = Annotation.make({
+  id: TypeInputOptionsAnnotationId,
+  schema: TypeInputOptions,
+  legacyId: true,
+});
 
 /**
  * Discovers all types — persisted in the space (database) and code-shipped in the registry (runtime).
