@@ -19,7 +19,7 @@ import * as InboxOperation from '../../types/InboxOperation';
 import * as Mailbox from '../../types/Mailbox';
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: InboxOperationHandlerSet,
+  operationHandlers: InboxOperationHandlerSet.handlers,
   types: [
     Cursor.Cursor,
     Feed.Feed,

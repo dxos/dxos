@@ -9,8 +9,8 @@ import type * as Project from '@dxos/compute/Project';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
+import * as FeedCursor from '@dxos/plugin-inbox/FeedCursor';
 import type * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { findOrCreateFeedCursor } from '@dxos/plugin-inbox/operations';
 import { Message } from '@dxos/types';
 
 import { ProjectOperation } from '#types';
@@ -43,7 +43,7 @@ const PROJECT_TASKS_CURSOR_KEY_ID = 'projectTasks';
 export const syncProjectTasks = (project: Project.Project, mailbox: Mailbox.Mailbox, senders: readonly string[]) =>
   Effect.gen(function* () {
     const feed = yield* Database.load(mailbox.feed);
-    const cursor = yield* findOrCreateFeedCursor(mailbox, PROJECT_TASKS_CURSOR_KEY_ID, project);
+    const cursor = yield* FeedCursor.findOrCreateFeedCursor(mailbox, PROJECT_TASKS_CURSOR_KEY_ID, project);
     const cursorKey = Cursor.parseKey(cursor.max);
 
     const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;

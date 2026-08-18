@@ -4,7 +4,7 @@
 
 import React, { type ReactNode, createContext, useContext, useEffect, useState } from 'react';
 
-import { IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Flex, IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -136,20 +136,18 @@ const formatRelative = (iso: string): string => {
 
 const PullRow = ({ pull }: { pull: GithubPullRequest }) => (
   <li>
-    <a
-      href={pull.html_url}
-      target='_blank'
-      rel='noopener noreferrer'
-      className='flex items-start gap-2 px-2 py-1 rounded-sm hover:bg-hover-surface'
-    >
-      <img src={pull.user.avatar_url} alt='' className='w-6 h-6 rounded-full shrink-0 mt-0.5' />
-      <div className='flex flex-col min-w-0 flex-1'>
-        <span className='text-sm truncate'>{pull.title}</span>
-        <span className='text-xs text-description truncate'>
-          #{pull.number} · {pull.user.login} · {pull.merged_at ? formatRelative(pull.merged_at) : ''}
-        </span>
-      </div>
-    </a>
+    <Flex asChild align='start' gap='sm' classNames='px-trim-sm py-trim-xs rounded-sm hover:bg-hover-surface'>
+      <a href={pull.html_url} target='_blank' rel='noopener noreferrer'>
+        <img src={pull.user.avatar_url} alt='' className='size-6 rounded-full shrink-0' />
+        <Flex column classNames='min-w-0 flex-1'>
+          {/* `leading-6` gives the title the avatar's line box, so the two align on their own. */}
+          <span className='text-sm leading-6 truncate'>{pull.title}</span>
+          <span className='text-xs text-description truncate'>
+            #{pull.number} · {pull.user.login} · {pull.merged_at ? formatRelative(pull.merged_at) : ''}
+          </span>
+        </Flex>
+      </a>
+    </Flex>
   </li>
 );
 

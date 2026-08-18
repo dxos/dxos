@@ -7,7 +7,7 @@ import { userEvent, within } from 'storybook/test';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Ref } from '@dxos/echo';
-import { AssistantSkill } from '@dxos/plugin-assistant';
+import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import { DrawingSkill } from '@dxos/plugin-illustrator';
 import { type Space } from '@dxos/react-client/echo';
 import { Cell } from '@dxos/storybook-testing';

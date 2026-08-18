@@ -5,7 +5,7 @@
 import React, { useCallback, useSyncExternalStore } from 'react';
 
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import { IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Flex, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Logger, type LogRow } from '@dxos/react-ui-debug';
 import { Form } from '@dxos/react-ui-form';
 
@@ -59,7 +59,7 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
       description={t('settings.debug-port.section.description')}
     >
       <Form.Row label={t('settings.debug-port.label')} description={t('settings.debug-port.description')}>
-        <div className='flex items-center gap-3'>
+        <Flex gap='md' align='center'>
           {status.running && (
             <span className='text-sm text-description'>
               {t('settings.debug-port.running.label')} <span className='font-mono'>{status.origin}</span>
@@ -68,7 +68,7 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
           <Input.Root>
             <Input.Switch checked={status.running} disabled={disabled} onCheckedChange={handleToggle} />
           </Input.Root>
-        </div>
+        </Flex>
       </Form.Row>
 
       {status.running && (
@@ -78,7 +78,7 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
             label={t('settings.debug-port.session.label')}
             description={t('settings.debug-port.session.description')}
           >
-            <div className='flex items-center gap-2'>
+            <Flex gap='sm' align='center'>
               <span className='grow truncate font-mono text-sm'>{status.session}</span>
               <IconButton
                 icon='ph--copy--regular'
@@ -86,7 +86,7 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
                 label={t('settings.debug-port.copy-session.label')}
                 onClick={handleCopy}
               />
-            </div>
+            </Flex>
           </Form.Row>
 
           {/* The settings variant puts the control in a right-hand column; log rows need the full
