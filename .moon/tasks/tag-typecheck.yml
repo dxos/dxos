@@ -1,8 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   build:
-    # `tsc` is the native TypeScript 7 compiler; `tsc6` is the classic JS one, kept as an escape hatch.
-    command: sh -c 'if [ "${DX_USE_TSC6}" = "1" ]; then pnpm exec tsc6 --noEmit; else pnpm exec tsc --noEmit; fi'
+    command: pnpm exec tsc --noEmit
     deps:
       - ^:build
     inputs:
