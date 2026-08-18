@@ -19,21 +19,27 @@ afterEach(() => {
 
 describe('channelVariant', () => {
   test('production ships the released mark', ({ expect }) => {
-    expect(channelVariant('production')).toBeUndefined();
+    expect(channelVariant('build', 'production')).toBeUndefined();
   });
 
   test('an unset environment is a local build, not a channel', ({ expect }) => {
-    expect(channelVariant('')).toBeUndefined();
-    expect(channelVariant(undefined)).toBeUndefined();
+    expect(channelVariant('build', '')).toBeUndefined();
+    expect(channelVariant('build', undefined)).toBeUndefined();
   });
 
   test('nightly is the one that runs beside production, so it gets its own mark', ({ expect }) => {
-    expect(channelVariant('nightly')).toEqual('purple');
+    expect(channelVariant('build', 'nightly')).toEqual('purple');
   });
 
   test('every other channel shares the rust mark', ({ expect }) => {
-    expect(channelVariant('dev')).toEqual('rust');
-    expect(channelVariant('staging')).toEqual('rust');
+    expect(channelVariant('build', 'dev')).toEqual('rust');
+    expect(channelVariant('build', 'staging')).toEqual('rust');
+  });
+
+  // Only a deployed bundle is branded, so `DX_ENVIRONMENT` in a shell does not repaint localhost.
+  test('a dev server keeps the released mark whatever the environment says', ({ expect }) => {
+    expect(channelVariant('serve', 'nightly')).toBeUndefined();
+    expect(channelVariant('serve', 'dev')).toBeUndefined();
   });
 });
 
