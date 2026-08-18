@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
+import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -90,5 +91,43 @@ export const Default: Story = {
 export const Empty: Story = {
   args: {
     markers: [],
+  },
+};
+
+/**
+ * A click does not leave a position asserted behind it.
+ *
+ * Clicking a tick focuses it, and the card was gated on focus — so the reader clicked, moved away,
+ * and a keyboard position they never asked for kept it up. What may assert a position is the pointer
+ * being over a tick, or the keyboard having *navigated* to one; focus is neither, and a click
+ * confers focus as a side effect.
+ *
+ * What this does **not** cover is the pointer actually leaving, because React synthesises enter and
+ * leave from over/out pairs and three attempts to drive that from dispatched events did not reach
+ * the handler — the state was still set afterwards whether or not the component was right. Asserting
+ * it here would be asserting the probe. It needs a real pointer; see `chat-ui/TASKS.md`.
+ */
+export const Dismissal: Story = {
+  args: { markers: defaultMarkers },
+  play: async ({ canvasElement }) => {
+    const rail = canvasElement.querySelector<HTMLElement>('[role="navigation"]')!;
+    const tick = rail.querySelectorAll('button')[3] as HTMLElement;
+    const settle = async () => {
+      for (let frame = 0; frame < 20; frame++) {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+    };
+
+    // Focused explicitly as well as clicked: a dispatched `click()` does not move focus, and focus
+    // is the thing whose side effect this is about.
+    tick.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    tick.focus();
+    tick.click();
+    await settle();
+
+    await expect({
+      focused: canvasElement.ownerDocument.activeElement === tick,
+      navigated: rail.dataset.navigated,
+    }).toEqual({ focused: true, navigated: '' });
   },
 };

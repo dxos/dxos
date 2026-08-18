@@ -275,10 +275,21 @@ Found while building the replacement placement layer (`DESIGN.md` §Principles).
       it settles is what a reader dragging a scrollbar does, and the property that matters is that
       the end is reachable and that it stops moving. Mutation-checked: disabling measurement fails
       both.
-- [ ] **Keyboard navigation from the outline rail is wrong.** Reported from use; the popover
-      dismissal half is fixed (pointer hover and keyboard position are now separate state, so leaving
-      with the mouse clears the card instead of the keyboard position putting it straight back). The
-      stepping itself is still unconfirmed — reproduce by hand.
+- [ ] **The outline's card may still not dismiss when the pointer leaves.** Reported from use, and
+      **not reproducible in a test**: React synthesises pointer enter and leave from over/out pairs,
+      and three ways of driving that from dispatched events — enter, out with a related target, and
+      both halves of the transition — never reached the handler, so the state read the same whether
+      the component was right or wrong. Clearing was tried on the rail (`onPointerLeave`), on the
+      rail as `onPointerOut` with a containment check, and on the tick itself; all three are
+      indistinguishable under a synthetic pointer. **Needs a real pointer to settle**, and the rail
+      now publishes `data-pointer` / `data-navigated` so that whoever does it can see which of the
+      two is holding the card open.
+- [x] **A click left a position asserted behind it.** Clicking a tick focuses it, and the card was
+      gated on focus, so the reader clicked, moved away, and a keyboard position they never asked for
+      kept it up. The gate is now "the keyboard has navigated", which a click is not. Covered by
+      `Outline/Dismissal`.
+- [ ] **Outline arrow stepping is unconfirmed.** It calls the host's `onNavigate` and the index does
+      change (`placement/Chrome` asserts it), but nobody has watched it end to end.
 - [ ] **The popover anchoring fix is unverified.** Anchoring to the hovered row and keying the
       content is principled, but the probe that "showed" the old drift was faulty — React synthesises
       `pointerenter` from `pointerover`/`pointerout` pairs, so dispatching enter alone never moved the

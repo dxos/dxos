@@ -179,6 +179,7 @@ export const Outline = ({
       // thinned, and so are not one-to-one with anything the reader is counting.
       if (onNavigate) {
         event.preventDefault();
+        setKeyboard(true);
         onNavigate(delta);
         return;
       }
@@ -204,17 +205,20 @@ export const Outline = ({
   // arrow press the popover would otherwise describe the tick the pointer last touched rather than
   // the place the reader is now. Derived from the visible range, so it tracks the list however the
   // reader moved: the arrows, the toolbar, or the scrollbar.
-  const [focused, setFocused] = useState(false);
+  // Not "has focus" — "is being driven by the keyboard". A click focuses a tick too, and gating on
+  // focus left the card up after the pointer had gone: the reader clicked, moved away, and the
+  // keyboard position they never asked for kept it open.
+  const [keyboard, setKeyboard] = useState(false);
   const visibleFrom = visibleRange?.from;
   useEffect(() => {
-    if (!focused || visibleFrom == null) {
+    if (!keyboard || visibleFrom == null) {
       setNavigated(null);
       return;
     }
 
     const index = rows.findIndex((row) => visibleFrom < row.span.to);
     setNavigated(index < 0 ? rows.length - 1 : index);
-  }, [focused, visibleFrom, rows]);
+  }, [keyboard, visibleFrom, rows]);
 
   const hoveredMarker = shown == null ? undefined : rows[shown]?.marker;
 
@@ -227,11 +231,16 @@ export const Outline = ({
           width: `${width}px`,
           height: bounded ? '100%' : `${natural}px`,
         }}
-        onPointerLeave={() => setPointer(null)}
-        onFocusCapture={() => setFocused(true)}
+        // Published so a test can ask *why* a card is up — the pointer being over a tick, or the
+        // keyboard having navigated to one — rather than only that it is (§12).
+        data-pointer={pointer ?? ''}
+        data-navigated={navigated ?? ''}
+        // A pointer anywhere in the rail ends the keyboard's claim on what is shown: the reader has
+        // gone back to pointing, and the two should not both assert a position.
+        onPointerDown={() => setKeyboard(false)}
         onBlurCapture={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-            setFocused(false);
+            setKeyboard(false);
           }
         }}
         onKeyDown={handleKeyDown}
@@ -267,7 +276,12 @@ export const Outline = ({
                 rowsRef.current[index] = element;
               }}
               onPointerEnter={() => setPointer(index)}
-              onFocus={() => setNavigated(index)}
+              // Cleared on the tick that set it, rather than on the rail. A rail-level leave is
+              // synthesised from over/out pairs and was observed not firing at all — the card
+              // stayed up after the pointer had gone, in the browser and in a test. Moving between
+              // ticks does not flicker: the leave and the next enter land in one batch.
+              onPointerLeave={() => setPointer((current) => (current === index ? null : current))}
+              onFocus={() => keyboard && setNavigated(index)}
               onClick={() => onSelect?.(marker, row.index)}
             >
               <div
