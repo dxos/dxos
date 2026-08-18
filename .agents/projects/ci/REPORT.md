@@ -245,6 +245,36 @@ Two results worth keeping, since they cut against the recommendation:
   derivable as `production/<installation-model-id>/<github-repository-id>/bazel` — but that
   borrows Bazel's identity, and the endpoint is undocumented.
 
+## Depot re-measured after their blob-batching fix (2026-08-18)
+
+Depot support (Pedro) reported the root cause independently: moon requests hundreds of blobs at
+once, Depot was fetching them from its own backend one at a time, so the small per-blob delay
+compounded — the same mechanism as "Why Depot is slow" above. They shipped a fix and asked for a
+retest.
+
+Method: same harness, `.moon/workspace.yml` temporarily repointed at the pre-#12494 Depot config
+(`grpcs://cache.depot.dev`, `DEPOT_TOKEN`), 5 reps of `:build` on commit `83bfa75fad`, moon 2.4.5.
+Rep 1 was the config-switch cold build (0 hits, expected — excluded below); reps 2–5 hit
+328–329/329 and are the comparison.
+
+| metric            |    Depot, before |     Depot, retest | self-hosted (current) |
+| ------------------ | ----------------: | -----------------: | ---------------------: |
+| wall median        |            338.0 s |             51.8 s |                 29.9 s |
+| hydration median   |          1,100.1 s |            207.9 s |                109.2 s |
+| per-task p50       |            2,027 ms |              389 ms |                  173 ms |
+| wall CV             |               4.7% |                3.3% |                       — |
+| dropped-batch fails |          1 of 5 reps |          0 of 5 reps |                       — |
+
+**Depot is 6.5× faster on wall clock and 5.2× faster per-task than before the fix**, and the
+per-task collapse (2,027 ms → 389 ms) is the signature of the sequential-round-trip mechanism
+being fixed rather than a general speedup. No dropped-blob-batch failures in this run, against 1
+of 5 previously — too small a sample to call reliability fixed, but consistent with it.
+
+**Self-hosted is still faster** — 1.7× on wall clock, 2.25× per-task — but the margin dropped from
+an order of magnitude to a real-but-modest gap. This changes the shape of the "cancel the Depot
+subscription" call in [`TASKS.md`](./TASKS.md): the original decision rested on an 11× gap, not a
+1.7× one.
+
 ## Limits
 
 - **Everything above "In CI" is from one dev machine**, and only the CI section is not. The
