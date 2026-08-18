@@ -117,3 +117,23 @@ export const AssistantPastEnd: Story = {
   args: { scenario: 'assistant', count: 200, scrollPastEnd: true },
   play: playTail(200),
 };
+
+/**
+ * The rung the reader actually opened: an editor per row, contents of different lengths.
+ *
+ * `plain` and `uniform` are estimates that happen to be right, and `assistant` is 200 rows rather
+ * than 500. This is the one where the estimate is wrong for nearly every row *and* the document is
+ * long.
+ *
+ * Its `scrollPastEnd` twin is **not** here, and deliberately. It fails, and what it fails on is not
+ * fixable in this engine: the reserved space is a DOM spacer, so it is in the element's
+ * `scrollHeight` and not in the virtualizer's total, and an offset inside it is beyond the
+ * virtualizer's own maximum — `scrollToOffset` then silently declines to move (verified: the element
+ * stayed exactly where it was). The feed opens at the document's end with its last message near the
+ * top of an empty screen. Two coordinate systems for one document is the defect the placement layer
+ * exists to remove, so the requirement is stated where it can be met: `bridge/VariedPastEnd`.
+ */
+export const Varied: Story = {
+  args: { scenario: 'thread', count: 500 },
+  play: playTail(500),
+};

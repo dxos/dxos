@@ -41,6 +41,15 @@ export type MessageWindowProps = {
   gutter?: 'sm' | 'md' | 'lg';
   /** Keep the last message against the bottom as content arrives — a chat's standing intent. */
   sticky?: boolean;
+  /**
+   * Empty extent after the last row, so it can be brought to the top of the viewport.
+   *
+   * A number, computed by the host from its own container. Not a `scrollPastEnd` mode: with the
+   * window placed rather than the rows, the reserve is a term in the sizer and nothing else in the
+   * engine knows about it (§7) — which is what the old engine could not say, since its reserve was
+   * a DOM spacer outside the virtualizer's coordinate space.
+   */
+  reserve?: number;
   onChange?: (state: WindowState) => void;
   controllerRef?: React.Ref<WindowController>;
 };
@@ -55,6 +64,7 @@ export const MessageWindow = ({
   estimateSize = 120,
   gutter,
   sticky,
+  reserve,
   onChange,
   controllerRef,
 }: MessageWindowProps) => {
@@ -83,6 +93,7 @@ export const MessageWindow = ({
       getId={getId}
       extents={extents}
       sticky={sticky}
+      reserve={reserve}
       onChange={onChange}
       controllerRef={controllerRef}
     >

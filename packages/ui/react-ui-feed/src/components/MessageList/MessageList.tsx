@@ -157,12 +157,19 @@ export type MessageListRootProps = PropsWithChildren<{
    * fault is the list; if it does not, the fault is in what the item is building.
    */
   Custom?: ComponentType<{ content: ItemContent & { kind: 'custom' }; message: Message.Message }>;
-  /** Message currently streaming; its item reconciles by delta rather than remounting. */
+  /**
+   * Message currently streaming; its item reconciles by delta rather than remounting.
+   */
   streamingId?: string;
-  /** Message ids selected as a set (list-shaped gesture, distinct from text selection). */
+  /**
+   * Message ids selected as a set (list-shaped gesture, distinct from text selection).
+   */
   selectedIds?: ReadonlySet<string>;
   onSelectedIdsChange?: (ids: ReadonlySet<string>) => void;
-  /** Search hits from the model; the list routes them to the items that own them. */
+  /**
+   * Search hits from the model; the list routes them to the items that own them.
+   */
+  // TODO(burdon): Why is this part of the API?
   hits?: readonly SearchHit[];
   /**
    * Which messages the arrow keys and the navigation controls step between.
