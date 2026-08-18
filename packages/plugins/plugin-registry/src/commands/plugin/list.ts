@@ -10,8 +10,8 @@ import * as Options from 'effect/unstable/cli/Flag';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { CommandConfig, printList } from '@dxos/cli-util';
 
-import { getLoadFailure } from '../../install';
 import { loadPlugins } from '../../storage';
+import { getLoadFailure } from '../../util';
 import { type FormattedPlugin, getPluginStatus, printPlugin } from './util';
 
 export const handler = Effect.fn(function* ({ enabled: enabledOnly }: { enabled: boolean }) {

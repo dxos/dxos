@@ -159,6 +159,11 @@ describe('plugin add <url>', () => {
           const row = findFixture(home);
           expect(row?.source).toBe('url');
           expect(row?.version).toBe('1.2.3');
+          // A snapshot lives outside any node_modules tree, so it only loads because the shared
+          // scope serves its `@dxos/*` imports from the host. Without that it resolves a published
+          // copy out of bun's install cache and fails.
+          expect(row?.failure).toBeUndefined();
+          expect(row?.status).toBe('enabled');
         });
       });
     },

@@ -91,9 +91,10 @@ reads as though disabling does not exist. DESIGN §2.3.
       registered plugin; threaded through `createCliApp`. `dx` now pins only client, registry,
       space and process-manager, so observability, connector and routine became disableable. 3 unit
       tests.
-- [x] **Real default set** (2026-08-15, PR #12606) — `getDefaults({ isLabs })` replaces the fixed
-      4-element list; chess and sample moved behind `DX_LABS` (new `DXEnv.LABS`), so a fresh
-      `dx --help` lists work verbs rather than a chess game.
+- [x] **Real default set** (2026-08-15, PR #12606) — the default set became an editorial choice:
+      chess and sample are installed but off, so a fresh `dx --help` lists work verbs rather than a
+      chess game. A `DX_LABS` env gate was tried and dropped (user, 2026-08-17) — the CLI does not
+      need a labs channel; `dx plugin enable` is the way to turn a demo on.
 - [x] **Persistence fix found on the way** (2026-08-15, PR #12606) — `loadEnabledPlugins` returned
       `[]` both for "no file" and "empty list", and `bin.ts` read `length > 0 ? saved : defaults`,
       so disabling every optional plugin silently restored the defaults on the next command. It now
@@ -102,17 +103,13 @@ reads as though disabling does not exist. DESIGN §2.3.
 
 ### Plugin loading
 
-- [~] **Shared scope at startup** (2026-08-15, PR #12606) — implemented as a `Bun.plugin`
-  `onResolve` hook over `DEFAULT_PACKAGES`, read from the new `@dxos/app-framework/SharedPackages`
-  export so the CLI and the Vite plugin share one list. Two corrections to DESIGN §2.1's plan
-  fell out of building it: (1) `build.module` registers **exact specifiers**, which cannot cover
-  the subpaths that are nearly every real import (`@dxos/app-framework/Plugin`), so `onResolve`
-  with a filter is the mechanism; (2) a factory that imports its own specifier **recurses into
-  the hook** and hangs every `dx` command, not just plugin loading — resolution has to hand back
-  a path, never an import. Gated on there being an installed plugin. **NOT yet effective for a
-  copied install**: bun auto-installs an unresolvable bare specifier from its own cache before
-  the hook is consulted, so a plugin under `plugins/<id>/` still loads its own `@dxos/*` copy
-  (repro below). Linked installs resolve correctly because they sit inside a node_modules tree.
+- [x] **Shared scope at startup** (2026-08-17, PR #12606) — `Bun.plugin`'s `build.module` over
+      `DEFAULT_PACKAGES` and their enumerated subpaths, read from the new
+      `@dxos/app-framework/SharedPackages` export so the CLI and the Vite plugin share one list.
+      **A URL-installed plugin now loads**, which it did not before: bun auto-installs an
+      unresolvable bare specifier from its own cache, and `build.module` takes precedence over
+      that. An `onResolve` filter was tried first and measured to receive **zero** invocations —
+      bun's runtime loader never consults it. Details and numbers in DESIGN §2.1.
 - [x] **`dx plugin add` / `remove`** (2026-08-15, PR #12606) — `add <url>` fetches the manifest and
       snapshots the assets under `plugins/<id>/` via a staging directory (a half-downloaded install
       the loader would later import is worse than none); `add --dev <path>` reads a directory in

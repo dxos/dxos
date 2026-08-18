@@ -43,21 +43,17 @@ export const getCore = (): string[] => [
 /**
  * Plugins enabled on a profile that has never been configured. Everything here is disableable;
  * `getCore` is added on top by the manager.
+ *
+ * Chess and Sample are deliberately absent: they are demos, and a fresh `dx --help` should list
+ * work verbs rather than a chess game. `dx plugin enable` turns them on.
  */
-export const getDefaults = ({ isLabs }: PluginConfig = {}): string[] =>
-  [
-    ConnectorPlugin.meta.profile.key,
-    InboxPlugin.meta.profile.key,
-    MarkdownPlugin.meta.profile.key,
-    ObservabilityPlugin.meta.profile.key,
-    RoutinePlugin.meta.profile.key,
-
-    // Demos. Off by default so a fresh `dx --help` lists work verbs rather than a chess game;
-    // both plugins say as much in their own tags (`alpha`, `labs`).
-    isLabs && [ChessPlugin.meta.profile.key, SamplePlugin.meta.profile.key],
-  ]
-    .flat()
-    .filter((key): key is string => typeof key === 'string');
+export const getDefaults = (): string[] => [
+  ConnectorPlugin.meta.profile.key,
+  InboxPlugin.meta.profile.key,
+  MarkdownPlugin.meta.profile.key,
+  ObservabilityPlugin.meta.profile.key,
+  RoutinePlugin.meta.profile.key,
+];
 
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
   return [

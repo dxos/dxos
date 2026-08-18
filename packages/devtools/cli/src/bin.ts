@@ -17,7 +17,7 @@ import * as Command from 'effect/unstable/cli/Command';
 import { createCliApp } from '@dxos/app-framework/cli';
 import { unrefTimeout } from '@dxos/async';
 import { ConfigService, DXOS_VERSION } from '@dxos/client';
-import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
+import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { isRecordEnabled, loadPlugins, makeInstalledPlugins } from '@dxos/plugin-registry';
 
@@ -81,11 +81,10 @@ const program = Effect.gen(function* () {
   const configPath = readRootFlag('config', 'c');
   const config = yield* ConfigService.load({ config: Option.fromNullishOr(configPath), profile });
 
-  const isLabs = DXEnv.get(DXEnv.LABS) === 'true';
   // `undefined` means the profile has never been configured; an empty array means the user
   // turned everything optional off, which must not be re-seeded with the defaults.
   const records = yield* loadPlugins({ profile });
-  const enabled = records?.filter(isRecordEnabled).map((record) => record.id) ?? getDefaults({ isLabs });
+  const enabled = records?.filter(isRecordEnabled).map((record) => record.id) ?? getDefaults();
   // Third-party installs register as lazy stubs built from the metadata cached at install time, so
   // a `dx` invocation imports a plugin's code only once something enables it.
   const installed = makeInstalledPlugins(records ?? []);

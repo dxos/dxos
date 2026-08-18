@@ -11,8 +11,8 @@ import * as Options from 'effect/unstable/cli/Flag';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { CommandConfig } from '@dxos/cli-util';
 
-import { PluginInstallError, downloadAssets, resolveLocator } from '../../install';
 import { type PluginRecord, loadPlugins, savePlugins } from '../../storage';
+import { PluginInstallError, downloadAssets, resolveLocator } from '../../util';
 
 export const handler = Effect.fn(function* ({
   locator,

@@ -32,8 +32,8 @@ type PluginRow = {
   failure?: string;
 };
 
-const listPlugins = (home: string, env?: Record<string, string>): PluginRow[] => {
-  const { stdout, stderr, status } = runDx(['--json', 'plugin', 'list'], { home, env });
+const listPlugins = (home: string): PluginRow[] => {
+  const { stdout, stderr, status } = runDx(['--json', 'plugin', 'list'], { home });
   if (status !== 0) {
     // eslint-disable-next-line no-console
     console.error('stdout:', stdout, '\nstderr:', stderr);
@@ -102,11 +102,14 @@ describe('plugin list', () => {
   );
 
   test(
-    'DX_LABS enables the demo plugins',
+    'the demo plugins are installed but off',
     ({ expect }) => {
       withIsolatedHome((home) => {
-        expect(listPlugins(home).find((row) => row.id === SAMPLE)?.enabled).toBe(false);
-        expect(listPlugins(home, { DX_LABS: 'true' }).find((row) => row.id === SAMPLE)?.enabled).toBe(true);
+        // The clearest instance of the two axes being independent: shipped with the binary, not
+        // contributing until someone asks for it.
+        const sample = listPlugins(home).find((row) => row.id === SAMPLE);
+        expect(sample?.installed).toBe(true);
+        expect(sample?.enabled).toBe(false);
       });
     },
     TIMEOUT,

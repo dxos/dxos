@@ -88,23 +88,27 @@ Measured on bun 1.3.11, in a compiled single-file executable (the shape `dx` shi
 So bun's runtime module registry is the node-side analogue of the browser's import map, and
 `DEFAULT_PACKAGES` stays the one contract both hosts honor.
 
-**Three corrections from building it** (2026-08-15, from source rather than a compiled binary):
+**Corrections from building it** (2026-08-15/17, measured from source rather than a compiled binary):
 
-1. `build.module` registers **exact specifiers**. Nearly every real import is a subpath —
-   `@dxos/app-framework/Plugin`, never the barrel — so a bare-specifier registry leaves the
-   imports that matter resolving to the plugin's own copy. `Bun.plugin`'s `onResolve` with a filter
-   covers a package and all its subpaths, and is what the CLI now uses.
-2. A factory that imports its own specifier **recurses into the hook**. `build.module` intercepts
-   every import of that specifier, the host's included, so the naive
-   `build.module(spec, () => import(spec))` hung the CLI before it ran any command — not just
-   plugin loading. The hook must return a resolved path and never import.
-3. **Bun auto-install wins the race for a copied plugin.** A plugin under `plugins/<id>/` has no
-   `node_modules` above it, and bun resolves its bare `@dxos/*` imports out of its own install
-   cache before the hook is consulted — so the copy loads a _published_ `@dxos/app-framework` that
-   then fails on its own `effect/Context` import. A linked install resolves correctly because it
-   sits inside a node_modules tree. Closing this is the remaining blocker for URL installs, and it
-   is the point where the compiled-binary measurement in this section needs redoing: the auto-install
-   path may not exist in a standalone executable, which would make the same hook sufficient there.
+1. `build.module` registers **exact specifiers**, and nearly every real import is a subpath —
+   `@dxos/app-framework/Plugin`, never the barrel. The subpaths have to be enumerated: resolve the
+   bare specifier, walk up to the package root, and read its `exports` keys (most packages do not
+   export `./package.json`, so it cannot be resolved directly). 116 declared packages yield 231
+   registrable specifiers in ~7 ms; 88 are absent from the CLI (React and friends, deliberately)
+   and 20 wildcard export keys cannot be enumerated statically.
+2. A factory that imports **its own specifier** recurses into the registry: `build.module`
+   intercepts every import of that specifier, the host's included, so the naive
+   `build.module(spec, () => import(spec))` hung the CLI before it ran any command. Resolve to a
+   file URL first and import that.
+3. **`onResolve` is not an option.** It looked like the natural fit — one filter covering a package
+   and all its subpaths, no enumeration — but bun's runtime ESM loader never consults it. Measured:
+   zero hook invocations, both for a plugin outside the tree _and_ for one inside it that loads
+   successfully. It is a bundler hook. `build.module` is the only runtime mechanism.
+4. **Bun auto-install would otherwise win.** A plugin under `plugins/<id>/` has no `node_modules`
+   above it, so bun resolves its bare `@dxos/*` imports out of its own install cache — loading a
+   _published_ `@dxos/app-framework` that then fails on its own `effect/Context` import.
+   `build.module` takes precedence over that, which is what makes a snapshot install loadable at
+   all.
 
 ### 2.2 What the CLI needs
 
@@ -233,8 +237,8 @@ The whole of plugin management, at Composer parity — not just the `add` verb. 
   leaves the plugin inert is a papercut — `code --install-extension` and `npm install` both do the
   working thing — and `--no-enable` is precisely the "fetch it, let me look at it before it runs"
   flow that §2.3's import boundary makes meaningful.
-- **A real default set, and a CLI-owned core set.** `getDefaults()` becomes config-driven the way
-  composer-app's is (it already receives `isDev` / `isLabs` / `isStrict` and ignores them), and the
+- **A real default set, and a CLI-owned core set.** `getDefaults()` becomes a deliberate choice
+  about which extra `dx` verbs a fresh profile has rather than a copied list, and the
   core set moves from each plugin's `system` tag to something `createCliApp` supplies, so the CLI
   can decide that a plugin Composer pins is merely default-enabled here. That last part is an
   app-framework change, not a CLI one: `ManagerOptions` exposes no `core` field, so the manager
