@@ -3,12 +3,15 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
+import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Message } from '@dxos/types';
 
 import { type FeedScenario, MessageWindow, createScenario } from '../../testing';
+import { type WindowController } from './Window';
 
 /**
  * Real messages, placed by the new module.
@@ -23,17 +26,50 @@ import { type FeedScenario, MessageWindow, createScenario } from '../../testing'
  * cursor as well as the virtualizer, so swapping the placement inside it is a reimplementation. This
  * is what that reimplementation will be checked against.
  */
-const Story = ({ scenario, count }: { scenario: FeedScenario; count: number }) => {
+const Story = ({ scenario, count, sticky }: { scenario: FeedScenario; count: number; sticky?: boolean }) => {
   const definition = useMemo(() => createScenario({ scenario, count }), [scenario, count]);
+  const [extra, setExtra] = useState<Message.Message[]>([]);
+  const controller = useRef<WindowController>(null);
+  const messages = useMemo(() => [...definition.messages, ...extra], [definition.messages, extra]);
 
   return (
-    <MessageWindow
-      messages={definition.messages}
-      renderer={definition.renderer}
-      Chrome={definition.Chrome}
-      Custom={definition.Custom}
-      estimateSize={definition.estimateSize}
-    />
+    <div className='flex flex-col h-full'>
+      <Toolbar.Root>
+        <IconButton
+          icon='ph--plus--regular'
+          iconOnly
+          label='Append'
+          data-testid='bridge.append'
+          onClick={() =>
+            setExtra((all) => [
+              ...all,
+              Message.make({
+                sender: { role: 'assistant', name: 'Assistant' },
+                blocks: [{ _tag: 'text', text: `Arrived ${all.length}` }],
+              }),
+            ])
+          }
+        />
+        <IconButton
+          icon='ph--arrow-line-down--regular'
+          iconOnly
+          label='Bottom'
+          data-testid='bridge.bottom'
+          onClick={() => controller.current?.scrollToIndex(messages.length - 1, 'end')}
+        />
+      </Toolbar.Root>
+      <div className='grow min-h-0'>
+        <MessageWindow
+          messages={messages}
+          renderer={definition.renderer}
+          Chrome={definition.Chrome}
+          Custom={definition.Custom}
+          estimateSize={definition.estimateSize}
+          sticky={sticky}
+          controllerRef={controller}
+        />
+      </div>
+    </div>
   );
 };
 
@@ -120,3 +156,40 @@ export const Uniform: StoryObject = holdsStill('uniform', 200);
 
 /** A chat's shape: per-message renderers, block widgets, a per-message estimate. */
 export const Assistant: StoryObject = holdsStill('assistant', 200);
+
+/**
+ * A chat's tail: the last message rests on the bottom, and stays there as answers arrive.
+ *
+ * **Failing, and left failing deliberately** — it states a requirement the swap has to meet. The
+ * scroller reports no scrollable extent at all in this story (`scrollHeight === clientHeight`, no
+ * last row mounted) while the three above it, which share the same component and differ only in
+ * `sticky`, are fine. So the fault is in how sticky interacts with the first layout, not in the tail
+ * arithmetic. See `chat-ui/TASKS.md`.
+ *
+ * The invariant `baseline/tail` holds the current engine to, pointed at the new one. Read from the
+ * last row's own bottom edge rather than the scroll offset: an offset can be at the document's end
+ * while the last message is nowhere near the screen, which is what both of that story's defects
+ * looked like from outside.
+ */
+export const Tail: StoryObject = {
+  args: { scenario: 'assistant', count: 200, sticky: true },
+  play: async ({ canvasElement }) => {
+    await settle();
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="window.scroller"]')!;
+    const rests = (count: number) => {
+      const last = canvasElement.querySelector<HTMLElement>(`[data-index="${count - 1}"]`);
+      return !!last && Math.abs(last.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom) <= 2;
+    };
+
+    (canvasElement.querySelector('[data-testid="bridge.bottom"]') as HTMLElement).click();
+    await settle();
+    const arrived = rests(200);
+
+    // An answer arrives while the reader is at the tail.
+    (canvasElement.querySelector('[data-testid="bridge.append"]') as HTMLElement).click();
+    await settle();
+    const followed = rests(201);
+
+    await expect({ arrived, followed }).toEqual({ arrived: true, followed: true });
+  },
+};

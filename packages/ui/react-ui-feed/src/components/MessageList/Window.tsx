@@ -188,6 +188,8 @@ export const Window = ({
   placement.setExtents(extents);
   placement.setReserve(reserve);
 
+  const { first, last, visible, offset, sizerExtent } = placement.layout();
+
   // Whether the reader was at the end *before* the model changed. Read from the element, since that
   // is what they were looking at, and remembered because by the time new rows exist it is too late
   // to ask.
@@ -204,16 +206,21 @@ export const Window = ({
   }, [axis, reserve]);
 
   useLayoutEffect(() => {
-    if (!sticky || !wasAtEnd.current || !count) {
+    const scroller = scrollerRef.current;
+    if (!sticky || !wasAtEnd.current || !count || !scroller) {
       wasAtEnd.current = atEnd();
       return;
     }
 
     // Following is a navigation, not a correction: the content the reader is pinned to has moved, so
     // the scroll has to as well. What corrections must never do is touch it (§7).
-    const scroller = scrollerRef.current;
+    //
+    // Written only when it is actually off, and never followed by an invalidate: the write raises a
+    // scroll event, which re-renders, which changes the extent this effect watches. Invalidating
+    // here as well is a loop, and React says so.
     placement.jumpTo(count - 1, 'end');
-    if (scroller) {
+    const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
+    if (Math.abs(current - placement.scroll) > 1) {
       if (axis === 'block') {
         scroller.scrollTop = placement.scroll;
       } else {
@@ -221,9 +228,10 @@ export const Window = ({
       }
     }
 
-    invalidate();
     wasAtEnd.current = true;
-  }, [sticky, count, placement, axis, atEnd, invalidate]);
+    // Keyed on the document's extent as well as the count: measuring the rows a scroll reveals moves
+    // the end, so a tail pinned once drifts off it as the estimates are replaced.
+  }, [sticky, count, sizerExtent, placement, axis, atEnd]);
 
   const main = axis === 'block' ? 'height' : 'width';
 
@@ -299,7 +307,6 @@ export const Window = ({
     }
   });
 
-  const { first, last, visible, offset, sizerExtent } = placement.layout();
   const announced = useRef<string>('');
   const state = `${visible.first}:${visible.last}:${first}:${last}:${count}`;
   if (onChange && announced.current !== state) {

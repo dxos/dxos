@@ -258,6 +258,16 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
 
 ## Placement engine — open defects
 
+- [ ] **`bridge/Tail` fails: a sticky window reports no scrollable extent.** With `sticky` on, the
+      scroller ends with `scrollHeight === clientHeight` and no last row mounted, while the three
+      bridge stories above it — same component, differing only in that flag — are fine. So the fault
+      is in how sticky interacts with the first layout, before anything has been measured, and not in
+      the tail arithmetic. Left failing on purpose: it states a requirement the swap of
+      `MessageList.Root` has to meet, and deleting it would be deleting the requirement. Fixed on the
+      way: the loop it first caused (the sticky effect both watching the layout and invalidating it),
+      and the tail landing short (a jump to the last row summed estimates instead of taking the
+      content's end, which it is by definition).
+
 - [x] **`Window` could not tell an append from a prepend.** It compared the first row's id to the
       anchor's, which says "prepended" for every append made while the reader is anywhere but the
       top — shifting the anchor and moving the feed under them. It now finds where the previous first

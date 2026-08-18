@@ -39,6 +39,8 @@ export type MessageWindowProps = {
   /** Extent of a row before it has been measured; a function where rows differ widely. */
   estimateSize?: number | ((message: Message.Message, index: number) => number);
   gutter?: 'sm' | 'md' | 'lg';
+  /** Keep the last message against the bottom as content arrives — a chat's standing intent. */
+  sticky?: boolean;
   onChange?: (state: WindowState) => void;
   controllerRef?: React.Ref<WindowController>;
 };
@@ -52,6 +54,7 @@ export const MessageWindow = ({
   Custom,
   estimateSize = 120,
   gutter,
+  sticky,
   onChange,
   controllerRef,
 }: MessageWindowProps) => {
@@ -79,6 +82,7 @@ export const MessageWindow = ({
       count={messages.length}
       getId={getId}
       extents={extents}
+      sticky={sticky}
       onChange={onChange}
       controllerRef={controllerRef}
     >

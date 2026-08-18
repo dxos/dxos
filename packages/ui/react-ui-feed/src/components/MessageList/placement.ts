@@ -200,7 +200,12 @@ export class Placement {
     }
 
     this.#anchor = { id: this.#getId(clamped), index: clamped, start };
-    this.#scroll = align === 'end' ? start + this.extentOf(clamped) - this.#viewport : start;
+    // The last row's end *is* the content's end, whatever the estimates in between say. Summing to
+    // it instead lands wherever the guesses add up to, which for a chat's "go to the bottom" is a
+    // tail that is nearly at the bottom — the one place approximately right is wrong.
+    const end =
+      clamped === this.#count - 1 ? this.layout().sizerExtent - this.#reserve : start + this.extentOf(clamped);
+    this.#scroll = align === 'end' ? end - this.#viewport : start;
     this.#scroll = Math.max(0, this.#scroll);
     this.#reanchor();
   }
