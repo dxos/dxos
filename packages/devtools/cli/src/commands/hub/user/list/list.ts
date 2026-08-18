@@ -12,17 +12,22 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 import path from 'node:path';
 
 import { CommandConfig } from '@dxos/cli-util';
+import { ConfigService } from '@dxos/client';
 import { withRetry } from '@dxos/edge-client';
 
-import { formatHubError, hubBaseUrl } from '../../util';
+import { formatHubError } from '../../util';
 
 export const list = Command.make(
   'list',
   {},
   Effect.fn(function* () {
-    // Formatted here too: the siblings resolve the URL inside `hubApiRequest`, so their
-    // hub-not-configured failure is already wrapped by the time it surfaces.
-    const baseUrl = yield* hubBaseUrl.pipe(Effect.catch((error) => Effect.fail(new Error(formatHubError(error)))));
+    const config = yield* ConfigService;
+    const baseUrl = config.values?.runtime?.services?.hub?.url;
+    if (!baseUrl) {
+      // The CLI writes a hub URL into every profile it creates, so an absent one means the profile
+      // was edited — report that rather than silently substituting a DXOS-operated host.
+      return yield* Effect.fail(new Error('Hub URL is not configured (runtime.services.hub.url).'));
+    }
     const url = path.join(baseUrl, '/api/waitlist');
     if (yield* CommandConfig.isVerbose) {
       yield* Effect.log(`Calling: ${url}`);

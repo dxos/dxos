@@ -17,7 +17,7 @@ import { type EdgeEnvelope } from '@dxos/protocols';
 
 export class HubApiError extends BaseError.extend('HubApiError', 'Hub API error') {}
 
-export const hubBaseUrl = Effect.gen(function* () {
+const hubBaseUrl = Effect.gen(function* () {
   const config = yield* ConfigService;
   const url = config.values?.runtime?.services?.hub?.url;
   if (!url) {
