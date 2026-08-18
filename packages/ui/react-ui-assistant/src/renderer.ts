@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type MessageRenderer } from '@dxos/react-ui-feed';
 import { type URI } from '@dxos/keys';
+import { type MessageRenderer } from '@dxos/react-ui-feed';
 import { type ContentBlock, type Message } from '@dxos/types';
 
 import { type ChatView } from './types';

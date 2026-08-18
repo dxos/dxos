@@ -7573,6 +7573,9 @@ importers:
       '@dxos/react-list':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-list
+      '@dxos/react-ui-assistant':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-assistant
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -7591,9 +7594,6 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
-      '@dxos/react-ui-markdown':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-markdown
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu

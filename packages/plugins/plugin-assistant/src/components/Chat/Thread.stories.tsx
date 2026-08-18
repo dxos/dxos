@@ -20,26 +20,42 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
+import { ChatThread, type ChatView } from '@dxos/react-ui-assistant';
+import { type MessageGenerator, createMessageGenerator } from '@dxos/react-ui-assistant/testing';
 import { EditorPreviewProvider } from '@dxos/react-ui-editor';
+import { useFeedModel } from '@dxos/react-ui-feed';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type Message as MessageType } from '@dxos/types';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { MessageGenerator, createMessageGenerator } from '#testing';
 import { translations } from '#translations';
-
-import { ChatThread, type ChatThreadProps } from './ChatThread';
 
 random.seed(1);
 
+/**
+ * The plugin's own harness over the package thread: messages live on a real ECHO feed, are
+ * generated (and streamed) through the Database/Feed services, and reach the thread through the
+ * `useFeedModel` replace adapter — the exact path `Chat.Thread` ships.
+ */
 type StoryArgs = {
   generator?: MessageGenerator[];
   delay?: number;
   wait?: boolean;
+  viewType?: ChatView;
   /** Render a toggle that unmounts and remounts the thread, reproducing navigating away and back. */
   remountable?: boolean;
-} & ChatThreadProps;
+};
 
-const DefaultStory = ({ generator = [], delay = 0, wait, remountable, ...props }: StoryArgs) => {
+const Thread = ({ messages, viewType }: { messages: MessageType.Message[]; viewType?: ChatView }) => {
+  const model = useFeedModel(messages, { stops: 'prompt' });
+  return (
+    <ChatThread.Root model={model} viewType={viewType} onEvent={() => {}}>
+      <ChatThread.Viewport classNames='grow min-h-0' padding />
+    </ChatThread.Root>
+  );
+};
+
+const DefaultStory = ({ generator = [], delay = 0, wait, remountable, viewType }: StoryArgs) => {
   const [space] = useSpaces();
   const feed = useMemo<Feed.Feed | undefined>(
     () => (space ? space.db.add(Feed.make({ name: 'chat' })) : undefined),
@@ -82,34 +98,33 @@ const DefaultStory = ({ generator = [], delay = 0, wait, remountable, ...props }
   return (
     <EditorPreviewProvider onLookup={async ({ dxn, label }) => ({ label, text: dxn })}>
       {remountable ? (
-        <RemountableThread {...props} messages={messages} />
+        <RemountableThread messages={messages} viewType={viewType} />
       ) : (
-        <ChatThread {...props} messages={messages} />
+        <Thread messages={messages} viewType={viewType} />
       )}
     </EditorPreviewProvider>
   );
 };
 
 /**
- * Unmount/remount harness. Returning to a chat remounts the thread, which re-walks the messages and
- * replaces the document — and a full replace clears accumulated widget props, so tool rows depend on
- * the rehydration that follows it. Mounting fresh never exercises that path.
+ * Unmount/remount harness. Returning to a chat remounts the thread, and every item is rebuilt from
+ * its message alone — tool rows included, which used to depend on a rehydration pass through
+ * out-of-band widget state.
  */
-const RemountableThread = (props: ChatThreadProps) => {
+const RemountableThread = (props: { messages: MessageType.Message[]; viewType?: ChatView }) => {
   const [mounted, setMounted] = useState(true);
   return (
     <div className='flex flex-col h-full'>
       <Button data-testid='story.toggleMount' onClick={() => setMounted((value) => !value)}>
         {mounted ? 'Unmount' : 'Mount'}
       </Button>
-      {mounted && <ChatThread {...props} />}
+      {mounted && <Thread {...props} />}
     </div>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-assistant/components/ChatThread',
-  component: ChatThread,
   render: DefaultStory,
   decorators: [
     withTheme(),
@@ -146,11 +161,7 @@ export const Default: Story = {
   },
 };
 
-/**
- * Every user prompt carries a rewind toolbar. It is emitted as its own markdown block after the
- * `<prompt>` tag; a single newline between them would let CommonMark absorb the toolbar into the
- * prompt's HTML block, so this asserts the tag actually parses into a widget.
- */
+/** Every user prompt carries its hover toolbar with the rewind control, rendered by the chrome. */
 export const Rewind: Story = {
   args: {
     generator: createMessageGenerator(),
@@ -158,45 +169,27 @@ export const Rewind: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const buttons = await waitFor(
+    await waitFor(
       async () => {
         const found = canvas.queryAllByTestId('chat.rewind');
         await expect(found.length).toBeGreaterThan(0);
-        return found;
       },
       { timeout: 10_000 },
     );
-
-    // One toolbar per user prompt.
-    const prompts = canvasElement.querySelectorAll('.cm-prompt, [data-prompt]');
-    if (prompts.length > 0) {
-      await expect(buttons.length).toBe(prompts.length);
-    }
   },
 };
 
+/** The streaming path: messages land one by one, and the thread follows its tail. */
 export const Delayed: Story = {
   args: {
     generator: createMessageGenerator(),
     delay: 500,
-    options: {
-      autoScroll: true,
-      typewriter: true,
-      cursor: true,
-    },
   },
 };
 
 /**
- * Tool rows must survive navigating away and back.
- *
- * They render from out-of-band widget state, not from the document: `blockToMarkdown` emits a
- * `<toolCall id/>` placeholder and pushes the blocks via `updateWidget`; an empty state renders an
- * empty row. On remount `MessageSyncer.reset` replaces the document, which fires `xmlTagResetEffect`
- * and clears that state, then rehydrates it — and that rehydration used to be dropped, because the
- * rebuild it triggers replaces the widget instances the editor was routing updates through
- * (`xml-tags.test.ts`, "state reaches a mounted widget after a rebuild replaced its decoration
- * instance").
+ * Tool rows must survive navigating away and back. Each item — tool panels included — is rebuilt
+ * from its message, so the replay path and the streaming path must render the same rows.
  */
 export const Remount: Story = {
   args: {

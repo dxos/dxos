@@ -115,6 +115,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-assistant"
+    },
+    {
       "path": "../../ui/react-ui-attention"
     },
     {
@@ -134,9 +137,6 @@
     },
     {
       "path": "../../ui/react-ui-list"
-    },
-    {
-      "path": "../../ui/react-ui-markdown"
     },
     {
       "path": "../../ui/react-ui-menu"

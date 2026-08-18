@@ -17,13 +17,14 @@ import {
   type FeedModel,
   type FeedNavigation,
   MessageList,
+  type MessageRange,
   type ScrollToOptions,
   useMessageList,
 } from '@dxos/react-ui-feed';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer';
 import { assistantRegistry } from '../../registry';
+import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer';
 import { type ChatThreadEvent, type ChatView } from '../../types';
 import { MessageChrome, MessageChromeProvider } from '../MessageChrome';
 
@@ -85,6 +86,8 @@ type ChatThreadRootProps = PropsWithChildren<
     userHue?: string;
     debug?: boolean;
     onEvent?: (event: ChatThreadEvent) => void;
+    /** The visible index range, as the reader scrolls — what an outline rail tracks. */
+    onRangeChange?: (range: MessageRange) => void;
     controllerRef?: Ref<ChatThreadController>;
   }
 >;
@@ -104,6 +107,7 @@ const ChatThreadRoot = ({
   userHue,
   debug,
   onEvent,
+  onRangeChange,
   controllerRef,
 }: ChatThreadRootProps) => {
   const renderer = useMemo(() => createRenderer(viewType, { getObjectLabel }), [viewType, getObjectLabel]);
@@ -122,6 +126,7 @@ const ChatThreadRoot = ({
           debug={debug}
           stickyBottom
           scrollPastEnd
+          onRangeChange={onRangeChange}
         >
           {controllerRef && <ControllerBridge controllerRef={controllerRef} />}
           {children}
