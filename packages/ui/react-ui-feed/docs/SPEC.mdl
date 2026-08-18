@@ -1,0 +1,178 @@
+# react-ui-feed — consolidation spec
+
+Status: draft for the post-spike refactor. The spike answered "can one anchor-placed window scroll
+smoothly with a CodeMirror editor per row" (yes — see `DESIGN.md` for the principles and
+`TESTING.md` for the manual evidence). This document specifies what to keep, what to extract, and
+the seams to cut so the parts are reusable across the project.
+
+Naming below: **virtualizer** = the extracted placement engine (`placement.ts` + `useWindow`);
+**list** = the message feed built on it (`MessageList`); **outliner** = the index-space rail
+(`Outline`, currently in `react-ui-components`); **minimap** = the content-space rail.
+
+---
+
+## 1. Virtualizer
+
+The reusable core. No DOM types in the model layer, no React in the placement layer, no knowledge
+of messages anywhere. Target: extractable as `@dxos/react-ui-virtualizer` (or a `react-ui-list`
+aspect) and usable by `react-ui-mosaic`'s `VirtualStack`, tables, and any long feed.
+
+- **Placement model (`Placement`)** — pure arithmetic, fully unit-testable
+  - One authoritative **anchor** (`id`, `index`, `start`); every other position derived by summing
+    extents away from it
+    - prepend shifts the anchor's index, never its position → nothing on screen moves
+    - re-anchoring preserves every derived position exactly
+  - **Extents, not heights** — scalars along one axis; the axis is the binding's business
+    - host supplies `Extents { of(index), exact? }`; `exact` = never revised by measurement
+      (deterministic layouts: fixed-height rows, declared-width cards) but still *checked* in dev
+      (`onMismatch`)
+    - measurements keyed by **row id**, not index — reordering or prepending cannot corrupt them
+  - **Scroll & range**
+    - `scrollTo(offset)` moves only the mounted range; corrections never touch the scroll
+    - visible range vs mounted range reported separately (readouts describe the reader, not the
+      overscan)
+    - `overscan` option: rows to mount before/beyond the visible window, per side (default 8)
+  - **Edges are ground truth**
+    - `drift()` reports estimate error at start/end; reported, never silently applied
+    - `endOffset()` / `offsetOf(index, align)` — derived from the anchor so asking where the end is
+      does not move it
+  - **Reserve** — empty extent after the last row (`scrollPastEnd` in host terms)
+    - a *number the host computes*, added to the sizer; nothing else in the engine knows about it
+    - this is what the tanstack design could not express (spacer lived outside the virtualizer's
+      coordinate space — the two-coordinate-systems defect class)
+- **DOM binding (`useWindow`)** — React hook against an element the *host* owns
+  - three-element shape: scroller (host's), sizer (extent only, no rows), window (one absolutely
+    positioned parent, moved by `transform`; rows unpositioned, in flow)
+    - rows in flow → a row that changes extent reflows its followers in the browser, same frame
+    - `overflow-anchor: none` on the scroller — exactly one party anchors
+  - measures rows after every commit (`data-index` / `data-object-id` contract on row elements)
+  - **sticky/follow** is an *intent*, withdrawn only by a backwards scroll — never re-derived from
+    proximity (corrections grow the document under a stationary reader)
+  - `WindowController.scrollToIndex(index, align, behavior)` — smooth only across mounted rows;
+    far targets jump (a glide over unmounted content is a journey over a blank screen)
+  - publishes `WindowState { index, visible, mounted, count, geometry }` — geometry in pixels for
+    maps/rails, indices for readouts
+  - axis-neutral: `block | inline`; only the binding maps extent→height/width
+- **`Window`** — the trivial binding (own scroller div) for stories, tests, and simple hosts
+- **Open items**
+  - variable-size *reserve at the start* (pinned headers / date separators) — not yet needed
+  - `estimateSize` naming: converge on `extents` everywhere (list still says `estimateSize`)
+  - imperative `measure(id, extent)` for hosts that know a row changed (widget expanded) before
+    layout runs
+
+## 2. List
+
+`MessageList` — the chat feed. Owns model-mapping and interaction; delegates all geometry to the
+virtualizer. Composite: `Root` (headless) / `Viewport` (DOM) / `Item`.
+
+- **Rendering**
+  - `renderer(message) → ItemContent` resolves each message to a kind; **pluggable block
+    renderers** keyed by kind: `markdown` (CodeMirror, read-only, shared cached extension sets),
+    `html`, `custom` (host component), room for `json`, transcript, tool-call blocks
+  - **Chrome is a host render-prop** (`Chrome` component: avatar, timestamp, fork/resolve
+    controls); engine renders content only — chrome must not affect the measurement contract
+    beyond being inside the measured row
+  - **Widgets** (XML tags → React via registry): portaled into editor decorations; state owned by
+    `Root`-level store so it survives row unmount/remount; expansion is *not* a special case —
+    it is the same measurement arriving again (post-commit measure pass)
+  - `Column` three-track layout (gutter | content | gutter) inside the row, not on the container
+- **Row selection**
+  - today: set-of-ids + additive click, one `SelectionGroup` for text selection across editors
+  - spec: extract a **selection controller/model** with interchangeable policies —
+    `single`, `multi` (toggle), `range` (shift-click, anchor+focus over the *anchors* sequence);
+    align with `react-ui-list` Listbox semantics (`aria-selected`, `dx-selected`) so styling and
+    a11y come from one place
+  - selection is model-space (ids), never DOM-space — must survive virtualization
+- **Navigation**
+  - **pluggable stops**: `isAnchor(message, index)` today; generalize to a `stops` provider —
+    per message, per prompt (user turns only), per block, per search hit, per day divider
+  - one mechanism for every driver: toolbar buttons, arrow keys, outliner, minimap all call the
+    same `step(delta)` / `jumpTo(stop)`; **common event/controller** shared with the outliner
+    (see §3) rather than parallel wiring
+  - cursor = row containing the scroll offset (derived, never set alongside the scroll) — this is
+    what makes every press travel
+  - Cmd/Ctrl+Arrow = first/last; keymap bound to the viewport element (focusable, tabIndex=0)
+- **Scrolling**
+  - smooth for steps within the mounted window; instant for far jumps — *policy lives in the
+    controller, not in each caller*
+  - `smooth vs jump` is a per-call `behavior`, with a host default
+- **Follow (streaming)**
+  - sticky intent as in §1; opt-out = backwards scroll, opt-in = returning to the tail
+  - `ScrollFollower` (velocity-based glide, rows/s, median row height) exists with tests but is
+    **not wired** post-swap — decision pending manual verdict on whether instant correction reads
+    as abrupt (TESTING.md §2.6); if wired, it drives the element and the placement follows via
+    scroll events
+- **Toolbar / statusbar**
+  - engine renders neither; `useMessageList()` exposes state (`range`, `currentIndex`, counts,
+    jumps/shifts diagnostics) and controls (`stepAnchor`, `scrollToIndex`, `scrollToBottom`)
+  - stories' toolbar/statusbar are the reference consumers; product chrome lives in
+    plugin-assistant
+- **Options**
+  - `debug` (row outlines + extents, jump detector), `scrollPastEnd` (reserve), `overscan`,
+    `stickyBottom`, `estimateSize | (message, index) => extent`, `streamingId`, `hits`
+  - all off-by-default; `debug` never defaults true
+
+## 3. Outliner
+
+Index-space rail: one tick per *stop* (not per row). Currently `Outline` in `react-ui-components`.
+
+- **Model**
+  - markers `{ id, title, description?, range }` in the host's own position space; thinning to
+    fit fixed tick pitch (8px), each tick standing for the span to the next
+  - active = marker intersecting `visibleRange`
+- **Interaction**
+  - hover: wave extension + one popover card tracking the tick's center (separate zero-height
+    anchor; ticks never wrapped — element identity must be stable)
+  - two "at a tick" states, kept apart and published (`data-pointer`, `data-navigated`,
+    `data-shown`): pointer wins while pointing; keyboard wins while navigating; pointing again
+    hands back
+  - dismissal: tick-level leave + document-level `pointerover` backstop (popover focus guards eat
+    the leave after a click)
+- **Navigation unification (the spec change)**
+  - `onNavigate(delta)` / `onSelect(marker)` today; replace both with the **same navigation
+    controller the toolbar uses** — outliner emits intents (`step(±1)`, `jumpTo(stop)`), the list
+    executes, the outliner re-derives its shown tick from `visibleRange`
+  - stops shown by the outliner = the list's pluggable stops (§2), so a "per prompt" feed shows
+    per-prompt ticks with no extra wiring
+- **Options**: `tickSize` (8), `width` (2rem), classNames; centred ticks; bounded-vs-natural height
+
+## 4. Minimap
+
+Content-space rail: the document in miniature. Currently `testing/debug/Minimap` — promote to a
+real component next to `Outline`.
+
+- **Model** — drawn from `WindowState.geometry` only
+  - track = total extent (reserve included); faint band = mounted window; solid band = viewport
+  - invariant to watch: viewport band ⊆ mounted band (viewport outside mounted = reader looking
+    at nothing)
+- **Interaction**
+  - click/drag → jump to that *fraction* of content space (emits fraction; host maps to offset via
+    the controller — same navigation seam as §3)
+  - optional hover readout (index at fraction) once navigation is unified
+- **Options**: `width` (2rem, matching Outline — asserted), no rounded corners, orientation follows
+  the list's axis
+- Debug-only overlays (per-row extents, drift markers) stay in `testing/debug`
+
+---
+
+## 5. Precedents and retrofit
+
+- **react-ui-list**
+  - `useListNavigation` (tabster) is *focus* navigation for fully-mounted lists; the feed's
+    navigation is *scroll* navigation over mostly-unmounted rows — different problem, keep both,
+    but adopt its role/ARIA conventions (`listbox`/`option`, `dx-selected`) for the selection
+    model in §2
+  - Listbox's opt-in selection semantics are the pattern the selection controller should present
+- **react-ui-mosaic**
+  - `VirtualStack` still runs tanstack react-virtual — the same engine the feed just removed, with
+    the same defect class available to it; **retrofit candidate**: bind `useWindow` under
+    `VirtualStack` (it already owns its scroller), keeping its pagination hook
+    (`useVirtualizerPagination` becomes an `onEdge('start'|'end')` consumer — edge callbacks are
+    already in the placement API)
+  - do this *after* the feed has soaked; mosaic adds drag-and-drop, which the spike never exercised
+- **Suggested order**
+  1. extract virtualizer (placement + useWindow + Window) to its own entry point with the tests
+  2. navigation controller (list ⇄ outliner ⇄ minimap on one seam)
+  3. selection controller (single/multi/range policies)
+  4. promote Minimap; move Outline next to it
+  5. mosaic retrofit behind a flag

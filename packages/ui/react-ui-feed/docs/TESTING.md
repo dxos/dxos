@@ -52,7 +52,7 @@ the floor. If `plain` is smooth and `varied` is not, the cost is in the item.
 
 ## 2. Streaming — where everything runs at once
 
-`http://localhost:9009/?path=/story/ui-react-ui-feed-messagelist--streaming`
+http://localhost:9009/?path=/story/ui-react-ui-feed-messagelist--streaming
 
 The follow changed with the swap, and this is where it shows. It is now an intent withdrawn by one
 thing only — a scroll that moves **backwards**. Measuring the tail grows the document under a reader
@@ -73,7 +73,7 @@ who has not moved, and the old rule (are we near the end?) read that as the read
 
 ## 3. The outline rail — the parts I could not verify
 
-`http://localhost:9009/?path=/story/ui-react-ui-feed-placement--static`
+http://localhost:9009/?path=/story/ui-react-ui-feed-placement--static
 
 The rail is on the left. Its state is published as `data-pointer` and `data-navigated` on the
 `[role="navigation"]` element, so if something is stuck you can see which of the two is holding it.
@@ -97,7 +97,7 @@ The rail is on the left. Its state is published as `data-pointer` and `data-navi
 
 ## 4. Placement — the engine on its own, by hand
 
-`http://localhost:9009/?path=/story/ui-react-ui-feed-placement--static`
+http://localhost:9009/?path=/story/ui-react-ui-feed-placement--static
 
 Plain boxes of known size, so anything that moves is the placement itself. The toolbar has
 prev / next / top / bottom, and `debug` / `scrollPastEnd` are controls.
