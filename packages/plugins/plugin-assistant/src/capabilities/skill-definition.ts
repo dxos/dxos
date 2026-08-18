@@ -22,7 +22,7 @@ import {
   makeDelegationStrategy,
 } from '@dxos/assistant-toolkit';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
-import { DatabaseSkill } from '@dxos/plugin-space/skills';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
 import { AssistantSkill } from '#skills';
 

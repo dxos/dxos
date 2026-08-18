@@ -40,8 +40,8 @@ import * as CommentOperationHandlerSet from '@dxos/plugin-review/CommentOperatio
 import * as CommentSkill from '@dxos/plugin-review/CommentSkill';
 import * as ScriptOperationHandlerSet from '@dxos/plugin-script/ScriptOperationHandlerSet';
 import * as ScriptSkill from '@dxos/plugin-script/ScriptSkill';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { SpaceObjectOperationHandlerSet } from '@dxos/plugin-space/operations';
-import { DatabaseSkill } from '@dxos/plugin-space/skills';
 import * as TableOperationHandlerSet from '@dxos/plugin-table/TableOperationHandlerSet';
 import * as TableSkill from '@dxos/plugin-table/TableSkill';
 import * as TranscriptionOperationHandlerSet from '@dxos/plugin-transcription/TranscriptionOperationHandlerSet';

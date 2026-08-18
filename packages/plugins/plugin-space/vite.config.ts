@@ -21,6 +21,7 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
     'skills': 'src/skills/index.ts',
+    'DatabaseSkill': 'src/skills/DatabaseSkill.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'SpaceCapabilities': 'src/types/SpaceCapabilities.ts',

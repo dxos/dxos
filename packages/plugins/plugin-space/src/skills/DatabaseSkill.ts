@@ -10,17 +10,15 @@ import { SpaceObjectOperation, SpaceOperation } from '#types';
 
 // The key the chat-bound skill has always had: the identity follows the verbs, so a chat already
 // bound to it keeps reading and writing objects after the move.
-export const SKILL_KEY = 'org.dxos.skill.database';
+export const key = 'org.dxos.skill.database';
 
 /**
- * Reading and writing the objects of a space, over the same verbs the app and the MCP surface use —
- * the plugin that owns the objects owns the skill that manipulates them. The schema, relation and
- * tag half still lives in assistant-toolkit's `Database schema` skill, and joins this one when it
- * relocates.
+ * Reading and writing a space's objects, types, relations and tags, over the same verbs the app and
+ * the MCP surface use — the plugin that owns the objects owns the skill that manipulates them.
  */
-const make = () =>
+export const make = (): Skill.Skill =>
   Skill.make({
-    key: SKILL_KEY,
+    key: key,
     name: 'Database',
     description: 'Query, read, create, update and remove objects in the current space.',
     agentCanEnable: true,
@@ -67,8 +65,3 @@ const make = () =>
       `,
     }),
   });
-
-export const DatabaseSkill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};

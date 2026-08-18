@@ -10,5 +10,4 @@ export * as ConnectorPlugin from './ConnectorPlugin';
 export * as SyncTemplate from './SyncTemplate';
 export * from './errors';
 export * from '#meta';
-export * from '#skills';
 export * from '#types';

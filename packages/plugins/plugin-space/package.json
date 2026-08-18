@@ -124,6 +124,11 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./DatabaseSkill": {
+      "source": "./src/skills/DatabaseSkill.ts",
+      "types": "./dist/types/src/skills/DatabaseSkill.d.ts",
+      "import": "./dist/lib/DatabaseSkill.mjs"
+    },
     "./CollectionOperation": {
       "source": "./src/types/CollectionOperation.ts",
       "types": "./dist/types/src/types/CollectionOperation.d.ts",

@@ -7,7 +7,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-const SKILL_KEY = 'org.dxos.skill.connectors';
+export const key = 'org.dxos.skill.connectors';
 
 /**
  * Instructs the model to surface a connector prompt when a request needs a service the user has not
@@ -28,9 +28,9 @@ const instructions = trim`
   Emit the surface once, then briefly tell the user that connecting the service will let you continue.
 `;
 
-const make = () =>
+export const make = (): Skill.Skill =>
   Skill.make({
-    key: SKILL_KEY,
+    key: key,
     name: 'Connectors',
     description: 'Prompt the user to connect external services when a connector is required but unavailable.',
     agentCanEnable: true,
@@ -38,10 +38,3 @@ const make = () =>
       source: Ref.make(Text.make({ content: instructions })),
     },
   });
-
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;
