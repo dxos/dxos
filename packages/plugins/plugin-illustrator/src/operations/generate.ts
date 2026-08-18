@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import { Mermaid } from '#model';
+import { Mermaid, Uml } from '#model';
 import { DrawingOperation } from '#types';
 
 import { resolveVariant } from '../util/load-drawing';
@@ -15,7 +15,8 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Generate> = Drawing
   Operation.withHandler(
     Effect.fn(function* ({ drawing, source }) {
       const { canvas, variant } = yield* resolveVariant(drawing);
-      const { upserted } = variant.builder.apply(canvas, Mermaid.compile(source));
+      const compile = Uml.isClassDiagram(source) ? Uml.compile : Mermaid.compile;
+      const { upserted } = variant.builder.apply(canvas, compile(source));
       const { scene, unmanaged } = variant.builder.read(canvas);
       return { scene, unmanaged, upserted };
     }),

@@ -52,4 +52,35 @@ op read
 
 op edit
   desc: Applies scene commands to a sketch via the variant's builder; returns the resulting scene.
+
+op generate
+  desc: Replaces a sketch with a diagram compiled from mermaid source (flowchart or classDiagram);
+        the dialect owns the layout, so no coordinates are supplied.
+```
+
+## Dialects
+
+Higher-level diagram languages compile to scene commands (see `src/model/dialect.ts`); each
+dialect owns its layout, so its output lands as ordinary world objects that stay editable by id.
+
+```mdl
+component MermaidFlowchart
+  desc: Mermaid flowchart subset (nodes, subgraphs, directed edges) with a layered layout.
+
+component UmlClass
+  desc: Mermaid classDiagram subset (class blocks with members, stereotypes, generics, and the
+        standard relation arrows) with a layered layout — supertypes above subtypes. Each class
+        compiles to a world object with title/attributes/methods compartments.
+```
+
+## Skills
+
+```mdl
+component DrawingSkill
+  desc: Free-form drawing via the scene DSL; the agent does the layout.
+
+component UmlSkill
+  desc: UML class diagrams from source code (bound documents or a fetched GitHub reference):
+        the agent extracts the class model, emits a mermaid classDiagram, and the generate
+        operation compiles and lays it out.
 ```

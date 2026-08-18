@@ -1,0 +1,238 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { userEvent, within } from 'storybook/test';
+
+import { Filter, Ref } from '@dxos/echo';
+import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
+import { UmlSkill } from '@dxos/plugin-illustrator';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import { type Space } from '@dxos/react-client/echo';
+import { Cell } from '@dxos/storybook-testing';
+import { trim } from '@dxos/util';
+
+import { StoryRole } from '../modules';
+import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
+
+const meta: Meta<typeof ModuleContainer> = {
+  title: 'stories/stories-assistant/Uml',
+  render: ModuleContainer,
+  parameters: storyParameters,
+};
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+/** Source the agent is asked to analyze: a small class hierarchy with every relation kind. */
+const SOURCE_CODE = trim`
+  # Media Library
+
+  Analyze this TypeScript module:
+
+  \`\`\`ts
+  interface Playable {
+    play(): void;
+  }
+
+  abstract class MediaItem {
+    constructor(readonly title: string, protected duration: number) {}
+    abstract describe(): string;
+  }
+
+  class Track extends MediaItem implements Playable {
+    constructor(title: string, duration: number, readonly artist: Artist) {
+      super(title, duration);
+    }
+    play(): void {}
+    describe(): string {
+      return \`\${this.title} — \${this.artist.name}\`;
+    }
+  }
+
+  class Album extends MediaItem {
+    readonly tracks: Track[] = [];
+    add(track: Track): void {
+      this.tracks.push(track);
+    }
+    describe(): string {
+      return \`\${this.title} (\${this.tracks.length} tracks)\`;
+    }
+  }
+
+  class Artist {
+    constructor(readonly name: string) {}
+  }
+
+  class Library {
+    readonly albums: Album[] = [];
+    find(query: string): MediaItem[] {
+      return this.albums.filter((album) => album.title.includes(query));
+    }
+  }
+  \`\`\`
+`;
+
+// Captured by `onInit` so play functions can assert on the live canvas records.
+let storySpace: Space | undefined;
+
+const decorators = createDecorators({
+  lazyPlugins: async () => {
+    // SpacePlugin contributes the `versioning-state` capability the markdown article reads.
+    const [{ Drawing }, IllustratorPlugin, MarkdownPlugin, SpacePlugin, TldrawPlugin] = await Promise.all([
+      import('@dxos/plugin-illustrator'),
+      import('@dxos/plugin-illustrator/IllustratorPlugin'),
+      import('@dxos/plugin-markdown/MarkdownPlugin'),
+      import('@dxos/plugin-space/SpacePlugin'),
+      import('@dxos/plugin-tldraw/TldrawPlugin'),
+    ]);
+    return {
+      plugins: [IllustratorPlugin.make(), MarkdownPlugin.make(), SpacePlugin.make({}), TldrawPlugin.make()],
+      types: [Drawing.Drawing, Drawing.Canvas],
+    };
+  },
+  onInit: async ({ space }) => {
+    storySpace = space;
+    const [{ Drawing }, { Tldraw }] = await Promise.all([
+      import('@dxos/plugin-illustrator'),
+      import('@dxos/plugin-tldraw'),
+    ]);
+    const document = space.db.add(Markdown.make({ name: 'Media Library', content: SOURCE_CODE }));
+    const drawing = space.db.add(
+      Drawing.make({ name: 'Class Diagram', canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA }) }),
+    );
+    addToRootCollection(space, [document, drawing]);
+    return [[StoryRole.Chat], [Cell.article(document)], [Cell.article(drawing)]];
+  },
+  onChatCreated: async ({ space, binder }) => {
+    const [{ Drawing }] = await Promise.all([import('@dxos/plugin-illustrator')]);
+    const documents = await space.db.query(Filter.type(Markdown.Document)).run();
+    const drawings = await space.db.query(Filter.type(Drawing.Drawing)).run();
+    await binder.bind({ objects: [...documents, ...drawings].map((object) => Ref.make(object)) });
+  },
+  skills: [AssistantSkill.key, MarkdownSkill.key, UmlSkill.key],
+});
+
+/**
+ * Submit a prompt through the chat's CodeMirror editor. Submission is dropped silently while the
+ * runtime is still activating or a previous response is streaming, so retry until the message
+ * actually shows up in the thread (the editor clearing is NOT proof of submission).
+ */
+const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
+  const canvas = within(canvasElement);
+  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 60_000 });
+  const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
+  if (!editor) {
+    throw new Error('Chat editor not found.');
+  }
+  const needle = text.slice(0, 30);
+  // The prompt editor itself holds the text until it clears; anywhere else (the thread renders
+  // sent messages in their own read-only CodeMirror) counts as submitted.
+  const promptRoot = editor.closest('.cm-editor');
+  const submitted = () =>
+    [...canvasElement.querySelectorAll('*')].some(
+      (node) =>
+        node.childElementCount === 0 && node.closest('.cm-editor') !== promptRoot && node.textContent?.includes(needle),
+    );
+  for (let attempt = 0; attempt < 20; attempt++) {
+    if (!editor.textContent?.includes(needle)) {
+      await userEvent.click(editor);
+      await userEvent.type(editor, text);
+    }
+    await userEvent.keyboard('{Enter}');
+    const deadline = Date.now() + 10_000;
+    while (Date.now() < deadline) {
+      if (submitted()) {
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+  throw new Error('Prompt did not reach the thread.');
+};
+
+/** Count canvas shape records belonging to a world object (`meta.object`), or all managed shapes. */
+const countObjectRecords = async (objectId?: string): Promise<number> => {
+  if (!storySpace) {
+    return 0;
+  }
+  const { Drawing } = await import('@dxos/plugin-illustrator');
+  const canvases = await storySpace.db.query(Filter.type(Drawing.Canvas)).run();
+  return canvases.reduce((count, canvas) => {
+    const records = Object.values(canvas.content ?? {}) as any[];
+    return (
+      count +
+      records.filter(
+        (record) => record?.typeName === 'shape' && (objectId ? record.meta?.object === objectId : record.meta?.object),
+      ).length
+    );
+  }, 0);
+};
+
+/** Poll until the canvas contains at least `min` managed shape records. */
+const waitForObjectRecords = async (objectId: string | undefined, min = 1, timeout = 240_000): Promise<number> => {
+  const deadline = Date.now() + timeout;
+  let count = 0;
+  while (Date.now() < deadline) {
+    count = await countObjectRecords(objectId);
+    if (count >= min) {
+      return count;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`timed out waiting for shapes of object "${objectId ?? '*'}" (last=${count})`);
+};
+
+/**
+ * Code-to-diagram over a live AI stack: the chat (left) reads the source in the markdown document
+ * (middle) and generates a UML class diagram onto the canvas (right) via the mermaid classDiagram
+ * dialect — the dialect owns the layout. Try: "Create a UML class diagram of the code in the
+ * Media Library document", then "Add a Playlist class that aggregates Tracks".
+ */
+export const Default: Story = {
+  decorators,
+};
+
+/**
+ * End-to-end test: the agent analyzes the bound document's TypeScript and generates the diagram.
+ * Asserts that class world objects land on the canvas — `Track` must exist and the diagram must
+ * span several classes.
+ *
+ * Live AI and slow, so excluded from CI test runs (`tags: ['!test']`); run manually in storybook
+ * against a reachable EDGE AI service.
+ */
+export const GenerateFromDocumentTest: Story = {
+  decorators,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    await submitPrompt(
+      canvasElement,
+      'Create a UML class diagram of the code in the Media Library document, on the Class Diagram drawing.',
+    );
+    await waitForObjectRecords('Track', 1);
+    await waitForObjectRecords(undefined, 6, 60_000);
+  },
+};
+
+/**
+ * As above, but the source is a GitHub reference rather than inline code: the agent fetches the
+ * file with its research/fetch tools before extracting the class model. Needs network access in
+ * addition to a live AI service, so it is manual-only.
+ */
+export const GenerateFromGithubTest: Story = {
+  decorators,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    await submitPrompt(
+      canvasElement,
+      trim`
+        Create a UML class diagram of https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-illustrator/src/model/scene.ts
+        on the Class Diagram drawing.
+      `.replace(/\s*\n\s*/g, ' '),
+    );
+    await waitForObjectRecords(undefined, 4);
+  },
+};

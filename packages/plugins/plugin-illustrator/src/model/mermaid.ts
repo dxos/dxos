@@ -8,6 +8,7 @@
 // carries no coordinates, so the dialect owns placement — see `dialect.ts` for the contract.
 //
 
+import * as Layout from './layout';
 import type * as Scene from './scene';
 
 export type Direction = 'TB' | 'BT' | 'LR' | 'RL';
@@ -129,69 +130,12 @@ const GAP_MAIN = 60;
 const GAP_CROSS = 40;
 const GROUP_PAD = 24;
 
-/**
- * Edges that close a cycle, found by DFS: an edge into a node still on the stack points backwards.
- * Ranking ignores them, so `C --> Y --> C` ranks C by its forward predecessors alone instead of
- * chasing the loop.
- */
-const backEdges = (graph: MermaidGraph): Set<MermaidEdge> => {
-  const outgoing = new Map<string, MermaidEdge[]>();
-  for (const edge of graph.edges) {
-    outgoing.set(edge.from, [...(outgoing.get(edge.from) ?? []), edge]);
-  }
-
-  const back = new Set<MermaidEdge>();
-  const done = new Set<string>();
-  const onStack = new Set<string>();
-
-  const visit = (id: string) => {
-    onStack.add(id);
-    for (const edge of outgoing.get(id) ?? []) {
-      if (onStack.has(edge.to)) {
-        back.add(edge);
-      } else if (!done.has(edge.to)) {
-        visit(edge.to);
-      }
-    }
-    onStack.delete(id);
-    done.add(id);
-  };
-
-  // Roots first so the DFS classifies edges along the natural reading order of the diagram.
-  const targets = new Set(graph.edges.map((edge) => edge.to));
-  for (const node of graph.nodes) {
-    if (!targets.has(node.id) && !done.has(node.id)) {
-      visit(node.id);
-    }
-  }
-  for (const node of graph.nodes) {
-    if (!done.has(node.id)) {
-      visit(node.id);
-    }
-  }
-  return back;
-};
-
 /** Assign each node a rank one past its deepest forward predecessor. */
-const rank = (graph: MermaidGraph): Map<string, number> => {
-  const back = backEdges(graph);
-  const forward = graph.edges.filter((edge) => !back.has(edge));
-  const ranks = new Map(graph.nodes.map((node) => [node.id, 0]));
-  for (let pass = 0; pass < graph.nodes.length; pass++) {
-    let changed = false;
-    for (const edge of forward) {
-      const next = (ranks.get(edge.from) ?? 0) + 1;
-      if (next > (ranks.get(edge.to) ?? 0)) {
-        ranks.set(edge.to, next);
-        changed = true;
-      }
-    }
-    if (!changed) {
-      break;
-    }
-  }
-  return ranks;
-};
+const rank = (graph: MermaidGraph): Map<string, number> =>
+  Layout.rank(
+    graph.nodes.map((node) => node.id),
+    graph.edges,
+  );
 
 export type CompileOptions = {
   /** Canvas position of the diagram's top-left, in canvas px. */
