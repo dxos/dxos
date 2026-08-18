@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { ListModel } from '@dxos/react-ui-virtual';
 import { type Message } from '@dxos/types';
 
 import { type MessageRenderer, type SearchHit, defaultRenderer, messageText, searchFeed } from './feed-model';
-import { ListModel } from './list-model';
 
 /**
  * One position navigation can land on (SPEC: Stop).

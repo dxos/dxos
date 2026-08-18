@@ -170,7 +170,7 @@ const DefaultStory = ({
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'ui/react-ui-feed/hooks/follow',
+  title: 'ui/react-ui-virtual/follow',
   render: DefaultStory,
   decorators: [withLayout({ layout: 'column' }), withTheme()],
   parameters: { layout: 'fullscreen' },

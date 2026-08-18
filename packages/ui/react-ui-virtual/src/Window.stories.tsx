@@ -10,8 +10,7 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { Minimap, Outline, type OutlineMarker } from '../components';
-import { ListModel } from '../model';
+import { ListModel } from './list-model';
 import { type EdgeDrift } from './placement';
 import { Window, type WindowAxis, type WindowController, type WindowState } from './Window';
 
@@ -142,20 +141,6 @@ const DefaultStory = ({
 
   const reserve = scrollPastEnd ? Math.max(0, available - (model.at(total - 1)?.extent ?? 100)) : 0;
 
-  // The product minimap, in **index** space: a tick per marker, and the mounted window as the
-  // visible range. Beside `Minimap`, which is the same list in **content** space — the pair is the
-  // point, since an index-space rail cannot show a layout that has gone wrong and a content-space
-  // one cannot show which message you are near.
-  const markers = useMemo<OutlineMarker[]>(
-    () =>
-      Array.from({ length: Math.ceil(total / 10) }, (_, step) => ({
-        id: `marker-${step * 10}`,
-        title: `#${step * 10}`,
-        range: { from: step * 10, to: step * 10 + 10 },
-      })),
-    [total],
-  );
-
   return (
     <div className='flex flex-col h-full'>
       <Toolbar.Root>
@@ -241,17 +226,6 @@ const DefaultStory = ({
       </Toolbar.Root>
 
       <div ref={bodyRef} className='grow min-h-0 flex gap-2'>
-        <div className='h-full grid grid-rows-[1fr_3fr_1fr]'>
-          <div className='flex items-center row-start-2'>
-            <Outline
-              markers={markers}
-              visibleRange={state ? { from: state.visible.first, to: state.visible.last } : undefined}
-              onSelect={(marker) => controller.current?.scrollToIndex(marker.range.from)}
-              onNavigate={step}
-            />
-          </div>
-        </div>
-
         <Window
           classNames='grow min-h-0'
           model={model}
@@ -280,11 +254,6 @@ const DefaultStory = ({
             );
           }}
         </Window>
-
-        <Minimap
-          state={state}
-          onSelect={(fraction) => controller.current?.scrollToIndex(Math.round(fraction * (total - 1)))}
-        />
       </div>
 
       <div className='px-2 py-1 flex gap-4 text-xs text-description tabular-nums' data-testid='placement.report'>
@@ -300,7 +269,7 @@ const DefaultStory = ({
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-feed/virtualizer',
+  title: 'ui/react-ui-virtual/window',
   render: DefaultStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },
@@ -559,40 +528,21 @@ export const Chrome: Story = {
 
     click('window.top');
     await settle();
-    // Read before the keyboard step below, which moves it again.
     const backToTop = read('window.index');
 
-    const tick = canvasElement.querySelector<HTMLElement>('[role="navigation"] button')!;
-    tick.focus();
-    const before = read('window.index');
-    tick.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
-    await settle();
-    const outlineStepped = read('window.index') !== before;
-
+    // The rails (Outline, Minimap) live in react-ui-feed and are covered by its stories.
     await expect({
       filled,
       moved: next !== start,
       atEnd,
       backToTop,
       range: /^\d+–\d+ of 200$/.test(read('window.range')),
-      map: canvasElement.querySelectorAll('[data-testid="minimap.viewport"]').length,
-      // The two rails flank the same list and default to the same width; a prop that is accepted and
-      // ignored looks exactly like one that works until they are put side by side.
-      // Arrows from a focused tick step the document, not the rail: the rail thins its markers, so
-      // stepping ticks would jump ten items at a time.
-      outlineNavigates: outlineStepped,
-      railsMatch:
-        Math.round(canvasElement.querySelector('[data-testid="minimap"]')!.getBoundingClientRect().width) ===
-        Math.round(canvasElement.querySelector('[role="navigation"]')!.getBoundingClientRect().width),
     }).toEqual({
       filled: true,
       moved: true,
       atEnd: true,
       backToTop: '0',
       range: true,
-      map: 1,
-      outlineNavigates: true,
-      railsMatch: true,
     });
   },
 };

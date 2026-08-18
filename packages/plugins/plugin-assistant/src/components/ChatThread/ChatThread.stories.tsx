@@ -24,14 +24,12 @@ import { EditorPreviewProvider } from '@dxos/react-ui-editor';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { createMessageGenerator } from '#testing';
+import { MessageGenerator, createMessageGenerator } from '#testing';
 import { translations } from '#translations';
 
 import { ChatThread, type ChatThreadProps } from './ChatThread';
 
 random.seed(1);
-
-type MessageGenerator = Effect.Effect<void, never, Database.Service | Feed.ContextFeedService>;
 
 type StoryArgs = {
   generator?: MessageGenerator[];

@@ -177,6 +177,7 @@
       "@dxos/react-ui-terminal",
       "@dxos/react-ui-thread",
       "@dxos/react-ui-transcription",
+      "@dxos/react-ui-virtual",
       "@dxos/rpc",
       "@dxos/rpc-tunnel",
       "@dxos/rpc-tunnel-e2e",

@@ -7,11 +7,11 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
 import { IconButton, Toolbar } from '@dxos/react-ui';
+import { type WindowController } from '@dxos/react-ui-virtual';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
 import { type FeedScenario, MessageWindow, createScenario } from '../testing';
-import { type WindowController } from '../virtualizer';
 
 /**
  * Real messages, placed by the new module.

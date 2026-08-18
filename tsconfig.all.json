@@ -808,6 +808,9 @@
       "path": "packages/ui/react-ui-transcription/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-virtual/tsconfig.json"
+    },
+    {
       "path": "packages/core/mesh/rpc/tsconfig.json"
     },
     {

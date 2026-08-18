@@ -22,12 +22,12 @@ import {
   composableProps,
   setRef,
 } from '@dxos/react-ui';
+import { type WindowController, type WindowState, useFollow, useWindow } from '@dxos/react-ui-virtual';
 import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { type FeedNavigation, useDecorations, useFeedNavigation, useFollow, useItemSelectionValue } from '../../hooks';
+import { type FeedNavigation, useDecorations, useFeedNavigation, useItemSelectionValue } from '../../hooks';
 import { type FeedModel, type ItemContent, type MessageRenderer, defaultRenderer } from '../../model';
-import { type WindowController, type WindowState, useWindow } from '../../virtualizer';
 import {
   type HighlightRange,
   HtmlBlock,

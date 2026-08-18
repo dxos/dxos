@@ -4,8 +4,9 @@
 
 import { type RefObject, useCallback, useRef } from 'react';
 
+import { type WindowController } from '@dxos/react-ui-virtual';
+
 import { type Stop } from '../model';
-import { type WindowController } from '../virtualizer';
 
 /** How long a commanded destination outranks the scroll offset as "where the reader is". */
 const PENDING_WINDOW = 1_500;
