@@ -10,18 +10,25 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { EID } from '@dxos/keys';
 
 import { SpaceObjectOperation } from '#types';
 
+import AddTagHandler from './add-tag';
 import GetObjectsHandler from './get-objects';
 import QueryObjectsHandler from './query-objects';
+import QueryTypesHandler from './query-types';
+import RemoveTagHandler from './remove-tag';
 
 /** The verbs return `unknown` (any ECHO shape), so the assertions decode the fields they read. */
 const decodeNamed = Schema.decodeUnknownSync(Schema.Struct({ name: Schema.optional(Schema.String) }));
 const decodeRow = Schema.decodeUnknownSync(Schema.Struct({ label: Schema.optional(Schema.String) }));
 const labelOf = (row: unknown): string => decodeRow(row).label ?? '';
+const decodeTypeRow = Schema.decodeUnknownSync(
+  Schema.Struct({ typename: Schema.String, jsonSchema: Schema.optional(Schema.Unknown) }),
+);
 
 class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.testObject', '0.1.0'))(
   Schema.Struct({
@@ -31,8 +38,14 @@ class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.
 ) {}
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: OperationHandlerSet.make(GetObjectsHandler, QueryObjectsHandler),
-  types: [Skill.Skill, Feed.Feed, TestObject],
+  operationHandlers: OperationHandlerSet.make(
+    AddTagHandler,
+    GetObjectsHandler,
+    QueryObjectsHandler,
+    QueryTypesHandler,
+    RemoveTagHandler,
+  ),
+  types: [Skill.Skill, Feed.Feed, Tag.Tag, TestObject],
   disableLlmMemoization: true,
 });
 
@@ -112,4 +125,49 @@ describe('object verbs', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'addTag then removeTag round-trips a tag on an object',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const tag = yield* Database.add(Tag.make({ label: 'important' }));
+        const object = yield* Database.add(Obj.make(TestObject, { name: 'tagged' }));
+        yield* Database.flush();
+
+        yield* Operation.invoke(SpaceObjectOperation.AddTag, { tag: Ref.make(tag), object: Ref.make(object) });
+        expect(taggedIds(object)).toContain(tag.id);
+
+        yield* Operation.invoke(SpaceObjectOperation.RemoveTag, { tag: Ref.make(tag), object: Ref.make(object) });
+        expect(taggedIds(object)).not.toContain(tag.id);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'queryTypes summarizes the space types, and returns a schema for the typenames named',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { types: summary } = yield* Operation.invoke(SpaceObjectOperation.QueryTypes, {});
+        const typenames = summary.map((type) => decodeTypeRow(type).typename);
+        expect(typenames).toContain('com.example.type.testObject');
+        // The agent addresses skills and feeds through its own surface, so they only spend context.
+        expect(typenames).not.toContain('dxos.org/type/Skill');
+
+        const { types } = yield* Operation.invoke(SpaceObjectOperation.QueryTypes, {
+          typenames: ['com.example.type.testObject'],
+        });
+        expect(types).toHaveLength(1);
+        expect(decodeTypeRow(types[0]).jsonSchema).toBeDefined();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
+
+// Compare by entity id: a same-space ref stores a local EID (`echo:/<id>`) while `Obj.getURI`
+// returns the fully-qualified form.
+const taggedIds = (object: Obj.Any): (string | undefined)[] =>
+  Obj.getMeta(object).tags.map((ref) => EID.getEntityId(EID.parse(ref.uri)));

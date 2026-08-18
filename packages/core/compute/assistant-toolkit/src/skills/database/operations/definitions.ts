@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
@@ -33,39 +33,6 @@ export const SchemaAdd = Operation.make({
     }),
   }),
   output: Schema.Void,
-  services: [Database.Service],
-});
-
-export const SchemaList = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.function.database.schemaList'),
-    name: 'List schemas',
-    icon: 'ph--list--regular',
-    description: trim`
-      Lists schema definitions registered in the space.
-
-      By default (no typenames) returns a lightweight summary for every type: typename, kind,
-      name, description, and field names. This is cheap and safe to call often.
-
-      Putting every type's full JSON Schema into context at once wastes a lot of it. To get the
-      full JSON Schema for specific types, call again with \`typenames\` set to only the typenames
-      you actually need (from the summary call) — e.g. right before creating or updating an object
-      of that type.
-    `,
-  },
-  input: Schema.Struct({
-    limit: Schema.optional(Schema.Number),
-    typenames: Schema.optional(
-      Schema.Array(Schema.String).annotate({
-        description: trim`
-          Return the full JSON Schema only for these typenames, instead of the default summary.
-          Get the typenames from a prior summary call (no typenames set).
-        `,
-        example: ['org.dxos.type.task'],
-      }),
-    ),
-  }),
-  output: Schema.Array(Schema.Unknown),
   services: [Database.Service],
 });
 
@@ -125,59 +92,6 @@ export const RelationCreate = Operation.make({
     properties: Schema.Any.annotate({
       description: 'The data to be stored in the relation.',
     }),
-  }),
-  output: Schema.Unknown,
-  services: [Database.Service],
-});
-
-export const RelationDelete = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.function.database.relationDelete'),
-    name: 'Delete relation',
-    description: trim`
-      Deletes the relation.
-    `,
-    icon: 'ph--trash--regular',
-  },
-  input: Schema.Struct({
-    rel: Ref.Ref(Relation.Unknown),
-  }),
-  output: Schema.Void,
-  services: [Database.Service],
-});
-
-export const TagAdd = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.function.database.tagAdd'),
-    name: 'Add tag',
-    icon: 'ph--tag--regular',
-    description: trim`
-      Adds a tag to an object.
-      Tags are objects of type ${Type.getTypename(Tag.Tag)}.
-      You must search database for available tags, or create a new one.
-    `,
-  },
-  input: Schema.Struct({
-    tag: Ref.Ref(Tag.Tag),
-    obj: Ref.Ref(Obj.Unknown),
-  }),
-  output: Schema.Unknown,
-  services: [Database.Service],
-});
-
-export const TagRemove = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.function.database.tagRemove'),
-    name: 'Remove tag',
-    icon: 'ph--tag--regular',
-    description: trim`
-      Removes a tag from an object.
-      Tags are objects of type ${Type.getTypename(Tag.Tag)}.
-    `,
-  },
-  input: Schema.Struct({
-    tag: Ref.Ref(Tag.Tag),
-    obj: Ref.Ref(Obj.Unknown),
   }),
   output: Schema.Unknown,
   services: [Database.Service],

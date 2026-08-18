@@ -10,9 +10,9 @@ import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Entity, Feed, Filter, JsonSchema, Obj, Query, Ref, Relation, Scope, Tag, Type } from '@dxos/echo';
+import { Database, Feed, Filter, JsonSchema, Obj, Query, Scope, Tag, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { DXN, EID, EntityId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 
 import { DatabaseHandlers } from './operations';
@@ -47,22 +47,6 @@ describe('Database Skill', { tags: ['model-fixture'] }, () => {
   //
   // Schema
   //
-
-  it.effect(
-    'schema-list: list available schemas',
-    Effect.fnUntraced(
-      function* (_) {
-        const agent = yield* AgentService.createSession({
-          skills: [DatabaseSkill.make()],
-        });
-        yield* agent.submitPrompt('List all available schemas. Tell me what typenames are available.');
-        yield* agent.waitForCompletion();
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: 60_000 },
-  );
 
   it.effect(
     'schema-add: requires jsonSchema to be an object',
@@ -156,86 +140,6 @@ describe('Database Skill', { tags: ['model-fixture'] }, () => {
     ),
     { timeout: 60_000 },
   );
-
-  it.effect(
-    'relation-delete: delete a relation',
-    Effect.fnUntraced(
-      function* (_) {
-        const agent = yield* AgentService.createSession({
-          skills: [DatabaseSkill.make()],
-        });
-        const person = yield* Database.add(Obj.make(Person.Person, { fullName: 'Sarah Connor' }));
-        const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Cyberdyne Systems' }));
-        const relation = yield* Database.add(
-          Relation.make(Employer.Employer, {
-            [Relation.Source]: person,
-            [Relation.Target]: org,
-            role: 'Director',
-          }),
-        );
-        const relationUri = Relation.getURI(relation);
-        yield* agent.submitPrompt(`Delete the relation ${relationUri}.`);
-        yield* agent.waitForCompletion();
-        expect(Relation.isDeleted(relation)).toBe(true);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: 60_000 },
-  );
-
-  //
-  // Tags
-  //
-
-  it.effect(
-    'tag-add: add a tag to an object',
-    Effect.fnUntraced(
-      function* (_) {
-        const agent = yield* AgentService.createSession({
-          skills: [DatabaseSkill.make()],
-        });
-        const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Tagged Corp' }));
-        const tag = yield* Database.add(Tag.make({ label: 'important' }));
-        yield* agent.submitPrompt(`Add tag "important" to the organization "Tagged Corp".`);
-        yield* agent.waitForCompletion();
-        // Compare by entity id: a same-space ref stores a local EID (`echo:/<id>`) while
-        // `Obj.getURI` returns the fully-qualified form (`echo://<space>/<id>`).
-        const taggedIds = Obj.getMeta(org).tags.map((ref) => EID.getEntityId(EID.parse(ref.uri)));
-        expect(taggedIds).toContain(tag.id);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: 60_000 },
-  );
-
-  it.effect(
-    'tag-remove: remove a tag from an object',
-    Effect.fnUntraced(
-      function* (_) {
-        const agent = yield* AgentService.createSession({
-          skills: [DatabaseSkill.make()],
-        });
-        const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Untagged Corp' }));
-        const tag = yield* Database.add(Tag.make({ label: 'obsolete' }));
-        // Compare by entity id (local vs fully-qualified EID forms refer to the same object).
-        const taggedIds = () => Obj.getMeta(org).tags.map((ref) => EID.getEntityId(EID.parse(ref.uri)));
-        Entity.update(org, (org) => Entity.addTag(org, Ref.make(tag)));
-        expect(taggedIds()).toContain(tag.id);
-        yield* agent.submitPrompt(`Remove tag "obsolete" from the organization "Untagged Corp".`);
-        yield* agent.waitForCompletion();
-        expect(taggedIds()).not.toContain(tag.id);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: 60_000 },
-  );
-
-  //
-  // Context
-  //
 
   it.effect(
     'context-add: add object to chat context',

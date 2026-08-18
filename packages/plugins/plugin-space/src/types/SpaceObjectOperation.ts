@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref, Tag } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
@@ -100,3 +100,63 @@ export const QueryObjects = Operation.make({
     results: Schema.Array(Schema.Unknown),
   }),
 }).pipe(Operation.mcpTool({ name: 'queryObjects', safety: 'read', aspect: 'space' }));
+
+export const AddTag = Operation.make({
+  meta: {
+    key: makeKey('addTag'),
+    name: 'Add Tag',
+    description: 'Add a tag to an object. Tags are objects, so query for one before creating another.',
+    icon: 'ph--tag--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    tag: Ref.Ref(Tag.Tag),
+    object: Ref.Ref(Obj.Unknown),
+  }),
+  output: Schema.Struct({
+    object: Schema.Unknown,
+  }),
+}).pipe(Operation.mcpTool({ name: 'addTag', safety: 'write', aspect: 'space' }));
+
+export const RemoveTag = Operation.make({
+  meta: {
+    key: makeKey('removeTag'),
+    name: 'Remove Tag',
+    description: 'Remove a tag from an object.',
+    icon: 'ph--tag--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    tag: Ref.Ref(Tag.Tag),
+    object: Ref.Ref(Obj.Unknown),
+  }),
+  output: Schema.Struct({
+    object: Schema.Unknown,
+  }),
+}).pipe(Operation.mcpTool({ name: 'removeTag', safety: 'write', aspect: 'space' }));
+
+/**
+ * Distinct from the hosts' `listTypes` tool, which reports the types the host registry carries:
+ * this queries the space (and its registry) and returns their schemas.
+ */
+export const QueryTypes = Operation.make({
+  meta: {
+    key: makeKey('queryTypes'),
+    name: 'Query Types',
+    description:
+      'List the types registered in the space. Returns a summary per type — typename, kind, name, ' +
+      'description, field names — or, for the typenames named, their full JSON Schema. Read the ' +
+      "summary first and ask for a type's schema only when about to create or update one of it.",
+    icon: 'ph--list--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    typenames: Schema.optional(Schema.Array(typenameParameter)).annotate({
+      description: 'Return the full JSON Schema for these typenames instead of the default summary.',
+    }),
+    limit: Schema.optional(Schema.Number).annotate({ description: 'Maximum number of types to return.' }),
+  }),
+  output: Schema.Struct({
+    types: Schema.Array(Schema.Unknown),
+  }),
+}).pipe(Operation.mcpTool({ name: 'queryTypes', safety: 'read', aspect: 'space' }));

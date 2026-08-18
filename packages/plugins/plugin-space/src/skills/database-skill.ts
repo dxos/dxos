@@ -27,8 +27,11 @@ const make = () =>
         SpaceOperation.AddObject,
         SpaceObjectOperation.GetObjects,
         SpaceObjectOperation.QueryObjects,
+        SpaceObjectOperation.QueryTypes,
         SpaceObjectOperation.UpdateObject,
         SpaceOperation.RemoveObjects,
+        SpaceObjectOperation.AddTag,
+        SpaceObjectOperation.RemoveTag,
       ],
     }),
     instructions: Template.make({
@@ -50,6 +53,11 @@ const make = () =>
         - Add files an object into the space; pass 'target' to file it into a specific collection.
         - Update patches the fields you supply and leaves the rest alone.
         - References are the { "/": "echo:..." } envelope form, in both directions.
+
+        # Types and tags
+        - Query the types before writing an object of an unfamiliar type: the summary lists what the
+          space knows, and asking for a typename returns the schema its fields must match.
+        - Tags are themselves objects, so query for one before creating another.
       `,
     }),
   });

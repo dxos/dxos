@@ -7,16 +7,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import {
-  ContextAdd,
-  ContextRemove,
-  RelationCreate,
-  RelationDelete,
-  SchemaAdd,
-  SchemaList,
-  TagAdd,
-  TagRemove,
-} from './operations/definitions';
+import { ContextAdd, ContextRemove, RelationCreate, SchemaAdd } from './operations/definitions';
 
 const SKILL_KEY = 'org.dxos.skill.database';
 
@@ -35,7 +26,7 @@ const make = () =>
       source: Ref.make(Text.make({ content: instructions })),
     },
     tools: Skill.toolDefinitions({
-      operations: [ContextAdd, ContextRemove, RelationCreate, RelationDelete, SchemaAdd, SchemaList, TagAdd, TagRemove],
+      operations: [ContextAdd, ContextRemove, RelationCreate, SchemaAdd],
     }),
   });
 

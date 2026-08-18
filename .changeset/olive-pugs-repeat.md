@@ -31,9 +31,12 @@ Skills move to the plugins that own their subject. `@dxos/plugin-connector` now 
 `@dxos/plugin-space` owns the **Database** skill — object CRUD over the projected verbs, exported as
 `DatabaseSkill` from `@dxos/plugin-space/skills`.
 
-`@dxos/assistant-toolkit`'s own `DatabaseSkill` keeps its key but drops the five operations
-plugin-space now covers (`objectCreate`, `objectDelete`, `objectUpdate`, `query`, `load`) and is
-renamed **Database schema** for what remains: schemas, relations, tags and chat-context binding. Two
+`@dxos/assistant-toolkit`'s own `DatabaseSkill` keeps its key but drops the operations plugin-space
+now covers and is renamed **Database schema** for what remains: schema and relation creation, and
+chat-context binding. Gone from it: `objectCreate`, `objectDelete`, `objectUpdate`, `query` and
+`load` (covered by the projected verbs); `relationDelete` (covered by `removeObjects`, which already
+accepts relations); and `tagAdd`, `tagRemove` and `schemaList`, which moved to plugin-space as the
+annotated `addTag`, `removeTag` and `queryTypes`. Two
 capabilities moved onto the plugin-space verbs with the operations: `queryObjects` gained `in` (scope
 results to objects reachable from the given ones — how queue-backed mail is addressed), and
 `getObject` became `getObjects`, taking an array so a batch of references resolves in one call.

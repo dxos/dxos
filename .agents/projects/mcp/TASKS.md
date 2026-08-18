@@ -101,13 +101,28 @@ changes what a model sees lives in the shared package or it is a bug.
         its skill is renamed **Database schema** for the residue. Two capabilities moved rather than
         being dropped: `queryObjects` gained `in`, and `getObject` became `getObjects` (array in, one
         call) — both covered by `plugin-space/src/operations/object-verbs.test.ts`.
-  - [ ] `database` skill — **schema/relation/tag half still in the toolkit.** Check each against what
-        plugin-space already has before moving: `RelationCreate`/`RelationDelete` against
-        `SpaceOperation.AddRelation`, `SchemaAdd` against `AddType` (`SchemaAdd` takes a JSON Schema,
-        `AddType` a `Type` — probably both survive, agent-facing vs app-facing). `TagAdd`/`TagRemove`
-        and `SchemaList` have no counterpart. `contextAdd`/`contextRemove` stay (they bind
-        `Harness.HarnessService`); once the rest leaves, the toolkit skill is a chat-context skill and
-        should be keyed as one.
+  - [ ] `database` skill — **schema/relation/tag half still in the toolkit.** Duplicate check done
+        (2026-08-15); every pair is the same app-facing/agent-facing split `addObject` already
+        resolved, so the moves are known:
+    - [x] `RelationDelete` — **retired, not moved.** `RemoveObjects` already says "objects,
+          relations, or persisted types" and takes `Entity.Unknown`/refs. Straight duplicate.
+    - [x] `TagAdd` / `TagRemove` / `SchemaList` — **relocated** to plugin-space as `addTag`,
+          `removeTag` and `queryTypes`, all three annotated and on the Database skill.
+          Correction to the earlier note: `queryTypes` does **not** retire the hosts' `listTypes`.
+          They answer different questions — `listTypes` reports the types the _host registry_
+          carries (typename + version, no space, no `Database.Service`), `queryTypes` queries the
+          _space_ and returns schemas. Hence the distinct name; both survive.
+    - [ ] `RelationCreate` → merge into `AddRelation` as its remote branch. Same shape relationship
+          as `create` is to `object`: `AddRelation` takes a live `schema: Schema.Any` plus live
+          `source`/`target` (not remotely callable), `RelationCreate` takes `typename` + refs +
+          `properties` (is). Three in-process call sites (plugin-review `add-message`,
+          plugin-assistant `ChatCompanion` and `fork-chat`) keep the live form.
+    - [ ] `SchemaAdd` → merge into `AddType` the same way — **blocked on services first.** `AddType`
+          declares `Capability.Service` + `Plugin.Service` (it fires `SpaceEvents.TypeAdded` and the
+          `OnTypeAdded` callbacks), so it dies on a headless host until those are read optionally.
+          Biggest of the five; do last.
+    - [ ] `contextAdd`/`contextRemove` stay (they bind `Harness.HarnessService`); once the rest
+          leaves, the toolkit skill is a chat-context skill and should be keyed as one.
   - [ ] **Model fixtures need regenerating** (needs `DX_ANTHROPIC_API_KEY`, absent from the cloud
         sandbox). `parameters.tools` is part of the fixture match key, so shrinking `DatabaseSkill`'s
         tool list invalidated all 134 conversations under

@@ -11,16 +11,22 @@ import { SpaceObjectOperation, SpaceOperation } from '#types';
  * (e.g. `ImportSpace`), which a skill-serializing registry cannot carry.
  */
 export const SpaceObjectOperationHandlerSet = OperationHandlerSet.lazy([
+  SpaceObjectOperation.AddTag.pipe(Operation.lazyHandler(() => import('./add-tag'))),
   SpaceObjectOperation.GetObjects.pipe(Operation.lazyHandler(() => import('./get-objects'))),
   SpaceObjectOperation.QueryObjects.pipe(Operation.lazyHandler(() => import('./query-objects'))),
+  SpaceObjectOperation.QueryTypes.pipe(Operation.lazyHandler(() => import('./query-types'))),
+  SpaceObjectOperation.RemoveTag.pipe(Operation.lazyHandler(() => import('./remove-tag'))),
   SpaceObjectOperation.UpdateObject.pipe(Operation.lazyHandler(() => import('./update-object'))),
   SpaceOperation.AddObject.pipe(Operation.lazyHandler(() => import('./add-object'))),
   SpaceOperation.RemoveObjects.pipe(Operation.lazyHandler(() => import('./remove-objects'))),
 ]);
 
 export const SpaceOperationHandlerSet = OperationHandlerSet.lazy([
+  SpaceObjectOperation.AddTag.pipe(Operation.lazyHandler(() => import('./add-tag'))),
   SpaceObjectOperation.GetObjects.pipe(Operation.lazyHandler(() => import('./get-objects'))),
   SpaceObjectOperation.QueryObjects.pipe(Operation.lazyHandler(() => import('./query-objects'))),
+  SpaceObjectOperation.QueryTypes.pipe(Operation.lazyHandler(() => import('./query-types'))),
+  SpaceObjectOperation.RemoveTag.pipe(Operation.lazyHandler(() => import('./remove-tag'))),
   SpaceObjectOperation.UpdateObject.pipe(Operation.lazyHandler(() => import('./update-object'))),
   SpaceOperation.AddObject.pipe(Operation.lazyHandler(() => import('./add-object'))),
   SpaceOperation.AddRelation.pipe(Operation.lazyHandler(() => import('./add-relation'))),

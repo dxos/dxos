@@ -166,9 +166,11 @@ export const AddObject = Operation.make({
   input: Schema.Struct({
     object: Schema.optional(Obj.Unknown).annotate({ description: 'The object to add, already instantiated.' }),
     // A caller that cannot hold a live object — anything across an RPC boundary — describes one
-    // instead, and the handler instantiates it against the space's type registry. Kept as its own
-    // field rather than a union with `object`, so the live path's schema (and its decoding) is
-    // untouched. Exactly one of the two is required.
+    // instead, and the handler instantiates it against the space's type registry. Two fields rather
+    // than a union because the branches address different callers: `Obj.Unknown` projects as bare
+    // `{ id }`, so a discriminated union would make a remote caller choose a branch it cannot
+    // populate. Exactly one is required, enforced in the handler — `invoke` does not decode its
+    // input, so a schema-level refinement would not run.
     create: Schema.optional(ObjectDraft).annotate({
       description: 'Description of an object to create and add, when no instantiated object is available.',
     }),
