@@ -26,6 +26,13 @@ export const createMessageGenerator = (): MessageGenerator[] => [
     const { feed } = yield* Feed.ContextFeedService;
     yield* Feed.append(feed, [
       createMessage('user', [
+        // Synthetic context (e.g. the document selection): rendered by the chrome as its own panel
+        // above the prompt bubble, never inside it.
+        {
+          _tag: 'text',
+          disposition: 'synthetic',
+          text: `The user's current selection: ${random.lorem.sentence(12)}`,
+        },
         {
           _tag: 'text',
           text: random.lorem.sentence(5),

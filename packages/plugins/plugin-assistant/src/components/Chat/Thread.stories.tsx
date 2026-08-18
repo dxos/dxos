@@ -214,6 +214,27 @@ export const Thinking: Story = {
   },
 };
 
+/** Synthetic context renders as its own panel above the bubble — never inside the reader's words. */
+export const Context: Story = {
+  args: {
+    generator: createMessageGenerator(),
+    wait: true,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      async () => {
+        await expect(canvasElement.querySelectorAll('[data-testid="chat.context"]').length).toBeGreaterThan(0);
+      },
+      { timeout: 10_000 },
+    );
+    // The bubble itself carries none of the context markup.
+    const bubbles = [...canvasElement.querySelectorAll('[data-testid="chat.context"]')];
+    for (const panel of bubbles) {
+      await expect(panel.parentElement?.textContent ?? '').not.toContain('<synthetic');
+    }
+  },
+};
+
 export const Normal: Story = {
   args: {
     generator: createMessageGenerator(),

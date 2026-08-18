@@ -10,6 +10,7 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
+        'context.label': 'Context',
         'copy.label': 'Copy',
         'just-now.label': 'just now',
         'rewind.label': 'Rewind to this prompt',

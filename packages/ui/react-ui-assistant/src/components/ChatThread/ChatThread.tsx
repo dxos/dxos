@@ -105,7 +105,12 @@ const ChatThreadRoot = ({
 
   return (
     <ChatThreadProvider userHue={userHue} onEvent={onEvent}>
-      <MessageChromeProvider onRewind={onEvent ? handleRewind : undefined} streaming={streaming} debug={debug}>
+      <MessageChromeProvider
+        onRewind={onEvent ? handleRewind : undefined}
+        streaming={streaming}
+        showContext={viewType !== 'summary'}
+        debug={debug}
+      >
         <MessageList.Root
           model={model}
           renderer={renderer}

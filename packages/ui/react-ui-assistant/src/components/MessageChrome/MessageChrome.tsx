@@ -5,7 +5,8 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -24,6 +25,8 @@ type MessageChromeContextValue = {
   onRewind?: (id: string) => void;
   /** While an answer is streaming the toolbars stay hidden — still in flow, never revealed. */
   streaming?: boolean;
+  /** Show synthetic context panels (off in the summary view). */
+  showContext?: boolean;
   /** Show the message id in the toolbars — one turn is several messages, and ids say which. */
   debug?: boolean;
 };
@@ -123,6 +126,45 @@ export const AssistantToolbar = ({ classNames, message }: MessageToolbarProps) =
 AssistantToolbar.displayName = 'AssistantToolbar';
 
 //
+// Context
+//
+
+/**
+ * Synthetic context riding on a prompt (a document selection, an encoded event): system-generated
+ * input, so it renders as its own dimmed panel above the bubble — the bubble frames only the
+ * reader's words.
+ */
+const SyntheticContext = ({ message }: { message: Message.Message }) => {
+  const { t } = useTranslation(translationKey);
+  const { showContext = true } = useMessageChromeContext('SyntheticContext');
+  const context = message.blocks
+    .filter((block) => block._tag === 'text' && block.disposition === 'synthetic')
+    .map((block) => (block as { text: string }).text)
+    .join('\n\n');
+  if (!showContext || !context.length) {
+    return null;
+  }
+
+  return (
+    <div className='pb-1 opacity-60' data-testid='chat.context'>
+      <TogglePanel.Root>
+        <TogglePanel.Content classNames='border border-subdued-separator rounded-sm'>
+          <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
+            <span className='grow text-description truncate'>{t('context.label')}</span>
+            <Icon icon='ph--brain--regular' size={4} classNames='text-description' />
+          </TogglePanel.Header>
+          <TogglePanel.Body>
+            <TogglePanel.Viewport classNames='px-2 pb-1 max-h-40 overflow-y-auto text-sm text-description whitespace-pre-wrap'>
+              {context}
+            </TogglePanel.Viewport>
+          </TogglePanel.Body>
+        </TogglePanel.Content>
+      </TogglePanel.Root>
+    </div>
+  );
+};
+
+//
 // Chrome
 //
 
@@ -156,6 +198,7 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
       {prompt ? (
         <div className='min-w-0 flex flex-col items-end'>
           <div className='max-w-[66%] min-w-0'>
+            <SyntheticContext message={message} />
             <div className='px-4 py-3 border-s-2 border-accent-bg rounded-sm bg-input-surface'>{children}</div>
             <PromptToolbar classNames={mx('justify-end', reveal, !streaming && revealOnHover)} message={message} />
           </div>

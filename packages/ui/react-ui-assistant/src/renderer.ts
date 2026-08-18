@@ -95,11 +95,9 @@ const blockToMarkdown = (
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
-        // A synthetic turn is system-generated input (a trigger, an encoded event): shown like
-        // reasoning, not framed as the reader's own words.
-        return block.disposition === 'synthetic'
-          ? tag('synthetic', block.text, block)
-          : tag('prompt', block.text, block);
+        // Synthetic context (a selection, an encoded event) is the chrome's: it renders as its own
+        // panel above the bubble, so the bubble frames only the reader's words.
+        return block.disposition === 'synthetic' ? undefined : tag('prompt', block.text, block);
       }
       return block.text.trim() || undefined;
     }
@@ -192,6 +190,11 @@ export const estimateRow = (message: Message.Message): number => {
   for (const block of message.blocks) {
     switch (block._tag) {
       case 'text': {
+        if (block.disposition === 'synthetic') {
+          // Rendered by the chrome as a collapsed context panel, not as text.
+          height += PANEL_HEIGHT;
+          break;
+        }
         for (const paragraph of block.text.split('\n\n')) {
           height += Math.max(1, Math.ceil(paragraph.length / LINE_CHARS)) * LINE_HEIGHT;
         }
