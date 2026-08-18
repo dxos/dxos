@@ -9,14 +9,14 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, createTmpPath } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { type BenchResult, printResults, runBench } from './testing/bench-util';
+import { type BenchResult, parseBenchCount, printResults, runBench } from './testing/bench-util';
 
 // Same 5 operations as `sqlite-benchmarks.test.ts`, run through the ECHO API instead of raw SQL,
 // against a real file-backed SQLite database (`storagePath`, not `:memory:`). Run once per object
 // storage kind: automerge objects (`db.add`, the default CRDT-backed document tree) and feed
 // objects (`db.add(obj, { to: feed })`, the append-only queue path) — the matrix the task asked for.
-const N = Number(process.env.ECHO_BENCH_N ?? 100);
-const SCAN_OPS = Number(process.env.ECHO_BENCH_SCAN_OPS ?? 10);
+const N = parseBenchCount('ECHO_BENCH_N', 100);
+const SCAN_OPS = parseBenchCount('ECHO_BENCH_SCAN_OPS', 10);
 
 type Variant = {
   name: string;

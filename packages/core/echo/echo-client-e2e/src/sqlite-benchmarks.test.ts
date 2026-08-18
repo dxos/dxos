@@ -14,14 +14,14 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 import { layerFile } from '@dxos/sql-sqlite/platform';
 import { range } from '@dxos/util';
 
-import { type BenchResult, printResults, runBench } from './testing/bench-util';
+import { type BenchResult, parseBenchCount, printResults, runBench } from './testing/bench-util';
 
 // Raw-SQLite baseline for the ECHO benchmarks in `echo-benchmarks.test.ts`: same driver
 // (`@dxos/sql-sqlite`'s node layer, i.e. `@effect/sql-sqlite-node`), same file-backed storage, so
 // the delta between this suite and that one isolates ECHO's overhead rather than a driver
 // difference. Opt-in ('manual' tag) since it's a timing report, not a pass/fail assertion.
-const N = Number(process.env.SQLITE_BENCH_N ?? 2_000);
-const SCAN_OPS = Number(process.env.SQLITE_BENCH_SCAN_OPS ?? 50);
+const N = parseBenchCount('SQLITE_BENCH_N', 2_000);
+const SCAN_OPS = parseBenchCount('SQLITE_BENCH_SCAN_OPS', 50);
 
 describe('sqlite benchmarks (raw)', { tags: ['manual'], timeout: 120_000 }, () => {
   let dir: string;
