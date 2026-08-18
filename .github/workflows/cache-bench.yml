@@ -1,0 +1,105 @@
+name: Cache benchmark
+
+# Measures the moon remote cache on a real runner. Manual only: it seeds each arm with a cold build
+# and is far too expensive to run on push.
+#
+# It exists because the question "is this cache fast enough" keeps coming back, and answering it
+# from a dev machine does not transfer — absolute times differ and the sandbox cannot even reach
+# port 9092. Method and the prior numbers: `.agents/projects/ci/REPORT.md`.
+on:
+  workflow_dispatch:
+    inputs:
+      arms:
+        description: 'Caches to compare, space-separated: selfhosted, depot'
+        required: false
+        default: 'selfhosted depot'
+      reps:
+        description: 'Recorded reps per arm (each arm also gets one unrecorded seeding build)'
+        required: false
+        default: '3'
+      target:
+        description: 'moon target to run, without the leading colon'
+        required: false
+        default: 'build'
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+  # Named by `remote.auth.token` in the Depot arm's config, which takes an environment variable name.
+  DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+
+# Keyed on the run id so repeated dispatches of one ref run in parallel: comparing caches needs
+# independent samples of the same commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  bench:
+    # The same runner and image as `check`, so the numbers sit next to the ones in REPORT.md rather
+    # than needing their own baseline.
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      # The Depot arm degrades to an uncached build on a missing token, green and silent — the same
+      # failure mode the whole cache project is about. Fail before spending an hour measuring it.
+      - name: Check the requested arms have credentials
+        env:
+          ARMS: ${{ inputs.arms }}
+        run: |
+          if [ "$ARMS" != "${ARMS#*depot}" ] && [ -z "$DEPOT_TOKEN" ]; then
+            echo "::error::The depot arm needs the DEPOT_TOKEN repository secret. It is unset or empty."
+            exit 1
+          fi
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Benchmark
+        env:
+          ARMS: ${{ inputs.arms }}
+        run: |
+          set -o pipefail
+          ./tools/moon-cache/bench/ci-bench.sh '${{ inputs.reps }}' '${{ inputs.target }}' 2>&1 \
+            | tee bench.out
+
+      # The table is the deliverable, so put it where the run page shows it rather than only in a log.
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo '### `:${{ inputs.target }}` — ${{ inputs.arms }}, ${{ inputs.reps }} reps'
+            echo
+            echo '```text'
+            sed -n '/^== RTT/,$p' bench.out 2>/dev/null || echo 'no output'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache-bench-${{ github.run_id }}
+          path: |
+            .moon-bench/
+            bench.out
+          if-no-files-found: warn
