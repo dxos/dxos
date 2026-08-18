@@ -22,7 +22,7 @@ import { type Credential, DeviceType, type Identity } from '@dxos/react-client/h
 import { osTranslations } from '@dxos/ui-theme';
 
 import hero from '../assets/hero.webp?url';
-import { WELCOME_SCREEN } from './constants';
+import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants';
 import { meta } from './meta';
 import { queryAllCredentials, removeQueryParamByValue } from './util';
 
@@ -160,7 +160,14 @@ export class OnboardingManager {
     } else if (!this._skipAuth && this._deviceInvitationCode === undefined) {
       // No identity yet: show welcome. Skipped when a device invitation is pending, since both dialog
       // updates then race through the operation layer and a welcome landing second hides the join.
-      await this._showWelcome();
+      // A `?token=...` param means a magic-link redemption is about to run: show the "authorizing"
+      // dialog instead of the login form, so the multi-second server + HALO-replication wait doesn't
+      // look like a stuck login gate.
+      if (this._token) {
+        await this._showAuthorizingDevice();
+      } else {
+        await this._showWelcome();
+      }
       if (aborted()) {
         return;
       }
@@ -201,8 +208,14 @@ export class OnboardingManager {
       // the existing identity. Awaiting `_login()` lets HALO finish replicating
       // any pre-existing IdentityRecovery credentials before `_setupRecovery`
       // checks them, so we don't prompt a user who already has a passkey.
-      await this._login();
-      await this._setupRecovery();
+      if (await this._login()) {
+        await this._setupRecovery();
+      } else {
+        // Token was invalid, expired, or already used: fall back to the ordinary login form so the
+        // user can request a fresh link, rather than leaving them on the "authorizing" dialog forever.
+        await this._showLoginExpiredToast();
+        await this._showWelcome();
+      }
     }
     if (aborted()) {
       return;
@@ -250,11 +263,18 @@ export class OnboardingManager {
     });
   }
 
-  private async _login(): Promise<void> {
+  /** Resolves false when the token was rejected -- `invokePromise` resolves with `{ error }` rather
+   * than rejecting, so the result must be inspected or a failed redemption is silently swallowed. */
+  private async _login(): Promise<boolean> {
     invariant(this._token);
-    await this._invokePromise(ClientOperation.RedeemToken, { token: this._token });
-    this._token && removeQueryParamByValue(this._token);
+    const { error } = await this._invokePromise(ClientOperation.RedeemToken, { token: this._token });
+    removeQueryParamByValue(this._token);
     removeQueryParamByValue('login');
+    if (error) {
+      log.warn('token redemption failed', { error });
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -357,6 +377,26 @@ export class OnboardingManager {
 
   private async _closeWelcome(): Promise<void> {
     await this._invokePromise(LayoutOperation.UpdateDialog, { state: false });
+  }
+
+  /** Shown in place of the login form while a `?token=...` magic-link redemption is in flight. */
+  private async _showAuthorizingDevice(): Promise<void> {
+    await this._invokePromise(LayoutOperation.UpdateDialog, {
+      subject: AUTHORIZING_DEVICE_DIALOG,
+      type: 'alert',
+      overlayClasses: 'dark bg-neutral-950! bg-no-repeat bg-center',
+      overlayStyle: { backgroundImage: `url(${hero})` },
+    });
+  }
+
+  private async _showLoginExpiredToast(): Promise<void> {
+    await this._invokePromise(LayoutOperation.AddToast, {
+      id: 'login-link-expired-toast',
+      title: ['login-link-expired-toast.title', { ns: meta.profile.key }],
+      description: ['login-link-expired-toast.description', { ns: meta.profile.key }],
+      icon: 'ph--warning--regular',
+      closeLabel: ['close.label', { ns: osTranslations }],
+    });
   }
 
   private async _createIdentity(): Promise<void> {
