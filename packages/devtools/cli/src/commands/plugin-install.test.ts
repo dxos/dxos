@@ -71,9 +71,11 @@ describe('plugin add --dev', () => {
   );
 
   test(
-    '--no-enable installs without running the plugin',
+    '--no-enable records the plugin without activating it',
     ({ expect }) => {
       withIsolatedHome((home) => {
+        // The fixture ships a built `manifest.json`, so nothing of the plugin is read but its
+        // metadata. An unbuilt checkout would instead have its `dx.config.ts` evaluated here.
         expect(runDx(['plugin', 'add', '--dev', FIXTURE_DIR, '--no-enable'], { home }).status).toBe(0);
         const row = findFixture(home);
         expect(row?.enabled).toBe(false);

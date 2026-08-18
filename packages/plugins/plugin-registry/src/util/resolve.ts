@@ -197,8 +197,10 @@ const resolveUrl = (manifestUrl: string): Effect.Effect<Resolved, PluginInstallE
 /**
  * Resolves a locator into the record `add` will persist.
  *
- * Nothing is imported: the metadata comes from a manifest or `dx.config.ts`, which is what lets
- * install stay a fetch-and-record step with `enable` as the first execution of plugin code.
+ * The plugin's entry module is never imported here: its metadata comes from a manifest, which is
+ * what lets install stay a fetch-and-record step with `enable` as the first execution of plugin
+ * code. The one exception is `--dev` against a checkout with no built manifest, which reads that
+ * directory's `dx.config.ts` — see {@link resolveDirectory}.
  *
  * Only two of the four locator/mode combinations install today. A snapshot of a local directory
  * and a live install from a dev server are both expressible in this command's shape (that is why

@@ -328,9 +328,11 @@ capability-passing boundary — which would also solve reload, since a worker ca
 Undecided; decide before third-party plugins ship, not after.
 
 §2.3's install/enable boundary changes the shape of the cheap end of that range without closing the
-question. If install never imports, then `add --no-enable` fetches and records without running
-anything, and `enable` is a single auditable moment where a named plugin starts executing with the
-user's keys. That is what makes "trusted publisher + explicit enable" an actual consent step rather
+question. Where it holds — every URL install, which is every install of code the user did not write
+— `add --no-enable` fetches and records without running anything, and `enable` is a single auditable
+moment where a named plugin starts executing with the user's keys. (`--dev` against an unbuilt
+checkout is the documented exception, and it is not a publisher-trust case: the argument is the
+user's own working directory.) That is what makes "trusted publisher + explicit enable" an actual consent step rather
 than a label on a flow where the code already ran. It does not bound what a plugin does **after**
 that point, which is what the worker boundary is for.
 
