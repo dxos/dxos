@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
 import { IconButton, Toolbar } from '@dxos/react-ui';
@@ -26,8 +26,8 @@ import { type FeedScenario, MessageWindow, createScenario } from '../testing';
  * cursor as well as the virtualizer, so swapping the placement inside it is a reimplementation. This
  * is what that reimplementation will be checked against.
  */
-/** A row's worth of space kept at the bottom, so the reserve cannot swallow the tail entirely. */
-const NOMINAL_ROW = 64;
+/** The fixed reserve the past-end story keeps below the tail — part of the resting view. */
+const RESERVE = 96;
 
 const DefaultStory = ({
   scenario,
@@ -45,22 +45,7 @@ const DefaultStory = ({
   const controller = useRef<WindowController>(null);
   const messages = useMemo(() => [...definition.messages, ...extra], [definition.messages, extra]);
 
-  // Measured from the container the host owns, never read back out of the layout: the reserve is an
-  // input to the sizer, and anything derived from the sizer oscillates.
   const bodyRef = useRef<HTMLDivElement>(null);
-  const [available, setAvailable] = useState(0);
-  useEffect(() => {
-    const element = bodyRef.current;
-    if (!element) {
-      return;
-    }
-
-    const read = () => setAvailable(element.clientHeight);
-    read();
-    const observer = new ResizeObserver(read);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
 
   return (
     <div className='flex flex-col h-full'>
@@ -96,7 +81,7 @@ const DefaultStory = ({
           Custom={definition.Custom}
           estimateSize={definition.estimateSize}
           sticky={sticky}
-          reserve={scrollPastEnd ? Math.max(0, available - NOMINAL_ROW) : 0}
+          reserve={scrollPastEnd ? RESERVE : 0}
           controllerRef={controller}
         />
       </div>
@@ -240,17 +225,12 @@ export const Tail: Story = {
 };
 
 /**
- * The tail, with a viewport's worth of space reserved past it.
+ * The tail, with a fixed reserve past it — part of the resting view.
  *
- * The case the old engine cannot do at all: its reserve is a DOM spacer, so the element and the
- * virtualizer disagree about where the document ends and an offset inside the reserve is beyond the
- * virtualizer's maximum, where `scrollToOffset` declines to move. The feed opened at the document's
- * end with its last message near the top of an empty screen — reported from a real session, and the
- * reason `baseline/tail` has no `VariedPastEnd`.
- *
- * Here the reserve is a term in the sizer and `endOffset` is the last row's own end, so "the end of
- * the content" and "the end of the document" are two numbers in one coordinate system rather than
- * two systems.
+ * The old engine could not reserve at all: its reserve was a DOM spacer, so the element and the
+ * virtualizer disagreed about where the document ends. Here the reserve is a term in the sizer, in
+ * the same coordinate system, and the rest position includes it: the tail sits the reserve's
+ * extent clear of the viewport's edge (breathing room above a composer), at the scroll maximum.
  */
 export const VariedPastEnd: Story = {
   args: { scenario: 'thread', count: 500, sticky: true, scrollPastEnd: true },
@@ -266,19 +246,23 @@ export const VariedPastEnd: Story = {
       return last && Math.round(last.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom);
     };
     let resting = restingOf();
-    for (let frame = 0; frame < 300 && Math.abs(resting ?? 999) > 2; frame++) {
+    for (let frame = 0; frame < 300 && Math.abs((resting ?? 999) + RESERVE) > 2; frame++) {
       await nextFrame();
       resting = restingOf();
     }
     const last = canvasElement.querySelector<HTMLElement>('[data-index="499"]');
 
-    // And the reserve is still there to be scrolled into — the point of reserving it.
+    // At rest the reserve is on screen, so there is nothing further to scroll into.
     const room = scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop;
 
-    await expect({ mounted: !!last, resting: Math.abs(resting ?? 999) <= 2, reserved: room > 100 }).toEqual({
+    await expect({
+      mounted: !!last,
+      resting: Math.abs((resting ?? 999) + RESERVE) <= 2,
+      settled: room <= 2,
+    }).toEqual({
       mounted: true,
       resting: true,
-      reserved: true,
+      settled: true,
     });
   },
 };

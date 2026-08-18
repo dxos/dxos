@@ -548,11 +548,13 @@ export const Chrome: Story = {
 };
 
 /**
- * With space reserved, the last row can be brought to the top of the viewport.
+ * The reserve is part of the resting view: "bottom" lands at the scroll maximum, with the reserved
+ * space on screen below the tail.
  *
- * On the old design this was a flag that special-cased the tail wherever it was consulted, and it
- * could never be stabilised. Here the host computes a number and the list adds it to the sizer;
- * nothing else in the engine knows it happened (§7).
+ * On the old design the reserve was a flag that special-cased the tail wherever it was consulted,
+ * and it could never be stabilised. Here the host computes a number, the list adds it to the sizer,
+ * and the end includes it; nothing else in the engine knows it happened (§7). This story's reserve
+ * is a viewport's worth less one row, so at rest the last row sits at the top — the extreme case.
  */
 export const PastEnd: Story = {
   args: { count: 200, scrollPastEnd: true },
@@ -560,26 +562,15 @@ export const PastEnd: Story = {
     await settle();
     const { scroller } = probe(canvasElement);
 
-    // "Bottom" means the last message resting on the bottom of the screen, not the end of the
-    // scrollable range: reserved space is somewhere the reader may go, not somewhere to be sent.
-    // Parking the last row at the top of an empty screen is exactly what the old design did.
     (canvasElement.querySelector('[data-testid="window.bottom"]') as HTMLElement).click();
     await settle();
-    const atBottom = canvasElement.querySelector<HTMLElement>('[data-index="199"]');
-    const rests =
-      !!atBottom && Math.abs(atBottom.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom) <= 2;
+    const last = canvasElement.querySelector<HTMLElement>('[data-index="199"]');
+    const atTop = !!last && Math.abs(last.getBoundingClientRect().top - scroller.getBoundingClientRect().top) <= 2;
 
-    // And the reserve is what lets the reader take that same row to the top. Scrolled twice: the
-    // reserve is measured from the container, so it exists one render after the first layout.
-    scroller.scrollTop = scroller.scrollHeight;
-    await settle();
-    scroller.scrollTop = scroller.scrollHeight;
-    await settle();
-    const atEnd = canvasElement.querySelector<HTMLElement>('[data-index="199"]');
-    const reachesTheTop =
-      !!atEnd && Math.abs(atEnd.getBoundingClientRect().top - scroller.getBoundingClientRect().top) <= 2;
+    // The rest position is the scroll maximum: there is nothing further to scroll into.
+    const room = scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop;
 
-    await expect({ rests, reachesTheTop }).toEqual({ rests: true, reachesTheTop: true });
+    await expect({ atTop, settled: room <= 2 }).toEqual({ atTop: true, settled: true });
   },
 };
 

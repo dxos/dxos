@@ -38,7 +38,7 @@ export type UseFollowOptions = {
   extent: number;
   count: number;
   axis?: 'block' | 'inline';
-  /** Empty extent after the last row; the end the follow rests at is before it. */
+  /** Empty extent after the last row, included in the resting view: the tail sits above it. */
   reserve?: number;
   /** The standing intent: off means this hook does nothing at all. */
   enabled?: boolean;
@@ -118,12 +118,13 @@ export const useFollow = ({
         axis === 'block'
           ? last.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom
           : last.getBoundingClientRect().right - scroller.getBoundingClientRect().right;
-      return Math.max(0, Math.round(current + delta));
+      // The reserve is part of the resting view: the tail sits that much clear of the edge.
+      return Math.max(0, Math.round(current + delta + reserve));
     }
 
-    return placement.endOffset();
+    return placement.endOffset() + reserve;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [axis, placement, scrollerRef.current]);
+  }, [axis, placement, reserve, scrollerRef.current]);
 
   // The glide, built once per scroller. Speeds are in rows, so it asks the placement for a live
   // median of what is mounted rather than being handed a constant.
@@ -189,7 +190,7 @@ export const useFollow = ({
       const total = axis === 'block' ? scroller.scrollHeight : scroller.scrollWidth;
       const back = current < lastOffset.current - 1;
       lastOffset.current = current;
-      if (total - reserve - current - viewport <= STICKY_THRESHOLD) {
+      if (total - current - viewport <= STICKY_THRESHOLD) {
         following.current = true;
       } else if (back && performance.now() - gestureAt.current < GESTURE_WINDOW) {
         following.current = false;

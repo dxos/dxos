@@ -198,10 +198,11 @@ export type MessageListRootProps = PropsWithChildren<{
    */
   stickyBottom?: boolean;
   /**
-   * Reserve empty space below the last row, so that any message — including the last — can be
-   * brought to the top of the viewport. A number in the sizer, not a mode the list has (§7).
+   * Blank lines kept below the last row, part of the resting view: the tail sits that much clear
+   * of the viewport's end (breathing room above a composer). A constant number in the sizer —
+   * lines × the viewport's line-height — not a mode the list has (§7).
    */
-  scrollPastEnd?: boolean;
+  tailLines?: number;
   overscan?: number;
   onRangeChange?: (range: MessageRange) => void;
   /** Published once the list is wired; for hosts composing chrome outside the feed's context. */
@@ -228,7 +229,7 @@ const MessageListRoot = ({
   debug,
   estimateSize = DEFAULT_ESTIMATE,
   stickyBottom = false,
-  scrollPastEnd = false,
+  tailLines = 0,
   overscan = 8,
   onRangeChange,
   controllerRef,
@@ -290,17 +291,20 @@ const MessageListRoot = ({
     [model, estimateSize, nominalSize],
   );
 
-  // The viewport less a nominal row: enough for the reader to bring the last row to the top.
-  //
-  // Measured from the element, never read back out of the layout. It is an *input* to the sizer, so
-  // anything derived from the sizer would oscillate — and deliberately not the last row's measured
-  // size, which the layout also feeds.
-  // Just enough space that the LAST STOP (the final prompt) can rest at the top of the viewport —
-  // not a viewport's worth. Estimates undershoot real rows, and an estimate-sized reserve then
-  // overshoots (the prompt scrolls OFF the top), so this reads the placement's measured extents —
-  // safe against the old oscillation because a row's height does not depend on the reserve; the
-  // value lags one render through state and settles when the measurements do.
+  // A constant input to the sizer: lines × the viewport's line-height, read once per mount. The
+  // previous design derived a viewport-sized reserve from the tail's measured extents (so the last
+  // prompt could reach the top), which was several moving parts — measurements, the stops policy,
+  // a freshness freeze — and never reliable. A constant cannot oscillate.
   const [reserve, setReserve] = useState(0);
+  useEffect(() => {
+    if (!viewport || !tailLines) {
+      setReserve(0);
+      return;
+    }
+
+    const lineHeight = parseFloat(getComputedStyle(viewport).lineHeight) || 24;
+    setReserve(Math.round(tailLines * lineHeight));
+  }, [viewport, tailLines]);
 
   const controller = useRef<WindowController>(null);
   const onWindowChange = useCallback(
@@ -358,33 +362,6 @@ const MessageListRoot = ({
     changedAt: () => changedAtRef.current,
   });
 
-  useEffect(() => {
-    if (!scrollPastEnd || !viewport || !model.count) {
-      setReserve(0);
-      return;
-    }
-
-    const stops = model.stops();
-    const lastStop = stops.length ? stops[stops.length - 1].index : model.count - 1;
-    let tail = 0;
-    for (let index = lastStop; index < model.count; index++) {
-      tail += placement.extentOf(index);
-    }
-
-    const next = Math.max(0, viewport.clientHeight - tail);
-    // Frozen except within a beat of a model change: the reserve reads the tail's measured extents,
-    // and a widget toggled there changes them — a reserve that followed would shift the sizer under
-    // the reader, which is the jump this line removes. New content re-sizes it; rearranging what is
-    // already there does not.
-    if (performance.now() - changedAtRef.current > 1_000) {
-      return;
-    }
-
-    // A pixel of hysteresis, so sub-pixel measurement noise cannot tick the sizer every commit.
-    setReserve((current) => (Math.abs(current - next) > 1 ? next : current));
-    // Keyed on the document's extent: that is what changes when the tail's rows are measured.
-  }, [scrollPastEnd, viewport, model, model.count, sizerExtent, placement]);
-
   // What a reader would call flicker: a row moving on screen by more than the scroll moved, sampled
   // once per frame so the reading is of what was painted. Only while debugging — it reads every
   // mounted row's box every frame.
@@ -420,21 +397,10 @@ const MessageListRoot = ({
         return;
       }
 
-      // Under scrollPastEnd, the bottom IS the last prompt at the top — the position the reserve
-      // was sized for; without it, the last row rests on the viewport's end.
-      const stops = model.stops();
-      if (scrollPastEnd && stops.length) {
-        scrollToIndex(stops[stops.length - 1].index, { align: 'start', ...options });
-      } else {
-        scrollToIndex(model.count - 1, { align: 'end', ...options });
-      }
-
-      // The bottom is the tail whichever position expresses it: pin the follow, after the jump's
-      // own onNavigate — under scrollPastEnd the target is the last *stop*, which reads as "not
-      // the tail" and would leave a submitted prompt unpinned while its answer streams.
-      follow.onNavigate(model.count - 1);
+      // The end includes the reserve: the tail rests its tail-lines clear of the viewport's edge.
+      scrollToIndex(model.count - 1, { align: 'end', ...options });
     },
-    [scrollToIndex, model, scrollPastEnd, follow],
+    [scrollToIndex, model],
   );
 
   useEffect(() => {
@@ -459,7 +425,6 @@ const MessageListRoot = ({
     stops: () => model.stops(),
     current: () => currentIndexRef.current,
     count: () => model.count,
-    scrollPastEnd,
     // The follow scrolls only while content arrives AND the reader is pinned to the bottom;
     // navigating anywhere but the last row un-pins, before the jump's own scroll event fires.
     onNavigate: follow.onNavigate,

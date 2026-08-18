@@ -171,7 +171,7 @@ component Virtualizer
     extents: Extents                  # measurements stay keyed by model id, never by index
     axis?: 'block' | 'inline'         # default block; only the binding maps extent to height/width
     overscan?: number                 # rows mounted before/beyond the visible window, per side (8)
-    reserve?: number                  # empty extent after the last row (scrollPastEnd), host-computed
+    reserve?: number                  # empty extent after the last row, part of the resting view
     sticky?: boolean                  # follow the tail as content arrives
   state:
     anchor: { id, index, start }      # the one authoritative position; everything else derived
@@ -204,7 +204,7 @@ component MessageList
     registry?: XmlWidgetRegistry                # XML tag -> React widget
     estimateSize?: number | (message, index) => number
     stickyBottom?: boolean
-    scrollPastEnd?: boolean                     # off by default
+    tailLines?: number                          # blank lines below the tail at rest; 0 by default
     overscan?: number
     debug?: boolean                             # borders, outlines + jump detector
     # NOT here, deliberately: decorations (née hits) and selection reach items via provider + hook
@@ -430,7 +430,7 @@ feat F-8: Retrofit
 
 ```mdl
 test T-1: Tail at rest with reserve
-  given: 500 varied-height messages, scrollPastEnd on
+  given: 500 varied-height messages, a tail reserve on
   then:
     - the feed opens with the last message resting on the viewport's bottom edge
     - the reserve is still scrollable; the last row reaches the top of the viewport and no further

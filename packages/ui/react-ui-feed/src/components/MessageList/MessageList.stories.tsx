@@ -15,11 +15,11 @@ const meta: Meta<FeedStoryProps> = {
   parameters: { layout: 'fullscreen' },
   args: {
     count: 100,
-    scrollPastEnd: true,
+    tailLines: 4,
   },
   argTypes: {
     debug: { control: 'boolean' },
-    scrollPastEnd: { control: 'boolean' },
+    tailLines: { control: 'number' },
   },
 };
 

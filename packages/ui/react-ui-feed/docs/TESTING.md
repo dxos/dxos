@@ -87,8 +87,8 @@ append/prepend are told to it, nothing is inferred.
 2. `--grow`: the row's extent changes in the model; rows after it move, rows before it must not.
 3. `--sticky`: drive to the end, press append. The tail follows with the glide; away from the end,
    append must not drag you.
-4. `--past-end` and the `scrollPastEnd` control: the last row rests on the bottom; the reserve is
-   scrollable to bring it to the top, and no further.
+4. `--past-end` and the reserve control: the reserve is part of the resting view — "bottom" lands
+   at the scroll maximum with the reserved space on screen below the tail.
 5. `--inline-content`: the horizontal axis with real editors (in scope for the virtualizer only).
    Scroll it; nothing should judder or jump.
 

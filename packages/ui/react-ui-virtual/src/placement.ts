@@ -223,11 +223,11 @@ export class Placement {
     }
 
     this.#anchor = { id: this.#getId(clamped), index: clamped, start };
-    // The last row's end *is* the content's end, whatever the estimates in between say. Summing to
-    // it instead lands wherever the guesses add up to, which for a chat's "go to the bottom" is a
-    // tail that is nearly at the bottom — the one place approximately right is wrong.
-    const end =
-      clamped === this.#count - 1 ? this.layout().sizerExtent - this.#reserve : start + this.extentOf(clamped);
+    // The last row's end *is* the content's end, whatever the estimates in between say — plus the
+    // reserve, which is part of the resting view: the tail sits that much clear of the viewport's
+    // edge. Summing instead lands wherever the guesses add up to, which for a chat's "go to the
+    // bottom" is a tail that is nearly at the bottom — the one place approximately right is wrong.
+    const end = clamped === this.#count - 1 ? this.layout().sizerExtent : start + this.extentOf(clamped);
     this.#scroll = align === 'end' ? end - this.#viewport : start;
     this.#scroll = Math.max(0, this.#scroll);
     this.#reanchor();
@@ -244,7 +244,9 @@ export class Placement {
   offsetOf(index: number, align: 'start' | 'end' = 'start'): number {
     const clamped = Math.max(0, Math.min(index, this.#count - 1));
     const start = this.positionOf(clamped);
-    return Math.max(0, align === 'end' ? start + this.extentOf(clamped) - this.#viewport : start);
+    // The reserve trails the last row and is part of its resting view.
+    const reserve = clamped === this.#count - 1 ? this.#reserve : 0;
+    return Math.max(0, align === 'end' ? start + this.extentOf(clamped) + reserve - this.#viewport : start);
   }
 
   /**

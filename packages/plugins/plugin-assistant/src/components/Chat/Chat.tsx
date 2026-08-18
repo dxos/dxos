@@ -343,11 +343,13 @@ const chatRegistry = {
 
 type ChatThreadProps = ThemedClassName<{
   viewType?: ChatView;
+  /** Blank lines kept below the tail at rest — breathing room above the composer. */
+  tailLines?: number;
   /** Invoked from the over-quota error toast to open the usage dashboard. */
   onViewUsage?: () => void;
 }>;
 
-const ChatThread = ({ classNames, viewType, onViewUsage }: ChatThreadProps) => {
+const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThreadProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { debug, event, messages, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
@@ -419,6 +421,7 @@ const ChatThread = ({ classNames, viewType, onViewUsage }: ChatThreadProps) => {
         viewType={viewType}
         registry={chatRegistry}
         userHue={userHue}
+        tailLines={tailLines}
         debug={debug}
         onEvent={handleEvent}
         onRangeChange={setVisibleRange}

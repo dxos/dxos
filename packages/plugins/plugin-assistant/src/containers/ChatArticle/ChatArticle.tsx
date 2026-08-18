@@ -14,7 +14,7 @@ import { type Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
-import { Flex, Panel } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { Merge } from '@dxos/util';
 
@@ -106,8 +106,8 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                   <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />
                 )}
                 {/* Main thread. */}
-                <ChatComponent.Thread viewType={viewType} onViewUsage={handleViewUsage} />
-                {/* Thrad status. */}
+                <ChatComponent.Thread viewType={viewType} tailLines={4} onViewUsage={handleViewUsage} />
+                {/* Floating thread status. */}
                 {viewType !== 'summary' && (
                   <div className='absolute bottom-2 left-0 right-0'>
                     <div className='dx-document px-4'>
@@ -118,6 +118,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
               </div>
               <div className='dx-document px-4 pb-4'>
                 {/* <Flex column align='center'> */}
+                {/* TODO: Fix number of lines. */}
                 <ChatComponent.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
                 {/* </Flex> */}
                 <ChatComponent.Prompt

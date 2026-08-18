@@ -18,8 +18,6 @@ export type UseFeedNavigationOptions = {
   /** The row containing the scroll offset — the cursor, derived and never set beside the scroll. */
   current: () => number;
   count: () => number;
-  /** Align the last stop to the end unless space is reserved past it (the reserve is scrollable). */
-  scrollPastEnd?: boolean;
   /**
    * Told before every jump, with the target index — the follow's `onNavigate` goes here. Without
    * it a navigation races the follow's correction effect, which runs before the jump's scroll
@@ -57,7 +55,6 @@ export const useFeedNavigation = ({
   stops,
   current,
   count,
-  scrollPastEnd,
   onNavigate,
 }: UseFeedNavigationOptions): FeedNavigation => {
   // The last commanded destination, while its travel may still be in flight. A step during a glide
@@ -70,15 +67,15 @@ export const useFeedNavigation = ({
   // Hosts hand the accessors as inline closures, so their identity churns per render; read through
   // a ref so the seam itself is stable — a controller derived from it and stored in a host's state
   // otherwise republishes every render, which is a setState-in-effect loop.
-  const optionsRef = useRef({ stops, current, count, scrollPastEnd, onNavigate });
-  optionsRef.current = { stops, current, count, scrollPastEnd, onNavigate };
+  const optionsRef = useRef({ stops, current, count, onNavigate });
+  optionsRef.current = { stops, current, count, onNavigate };
 
   const jumpTo = useCallback(
     (index: number, behavior: ScrollBehavior = 'auto') => {
-      const { count, scrollPastEnd, onNavigate } = optionsRef.current;
+      const { count, onNavigate } = optionsRef.current;
       pending.current = { index, at: performance.now() };
       onNavigate?.(index);
-      const align = !scrollPastEnd && index >= count() - 1 ? 'end' : 'start';
+      const align = index >= count() - 1 ? 'end' : 'start';
       controller.current?.scrollToIndex(index, align, behavior);
     },
     [controller],
@@ -109,13 +106,9 @@ export const useFeedNavigation = ({
 
   const first = useCallback(() => jumpTo(0), [jumpTo]);
 
-  // With space reserved past the end, "the bottom" is the reading position the reserve exists for:
-  // the last stop (the final prompt) at the top of the viewport — not the last row's start.
   const last = useCallback(() => {
-    const { stops, count, scrollPastEnd } = optionsRef.current;
-    const all = stops();
-    const target = scrollPastEnd && all.length ? all[all.length - 1].index : count() - 1;
-    jumpTo(target);
+    const { count } = optionsRef.current;
+    jumpTo(count() - 1);
   }, [jumpTo]);
 
   return useMemo(() => ({ step, jumpTo, first, last }), [step, jumpTo, first, last]);

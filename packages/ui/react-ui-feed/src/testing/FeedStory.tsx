@@ -114,8 +114,8 @@ export type FeedStoryProps = {
   wordsPerChunk?: number;
   chunkDelay?: number;
   estimateSize?: number;
-  /** Reserve space below the last row so any message can be brought to the top. */
-  scrollPastEnd?: boolean;
+  /** Blank lines kept below the last row, part of the resting view. */
+  tailLines?: number;
 };
 
 /**
@@ -127,7 +127,7 @@ export type FeedStoryProps = {
  */
 export const FeedStory = ({
   scenario,
-  scrollPastEnd,
+  tailLines,
   count = 0,
   debug: debugProp,
   streaming: streamingProp = false,
@@ -263,7 +263,7 @@ export const FeedStory = ({
           registry={definition?.registry}
           estimateSize={estimateSize ?? definition?.estimateSize}
           stickyBottom={definition?.stickyBottom ?? true}
-          scrollPastEnd={scrollPastEnd}
+          tailLines={tailLines}
         >
           <Panel.Root>
             <Panel.Toolbar asChild>

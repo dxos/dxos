@@ -58,6 +58,8 @@ type ChatThreadRootProps = PropsWithChildren<
     registry?: XmlWidgetRegistry;
     /** The reader's identity hue, published to the DOM for the prompt frame's tokens. */
     userHue?: string;
+    /** Blank lines kept below the tail at rest — breathing room above the host's composer. */
+    tailLines?: number;
     debug?: boolean;
     onEvent?: (event: ChatThreadEvent) => void;
     /** The visible index range, as the reader scrolls — what an outline rail tracks. */
@@ -79,6 +81,7 @@ const ChatThreadRoot = ({
   registry,
   getObjectLabel,
   userHue,
+  tailLines,
   debug,
   onEvent,
   onRangeChange,
@@ -107,7 +110,7 @@ const ChatThreadRoot = ({
           estimateSize={estimateRow}
           debug={debug}
           stickyBottom
-          scrollPastEnd
+          tailLines={tailLines}
           onRangeChange={onRangeChange}
           controllerRef={controllerRef}
         >
