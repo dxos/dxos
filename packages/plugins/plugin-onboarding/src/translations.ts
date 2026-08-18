@@ -88,6 +88,11 @@ export const translations = [
         'passkey-setup-toast-action.label': 'Setup',
         'passkey-setup-toast-action.alt': 'Navigate to the passkeys management page.',
 
+        'authorizing-device.title': 'Authorizing this device',
+        'login-link-expired-toast.title': 'Login link expired',
+        'login-link-expired-toast.description':
+          'This login link is no longer valid. Please request a new one to log in.',
+
         'native-redirect.message': 'Opening in the Composer app...',
         'open-in-browser-button.label': 'Open here instead',
 
