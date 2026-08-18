@@ -256,6 +256,33 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       yields markdown source. Two paths producing different content is a defect waiting to happen.
 - [ ] Record the findings back into AUDIT.md §3.3.
 
+## Rewrite plan (2026-08-17, approved; user offline until morning)
+
+Decisions: MessageList name kept; @effect/atom with plain-subscribe fallback; PR at the end;
+call-site sim stories dropped; flagship story = plugin-assistant simulation (typed prompts,
+streamed multi-block answers, follow) — first thing reviewed.
+
+- [ ] **A. Virtualizer entry point** — move placement + Window/useWindow + tests + stories to
+      `src/virtualizer/`, export `@dxos/react-ui-feed/virtualizer`; inline-axis acceptance story
+      with real content (axis in scope for virtualizer only).
+- [ ] **B. Model** — `ListModel` (@effect/atom; fallback plain subscribe) + `fromMessages` +
+      `FeedModel` (stops, streamingId, loadBefore/After); virtualizer consumes the model — a
+      prepend is told, never inferred.
+- [ ] **C. Aspects** (each own tests) — useFollow (glide default on, ScrollFollower wired),
+      useFeedNavigation (one seam: toolbar/arrows/rails), useStops (model policy; isAnchor sugar),
+      useDecorations (hits leave the API; search = one producer), useItemSelection (over
+      react-ui-list useListSelection).
+- [ ] **D. Recomposition** — MessageList.Root = model + aspects; Outline moves here from
+      react-ui-components (plugin-assistant Chat.tsx import updated); Minimap promoted from
+      testing/debug.
+- [ ] **E. Debug** — generic DebugModel + useDebug + Debug table at `./debug` endpoint; fold
+      frame-meter/stats; pluggable probes per aspect (placement, follow, jumps).
+- [ ] **F. Stories** — drop email/thread/comments/transcript sims; flagship `Assistant` story
+      (prompt entry, multi-block streaming, follow) with play test; baseline ladder stays green
+      throughout.
+- [ ] **G. Finish** — full build/lint/test, rewrite TESTING.md, update SPEC, submit PR (changeset
+      for react-ui-components Outline removal if it is published), CI green, preview URL.
+
 ## Placement engine — open defects
 
 Reported from a manual pass on 2026-08-17, against `TESTING.md`.
