@@ -226,7 +226,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                 <DropdownMenu.Trigger asChild>
                   <Button>
                     {t('download-backup.label')}
-                    <Icon icon='ph--caret-down--regular' size={4} classNames='mis-2' />
+                    <Icon icon='ph--caret-down--regular' size={4} classNames='ms-2' />
                   </Button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Content>
@@ -268,7 +268,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                       </Dialog.Header>
                       <Dialog.Body>
                         <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
-                        <Flex gap='sm' justify='end' classNames='mbs-4'>
+                        <Flex gap='sm' justify='end' classNames='mt-4'>
                           <Dialog.Close asChild>
                             <Button>{t('cancel.label')}</Button>
                           </Dialog.Close>

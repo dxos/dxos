@@ -225,7 +225,8 @@ catalog:
   '@tailwindcss/oxide': ^4.3.0
   '@tailwindcss/postcss': ^4.3.0
   '@tailwindcss/vite': ^4.3.3
-  '@tanstack/react-virtual': ^3.13.18
+  '@tanstack/react-virtual': ^3.14.9
+  '@tanstack/virtual-core': ^3.17.7
   '@tauri-apps/api': ^2.11.1
   '@tauri-apps/cli': ^2.11.4
   '@tauri-apps/plugin-deep-link': ^2.4.9

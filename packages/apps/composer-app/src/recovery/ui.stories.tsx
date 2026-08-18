@@ -9,7 +9,7 @@ import React, { useEffect, useRef } from 'react';
 
 import { type RecoveryAction, type RecoveryUi, createRecoveryUi } from './ui';
 
-type RecoveryUiStoryProps = {
+type RecoveryUiStoryArgs = {
   /** Lines printed on mount, standing in for the page's boot banner. */
   lines?: string[];
   busy?: boolean;
@@ -20,7 +20,7 @@ type RecoveryUiStoryProps = {
  * Mounts the framework-free recovery chrome so its layout and states are reviewable without
  * booting the real page (which touches OPFS and can wipe the origin).
  */
-const RecoveryUiStory = ({ lines = [], busy = false, debugPortActive = false }: RecoveryUiStoryProps) => {
+const RecoveryUiStory = ({ lines = [], busy = false, debugPortActive = false }: RecoveryUiStoryArgs) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const uiRef = useRef<RecoveryUi>(undefined);
 

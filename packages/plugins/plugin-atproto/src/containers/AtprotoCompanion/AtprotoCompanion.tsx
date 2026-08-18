@@ -253,7 +253,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                   <Banner.Content>
                     <Banner.Body>{t('confirm-publish.message')}</Banner.Body>
                     <Banner.Body asChild>
-                      <Flex gap='sm' classNames='pbs-2'>
+                      <Flex gap='sm' classNames='pt-2'>
                         <Button variant='primary' disabled={busy} onClick={handlePublish}>
                           {t('confirm-publish.label')}
                         </Button>

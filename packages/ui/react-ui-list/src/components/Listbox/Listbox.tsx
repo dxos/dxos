@@ -70,7 +70,7 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type SelectionItemBinding, useListNavigation, useListSelection } from '../../aspects';
+import { type SelectionItemBinding, useListNavigation, useListSelection } from '../../hooks';
 import { listTheme } from '../List.theme';
 import {
   LISTBOX_ITEM_NAME,

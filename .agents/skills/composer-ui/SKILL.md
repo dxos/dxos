@@ -83,6 +83,34 @@ keep using them: `ps-*` / `pe-*` (padding), `ms-*` / `me-*` (margin), `start-*` 
 `border-s` / `border-e` (border side), `text-start` / `text-end` (alignment). Do **not** rewrite these to
 physical (`pl-`, `ml-`, `left-`, `text-left`).
 
+**The `tailwindcss-logical` dialect is gone.** Dropped in the Tailwind v4 migration (#10611), so every
+class it provided now compiles to **nothing** — silently. These are the ones that keep coming back, with
+what to write instead:
+
+| Dead class              | Write                 |
+| ----------------------- | --------------------- |
+| `pis-*` / `pie-*`       | `ps-*` / `pe-*`       |
+| `pbs-*` / `pbe-*`       | `pt-*` / `pb-*`       |
+| `pli-*` / `plb-*`       | `px-*` / `py-*`       |
+| `mis-*` / `mie-*`       | `ms-*` / `me-*`       |
+| `mbs-*` / `mbe-*`       | `mt-*` / `mb-*`       |
+| `mli-*` / `mlb-*`       | `mx-*` / `my-*`       |
+| `is-*` / `bs-*`         | `w-*` / `h-*`         |
+| `min-is-*` / `min-bs-*` | `min-w-*` / `min-h-*` |
+| `max-is-*` / `max-bs-*` | `max-w-*` / `max-h-*` |
+
+This is the highest-frequency regression in this codebase, and the most expensive kind: nothing errors,
+nothing lints, the layout is merely wrong — and when the dead class was load-bearing (a `min-bs-*` floor
+reserving height, a `min-is-0` letting a grid child shrink) the failure surfaces far from its cause.
+**Grep your diff before committing:**
+
+```bash
+git diff | grep -nE '\b(p|m)(is|ie|bs|be|li|lb)-|\b(min-|max-)?(is|bs)-'
+```
+
+Note the near-misses that ARE real: `ps-*`/`pe-*` and `ms-*`/`me-*` (Tailwind's own logical spacing) and
+`inset-*`/`start-*`/`end-*`. Only the `-is-`/`-bs-`/`-li-`/`-lb-` infixes above are dead.
+
 Rule of thumb: **width/height → physical; margin/padding/inset/border-side/text-align → logical.**
 
 ## Icons
