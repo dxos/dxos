@@ -7,7 +7,7 @@ import { expect, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { FeedStory, type FeedStoryProps } from '../../testing';
+import { FeedStory, type FeedStoryProps } from '../testing';
 
 /**
  * Arrow keys step between the feed's stops, one press one stop.
@@ -19,7 +19,7 @@ import { FeedStory, type FeedStoryProps } from '../../testing';
  * symptom is an arrow that sometimes moves and sometimes returns to the row it just left.
  */
 const meta: Meta<FeedStoryProps> = {
-  title: 'ui/react-ui-feed/baseline/navigation',
+  title: 'ui/react-ui-feed/stories/navigation',
   render: FeedStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },
@@ -43,31 +43,32 @@ const settle = async () => {
 /**
  * The reading the complaint is about: where the feed actually is.
  *
- * Deliberately not the cursor readout. That is the row the scroll offset falls inside, and a row not
- * yet measured is placed from an estimate — so arriving at a stop and measuring around it can leave
- * the offset in the row above or below, and the readout reports a neighbour. The scroll position is
- * what the reader sees, and a press that does not change it is a press that did nothing.
+ * Not the cursor readout, and not `scrollTop` either. The readout can name a neighbour while a stop
+ * is still being measured; and the offset now absorbs the start edge's repayments — content and
+ * scroll shift together so the reader sees nothing move, which also means the raw offset moves when
+ * nothing did. The row under the top edge is what the reader sees, so a press's travel is read as
+ * that row's index: ArrowUp must put an earlier row there, every time.
  */
-const scrollOf = (canvasElement: HTMLElement): number =>
-  Math.round(within(canvasElement).getByTestId('feed.viewport').scrollTop);
-
-/**
- * What the tests assert, and why it is not "one row per press".
- *
- * Every ArrowUp must move the feed **towards the top** — never nowhere, and never the other way.
- * That is the defect this file exists for: opened at its tail the feed used to align to its *last*
- * row while its first visible row was several earlier, so the first presses stepped through rows
- * already on screen and scrolled nothing, and `getOffsetForIndex` then answered with an offset
- * *below* the current one, scrolling down in response to ArrowUp.
- *
- * Distance is asserted too: a press moves by a stop, and a stop is at least a row, so anything
- * smaller is the feed nudging itself inside a row it is already in.
- */
-const MIN_TRAVEL = 20;
+const topRowOf = (canvasElement: HTMLElement): number => {
+  const viewport = within(canvasElement).getByTestId('feed.viewport');
+  const edge = viewport.getBoundingClientRect().top;
+  const rows = [...viewport.querySelectorAll<HTMLElement>('[data-index]')];
+  const row = rows.find((element) => element.getBoundingClientRect().bottom > edge + 1);
+  return row ? Number(row.dataset.index) : -1;
+};
 
 const press = async (viewport: HTMLElement, key: 'ArrowUp' | 'ArrowDown') => {
   viewport.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
-  await settle();
+  // A step glides now, so "after the press" means after the travel lands: polled to a scroll that
+  // has held still for a dozen frames, not a fixed wait that encodes one machine's glide speed.
+  let still = 0;
+  let last = viewport.scrollTop;
+  for (let frame = 0; frame < 300 && still < 12; frame++) {
+    await nextFrame();
+    const current = viewport.scrollTop;
+    still = Math.abs(current - last) < 1 ? still + 1 : 0;
+    last = current;
+  }
 };
 
 /** Passive: the feed with its stops, for driving by hand. */
@@ -89,38 +90,34 @@ export const Arrows: Story = {
     const viewport = within(canvasElement).getByTestId('feed.viewport');
     await settle();
 
-    const scrolls = [scrollOf(canvasElement)];
+    // Asserted as the whole path of top-row indices: every ArrowUp must put an earlier row under
+    // the top edge, so a failure names the press that stalled and what it did instead.
+    const rows = [topRowOf(canvasElement)];
     for (let step = 0; step < 5; step++) {
       await press(viewport, 'ArrowUp');
-      scrolls.push(scrollOf(canvasElement));
+      rows.push(topRowOf(canvasElement));
     }
 
-    // Asserted as a whole path rather than per step: a failure then names the press that stalled and
-    // shows what it did instead, where a per-step assertion only reports that one did.
-    const travel = scrolls.slice(1).map((top, step) => scrolls[step] - top);
-    await expect({ scrolls, backwards: travel.filter((distance) => distance < 0) }).toEqual({
-      scrolls,
-      backwards: [],
-    });
-    await expect(scrolls.at(-1)!).toBeLessThan(scrolls[0]);
-    // A press moves by a stop, and a stop is at least a row. Anything smaller is the feed nudging
-    // itself inside a row it is already in, which reads as a press that did nothing.
-    await expect({ travel, stalled: travel.filter((distance) => distance < MIN_TRAVEL) }).toEqual({
-      travel,
-      stalled: [],
-    });
+    const stalled = rows.slice(1).filter((row, step) => row >= rows[step]);
+    await expect({ rows, stalled }).toEqual({ rows, stalled: [] });
 
-    const back: number[] = [];
+    // And the other way: `ArrowDown` returns towards the tail it came from. Near the end a stop's
+    // start can lie beyond the maximum offset, so "already at max scroll" counts as arrived rather
+    // than as a stall — the feed cannot advance the top row past what the viewport can hold.
+    const back = [topRowOf(canvasElement)];
+    const progressed: boolean[] = [];
     for (let step = 0; step < 5; step++) {
+      const wasAtMax = viewport.scrollTop >= viewport.scrollHeight - viewport.clientHeight - 2;
       await press(viewport, 'ArrowDown');
-      back.push(scrollOf(canvasElement));
+      back.push(topRowOf(canvasElement));
+      const atMax = viewport.scrollTop >= viewport.scrollHeight - viewport.clientHeight - 2;
+      // A press made progress if the top row advanced, or it carried the viewport to (or held it
+      // at) the maximum — the last stop's start can lie beyond what the viewport can scroll to.
+      progressed.push(back[step + 1] > back[step] || atMax || wasAtMax);
     }
 
-    // And the other way: `ArrowDown` returns towards the tail it came from.
-    await expect({ back, backwards: back.filter((top, step) => step > 0 && top < back[step - 1]) }).toEqual({
-      back,
-      backwards: [],
-    });
+    const stalls = progressed.filter((ok) => !ok);
+    await expect({ back, stalls }).toEqual({ back, stalls: [] });
   },
 };
 
@@ -136,21 +133,13 @@ export const Plain: Story = {
     const viewport = within(canvasElement).getByTestId('feed.viewport');
     await settle();
 
-    const scrolls = [scrollOf(canvasElement)];
+    const rows = [topRowOf(canvasElement)];
     for (let step = 0; step < 5; step++) {
       await press(viewport, 'ArrowUp');
-      scrolls.push(scrollOf(canvasElement));
+      rows.push(topRowOf(canvasElement));
     }
 
-    const travel = scrolls.slice(1).map((top, step) => scrolls[step] - top);
-    await expect({ scrolls, backwards: travel.filter((distance) => distance < 0) }).toEqual({
-      scrolls,
-      backwards: [],
-    });
-    await expect(scrolls.at(-1)!).toBeLessThan(scrolls[0]);
-    await expect({ travel, stalled: travel.filter((distance) => distance < MIN_TRAVEL) }).toEqual({
-      travel,
-      stalled: [],
-    });
+    const stalled = rows.slice(1).filter((row, step) => row >= rows[step]);
+    await expect({ rows, stalled }).toEqual({ rows, stalled: [] });
   },
 };

@@ -17,13 +17,7 @@ import { Column, ScrollArea, type ScrollAreaRootProps, composable, composablePro
 import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import {
-  type FeedNavigation,
-  useDecorations,
-  useFeedNavigation,
-  useFollow,
-  useItemSelectionValue,
-} from '../../aspects';
+import { type FeedNavigation, useDecorations, useFeedNavigation, useFollow, useItemSelectionValue } from '../../hooks';
 import { type FeedModel, type ItemContent, type MessageRenderer, defaultRenderer } from '../../model';
 import { type WindowController, type WindowState, useWindow } from '../../virtualizer';
 import {

@@ -274,6 +274,29 @@ describe('placement', () => {
     expect(placement.extentOf(3)).to.eq(250);
   });
 
+  test('rebasing the start puts row 0 at zero and moves the view not at all', () => {
+    const { placement } = create({ count: 200, extent: () => 100 });
+    // Opened at the tail, then the rows above measure half again taller than assumed: row 0 is
+    // pushed negative, where no scroll can reach it.
+    placement.jumpTo(199, 'end');
+    const { first, last } = placement.layout();
+    for (let index = first; index <= last; index++) {
+      placement.measure(`row-${index}`, 150);
+    }
+
+    const anchorBefore = placement.anchor.index;
+    const onScreen = placement.positionOf(anchorBefore) - placement.scroll;
+
+    const shift = placement.rebaseStart();
+
+    expect(placement.positionOf(0)).to.eq(0);
+    // What the reader sees is a row's position relative to the scroll, and it has not moved.
+    expect(placement.positionOf(anchorBefore) - placement.scroll).to.eq(onScreen);
+    expect(shift).to.not.eq(0);
+    // Repaying twice is a no-op: the fact is now true.
+    expect(placement.rebaseStart()).to.eq(0);
+  });
+
   test('an empty model has no window and no drift', () => {
     const { placement } = create({ count: 0 });
 

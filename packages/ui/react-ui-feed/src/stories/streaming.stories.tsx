@@ -7,7 +7,7 @@ import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { FeedStory, type FeedStoryProps } from '../../testing';
+import { FeedStory, type FeedStoryProps } from '../testing';
 
 /**
  * The deciding case: a model answering into the tail while the reader watches.
@@ -18,7 +18,7 @@ import { FeedStory, type FeedStoryProps } from '../../testing';
  * reconciliation all run at once, and it is the only place their interaction shows.
  */
 const meta: Meta<FeedStoryProps> = {
-  title: 'ui/react-ui-feed/baseline/streaming',
+  title: 'ui/react-ui-feed/stories/streaming',
   render: FeedStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },

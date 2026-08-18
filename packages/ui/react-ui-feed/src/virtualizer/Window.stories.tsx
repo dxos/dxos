@@ -10,11 +10,18 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { Minimap } from '../components/Minimap';
-import { Outline, type OutlineMarker } from '../components/Outline';
+import { Minimap, Outline, type OutlineMarker } from '../components';
 import { ListModel } from '../model';
 import { type EdgeDrift } from './placement';
 import { Window, type WindowAxis, type WindowController, type WindowState } from './Window';
+
+const EXTENT = (index: number) => 40 + (index % 8) * 30;
+
+/** One harness row: identity plus the extent it renders at, so a prepend moves rows, not sizes. */
+type Row = { id: string; extent: number };
+
+/** The row `Grow` changes; near the top, so it is mounted whatever the extents turn out to be. */
+const GROWN = 5;
 
 /**
  * The DOM shape, driven by content that cannot lie about its size.
@@ -61,14 +68,6 @@ type StoryArgs = {
    */
   declared?: (index: number) => number;
 };
-
-const EXTENT = (index: number) => 40 + (index % 8) * 30;
-
-/** One harness row: identity plus the extent it renders at, so a prepend moves rows, not sizes. */
-type Row = { id: string; extent: number };
-
-/** The row `Grow` changes; near the top, so it is mounted whatever the extents turn out to be. */
-const GROWN = 5;
 
 const DefaultStory = ({
   count = 500,
@@ -305,12 +304,16 @@ const meta: Meta<StoryArgs> = {
   render: DefaultStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },
-  // Listed in `args`, not only `argTypes`: the meta names no `component`, so storybook shows exactly
-  // the args that are set and a control declared only in `argTypes` never appears.
-  args: { count: 500, debug: false, scrollPastEnd: false },
   argTypes: {
     debug: { control: 'boolean' },
     scrollPastEnd: { control: 'boolean' },
+  },
+  // Listed in `args`, not only `argTypes`: the meta names no `component`, so storybook shows exactly
+  // the args that are set and a control declared only in `argTypes` never appears.
+  args: {
+    count: 500,
+    debug: false,
+    scrollPastEnd: false,
   },
 };
 

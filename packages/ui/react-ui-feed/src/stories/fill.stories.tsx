@@ -7,19 +7,19 @@ import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { FeedStory, type FeedStoryProps } from '../../testing';
+import { FeedStory, type FeedStoryProps } from '../testing';
 
 /**
  * How long the first fill takes, and what it spends the time on.
  *
  * `baseline/Uniform` visibly fills from the bottom up over more than a second, which construction
- * cost does not explain — `baseline/construction` measures one item at ~0.4ms, so a viewport of them
+ * cost does not explain — `stories/construction` measures one item at ~0.4ms, so a viewport of them
  * is ~8ms. The remaining explanation is the number of *passes*: every measured row changes the
  * offsets below it, and each correction the virtualizer makes costs a frame. This samples the DOM
  * once per animation frame and reports how many frames the list took to stop changing.
  */
 const meta: Meta<FeedStoryProps> = {
-  title: 'ui/react-ui-feed/baseline/fill',
+  title: 'ui/react-ui-feed/stories/fill',
   render: FeedStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },

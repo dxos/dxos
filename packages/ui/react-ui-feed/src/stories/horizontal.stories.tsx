@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MarkdownItem } from '../components';
 import { ListModel } from '../model';
-import { Window, type WindowController } from './Window';
+import { Window, type WindowController } from '../virtualizer/Window';
 
 /**
  * The inline axis against real content — editors, not boxes.
@@ -45,26 +45,24 @@ const DefaultStory = () => {
   );
 
   return (
-    <div className='flex flex-col h-full p-4'>
-      <Window classNames='grow min-h-0' axis='inline' model={model} extents={extents} controllerRef={controller}>
-        {(index) => (
-          // Padding, never margin: a child's margin is outside its parent's offsetWidth, so the
-          // measured extent would disagree with the rendered pitch by exactly the gap.
-          <div className='h-full px-1 py-1'>
-            <div className='h-full w-[20rem] border border-separator rounded-md p-2 overflow-hidden'>
-              <MarkdownItem text={documents[index]} />
-            </div>
+    <Window classNames='grow min-h-0' axis='inline' model={model} extents={extents} controllerRef={controller}>
+      {(index) => (
+        // Padding, never margin: a child's margin is outside its parent's offsetWidth, so the
+        // measured extent would disagree with the rendered pitch by exactly the gap.
+        <div className='h-full px-1 py-1'>
+          <div className='h-full w-[20rem] border border-separator rounded-md p-2 overflow-hidden'>
+            <MarkdownItem text={documents[index]} />
           </div>
-        )}
-      </Window>
-    </div>
+        </div>
+      )}
+    </Window>
   );
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-feed/virtualizer/inline',
+  title: 'ui/react-ui-feed/stories/horizontal',
   render: DefaultStory,
-  decorators: [withLayout({ layout: 'column' }), withTheme()],
+  decorators: [withLayout({ layout: 'fullscreen' }), withTheme()],
   parameters: { layout: 'fullscreen' },
 };
 

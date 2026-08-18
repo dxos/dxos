@@ -7,7 +7,7 @@ import { expect, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { FeedStory, type FeedStoryProps } from '../../testing';
+import { FeedStory, type FeedStoryProps } from '../testing';
 
 /**
  * A widget the reader opened stays open when its row leaves the window and comes back.
@@ -17,7 +17,7 @@ import { FeedStory, type FeedStoryProps } from '../../testing';
  * thread that is one long document the question never arises, because nothing ever unmounts.
  */
 const meta: Meta<FeedStoryProps> = {
-  title: 'ui/react-ui-feed/baseline/widget-state',
+  title: 'ui/react-ui-feed/stories/widget',
   render: FeedStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },

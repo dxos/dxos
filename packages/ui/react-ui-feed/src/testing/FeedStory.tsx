@@ -9,9 +9,9 @@ import { IconButton, Input, Panel, ThemedClassName, Toolbar } from '@dxos/react-
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { type Decoration, DecorationsProvider, ItemSelectionProvider } from '../aspects';
 import { Outline, type OutlineMarker } from '../components';
 import { type MessageChromeProps, MessageList, useMessageList } from '../components';
+import { type Decoration, DecorationsProvider, ItemSelectionProvider } from '../hooks';
 import { SearchHit, defaultRenderer, searchFeed, sliceFeed, useFeedModel } from '../model';
 import { FeedStats, useFeedDebug } from './debug';
 import { createMessages } from './generator';

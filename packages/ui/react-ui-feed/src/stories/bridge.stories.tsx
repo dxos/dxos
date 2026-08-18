@@ -10,8 +10,8 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
-import { type FeedScenario, MessageWindow, createScenario } from '../../testing';
-import { type WindowController } from '../../virtualizer';
+import { type FeedScenario, MessageWindow, createScenario } from '../testing';
+import { type WindowController } from '../virtualizer';
 
 /**
  * Real messages, placed by the new module.
@@ -105,7 +105,7 @@ const DefaultStory = ({
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-feed/bridge',
+  title: 'ui/react-ui-feed/stories/bridge',
   render: DefaultStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },
@@ -316,24 +316,61 @@ export const Scrolling: Story = {
     (canvasElement.querySelector('[data-testid="bridge.bottom"]') as HTMLElement).click();
     await settle(40);
 
-    const jumps: { from: number; index: string; moved: number; scrolled: number }[] = [];
+    const jumps: { from: number; index: string; moved: number }[] = [];
     for (let step = 0; step < 12; step++) {
       const before = at();
       const from = scroller.scrollTop;
       scroller.scrollTop = from - 240;
       await settle(8);
-      const scrolled = scroller.scrollTop - from;
       const row = before && scroller.querySelector<HTMLElement>(`[data-index="${before.index}"]`);
       if (!before || !row) {
         continue;
       }
 
+      // Against the reader's own write, not the net scrollTop delta: repaying the start edge moves
+      // content and scroll together, so the offset absorbs the machine's shift while the row under
+      // the eye moves by exactly what the reader asked — which is the invariant.
       const moved = before.offset - (row.getBoundingClientRect().top - top());
-      if (Math.abs(moved - scrolled) > 2) {
-        jumps.push({ from, index: before.index, moved: Math.round(moved), scrolled: Math.round(scrolled) });
+      if (Math.abs(moved - -240) > 2) {
+        jumps.push({ from, index: before.index, moved: Math.round(moved) });
       }
     }
 
     await expect(jumps).toEqual([]);
+  },
+};
+
+/**
+ * The top of the conversation exists.
+ *
+ * A feed opened at its tail derives every position above the reader from estimates; rows measuring
+ * taller than assumed push row 0 negative, where no scroll can reach it — the reader arrives at the
+ * top and the first messages are simply not there (seen live: the flagship opened with its first
+ * prompt missing). The start edge is repaid by shifting content and scroll together, so this drives
+ * to the top and asks the one absolute fact of content space: row 0 starts at zero.
+ */
+export const Top: Story = {
+  args: { scenario: 'thread', count: 300, sticky: true },
+  play: async ({ canvasElement }) => {
+    await settle(40);
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="window.scroller"]')!;
+
+    // Driven repeatedly: each ascent mounts rows whose measurement re-bases the top.
+    let previous = -1;
+    for (let attempt = 0; attempt < 10 && scroller.scrollTop !== previous; attempt++) {
+      previous = scroller.scrollTop;
+      scroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: -100 }));
+      scroller.scrollTop = 0;
+      await settle(20);
+    }
+
+    const first = scroller.querySelector<HTMLElement>('[data-index="0"]');
+    const resting = !!first && Math.abs(first.getBoundingClientRect().top - scroller.getBoundingClientRect().top) <= 2;
+
+    await expect({ mounted: !!first, resting, atZero: scroller.scrollTop === 0 }).toEqual({
+      mounted: true,
+      resting: true,
+      atZero: true,
+    });
   },
 };

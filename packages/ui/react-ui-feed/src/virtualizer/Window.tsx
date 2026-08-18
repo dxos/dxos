@@ -17,7 +17,7 @@ import React, {
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useFollow } from '../aspects/use-follow';
+import { useFollow } from '../hooks/useFollow';
 import { type EdgeDrift, type Extents, type Layout, Placement } from './placement';
 
 /**
@@ -297,6 +297,24 @@ export const useWindow = ({
         placement.measure(id, actual);
         changed = true;
       }
+    }
+
+    // The start edge's drift is repaid, not merely reported: row 0 at a negative position is a top
+    // of the document no scroll can reach. Content and offset move by the same delta in the same
+    // commit, so the mounted rows hold their place on screen while the coordinate system comes
+    // true. Forward shifts never read as the reader (the follow only weighs backwards gestures).
+    const shift = placement.rebaseStart();
+    if (shift !== 0) {
+      const scroller = scrollerRef.current;
+      if (scroller) {
+        if (axis === 'block') {
+          scroller.scrollTop = placement.scroll;
+        } else {
+          scroller.scrollLeft = placement.scroll;
+        }
+      }
+
+      changed = true;
     }
 
     // Deduped for the same reason as a mismatch: an edge is news the first time it is reached, and

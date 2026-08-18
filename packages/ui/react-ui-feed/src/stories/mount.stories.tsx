@@ -8,9 +8,9 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { useFeedModel } from '../../model';
-import { type FeedScenario, type ScenarioDefinition, createScenario } from '../../testing';
-import { MessageList } from './MessageList';
+import { MessageList } from '../components';
+import { useFeedModel } from '../model';
+import { type FeedScenario, type ScenarioDefinition, createScenario } from '../testing';
 
 /**
  * What one mounted row costs, with the fixtures already built.
@@ -203,7 +203,7 @@ const Mounted = ({ definition }: { definition: ScenarioDefinition }) => {
 };
 
 const meta: Meta<MountProfileProps> = {
-  title: 'ui/react-ui-feed/baseline/mount',
+  title: 'ui/react-ui-feed/stories/mount',
   component: MountProfile,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },

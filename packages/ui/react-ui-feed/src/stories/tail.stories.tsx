@@ -7,7 +7,7 @@ import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { FeedStory, type FeedStoryProps } from '../../testing';
+import { FeedStory, type FeedStoryProps } from '../testing';
 
 /**
  * A feed opened at its tail shows its last message, and stays there.
@@ -23,7 +23,7 @@ import { FeedStory, type FeedStoryProps } from '../../testing';
  * near the screen. It has to arrive there, and it has to stop.
  */
 const meta: Meta<FeedStoryProps> = {
-  title: 'ui/react-ui-feed/baseline/tail',
+  title: 'ui/react-ui-feed/stories/tail',
   render: FeedStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },

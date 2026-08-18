@@ -10,11 +10,11 @@ import { IconButton, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
-import { Debug, DebugProvider, useDebugProbes, useFrameMeter } from '../../debug';
-import { FeedModel } from '../../model';
-import { createScenario, streamTurn } from '../../testing';
-import { Outline, type OutlineMarker } from '../Outline';
-import { MessageList, useMessageList } from './MessageList';
+import { Outline, type OutlineMarker } from '../components';
+import { MessageList, useMessageList } from '../components';
+import { Debug, DebugProvider, useDebugProbes, useFrameMeter } from '../debug';
+import { FeedModel } from '../model';
+import { createScenario, streamTurn } from '../testing';
 
 /**
  * The plugin-assistant use case, end to end: a reader typing prompts into a conversation while an
@@ -223,10 +223,28 @@ const Probes = ({ model }: { model: FeedModel }) => {
   state.current = { range, mountedRows, mountedWidgets, jumps, model };
 
   useDebugProbes(() => [
-    { id: 'fps', group: 'frames', read: () => Math.round(meter.fps), alarm: (value) => Number(value) < 30 },
-    { id: 'worst', group: 'frames', unit: 'ms', read: () => Math.round(meter.worst) },
-    { id: 'count', group: 'model', read: () => state.current.model.count },
-    { id: 'streaming', group: 'model', read: () => (state.current.model.streamingId ? 'yes' : '—') },
+    {
+      id: 'fps',
+      group: 'frames',
+      read: () => Math.round(meter.fps),
+      alarm: (value) => Number(value) < 30,
+    },
+    {
+      id: 'worst',
+      group: 'frames',
+      unit: 'ms',
+      read: () => Math.round(meter.worst),
+    },
+    {
+      id: 'count',
+      group: 'model',
+      read: () => state.current.model.count,
+    },
+    {
+      id: 'streaming',
+      group: 'model',
+      read: () => (state.current.model.streamingId ? 'yes' : '—'),
+    },
     {
       id: 'range',
       group: 'window',
@@ -235,16 +253,29 @@ const Probes = ({ model }: { model: FeedModel }) => {
         return range ? `${range.startIndex}–${range.endIndex}` : '—';
       },
     },
-    { id: 'mounted', group: 'window', read: () => state.current.mountedRows },
-    { id: 'widgets', group: 'window', read: () => state.current.mountedWidgets },
-    { id: 'jumps', group: 'window', read: () => state.current.jumps.count, alarm: (value) => Number(value) > 0 },
+    {
+      id: 'mounted',
+      group: 'window',
+      read: () => state.current.mountedRows,
+    },
+    {
+      id: 'widgets',
+      group: 'window',
+      read: () => state.current.mountedWidgets,
+    },
+    {
+      id: 'jumps',
+      group: 'window',
+      read: () => state.current.jumps.count,
+      alarm: (value) => Number(value) > 0,
+    },
   ]);
 
   return null;
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-feed/assistant',
+  title: 'ui/react-ui-feed/stories/assistant',
   render: DefaultStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },

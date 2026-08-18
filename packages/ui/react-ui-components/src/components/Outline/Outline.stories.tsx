@@ -77,7 +77,7 @@ const DefaultStory = ({ markers, ...props }: OutlineProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-feed/components/Outline',
+  title: 'ui/react-ui-components/Outline',
   component: Outline,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],

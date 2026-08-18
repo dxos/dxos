@@ -17,7 +17,9 @@
  * from index 0.
  */
 export type Extents = {
-  /** Extent along the scroll axis of the row at `index`, when nothing has been measured for it. */
+  /**
+   * Extent along the scroll axis of the row at `index`, when nothing has been measured for it.
+   */
   of: (index: number) => number;
   /**
    * Never revised by measurement.
@@ -76,6 +78,9 @@ export type EdgeDrift = {
 
 const DEFAULT_OVERSCAN = 8;
 
+/**
+ *
+ */
 export class Placement {
   #count: number;
   #getId: (index: number) => string;
@@ -283,6 +288,33 @@ export class Placement {
     }
 
     return { first, last, visible, offset, sizerExtent: offset + windowExtent + after + this.#reserve };
+  }
+
+  /**
+   * Repay the start edge's drift: shift every position so row 0 starts at exactly zero, and move
+   * the scroll by the same amount so nothing the reader sees moves.
+   *
+   * The first row starting at zero is the one absolute fact of content space, and estimates being
+   * replaced above the anchor break it: a feed opened at its tail whose rows measure taller than
+   * assumed pushes row 0 *negative*, where no scroll can reach it — the reader arrives at the top
+   * and the first messages simply are not there. This is the single correction that must touch the
+   * scroll (§7's rule is about corrections and readers sharing a channel; here both the content and
+   * the offset move by the same delta in the same commit, so the reader sees nothing at all).
+   * Returns the shift for the binding to apply to the element.
+   */
+  rebaseStart(): number {
+    if (!this.#count) {
+      return 0;
+    }
+
+    const shift = -this.positionOf(0);
+    if (shift === 0) {
+      return 0;
+    }
+
+    this.#anchor = { ...this.#anchor, start: this.#anchor.start + shift };
+    this.#scroll = Math.max(0, this.#scroll + shift);
+    return shift;
   }
 
   /**

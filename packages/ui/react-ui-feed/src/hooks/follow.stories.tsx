@@ -34,7 +34,7 @@ type StoryProps = {
  * on screen is only the follow — its ramp up, its cruise, and its landing. When the feed's scrolling
  * feels wrong, this is where to tell a follow problem apart from a measurement one.
  */
-const FollowStory = ({
+const DefaultStory = ({
   count = 100,
   maxSpeed,
   acceleration,
@@ -170,8 +170,8 @@ const FollowStory = ({
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'ui/react-ui-feed/Scrolling',
-  render: FollowStory,
+  title: 'ui/react-ui-feed/hooks/follow',
+  render: DefaultStory,
   decorators: [withLayout({ layout: 'column' }), withTheme()],
   parameters: { layout: 'fullscreen' },
   args: { count: 100 },

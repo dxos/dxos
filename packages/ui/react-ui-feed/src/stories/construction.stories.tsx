@@ -15,9 +15,9 @@ import {
   decorateMarkdown,
 } from '@dxos/ui-editor';
 
-import { chatRegistry } from '../../testing/widgets';
-import { type ConstructionCase, type ConstructionResult, profileConstruction } from './construction';
-import { createItemExtensions } from './extensions';
+import { type ConstructionCase, type ConstructionResult, profileConstruction } from '../components/Item/construction';
+import { createItemExtensions } from '../components/Item/extensions';
+import { chatRegistry } from '../testing/widgets';
 
 /** The uniform ladder's document: one short paragraph, one line at the story's width. */
 const SHORT = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do.';
@@ -127,7 +127,7 @@ const format = (rows: Row[]): string => {
 };
 
 const meta: Meta<typeof ConstructionProfile> = {
-  title: 'ui/react-ui-feed/baseline/construction',
+  title: 'ui/react-ui-feed/stories/construction',
   component: ConstructionProfile,
   decorators: [withLayout({ layout: 'column' }), withTheme()],
   parameters: { layout: 'fullscreen' },
