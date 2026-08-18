@@ -7503,6 +7503,9 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/compute/conductor
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools

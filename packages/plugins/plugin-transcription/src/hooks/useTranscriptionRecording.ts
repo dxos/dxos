@@ -3,19 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
+import { useConfig } from '@dxos/react-client';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
 
 import { TranscriptionCapabilities, TranscriptOperation } from '#types';
-
-import { useTranscriptionEndpoint } from './useTranscriptionEndpoint';
 
 export type TranscriptionRecording = {
   recording: boolean;
@@ -36,7 +36,8 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
   const track = useAudioTrack(recording);
   const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(TranscriptionCapabilities.Settings);
-  const endpoint = useTranscriptionEndpoint();
+  const config = useConfig();
+  const endpoint = getEdgeServiceEndpoint(config, EdgeServiceName.Transcription);
 
   // Append a transcribed message batch to the transcript's feed, enriching it first (when entity
   // extraction is enabled) with references to known entities mentioned in the transcript.
@@ -73,7 +74,9 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
   );
 
   // Drive the transcriber lifecycle off the recording flag + audio track.
-  const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments, endpoint });
+  // Stable identity: a fresh object every render would recreate (and reopen) the transcriber.
+  const transcriberConfig = useMemo(() => ({ endpoint }), [endpoint]);
+  const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments, transcriberConfig });
   useEffect(() => {
     if (!transcriber) {
       return;

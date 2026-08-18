@@ -20,7 +20,6 @@ export type UseTranscriberOptions = Omit<CreateTranscriberOptions, 'audioStreamT
  */
 export const useTranscriber = ({
   audioStreamTrack,
-  endpoint,
   recorderConfig,
   transcriberConfig,
   transcribe,
@@ -33,13 +32,12 @@ export const useTranscriber = ({
 
     return createTranscriber({
       audioStreamTrack,
-      endpoint,
       recorderConfig,
       transcriberConfig,
       transcribe,
       onSegments,
     });
-  }, [audioStreamTrack, endpoint, recorderConfig, transcriberConfig, transcribe, onSegments]);
+  }, [audioStreamTrack, recorderConfig, transcriberConfig, transcribe, onSegments]);
 
   useEffect(() => {
     return () => {

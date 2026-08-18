@@ -30,9 +30,10 @@ const TRANSCRIPTION_ENDPOINT = 'https://calls.dxos.network';
 
 // Small chunk threshold so the transcriber emits every few seconds while the file plays (streaming),
 // instead of only flushing the whole buffer on stop.
-const STREAMING_TRANSCRIBE_CONFIG: Partial<Omit<TranscribeConfig, 'endpoint'>> = {
+const STREAMING_TRANSCRIBE_CONFIG: Partial<TranscribeConfig> & { endpoint: string | undefined } = {
   transcribeAfterChunksAmount: 25,
   prefixBufferChunksAmount: 10,
+  endpoint: TRANSCRIPTION_ENDPOINT,
 };
 
 // In-memory message buffer + model adapter (production wires up a real space-backed `Feed`).
@@ -116,7 +117,6 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
 
   const stages = useMemo(() => [makeCorrectionStage()], []);
   useRecordingPipeline({
-    endpoint: TRANSCRIPTION_ENDPOINT,
     config: STREAMING_TRANSCRIBE_CONFIG,
     segmentSentences: true,
     active: running,

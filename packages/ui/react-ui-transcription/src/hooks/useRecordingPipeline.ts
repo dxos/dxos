@@ -31,10 +31,11 @@ const DEFAULT_TRANSCRIBE_CONFIG: TranscribeConfig = {
 };
 
 export type RecordingPipelineOptions = {
-  /** Transcription service base URL (`runtime.services.edgeServices: transcription`). */
-  endpoint: string | undefined;
-  /** Override the transcriber chunk configuration. */
-  config?: Partial<Omit<TranscribeConfig, 'endpoint'>>;
+  /**
+   * Transcriber configuration. `endpoint` is nullable rather than optional: omitting it silently
+   * would build a transcriber that rejects on `open()`.
+   */
+  config: Partial<TranscribeConfig> & { endpoint: string | undefined };
   /** Re-segment ASR output into complete sentences before the pipeline (merges mid-sentence cuts). */
   segmentSentences?: boolean;
   /**
@@ -71,7 +72,6 @@ export type RecordingPipeline = {
  */
 export const useRecordingPipeline = ({
   active,
-  endpoint,
   microphone,
   track: externalTrack,
   audioConstraints,
@@ -113,7 +113,7 @@ export const useRecordingPipeline = ({
     }
     const asr = runAsrPipeline({
       recorder,
-      config: { ...DEFAULT_TRANSCRIBE_CONFIG, ...config, endpoint },
+      config: { ...DEFAULT_TRANSCRIBE_CONFIG, ...config },
       segmentSentences,
       stages,
       commit,
