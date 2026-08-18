@@ -10,8 +10,9 @@ import { Outline, type OutlineMarker } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
+import { type Decoration, DecorationsProvider, ItemSelectionProvider } from '../aspects';
 import { type MessageChromeProps, MessageList, useMessageList } from '../components';
-import { SearchHit, defaultRenderer, searchFeed, sliceFeed } from '../model';
+import { SearchHit, defaultRenderer, searchFeed, sliceFeed, useFeedModel } from '../model';
 import { FeedStats, useFeedDebug } from './debug';
 import { createMessages } from './generator';
 import { type FeedScenario, createScenario } from './scenarios';
@@ -144,6 +145,17 @@ export const FeedStory = ({
 
   const hits = useMemo(() => searchFeed(messages, defaultRenderer, query), [messages, query]);
 
+  // Search is a decoration producer, not a list prop (SPEC §Aspects): the ranges reach the items
+  // through the provider below, and the list neither knows nor routes them.
+  const decorations = useMemo<Decoration[]>(
+    () => hits.map(({ messageId, offset, length }) => ({ id: messageId, range: { offset, length }, kind: 'search' })),
+    [hits],
+  );
+
+  // The model owns identity, stops and streaming; the array survives as this adapter (SPEC F-7.3).
+  const isAnchor = definition?.isAnchor;
+  const model = useFeedModel(messages, { stops: isAnchor ?? 'message' });
+
   // Instrumentation as an aspect: the meter, the sweep, the outlines and the pass label live in
   // `useFeedDebug` so this component stays about the feed.
   const { debug, toggleDebug, meter, viewportRef, sweeping, onSweep } = useFeedDebug({
@@ -224,82 +236,94 @@ export const FeedStory = ({
     };
   }, [streaming, wordsPerChunk, chunkDelay, scenario]);
 
+  const onSelect = useCallback((id: string, additive: boolean) => {
+    setSelectedIds((current) => {
+      const next = new Set(additive ? current : []);
+      if (additive && next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
   return (
     // Root is headless, so the toolbar and statusbar sit outside the scroll container and still read
-    // the list's state through `useMessageList`.
-    <MessageList.Root
-      messages={messages}
-      renderer={definition?.renderer}
-      debug={debug}
-      isAnchor={definition?.isAnchor}
-      Chrome={definition?.Chrome ?? TestChrome}
-      Custom={definition?.Custom}
-      registry={definition?.registry}
-      hits={hits}
-      streamingId={streaming ? answerId : undefined}
-      selectedIds={selectedIds}
-      onSelectedIdsChange={setSelectedIds}
-      estimateSize={estimateSize ?? definition?.estimateSize}
-      stickyBottom={definition?.stickyBottom ?? true}
-      scrollPastEnd={scrollPastEnd}
-    >
-      <Panel.Root>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <IconButton
-              icon={streaming ? 'ph--stop--regular' : 'ph--play--regular'}
-              iconOnly
-              label={streaming ? 'Stop' : 'Start'}
-              data-testid='feed.stream.toggle'
-              onClick={() => setStreaming((value) => !value)}
-            />
-            <IconButton
-              icon='ph--plus--regular'
-              iconOnly
-              label='Add message'
-              data-testid='feed.stream.append'
-              onClick={handleAppend}
-            />
-            <IconButton icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
-            <IconButton
-              icon={debug ? 'ph--bounding-box--fill' : 'ph--bounding-box--regular'}
-              iconOnly
-              label={debug ? 'Hide block outlines' : 'Show block outlines'}
-              data-testid='feed.debug.toggle'
-              onClick={toggleDebug}
-            />
-            <Toolbar.Separator />
-            <Input.Root>
-              <Input.TextInput
-                placeholder='Search…'
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                data-testid='feed.search'
-              />
-            </Input.Root>
-            <FindButton hits={hits} />
-            <IconButton icon='ph--copy--regular' iconOnly label='Copy range' onClick={handleCopy} />
-            <IconButton
-              icon={sweeping ? 'ph--stop--regular' : 'ph--arrows-down-up--regular'}
-              iconOnly
-              label={sweeping ? 'Stop sweep' : 'Sweep (measure a pass)'}
-              data-testid='feed.sweep'
-              onClick={onSweep}
-            />
-            <div className='grow' />
-            <NavButtons />
-          </Toolbar.Root>
-        </Panel.Toolbar>
+    // the list's state through `useMessageList`. The providers around it are the aspect pattern:
+    // selection and decorations reach the items by id, and the list never sees either.
+    <DecorationsProvider decorations={decorations}>
+      <ItemSelectionProvider selectedIds={selectedIds} onSelect={onSelect}>
+        <MessageList.Root
+          model={model}
+          renderer={definition?.renderer}
+          debug={debug}
+          Chrome={definition?.Chrome ?? TestChrome}
+          Custom={definition?.Custom}
+          registry={definition?.registry}
+          estimateSize={estimateSize ?? definition?.estimateSize}
+          stickyBottom={definition?.stickyBottom ?? true}
+          scrollPastEnd={scrollPastEnd}
+        >
+          <Panel.Root>
+            <Panel.Toolbar asChild>
+              <Toolbar.Root>
+                <IconButton
+                  icon={streaming ? 'ph--stop--regular' : 'ph--play--regular'}
+                  iconOnly
+                  label={streaming ? 'Stop' : 'Start'}
+                  data-testid='feed.stream.toggle'
+                  onClick={() => setStreaming((value) => !value)}
+                />
+                <IconButton
+                  icon='ph--plus--regular'
+                  iconOnly
+                  label='Add message'
+                  data-testid='feed.stream.append'
+                  onClick={handleAppend}
+                />
+                <IconButton icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
+                <IconButton
+                  icon={debug ? 'ph--bounding-box--fill' : 'ph--bounding-box--regular'}
+                  iconOnly
+                  label={debug ? 'Hide block outlines' : 'Show block outlines'}
+                  data-testid='feed.debug.toggle'
+                  onClick={toggleDebug}
+                />
+                <Toolbar.Separator />
+                <Input.Root>
+                  <Input.TextInput
+                    placeholder='Search…'
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    data-testid='feed.search'
+                  />
+                </Input.Root>
+                <FindButton hits={hits} />
+                <IconButton icon='ph--copy--regular' iconOnly label='Copy range' onClick={handleCopy} />
+                <IconButton
+                  icon={sweeping ? 'ph--stop--regular' : 'ph--arrows-down-up--regular'}
+                  iconOnly
+                  label={sweeping ? 'Stop sweep' : 'Sweep (measure a pass)'}
+                  data-testid='feed.sweep'
+                  onClick={onSweep}
+                />
+                <div className='grow' />
+                <NavButtons />
+              </Toolbar.Root>
+            </Panel.Toolbar>
 
-        <Panel.Content classNames='relative dx-container'>
-          <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
-            <FeedOutline classNames='row-start-2' messages={messages} />
-          </div>
-          <MessageList.Viewport classNames='absolute inset-0' padding ref={viewportRef} />
-        </Panel.Content>
-      </Panel.Root>
-      <FeedStats meter={meter} streaming={streaming} selected={selectedIds.size} hits={hits.length} />
-    </MessageList.Root>
+            <Panel.Content classNames='relative dx-container'>
+              <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
+                <FeedOutline classNames='row-start-2' messages={messages} />
+              </div>
+              <MessageList.Viewport classNames='absolute inset-0' padding ref={viewportRef} />
+            </Panel.Content>
+          </Panel.Root>
+          <FeedStats meter={meter} streaming={streaming} selected={selectedIds.size} hits={hits.length} />
+        </MessageList.Root>
+      </ItemSelectionProvider>
+    </DecorationsProvider>
   );
 };
 
@@ -377,17 +401,11 @@ const FindButton = ({ hits }: { hits: readonly SearchHit[] }) => {
 
 /** Move by one message, or to either end, from the list's cursor (what the arrow keys also move). */
 const NavButtons = () => {
-  const {
-    currentIndex: current,
-    anchors,
-    count,
-    stepAnchor,
-    scrollToIndex,
-    scrollToBottom,
-  } = useMessageList('NavButtons');
+  const { currentIndex: current, count, navigation, scrollToIndex, scrollToBottom } = useMessageList('NavButtons');
 
-  // The same stops the arrow keys use, so a reader who switches between them does not change places.
-  const step = stepAnchor;
+  // The same seam the arrow keys use (SPEC F-3.2), so a reader who switches between them does not
+  // change places.
+  const step = navigation.step;
 
   return (
     <>
@@ -407,7 +425,7 @@ const NavButtons = () => {
         iconOnly
         label='Previous message'
         variant='ghost'
-        disabled={current <= (anchors[0] ?? 0)}
+        disabled={current <= 0}
         data-testid='feed.nav.back'
         onClick={() => step(-1)}
       />
@@ -416,7 +434,7 @@ const NavButtons = () => {
         iconOnly
         label='Next message'
         variant='ghost'
-        disabled={current >= (anchors[anchors.length - 1] ?? count - 1)}
+        disabled={current >= count - 1}
         data-testid='feed.nav.forward'
         onClick={() => step(1)}
       />

@@ -97,6 +97,12 @@ export const useFollow = ({
     }
 
     return new ScrollFollower(scroller, {
+      // Faster than the class's defaults, which were tuned for a single arrival: a streaming answer
+      // grows at hundreds of px/s, and a follow that cannot outrun the growth reads as falling
+      // behind for the whole turn. The ramp is what keeps this from feeling like a snap.
+      maxSpeed: 8,
+      acceleration: 32,
+      deceleration: 10,
       // The follower's target is DOM-derived (scrollHeight - trailing - viewport); the authoritative
       // end is the placement's (the last row's own edge, which the document disagrees with by the
       // drift while estimates are being replaced). Expressing the placement's end *as* a trailing

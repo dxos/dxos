@@ -8,7 +8,8 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type FeedScenario, createScenario } from '../../testing';
+import { useFeedModel } from '../../model';
+import { type FeedScenario, type ScenarioDefinition, createScenario } from '../../testing';
 import { MessageList } from './MessageList';
 
 /**
@@ -159,20 +160,7 @@ const MountProfile = ({ count = 200, runs = 3 }: MountProfileProps) => {
         {results.length ? format(results) : 'measuring…'}
       </pre>
       <div ref={containerRef} className='relative grow min-h-0'>
-        {definition && (
-          <MessageList.Root
-            key={shown}
-            messages={definition.messages}
-            renderer={definition.renderer}
-            registry={definition.registry}
-            Chrome={definition.Chrome}
-            Custom={definition.Custom}
-            estimateSize={definition.estimateSize}
-            stickyBottom={definition.stickyBottom}
-          >
-            <MessageList.Viewport classNames='absolute inset-0' padding />
-          </MessageList.Root>
-        )}
+        {definition && <Mounted key={shown} definition={definition} />}
       </div>
     </div>
   );
@@ -194,6 +182,24 @@ const format = (results: Result[]): string => {
   const widths = header.map((_, column) => Math.max(...[header, ...body].map((row) => row[column].length)));
 
   return [header, ...body].map((row) => row.map((cell, column) => cell.padEnd(widths[column])).join('  ')).join('\n');
+};
+
+/** One scenario mounted through the real Root; a component so the model hook has somewhere to live. */
+const Mounted = ({ definition }: { definition: ScenarioDefinition }) => {
+  const model = useFeedModel(definition.messages);
+  return (
+    <MessageList.Root
+      model={model}
+      renderer={definition.renderer}
+      registry={definition.registry}
+      Chrome={definition.Chrome}
+      Custom={definition.Custom}
+      estimateSize={definition.estimateSize}
+      stickyBottom={definition.stickyBottom}
+    >
+      <MessageList.Viewport classNames='absolute inset-0' padding />
+    </MessageList.Root>
+  );
 };
 
 const meta: Meta<MountProfileProps> = {

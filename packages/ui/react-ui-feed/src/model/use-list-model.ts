@@ -4,6 +4,9 @@
 
 import { useEffect, useMemo } from 'react';
 
+import { type Message } from '@dxos/types';
+
+import { FeedModel, type FeedModelOptions } from './feed';
 import { ListModel } from './list-model';
 
 /**
@@ -23,6 +26,28 @@ export const useListModel = <T>(items: readonly T[], getId: (item: T) => string)
       model.replace(items);
     }
   }, [model, items]);
+
+  return model;
+};
+
+/**
+ * The feed-shaped twin, for a host that re-creates its message array per render.
+ *
+ * Streaming through this adapter is a `replace` whose length does not change; the model still
+ * publishes, so the window still re-renders, and the streaming item reconciles by document delta
+ * exactly as it would under a told update.
+ */
+export const useFeedModel = (
+  messages: readonly Message.Message[],
+  options: Omit<FeedModelOptions, 'messages'> = {},
+): FeedModel => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const model = useMemo(() => new FeedModel({ messages, ...options }), []);
+  useEffect(() => {
+    if (model.messages !== messages) {
+      model.replace(messages);
+    }
+  }, [model, messages]);
 
   return model;
 };
