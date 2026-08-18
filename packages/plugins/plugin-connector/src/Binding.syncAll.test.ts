@@ -290,7 +290,7 @@ describe('Binding.syncAll', () => {
   });
 
   /**
-   * Capabilities `runConnectionSync` reads: the connector registry, plus a `ServiceResolver` that
+   * Capabilities `Binding.runSync` reads: the connector registry, plus a `ServiceResolver` that
    * resolves the space's trigger monitor.
    */
   const makeCapabilities = ({ scheduled }: { scheduled: boolean }) => {
@@ -349,7 +349,7 @@ describe('Binding.syncAll', () => {
     return cursor;
   };
 
-  /** The account routine's trigger, as `scaffoldConnectionSyncRoutine` wires it. */
+  /** The account routine's trigger, as `Binding.scaffoldRoutine` wires it. */
   const addConnectionSyncTrigger = async (db: Database.Database, connection: Connection.Connection) => {
     const trigger = db.add(
       Trigger.make({

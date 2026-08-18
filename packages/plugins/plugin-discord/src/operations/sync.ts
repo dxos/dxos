@@ -6,6 +6,7 @@ import { DiscordREST } from 'dfx';
 import type { MessageResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
@@ -18,7 +19,7 @@ import { meta } from '#meta';
 import { DiscordOperation } from '#types';
 
 import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
-import { formatDiscordSyncFailure } from '../errors';
+import { DiscordChannelUnresolvedError, DiscordTargetInvalidError, formatDiscordSyncFailure } from '../errors';
 import { makeDiscordLayerFromToken } from '../services';
 
 /**
@@ -149,7 +150,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
         sync: (binding) =>
           Effect.gen(function* () {
             const db = Obj.getDatabase(binding);
-            invariant(db, 'No database for binding.');
+            if (!db) {
+              return yield* Effect.fail(new SyncDatabaseMissingError());
+            }
 
             // Resolve the binding's endpoints up front: the source access token
             // supplies the credential for the Discord layer, the target is the
@@ -157,8 +160,14 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
             const accessToken = yield* Database.load(binding.spec.source).pipe(Effect.provide(Database.layer(db)));
             const localRoot = yield* Database.load(binding.spec.target).pipe(Effect.provide(Database.layer(db)));
             const externalId = binding.spec.externalId;
-            invariant(externalId, 'Cursor is missing an externalId for Discord channel.');
-            invariant(Channel.instanceOf(localRoot), 'Cursor target is not a Channel.');
+            // Typed rather than an `invariant` defect, so a misconfigured binding records its reason
+            // and the account's other channels still sync.
+            if (!externalId) {
+              return yield* Effect.fail(new DiscordChannelUnresolvedError());
+            }
+            if (!Channel.instanceOf(localRoot)) {
+              return yield* Effect.fail(new DiscordTargetInvalidError());
+            }
 
             // Captured on the success path so the cursor's value + run status advance in one atomic update.
             let newestId: string | undefined;
