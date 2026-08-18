@@ -22,7 +22,7 @@ export const testToolkit = Toolkit.empty as Toolkit.Toolkit<any>;
  * language model. Defined once so a `.test.ts` per handler does not restate it.
  */
 export const OperationTestLayer = AssistantTestLayer({
-  operationHandlers: MarkdownOperationHandlerSet,
+  operationHandlers: MarkdownOperationHandlerSet.handlers,
   types: [SpaceProperties, Collection.Collection, Skill.Skill, Markdown.Document, HasSubject.HasSubject, Feed.Feed],
   disableLlmMemoization: true,
 });

@@ -20,6 +20,8 @@ const TEST_FAILED_MESSAGE = 'Connection test failed.' as const;
 
 const SYNC_FAILED_MESSAGE = 'Connection sync could not be run.' as const;
 
+const ACCOUNT_MISMATCH_MESSAGE = 'Target is already synced from a different account.' as const;
+
 /**
  * A connector's {@link TestConnection} probe rejected the stored credential or could not reach the
  * service. Its `message` is the user-facing reason shown in the connection UI.
@@ -34,6 +36,21 @@ export class ConnectionTestError extends BaseError.extend('ConnectionTestError',
 export class ConnectionSyncError extends BaseError.extend('ConnectionSyncError', SYNC_FAILED_MESSAGE) {
   constructor(input: { connectorId?: string; cause?: unknown } = {}) {
     super({ context: { connectorId: input.connectorId }, cause: input.cause });
+  }
+}
+
+/**
+ * A bind was attempted between a target and a credential for a different remote account than the one
+ * the target already syncs. Refused rather than reconciled: the target's feed holds the other account's
+ * data, and binding here would merge two accounts into one object. A new target is the way to sync a
+ * second account.
+ */
+export class TargetAccountMismatchError extends BaseError.extend(
+  'TargetAccountMismatchError',
+  ACCOUNT_MISMATCH_MESSAGE,
+) {
+  constructor(input: { targetId: string; expected: string; actual: string }) {
+    super({ context: { targetId: input.targetId, expected: input.expected, actual: input.actual } });
   }
 }
 

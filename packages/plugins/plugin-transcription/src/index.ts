@@ -4,5 +4,4 @@
 
 export * as TranscriptionPlugin from './TranscriptionPlugin';
 export * from '#meta';
-export * from '#skills';
 export * from '#types';

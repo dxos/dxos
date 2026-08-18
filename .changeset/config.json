@@ -243,6 +243,7 @@
       "@dxos/plugin-client",
       "@dxos/plugin-code",
       "@dxos/plugin-commerce",
+      "@dxos/plugin-computer",
       "@dxos/plugin-conductor",
       "@dxos/plugin-connector",
       "@dxos/plugin-crm",

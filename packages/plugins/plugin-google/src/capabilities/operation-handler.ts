@@ -11,6 +11,6 @@ import { GoogleOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, GoogleOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, GoogleOperationHandlerSet.handlers);
   }),
 );

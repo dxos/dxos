@@ -178,7 +178,10 @@ export const Spec: Story = {
     // `Row.Star` labels itself from react-ui's own translation namespace, which this isolated story
     // does not load — so the accessible name is the raw key. Asserting on it still pins the behaviour
     // under test: the star owns its state, and toggling swaps which action the button offers.
-    await userEvent.click(canvas.getByRole('button', { name: 'system-button.unstar.label' }));
+    // `find`, not `get`: creating the contact re-renders the row, so the star can be briefly absent.
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'system-button.unstar.label' }, { timeout: 5_000 }),
+    );
     await canvas.findByRole('button', { name: 'system-button.star.label' }, { timeout: 5_000 });
   },
 };
