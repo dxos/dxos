@@ -16,6 +16,7 @@ import React, {
 
 import {
   Column,
+  ColumnRootProps,
   IconButton,
   ScrollArea,
   type ScrollAreaRootProps,
@@ -537,17 +538,8 @@ const MESSAGE_LIST_VIEWPORT_NAME = 'MessageList.Viewport';
 type MessageListViewportExtra = Pick<
   ScrollAreaRootProps,
   'autoHide' | 'centered' | 'native' | 'padding' | 'scrollbars' | 'thin'
-> & {
-  /**
-   * Gutter size for the three-track layout each row is laid out on (`gutter | content | gutter`).
-   *
-   * The tracks live inside the row rather than on the container, because the rows are laid out by
-   * the browser inside one placed parent and cannot be items of an outer grid. Chrome that wants the
-   * gutters — a fork control, an avatar, a resolve toggle — opts in with `Column.Row`; everything
-   * else sits in the centre track.
-   */
-  gutter?: 'sm' | 'md' | 'lg';
-};
+> &
+  Pick<ColumnRootProps, 'gutter'>;
 
 /**
  * The scroll container and the mounted window of rows.
@@ -567,7 +559,7 @@ const isEmptyContent = (content: ItemContent, hasCustomRenderer: boolean): boole
   (content.kind === 'custom' && !hasCustomRenderer);
 
 const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
-  ({ autoHide, centered, native, padding, scrollbars, thin, gutter, ...props }, forwardedRef) => {
+  ({ autoHide, centered, native, padding, scrollbars, thin, gutter = 'sm', ...props }, forwardedRef) => {
     const { model, renderer, Chrome, Custom, windowRef, offset, sizerExtent, first, last, setViewport } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
     // The value once, per-row state derived: hooks do not run in loops, and the row loop below is

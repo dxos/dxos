@@ -153,7 +153,7 @@ type Story = StoryObj<StoryArgs>;
 
 export const Default: Story = {
   args: {
-    debug: true,
+    debug: false,
   },
 };
 
