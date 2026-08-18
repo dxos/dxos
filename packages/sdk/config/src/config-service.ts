@@ -59,35 +59,10 @@ export const defaultConfig = new Config({
 });
 
 /** Aligns a fresh monorepo CLI profile with the backend Composer's local dev server talks to. */
-export const localDevConfig = new Config({
-  runtime: {
-    client: {
-      edgeFeatures: {
-        subductionReplicator: true,
-        feedReplicator: true,
-        signaling: true,
-        agents: true,
-      },
-      storage: {
-        persistent: true,
-      },
-    },
-    services: {
-      edge: {
-        url: 'https://main.dxos.network',
-      },
-      iceProviders: [
-        {
-          urls: 'https://dxos.network/ice',
-        },
-      ],
-      ipfs: {
-        server: 'https://api.ipfs.dxos.network/api/v0',
-        gateway: 'https://gateway.ipfs.dxos.network/ipfs',
-      },
-    },
-  },
-});
+export const localDevConfig = new Config(
+  { runtime: { services: { edge: { url: 'https://main.dxos.network' } } } },
+  defaultConfig.values,
+);
 
 export class ConfigService extends Context.Service<ConfigService, Config>()('ConfigService') {
   static layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
