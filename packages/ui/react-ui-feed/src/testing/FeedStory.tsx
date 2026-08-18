@@ -392,7 +392,7 @@ const FindButton = ({ hits }: { hits: readonly SearchHit[] }) => {
   const handleFind = useCallback(() => {
     const hit = hits[0];
     if (hit) {
-      scrollToIndex(hit.index, { align: 'center', behavior: 'smooth' });
+      scrollToIndex(hit.index, { align: 'start', behavior: 'smooth' });
     }
   }, [hits, scrollToIndex]);
 

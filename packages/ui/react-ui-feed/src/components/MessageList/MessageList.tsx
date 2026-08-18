@@ -109,7 +109,8 @@ type MessageListContextValue = {
 };
 
 export type ScrollToOptions = {
-  align?: 'start' | 'center' | 'end';
+  /** The alignments the virtualizer honours; centering is a host concern it does not have. */
+  align?: 'start' | 'end';
   behavior?: 'auto' | 'smooth';
 };
 
@@ -408,7 +409,7 @@ const MessageListRoot = ({
       // Before the write, not via the scroll event it raises: asking to be somewhere answers "do
       // you want the tail?", and the correction effect must not get a word in first.
       follow.onNavigate(index);
-      controller.current?.scrollToIndex(index, align === 'center' ? 'start' : align, behavior);
+      controller.current?.scrollToIndex(index, align, behavior);
     },
     [follow],
   );
