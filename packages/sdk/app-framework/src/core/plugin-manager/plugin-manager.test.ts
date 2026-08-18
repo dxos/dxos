@@ -3364,4 +3364,51 @@ describe('PluginManager', () => {
       }),
     );
   });
+
+  describe('host-supplied core set', () => {
+    it.effect('defaults to the plugins tagged `system`', () =>
+      Effect.gen(function* () {
+        const tagged = makePlugin('org.dxos.test.tagged', ['system']);
+        const plain = makePlugin('org.dxos.test.plain');
+        const manager = PluginManager.make({ plugins: [tagged, plain], pluginLoader });
+
+        assert.deepStrictEqual(manager.getCore(), ['org.dxos.test.tagged']);
+      }),
+    );
+
+    it.effect('an explicit set replaces the tag, in both directions', () =>
+      Effect.gen(function* () {
+        const tagged = makePlugin('org.dxos.test.tagged', ['system']);
+        const plain = makePlugin('org.dxos.test.plain');
+        const manager = PluginManager.make({
+          plugins: [tagged, plain],
+          // The host both drops a `system`-tagged plugin from core and promotes an untagged one:
+          // the tag is declared once per plugin for every host, so neither direction can be
+          // expressed without this option.
+          core: ['org.dxos.test.plain'],
+          pluginLoader,
+        });
+
+        assert.deepStrictEqual(manager.getCore(), ['org.dxos.test.plain']);
+        assert.isTrue(manager.getEnabled().includes('org.dxos.test.plain'));
+      }),
+    );
+
+    it.effect('ignores ids that name no registered plugin', () =>
+      Effect.gen(function* () {
+        const plain = makePlugin('org.dxos.test.plain');
+        const manager = PluginManager.make({
+          plugins: [plain],
+          core: ['org.dxos.test.plain', 'org.dxos.test.absent'],
+          pluginLoader,
+        });
+
+        // A phantom core id would be permanently un-removable and un-enableable.
+        assert.deepStrictEqual(manager.getCore(), ['org.dxos.test.plain']);
+      }),
+    );
+
+    const makePlugin = (id: string, tags?: string[]) =>
+      Plugin.make(Plugin.define({ profile: { key: id, name: id, tags } }))();
+  });
 });
