@@ -137,22 +137,20 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * The set resolves into milestone sections with derived progress, and stays live afterwards.
- * Membership, milestone assignment and progress are all computed from the set's arrays plus the
- * per-task refs, so each mutation below is the one that would go stale if a view were cached.
+ * The set resolves into one flat list and stays live afterwards. Membership is the `tasks` array,
+ * so each mutation below is the one that would go stale if the view were cached. Milestones are
+ * seeded but deliberately not rendered yet (see TASKS.md) — the list is every task in the set.
  */
 export const Behavior: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // Resolves and renders: a section per milestone, in `milestones` array order, plus the backlog
-    // for the two unfiled tasks. Progress is derived — Roasting has one done of two non-cancelled.
-    await expect(canvas.findByText('Roasting', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.findByText('Launch', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.findByText('Backlog', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.findByText('1/2', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    // 'Print run v1' is cancelled, so it leaves the denominator rather than counting as owed work.
-    await expect(canvas.findByText('0/2', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    // Resolves and renders: every task in the array, filed or not, with no milestone chrome.
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    // Unfiled tasks are not segregated into a backlog — they are rows like any other.
+    await expect(canvas.findByText('Schedule cuppings', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(canvas.queryByText('Roasting')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
 
     const context = seeded;
     if (!context) {
@@ -160,8 +158,7 @@ export const Behavior: Story = {
     }
     const { space, taskSet, roasting } = context;
 
-    // Updates — membership: a task appended to the array joins its milestone's section and moves
-    // the derived counter, with no write to the milestone itself.
+    // Updates — membership: a task appended to the array joins the list.
     const added = space.db.add(
       Task.make({ title: 'Order sample bags', status: 'todo', milestone: Ref.make(roasting) }),
     );
@@ -170,22 +167,18 @@ export const Behavior: Story = {
       taskSet.tasks = [...taskSet.tasks, Ref.make(added)];
     });
     await expect(canvas.findByText('Order sample bags', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.findByText('1/3', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
-    // Updates — a member's own properties: the title reaches its row, and completing it advances
-    // progress.
+    // Updates — a member's own properties reach its row (the row holds that subscription).
     Obj.update(added, (added) => {
       added.title = 'Order sample bags (v2)';
       added.status = 'done';
     });
     await expect(canvas.findByText('Order sample bags (v2)', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.findByText('2/3', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     // Updates — removal: dropping the ref takes the row with it.
     Obj.update(taskSet, (taskSet) => {
       taskSet.tasks = taskSet.tasks.filter((ref) => ref.target?.id !== added.id);
     });
     await waitFor(() => expect(canvas.queryByText('Order sample bags (v2)')).toBeNull(), { timeout: 10_000 });
-    await expect(canvas.findByText('1/2', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };

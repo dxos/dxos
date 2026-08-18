@@ -55,12 +55,28 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
   ),
 ) {}
 
-/** Factory wrapper around `Obj.make` for {@link Project}. */
+/**
+ * Factory wrapper around `Obj.make` for {@link Project}.
+ *
+ * Materializes the owned task set unless the caller supplies one: there is no UI to add a ledger to
+ * a project that lacks one, so a project without it has nowhere to put its tasks. The parent edge is
+ * set alongside the ref so the set cascades when the project is deleted.
+ */
 export const make = (
   props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'artifacts'> & {
     artifacts?: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
   } = {},
-): Project => Obj.make(Project, { ...props, artifacts: props.artifacts ?? [] });
+): Project => {
+  const project = Obj.make(Project, { ...props, artifacts: props.artifacts ?? [] });
+  if (!props.taskSet) {
+    const taskSet = TaskSet.make({ name: 'Tasks' });
+    Obj.setParent(taskSet, project);
+    Obj.update(project, (project) => {
+      project.taskSet = Ref.make(taskSet);
+    });
+  }
+  return project;
+};
 
 /** Bindings a chat session should receive when running in a project's context. */
 export type ContextBindings = {

@@ -5,7 +5,6 @@
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref } from '@dxos/echo';
-import { TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 /** Default brief seeded into a new Project's agent instructions. */
@@ -33,13 +32,9 @@ export const scaffoldProject = ({ name, description, text, ...instructionsProps 
     ...instructionsProps,
   });
   Obj.setParent(instructions, project);
-  // Every project owns a task set from the start: tasks are parented to it, so the ledger exists
-  // before the first task rather than being created ad hoc on first use.
-  const tasks = TaskSet.make({ name: 'Tasks' });
-  Obj.setParent(tasks, project);
+  // The task set comes from `Project.make` — every project owns a ledger from the start.
   Obj.update(project, (project) => {
     project.instructions = Ref.make(instructions);
-    project.taskSet = Ref.make(tasks);
   });
   return project;
 };

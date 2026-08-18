@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { DXN, Obj, Ref, Type, URI } from '@dxos/echo';
+import { TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions';
 import * as Project from './Project';
@@ -21,6 +22,20 @@ describe('Project', () => {
     const project = Project.make({ name: 'test' });
     expect(Obj.instanceOf(Project.Project, project)).toBe(true);
     expect(project.artifacts).toEqual([]);
+  });
+
+  test('a project owns a task set from the start, parented for cascade', ({ expect }) => {
+    const project = Project.make({ name: 'test' });
+    const taskSet = project.taskSet?.target;
+    expect(taskSet).toBeDefined();
+    expect(TaskSet.instanceOf(taskSet)).toBe(true);
+    expect(Obj.getParent(taskSet!)?.id).toBe(project.id);
+  });
+
+  test('an explicitly supplied task set is kept', ({ expect }) => {
+    const existing = TaskSet.make({ name: 'Mirrored' });
+    const project = Project.make({ name: 'test', taskSet: Ref.make(existing) });
+    expect(project.taskSet?.target?.id).toBe(existing.id);
   });
 
   test('contextBindings exposes skills and objects, not the instructions object itself', ({ expect }) => {

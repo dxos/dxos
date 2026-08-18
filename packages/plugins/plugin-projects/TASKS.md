@@ -572,6 +572,16 @@ deletion guards (Phase 5) are separate planned follow-ups.**
 
 - [ ] **Knowledge base for memory** — tracked 2026-08-01 (user), scope TBD.
 
+- [ ] **Milestone rendering in `TaskSetArticle`** — tracked 2026-08-18 (user). The article renders
+      one flat list of every task in the set; milestone sections, the backlog split, derived
+      progress and the sub-task tree are all deliberately deferred. The model carries them already
+      (`TaskSet.milestones`, `Task.milestone`/`parentTask`) and the derived-view helpers
+      (`rootTasks`, `tasksForMilestone`, `backlogTasks`, `milestoneProgress`) are written and unit
+      tested, so this is a view-layer task: reinstate the per-milestone grouping with progress in
+      the header. Keep subscriptions leaf-pushed — the grouping needs each task's `milestone` and
+      `parentTask` read through property atoms, never a whole-list subscription. Milestones also
+      still have no create/rename/reorder UI; the five milestone verbs are agent-only for now.
+
 - [ ] **`ProjectMcpOperation` is misnamed and its seam is unguarded** — tracked 2026-08-18 (user).
       The split from `ProjectOperation` is load-bearing but is about the _import graph_, not MCP:
       the module stays a leaf (compute/echo/keys only) so the edge operation-service and workerd can
