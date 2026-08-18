@@ -7,7 +7,7 @@ import React, { type ComponentType, useCallback, useMemo, useRef, useState } fro
 import { Column } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
-import { HtmlItem, MarkdownItem, type MessageChromeProps } from '../components';
+import { HtmlBlock, MarkdownBlock, type MessageChromeProps } from '../components';
 import { useListModel } from '../model';
 import { type MessageRenderer, defaultRenderer } from '../model';
 import { Window, type WindowController, type WindowState } from '../virtualizer';
@@ -129,8 +129,8 @@ const Item = ({
   Custom?: ComponentType<{ content: any; message: Message.Message }>;
 }) => (
   <>
-    {content.kind === 'markdown' && <MarkdownItem text={content.text} />}
-    {content.kind === 'html' && <HtmlItem html={content.html} />}
+    {content.kind === 'markdown' && <MarkdownBlock text={content.text} />}
+    {content.kind === 'html' && <HtmlBlock html={content.html} />}
     {content.kind === 'custom' && Custom && <Custom content={content} message={message} />}
   </>
 );

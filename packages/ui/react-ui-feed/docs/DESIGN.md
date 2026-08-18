@@ -434,7 +434,7 @@ What they established, in order:
    `assistant` from 591ms to 137ms.
 
 The rule that follows: **an extension set is built once per (registry, editable, themeMode), never
-per item.** `createItemExtensions` caches on exactly that, and `baseline/mount` is what would catch a
+per item.** `createBlockExtensions` caches on exactly that, and `baseline/mount` is what would catch a
 regression — a row that costs ten times a probe's row is a set being rebuilt somewhere.
 
 **Reading the invariant correctly matters.** When the reader scrolls 300px, the anchor row moves
@@ -540,5 +540,5 @@ the scroll's — anything else measures sampling skew.
 ## Open
 
 - Chrome sees only its own message and index, so it cannot group consecutive turns from one speaker.
-- `HtmlItem` has no prose styling — an email's `blockquote` and `ul` render flat.
+- `HtmlBlock` has no prose styling — an email's `blockquote` and `ul` render flat.
 - Item pooling is deliberately not done: the measurements say the editors are not the bottleneck.

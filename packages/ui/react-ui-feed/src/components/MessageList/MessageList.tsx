@@ -22,14 +22,14 @@ import { type FeedModel, type ItemContent, type MessageRenderer, defaultRenderer
 import { type WindowController, type WindowState, useWindow } from '../../virtualizer';
 import {
   type HighlightRange,
-  HtmlItem,
-  MarkdownItem,
+  HtmlBlock,
+  MarkdownBlock,
   SelectionGroupContext,
   WidgetScopeProvider,
   WidgetStateProvider,
   createSelectionGroup,
   createWidgetStateStore,
-} from '../Item';
+} from '../Block';
 import { useJumpDetector, usePositionLog } from './position-log';
 
 //
@@ -623,10 +623,10 @@ const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ mess
     >
       {content.kind === 'markdown' && (
         <WidgetScopeProvider scope={message.id}>
-          <MarkdownItem text={content.text} registry={registry} hits={hits} onWidgetsChange={handleWidgetsChange} />
+          <MarkdownBlock text={content.text} registry={registry} hits={hits} onWidgetsChange={handleWidgetsChange} />
         </WidgetScopeProvider>
       )}
-      {content.kind === 'html' && <HtmlItem html={content.html} />}
+      {content.kind === 'html' && <HtmlBlock html={content.html} />}
       {content.kind === 'custom' && Custom && <Custom content={content} message={message} />}
     </div>
   );

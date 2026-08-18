@@ -8,7 +8,7 @@ import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { MarkdownItem } from '../components';
+import { MarkdownBlock } from '../components';
 import { ListModel } from '../model';
 import { Window, type WindowController } from '../virtualizer/Window';
 
@@ -51,7 +51,7 @@ const DefaultStory = () => {
         // measured extent would disagree with the rendered pitch by exactly the gap.
         <div className='h-full px-1 py-1'>
           <div className='h-full w-[20rem] border border-separator rounded-md p-2 overflow-hidden'>
-            <MarkdownItem text={documents[index]} />
+            <MarkdownBlock text={documents[index]} />
           </div>
         </div>
       )}

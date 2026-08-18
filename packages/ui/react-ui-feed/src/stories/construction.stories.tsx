@@ -15,8 +15,8 @@ import {
   decorateMarkdown,
 } from '@dxos/ui-editor';
 
-import { type ConstructionCase, type ConstructionResult, profileConstruction } from '../components/Item/construction';
-import { createItemExtensions } from '../components/Item/extensions';
+import { type ConstructionCase, type ConstructionResult, profileConstruction } from '../components/Block/construction';
+import { createBlockExtensions } from '../components/Block/extensions';
 import { chatRegistry } from '../testing/widgets';
 
 /** The uniform ladder's document: one short paragraph, one line at the story's width. */
@@ -75,8 +75,8 @@ const buildCases = (): ConstructionCase[] => [
       decorateMarkdown(),
     ] as Extension[],
   },
-  { name: 'item', extensions: createItemExtensions() },
-  { name: 'item + registry', extensions: createItemExtensions({ registry: chatRegistry }) },
+  { name: 'item', extensions: createBlockExtensions() },
+  { name: 'item + registry', extensions: createBlockExtensions({ registry: chatRegistry }) },
 ];
 
 type Row = ConstructionResult & { doc: string };

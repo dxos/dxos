@@ -5,7 +5,7 @@
 import DOMPurify from 'dompurify';
 import React, { memo, useMemo } from 'react';
 
-export type HtmlItemProps = {
+export type HtmlBlockProps = {
   html: string;
 };
 
@@ -17,10 +17,10 @@ export type HtmlItemProps = {
  * engine owns virtualization, chrome and selection anchors, not what a message looks like inside.
  * As plain (non-contenteditable) DOM it is also the control case for cross-item selection.
  */
-export const HtmlItem = memo(({ html }: HtmlItemProps) => {
+export const HtmlBlock = memo(({ html }: HtmlBlockProps) => {
   const sanitized = useMemo(() => DOMPurify.sanitize(html, { USE_PROFILES: { html: true } }), [html]);
 
   return <div className='dx-feed-html' dangerouslySetInnerHTML={{ __html: sanitized }} />;
 });
 
-HtmlItem.displayName = 'HtmlItem';
+HtmlBlock.displayName = 'HtmlBlock';

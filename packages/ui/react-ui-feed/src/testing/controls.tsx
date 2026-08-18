@@ -14,7 +14,7 @@ import {
   decorateMarkdown,
 } from '@dxos/ui-editor';
 
-import { MarkdownItem } from '../components';
+import { MarkdownBlock } from '../components';
 
 /**
  * Controls for attributing what a row costs to mount.
@@ -70,11 +70,11 @@ export const DecoratedEditorItem = ({ content }: { content: ControlContent; mess
  * it*: everything outside this component is identical to `uniform-decorated`.
  */
 export const MarkdownProbeItem = ({ content }: { content: ControlContent; message: Message.Message }) => (
-  <MarkdownItem text={String(content.data ?? '')} />
+  <MarkdownBlock text={String(content.data ?? '')} />
 );
 
 /**
- * A deliberate copy of `MarkdownItem`'s construction, reduced to the part being measured.
+ * A deliberate copy of `MarkdownBlock`'s construction, reduced to the part being measured.
  *
  * Copied rather than shared: the point of a control is that it does not change when the thing it is
  * a control for does.

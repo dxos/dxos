@@ -10,11 +10,11 @@ import { createPortal } from 'react-dom';
 import { useThemeContext } from '@dxos/react-ui';
 import { type XmlWidgetRegistry, type XmlWidgetState } from '@dxos/ui-editor';
 
-import { createItemExtensions } from './extensions';
+import { createBlockExtensions } from './extensions';
 import { type HighlightRange, setHighlights } from './highlight';
 import { useSelectionGroup } from './selection-group';
 
-export type MarkdownItemProps = {
+export type MarkdownBlockProps = {
   text: string;
   /**
    * When false the view mounts with `EditorView.editable.of(false)`, which drops `contenteditable`
@@ -34,7 +34,7 @@ export type MarkdownItemProps = {
  * Each item owns a document, so streaming appends and per-message editing stay local — where a
  * single thread-wide document needs a cursor and a range table to know which message it is touching.
  */
-export const MarkdownItem = memo(({ text, editable = false, registry, hits, onWidgetsChange }: MarkdownItemProps) => {
+export const MarkdownBlock = memo(({ text, editable = false, registry, hits, onWidgetsChange }: MarkdownBlockProps) => {
   const { themeMode } = useThemeContext();
   const [view, setView] = useState<EditorView | null>(null);
   // React widgets render in portals into hosts the extension places in the document, so the item has
@@ -50,7 +50,7 @@ export const MarkdownItem = memo(({ text, editable = false, registry, hits, onWi
 
   const extensions = useMemo<Extension[]>(
     () => [
-      ...createItemExtensions({ registry, editable, themeMode, setWidgets }),
+      ...createBlockExtensions({ registry, editable, themeMode, setWidgets }),
       EditorView.updateListener.of((update) => {
         if (update.selectionSet && !update.state.selection.main.empty) {
           selectionGroupRef.current.claim(update.view);
@@ -154,4 +154,4 @@ export const MarkdownItem = memo(({ text, editable = false, registry, hits, onWi
   );
 });
 
-MarkdownItem.displayName = 'MarkdownItem';
+MarkdownBlock.displayName = 'MarkdownBlock';

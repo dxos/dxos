@@ -1,10 +1,11 @@
 ---
+'@dxos/react-ui-feed': minor
 '@dxos/react-ui-components': minor
 ---
 
-The `Minimap` rail is renamed `Outline` — it draws an index-space outline of a document, and the
-name `Minimap` now belongs to the feed's content-space rail. Along the way: ticks thin evenly to
-any rail height (first and last kept, each rendered tick standing for the span to the next, so
-`visibleRange` still lights the tick the reader is under); the hover card anchors to the tick's
-centre and tracks it; keyboard navigation steps through the host's `onNavigate` when supplied; and
-the card's state is published as `data-pointer` / `data-navigated` / `data-shown`.
+`@dxos/react-ui-feed` publishes: the feed engine (a model-driven, anchor-placed virtualized message
+list), the standalone virtualizer (`@dxos/react-ui-feed/virtualizer`), the follow/navigation/
+decoration/selection hooks, and the debug instrumentation (`@dxos/react-ui-feed/debug`). The
+`Outline` rail (formerly `Minimap` in `@dxos/react-ui-components`) now lives there — import it from
+`@dxos/react-ui-feed`. Along the way the rail gained even thinning to any height, a hover card that
+tracks the tick's centre, and keyboard stepping through the host's `onNavigate`.

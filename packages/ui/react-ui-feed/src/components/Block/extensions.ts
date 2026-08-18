@@ -39,7 +39,7 @@ export type ItemExtensionOptions = {
  * Extensions are descriptors, not instances: a `StateField` or `ViewPlugin` in a shared array is
  * still instantiated per view, so sharing changes nothing but the identity CodeMirror dedupes on.
  */
-export const createItemExtensions = ({
+export const createBlockExtensions = ({
   registry,
   editable = false,
   themeMode = 'light',

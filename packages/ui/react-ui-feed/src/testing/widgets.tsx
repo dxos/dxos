@@ -32,7 +32,7 @@ import { useWidgetState } from '../components';
  * The disclosure animates, and every frame of it is measured twice — by CodeMirror, to re-place the
  * lines under the widget, and by the virtualizer, to re-place the rows under the item. That is what
  * it costs for the content below to travel with the panel instead of jumping to its new place; the
- * geometry stays consistent because `MarkdownItem` re-measures the document as the widget resizes.
+ * geometry stays consistent because `MarkdownBlock` re-measures the document as the widget resizes.
  */
 const Panel = ({
   stateKey,
