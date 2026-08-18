@@ -9,7 +9,14 @@ import { afterEach, describe, test } from 'vitest';
 
 import { applyChannelFavicons, bootMarkPath, channelVariant } from './channel-branding';
 
-const FAVICONS = ['favicon.svg', 'favicon-96x96.png', 'apple-touch-icon.png', 'favicon.ico'];
+const FAVICONS = [
+  'favicon.svg',
+  'favicon-96x96.png',
+  'apple-touch-icon.png',
+  'favicon.ico',
+  'web-app-manifest-192x192.png',
+  'web-app-manifest-512x512.png',
+];
 
 const scratches: string[] = [];
 

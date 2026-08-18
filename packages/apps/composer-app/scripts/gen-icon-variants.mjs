@@ -66,13 +66,16 @@ const RAMP = [
 const BUNDLE_ICONS = ['32x32.png', '128x128.png', '128x128@2x.png', 'icon.icns', 'icon.ico'];
 
 /**
- * The favicons `index.html` references, mapped to the `tauri icon` output that happens to be drawn at
- * that size. Reusing the icon generator keeps this script free of a second rasterizer; the sizes line up
- * because Android's xhdpi launcher is 96px and iOS's 60pt @3x is 180px.
+ * The browser-facing icons — `index.html`'s `<link rel=icon>` set plus `site.webmanifest`'s pair —
+ * mapped to the `tauri icon` output drawn at that size. Reusing the icon generator keeps this script
+ * free of a second rasterizer; the sizes line up because Android's launcher densities cover 96 and 192,
+ * iOS's 60pt @3x is 180, and the root `icon.png` is 512.
  */
 const FAVICONS = {
   'favicon-96x96.png': join('android', 'mipmap-xhdpi', 'ic_launcher.png'),
   'apple-touch-icon.png': join('ios', 'AppIcon-60x60@3x.png'),
+  'web-app-manifest-192x192.png': join('android', 'mipmap-xxxhdpi', 'ic_launcher.png'),
+  'web-app-manifest-512x512.png': 'icon.png',
   'favicon.ico': 'icon.ico',
 };
 
