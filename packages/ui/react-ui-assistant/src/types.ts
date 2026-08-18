@@ -2,6 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+// Also exported as the UI-free `./types` entry: a plugin's workerd module consumes `ChatView`
+// without dragging the package's React surface (and so `@dxos/react-ui`) into a non-DOM runtime.
+
 import * as Schema from 'effect/Schema';
 
 /**

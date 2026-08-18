@@ -10,7 +10,7 @@ import * as Struct from 'effect/Struct';
 import { Provider } from '@dxos/ai';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { ChatView } from '@dxos/react-ui-assistant';
+import { ChatView } from '@dxos/react-ui-assistant/types';
 
 // A provider id is an open DXN (third-party providers define their own), validated as a DXN rather
 // than restricted to a closed literal union. The known providers come from the @dxos/ai registry.
