@@ -9472,6 +9472,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9481,6 +9484,9 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
+      '@dxos/plugin-connector':
+        specifier: workspace:*
+        version: link:../plugin-connector
       '@dxos/plugin-google':
         specifier: workspace:*
         version: link:../plugin-google

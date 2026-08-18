@@ -105,10 +105,9 @@ export const reconcileCursors = ({
           accessToken,
           source: connection.accessToken,
           externalId: sel.externalId,
-          connector,
         });
         if (adopted) {
-          // `Binding.prepare` restores the schedule; nothing else to wire.
+          // Resumed with its synced range intact; the account routine's fan-out covers it.
           added++;
           continue;
         }
@@ -144,10 +143,9 @@ export const reconcileCursors = ({
       if (account && target !== connection) {
         Binding.recordAccount(target, accessToken.source, account);
       }
-      // Sets up recurring background sync for the binding, if the connector declares a trigger
-      // spec. Not specially protected — a failure here propagates like any other step in this loop
-      // (e.g. a `materializeTarget` failure); this function has no blanket catch of its own today.
-      yield* Binding.ensureTrigger({ connector, cursor });
+      // No sync routine is created here: the connection's single account-level routine covers every
+      // binding (its fan-out queries the cursors at run time), and the routine itself is offered
+      // through the create-routine form by the caller on initial setup.
       added++;
     }
 
