@@ -259,3 +259,58 @@ export const VariedPastEnd: StoryObject = {
     });
   },
 };
+
+/**
+ * Scrolling moves the content by exactly what was scrolled, and by nothing else.
+ *
+ * Reported from a real session as the feed "jumping as soon as it starts to scroll". Measurement
+ * *is* allowed to move things — a row that turns out taller pushes the rows after it, and that is
+ * the list working — so the reading is the row the reader is looking at: whatever is under the top
+ * of the viewport when a step begins must be exactly one step higher when it ends.
+ *
+ * That is what a re-base breaks and what an anchor cannot: re-basing the document rewrites every
+ * position including the ones above the reader, so a correction anywhere lands as a jump here.
+ */
+export const Scrolling: StoryObject = {
+  args: { scenario: 'thread', count: 500 },
+  play: async ({ canvasElement }) => {
+    await settle();
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="window.scroller"]')!;
+    const top = () => scroller.getBoundingClientRect().top;
+    // The row under the top of the viewport, and where it is relative to that edge.
+    const at = () => {
+      const rows = [...scroller.querySelectorAll<HTMLElement>('[data-index]')];
+      const edge = top();
+      const row = rows.find((element) => element.getBoundingClientRect().bottom > edge + 1);
+      return row && { index: row.dataset.index!, offset: row.getBoundingClientRect().top - edge };
+    };
+
+    // Upward, from the tail, which is the only direction that can tell the two designs apart. Going
+    // down, every row above the reader has already been measured, so a prefix sum from index 0 and
+    // an anchor-relative position agree exactly. Going up, the rows arriving above are estimates
+    // being replaced — and under a prefix sum each replacement pushes everything below it, including
+    // what the reader is reading.
+    (canvasElement.querySelector('[data-testid="bridge.bottom"]') as HTMLElement).click();
+    await settle(40);
+
+    const jumps: { from: number; index: string; moved: number; scrolled: number }[] = [];
+    for (let step = 0; step < 12; step++) {
+      const before = at();
+      const from = scroller.scrollTop;
+      scroller.scrollTop = from - 240;
+      await settle(8);
+      const scrolled = scroller.scrollTop - from;
+      const row = before && scroller.querySelector<HTMLElement>(`[data-index="${before.index}"]`);
+      if (!before || !row) {
+        continue;
+      }
+
+      const moved = before.offset - (row.getBoundingClientRect().top - top());
+      if (Math.abs(moved - scrolled) > 2) {
+        jumps.push({ from, index: before.index, moved: Math.round(moved), scrolled: Math.round(scrolled) });
+      }
+    }
+
+    await expect(jumps).toEqual([]);
+  },
+};

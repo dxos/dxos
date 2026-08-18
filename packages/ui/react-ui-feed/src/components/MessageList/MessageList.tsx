@@ -160,10 +160,12 @@ export type MessageListRootProps = PropsWithChildren<{
   /**
    * Message currently streaming; its item reconciles by delta rather than remounting.
    */
+  // TODO(burdon): Why is this part of the API?
   streamingId?: string;
   /**
    * Message ids selected as a set (list-shaped gesture, distinct from text selection).
    */
+  // TODO(burdon): Consider selection model?
   selectedIds?: ReadonlySet<string>;
   onSelectedIdsChange?: (ids: ReadonlySet<string>) => void;
   /**
@@ -180,7 +182,9 @@ export type MessageListRootProps = PropsWithChildren<{
    * meaning. Absent, every message is a stop.
    */
   isAnchor?: (message: Message.Message, index: number) => boolean;
-  /** Outline each item and the blocks inside it, so what the layout is measuring is visible. */
+  /**
+   * Outline each item and the blocks inside it, so what the layout is measuring is visible.
+   */
   debug?: boolean;
   /**
    * Estimated row height before measurement.
@@ -194,7 +198,9 @@ export type MessageListRootProps = PropsWithChildren<{
    * roughly uniform.
    */
   estimateSize?: number | ((message: Message.Message, index: number) => number);
-  /** Pin to the bottom as messages arrive, and as a streaming message grows (chat behaviour). */
+  /**
+   * Pin to the bottom as messages arrive, and as a streaming message grows (chat behaviour).
+   */
   stickyBottom?: boolean;
   /**
    * Reserve empty space below the last row, so that any message — including the last — can be
