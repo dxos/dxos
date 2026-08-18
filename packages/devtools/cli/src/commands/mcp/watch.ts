@@ -5,6 +5,8 @@
 import * as Effect from 'effect/Effect';
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { type FSWatcher, watch as watchPath } from 'node:fs';
+import { isAbsolute, resolve as resolvePath } from 'node:path';
+import { StringDecoder } from 'node:string_decoder';
 import { fileURLToPath } from 'node:url';
 
 import { BaseError } from '@dxos/errors';
@@ -25,6 +27,9 @@ const RESTART_ERROR_CODE = -32603;
 
 /** An editor writes a file several times per save, so the restart waits for the writes to settle. */
 const SETTLE_MS = 150;
+
+/** A child that ignores SIGTERM would otherwise wedge the supervisor forever. */
+const KILL_GRACE_MS = 2_000;
 
 /** A single JSON-RPC message. Only the routing fields are read; everything else passes through. */
 type Frame = {
@@ -82,15 +87,44 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
     let starts = 0;
     let stopping = false;
     let restarting = false;
+    let failed = false;
     let settle: NodeJS.Timeout | undefined;
 
     const toChild = (line: string) => child.stdin.write(`${line}\n`);
     const toClient = (message: unknown) => process.stdout.write(`${JSON.stringify(message)}\n`);
     const note = (message: string) => process.stderr.write(`[dx mcp serve --watch] ${message}\n`);
 
+    /** Resumes at most once — `error` and `exit` can both fire for the same dead child. */
+    const fail = (error: WatchError) => {
+      if (failed || stopping) {
+        return;
+      }
+      failed = true;
+      resume(Effect.fail(error));
+    };
+
+    /** SIGTERM with a SIGKILL escalation, unref'd so a clean exit is not held open by the timer. */
+    const killChild = () => {
+      const target = child;
+      target.kill('SIGTERM');
+      const escalate = setTimeout(() => target.kill('SIGKILL'), KILL_GRACE_MS);
+      escalate.unref();
+      target.once('exit', () => clearTimeout(escalate));
+    };
+
+    /** Writes a client line to the child, recording the requests the child now owes answers to. */
+    const sendToChild = (line: string) => {
+      for (const message of parseFrame(line)) {
+        if (message.method !== undefined && message.id !== undefined) {
+          pending.add(message.id);
+        }
+      }
+      toChild(line);
+    };
+
     const flush = () => {
       for (const line of queued.splice(0)) {
-        toChild(line);
+        sendToChild(line);
       }
     };
 
@@ -107,6 +141,10 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
       toClient({ jsonrpc: '2.0', method: 'notifications/prompts/list_changed', params: {} });
     };
 
+    // Two windows are accepted as inherent to in-place reload: a frame sent between bun's realm
+    // wipe and the sentinel can be rejected by the half-started realm, and an edit that fails to
+    // load produces no sentinel at all — the child's stderr shows the crash, and the next good
+    // edit recovers.
     const onReady = (paths: readonly string[]) => {
       starts += 1;
       armWatchers(paths);
@@ -137,11 +175,10 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
         } else if (message.method === 'notifications/initialized') {
           initialized = message;
         }
-        if (message.method !== undefined && message.id !== undefined) {
-          pending.add(message.id);
-        }
       }
-      ready ? toChild(line) : queued.push(line);
+      // A queued request is not yet pending — `pending` holds only ids the child has seen, so a
+      // reload errors exactly the requests it stranded while the flush delivers the rest once.
+      ready ? sendToChild(line) : queued.push(line);
     };
 
     const onChildLine = (line: string) => {
@@ -161,7 +198,15 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
 
     const onChildError = (line: string) => {
       const readyLine = parseReady(line);
-      readyLine ? onReady(readyLine.watch) : process.stderr.write(`${line}\n`);
+      if (!readyLine) {
+        process.stderr.write(`${line}\n`);
+        return;
+      }
+      if (readyLine.malformed) {
+        // Silently arming nothing would look identical to having no dev plugins.
+        note('ready payload malformed; watching nothing');
+      }
+      onReady(readyLine.watch);
     };
 
     /**
@@ -207,7 +252,7 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
           return;
         }
         restarting = true;
-        child.kill('SIGTERM');
+        killChild();
       }, SETTLE_MS);
     };
 
@@ -232,7 +277,9 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
         // carries it applies TC39 semantics to legacy decorators — `@synchronized` then dies on
         // `descriptor.value` deep in client startup. An MCP client launches `dx` from the user's
         // own project, so inheriting that cwd broke the child every time.
-        child = spawn('bun', [...bunArgs, 'run', childEntry, ...childArgs], {
+        // The pinned cwd would re-anchor a relative `--config`, so it is resolved against the
+        // invocation directory the user actually meant first.
+        child = spawn('bun', [...bunArgs, 'run', childEntry, ...absolutizeConfigArg(childArgs)], {
           cwd: fileURLToPath(new URL('../../..', import.meta.url)),
           env: { ...process.env, [WATCH_CHILD_ENV]: '1' },
         });
@@ -244,24 +291,29 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
       // exit handler below is what actually reports the failure.
       child.stdin.on('error', (error) => note(`child stdin: ${error.message}`));
       child.on('error', (error) =>
-        resume(Effect.fail(new WatchError({ message: 'Failed to start the watched server.', cause: error }))),
+        fail(new WatchError({ message: 'Failed to start the watched server.', cause: error })),
       );
       child.on('exit', (code, signal) => {
-        if (restarting) {
+        if (failed) {
+          return;
+        }
+        // `!stopping` because a disconnect racing a reload must win — a respawn here would outlive
+        // the client, answered by nobody, and the shutdown below would never resolve.
+        if (restarting && !stopping) {
           // Expected: the binary strategy kills its own child to reload it.
           restarting = false;
           ready = false;
           spawnChild();
           return;
         }
-        resume(
-          stopping
-            ? Effect.void
-            : Effect.fail(
-                new WatchError({
-                  message: `Watched server exited (code ${code ?? 'none'}, signal ${signal ?? 'none'}).`,
-                }),
-              ),
+        if (stopping) {
+          resume(Effect.void);
+          return;
+        }
+        fail(
+          new WatchError({
+            message: `Watched server exited (code ${code ?? 'none'}, signal ${signal ?? 'none'}).`,
+          }),
         );
       });
     };
@@ -271,7 +323,12 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
     process.stdin.on('data', splitLines(onClientLine));
     process.stdin.on('end', () => {
       stopping = true;
-      child.kill('SIGTERM');
+      killChild();
+    });
+    // A client that dies without closing our stdin surfaces as EPIPE here; treat it as a disconnect.
+    process.stdout.on('error', () => {
+      stopping = true;
+      killChild();
     });
 
     return Effect.sync(() => {
@@ -280,15 +337,17 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
       for (const watcher of watchers.values()) {
         watcher.close();
       }
-      child.kill('SIGTERM');
+      killChild();
     });
   });
 
 /** Splits a byte stream into NDJSON lines — the framing `McpServer.layerStdio` uses. */
 const splitLines = (onLine: (line: string) => void) => {
+  // A pipe chunk can end mid-codepoint; the decoder carries the partial bytes to the next chunk.
+  const decoder = new StringDecoder('utf8');
   let buffer = '';
   return (chunk: Buffer) => {
-    buffer += chunk.toString('utf8');
+    buffer += decoder.write(chunk);
     for (let index = buffer.indexOf('\n'); index !== -1; index = buffer.indexOf('\n')) {
       const line = buffer.slice(0, index).trim();
       buffer = buffer.slice(index + 1);
@@ -303,8 +362,28 @@ const splitLines = (onLine: (line: string) => void) => {
 const parseFrame = (line: string): Frame[] => {
   try {
     const parsed = JSON.parse(line);
-    return Array.isArray(parsed) ? parsed : [parsed];
+    // `'null'` parses but is no frame, and reading `.method` off it would crash the proxy.
+    return (Array.isArray(parsed) ? parsed : [parsed]).filter(
+      (entry): entry is Frame => typeof entry === 'object' && entry !== null,
+    );
   } catch {
     return [];
   }
 };
+
+/**
+ * Resolves a relative `--config`/`-c` value against the invocation cwd, because the source
+ * strategy pins the child's cwd elsewhere and `ConfigService.load` uses the path verbatim.
+ * Mirrors the forms `readRootFlag` in `bin.ts` accepts.
+ */
+const absolutizeConfigArg = (args: readonly string[]): string[] =>
+  args.map((arg, index) => {
+    const previous = args[index - 1];
+    if ((previous === '--config' || previous === '-c') && !isAbsolute(arg)) {
+      return resolvePath(arg);
+    }
+    if (arg.startsWith('--config=') && !isAbsolute(arg.slice('--config='.length))) {
+      return `--config=${resolvePath(arg.slice('--config='.length))}`;
+    }
+    return arg;
+  });

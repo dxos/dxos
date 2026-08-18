@@ -70,9 +70,7 @@ describe('plugin add --dev', () => {
     TIMEOUT,
   );
 
-  // Installing is where the user extends trust: the plugin's code then runs unsandboxed with their
-  // HALO identity, and nothing downstream asks again. With no terminal to prompt, the answer has to
-  // be refusal rather than assent — a script must say `--yes` for the consent to mean anything.
+  // With no terminal to prompt, consent has to be refusal — a script must say `--yes`.
   test(
     'refuses to install without confirmation, naming --yes',
     ({ expect }) => {

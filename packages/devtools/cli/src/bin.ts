@@ -88,7 +88,9 @@ const isWatchSupervisor = (argv: readonly string[]): boolean => {
     return false;
   }
   const serve = argv.indexOf('serve');
-  return serve > 0 && argv[serve - 1] === 'mcp' && argv.some((arg) => arg === '--watch' || arg.startsWith('--watch='));
+  // Bare `--watch` only: `--watch=false` means watch OFF, and any `--watch=…` form is left to the
+  // real parser — a miss costs a slow start via `serve.ts`'s own branch, never wrong behavior.
+  return serve > 0 && argv[serve - 1] === 'mcp' && argv.includes('--watch');
 };
 
 const program = Effect.gen(function* () {

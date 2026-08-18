@@ -4,8 +4,8 @@
 
 /**
  * Constants shared by `dx mcp serve` and its watch supervisor. They live apart from `watch.ts` so
- * the server can announce itself without a static import of the supervisor, which would defeat the
- * bundle-time strip in `scripts/build.ts`.
+ * the server can announce itself without pulling the supervisor into its own module graph — under
+ * `bun --watch` an import of `watch.ts` would make the supervisor's own edits reload the child.
  */
 
 /** Set by the supervisor on the child so it announces every (re)start. */
@@ -27,6 +27,8 @@ export const WATCH_READY_SENTINEL = '@dxos/cli:mcp-serve-ready';
  */
 export type WatchReady = {
   readonly watch: readonly string[];
+  /** Set when the payload did not parse, so the supervisor can say why nothing is watched. */
+  readonly malformed?: boolean;
 };
 
 /** The sentinel line the child writes. */
@@ -52,6 +54,6 @@ export const parseReady = (line: string): WatchReady | undefined => {
       : [];
     return { watch };
   } catch {
-    return { watch: [] };
+    return { watch: [], malformed: true };
   }
 };

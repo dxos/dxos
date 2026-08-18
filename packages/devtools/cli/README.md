@@ -146,8 +146,8 @@ the path.
 
 ### From the released binary
 
-A shipped `dx` has no sources, and bun's watcher is not in the artifact — a compiled binary receives
-`--watch` as ordinary argv rather than acting on it. So the supervisor re-runs the binary itself and
+A shipped `dx` has no sources, and bun's watcher is not in the artifact — a compiled binary treats a
+`--watch` token as ordinary program argv, not as bun's own flag. So the supervisor re-runs the binary itself and
 watches the only on-disk code a shipped `dx` can see change: the plugins you installed with
 `dx plugin add --dev <path>`, which are read in place rather than copied.
 

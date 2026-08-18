@@ -39,6 +39,7 @@ process.stdin.on('data', (chunk) => {
     }
   }
 });
+process.stdin.on('end', () => process.exit(0));
 `;
 
 /** Source strategy: `marker` is an imported module, so bun's watcher sees the edit. */
@@ -62,53 +63,12 @@ process.stderr.write('${WATCH_READY_SENTINEL} ' + JSON.stringify({ watch: [plugi
 
 type Message = { id?: number | string; method?: string; result?: any };
 
-/** Collects the supervisor's stdout as protocol messages and drives requests into its stdin. */
-const driver = (child: ChildProcessWithoutNullStreams) => {
-  const messages: Message[] = [];
-  let buffer = '';
-  child.stdout.on('data', (chunk) => {
-    buffer += String(chunk);
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
-    for (const line of lines.filter((entry) => entry.trim().length > 0)) {
-      try {
-        messages.push(JSON.parse(line));
-      } catch {
-        // Not a protocol message; the transport is line-delimited JSON and anything else is noise.
-      }
-    }
-  });
-
-  const send = (message: unknown) => child.stdin.write(`${JSON.stringify(message)}\n`);
-  const waitFor = async (label: string, match: (message: Message) => boolean, timeout = 30_000): Promise<Message> => {
-    const deadline = Date.now() + timeout;
-    while (Date.now() < deadline) {
-      const found = messages.find(match);
-      if (found) {
-        return found;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-    throw new Error(`timed out awaiting ${label}; saw ${JSON.stringify(messages)}`);
-  };
-  return { messages, send, waitFor };
-};
-
 const initialize = {
   jsonrpc: '2.0',
   id: 1,
   method: 'initialize',
   params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'test', version: '1' } },
 };
-
-// `--conditions=source` so the runner resolves workspace packages without a build, as `bin/dx`'s
-// `DX_SOURCE=1` path does. Safe here where `bin/dx` warns it is not: the runner reaches only
-// `effect`, `@dxos/effect` and `@dxos/errors`, none of the third-party packages whose unshipped
-// `source` fields break that path.
-const runSupervisor = (options: unknown) =>
-  spawn('bun', ['--conditions=source', 'run', RUNNER, JSON.stringify(options)], {
-    env: { ...process.env, NO_COLOR: '1' },
-  });
 
 describe('dx mcp serve --watch', () => {
   test('source strategy: replays the handshake so an edit is invisible to the client', async ({ expect }) => {
@@ -134,7 +94,7 @@ describe('dx mcp serve --watch', () => {
       // The replayed handshake is swallowed rather than forwarded; the client saw one result.
       expect(messages.filter((message) => message.id === 1)).to.have.length(1);
     } finally {
-      child.kill('SIGKILL');
+      await stop(child);
       fs.rmSync(dir, { recursive: true, force: true });
     }
   }, 60_000);
@@ -164,7 +124,7 @@ describe('dx mcp serve --watch', () => {
       expect((await waitFor('ping', (message) => message.id === 2)).result.marker).to.equal('v2');
       expect(messages.filter((message) => message.id === 1)).to.have.length(1);
     } finally {
-      child.kill('SIGKILL');
+      await stop(child);
       fs.rmSync(dir, { recursive: true, force: true });
     }
   }, 60_000);
@@ -189,9 +149,70 @@ describe('dx mcp serve --watch', () => {
       const answer = await waitFor('initialize', (message) => message.id === 1, 120_000);
       expect(answer.result.serverInfo).to.be.an('object');
     } finally {
-      child.kill('SIGKILL');
+      await stop(child);
       fs.rmSync(cwd, { recursive: true, force: true });
       fs.rmSync(home, { recursive: true, force: true });
     }
   }, 180_000);
 });
+
+/** Collects the supervisor's stdio and drives requests into its stdin. */
+const driver = (child: ChildProcessWithoutNullStreams) => {
+  const messages: Message[] = [];
+  const stderr: string[] = [];
+  let buffer = '';
+  child.stdout.on('data', (chunk) => {
+    buffer += String(chunk);
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    for (const line of lines.filter((entry) => entry.trim().length > 0)) {
+      try {
+        messages.push(JSON.parse(line));
+      } catch {
+        // Not a protocol message; the transport is line-delimited JSON and anything else is noise.
+      }
+    }
+  });
+  // Drained so a timeout can say why — without a reader the child's diagnostics sit in a pipe
+  // nobody ever sees.
+  child.stderr.on('data', (chunk) => stderr.push(String(chunk)));
+
+  const send = (message: unknown) => child.stdin.write(`${JSON.stringify(message)}\n`);
+  const waitFor = async (label: string, match: (message: Message) => boolean, timeout = 30_000): Promise<Message> => {
+    const deadline = Date.now() + timeout;
+    while (Date.now() < deadline) {
+      const found = messages.find(match);
+      if (found) {
+        return found;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    const diagnostics = stderr.join('').split('\n').slice(-20).join('\n');
+    throw new Error(`timed out awaiting ${label}; saw ${JSON.stringify(messages)}\nstderr tail:\n${diagnostics}`);
+  };
+  return { messages, send, waitFor };
+};
+
+// `--conditions=source` so the runner resolves workspace packages without a build, as `bin/dx`'s
+// `DX_SOURCE=1` path does. Safe here where `bin/dx` warns it is not: the runner reaches only
+// `effect`, `@dxos/effect` and `@dxos/errors`, none of the third-party packages whose unshipped
+// `source` fields break that path.
+const runSupervisor = (options: unknown) =>
+  spawn('bun', ['--conditions=source', 'run', RUNNER, JSON.stringify(options)], {
+    env: { ...process.env, NO_COLOR: '1' },
+  });
+
+/**
+ * Ends the supervisor's stdin — its own shutdown path, which also reaps the server it spawned —
+ * and escalates to SIGKILL only if that stalls. A bare SIGKILL would orphan the spawned server.
+ */
+const stop = async (child: ChildProcessWithoutNullStreams) => {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    return;
+  }
+  const exited = new Promise((resolve) => child.once('exit', resolve));
+  child.stdin.end();
+  const escalate = setTimeout(() => child.kill('SIGKILL'), 5_000);
+  await exited;
+  clearTimeout(escalate);
+};
