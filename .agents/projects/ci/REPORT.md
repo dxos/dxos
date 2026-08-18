@@ -259,13 +259,13 @@ Method: same harness, `.moon/workspace.yml` temporarily repointed at the pre-#12
 Rep 1 was the config-switch cold build (0 hits, expected — excluded below); reps 2–5 hit
 328–329/329 and are the comparison.
 
-| metric            |    Depot, before |     Depot, retest | self-hosted (current) |
-| ------------------ | ----------------: | -----------------: | ---------------------: |
-| wall median        |            338.0 s |             51.8 s |                 29.9 s |
-| hydration median   |          1,100.1 s |            207.9 s |                109.2 s |
-| per-task p50       |            2,027 ms |              389 ms |                  173 ms |
-| wall CV             |               4.7% |                3.3% |                       — |
-| dropped-batch fails |          1 of 5 reps |          0 of 5 reps |                       — |
+| metric              | Depot, before | Depot, retest | self-hosted (current) |
+| ------------------- | ------------: | ------------: | --------------------: |
+| wall median         |       338.0 s |        51.8 s |                29.9 s |
+| hydration median    |     1,100.1 s |       207.9 s |               109.2 s |
+| per-task p50        |      2,027 ms |        389 ms |                173 ms |
+| wall CV             |          4.7% |          3.3% |                     — |
+| dropped-batch fails |   1 of 5 reps |   0 of 5 reps |                     — |
 
 **Depot is 6.5× faster on wall clock and 5.2× faster per-task than before the fix**, and the
 per-task collapse (2,027 ms → 389 ms) is the signature of the sequential-round-trip mechanism
@@ -285,15 +285,15 @@ this measurement) ran the same 5-rep bench as a two-arm matrix on `depot-ubuntu-
 `239dce9d47`, moon 2.4.5. Depot's rep 1 was again the config-switch cold build and is excluded;
 self-hosted needed no config switch, so all 5 of its reps count.
 
-| metric          | Depot, CI runner | self-hosted, CI runner | self-hosted is |
-| ---------------- | -----------------: | -----------------------: | --------------: |
-| wall median      |              31.1 s |                   14.8 s |     2.1× faster |
-| hydration median |             120.1 s |                   37.8 s |     3.2× faster |
-| per-task p50     |              265 ms |                     60 ms |     4.4× faster |
+| metric           | Depot, CI runner | self-hosted, CI runner | self-hosted is |
+| ---------------- | ---------------: | ---------------------: | -------------: |
+| wall median      |           31.1 s |                 14.8 s |    2.1× faster |
+| hydration median |          120.1 s |                 37.8 s |    3.2× faster |
+| per-task p50     |           265 ms |                  60 ms |    4.4× faster |
 
 From a co-located runner Depot is faster still than from the laptop (31.1 s vs 51.8 s wall
 median, lower RTT doing what the latency-bound model predicts), but the gap to self-hosted is
-*wider* here than the dev-machine retest suggested (2–4× against 1.7–2.25×) — the dev-machine
+_wider_ here than the dev-machine retest suggested (2–4× against 1.7–2.25×) — the dev-machine
 numbers understated how far ahead self-hosted actually is on the hardware that matters. This
 changes the shape of the "cancel the Depot subscription" call in [`TASKS.md`](./TASKS.md): the
 original decision rested on an 11× gap on a Depot runner, now closer to 2–4×, not the 1.7× the
