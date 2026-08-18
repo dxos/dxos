@@ -54,6 +54,7 @@ export const useSyncTrigger = ({
   const connectionTriggers = useQuery(
     // Skip until the connection resolves — passing no db yields no results without breaking hook order.
     connection ? db : undefined,
+    // `connection` is always set when a db is passed, so this id is never the fallback's.
     Query.select(Filter.id(connection?.id ?? subject.id))
       .referencedBy(Trigger.Trigger)
       .debugLabel('plugin-inbox.useSyncTrigger.connection'),

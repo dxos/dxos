@@ -640,6 +640,12 @@ describe('Binding.syncAll', () => {
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
+    // Reset here rather than in `setup`, so a test seeding its own database cannot inherit state.
+    synced.length = 0;
+    fired.length = 0;
+    runAgainFor.clear();
+    failFor.clear();
+    dieFor.clear();
   });
 
   afterEach(async () => {
@@ -661,6 +667,22 @@ describe('Binding.syncAll', () => {
   /** Binding uris whose sync should die (defect channel), by defect. */
   const dieFor = new Map<string, unknown>();
 
+  /** Records each binding, then applies whichever fault is configured for it. */
+  const recordingSync = (binding: Cursor.ExternalCursor) =>
+    Effect.gen(function* () {
+      const uri = Ref.make(binding).uri;
+      synced.push(uri);
+      if (runAgainFor.has(uri)) {
+        yield* Operation.runAgain();
+      }
+      if (dieFor.has(uri)) {
+        yield* Effect.die(dieFor.get(uri));
+      }
+      if (failFor.has(uri)) {
+        yield* Effect.fail(failFor.get(uri));
+      }
+    });
+
   // Stand-in for a connector's account-level `sync.operation`: its handler wraps the shared
   // fan-out over a per-binding sync, the shape every migrated connector follows.
   const TestSync = Operation.make({
@@ -674,20 +696,7 @@ describe('Binding.syncAll', () => {
       Binding.syncAll({
         connection,
         priority,
-        sync: (binding) =>
-          Effect.gen(function* () {
-            const uri = Ref.make(binding).uri;
-            synced.push(uri);
-            if (runAgainFor.has(uri)) {
-              yield* Operation.runAgain();
-            }
-            if (dieFor.has(uri)) {
-              yield* Effect.die(dieFor.get(uri));
-            }
-            if (failFor.has(uri)) {
-              yield* Effect.fail(failFor.get(uri));
-            }
-          }),
+        sync: recordingSync,
       }),
     ),
   );
@@ -917,11 +926,6 @@ describe('Binding.syncAll', () => {
     );
 
   const setup = async () => {
-    synced.length = 0;
-    fired.length = 0;
-    runAgainFor.clear();
-    failFor.clear();
-    dieFor.clear();
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([
       Connection.Connection,
@@ -970,20 +974,7 @@ describe('Binding.syncAll', () => {
       Binding.syncAll({
         connection: Ref.make(connection),
         priority,
-        sync: (binding) =>
-          Effect.gen(function* () {
-            const uri = Ref.make(binding).uri;
-            synced.push(uri);
-            if (runAgainFor.has(uri)) {
-              yield* Operation.runAgain();
-            }
-            if (dieFor.has(uri)) {
-              yield* Effect.die(dieFor.get(uri));
-            }
-            if (failFor.has(uri)) {
-              yield* Effect.fail(failFor.get(uri));
-            }
-          }),
+        sync: recordingSync,
       }).pipe(Effect.result),
     );
 

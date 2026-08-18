@@ -11,7 +11,7 @@ import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -72,6 +72,18 @@ describe('SyncTemplate', () => {
     const routine = await scaffold(template, db, target);
 
     expect(Binding.triggerOfRoutine(routine)?.input?.connection).toBeDefined();
+  });
+
+  test('passes a supplied name through to the routine', async ({ expect }) => {
+    const { db, connection } = await setup();
+    const template = SyncTemplate.make(capabilities({ scheduled: true }));
+
+    const routine = await EffectEx.runPromise(
+      template.scaffold({ name: 'Nightly sync', subject: connection }).pipe(Effect.provide(Database.layer(db))),
+    );
+
+    // Without one, `scaffoldRoutine` names the routine after the account.
+    expect(routine.name).toBe('Nightly sync');
   });
 
   test('fails when there is no subject', async ({ expect }) => {
@@ -140,7 +152,7 @@ const setup = async () => {
   return { db, connection, target };
 };
 
-const TARGET_TYPENAME = Obj.getTypename(Obj.make(Expando.Expando, {}));
+const TARGET_TYPENAME = Type.getTypename(Expando.Expando);
 
 const TestSync = Operation.make({
   meta: { key: DXN.make('org.dxos.test.syncTemplate.sync'), name: 'Test Sync' },
