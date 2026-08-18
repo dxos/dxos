@@ -21,7 +21,9 @@ import {
   useDynamicRef,
   useTranslation,
 } from '@dxos/react-ui';
-import { Minimap, type MinimapMarker } from '@dxos/react-ui-components';
+// Aliased: `@dxos/types` exports an `Outline` of its own — a project's checklist — and this file
+// uses both. The rail is the newcomer here, so it is the one that gives way.
+import { type OutlineMarker, Outline as OutlineRail } from '@dxos/react-ui-feed';
 import { type DocumentRange, type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Outline } from '@dxos/types';
@@ -92,7 +94,7 @@ const ChatRoot = ({
   const event = useMemo(() => new Event<ChatEvent>(), []);
 
   // The editor controller and per-message ranges are produced by `Chat.Thread` and consumed by
-  // `Chat.Minimap`; lifted here so both sub-components share the same instance.
+  // `Chat.Outline`; lifted here so both sub-components share the same instance.
   const [controller, setController] = useState<MarkdownStreamController | null>(null);
   const [messageRanges, setMessageRanges] = useState<MessageSpan[]>([]);
 
@@ -299,9 +301,9 @@ const replySnippet = (message: Message.Message): string | undefined => {
  * snippet of the following assistant reply, range = the turn's document span (prompt start →
  * next prompt start). Positions come from the syncer's per-message range table.
  */
-const buildMarkers = (messages: Message.Message[], ranges: MessageSpan[]): MinimapMarker[] => {
+const buildMarkers = (messages: Message.Message[], ranges: MessageSpan[]): OutlineMarker[] => {
   const rangeById = new Map(ranges.map((range) => [range.id, range] as const));
-  const markers: MinimapMarker[] = [];
+  const markers: OutlineMarker[] = [];
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
     if (message.sender.role !== 'user') {
@@ -366,7 +368,7 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
   const debugView = viewType === 'debug';
 
   const controllerRef = useRef<MarkdownStreamController | null>(null);
-  // Share the controller with `Chat.Minimap` (and keep the local ref for event handling).
+  // Share the controller with `Chat.Outline` (and keep the local ref for event handling).
   const handleControllerRef = useCallback(
     (instance: MarkdownStreamController | null) => {
       controllerRef.current = instance;
@@ -490,19 +492,19 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
 ChatThread.displayName = CHAT_THREAD_NAME;
 
 //
-// Minimap
+// Outline
 //
 
-const CHAT_MINIMAP_NAME = 'Chat.Minimap';
+const CHAT_OUTLINE_NAME = 'Chat.Outline';
 
-type ChatMinimapProps = ThemedClassName<{}>;
+type ChatOutlineProps = ThemedClassName<{}>;
 
 /**
  * Anchor-marker rail for the thread: one tick per user-prompt turn. Reads the shared controller
  * and the syncer's range table from context; clicking a tick scrolls the thread to that turn.
  */
-const ChatMinimap = ({ classNames }: ChatMinimapProps) => {
-  const { messages, messageRanges, controller } = useChatContext(CHAT_MINIMAP_NAME);
+const ChatOutline = ({ classNames }: ChatOutlineProps) => {
+  const { messages, messageRanges, controller } = useChatContext(CHAT_OUTLINE_NAME);
   const [visibleRange, setVisibleRange] = useState<DocumentRange | undefined>(undefined);
   useEffect(() => {
     if (!controller) {
@@ -513,7 +515,7 @@ const ChatMinimap = ({ classNames }: ChatMinimapProps) => {
 
   const markers = useMemo(() => buildMarkers(messages, messageRanges), [messages, messageRanges]);
   const handleSelect = useCallback(
-    (marker: MinimapMarker) => {
+    (marker: OutlineMarker) => {
       controller?.scrollTo(marker.range.from, { y: 'start' });
     },
     [controller],
@@ -523,10 +525,10 @@ const ChatMinimap = ({ classNames }: ChatMinimapProps) => {
     return null;
   }
 
-  return <Minimap classNames={classNames} markers={markers} visibleRange={visibleRange} onSelect={handleSelect} />;
+  return <OutlineRail classNames={classNames} markers={markers} visibleRange={visibleRange} onSelect={handleSelect} />;
 };
 
-ChatMinimap.displayName = CHAT_MINIMAP_NAME;
+ChatOutline.displayName = CHAT_OUTLINE_NAME;
 
 //
 // Prompt
@@ -596,14 +598,14 @@ export const Chat = {
   Prompt: ChatPrompt,
   Status: ChatStatus,
   Thread: ChatThread,
-  Minimap: ChatMinimap,
+  Outline: ChatOutline,
   TaskList: ChatTaskList,
 };
 
 export type {
   ChatContentProps,
   ChatEvent,
-  ChatMinimapProps,
+  ChatOutlineProps,
   ChatPromptProps,
   ChatRootProps,
   ChatThreadProps,

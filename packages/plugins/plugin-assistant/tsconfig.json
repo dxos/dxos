@@ -127,6 +127,9 @@
       "path": "../../ui/react-ui-editor"
     },
     {
+      "path": "../../ui/react-ui-feed"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {

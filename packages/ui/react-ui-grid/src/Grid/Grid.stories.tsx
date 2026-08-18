@@ -18,9 +18,9 @@ import { Grid, type GridContentProps, type GridEditing, type GridRootProps } fro
 
 const storybookItems = random.helpers.uniqueArray(random.commerce.productName, 16);
 
-type GridStoryProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
+type GridStoryArgs = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 
-const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
+const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
   const triggerRef = useRef<HTMLButtonElement>(null) as RefObject<HTMLButtonElement>;
 
   const [cells, setCells] = useState<GridContentProps['initialCells']>(initialCells);

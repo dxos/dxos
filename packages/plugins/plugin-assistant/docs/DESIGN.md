@@ -8,27 +8,27 @@ development and debugging workflow — including a headless harness for the dele
 
 Related docs (not duplicated here):
 
-- [`@dxos/ai` TESTING.md](../../core/compute/ai/TESTING.md) — the test-dimension taxonomy (A–H)
+- [`@dxos/ai` TESTING.md](../../../core/compute/ai/TESTING.md) — the test-dimension taxonomy (A–H)
   and the memoization-retirement plan this document builds on.
-- [`agent-service/README.md`](../../core/compute/agent-runtime/src/agent-service/README.md) —
+- [`agent-service/README.md`](../../../core/compute/agent-runtime/src/agent-service/README.md) —
   supervisor/delegation layering and lifecycle diagrams.
-- [`DEBUG.md`](./DEBUG.md) — the AI→CodeMirror dataflow in
+- [`DEBUG.md`](../DEBUG.md) — the AI→CodeMirror dataflow in
   detail.
 
 ## 1. Call stack: prompt → response → document → widgets
 
 ### 1.1 Layers
 
-| #   | Layer               | Key symbols                                                           | Where                                                                                                                                               |
-| --- | ------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Container / surface | `ChatArticle`, `useChatProcessor`, `useChatServices`                  | [`containers/ChatArticle`](./src/containers/ChatArticle/ChatArticle.tsx), [`hooks`](./src/hooks/useChatProcessor.ts)                                |
-| 2   | Chat composite      | `Chat.Root/Toolbar/Thread/Prompt/Minimap/TaskList`, event bus         | [`components/Chat`](./src/components/Chat/Chat.tsx)                                                                                                 |
-| 3   | Processor           | `AiChatProcessor` (atoms: `messages`, `streaming`, `active`, `error`) | [`processor`](./src/processor/processor.ts)                                                                                                         |
-| 4   | Agent process       | `AgentService`, `AgentProcess` (input queue, alarms, delegation)      | [`@dxos/agent-runtime`](../../core/compute/agent-runtime/src/agent-service)                                                                         |
-| 5   | Session / request   | `AiSession.Session`, `AiRequest.Request`, `AiContext.Binder`          | [`@dxos/assistant`](../../core/compute/assistant/src)                                                                                               |
-| 6   | Model               | `AiService` → `LanguageModel.streamText` → `AiParser`                 | [`@dxos/ai`](../../core/compute/ai/src)                                                                                                             |
-| 7   | Document sync       | `MessageSyncer`, `BlockRenderer` (`blockToMarkdown`)                  | [`components/ChatThread/sync`](./src/components/ChatThread/sync/sync.ts), [`registry.tsx`](./src/components/ChatThread/registry.tsx)                |
-| 8   | Editor / widgets    | `MarkdownStream`, `xmlTags`, `XmlWidgetRegistry`, widget classes      | [`@dxos/react-ui-markdown`](../../ui/react-ui-markdown/src/MarkdownStream), [`@dxos/ui-editor` xml](../../ui/ui-editor/src/extensions/language/xml) |
+| #   | Layer               | Key symbols                                                           | Where                                                                                                                                                     |
+| --- | ------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Container / surface | `ChatArticle`, `useChatProcessor`, `useChatServices`                  | [`containers/ChatArticle`](../src/containers/ChatArticle/ChatArticle.tsx), [`hooks`](../src/hooks/useChatProcessor.ts)                                    |
+| 2   | Chat composite      | `Chat.Root/Toolbar/Thread/Prompt/Minimap/TaskList`, event bus         | [`components/Chat`](../src/components/Chat/Chat.tsx)                                                                                                      |
+| 3   | Processor           | `AiChatProcessor` (atoms: `messages`, `streaming`, `active`, `error`) | [`processor`](../src/processor/processor.ts)                                                                                                              |
+| 4   | Agent process       | `AgentService`, `AgentProcess` (input queue, alarms, delegation)      | [`@dxos/agent-runtime`](../../../core/compute/agent-runtime/src/agent-service)                                                                            |
+| 5   | Session / request   | `AiSession.Session`, `AiRequest.Request`, `AiContext.Binder`          | [`@dxos/assistant`](../../../core/compute/assistant/src)                                                                                                  |
+| 6   | Model               | `AiService` → `LanguageModel.streamText` → `AiParser`                 | [`@dxos/ai`](../../../core/compute/ai/src)                                                                                                                |
+| 7   | Document sync       | `MessageSyncer`, `BlockRenderer` (`blockToMarkdown`)                  | [`components/ChatThread/sync`](../src/components/ChatThread/sync/sync.ts), [`registry.tsx`](../src/components/ChatThread/registry.tsx)                    |
+| 8   | Editor / widgets    | `MarkdownStream`, `xmlTags`, `XmlWidgetRegistry`, widget classes      | [`@dxos/react-ui-markdown`](../../../ui/react-ui-markdown/src/MarkdownStream), [`@dxos/ui-editor` xml](../../../ui/ui-editor/src/extensions/language/xml) |
 
 ### 1.2 Sequence
 
@@ -97,7 +97,7 @@ sequenceDiagram
    conversation feed; forks `session.subscribeEphemeral()`; `session.submitPrompt(...)` pushes
    the prompt onto the agent's persisted input queue; `session.waitForCompletion()` awaits the
    turn. In production the `AgentService` layer is contributed as an application-affinity
-   `LayerSpec` ([`capabilities/agent-service.ts`](./src/capabilities/agent-service.ts)), wiring
+   `LayerSpec` ([`capabilities/agent-service.ts`](../src/capabilities/agent-service.ts)), wiring
    in the optional `DelegationStrategy` from `RoutineCapabilities.AgentDelegationStrategy`.
 
 ### 1.4 Agent turn (inside the agent process)
@@ -134,7 +134,7 @@ sequenceDiagram
    block's rendered output must be a monotonic string extension of its previous render; blocks
    before the cursor are never re-rendered (preserves single-shot side effects). The syncer also
    maintains per-message document ranges (minimap markers, prompt navigation).
-5. The renderer ([`registry.tsx`](./src/components/ChatThread/registry.tsx)) maps blocks to
+5. The renderer ([`registry.tsx`](../src/components/ChatThread/registry.tsx)) maps blocks to
    markdown-with-XML: user text → `<prompt>`, reasoning/status/summary → streaming XML tags,
    `toolCall` → self-closing `<toolCall id/>` plus a **side-channel**
    (`applyToolBlockToWidgetState` → `XmlWidgetStateManager.updateWidget`) that streams tool
@@ -169,7 +169,7 @@ AI service (manual only).
 - `sync.test.ts`, `tool-widget-state.test.ts` — det unit tests of `MessageSyncer` incl. the
   monotonic-append contract and widget rehydration.
 - `ChatThread.stories.tsx` — det; a scripted **message generator**
-  ([`testing/test-generator.ts`](./src/testing/test-generator.ts)) appends `Message`s to a real
+  ([`testing/test-generator.ts`](../src/testing/test-generator.ts)) appends `Message`s to a real
   feed, including a remount harness for the reset/rehydrate path.
 
 **Verdict: strong.** The `BlockRenderer` contract is the load-bearing invariant and has both
@@ -226,7 +226,7 @@ to add more live tests.
 1. **Scripted AI in storybook (highest leverage).** **Done** — the `stories-assistant`
    decorators accept `scripted: Script`, which wires
    `ScriptedLanguageModel.scriptedAiServiceMiddleware` through the plugin's `aiServiceMiddleware`
-   seam ([`types/index.ts`](./src/types/index.ts)), replacing the AI service with the offline
+   seam ([`types/index.ts`](../src/types/index.ts)), replacing the AI service with the offline
    scripted model for the whole plugin stack (all agent and sub-agent processes). Each scenario
    gets two variants:
    - `Foo` — live, `tags: ['!test']`, for model-behavior work;
@@ -241,7 +241,7 @@ to add more live tests.
    prefer a vitest + scripted-model test at this seam and open storybook only for the visual
    layers. §4 supplies the missing harness pieces.
 3. **Processor streaming harness.** **Done** —
-   [`processor/streaming.node.test.ts`](./src/processor/streaming.node.test.ts) feeds a scripted
+   [`processor/streaming.node.test.ts`](../src/processor/streaming.node.test.ts) feeds a scripted
    `PartialBlock` trace sequence through a real `AiChatProcessor` (stub `AgentService.Session`
    replaying the fixture) and asserts the atom transitions: in-place partial upserts,
    finalization, stale-partial drop after finalize, and end-of-request flush. Two learnings for
@@ -283,7 +283,7 @@ scripted model; the pieces below complete the harness for **two cooperating sess
 ### 4.2 Harness pieces (implemented)
 
 **(a) Script routing**
-([`ScriptedLanguageModel.ts`](../../core/compute/ai/src/testing/ScriptedLanguageModel.ts)).
+([`ScriptedLanguageModel.ts`](../../../core/compute/ai/src/testing/ScriptedLanguageModel.ts)).
 A plain turn list has one global cursor, which cannot script a supervisor and its sub-agent
 independently. A routed script dispatches each model call to the first route whose `match`
 predicate accepts the flattened request (system prompt + message text); each route keeps its
@@ -301,7 +301,7 @@ separate processes consume the same routes. The single-list form is unchanged (a
 match-all route).
 
 **(b) Session helpers**
-([`agent-runtime/testing/test-agent.ts`](../../core/compute/agent-runtime/src/testing/test-agent.ts)).
+([`agent-runtime/testing/test-agent.ts`](../../../core/compute/agent-runtime/src/testing/test-agent.ts)).
 `collectEphemeral(session)` forks and buffers the `PartialBlock`/`CompleteBlock` stream — the
 headless equivalent of what the chat UI renders. `waitForMessage(feed, predicate)` (with
 `messageTextIncludes`) polls the conversation feed for out-of-band results:
@@ -314,7 +314,7 @@ keys (via the `feed` trace sink).
 
 ### 4.3 The headless test
 
-[`supervisor/delegation-strategy.test.ts`](../../core/compute/assistant-toolkit/src/supervisor/delegation-strategy.test.ts)
+[`supervisor/delegation-strategy.test.ts`](../../../core/compute/assistant-toolkit/src/supervisor/delegation-strategy.test.ts)
 (D-tier, det, PR-gating — the real strategy, not the stub). The sub-agent route is keyed on the
 `RunInstructions` system prompt ("non-interactive mode"); the supervisor is the fallback route:
 

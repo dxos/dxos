@@ -257,7 +257,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
       </Panel.Toolbar>
       <Panel.Content classNames='flex flex-col min-h-0 py-2'>
         {error && (
-          <div role='none' className='px-2 pbe-2 text-sm text-error-text'>
+          <div role='none' className='px-2 pb-2 text-sm text-error-text'>
             {error}
           </div>
         )}
