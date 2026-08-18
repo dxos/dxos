@@ -22,6 +22,11 @@ rendering layer. Track B and C touch `react-ui-thread`, so coordinate before mov
       after scrolling — CodeMirror renders a slice of the document and the markdown list numbering
       appears to be assigned from the rendered slice, not source positions (ui-editor
       decorateMarkdown). Reproduce with a single message containing a 100-item ordered list.
+- [ ] Synthetic context renders inside the prompt bubble: a user message carrying a `<synthetic>`
+      block (e.g. the document selection) plus the prompt text gets ONE bubble containing both —
+      the synthetic part should render separately, before the bubble. The chrome frames the whole
+      message; needs the item split per block group (or the renderer/chrome to cooperate) in
+      react-ui-assistant MessageChrome/renderer.
 - [ ] mosaic VirtualStack rebind onto react-ui-virtual (SPEC F-8.2).
 - [ ] npm publish of react-ui-virtual / react-ui-feed / react-ui-assistant (changesets post-merge).
 
