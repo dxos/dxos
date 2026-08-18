@@ -306,9 +306,12 @@ jobs:
           retention-days: 1
 
   deploy:
-    needs: [plan, release, build-bundle]
+    needs: [plan, release, version, build-bundle]
     # Run once the prep jobs succeeded or were skipped (static-only app sets); skip only on a failure.
-    if: ${{ !cancelled() && needs.plan.result == 'success' && needs.release.result != 'failure' && needs.build-bundle.result != 'failure' }}
+    # `version` must be here explicitly: its failure leaves `build-bundle` *skipped* (not failed), which
+    # would otherwise pass the build-bundle check and let this job rebuild Composer inline from the
+    # un-stamped package.json — deploying a bundle that reports the previous release's version.
+    if: ${{ !cancelled() && needs.plan.result == 'success' && needs.release.result != 'failure' && needs.version.result != 'failure' && needs.build-bundle.result != 'failure' }}
     permissions:
       contents: write # Force-updates the per-app `<app>/<env>` deploy pointer tags.
     runs-on: depot-ubuntu-24.04-4
@@ -430,6 +433,27 @@ jobs:
         run: |
           payload=$(jq -nc --arg env "$DEPLOY_ENV" --arg app "$DEPLOY_APP" --arg url "$RUN_URL" \
             '{content: (":x: Deploy of **" + $app + "** to `" + $env + "` failed\nRun: " + $url)}')
+          curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
+
+  # A run that breaks before `deploy` must still say so: a prep failure (release, version, build-bundle)
+  # skips `deploy`, so its own failure ping never fires — and since nightly successes are deliberately
+  # silent, a silent broken nightly would read as a good one.
+  notify-prep-failure:
+    needs: [plan, release, version, build-bundle]
+    if: ${{ !cancelled() && needs.plan.result == 'success' && (needs.release.result == 'failure' || needs.version.result == 'failure' || needs.build-bundle.result == 'failure') }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      DEPLOY_ENV: ${{ needs.plan.outputs.env }}
+      DEPLOY_APP: ${{ needs.plan.outputs.app }}
+    steps:
+      - name: Notify Discord — deploy preparation failed
+        env:
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -nc --arg env "$DEPLOY_ENV" --arg app "$DEPLOY_APP" --arg url "$RUN_URL" \
+            '{content: (":x: Deploy of **" + $app + "** to `" + $env + "` failed before deploying (release/version/build)\nRun: " + $url)}')
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
   # Desktop/mobile build for Composer — every environment ships a desktop app, so dogfooders on the
