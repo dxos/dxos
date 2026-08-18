@@ -47,8 +47,8 @@ describe('deleting a project', () => {
     const chat = db.add(Chat.make({ name: 'Chat', feed: Ref.make(feed) }));
     Obj.setParent(chat, project);
 
-    // Mirrors ProjectOperation.CreateRoutine: neither owned nor referenced — the routine reaches its
-    // project only through its own instructions.
+    // Mirrors the routine-template create flow: neither owned nor referenced — the routine reaches
+    // its project only through its own instructions.
     const routine = db.add(Routine.make({ name: 'Routine', triggers: [] }));
     await db.flush();
 

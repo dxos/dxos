@@ -11,7 +11,7 @@ import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Outline, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions';
-import type * as Skill from './Skill';
+import * as Skill from './Skill';
 
 /** Work-stream lifecycle state; what done means lives on the task set's milestones. */
 export const ProjectStatus = Schema.Literals(['active', 'paused', 'blocked', 'ended']);
@@ -48,6 +48,16 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     Schema.annotate({ title: 'Project' }),
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
+    // Skills any project-scoped session carries: the project skill (so created objects can be filed
+    // into `artifacts` — filing is a deliberate tool call) plus the artifact-type skills (so producing
+    // the artifact the user asked for does not cost a query-skills/enable-skills round trip first).
+    // Plain dotted keys, so the type does not depend on the plugins that own each skill.
+    Skill.SkillsAnnotation.set([
+      'org.dxos.skill.project',
+      'org.dxos.skill.markdown',
+      'org.dxos.skill.table',
+      'org.dxos.skill.sheet',
+    ]),
   ),
 ) {}
 

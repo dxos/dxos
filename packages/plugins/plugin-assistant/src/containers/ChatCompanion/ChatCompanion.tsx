@@ -85,7 +85,7 @@ const useSkills = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 'sub
       return [] as string[];
     }
 
-    return Option.getOrElse(() => [] as string[])(AppAnnotation.SkillsAnnotation.get(Type.getSchema(schema)));
+    return Option.getOrElse(() => [] as string[])(Skill.SkillsAnnotation.get(Type.getSchema(schema)));
   }, [companionTo]);
 
   const existingSkills = useQuery(space?.db, Filter.type(Skill.Skill));

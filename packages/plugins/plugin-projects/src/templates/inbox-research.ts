@@ -20,7 +20,7 @@ import { scaffoldProject } from './scaffold';
 /**
  * Skill keys composed into the project's instructions (chat sessions) and the starter routine.
  * Plain dotted keys (not skill imports) so plugin-inbox does not depend on the plugins that own
- * them — the `ARTIFACT_SKILL_KEYS` idiom.
+ * them — the `SkillsAnnotation` idiom.
  */
 const PROJECT_SKILL_KEYS = ['org.dxos.skill.inbox', 'org.dxos.skill.table'] as const;
 const ROUTINE_SKILL_KEYS = ['org.dxos.skill.table', 'org.dxos.skill.project'] as const;
