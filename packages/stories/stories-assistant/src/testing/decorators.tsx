@@ -163,50 +163,58 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   return <>{children}</>;
 };
 
-/**
- * Create storybook decorators for the assistant story groups: the shared harness plus the
- * assistant plugin stack, chat/agent creation, and skill binding.
- */
-export const createDecorators = ({
+/** Maps the assistant-domain props onto the shared harness props. */
+const toStoryDecoratorsProps = ({
   config: configProp = config.remote,
   skills,
   scripted,
-  onChatCreated,
   createAgent,
   types = [],
   plugins = [],
+  onChatCreated,
   ...props
-}: DecoratorsProps) =>
-  createStoryDecorators({
-    ...props,
-    config: configProp,
-    types: [
-      AccessToken.AccessToken,
-      Chat.Chat,
-      Collection.Collection,
-      Outline.Outline,
-      Task.Task,
-      TaskSet.TaskSet,
-      Text.Text,
-      Skill.Skill,
-      Operation.PersistentOperation,
-      Markdown.Document,
-      Instructions.Instructions,
-      Trigger.Trigger,
-      ...types,
-    ],
-    plugins: [
-      PreviewPlugin.make(),
-      RoutinePlugin.make(),
-      AssistantPlugin.make(
-        scripted ? { aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(scripted) } : {},
-      ),
-      TranscriptionPlugin.make(),
-      StoryPlugin({ onChatCreated, createAgent }),
-      ...plugins,
-    ],
-    Wrapper: skills?.length ? ({ children }) => <SkillBinder skills={skills}>{children}</SkillBinder> : undefined,
-  });
+}: DecoratorsProps): StoryDecoratorsProps => ({
+  ...props,
+  config: configProp,
+  types: [
+    AccessToken.AccessToken,
+    Chat.Chat,
+    Collection.Collection,
+    Outline.Outline,
+    Task.Task,
+    TaskSet.TaskSet,
+    Text.Text,
+    Skill.Skill,
+    Operation.PersistentOperation,
+    Markdown.Document,
+    Instructions.Instructions,
+    Trigger.Trigger,
+    ...types,
+  ],
+  plugins: [
+    PreviewPlugin.make(),
+    RoutinePlugin.make(),
+    AssistantPlugin.make(
+      scripted ? { aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(scripted) } : {},
+    ),
+    TranscriptionPlugin.make(),
+    StoryPlugin({ onChatCreated, createAgent }),
+    ...plugins,
+  ],
+  Wrapper: skills?.length ? ({ children }) => <SkillBinder skills={skills}>{children}</SkillBinder> : undefined,
+});
+
+/**
+ * Create storybook decorators for the assistant story groups: the shared harness plus the
+ * assistant plugin stack, chat/agent creation, and skill binding. The function form gives seeding
+ * code (e.g. `onInit`) access to the story's `args`.
+ */
+export const createDecorators = <Args = any,>(
+  input: DecoratorsProps | ((context: { args: Args }) => DecoratorsProps),
+) =>
+  createStoryDecorators<Args>(
+    typeof input === 'function' ? (context) => toStoryDecoratorsProps(input(context)) : toStoryDecoratorsProps(input),
+  );
 
 type CreateAgentOptions = {
   name?: string;

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
 import { Filter, Ref } from '@dxos/echo';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
@@ -16,15 +17,21 @@ import { trim } from '@dxos/util';
 import { StoryRole } from '../modules';
 import { ModuleContainer, addToRootCollection, createDecorators, storyParameters, submitPrompt } from '../testing';
 
-const meta: Meta<typeof ModuleContainer> = {
+type StoryArgs = {
+  /** Markdown content of the seeded document the agent is asked to analyze. */
+  source: string;
+};
+
+const meta: Meta<StoryArgs> = {
   title: 'stories/stories-assistant/Uml',
-  render: ModuleContainer,
+  // Args feed the decorator's seeding, not the container (its layout arrives via StoryLayout.Atom).
+  render: () => <ModuleContainer />,
   parameters: storyParameters,
 };
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<StoryArgs>;
 
 /** Source the agent is asked to analyze: a small class hierarchy with every relation kind. */
 const SOURCE_CODE = trim`
@@ -78,7 +85,7 @@ const SOURCE_CODE = trim`
 // Captured by `onInit` so play functions can assert on the live canvas records.
 let storySpace: Space | undefined;
 
-const decorators = createDecorators({
+const decorators = createDecorators<StoryArgs>(({ args }) => ({
   skills: [AssistantSkill.key, MarkdownSkill.key, UmlSkill.key],
   lazyPlugins: async () => {
     // SpacePlugin contributes the `versioning-state` capability the markdown article reads.
@@ -100,7 +107,7 @@ const decorators = createDecorators({
       import('@dxos/plugin-illustrator'),
       import('@dxos/plugin-tldraw'),
     ]);
-    const document = space.db.add(Markdown.make({ name: 'Media Library', content: SOURCE_CODE }));
+    const document = space.db.add(Markdown.make({ name: 'Media Library', content: args.source }));
     const drawing = space.db.add(
       Drawing.make({ name: 'Class Diagram', canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA }) }),
     );
@@ -113,7 +120,7 @@ const decorators = createDecorators({
     const drawings = await space.db.query(Filter.type(Drawing.Drawing)).run();
     await binder.bind({ objects: [...documents, ...drawings].map((object) => Ref.make(object)) });
   },
-});
+}));
 
 /** Count canvas shape records belonging to a world object (`meta.object`), or all managed shapes. */
 const countObjectRecords = async (objectId?: string): Promise<number> => {
@@ -155,6 +162,7 @@ const waitForObjectRecords = async (objectId: string | undefined, min = 1, timeo
  */
 export const Default: Story = {
   decorators,
+  args: { source: SOURCE_CODE },
 };
 
 /**
@@ -167,6 +175,7 @@ export const Default: Story = {
  */
 export const GenerateFromDocumentTest: Story = {
   decorators,
+  args: { source: SOURCE_CODE },
   tags: ['!test'],
   play: async ({ canvasElement }) => {
     await submitPrompt(
@@ -185,6 +194,8 @@ export const GenerateFromDocumentTest: Story = {
  */
 export const GenerateFromGithubTest: Story = {
   decorators,
+  // The GitHub reference goes in the prompt; the seeded document is inert here.
+  args: { source: SOURCE_CODE },
   tags: ['!test'],
   play: async ({ canvasElement }) => {
     await submitPrompt(
