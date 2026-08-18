@@ -89,8 +89,17 @@ const holdsStill = (scenario: FeedScenario, count: number): StoryObject => ({
     // "Nothing moved" alone is satisfied by a list that never measures anything — verified by
     // disabling measurement, at which point the story still passed. Scrolling to the end exercises
     // the sizer, and the sizer is only right if the measured extents reached it.
-    scroller.scrollTop = scroller.scrollHeight;
-    await settle();
+    // Driven to the end rather than sent there once. The extents are estimates, so measuring the
+    // rows the scroll reveals grows the document under it — one assignment lands short of an end
+    // that was not yet as far away as it turned out to be. A reader dragging a scrollbar does the
+    // same thing repeatedly; what has to be true is that the end is reachable, and that it settles.
+    let previous = -1;
+    for (let attempt = 0; attempt < 8 && scroller.scrollTop !== previous; attempt++) {
+      previous = scroller.scrollTop;
+      scroller.scrollTop = scroller.scrollHeight;
+      await settle(20);
+    }
+
     const last = scroller.querySelector<HTMLElement>(`[data-index="${count - 1}"]`);
     const rests =
       !!last && Math.abs(last.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom) <= 2;

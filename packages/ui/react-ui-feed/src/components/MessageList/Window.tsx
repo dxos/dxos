@@ -154,6 +154,9 @@ export const Window = ({
     [placement, axis, invalidate],
   );
 
+  // Told on every render, not captured once: `extents` is a function the host may replace, and a
+  // placement holding the first one it was given keeps a layout that was true at mount.
+  placement.setExtents(extents);
   placement.setReserve(reserve);
 
   const main = axis === 'block' ? 'height' : 'width';

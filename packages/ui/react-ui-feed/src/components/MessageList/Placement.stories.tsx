@@ -59,6 +59,9 @@ type StoryProps = {
 
 const EXTENT = (index: number) => 40 + (index % 8) * 30;
 
+/** The row `Grow` changes; near the top, so it is mounted whatever the extents turn out to be. */
+const GROWN = 5;
+
 const Harness = ({
   count = 500,
   axis = 'block',
@@ -403,21 +406,20 @@ export const Grow: Story = {
         {...args}
         count={200}
         exact={false}
-        extent={(index) => (grown && index === 30 ? 400 : EXTENT(index))}
+        extent={(index) => (grown && index === GROWN ? 400 : EXTENT(index))}
         onGrow={() => setGrown(true)}
       />
     );
   },
   play: async ({ canvasElement }) => {
     await settle();
-    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="window.scroller"]')!;
-    // Asserted, not assumed: the story names row 30, and a scroll that did not arrive leaves it
-    // unmounted — which reads as "the grow did nothing" and is really "the test looked elsewhere".
-    scroller.scrollTop = 2_000;
-    await settle();
     const before = probe(canvasElement);
-    if (!before.rows.has(30)) {
-      throw new Error(`row 30 should be mounted at this scroll; mounted ${[...before.rows.keys()].join(',')}`);
+    // Grown at the top of the list rather than after a scroll: which rows are mounted depends on the
+    // extent function, and a story that scrolls to a fixed offset and then names a fixed row is
+    // asserting against wherever that row happened to be the day it was written. It named row 30 at
+    // an offset that mounts rows 6–29, and read "the grow did nothing".
+    if (!before.rows.has(GROWN)) {
+      throw new Error(`row ${GROWN} should be mounted at the top; mounted ${[...before.rows.keys()].join(',')}`);
     }
 
     (canvasElement.querySelector('[data-testid="window.grow"]') as HTMLElement).click();
@@ -425,19 +427,9 @@ export const Grow: Story = {
 
     const after = probe(canvasElement);
     const displaced = moved(before, after);
-    // eslint-disable-next-line no-console
-    console.log(
-      '[grow]',
-      JSON.stringify({
-        button: !!canvasElement.querySelector('[data-testid="window.grow"]'),
-        rows: [...before.rows.keys()].slice(0, 3),
-        has30: before.rows.has(30),
-        displaced,
-      }),
-    );
     await expect({
-      before: displaced.filter((index) => index < 30),
-      after: displaced.some((index) => index > 30),
+      before: displaced.filter((index) => index < GROWN),
+      after: displaced.some((index) => index > GROWN),
     }).toEqual({ before: [], after: true });
   },
 };

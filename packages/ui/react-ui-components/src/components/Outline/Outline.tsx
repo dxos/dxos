@@ -69,7 +69,7 @@ export type OutlineProps = ThemedClassName<{
  * A vertical rail of horizontal ticks, each representing an anchor marker in a
  * scrollable document. The rows tile the full height, so hovering anywhere in the rail activates
  * the nearest tick: it (and its neighbours, with a distance falloff) extends rightward in a wave.
- * A single popover — anchored to the rail's right edge and shifted to the hovered row — shows the
+ * A single popover — anchored to the tick the reader is at — shows the
  * marker's title/description. Markers whose range intersects `visibleRange` render at full
  * opacity; the rest are dimmed.
  */
@@ -108,7 +108,11 @@ export const Outline = ({
 }: OutlineProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rowsRef = useRef<Array<HTMLButtonElement | null>>([]);
-  const [hovered, setHovered] = useState<number | null>(null);
+  // Two ways to be *at* a tick, kept apart: the pointer is over one, or the rail has focus and the
+  // reader has navigated to one. Conflating them means leaving with the mouse cannot dismiss the
+  // card — the keyboard position immediately puts it back.
+  const [pointer, setPointer] = useState<number | null>(null);
+  const [navigated, setNavigated] = useState<number | null>(null);
   // The rail is bounded by whatever contains it. Measured rather than assumed, because the same
   // component is used both in a sized grid cell and floating over a document, where nothing
   // constrains it and its natural height is the right one.
@@ -140,25 +144,27 @@ export const Outline = ({
     [visibleRange],
   );
 
-  // Wave falloff: a Gaussian (normal-distribution) bell centred on the hovered row — a rounded
+  // The pointer wins where there is one: it is the more direct statement of what the reader means.
+  const shown = pointer ?? navigated;
+
+  // Wave falloff: a Gaussian (normal-distribution) bell centred on the tick shown — a rounded
   // peak with inflected shoulders that flatten toward rest, rather than a dome. `WAVE_SPREAD` is
   // the standard deviation (in rows).
   const widthFor = useCallback(
     (index: number) => {
-      if (hovered == null) {
+      if (shown == null) {
         return REST_WIDTH;
       }
 
-      const distance = index - hovered;
+      const distance = index - shown;
       const falloff = Math.exp(-(distance * distance) / (2 * WAVE_SPREAD * WAVE_SPREAD));
       return REST_WIDTH + (width - REST_WIDTH) * falloff;
     },
-    [hovered, width],
+    [shown, width],
   );
 
   // Arrow keys walk the rail. The ticks are buttons, so tab reaches the rail and the arrows then
   // move within it — the roving behaviour a vertical list of controls is expected to have. The step
-  // is taken from the focused row rather than `hovered`, which the pointer leaving the rail clears
   // while the keyboard is still on a tick; and clamped to `rows`, since thinning can leave the ref
   // array longer than the rail it now renders.
   const handleKeyDown = useCallback(
@@ -178,9 +184,8 @@ export const Outline = ({
       }
 
       // Otherwise they walk the rail, the roving behaviour a vertical list of controls is expected
-      // to have. Taken from the focused row rather than `hovered`, which the pointer leaving clears
-      // while the keyboard is still on a tick; and clamped to `rows`, since thinning can leave the
-      // ref array longer than the rail it now renders.
+      // to have. Taken from the focused element rather than from the shown tick, and clamped to
+      // `rows`, since thinning can leave the ref array longer than the rail it now renders.
       const current = rowsRef.current.findIndex((element) => element === event.target);
       if (current < 0) {
         return;
@@ -203,14 +208,15 @@ export const Outline = ({
   const visibleFrom = visibleRange?.from;
   useEffect(() => {
     if (!focused || visibleFrom == null) {
+      setNavigated(null);
       return;
     }
 
     const index = rows.findIndex((row) => visibleFrom < row.span.to);
-    setHovered(index < 0 ? rows.length - 1 : index);
+    setNavigated(index < 0 ? rows.length - 1 : index);
   }, [focused, visibleFrom, rows]);
 
-  const hoveredMarker = hovered == null ? undefined : rows[hovered]?.marker;
+  const hoveredMarker = shown == null ? undefined : rows[shown]?.marker;
 
   return (
     <Popover.Root open={hoveredMarker != null}>
@@ -221,12 +227,11 @@ export const Outline = ({
           width: `${width}px`,
           height: bounded ? '100%' : `${natural}px`,
         }}
-        onPointerLeave={() => !focused && setHovered(null)}
+        onPointerLeave={() => setPointer(null)}
         onFocusCapture={() => setFocused(true)}
         onBlurCapture={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
             setFocused(false);
-            setHovered(null);
           }
         }}
         onKeyDown={handleKeyDown}
@@ -261,14 +266,14 @@ export const Outline = ({
               ref={(element) => {
                 rowsRef.current[index] = element;
               }}
-              onPointerEnter={() => setHovered(index)}
-              onFocus={() => setHovered(index)}
+              onPointerEnter={() => setPointer(index)}
+              onFocus={() => setNavigated(index)}
               onClick={() => onSelect?.(marker, row.index)}
             >
               <div
                 className={mx(
                   'h-[3px] rounded-full transition-all duration-200 ease-out',
-                  hovered === index ? 'bg-neutral-800 dark:bg-neutral-200' : 'bg-neutral-400 dark:bg-neutral-600',
+                  shown === index ? 'bg-neutral-800 dark:bg-neutral-200' : 'bg-neutral-400 dark:bg-neutral-600',
                   active ? 'opacity-100' : 'opacity-30',
                 )}
                 style={{ width: widthFor(index) }}
@@ -276,7 +281,7 @@ export const Outline = ({
             </button>
           );
 
-          return index === hovered ? (
+          return index === shown ? (
             <Popover.Anchor asChild key={marker.id}>
               {tick}
             </Popover.Anchor>

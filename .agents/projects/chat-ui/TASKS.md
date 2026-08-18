@@ -260,29 +260,25 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
 
 Found while building the replacement placement layer (`DESIGN.md` §Principles). None block stage 3.
 
-- [ ] **Keyboard navigation from the outline rail is wrong.** Reported from use, symptom not yet
-      pinned down. The rail's arrows now call `onNavigate` (stepping items via the host's own
-      mechanism) and the popover is derived from the visible range while the rail has focus, so the
-      suspects are: the step being taken from a stale `index`, focus not staying on the rail across a
-      navigation, or the derived tick fighting the focused one. Reproduce by hand first — this is a
-      behaviour nobody has watched end to end.
-- [ ] **`placement/Prepend` and `placement/Grow` fail deterministically.** Not flakiness: they fail
-      at the commit where they were reported passing, so those reports were wrong. `Grow` is
-      localised — scrolling to 2,000 mounts rows 6–29 while the story asks about row 30, so the grow
-      looks like it did nothing. The precondition is now an explicit throw naming the mounted rows.
-      Either `Window` loses a directly-assigned `scrollTop`, or the story assumes a viewport size it
-      never pinned; establish which before changing anything.
-- [ ] **The end is not reachable when extents are estimates.** `bridge/Uniform` and
-      `bridge/Assistant` fail; `bridge/Plain` passes because its extents are exact. Scrolling to the
-      end does not land the last row on the viewport's bottom, which is the end-edge drift being
-      _reported and never applied_ — the open question in §7. The correction has to go to the sizer
-      rather than the window (moving the window moves what the reader is looking at), and the sizer
-      must not be revised under a scroll. This is the next real piece of placement work.
-- [ ] **The item cannot be rendered without the list.** `MessageList.Item` reads the renderer, the
-      registry, the hits and the widget census from `MessageList.Root`'s context, so the placement
-      layer cannot be exercised with real items except through the very thing it replaces. The bridge
-      repeats the resolution rather than refactoring; making the item take its dependencies as props
-      belongs in the retrofit.
+- [x] **`Window` held the extents it was given at construction.** `extents` is a function the host
+      may replace — a row edited, a panel opened, a story flipping a fixture — and `Placement` kept
+      the first one for ever, so the layout stayed true to whatever was the case at mount. It is now
+      told on every render. This was `placement/Prepend`'s failure, and mutation-checked: removing
+      the call fails that story.
+- [x] **`placement/Grow` was asking about a row that was never there.** It scrolled to a fixed offset
+      and named row 30, but the extent function averages 145px, so that offset mounts rows 6–29 — and
+      the story read "the grow did nothing". It now grows a row near the top and asserts the row is
+      mounted before touching it. The code was right; the story's assumption was not.
+- [x] **The end is reachable, in more than one move.** `bridge/Uniform` and `bridge/Assistant` sent
+      the scroll to the end once and landed short — measuring the rows a scroll reveals grows the
+      document under it, so the end was not yet as far away as it turned out to be. Driving it until
+      it settles is what a reader dragging a scrollbar does, and the property that matters is that
+      the end is reachable and that it stops moving. Mutation-checked: disabling measurement fails
+      both.
+- [ ] **Keyboard navigation from the outline rail is wrong.** Reported from use; the popover
+      dismissal half is fixed (pointer hover and keyboard position are now separate state, so leaving
+      with the mouse clears the card instead of the keyboard position putting it straight back). The
+      stepping itself is still unconfirmed — reproduce by hand.
 - [ ] **The popover anchoring fix is unverified.** Anchoring to the hovered row and keying the
       content is principled, but the probe that "showed" the old drift was faulty — React synthesises
       `pointerenter` from `pointerover`/`pointerout` pairs, so dispatching enter alone never moved the

@@ -111,6 +111,16 @@ export class Placement {
     this.#viewport = viewport;
   }
 
+  /**
+   * The host's answer about extents can change — a row is edited, a panel opens, a story flips a
+   * fixture — and it is a *function*, so keeping the one handed over at construction quietly pins
+   * the layout to whatever was true then. Measured extents survive: they are keyed by id and this
+   * only replaces what the host would say about a row nobody has measured.
+   */
+  setExtents(extents: Extents): void {
+    this.#extents = extents;
+  }
+
   setReserve(reserve: number): void {
     this.#reserve = reserve;
   }
