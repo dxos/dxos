@@ -186,7 +186,7 @@ const runDxBuild = async (): Promise<void> => {
     }
   } catch (error) {
     // execFileAsync captures the subprocess stdio on the rejected value; without this,
-    // rolldown swallows tsgo's actual diagnostic output and the plugin error carries only
+    // rolldown swallows the compiler's actual diagnostic output and the plugin error carries only
     // a generic exit-code message.
     const err = error as { stdout?: string | Buffer; stderr?: string | Buffer };
     if (err.stdout && err.stdout.length > 0) {
@@ -196,7 +196,7 @@ const runDxBuild = async (): Promise<void> => {
       process.stderr.write(err.stderr);
     }
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`dx-build (tsgo) failed: ${message} cwd=${process.cwd()}`);
+    throw new Error(`dx-build failed: ${message} cwd=${process.cwd()}`);
   }
 };
 
@@ -297,14 +297,14 @@ export const DxWorkerResolvePlugin = (): Plugin => {
 };
 
 /**
- * Kicks off `dx-build` (tsgo wrapper) at build start so declaration emit runs in
+ * Kicks off `dx-build` (tsc wrapper) at build start so declaration emit runs in
  * parallel with the JS bundle. Generates per-file `.d.ts` files in `dist/types/src/`.
  */
-export const DxTsgoPlugin = (): Plugin => {
+export const DxDeclarationsPlugin = (): Plugin => {
   let dxBuildTask: Promise<void> | undefined;
 
   return {
-    name: 'DxTsgo',
+    name: 'DxDeclarations',
     apply: 'build',
     buildStart() {
       dxBuildTask = runDxBuild();
@@ -891,7 +891,7 @@ const buildTestConfig = (
  * Single entry point for a DXOS library package's `vite.config.ts`.
  *
  * - Library JS → `dist/lib/<entry>.mjs` (rolldown, all non-relative imports external).
- * - Types → `dist/types/src/**\/*.d.ts` (tsgo, started in `buildStart`).
+ * - Types → `dist/types/src/**\/*.d.ts` (tsc, started in `buildStart`).
  * - Tests → vitest projects (`node` / `browser` / `storybook`) wired in when `test` is set.
  */
 export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
@@ -975,7 +975,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),
       ...jsxPlugin,
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
-      DxTsgoPlugin(),
+      DxDeclarationsPlugin(),
     ],
     ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),
   });

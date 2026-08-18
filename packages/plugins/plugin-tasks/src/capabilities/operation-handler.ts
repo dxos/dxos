@@ -11,6 +11,6 @@ import { TasksOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, TasksOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, TasksOperationHandlerSet.handlers);
   }),
 );

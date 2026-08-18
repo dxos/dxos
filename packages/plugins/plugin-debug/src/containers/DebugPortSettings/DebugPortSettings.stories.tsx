@@ -73,13 +73,13 @@ const createFakeController = (initial: Partial<DebugPortStatus> = {}): DebugPort
 /** `Form.Row` reads the form context for its variant; the section itself binds no fields. */
 const NoFields = Schema.Struct({});
 
-type StoryProps = {
+type StoryArgs = {
   initial?: Partial<DebugPortStatus>;
   /** Emitted into the shared log buffer on mount, standing in for a session already under way. */
   lines?: string[];
 };
 
-const DefaultStory = ({ initial, lines = [] }: StoryProps) => {
+const DefaultStory = ({ initial, lines = [] }: StoryArgs) => {
   const controller = useMemo(() => createFakeController(initial), [initial]);
   // Seed the shared buffer so a story that opens already-running has rows to show. The buffer
   // outlives the component, so a remount (StrictMode, story switch) must not append a second copy.

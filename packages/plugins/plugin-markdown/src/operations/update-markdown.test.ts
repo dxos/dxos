@@ -34,7 +34,7 @@ class TestOutline extends Type.makeObject<TestOutline>(DXN.make('com.example.typ
 
 /** `OperationTestLayer` plus the outline-shaped type. */
 const OutlineTestLayer = AssistantTestLayer({
-  operationHandlers: MarkdownOperationHandlerSet,
+  operationHandlers: MarkdownOperationHandlerSet.handlers,
   types: [
     SpaceProperties,
     Collection.Collection,

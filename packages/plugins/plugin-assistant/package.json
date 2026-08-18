@@ -103,11 +103,6 @@
       "import": "./dist/lib/hooks.mjs"
     },
     "./package.json": "./package.json",
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
-    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
@@ -172,6 +167,11 @@
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
+    },
+    "./AssistantSkill": {
+      "source": "./src/skills/assistant/AssistantSkill.ts",
+      "types": "./dist/types/src/skills/assistant/AssistantSkill.d.ts",
+      "import": "./dist/lib/AssistantSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -259,6 +259,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-chat": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
+    "@dxos/react-ui-feed": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",

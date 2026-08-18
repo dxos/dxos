@@ -638,7 +638,7 @@ const ConversationMessageRow = ({
           {/* `ml-auto` rather than `justify-between` on the row: a message whose sender carries
               neither name nor address renders no name at all, and `justify-between` would then treat
               the date as the only child and pull it to the start. */}
-          <span className='ml-auto pis-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
+          <span className='ml-auto ps-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
         </button>
 
         {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}

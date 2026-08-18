@@ -9,7 +9,7 @@ import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DelegationSkill, PlanningSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
-import { MarkdownSkill } from '@dxos/plugin-markdown';
+import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { type Space } from '@dxos/react-client/echo';
 import { Outline } from '@dxos/types';
 
