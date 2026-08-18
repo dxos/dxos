@@ -16,6 +16,7 @@ import { SchemaAST } from '@dxos/effect';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel, useTranslation } from '@dxos/react-ui';
+import { Attention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -172,15 +173,18 @@ const useToolbarActions = (project: Project.Project) => {
           },
           () => void invokePromise(ProjectOperation.CreateChat, { project }, { spaceId }),
         )
+        // The growing gap pushes the routines button to the trailing edge: it opens a companion rather
+        // than creating anything, so it reads as navigation, not a peer of the create actions.
+        .separator()
         .action(
-          'create-routine',
+          'routines',
           {
-            label: ['create-routine.label', { ns: meta.profile.key }],
+            label: ['routines.label', { ns: meta.profile.key }],
             icon: 'ph--lightning--regular',
             disposition: 'toolbar',
-            testId: 'projectsPlugin.createRoutine',
+            testId: 'projectsPlugin.routines',
           },
-          () => void invokePromise(ProjectOperation.CreateRoutine, { project }, { spaceId }),
+          () => void invokePromise(LayoutOperation.UpdateCompanion, { subject: Attention.linkedSegment('automation') }),
         )
         .build(),
     [project, invokePromise, spaceId],

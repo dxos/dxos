@@ -571,6 +571,21 @@ deletion guards (Phase 5) are separate planned follow-ups.**
 
 - [ ] **Knowledge base for memory** — tracked 2026-08-01 (user), scope TBD.
 
+- [ ] **Companion-created routines miss project scope seeding** — tracked 2026-08-18. The project
+      toolbar's "New routine" was replaced by a trailing "Routines" button that just opens the
+      automation companion; creation now happens via the companion's template menu, whose scaffold
+      seeds the subject into `instructions.objects` but does NOT run `seedProjectScope`
+      (`ProjectSkill` + artifact-type skills). Either move the seeding into a plugin-projects-owned
+      template/scaffold hook or drive it from a `SkillsAnnotation` on `Project`; then decide whether
+      `ProjectOperation.CreateRoutine` (kept for now, no UI invoker) survives as an agent verb.
+- [ ] **Project companion chat misses `ProjectSkill` + artifact skills** — tracked 2026-08-18.
+      `ChatCompanion.useSkills` binds skills from the subject type's `SkillsAnnotation`, and
+      `Project` has none — so a project's companion chat gets neither `ProjectSkill` nor the
+      artifact-type skills that `ProjectOperation.CreateChat` binds explicitly (the comment in
+      `create-chat.ts` claiming companions get these from the annotation is wrong for projects).
+      Fix by annotating `Project` or binding in the companion; prerequisite to ever collapsing the
+      toolbar chat into the companion.
+
 - [x] **`Chat.agent` removed; linkage is the `CompanionTo` relation** — the field (phase B) was the
       edge that closed the Agent↔Chat import cycle and forced both types into one module behind
       namespace facades. `Agent` and `Chat` are now independent leaves; `Agent` owns the lifecycle, including `loadForChat`. No migration (the field shipped one day earlier at `chat@0.1.0`,
