@@ -572,6 +572,22 @@ deletion guards (Phase 5) are separate planned follow-ups.**
 
 - [ ] **Knowledge base for memory** — tracked 2026-08-01 (user), scope TBD.
 
+- [ ] **`ProjectMcpOperation` is misnamed and its seam is unguarded** — tracked 2026-08-18 (user).
+      The split from `ProjectOperation` is load-bearing but is about the _import graph_, not MCP:
+      the module stays a leaf (compute/echo/keys only) so the edge operation-service and workerd can
+      load the definitions without dragging `@dxos/app-framework`, `@dxos/assistant-toolkit`,
+      `@dxos/ai`, `@dxos/plugin-inbox`. Tree-shaking does not help — `Operation.make(...)` runs at
+      module level. Two defects: (1) the name contradicts itself, since `ProjectOperation.Create`
+      is also MCP-projected (`projectCreate`), so the four CRUD tools sit either side of a seam the
+      name does not describe; (2) nothing enforces the seam — a `Database.Service`-only verb added
+      to `ProjectOperation`, or an app-graph import added to `ProjectMcpOperation`, breaks remote
+      loading silently with no failing test. The verbs do NOT duplicate (disjoint sets, four
+      distinct tool names). Preferred fix: invert the naming so the portable module keeps the plain
+      `ProjectOperation` name and the app-graph verbs move to `ProjectAppOperation` — the default
+      namespace is then the portable one and the heavy module justifies itself — plus a check that
+      the portable module's import graph stays leaf. Keep the `MILESTONE-5.md` §7.2/§7.4 pointer.
+      Pre-existing on main; deliberately not folded into #12595.
+
 - [x] **Companion-created routines miss project scope seeding** — resolved 2026-08-18 via the
       annotation route: `SkillsAnnotation` moved from `@dxos/app-toolkit/AppAnnotation` to
       `@dxos/compute/Skill` (id-keyed, so only import paths changed — ~14 call sites), and `Project`
