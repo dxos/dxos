@@ -143,3 +143,44 @@ export const Plain: Story = {
     await expect({ rows, stalled }).toEqual({ rows, stalled: [] });
   },
 };
+
+/**
+ * Presses faster than the glide: each must still take one stop.
+ *
+ * A step mid-travel that re-derives its base from the scroll offset finds the stop it is already
+ * heading to and goes there again — the press is swallowed, which a reader at a toolbar feels as a
+ * button that "does not reliably move". The navigation chains from the pending destination instead,
+ * so three fast presses land three stops away, wherever the glide had got to.
+ */
+export const RapidArrows: Story = {
+  args: { scenario: 'assistant', count: 60 },
+  play: async ({ canvasElement }) => {
+    const viewport = within(canvasElement).getByTestId('feed.viewport');
+    await settle();
+
+    const before = topRowOf(canvasElement);
+    // Three presses inside one glide's travel time — no settling between.
+    for (let step = 0; step < 3; step++) {
+      viewport.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
+      await nextFrame();
+    }
+
+    // Then let the travel land.
+    let still = 0;
+    let last = viewport.scrollTop;
+    for (let frame = 0; frame < 400 && still < 12; frame++) {
+      await nextFrame();
+      const current = viewport.scrollTop;
+      still = Math.abs(current - last) < 1 ? still + 1 : 0;
+      last = current;
+    }
+
+    // Three stops on the assistant scenario is three prompts — several rows, not one.
+    const after = topRowOf(canvasElement);
+    await expect({ before, after, travelled: before - after >= 3 }).toEqual({
+      before,
+      after,
+      travelled: true,
+    });
+  },
+};

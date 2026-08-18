@@ -106,7 +106,7 @@ const DefaultStory = ({ count = 30, debug, scrollPastEnd, wordsPerChunk = 4, chu
                 data-testid='assistant.auto'
                 onClick={toggleAuto}
               />
-              <div className='grow' />
+              <Toolbar.Separator />
               <NavButtons />
             </Toolbar.Root>
           </Panel.Toolbar>
@@ -115,9 +115,7 @@ const DefaultStory = ({ count = 30, debug, scrollPastEnd, wordsPerChunk = 4, chu
               a loose child lands in an implicit row under the toolbar rather than at the bottom. */}
           <Panel.Content classNames='dx-container flex flex-col min-h-0'>
             <div className='relative grow min-h-0'>
-              <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
-                <PromptOutline classNames='row-start-2' model={model} />
-              </div>
+              <PromptOutline model={model} />
               <MessageList.Viewport classNames='absolute inset-0' padding />
               {debug && <Probes model={model} />}
             </div>
@@ -142,7 +140,7 @@ const PromptInput = ({ busy, onSubmit }: { busy: boolean; onSubmit: (prompt: str
   };
 
   return (
-    <div className='p-2 border-bs border-separator'>
+    <div className='p-2'>
       <Input.Root>
         <Input.TextInput
           placeholder={busy ? 'Answering…' : 'Ask something…'}
@@ -183,13 +181,15 @@ const PromptOutline = ({ classNames, model }: { classNames?: string; model: Feed
   }
 
   return (
-    <Outline
-      classNames={['justify-self-center', classNames]}
-      markers={markers}
-      visibleRange={current}
-      onSelect={(marker) => navigation.jumpTo(marker.range.from, 'smooth')}
-      onNavigate={(delta) => navigation.step(delta)}
-    />
+    <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
+      <Outline
+        classNames={['row-start-2 justify-self-center', classNames]}
+        markers={markers}
+        visibleRange={current}
+        onSelect={(marker) => navigation.jumpTo(marker.range.from, 'smooth')}
+        onNavigate={(delta) => navigation.step(delta)}
+      />
+    </div>
   );
 };
 

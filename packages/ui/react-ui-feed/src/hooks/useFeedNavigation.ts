@@ -2,10 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RefObject, useCallback } from 'react';
+import { type RefObject, useCallback, useRef } from 'react';
 
 import { type Stop } from '../model';
 import { type WindowController } from '../virtualizer';
+
+/** How long a commanded destination outranks the scroll offset as "where the reader is". */
+const PENDING_WINDOW = 1_500;
 
 export type UseFeedNavigationOptions = {
   controller: RefObject<WindowController | null>;
@@ -56,8 +59,16 @@ export const useFeedNavigation = ({
   scrollPastEnd,
   onNavigate,
 }: UseFeedNavigationOptions): FeedNavigation => {
+  // The last commanded destination, while its travel may still be in flight. A step during a glide
+  // must chain from where the reader is *going*, not from wherever the scroll happens to be this
+  // frame — deriving from the offset mid-travel re-finds the same stop, and rapid presses swallow
+  // each other (seen live: the toolbar's up button "not reliably" stepping). Expires rather than
+  // waiting on arrival, because a scroll the reader takes over is theirs again.
+  const pending = useRef<{ index: number; at: number } | undefined>(undefined);
+
   const jumpTo = useCallback(
     (index: number, behavior: ScrollBehavior = 'auto') => {
+      pending.current = { index, at: performance.now() };
       onNavigate?.(index);
       const align = !scrollPastEnd && index >= count() - 1 ? 'end' : 'start';
       controller.current?.scrollToIndex(index, align, behavior);
@@ -72,7 +83,11 @@ export const useFeedNavigation = ({
         return;
       }
 
-      const at = current();
+      const flight = pending.current;
+      const at =
+        flight && performance.now() - flight.at < PENDING_WINDOW && flight.index !== current()
+          ? flight.index
+          : current();
       const next =
         delta > 0
           ? (all.find(({ index }) => index > at) ?? all[all.length - 1])

@@ -302,8 +302,10 @@ export const useWindow = ({
     // The start edge's drift is repaid, not merely reported: row 0 at a negative position is a top
     // of the document no scroll can reach. Content and offset move by the same delta in the same
     // commit, so the mounted rows hold their place on screen while the coordinate system comes
-    // true. Forward shifts never read as the reader (the follow only weighs backwards gestures).
-    const shift = placement.rebaseStart();
+    // true. Only while row 0 is mounted — everywhere else the incoherence is invisible, and the
+    // write is not: a scrollTop write cancels any native smooth travel in flight, which read as the
+    // toolbar's step dying two stops short. §7 holds mid-list; the top is the one place it cannot.
+    const shift = placement.layout().first === 0 ? placement.rebaseStart() : 0;
     if (shift !== 0) {
       const scroller = scrollerRef.current;
       if (scroller) {
