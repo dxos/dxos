@@ -1,7 +1,7 @@
 layer: library
 language: typescript
 tags:
-  - dist-runtime
+  - dist-config
   - ts-compile
 
 # Fixture transfer and inspection are developer actions against a private R2 bucket, never part of a
