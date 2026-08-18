@@ -22,8 +22,7 @@ const FEEDBACK_LOGS_MAX_BODY_SIZE = LOG_STORE_MAX_BYTES;
 const ALLOWED_ORIGINS = new Set([
   'https://composer.space',
   'https://staging.composer.space',
-  'https://labs.composer.space',
-  'https://main.composer.space',
+  'https://nightly.composer.space',
 ]);
 
 const corsHeaders = (origin: string | null): Record<string, string> => ({

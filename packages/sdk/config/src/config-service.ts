@@ -43,7 +43,7 @@ export const defaultConfig = new Config({
     },
     services: {
       edge: {
-        url: 'wss://dxos.network/',
+        url: 'https://dxos.network/',
       },
       iceProviders: [
         {
