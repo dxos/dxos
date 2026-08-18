@@ -6,4 +6,4 @@ export * from './Debug';
 export * from './debug-model';
 export * from './frame-meter';
 export * from './Stats';
-export * from './use-debug';
+export * from './useDebug';

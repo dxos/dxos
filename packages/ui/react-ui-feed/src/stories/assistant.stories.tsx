@@ -261,7 +261,11 @@ const meta: Meta<StoryArgs> = {
     debug: { control: 'boolean' },
     scrollPastEnd: { control: 'boolean' },
   },
-  args: { count: 30, debug: false, scrollPastEnd: true },
+  args: {
+    count: 30,
+    debug: true,
+    scrollPastEnd: true,
+  },
 };
 
 export default meta;

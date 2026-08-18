@@ -278,23 +278,11 @@ const MessageListRoot = ({
   // anything derived from the sizer would oscillate — and deliberately not the last row's measured
   // size, which the layout also feeds.
   // Just enough space that the LAST STOP (the final prompt) can rest at the top of the viewport —
-  // not a viewport's worth. From estimates only, never measurements: the reserve is an input to the
-  // sizer, and a reserve that follows what the sizer produced oscillates.
-  const reserve = useMemo(() => {
-    if (!scrollPastEnd || !viewport || !model.count) {
-      return 0;
-    }
-
-    const stops = model.stops();
-    const lastStop = stops.length ? stops[stops.length - 1].index : model.count - 1;
-    let tail = 0;
-    for (let index = lastStop; index < model.count; index++) {
-      tail += extents.of(index);
-    }
-
-    return Math.max(0, viewport.clientHeight - tail);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scrollPastEnd, viewport, model, model.count, extents]);
+  // not a viewport's worth. Estimates undershoot real rows, and an estimate-sized reserve then
+  // overshoots (the prompt scrolls OFF the top), so this reads the placement's measured extents —
+  // safe against the old oscillation because a row's height does not depend on the reserve; the
+  // value lags one render through state and settles when the measurements do.
+  const [reserve, setReserve] = useState(0);
 
   const controller = useRef<WindowController>(null);
   const onWindowChange = useCallback(
@@ -352,6 +340,25 @@ const MessageListRoot = ({
     changedAt: () => changedAtRef.current,
   });
 
+  useEffect(() => {
+    if (!scrollPastEnd || !viewport || !model.count) {
+      setReserve(0);
+      return;
+    }
+
+    const stops = model.stops();
+    const lastStop = stops.length ? stops[stops.length - 1].index : model.count - 1;
+    let tail = 0;
+    for (let index = lastStop; index < model.count; index++) {
+      tail += placement.extentOf(index);
+    }
+
+    const next = Math.max(0, viewport.clientHeight - tail);
+    // A pixel of hysteresis, so sub-pixel measurement noise cannot tick the sizer every commit.
+    setReserve((current) => (Math.abs(current - next) > 1 ? next : current));
+    // Keyed on the document's extent: that is what changes when the tail's rows are measured.
+  }, [scrollPastEnd, viewport, model, model.count, sizerExtent, placement]);
+
   // What a reader would call flicker: a row moving on screen by more than the scroll moved, sampled
   // once per frame so the reading is of what was painted. Only while debugging — it reads every
   // mounted row's box every frame.
@@ -383,11 +390,20 @@ const MessageListRoot = ({
 
   const scrollToBottom = useCallback(
     (options?: ScrollToOptions) => {
-      if (model.count) {
+      if (!model.count) {
+        return;
+      }
+
+      // Under scrollPastEnd, the bottom IS the last prompt at the top — the position the reserve
+      // was sized for; without it, the last row rests on the viewport's end.
+      const stops = model.stops();
+      if (scrollPastEnd && stops.length) {
+        scrollToIndex(stops[stops.length - 1].index, { align: 'start', ...options });
+      } else {
         scrollToIndex(model.count - 1, { align: 'end', ...options });
       }
     },
-    [scrollToIndex, model],
+    [scrollToIndex, model, scrollPastEnd],
   );
 
   useEffect(() => {

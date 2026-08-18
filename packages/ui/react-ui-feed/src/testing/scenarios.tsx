@@ -457,7 +457,7 @@ const CopyButton = ({ message }: { message: Message.Message }) => (
     iconOnly
     label='Copy'
     variant='ghost'
-    size={3}
+    density='sm'
     onClick={() => void navigator.clipboard?.writeText(Message.extractText(message))}
   />
 );
@@ -480,8 +480,6 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
                 move every row below it. Opacity costs nothing to measure. The toolbar follows the
                 bubble's edge — right-aligned, like the words it belongs to. */}
             <div className='flex items-center justify-end gap-1 pt-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
-              <span className='text-subdued'>#{index}</span>
-              <span>{timeOf(message)}</span>
               <CopyButton message={message} />
               <IconButton
                 icon='ph--arrow-counter-clockwise--regular'
@@ -489,27 +487,21 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
                 label='Rewind'
                 variant='ghost'
                 density='sm'
-                size={3}
               />
-              <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' density='sm' size={3} />
+              <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' density='sm' />
+              <span className='text-subdued'>#{index}</span>
+              <span>{timeOf(message)}</span>
             </div>
           </div>
         </div>
       ) : (
         <div className='min-w-0'>
           {children}
-          <div className='flex items-center gap-2 pt-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
+          <div className='flex items-center gap-1 pt-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
+            <CopyButton message={message} />
+            <IconButton icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' density='sm' />
             <span className='text-subdued'>#{index}</span>
             <span>{timeOf(message)}</span>
-            <CopyButton message={message} />
-            <IconButton
-              icon='ph--arrow-bend-up-left--regular'
-              iconOnly
-              label='Reply'
-              variant='ghost'
-              density='sm'
-              size={3}
-            />
           </div>
         </div>
       )}

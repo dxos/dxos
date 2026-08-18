@@ -99,7 +99,14 @@ export const useFeedNavigation = ({
   );
 
   const first = useCallback(() => jumpTo(0), [jumpTo]);
-  const last = useCallback(() => jumpTo(count() - 1), [jumpTo, count]);
+
+  // With space reserved past the end, "the bottom" is the reading position the reserve exists for:
+  // the last stop (the final prompt) at the top of the viewport — not the last row's start.
+  const last = useCallback(() => {
+    const all = stops();
+    const target = scrollPastEnd && all.length ? all[all.length - 1].index : count() - 1;
+    jumpTo(target);
+  }, [jumpTo, count, stops, scrollPastEnd]);
 
   return { step, jumpTo, first, last };
 };

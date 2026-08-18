@@ -9,7 +9,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type DebugProbe } from './debug-model';
 import { type Stat, Stats } from './Stats';
-import { useDebugModel } from './use-debug';
+import { useDebugModel } from './useDebug';
 
 export type DebugProps = ThemedClassName<{
   /** Readouts side by side. @default 1 */
@@ -66,7 +66,7 @@ export const Debug = ({ columns = 1, title, classNames }: DebugProps) => {
   return (
     <div
       className={mx(
-        'z-20 absolute bottom-2 right-2 p-2 rounded-md bg-base-surface/90 border border-separator w-[18rem]',
+        'z-20 absolute bottom-2 right-2 p-2 rounded-md bg-base-surface/90 border border-separator w-[16rem] text-sm',
         classNames,
       )}
       data-testid='debug.panel'
