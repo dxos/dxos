@@ -275,15 +275,17 @@ Found while building the replacement placement layer (`DESIGN.md` §Principles).
       it settles is what a reader dragging a scrollbar does, and the property that matters is that
       the end is reachable and that it stops moving. Mutation-checked: disabling measurement fails
       both.
-- [ ] **The outline's card may still not dismiss when the pointer leaves.** Reported from use, and
-      **not reproducible in a test**: React synthesises pointer enter and leave from over/out pairs,
-      and three ways of driving that from dispatched events — enter, out with a related target, and
-      both halves of the transition — never reached the handler, so the state read the same whether
-      the component was right or wrong. Clearing was tried on the rail (`onPointerLeave`), on the
-      rail as `onPointerOut` with a containment check, and on the tick itself; all three are
-      indistinguishable under a synthetic pointer. **Needs a real pointer to settle**, and the rail
-      now publishes `data-pointer` / `data-navigated` so that whoever does it can see which of the
-      two is holding the card open.
+- [x] **The outline's card would not dismiss when the pointer left.** Two causes, both found with a
+      real pointer after synthetic ones proved useless. The shown tick was wrapped in
+      `Popover.Anchor`, which changes the element type at that position — so React unmounted and
+      remounted that button, and a destroyed element never receives `pointerleave`. A separate
+      zero-height anchor moved to the tick's offset keeps every tick stable, and the popover is keyed
+      to the marker so it still re-measures. And after a _click_ the opened popover's focus guards sit
+      over the page, so the tick never sees the pointer go at all: a document-level `pointerover`
+      backstop, live only while a card is up, clears it wherever the pointer lands. Verified in the
+      browser — hovering away clears it, and dispatching a document `pointerover` clears it after a
+      click. The rail publishes `data-pointer` / `data-navigated` so this is inspectable rather than
+      inferred.
 - [x] **A click left a position asserted behind it.** Clicking a tick focuses it, and the card was
       gated on focus, so the reader clicked, moved away, and a keyboard position they never asked for
       kept it up. The gate is now "the keyboard has navigated", which a click is not. Covered by

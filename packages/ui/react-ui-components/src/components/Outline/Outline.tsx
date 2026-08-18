@@ -6,6 +6,7 @@ import React, {
   type KeyboardEvent as ReactKeyboardEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -147,6 +148,43 @@ export const Outline = ({
   // The pointer wins where there is one: it is the more direct statement of what the reader means.
   const shown = pointer ?? navigated;
 
+  // A backstop while a card is up: the pointer arriving anywhere outside the rail clears it.
+  //
+  // The tick's own leave is enough for a plain hover, and is not enough after a click — the popover
+  // that opens brings focus guards that sit over the page, and the tick never sees the pointer go.
+  // Verified with a real pointer: hovering away cleared it, clicking and then hovering away did not.
+  // Asking the document is the one question no overlay can intercept.
+  useEffect(() => {
+    if (pointer == null) {
+      return;
+    }
+
+    const rail = containerRef.current;
+    const owner = rail?.ownerDocument;
+    if (!rail || !owner) {
+      return;
+    }
+
+    const onOver = (event: PointerEvent) => {
+      if (!rail.contains(event.target as Node | null)) {
+        setPointer(null);
+      }
+    };
+
+    owner.addEventListener('pointerover', onOver);
+    return () => owner.removeEventListener('pointerover', onOver);
+  }, [pointer]);
+
+  // Offset of the shown tick, read from the tick itself: the rail centres its ticks, so the position
+  // is not `index * tickSize` and asking the element is the only answer that stays right.
+  const [anchorOffset, setAnchorOffset] = useState(0);
+  useLayoutEffect(() => {
+    const row = shown == null ? null : rowsRef.current[shown];
+    if (row) {
+      setAnchorOffset(row.offsetTop + row.offsetHeight / 2);
+    }
+  }, [shown]);
+
   // Wave falloff: a Gaussian (normal-distribution) bell centred on the tick shown — a rounded
   // peak with inflected shoulders that flatten toward rest, rather than a dome. `WAVE_SPREAD` is
   // the standard deviation (in rows).
@@ -253,11 +291,6 @@ export const Outline = ({
         {rows.map((row, index) => {
           const marker = row.marker;
           const active = isActive(row);
-          // The hovered row *is* the anchor, rather than a floating point kept in sync with it: a
-          // popover measures its anchor when it opens, so an anchor element that merely moves leaves
-          // the popover behind — which showed as the card sitting several ticks below the one under
-          // the pointer. Anchoring to the row makes the element identity change with the hover,
-          // which is what makes it re-measure.
           const tick = (
             <button
               key={marker.id}
@@ -295,14 +328,19 @@ export const Outline = ({
             </button>
           );
 
-          return index === shown ? (
-            <Popover.Anchor asChild key={marker.id}>
-              {tick}
-            </Popover.Anchor>
-          ) : (
-            tick
-          );
+          return tick;
         })}
+
+        {/* A separate anchor, and the ticks are never wrapped.
+            Wrapping the shown tick in `Popover.Anchor` changes the element type at that position, so
+            React unmounts and remounts that button — and a destroyed element never receives
+            `pointerleave`, which is why the card would not dismiss when the pointer left. Verified
+            with a real pointer: `data-pointer` stayed on the tick after the pointer had gone.
+            A zero-height anchor moved to the shown tick's offset keeps every tick stable; the
+            popover is keyed to the marker so it still re-measures when the anchor moves. */}
+        <Popover.Anchor asChild>
+          <div className='absolute left-0' style={{ top: anchorOffset, width, height: 0 }} />
+        </Popover.Anchor>
       </div>
       {hoveredMarker && (
         <Popover.Content
