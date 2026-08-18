@@ -450,6 +450,18 @@ const Row = ({ children, classNames }: { children: React.ReactNode; classNames?:
  * control that appears on hover changes the row's height, and a pointer travelling down a scrolling
  * list then moves every row below it.
  */
+/** Copies the message's extracted text — the model's truth, not the DOM's partial render. */
+const CopyButton = ({ message }: { message: Message.Message }) => (
+  <IconButton
+    icon='ph--copy--regular'
+    iconOnly
+    label='Copy'
+    variant='ghost'
+    size={3}
+    onClick={() => void navigator.clipboard?.writeText(Message.extractText(message))}
+  />
+);
+
 const AssistantChrome = ({ message, index, selected, children }: MessageChromeProps) => {
   const prompt = message.sender.role === 'user';
 
@@ -470,14 +482,16 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
             <div className='flex items-center justify-end gap-1 pt-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
               <span className='text-subdued'>#{index}</span>
               <span>{timeOf(message)}</span>
+              <CopyButton message={message} />
               <IconButton
                 icon='ph--arrow-counter-clockwise--regular'
                 iconOnly
                 label='Rewind'
                 variant='ghost'
+                density='sm'
                 size={3}
               />
-              <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size={3} />
+              <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' density='sm' size={3} />
             </div>
           </div>
         </div>
@@ -485,11 +499,17 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
         <div className='min-w-0'>
           {children}
           <div className='flex items-center gap-2 pt-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
-            <span className='font-medium'>{message.sender.name}</span>
-            <span>{timeOf(message)}</span>
             <span className='text-subdued'>#{index}</span>
-            <span className='grow' />
-            <IconButton icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' size={3} />
+            <span>{timeOf(message)}</span>
+            <CopyButton message={message} />
+            <IconButton
+              icon='ph--arrow-bend-up-left--regular'
+              iconOnly
+              label='Reply'
+              variant='ghost'
+              density='sm'
+              size={3}
+            />
           </div>
         </div>
       )}

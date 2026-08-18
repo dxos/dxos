@@ -105,3 +105,37 @@ export const Reopened: Story = {
     await expect((reopened as HTMLElement | null)?.dataset.open).toEqual('true');
   },
 };
+
+/**
+ * Toggling a widget near the tail is the reader's business, not the follow's.
+ *
+ * The reader sits at the bottom (which arms the follow) and opens a panel. The document grows —
+ * exactly as it does when content streams — but nothing arrived: correcting for it snaps the feed
+ * so the content's bottom meets the viewport's, yanking the toggle out from under the pointer
+ * (reported live). The follow chases growth only within a beat of a model change, so here the
+ * panel opens downward and the widget's top holds still.
+ */
+export const ToggleAtTail: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const viewport = canvas.getByTestId('feed.viewport');
+    // Past the follow's freshness window: the mount itself counts as a model change, and a toggle
+    // inside that beat would legitimately be followed.
+    await settle(80);
+
+    // At the tail — the follow armed — then find the last widget on screen and open it.
+    const panels = canvas.getAllByTestId('feed.widget');
+    const panel = panels[panels.length - 1];
+    const before = panel.getBoundingClientRect().top;
+    const scrollBefore = viewport.scrollTop;
+
+    (panel.querySelector('.cursor-pointer') as HTMLElement | null)?.click();
+    await settle(50);
+
+    const after = panel.getBoundingClientRect().top;
+    await expect({
+      held: Math.abs(after - before) <= 2,
+      pinned: Math.abs(viewport.scrollTop - scrollBefore) <= 2,
+    }).toEqual({ held: true, pinned: true });
+  },
+};

@@ -45,13 +45,13 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@radix-ui/react-context": "catalog:",
     "dompurify": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

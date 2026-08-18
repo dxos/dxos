@@ -381,6 +381,10 @@ export const Window = ({ classNames, children, controllerRef, ...options }: Wind
   const main = axis === 'block' ? 'height' : 'width';
   const { getId } = options.model;
 
+  // When the model last actually changed — what the follow may chase (see useFollow.changedAt).
+  const changedAtRef = useRef(performance.now());
+  useEffect(() => options.model.subscribe(() => (changedAtRef.current = performance.now())), [options.model]);
+
   // The binding composes the aspect; the hook knows nothing about following. Graduates with the
   // virtualizer — nothing in it is about messages.
   const follow = useFollow({
@@ -391,6 +395,7 @@ export const Window = ({ classNames, children, controllerRef, ...options }: Wind
     axis,
     reserve: options.reserve,
     enabled: options.sticky,
+    changedAt: () => changedAtRef.current,
   });
 
   // The exposed controller answers the follow before it moves (see FollowHandle.onNavigate).

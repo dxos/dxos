@@ -277,10 +277,24 @@ const MessageListRoot = ({
   // Measured from the element, never read back out of the layout. It is an *input* to the sizer, so
   // anything derived from the sizer would oscillate — and deliberately not the last row's measured
   // size, which the layout also feeds.
-  const reserve = useMemo(
-    () => (scrollPastEnd && viewport && model.count ? Math.max(0, viewport.clientHeight - nominalSize) : 0),
-    [scrollPastEnd, viewport, model.count, nominalSize],
-  );
+  // Just enough space that the LAST STOP (the final prompt) can rest at the top of the viewport —
+  // not a viewport's worth. From estimates only, never measurements: the reserve is an input to the
+  // sizer, and a reserve that follows what the sizer produced oscillates.
+  const reserve = useMemo(() => {
+    if (!scrollPastEnd || !viewport || !model.count) {
+      return 0;
+    }
+
+    const stops = model.stops();
+    const lastStop = stops.length ? stops[stops.length - 1].index : model.count - 1;
+    let tail = 0;
+    for (let index = lastStop; index < model.count; index++) {
+      tail += extents.of(index);
+    }
+
+    return Math.max(0, viewport.clientHeight - tail);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollPastEnd, viewport, model, model.count, extents]);
 
   const controller = useRef<WindowController>(null);
   const onWindowChange = useCallback(
@@ -321,6 +335,11 @@ const MessageListRoot = ({
     controllerRef: controller,
   });
 
+  // When the content last actually changed, as against merely re-measured: what the follow is
+  // allowed to chase (a toggle near the tail grows the document too, and is the reader's business).
+  const changedAtRef = useRef(performance.now());
+  useEffect(() => model.subscribe(() => (changedAtRef.current = performance.now())), [model]);
+
   // The follow is an aspect the host composes, not part of the window (SPEC §Aspects) — the intent,
   // its withdrawal by a backwards scroll, and the glide all live there.
   const follow = useFollow({
@@ -330,6 +349,7 @@ const MessageListRoot = ({
     count: model.count,
     reserve,
     enabled: stickyBottom,
+    changedAt: () => changedAtRef.current,
   });
 
   // What a reader would call flicker: a row moving on screen by more than the scroll moved, sampled
@@ -663,8 +683,7 @@ type MessageListNavExtra = {
  * what the keys mean.
  */
 const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends = true, ...props }, forwardedRef) => {
-  const { currentIndex: current, model, navigation } = useMessageListContext(MESSAGE_LIST_NAV_NAME);
-  const count = model.count;
+  const { navigation } = useMessageListContext(MESSAGE_LIST_NAV_NAME);
 
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -696,7 +715,6 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
           iconOnly
           label='First message'
           variant='ghost'
-          disabled={current <= 0}
           data-testid='feed.nav.top'
           onClick={() => navigation.first()}
         />
@@ -706,7 +724,6 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
         iconOnly
         label='Previous message'
         variant='ghost'
-        disabled={current <= 0}
         data-testid='feed.nav.back'
         onClick={() => navigation.step(-1)}
       />
@@ -715,7 +732,6 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
         iconOnly
         label='Next message'
         variant='ghost'
-        disabled={current >= count - 1}
         data-testid='feed.nav.forward'
         onClick={() => navigation.step(1)}
       />
@@ -725,7 +741,6 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
           iconOnly
           label='Last message'
           variant='ghost'
-          disabled={count === 0}
           data-testid='feed.nav.bottom'
           onClick={() => navigation.last()}
         />

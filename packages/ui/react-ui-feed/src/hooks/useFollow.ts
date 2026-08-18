@@ -13,6 +13,12 @@ const STICKY_THRESHOLD = 32;
 /** How long after a gesture a scroll is still attributable to the reader. */
 const GESTURE_WINDOW = 300;
 
+/** How long after a model change growth still counts as content arriving. */
+const FOLLOW_WINDOW = 1_000;
+
+/** Frames an instant arrival re-checks itself against the paint before trusting it. */
+const SETTLE_FRAMES = 12;
+
 export type FollowHandle = {
   /**
    * A navigation is the reader answering "do you want the tail?" — and it must answer *before* the
@@ -43,6 +49,16 @@ export type UseFollowOptions = {
    * motion anyway, and the travel would cross rows whose extents are still estimates.
    */
   glide?: boolean;
+  /**
+   * When the content last actually changed — a model event, not a measurement.
+   *
+   * The follow moves the view only while new content is arriving AND the reader is pinned to the
+   * bottom. Extent alone cannot say why the document grew: a widget toggled open near the tail
+   * grows it too, and correcting for that snaps the reader's toggle out from under them — the feed
+   * "jumps to place its bottom at the bottom". Growth is followed only within a beat of a model
+   * change; everything else is the reader rearranging what they already have.
+   */
+  changedAt?: () => number;
 };
 
 /**
@@ -66,6 +82,7 @@ export const useFollow = ({
   reserve = 0,
   enabled,
   glide = true,
+  changedAt,
 }: UseFollowOptions): FollowHandle => {
   const following = useRef(!!enabled);
   const wasEnabled = useRef(enabled);
@@ -218,6 +235,20 @@ export const useFollow = ({
       return;
     }
 
+    // Arrival and small repayments are always allowed; *growth* is followed only while content just
+    // changed. A widget toggled open near the tail grows the document exactly as a streamed chunk
+    // does, and correcting for it snaps the reader's toggle out from under them — but the few-pixel
+    // residues of estimates settling are the tail being kept honest, model change or none.
+    // Growth is followed only while content just changed; shrink is always repaid. The document
+    // growing says nothing about why — a streamed chunk and a widget's opening animation look the
+    // same from here, and a size allowance fails too, because an animation grows in sub-threshold
+    // steps. Only the model can say "content arrived". Shrink is different: the content's end moved
+    // *up* (a panel closed, estimates settled), and repaying it keeps the tail honest without ever
+    // pushing the reader's view down.
+    if (positioned.current && gap > 1 && changedAt && performance.now() - changedAt() > FOLLOW_WINDOW) {
+      return;
+    }
+
     const viewport = axis === 'block' ? scroller.clientHeight : scroller.clientWidth;
     if (positioned.current && glide && follower && gap > 0 && gap <= viewport) {
       // The follower recomputes its target every frame, so content arriving faster than the travel
@@ -230,16 +261,40 @@ export const useFollow = ({
     // never followed by an invalidate — the write raises a scroll event, which re-renders, which
     // changes the extent this effect watches; invalidating here as well is a loop, and React says so.
     follower?.cancel();
-    placement.scrollTo(target);
-    // Pre-announced, so the write's own scroll event cannot read as a gesture: a correction can
-    // move the offset *backwards* (an over-estimated tail shrinking), and the intent listener would
-    // otherwise take that for the reader leaving and withdraw the follow for good.
-    lastOffset.current = target;
-    if (axis === 'block') {
-      scroller.scrollTop = target;
-    } else {
-      scroller.scrollLeft = target;
-    }
+    const write = (value: number) => {
+      placement.scrollTo(value);
+      // Pre-announced, so the write's own scroll event cannot read as a gesture: a correction can
+      // move the offset *backwards* (an over-estimated tail shrinking), and the intent listener
+      // would otherwise take that for the reader leaving and withdraw the follow for good.
+      lastOffset.current = value;
+      if (axis === 'block') {
+        scroller.scrollTop = value;
+      } else {
+        scroller.scrollLeft = value;
+      }
+    };
+
+    write(target);
+
+    // Verified against the paint, a few frames, because the write and the layout can disagree: the
+    // rect this target was read from can still be mid-reflow (widgets settling to their measured
+    // height), and an arrival 88px off that nothing re-fires for is a tail that simply rests wrong.
+    // Bounded, shrink-only repayment (positive residue is growth, which the gate owns).
+    let verifies = SETTLE_FRAMES;
+    const verify = () => {
+      if (!following.current || verifies-- <= 0) {
+        return;
+      }
+
+      const residue = endTarget() - (axis === 'block' ? scroller.scrollTop : scroller.scrollLeft);
+      if (residue < -1) {
+        write(endTarget());
+      }
+
+      requestAnimationFrame(verify);
+    };
+
+    requestAnimationFrame(verify);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, count, extent, placement, axis, glide, follower, endTarget, scrollerRef.current]);
 
