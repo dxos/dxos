@@ -39,45 +39,6 @@ type PluginRow = {
   status: string;
 };
 
-const listPlugins = (home: string): PluginRow[] => JSON.parse(runDx(['--json', 'plugin', 'list'], { home }).stdout);
-
-const findFixture = (home: string) => listPlugins(home).find((row) => row.id === FIXTURE_ID);
-
-const pluginsFile = (home: string) => path.join(home, '.config', 'dx', 'plugins', 'default.yml');
-const installDir = (home: string) => path.join(home, '.config', 'dx', 'plugins', FIXTURE_ID);
-
-/**
- * Serves the fixture directory on a loopback port for the duration of `fn`.
- *
- * The server runs in a child process because `runDx` spawns synchronously: an in-process server
- * could never answer the CLI's request, since the event loop that would serve it is blocked
- * waiting for the very subprocess making the request.
- */
-const withFixtureServer = async <T>(fn: (baseUrl: string) => T): Promise<T> => {
-  const source = `
-    const http = require('node:http');
-    const fs = require('node:fs');
-    const path = require('node:path');
-    const server = http.createServer((req, res) => {
-      const file = path.join(${JSON.stringify(FIXTURE_DIR)}, path.basename(req.url || '/'));
-      if (!fs.existsSync(file)) { res.writeHead(404).end(); return; }
-      res.writeHead(200, { 'content-type': 'application/octet-stream' }).end(fs.readFileSync(file));
-    });
-    server.listen(0, '127.0.0.1', () => process.stdout.write(String(server.address().port) + '\\n'));
-  `;
-  const child = spawn(process.execPath, ['-e', source], { stdio: ['ignore', 'pipe', 'ignore'] });
-  const port = await new Promise<string>((resolve, reject) => {
-    child.stdout.once('data', (chunk) => resolve(String(chunk).trim()));
-    child.once('error', reject);
-    child.once('exit', () => reject(new Error('fixture server exited before it was ready')));
-  });
-  try {
-    return await fn(`http://127.0.0.1:${port}`);
-  } finally {
-    child.kill();
-  }
-};
-
 describe('plugin add --dev', () => {
   test(
     'reads a directory in place, loads it, and behaves like a builtin under disable/enable',
@@ -133,6 +94,15 @@ describe('plugin add <url>', () => {
         const dev = runDx(['plugin', 'add', '--dev', `${baseUrl}/manifest.json`], { home: isolated });
         expect(dev.status).toBe(1);
         expect(dev.stdout + dev.stderr).toContain('directory');
+
+        // A manifest is untrusted input, and an asset entry that names another host would turn
+        // `plugin add` into a fetch the user never asked for. Refused before anything is written.
+        const hostile = runDx(['plugin', 'add', `${baseUrl}/hostile-manifest.json`], { home: isolated });
+        expect(hostile.status).toBe(1);
+        expect(hostile.stdout + hostile.stderr).toContain('origin');
+        expect(fs.existsSync(path.join(isolated, '.config', 'dx', 'plugins', 'com.example.plugin.hostile'))).toBe(
+          false,
+        );
 
         expect(runDx(['plugin', 'add', `${baseUrl}/manifest.json`], { home: isolated }).status).toBe(0);
         return isolated;
@@ -219,3 +189,42 @@ describe('a broken install', () => {
     TIMEOUT,
   );
 });
+
+const listPlugins = (home: string): PluginRow[] => JSON.parse(runDx(['--json', 'plugin', 'list'], { home }).stdout);
+
+const findFixture = (home: string) => listPlugins(home).find((row) => row.id === FIXTURE_ID);
+
+const pluginsFile = (home: string) => path.join(home, '.config', 'dx', 'plugins', 'default.yml');
+const installDir = (home: string) => path.join(home, '.config', 'dx', 'plugins', FIXTURE_ID);
+
+/**
+ * Serves the fixture directory on a loopback port for the duration of `fn`.
+ *
+ * The server runs in a child process because `runDx` spawns synchronously: an in-process server
+ * could never answer the CLI's request, since the event loop that would serve it is blocked
+ * waiting for the very subprocess making the request.
+ */
+const withFixtureServer = async <T>(fn: (baseUrl: string) => T): Promise<T> => {
+  const source = `
+    const http = require('node:http');
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const server = http.createServer((req, res) => {
+      const file = path.join(${JSON.stringify(FIXTURE_DIR)}, path.basename(req.url || '/'));
+      if (!fs.existsSync(file)) { res.writeHead(404).end(); return; }
+      res.writeHead(200, { 'content-type': 'application/octet-stream' }).end(fs.readFileSync(file));
+    });
+    server.listen(0, '127.0.0.1', () => process.stdout.write(String(server.address().port) + '\\n'));
+  `;
+  const child = spawn(process.execPath, ['-e', source], { stdio: ['ignore', 'pipe', 'ignore'] });
+  const port = await new Promise<string>((resolve, reject) => {
+    child.stdout.once('data', (chunk) => resolve(String(chunk).trim()));
+    child.once('error', reject);
+    child.once('exit', () => reject(new Error('fixture server exited before it was ready')));
+  });
+  try {
+    return await fn(`http://127.0.0.1:${port}`);
+  } finally {
+    child.kill();
+  }
+};

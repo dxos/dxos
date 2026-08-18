@@ -50,6 +50,14 @@ export const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plug
 };
 
 /**
+ * Import failures recorded by {@link makeInstalledPlugin}, keyed by plugin id.
+ *
+ * Process-local: the load happens while the command tree is being built, so a command reading this
+ * afterwards sees every failure from its own startup.
+ */
+const loadFailures = new Map<string, Error>();
+
+/**
  * Builds a registrable plugin for an installed record **without importing its module**.
  *
  * The record cached the plugin's own metadata at install time, which is everything the manager
@@ -90,14 +98,6 @@ export const makeInstalledPlugin = (record: PluginRecord): Plugin.Plugin | undef
     );
   return Plugin.lazy(meta, loader)();
 };
-
-/**
- * Import failures recorded by {@link makeInstalledPlugin}, keyed by plugin id.
- *
- * Process-local: the load happens while the command tree is being built, so a command reading this
- * afterwards sees every failure from its own startup.
- */
-const loadFailures = new Map<string, Error>();
 
 /** Returns the load failure for a plugin id, if its module could not be imported this run. */
 export const getLoadFailure = (id: string): Error | undefined => loadFailures.get(id);

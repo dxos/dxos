@@ -40,11 +40,19 @@ export const isUrl = (locator: string): boolean => {
   }
 };
 
+/** One file to download, already checked against the manifest that declared it. */
+export type PluginAsset = {
+  /** Absolute URL to fetch. */
+  url: string;
+  /** Where to write it, relative to the install directory. */
+  path: string;
+};
+
 /** What `add` learned about a plugin before writing anything. */
 export type Resolved = {
   record: PluginRecord;
-  /** Absolute URLs of every file to download. Empty for a linked install. */
-  assetUrls: readonly string[];
+  /** Every file to download. Empty for a linked install. */
+  assets: readonly PluginAsset[];
   /**
    * The manifest verbatim, persisted alongside the downloaded assets.
    *
@@ -78,9 +86,13 @@ const resolveDirectory = (locator: string): Effect.Effect<Resolved, PluginInstal
       );
       const { assets: _assets, ...plugin } = manifest;
       const record: PluginRecord = { id: manifest.key, source: { kind: 'link', path: directory }, meta: plugin };
-      return { record, assetUrls: [] };
+      return { record, assets: [] };
     }
 
+    // Reached only for `--dev`, and only when the checkout has no built manifest: reading the
+    // metadata means evaluating the developer's own config module. That is a weaker bar than the
+    // one `add <url>` holds to — where nothing is imported until `enable` — and it is the same bar
+    // as running the checkout's build, which is what produces the manifest this branch is missing.
     const configPath = path.join(directory, 'dx.config.ts');
     const config = yield* Effect.tryPromise(() => import(/* @vite-ignore */ configPath)).pipe(
       Effect.flatMap((mod) => Schema.decodeUnknownEffect(DxConfig)(mod.default)),
@@ -91,7 +103,51 @@ const resolveDirectory = (locator: string): Effect.Effect<Resolved, PluginInstal
       source: { kind: 'link', path: directory },
       meta: config.plugin,
     };
-    return { record, assetUrls: [] };
+    return { record, assets: [] };
+  });
+
+/** A manifest is a small JSON document; a server that has not sent it by now is not going to. */
+const MANIFEST_TIMEOUT = '30 seconds';
+
+/**
+ * Resolves one manifest-declared asset against the URL the manifest was served from.
+ *
+ * The manifest is untrusted — it is the first thing `add <url>` reads, before anything about the
+ * plugin is known — and `new URL(asset, base)` ignores the base for anything absolute. So an entry
+ * of `https://elsewhere.example/x.js` would make `dx plugin add` fetch a host the user never named,
+ * and `../../../x.js` would write outside the install directory. An asset must therefore be served
+ * from the same origin as its manifest and sit at or below it, which is what a published bundle
+ * looks like anyway.
+ */
+const resolveAsset = (asset: string, manifestUrl: string): Effect.Effect<PluginAsset, PluginInstallError> =>
+  Effect.gen(function* () {
+    const reject = (message: string) =>
+      Effect.fail(new PluginInstallError({ message, context: { locator: asset, reason: 'manifest-invalid' } }));
+
+    const base = new URL(manifestUrl);
+    const url = yield* Effect.try(() => new URL(asset, base)).pipe(
+      Effect.catch(() => reject(`Plugin asset is not a valid URL: ${asset}`)),
+    );
+    if (url.protocol !== base.protocol || url.origin !== base.origin) {
+      return yield* reject(`Plugin asset is not served from the manifest's origin: ${asset}`);
+    }
+
+    // Everything up to and including the manifest's last slash; an asset must extend it.
+    const directory = base.pathname.slice(0, base.pathname.lastIndexOf('/') + 1);
+    if (!url.pathname.startsWith(directory)) {
+      return yield* reject(`Plugin asset resolves above its manifest: ${asset}`);
+    }
+    // Decoded, because the path becomes a filename and a bundle's internal imports use the decoded
+    // form. Segment-checked afterwards, because percent-encoding can hide a traversal from `URL`.
+    const relative = yield* Effect.try(() => decodeURIComponent(url.pathname.slice(directory.length))).pipe(
+      Effect.catch(() => reject(`Plugin asset path is not decodable: ${asset}`)),
+    );
+    const segments = relative.split('/');
+    if (segments.some((segment) => segment === '' || segment === '.' || segment === '..')) {
+      return yield* reject(`Plugin asset does not name a file: ${asset}`);
+    }
+
+    return { url: url.toString(), path: relative };
   });
 
 /** Fetches a published manifest and lists the files to snapshot. */
@@ -99,6 +155,7 @@ const resolveUrl = (manifestUrl: string): Effect.Effect<Resolved, PluginInstallE
   Effect.gen(function* () {
     const response = yield* HttpClientRequest.get(manifestUrl).pipe(
       HttpClient.execute,
+      Effect.timeout(MANIFEST_TIMEOUT),
       Effect.mapError(
         (cause) => new PluginInstallError({ context: { locator: manifestUrl, reason: 'fetch-failed' }, cause }),
       ),
@@ -113,6 +170,7 @@ const resolveUrl = (manifestUrl: string): Effect.Effect<Resolved, PluginInstallE
     // Read as text rather than `schemaBodyJson` so the body can be written into the install
     // directory as it was served.
     const body = yield* response.text.pipe(
+      Effect.timeout(MANIFEST_TIMEOUT),
       Effect.mapError(
         (cause) => new PluginInstallError({ context: { locator: manifestUrl, reason: 'fetch-failed' }, cause }),
       ),
@@ -132,7 +190,8 @@ const resolveUrl = (manifestUrl: string): Effect.Effect<Resolved, PluginInstallE
       source: { kind: 'copy', origin: manifestUrl, version: manifest.version },
       meta: plugin,
     };
-    return { record, assetUrls: assetPaths.map((asset) => new URL(asset, manifestUrl).toString()), manifest: body };
+    const assetList = yield* Effect.forEach(assetPaths, (asset) => resolveAsset(asset, manifestUrl));
+    return { record, assets: assetList, manifest: body };
   }).pipe(Effect.scoped, Effect.provide(FetchHttpClient.layer));
 
 /**

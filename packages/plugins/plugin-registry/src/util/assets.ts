@@ -11,11 +11,17 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { getPluginInstallPath } from '../storage';
 import { PluginInstallError } from './errors';
-import { MANIFEST_FILENAME } from './resolve';
+import { MANIFEST_FILENAME, type PluginAsset } from './resolve';
+
+/** A plugin bundle is a handful of small files; a stalled transfer must not hang `add` forever. */
+const ASSET_TIMEOUT = '30 seconds';
 
 /**
  * Downloads a plugin's files into `plugins/<id>/`, mirroring each asset's path relative to its
  * manifest so a bundle's internal imports resolve the same way they did when it was built.
+ *
+ * Every asset's URL and destination were checked against the manifest by `resolveAsset` before
+ * reaching here, so this only fetches and writes.
  *
  * The manifest is written alongside them, so an installed plugin is self-describing on disk and
  * needs no network to say what it is: a snapshot ends up the same shape as a directory `add --dev`
@@ -28,12 +34,12 @@ import { MANIFEST_FILENAME } from './resolve';
 export const downloadAssets = ({
   id,
   baseUrl,
-  assetUrls,
+  assets,
   manifest,
 }: {
   id: string;
   baseUrl: string;
-  assetUrls: readonly string[];
+  assets: readonly PluginAsset[];
   manifest?: string;
 }): Effect.Effect<string, PluginInstallError, any> =>
   Effect.gen(function* () {
@@ -51,49 +57,41 @@ export const downloadAssets = ({
         ),
       );
 
-    const base = new URL(baseUrl);
-    for (const assetUrl of assetUrls) {
-      const relative = path.relative(path.dirname(base.pathname), new URL(assetUrl).pathname);
-      // An asset resolving above its manifest would write outside the install directory.
-      if (relative.startsWith('..') || path.isAbsolute(relative)) {
-        return yield* Effect.fail(
-          new PluginInstallError({
-            message: `Plugin asset escapes its install directory: ${assetUrl}`,
-            context: { locator: assetUrl, reason: 'manifest-invalid' },
-          }),
-        );
-      }
-
-      const response = yield* HttpClientRequest.get(assetUrl).pipe(
+    for (const asset of assets) {
+      const response = yield* HttpClientRequest.get(asset.url).pipe(
         HttpClient.execute,
+        Effect.timeout(ASSET_TIMEOUT),
         Effect.mapError(
-          (cause) => new PluginInstallError({ context: { locator: assetUrl, reason: 'fetch-failed' }, cause }),
+          (cause) => new PluginInstallError({ context: { locator: asset.url, reason: 'fetch-failed' }, cause }),
         ),
       );
       if (response.status >= 400) {
         return yield* Effect.fail(
-          new PluginInstallError({ context: { locator: assetUrl, reason: 'fetch-failed', status: response.status } }),
+          new PluginInstallError({ context: { locator: asset.url, reason: 'fetch-failed', status: response.status } }),
         );
       }
-      const body = yield* response.text.pipe(
+      // Read as bytes, not text: a plugin bundle may ship a wasm module, a font or an image, and
+      // decoding those as UTF-8 on the way to disk replaces every invalid sequence.
+      const body = yield* response.arrayBuffer.pipe(
+        Effect.timeout(ASSET_TIMEOUT),
         Effect.mapError(
-          (cause) => new PluginInstallError({ context: { locator: assetUrl, reason: 'fetch-failed' }, cause }),
+          (cause) => new PluginInstallError({ context: { locator: asset.url, reason: 'fetch-failed' }, cause }),
         ),
       );
 
-      const destination = path.join(staging, relative);
+      const destination = path.join(staging, asset.path);
       yield* fs
         .makeDirectory(path.dirname(destination), { recursive: true })
         .pipe(
           Effect.mapError(
-            (cause) => new PluginInstallError({ context: { locator: assetUrl, reason: 'write-failed' }, cause }),
+            (cause) => new PluginInstallError({ context: { locator: asset.url, reason: 'write-failed' }, cause }),
           ),
         );
       yield* fs
-        .writeFileString(destination, body)
+        .writeFile(destination, new Uint8Array(body))
         .pipe(
           Effect.mapError(
-            (cause) => new PluginInstallError({ context: { locator: assetUrl, reason: 'write-failed' }, cause }),
+            (cause) => new PluginInstallError({ context: { locator: asset.url, reason: 'write-failed' }, cause }),
           ),
         );
     }

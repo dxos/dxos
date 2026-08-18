@@ -88,6 +88,7 @@ const program = Effect.gen(function* () {
   // Third-party installs register as lazy stubs built from the metadata cached at install time, so
   // a `dx` invocation imports a plugin's code only once something enables it.
   const installed = makeInstalledPlugins(records ?? []);
+  const overridden = new Set(installed.map((plugin) => plugin.meta.profile.key));
   // Must precede any plugin import so a third-party plugin's bare specifiers resolve to the host's
   // module instances rather than its own copies.
   registerSharedScope({ enabled: installed.length > 0 });
@@ -113,7 +114,10 @@ const program = Effect.gen(function* () {
       hub,
       reflect,
     ],
-    plugins: [...getPlugins({ config }), ...installed],
+    // Installs come first, and the builtin they claim is dropped rather than left as an
+    // unreachable duplicate: both the manager's lookup and the CLI's plugin loader take the first
+    // match by key, so `add --dev` only overrides a builtin if its plugin precedes that builtin.
+    plugins: [...installed, ...getPlugins({ config }).filter((plugin) => !overridden.has(plugin.meta.profile.key))],
     enabled,
     core: getCore(),
   });

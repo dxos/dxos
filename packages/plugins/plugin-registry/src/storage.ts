@@ -146,21 +146,32 @@ export const loadEnabledPlugins = Effect.fn(function* ({ profile }: { profile: s
  *
  * Takes the manager's enabled set rather than a single id so the caller does not have to reason
  * about dependency closures — enabling one plugin can enable several.
+ *
+ * `registered` names every plugin the host actually holds. A record outside it — an install whose
+ * metadata could not be read, or a plugin compiled out of this build — is left exactly as the user
+ * last set it, because the enabled set could never have contained it and rewriting from that set
+ * would turn a load failure into a silent, permanent disable. Omitting `registered` rewrites every
+ * record, which is only correct when the caller knows the file and the host agree.
  */
 export const saveEnabledPlugins = Effect.fn(function* ({
   profile,
   enabled,
+  registered,
   core = [],
 }: {
   profile: string;
   enabled: readonly string[];
+  registered?: readonly string[];
   core?: readonly string[];
 }) {
   const existing = (yield* loadPlugins({ profile })) ?? [];
-  const known = new Set(existing.map((record) => record.id));
+  const stored = new Set(existing.map((record) => record.id));
+  const host = registered && new Set(registered);
   const plugins: PluginRecord[] = [
-    ...existing.map((record) => ({ ...record, enabled: enabled.includes(record.id) })),
-    ...enabled.filter((id) => !known.has(id)).map((id) => ({ id, enabled: true })),
+    ...existing.map((record) =>
+      host && !host.has(record.id) ? record : { ...record, enabled: enabled.includes(record.id) },
+    ),
+    ...enabled.filter((id) => !stored.has(id)).map((id) => ({ id, enabled: true })),
   ];
   yield* savePlugins({ profile, plugins, core });
 });

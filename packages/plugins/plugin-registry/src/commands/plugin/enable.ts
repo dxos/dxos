@@ -27,7 +27,12 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
   // scripting it should not have to branch on whether they already ran it.
   if (!manager.getEnabled().includes(id)) {
     yield* manager.enable(id);
-    yield* saveEnabledPlugins({ profile, enabled: [...manager.getEnabled()], core: manager.getCore() });
+    yield* saveEnabledPlugins({
+      profile,
+      enabled: [...manager.getEnabled()],
+      registered: plugins.map((plugin: Plugin.Plugin) => plugin.meta.profile.key),
+      core: manager.getCore(),
+    });
   }
 
   if (json) {

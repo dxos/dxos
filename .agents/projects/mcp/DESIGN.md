@@ -209,6 +209,13 @@ and only afterwards consults the enabled set, so an installed-but-disabled plugi
 body on every page load. Worth aligning, but the CLI should not inherit it — see §2.6, where this
 boundary is also the cheapest thing we have resembling a consent point.
 
+The one exception, found while building it: `add --dev <path>` against a checkout that has not been
+built has no `manifest.json` to read, and falls back to evaluating that directory's `dx.config.ts`.
+That is a weaker bar, and deliberately so — it is bounded to `--dev`, where the argument is a path
+on the user's own disk, and it is the same bar as running the checkout's build, which is what would
+have produced the manifest. The property holds exactly where the trust question is real: nothing
+reached from a URL is imported until `enable`.
+
 **One file, not two.** The browser's split (remote records in `localStorage`, enabled ids elsewhere)
 is a localStorage artifact, not a design; two files can disagree and something then has to
 reconcile them. `plugins/<profile>.yml` should become one list of records — `id`, `enabled`, and for

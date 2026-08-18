@@ -3366,9 +3366,6 @@ describe('PluginManager', () => {
   });
 
   describe('host-supplied core set', () => {
-    const makePlugin = (id: string, tags?: string[]) =>
-      Plugin.make(Plugin.define({ profile: { key: id, name: id, tags } }))();
-
     it.effect('defaults to the plugins tagged `system`', () =>
       Effect.gen(function* () {
         const tagged = makePlugin('org.dxos.test.tagged', ['system']);
@@ -3410,5 +3407,8 @@ describe('PluginManager', () => {
         assert.deepStrictEqual(manager.getCore(), ['org.dxos.test.plain']);
       }),
     );
+
+    const makePlugin = (id: string, tags?: string[]) =>
+      Plugin.make(Plugin.define({ profile: { key: id, name: id, tags } }))();
   });
 });

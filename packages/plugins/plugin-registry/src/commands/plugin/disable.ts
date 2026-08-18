@@ -29,7 +29,12 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
   // Idempotent for the same reason `enable` is.
   if (manager.getEnabled().includes(id)) {
     yield* manager.disable(id);
-    yield* saveEnabledPlugins({ profile, enabled: [...manager.getEnabled()], core: manager.getCore() });
+    yield* saveEnabledPlugins({
+      profile,
+      enabled: [...manager.getEnabled()],
+      registered: plugins.map((plugin: Plugin.Plugin) => plugin.meta.profile.key),
+      core: manager.getCore(),
+    });
   }
 
   if (json) {

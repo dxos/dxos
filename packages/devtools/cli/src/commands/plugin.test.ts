@@ -34,17 +34,6 @@ type PluginRow = {
   failure?: string;
 };
 
-const listPlugins = (home: string, args: string[] = []): PluginRow[] => {
-  const { stdout, stderr, status } = runDx(['--json', 'plugin', 'list', ...args], { home });
-  if (status !== 0) {
-    // eslint-disable-next-line no-console
-    console.error('stdout:', stdout, '\nstderr:', stderr);
-  }
-  return JSON.parse(stdout);
-};
-
-const pluginsFile = (home: string) => path.join(home, '.config', 'dx', 'plugins', 'default.yml');
-
 describe('plugin list', () => {
   test(
     'reports both axes, the CLI-owned core set, and the default enabled set',
@@ -144,3 +133,14 @@ describe('plugin enable / disable', () => {
     TIMEOUT,
   );
 });
+
+const listPlugins = (home: string, args: string[] = []): PluginRow[] => {
+  const { stdout, stderr, status } = runDx(['--json', 'plugin', 'list', ...args], { home });
+  if (status !== 0) {
+    // eslint-disable-next-line no-console
+    console.error('stdout:', stdout, '\nstderr:', stderr);
+  }
+  return JSON.parse(stdout);
+};
+
+const pluginsFile = (home: string) => path.join(home, '.config', 'dx', 'plugins', 'default.yml');
