@@ -8,6 +8,9 @@ is answered from the model rather than the DOM.
 The audit that motivates this, the five call sites it has to serve, and the measured verdict live in
 [`plugin-assistant/docs/AUDIT.md`](../../plugins/plugin-assistant/docs/AUDIT.md) §3.3–§3.4.
 
+[`TESTING.md`](./TESTING.md) is the manual plan: what a person has to confirm, and why each item
+cannot be a test.
+
 ## Principles
 
 What the list is allowed to assume, and what follows from it. Everything below this section
