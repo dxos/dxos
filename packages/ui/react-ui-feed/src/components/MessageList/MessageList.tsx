@@ -354,6 +354,14 @@ const MessageListRoot = ({
     }
 
     const next = Math.max(0, viewport.clientHeight - tail);
+    // Frozen except within a beat of a model change: the reserve reads the tail's measured extents,
+    // and a widget toggled there changes them — a reserve that followed would shift the sizer under
+    // the reader, which is the jump this line removes. New content re-sizes it; rearranging what is
+    // already there does not.
+    if (performance.now() - changedAtRef.current > 1_000) {
+      return;
+    }
+
     // A pixel of hysteresis, so sub-pixel measurement noise cannot tick the sizer every commit.
     setReserve((current) => (Math.abs(current - next) > 1 ? next : current));
     // Keyed on the document's extent: that is what changes when the tail's rows are measured.
