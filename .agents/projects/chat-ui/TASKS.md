@@ -272,6 +272,17 @@ Found while building the replacement placement layer (`DESIGN.md` §Principles).
       looks like it did nothing. The precondition is now an explicit throw naming the mounted rows.
       Either `Window` loses a directly-assigned `scrollTop`, or the story assumes a viewport size it
       never pinned; establish which before changing anything.
+- [ ] **The end is not reachable when extents are estimates.** `bridge/Uniform` and
+      `bridge/Assistant` fail; `bridge/Plain` passes because its extents are exact. Scrolling to the
+      end does not land the last row on the viewport's bottom, which is the end-edge drift being
+      _reported and never applied_ — the open question in §7. The correction has to go to the sizer
+      rather than the window (moving the window moves what the reader is looking at), and the sizer
+      must not be revised under a scroll. This is the next real piece of placement work.
+- [ ] **The item cannot be rendered without the list.** `MessageList.Item` reads the renderer, the
+      registry, the hits and the widget census from `MessageList.Root`'s context, so the placement
+      layer cannot be exercised with real items except through the very thing it replaces. The bridge
+      repeats the resolution rather than refactoring; making the item take its dependencies as props
+      belongs in the retrofit.
 - [ ] **The popover anchoring fix is unverified.** Anchoring to the hovered row and keying the
       content is principled, but the probe that "showed" the old drift was faulty — React synthesises
       `pointerenter` from `pointerover`/`pointerout` pairs, so dispatching enter alone never moved the
