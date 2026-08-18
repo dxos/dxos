@@ -93,12 +93,13 @@ describe('EdgeHttpClient auth refresh', () => {
     const fetchMock = makeFetchMock({ challenge: 'Y2hhbGxlbmdl', expiresInMs: 300_000 });
     vi.stubGlobal('fetch', fetchMock);
 
+    const presentCredentials = vi.fn(async (): Promise<Presentation> => {
+      throw new Error('chain is required');
+    });
     const chainless: EdgeIdentity = {
       peerKey: 'peer-key',
       identityDid: 'did:halo:test',
-      presentCredentials: async () => {
-        throw new Error('chain is required');
-      },
+      presentCredentials,
     };
 
     const client = new EdgeHttpClient('https://edge.example.com');
@@ -106,6 +107,9 @@ describe('EdgeHttpClient auth refresh', () => {
 
     await client.putBlob(Context.default(), 'one', new Uint8Array([1]), { contentType: 'application/octet-stream' });
 
+    // Assert the throw actually happened: without this the test would also pass if the prefetch
+    // were skipped entirely, which is a different behaviour from recovering from it.
+    expect(presentCredentials).toHaveBeenCalledTimes(1);
     const targetCall = fetchMock.mock.calls.find((call) => !String(call[0]).endsWith('/auth'));
     expect(targetCall).toBeDefined();
     expect((targetCall![1] as RequestInit | undefined)?.headers).not.toHaveProperty('Authorization');
@@ -170,6 +174,63 @@ describe('EdgeHttpClient auth refresh', () => {
     // The stale presentation was discarded: the request went out without it.
     const putCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/api/file/one'));
     expect((putCall![1]?.headers as Record<string, string> | undefined)?.Authorization).toBeUndefined();
+  });
+
+  test('a settling prefetch does not clear a newer single-flight guard', async ({ expect }) => {
+    // Both of the first two `/auth` round trips are parked, so the FIRST can settle while the
+    // SECOND is still in flight — the only ordering in which a stale `finally` can clear a live
+    // guard. Releasing them in the other order (as a naive test does) never reproduces it.
+    const releases: Array<() => void> = [];
+    const started: Array<Promise<void>> = [];
+    const startSignals: Array<() => void> = [];
+    for (let i = 0; i < 2; i++) {
+      started.push(new Promise<void>((resolve) => startSignals.push(resolve)));
+    }
+    let authCallCount = 0;
+    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
+      const url = String(input instanceof URL ? input : (input.url ?? input));
+      if (url.endsWith('/auth')) {
+        const index = authCallCount++;
+        if (index < 2) {
+          startSignals[index]();
+          await new Promise<void>((resolve) => releases.push(resolve));
+        }
+        return new Response(JSON.stringify({ success: true, data: { challenge: 'Y2hhbGxlbmdl' } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(null, { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    client.setIdentity(identity);
+    const first = client.putBlob(Context.default(), 'one', new Uint8Array([1]), {
+      contentType: 'application/octet-stream',
+    });
+    await started[0];
+
+    // `setIdentity` drops the in-flight guard, so this second call installs its own.
+    client.setIdentity({ ...identity, identityDid: 'did:halo:other' });
+    const second = client.putBlob(Context.default(), 'two', new Uint8Array([2]), {
+      contentType: 'application/octet-stream',
+    });
+    await started[1];
+
+    // Settle the FIRST while the second is still parked. Without the identity check in `finally`,
+    // this clears the guard the second prefetch owns.
+    releases[0]();
+    await first;
+
+    // A third caller must join the second prefetch, not start its own.
+    const third = client.putBlob(Context.default(), 'three', new Uint8Array([3]), {
+      contentType: 'application/octet-stream',
+    });
+    releases[1]();
+    await Promise.all([second, third]);
+
+    expect(authCallCount).toBe(2);
   });
 
   test('no advertised TTL means no proactive refresh', async ({ expect }) => {

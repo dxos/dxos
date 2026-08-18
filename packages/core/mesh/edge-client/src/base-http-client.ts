@@ -266,13 +266,23 @@ export abstract class BaseHttpClient {
    * `_call` as a failed request — turning a call that used to succeed unauthenticated into an error.
    */
   private _prefetchAuthHeader(): Promise<void> {
-    return (this._authPrefetch ??= this._prefetchAuthHeaderOnce()
+    if (this._authPrefetch) {
+      return this._authPrefetch;
+    }
+    const prefetch: Promise<void> = this._prefetchAuthHeaderOnce()
       .catch((err) => {
         log.verbose('auth prefetch failed; proceeding unauthenticated', { err });
       })
       .finally(() => {
-        this._authPrefetch = undefined;
-      }));
+        // Only if this promise still owns the guard: `setIdentity` clears it mid-flight, so a
+        // newer prefetch may already have claimed it, and clearing that one would let concurrent
+        // callers each start their own `/auth` round trip and credential presentation.
+        if (this._authPrefetch === prefetch) {
+          this._authPrefetch = undefined;
+        }
+      });
+    this._authPrefetch = prefetch;
+    return prefetch;
   }
 
   private async _prefetchAuthHeaderOnce(): Promise<void> {
