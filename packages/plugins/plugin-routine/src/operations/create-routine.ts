@@ -17,20 +17,16 @@ import { getRoutinesPath } from '../paths';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = RoutineOperation.CreateRoutine.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ db, templateId, name, subject, draft }) {
-      let object = draft;
-      if (!object) {
-        const templates = yield* Capability.getAll(RoutineCapabilities.Template);
-        const template = templates.find((entry) => entry.id === templateId);
-        invariant(template, `Unknown routine template: ${templateId}`);
+    Effect.fnUntraced(function* ({ db, templateId, name, subject }) {
+      const templates = yield* Capability.getAll(RoutineCapabilities.Template);
+      const template = templates.find((entry) => entry.id === templateId);
+      invariant(template, `Unknown routine template: ${templateId}`);
 
-        // The scaffold returns a fully-wired in-memory routine graph (runnable, owned instructions, and trigger
-        // all parented and bound by `makeRoutine`); AddObject's `Database.add` cascades the whole graph.
-        object = yield* template
-          .scaffold({ name, subject })
-          .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
-      }
-      invariant(Obj.instanceOf(Routine.Routine, object), 'Draft is not a routine');
+      // The scaffold returns a fully-wired in-memory routine graph (runnable, owned instructions, and trigger
+      // all parented and bound by `makeRoutine`); AddObject's `Database.add` cascades the whole graph.
+      const object = yield* template
+        .scaffold({ name, subject })
+        .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
       const targetNodeId = getRoutinesPath(db.spaceId);
       return yield* Operation.invoke(SpaceOperation.AddObject, {
