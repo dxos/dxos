@@ -16,7 +16,7 @@ import React, {
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type EdgeDrift, type Extents, Placement } from './placement';
+import { type EdgeDrift, type Extents, type Layout, Placement } from './placement';
 
 /** Distance from the end within which the reader counts as being at it. */
 const STICKY_THRESHOLD = 32;
@@ -105,8 +105,34 @@ const windowExtentOf = (placement: Placement, first: number, last: number): numb
   return extent;
 };
 
-export const Window = ({
-  classNames,
+/**
+ * Everything the shape needs, with no opinion about who owns the scroll element.
+ *
+ * Split out because the DOM below is only the *simplest* binding of it. A host that already has a
+ * scroll container — `MessageList` scrolls inside `ScrollArea`, which owns the overlay thumbs and
+ * the padding tokens — cannot nest a second one, and would otherwise have to reimplement the
+ * placement to keep its own chrome. It hands its element over instead.
+ */
+export type UseWindowOptions = Omit<WindowProps, 'classNames' | 'children'> & {
+  /** The element being scrolled, when the host owns it. `Window` passes its own. */
+  scrollerRef: React.RefObject<HTMLElement | null>;
+};
+
+export type UseWindowResult = {
+  placement: Placement;
+  layout: Layout;
+  /** Ref for the element holding the mounted rows, which is what gets measured. */
+  windowRef: React.RefObject<HTMLDivElement | null>;
+  /** Extent of the whole document along the axis, reserve included: what the thumb is scaled to. */
+  sizerExtent: number;
+  /** Absolute position of the first mounted row, which the parent is translated by. */
+  offset: number;
+  first: number;
+  last: number;
+};
+
+export const useWindow = ({
+  scrollerRef,
   count,
   getId,
   extents,
@@ -118,9 +144,7 @@ export const Window = ({
   onMismatch,
   onChange,
   controllerRef,
-  children,
-}: WindowProps) => {
-  const scrollerRef = useRef<HTMLDivElement>(null);
+}: UseWindowOptions): UseWindowResult => {
   const windowRef = useRef<HTMLDivElement>(null);
   const [, render] = useState(0);
   const invalidate = useCallback(() => render((value) => value + 1), []);
@@ -239,8 +263,6 @@ export const Window = ({
     wasSticky.current = sticky;
     following.current = !!sticky;
   }
-
-  const main = axis === 'block' ? 'height' : 'width';
 
   // Declared before the follow, so the follow's first run has a viewport to compute an end against:
   // effects run in order, and an end measured against a viewport of zero is the whole document.
@@ -373,6 +395,30 @@ export const Window = ({
       }),
     );
   }
+
+  return {
+    placement,
+    layout: { first, last, visible, offset, sizerExtent },
+    windowRef,
+    sizerExtent,
+    offset,
+    first,
+    last,
+  };
+};
+
+/**
+ * The DOM shape, and nothing else.
+ *
+ * Three elements: a **sizer** that holds no rows and exists only to give the thumb something to
+ * measure, a **window** holding the mounted rows in normal flow, and the scroller around them.
+ */
+export const Window = ({ classNames, children, ...options }: WindowProps) => {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const { windowRef, offset, sizerExtent, first, last } = useWindow({ ...options, scrollerRef });
+  const axis = options.axis ?? 'block';
+  const main = axis === 'block' ? 'height' : 'width';
+  const { getId } = options;
 
   const rows = [];
   for (let index = first; index <= last; index++) {

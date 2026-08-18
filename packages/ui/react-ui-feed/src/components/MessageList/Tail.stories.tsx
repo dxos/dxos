@@ -137,3 +137,8 @@ export const Varied: Story = {
   args: { scenario: 'thread', count: 500 },
   play: playTail(500),
 };
+
+export const VariedPastEnd: Story = {
+  args: { scenario: 'thread', count: 500, scrollPastEnd: true },
+  play: playTail(500),
+};
