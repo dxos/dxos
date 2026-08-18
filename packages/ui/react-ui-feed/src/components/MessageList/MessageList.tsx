@@ -3,15 +3,11 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import { type Virtualizer, useVirtualizer } from '@tanstack/react-virtual';
 import React, {
   type ComponentType,
   type PropsWithChildren,
-  createContext as createReactContext,
   useCallback,
-  useContext,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -32,8 +28,8 @@ import {
   createSelectionGroup,
   createWidgetStateStore,
 } from '../Item';
-import { type FollowOptions, ScrollFollower } from './follow';
 import { useJumpDetector, usePositionLog } from './position-log';
+import { type WindowController, type WindowState, useWindow } from './Window';
 
 //
 // Context
@@ -80,11 +76,15 @@ type MessageListContextValue = {
   shifts: number;
   breaks: number;
   resetShifts: () => void;
-  virtualizer: Virtualizer<HTMLElement, HTMLElement>;
-  /** Measures a commit's rows in one pass, feeding the running average behind `estimateSize`. */
-  measureItems: (elements: Iterable<HTMLElement>) => void;
-  /** Empty space below the last row, so the tail can be scrolled up to the top of the viewport. */
-  trailing: number;
+  /** The element holding the mounted rows, which is what gets measured. */
+  windowRef: React.RefObject<HTMLDivElement | null>;
+  /** Absolute position of the first mounted row: what that element is translated by (§7). */
+  offset: number;
+  /** Extent of the whole document, reserved space included — what the thumb is scaled against. */
+  sizerExtent: number;
+  first: number;
+  last: number;
+  getId: (index: number) => string;
   setViewport: (viewport: HTMLElement | null) => void;
   onSelect: (id: string, additive: boolean) => void;
   scrollToIndex: (index: number, options?: ScrollToOptions) => void;
@@ -216,13 +216,6 @@ export type MessageListRootProps = PropsWithChildren<{
    * row's measurement, which removes the worst of the feedback but not all of it.
    */
   scrollPastEnd?: boolean;
-  /**
-   * How the sticky follow moves while `streamingId` is set; every other height change snaps, so a
-   * populated feed opens already at the tail rather than travelling there. @default 'auto'
-   */
-  stickyBehavior?: ScrollToOptions['behavior'];
-  /** Travel speeds for the smooth follow, in rows/s. */
-  follow?: FollowOptions;
   overscan?: number;
   onRangeChange?: (range: MessageRange) => void;
 }>;
@@ -254,7 +247,7 @@ const REBASE_LIMIT = 3;
 const GESTURE_WINDOW = 300;
 
 /**
- * Headless root of a feed: owns the virtualizer, the selection group and the model-to-item mapping.
+ * Headless root of a feed: owns the placement, the selection group and the model-to-item mapping.
  * Renders no DOM of its own, so a toolbar or statusbar that reads its state can sit outside the
  * scroll container — the scrolling part is `MessageList.Viewport`.
  */
@@ -274,27 +267,26 @@ const MessageListRoot = ({
   estimateSize = DEFAULT_ESTIMATE,
   stickyBottom = false,
   scrollPastEnd = false,
-  stickyBehavior = 'auto',
-  follow: followOptions,
   overscan = 8,
   onRangeChange,
 }: MessageListRootProps) => {
   // Owned here so it outlives every row: a widget's state must survive its row being destroyed.
   const widgetStore = useMemo(createWidgetStateStore, []);
 
-  const [viewport, setViewport] = useState<HTMLElement | null>(null);
+  const [viewport, setViewportState] = useState<HTMLElement | null>(null);
+  // The same element as a ref, because the placement is bound to an element rather than to a render.
+  const scrollerRef = useRef<HTMLElement | null>(null);
+  const setViewport = useCallback((element: HTMLElement | null) => {
+    scrollerRef.current = element;
+    setViewportState(element);
+  }, []);
+
   const [range, setRange] = useState<MessageRange | undefined>(undefined);
+  const [mounted, setMounted] = useState(0);
 
-  // One number standing in for the caller's estimate wherever a single value is needed — the opening
-  // offset, the fallback row height — since a per-row estimator answers about a row, not the feed.
+  // One number standing in for the caller's estimate wherever a single value is needed, since a
+  // per-row estimator answers about a row and not about the feed.
   const nominalSize = typeof estimateSize === 'number' ? estimateSize : DEFAULT_ESTIMATE;
-
-  // The reader's position as an index rather than a pixel offset: what the arrow keys step through,
-  // what navigation sets, and what a minimap or a counter reports. Mirrored in a ref because the
-  // keymap is bound to the element once and would otherwise step from a captured value.
-  // Read by the scroll listener, which is bound to the element once and would otherwise close over
-  // the space reserved at the time it was bound.
-  const trailingRef = useRef(0);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const currentIndexRef = useRef(0);
@@ -318,264 +310,110 @@ const MessageListRoot = ({
     setMountedWidgets([...widgetCounts.current.values()].reduce((total, value) => total + value, 0));
   }, []);
 
-  // Running average of the rows measured so far. The estimate governs every row the list has not
-  // rendered — the total height, the scrollbar, and which window a jump lands in — so a wrong one is
-  // not a slow start but a document of the wrong length, corrected row by row as the reader travels
-  // through it. Averaging the real heights replaces the guess after the first handful of rows.
-  const measured = useRef({ sizes: new Map<string, number>(), total: 0 });
+  const getId = useCallback((index: number) => messages[index]?.id ?? `missing-${index}`, [messages]);
 
-  // Read through a ref: the virtualizer is constructed before the anchor exists, and its options are
-  // captured once per render.
-  const anchoredMeasureRef = useRef<
-    | ((
-        element: Element,
-        entry: ResizeObserverEntry | undefined,
-        instance: Virtualizer<HTMLElement, HTMLElement>,
-      ) => number)
-    | null
-  >(null);
-
-  const virtualizer = useVirtualizer<HTMLElement, HTMLElement>({
-    count: messages.length,
-    getScrollElement: () => viewport,
-    // Deliberately reads refs rather than state: the virtualizer calls this while computing a
-    // layout, and re-rendering to publish a new average would recompute the layout it is inside.
-    estimateSize: useCallback(
-      (index: number) => {
+  // What the host says, and nothing else.
+  //
+  // There is no running average here and no re-base built on one. Both existed because the old
+  // engine could only revise the rows below the last one it had measured, so a feed opened at its
+  // tail kept a document sized by the opening guess and had to be rebuilt from the top to correct
+  // it — which moved every offset in the list at once. A measurement is kept against the row's id
+  // and consulted from the anchor, so a wrong estimate is wrong only for rows nobody has seen (§8).
+  const extents = useMemo(
+    () => ({
+      of: (index: number) => {
         const message = messages[index];
-        if (typeof estimateSize === 'function' && message) {
-          return estimateSize(message, index);
-        }
-
-        const { sizes, total } = measured.current;
-        return sizes.size >= MEASURED_SAMPLE ? Math.round(total / sizes.size) : nominalSize;
+        return typeof estimateSize === 'function' && message ? estimateSize(message, index) : nominalSize;
       },
-      [estimateSize, nominalSize, messages],
-    ),
-    // Key measurements by message id, not index: a prepended page or a rewind would otherwise
-    // shift every cached height by one row and the scrollbar would jump.
-    getItemKey: useCallback((index: number) => messages[index]?.id ?? index, [messages]),
-    // A feed that opens at its tail should mount the tail, and only the tail. Without this the first
-    // commit builds the window at offset 0, the sticky effect then scrolls to the bottom, and every
-    // row is constructed twice — once at each end of the document. Each row is an `EditorView`, so
-    // that doubling is the largest single cost in the list's lifetime: a deliberately low estimate
-    // mounts tens of editors per window, and the pair of them lands as one stalled frame.
-    //
-    // Read once, at construction: the virtualizer only consults this while it has no scroll offset
-    // of its own, and the sticky effect corrects the real `scrollTop` on the next frame.
-    initialOffset: stickyBottom ? () => messages.length * nominalSize : undefined,
-    overscan,
-  });
+    }),
+    [messages, estimateSize, nominalSize],
+  );
 
-  // Keyed by message id rather than index, so a row counted once is not counted again when the feed
-  // shifts beneath it.
+  // The viewport less a nominal row: enough for the reader to bring the last row to the top.
   //
-  // Every row of a commit in one call, because each of these reads forces the document to lay out:
-  // interleaved with the rows building their own content, that is one forced layout per row.
-  const measureItems = useCallback(
-    (elements: Iterable<HTMLElement>) => {
-      for (const element of elements) {
-        const id = element.dataset.objectId;
-        const size = element.offsetHeight;
-        if (id && size) {
-          const { sizes, total } = measured.current;
-          measured.current.total = total + size - (sizes.get(id) ?? 0);
-          sizes.set(id, size);
-        }
+  // Measured from the element, never read back out of the layout. It is an *input* to the sizer, so
+  // anything derived from the sizer would oscillate — and deliberately not the last row's measured
+  // size, which the layout also feeds.
+  const reserve = useMemo(
+    () => (scrollPastEnd && viewport && messages.length ? Math.max(0, viewport.clientHeight - nominalSize) : 0),
+    [scrollPastEnd, viewport, messages.length, nominalSize],
+  );
 
-        virtualizer.measureElement(element);
+  const controller = useRef<WindowController>(null);
+  const onWindowChange = useCallback(
+    (state: WindowState) => {
+      const next = state.count ? { startIndex: state.visible.first, endIndex: state.visible.last } : undefined;
+      setRange(next);
+      setMounted(state.mounted.last - state.mounted.first + 1);
+      if (next) {
+        onRangeChange?.(next);
+        // The cursor is the row at the top of the viewport, derived from the scroll and never set
+        // alongside it. That is what makes a press always move: the row containing the offset is the
+        // one the stop above begins strictly higher than, and the stop below strictly lower.
+        setCurrent(next.startIndex);
       }
-
-      // Drops the cache entries of rows that have left the DOM; the virtualizer's own ref-callback
-      // contract does this by being called with `null`, which a batch never is.
-      virtualizer.measureElement(null);
     },
-    [virtualizer],
+    [onRangeChange, setCurrent],
   );
 
-  // The follow carries velocity across frames, so a target that moves with every chunk produces one
-  // continuous travel rather than an animation restarted per chunk.
-  //
-  // Speeds are in rows, so a row needs a height. The median of what is on screen, rather than the
-  // mean of everything: a streaming answer is enormous beside a handful of short messages, so the
-  // mean tracks that one row and the follow accelerates with it — the speed then honours its limit
-  // in rows while ignoring it entirely in pixels. Capped at the viewport because a row taller than
-  // the screen makes "rows per second" meaningless as a rate.
-  const rowHeight = useCallback(() => {
-    const sizes = virtualizer
-      .getVirtualItems()
-      .map((item) => item.size)
-      .sort((a, b) => a - b);
-    const median = sizes.length ? sizes[Math.floor(sizes.length / 2)] : nominalSize;
-    return Math.min(median, viewport?.clientHeight || median);
-  }, [virtualizer, nominalSize, viewport]);
-  // `trailing` is read through a ref rather than captured: the follower is built once per viewport
-  // and the reserved space is not known until the element has been measured.
-  const follower = useMemo(
-    () =>
-      viewport
-        ? new ScrollFollower(viewport, { ...followOptions, rowHeight, trailing: () => trailingRef.current })
-        : undefined,
-    [viewport, followOptions?.maxSpeed, followOptions?.acceleration, followOptions?.deceleration, rowHeight],
-  );
-  useEffect(() => () => follower?.cancel(), [follower]);
+  const { placement, windowRef, offset, sizerExtent, first, last } = useWindow({
+    scrollerRef,
+    count: messages.length,
+    getId,
+    extents,
+    overscan,
+    reserve,
+    sticky: stickyBottom,
+    onChange: onWindowChange,
+    controllerRef: controller,
+  });
 
   // What a reader would call flicker: a row moving on screen by more than the scroll moved, sampled
   // once per frame so the reading is of what was painted. Only while debugging — it reads every
   // mounted row's box every frame.
   const jumps = useJumpDetector(viewport, debug);
 
-  // Where each row was placed, and whether it stayed there. A row that moves after it was laid out
-  // is what the reader sees as flicker, and it happens scrolling up, where unmeasured rows enter.
-  const {
-    shifts,
-    breaks,
-    last: lastShift,
-    trace: shiftTrace,
-    record: recordPositions,
-    reset: resetShifts,
-  } = usePositionLog();
-  const virtualItems = virtualizer.getVirtualItems();
+  // Where each row was placed, and whether it stayed there.
+  const { shifts, breaks, trace: shiftTrace, record: recordPositions, reset: resetShifts } = usePositionLog();
   useEffect(() => {
-    recordPositions(
-      virtualItems.map(({ key, index, start }) => ({ key, index, start })),
-      // The offset the layout was computed against, not the element's current `scrollTop`: reading
-      // the DOM here samples a scroll that has moved on since, and every row then looks displaced by
-      // exactly one frame of travel.
-      { scrollOffset: virtualizer.scrollOffset ?? 0 },
-    );
-  }, [virtualItems, recordPositions, virtualizer]);
-
-  const mounted = virtualizer.getVirtualItems().length;
-  const startIndex = virtualizer.range?.startIndex;
-  const endIndex = virtualizer.range?.endIndex;
-  useEffect(() => {
-    // An emptied list keeps whatever range it last reported, so clear it rather than leave a
-    // readout describing rows that are gone.
-    const next =
-      messages.length && startIndex !== undefined && endIndex !== undefined ? { startIndex, endIndex } : undefined;
-    setRange(next);
-    if (next) {
-      onRangeChange?.(next);
-      // The cursor is the row at the top of the viewport — derived from the scroll, never set
-      // alongside it. That is what makes a press always move: `startIndex` is the row containing the
-      // scroll offset, so the stop above it begins strictly higher and the stop below it begins
-      // strictly lower, and either way the viewport travels.
-      //
-      // Setting the cursor separately is what broke this. A feed opened at its tail is aligned to
-      // its *last* row while its first visible row is several earlier, so the presses closing that
-      // gap stepped through rows already on screen and scrolled nothing: three dead presses, then
-      // movement. Deriving it also makes a press during a travel step from where the travel has
-      // reached, which is what the reader can see.
-      setCurrent(next.startIndex);
-    }
-  }, [mounted, startIndex, endIndex, messages.length, onRangeChange, setCurrent]);
-
-  // Following is an intent, and only the reader can withdraw it.
-  //
-  // Neither of the obvious signals can tell the reader apart from the machinery. Distance says a
-  // tail growing faster than the follow travels is a reader who scrolled away; direction says the
-  // same of a row above being re-measured smaller, or of the virtualizer correcting its own
-  // estimate — and either way the follow switches off for good and the feed stops following.
-  //
-  // Input events can: the follow writes `scrollTop`, it does not turn wheels or press keys. So a
-  // scroll counts as the reader's only when a gesture preceded it, and returning to the tail — by
-  // any means — opts back in.
-  const followRef = useRef(true);
-  const gestureRef = useRef(0);
-  const scrolledAt = useRef(0);
-
-  // Hold the row the reader is on still while first-time measurements correct the layout under it.
-  // Suspended while following the tail, where the bottom is the anchor and the follow owns the
-  // scroll — two things writing `scrollTop` would fight.
-  useEffect(() => {
-    if (!viewport) {
-      return;
+    const rows = [];
+    for (let index = first; index <= last; index++) {
+      rows.push({ key: getId(index), index, start: placement.positionOf(index) });
     }
 
-    const onGesture = () => {
-      gestureRef.current = performance.now();
-    };
+    // The offset the layout was computed against, not the element's current `scrollTop`: reading the
+    // DOM here samples a scroll that has moved on since, and every row then looks displaced by
+    // exactly one frame of travel.
+    recordPositions(rows, { scrollOffset: placement.scroll });
+  }, [first, last, offset, sizerExtent, getId, placement, recordPositions]);
 
-    const onScroll = () => {
-      scrolledAt.current = performance.now();
-      // Against the last row's bottom, not the document's: the space reserved below it is somewhere
-      // the reader may go, and a feed parked there is still parked at its tail.
-      const atTail =
-        viewport.scrollHeight - trailingRef.current - viewport.scrollTop - viewport.clientHeight < STICKY_THRESHOLD;
-      if (atTail) {
-        followRef.current = true;
-      } else if (performance.now() - gestureRef.current < GESTURE_WINDOW) {
-        followRef.current = false;
-        follower?.cancel();
-      }
-    };
+  const scrollToIndex = useCallback((index: number, { align = 'start', behavior = 'auto' }: ScrollToOptions = {}) => {
+    controller.current?.scrollToIndex(index, align === 'center' ? 'start' : align, behavior);
+  }, []);
 
-    onScroll();
-    viewport.addEventListener('scroll', onScroll, { passive: true });
-    // Every way a reader can move a scroll container by hand: the wheel, a touch drag, the keyboard,
-    // and a pointer on the scrollbar itself.
-    for (const event of ['wheel', 'touchmove', 'keydown', 'pointerdown'] as const) {
-      viewport.addEventListener(event, onGesture, { passive: true });
-    }
-
-    return () => {
-      viewport.removeEventListener('scroll', onScroll);
-      for (const event of ['wheel', 'touchmove', 'keydown', 'pointerdown'] as const) {
-        viewport.removeEventListener(event, onGesture);
-      }
-    };
-  }, [viewport, follower]);
-
-  const scrollToIndex = useCallback(
-    (index: number, { align = 'start', behavior = 'auto' }: ScrollToOptions = {}) => {
-      // Asking to be somewhere is an answer to "do you want the tail?". Navigating into the feed
-      // withdraws the follow — otherwise the next message drags the reader back from wherever they
-      // just asked to be — and asking for the last message opts back in.
-      followRef.current = index >= messages.length - 1;
-      if (!followRef.current) {
-        follower?.cancel();
-      }
-
-      // A smooth scroll is driven from the offset the virtualizer computes, because the virtualizer
-      // itself refuses to animate under dynamic measurement (it warns and scrolls instantly).
-      //
-      // Beyond a few rows that offset is an estimate for everything not yet measured, so the
-      // animation travels to the wrong place and corrects on arrival. A far jump therefore goes
-      // instantly — the reader loses no continuity across a distance they could not have followed.
-      // Reserved space past the end puts two offsets out of the virtualizer's reach: it clamps every
-      // offset it computes to the element's maximum — which is now that space rather than the last
-      // row — and returns the maximum outright for an end-aligned last row. Taken literally the
-      // first makes a row near the tail unreachable at the top of the viewport, and the second opens
-      // a chat with its last message at the top of an otherwise empty screen.
-      const reserved = scrollPastEnd && viewport ? virtualizer.measurementsCache[index] : undefined;
-      if (reserved && viewport) {
-        const tail = virtualizer.getTotalSize() - viewport.clientHeight;
-        const past = align === 'end' ? reserved.end - viewport.clientHeight : reserved.start;
-        if (align === 'end' ? index === messages.length - 1 : past > tail) {
-          // Through the virtualizer rather than by writing `scrollTop`: it carries its own copy of
-          // the offset and the compensations it has applied, and an element written behind its back
-          // leaves the two disagreeing. (Not what causes the rows to move on a rebuild here — that
-          // is unresolved, see `chat-ui/TASKS.md` — but writing the element directly is wrong
-          // regardless of whether a test currently catches it.)
-          virtualizer.scrollToOffset(Math.max(0, past), { align: 'start', behavior });
-          return;
-        }
-      }
-
-      const distance = Math.abs(index - (virtualizer.range?.startIndex ?? 0));
-      const offset =
-        behavior === 'smooth' && distance <= SMOOTH_SCROLL_LIMIT
-          ? virtualizer.getOffsetForIndex(index, align)?.[0]
-          : undefined;
-      if (offset !== undefined && viewport) {
-        viewport.scrollTo({ top: offset, behavior: 'smooth' });
-      } else {
-        virtualizer.scrollToIndex(index, { align });
+  const scrollToBottom = useCallback(
+    (options?: ScrollToOptions) => {
+      if (messages.length) {
+        scrollToIndex(messages.length - 1, { align: 'end', ...options });
       }
     },
-    [virtualizer, viewport, follower, messages.length, setCurrent, scrollPastEnd],
+    [scrollToIndex, messages.length],
   );
+
+  useEffect(() => {
+    if (viewport) {
+      // Why the list is where it is, readable from the console as `$0.__feed`.
+      (viewport as any).__feed = {
+        placement,
+        get layout() {
+          return placement.layout();
+        },
+        get shifted() {
+          return { shifts, breaks, recent: shiftTrace.current };
+        },
+      };
+    }
+  }, [viewport, placement, shifts, breaks, shiftTrace]);
 
   // Ordered stops. Recomputed with the feed rather than searched on each keypress: a long thread is
   // scanned once here, and every step afterwards is a lookup.
@@ -592,222 +430,39 @@ const MessageListRoot = ({
     [messages, isAnchor],
   );
 
-  const scrollToBottom = useCallback(
-    (options?: ScrollToOptions) => {
-      if (messages.length) {
-        scrollToIndex(messages.length - 1, { align: 'end', ...options });
-      }
-    },
-    [scrollToIndex, messages.length],
-  );
-
-  // Re-base the layout on what the rows actually measure, anchored on the reader's position.
-  //
-  // A new average only reaches the rows below the last one measured: the virtualizer rebuilds its
-  // measurements from the earliest pending index, so everything above keeps the height it was first
-  // laid out with. A feed opened at its tail therefore keeps a document sized by the original
-  // estimate — 2,000 rows at 24px where they measure 130 — and the scrollbar, the total height and
-  // every jump to an index stay wrong for as long as the reader does not travel through them.
-  //
-  // The rebuild is triggered by resizing row 0 to the average, which is the one supported way to
-  // make the virtualizer start again from the top: it resumes from its earliest pending measurement,
-  // so a tail-anchored feed otherwise rebuilds only the tail for ever. Clearing its caches outright
-  // does not work — the mounted rows re-measure before the rebuild runs, and the resumption point
-  // lands back at the tail over an emptied cache, leaving a layout with holes in it.
-  //
-  // Every real measurement is kept; only rows that were standing on the estimate move. The rebuild
-  // shifts every offset, so the reader is put back where they were: at the tail if they were
-  // following it, otherwise on the message they were on. Converges — the average becomes the basis,
-  // so the next comparison is against itself.
-  const basis = useRef(nominalSize);
-  const rebases = useRef(0);
-  const pendingRebase = useRef<{ index: number; following: boolean } | null>(null);
-  useEffect(() => {
-    // A caller estimating per row is already better informed than an average over every row.
-    const { sizes, total } = measured.current;
-    if (typeof estimateSize === 'function' || sizes.size < MEASURED_SAMPLE) {
-      return;
-    }
-
-    const average = Math.round(total / sizes.size);
-    if (!average || Math.abs(average - basis.current) / basis.current < REBASE_THRESHOLD) {
-      return;
-    }
-
-    // Never while the reader is moving. A rebuild moves every offset in the list, so doing it under
-    // a scroll is a row changing place beneath the eye — which is what "flicker" is, and it shows
-    // going up, where unmeasured rows enter and the average is still moving. Deferred to the next
-    // quiet moment: measurements keep arriving, so this effect runs again.
-    if (performance.now() - scrolledAt.current < REBASE_QUIET || rebases.current >= REBASE_LIMIT) {
-      return;
-    }
-
-    rebases.current++;
-
-    basis.current = average;
-    // Recorded, not restored here. `resizeItem` only asks for a rebuild: the document grows on the
-    // commit that follows, and a scroll issued now is clamped against a height the element does not
-    // have yet — so the page moves, and the correction arrives frames later as a second jump. The
-    // measured trace was `scrollHeight` 12576 → 18218 at 692ms with `scrollTop` not corrected until
-    // 748ms, which is the whole page flickering half a second after it settled.
-    pendingRebase.current = { index: currentIndexRef.current, following: stickyBottom && followRef.current };
-    virtualizer.resizeItem(0, average);
-  });
-
-  // Keyed on the total size as well as the count: a growing tail extends the last row without
-  // adding a message, so following it means reacting to the height the virtualizer measured, not
-  // to how many messages exist.
-  //
-  // What the follow chases is the tail as it stands, not whatever produced it. The follower
-  // recomputes its target every frame, so content arriving faster than the travel simply keeps the
-  // target ahead; when the arrivals stop, the follow is still under way and lands by decelerating
-  // rather than being cut short. Tying this to a streaming flag instead would snap the moment a
-  // stream ended, discarding exactly the distance it had left to cover.
-  const positioned = useRef(false);
-  const totalSize = virtualizer.getTotalSize();
-
-  // Put the reader back in the same commit that resized the document, before it is painted.
-  useLayoutEffect(() => {
-    const pending = pendingRebase.current;
-    if (!pending) {
-      return;
-    }
-
-    pendingRebase.current = null;
-    // Restored the same way any other navigation is. Writing the offset directly — either on the
-    // element or through `scrollToOffset` — reaches the tail in one frame but leaves a feed of
-    // uneven rows correcting itself for the next second, because the rows the new offset lands among
-    // have never been measured. Tried both; both were worse.
-    if (pending.following) {
-      scrollToBottom();
-    } else {
-      virtualizer.scrollToIndex(pending.index, { align: 'start' });
-    }
-    // Keyed on the total size: it is what the rebuild changes, so this runs on the commit that
-    // applied it and on no other.
-  }, [totalSize, virtualizer, scrollToBottom]);
-
-  // The viewport less a nominal row: enough for the reader to bring the last row to the top.
-  //
-  // Deliberately *not* the last row's measured size. The reserved space is part of the scroll
-  // container's height, so anything it depends on it also feeds: a size that follows the
-  // measurements changes the document, which moves the tail, which re-measures.
-  const trailing = useMemo(
-    () => (scrollPastEnd && viewport && messages.length ? Math.max(0, viewport.clientHeight - nominalSize) : 0),
-    [scrollPastEnd, viewport, messages.length, nominalSize],
-  );
-
-  trailingRef.current = trailing;
-
-  useEffect(() => {
-    // Why a follow is or is not running is invisible from the outside — the state lives in refs and
-    // an animation frame — and every wrong guess about it costs a round of debugging. Published on
-    // the element so it can be read from the console: `$0.__feed`.
-    //
-    // Getters, not a snapshot: these refs are written outside React (by the scroll listener and by
-    // `scrollToIndex`), so a captured value would report the state as of the last render and send
-    // the next reader down the wrong path — which is precisely what this exists to prevent.
-    if (viewport) {
-      (viewport as any).__feed = {
-        virtualizer,
-        follower,
-        get following() {
-          return followRef.current;
-        },
-        get positioned() {
-          return positioned.current;
-        },
-        get shifted() {
-          return { shifts, breaks, last: lastShift, recent: shiftTrace.current };
-        },
-        get measured() {
-          const { sizes, total } = measured.current;
-          return { rows: sizes.size, average: sizes.size ? Math.round(total / sizes.size) : 0, basis: basis.current };
-        },
-      };
-    }
-
-    if (!viewport || !follower || !stickyBottom || !followRef.current) {
-      follower?.stop();
-      return;
-    }
-
-    // Opening a populated feed is not motion to follow: arrive at the tail rather than travel to
-    // it. Through the virtualizer rather than by writing `scrollTop`, because on first render the
-    // total size is mostly estimate — a raw jump lands at a position the mounted window does not
-    // cover and the feed opens blank.
-    // How far behind the tail the reader is, ignoring any space reserved past the last row.
-    //
-    // More than a screen is not motion to animate. The first jump is computed from estimates, so it
-    // lands where the estimate put the tail — 60,000px into a document that measures 71,565 — and
-    // the follow would then close the remaining ten thousand pixels at two rows a second. The follow
-    // is for content arriving at a tail the reader is watching; a gap the estimate opened is a
-    // correction, and corrections jump.
-    const behind = viewport.scrollHeight - trailingRef.current - viewport.scrollTop - viewport.clientHeight;
-    if (!positioned.current || stickyBehavior !== 'smooth' || behind > viewport.clientHeight) {
-      positioned.current = positioned.current || messages.length > 0;
-      follower.cancel();
-      scrollToBottom();
-      return;
-    }
-
-    follower.start();
-  }, [viewport, follower, stickyBottom, stickyBehavior, messages.length, totalSize, scrollToBottom]);
-
-  // Stepped from the scroll offset, not from an index.
-  //
-  // An index has to be turned into a position to be compared with anything, and the row a position
-  // falls in moves: the estimate for a row not yet measured is wrong by design, so landing on a stop
-  // and then measuring around it leaves the offset inside the row above or below. Stepping by index
-  // from there skips a stop or picks the one just left, which the reader sees as presses that travel
-  // different distances.
-  //
-  // Stepping from the row the offset is *inside* is what makes it exact. Comparing positions
-  // directly does not: landing on a stop leaves the offset a few pixels into that row once the
-  // measurement settles, and a tolerance small enough to be honest then reads it as "not yet there"
-  // and re-scrolls the same two pixels. A row contains the offset or it does not.
-  //
-  // From there every press travels: the stop above begins before the containing row does, and the
-  // stop below begins after it ends.
+  // Stepped from the row the cursor is on, which is the row containing the scroll offset. The stop
+  // above it begins strictly higher and the stop below begins strictly lower, so every press
+  // travels — an index compared against a position cannot promise that while the position is still
+  // being measured.
   const stepAnchor = useCallback(
     (delta: number) => {
-      if (!anchors.length || !viewport) {
+      if (!anchors.length) {
         return;
       }
 
-      // The virtualizer's offset, not the element's. They are different coordinate systems: every
-      // compensation for a measured row is carried as an adjustment the virtualizer applies to what
-      // it writes to the element, so `scrollTop` and the measurements drift apart by the accumulated
-      // total. Comparing across the two picks the wrong row and the press travels two pixels.
-      //
-      // Biased a pixel in, so an offset sitting exactly on a boundary belongs to the row that starts
-      // there rather than to the one that ends there.
-      const at = virtualizer.getVirtualItemForOffset((virtualizer.scrollOffset ?? 0) + 1)?.index ?? 0;
+      const at = currentIndexRef.current;
       const next =
         delta > 0
           ? (anchors.find((index) => index > at) ?? anchors[anchors.length - 1])
           : ([...anchors].reverse().find((index) => index < at) ?? anchors[0]);
 
-      // Instant, not smooth. A smooth scroll is a promise the list cannot keep: measurements keep
-      // landing while it travels, and each one writes `scrollTop` to the offset it has compensated,
-      // which cancels the animation wherever it had reached. Measured on `baseline/plain`, every
-      // other press was killed two pixels from where it started — a press that visibly did nothing.
-      // A step between two stops is a discrete move anyway; the glide belongs to the follow.
+      // Smooth, and it stays smooth: corrections move the window rather than the scroll, so nothing
+      // cancels the animation halfway. The old engine had to make this instant for exactly that
+      // reason — every other press was killed two pixels from where it started.
       scrollToIndex(next, {
         align: !scrollPastEnd && next === messages.length - 1 ? 'end' : 'start',
+        behavior: 'smooth',
       });
     },
-    [anchors, viewport, virtualizer, scrollToIndex, messages.length, scrollPastEnd],
+    [anchors, scrollToIndex, messages.length, scrollPastEnd],
   );
 
   // Arrow keys move by message, not by line: a plain arrow steps the cursor to the adjacent message
-  // and Cmd/Ctrl + Arrow jumps to the first or last. Stepping the index rather than letting the
-  // container scroll by a notch is what makes the position readable — a few pixels into a tall
-  // message leaves every index-based readout on the message the reader has already left.
+  // and Cmd/Ctrl + Arrow jumps to the first or last.
   //
   // Bound imperatively to the viewport element (rather than as a React prop) because
   // `ScrollArea.Viewport` narrows its props to the slottable set, and wrapping it in a focusable div
-  // would insert a box into the height chain. `scrollToIndex` decides whether the jump animates.
+  // would insert a box into the height chain.
   useEffect(() => {
     if (!viewport) {
       return;
@@ -829,7 +484,7 @@ const MessageListRoot = ({
       event.preventDefault();
       if (event.metaKey || event.ctrlKey) {
         const target = delta > 0 ? messages.length - 1 : 0;
-        scrollToIndex(target, { align: target === messages.length - 1 ? 'end' : 'start', behavior: 'smooth' });
+        scrollToIndex(target, { align: target === messages.length - 1 ? 'end' : 'start' });
         return;
       }
 
@@ -895,9 +550,12 @@ const MessageListRoot = ({
           shifts={shifts}
           breaks={breaks}
           resetShifts={resetShifts}
-          virtualizer={virtualizer}
-          measureItems={measureItems}
-          trailing={trailing}
+          windowRef={windowRef}
+          offset={offset}
+          sizerExtent={sizerExtent}
+          first={first}
+          last={last}
+          getId={getId}
           setViewport={setViewport}
           onSelect={onSelect}
           scrollToIndex={scrollToIndex}
@@ -925,8 +583,8 @@ type MessageListViewportExtra = Pick<
   /**
    * Gutter size for the three-track layout each row is laid out on (`gutter | content | gutter`).
    *
-   * The tracks live inside the row rather than on the container, because rows are placed at the
-   * offsets the virtualizer computes and cannot be items of an outer grid. Chrome that wants the
+   * The tracks live inside the row rather than on the container, because the rows are laid out by
+   * the browser inside one placed parent and cannot be items of an outer grid. Chrome that wants the
    * gutters — a fork control, an avatar, a resolve toggle — opts in with `Column.Row`; everything
    * else sits in the centre track.
    */
@@ -937,11 +595,11 @@ type MessageListViewportExtra = Pick<
  * The scroll container and the mounted window of rows.
  *
  * Scrolling belongs to `ScrollArea`, which owns the overlay thumbs and the padding tokens; the
- * virtualizer needs only the element being scrolled, which `ScrollArea.Viewport` publishes.
+ * placement needs only the element being scrolled, which `ScrollArea.Viewport` publishes.
  */
 const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
   ({ autoHide, centered, native, padding, scrollbars, thin, gutter, ...props }, forwardedRef) => {
-    const { messages, Chrome, selectedIds, virtualizer, measureItems, trailing, setViewport, onSelect } =
+    const { messages, Chrome, selectedIds, windowRef, offset, sizerExtent, first, last, getId, setViewport, onSelect } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
 
     const handleViewportRef = useCallback(
@@ -951,6 +609,34 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
       },
       [setViewport, forwardedRef],
     );
+
+    const rows = [];
+    for (let index = first; index <= last; index++) {
+      const message = messages[index];
+      if (!message) {
+        continue;
+      }
+
+      rows.push(
+        // Unpositioned, and that is the point. A row that changes extent reflows the ones after it,
+        // in the browser, in the same frame; placing each row ourselves meant re-placing every row
+        // below it on every frame of the change — 177 re-placements for one disclosure opening (§6).
+        <div key={message.id} data-index={index} data-object-id={message.id}>
+          <Column.Root gutter={gutter}>
+            <Column.Center>
+              <Chrome
+                message={message}
+                index={index}
+                selected={selectedIds?.has(message.id) ?? false}
+                onSelect={onSelect}
+              >
+                <MessageListItem message={message} />
+              </Chrome>
+            </Column.Center>
+          </Column.Root>
+        </div>,
+      );
+    }
 
     return (
       <ScrollArea.Root
@@ -963,36 +649,22 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         scrollbars={scrollbars}
         thin={thin}
       >
-        <ScrollArea.Viewport data-testid='feed.viewport' ref={handleViewportRef}>
-          <div className='relative w-full' style={{ height: virtualizer.getTotalSize() + trailing }}>
-            <MessageRows measure={measureItems}>
-              {virtualizer.getVirtualItems().map((item) => {
-                // The virtualizer can still report items for the previous count on the render after
-                // a feed truncates — a rewind, a filter, a space switch — and the row would throw on
-                // a message that is no longer there.
-                const message = messages[item.index];
-                if (!message) {
-                  return null;
-                }
-
-                return (
-                  <MessageListRow key={item.key} index={item.index} start={item.start} message={message}>
-                    <Column.Root gutter={gutter}>
-                      <Column.Center>
-                        <Chrome
-                          message={message}
-                          index={item.index}
-                          selected={selectedIds?.has(message.id) ?? false}
-                          onSelect={onSelect}
-                        >
-                          <MessageListItem message={message} />
-                        </Chrome>
-                      </Column.Center>
-                    </Column.Root>
-                  </MessageListRow>
-                );
-              })}
-            </MessageRows>
+        <ScrollArea.Viewport
+          data-testid='feed.viewport'
+          // Off deliberately: the browser adjusting the scroll as well would be a second party
+          // anchoring the same thing, and the defect this design exists to remove is exactly that.
+          style={{ position: 'relative', overflowAnchor: 'none' }}
+          ref={handleViewportRef}
+        >
+          {/* Holds no rows: it exists only to give the thumb something to measure. */}
+          <div style={{ height: sizerExtent }} data-testid='feed.sizer' />
+          <div
+            ref={windowRef}
+            className='absolute top-0 left-0 flex flex-col w-full'
+            style={{ transform: `translateY(${offset}px)` }}
+            data-testid='feed.window'
+          >
+            {rows}
           </div>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
@@ -1001,90 +673,6 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
 );
 
 MessageListViewport.displayName = MESSAGE_LIST_VIEWPORT_NAME;
-
-/**
- * One placed row.
- *
- * It registers its element rather than measuring it, and that is the whole point of this component.
- * React attaches refs before it runs any layout effect, so a row measured from its ref is measured
- * before its item has built anything — an editor is constructed in the item's own layout effect —
- * and the virtualizer records the height of an empty box. The real height arrives a frame later as a
- * correction, which moves every row below it: a jump per row, worst on first load and when scrolling
- * up, where rows mount continuously.
- *
- * Measuring in this component's own layout effect fixes that but costs more than it looks. Layout
- * effects run child-first and sibling by sibling, so the commit alternates *write* — this row's
- * editor building its DOM — with *read*, and every read forces the whole document to lay out again.
- * A viewport of rows is then a viewport of forced layouts: ~15ms per row, against ~0.4ms to
- * construct the editor itself. `MessageRows` does all the reading instead, once, after every row has
- * finished writing.
- */
-const MessageListRow = ({
-  index,
-  start,
-  message,
-  children,
-}: PropsWithChildren<{
-  index: number;
-  start: number;
-  message: Message.Message;
-}>) => {
-  const register = useContext(MessageRowsContext);
-  const ref = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    register(index, ref.current);
-    return () => register(index, null);
-  }, [register, index]);
-
-  return (
-    <div
-      ref={ref}
-      data-index={index}
-      data-object-id={message.id}
-      className='absolute inset-x-0 top-0'
-      style={{ transform: `translateY(${start}px)` }}
-    >
-      {children}
-    </div>
-  );
-};
-
-type RegisterRow = (index: number, element: HTMLElement | null) => void;
-
-const MessageRowsContext = createReactContext<RegisterRow>(() => {});
-
-/**
- * The rows of one commit, measured together.
- *
- * A parent's layout effect runs after all of its children's, so by the time this one fires every row
- * has built its content and nothing left to run writes to the DOM. Reading them here turns a forced
- * layout per row into one for the whole commit, which is most of what mounting a viewport costs.
- *
- * The effect deliberately declares no dependencies: rows register and unregister during the same
- * commit this reads, so what has to be re-measured is exactly what changed in it.
- */
-const MessageRows = ({
-  measure,
-  children,
-}: PropsWithChildren<{ measure: (elements: Iterable<HTMLElement>) => void }>) => {
-  const elements = useRef(new Map<number, HTMLElement>()).current;
-  const register = useCallback<RegisterRow>(
-    (index, element) => {
-      if (element) {
-        elements.set(index, element);
-      } else {
-        elements.delete(index);
-      }
-    },
-    [elements],
-  );
-
-  useLayoutEffect(() => {
-    measure(elements.values());
-  });
-
-  return <MessageRowsContext.Provider value={register}>{children}</MessageRowsContext.Provider>;
-};
 
 //
 // Item

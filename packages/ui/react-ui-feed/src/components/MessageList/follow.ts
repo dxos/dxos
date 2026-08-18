@@ -78,6 +78,12 @@ export const stepVelocity = ({
 };
 
 /**
+ * **Not wired into `MessageList` at present.** The placement engine follows the tail by holding an
+ * intent and correcting the offset, which arrives instantly; this class is the animated travel the
+ * old engine used, kept with its tests because the glide is worth having back and nothing about it
+ * was wrong. Wiring it is a decision about feel, not a repair.
+ */
+/**
  * Keeps an element scrolled to its bottom while its content grows.
  *
  * Native `scrollTo({ behavior: 'smooth' })` restarts its easing on every call, so a target that

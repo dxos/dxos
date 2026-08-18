@@ -237,11 +237,12 @@ export const PlainPastEnd: Story = {
 
 export const UniformPastEnd: Story = {
   args: { scenario: 'uniform', count: 500, scrollPastEnd: true },
-  // The one rung that still moves, and the only one: twenty rows travel on the frame the layout is
-  // rebuilt. It is the combination that does it — `Uniform` rebuilds and holds still, `PlainPastEnd`
-  // reserves space and never rebuilds (its estimator is per-row, which skips the re-base). Pinned at
-  // what is measured so a regression past it fails; the diagnosis is in `chat-ui/TASKS.md`.
-  play: playFill('uniform past-end', 18),
+  // This was the one rung that moved: eighteen rows travelled on the frame the layout was rebuilt,
+  // pinned at what was measured so a regression past it would fail. There is no rebuild any more —
+  // it existed because the old engine could only revise the rows below the last one it had measured,
+  // so the whole document had to be re-based from the top to correct an opening guess, and that
+  // moved every offset at once. Zero now, and held there.
+  play: playFill('uniform past-end'),
 };
 
 export const UniformShort: Story = {

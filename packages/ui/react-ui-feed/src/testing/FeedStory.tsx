@@ -113,11 +113,8 @@ export type FeedStoryProps = {
   wordsPerChunk?: number;
   chunkDelay?: number;
   estimateSize?: number;
-  /** Reserve space below the last row so any message can be brought to the top. Known unstable. */
+  /** Reserve space below the last row so any message can be brought to the top. */
   scrollPastEnd?: boolean;
-  maxSpeed?: number;
-  acceleration?: number;
-  deceleration?: number;
 };
 
 /**
@@ -136,9 +133,6 @@ export const FeedStory = ({
   wordsPerChunk = 4,
   chunkDelay = 120,
   estimateSize,
-  maxSpeed,
-  acceleration,
-  deceleration,
 }: FeedStoryProps) => {
   const definition = useMemo(() => (scenario ? createScenario({ scenario, count }) : undefined), [scenario, count]);
   const [messages, setMessages] = useState<Message.Message[]>(() => definition?.messages ?? createMessages({ count }));
@@ -248,8 +242,6 @@ export const FeedStory = ({
       estimateSize={estimateSize ?? definition?.estimateSize}
       stickyBottom={definition?.stickyBottom ?? true}
       scrollPastEnd={scrollPastEnd}
-      stickyBehavior='smooth'
-      follow={{ maxSpeed, acceleration, deceleration }}
     >
       <Panel.Root>
         <Panel.Toolbar asChild>
