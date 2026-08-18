@@ -20,6 +20,7 @@ import { ProjectOperation } from '#types';
 
 import { ARTIFACT_SKILL_KEYS } from '../skills/keys';
 
+// TODO(wittjosiah): What motivates this being distinct from companion chats?
 const handler: Operation.WithHandler<typeof ProjectOperation.CreateChat> = ProjectOperation.CreateChat.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ project }) {
