@@ -3,10 +3,18 @@ name: Cache benchmark
 # Measures the moon remote cache on a real runner. Manual only: it seeds each arm with a cold build
 # and is far too expensive to run on push.
 #
-# It exists because the question "is this cache fast enough" keeps coming back, and answering it
-# from a dev machine does not transfer — absolute times differ and the sandbox cannot even reach
-# port 9092. Method and the prior numbers: `.agents/projects/ci/REPORT.md`.
+# It exists because "is this cache fast enough" keeps coming back, and answering it from a dev
+# machine does not transfer — absolute times differ and the agent sandbox cannot even reach port
+# 9092. Method and the prior numbers: `.agents/projects/ci/REPORT.md`.
+#
+# The `cache-bench` label is how to run it from a branch: `workflow_dispatch` is only offered for
+# workflows that already exist on the default branch, so the PR introducing a benchmark cannot
+# dispatch it. `labeled` rather than `synchronize` keeps an hour-long job off every push to a
+# labelled PR — remove and re-add the label to re-run.
 on:
+  pull_request:
+    types: [labeled]
+
   workflow_dispatch:
     inputs:
       arms:
@@ -35,7 +43,7 @@ env:
   # Named by `remote.auth.token` in the Depot arm's config, which takes an environment variable name.
   DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
 
-# Keyed on the run id so repeated dispatches of one ref run in parallel: comparing caches needs
+# Keyed on the run id so repeated runs of one ref proceed in parallel: comparing caches needs
 # independent samples of the same commit.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.run_id }}
@@ -43,8 +51,9 @@ concurrency:
 
 jobs:
   bench:
-    # The same runner and image as `check`, so the numbers sit next to the ones in REPORT.md rather
-    # than needing their own baseline.
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'cache-bench'
+    # The same runner and image as `check`, so these numbers sit next to the ones already in
+    # REPORT.md rather than needing their own baseline.
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -52,19 +61,24 @@ jobs:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 120
+    # A label event carries no inputs, so each knob repeats its dispatch default here.
+    env:
+      # `ARMS` is the name ci-bench.sh reads.
+      ARMS: ${{ inputs.arms || 'selfhosted depot' }}
+      BENCH_REPS: ${{ inputs.reps || '3' }}
+      BENCH_TARGET: ${{ inputs.target || 'build' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
       # The Depot arm degrades to an uncached build on a missing token, green and silent — the same
       # failure mode the whole cache project is about. Fail before spending an hour measuring it.
       - name: Check the requested arms have credentials
-        env:
-          ARMS: ${{ inputs.arms }}
         run: |
           if [ "$ARMS" != "${ARMS#*depot}" ] && [ -z "$DEPOT_TOKEN" ]; then
             echo "::error::The depot arm needs the DEPOT_TOKEN repository secret. It is unset or empty."
@@ -75,19 +89,16 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Benchmark
-        env:
-          ARMS: ${{ inputs.arms }}
         run: |
           set -o pipefail
-          ./tools/moon-cache/bench/ci-bench.sh '${{ inputs.reps }}' '${{ inputs.target }}' 2>&1 \
-            | tee bench.out
+          ./tools/moon-cache/bench/ci-bench.sh "$BENCH_REPS" "$BENCH_TARGET" 2>&1 | tee bench.out
 
       # The table is the deliverable, so put it where the run page shows it rather than only in a log.
       - name: Summarise
         if: always()
         run: |
           {
-            echo '### `:${{ inputs.target }}` — ${{ inputs.arms }}, ${{ inputs.reps }} reps'
+            echo "### \`:$BENCH_TARGET\` — $ARMS, $BENCH_REPS reps"
             echo
             echo '```text'
             sed -n '/^== RTT/,$p' bench.out 2>/dev/null || echo 'no output'
