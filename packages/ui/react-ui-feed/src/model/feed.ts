@@ -5,7 +5,7 @@
 import { ListModel } from '@dxos/react-ui-virtual';
 import { type Message } from '@dxos/types';
 
-import { type MessageRenderer, type SearchHit, defaultRenderer, messageText, searchFeed } from './feed-model';
+import { type MessageRenderer, type SearchHit, defaultRenderer, isPrompt, messageText, searchFeed } from './feed-model';
 
 /**
  * One position navigation can land on (SPEC: Stop).
@@ -93,12 +93,7 @@ export class FeedModel extends ListModel<Message.Message> {
    * knows when it changed — callers that want reactivity derive from `rowsAtom`.
    */
   stops(): Stop[] {
-    const predicate =
-      this.#stops === 'message'
-        ? () => true
-        : this.#stops === 'prompt'
-          ? (message: Message.Message) => message.sender.role === 'user'
-          : this.#stops;
+    const predicate = this.#stops === 'message' ? () => true : this.#stops === 'prompt' ? isPrompt : this.#stops;
 
     const stops: Stop[] = [];
     this.messages.forEach((message, index) => {

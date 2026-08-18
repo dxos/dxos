@@ -421,7 +421,7 @@ const ChatThread = ({ classNames, viewType, debug: debugProp, onViewUsage }: Cha
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}
       >
-        <NaturalChatThread.Viewport classNames={['grow min-h-0', classNames]} padding />
+        <NaturalChatThread.Viewport classNames={['bordergrow min-h-0', classNames]} padding />
       </NaturalChatThread.Root>
 
       <Toast.Root

@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { type MessageChromeProps } from '@dxos/react-ui-feed';
+import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -130,7 +130,7 @@ const Row = ({ children, classNames }: PropsWithChildren<{ classNames?: string }
  */
 export const MessageChrome = ({ message, selected, children }: MessageChromeProps) => {
   const { streaming } = useMessageChromeContext(MESSAGE_CHROME_NAME);
-  const prompt = message.sender.role === 'user';
+  const prompt = isPrompt(message);
 
   return (
     <Row classNames={mx(selected && 'bg-hover-surface')}>

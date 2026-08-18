@@ -13,15 +13,7 @@ import React, {
   useState,
 } from 'react';
 
-import { setRef } from '@dxos/react-ui';
-import {
-  type FeedModel,
-  type FeedNavigation,
-  MessageList,
-  type MessageRange,
-  type ScrollToOptions,
-  useMessageList,
-} from '@dxos/react-ui-feed';
+import { type FeedModel, MessageList, type MessageListController, type MessageRange } from '@dxos/react-ui-feed';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { assistantRegistry } from '../../registry';
@@ -48,29 +40,10 @@ const [ChatThreadProvider, useChatThreadContext] = createContext<ChatThreadConte
 
 /**
  * The imperative handle a host drives the thread through — the successor of the old
- * `MarkdownStreamController`, shrunk to what a message-indexed feed still needs: everything else
- * (visible range, spans, widget state) is either context or the model's own business.
+ * `MarkdownStreamController`, and simply the feed's own controller: everything else (visible
+ * range, spans, widget state) is either context or the model's business.
  */
-export type ChatThreadController = {
-  model: FeedModel;
-  scrollToBottom: (options?: ScrollToOptions) => void;
-  scrollToIndex: (index: number, options?: ScrollToOptions) => void;
-  /** The one seam every navigation driver shares: toolbar, arrows, rails. */
-  navigation: FeedNavigation;
-};
-
-/** Bridges the feed's context out to the host's ref; renders nothing. */
-const ControllerBridge = ({ controllerRef }: { controllerRef: Ref<ChatThreadController> }) => {
-  const { model, scrollToBottom, scrollToIndex, navigation } = useMessageList('ChatThread.Controller');
-  useEffect(() => {
-    setRef(controllerRef, { model, scrollToBottom, scrollToIndex, navigation });
-    return () => {
-      setRef(controllerRef, null);
-    };
-  }, [controllerRef, model, scrollToBottom, scrollToIndex, navigation]);
-
-  return null;
-};
+export type ChatThreadController = MessageListController;
 
 //
 // Root
@@ -136,8 +109,8 @@ const ChatThreadRoot = ({
           stickyBottom
           scrollPastEnd
           onRangeChange={onRangeChange}
+          controllerRef={controllerRef}
         >
-          {controllerRef && <ControllerBridge controllerRef={controllerRef} />}
           {children}
         </MessageList.Root>
       </MessageChromeProvider>

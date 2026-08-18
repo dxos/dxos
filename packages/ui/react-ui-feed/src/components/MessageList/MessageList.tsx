@@ -6,6 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentType,
   type PropsWithChildren,
+  type Ref,
   useCallback,
   useEffect,
   useMemo,
@@ -55,6 +56,19 @@ export type MessageChromeProps = PropsWithChildren<{
 }>;
 
 export type MessageRange = { startIndex: number; endIndex: number };
+
+/**
+ * The imperative handle a host outside the feed's context drives the list through — the successor
+ * of a document controller, shrunk to what a message-indexed feed needs. Everything else (range,
+ * census, debug) is context, read via {@link useMessageList}.
+ */
+export type MessageListController = {
+  model: FeedModel;
+  scrollToBottom: (options?: ScrollToOptions) => void;
+  scrollToIndex: (index: number, options?: ScrollToOptions) => void;
+  /** The one seam every navigation driver shares: toolbar, arrows, rails (SPEC F-3.2). */
+  navigation: FeedNavigation;
+};
 
 type MessageListContextValue = {
   /** The feed's model: messages, identity, stops, streaming, iteration. The one source (SPEC F-7). */
@@ -189,6 +203,8 @@ export type MessageListRootProps = PropsWithChildren<{
   scrollPastEnd?: boolean;
   overscan?: number;
   onRangeChange?: (range: MessageRange) => void;
+  /** Published once the list is wired; for hosts composing chrome outside the feed's context. */
+  controllerRef?: Ref<MessageListController>;
 }>;
 
 const DefaultChrome = ({ children }: MessageChromeProps) => <>{children}</>;
@@ -214,6 +230,7 @@ const MessageListRoot = ({
   scrollPastEnd = false,
   overscan = 8,
   onRangeChange,
+  controllerRef,
 }: MessageListRootProps) => {
   // Owned here so it outlives every row: a widget's state must survive its row being destroyed.
   const widgetStore = useMemo(createWidgetStateStore, []);
@@ -485,6 +502,14 @@ const MessageListRoot = ({
 
   // The feed has one selection even though it has many editors; the group is what enforces that.
   const selectionGroup = useMemo(createSelectionGroup, []);
+
+  // The parts are stable identities, so this republishes only when the model itself is replaced.
+  useEffect(() => {
+    setRef(controllerRef, { model, scrollToBottom, scrollToIndex, navigation });
+    return () => {
+      setRef(controllerRef, null);
+    };
+  }, [controllerRef, model, scrollToBottom, scrollToIndex, navigation]);
 
   return (
     <SelectionGroupContext.Provider value={selectionGroup}>
