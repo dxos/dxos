@@ -174,10 +174,10 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@typescript/typescript6": "catalog:",
     "@typescript/vfs": "catalog:",
     "effect": "catalog:",
-    "esbuild-wasm": "catalog:",
-    "typescript": "catalog:"
+    "esbuild-wasm": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-client": "workspace:*",

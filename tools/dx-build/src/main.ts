@@ -4,13 +4,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import ts from '@typescript/typescript6';
 import { spawnSync } from 'node:child_process';
 import { readdir, rm, stat } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-import ts from 'typescript';
 
 const VERBOSE = false,
-  USE_TSGO = process.env.DX_USE_TSC !== '1';
+  // Escape hatch back to the classic JS compiler when the native one misbehaves.
+  USE_TSC6 = process.env.DX_USE_TSC6 === '1';
 
 /** Matches TypeScript diagnostic file paths, including `../` segments and multi-part extensions. */
 const DIAGNOSTIC_FILE = String.raw`[\w./-]+\.[A-Za-z0-9]+(?:\.[A-Za-z0-9]+)*`;
@@ -108,7 +109,7 @@ const main = async () => {
   VERBOSE && console.log('Clean complete.');
 
   // Run the compiler after cleaning.
-  const compiler = USE_TSGO ? 'tsgo' : 'tsc';
+  const compiler = USE_TSC6 ? 'tsc6' : 'tsc';
   VERBOSE && console.log(`Running ${compiler}...`);
   const tsc = spawnSync(compiler, [], { encoding: 'utf-8' });
 
