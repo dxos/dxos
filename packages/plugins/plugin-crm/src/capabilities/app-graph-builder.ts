@@ -14,11 +14,14 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Ref, Registry, Type } from '@dxos/echo';
+import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
 import { Organization, Person } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
+import { CRM_SKILL_KEY } from '#skills';
 import { CrmOperation } from '#types';
 
 /** A node whose data is a researchable CRM object, tagged so the action can pick the right operation. */
@@ -59,20 +62,12 @@ export default Capability.makeModule(
         id: 'crmTypes',
         url: { key: 'crm', kind: 'item', path: [GraphPath.GroupSegments.crm] },
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.crm),
-        connector: (space, get) => {
-          // Index the registry once per rebuild so each type resolves its registered schema in O(1).
-          const registered = new Map(
-            space.db.graph.registry
-              .list()
-              .filter(Type.isType)
-              .map((entry) => [Type.getTypename(entry), entry] as const),
-          );
-          return Effect.succeed(
-            CRM_TYPES.map((type) => createTypeNode({ type, space, get, registered })).filter(
+        connector: (space, get) =>
+          Effect.succeed(
+            CRM_TYPES.map((type) => createTypeNode({ type, space, get })).filter(
               (node): node is NonNullable<typeof node> => node !== null,
             ),
-          );
-        },
+          ),
       }),
 
       // Research on the object's own node, so any surface showing a Person/Organization (the record
@@ -115,10 +110,30 @@ export default Capability.makeModule(
                       { spaceId: db.spaceId },
                     );
                   }
-                  // Set-scoped rather than subject-scoped (it walks everything missing an image), so it
-                  // is bounded by `limit` instead of targeting this object. A subject-scoped variant
-                  // would be the cleaner call here — see TASKS.md.
-                  yield* Operation.schedule(CrmOperation.EnrichImages, { limit: 8 }, { spaceId: db.spaceId });
+                  // The operations above only render the skeleton from what ECHO already knows —
+                  // every section beyond Details is emitted empty on purpose. Filling them is the
+                  // agent's job, which the CRM skill already instructs ("Enrich Profile documents in
+                  // place…"), so the action runs both halves: skeleton first (instant, no model), then
+                  // the agent against it.
+                  //
+                  // The subject rides along as a bound context object rather than a persisted
+                  // `Instructions`, and `background` keeps the run in the process monitor instead of
+                  // opening a chat. Images are the agent's too, via the skill's `attach-image` tool —
+                  // `EnrichImages` is set-scoped (it walks everything missing an image) and would fire
+                  // at objects the user never asked about.
+                  yield* Operation.invoke(RoutineOperation.RunPromptInNewChat, {
+                    db,
+                    objects: [matched.subject],
+                    skills: [CRM_SKILL_KEY],
+                    background: true,
+                    instructions: trim`
+                      Research this ${matched.kind} and fill in its Profile document, which has just
+                      been created with an empty Overview, Key Links, Notes and Sources.
+                      Extend each section in place, record every contributing URL under Sources, and
+                      attach an avatar or logo if research surfaces a good https candidate.
+                      Do not invent facts you cannot source.
+                    `,
+                  });
                 }),
               properties: {
                 label: ['research.label', { ns: meta.profile.key }],
@@ -142,12 +157,10 @@ const createTypeNode = ({
   type,
   space,
   get,
-  registered,
 }: {
   type: Type.AnyEntity;
   space: Space;
   get: Atom.AtomContext;
-  registered: ReadonlyMap<string, Type.AnyEntity>;
 }): Node.NodeArg<Type.AnyEntity> | null => {
   const typename = Type.getTypename(type);
   const objects = get(space.db.query(Filter.type(Type.getURI(type))).atom);
@@ -155,8 +168,9 @@ const createTypeNode = ({
     return null;
   }
 
-  // Prefer the registry copy of the schema: raw schema classes don't carry annotations reliably.
-  const entity = registered.get(typename) ?? type;
+  // Raw schema classes don't carry annotations reliably, and schemas register lazily, so read
+  // the registry copy through the atom.
+  const entity = get(Registry.typeAtom(space.db.graph.registry, typename)) ?? type;
   const annotation = Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(entity)));
 
   return Node.make({

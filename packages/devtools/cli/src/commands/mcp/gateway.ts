@@ -19,11 +19,11 @@ import { Obj, Type } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Gateway } from '@dxos/mcp-server';
+import * as CodeProjectSkill from '@dxos/plugin-projects/CodeProjectSkill';
 // Narrow subpath imports: these plugins declare React surfaces, and a bundler follows the dynamic
 // import behind a lazy capability, so activating them would pull React into the CLI binary.
-import { ProjectOperationHandlerSet } from '@dxos/plugin-projects/operations';
-import { CodeProjectSkillDefinition } from '@dxos/plugin-projects/skills';
-import { TasksOperationHandlerSet } from '@dxos/plugin-tasks/operations';
+import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
+import * as TasksOperationHandlerSet from '@dxos/plugin-tasks/TasksOperationHandlerSet';
 
 import { chatLayer, operationHandlers, types } from '../../util';
 
@@ -64,14 +64,14 @@ export const makeGateway = Effect.fn(function* () {
   const handlerSet = OperationHandlerSet.merge(
     ...capabilities.getAll(Capabilities.OperationHandler),
     operationHandlers,
-    ProjectOperationHandlerSet,
-    TasksOperationHandlerSet,
+    ProjectOperationHandlerSet.handlers,
+    TasksOperationHandlerSet.handlers,
   );
   // An operation reaching the registry from both an activated plugin and the CLI's curated chat
   // list must project once; a second registration is a tool-name collision, which the projection
   // raises rather than resolving silently.
   const handlers = dedupeOperations(yield* handlerSet.handlers);
-  const skills = dedupeByKey([...capabilities.getAll(AppCapabilities.SkillDefinition), CodeProjectSkillDefinition]);
+  const skills = dedupeByKey([...capabilities.getAll(AppCapabilities.SkillDefinition), CodeProjectSkill]);
 
   // Same visibility rule as EDGE: the HALO space and the settings space hold identity and app
   // config, never user data, so neither surfaces as a space a tool may target.

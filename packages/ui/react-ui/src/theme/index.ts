@@ -19,7 +19,7 @@ export * from '../components/Input/Input.theme';
 export * from '../components/Link/Link.theme';
 export * from '../components/Main/Main.theme';
 export * from '../components/Menu/Menu.theme';
-export * from '../components/Message/Message.theme';
+export * from '../components/Banner/Banner.theme';
 export * from '../components/Popover/Popover.theme';
 export * from '../components/ScrollArea/ScrollArea.theme';
 export * from '../components/Select/Select.theme';

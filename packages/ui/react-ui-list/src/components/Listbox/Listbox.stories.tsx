@@ -10,7 +10,7 @@ import { Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { useListDisclosure } from '../../aspects';
+import { useListDisclosure } from '../../hooks';
 import { Listbox } from './Listbox';
 
 random.seed(1);

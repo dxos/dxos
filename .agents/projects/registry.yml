@@ -77,6 +77,16 @@ projects:
     design: .agents/projects/agent-directives/DESIGN.md
     prs: [12453, 12463]
     resume: 'PR #12453 MERGED 2026-08-04; PR #12463 OPEN — https://github.com/dxos/dxos/pull/12463. Phases 1-3 essentially DONE. The mode toggle is now the `/mode` SLASH COMMAND, not a sentinel: UserPromptSubmit carries the RAW typed text and fires BEFORE a command expands, so hooks/mode.sh greps `/mode <MODE>` there and the write stays deterministic — the planned UserPromptExpansion hook was never needed (that event is for BLOCKING an expansion, not beating it). commands/mode.md is inert ergonomics. `$mode` REMOVED; anchoring to the FIRST LINE retires the prose-flips-the-mode bug class entirely. `$project` WAS CONVERTED THE SAME WAY (it fired on the very message asking to convert it): `/project VERB [ARGS]` first-line only, legacy $track/track:/$hydrate/$checkpoint/$resume/$rehydrate all REMOVED, plus a new `tasks` verb and a bare-`/project` status report. Both hooks take head -1 before matching (grep -E anchors ^ per line) and require a trailing boundary after the value (`/mode tersex` used to prefix-match). Bare `/mode` = re-orientation report (worktree+branch, consulted instruction files, current mode) with NO numbered options — a numeric reply is the one form the hook cannot catch. REVERSED from #12453: the worktree/files-read line is FIRST-REPLY ONLY again (user, 2026-08-04) — per-turn injection is for rules governing every reply; a once-per-session rule belongs on SessionStart, where session-context.sh already delivers it. Phase 3 closed: mode.sh split kept + documented (the command gave the backend a second caller), task-planning SKILL.md slash-command claim fixed, branch-beacon.sh emits systemMessage + additionalContext (lives in ~/.claude, NOT in the PR — will not travel to another machine). The task-planning SKILL.md was thinned 215->186 lines: the per-verb enumeration lives ONLY in the hook directives now, and the skill keeps what applies when nobody types a command (TASKS.md convention, registry schema, handoff steps). REMAINING: (a) close the .agent/ entry at .agents/projects/ai-testing-strategy/TASKS.md:411 when this lands. CLOSED BY DECISION: updating ~/.claude/CLAUDE.md (user chose to skip 2026-08-04 — it has no stale markers, and the hook already covers this repo).'
+  - name: claude-plugins
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-05
+    summary: Extract /project + the task-planning skill into a distributable Claude Code plugin (`dx`) usable in any repo; phase 2 swaps the file registry for the DXOS Composer MCP server.
+    tasks: .agents/projects/claude-plugins/TASKS.md
+    design: .agents/projects/claude-plugins/DESIGN.md
+    prs: [12618, 12620, 12622]
+    resume: 'Phase 1 BUILT and dogfooded in-repo. Plugin at tools/claude/plugins/dxos-project (namespace `dx` -> /dx:project; bare /project also matches), marketplace manifest at .claude-plugin/marketplace.json (name `dxos`), enabled here via extraKnownMarketplaces + enabledPlugins. The repo-local .claude/hooks/track.sh and .claude/commands/project.md are DELETED and the skill MOVED out of .agents/skills — this repo now consumes the plugin. KEY DESIGN: every directive states the OPERATION only and resolve_backend appends a BACKEND: line stating the MECHANISM, so phase 2 (Composer MCP) is a one-function swap rather than a rewrite of seven directives plus the skill. Verified by feeding JSON to the hook: all verbs dispatch, both invocation forms fire, prose/`/projects`/second-line are inert, and a scratch `git init` repo with no .agents/ gets the missing-registry branch plus a working DX_PROJECT_REGISTRY override. NOT yet verified: the live plugin path (marketplace resolution, ${CLAUDE_PLUGIN_ROOT}, /dx:project autocomplete) needs a session restart — that is the next action. Then decide whether /mode joins the plugin.'
   - name: lenses
     status: active
     user: josiah
@@ -159,8 +169,45 @@ projects:
     summary: The mailbox pipeline and the surface over it — sync and scan, contributed feed processors with per-processor cursors, and the inbox UI they feed (folders, message actions, contact affordances, summarization).
     tasks: packages/plugins/plugin-inbox/docs/TASKS.md
     design: packages/plugins/plugin-inbox/docs/PIPELINE.md
-    prs: [12555]
-    resume: 'PR #12555 IN THE MERGE QUEUE (auto-merge, squash) — 84 commits spanning Phases 0-5. SHIPPED THIS SESSION beyond the earlier phases: the processor topology (D1-D5). ScanMailbox no longer enumerates its passes — they arrive as InboxCapabilities.MailboxProcessor contributions ordered by declared `after` edges (operations/topology.ts, pure and ECHO-free); plugin-inbox contributes its own four through the same seam so there is no privileged built-in path. A failure now blocks only its DESCENDANTS (Topology.descendants), not everything later in the list. A missing service is a SKIP not a failure (operations/precondition.ts, uniform over the tag). AnalyzeMailbox and GenerateReply MOVED to plugin-brain, changing two released DXNs (accepted, pre-1.0) — with them plugin-inbox no longer depends on @dxos/pipeline-rdf at all; GenerateReply could not move wholesale (two inbox containers invoke it) so it goes through a new InboxCapabilities.ReplyGenerator typed against a shared ReplyGeneration contract, and the AI-reply affordance is now ABSENT rather than broken when nothing is contributed. The analysis cursor is tagged (ANALYZE_CURSOR_KEY_ID) instead of identified by having NO foreign key, with in-place adoption so existing mailboxes keep their position. Enrich renamed: mailbox action -> Scan, CRM record/sender -> Research, EnrichImages label -> Find images. KEY GOTCHAS: oxfmt is NOT idempotent on a backtick span wrapped inside a list item (bit twice — never let inline code wrap); changesets must be minor not major pre-1.0 (major would cut 1.0.0 across the fixed group); Capability.Service resolves through the ServiceResolver NOT the caller Effect context, so tests must use AssistantTestLayer extraServices; in-repo @dxos deps take workspace:* never --save-catalog (a catalog pin silently resolved to the PUBLISHED package and broke types). BLOCKER unchanged but RE-DIAGNOSED: storybook startup times out for a COLD BROWSER PROFILE, not the worktree — :9009 IS this worktree and the same stories render for the user there while timing out for an automation browser against the same server. So the 27-step TESTING.md plan needs the USER to walk it in a warm browser; nothing in 84 commits has been seen running. TWO ECHO CHIPS SPAWNED and awaiting Dima: computed group keys (fixes threadless messages being truncated to 4 by the aggregate items limit) and annotation-constrained refs (Ref.Ref cannot be constrained by annotation, which D6 needs for boundary validation). DECIDED: threadId truncation -> ECHO computed group key; projects trio -> defer into D6. D6 itself has NO confirmed second consumer — eight types own a feed but only Mailbox has a cursored consumer, and the projects trio reads mailbox.feed so it needs fan-out not generalization. FeedAnnotation already exists and three consumers already discover feed owners with it, so D6 is the second half of a started pattern. NEXT unblocked work: Phase 4 summarization, useBlobUrl coverage. Design in packages/plugins/plugin-inbox/docs/PIPELINE.md; manual plan split out to docs/TESTING.md.'
+    prs: [12555, 12574, 12575, 12577, 12605, 12612, 12613, 12621]
+    resume: >-
+      #12555, #12574, #12575, #12577, #12605, #12612 and #12613 MERGED. #12621 (the review follow-up) MERGED
+      2026-08-16. No PR open; next piece starts clean. D6 IS BUILT, and it was not the thing it was named after.
+      Framed as "generalize off Mailbox" it had no second consumer and every costing said wait; the real defect was
+      that findOrCreateFeedCursor took ONE object playing two roles — the feed OWNER and the cursor SUBJECT.
+      isConsumerCursor matched on (feed, tag) and ignored spec.target, which was the ENTIRETY of the "cursor
+      identity" problem PIPELINE.md called blocking and specified a composite key for: the write side already stored
+      the target and the predicate was missing a conjunct. createInvocation became createInvocations so a processor
+      covers N subjects. First consumer: syncProjectTasks keeps a cursor per Project over a shared mailbox feed. No
+      Ref.byAnnotation (dropped for good in #12612), no generic feed host, no change to AnalyzeMailbox input. ALSO
+      CORRECTED: the projects trio was filed as needing fan-out — it ALREADY fans out via per-project routines; what
+      it lacked was cursors, and only one of the three should have one (the other two regenerate their document from
+      the whole feed, same reasoning as ExtractSubscriptions). SHIPPED BESIDES: AppSurface.CardIcon + CardIconSlot
+      so a type contributes its card depiction (type glyph stays the default at all hosts; Person alone contributes
+      photo-then-initials); AI_ACTION_ICON in ui-types + SystemIconButton.Ai for the AI-action glyph; provider ops
+      moved to plugin-google/plugin-jmap; Banner rename + Deferred; dev startup abort; trigger poll floor at one
+      minute with a minimum-gap cron check. NEW DOC: packages/plugins/plugin-inbox/docs/PIPELINE-AUDIT.md indexes
+      all 24 pipelines/operations against their tests and storybooks. Its headline finding drives the next work:
+      NOTHING drives Sync -> Analyze -> Research end to end. The cascade is tested with STUB operations while the
+      real passes are tested WITHOUT the cascade. FeedPipeline.stories was renamed MailboxAnalyze.stories — it
+      already is a workbench (cascade, every pass, brain+crm, projects trio, 4 seeds, live OPFS); the gap is the
+      JOIN with MailboxSync, which writes a feed live while MailboxAnalyze reads a seeded one. HARD-WON GOTCHAS: (1)
+      vite.config.ts lists build entrypoints EXPLICITLY — a new subpath without one builds fine and dies at runtime
+      module resolution in a consumer; this cost 11 CLI tests and a full CI cycle, and five more packages on main
+      have the same latent defect (plugin-atproto, plugin-library, plugin-brain ./containers, plugin-projects
+      ./templates, storybook-testing ./modules). (2) A CONTRIBUTION SEAM has no package boundary — searching "the
+      packages I am working in" missed plugin-crm's processor and plugin-jmap's twin test, four times over. Grep the
+      whole tree. (3) Counting by EXCLUSION rather than identity bit twice in one PR (results dropping subject;
+      skipped sweeping up cancelled). (4) A squash merge leaves the branch with a stale merge base — every touched
+      file conflicts and a naive merge shows the whole PR again; take main side and re-apply the delta. UNRESOLVED:
+      CodeRabbit Major on #12605 — moving provider operations changed released DXNs, so existing triggers bound to
+      old keys will not resolve (mechanism verified: PersistentOperation carries the key in object meta and
+      Operation.deserialize rebuilds from it). Consistent with the pre-1.0 trade accepted twice before, declared in
+      the changeset, but it is a real user-visible break awaiting a human call. ALSO UNRESOLVED: the mailbox
+      empty-panel flicker root cause (Deferred masks it); the CRM research agent has never been observed running;
+      NOTHING from this session has been seen in a running app. NEXT: #19 the Sync->Analyze join, or #11 dashed
+      placeholder icons (hypothesis recorded: deferred plugin activation means getSchema returns null so Obj.getIcon
+      yields undefined).
   - name: mailbox-research
     status: active
     user: burdon
@@ -171,16 +218,6 @@ projects:
     design: packages/stories/stories-brain/fixtures/REPORT.md
     prs: [12163, 12167, 12178, 12538, 12546, 12553, 12555]
     resume: 'UMBRELLA work-stream. The inbox SURFACE work lives in the CHILD ledger packages/plugins/plugin-inbox/docs/TASKS.md (registry project mailbox-pipeline) — that split is deliberate and its file says do not add surface work here; THIS ledger (packages/stories/stories-brain/docs/TASKS.md) keeps the model-ladder / FINDINGS / Topics research, 42 open items. CHILD STATUS 2026-08-14: PR #12555 is IN THE MERGE QUEUE (auto-merge, squash, 84 commits) carrying Phases 0-5 — virtual folders, archive, sender enrichment, and the processor topology. The Scan cascade no longer enumerates its passes: they are InboxCapabilities.MailboxProcessor contributions ordered by declared `after` edges, a failure blocks only its DESCENDANTS, and a missing service is a SKIP not a failure. AnalyzeMailbox and GenerateReply moved to plugin-brain (two released DXNs changed, accepted pre-1.0), which dropped @dxos/pipeline-rdf from plugin-inbox entirely. TWO ECHO CHIPS SPAWNED and gating the rest, both awaiting Dima: computed aggregate group keys (threadless messages are silently truncated to 4 today) and annotation-constrained refs (needed for D6 boundary validation). NOTHING in those 84 commits has been verified in a running app: the 27-step plan in packages/plugins/plugin-inbox/docs/TESTING.md needs a WARM browser — an automation browser starts with an empty OPFS and trips the fixed 30s budget at useApp.tsx:236, a cold-profile problem rather than a worktree or code one. Design for the pipeline architecture: packages/plugins/plugin-inbox/docs/PIPELINE.md.'
-  - name: task-planning-skill
-    status: active
-    user: burdon
-    host: burdon-mbp-2022
-    created: 2026-07-12
-    summary: Rename the $session sentinel/concept to $project and add a numbered pick-to-resume table.
-    tasks: .agents/skills/task-planning/TASKS.md
-    design: .agents/skills/task-planning/SKILL.md
-    prs: [12174]
-    resume: 'PR #12174 opened. Next: watch the Check workflow to green and address any review comments.'
   - name: inbox-test-suite
     status: active
     user: jdw
@@ -262,6 +299,16 @@ projects:
     design: .agents/projects/object-deduplication/DESIGN.md
     prs: [12417]
     resume: "PR #12417 MERGED 2026-08-01 (squash 0a4bbdeda4), all 20 CodeRabbit threads resolved, working tree clean. Phases 1-4 complete and live-verified in storybook (:9013 from this worktree; :9012 is also mine). SHIPPED: engine in @dxos/extractor (IdentitySpec/IdentityIndex/overlayIdentityIndex/findDuplicates/planMerge/applyMerge); specs in extractor-lib; FindDuplicates/MergeDuplicates operations + Duplicates tab in plugin-space; specs contributed by PLUGIN-INBOX (moved there from plugin-crm then plugin-space — whoever creates the objects owns the identity rule, and inbox is default-enabled whereas crm is Labs, which is why the tab was invisible on localhost). F1-F4 fixed; selective-extraction allow-list wired into the email pipeline. FOUR review rounds found nine real bugs, all in the callers rather than the engine: override semantics (a confirmed edit was discarded), dropped unkeyable entries (silent data loss), ECHO refusing to re-parent a nested record on compound merges, a cached rejected index build, uncommitted contacts poisoning the shared index, www.-vs-bare domain mismatch breaking Organization linking, Google sync not re-registering after a merge, the masonry cache keyed on index-defaulted ids, and MergeDuplicates accepting arbitrary ids for a DESTRUCTIVE op. Twice my own tests had locked in the wrong behaviour; twice a claim of mine did not survive checking (planMerge does NOT recompute identity keys). Also landed en route: masonry height cache (remount 113ms -> 1ms, scoped by a required cacheKey), message-age annotations on person card rows (Card.Action `annotation`), sheet completion tooltip anchored to the editing cell (was pinned to the window corner; driven by a DOM observer because CodeMirror positions in its measure phase), grid cell editor filling and centring its cell. NEXT: (1) task 3.5 play test for the Duplicates story — highest value, since that is exactly where the bugs kept appearing; (2) phase 5 compound table cells (DESIGN.md §5); (3) factor the duplicates tab out of TypeArticle as a registered aspect — Panel.Content was normalized to one Tabs.Panel per layout as step 1, the seam should also carry the merge-preview companion still hardcoded in react-surface.tsx, and note the tabpanels have a dangling aria-labelledby since the layout switch is a menu toggle-group not a Tablist; (4) task 4.4 audit plugin-github/sync + assistant-toolkit linear sync-issues. MOVED OUT: the unwired SenderSignals.outbound is now mailbox-research's (packages/stories/stories-brain/docs/TASKS.md) — it needs sent-mail recipient extraction, and the open question is which correspondents matter; consequence today is that a human mailing from a domain with no Organization gets no contact. KNOWN: refs to a merged-away object are not rewritten (feed-stored Message.sender.contact cannot be) — coordinate with josiah/object-merging; plugin-sheet couples to the .dx-grid__cell-editor class name for tooltip anchoring. Commits are UNSIGNED (1Password agent failing to fill)."
+  - name: claude-sdk
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-15
+    summary: Run the Claude Agent SDK inside DXOS as an agent (not a model provider), projecting its transcript into ECHO messages, with a tree-shaped conversation UI as the end goal.
+    tasks: .agents/projects/claude-sdk/TASKS.md
+    design: .agents/projects/claude-sdk/DESIGN.md
+    prs: [12614]
+    resume: "Branch claude/tree-conversation-harness-7d9d49; PR #12614, review active with dmaretskyi (Scope lifecycle + runTurn rename implemented at his direction; his open questions: error channel, hook placement). M1+M2+M3a+M3c DONE. M3c: the assistant's OWN chat runs on the Claude Agent SDK — AgentTurnProducer capability -> AgentServiceSpec -> agent-process runTurn -> @dxos/agent-claude/producer -> sidecar HTTP -> SDK; WithClaudeAgent submits via the chat editor and asserts the rendered fixture token; suite 34/34. Seam: MakeTurnProducer returns Effect<TurnProducer, never, Scope.Scope>; method is runTurn. GOTCHAS: story-file module state must be keyed per story (a shared storySpace slot hands a later story the previous story's destroyed client — passes alone, hangs in-suite); resolveCwd realpaths both sides; Client.run throws when a stream ends without the End frame. NEXT: M4 tree UI (sidebar threads, fork switching, shared task list — fork proven in the console); backlog: model-undefined projection gap, standalone sidecar for deployed Composer, permission surface from collected denials."
   - name: chat
     status: active
     user: josiah
@@ -272,6 +319,16 @@ projects:
     design: .agents/projects/chat/DESIGN.md
     prs: []
     resume: 'DESIGN.md is UNIFIED (2026-07-29) — read it first; TASKS.md is a deep per-stage ledger. Model: Channel is the only conversation type (no Thread object); thread = threadId partition of the channel feed (Zulip-style, thread-first UX); comments = per-document comments Channel hidden via companion-relation pattern, threadId = anchor id; single-writer principle (no shared mutable state on feed items — Reaction is its own per-author type folded at read, replies = parentMessage refs). Stages: 1 prototype in plugin-thread (schema fixes: parentMessage bare Obj.ID -> Ref(Message) at Message.ts:41; EVALUATE properties bag -> typed ECHO annotations, beware LabelAnnotation reads properties.subject; Reaction type; thread-first UX; message actions) -> 2 rename to plugin-chat -> 3 review unification + Thread deletion with migration (COORDINATE with document-revisions/burdon) -> 4 post-unification: notifications + presence (moved OUT of stage 1 by jdw). Ship gate: feed phase 1 before real users. PR #12391 carries the project docs. NEXT: stage 1 — schema fixes + thread-first prototype in plugin-thread.'
+  - name: chat-ui
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-15
+    summary: 'Chat/thread UI convergence — audit of the five message-thread renderers (AI chat, human chat, comments, transcription, email) and the @dxos/react-ui-feed prototype: one virtualized engine where each message is its own markdown item, with chrome as a host render-prop. Also the plugin-assistant restructure it unblocks (ChatProcessor port + MockChatProcessor). Distinct from `chat` (josiah, data model + plugin-chat rename) — this is the rendering layer; the tile-renderer convergence touches react-ui-thread, so coordinate.'
+    tasks: .agents/projects/chat-ui/TASKS.md
+    design: packages/plugins/plugin-assistant/docs/AUDIT.md
+    prs: [12627]
+    resume: 'Branch `claude/ai-chat-interface-restructure-bdc043`, PR #12627 open — the REWRITE is complete (2026-08-18). SPEC-driven consolidation per packages/ui/react-ui-feed/docs/SPEC.mdl: tanstack REMOVED; the virtualizer is an entry point (@dxos/react-ui-feed/virtualizer — Placement + useWindow + Window, told about changes by a model, prepend never inferred); ListModel/FeedModel (stops policy, streaming via patch — Message.make freezes its result so streaming-by-mutation dies silently, patch replaces under the same identity; iteration via loadBefore/loadAfter consumed at the window edges); aspects each with tests (useFollow — glide ON by default at 8 rows/s, intent withdrawn only by a BACKWARDS scroll, writes pre-announced so corrections do not read as the reader leaving, lands on the RENDERED edge not the arithmetic one, never animates the opening positioning; useFeedNavigation — the one seam toolbar/arrows/rails call; useDecorations — hits left the list API, search is one producer; useItemSelection provider+hook); Outline moved here from react-ui-components (changeset), Minimap promoted; debug endpoint (@dxos/react-ui-feed/debug — DebugModel of pull-based probes + Debug table, generic for future components). FLAGSHIP: ui/react-ui-feed-assistant--assistant — the plugin-assistant loop (typed prompts, streamTurn multi-block answers, follow, Outline over prompt stops, debug arg) — THE FIRST THING TO REVIEW, per the user. 107 tests react-ui-feed + 74 react-ui-components green; call-site sims (email/thread/comments/transcript stories) dropped by instruction. Manual plan: docs/TESTING.md, flagship first; the open feel question is the glide speed (maxSpeed: 8 in aspects/use-follow.ts). NEXT: user reviews flagship + TESTING.md; then plugin-assistant retrofit (Chat.tsx already imports Outline from react-ui-feed), mosaic VirtualStack rebind (SPEC F-8.2), range selection mode contributed to react-ui-list.'
   - name: deck
     status: active
     user: burdon
@@ -355,6 +412,23 @@ projects:
     prs: [12229, 12583, 12588]
     resume: "The ledger IS packages/core/halo/halo/MIGRATION_PLAN.md (per-plugin table + numbered Missing APIs 1-10); CONSUMER_MIGRATION.md is the cookbook, API_AUDIT.md the pre-migration inventory. THE HALO TIER IS COMPLETE — Missing APIs 1-6 all landed: #12229 (React + imperative singleton tiers), #12583 (1: Identity.personalSpaceId; 2: createRecoveryCredential/requestRecoveryChallenge/revokeRecoveryCredential + passkey recover), #12588 (3: Identity.getEdgeIdentity), and this branch (4: useInvitationFlow in halo-react + DeviceInfo.presence/os/platform/kind + shell DeviceListItem takes the structural ShellDevice with toShellDevice for client callers; 5: ClientOperation.GrantServiceAccess, plugin-script off writeCredentials; 6: Identity.atom(service), an Atom<Option<Info>> keyed by service reference, used by app-graph-builder). No plugin touches @dxos/client for HALO anymore. NEXT is the non-HALO remainder, all bigger: 7 = ECHO React bindings (~340 imports, the dominant blocker), 8 = space-invitation UI on Space.share/join, 9 = config/mesh/services access without the client root (what still pins DevicesContainer via useNetworkStatus + the DX_ENVIRONMENT gate, app-graph-builder, plugin-debug, plugin-observability), 10 = a @dxos/react-client/testing replacement. DELIBERATE BOUNDARIES (not gaps): CLI src/commands/** construct the client; plugin-client provides it. CARVE-OUTS: requestRecoveryChallenge needs EDGE so halo-e2e cannot cover it; plugin-onboarding queryAllCredentials wants an exhaustive credential QUERY verb distinct from the credentials stream; oauth-recovery-redirect keeps a client for Account.createHubClient and a 30s recover timeout vs the proxy's 20s. E2E: playwright app-manager.ts parses the DevicesContainer console JSON for invitationCode — that log line is load-bearing, keep it."
 ended:
+  - name: task-planning-skill
+    user: burdon
+    host: burdon-mbp-2022
+    created: 2026-07-12
+    ended: 2026-08-15
+    summary: Rename the $session sentinel/concept to $project and add a numbered pick-to-resume table.
+    tasks: tools/claude/plugins/dxos-project/skills/task-planning/TASKS.md
+    design: tools/claude/plugins/dxos-project/skills/task-planning/SKILL.md
+    prs: [12174]
+    resume: "ENDED 2026-08-15, subsumed by `claude-plugins`. PR #12174 MERGED (34d2d1a190) — the
+      $session->$project rename and the numbered pick-to-resume table both shipped. The `$project`
+      SENTINEL it introduced was later REPLACED by the `/project` slash command (`agent-directives`,
+      PR #12463); the skill then moved out of .agents/skills entirely into the `dxos-project` plugin
+      (PR #12618), so both this ledger's syntax and its file paths are history. Its one open
+      follow-up — test the skill in a clean repo outside the monorepo — was answered by that
+      extraction: the plugin was verified in a scratch `git init` repo with no .agents/ directory,
+      and the remaining live-path check is tracked as Phase 1 of `claude-plugins`."
   - name: app-framework-capability-activation
     user: jdw
     host: jdw-mbp

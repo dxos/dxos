@@ -13,6 +13,7 @@ import {
   OAuthRedirect,
   OperationHandler,
   ReactSurface,
+  RoutineTemplate,
   Schema,
   SkillDefinition,
 } from '#capabilities';
@@ -33,6 +34,7 @@ export const ConnectorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(BuiltinConnectors),
   Plugin.addModule(Coordinator),
   Plugin.addModule(OAuthRedirect),
+  Plugin.addModule(RoutineTemplate),
   Plugin.addModule(
     AppCapability.pluginAsset({
       pluginId: meta.profile.key,

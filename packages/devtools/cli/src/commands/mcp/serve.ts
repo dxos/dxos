@@ -7,18 +7,22 @@ import * as Layer from 'effect/Layer';
 import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
 import * as McpServer from 'effect/unstable/ai/McpServer';
 import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
+import { CommandConfig } from '@dxos/cli-util';
 import { DXOS_VERSION } from '@dxos/client';
 import { log } from '@dxos/log';
 import { Gateway, Server } from '@dxos/mcp-server';
+import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
 
 import { DiscoveryToolkit, discoveryHandlers } from './discovery-tools';
 import { makeGateway } from './gateway';
 import { SpaceToolkit, spaceHandlers } from './space-tools';
+import { WATCH_CHILD_ENV, formatReady } from './watch-protocol';
 
 /**
  * Names of the statically-defined tools; projected operations must not collide with them.
@@ -26,10 +30,55 @@ import { SpaceToolkit, spaceHandlers } from './space-tools';
  */
 const STATIC_TOOL_NAMES = ['whoami', 'listSpaces', 'listPlugins', 'listTypes', 'listOperations'] as const;
 
+declare global {
+  /**
+   * Substituted with `true` by the `define` in `scripts/build.ts`, so only the compiled binary sees
+   * it; running from source leaves it `undefined`. A global rather than an env var because the
+   * substitution happens while bun bundles, and because nothing should be able to flip it from the
+   * environment. It selects the watch strategy: a binary has no sources for `bun --watch` to track,
+   * so it supervises a copy of itself and watches its dev-installed plugins instead.
+   */
+  // eslint-disable-next-line no-var
+  var DX_CLI_BUNDLED: boolean | undefined;
+}
+
+/**
+ * What `--watch` reloads on differs by build, so the description does too: from source the whole
+ * imported graph is live, while the binary can only change through its dev-installed plugins.
+ */
+const watchOption = Options.boolean('watch').pipe(
+  Options.withDescription(
+    globalThis.DX_CLI_BUNDLED
+      ? 'Restart the server when a dev-installed plugin changes.'
+      : 'Restart the server when sources change.',
+  ),
+  Options.withDefault(false),
+);
+
+/**
+ * Directories of the profile's dev-installed plugins — the only on-disk code a running server can
+ * see change. A `copy` install is a snapshot the CLI owns and only `add` rewrites, and a
+ * compiled-in plugin cannot change at all, so neither is worth a watch.
+ */
+const devPluginPaths = Effect.gen(function* () {
+  const { profile } = yield* CommandConfig;
+  const records = (yield* loadPlugins({ profile })) ?? [];
+  return records.flatMap((record) =>
+    isRecordEnabled(record) && record.source?.kind === 'link' ? [record.source.path] : [],
+  );
+});
+
 export const serve = Command.make(
   'serve',
-  {},
-  Effect.fn(function* () {
+  { watch: watchOption },
+  Effect.fn(function* ({ watch }) {
+    if (watch) {
+      // Imported here rather than at the top so the supervisor is absent from the module graph of
+      // the child it supervises, which would otherwise reload itself on every one of its own edits.
+      const { runWatchSupervisor } = yield* Effect.promise(() => import('./watch'));
+      return yield* runWatchSupervisor();
+    }
+
     const manager = yield* Capability.get(Capabilities.PluginManager);
     // Building the command tree only fires `Startup`; operation handlers default to `Idle` and
     // skill definitions to `AssistantStart`, so without both the projected surface is empty.
@@ -44,6 +93,12 @@ export const serve = Command.make(
       McpServer.toolkit(SpaceToolkit).pipe(Layer.provide(SpaceToolkit.toLayer(spaceHandlers(gateway)))),
       McpServer.toolkit(DiscoveryToolkit).pipe(Layer.provide(DiscoveryToolkit.toLayer(discoveryHandlers(gateway)))),
     );
+
+    // Written before the transport blocks: the child's stdin is a pipe, so anything the supervisor
+    // sends on the strength of this line waits in the buffer until the server reads it.
+    if (process.env[WATCH_CHILD_ENV]) {
+      process.stderr.write(`${formatReady({ watch: yield* devPluginPaths })}\n`);
+    }
 
     yield* Layer.launch(
       Layer.mergeAll(

@@ -7,40 +7,40 @@ import * as Layer from 'effect/Layer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
-import { Cursor } from '@dxos/link';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as Binding from '@dxos/plugin-connector/Binding';
 
 import { GoogleCalendarApi, GoogleCredentials } from '#services';
+import { GoogleOperation } from '#types';
 
-import { type SyncCalendarProps, syncCalendar } from './sync';
+import { syncCalendar } from './sync';
 
-const handler = InboxOperation.GoogleCalendarSync.pipe(
-  Operation.withHandler((props: SyncCalendarProps) =>
-    Effect.gen(function* () {
-      const bindingObj = props.binding.target;
-      const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
-      if (!bindingObj || !db || !Cursor.isExternal(bindingObj)) {
-        return { newEvents: 0 };
-      }
-
-      const accessTokenRef = bindingObj.spec.source;
-      // Composer's invoker is wired without a `databaseResolver`, so derive the db from the binding's
-      // target and provide `Database.layer(db)` ourselves (alongside the Google Calendar credentials).
-      // `GoogleCalendarApi.Live` absorbs the HTTP client + credentials, so `syncCalendar` itself
-      // requires only the service (which a test swaps for `GoogleCalendarApi.mock`).
-      const credentials = Layer.mergeAll(FetchHttpClient.layer, GoogleCredentials.fromAccessToken(accessTokenRef));
-      return yield* syncCalendar(props).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            GoogleCalendarApi.Live.pipe(Layer.provide(credentials)),
-            InboxResolver.Live,
-            Database.layer(db),
+const handler = GoogleOperation.GoogleCalendarSync.pipe(
+  Operation.withHandler(({ connection, priority, googleCalendarId, syncBackDays, syncForwardDays, pageSize }) =>
+    Binding.syncAll({
+      connection,
+      priority,
+      sync: (binding) =>
+        // Layer stack, top-down: `syncCalendar` needs GoogleCalendarApi + Resolver (a test swaps the
+        // API for `GoogleCalendarApi.mock`); `GoogleCalendarApi.Live` needs the HTTP client + the
+        // binding's credentials. The Database service comes from the fan-out.
+        syncCalendar({ binding: Ref.make(binding), googleCalendarId, syncBackDays, syncForwardDays, pageSize }).pipe(
+          Effect.provide(
+            Layer.mergeAll(
+              GoogleCalendarApi.Live.pipe(
+                Layer.provide(FetchHttpClient.layer),
+                Layer.provide(GoogleCredentials.fromAccessToken(binding.spec.source)),
+              ),
+              InboxResolver.Live,
+            ),
           ),
         ),
-      );
-    }),
+    }).pipe(
+      Effect.map(({ outputs }) => ({
+        newEvents: outputs.reduce((total, output) => total + output.newEvents, 0),
+      })),
+    ),
   ),
   Operation.opaqueHandler,
 );

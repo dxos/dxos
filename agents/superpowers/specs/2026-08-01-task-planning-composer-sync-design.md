@@ -6,7 +6,7 @@ Project: `mcp` (milestone 3, task 3). Builds on the verified local loop
 
 ## Goal
 
-The task-planning skill (`.agents/skills/task-planning`) keeps each project's TASKS in a
+The task-planning skill (`tools/claude/plugins/dxos/skills/task-planning`) keeps each project's TASKS in a
 **Composer document** instead of (or alongside) a repo `TASKS.md`, so tasks are live objects —
 visible in Composer, editable by humans and agents concurrently, and queryable by other tooling.
 
@@ -44,10 +44,10 @@ The skill reads/writes through the local MCP server (`mcp-space-service:8791` �
 
 Keep it dumb and explicit; no daemon:
 
-- `$resume` / session start: if `tasksDxn` set and MCP reachable → fetch document, write through
+- `/dxos:project resume` / session start: if `tasksDxn` set and MCP reachable → fetch document, write through
   to the local file (the file is a mirror + offline fallback), note divergence if the file had
   unpushed local edits (three-way vs last-sync copy stored beside it as `.TASKS.md.base`).
-- `$track` / `$hydrate` / task edits: apply as **targeted string edits** to the document via
+- `/dxos:project track` / `hydrate` / task edits: apply as **targeted string edits** to the document via
   `updateObject.edits` (find the exact line, replace/append), then refresh the mirror.
 - MCP unreachable → edit the file only and flag "pending push" in the resume note; next reachable
   session reconciles (line-level merge; conflicts surfaced to the user, never auto-dropped).
@@ -66,7 +66,7 @@ in the registry — the DXN is an address, not a capability.
   is the bridge; the outliner's convert-to-task covers promotion of individual items. Revisit after
   task 4's plugin design.
 - **Registry stores spaceId+objectId as separate fields** — the echo URI already encodes both.
-- **Bidirectional daemon sync** — rejected; explicit sync points (`$resume`/`$track`/`$hydrate`)
+- **Bidirectional daemon sync** — rejected; explicit sync points (`resume`/`track`/`hydrate`)
   match the skill's existing rhythm and keep conflict windows small.
 
 ## Open questions (for review)

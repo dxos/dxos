@@ -18,7 +18,13 @@ export const createEchoChangeCallback = <T extends Obj.Unknown>(
   kanban: (mutate) => Obj.update(kanban, (kanban) => mutate(kanban)),
   setItemField: (item, field, value) => {
     Obj.update(item, (item: any) => {
-      item[field] = value;
+      if (value === undefined) {
+        // Deleted rather than assigned, because assigning asserts against the property schema, which
+        // rejects clearing an optional field of a stored schema.
+        delete item[field];
+      } else {
+        item[field] = value;
+      }
     });
   },
 });

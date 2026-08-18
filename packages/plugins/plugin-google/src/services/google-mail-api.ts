@@ -70,6 +70,18 @@ export interface GoogleMailApiService {
     GoogleMailApiError
   >;
   readonly trashMessage: (userId: string, messageId: string) => Effect.Effect<GoogleMail.Message, GoogleMailApiError>;
+  /** Adds/removes labels on one message. `SPAM` is an ordinary label here; `TRASH` is not. */
+  readonly modifyMessage: (
+    userId: string,
+    messageId: string,
+    labels: { addLabelIds?: readonly string[]; removeLabelIds?: readonly string[] },
+  ) => Effect.Effect<GoogleMail.Message, GoogleMailApiError>;
+  /** Applies the same label change to up to 1000 messages in one call. */
+  readonly batchModifyMessages: (
+    userId: string,
+    messageIds: readonly string[],
+    labels: { addLabelIds?: readonly string[]; removeLabelIds?: readonly string[] },
+  ) => Effect.Effect<void, GoogleMailApiError>;
 }
 
 /**
@@ -138,6 +150,10 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
           Effect.provide(GoogleMail.getAttachment(userId, messageId, attachmentId), context),
         sendMessage: (userId, message) => Effect.provide(GoogleMail.sendMessage(userId, message), context),
         trashMessage: (userId, messageId) => Effect.provide(GoogleMail.trashMessage(userId, messageId), context),
+        modifyMessage: (userId, messageId, labels) =>
+          Effect.provide(GoogleMail.modifyMessage(userId, messageId, labels), context),
+        batchModifyMessages: (userId, messageIds, labels) =>
+          Effect.provide(GoogleMail.batchModifyMessages(userId, messageIds, labels), context),
       });
     }),
   );
@@ -150,6 +166,50 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
    */
   static readonly mock = (dataset: GmailDataset): Layer.Layer<GoogleMailApi> => {
     const byId = new Map(dataset.messages.map((message) => [message.id, message]));
+    // Per-message label state, mutable so a test can assert what a tag push actually wrote and so a
+    // later `getMessage` reflects it. Seeded from the fixture; the fixture itself stays immutable.
+    const labelsById = new Map(dataset.messages.map((message) => [message.id, [...(message.labelIds ?? [])]]));
+    // Steps appended by writes made THROUGH the mock, so a push becomes visible to a later
+    // `history.list` exactly as it does at Gmail, which records a client's own label write in the
+    // account's history (verified live). Without this the mock cannot exercise the echo at all, and
+    // the ordering rule that absorbs it would be covered only by the live suite.
+    const pushedHistory: GmailHistoryStep[] = [];
+    let nextHistoryId = dataset.historyId;
+    const applyLabels = (
+      messageIds: readonly string[],
+      {
+        addLabelIds = [],
+        removeLabelIds = [],
+      }: { addLabelIds?: readonly string[]; removeLabelIds?: readonly string[] },
+    ) => {
+      for (const id of messageIds) {
+        const current = labelsById.get(id) ?? [];
+        const next = current.filter((label) => !removeLabelIds.includes(label));
+        for (const label of addLabelIds) {
+          if (!next.includes(label)) {
+            next.push(label);
+          }
+        }
+        labelsById.set(id, next);
+      }
+      if (nextHistoryId === undefined || messageIds.length === 0) {
+        return;
+      }
+      const startHistoryId = nextHistoryId;
+      nextHistoryId = String(Number.parseInt(startHistoryId, 10) + 1);
+      pushedHistory.push({
+        startHistoryId,
+        historyId: nextHistoryId,
+        labelsAdded: addLabelIds.length > 0 ? messageIds.map((id) => ({ id, labelIds: addLabelIds })) : undefined,
+        labelsRemoved:
+          removeLabelIds.length > 0 ? messageIds.map((id) => ({ id, labelIds: removeLabelIds })) : undefined,
+      });
+    };
+    /** The fixture message with its current (possibly pushed-to) labels. */
+    const withLabels = (message: GoogleMail.Message): GoogleMail.Message => ({
+      ...message,
+      labelIds: labelsById.get(message.id) ?? message.labelIds,
+    });
     return Layer.succeed(
       GoogleMailApi,
       GoogleMailApi.of({
@@ -179,10 +239,12 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
         getMessage: (_userId, messageId) => {
           const message = byId.get(messageId);
           return message
-            ? Effect.succeed(message)
+            ? Effect.succeed(withLabels(message))
             : Effect.die(new Error(`mock GoogleMailApi: message not in dataset: ${messageId}`));
         },
-        getProfile: () => Effect.succeed({ historyId: dataset.historyId }),
+        // The mailbox's CURRENT id, which advances as pushes are recorded — a fresh capture after a
+        // push must not hand back a position that predates it.
+        getProfile: () => Effect.succeed({ historyId: nextHistoryId }),
         // Chains the history-log steps from `startHistoryId` into one record per step (Gmail returns a
         // record per change-batch), then returns one bounded page (honoring `maxResults`). `historyId` is
         // the mailbox's *current* record on every page (Gmail semantics). An unknown/evicted id (no chain
@@ -190,7 +252,7 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
         // retention window.
         listHistory: (_userId, options) =>
           Effect.gen(function* () {
-            const latest = dataset.historyId;
+            const latest = nextHistoryId;
             const records: {
               id: string;
               messagesAdded: { message: { id: string } }[];
@@ -199,7 +261,7 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
             }[] = [];
             let chain = options.startHistoryId;
             let matched = latest !== undefined && options.startHistoryId === latest;
-            for (const step of dataset.historyLog ?? []) {
+            for (const step of [...(dataset.historyLog ?? []), ...pushedHistory]) {
               if (step.startHistoryId === chain) {
                 matched = true;
                 records.push({
@@ -238,6 +300,24 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
         },
         sendMessage: () => Effect.die(new Error('mock GoogleMailApi: sendMessage not supported')),
         trashMessage: () => Effect.die(new Error('mock GoogleMailApi: trashMessage not supported')),
+        modifyMessage: (_userId, messageId, labels) => {
+          const message = byId.get(messageId);
+          if (!message) {
+            return Effect.fail(new GoogleApiError(404, 'Requested entity was not found.'));
+          }
+          applyLabels([messageId], labels);
+          return Effect.succeed(withLabels(message));
+        },
+        batchModifyMessages: (_userId, messageIds, labels) =>
+          Effect.sync(() => {
+            // Real `batchModify` returns 204 and reports nothing per message, including for ids it did
+            // not recognise — so the mock silently ignores unknown ids too rather than being stricter
+            // than the API it stands in for.
+            applyLabels(
+              messageIds.filter((id) => byId.has(id)),
+              labels,
+            );
+          }),
       }),
     );
   };

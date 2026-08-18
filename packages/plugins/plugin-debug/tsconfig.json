@@ -58,6 +58,9 @@
       "path": "../../core/compute/conductor"
     },
     {
+      "path": "../../core/compute/link"
+    },
+    {
       "path": "../../core/compute/operation"
     },
     {
@@ -125,6 +128,12 @@
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-connector"
+    },
+    {
+      "path": "../plugin-google"
     },
     {
       "path": "../plugin-illustrator"

@@ -34,6 +34,9 @@ function lockfileWarning() {
 
 lockfileWarning();
 
+/** The last TypeScript release with the classic JS compiler API. */
+const TYPESCRIPT_API_VERSION = '^6.0.3';
+
 function readPackage(packageJson, context) {
   // Ignore all AWS peers.
   const peerDependencies = Object.keys(packageJson.peerDependencies ?? {});
@@ -41,6 +44,16 @@ function readPackage(packageJson, context) {
     if (dep.startsWith('@aws-sdk/') || dep.startsWith('@aws-crypto/')) {
       delete packageJson.peerDependencies[dep];
     }
+  }
+
+  // TypeScript 7 is the native compiler and ships no JS API (one returns in 7.1), so third-party
+  // tooling that calls into the API — typescript-eslint, typedoc, knip, madge, react-docgen,
+  // rolldown-plugin-dts — has to resolve the 6.x line while the workspace itself compiles with 7.
+  // Converting the peer to a real dependency is what keeps it off the workspace's own `typescript`.
+  if (!packageJson.name?.startsWith('@dxos/') && packageJson.peerDependencies?.typescript) {
+    packageJson.dependencies = { ...packageJson.dependencies, typescript: TYPESCRIPT_API_VERSION };
+    delete packageJson.peerDependencies.typescript;
+    delete packageJson.peerDependenciesMeta?.typescript;
   }
 
   switch (packageJson.name) {
@@ -104,6 +117,13 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    // Its published .d.ts does `import type ts from 'typescript'`, but the manifest lists typescript
+    // only as a devDependency — without this the type resolves to `any` in every consumer.
+    case '@valtown/codemirror-ts': {
+      packageJson.dependencies['typescript'] = TYPESCRIPT_API_VERSION;
+      break;
+    }
+
     case '@rollup/pluginutils': {
       packageJson.peerDependencies['rollup'] = '^2.0.0||^3.0.0';
       break;
@@ -131,12 +151,6 @@ function readPackage(packageJson, context) {
       packageJson.peerDependencies['@storybook/components'] = '^7.0.0-beta';
       packageJson.peerDependencies['@storybook/core-events'] = '^7.0.0-beta';
       packageJson.peerDependencies['@storybook/theming'] = '^7.0.0-beta';
-      break;
-    }
-
-    // @dxos/apidoc doesn't work with the latest version of typedoc (yet).
-    case 'typedoc': {
-      packageJson.peerDependencies['typescript'] = '^5.0.0';
       break;
     }
 

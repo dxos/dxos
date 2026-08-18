@@ -1252,8 +1252,9 @@ export class DxGrid extends LitElement {
           <div
             role="none"
             class="dx-grid__plane--frozen-row__content"
-            style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:${this
-              .templateGridColumns};grid-template-rows:${this[`template${rowPlane}`]}"
+            style="transform:translate3d(${offsetInline}px,0,0);grid-template-columns:${
+              this.templateGridColumns
+            };grid-template-rows:${this[`template${rowPlane}`]}"
           >
             ${[...Array(rows)].map((_, r) => {
               return [...Array(visibleCols)].map((_, c0) => {
@@ -1286,8 +1287,9 @@ export class DxGrid extends LitElement {
           <div
             role="none"
             class="dx-grid__plane--frozen-col__content"
-            style="transform:translate3d(0,${offsetBlock}px,0);grid-template-rows:${this
-              .templateGridRows};grid-template-columns:${this[`template${colPlane}`]}"
+            style="transform:translate3d(0,${offsetBlock}px,0);grid-template-rows:${
+              this.templateGridRows
+            };grid-template-columns:${this[`template${colPlane}`]}"
           >
             ${[...Array(visibleRows)].map((_, r0) => {
               return [...Array(cols)].map((_, c) => {
@@ -1319,8 +1321,9 @@ export class DxGrid extends LitElement {
           <div
             role="none"
             class="dx-grid__plane--grid__content"
-            style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
-              .templateGridColumns};grid-template-rows:${this.templateGridRows};"
+            style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${
+              this.templateGridColumns
+            };grid-template-rows:${this.templateGridRows};"
           >
             ${[...Array(visibleRows)].map((_, r0) => {
               return [...Array(visibleCols)].map((_, c0) => {
@@ -1452,16 +1455,18 @@ export class DxGrid extends LitElement {
       style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
     >
       <div role="none" class="dx-grid__cell__content">${cell?.value}${accessory}</div>
-      ${cell?.resizeHandle &&
-      this.mode === 'browse' &&
-      this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
-        ? html`<dx-grid-axis-resize-handle
-            axis=${cell.resizeHandle}
-            plane=${resizePlane}
-            index=${resizeIndex}
-            size=${this[`${cell.resizeHandle}Size`](resizeIndex!, plane)}
-          ></dx-grid-axis-resize-handle>`
-        : null}
+      ${
+        cell?.resizeHandle &&
+        this.mode === 'browse' &&
+        this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
+          ? html`<dx-grid-axis-resize-handle
+              axis=${cell.resizeHandle}
+              plane=${resizePlane}
+              index=${resizeIndex}
+              size=${this[`${cell.resizeHandle}Size`](resizeIndex!, plane)}
+            ></dx-grid-axis-resize-handle>`
+          : null
+      }
     </div>`;
   }
 

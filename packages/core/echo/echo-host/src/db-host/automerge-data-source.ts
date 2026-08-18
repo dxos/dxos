@@ -158,6 +158,7 @@ export class AutomergeDataSource implements IndexDataSource {
               documentId,
               queueId: null,
               queueNamespace: null,
+              queuePosition: null,
               recordId: null,
               data: objectStructureToJson(objectId, structure),
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,

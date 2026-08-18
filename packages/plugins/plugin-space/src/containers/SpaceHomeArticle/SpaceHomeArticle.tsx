@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Column, Panel, ScrollArea } from '@dxos/react-ui';
+import { Column, Flex, Panel, ScrollArea } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -49,9 +49,9 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
         <Column.Root style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
           <ScrollArea.Root orientation='vertical' centered padding>
             <ScrollArea.Viewport>
-              <div className='dx-document flex flex-col gap-4 pb-12'>
+              <Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
                 <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
-              </div>
+              </Flex>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
           <Column.Center classNames='dx-document pb-4'>

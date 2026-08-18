@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ChessSkill': 'src/skills/ChessSkill.ts',
+    'ChessOperationHandlerSet': 'src/operations/ChessOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'ChessPlugin': 'src/ChessPlugin.ts',
     'plugin': 'src/plugin.tsx',
