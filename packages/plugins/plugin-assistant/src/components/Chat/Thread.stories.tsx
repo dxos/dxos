@@ -194,6 +194,47 @@ export const Rewind: Story = {
   },
 };
 
+/**
+ * The view type is a projection the renderer applies per message: `thinking` shows the reasoning
+ * widget, `normal` hides it — same model, different render.
+ */
+export const Thinking: Story = {
+  args: {
+    generator: createMessageGenerator(),
+    wait: true,
+    viewType: 'thinking',
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      async () => {
+        await expect(canvasElement.querySelectorAll('[data-reasoning-text]').length).toBeGreaterThan(0);
+      },
+      { timeout: 10_000 },
+    );
+  },
+};
+
+export const Normal: Story = {
+  args: {
+    generator: createMessageGenerator(),
+    wait: true,
+    viewType: 'normal',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Rendered content is present (the thread mounted)…
+    await waitFor(
+      async () => {
+        await expect(canvas.queryAllByTestId('chat.rewind').length).toBeGreaterThan(0);
+      },
+      { timeout: 10_000 },
+    );
+    // …and the reasoning is projected out, raw tags included.
+    await expect(canvasElement.querySelectorAll('[data-reasoning-text]').length).toBe(0);
+    await expect(canvasElement.textContent ?? '').not.toContain('<reasoning');
+  },
+};
+
 /** The streaming path: messages land one by one, and the thread follows its tail. */
 export const Delayed: Story = {
   args: {

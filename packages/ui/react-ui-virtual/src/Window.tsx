@@ -293,7 +293,10 @@ export const useWindow = ({
         continue;
       }
 
-      if (actual && actual !== declared) {
+      // A childless row is genuinely empty (an empty render mounts no chrome): record its zero,
+      // or the estimate survives for ever and pools as phantom extent. A row WITH children that
+      // measures zero is mid-construction, and recording that would be wrong twice over.
+      if (actual !== declared && (actual || row.childElementCount === 0)) {
         placement.measure(id, actual);
         changed = true;
       }

@@ -88,7 +88,11 @@ const ChatThreadRoot = ({
   controllerRef,
 }: ChatThreadRootProps) => {
   const renderer = useMemo(() => createRenderer(viewType, { getObjectLabel }), [viewType, getObjectLabel]);
-  const merged = useMemo(() => (registry ? { ...assistantRegistry, ...registry } : assistantRegistry), [registry]);
+  // Debug shows the raw document: with no registry the tags stay visible as the text they are.
+  const merged = useMemo(
+    () => (viewType === 'debug' ? undefined : registry ? { ...assistantRegistry, ...registry } : assistantRegistry),
+    [registry, viewType],
+  );
   const handleRewind = useCallback((id: string) => onEvent?.({ type: 'rewind', id }), [onEvent]);
 
   // While an answer streams, the chrome keeps its toolbars hidden — a control on a half-written

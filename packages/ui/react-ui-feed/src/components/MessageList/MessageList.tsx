@@ -397,10 +397,18 @@ const MessageListRoot = ({
         return;
       }
 
+      // Already at rest: arm the follow and do nothing else — the jump re-anchors from estimates,
+      // which visibly moves a reader who has not moved (seen on submit while pinned).
+      const scroller = scrollerRef.current;
+      if (scroller && scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop <= 32) {
+        follow.onNavigate(model.count - 1);
+        return;
+      }
+
       // The end includes the reserve: the tail rests its tail-lines clear of the viewport's edge.
       scrollToIndex(model.count - 1, { align: 'end', ...options });
     },
-    [scrollToIndex, model],
+    [scrollToIndex, model, follow],
   );
 
   useEffect(() => {

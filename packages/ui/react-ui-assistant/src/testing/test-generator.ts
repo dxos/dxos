@@ -31,6 +31,13 @@ export const createMessageGenerator = (): MessageGenerator[] => [
           text: random.lorem.sentence(5),
         },
       ]),
+      // Reasoning, so the view-type projections have something to hide (normal) and show (thinking).
+      createMessage('assistant', [
+        {
+          _tag: 'reasoning',
+          reasoningText: 'Considering the question before answering.',
+        },
+      ]),
     ]);
   }),
 
