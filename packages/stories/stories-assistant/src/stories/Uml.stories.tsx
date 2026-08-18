@@ -79,6 +79,7 @@ const SOURCE_CODE = trim`
 let storySpace: Space | undefined;
 
 const decorators = createDecorators({
+  skills: [AssistantSkill.key, MarkdownSkill.key, UmlSkill.key],
   lazyPlugins: async () => {
     // SpacePlugin contributes the `versioning-state` capability the markdown article reads.
     const [{ Drawing }, IllustratorPlugin, MarkdownPlugin, SpacePlugin, TldrawPlugin] = await Promise.all([
@@ -112,7 +113,6 @@ const decorators = createDecorators({
     const drawings = await space.db.query(Filter.type(Drawing.Drawing)).run();
     await binder.bind({ objects: [...documents, ...drawings].map((object) => Ref.make(object)) });
   },
-  skills: [AssistantSkill.key, MarkdownSkill.key, UmlSkill.key],
 });
 
 /** Count canvas shape records belonging to a world object (`meta.object`), or all managed shapes. */

@@ -9,5 +9,4 @@ export * from './decorators';
 export * from './objects';
 export * from './prompt';
 export * from './schema';
-export * from './snapshot';
 export * from './agent-claude-plugin';

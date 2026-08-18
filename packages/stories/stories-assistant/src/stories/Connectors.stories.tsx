@@ -15,13 +15,12 @@ import * as InboxSkill from '@dxos/plugin-inbox/InboxSkill';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as TranscriptionSkill from '@dxos/plugin-transcription/TranscriptionSkill';
-import { Cell } from '@dxos/storybook-testing';
+import { Cell, accessTokensFromEnv } from '@dxos/storybook-testing';
 import { Event, Message, Person, Pipeline, Task, Transcript } from '@dxos/types';
 
 import { StoryRole } from '../modules';
 import {
   ModuleContainer,
-  accessTokensFromEnv,
   addToRootCollection,
   config,
   createDecorators,
