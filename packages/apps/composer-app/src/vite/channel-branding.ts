@@ -40,11 +40,6 @@ export const bootMarkPath = (appDir: string, variant = channelVariant()): string
   variant && path.join(appDir, 'assets', `boot-mark-${variant}.svg`);
 
 /**
- * Overwrite the emitted favicons with the channel's own.
- * Runs in `closeBundle` rather than `generateBundle`: the favicons are `publicDir` files rather than
- * rollup assets, so they are copied outside the bundle hooks and only the last hook is reliably after.
- */
-/**
  * Overwrite the favicons already emitted into `outDir` with the channel's own. No-op without a variant,
  * which is what a production or local build gets.
  */
