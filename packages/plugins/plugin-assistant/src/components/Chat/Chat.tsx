@@ -23,7 +23,7 @@ import {
 } from '@dxos/react-ui';
 // Aliased: `@dxos/types` exports an `Outline` of its own — a project's checklist — and this file
 // uses both. The rail is the newcomer here, so it is the one that gives way.
-import { type OutlineMarker, Outline as OutlineRail } from '@dxos/react-ui-components';
+import { type OutlineMarker, Outline as OutlineRail } from '@dxos/react-ui-feed';
 import { type DocumentRange, type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Outline } from '@dxos/types';

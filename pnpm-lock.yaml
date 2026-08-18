@@ -7573,6 +7573,9 @@ importers:
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
+      '@dxos/react-ui-feed':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-feed
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form

@@ -4,3 +4,5 @@
 
 export * from './Item';
 export * from './MessageList';
+export * from './Minimap';
+export * from './Outline';

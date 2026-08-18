@@ -6,11 +6,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { IconButton, Input, Panel, ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Outline, type OutlineMarker } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { type Decoration, DecorationsProvider, ItemSelectionProvider } from '../aspects';
+import { Outline, type OutlineMarker } from '../components';
 import { type MessageChromeProps, MessageList, useMessageList } from '../components';
 import { SearchHit, defaultRenderer, searchFeed, sliceFeed, useFeedModel } from '../model';
 import { FeedStats, useFeedDebug } from './debug';
