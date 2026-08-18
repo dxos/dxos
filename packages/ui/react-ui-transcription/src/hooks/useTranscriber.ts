@@ -9,11 +9,12 @@ import { type Transcriber } from '@dxos/pipeline-transcription';
 import { type CreateTranscriberOptions, createTranscriber } from '../capture';
 
 /**
- * Everything {@link createTranscriber} takes, optional except `endpoint`: an absent transcription
- * service is a caller-visible state, not a default this hook can invent.
+ * {@link CreateTranscriberOptions} with the two inputs the hook waits for made optional — it returns
+ * `undefined` until a track and a segment handler exist. Everything else, `endpoint` included,
+ * carries over unchanged.
  */
-export type UseTranscriberOptions = Partial<Omit<CreateTranscriberOptions, 'endpoint'>> &
-  Pick<CreateTranscriberOptions, 'endpoint'>;
+export type UseTranscriberOptions = Omit<CreateTranscriberOptions, 'audioStreamTrack' | 'onSegments'> &
+  Partial<Pick<CreateTranscriberOptions, 'audioStreamTrack' | 'onSegments'>>;
 
 /**
  * Records audio while the user is speaking and transcribes it after they pause. Builds a
