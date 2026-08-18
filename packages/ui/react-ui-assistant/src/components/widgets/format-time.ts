@@ -20,6 +20,11 @@ export type FormatTimeOptions = {
   justNow?: string;
 };
 
+/**
+ * Relative time for the message toolbars: `justNow` (caller-translated) under a minute, relative
+ * ("5 min ago", "yesterday") within two days, an absolute date beyond that. `now` defaults to the
+ * wall clock; an invalid timestamp renders as the empty string.
+ */
 export const formatTime = (created: string, { now = Date.now(), justNow }: FormatTimeOptions = {}): string => {
   const date = new Date(created);
   if (Number.isNaN(date.getTime())) {
@@ -32,14 +37,16 @@ export const formatTime = (created: string, { now = Date.now(), justNow }: Forma
   }
 
   const format = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
-  const minutes = Math.round(elapsed / 60_000);
-  if (minutes < 1) {
+  // The raw elapsed, not rounded minutes: 30-59s rounds to one minute and would skip the label.
+  if (elapsed < 60_000) {
     if (justNow) {
       return justNow;
     }
     // Seconds rather than `format(0, 'minute')`, which renders as "this minute".
     return format.format(-Math.max(1, Math.round(elapsed / 1000)), 'second');
   }
+
+  const minutes = Math.round(elapsed / 60_000);
   if (minutes < 60) {
     return format.format(-minutes, 'minute');
   }

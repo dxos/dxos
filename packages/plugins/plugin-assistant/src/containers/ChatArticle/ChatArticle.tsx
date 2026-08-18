@@ -95,7 +95,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           </Panel.Toolbar>
           <Panel.Content asChild>
             <ChatComponent.Content>
-              <div className='border dx-document relative'>
+              <div className='dx-container dx-document relative'>
                 {viewType !== 'summary' && (
                   <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />
                 )}
