@@ -10,10 +10,11 @@ inputs:
     required: true
   suffix-identifier:
     description: >-
-      Set "false" to keep the bare bundle identifier on a non-production build. iOS does this: an App ID
-      must be registered with Apple and carried by a provisioning profile, so suffixing it would break
-      TestFlight until that registration exists. Desktop wants the suffix — it is what gives each channel
-      its own data container.
+      Set "false" to keep the stock bundle identifier and icons on a non-production build. iOS does this:
+      an App ID must be registered with Apple and carried by a provisioning profile, so suffixing it would
+      break TestFlight until that registration exists, and `tauri ios init` builds its asset catalog from
+      the icon directory, which only the stock one populates. Desktop wants both — the suffix is what gives
+      each channel its own data container, and the icon is how you tell the channels apart in the dock.
     required: false
     default: 'true'
   ios-bundle-version:
@@ -77,6 +78,31 @@ runs:
           '.identifier += "." + $env | .productName += " " + $label' \
           "$TAURI_CONF" > temp.json && mv temp.json "$TAURI_CONF"
         echo "identity -> $(jq -r '.identifier + " / " + .productName' "$TAURI_CONF")"
+      shell: bash
+
+    # Side-by-side installs are only useful if you can tell them apart: nightly gets the purple mark, every
+    # other prerelease the greyscale one, and the blue mark stays the released app's alone.
+    - name: Update icon in tauri.conf.json
+      if: inputs.environment != 'production' && inputs.suffix-identifier != 'false'
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        TAURI_CONF: ${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}
+        WORKING_DIRECTORY: ${{ inputs.working-directory }}
+      run: |
+        case "$ENVIRONMENT" in
+          nightly) icons=icons-nightly ;;
+          *) icons=icons-grey ;;
+        esac
+        for file in 32x32.png 128x128.png 128x128@2x.png icon.icns icon.ico; do
+          if [ ! -f "$WORKING_DIRECTORY/$icons/$file" ]; then
+            echo "::error::cn-config: missing $icons/$file" && exit 1
+          fi
+        done
+        jq --arg icons "$icons" \
+          '.bundle.icon = [$icons + "/32x32.png", $icons + "/128x128.png", $icons + "/128x128@2x.png",
+                           $icons + "/icon.icns", $icons + "/icon.ico"]' \
+          "$TAURI_CONF" > temp.json && mv temp.json "$TAURI_CONF"
+        echo "icon -> $icons"
       shell: bash
 
     - name: Update version in tauri.conf.json
