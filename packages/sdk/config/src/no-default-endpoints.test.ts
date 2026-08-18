@@ -2,18 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { Config } from './config';
 import { EdgeServiceName, getEdgeServiceEndpoint, getRequiredEdgeServiceEndpoint } from './edge-services';
 
 // Unconfigured lookups must never inject an endpoint (configPreset is exempt: calling the factory is the opt-in).
 describe('no default endpoints', () => {
-  test('getEdgeServiceEndpoint returns undefined when unconfigured', () => {
+  test('getEdgeServiceEndpoint returns undefined when unconfigured', ({ expect }) => {
     expect(getEdgeServiceEndpoint(new Config(), EdgeServiceName.Calls)).toBeUndefined();
   });
 
-  test('getEdgeServiceEndpoint resolves the configured entry (last one wins)', () => {
+  test('getEdgeServiceEndpoint resolves the configured entry (last one wins)', ({ expect }) => {
     const config = new Config({
       runtime: {
         services: {
@@ -28,7 +28,7 @@ describe('no default endpoints', () => {
     expect(getEdgeServiceEndpoint(config, EdgeServiceName.Image)).toBeUndefined();
   });
 
-  test('getRequiredEdgeServiceEndpoint names the service and the config path when unconfigured', () => {
+  test('getRequiredEdgeServiceEndpoint names the service and the config path when unconfigured', ({ expect }) => {
     expect(() => getRequiredEdgeServiceEndpoint(new Config(), EdgeServiceName.Calls)).toThrow(
       'The calls service is not configured (runtime.services.edgeServices: calls).',
     );

@@ -12,8 +12,8 @@ import { WnfsCapabilities } from '#types';
 export const BlobBackend = Capability.lazyModule(
   'BlobBackend',
   {
-    // Blockstore/Instances are awaited inside the module, not declared here: they are absent by
-    // design when EDGE is unconfigured, and declared requires are resolved before the body runs.
+    // Blockstore/Instances are awaited in the module body, not declared here: they are absent by
+    // design when EDGE is unconfigured.
     requires: [ClientCapabilities.Client],
     provides: [FileCapabilities.Backend],
     activatesOn: FileEvents.Start,

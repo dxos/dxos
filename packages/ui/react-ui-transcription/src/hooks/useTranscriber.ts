@@ -8,11 +8,7 @@ import { type Transcriber } from '@dxos/pipeline-transcription';
 
 import { type CreateTranscriberOptions, createTranscriber } from '../capture';
 
-/**
- * {@link CreateTranscriberOptions} with the two inputs the hook waits for made optional — it returns
- * `undefined` until a track and a segment handler exist. Everything else, `endpoint` included,
- * carries over unchanged.
- */
+/** As {@link CreateTranscriberOptions}, but the hook returns `undefined` until a track and handler exist. */
 export type UseTranscriberOptions = Omit<CreateTranscriberOptions, 'audioStreamTrack' | 'onSegments'> &
   Partial<Pick<CreateTranscriberOptions, 'audioStreamTrack' | 'onSegments'>>;
 

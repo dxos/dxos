@@ -55,9 +55,9 @@ export type TranscriptionManagerOptions = {
  * interface (via the `TranscriptionManagerProvider` capability), not this class.
  */
 export class TranscriptionManagerImpl extends Resource implements TranscriptionCapabilities.TranscriptionManager {
+  private readonly _registry: Registry.AtomRegistry;
   private readonly _transcriptionEndpoint?: string;
   private readonly _messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
-  private readonly _registry: Registry.AtomRegistry;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
@@ -68,9 +68,9 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
 
   constructor(options: TranscriptionManagerOptions) {
     super();
+    this._registry = options.registry;
     this._transcriptionEndpoint = options.transcriptionEndpoint;
     this._messageEnricher = options.messageEnricher;
-    this._registry = options.registry;
   }
 
   get enabled(): Atom.Atom<boolean> {

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, onTestFinished, test, vi } from 'vitest';
+import { describe, onTestFinished, test, vi } from 'vitest';
 
 import { Config } from '@dxos/config';
 import { Filter, Obj } from '@dxos/echo';
@@ -21,7 +21,7 @@ vi.mock('isomorphic-ws', () => ({
 }));
 
 describe('Client with offline config (no edge endpoint)', () => {
-  test('boots, database round-trips, zero network activity, zero warnings', { timeout: 30_000 }, async () => {
+  test('boots, database round-trips, zero network activity, zero warnings', { timeout: 30_000 }, async ({ expect }) => {
     const networkCalls = interceptNetwork();
     const problems = captureProblems();
 

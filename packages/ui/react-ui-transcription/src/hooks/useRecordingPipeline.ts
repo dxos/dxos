@@ -31,10 +31,7 @@ const DEFAULT_TRANSCRIBE_CONFIG: TranscribeConfig = {
 };
 
 export type RecordingPipelineOptions = {
-  /**
-   * Transcription service base URL (`runtime.services.edgeServices: transcription`).
-   * A required key — there is no built-in endpoint, so the caller must resolve one from config.
-   */
+  /** Transcription service base URL (`runtime.services.edgeServices: transcription`). */
   endpoint: string | undefined;
   /** Override the transcriber chunk configuration. */
   config?: Partial<Omit<TranscribeConfig, 'endpoint'>>;

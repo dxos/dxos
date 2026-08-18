@@ -18,9 +18,9 @@ export type CreateTranscriberOptions = {
   audioStreamTrack: MediaStreamTrack;
   onSegments: (segments: ContentBlock.Transcript[]) => Promise<void>;
   /**
-   * Transcription service base URL (`runtime.services.edgeServices: transcription`).
-   * A required key — there is no built-in endpoint, so every caller has to resolve one from config
-   * (or pass `transcribe`) rather than build a transcriber that rejects on `open()`.
+   * Transcription service base URL (`runtime.services.edgeServices: transcription`). Required, and
+   * nullable rather than optional: omitting it silently would build a transcriber that rejects on
+   * `open()`.
    */
   endpoint: string | undefined;
   transcriberConfig?: Partial<Omit<TranscribeConfig, 'endpoint'>>;
