@@ -58,12 +58,7 @@ export const defaultConfig = new Config({
   },
 });
 
-/**
- * Same as {@link defaultConfig}, but pointed at the `main` (staging) edge worker — the same
- * override Composer's local dev server applies via `dx-local.yml` on top of `dx.yml`. Bootstraps a
- * profile when {@link ConfigService.load} runs with `DX_LOCAL_DEV` set, so a fresh CLI profile in a
- * dev checkout talks to the same backend as a locally-run Composer instead of production.
- */
+/** Aligns a fresh monorepo CLI profile with the backend Composer's local dev server talks to. */
 export const localDevConfig = new Config({
   runtime: {
     client: {
@@ -128,8 +123,8 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
               const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
               yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });
               yield* fs.writeFileString(pathToCreate, Yaml.stringify(configValues));
-              // The written file carries only `defaultConfig`; the profile defaults stay out of it so
-              // they keep tracking the code rather than freezing into every profile ever created.
+              // Profile defaults stay out of the written file so they keep tracking the code
+              // rather than freezing into every profile ever created.
               return ConfigService.of(
                 new Config(processEnvDefaults(), configValues, profileBuiltinDefaults(args.profile).values),
               );
