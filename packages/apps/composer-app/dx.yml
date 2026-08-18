@@ -29,3 +29,5 @@ runtime:
         endpoint: https://image.main.dxos.network
       - name: discord
         endpoint: https://discord.dxos.network
+      - name: introspect
+        endpoint: https://introspect.labs.dxos.network/mcp

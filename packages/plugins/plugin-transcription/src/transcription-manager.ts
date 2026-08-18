@@ -13,7 +13,6 @@ import { Resource } from '@dxos/context';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Transcriber } from '@dxos/pipeline-transcription';
-import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { MediaStreamRecorder } from '@dxos/react-ui-transcription';
 import { type ContentBlock, Message } from '@dxos/types';
 
@@ -36,8 +35,13 @@ const PREFIXED_CHUNKS_AMOUNT = 10;
 const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
 export type TranscriptionManagerOptions = {
-  edgeClient: EdgeHttpClient;
   registry: Registry.AtomRegistry;
+
+  /**
+   * Transcription service base URL (`runtime.services.edgeServices: transcription`).
+   * Transcription fails with a clear error when absent — there is no built-in endpoint.
+   */
+  transcriptionEndpoint?: string;
 
   /**
    * Enrich the message before it is written to the transcription feed.
@@ -51,9 +55,9 @@ export type TranscriptionManagerOptions = {
  * interface (via the `TranscriptionManagerProvider` capability), not this class.
  */
 export class TranscriptionManagerImpl extends Resource implements TranscriptionCapabilities.TranscriptionManager {
-  private readonly _edgeClient: EdgeHttpClient;
-  private readonly _messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
   private readonly _registry: Registry.AtomRegistry;
+  private readonly _transcriptionEndpoint?: string;
+  private readonly _messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
@@ -64,9 +68,9 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
 
   constructor(options: TranscriptionManagerOptions) {
     super();
-    this._edgeClient = options.edgeClient;
-    this._messageEnricher = options.messageEnricher;
     this._registry = options.registry;
+    this._transcriptionEndpoint = options.transcriptionEndpoint;
+    this._messageEnricher = options.messageEnricher;
   }
 
   get enabled(): Atom.Atom<boolean> {
@@ -150,16 +154,26 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
     }
     if (needReinit) {
       await this._transcriber?.close();
-      this._transcriber = new Transcriber({
+      this._transcriber = undefined;
+      const transcriber = new Transcriber({
         config: {
           transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
           prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
+          endpoint: this._transcriptionEndpoint,
         },
         recorder: this._mediaRecorder,
         onSegments: (segments) => this._onSegments(segments),
       });
 
-      await this._transcriber?.open();
+      try {
+        await transcriber.open();
+      } catch (err) {
+        // Drop the recorder as well: latching an unopened transcriber would leave `needReinit`
+        // false, so every later enable/track update would silently no-op for this session.
+        this._mediaRecorder = undefined;
+        throw err;
+      }
+      this._transcriber = transcriber;
     }
   }
 

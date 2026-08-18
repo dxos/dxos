@@ -13,15 +13,21 @@ import path from 'node:path';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { ConfigService } from '@dxos/client';
-import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
 import { withRetry } from '@dxos/edge-client';
+
+import { formatHubError } from '../../util';
 
 export const list = Command.make(
   'list',
   {},
   Effect.fn(function* () {
     const config = yield* ConfigService;
-    const baseUrl = config.values?.runtime?.services?.hub?.url ?? DEFAULT_HUB_URL;
+    const baseUrl = config.values?.runtime?.services?.hub?.url;
+    if (!baseUrl) {
+      // The CLI writes a hub URL into every profile it creates, so an absent one means the profile
+      // was edited — report that rather than silently substituting a DXOS-operated host.
+      return yield* Effect.fail(new Error('Hub URL is not configured (runtime.services.hub.url).'));
+    }
     const url = path.join(baseUrl, '/api/waitlist');
     if (yield* CommandConfig.isVerbose) {
       yield* Effect.log(`Calling: ${url}`);
@@ -38,13 +44,23 @@ export const list = Command.make(
       ),
       Effect.provide(FetchHttpClient.layer),
       Effect.withSpan('EdgeHttpClient'),
+      // Same surfacing as the sibling hub commands: a transport/API failure reaches the user as the
+      // hub's own message, not a raw Effect error dump.
+      Effect.catch((error) => Effect.fail(new Error(formatHubError(error)))),
     );
 
     if (yield* CommandConfig.isJson) {
       return yield* Console.log(result);
     } else {
       // TODO(burdon): Output table. Look at @effect/printer.
-      return yield* Console.log((result as any).entries?.length + ' waitlist entries');
+      const count = countEntries(result);
+      return yield* Console.log(count === undefined ? 'Unexpected response.' : `${count} waitlist entries`);
     }
   }),
 ).pipe(Command.withDescription('List hub users.'));
+
+/** Narrows the untyped hub response; `undefined` when it does not carry an `entries` array. */
+const countEntries = (result: unknown): number | undefined =>
+  typeof result === 'object' && result !== null && 'entries' in result && Array.isArray(result.entries)
+    ? result.entries.length
+    : undefined;

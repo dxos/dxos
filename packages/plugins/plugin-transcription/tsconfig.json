@@ -79,10 +79,10 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/react-edge-client"
+      "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/schema"

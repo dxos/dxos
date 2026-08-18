@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: client-edge-audit
+    status: active
+    user: mykola
+    host: mac
+    created: 2026-08-14
+    summary: 'Audit every client→edge communication point (EdgeHttpClient, EdgeClient, ad-hoc fetch/WebSocket) and make the client run cleanly offline — with no edge endpoint in config the database works, no network activity, no warnings/errors, and no code path defaults an edge endpoint.'
+    tasks: .agents/projects/client-edge-audit/TASKS.md
+    design: .agents/projects/client-edge-audit/DESIGN.md
+    prs: [12598]
+    resume: 'PR #12598 OPEN (https://github.com/dxos/dxos/pull/12598) — watch Check to green. Phase 1 audit in DESIGN.md (boot path was already URL-gated everywhere; echo/halo/common have zero direct network calls; observability has 2 consent-gating bugs). Phase 2 verified by packages/sdk/client/src/client/client-offline.test.ts — empty Config boots, DB round-trips, ZERO network calls (fetch/WebSocket/isomorphic-ws intercepted) and ZERO WARN+ logs, green first run; only SDK fix needed was ipdata missing-key warn→debug. Phase 3 removed every SDK edge-endpoint default: @dxos/config defaultConfig stripped of services (CLI first-run profile now endpoint-free), configPreset omit-when-unset (no implicit main), EDGE_SERVICE_DEFAULTS deleted (getEdgeServiceEndpoint returns string|undefined, pinned by no-default-endpoints.test.ts), plus CLI hub ?? fallbacks, DEFAULT_VAULT_URL, DEFAULT_IMAGE_SERVICE_URL, DEFAULT_INTROSPECT_MCP_URL, GptRealtime/plugin-wnfs localhost:8787, devtools halo.dxos.org target; ~10 consumers updated to handle absence (clear error at use / unconfigured UI state / skip), composer dx.yml gained the introspect entry. Full-repo :build green, touched-package tests+lint+format green. NEXT: drive PR #12598 review + Check to green and land, then Phase 4 backlog in TASKS.md: proxyFetchLegacy cors.dxos.network through config, optional capability contributions (module-loader warn), observability consent gating, plugin-script ??"" masking, react-edge-client removal, files: allowlists.'
   - name: client-startup-timeout
     status: active
     user: jdw

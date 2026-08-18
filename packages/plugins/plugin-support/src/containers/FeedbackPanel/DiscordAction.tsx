@@ -6,8 +6,8 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
-import { useConfig } from '@dxos/react-client';
+import { EdgeServiceName } from '@dxos/config';
+import { useConfig, useEdgeServiceEndpoint } from '@dxos/react-client';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
@@ -35,18 +35,14 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
   const config = useConfig();
 
   const posthogProjectId = config.values.runtime?.app?.env?.DX_POSTHOG_PROJECT_ID as string | undefined;
+  const discordEndpoint = useEdgeServiceEndpoint(EdgeServiceName.Discord);
   const discordServiceUrl =
-    (config.values.runtime?.app?.env?.DX_DISCORD_SERVICE_URL as string | undefined) ??
-    getEdgeServiceEndpoint(config, EdgeServiceName.Discord);
+    (config.values.runtime?.app?.env?.DX_DISCORD_SERVICE_URL as string | undefined) ?? discordEndpoint;
 
   const discordPresence = useDiscordPresence(discordServiceUrl);
 
   const handleDiscord = useCallback<FeedbackSubmitHandler>(
     async (values) => {
-      if (!discordServiceUrl) {
-        return;
-      }
-
       const message = formatRequestMessage(values);
 
       // PostHog submission is the primary path — if it fails the error propagates
@@ -108,6 +104,12 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
     },
     [invokePromise, discordServiceUrl, posthogProjectId],
   );
+
+  // Nothing to offer without the service: rendering the button would submit into a no-op, and the
+  // panel's own "Send feedback" action already covers the PostHog-only path.
+  if (!discordServiceUrl) {
+    return null;
+  }
 
   return (
     <>

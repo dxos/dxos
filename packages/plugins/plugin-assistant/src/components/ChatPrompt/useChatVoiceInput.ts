@@ -5,7 +5,9 @@
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOptionalAtomCapabilityState } from '@dxos/app-framework/ui';
+import { EdgeServiceName } from '@dxos/config';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
+import { useEdgeServiceEndpoint } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-ui';
 import { type ChatEditorController } from '@dxos/react-ui-chat';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
@@ -27,6 +29,7 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
   // Voice input is optional: tolerate the transcription plugin being absent (no session ⇒ inactive).
   const [session] = useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   const [settings] = useOptionalAtomCapabilityState(TranscriptionCapabilities.Settings);
+  const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
 
   const active = !!session?.recording && session.id === docId;
 
@@ -80,8 +83,9 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
         1,
         Math.round((settings?.transcribeAfterMs ?? 4000) / RECORDER_INTERVAL_MS),
       ),
+      endpoint,
     }),
-    [settings?.transcribeAfterMs],
+    [settings?.transcribeAfterMs, endpoint],
   );
 
   // Stable identity: a fresh object would change useTranscriber's memo deps every render.

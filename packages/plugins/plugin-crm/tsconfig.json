@@ -22,6 +22,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -77,9 +80,6 @@
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"

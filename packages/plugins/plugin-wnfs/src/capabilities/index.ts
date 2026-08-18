@@ -12,7 +12,9 @@ import { WnfsCapabilities } from '#types';
 export const BlobBackend = Capability.lazyModule(
   'BlobBackend',
   {
-    requires: [ClientCapabilities.Client, WnfsCapabilities.Blockstore, WnfsCapabilities.Instances],
+    // Blockstore/Instances are awaited in the module body, not declared here: they are absent by
+    // design when EDGE is unconfigured.
+    requires: [ClientCapabilities.Client],
     provides: [FileCapabilities.Backend],
     activatesOn: FileEvents.Start,
   },
@@ -24,7 +26,7 @@ export const Dependencies = Capability.lazyModule(
   {
     requires: [ClientCapabilities.Client],
     // The file plugin's start, not wnfs's own: wnfs contributes no surface, so nothing would
-    // ever fire its own start — and these are exactly the requires of the blob backend below.
+    // ever fire its own start — and these are exactly what the blob backend above waits for.
     provides: [WnfsCapabilities.Blockstore, WnfsCapabilities.Instances],
     activatesOn: FileEvents.Start,
   },
