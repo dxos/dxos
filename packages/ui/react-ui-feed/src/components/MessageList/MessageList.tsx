@@ -559,7 +559,7 @@ const isEmptyContent = (content: ItemContent, hasCustomRenderer: boolean): boole
   (content.kind === 'custom' && !hasCustomRenderer);
 
 const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
-  ({ autoHide, centered, native, padding, scrollbars, thin, gutter = 'sm', ...props }, forwardedRef) => {
+  ({ autoHide, centered, native, padding, scrollbars, thin, gutter = 'md', ...props }, forwardedRef) => {
     const { model, renderer, Chrome, Custom, windowRef, offset, sizerExtent, first, last, setViewport } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
     // The value once, per-row state derived: hooks do not run in loops, and the row loop below is

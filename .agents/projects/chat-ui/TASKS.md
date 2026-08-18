@@ -25,6 +25,13 @@ rendering layer. Track B and C touch `react-ui-thread`, so coordinate before mov
 - [x] Synthetic context renders inside the prompt bubble — FIXED: the chrome renders synthetic
       text blocks as a dimmed collapsible panel above the bubble (react-ui-assistant MessageChrome
       SyntheticContext); the renderer excludes them from the item's document.
+- [ ] plugin-mermaid extension (story `plugins/plugin-mermaid/extensions/mermaid--default`):
+      center the diagram in `.cm-mermaid` and fix node labels not rendering (the chip session for
+      this was deleted before it ran).
+- [ ] Live app re-test: thinking view shows reasoning blocks (AiRequest now parses cot/think/
+      reasoning tags into reasoning blocks); typewriter cadence feel (MarkdownBlock drip: min 2
+      chars/frame, catch-up divisor 30); awaiting user fixtures for the remaining streaming and
+      list-renumbering reports.
 - [ ] mosaic VirtualStack rebind onto react-ui-virtual (SPEC F-8.2).
 - [ ] npm publish of react-ui-virtual / react-ui-feed / react-ui-assistant (changesets post-merge).
 
