@@ -258,15 +258,29 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
 
 ## Placement engine — open defects
 
-- [ ] **`bridge/Tail` fails: a sticky window reports no scrollable extent.** With `sticky` on, the
-      scroller ends with `scrollHeight === clientHeight` and no last row mounted, while the three
-      bridge stories above it — same component, differing only in that flag — are fine. So the fault
-      is in how sticky interacts with the first layout, before anything has been measured, and not in
-      the tail arithmetic. Left failing on purpose: it states a requirement the swap of
-      `MessageList.Root` has to meet, and deleting it would be deleting the requirement. Fixed on the
-      way: the loop it first caused (the sticky effect both watching the layout and invalidating it),
-      and the tail landing short (a jump to the last row summed estimates instead of taking the
-      content's end, which it is by definition).
+Reported from a manual pass on 2026-08-17, against `TESTING.md`.
+
+- [x] **`bridge/Tail` renders nothing** — two defects, neither in the tail arithmetic. `Window` held
+      the `getId` closure it was constructed with, so an appended row's measurement was filed under
+      one id and read back under another; the row disagreed with itself every commit and React ended
+      it by exceeding the update limit. And the follow was re-derived from proximity, which its own
+      corrections disengage. Fixed by `Placement.setGetId` + `endOffset` + a `following` intent.
+- [x] **Outline card does not move on ArrowUp/Down** (§3.4) — the pointer rests on the tick the
+      reader clicked, and "the pointer always wins" pinned the card there. The keyboard now holds it
+      while it is being used; `data-shown` publishes which won.
+- [x] **Stepping snapped rather than glided** (§4.2) — the old engine had to make it instant because
+      measurement wrote `scrollTop`; here corrections move the window, so a glide survives. Only over
+      mounted rows.
+- [ ] **The feed opens at the document's end, not the content's** (§1) — old engine, and not fixable
+      there: the reserve is a DOM spacer, so it is in the element's `scrollHeight` and not in the
+      virtualizer's total, and an offset inside it is beyond the virtualizer's own maximum, where
+      `scrollToOffset` silently declines to move (verified — the element stayed exactly where it
+      was). `baseline/tail` stops at what that engine can do; `bridge/VariedPastEnd` states the whole
+      requirement against the replacement. **Closed by the swap.**
+- [ ] **Jumps as soon as it starts to scroll** (§2) — old engine, the re-base. `bridge/Scrolling`
+      pins the invariant on the replacement: the row under the top of the viewport moves by exactly
+      what was scrolled. Scrolls _up_ from the tail, which is the only direction that discriminates.
+      Mutation-checked at 8–16px per step under a prefix sum. **Closed by the swap.**
 
 - [x] **`Window` could not tell an append from a prepend.** It compared the first row's id to the
       anchor's, which says "prepended" for every append made while the reader is anywhere but the
