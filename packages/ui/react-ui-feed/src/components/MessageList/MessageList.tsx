@@ -577,9 +577,18 @@ type MessageListViewportExtra = Pick<
  * Scrolling belongs to `ScrollArea`, which owns the overlay thumbs and the padding tokens; the
  * placement needs only the element being scrolled, which `ScrollArea.Viewport` publishes.
  */
+/**
+ * Whether a message renders to nothing under the current renderer — e.g. a stats-only turn, whose
+ * block the renderer deliberately maps to no output. The message stays in the model (identity,
+ * stops, search all see it); only its chrome is withheld, so the reader is not shown an empty row
+ * with a toolbar.
+ */
+const isEmptyContent = (content: ItemContent): boolean =>
+  (content.kind === 'markdown' && !content.text.trim()) || (content.kind === 'html' && !content.html.trim());
+
 const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
   ({ autoHide, centered, native, padding, scrollbars, thin, gutter, ...props }, forwardedRef) => {
-    const { model, Chrome, windowRef, offset, sizerExtent, first, last, setViewport } =
+    const { model, renderer, Chrome, windowRef, offset, sizerExtent, first, last, setViewport } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
     // The value once, per-row state derived: hooks do not run in loops, and the row loop below is
     // one. Item-shaped chrome uses `useItemSelection(id)` instead.
@@ -600,23 +609,28 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
         continue;
       }
 
+      // The row div always exists — the measurement pass walks the window's children by index —
+      // but an empty render mounts no chrome inside it, so it measures at zero and takes no space.
+      const empty = isEmptyContent(renderer(message));
       rows.push(
         // Unpositioned, and that is the point. A row that changes extent reflows the ones after it,
         // in the browser, in the same frame; placing each row ourselves meant re-placing every row
         // below it on every frame of the change — 177 re-placements for one disclosure opening (§6).
         <div key={message.id} data-index={index} data-object-id={message.id}>
-          <Column.Root gutter={gutter}>
-            <Column.Center>
-              <Chrome
-                message={message}
-                index={index}
-                selected={selectedIds?.has(message.id) ?? false}
-                onSelect={(id, additive) => onSelect?.(id, additive)}
-              >
-                <MessageListItem message={message} />
-              </Chrome>
-            </Column.Center>
-          </Column.Root>
+          {!empty && (
+            <Column.Root gutter={gutter}>
+              <Column.Center>
+                <Chrome
+                  message={message}
+                  index={index}
+                  selected={selectedIds?.has(message.id) ?? false}
+                  onSelect={(id, additive) => onSelect?.(id, additive)}
+                >
+                  <MessageListItem message={message} />
+                </Chrome>
+              </Column.Center>
+            </Column.Root>
+          )}
         </div>,
       );
     }

@@ -29,7 +29,7 @@ import { Message } from '@dxos/types';
 import { translations } from '#translations';
 
 import { AssistantPlugin } from '../../plugin';
-import { ChatArticle } from './ChatArticle';
+import { ChatArticle, ChatArticleProps } from './ChatArticle';
 
 /**
  * Replaces the AI service the plugin would build with a scripted model, so a story can drive the real
@@ -79,16 +79,16 @@ const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
 type StoryArgs = {
   /** Turns the story drives: each prompt is submitted, and its reply is what the scripted model returns. */
   messages?: { prompt: string; reply: string }[];
-};
+} & Pick<ChatArticleProps, 'debug'>;
 
-const DefaultStory = () => {
+const DefaultStory = ({ debug }: StoryArgs) => {
   const [space] = useSpaces();
   const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
   if (!chat) {
     return <Loading />;
   }
 
-  return <ChatArticle role='article' subject={chat} attendableId='story' />;
+  return <ChatArticle role='article' subject={chat} attendableId='story' debug={debug} />;
 };
 
 const meta = {
@@ -138,7 +138,11 @@ export default meta;
 
 type Story = StoryObj<StoryArgs>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    // debug: true,
+  },
+};
 
 /**
  * Drives the real request loop against the scripted model — no network and no seeded feed. This is the

@@ -36,7 +36,10 @@ type Story = StoryObj<FeedStoryProps>;
 
 /** Passive: the assistant-shaped feed under the shared harness. */
 export const Default: Story = {
-  args: { scenario: 'assistant', count: 200 },
+  args: {
+    scenario: 'assistant',
+    count: 200,
+  },
 };
 
 export const Small: Story = {

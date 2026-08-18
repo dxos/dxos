@@ -16,17 +16,21 @@ import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
 import { Flex, Panel } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
+import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
 import { useChatProcessor, useChatServices, usePresets, useSelectionContext } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
-export type ChatArticleProps = AppSurface.ObjectSectionProps<ChatType.Chat> & {
-  companionTo?: Obj.Unknown;
-} & Pick<ChatRootProps, 'onEvent' | 'onSubmit'>;
+export type ChatArticleProps = Merge<
+  AppSurface.ObjectSectionProps<ChatType.Chat> & {
+    companionTo?: Obj.Unknown;
+  },
+  Pick<ChatRootProps, 'debug' | 'onEvent' | 'onSubmit'>
+>;
 
 export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
-  ({ role, attendableId, subject: chat, companionTo, onEvent, onSubmit }, forwardedRef) => {
+  ({ role, attendableId, subject: chat, companionTo, debug, onEvent, onSubmit }, forwardedRef) => {
     const registry = useRegistry();
     const settings = useAtomCapability(AssistantCapabilities.Settings);
     const atomRegistry = useCapability(Capabilities.AtomRegistry);
@@ -85,6 +89,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         chat={chat}
         db={space?.db}
         processor={processor}
+        debug={debug}
         getContext={getContext}
         onEvent={onEvent}
         onSubmit={onSubmit}
@@ -95,11 +100,11 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           </Panel.Toolbar>
           <Panel.Content asChild>
             <ChatComponent.Content>
-              <div className='dx-container dx-document relative'>
+              <div className='dx-container relative'>
                 {viewType !== 'summary' && (
                   <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />
                 )}
-                <ChatComponent.Thread viewType={viewType} onViewUsage={handleViewUsage} />
+                <ChatComponent.Thread classNames='dx-document' viewType={viewType} onViewUsage={handleViewUsage} />
                 {viewType !== 'summary' && (
                   <div className='absolute bottom-2 left-0 right-0'>
                     <div className='dx-document px-4'>

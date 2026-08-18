@@ -46,7 +46,7 @@ import { projectThread, resolveRewind } from './thread';
 //
 
 type ChatRootProps = PropsWithChildren<
-  Pick<ChatContextValue, 'chat' | 'processor'> & {
+  Pick<ChatContextValue, 'chat' | 'processor' | 'debug'> & {
     /** Fallback database when the chat is transient (not yet persisted). */
     db?: Database.Database;
     onEvent?: (event: ChatEvent) => void;
@@ -65,12 +65,13 @@ const ChatRoot = ({
   chat,
   processor,
   db: dbFallback,
+  debug: debugProp,
   onEvent,
   onSubmit,
   getContext,
   ...props
 }: ChatRootProps) => {
-  const [debug, setDebug] = useState(false);
+  const [debug, setDebug] = useState(debugProp ?? false);
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
   const requestTiming = useRequestTiming({ active });
@@ -332,19 +333,21 @@ const buildMarkers = (messages: Message.Message[]): OutlineMarker[] => {
 
 const CHAT_THREAD_NAME = 'Chat.Thread';
 
+/** The plugin's `surface` widget layered over the package registry: it can dispatch a Surface. */
+const chatRegistry = {
+  surface: {
+    block: true,
+    Component: SurfaceWidget,
+  },
+} as const;
+
 type ChatThreadProps = ThemedClassName<{
   viewType?: ChatView;
-  debug?: boolean;
   /** Invoked from the over-quota error toast to open the usage dashboard. */
   onViewUsage?: () => void;
 }>;
 
-/** The plugin's `surface` widget layered over the package registry: it can dispatch a Surface. */
-const chatRegistry = {
-  surface: { block: true, Component: SurfaceWidget },
-} as const;
-
-const ChatThread = ({ classNames, viewType, debug: debugProp, onViewUsage }: ChatThreadProps) => {
+const ChatThread = ({ classNames, viewType, onViewUsage }: ChatThreadProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { debug, event, messages, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
@@ -416,13 +419,12 @@ const ChatThread = ({ classNames, viewType, debug: debugProp, onViewUsage }: Cha
         viewType={viewType}
         registry={chatRegistry}
         userHue={userHue}
-        debug={true}
-        // debug={debugProp ?? debug}
+        debug={debug}
         onEvent={handleEvent}
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}
       >
-        <NaturalChatThread.Viewport classNames={['bordergrow min-h-0', classNames]} padding />
+        <NaturalChatThread.Viewport classNames={['border grow min-h-0', classNames]} padding />
       </NaturalChatThread.Root>
 
       {/* TODO(burdon): Why is this required? */}
