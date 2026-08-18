@@ -5,9 +5,9 @@
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOptionalAtomCapabilityState } from '@dxos/app-framework/ui';
-import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
+import { EdgeServiceName } from '@dxos/config';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
-import { useConfig } from '@dxos/react-client';
+import { useEdgeServiceEndpoint } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-ui';
 import { type ChatEditorController } from '@dxos/react-ui-chat';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
@@ -29,8 +29,7 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
   // Voice input is optional: tolerate the transcription plugin being absent (no session ⇒ inactive).
   const [session] = useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   const [settings] = useOptionalAtomCapabilityState(TranscriptionCapabilities.Settings);
-  const config = useConfig();
-  const endpoint = getEdgeServiceEndpoint(config, EdgeServiceName.Transcription);
+  const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
 
   const active = !!session?.recording && session.id === docId;
 

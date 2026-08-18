@@ -8,11 +8,11 @@ import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } fr
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
-import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
+import { EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
 import { linkEntities } from '@dxos/pipeline-transcription';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
-import { useConfig } from '@dxos/react-client';
+import { useEdgeServiceEndpoint } from '@dxos/react-client';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
@@ -36,8 +36,7 @@ const TranscriptionDriver = () => {
   // Injected entity resolver (full-text/vector/…); the driver stays decoupled from the database.
   const [lookup] = useCapabilities(TranscriptionCapabilities.EntityLookup);
   const settings = useAtomCapability(TranscriptionCapabilities.Settings);
-  const config = useConfig();
-  const endpoint = getEdgeServiceEndpoint(config, EdgeServiceName.Transcription);
+  const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
 
   const [, setStatus] = useAtomCapabilityState(TranscriptionCapabilities.PipelineStatus);
 

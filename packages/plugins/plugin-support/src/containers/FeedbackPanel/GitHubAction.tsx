@@ -6,9 +6,9 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
+import { EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
-import { useConfig } from '@dxos/react-client';
+import { useConfig, useEdgeServiceEndpoint } from '@dxos/react-client';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
@@ -85,9 +85,9 @@ export const GitHubAction = () => {
   const { invokePromise } = useOperationInvoker();
   const config = useConfig();
   // Shared with @dxos/plugin-crm (same Edge service, same multipart contract).
+  const imageEndpoint = useEdgeServiceEndpoint(EdgeServiceName.Image);
   const imageServiceUrl =
-    (config.values.runtime?.app?.env?.DX_IMAGE_SERVICE_URL as string | undefined) ??
-    getEdgeServiceEndpoint(config, EdgeServiceName.Image);
+    (config.values.runtime?.app?.env?.DX_IMAGE_SERVICE_URL as string | undefined) ?? imageEndpoint;
 
   const handleGitHub = useCallback<FeedbackSubmitHandler>(
     async (values) => {

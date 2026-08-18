@@ -6,8 +6,8 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
-import { useConfig } from '@dxos/react-client';
+import { EdgeServiceName } from '@dxos/config';
+import { useConfig, useEdgeServiceEndpoint } from '@dxos/react-client';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
@@ -35,9 +35,9 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
   const config = useConfig();
 
   const posthogProjectId = config.values.runtime?.app?.env?.DX_POSTHOG_PROJECT_ID as string | undefined;
+  const discordEndpoint = useEdgeServiceEndpoint(EdgeServiceName.Discord);
   const discordServiceUrl =
-    (config.values.runtime?.app?.env?.DX_DISCORD_SERVICE_URL as string | undefined) ??
-    getEdgeServiceEndpoint(config, EdgeServiceName.Discord);
+    (config.values.runtime?.app?.env?.DX_DISCORD_SERVICE_URL as string | undefined) ?? discordEndpoint;
 
   const discordPresence = useDiscordPresence(discordServiceUrl);
 
