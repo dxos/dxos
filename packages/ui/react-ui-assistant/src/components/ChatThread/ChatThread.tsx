@@ -10,6 +10,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useState,
 } from 'react';
 
 import { setRef } from '@dxos/react-ui';
@@ -114,9 +115,17 @@ const ChatThreadRoot = ({
   const merged = useMemo(() => (registry ? { ...assistantRegistry, ...registry } : assistantRegistry), [registry]);
   const handleRewind = useCallback((id: string) => onEvent?.({ type: 'rewind', id }), [onEvent]);
 
+  // While an answer streams, the chrome keeps its toolbars hidden — a control on a half-written
+  // answer invites acting on it, and the hover reveal moving with the growing rows reads as noise.
+  const [streaming, setStreaming] = useState(!!model.streamingId);
+  useEffect(() => {
+    setStreaming(!!model.streamingId);
+    return model.subscribe(() => setStreaming(!!model.streamingId));
+  }, [model]);
+
   return (
     <ChatThreadProvider userHue={userHue} onEvent={onEvent}>
-      <MessageChromeProvider onRewind={onEvent ? handleRewind : undefined}>
+      <MessageChromeProvider onRewind={onEvent ? handleRewind : undefined} streaming={streaming}>
         <MessageList.Root
           model={model}
           renderer={renderer}

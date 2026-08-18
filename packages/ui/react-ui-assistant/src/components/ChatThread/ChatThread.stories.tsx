@@ -15,7 +15,7 @@ import { Message } from '@dxos/types';
 
 import { translations } from '../../translations';
 import { type ChatThreadEvent, type ChatView } from '../../types';
-import { ChatThread } from './ChatThread';
+import { ChatThread, type ChatThreadController } from './ChatThread';
 
 /**
  * The canonical assistant thread: `ChatThread` end to end — the view-typed renderer, the real
@@ -39,9 +39,11 @@ const DefaultStory = ({ count = 30, viewType = 'thinking', debug, wordsPerChunk 
   const definition = useMemo(() => createScenario({ scenario: 'assistant', count }), [count]);
   const model = useMemo(() => new FeedModel({ messages: definition.messages, stops: 'prompt' }), [definition]);
 
+  const [prompt, setPrompt] = useState('');
   const [busy, setBusy] = useState(false);
   const [auto, setAuto] = useState(false);
   const autoRef = useRef(false);
+  const controller = useRef<ChatThreadController | null>(null);
 
   // One agent turn: the answer arrives as blocks that shrink and rewrite as well as grow.
   const answer = useCallback(
@@ -50,6 +52,8 @@ const DefaultStory = ({ count = 30, viewType = 'thinking', debug, wordsPerChunk 
       model.append([
         Message.make({ sender: { role: 'user', name: 'rich' }, blocks: [{ _tag: 'text', text: prompt }] }),
       ]);
+      // The reader's own prompt takes them to it: the answer streams where they are looking.
+      controller.current?.scrollToBottom();
 
       const reply = Message.make({ sender: { role: 'assistant', name: 'Assistant' }, blocks: [] });
       model.append([reply]);
@@ -80,9 +84,15 @@ const DefaultStory = ({ count = 30, viewType = 'thinking', debug, wordsPerChunk 
           break;
         }
         case 'rewind': {
+          // Edit-and-resend, matching the plugin: the prompt and everything after it leave the
+          // thread, and its text comes back in the composer to be revised.
           const index = model.indexOf(event.id);
           if (index >= 0) {
+            const text = model.at(index)?.blocks.find((block) => block._tag === 'text')?.text;
             model.replace(model.messages.slice(0, index));
+            if (text) {
+              setPrompt(text);
+            }
           }
           break;
         }
@@ -109,7 +119,7 @@ const DefaultStory = ({ count = 30, viewType = 'thinking', debug, wordsPerChunk 
 
   return (
     <DebugProvider>
-      <ChatThread.Root model={model} viewType={viewType} onEvent={handleEvent}>
+      <ChatThread.Root model={model} viewType={viewType} onEvent={handleEvent} controllerRef={controller}>
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
@@ -131,7 +141,7 @@ const DefaultStory = ({ count = 30, viewType = 'thinking', debug, wordsPerChunk 
               <ChatThread.Viewport classNames='absolute inset-0' padding />
               {debug && <Probes model={model} />}
             </div>
-            <PromptInput busy={busy} onSubmit={(prompt) => void answer(prompt)} />
+            <PromptInput busy={busy} prompt={prompt} setPrompt={setPrompt} onSubmit={(prompt) => void answer(prompt)} />
           </Panel.Content>
         </Panel.Root>
         {debug && <Debug />}
@@ -140,9 +150,19 @@ const DefaultStory = ({ count = 30, viewType = 'thinking', debug, wordsPerChunk 
   );
 };
 
-/** The prompt box: the reader's half of the conversation. */
-const PromptInput = ({ busy, onSubmit }: { busy: boolean; onSubmit: (prompt: string) => void }) => {
-  const [prompt, setPrompt] = useState('');
+/** The prompt box: the reader's half of the conversation. State lives with the story so a rewind
+ * can put the withdrawn prompt back (edit-and-resend). */
+const PromptInput = ({
+  busy,
+  prompt,
+  setPrompt,
+  onSubmit,
+}: {
+  busy: boolean;
+  prompt: string;
+  setPrompt: (prompt: string) => void;
+  onSubmit: (prompt: string) => void;
+}) => {
   const submit = () => {
     const text = prompt.trim();
     if (text.length) {
@@ -265,7 +285,7 @@ const Probes = ({ model }: { model: FeedModel }) => {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-assistant/ChatThread',
+  title: 'ui/react-ui-assistant/components/ChatThread',
   render: DefaultStory,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen', translations },

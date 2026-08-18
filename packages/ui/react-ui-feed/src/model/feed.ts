@@ -65,6 +65,9 @@ export class FeedModel extends ListModel<Message.Message> {
 
   setStreaming(id: string | undefined): void {
     const previous = this.#streamingId;
+    if (previous === id) {
+      return;
+    }
     this.#streamingId = id;
     // The item that stopped (or started) streaming re-renders; the rest of the feed does not care.
     for (const changed of [previous, id]) {

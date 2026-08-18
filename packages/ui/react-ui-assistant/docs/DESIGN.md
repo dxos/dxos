@@ -104,14 +104,15 @@ identity scan sees the truncation and the window is told, nothing rebuilt by han
 
 ## 4. Package shape
 
-```
+```text
 react-ui-assistant/
   src/
     components/
       ChatThread/       ChatThread.tsx (+ canonical ChatThread.stories.tsx)
       MessageChrome/    MessageChrome.tsx — bubble + Prompt/Assistant toolbars
-      widgets/          ported widgets (Reasoning, Status, Tool, Branch, Summary, …)
-    model/              renderer.ts (view-type projection), types.ts (ChatView)
+      widgets/          ported widgets (Reasoning, Status, Tool, Summary, …)
+    renderer.ts         view-type projection (+ estimateRow)
+    types.ts            ChatView, ChatThreadEvent
     registry.tsx        assistantRegistry (host-extensible)
     translations.ts
     testing/            test-generator (moved), fixtures

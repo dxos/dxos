@@ -20,7 +20,7 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
-import { ChatThread, type ChatView } from '@dxos/react-ui-assistant';
+import { ChatThread, type ChatThreadEvent, type ChatView } from '@dxos/react-ui-assistant';
 import { type MessageGenerator, createMessageGenerator } from '@dxos/react-ui-assistant/testing';
 import { EditorPreviewProvider } from '@dxos/react-ui-editor';
 import { useFeedModel } from '@dxos/react-ui-feed';
@@ -46,10 +46,13 @@ type StoryArgs = {
   remountable?: boolean;
 };
 
+/** Events the thread emitted, for the plays to assert against; reset per story mount. */
+const recordedEvents: ChatThreadEvent[] = [];
+
 const Thread = ({ messages, viewType }: { messages: MessageType.Message[]; viewType?: ChatView }) => {
   const model = useFeedModel(messages, { stops: 'prompt' });
   return (
-    <ChatThread.Root model={model} viewType={viewType} onEvent={() => {}}>
+    <ChatThread.Root model={model} viewType={viewType} onEvent={(event) => recordedEvents.push(event)}>
       <ChatThread.Viewport classNames='grow min-h-0' padding />
     </ChatThread.Root>
   );
@@ -161,7 +164,10 @@ export const Default: Story = {
   },
 };
 
-/** Every user prompt carries its hover toolbar with the rewind control, rendered by the chrome. */
+/**
+ * Every user prompt carries its hover toolbar with the rewind control, and clicking it emits a
+ * `rewind` event carrying that prompt's message id — the host (Chat.Root) owns what a rewind does.
+ */
 export const Rewind: Story = {
   args: {
     generator: createMessageGenerator(),
@@ -169,13 +175,22 @@ export const Rewind: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await waitFor(
+    recordedEvents.length = 0;
+    const buttons = await waitFor(
       async () => {
         const found = canvas.queryAllByTestId('chat.rewind');
         await expect(found.length).toBeGreaterThan(0);
+        return found;
       },
       { timeout: 10_000 },
     );
+
+    buttons[0].click();
+    const rewinds = recordedEvents.filter((event) => event.type === 'rewind');
+    await expect(rewinds).toHaveLength(1);
+    // The id names the prompt the toolbar belongs to — its row carries the same object id.
+    const row = buttons[0].closest<HTMLElement>('[data-object-id]');
+    await expect(rewinds[0]).toEqual({ type: 'rewind', id: row?.dataset.objectId });
   },
 };
 

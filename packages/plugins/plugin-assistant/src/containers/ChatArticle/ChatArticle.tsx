@@ -15,10 +15,11 @@ import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
 import { Flex, Panel } from '@dxos/react-ui';
+import { type ChatView } from '@dxos/react-ui-assistant';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
 import { useChatProcessor, useChatServices, usePresets, useSelectionContext } from '#hooks';
-import { Assistant, AssistantCapabilities } from '#types';
+import { AssistantCapabilities } from '#types';
 
 export type ChatArticleProps = AppSurface.ObjectSectionProps<ChatType.Chat> & {
   companionTo?: Obj.Unknown;
@@ -43,7 +44,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;
     // a direct `chat.viewType` read in render does not establish a reactive dependency.
     const [chatViewType] = useObject(chat, 'viewType');
-    const viewType = (chatViewType as Assistant.ChatView | undefined) ?? settings.chatView;
+    const viewType = (chatViewType as ChatView | undefined) ?? settings.chatView;
 
     const { invokePromise } = useOperationInvoker();
     const handleViewUsage = useCallback(() => {

@@ -22,6 +22,8 @@ const MESSAGE_CHROME_NAME = 'MessageChrome';
 type MessageChromeContextValue = {
   /** Soft-fork the thread from the given prompt; the rewind button renders only when present. */
   onRewind?: (id: string) => void;
+  /** While an answer is streaming the toolbars stay hidden — still in flow, never revealed. */
+  streaming?: boolean;
 };
 
 const [MessageChromeProvider, useMessageChromeContext] = createContext<MessageChromeContextValue>(MESSAGE_CHROME_NAME);
@@ -47,11 +49,14 @@ const CopyButton = ({ message }: { message: Message.Message }) => {
   );
 };
 
-const timeOf = (message: Message.Message) => (
-  <time dateTime={message.created} title={new Date(message.created).toLocaleString()}>
-    {formatTime(message.created)}
-  </time>
-);
+const Time = ({ message }: { message: Message.Message }) => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <time dateTime={message.created} title={new Date(message.created).toLocaleString()}>
+      {formatTime(message.created, { justNow: t('just-now.label') })}
+    </time>
+  );
+};
 
 export type MessageToolbarProps = ThemedClassName<{
   message: Message.Message;
@@ -81,7 +86,7 @@ export const PromptToolbar = ({ classNames, message }: MessageToolbarProps) => {
           onClick={() => onRewind(message.id)}
         />
       )}
-      {timeOf(message)}
+      <Time message={message} />
     </div>
   );
 };
@@ -93,7 +98,7 @@ export const AssistantToolbar = ({ classNames, message }: MessageToolbarProps) =
   return (
     <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-description', classNames)}>
       <CopyButton message={message} />
-      {timeOf(message)}
+      <Time message={message} />
     </div>
   );
 };
@@ -105,7 +110,8 @@ AssistantToolbar.displayName = 'AssistantToolbar';
 //
 
 /** Shared hover reveal: present in flow at all times, visible when the row is under the pointer. */
-const reveal = 'pt-1 opacity-0 transition-opacity group-hover:opacity-100';
+const reveal = 'pt-1 opacity-0 transition-opacity';
+const revealOnHover = 'group-hover:opacity-100';
 
 const Row = ({ children, classNames }: PropsWithChildren<{ classNames?: string }>) => (
   <div className={mx('group relative px-2 py-2', classNames)} data-testid='feed.message'>
@@ -123,6 +129,7 @@ const Row = ({ children, classNames }: PropsWithChildren<{ classNames?: string }
  * bubble's edge.
  */
 export const MessageChrome = ({ message, selected, children }: MessageChromeProps) => {
+  const { streaming } = useMessageChromeContext(MESSAGE_CHROME_NAME);
   const prompt = message.sender.role === 'user';
 
   return (
@@ -131,13 +138,13 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
         <div className='min-w-0 flex flex-col items-end'>
           <div className='max-w-[66%] min-w-0'>
             <div className='px-4 py-3 border-s-2 border-accent-bg rounded-sm bg-input-surface'>{children}</div>
-            <PromptToolbar classNames={mx('justify-end', reveal)} message={message} />
+            <PromptToolbar classNames={mx('justify-end', reveal, !streaming && revealOnHover)} message={message} />
           </div>
         </div>
       ) : (
         <div className='min-w-0'>
           {children}
-          <AssistantToolbar classNames={reveal} message={message} />
+          <AssistantToolbar classNames={mx(reveal, !streaming && revealOnHover)} message={message} />
         </div>
       )}
     </Row>

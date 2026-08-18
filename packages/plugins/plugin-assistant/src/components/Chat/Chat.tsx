@@ -489,7 +489,8 @@ const ChatOutline = ({ classNames }: ChatOutlineProps) => {
     <OutlineRail
       classNames={classNames}
       markers={markers}
-      visibleRange={visibleRange ? { from: visibleRange.startIndex, to: visibleRange.endIndex } : undefined}
+      // `endIndex` is inclusive; the rail's `to` is exclusive.
+      visibleRange={visibleRange ? { from: visibleRange.startIndex, to: visibleRange.endIndex + 1 } : undefined}
       onSelect={handleSelect}
       onNavigate={handleNavigate}
     />

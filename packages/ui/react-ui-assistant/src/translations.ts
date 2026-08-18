@@ -11,6 +11,7 @@ export const translations = [
     'en-US': {
       [translationKey]: {
         'copy.label': 'Copy',
+        'just-now.label': 'just now',
         'rewind.label': 'Rewind to this prompt',
         'summary.label': 'Summary',
         'stats.label': 'Stats',

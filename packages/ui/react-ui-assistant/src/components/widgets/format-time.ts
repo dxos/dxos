@@ -14,7 +14,13 @@
  */
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export const formatTime = (created: string, now = Date.now()): string => {
+export type FormatTimeOptions = {
+  now?: number;
+  /** Rendered for anything under a minute — translated by the caller ("just now"). */
+  justNow?: string;
+};
+
+export const formatTime = (created: string, { now = Date.now(), justNow }: FormatTimeOptions = {}): string => {
   const date = new Date(created);
   if (Number.isNaN(date.getTime())) {
     return '';
@@ -28,6 +34,9 @@ export const formatTime = (created: string, now = Date.now()): string => {
   const format = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
   const minutes = Math.round(elapsed / 60_000);
   if (minutes < 1) {
+    if (justNow) {
+      return justNow;
+    }
     // Seconds rather than `format(0, 'minute')`, which renders as "this minute".
     return format.format(-Math.max(1, Math.round(elapsed / 1000)), 'second');
   }

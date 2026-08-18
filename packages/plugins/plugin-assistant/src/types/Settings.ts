@@ -18,8 +18,8 @@ export const ModelProvider = DXN.Schema;
 export type ModelProvider = DXN.DXN;
 export const ModelProviders: readonly DXN.DXN[] = Provider.all.map((provider) => provider.id);
 
-// The view type is the thread's own concern; the settings schema consumes it from the package.
-export { ChatView } from '@dxos/react-ui-assistant';
+// The view type is the thread's own concern (`@dxos/react-ui-assistant`); only the literal values
+// survive here, for the settings UI.
 export const ChatViews = SchemaEx.getLiteralValues(ChatView);
 
 export const ModelDefaults = Schema.Struct({
