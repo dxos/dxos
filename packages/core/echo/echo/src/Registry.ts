@@ -4,6 +4,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type ReadOnlyEvent } from '@dxos/async';
 
@@ -11,6 +12,7 @@ import type * as Database from './Database';
 import * as Entity from './Entity';
 import type * as Filter from './Filter';
 import type * as Query from './Query';
+import * as Type from './Type';
 
 /**
  * Identifier denoting an ECHO Registry.
@@ -153,3 +155,48 @@ export const runQuery: {
     const registry = yield* Service;
     return (yield* Effect.promise(() => registry.query(queryOrFilter as any).run())) as any;
   });
+
+//
+// Reactive lookup.
+//
+
+/**
+ * Nested atom family: registry instance -> typename -> the registered type entity.
+ * Memoized, so every consumer of a typename shares one atom and one `changed` subscription.
+ */
+const typeEntityFamily = Atom.family((registry: Registry) =>
+  Atom.family((typename: string): Atom.Atom<Type.AnyEntity | undefined> => {
+    const resolve = (): Type.AnyEntity | undefined =>
+      registry
+        .list()
+        .filter(Type.isType)
+        .find((type) => Type.getTypename(type) === typename);
+
+    return Atom.make<Type.AnyEntity | undefined>((get) => {
+      let current = resolve();
+      const unsubscribe = registry.changed.on(() => {
+        const next = resolve();
+        // Identity guard: the registry also holds operations, skills, and routines, whose churn
+        // must not re-run consumers keyed to an unrelated typename.
+        if (next !== current) {
+          current = next;
+          get.setSelf(next);
+        }
+      });
+      get.addFinalizer(() => unsubscribe());
+      return current;
+    });
+  }),
+);
+
+/**
+ * Reactive lookup of the type entity registered under `typename`.
+ *
+ * Registration is asynchronous — plugin schema modules activate lazily and `client.addTypes` is
+ * awaited — so anything that derives display state from a schema (icon, annotations) must read it
+ * through this atom or it freezes at whatever the registry happened to hold on first evaluation.
+ *
+ * @example `const type = get(Registry.typeAtom(db.graph.registry, typename));`
+ */
+export const typeAtom = (registry: Registry, typename: string): Atom.Atom<Type.AnyEntity | undefined> =>
+  typeEntityFamily(registry)(typename);

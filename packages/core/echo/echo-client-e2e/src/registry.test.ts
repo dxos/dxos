@@ -4,9 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { Filter, Obj, Query, Registry, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, Registry, Type } from '@dxos/echo';
 import { makeRegistry, registryLayer, registryLayerWithUpstream } from '@dxos/echo-client';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
@@ -191,6 +193,32 @@ describe('Registry', () => {
 
     const results = registry.query(Query.select(Filter.type(TestSchema.Expando)).limit(2)).results;
     expect(results).toHaveLength(2);
+  });
+
+  test('typeAtom emits when the typename registers, and ignores unrelated churn', ({ expect }) => {
+    const registry = makeRegistry();
+    const atoms = AtomRegistry.make();
+    const atom = Registry.typeAtom(registry, 'org.example.type.late');
+    let emissions = 0;
+    const unsubscribe = atoms.subscribe(atom, () => emissions++);
+
+    expect(atoms.get(atom)).toBeUndefined();
+
+    const Late = Type.makeObject(DXN.make('org.example.type.late', '0.1.0'))(Schema.Struct({}));
+    registry.add([Late]);
+    expect(atoms.get(atom)).toBe(Late);
+    expect(emissions).toBeGreaterThan(0);
+
+    // The registry also holds operations, skills, and routines; their churn must not re-emit here.
+    const settled = emissions;
+    registry.add([makeObj({ key: 'org.example.fn.unrelated', value: 1 })]);
+    expect(emissions).toBe(settled);
+
+    registry.remove(Late.id);
+    expect(atoms.get(atom)).toBeUndefined();
+    expect(emissions).toBeGreaterThan(settled);
+
+    unsubscribe();
   });
 
   test('changed fires on add/remove/clear', ({ expect }) => {

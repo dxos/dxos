@@ -14,7 +14,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Ref, Registry, Type } from '@dxos/echo';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
 import { Organization, Person } from '@dxos/types';
@@ -62,20 +62,12 @@ export default Capability.makeModule(
         id: 'crmTypes',
         url: { key: 'crm', kind: 'item', path: [GraphPath.GroupSegments.crm] },
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.crm),
-        connector: (space, get) => {
-          // Index the registry once per rebuild so each type resolves its registered schema in O(1).
-          const registered = new Map(
-            space.db.graph.registry
-              .list()
-              .filter(Type.isType)
-              .map((entry) => [Type.getTypename(entry), entry] as const),
-          );
-          return Effect.succeed(
-            CRM_TYPES.map((type) => createTypeNode({ type, space, get, registered })).filter(
+        connector: (space, get) =>
+          Effect.succeed(
+            CRM_TYPES.map((type) => createTypeNode({ type, space, get })).filter(
               (node): node is NonNullable<typeof node> => node !== null,
             ),
-          );
-        },
+          ),
       }),
 
       // Research on the object's own node, so any surface showing a Person/Organization (the record
@@ -165,12 +157,10 @@ const createTypeNode = ({
   type,
   space,
   get,
-  registered,
 }: {
   type: Type.AnyEntity;
   space: Space;
   get: Atom.AtomContext;
-  registered: ReadonlyMap<string, Type.AnyEntity>;
 }): Node.NodeArg<Type.AnyEntity> | null => {
   const typename = Type.getTypename(type);
   const objects = get(space.db.query(Filter.type(Type.getURI(type))).atom);
@@ -179,7 +169,8 @@ const createTypeNode = ({
   }
 
   // Prefer the registry copy of the schema: raw schema classes don't carry annotations reliably.
-  const entity = registered.get(typename) ?? type;
+  // Read reactively so a schema registered after this node was built still lands.
+  const entity = get(Registry.typeAtom(space.db.graph.registry, typename)) ?? type;
   const annotation = Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(entity)));
 
   return Node.make({
