@@ -131,11 +131,12 @@ changes what a model sees lives in the shared package or it is a bug.
           (`org.dxos.skill.inbox`, `.markdown`, `.chess`) — the long
           `org.dxos.plugin.<name>.skill.<x>` form is the exception, not the rule. Note DXN names
           reject hyphens in the final segment, hence `chatContext`.
-  - [ ] **Model fixtures need regenerating** (needs `DX_ANTHROPIC_API_KEY`, absent from the cloud
-        sandbox). Down to the two `chat-context` tests: `parameters.tools` is part of the match key,
-        so the skill's changed tool list invalidated them. `DX_UPDATE_MODEL_FIXTURES=1 moon run
-'#model-fixture:test'`, then commit `.store/**`. The `Model Fixture` workflow is deliberately
-        **not** a required check, so this reports red without blocking merge. The 134 conversations
+  - [x] **Model fixtures re-recorded.** The two `chat-context` tests were not just stale — the split
+        left them with no lookup verb (the skill exposes only `contextAdd`/`contextRemove`), so the
+        agent could not resolve a name to a URI; both prompts now supply the URI directly. The remove
+        test also compared a space-relative context ref (`echo:///<id>`) against a space-qualified
+        `Obj.getURI`, so its absence assertion held whether or not the tool ran — both tests now
+        compare on the object id and the remove test pins its starting state. The 134 conversations
         under `..._skills_database_skill/` were deleted: the suite segment is the test file's path
         flattened, so moving the file to `skills/chat-context/` made them unreachable on top of being
         stale.
