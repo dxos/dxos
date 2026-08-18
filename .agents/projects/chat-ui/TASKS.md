@@ -258,6 +258,10 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
 
 ## Tracked follow-ups
 
+- [ ] (2026-08-18) **Make the feed UI closer to Claude** — widget styling, spacing, chrome
+      (avatar/timestamp treatment), etc. Reference: claude.ai's chat rendering; applies to the
+      Block widgets (reasoning/toolCall panels), Column gutters, and the assistant Chrome in
+      `react-ui-feed`.
 - [ ] New project idea (2026-08-18): **structured message hub with AI — open-weight models on
       Cloudflare.** Parked here from the rewrite session; not part of chat-ui's scope. Candidate
       for `/dxos:project new` when picked up.
