@@ -256,6 +256,27 @@ Deciding criterion: **scroll smoothness**. If it is not good, track C is dropped
       yields markdown source. Two paths producing different content is a defect waiting to happen.
 - [ ] Record the findings back into AUDIT.md §3.3.
 
+## Placement engine — open defects
+
+Found while building the replacement placement layer (`DESIGN.md` §Principles). None block stage 3.
+
+- [ ] **Keyboard navigation from the outline rail is wrong.** Reported from use, symptom not yet
+      pinned down. The rail's arrows now call `onNavigate` (stepping items via the host's own
+      mechanism) and the popover is derived from the visible range while the rail has focus, so the
+      suspects are: the step being taken from a stale `index`, focus not staying on the rail across a
+      navigation, or the derived tick fighting the focused one. Reproduce by hand first — this is a
+      behaviour nobody has watched end to end.
+- [ ] **`placement/Prepend` and `placement/Grow` fail deterministically.** Not flakiness: they fail
+      at the commit where they were reported passing, so those reports were wrong. `Grow` is
+      localised — scrolling to 2,000 mounts rows 6–29 while the story asks about row 30, so the grow
+      looks like it did nothing. The precondition is now an explicit throw naming the mounted rows.
+      Either `Window` loses a directly-assigned `scrollTop`, or the story assumes a viewport size it
+      never pinned; establish which before changing anything.
+- [ ] **The popover anchoring fix is unverified.** Anchoring to the hovered row and keying the
+      content is principled, but the probe that "showed" the old drift was faulty — React synthesises
+      `pointerenter` from `pointerover`/`pointerout` pairs, so dispatching enter alone never moved the
+      hover and the measurement was of one stationary card. Needs a real pointer.
+
 ## Phase 2 — the mock-processor loop (track A)
 
 Independent of phase 1's outcome.
