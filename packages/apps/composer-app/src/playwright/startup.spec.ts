@@ -229,10 +229,18 @@ test.describe.serial('Startup timing harness', () => {
     // Profile is overridable from the environment; Fast 3G + 2× CPU stays the default. On the
     // current bundle Fast 3G does not reach ready within `waitForReady`'s 300 s, so a gentler
     // profile (e.g. 40 ms / 10 Mbps / 2×) is what actually yields a number today.
-    const latency = Number(process.env.DX_HARNESS_LATENCY_MS ?? 150);
-    const downMbps = Number(process.env.DX_HARNESS_DOWN_MBPS ?? 1.5);
-    const upMbps = Number(process.env.DX_HARNESS_UP_MBPS ?? 0.75);
-    const cpuRate = Number(process.env.DX_HARNESS_CPU ?? 2);
+    const throttleNumber = (name: string, fallback: number, min: number): number => {
+      const raw = process.env[name];
+      const value = raw === undefined ? fallback : Number(raw);
+      if (!Number.isFinite(value) || value < min) {
+        throw new Error(`${name} must be a finite number >= ${min}; got ${JSON.stringify(raw)}`);
+      }
+      return value;
+    };
+    const latency = throttleNumber('DX_HARNESS_LATENCY_MS', 150, 0);
+    const downMbps = throttleNumber('DX_HARNESS_DOWN_MBPS', 1.5, 0);
+    const upMbps = throttleNumber('DX_HARNESS_UP_MBPS', 0.75, 0);
+    const cpuRate = throttleNumber('DX_HARNESS_CPU', 2, 1);
     await cdp.send('Network.enable');
     await cdp.send('Network.emulateNetworkConditions', {
       offline: false,

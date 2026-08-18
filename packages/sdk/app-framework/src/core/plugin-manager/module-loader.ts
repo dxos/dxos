@@ -335,7 +335,7 @@ export class ModuleLoader {
       performance.mark(`module:${module.id}:start`, { detail: { parentEvent } });
       // Cause is a separate mark because the profiler reads measures by prefix and a measure
       // cannot carry the start mark's detail; without it a profile shows WHAT activated, never why.
-      performance.mark(`module-cause:${module.id}:${parentEvent}`);
+      performance.mark(`module-cause:${module.id}`, { detail: { module: module.id, event: parentEvent } });
       yield* PubSub.publish(this.#state.activation, { event: parentEvent, state: 'activating', module: module.id });
       const pluginId = this.#state.pluginIdOfModule(module.id);
       yield* this.#awaitProvidersInFlight(module);

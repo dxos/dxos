@@ -111,13 +111,12 @@ export const startupProfiler = (): Profiler => {
       moduleCauses: marks
         .filter((entry) => entry.name.startsWith('module-cause:'))
         .map((entry) => {
-          // `<module>:<event>` — the event is a DXN and contains colons, so split on the last one
-          // that precedes `dxn:`.
-          const rest = entry.name.slice('module-cause:'.length);
-          const at = rest.indexOf(':dxn:');
+          // Module and event travel in `detail`; both are DXN-shaped and contain colons, so the
+          // mark name carries only the module id.
+          const detail = (entry as PerformanceMark).detail as { module?: string; event?: string } | null;
           return {
-            module: at === -1 ? rest : rest.slice(0, at),
-            event: at === -1 ? '' : rest.slice(at + 1),
+            module: detail?.module ?? entry.name.slice('module-cause:'.length),
+            event: detail?.event ?? '',
             startTime: Math.round(entry.startTime),
           };
         }),

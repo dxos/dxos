@@ -67,8 +67,8 @@ got here — checkpoints, measurements and findings, not work items.
       via `react-aria-components`. Detail under
       [Wave 3](#wave-3--eager-core-ui-laziness-audit).
 
-- [ ] **A12 — plugin body imports were serialized by `lazyLoadLock` (2026-08-17; IMPLEMENTED,
-      uncommitted: lock REMOVED).** `Plugin.resolveLazy` held a 1-permit semaphore around every body
+- [x] **A12 — plugin body imports were serialized by `lazyLoadLock` (2026-08-17; landed in
+      PR #12656, lock REMOVED).** `Plugin.resolveLazy` held a 1-permit semaphore around every body
       `import()` (added inside the Effect-4 migration `a3b6ef05f2` for WebKit bug 242740). Measured
       on chromium: 33 bodies loaded strictly back to back (span 2.75 s ≈ sum) — the whole startup
       pass — and the 7 core plugins, queued first at 391 ms, starved behind content plugins until

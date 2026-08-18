@@ -1008,14 +1008,15 @@ export const createExtension = <TMatched = Node.Node, R = never, const Id extend
             Function.pipe(
               get(node),
               Option.flatMap((matchedNode) => match(matchedNode, get)),
-              Option.map((matched) =>
-                runEffectSyncWithFallback(actionGroups(matched, get), context, id, []).map((group) => ({
+              Option.map((matched) => {
+                markBodyRun(id, 'actionGroups');
+                return runEffectSyncWithFallback(actionGroups(matched, get), context, id, []).map((group) => ({
                   ...group,
                   // Attach captured context to the group's child actions so they execute with the
                   // extension's services (e.g. Capability.Service) even without an explicit runner.
                   actions: group.actions?.map((action) => ({ ...action, _actionContext: context })),
-                })),
-              ),
+                }));
+              }),
               Option.getOrElse(() => []),
             ),
           )
@@ -1023,7 +1024,10 @@ export const createExtension = <TMatched = Node.Node, R = never, const Id extend
 
     const resolverExtension = resolver
       ? (nodeId: string) =>
-          Atom.make((get) => runEffectSyncWithFallback(resolver(nodeId, get), context, id, null) ?? null)
+          Atom.make((get) => {
+            markBodyRun(id, 'resolver');
+            return runEffectSyncWithFallback(resolver(nodeId, get), context, id, null) ?? null;
+          })
       : undefined;
 
     return createExtensionRaw({
