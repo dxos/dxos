@@ -18,8 +18,10 @@ import { StoryRole } from '../modules';
 import { ModuleContainer, addToRootCollection, createDecorators, storyParameters, submitPrompt } from '../testing';
 
 type StoryArgs = {
-  /** Markdown content of the seeded document the agent is asked to analyze. */
-  source: string;
+  /** Name of the seeded document. */
+  name?: string;
+  /** Markdown content of the seeded document; empty when the document is the diagram's target. */
+  source?: string;
 };
 
 const meta: Meta<StoryArgs> = {
@@ -107,7 +109,7 @@ const decorators = createDecorators<StoryArgs>(({ args }) => ({
       import('@dxos/plugin-illustrator'),
       import('@dxos/plugin-tldraw'),
     ]);
-    const document = space.db.add(Markdown.make({ name: 'Media Library', content: args.source }));
+    const document = space.db.add(Markdown.make({ name: args.name ?? 'Media Library', content: args.source }));
     const drawing = space.db.add(
       Drawing.make({ name: 'Class Diagram', canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA }) }),
     );
@@ -140,6 +142,21 @@ const countObjectRecords = async (objectId?: string): Promise<number> => {
   }, 0);
 };
 
+/** Poll until the named document's text contains `needle`. */
+const waitForDocumentContent = async (name: string, needle: string, timeout = 240_000): Promise<void> => {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const documents = (await storySpace?.db.query(Filter.type(Markdown.Document)).run()) ?? [];
+    const document = documents.find((doc) => doc.name === name);
+    const text = await document?.content.tryLoad();
+    if (text?.content.includes(needle)) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`timed out waiting for "${needle}" in document "${name}"`);
+};
+
 /** Poll until the canvas contains at least `min` managed shape records. */
 const waitForObjectRecords = async (objectId: string | undefined, min = 1, timeout = 240_000): Promise<number> => {
   const deadline = Date.now() + timeout;
@@ -162,7 +179,9 @@ const waitForObjectRecords = async (objectId: string | undefined, min = 1, timeo
  */
 export const Default: Story = {
   decorators,
-  args: { source: SOURCE_CODE },
+  args: {
+    source: SOURCE_CODE,
+  },
 };
 
 /**
@@ -175,7 +194,9 @@ export const Default: Story = {
  */
 export const GenerateFromDocumentTest: Story = {
   decorators,
-  args: { source: SOURCE_CODE },
+  args: {
+    source: SOURCE_CODE,
+  },
   tags: ['!test'],
   play: async ({ canvasElement }) => {
     await submitPrompt(
@@ -189,22 +210,26 @@ export const GenerateFromDocumentTest: Story = {
 
 /**
  * As above, but the source is a GitHub reference rather than inline code: the agent fetches the
- * file with its research/fetch tools before extracting the class model. Needs network access in
- * addition to a live AI service, so it is manual-only.
+ * file with its research/fetch tools, writes the mermaid classDiagram into the (empty) bound
+ * document, and renders it onto the canvas. Needs network access in addition to a live AI
+ * service, so it is manual-only.
  */
 export const GenerateFromGithubTest: Story = {
   decorators,
-  // The GitHub reference goes in the prompt; the seeded document is inert here.
-  args: { source: SOURCE_CODE },
+  args: {
+    name: 'Diagram',
+  },
   tags: ['!test'],
   play: async ({ canvasElement }) => {
     await submitPrompt(
       canvasElement,
       trim`
-        Create a UML class diagram of https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-illustrator/src/model/scene.ts
-        on the Class Diagram drawing.
+        Create a UML class diagram of https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-illustrator/src/model/scene.ts.
+        Write the mermaid classDiagram source into the empty Diagram document (as a fenced mermaid block),
+        then render it on the Class Diagram drawing.
       `.replace(/\s*\n\s*/g, ' '),
     );
-    await waitForObjectRecords(undefined, 4);
+    await waitForDocumentContent('Diagram', 'classDiagram');
+    await waitForObjectRecords(undefined, 4, 60_000);
   },
 };
