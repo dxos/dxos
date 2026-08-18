@@ -27,6 +27,11 @@
       "source": "./src/virtualizer/index.ts",
       "types": "./dist/types/src/virtualizer/index.d.ts",
       "import": "./dist/lib/virtualizer.mjs"
+    },
+    "./debug": {
+      "source": "./src/debug/index.ts",
+      "types": "./dist/types/src/debug/index.d.ts",
+      "import": "./dist/lib/debug.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -8,8 +8,7 @@ import { IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useMessageList } from '../../components';
-import { type FrameMeter } from './frame-meter';
-import { type Stat, Stats, warnAbove } from './Stats';
+import { type FrameMeter, type Stat, Stats, warnAbove } from '../../debug';
 
 /** What the feed currently holds, as opposed to how well it is holding it. */
 const FEED_STATS: Stat[] = [

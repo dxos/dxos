@@ -102,6 +102,21 @@ export class ListModel<T> {
   }
 
   /**
+   * Replace one item with a successor of the same identity — the streaming case for *frozen*
+   * items. An ECHO object mutates and `update` announces it; a schema-made message is frozen, so
+   * the chunk arrives as a fresh value under the old id. Same event either way: `updated`.
+   */
+  patch(id: string, next: T): void {
+    const index = this.#items.findIndex((item) => this.#getId(item) === id);
+    if (index < 0 || this.#getId(next) !== id) {
+      return;
+    }
+
+    this.#items = [...this.#items.slice(0, index), next, ...this.#items.slice(index + 1)];
+    this.#publish({ updated: [id] });
+  }
+
+  /**
    * The adapter for hosts that hand over a whole new array (a React prop, a query result).
    *
    * The one place the prepend inference survives, because this is the one caller that genuinely

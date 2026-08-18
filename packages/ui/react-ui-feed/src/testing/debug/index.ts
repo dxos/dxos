@@ -11,8 +11,6 @@
 //
 
 export * from './FeedStats';
-export * from './Stats';
 
-export * from './frame-meter';
 export * from './sweep';
 export * from './use-feed-debug';

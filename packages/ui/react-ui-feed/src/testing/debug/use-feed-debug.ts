@@ -4,7 +4,7 @@
 
 import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type FrameMeter, useFrameMeter } from './frame-meter';
+import { type FrameMeter, useFrameMeter } from '../../debug';
 import { sweepScroll } from './sweep';
 
 export type FeedDebugOptions = {

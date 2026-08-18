@@ -35,46 +35,6 @@ type Story = StoryObj<FeedStoryProps>;
 // `plugin-assistant/docs/AUDIT.md` §3.4.
 //
 
-/** AI chat (`plugin-assistant`): prompts, answers, reasoning, tool calls, suggestions. */
-export const Assistant: Story = {
-  args: {
-    scenario: 'assistant',
-    count: 200,
-  },
-};
-
-/** Email conversation (`plugin-inbox/ConversationStack`): HTML bodies, read from the top. */
-export const Email: Story = {
-  args: {
-    scenario: 'email',
-    count: 200,
-  },
-};
-
-/** Human chat (`react-ui-thread`): short turns, many of them, pinned to the tail. */
-export const Thread: Story = {
-  args: {
-    scenario: 'thread',
-    count: 500,
-  },
-};
-
-/** Comments (`react-ui-thread` via `plugin-review`): anchored to a document, resolvable. */
-export const Comments: Story = {
-  args: {
-    scenario: 'comments',
-    count: 200,
-  },
-};
-
-/** Transcription (`react-ui-transcription`): one utterance per row, arriving as it is spoken. */
-export const Transcript: Story = {
-  args: {
-    scenario: 'transcript',
-    count: 500,
-  },
-};
-
 //
 // The engine's own stories: a synthetic mixed feed, which is what the measurements were taken over.
 //

@@ -48,6 +48,19 @@ describe('ListModel', () => {
     expect(changes).to.deep.eq([{ prepended: undefined, appended: 1 }]);
   });
 
+  test('patch replaces a frozen item under its own identity', () => {
+    const model = create(3);
+    const changes: unknown[] = [];
+    model.subscribe((change) => changes.push(change));
+
+    model.patch('row-1', { id: 'row-1' });
+    // A patch that would change identity is refused: it would strand measurements and selection.
+    model.patch('row-2', { id: 'imposter' });
+
+    expect(changes).to.deep.eq([{ updated: ['row-1'] }]);
+    expect(model.getId(2)).to.eq('row-2');
+  });
+
   test('the atom face tracks the same rows', () => {
     const model = create(2);
     model.append([{ id: 'later-0' }]);
