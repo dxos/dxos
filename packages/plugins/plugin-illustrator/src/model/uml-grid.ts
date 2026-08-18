@@ -13,8 +13,15 @@ import * as Layout from './layout';
 import type * as Scene from './scene';
 import { type UmlModel, type UmlRelation, parse, relationRanks, relationStyle, relationText } from './uml';
 
-/** tldraw's document grid unit; every cell dimension, gap, and position is a multiple. */
-export const GRID = 10;
+/**
+ * Snap unit for cells, gaps, and positions. tldraw renders grid lines every 1/4/16/64 × the
+ * document gridSize (10) depending on zoom, so 40 — the step visible at working zoom — puts
+ * node edges on rendered lines; finer 10-unit alignment only shows past ~0.7 zoom.
+ */
+export const GRID = 40;
+
+/** The document grid unit, used for sub-cell nudges (channel separation, label offsets). */
+const GRID_FINE = 10;
 
 const TITLE_FONT = Layout.FONT_METRICS.m;
 const MEMBER_FONT = Layout.FONT_METRICS.s;
@@ -24,7 +31,7 @@ const PAD_X = 24;
 const TITLE_PAD = 10;
 const SECTION_PAD = 14;
 const GAP_MAIN = 80;
-const GAP_CROSS = 60;
+const GAP_CROSS = 80;
 
 const snap = (value: number) => Math.ceil(value / GRID) * GRID;
 
@@ -72,7 +79,7 @@ const routeAlongX = (from: Rect, to: Rect, shift: number): Scene.Point[] => {
 export const zRouter: Router = ({ from, to, offset, horizontal }) => {
   const sameLane = horizontal ? from.x === to.x : from.y === to.y;
   const alongY = horizontal ? sameLane : !sameLane;
-  return (alongY ? routeAlongY : routeAlongX)(from, to, offset * GRID);
+  return (alongY ? routeAlongY : routeAlongX)(from, to, offset * GRID_FINE);
 };
 
 type Cell = { w: number; h: number; titleH: number };
@@ -110,7 +117,7 @@ export type CompileOptions = {
   scale?: number;
   /** Gap between ranks along the flow direction, in scene units (default 80, snapped to GRID). */
   gapMain?: number;
-  /** Gap between classes within a rank, in scene units (default 60, snapped to GRID). */
+  /** Gap between classes within a rank, in scene units (default 80, snapped to GRID). */
   gapCross?: number;
   /** Maximum cell width, in scene units (default 400); longer lines wrap. */
   maxWidth?: number;
@@ -227,7 +234,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
         elements.push({
           kind: 'text',
           id: `${id}-label`,
-          x: (head.x + tail.x) / 2 + GRID / 2,
+          x: (head.x + tail.x) / 2 + GRID_FINE / 2,
           y: (head.y + tail.y) / 2 - MEMBER_FONT.lineH,
           text,
           weight: 's',
