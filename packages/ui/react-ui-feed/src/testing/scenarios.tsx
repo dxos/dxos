@@ -456,18 +456,31 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
   return (
     <Row classNames={mx(selected && 'bg-hover-surface')}>
       {prompt ? (
-        <div className='min-w-0'>
-          {/* The reader's own words, framed: a prompt is an instruction the thread can be rewound
-              to, and it reads as one only if it is visibly not the model's prose. */}
-          <div className='ps-2 pe-2 pt-1 pb-1 border-s-2 border-accent-bg rounded-sm bg-input-surface'>{children}</div>
-          {/* Revealed on hover, but never removed from flow: chrome that appears and disappears
-              changes the row's height, and a pointer travelling down a scrolling list would then
-              move every row below it. Opacity costs nothing to measure. */}
-          <div className='flex items-center gap-1 pt-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
-            <IconButton icon='ph--arrow-counter-clockwise--regular' iconOnly label='Rewind' variant='ghost' size={3} />
-            <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size={3} />
-            <span>{timeOf(message)}</span>
-            <span className='text-subdued'>#{index}</span>
+        // The reader's own words sit apart from the model's: right-aligned, at most two thirds of
+        // the viewport — the chat convention that makes whose-turn legible at a glance.
+        <div className='min-w-0 flex flex-col items-end'>
+          <div className='max-w-[66%] min-w-0'>
+            {/* The reader's own words, framed: a prompt is an instruction the thread can be rewound
+                to, and it reads as one only if it is visibly not the model's prose. */}
+            <div className='ps-2 pe-2 pt-1 pb-1 border-s-2 border-accent-bg rounded-sm bg-input-surface'>
+              {children}
+            </div>
+            {/* Revealed on hover, but never removed from flow: chrome that appears and disappears
+                changes the row's height, and a pointer travelling down a scrolling list would then
+                move every row below it. Opacity costs nothing to measure. The toolbar follows the
+                bubble's edge — right-aligned, like the words it belongs to. */}
+            <div className='flex items-center justify-end gap-1 pt-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
+              <span className='text-subdued'>#{index}</span>
+              <span>{timeOf(message)}</span>
+              <IconButton
+                icon='ph--arrow-counter-clockwise--regular'
+                iconOnly
+                label='Rewind'
+                variant='ghost'
+                size={3}
+              />
+              <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size={3} />
+            </div>
           </div>
         </div>
       ) : (

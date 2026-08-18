@@ -13,7 +13,15 @@ import React, {
   useState,
 } from 'react';
 
-import { Column, ScrollArea, type ScrollAreaRootProps, composable, composableProps, setRef } from '@dxos/react-ui';
+import {
+  Column,
+  IconButton,
+  ScrollArea,
+  type ScrollAreaRootProps,
+  composable,
+  composableProps,
+  setRef,
+} from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
@@ -635,6 +643,100 @@ const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ mess
 MessageListItem.displayName = MESSAGE_LIST_ITEM_NAME;
 
 //
+// Nav
+//
+
+const MESSAGE_LIST_NAV_NAME = 'MessageList.Nav';
+
+type MessageListNavExtra = {
+  /** Render the jump-to-ends buttons as well as the steppers. @default true */
+  ends?: boolean;
+};
+
+/**
+ * The step and jump controls, on the same seam as the arrow keys and the rails (SPEC F-3.2), so a
+ * reader who switches between them does not change places. Lives outside the viewport — Root is
+ * headless precisely so chrome like this can sit in a toolbar.
+ *
+ * While any of its buttons has focus, ArrowUp/Down step and Meta(Ctrl)+Arrow jumps to the ends —
+ * the same keymap the viewport itself carries, so focus landing on the toolbar does not change
+ * what the keys mean.
+ */
+const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends = true, ...props }, forwardedRef) => {
+  const { currentIndex: current, model, navigation } = useMessageListContext(MESSAGE_LIST_NAV_NAME);
+  const count = model.count;
+
+  const onKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      const delta = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+      if (!delta || event.altKey || event.shiftKey) {
+        return;
+      }
+
+      event.preventDefault();
+      if (event.metaKey || event.ctrlKey) {
+        if (delta > 0) {
+          navigation.last();
+        } else {
+          navigation.first();
+        }
+        return;
+      }
+
+      navigation.step(delta);
+    },
+    [navigation],
+  );
+
+  return (
+    <div role='group' {...composableProps(props)} onKeyDown={onKeyDown} ref={forwardedRef}>
+      {ends && (
+        <IconButton
+          icon='ph--arrow-line-up--regular'
+          iconOnly
+          label='First message'
+          variant='ghost'
+          disabled={current <= 0}
+          data-testid='feed.nav.top'
+          onClick={() => navigation.first()}
+        />
+      )}
+      <IconButton
+        icon='ph--caret-up--regular'
+        iconOnly
+        label='Previous message'
+        variant='ghost'
+        disabled={current <= 0}
+        data-testid='feed.nav.back'
+        onClick={() => navigation.step(-1)}
+      />
+      <IconButton
+        icon='ph--caret-down--regular'
+        iconOnly
+        label='Next message'
+        variant='ghost'
+        disabled={current >= count - 1}
+        data-testid='feed.nav.forward'
+        onClick={() => navigation.step(1)}
+      />
+      {ends && (
+        <IconButton
+          icon='ph--arrow-line-down--regular'
+          iconOnly
+          label='Last message'
+          variant='ghost'
+          disabled={count === 0}
+          data-testid='feed.nav.bottom'
+          onClick={() => navigation.last()}
+        />
+      )}
+    </div>
+  );
+});
+
+MessageListNav.displayName = MESSAGE_LIST_NAV_NAME;
+
+//
 // MessageList
 //
 
@@ -642,6 +744,11 @@ export const MessageList = {
   Root: MessageListRoot,
   Viewport: MessageListViewport,
   Item: MessageListItem,
+  Nav: MessageListNav,
 };
 
-export type { MessageListItemExtra as MessageListItemProps, MessageListViewportExtra as MessageListViewportProps };
+export type {
+  MessageListNavExtra as MessageListNavProps,
+  MessageListItemExtra as MessageListItemProps,
+  MessageListViewportExtra as MessageListViewportProps,
+};

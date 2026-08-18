@@ -309,7 +309,7 @@ export const FeedStory = ({
                   onClick={onSweep}
                 />
                 <div className='grow' />
-                <NavButtons />
+                <MessageList.Nav classNames='contents' />
               </Toolbar.Root>
             </Panel.Toolbar>
 
@@ -397,56 +397,4 @@ const FindButton = ({ hits }: { hits: readonly SearchHit[] }) => {
   }, [hits, scrollToIndex]);
 
   return <IconButton icon='ph--magnifying-glass--regular' iconOnly label='Find' onClick={handleFind} />;
-};
-
-/** Move by one message, or to either end, from the list's cursor (what the arrow keys also move). */
-const NavButtons = () => {
-  const { currentIndex: current, count, navigation, scrollToIndex, scrollToBottom } = useMessageList('NavButtons');
-
-  // The same seam the arrow keys use (SPEC F-3.2), so a reader who switches between them does not
-  // change places.
-  const step = navigation.step;
-
-  return (
-    <>
-      <IconButton
-        icon='ph--arrow-line-up--regular'
-        iconOnly
-        label='First message'
-        variant='ghost'
-        disabled={current <= 0}
-        data-testid='feed.nav.top'
-        // Smooth is requested, but a jump across more than a few rows travels towards an estimated
-        // offset, so `scrollToIndex` takes these instantly. Same call, honest either way.
-        onClick={() => scrollToIndex(0, { align: 'start', behavior: 'smooth' })}
-      />
-      <IconButton
-        icon='ph--caret-up--regular'
-        iconOnly
-        label='Previous message'
-        variant='ghost'
-        disabled={current <= 0}
-        data-testid='feed.nav.back'
-        onClick={() => step(-1)}
-      />
-      <IconButton
-        icon='ph--caret-down--regular'
-        iconOnly
-        label='Next message'
-        variant='ghost'
-        disabled={current >= count - 1}
-        data-testid='feed.nav.forward'
-        onClick={() => step(1)}
-      />
-      <IconButton
-        icon='ph--arrow-line-down--regular'
-        iconOnly
-        label='Last message'
-        variant='ghost'
-        disabled={count === 0}
-        data-testid='feed.nav.bottom'
-        onClick={() => scrollToBottom({ behavior: 'smooth' })}
-      />
-    </>
-  );
 };

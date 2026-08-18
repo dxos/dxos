@@ -107,7 +107,7 @@ const DefaultStory = ({ count = 30, debug, scrollPastEnd, wordsPerChunk = 4, chu
                 onClick={toggleAuto}
               />
               <Toolbar.Separator />
-              <NavButtons />
+              <MessageList.Nav ends={false} classNames='contents' />
             </Toolbar.Root>
           </Panel.Toolbar>
 
@@ -190,28 +190,6 @@ const PromptOutline = ({ classNames, model }: { classNames?: string; model: Feed
         onNavigate={(delta) => navigation.step(delta)}
       />
     </div>
-  );
-};
-
-const NavButtons = () => {
-  const { navigation } = useMessageList('NavButtons');
-  return (
-    <>
-      <IconButton
-        icon='ph--caret-up--regular'
-        iconOnly
-        label='Previous prompt'
-        data-testid='assistant.prev'
-        onClick={() => navigation.step(-1)}
-      />
-      <IconButton
-        icon='ph--caret-down--regular'
-        iconOnly
-        label='Next prompt'
-        data-testid='assistant.next'
-        onClick={() => navigation.step(1)}
-      />
-    </>
   );
 };
 
