@@ -336,12 +336,71 @@ user's own working directory.) That is what makes "trusted publisher + explicit 
 than a label on a flow where the code already ran. It does not bound what a plugin does **after**
 that point, which is what the worker boundary is for.
 
+**The consent step is now explicit** (2026-08-15). `add` names the plugin and where it came from,
+says that its code runs with the user's HALO identity and that `dx mcp serve` exposes its operations
+to an AI agent, and asks. A non-interactive caller has to pass `--yes` rather than being assumed to
+consent — the same posture `dx admin identity delete` takes with `--force`, and the only way the
+prompt means anything in a script. It is asked at `add` rather than `enable` because `add` enables
+by default, so `enable` would be silent on the common path; a plugin already consented to is not
+re-asked.
+
+`--watch` sharpens the argument for a real boundary rather than weakening it: a dev plugin's code is
+re-executed automatically on every file change, so the human beat between "author saves" and "code
+runs" is gone after the initial consent. That is the intended dev loop, and it is exactly the
+property the worker boundary would bound.
+
 ## 3. Reload, in two stages
 
-**Stage 1 — developing dxos itself.** `--watch` supervising a child process, restarting on change.
-An MCP stdio session dies with the process, so the client reconnects per edit; acceptable for our
-own loop. `moon run cli:dev` already runs `dx` from source, so this is a supervisor and a file
-watcher.
+**Stage 1 — developing dxos itself.** `dx mcp serve --watch`, shipped. The premise this was planned
+on — "an MCP stdio session dies with the process, so the client reconnects per edit" — turned out to
+be false, which made the stage cheaper _and_ better than budgeted. `bun --watch` reloads **in place**:
+same pid, same pipes, and a wiped JS realm. Measured, not assumed — a reload keeps `process.pid`
+constant, data written to the child's stdin after the edit reaches the new instance, and `globalThis`
+comes back empty, so module-level and global registries both reset (which is also why the stage-2
+schema-re-registration obstacle below does not apply here).
+
+What survives is the connection; what dies is the session. So the supervisor's job is not to make
+the client reconnect but to hold the handshake outside the realm and replay it: it caches the
+client's `initialize` and `notifications/initialized`, re-drives them into the fresh realm under a
+namespaced id whose response it swallows, errors the requests the reload stranded, and emits
+`tools/list_changed` / `prompts/list_changed`. An edit is invisible to the client. The watching
+itself is delegated to `bun --watch`, whose file set is exactly the imported module graph.
+
+**The flag ships in the binary too**, which is where it pays: a plugin author has the released `dx`,
+not a dxos checkout. It was source-only for one revision on the theory that a binary has nothing to
+watch — true of the CLI's own code, false of the thing that matters. Two strategies, chosen by
+`globalThis.DX_CLI_BUNDLED`:
+
+- **From source**, `bun --watch` runs the child and tracks the imported module graph. It reloads in
+  place, so the supervisor only has to replay the handshake.
+- **From the binary**, bun's watcher is absent (a compiled binary takes `--watch` as ordinary argv —
+  measured), so the supervisor re-runs the binary via `process.execPath` and arms recursive
+  `fs.watch` itself. Both work inside a compiled binary; so does importing on-disk TypeScript, so an
+  author needs no build step.
+
+**The watch set is reported by the child, not derived by the supervisor.** The child has the profile,
+the records and the resolved paths, so it emits its `link`-install directories on the ready sentinel
+it already writes. The supervisor stays a JSON-RPC proxy that knows nothing about plugins, and
+adding or removing a dev plugin re-arms the watch on the next reload for free. `copy` installs are
+skipped: the CLI owns those bytes and only `add` rewrites them.
+
+The `DX_CLI_BUNDLED` define is a build-time constant rather than a runtime check because
+bundled-ness is only observable at runtime (`import.meta.dir` is `/$bunfs/root` in a binary), and
+while the strip it originally served is gone — the binary needs the supervisor now — the constant
+still has to pick the strategy. Its target is a global rather than `process.env.*`: both fold and
+both stay safe unreplaced on the source path, where no bundler runs, but a bare identifier throws
+`ReferenceError` there and an env var can be flipped by a stray exported variable. Measured across
+all three.
+
+`--watch` also runs its child with `--conditions=source`. Without it every `@dxos/*` import resolves
+to `dist`, so the watcher tracked build output and a plugin source edit reloaded nothing until that
+package was rebuilt — the flag fired on builds rather than on edits. `DX_SOURCE=0` opts back out.
+Related trap for anyone debugging a watch that will not fire: only imported files are watched, and
+the CLI imports subpaths rather than barrels, so a package's `src/index.ts` is frequently not on the
+path at all.
+
+The remaining cost is latency: a reload is a full server start, identity and plugin activation
+included.
 
 **Stage 2 — external plugin authors.** The loop that pays, and the browser shows its shape: a dev
 manifest with `devEntry` served by Vite. The CLI equivalent is

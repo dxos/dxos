@@ -44,7 +44,7 @@ describe('plugin add --dev', () => {
     'reads a directory in place, loads it, and behaves like a builtin under disable/enable',
     ({ expect }) => {
       withIsolatedHome((home) => {
-        const { stdout, status } = runDx(['plugin', 'add', '--dev', FIXTURE_DIR], { home });
+        const { stdout, status } = runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR], { home });
         expect(status).toBe(0);
         // The user typed a locator, so the resolved id is the useful output.
         expect(stdout).toContain(FIXTURE_ID);
@@ -70,12 +70,27 @@ describe('plugin add --dev', () => {
     TIMEOUT,
   );
 
+  // With no terminal to prompt, consent has to be refusal — a script must say `--yes`.
+  test(
+    'refuses to install without confirmation, naming --yes',
+    ({ expect }) => {
+      withIsolatedHome((home) => {
+        const { stdout, stderr, status } = runDx(['plugin', 'add', '--dev', FIXTURE_DIR], { home });
+        expect(status).not.toBe(0);
+        expect(stdout + stderr).toContain('--yes');
+        // Refusal has to leave nothing behind, or the next command loads code never consented to.
+        expect(findFixture(home)).toBeUndefined();
+      });
+    },
+    TIMEOUT,
+  );
+
   test(
     '--no-enable records the plugin without activating it',
     ({ expect }) => {
       withIsolatedHome((home) => {
         // The fixture ships a built `manifest.json`, so only its metadata is read.
-        expect(runDx(['plugin', 'add', '--dev', FIXTURE_DIR, '--no-enable'], { home }).status).toBe(0);
+        expect(runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR, '--no-enable'], { home }).status).toBe(0);
         const row = findFixture(home);
         expect(row?.enabled).toBe(false);
         expect(row?.status).toBe('disabled');
@@ -92,12 +107,12 @@ describe('plugin add <url>', () => {
       const home = await withFixtureServer((baseUrl) => {
         const isolated = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-test-'));
         // `--dev` means "read in place", which a URL cannot satisfy.
-        const dev = runDx(['plugin', 'add', '--dev', `${baseUrl}/manifest.json`], { home: isolated });
+        const dev = runDx(['plugin', 'add', '--dev', '--yes', `${baseUrl}/manifest.json`], { home: isolated });
         expect(dev.status).toBe(1);
         expect(dev.stdout + dev.stderr).toContain('directory');
 
         // An asset naming another host would make `add` fetch somewhere the user never named.
-        const hostile = runDx(['plugin', 'add', `${baseUrl}/hostile-manifest.json`], { home: isolated });
+        const hostile = runDx(['plugin', 'add', '--yes', `${baseUrl}/hostile-manifest.json`], { home: isolated });
         expect(hostile.status).toBe(1);
         expect(hostile.stdout + hostile.stderr).toContain('origin');
         expect(fs.existsSync(path.join(isolated, '.config', 'dx', 'plugins', 'com.example.plugin.hostile'))).toBe(
@@ -105,11 +120,11 @@ describe('plugin add <url>', () => {
         );
 
         // `..%5C` survives URL normalization and is a separator once decoded on Windows.
-        const traversal = runDx(['plugin', 'add', `${baseUrl}/traversal-manifest.json`], { home: isolated });
+        const traversal = runDx(['plugin', 'add', '--yes', `${baseUrl}/traversal-manifest.json`], { home: isolated });
         expect(traversal.status).toBe(1);
         expect(traversal.stdout + traversal.stderr).toContain('below its manifest');
 
-        expect(runDx(['plugin', 'add', `${baseUrl}/manifest.json`], { home: isolated }).status).toBe(0);
+        expect(runDx(['plugin', 'add', '--yes', `${baseUrl}/manifest.json`], { home: isolated }).status).toBe(0);
         return isolated;
       });
 
@@ -143,7 +158,7 @@ describe('plugin remove', () => {
     'forgets a link without touching it, and refuses a builtin, an unknown id, or a bare path',
     ({ expect }) => {
       withIsolatedHome((home) => {
-        runDx(['plugin', 'add', '--dev', FIXTURE_DIR], { home });
+        runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR], { home });
         expect(runDx(['plugin', 'remove', FIXTURE_ID], { home }).status).toBe(0);
         expect(fs.readFileSync(pluginsFile(home), 'utf8')).not.toContain(FIXTURE_ID);
         // The user owns a linked directory; uninstalling must not delete their working copy.
@@ -158,7 +173,7 @@ describe('plugin remove', () => {
         expect(unknown.stdout + unknown.stderr).toContain('not found');
 
         // Installing from a path without `--dev` would have to snapshot it, which is not supported.
-        const bare = runDx(['plugin', 'add', FIXTURE_DIR], { home });
+        const bare = runDx(['plugin', 'add', '--yes', FIXTURE_DIR], { home });
         expect(bare.status).toBe(1);
         expect(bare.stdout + bare.stderr).toContain('--dev');
       });
@@ -172,7 +187,7 @@ describe('a broken install', () => {
     'is reported by `plugin list` instead of taking down the CLI',
     ({ expect }) => {
       withIsolatedHome((home) => {
-        runDx(['plugin', 'add', '--dev', FIXTURE_DIR], { home });
+        runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR], { home });
         // Point the record at a directory that no longer holds an entry module — the state a user
         // reaches by moving or deleting a linked checkout.
         const contents = fs.readFileSync(pluginsFile(home), 'utf8');
