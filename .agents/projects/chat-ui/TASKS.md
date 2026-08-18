@@ -2,10 +2,23 @@
 
 Design: [`plugin-assistant/docs/AUDIT.md`](../../../packages/plugins/plugin-assistant/docs/AUDIT.md)
 (the audit is the design doc for this project; there is no separate DESIGN.md).
-Branch `claude/ai-chat-interface-restructure-bdc043`. No PR yet.
+Branch `claude/ai-chat-interface-restructure-bdc043`. PR #12627 merged; PR #12648 open.
 
 Related: `chat` (josiah) owns the data model and the plugin-chat rename; this project owns the
 rendering layer. Track B and C touch `react-ui-thread`, so coordinate before moving its internals.
+
+## Phase 2 — packages (PR #12648, 2026-08-18)
+
+- [x] `@dxos/react-ui-virtual` — Placement, useWindow/Window, useFollow, ScrollFollower, ListModel
+      extracted from react-ui-feed; feed depends on it, `/virtualizer` endpoint removed.
+- [x] `@dxos/react-ui-assistant` — ChatThread composite on the feed engine: view-typed renderer,
+      ported XML widgets (tool runs as one `<toolkit>` JSON tag), MessageChrome +
+      Prompt/AssistantToolbar, ChatThreadController, `/testing` generator, canonical story.
+- [x] plugin-assistant rewired: ChatThread dir deleted, MessageSyncer retired, Chat.tsx inlines the
+      package thread, SurfaceWidget injected, ChatView moved to the package.
+- [x] Defect: useFollow/useFeedNavigation identities stabilized (controller-in-state loop).
+- [ ] mosaic VirtualStack rebind onto react-ui-virtual (SPEC F-8.2).
+- [ ] npm publish of react-ui-virtual / react-ui-feed / react-ui-assistant (changesets post-merge).
 
 ## Phase 0 — audit
 
