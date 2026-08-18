@@ -1,8 +1,8 @@
 # react-ui-feed — manual testing
 
 What a person has to check, because a machine here cannot. Everything else is covered by
-`placement.test.ts`, `placement/*`, `bridge/*` and `baseline/*`, and those are mutation-checked —
-each has been seen to fail when the thing it tests is broken.
+`placement.test.ts`, `placement/*`, `bridge/*` and `baseline/*` — 46 unit tests and 55 story tests,
+all green, and mutation-checked: each has been seen to fail when the thing it tests is broken.
 
 Three reasons a check is on this list rather than in a test:
 
@@ -32,7 +32,7 @@ rm -rf .cache/storybook
 
 ## 1. Smoothness — the deciding criterion
 
-`http://localhost:9009/?path=/story/ui-react-ui-feed-baseline--varied`
+http://localhost:9009/?path=/story/ui-react-ui-feed-baseline--varied
 
 The whole spike exists to answer this. The readouts are in the floating stats panel, bottom right.
 
@@ -54,6 +54,10 @@ the floor. If `plain` is smooth and `varied` is not, the cost is in the item.
 
 `http://localhost:9009/?path=/story/ui-react-ui-feed-messagelist--streaming`
 
+The follow changed with the swap, and this is where it shows. It is now an intent withdrawn by one
+thing only — a scroll that moves **backwards**. Measuring the tail grows the document under a reader
+who has not moved, and the old rule (are we near the end?) read that as the reader leaving.
+
 1. Press play (▶) in the toolbar and let three or four turns arrive.
 2. Read `fps` while the tail grows.
 3. Scroll away mid-answer. **The follow must stop and stay stopped.**
@@ -61,8 +65,11 @@ the floor. If `plain` is smooth and `varied` is not, the cost is in the item.
 5. Watch a turn's status block disappear as the answer starts: everything shifts down by one block's
    height. That is correct — the document shrank and the tail is pinned — but tell me if it reads as
    a glitch rather than as the feed working.
+6. **The follow no longer glides.** It corrects instantly instead of travelling. `ScrollFollower` and
+   its tests are untouched and can be wired back — tell me whether the instant version reads as
+   abrupt, because that is the only thing that decides it.
 
-**Report:** whether 3 and 4 hold, and how 5 reads.
+**Report:** whether 3 and 4 hold, how 5 reads, and your verdict on 6.
 
 ## 3. The outline rail — the parts I could not verify
 
@@ -88,7 +95,7 @@ The rail is on the left. Its state is published as `data-pointer` and `data-navi
 **Report:** which of 1–6 fail, and for 2/3 the values of `data-pointer` / `data-navigated` /
 `data-shown` when the card is stuck (devtools, or `$0.dataset` with the rail selected).
 
-## 4. Placement — the new engine, by hand
+## 4. Placement — the engine on its own, by hand
 
 `http://localhost:9009/?path=/story/ui-react-ui-feed-placement--static`
 
@@ -102,6 +109,7 @@ prev / next / top / bottom, and `debug` / `scrollPastEnd` are controls.
    instant, because measurement wrote the scroll and cancelled the animation. Here corrections move
    the window instead, so nothing interrupts it. A step to somewhere not currently mounted is still
    instant, deliberately — a glide across rows that do not exist is a journey over a blank screen.)
+   The same glide is now on the arrow keys in the real feed, sections 1 and 2.
 3. Click **top**. The first row must sit exactly at the top, with nothing above it.
 4. Click **bottom**. The last row must rest on the bottom of the viewport — not at the top of an
    empty screen, and not below the fold.
@@ -135,35 +143,49 @@ Same page as section 4.
 
 **Report:** whether 3 ever fails, and at what kind of scroll speed.
 
-## 6. The new engine, on the two things the old one gets wrong
+## 6. The two defects from the last pass
 
-`http://localhost:9009/?path=/story/ui-react-ui-feed-bridge--varied-past-end`
+Both were reported against `baseline/*`, and neither was fixable where it was found — each was one
+document described by two coordinate systems. `MessageList` is placed by the anchor now, so these
+are checks on the shipping path rather than on a spike.
 
-Real messages, real editors, placed by the new module. These are the two defects reported from the
-last pass, and neither is fixable in the old engine — both are one document described by two
-coordinate systems, which is what the placement layer removes.
+**The feed opening in the wrong place** — `baseline--varied` with `scrollPastEnd` on (its default):
 
-1. `--varied-past-end`: the feed opens with its **last message resting on the bottom**, not near the
-   top of an empty screen. (`baseline/varied` still does the wrong thing, and will until the swap.)
-2. Scroll down past the last message. The reserved space is there, and the last message can be
+1. Open it. The **last message rests on the bottom of the screen**. It used to sit near the top of an
+   otherwise empty one. The cause was a single seed offset that could not be reached: the virtualizer
+   opened at the content's end with no viewport subtracted, past the element's own maximum, so the
+   element clamped and the virtualizer did not — and every measurement afterwards re-wrote the
+   element back to its maximum.
+2. Scroll down past the last message. The reserved space is still there, and the last message can be
    brought to the top of the viewport and no further.
-3. `--scrolling`: scroll **up** from the tail, slowly, then quickly. Nothing should jump. This is the
-   one the old engine fails as soon as it starts to scroll.
-4. `--tail`: press ⊕ a few times. The tail should stay on the bottom as messages arrive.
-5. Scroll up a screen, then press ⊕. It must **not** drag you back.
 
-**Report:** anything that jumps, and whether 5 holds.
+**Jumping as soon as it scrolls** — same story:
+
+3. Scroll **up** from the tail, slowly, then quickly. Nothing should jump. Up is the direction that
+   matters: going down, every row above you has already been measured. There is no re-base any more,
+   which is what used to move every offset in the list at once.
+4. `baseline--uniform` with `scrollPastEnd` on, and watch the first second. Eighteen rows used to
+   travel on the frame the layout was rebuilt. It measures zero now.
+
+**And the same shapes on the engine alone**, if 1–4 disagree with the tests —
+`bridge--varied-past-end`, `bridge--scrolling`, `bridge--tail`: same fixtures, no chrome, so a
+failure there says the placement and a failure only above says the wiring.
+
+**Report:** anything that jumps, and whether 1 and 3 hold.
 
 ---
 
 ## What I most want to know, in order
 
-1. **Section 1** — is it smooth? Nothing else matters if it is not.
-2. **Section 6.3** — does the new engine hold still when you scroll up from the tail? That is the
-   defect that decides whether the swap is worth making.
-3. **Section 4.9** — does a prepend really move nothing?
-4. Everything else.
+1. **Section 1** — is it smooth? Nothing else matters if it is not, and it is the one thing no test
+   here can answer.
+2. **Section 6.1 and 6.3** — are the two defects you reported actually gone in front of you? The
+   tests say so; you are the check on the tests.
+3. **Section 2.6** — does the instant follow read as abrupt? That decides whether the glide comes
+   back.
+4. **Section 4.8** — does a prepend really move nothing?
+5. Everything else.
 
-Sections 1 and 2 still run on the **old** engine, so the two defects reported last time (the feed
-opening in the wrong place, and jumping as it starts to scroll) are still there. They are diagnosed,
-not ignored — see section 6, where the same requirements are stated against the replacement.
+Everything on this page now runs on the same engine. `baseline/*` is the real feed, `placement/*` is
+that engine with boxes instead of editors, and `bridge/*` is the pair meeting — so where a check
+fails tells you which of the two is at fault.
