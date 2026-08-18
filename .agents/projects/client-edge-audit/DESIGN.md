@@ -71,11 +71,10 @@ Out-of-config endpoints (violations of goal 3 by spirit, as audited):
   open — Phase 4 follow-up.**
 - CLI hub util fell back to literal `'https://hub.dxos.network'`
   ([cli hub/util.ts](packages/devtools/cli/src/commands/hub/util.ts)). Removed
-  in this PR, then **restored on merge by PR #12642** (2026-08-17), which
-  promotes it to a named `DEFAULT_HUB_URL` builtin applied in
-  `profileBuiltinDefaults` and overridable via `DX_HUB_URL`. **Hub is outside
-  this audit's no-defaults rule by that later decision**; only `edge.url` and
-  `edgeServices` are covered here.
+  here, restored on merge by PR #12642 (2026-08-17) as a `DEFAULT_HUB_URL`
+  builtin, then **removed again by decision (Mykola, 2026-08-18)**: the constant
+  survives as the value written into a created profile, but no CLI read falls
+  back to it — `hubBaseUrl` fails with `HubApiError` instead.
 
 Notable secondary findings:
 
@@ -198,16 +197,22 @@ which Composer reads first — an invisible override channel, not a default.
    named-config-path error (invariant / typed `Error` / `Effect.fail`), or
    render an explicit "not configured" state for UI surfaces. Boot-reachable
    paths never throw and never warn.
-2. **`@dxos/config` ships zero implicit endpoints.** `defaultConfig` is deleted
-   outright — `ConfigService.load` materializes an **empty** profile on first
-   run and merges `profileBuiltinDefaults` identically on both load branches
-   (this also fixes the first-run branch skipping the builtin merge, so
-   `dataRoot` now applies on first run too); `EDGE_SERVICE_DEFAULTS` is deleted
-   and `getEdgeServiceEndpoint` returns `string | undefined` so absence is
-   representable. Pinned by `no-default-endpoints.test.ts`. **Exemption by
-   decision (Mykola, 2026-08-14): `configPreset` keeps its `edge = 'main'`
-   default** — calling the preset factory is itself an explicit opt-in, like a
-   CLI template.
+2. **`@dxos/config` ships zero implicit endpoints — but a created profile states
+   its own.** Revised by decision (Mykola, 2026-08-18) from the original "empty
+   first-run profile": the objection was never that a CLI user ends up pointed at
+   DXOS hosts, it was that code substituted them invisibly on every load. So
+   `ConfigService.load` writes `defaultProfileEndpoints` (hub, edge, ICE, IPFS)
+   into the profile it creates, where the user can read and change them, and
+   **nothing falls back afterwards** — `profileBuiltinDefaults` carries only
+   features and storage (which track the code), and the CLI's `hubBaseUrl` fails
+   with `HubApiError` when the profile has no hub URL. This also reverses PR
+   #12642's `DEFAULT_HUB_URL` fallback for the CLI, which now supplies the value
+   written at creation rather than a silent default; `Account.getHubUrl`
+   (app-toolkit, browser surface) still falls back and is out of scope here.
+   `EDGE_SERVICE_DEFAULTS` is deleted and `getEdgeServiceEndpoint` returns
+   `string | undefined` so absence is representable. Pinned by
+   `no-default-endpoints.test.ts`. **`configPreset` keeps its `edge = 'main'`
+   default** — calling the preset factory is itself an explicit opt-in.
 3. **Apps opt in via their own dx.yml** — that is the acceptable channel for
    production endpoints (composer-app now also carries `introspect`). App
    config ≠ SDK default.

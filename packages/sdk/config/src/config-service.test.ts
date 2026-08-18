@@ -24,10 +24,11 @@ describe('ConfigService.load', () => {
     restoreEnv = undefined;
   });
 
-  test('falls back to the built-in hub for a profile that configures none', async ({ expect }) => {
+  test('leaves the hub unset for a profile that configures none', async ({ expect }) => {
     restoreEnv = withEnv({ DX_HUB_URL: undefined });
     const config = await load('version: 1\n');
-    expect(config.get(HUB_SERVICE_URL)).toEqual(DEFAULT_HUB_URL);
+    // No code-level substitute: a profile without a hub is a state the caller has to report.
+    expect(config.get(HUB_SERVICE_URL)).toBeUndefined();
     expect(config.get(HUB_ENV_URL)).toBeUndefined();
   });
 
@@ -45,107 +46,36 @@ describe('ConfigService.load', () => {
     expect(config.get(HUB_ENV_URL)).toEqual('https://hub.env/');
   });
 
-  test('applies the profile defaults to a freshly created config file', async ({ expect }) => {
+  test('writes the endpoints into a freshly created config file', async ({ expect }) => {
     restoreEnv = withEnv({ DX_HUB_URL: undefined });
-    const { config, contents } = await EffectEx.runPromise(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = `${yield* fs.makeTempDirectoryScoped()}/missing/config.yml`;
-        const config = yield* ConfigService.load({ config: Option.some(path), profile: 'test' });
-        return { config, contents: yield* fs.readFileString(path) };
-      }).pipe(Effect.provide(NodeServices.layer), Effect.scoped),
-    );
+    const { config, contents } = await createProfile();
 
     expect(config.get(HUB_SERVICE_URL)).toEqual(DEFAULT_HUB_URL);
-    // The defaults track the code, so they are not baked into the file that was just written.
-    expect(contents).not.toContain('hub');
+    expect(config.get('runtime.services.edge.url')).toEqual('wss://dxos.network/');
+
+    // Stated in the file the user owns, not substituted from code on every load.
+    expect(contents).toContain('hub');
+    expect(contents).toContain('edge');
+    expect(contents).toContain('ipfs');
   });
 
-  test('writes no endpoint into a freshly created config file', async ({ expect }) => {
+  test('keeps features and storage out of the created file so they track the code', async ({ expect }) => {
     restoreEnv = withEnv({ DX_HUB_URL: undefined });
-    const { config, contents } = await EffectEx.runPromise(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = `${yield* fs.makeTempDirectoryScoped()}/missing/config.yml`;
-        const config = yield* ConfigService.load({ config: Option.some(path), profile: 'test' });
-        return { config, contents: yield* fs.readFileString(path) };
-      }).pipe(Effect.provide(NodeServices.layer), Effect.scoped),
-    );
+    const { config, contents } = await createProfile();
 
-    // A first run records user choices only, so no edge endpoint can reach disk without consent.
-    expect(contents).not.toContain('services:');
-    expect(contents).not.toMatch(/dxos\.(network|org)/);
-    expect(config.values.runtime?.services?.edge?.url).toBeUndefined();
-    expect(config.values.runtime?.services?.edgeServices).toBeUndefined();
-
-    // ...while the builtins that track the code still apply on the first-run branch.
+    expect(contents).not.toContain('edgeFeatures');
+    expect(contents).not.toContain('storage');
     expect(config.values.runtime?.client?.storage?.persistent).toBe(true);
     expect(config.values.runtime?.client?.edgeFeatures?.subductionReplicator).toBe(true);
   });
-
-  test('migrates a profile an earlier version seeded with endpoints', async ({ expect }) => {
-    restoreEnv = withEnv({ DX_HUB_URL: undefined });
-    const { config, contents } = await loadAndReread(LEGACY_PROFILE);
-
-    // Nothing chose these; an earlier `defaultConfig` wrote them on first run.
-    expect(config.values.runtime?.services?.edge?.url).toBeUndefined();
-    expect(config.values.runtime?.services?.iceProviders).toBeUndefined();
-    expect(config.values.runtime?.services?.ipfs).toBeUndefined();
-
-    // The file itself is rewritten, so every other reader of the profile sees the same thing.
-    expect(contents).not.toContain('dxos.network');
-
-    // Settings the profile legitimately carries are untouched.
-    expect(config.values.runtime?.client?.storage?.persistent).toBe(true);
-  });
-
-  test('keeps endpoints a profile configures for itself', async ({ expect }) => {
-    restoreEnv = withEnv({ DX_HUB_URL: undefined });
-    const configured = [
-      'version: 1',
-      'runtime:',
-      '  services:',
-      '    edge:',
-      '      url: wss://edge.test/',
-      '    ipfs:',
-      '      server: https://ipfs.test/api',
-      '      gateway: https://ipfs.test/gateway',
-      '',
-    ].join('\n');
-    const { config, contents } = await loadAndReread(configured);
-
-    expect(config.values.runtime?.services?.edge?.url).toEqual('wss://edge.test/');
-    expect(config.values.runtime?.services?.ipfs?.server).toEqual('https://ipfs.test/api');
-    // Untouched: no rewrite happens when there is nothing to remove.
-    expect(contents).toEqual(configured);
-  });
 });
 
-/** A profile as the removed `defaultConfig` used to write it on first run. */
-const LEGACY_PROFILE = [
-  'version: 1',
-  'runtime:',
-  '  client:',
-  '    storage:',
-  '      persistent: true',
-  '  services:',
-  '    edge:',
-  '      url: wss://dxos.network/',
-  '    iceProviders:',
-  '      - urls: https://dxos.network/ice',
-  '    ipfs:',
-  '      server: https://api.ipfs.dxos.network/api/v0',
-  '      gateway: https://gateway.ipfs.dxos.network/ipfs',
-  '',
-].join('\n');
-
-/** Loads a profile from `contents` and reads the file back, to observe any migration write. */
-const loadAndReread = (contents: string) =>
+/** Triggers the first-run branch on a missing path and reads back what it wrote. */
+const createProfile = () =>
   EffectEx.runPromise(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const path = `${yield* fs.makeTempDirectoryScoped()}/config.yml`;
-      yield* fs.writeFileString(path, contents);
+      const path = `${yield* fs.makeTempDirectoryScoped()}/missing/config.yml`;
       const config = yield* ConfigService.load({ config: Option.some(path), profile: 'test' });
       return { config, contents: yield* fs.readFileString(path) };
     }).pipe(Effect.provide(NodeServices.layer), Effect.scoped),

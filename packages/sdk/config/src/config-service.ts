@@ -11,7 +11,6 @@ import { dirname } from 'node:path';
 
 import { DEFAULT_HUB_URL, DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
 import { Config } from './config';
@@ -24,6 +23,33 @@ export const memoryConfig = new Config({
         feedReplicator: true,
         signaling: true,
         agents: true,
+      },
+    },
+  },
+});
+
+/**
+ * Endpoints the CLI writes into a profile when it creates one. They belong in the file rather than
+ * in {@link profileBuiltinDefaults} so the user can see and change what their CLI talks to; no code
+ * path substitutes them later, so deleting one is a decision the CLI reports rather than papers over.
+ */
+export const defaultProfileEndpoints = new Config({
+  runtime: {
+    services: {
+      hub: {
+        url: DEFAULT_HUB_URL,
+      },
+      edge: {
+        url: 'wss://dxos.network/',
+      },
+      iceProviders: [
+        {
+          urls: 'https://dxos.network/ice',
+        },
+      ],
+      ipfs: {
+        server: 'https://api.ipfs.dxos.network/api/v0',
+        gateway: 'https://gateway.ipfs.dxos.network/ipfs',
       },
     },
   },
@@ -43,13 +69,7 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
       const Yaml = yield* Effect.promise(() => import('yaml'));
       const configPath = Option.getOrElse(args.config, () => defaultConfigPath);
       const configContent = yield* fs.readFileString(configPath);
-      const { values: configValues, removed } = stripLegacyDefaultEndpoints(Yaml.parse(configContent));
-      if (removed.length > 0) {
-        // Rewritten, not just filtered on load: the endpoints were materialized without the user
-        // asking, so they must leave the file rather than linger for every other reader of it.
-        yield* fs.writeFileString(configPath, Yaml.stringify(configValues));
-        log.info('removed endpoints written by an earlier version', { path: configPath, removed });
-      }
+      const configValues = Yaml.parse(configContent);
       return withProfileDefaults(configValues, args.profile);
     }).pipe(
       // If the config file doesn't exist, create it. v4 folds v3's `SystemError` and `BadArgument`
@@ -59,10 +79,10 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
           ? Effect.fail(error)
           : Effect.gen(function* () {
               const Yaml = yield* Effect.promise(() => import('yaml'));
-              // First run materializes an EMPTY profile: the file records only user choices, while
-              // features/storage come from profileBuiltinDefaults on every load (same as the read
-              // path) — never a silently-defaulted endpoint.
-              const configValues = new Config().values;
+              // First run materializes the endpoints, and only the endpoints: features and storage
+              // keep coming from profileBuiltinDefaults so they track the code, while what the CLI
+              // talks to is stated in the file the user owns.
+              const configValues = defaultProfileEndpoints.values;
               const fs = yield* FileSystem.FileSystem;
               const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
               yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });
@@ -73,70 +93,6 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
     );
   };
 }
-
-// Endpoints the removed `defaultConfig` materialized into every profile on first run; a profile
-// created before that removal still carries them on disk.
-const LEGACY_EDGE_URL = 'wss://dxos.network/';
-const LEGACY_ICE_URLS = 'https://dxos.network/ice';
-const LEGACY_IPFS_SERVER = 'https://api.ipfs.dxos.network/api/v0';
-const LEGACY_IPFS_GATEWAY = 'https://gateway.ipfs.dxos.network/ipfs';
-
-/**
- * Drops endpoints an earlier `ConfigService.load` wrote into the profile without the user choosing
- * them, so the no-defaults guarantee covers profiles that already exist and not just new ones.
- * Each literal is matched exactly — anything the user configured for themselves is left alone.
- */
-const stripLegacyDefaultEndpoints = (values: ConfigProto): { values: ConfigProto; removed: string[] } => {
-  const runtime = values?.runtime;
-  const services = runtime?.services;
-  if (!runtime || !services) {
-    return { values, removed: [] };
-  }
-
-  const removed: string[] = [];
-  const { edge, iceProviders, ipfs, ...rest } = services;
-  const nextServices: typeof services = { ...rest };
-
-  const { url, ...edgeRest } = edge ?? {};
-  if (url === LEGACY_EDGE_URL) {
-    removed.push('runtime.services.edge.url');
-    if (Object.keys(edgeRest).length > 0) {
-      nextServices.edge = edgeRest;
-    }
-  } else if (edge) {
-    nextServices.edge = edge;
-  }
-
-  if (iceProviders?.length === 1 && isOnly(iceProviders[0], { urls: LEGACY_ICE_URLS })) {
-    removed.push('runtime.services.iceProviders');
-  } else if (iceProviders) {
-    nextServices.iceProviders = iceProviders;
-  }
-
-  if (ipfs && isOnly(ipfs, { server: LEGACY_IPFS_SERVER, gateway: LEGACY_IPFS_GATEWAY })) {
-    removed.push('runtime.services.ipfs');
-  } else if (ipfs) {
-    nextServices.ipfs = ipfs;
-  }
-
-  if (removed.length === 0) {
-    return { values, removed };
-  }
-
-  const { services: _dropped, ...runtimeRest } = runtime;
-  return {
-    values: {
-      ...values,
-      runtime: Object.keys(nextServices).length > 0 ? { ...runtimeRest, services: nextServices } : runtimeRest,
-    },
-    removed,
-  };
-};
-
-/** Whether `value` carries exactly `expected` — a subset match would strip a user's own additions. */
-const isOnly = (value: object, expected: Record<string, string>): boolean =>
-  Object.keys(value).length === Object.keys(expected).length &&
-  Object.entries(value).every(([key, actual]) => expected[key] === actual);
 
 /**
  * Both load branches (existing file, first-run write) must layer env, file, and builtins in the same
@@ -166,14 +122,6 @@ const profileBuiltinDefaults = (profile: string) => {
 
   return new Config({
     runtime: {
-      // Set here rather than in the file written for a new profile, and under the service key
-      // rather than `runtime.app.env`: the latter outranks it in the resolver, so a built-in there
-      // would shadow a hub URL the profile configures for itself.
-      services: {
-        hub: {
-          url: DEFAULT_HUB_URL,
-        },
-      },
       client: {
         edgeFeatures: {
           subductionReplicator: true,

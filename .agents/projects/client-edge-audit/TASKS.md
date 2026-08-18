@@ -52,9 +52,11 @@ warnings/errors.
 - [x] **Find any code/config default that injects an edge endpoint** — full
       list in DESIGN.md §Config plumbing & defaults.
 - [x] **Remove them** — shipped in this branch:
-  - `@dxos/config`: `defaultConfig` DELETED — `ConfigService.load` writes an
-    empty first-run profile and merges `profileBuiltinDefaults` on both load
-    branches (fixing the first-run branch that skipped the merge);
+  - `@dxos/config`: `defaultConfig` DELETED; `ConfigService.load` writes
+    `defaultProfileEndpoints` (hub, edge, ICE, IPFS) into the profile it creates
+    and merges `profileBuiltinDefaults` — features and storage only — on both
+    load branches (fixing the first-run branch that skipped the merge). Endpoints
+    live in the user's file; no code path substitutes them on load.
     `EDGE_SERVICE_DEFAULTS` deleted, `getEdgeServiceEndpoint` returns
     `string | undefined`. Pinned by `no-default-endpoints.test.ts`.
     `configPreset` keeps its `edge = 'main'` default by decision — the factory
@@ -66,10 +68,10 @@ warnings/errors.
     ToolsExplorer (new config-driven container).
   - `react-ui-introspect`: `DEFAULT_INTROSPECT_MCP_URL` removed; explorer
     renders a "not configured" state.
-  - CLI hub commands: `?? 'https://hub.dxos.network'` (×2) → failed with
-    `HubApiError` when unset, **reverted on merge with main**: PR #12642 makes
-    the hub URL a named `DEFAULT_HUB_URL` builtin (env-overridable), so hub sits
-    outside this audit's no-defaults rule by that later decision.
+  - CLI hub commands: `?? 'https://hub.dxos.network'` (×2) → `hubBaseUrl` fails
+    with `HubApiError` when `runtime.services.hub.url` is unset. Briefly reverted
+    on merge with PR #12642, reinstated by decision 2026-08-18 — the created
+    profile carries the URL, so its absence is a real condition to report.
   - `sdk/client` devtools hook: no more `https://halo.dxos.org` fallback target.
   - `client-protocol`: deprecated `DEFAULT_VAULT_URL` deleted (zero readers).
   - `edge-client/service/Image.ts`: `DEFAULT_IMAGE_SERVICE_URL` export deleted
