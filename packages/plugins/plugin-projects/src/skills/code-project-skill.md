@@ -111,12 +111,9 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
   progress can never disagree with the work.
 - **Task set** — the ledger. Milestone membership is the task's `milestone` (`taskCreate` with
   `milestone: {"/": "echo:///<milestone-id>"}`; omit it for the backlog); sub-tasks use `parentTask`.
-  Task `status` is `todo`|`in-progress`|`done`|`failed`|`cancelled`. Projects made by `projectCreate` always
-  own a task set; if `projectGet` shows none (a project created some other way), bootstrap one
-  before recording tasks: `createObject { typename: 'org.dxos.type.taskSet', properties: { name:
-'Tasks' }, spaceId }`, then attach it with `updateObject { id: <project-id>, properties: {
-taskSet: {"/": "echo:///<task-set-id>"} }, spaceId }`. If the bootstrap fails, say so — do **not**
-  claim a task was recorded.
+  Task `status` is `todo`|`in-progress`|`done`|`failed`|`cancelled`. Every project owns a task set
+  from creation, so `projectGet` showing none means something is wrong — say so rather than
+  recording tasks somewhere else, and do **not** claim a task was recorded.
 - **Outline** — the free-text scratch surface (`outlineGet`/`outlineUpdate`). Keep a line
   starting `Resume:` holding the single next action, and a `Design: {"/": "echo:///<doc-id>"}` line
   pointing at the design document.

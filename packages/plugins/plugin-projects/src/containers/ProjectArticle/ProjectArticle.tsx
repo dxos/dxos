@@ -15,11 +15,12 @@ import { useObject, useObjects } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type Milestone } from '@dxos/types';
 
 import { ObjectCard } from '#components';
 import { meta } from '#meta';
@@ -57,6 +58,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // components — the boundary is surfaces/operations only).
   const [taskSetSnapshot] = useObject(project.taskSet);
   const taskSet = Obj.getReactiveOrUndefined(taskSetSnapshot);
+  const milestoneRefs = taskSetSnapshot?.milestones ?? [];
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<HeaderValues>>(
@@ -129,6 +131,12 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   </Form.Section>
                 )}
 
+                {milestoneRefs.length > 0 && (
+                  <Form.Section title={t('milestones.label')}>
+                    <MilestoneList refs={milestoneRefs} />
+                  </Form.Section>
+                )}
+
                 {taskSet && (
                   <Form.Section title={t('tasks.label')}>
                     <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
@@ -148,6 +156,35 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 };
 
 ProjectArticle.displayName = 'ProjectArticle';
+
+/**
+ * Read-only view of the task set's milestones, at parity with the retired `GoalList`: milestones
+ * replaced goals, and authoring is still agent/MCP-only. No status icon — a milestone stores none,
+ * because progress is derived from the tasks filed under it; wiring that in is a follow-up.
+ */
+const MilestoneList = ({ refs }: { refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>> }) => (
+  <Flex role='list' column gap='xs'>
+    {refs.map((milestoneRef) => (
+      <MilestoneRow key={milestoneRef.uri.toString()} milestoneRef={milestoneRef} />
+    ))}
+  </Flex>
+);
+
+/** One row, holding its own subscription so a rename re-renders just that row. */
+const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milestone> }) => {
+  const [milestone] = useObject(milestoneRef);
+  if (!milestone) {
+    return null;
+  }
+
+  return (
+    <Flex role='listitem' gap='sm' align='center' classNames='min-w-0'>
+      <Icon icon='ph--flag--regular' size={4} />
+      <span className='truncate'>{milestone.name}</span>
+      {milestone.targetDate && <span className='text-subdued shrink-0'>{milestone.targetDate}</span>}
+    </Flex>
+  );
+};
 
 /**
  * The toolbar's own actions. Deliberately not spliced from the app graph: toolbar and navtree

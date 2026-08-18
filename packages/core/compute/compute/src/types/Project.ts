@@ -69,7 +69,7 @@ export const make = (
 ): Project => {
   const project = Obj.make(Project, { ...props, artifacts: props.artifacts ?? [] });
   if (!props.taskSet) {
-    const taskSet = TaskSet.make({ name: 'Tasks' });
+    const taskSet = TaskSet.make();
     Obj.setParent(taskSet, project);
     Obj.update(project, (project) => {
       project.taskSet = Ref.make(taskSet);

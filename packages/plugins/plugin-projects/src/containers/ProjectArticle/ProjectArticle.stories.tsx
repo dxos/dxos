@@ -209,9 +209,18 @@ export const Updates: Story = {
     });
     const MILESTONE_TASK = 'Filed under the milestone';
     addTask(space, taskSet, MILESTONE_TASK, milestone);
+    // The milestone appears in its own read-only section (parity with the retired Goals list) …
+    await expect(canvas.findByText(MILESTONE_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    // … while its task is just a row in the flat list: the task list does not group by milestone
+    // yet (see TASKS.md), so no backlog split appears.
     await expect(canvas.findByText(MILESTONE_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await waitFor(() => expect(canvas.queryByText(MILESTONE_NAME)).toBeNull(), { timeout: 10_000 });
     await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
+
+    // A rename reaches the row, which holds its own subscription.
+    Obj.update(milestone, (milestone) => {
+      milestone.name = `${MILESTONE_NAME} (v2)`;
+    });
+    await expect(canvas.findByText(`${MILESTONE_NAME} (v2)`, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     // 5. Artifacts are an inline ref array on the project now, so appending a ref must add a card.
     const ADDED_ARTIFACT = 'Added artifact';
