@@ -11,6 +11,18 @@ manual evidence). This document specifies the four parts to consolidate — **vi
 swap, exposed as a reusable hook per the `react-ui-list` pattern) versus an internal (an invariant
 the engine must hold, never exposed).
 
+Decisions taken:
+
+- The virtualizer ships as an entry point of this package first (`@dxos/react-ui-feed/virtualizer`);
+  it graduates to `@dxos/react-ui-virtualizer` when a second consumer (mosaic) lands.
+- The list consumes a **model**, not an array: a low-level `ListModel` (reactive via `@effect/atom`)
+  the virtualizer binds to, and `FeedModel` as the native case — not an add-on. `fromMessages()`
+  keeps the array form as an adapter.
+- The follow glide (`ScrollFollower`) is wired and on by default; instant is the fallback.
+- Search is **not** the list's concern. Cross-cutting per-item data — search highlights, selection —
+  reaches items through provider + hook (the decoration pattern, §Aspects); the list neither knows
+  nor routes it.
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -61,6 +73,49 @@ type WindowState
 ```
 
 ```mdl
+type ListModel
+  desc: >
+    The low-level contract the virtualizer binds to — what the engine already consumed as separate
+    props (count, getId, extents), made one reactive object. Backed by @effect/atom, so derivations
+    (stops, decorations, readouts) are atoms over it rather than parallel props. Changes carry
+    structure the engine currently has to infer: a prepend says it is one, so anchor preservation
+    is information, not an identity scan.
+  fields:
+    count: Atom<number>
+    getId: (index: number) => string
+    at: (index: number) => T | undefined
+    changes: Stream<{ prepended?: number, appended?: number, updated?: string[] }>
+```
+
+```mdl
+type FeedModel
+  desc: >
+    The native case, not an add-on: a ListModel of messages with the feed's own semantics. Owns
+    ITERATION — how the window walks the source — so reaching an edge asks the model
+    (loadBefore/loadAfter: paged history, reverse-from-tail) instead of leaking a host callback.
+    Owns the stops policy and the streaming tail. Adapters: fromMessages(array) for the plain case;
+    ECHO/queue bindings live outside this package (plugin-assistant adapts).
+  extends: ListModel
+  fields:
+    stops: Atom<Stop[]>               # pluggable policy: per message | prompt | block | day
+    streamingId?: Atom<string>        # tail message reconciling by delta
+    loadBefore?: () => Promise<void>  # consumed by onEdge('start') — paging is the model's business
+    loadAfter?: () => Promise<void>
+```
+
+```mdl
+type Decoration
+  desc: >
+    A range of one item's rendered text that some producer wants painted — search is ONE producer;
+    linting, mentions, and diff spans are others. Keyed by item id; delivered to items via the
+    decoration provider/hook (§Aspects), never through list props.
+  fields:
+    id: string                        # item (message) id
+    range: { offset: number, length: number }
+    kind: string                      # producer tag: 'search' | 'mention' | ...
+```
+
+```mdl
 type Stop
   desc: >
     One position navigation can land on. Stops are produced by a pluggable policy over the model
@@ -100,9 +155,8 @@ component Virtualizer
     hosts). Target: extractable package or react-ui-list aspect; retrofit candidate for
     react-ui-mosaic VirtualStack, which still runs tanstack react-virtual.
   props:
-    count: number
-    getId: (index) => string          # identity; measurements are keyed by this, never by index
-    extents: Extents
+    model: ListModel                  # count + identity + change structure; array via fromMessages()
+    extents: Extents                  # measurements stay keyed by model id, never by index
     axis?: 'block' | 'inline'         # default block; only the binding maps extent to height/width
     overscan?: number                 # rows mounted before/beyond the visible window, per side (8)
     reserve?: number                  # empty extent after the last row (scrollPastEnd), host-computed
@@ -131,25 +185,23 @@ component MessageList
     the window too). Renders no toolbar or statusbar; useMessageList() exposes state and controls
     for chrome outside the scroller.
   props:
-    messages: Message[]
-    renderer?: (message) => ItemContent        # resolves each message to a block kind
-    Chrome?: Component<MessageChromeProps>     # host render-prop; avatar/timestamp/fork controls
-    Custom?: Component                         # renderer for kind 'custom'
-    registry?: XmlWidgetRegistry               # XML tag -> React widget
+    model: FeedModel                            # or fromMessages(array); stops/streaming/paging live here
+    renderer?: (message) => ItemContent         # resolves each message to a block kind
+    Chrome?: Component<MessageChromeProps>      # host render-prop; avatar/timestamp/fork controls
+    Custom?: Component                          # renderer for kind 'custom'
+    registry?: XmlWidgetRegistry                # XML tag -> React widget
     estimateSize?: number | (message, index) => number
-    isAnchor?: (message, index) => boolean     # today's stops policy; generalizes to Stop provider
     stickyBottom?: boolean
-    scrollPastEnd?: boolean                    # off by default
-    debug?: boolean                            # off by default; outlines + jump detector
+    scrollPastEnd?: boolean                     # off by default
     overscan?: number
-    streamingId?: string                       # item reconciles by delta rather than remounting
-    hits?: SearchHit[]                         # routed to owning items, grouped once per pass
-    selectedIds?: ReadonlySet<string>
+    debug?: boolean                             # borders, outlines + jump detector
+    # NOT here, deliberately: decorations (née hits) and selection reach items via provider + hook
+    # (§Aspects); isAnchor/streamingId are model concerns (FeedModel.stops / .streamingId).
   state:
-    currentIndex: number              # row containing the scroll offset — derived, never set beside it
-    widgetStore: WidgetStateStore     # outlives rows; widget state survives unmount/remount
+    currentIndex: number                        # row containing the scroll offset — derived, never set beside it
+    widgetStore: WidgetStateStore               # outlives rows; widget state survives unmount/remount
   actions:
-    stepAnchor(delta)                 # one seam for every driver: toolbar, arrows, rails
+    stepAnchor(delta)                           # one seam for every driver: toolbar, arrows, rails
     scrollToIndex(index, options?)
     scrollToBottom(options?)
 ```
@@ -207,10 +259,32 @@ aspect useWindow
 ```mdl
 aspect useStops
   desc: >
-    Pluggable navigation stops over the model: per message, per prompt (user turns), per block,
-    per search hit, per day divider. Pure; shared by list, outliner, minimap so a per-prompt feed
-    shows per-prompt ticks with no extra wiring.
-  owns: (items, policy) => Stop[]
+    Navigation stops as an atom over the model (FeedModel.stops): per message, per prompt (user
+    turns), per block, per day divider. Shared by list, outliner, minimap so a per-prompt feed
+    shows per-prompt ticks with no extra wiring. isAnchor survives as fromMessages() sugar for the
+    per-message policy.
+  owns: stops policy over ListModel
+```
+
+```mdl
+aspect useDecorations
+  desc: >
+    THE PATTERN for cross-cutting per-item data, retrofitted everywhere rather than invented per
+    surface: a provider at the host carries producers (search, mentions, lint, diff); an item asks
+    useDecorations(id) for its own ranges and paints them. The list neither knows nor routes —
+    search leaves the list API entirely (searchFeed stays a model-level producer, since
+    virtualization hides most items from any DOM search). Candidate consumers beyond the feed:
+    react-ui-editor documents, tables, grid cells.
+  owns: provider of Decoration producers; per-item subscription by id
+```
+
+```mdl
+aspect useItemSelection
+  desc: >
+    The item-side hook of the same pattern: an item asks for its own { selected, toggle, rowProps }
+    by id instead of the list threading selectedIds through props. Backed by useListSelection's
+    modes (single | multi | range) at the provider; model-space ids, so virtualization is untouched.
+  owns: per-item selection binding by id
 ```
 
 ```mdl
@@ -229,9 +303,9 @@ aspect useFollow
   desc: >
     The sticky tail as an intent — withdrawn only by a backwards scroll, never re-derived from
     proximity (corrections grow the document under a stationary reader). Optionally drives
-    ScrollFollower for the velocity-based glide (rows/s, median row height); wiring the glide is
-    pending the manual verdict on whether instant correction reads as abrupt (TESTING §2.6).
-    Reusable for any streaming container: transcripts, logs.
+    ScrollFollower for the velocity-based glide (rows/s, median row height) — DECIDED: wired and
+    on by default, instant as the fallback (glide: false). Reusable for any streaming container:
+    transcripts, logs.
   owns: following intent, tail correction, optional glide
 ```
 
@@ -270,12 +344,13 @@ feat F-2: Rendering
   req F-2.3: Widgets (XML tag -> React via registry) may expand after mount; expansion is not a
     special case — it is the same post-commit measurement arriving again.
   req F-2.4: Widget state lives in a Root-owned store and survives its row unmounting.
-  req F-2.5: The streaming item reconciles by delta rather than remounting.
+  req F-2.5: The streaming item (FeedModel.streamingId) reconciles by delta rather than remounting.
 ```
 
 ```mdl
 feat F-3: Navigation
-  req F-3.1: Stops are pluggable (useStops); the default is every message.
+  req F-3.1: Stops are a model policy (FeedModel.stops via useStops); default is every message;
+    isAnchor survives as fromMessages() sugar.
   req F-3.2: All drivers — toolbar, arrows, outliner, minimap — call useFeedNavigation; no parallel
     wiring.
   req F-3.3: The cursor is the row containing the scroll offset; every press travels.
@@ -287,7 +362,8 @@ feat F-3: Navigation
 ```mdl
 feat F-4: Selection
   req F-4.1: Selection modes single, multi, range are interchangeable policies (useListSelection).
-  req F-4.2: Selection is model-space (ids) and survives virtualization.
+  req F-4.2: Selection is model-space (ids) and survives virtualization; items read their own
+    binding via useItemSelection(id), never a threaded selectedIds prop.
   req F-4.3: One SelectionGroup spans every editor for text selection.
 ```
 
@@ -310,14 +386,27 @@ feat F-6: Rails
 ```
 
 ```mdl
-feat F-7: Retrofit
-  req F-7.1: Extract the virtualizer (placement + useWindow + Window + tests) to its own entry
-    point first.
-  req F-7.2: react-ui-mosaic VirtualStack (still on tanstack react-virtual) rebinds onto useWindow
-    after the feed has soaked; its pagination hook becomes an onEdge consumer. Mosaic adds
-    drag-and-drop, which the spike never exercised — behind a flag.
-  req F-7.3: react-ui-list conventions adopted, not duplicated: useListSelection extended with
-    range; listbox ARIA semantics for rows.
+feat F-7: Model
+  req F-7.1: The virtualizer binds to ListModel; a prepend is told, never inferred by identity scan.
+  req F-7.2: FeedModel is the native case: stops, streamingId, and iteration (loadBefore/loadAfter
+    consumed by onEdge) are model concerns, not list props.
+  req F-7.3: fromMessages(array) adapts the plain case; ECHO/queue bindings adapt outside this
+    package.
+  req F-7.4: Reactivity is @effect/atom; derivations (stops, decorations, readouts) are atoms over
+    the model rather than parallel props.
+```
+
+```mdl
+feat F-8: Retrofit
+  req F-8.1: Extract the virtualizer (placement + useWindow + Window + tests) to the
+    @dxos/react-ui-feed/virtualizer entry point first; graduate to @dxos/react-ui-virtualizer when
+    mosaic consumes it.
+  req F-8.2: react-ui-mosaic VirtualStack (still on tanstack react-virtual) rebinds onto useWindow
+    after the feed has soaked; its pagination hook becomes a ListModel.loadBefore/loadAfter
+    consumer. Mosaic adds drag-and-drop, which the spike never exercised — behind a flag.
+  req F-8.3: react-ui-list conventions adopted, not duplicated: useListSelection extended with
+    range; listbox ARIA semantics for rows; useDecorations retrofitted to editor/table surfaces as
+    they come up.
 ```
 
 ## Acceptance
