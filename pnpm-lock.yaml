@@ -6198,9 +6198,15 @@ importers:
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../echo/echo-protocol
       '@dxos/edge-protocol':
         specifier: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@fe42692
-        version: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@fe42692
+        version: https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@fe42692(@dxos/echo-protocol@packages+core+echo+echo-protocol)(@dxos/echo@packages+core+echo+echo)
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -25508,7 +25514,7 @@ packages:
     engines: {node: '>=16.11.0'}
 
   '@dxos/debug@https://pkg.pr.new/dxos/dxos/@dxos/debug@4f55909':
-    resolution: {integrity: sha512-mO5Mw1Adb9X2Wyu3NElWhYpTfwu+spoZHyq2eYvLSGm0gogqv0Fa0hMGwdKxl9Ryvzhz/hAYDWd1DKHeW7Pd8w==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/debug@4f55909}
+    resolution: {tarball: https://pkg.pr.new/dxos/dxos/@dxos/debug@4f55909}
     version: 0.11.1
 
   '@dxos/edge-protocol@https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@fe42692':
@@ -25524,7 +25530,7 @@ packages:
     version: 0.11.1
 
   '@dxos/invariant@https://pkg.pr.new/dxos/dxos/@dxos/invariant@4f55909':
-    resolution: {integrity: sha512-Z+LngbMAW8Nui0zIPoD9Iz2Sd230oaUccUlMvtH4dvnhgiqeKk3GomiDGJkJBRzWlJ1jikBTcOaamF48CCXkQg==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/invariant@4f55909}
+    resolution: {tarball: https://pkg.pr.new/dxos/dxos/@dxos/invariant@4f55909}
     version: 0.11.1
 
   '@dxos/invariant@https://pkg.pr.new/dxos/dxos/@dxos/invariant@4f55909b5373a8b4558074ce90a9b60880d620bd':
@@ -25532,7 +25538,7 @@ packages:
     version: 0.11.1
 
   '@dxos/keys@https://pkg.pr.new/dxos/dxos/@dxos/keys@4f55909':
-    resolution: {integrity: sha512-ucqIe5e2BxJ0IkB8p60fJc5XW1kXpbj4DdhK9qjY8CpTEg2oOKWgLo1U1C8BcDCy5pfcVLBySmDPer9cWztQHA==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/keys@4f55909}
+    resolution: {tarball: https://pkg.pr.new/dxos/dxos/@dxos/keys@4f55909}
     version: 0.11.1
     peerDependencies:
       effect: 4.0.0-rc.108
@@ -25542,11 +25548,11 @@ packages:
     version: 0.11.1
 
   '@dxos/node-std@https://pkg.pr.new/dxos/dxos/@dxos/node-std@4f55909':
-    resolution: {integrity: sha512-1igBHlOPAdvAx1XGDZlglbuoeTjr4U7gk3jXvKWmZ4CjDLMshgzC9XZpG/jzs2oA7pcerRkddBd9RYtCH0arZg==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/node-std@4f55909}
+    resolution: {tarball: https://pkg.pr.new/dxos/dxos/@dxos/node-std@4f55909}
     version: 0.11.1
 
   '@dxos/util@https://pkg.pr.new/dxos/dxos/@dxos/util@4f55909':
-    resolution: {integrity: sha512-0Vl7Jox29ZaN2ef4/FlR1AYNeYUkYWqVQSMA7tMpjJ/luXphcOr0g15hT7/V8uYDw+bqN06hf4r17u8loqtF5Q==, tarball: https://pkg.pr.new/dxos/dxos/@dxos/util@4f55909}
+    resolution: {tarball: https://pkg.pr.new/dxos/dxos/@dxos/util@4f55909}
     version: 0.11.1
 
   '@dxos/util@https://pkg.pr.new/dxos/dxos/@dxos/util@4f55909b5373a8b4558074ce90a9b60880d620bd':
@@ -47564,8 +47570,10 @@ snapshots:
     dependencies:
       '@dxos/node-std': https://pkg.pr.new/dxos/dxos/@dxos/node-std@4f55909
 
-  '@dxos/edge-protocol@https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@fe42692':
+  '@dxos/edge-protocol@https://pkg.pr.new/dxos/edge/@dxos/edge-protocol@fe42692(@dxos/echo-protocol@packages+core+echo+echo-protocol)(@dxos/echo@packages+core+echo+echo)':
     dependencies:
+      '@dxos/echo': link:packages/core/echo/echo
+      '@dxos/echo-protocol': link:packages/core/echo/echo-protocol
       '@dxos/errors': https://pkg.pr.new/dxos/dxos/@dxos/errors@4f55909b5373a8b4558074ce90a9b60880d620bd
       '@dxos/invariant': https://pkg.pr.new/dxos/dxos/@dxos/invariant@4f55909b5373a8b4558074ce90a9b60880d620bd
       '@dxos/keys': link:packages/common/keys
