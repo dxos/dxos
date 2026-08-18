@@ -316,7 +316,7 @@ catalog:
   '@types/yargs': ~16.0.1
   '@types/zen-observable': ^0.8.3
   '@typescript-eslint/parser': ^8.66.0
-  '@typescript/native-preview': 7.0.0-dev.20260421.2
+  '@typescript/typescript6': ^6.0.2
   '@typescript/vfs': ^1.6.0
   '@uiw/codemirror-theme-vscode': ^4.25.2
   '@valtown/codemirror-continue': ^2.3.1
@@ -652,7 +652,7 @@ catalog:
   topojson-simplify: ^3.0.3
   transformation-matrix: ^2.16.1
   ts-morph: ^16.0.0
-  tsdown: ^0.16.7
+  tsdown: ^0.22.14
   tslib: ^2.8.1
   tsx: ^4.21.0
   tty-browserify: ~0.0.1
@@ -660,7 +660,7 @@ catalog:
   type-fest: 4.10.1
   typedoc: 0.28.1
   types-package-json: ^2.0.39
-  typescript: ^6.0.3
+  typescript: ^7.0.2
   ua-parser-js: ^1.0.39
   uint8arrays: ^5.1.0
   ulidx: ^2.3.0
@@ -791,7 +791,6 @@ overrides:
   react-dom: 'catalog:'
   tar: '>=7.5.7'
   tar-fs: '>=3.1.1'
-  typescript: 'catalog:'
   undici: '>=7.18.2'
   vite: '>=8.2.1'
   web-ext: ^10.5.0
