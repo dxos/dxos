@@ -18,7 +18,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { Cursor } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { ConnectorAnnotations, ConnectorSpec } from '#types';
@@ -30,7 +30,7 @@ const SUBJECT_ID = 'subject';
 
 const TestSync = Operation.make({
   meta: { key: DXN.make('org.dxos.test.connectorAuthGraph.sync'), name: 'Test Sync' },
-  input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+  input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
   output: Schema.Any,
 });
 

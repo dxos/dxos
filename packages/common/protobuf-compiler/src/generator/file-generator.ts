@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import * as ts from '@typescript/typescript6';
 import { dirname, join } from 'path';
 import type pb from 'protobufjs';
-import * as ts from 'typescript';
 
 import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
 import { getSafeNamespaceIdentifier, parseFullyQualifiedName } from '../namespaces';

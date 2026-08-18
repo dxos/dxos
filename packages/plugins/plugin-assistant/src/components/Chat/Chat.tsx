@@ -20,8 +20,6 @@ import {
   type ChatView,
   ChatThread as NaturalChatThread,
 } from '@dxos/react-ui-assistant';
-// Aliased: `@dxos/types` exports an `Outline` of its own — a project's checklist — and this file
-// uses both. The rail is the newcomer here, so it is the one that gives way.
 import { type MessageRange, type OutlineMarker, Outline as OutlineRail, useFeedModel } from '@dxos/react-ui-feed';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Outline } from '@dxos/types';

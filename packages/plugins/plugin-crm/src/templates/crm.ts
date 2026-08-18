@@ -39,7 +39,7 @@ export const crm: RoutineCapabilities.Template = {
         name: name ?? `CRM — ${mailbox.name ?? 'Mailbox'}`,
         spec: { kind: 'runnable', runnable: Ref.fromURI(CrmOperation.ProcessMailbox.meta.key) },
         trigger: Trigger.make({
-          enabled: false,
+          enabled: true,
           spec: Trigger.specFeed(feed),
           // The operation reads the mailbox itself, so the trigger passes the subject rather than the
           // event item; `research` scaffolds a Profile per new contact.
