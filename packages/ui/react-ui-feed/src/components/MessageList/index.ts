@@ -3,7 +3,5 @@
 //
 
 export * from './MessageList';
-export * from './placement';
-export * from './Window';
 export * from './follow';
 export * from './position-log';

@@ -18,6 +18,7 @@ import { type Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { type ItemContent, type MessageRenderer, type SearchHit, defaultRenderer } from '../../model';
+import { type WindowController, type WindowState, useWindow } from '../../virtualizer';
 import {
   type HighlightRange,
   HtmlItem,
@@ -29,7 +30,6 @@ import {
   createWidgetStateStore,
 } from '../Item';
 import { useJumpDetector, usePositionLog } from './position-log';
-import { type WindowController, type WindowState, useWindow } from './Window';
 
 //
 // Context

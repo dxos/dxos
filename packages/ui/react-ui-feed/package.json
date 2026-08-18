@@ -22,6 +22,11 @@
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./virtualizer": {
+      "source": "./src/virtualizer/index.ts",
+      "types": "./dist/types/src/virtualizer/index.d.ts",
+      "import": "./dist/lib/virtualizer.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

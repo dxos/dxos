@@ -7,7 +7,7 @@ import React from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type WindowState } from '../../components';
+import { type WindowState } from '../../virtualizer';
 
 /** 2rem, matching the outline rail it usually sits opposite. */
 const DEFAULT_WIDTH = 32;

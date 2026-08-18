@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
 import { type FeedScenario, MessageWindow, createScenario } from '../../testing';
-import { type WindowController } from './Window';
+import { type WindowController } from '../../virtualizer';
 
 /**
  * Real messages, placed by the new module.

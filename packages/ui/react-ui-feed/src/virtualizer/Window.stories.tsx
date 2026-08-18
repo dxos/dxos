@@ -11,7 +11,7 @@ import { Outline, type OutlineMarker } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { Minimap } from '../../testing/debug';
+import { Minimap } from '../testing/debug';
 import { type EdgeDrift } from './placement';
 import { Window, type WindowAxis, type WindowController, type WindowState } from './Window';
 
@@ -262,7 +262,7 @@ const Harness = ({
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'ui/react-ui-feed/placement',
+  title: 'ui/react-ui-feed/virtualizer',
   render: Harness,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen' },

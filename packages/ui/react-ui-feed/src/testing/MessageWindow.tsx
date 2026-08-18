@@ -7,15 +7,9 @@ import React, { type ComponentType, useCallback, useMemo, useRef, useState } fro
 import { Column } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
-import {
-  HtmlItem,
-  MarkdownItem,
-  type MessageChromeProps,
-  Window,
-  type WindowController,
-  type WindowState,
-} from '../components';
+import { HtmlItem, MarkdownItem, type MessageChromeProps } from '../components';
 import { type MessageRenderer, defaultRenderer } from '../model';
+import { Window, type WindowController, type WindowState } from '../virtualizer';
 
 /**
  * A feed of real messages placed by `Window`, and nothing else.
