@@ -67,6 +67,10 @@ export type StartupReport = {
     }>;
     /** Plugin-definition chunk imports (precede all module activation). */
     pluginLoads: Array<{ name: string; duration: number; startTime: number }>;
+    /** Which event activated each module. */
+    moduleCauses: Array<{ module: string; event: string; startTime: number }>;
+    /** Graph-builder extension bodies that ran before the snapshot (first run only). */
+    graphBodies: Array<{ id: string; kind: string; startTime: number }>;
   };
   /**
    * Static module inventory probed from `composer.manager.getModules()` — the classification
@@ -321,6 +325,8 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
       })),
       modules,
       pluginLoads: data.snapshot?.pluginLoads ?? [],
+      moduleCauses: data.snapshot?.moduleCauses ?? [],
+      graphBodies: data.snapshot?.graphBodies ?? [],
     },
     inventory: data.inventory as StartupReport['inventory'],
     resources: data.resources,

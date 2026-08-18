@@ -936,6 +936,19 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never, Id extends s
   url?: UrlBinding;
 };
 
+// First-run mark per extension body: the startup profile can then say which builders' bodies ran
+// before ready (their matcher hit a node that exists pre-navigation) — the extension list alone
+// cannot, since a matcher on a navigated-to node keeps its body dormant.
+const bodyMarked = new Set<string>();
+const markBodyRun = (extensionId: string, kind: string): void => {
+  const key = `${extensionId}:${kind}`;
+  if (bodyMarked.has(key) || typeof performance === 'undefined') {
+    return;
+  }
+  bodyMarked.add(key);
+  performance.mark(`graph-body:${kind}:${extensionId}`);
+};
+
 /**
  * Run an Effect synchronously with the provided context.
  * Defects are caught, logged, and the fallback value is returned.
@@ -976,13 +989,14 @@ export const createExtension = <TMatched = Node.Node, R = never, const Id extend
             Function.pipe(
               get(node),
               Option.flatMap((matchedNode) => match(matchedNode, get)),
-              Option.map((matched) =>
-                runEffectSyncWithFallback(actions(matched, get), context, id, []).map((action) => ({
+              Option.map((matched) => {
+                markBodyRun(id, 'actions');
+                return runEffectSyncWithFallback(actions(matched, get), context, id, []).map((action) => ({
                   ...action,
                   // Attach captured context for action execution.
                   _actionContext: context,
-                })),
-              ),
+                }));
+              }),
               Option.getOrElse(() => []),
             ),
           )
@@ -1059,7 +1073,10 @@ const createConnectorWithRuntime = <TData, R>(
       Function.pipe(
         get(node),
         Option.flatMap((matchedNode) => matcher(matchedNode, get)),
-        Option.map((data) => runEffectSyncWithFallback(factory(data, get), context, extensionId, [])),
+        Option.map((data) => {
+          markBodyRun(extensionId, 'connector');
+          return runEffectSyncWithFallback(factory(data, get), context, extensionId, []);
+        }),
         Option.getOrElse(() => []),
       ),
     );

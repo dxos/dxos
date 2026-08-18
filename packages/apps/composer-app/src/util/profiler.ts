@@ -34,6 +34,10 @@ export type ProfilerSnapshot = {
   moduleImports: Array<{ name: string; duration: number; startTime: number }>;
   /** Plugin-definition chunk imports (`plugin-load:` — precede all module activation). */
   pluginLoads: Array<{ name: string; duration: number; startTime: number }>;
+  /** Which event activated each module (`module-cause:<module>:<event>` marks). */
+  moduleCauses: Array<{ module: string; event: string; startTime: number }>;
+  /** Graph-builder extension bodies that ran, first run only (`graph-body:<kind>:<id>` marks). */
+  graphBodies: Array<{ id: string; kind: string; startTime: number }>;
 };
 
 export type Profiler = {
@@ -57,6 +61,7 @@ export const startupProfiler = (): Profiler => {
 
   const collect = (): ProfilerSnapshot => {
     const measures = performance.getEntriesByType('measure');
+    const marks = performance.getEntriesByType('mark');
     const totalEntry = measures
       .slice()
       .reverse()
@@ -103,6 +108,25 @@ export const startupProfiler = (): Profiler => {
         .filter((entry) => entry.name.startsWith('plugin-load:'))
         .sort((first, second) => second.duration - first.duration)
         .map((entry) => toRow(entry, 'plugin-load:')),
+      moduleCauses: marks
+        .filter((entry) => entry.name.startsWith('module-cause:'))
+        .map((entry) => {
+          // `<module>:<event>` — the event is a DXN and contains colons, so split on the last one
+          // that precedes `dxn:`.
+          const rest = entry.name.slice('module-cause:'.length);
+          const at = rest.indexOf(':dxn:');
+          return {
+            module: at === -1 ? rest : rest.slice(0, at),
+            event: at === -1 ? '' : rest.slice(at + 1),
+            startTime: Math.round(entry.startTime),
+          };
+        }),
+      graphBodies: marks
+        .filter((entry) => entry.name.startsWith('graph-body:'))
+        .map((entry) => {
+          const [kind, ...id] = entry.name.slice('graph-body:'.length).split(':');
+          return { kind, id: id.join(':'), startTime: Math.round(entry.startTime) };
+        }),
     };
   };
 

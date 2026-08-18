@@ -226,14 +226,22 @@ test.describe.serial('Startup timing harness', () => {
       test.skip(true, 'CDP session unavailable');
       return;
     }
+    // Profile is overridable from the environment; Fast 3G + 2× CPU stays the default. On the
+    // current bundle Fast 3G does not reach ready within `waitForReady`'s 300 s, so a gentler
+    // profile (e.g. 40 ms / 10 Mbps / 2×) is what actually yields a number today.
+    const latency = Number(process.env.DX_HARNESS_LATENCY_MS ?? 150);
+    const downMbps = Number(process.env.DX_HARNESS_DOWN_MBPS ?? 1.5);
+    const upMbps = Number(process.env.DX_HARNESS_UP_MBPS ?? 0.75);
+    const cpuRate = Number(process.env.DX_HARNESS_CPU ?? 2);
     await cdp.send('Network.enable');
     await cdp.send('Network.emulateNetworkConditions', {
       offline: false,
-      latency: 150,
-      downloadThroughput: (1.5 * 1024 * 1024) / 8,
-      uploadThroughput: (750 * 1024) / 8,
+      latency,
+      downloadThroughput: (downMbps * 1024 * 1024) / 8,
+      uploadThroughput: (upMbps * 1024 * 1024) / 8,
     });
-    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 2 });
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpuRate });
+    log.info('throttle profile', { latency, downMbps, upMbps, cpuRate });
 
     const network = trackNetwork(page);
     await observeLongTasks(page);

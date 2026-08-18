@@ -127,11 +127,14 @@ got here — checkpoints, measurements and findings, not work items.
       moves it out of `profilerTotal`, never off the ready path. If a genuinely-late wave is wanted
       it must be built (post-first-interactive event; narrow the baseline rule so Idle providers are
       pulled only when required). Related open item above ("Make `activatesOn` genuinely optional").
-- [ ] **A13 — keep the activation-cause / body-load / graph-body marks behind the profiler flag.**
-      `milestone:module-cause:<id>:<parentEvent>` at `module:start`; `milestone:graph-body:<kind>:<id>`
-      the first time an extension body runs; the catalog's existing `plugin-load:<id>` already reaches
-      the harness as `profile.pluginLoads` (unread until today). Three runs answered four questions
-      the source could not. Currently in `stash@{0}` on the worktree, with the tunable throttle.
+- [x] **A13 — activation-cause / builder-body marks in the startup profile** (2026-08-17, landed).
+      `module-cause:<module>:<parentEvent>` at `module:start` (plus `detail.parentEvent` on the
+      start mark) and `graph-body:<kind>:<id>` the first time an extension body runs; the profiler
+      collects them as `moduleCauses` / `graphBodies` beside the catalog's pre-existing
+      `plugin-load:` → `pluginLoads` (which was already in the report, unread until today), and the
+      harness carries all three. Always-on like the existing `module:*` marks. Throttled-cold
+      profile env-tunable (`DX_HARNESS_LATENCY_MS/_DOWN_MBPS/_UP_MBPS/_CPU`, Fast 3G default).
+      One run: 226 causes (all `event.startup` — see A14), 20 bodies, 33 loads.
 - [ ] **A8 — harness: `pluginSet` column in `appendBenchmarkRow`; keep the env-tunable throttle
       profile** (`DX_HARNESS_LATENCY_MS/_DOWN_MBPS/_UP_MBPS/_CPU`, Fast 3G default). Fast 3G + 2×
       CPU cannot reach ready within `waitForReady`'s 300 s on the current bundle (three attempts,
