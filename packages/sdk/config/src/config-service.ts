@@ -59,10 +59,10 @@ export const defaultConfig = new Config({
 });
 
 /**
- * Same as {@link defaultConfig}, but pointed at the `main` (staging) edge worker and its sandbox —
- * the same overrides Composer's local dev server applies via `dx-local.yml` on top of `dx.yml`.
- * Bootstraps a profile when {@link ConfigService.load} runs with `DX_LOCAL_DEV` set, so a fresh CLI
- * profile in a dev checkout talks to the same backend as a locally-run Composer instead of production.
+ * Same as {@link defaultConfig}, but pointed at the `main` (staging) edge worker — the same
+ * override Composer's local dev server applies via `dx-local.yml` on top of `dx.yml`. Bootstraps a
+ * profile when {@link ConfigService.load} runs with `DX_LOCAL_DEV` set, so a fresh CLI profile in a
+ * dev checkout talks to the same backend as a locally-run Composer instead of production.
  */
 export const localDevConfig = new Config({
   runtime: {
@@ -86,9 +86,6 @@ export const localDevConfig = new Config({
           urls: 'https://dxos.network/ice',
         },
       ],
-      sandbox: {
-        url: 'https://sandbox-service.dxos.workers.dev',
-      },
       ipfs: {
         server: 'https://api.ipfs.dxos.network/api/v0',
         gateway: 'https://gateway.ipfs.dxos.network/ipfs',

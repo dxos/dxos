@@ -36,37 +36,12 @@ const makeTemplate = (edgeUrl: string) => trim`
         url: ${edgeUrl}
 `;
 
-// Mirrors `localDevConfig` in packages/sdk/config/src/config-service.ts — the `main`/staging
-// overrides Composer's `dx-local.yml` applies on top of `dx.yml` for its local dev server, and
-// what a fresh profile auto-bootstraps to under `DX_LOCAL_DEV`. Keep the two in sync by hand: this
-// file can't take a static `yaml` import without pulling the parser into the browser boot graph
-// (see the same constraint noted in config-service.ts).
-const mainTemplate = trim`
-  version: 1
-  runtime:
-    client:
-      storage:
-        persistent: true
-      edgeFeatures:
-        signaling: true
-        subductionReplicator: true
-        feedReplicator: true
-        agents: true
-    services:
-      edge:
-        url: https://main.dxos.network
-      iceProviders:
-        - urls: https://dxos.network/ice
-      sandbox:
-        url: https://sandbox-service.dxos.workers.dev
-      ipfs:
-        server: https://api.ipfs.dxos.network/api/v0
-        gateway: https://gateway.ipfs.dxos.network/ipfs
-`;
-
 const TEMPLATES = {
   default: makeTemplate('https://dxos.network'),
-  main: mainTemplate,
+  // Matches `localDevConfig` in packages/sdk/config/src/config-service.ts — the `main`/staging
+  // override Composer's `dx-local.yml` applies on top of `dx.yml` for its local dev server, and
+  // what a fresh profile auto-bootstraps to under `DX_LOCAL_DEV`.
+  main: makeTemplate('https://main.dxos.network'),
   dev: makeTemplate('https://edge.dxos.workers.dev'),
   local: makeTemplate('http://localhost:8787'),
 } as const;
