@@ -5612,6 +5612,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../mesh/teleport
