@@ -62,6 +62,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
+    "@dxos/edge-protocol": "catalog:",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
