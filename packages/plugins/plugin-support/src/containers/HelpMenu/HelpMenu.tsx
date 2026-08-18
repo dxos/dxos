@@ -3,11 +3,10 @@
 //
 
 import { formatDistance, isValid } from 'date-fns';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { log } from '@dxos/log';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { useConfig } from '@dxos/react-client';
 import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
@@ -16,7 +15,7 @@ import { isTauri } from '@dxos/util';
 import { meta } from '#meta';
 
 import { SHORTCUTS_DIALOG } from '../../constants';
-import { DOWNLOAD_URL, prereleaseChannel, resolveDownloadUrl } from './download';
+import { downloadUrl } from './download';
 
 // Mirrors the welcome plugin's ABOUT_DIALOG constant (composer-app/src/plugins/welcome);
 // inlined because composer-app is not a workspace dependency.
@@ -45,28 +44,8 @@ export const HelpMenu = () => {
     [invokePromise],
   );
 
-  // Undefined on production, where the dashboard is already the right destination.
-  const channel = prereleaseChannel(config.values.runtime?.app?.env?.DX_ENVIRONMENT);
-  const [downloadUrl, setDownloadUrl] = useState(DOWNLOAD_URL);
-
-  // Resolved before the click, since opening a window after an await has lost its transient activation
-  // and gets blocked as a popup.
-  useEffect(() => {
-    if (!channel || isTauri()) {
-      return;
-    }
-    let active = true;
-    void resolveDownloadUrl(channel)
-      .then((url) => {
-        if (active) {
-          setDownloadUrl(url);
-        }
-      })
-      .catch((err) => log.catch(err));
-    return () => {
-      active = false;
-    };
-  }, [channel]);
+  // The dashboard on production, the channel's own latest installer elsewhere.
+  const downloadHref = downloadUrl(config.values.runtime?.app?.env?.DX_ENVIRONMENT);
 
   return (
     <DropdownMenu.Root>
@@ -103,7 +82,7 @@ export const HelpMenu = () => {
             </DropdownMenu.Item>
             {!isTauri() && (
               <DropdownMenu.Item asChild>
-                <a href={downloadUrl} target='_blank' rel='noopener noreferrer'>
+                <a href={downloadHref} target='_blank' rel='noopener noreferrer'>
                   <Icon icon='ph--download-simple--regular' size={4} />
                   <span>{t('download-apps.label')}</span>
                 </a>

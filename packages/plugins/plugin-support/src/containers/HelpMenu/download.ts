@@ -6,19 +6,15 @@
 export const DOWNLOAD_URL = 'https://web.crabnebula.cloud/dxos/composer/releases';
 
 // CrabNebula's dashboard has no page for a prerelease channel, so a nightly deployment cannot link there
-// for its own installer. Its update endpoint can: it is public, channel-addressable, and the JSON it
-// returns names the platform asset — enough to send someone straight at the binary.
-const UPDATE_ENDPOINT = 'https://cdn.crabnebula.app/update/dxos/composer';
+// for its own installer. The CDN's download endpoint can: it is public, channel-addressable, and 302s to
+// the channel's latest installer (the DMG, not the updater archive). It has to be a navigation rather
+// than a fetch — the CDN sends no CORS headers, so a script here can never read what it happily serves
+// the browser.
+const DOWNLOAD_ENDPOINT = 'https://cdn.crabnebula.app/download/dxos/composer/latest/platform';
 
-/** Assets are served from the same CDN; anything else is not something to hand a browser. */
-const ASSET_ORIGIN = 'https://cdn.crabnebula.app';
-
-// TODO(wittjosiah): Only macOS is built today; derive this once Windows and Linux ship (`windows-x86_64`,
-// `linux-x86_64`, `darwin-x86_64`).
-const UPDATE_PLATFORM = 'darwin-aarch64';
-
-/** The lookup backs a link, so it must fail fast enough to fall back rather than leave a dead control. */
-const TIMEOUT = 10_000;
+// TODO(wittjosiah): Only macOS is built today; derive this once Windows and Linux ship (`nsis-x86_64`,
+// `appimage-x86_64`).
+const DOWNLOAD_PLATFORM = 'dmg-aarch64';
 
 /**
  * The CrabNebula channel a deploy environment publishes to, or undefined for the one the dashboard lists.
@@ -29,31 +25,11 @@ export const prereleaseChannel = (environment?: string): string | undefined =>
   environment && environment !== 'production' ? environment : undefined;
 
 /**
- * Resolve a channel's current download URL.
- * `0.0.0` as the current version so every published build reads as an upgrade and the asset is always
- * returned — this only reads the metadata, it never installs.
+ * The help menu's download link: the dashboard on production, a prerelease channel's own latest installer
+ * elsewhere. Until a channel's first desktop build publishes, its link answers 404 — a state each channel
+ * leaves with its first deploy, not one worth a probe the missing CORS headers would block anyway.
  */
-export const resolveDownloadUrl = async (channel: string): Promise<string> => {
-  const response = await fetch(`${UPDATE_ENDPOINT}/${UPDATE_PLATFORM}/0.0.0?channel=${encodeURIComponent(channel)}`, {
-    signal: AbortSignal.timeout(TIMEOUT),
-  });
-  if (!response.ok) {
-    // A channel with no published build yet answers 404, which is the state every new channel starts in.
-    throw new Error(`update endpoint returned ${response.status}`);
-  }
-  const { url } = (await response.json()) as { url?: string };
-  if (!url) {
-    throw new Error('update endpoint returned no asset url');
-  }
-  // The response decides where a click sends someone, so confirm it names the CDN before trusting it.
-  let origin: string;
-  try {
-    origin = new URL(url).origin;
-  } catch {
-    throw new Error('update endpoint returned a malformed asset url');
-  }
-  if (origin !== ASSET_ORIGIN) {
-    throw new Error(`update endpoint returned an unexpected asset origin: ${origin}`);
-  }
-  return url;
+export const downloadUrl = (environment?: string): string => {
+  const channel = prereleaseChannel(environment);
+  return channel ? `${DOWNLOAD_ENDPOINT}/${DOWNLOAD_PLATFORM}?channel=${encodeURIComponent(channel)}` : DOWNLOAD_URL;
 };
