@@ -14,17 +14,6 @@ import { HtmlBlock } from './HtmlBlock';
 import { MarkdownBlock } from './MarkdownBlock';
 import { WidgetStateProvider, createWidgetStateStore } from './widget-state';
 
-/**
- * One story per item kind, outside any list: the item is the unit the feed mounts per message, and
- * this is where its rendering is judged on its own — a defect here is the item's, never the
- * placement's. Kinds mirror `ItemContent`: markdown (a read-only CodeMirror document), markdown
- * with block widgets (the assistant turn's shape), markdown with highlights (what decorations
- * paint), and html (sanitized prose, the email case).
- */
-type StoryArgs = {
-  kind: 'markdown' | 'widgets' | 'highlighted' | 'html';
-};
-
 const MARKDOWN = trim`
   ### A markdown item
 
@@ -59,6 +48,17 @@ const HTML = trim`
 `;
 
 const store = createWidgetStateStore();
+
+/**
+ * One story per item kind, outside any list: the item is the unit the feed mounts per message, and
+ * this is where its rendering is judged on its own — a defect here is the item's, never the
+ * placement's. Kinds mirror `ItemContent`: markdown (a read-only CodeMirror document), markdown
+ * with block widgets (the assistant turn's shape), markdown with highlights (what decorations
+ * paint), and html (sanitized prose, the email case).
+ */
+type StoryArgs = {
+  kind: 'markdown' | 'widgets' | 'highlighted' | 'html';
+};
 
 const DefaultStory = ({ kind }: StoryArgs) => {
   switch (kind) {

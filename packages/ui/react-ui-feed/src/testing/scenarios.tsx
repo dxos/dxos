@@ -462,9 +462,7 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
           <div className='max-w-[66%] min-w-0'>
             {/* The reader's own words, framed: a prompt is an instruction the thread can be rewound
                 to, and it reads as one only if it is visibly not the model's prose. */}
-            <div className='ps-2 pe-2 pt-1 pb-1 border-s-2 border-accent-bg rounded-sm bg-input-surface'>
-              {children}
-            </div>
+            <div className='px-4 py-3 border-s-2 border-accent-bg rounded-sm bg-input-surface'>{children}</div>
             {/* Revealed on hover, but never removed from flow: chrome that appears and disappears
                 changes the row's height, and a pointer travelling down a scrolling list would then
                 move every row below it. Opacity costs nothing to measure. The toolbar follows the
