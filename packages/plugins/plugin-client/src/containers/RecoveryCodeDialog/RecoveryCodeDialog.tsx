@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { AlertDialog, Button, Clipboard, Input, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, Button, Clipboard, Flex, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -27,11 +27,11 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
         <Clipboard.Provider>
           <Code code={code} />
         </Clipboard.Provider>
-        <div className='flex flex-col py-4 gap-2'>
+        <Flex column gap='sm' classNames='py-4'>
           <p>{t('recovery-code-dialog-warning-1.message')}</p>
           <p>{t('recovery-code-dialog-warning-2.message')}</p>
-        </div>
-        <div className='flex items-center gap-2 pb-4'>
+        </Flex>
+        <Flex gap='sm' align='center' classNames='pb-4'>
           <Input.Root>
             <Input.Checkbox
               data-testid='recoveryCode.confirm'
@@ -40,7 +40,7 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
             />
             <Input.Label>{t('recovery-code-confirmation.label')}</Input.Label>
           </Input.Root>
-        </div>
+        </Flex>
       </AlertDialog.Body>
       <AlertDialog.ActionBar>
         <AlertDialog.Action asChild>
@@ -60,10 +60,10 @@ const Code = ({ code }: { code: string }) => {
       <Clipboard.IconButton value={code} classNames='absolute top-2 right-2 invisible group-hover:visible' />
       <div className='grid grid-cols-4'>
         {words.map((word, i) => (
-          <div key={i} className='flex items-center p-2 gap-2'>
+          <Flex key={i} gap='sm' align='center' classNames='p-2'>
             <div className='w-4 text-xs text-center text-subdued'>{i + 1}</div>
             <div className='text-sm'>{word}</div>
-          </div>
+          </Flex>
         ))}
       </div>
     </div>

@@ -9,8 +9,8 @@ import type * as Project from '@dxos/compute/Project';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
+import * as FeedCursor from '@dxos/plugin-inbox/FeedCursor';
 import type * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { findOrCreateFeedCursor } from '@dxos/plugin-inbox/operations';
 import { Message } from '@dxos/types';
 
 import { ProjectOperation } from '#types';
@@ -43,13 +43,17 @@ const PROJECT_TASKS_CURSOR_KEY_ID = 'projectTasks';
 export const syncProjectTasks = (project: Project.Project, mailbox: Mailbox.Mailbox, senders: readonly string[]) =>
   Effect.gen(function* () {
     const feed = yield* Database.load(mailbox.feed);
-    const cursor = yield* findOrCreateFeedCursor(mailbox, PROJECT_TASKS_CURSOR_KEY_ID, project);
+    const cursor = yield* FeedCursor.findOrCreateFeedCursor(mailbox, PROJECT_TASKS_CURSOR_KEY_ID, project);
     const cursorKey = Cursor.parseKey(cursor.max);
 
     const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+    // `>=`, not `>`: two messages can share a `created` timestamp, and excluding the boundary would
+    // drop the second one permanently once the first advanced the cursor past it. Re-examining the
+    // boundary instant each run is bounded (the messages sharing one timestamp) and costs nothing,
+    // because `upsertTask` keys on the message id — the same boundary re-fetch the Gmail sync does.
     const pending = messages.filter((message) => {
       const key = Date.parse(message.created);
-      return Number.isFinite(key) && key > cursorKey;
+      return Number.isFinite(key) && key >= cursorKey;
     });
     const matched = messagesAscending(pending).filter((message) => senderMatches(message, senders));
 

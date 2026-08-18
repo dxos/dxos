@@ -18,6 +18,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import * as DebugPlugin from '@dxos/plugin-debug/DebugPlugin';
+import * as GooglePlugin from '@dxos/plugin-google/GooglePlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
@@ -80,6 +81,9 @@ const DECORATORS = [
       InboxPlugin(),
       ConnectorPlugin.make(),
       DebugPlugin.make({}),
+      // `Mailbox` resolves its connector-auth providers from the registry, so without one registered
+      // the toolbar offers no Connect action.
+      GooglePlugin.make(),
       AssistantPlugin.make(),
       PreviewPlugin.make(),
       ProgressPlugin.make(),

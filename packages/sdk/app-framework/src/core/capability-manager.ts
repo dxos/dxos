@@ -54,12 +54,10 @@ export const expandContributions = (
 ): Capability.Any[] =>
   items.flatMap((item) =>
     isContribution(item)
-      ? item.values.map(
-          (value): Capability.Any => ({
-            interface: item.capability,
-            implementation: value,
-          }),
-        )
+      ? item.values.map((value): Capability.Any => ({
+          interface: item.capability,
+          implementation: value,
+        }))
       : [item],
   );
 

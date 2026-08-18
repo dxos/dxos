@@ -15,6 +15,7 @@ import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 // TypeScript to name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Actor, Event, Message, type Person } from '@dxos/types';
+import { AI_ACTION_ICON } from '@dxos/ui-types';
 
 import { meta } from '#meta';
 
@@ -410,7 +411,7 @@ export const AnalyzeMailbox = Operation.make({
     name: 'Analyze Mailbox',
     description:
       'Runs the mailbox pipelines in cascade order — deterministic extraction, then cheap LLM classification, then optional per-message analysis.',
-    icon: 'ph--stack-simple--regular',
+    icon: AI_ACTION_ICON,
   },
   // Only the orchestrator's own needs: each spawned operation resolves its own services (an AI tier
   // brings its own AiService), so the cascade itself stays runnable where no AI layer exists.
@@ -460,12 +461,16 @@ export const AnalyzeMailbox = Operation.make({
     completed: Schema.Number,
     failed: Schema.Number,
     skipped: Schema.Number,
+    /** Passes that never ran because the cascade was interrupted — distinct from skipped. */
+    cancelled: Schema.Number,
     /** Per-processor outcome in run order — the spawned operation's own output, or why it did not run. */
     stages: Schema.Array(
       Schema.Struct({
         tier: MailboxTier,
         /** The contributed processor's id — its topology key and its cursor tag. */
         processor: Schema.String,
+        /** URI of what this run was about; several entries share a processor when it covers N subjects. */
+        subject: Schema.optional(Schema.String),
         status: Schema.Literals(['completed', 'failed', 'skipped', 'cancelled']),
         output: Schema.optional(Schema.Any),
         error: Schema.optional(Schema.String),

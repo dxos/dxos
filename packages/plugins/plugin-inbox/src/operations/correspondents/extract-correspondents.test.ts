@@ -20,7 +20,7 @@ import { InboxOperation, Mailbox } from '#types';
 import { deriveCorrespondents, parseAddressList } from './correspondence';
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: InboxOperationHandlerSet,
+  operationHandlers: InboxOperationHandlerSet.handlers,
   types: [
     Cursor.Cursor,
     Feed.Feed,
