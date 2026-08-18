@@ -51,9 +51,9 @@ REPORT.md, "In CI". What remains is operational hardening, not the rollout itsel
       `bazel-remote` has no per-client ACL, so a laptop can poison CI's cache today.
 - [ ] **Cancel the Depot cache subscription** once this has a track record. Depot remains the
       runner provider (`depot-ubuntu-24.04-8`); only the cache moved. Reconsider the timeline:
-      Depot fixed the blob-batching bug behind their slowness and retested 6.5× faster (still 1.7×
-      behind self-hosted, not 11×) — see REPORT.md, "Depot re-measured after their blob-batching
-      fix".
+      Depot fixed the blob-batching bug behind their slowness. Retested on an actual Depot runner,
+      self-hosted is now 2.1–4.4× faster (was ~11×), not the order of magnitude the original
+      decision rested on — see REPORT.md, "Depot re-measured after their blob-batching fix".
 
 ## Phase 2: Backlog
 
