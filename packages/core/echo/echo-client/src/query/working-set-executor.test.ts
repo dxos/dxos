@@ -143,10 +143,14 @@ describe('WorkingSetQueryExecutor', () => {
 
   test('referenceAt follows a ref at a nested path and filters to the target type', async ({ expect }) => {
     const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    // Same type as the hop's result, but unreferenced — so a traversal that ignored the path and
+    // returned every Person would fail this test.
+    const unreferenced = Obj.make(TestSchema.Person, { name: 'Unreferenced' });
     const task = Obj.make(TestSchema.Task, { title: 'Task 1' });
     const personWrapper = Obj.make(Wrapper, { spec: { source: Ref.make(alice) } });
     const taskWrapper = Obj.make(Wrapper, { spec: { source: Ref.make(task) } });
     db.add(alice);
+    db.add(unreferenced);
     db.add(task);
     db.add(personWrapper);
     db.add(taskWrapper);
@@ -157,8 +161,9 @@ describe('WorkingSetQueryExecutor', () => {
       Query.select(Filter.type(Wrapper)).referenceAt('spec.source', TestSchema.Person),
     );
     const ids = results.map((item) => item.objectId);
-    // The nested hop resolves, and the target filter drops the ref that reaches a Task.
     expect(ids).toContain(alice.id);
+    expect(ids).not.toContain(unreferenced.id);
+    // The target filter drops the ref that reaches a Task.
     expect(ids).not.toContain(task.id);
   });
 

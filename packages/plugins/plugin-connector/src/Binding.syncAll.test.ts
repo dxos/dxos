@@ -141,8 +141,7 @@ describe('Binding.syncAll', () => {
 
     const outcome = await runFanOut(connection);
 
-    // The broken binding neither interrupts nor starves its sibling — both ran — and the failure is
-    // still reported rather than swallowed.
+    // A failing binding must not stop its sibling from running.
     expect(synced).toContain(Ref.make(cursor).uri);
     expect(synced).toContain(Ref.make(second).uri);
     expect(outcome._tag).toBe('Failure');
@@ -170,7 +169,7 @@ describe('Binding.syncAll', () => {
 
   test('retags a 401 buried in a wrapper’s cause', async ({ expect }) => {
     const { connection, cursor } = await setup();
-    // The shape `MailSyncError.wrap()` produces: the provider's 401 is only reachable via `cause`.
+    // `MailSyncError.wrap()` leaves the provider's 401 reachable only via `cause`.
     failFor.set(Ref.make(cursor).uri, { _tag: 'MailSyncError', cause: { code: 401 } });
 
     const outcome = await runFanOut(connection);
@@ -187,7 +186,7 @@ describe('Binding.syncAll', () => {
 
     const outcome = await runFanOut(connection);
 
-    // The reauthenticate affordance is the actionable one, whichever binding failed first.
+    // Auth expiry carries the reauthenticate affordance, so it outranks an ordinary failure.
     invariant(outcome._tag === 'Failure');
     expect(outcome.failure).toBeInstanceOf(ConnectionAuthExpiredError);
   });
@@ -198,7 +197,7 @@ describe('Binding.syncAll', () => {
 
     const outcome = await runFanOut(connection);
 
-    // `undefined` is a legitimate output, not a sentinel — collection must not drop it.
+    // A void sync's `undefined` is a real output, not a sentinel to filter.
     invariant(outcome._tag === 'Success');
     expect(outcome.success.synced).toBe(2);
     expect(outcome.success.outputs).toHaveLength(2);
@@ -212,7 +211,7 @@ describe('Binding.syncAll', () => {
 
     const outcome = await runFanOut(connection);
 
-    // Reported as a failure (the capped binding resumes on the next scheduled run anyway).
+    // The capped binding resumes on the next scheduled run, so the failure is what needs reporting.
     invariant(outcome._tag === 'Failure');
     expect(outcome.failure).not.toBeInstanceOf(ConnectionAuthExpiredError);
   });
@@ -362,10 +361,7 @@ describe('Binding.syncAll', () => {
     return trigger;
   };
 
-  /**
-   * Runs the fan-out directly rather than through the invoker (which `orDie`s handler failures), so a
-   * per-binding typed failure and the retagged error are observable.
-   */
+  /** Runs the fan-out directly, since the invoker `orDie`s handler failures out of view. */
   const runFanOut = (connection: Connection.Connection, priority?: string) =>
     EffectEx.runPromise(
       Binding.syncAll({
