@@ -64,6 +64,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-space"
+    },
+    {
       "path": "../plugin-testing"
     },
     {

@@ -11,12 +11,12 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Annotation, DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { FAVORITE_TAG } from '@dxos/plugin-space/dashboard';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { FAVORITE_TAG } from '#model';
 import { translations } from '#translations';
 
 import { StreamDeckDashboard } from './StreamDeckDashboard';

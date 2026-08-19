@@ -9,13 +9,15 @@ import { useOptionalAtomCapability, usePluginManager } from '@dxos/app-framework
 import { type AppSurface, useProgressMonitors } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { toMetrics, toSpaceStats } from '@dxos/plugin-space/dashboard';
 import { Panel } from '@dxos/react-ui';
 
 import { VirtualStreamDeck } from '#components';
-import { toDialSpecs, toSpaceStats, useFavorites } from '#model';
 import * as Protocol from '#protocol';
 import { useFrame } from '#render';
 import { StreamDeckCapabilities } from '#types';
+
+import { useFavorites } from './useFavorites';
 
 export type StreamDeckDashboardProps = AppSurface.SpaceArticleProps;
 
@@ -37,7 +39,7 @@ export const StreamDeckDashboard = ({ space, role }: StreamDeckDashboardProps) =
   const status = useOptionalAtomCapability(StreamDeckCapabilities.BridgeStatus);
   const keys = useFavorites(space.db, DEVICE.keys);
   const dials = useMemo(
-    () => toDialSpecs(monitors, toSpaceStats(objects, enabled.length), DEVICE.dials),
+    () => toMetrics(monitors, toSpaceStats(objects, enabled.length), DEVICE.dials),
     [monitors, objects, enabled.length],
   );
   const frame = useFrame({ device: DEVICE, keys, dials });

@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DialSpec, type KeySpec } from '#model';
+import { type MetricSpec, type Shortcut } from '@dxos/plugin-space/dashboard';
+
 import type * as Protocol from '#protocol';
 
 import { renderDial } from './dial';
@@ -10,8 +11,8 @@ import { type IconMarkup, renderEmptyKey, renderKey } from './key';
 
 export type BuildFrameOptions = {
   device: Protocol.DeviceProfile;
-  keys: readonly (KeySpec | null)[];
-  dials: readonly (DialSpec | null)[];
+  keys: readonly (Shortcut | null)[];
+  dials: readonly (MetricSpec | null)[];
   /** Inline icon markup by icon name; a missing entry renders the key without its glyph. */
   icons?: Record<string, IconMarkup>;
 };

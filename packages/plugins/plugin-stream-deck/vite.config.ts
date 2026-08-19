@@ -14,7 +14,6 @@ export default defineConfig({
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
-    model: 'src/model/index.ts',
     Protocol: 'src/protocol/Protocol.ts',
     render: 'src/render/index.ts',
     translations: 'src/translations.ts',

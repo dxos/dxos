@@ -2,13 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useMemo } from 'react';
-
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { type Database, Filter, Obj, Tag } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { Obj, type Tag } from '@dxos/echo';
 
-import { type KeySpec } from './types';
+import { type Shortcut } from './types';
 
 /**
  * Label of the canonical tag marking an object as a favorite. ECHO tags are first-class
@@ -19,17 +16,17 @@ export const FAVORITE_TAG = 'favorite';
 const DEFAULT_ICON = 'ph--cube--regular';
 
 /**
- * Projects favorites onto a fixed number of key slots.
+ * Projects favorites onto a fixed number of slots.
  *
- * Phase 1 assigns slots from a stable sort rather than persisting positions, so adding a favorite
- * can reshuffle the keys under the user's fingers; a `StreamDeckLayout` object fixes that later.
- * Kept pure so the mapping is testable without a device or a live query.
+ * Slots are assigned from a stable sort rather than persisted positions, so adding a favorite can
+ * reshuffle them under the user's fingers; a persisted layout object fixes that later. Kept pure so
+ * the mapping is testable without a device or a live query.
  */
-export const toKeySpecs = (objects: readonly Obj.Unknown[], slots: number): (KeySpec | null)[] => {
+export const toShortcuts = (objects: readonly Obj.Unknown[], slots: number): (Shortcut | null)[] => {
   const specs = objects
-    .flatMap((object): KeySpec[] => {
-      // An object with no database or no type URI has no navigation path, so a key for it could not
-      // open anything; drop it rather than surfacing a dead key.
+    .flatMap((object): Shortcut[] => {
+      // An object with no database or no type URI has no navigation path, so a slot for it could not
+      // open anything; drop it rather than surfacing a dead slot.
       let target: string;
       try {
         target = GraphPath.getObjectPathFromObject(object);
@@ -58,11 +55,3 @@ export const toKeySpecs = (objects: readonly Obj.Unknown[], slots: number): (Key
  */
 export const findFavoriteTag = (tags: readonly Tag.Tag[]): Tag.Tag | undefined =>
   tags.find((tag) => tag.label.toLowerCase() === FAVORITE_TAG && (Obj.getMeta(tag).keys ?? []).length === 0);
-
-/** Live key specs for the space's favorites. */
-export const useFavorites = (db: Database.Queryable | undefined, slots: number): (KeySpec | null)[] => {
-  const tags = useQuery(db, Filter.type(Tag.Tag));
-  const tag = useMemo(() => findFavoriteTag(tags), [tags]);
-  const objects = useQuery(db, tag ? Filter.tag(Obj.getURI(tag)) : Filter.nothing());
-  return useMemo(() => toKeySpecs(objects, slots), [objects, slots]);
-};

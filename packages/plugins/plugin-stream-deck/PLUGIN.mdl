@@ -38,7 +38,7 @@ type DeviceProfile
 ```
 
 ```mdl
-type KeySpec
+type Shortcut
   desc: What one key shows. Produced by the model, consumed by the renderer; never crosses the wire.
   fields:
     target: string                # graph navigation path; the press target
@@ -48,7 +48,7 @@ type KeySpec
 ```
 
 ```mdl
-type DialSpec
+type MetricSpec
   desc: What one touch-strip segment shows — a running task, or a statistic when nothing is running.
   fields:
     kind: progress | stat

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type KeySpec } from '#model';
+import { type Shortcut } from '@dxos/plugin-space/dashboard';
 
 import { deviceColors, hueColor } from './palette';
 import { escapeXml, wrapText } from './text';
@@ -43,7 +43,7 @@ const background = (size: number): string =>
  * rasterised: the output is deterministic, snapshot-testable, and the storybook virtual device
  * displays the identical markup the hardware receives.
  */
-export const renderKey = (spec: KeySpec, { size = DEFAULT_SIZE, icon }: RenderKeyOptions = {}): string => {
+export const renderKey = (spec: Shortcut, { size = DEFAULT_SIZE, icon }: RenderKeyOptions = {}): string => {
   const color = hueColor(spec.hue);
   const iconSize = Math.round(size * ICON_FRACTION);
   const iconTop = Math.round(size * 0.16);

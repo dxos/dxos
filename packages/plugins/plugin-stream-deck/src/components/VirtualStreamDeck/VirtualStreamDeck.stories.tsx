@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { type MetricSpec, type Shortcut } from '@dxos/plugin-space/dashboard';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type DialSpec, type KeySpec } from '#model';
 import * as Protocol from '#protocol';
 import { useFrame } from '#render';
 
@@ -15,7 +15,7 @@ import { VirtualStreamDeck } from './VirtualStreamDeck';
 
 const device = Protocol.streamDeckPlus;
 
-const keys: (KeySpec | null)[] = [
+const keys: (Shortcut | null)[] = [
   { target: 'eid:1', label: 'Inbox', icon: 'ph--tray--regular', hue: 'cyan' },
   { target: 'eid:2', label: 'Weekly team notes', icon: 'ph--note--regular', hue: 'amber' },
   { target: 'eid:3', label: 'Roadmap', icon: 'ph--kanban--regular', hue: 'emerald' },
@@ -26,14 +26,14 @@ const keys: (KeySpec | null)[] = [
   null,
 ];
 
-const stats: DialSpec[] = [
+const stats: MetricSpec[] = [
   { kind: 'stat', title: 'Objects', value: '128' },
   { kind: 'stat', title: 'Feeds', value: '3' },
   { kind: 'stat', title: 'Types', value: '9' },
   { kind: 'stat', title: 'Plugins', value: '21' },
 ];
 
-const progress: (DialSpec | null)[] = [
+const progress: (MetricSpec | null)[] = [
   { kind: 'progress', title: 'Syncing mailbox', ratio: 0.42, detail: '42/100' },
   { kind: 'progress', title: 'Indexing' },
   null,
@@ -41,8 +41,8 @@ const progress: (DialSpec | null)[] = [
 ];
 
 type StoryProps = {
-  keys?: (KeySpec | null)[];
-  dials?: (DialSpec | null)[];
+  keys?: (Shortcut | null)[];
+  dials?: (MetricSpec | null)[];
 };
 
 // The frame is built inside the story so it goes through the same `useFrame` the app uses, icons and

@@ -39,11 +39,6 @@
       "types": "./dist/types/src/meta.d.ts",
       "default": "./dist/lib/meta.mjs"
     },
-    "#model": {
-      "source": "./src/model/index.ts",
-      "types": "./dist/types/src/model/index.d.ts",
-      "default": "./dist/lib/model.mjs"
-    },
     "#plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -120,6 +115,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
     "@dxos/progress": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-types": "workspace:*",

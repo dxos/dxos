@@ -4,11 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { type KeySpec } from '#model';
+import { type Shortcut } from '@dxos/plugin-space/dashboard';
 
 import { renderEmptyKey, renderKey } from './key';
 
-const spec: KeySpec = { target: 'eid:01J/abc', label: 'Notes', icon: 'ph--note--regular', hue: 'cyan' };
+const spec: Shortcut = { target: 'eid:01J/abc', label: 'Notes', icon: 'ph--note--regular', hue: 'cyan' };
 
 describe('renderKey', () => {
   test('renders a square SVG at the requested size', ({ expect }) => {

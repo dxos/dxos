@@ -14,11 +14,11 @@ import { type Space } from '@dxos/client/echo';
 import { Filter, type Filter as FilterType, Obj, Query, Tag } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { findFavoriteTag, toMetrics, toShortcuts, toSpaceStats } from '@dxos/plugin-space/dashboard';
 import { getIconRegistry } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
 
 import { StreamDeckBridge } from '#bridge';
-import { findFavoriteTag, toDialSpecs, toKeySpecs, toSpaceStats } from '#model';
 import * as Protocol from '#protocol';
 import { type IconMarkup, buildFrame, resolveIcon } from '#render';
 import { StreamDeckCapabilities } from '#types';
@@ -112,7 +112,7 @@ export default Capability.makeModule(
     let favoriteTag: string | undefined;
 
     const publish = () => {
-      const keys = toKeySpecs(favorites?.results ?? [], DEVICE.keys);
+      const keys = toShortcuts(favorites?.results ?? [], DEVICE.keys);
       const icons: Record<string, IconMarkup> = {};
       for (const key of keys) {
         // Undefined until the sprite has the glyph; the icon-registry subscription republishes then.
@@ -127,7 +127,7 @@ export default Capability.makeModule(
       const frame = buildFrame({
         device: DEVICE,
         keys,
-        dials: toDialSpecs(progress ? registry.get(progress.snapshotAtom).tasks : [], stats, DEVICE.dials),
+        dials: toMetrics(progress ? registry.get(progress.snapshotAtom).tasks : [], stats, DEVICE.dials),
         icons,
       });
 

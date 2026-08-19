@@ -17,18 +17,18 @@ show, on hardware that sits on a desk and is always on.
 Verified against LaMetric's API v2.3.0 documentation before designing, because they decide the whole
 architecture.
 
-| | Value |
-| --- | --- |
-| Display | 37x8 white LED matrix, plus an 8x8 colour block on the left |
-| Icons | 8x8 PNG or GIF (base64 data URI), or a numeric icon ID from `developer.lametric.com/icons` |
-| Input | None reachable from the API — the buttons switch apps and are not bindable |
+|             | Value                                                                                                         |
+| ----------- | ------------------------------------------------------------------------------------------------------------- |
+| Display     | 37x8 white LED matrix, plus an 8x8 colour block on the left                                                   |
+| Icons       | 8x8 PNG or GIF (base64 data URI), or a numeric icon ID from `developer.lametric.com/icons`                    |
+| Input       | None reachable from the API — the buttons switch apps and are not bindable                                    |
 | Frame model | An app cycles through frames: `{text, icon}`, `{goalData: {start, current, end, unit}}`, `{chartData: [...]}` |
 
 The device exposes **two** unrelated write surfaces:
 
 1. **Indicator App** — `POST /api/v1/dev/widget/update/<app-id>/<widget-id>`, header
    `X-Access-Token`. A persistent screen the user rotates to. Reachable at **both**
-   `https://<device-ip>:4343` and `https://developer.lametric.com` with an *identical* path, header
+   `https://<device-ip>:4343` and `https://developer.lametric.com` with an _identical_ path, header
    and body. Requires the user to create and publish an app once on the developer portal.
 2. **Device notifications** — `POST /api/v2/device/notifications`, Basic auth `dev:<device-api-key>`.
    A transient interruption that pushes over whatever is showing. LAN only, no app needed.
@@ -102,7 +102,7 @@ device-agnostic — the slot count is a parameter).
 bridge, the protocol, and the 144x144 / 8-key / 4-dial geometry.
 
 **Renames on the way in.** `DialSpec` → `MetricSpec`, `KeySpec` → `Shortcut`. On LaMetric a
-`DialSpec` becomes a *frame*, not a dial; leaving Stream Deck vocabulary in a `plugin-space`
+`DialSpec` becomes a _frame_, not a dial; leaving Stream Deck vocabulary in a `plugin-space`
 capability would misname it permanently. `toDialSpecs` → `toMetrics`, `toKeySpecs` → `toShortcuts`.
 
 These edits touch files that appear in #12678's diff. They happen on **this** branch, so #12678
@@ -113,17 +113,17 @@ lands unmodified and this work applies on top.
 Package shape follows `plugin-stream-deck` (which follows `plugin-sample`): `private: true`,
 `workspace:*` deps, `labs` tier in `dx.config.ts`, subpath `imports` per module.
 
-| Module | Responsibility |
-| --- | --- |
-| `protocol/LaMetric.ts` | Effect Schema for the widget payload. Not our protocol — LaMetric's, modelled so a malformed frame fails at the boundary rather than on the wire. |
-| `render/frames.ts` | Pure `MetricSpec[] → LaMetric.Frame[]`. Snapshot-testable in node. |
-| `transport/LaMetricTransport.ts` | `{ push(payload): Promise<void> }` plus `selectTransport`. |
-| `transport/LocalTransport.ts` | `https://<address>:4343/api/v1/dev/widget/update/<app>/<widget>` via `@tauri-apps/plugin-http`. |
-| `transport/CloudTransport.ts` | `https://developer.lametric.com/api/v1/dev/widget/update/<app>/<widget>` via `fetch`. |
-| `capabilities/dashboard-driver.ts` | Reads `SpaceCapabilities.Dashboard`, projects, pushes. Headless — the display stays live whether or not a panel is on screen. |
-| `capabilities/settings.ts` | Address, app id, widget id, access token, minimum push interval. |
-| `components/VirtualLaMetric` | 37x8 pixel-grid preview rendering the exact frames pushed. |
-| `components/LaMetricStatus` | Rail indicator, rendered only while a push has succeeded. |
+| Module                             | Responsibility                                                                                                                                    |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `protocol/LaMetric.ts`             | Effect Schema for the widget payload. Not our protocol — LaMetric's, modelled so a malformed frame fails at the boundary rather than on the wire. |
+| `render/frames.ts`                 | Pure `MetricSpec[] → LaMetric.Frame[]`. Snapshot-testable in node.                                                                                |
+| `transport/LaMetricTransport.ts`   | `{ push(payload): Promise<void> }` plus `selectTransport`.                                                                                        |
+| `transport/LocalTransport.ts`      | `https://<address>:4343/api/v1/dev/widget/update/<app>/<widget>` via `@tauri-apps/plugin-http`.                                                   |
+| `transport/CloudTransport.ts`      | `https://developer.lametric.com/api/v1/dev/widget/update/<app>/<widget>` via `fetch`.                                                             |
+| `capabilities/dashboard-driver.ts` | Reads `SpaceCapabilities.Dashboard`, projects, pushes. Headless — the display stays live whether or not a panel is on screen.                     |
+| `capabilities/settings.ts`         | Address, app id, widget id, access token, minimum push interval.                                                                                  |
+| `components/VirtualLaMetric`       | 37x8 pixel-grid preview rendering the exact frames pushed.                                                                                        |
+| `components/LaMetricStatus`        | Rail indicator, rendered only while a push has succeeded.                                                                                         |
 
 ### 3. `composer-app`
 
@@ -138,13 +138,13 @@ The display is 37 pixels wide. Everything below follows from that.
 
 **Each `MetricSpec` maps to exactly one frame:**
 
-| Metric | Frame |
-| --- | --- |
-| Progress, determinate | `{goalData: {start: 0, current: round(ratio * 100), end: 100, unit: '%'}}` — the device draws its own bar |
-| Progress, indeterminate (no total) | `{text: '<title> <detail>'}` — `goalData` needs an `end`, so there is no bar to draw |
-| Statistic | `{text: '<value> <title lowercased>'}`, e.g. `42 objects` |
+| Metric                             | Frame                                                                                                     |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Progress, determinate              | `{goalData: {start: 0, current: round(ratio * 100), end: 100, unit: '%'}}` — the device draws its own bar |
+| Progress, indeterminate (no total) | `{text: '<title> <detail>'}` — `goalData` needs an `end`, so there is no bar to draw                      |
+| Statistic                          | `{text: '<value> <title lowercased>'}`, e.g. `42 objects`                                                 |
 
-- **No icons in v1.** The 8x8 colour block sits to the *left of* the text and takes width from it,
+- **No icons in v1.** The 8x8 colour block sits to the _left of_ the text and takes width from it,
   and LaMetric's built-in icon IDs have to be chosen by eye against the real display. Text-only
   frames are wider and need no invented constants. Adding icons later changes one pure function.
 - **No truncation.** The device scrolls text that does not fit, which beats an ellipsis on a
@@ -218,12 +218,12 @@ is never echoed into chat, a log, or a commit.
 
 ## Testing
 
-| Level | Coverage |
-| --- | --- |
-| node | `toMetrics`/`toShortcuts` after the move (existing tests follow them into `plugin-space`); frame mapping incl. determinate, indeterminate, stat and empty; icon table fallback; transport selection across all four configuration states; payload suppression; debounce timing via Effect's TestClock. |
-| smoke | A stand-in HTTP server the driver pushes to, asserting the exact request line, `X-Access-Token` header and body. The equivalent Stream Deck test caught four bundle-only defects that no unit test could see. |
-| storybook | `VirtualLaMetric` over the three frame kinds and the empty state; a container story over a live seeded ECHO space. |
-| hardware | The real device, once the token is available. |
+| Level     | Coverage                                                                                                                                                                                                                                                                                               |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| node      | `toMetrics`/`toShortcuts` after the move (existing tests follow them into `plugin-space`); frame mapping incl. determinate, indeterminate, stat and empty; icon table fallback; transport selection across all four configuration states; payload suppression; debounce timing via Effect's TestClock. |
+| smoke     | A stand-in HTTP server the driver pushes to, asserting the exact request line, `X-Access-Token` header and body. The equivalent Stream Deck test caught four bundle-only defects that no unit test could see.                                                                                          |
+| storybook | `VirtualLaMetric` over the three frame kinds and the empty state; a container story over a live seeded ECHO space.                                                                                                                                                                                     |
+| hardware  | The real device, once the token is available.                                                                                                                                                                                                                                                          |
 
 ## Spikes
 

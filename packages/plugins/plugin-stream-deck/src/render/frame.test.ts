@@ -4,14 +4,15 @@
 
 import { describe, test } from 'vitest';
 
-import { type DialSpec, type KeySpec } from '#model';
+import { type MetricSpec, type Shortcut } from '@dxos/plugin-space/dashboard';
+
 import * as Protocol from '#protocol';
 
 import { buildFrame } from './frame';
 
 const device = Protocol.streamDeckPlus;
-const key: KeySpec = { target: 'root/space/db/notes/01', label: 'Notes', icon: 'ph--note--regular' };
-const dial: DialSpec = { kind: 'stat', title: 'Objects', value: '12' };
+const key: Shortcut = { target: 'root/space/db/notes/01', label: 'Notes', icon: 'ph--note--regular' };
+const dial: MetricSpec = { kind: 'stat', title: 'Objects', value: '12' };
 
 describe('buildFrame', () => {
   test('renders a key with its press target', ({ expect }) => {

@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DialSpec } from '#model';
+import { type MetricSpec } from '@dxos/plugin-space/dashboard';
+
 import type * as Protocol from '#protocol';
 
 /**
  * Projects a dial spec onto the wire's semantic feedback shape. The device plugin owns the mapping
  * onto Elgato's touch-strip layout, so nothing here depends on their layout item names.
  */
-export const renderDial = (spec: DialSpec): Protocol.DialFeedback => {
+export const renderDial = (spec: MetricSpec): Protocol.DialFeedback => {
   switch (spec.kind) {
     case 'progress': {
       return {

@@ -10,7 +10,7 @@ import { Annotation, DXN, Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo'
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { FAVORITE_TAG, findFavoriteTag, toKeySpecs } from './favorites';
+import { FAVORITE_TAG, findFavoriteTag, toShortcuts } from './shortcuts';
 
 class TestItem extends Type.makeObject<TestItem>(DXN.make('org.dxos.type.test.streamDeckItem', '0.1.0'))(
   Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(
@@ -44,7 +44,7 @@ describe('favorites', () => {
     expect(found).toBeDefined();
 
     const objects = await db.query(Query.select(Filter.tag(Obj.getURI(found!)))).run();
-    const specs = toKeySpecs(objects, 4);
+    const specs = toShortcuts(objects, 4);
 
     // Sorted by label, padded to the slot count.
     expect(specs.map((spec) => spec?.label)).toEqual(['Apple', 'Zebra', undefined, undefined]);
@@ -64,6 +64,6 @@ describe('favorites', () => {
   });
 
   test('truncates to the available slots', ({ expect }) => {
-    expect(toKeySpecs([], 8)).toHaveLength(8);
+    expect(toShortcuts([], 8)).toHaveLength(8);
   });
 });
