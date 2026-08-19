@@ -65,6 +65,9 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 24
+          # setup-node v5 caches the package-manager store by default; this job never installs, so the
+          # store path does not exist and the cache-save post-step fails the job after every step passed.
+          cache: false
 
       - name: Install jq
         run: |
