@@ -33,10 +33,11 @@ export default Capability.makeModule(
           const object = provider
             ? Channel.make({ name, backend: { kind: provider.kind, config: provider.makeConfig(options ?? {}) } })
             : Channel.make({ name });
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: opts.target,
-          });
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            { object, target: opts.target },
+            { spaceId: opts.db.spaceId },
+          );
         }),
     });
   }),

@@ -4,7 +4,6 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
-import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -971,32 +970,18 @@ describe('ProcessOperationInvoker environment inheritance', () => {
   );
 
   it.effect(
-    'a spaceId-less invocation inherits a declared service from the calling context',
-    Effect.fn(function* ({ expect }) {
-      const { db } = yield* Database.Service;
-      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-
-      // No space is named, so eager resolution is satisfied by the service the calling context
-      // already holds — the way the app scopes a database around a spaceId-less invocation.
-      const fiber = yield* invoker.invokeFiber(ChildOp, undefined);
-      const output = yield* fiber.await;
-      expect(output).toEqual(Exit.succeed({ spaceId: db.spaceId }));
-    }, Effect.provide(InheritanceTestLayer)),
-  );
-
-  it.effect(
-    'with neither a space nor an inherited service, spawning fails strictly',
+    'top-level invocations with no environment fail to resolve space-affinity services',
     Effect.fn(function* ({ expect }) {
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
 
-      // The failure surfaces while spawning (the runtime resolves declared `services` eagerly), so
-      // the entire `invokeFiber` call is wrapped in `Effect.exit` rather than awaiting a fiber that
-      // never gets created. Stripping the service from the calling context proves the resolver is
-      // actually strict and the inheritance above is doing the work.
-      const spawnExit = yield* invoker.invokeFiber(ChildOp, undefined).pipe(
-        Effect.updateContext((context: Context.Context<never>) => Context.omit(Database.Service)(context)),
-        Effect.exit,
-      );
+      // No environment is set on the top-level spawn, so no space context
+      // exists for `Database.Service` resolution. The failure surfaces while
+      // spawning (the runtime resolves declared `services` eagerly), so the
+      // entire `invokeFiber` call is wrapped in `Effect.exit` rather than
+      // awaiting a fiber that never gets created. Confirms the resolver is
+      // actually strict and the inheritance tests above aren't passing by
+      // accident.
+      const spawnExit = yield* invoker.invokeFiber(ChildOp, undefined).pipe(Effect.exit);
       expect(Exit.isFailure(spawnExit)).toBe(true);
       const cause = Exit.isFailure(spawnExit) ? Cause.pretty(spawnExit.cause) : '';
       expect(cause).toContain('Database.Service requires space context');

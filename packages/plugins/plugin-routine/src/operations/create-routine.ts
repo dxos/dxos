@@ -25,11 +25,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = Ro
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
-      // AddObject declares Database.Service; a spaceId-less invocation satisfies it from the calling context.
-      return yield* Operation.invoke(SpaceOperation.AddObject, {
-        object,
-        target: db,
-      }).pipe(Effect.provide(Database.layer(db)));
+      return yield* Operation.invoke(SpaceOperation.AddObject, { object, target: db }, { spaceId: db.spaceId });
     }),
   ),
 );

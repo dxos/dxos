@@ -26,11 +26,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = 
 
       const props = createDraftMessage({ mode, message, subject, body, mailbox });
       const draft = DraftMessage.make(props);
-      // AddObject declares Database.Service; a spaceId-less invocation satisfies it from the calling context.
-      yield* Operation.invoke(SpaceOperation.AddObject, {
-        object: draft,
-        target: db,
-      }).pipe(Effect.provide(Database.layer(db)));
+      yield* Operation.invoke(SpaceOperation.AddObject, { object: draft, target: db }, { spaceId: db.spaceId });
 
       // Tag as 'draft' so the Drafts view (a systemTag filter, like Inbox/Sent) picks it up;
       // `useSendEmail` removes the tag at send time.

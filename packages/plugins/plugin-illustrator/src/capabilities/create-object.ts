@@ -39,10 +39,14 @@ export default Capability.makeModule(
 
           // Add the canvas to the database. It carries HiddenAnnotation, so `CollectionModel.add`
           // persists it without filing it into the target collection.
-          yield* Operation.invoke(SpaceOperation.AddObject, {
-            object: canvas,
-            target: options.target,
-          });
+          yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object: canvas,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          );
 
           const drawing = Drawing.make({
             name: typeof input?.name === 'string' ? input.name : undefined,
@@ -52,10 +56,14 @@ export default Capability.makeModule(
           // Add the user-facing Drawing wrapper. Not hidden — this is the object the user sees
           // and navigates to. If this second write fails, roll back the canvas so we don't
           // leak an orphaned object into the space.
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object: drawing,
-            target: options.target,
-          }).pipe(
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object: drawing,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          ).pipe(
             Effect.tapError(() =>
               Operation.invoke(SpaceOperation.RemoveObjects, { objects: [canvas] }).pipe(Effect.ignore),
             ),

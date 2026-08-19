@@ -18,10 +18,14 @@ export default Capability.makeModule(
       createObject: (props, options) =>
         Effect.gen(function* () {
           const object = Pipeline.make(props);
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: options.target,
-          });
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          );
         }),
     });
   }),

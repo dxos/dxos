@@ -93,10 +93,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = CreateSubscription.makeSubscriptionFromCreate(props);
-              const result = yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-              });
+              const result = yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
               // Auto-sync after creation if URL is provided.
               if (object.url) {
                 yield* Operation.schedule(
@@ -114,10 +118,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const magazine = Magazine.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object: magazine,
-                target: options.target,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object: magazine,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
       ]),

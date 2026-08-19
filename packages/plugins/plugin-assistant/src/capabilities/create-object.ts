@@ -30,10 +30,14 @@ export default Capability.makeModule(
                 db: options.db,
                 name: props?.name,
               });
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
         {
@@ -42,10 +46,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Skill.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
         {
@@ -53,10 +61,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Obj.make(Sequence.Sequence, props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
         {
@@ -65,10 +77,14 @@ export default Capability.makeModule(
             Effect.gen(function* () {
               const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentSkill.make());
 
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }).pipe(
               Effect.provide(
                 ServiceResolver.provide({ space: options.db.spaceId }, Database.Service).pipe(

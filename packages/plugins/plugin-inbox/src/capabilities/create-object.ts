@@ -34,10 +34,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Message.make({ sender: 'user' });
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
         {
@@ -46,10 +50,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Calendar.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
         {
@@ -57,10 +65,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Event.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
       ]),

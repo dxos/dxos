@@ -71,12 +71,10 @@ exports `operations`, spanning the project, task and outline verbs).
 `addObject`, `addRelation` and `addType` now declare `Database.Service` as a required service, and
 the MCP projection keys the ambient `spaceId` tool parameter off that declaration — only
 space-addressed tools advertise it (`removeObjects` takes its space from the entities or
-space-qualified refs it is given, so it declares nothing and carries no parameter). To make the
-requirement satisfiable everywhere, eager service resolution learned one rule: when an invocation
-names no explicit space, a declared service already present in the calling context is satisfied by
-it — an explicit `spaceId` still resolves through the resolver and overrides. The app's
-create-object dispatch points and the direct spaceId-less call sites scope their invocations with
-`Effect.provide(Database.layer(db))` accordingly.
+space-qualified refs it is given, so it declares nothing and carries no parameter). Resolution is
+strict: the service materializes only from `InvokeOptions.spaceId` (or the parent process's
+environment for nested invocations), so every call site that needs the database passes
+`{ spaceId: db.spaceId }` in options — the create-object entries across the plugins included.
 
 `@dxos/mcp-server` gains `DxMcpService`: `make({ skills })` yields the projected MCP surface
 (prompts, tools, `skillLoad`) requiring only `Operation.Service` — the in-process front door,

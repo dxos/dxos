@@ -38,10 +38,11 @@ const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOp
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
-      const result = yield* Operation.invoke(SpaceOperation.AddObject, {
-        object: draft,
-        target: db,
-      });
+      const result = yield* Operation.invoke(
+        SpaceOperation.AddObject,
+        { object: draft, target: db },
+        { spaceId: db.spaceId },
+      );
       invariant(Obj.instanceOf(Project.Project, result.object), 'Expected a Project.');
       // This caller knows where a project belongs in the tree, so it spells the path rather than
       // having the add compute one.

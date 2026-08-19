@@ -21,10 +21,14 @@ export default Capability.makeModule(
           createObject: (_props, options) =>
             Effect.gen(function* () {
               const object = Artifact.make();
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
         {
@@ -32,10 +36,14 @@ export default Capability.makeModule(
           createObject: (_props, options) =>
             Effect.gen(function* () {
               const object = Lightbox.make();
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
       ]),

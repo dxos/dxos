@@ -72,10 +72,7 @@ export const add: Command.Command<
         return yield* Effect.fail(new Error(`Unknown typename: ${selectedTypename}`));
       }
 
-      // The entries' verbs declare Database.Service; scope the invocation to the selected database.
-      const result = yield* metadata
-        .createObject({}, { db, target: collection ?? db })
-        .pipe(Effect.provide(Database.layer(db)));
+      const result = yield* metadata.createObject({}, { db, target: collection ?? db });
       const object = result.object;
       if (!Obj.isObject(object)) {
         return yield* Effect.fail(new Error(`Invalid object: ${object}`));

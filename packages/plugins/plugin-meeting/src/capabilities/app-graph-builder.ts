@@ -14,7 +14,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
@@ -141,11 +141,11 @@ export default Capability.makeModule(
                     const db = Obj.getDatabase(channel);
                     invariant(db);
                     const createResult = yield* Operation.invoke(MeetingOperation.Create, { channel });
-                    // AddObject declares Database.Service; satisfied from the calling context.
-                    const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
-                      target: db,
-                      object: createResult.object,
-                    }).pipe(Effect.provide(Database.layer(db)));
+                    const addResult = yield* Operation.invoke(
+                      SpaceOperation.AddObject,
+                      { target: db, object: createResult.object },
+                      { spaceId: db.spaceId },
+                    );
                     invariant(Obj.instanceOf(Meeting.Meeting, addResult.object));
                     yield* Operation.invoke(MeetingOperation.SetActive, { object: addResult.object });
                     meeting = addResult.object as Meeting.Meeting;

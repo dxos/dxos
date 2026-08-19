@@ -26,10 +26,14 @@ export default Capability.makeModule(
               : undefined;
             return Graph.make({ name: props.name, view });
           });
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: options.target,
-          });
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          );
         }),
     });
   }),

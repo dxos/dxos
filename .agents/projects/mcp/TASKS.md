@@ -206,16 +206,15 @@ field goes.
 
 - [x] **Compute** — `Skill.Definition` gains `operations` (the definitions behind the ToolIds, so a
       registry-less host can serialize them); `Operation.mcpTool` drops `skill` and `aspect`.
-      **Correction (user, 2026-08-19):** the first cut added `optionalServices` for the
-      `Effect.serviceOption` reads; that mechanism is gone. `addObject`/`addRelation`/`addType`
-      declare `Database.Service` **required**, and eager resolution learned the rule that makes it
-      satisfiable everywhere: with no explicit space named, a declared service already present in
-      the calling context is satisfied by it (an explicit `spaceId` still resolves through the
-      resolver and overrides — pinned in ProcessManager.test). The app's three create-object
-      dispatch points and the ~13 direct spaceId-less call sites scope their invocations with
-      `Effect.provide(Database.layer(db))`. `removeObjects` stays undeclared: its space comes from
-      the input itself (live entities or space-qualified refs), so it carries no `spaceId` tool
-      parameter either.
+      **Correction (user, 2026-08-19, twice):** the first cut added `optionalServices` for the
+      `Effect.serviceOption` reads; a second cut satisfied required declarations from the calling
+      context. Both mechanisms are gone. `addObject`/`addRelation`/`addType` declare
+      `Database.Service` **required**, resolution stays strict (`Database.Service` materializes
+      only from `InvokeOptions.spaceId`, or the parent process's environment for nested invokes —
+      pre-existing machinery), and **every spaceId-less call site now passes
+      `{ spaceId: db.spaceId }` in options**: ~60 create-object entries across ~35 plugins plus the
+      direct handler sites. `removeObjects` stays undeclared: its space comes from the input itself
+      (live entities or space-qualified refs), so it carries no `spaceId` tool parameter either.
 - [x] **Projection** — `Gateway.SkillRecord` gains `tools`; operations project iff named by an
       opted-in skill's tools list; pointer sentence auto-appended (multi-skill aware); annotation
       optional (defaults: name = key's final segment, no safety claims; a malformed annotation
@@ -248,7 +247,7 @@ field goes.
       MCP-side it changes client-visible schemas. Do it as its own PR: (1) extract the shared
       schema-massaging core (null-branch dropping, openness, empty-params) into `@dxos/compute`
       behavior-preserving; (2) audit whether MCP's emitted schemas have the optional-`anyOf:[T,
-  null]` defect the assistant already fixed — if so the shared core becomes a response pass;
+null]` defect the assistant already fixed — if so the shared core becomes a response pass;
       (3) decide whether tool _names_ should converge (fixture regeneration budget required).
 - [ ] **Edge follow-through** — on the next `@dxos/*` pin bump the worker picks the reshape up via
       the package; its `SkillRecord` marshalling in operation-service gains `tools`.
