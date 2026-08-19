@@ -1,6 +1,6 @@
 # Stream Deck — Tasks
 
-_Resume: M1 landed and green (build/lint/26 node tests/4 storybook tests). Next: author `PLUGIN.mdl` (required before the first PR), then Phase 2 — the `.sdPlugin` bundle and the WebSocket, which needs the device. Uncommitted: none. Last: `@dxos/plugin-stream-deck` scaffolded with protocol, favorites/monitor models, pure SVG renderers, virtual-device component + stories, and registration in `composer-app` under the labs flag._
+_Resume: M1 landed and green (build/lint/26 node tests/4 storybook tests). Phase 2's home and naming are now decided: `packages/apps/composer-stream-deck`, `layer: application`, Elgato UUID `org.dxos.composer`. Next: author `PLUGIN.mdl` (required before the first PR), then Phase 2 — the `.sdPlugin` bundle and the WebSocket, which needs the device. Uncommitted: none. Last: `@dxos/plugin-stream-deck` scaffolded with protocol, favorites/monitor models, pure SVG renderers, virtual-device component + stories, and registration in `composer-app` under the labs flag._
 
 Design and decisions: [DESIGN.md](./DESIGN.md).
 
@@ -57,6 +57,13 @@ The `.sdPlugin` bundle and the WebSocket transport. Needs the physical device an
 ### Tasks
 
 - [ ] **Scaffold `@dxos/composer-stream-deck`** (`packages/apps/composer-stream-deck`)
+  - `layer: application`, mirroring `composer-crx`: a `pack` task emits the `.streamDeckPlugin`
+    distributable. It is an Elgato plugin, not a Composer plugin (no `Plugin.Meta`) and not a tool
+    (it ships to users, not contributors) — see the design's naming section.
+  - Elgato plugin UUID `org.dxos.composer`, so the build output directory is
+    `org.dxos.composer.sdPlugin/` (derived from the UUID, therefore gitignored). Marketplace name
+    `Composer`. Uppercase is illegal in an Elgato UUID, so `org.dxos.plugin.streamDeck` cannot be
+    reused.
   - `manifest.json` with a keypad action (`org.dxos.composer.favorite`) and an encoder action
     (`org.dxos.composer.monitor`); Node entrypoint using `@elgato/streamdeck`.
   - Dev loop via Elgato's `streamdeck` CLI (`link`, `dev`, `restart`).

@@ -60,7 +60,39 @@ pattern in this repo (a webview cannot listen on a port). `tauri.conf.json`'s CS
 | Package                      | Location                              | Role                                                                                                                                                  |
 | ---------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@dxos/plugin-stream-deck`   | `packages/plugins/plugin-stream-deck` | The brain: favorites/monitor model, pure SVG renderers, WS client, surfaces. Also owns the protocol, exported as the React-free `./Protocol` subpath. |
-| `@dxos/composer-stream-deck` | `packages/apps/composer-stream-deck`  | The `.sdPlugin` bundle: manifest, WS server, Elgato SDK glue. Precedent for a third-party-host bundle in `packages/apps` is `composer-crx`.           |
+| `@dxos/composer-stream-deck` | `packages/apps/composer-stream-deck`  | The `.sdPlugin` bundle: manifest, WS server, Elgato SDK glue.                                                                                         |
+
+#### The device plugin is an app, not a Composer plugin and not a tool
+
+It is an **Elgato** plugin — a Node process spawned by Elgato's application, with an Elgato
+`manifest.json`, no `Plugin.Meta`, no capabilities, and no React. It can never be enabled from
+Composer's plugin registry, so it does not belong in `packages/plugins/`, where a package _is_ a
+plugin by virtue of exporting `Plugin.Meta` and where `list_plugins` would miscount it.
+
+Nor is it a tool. Everything under `tools/` — build tooling, codemods, vite plugins, storybook hosts,
+and the editor and agent integrations (`tools/claude/plugins/dxos`, `tools/intellij-plugin`) — serves
+people **working on this repo**. Running inside a third-party host is not what makes something a
+tool; the audience is. This plugin ships to Composer **users** through a marketplace, which is
+exactly `packages/apps/composer-crx`'s situation: `layer: application`, with a `pack` task emitting
+the distributable.
+
+#### Elgato naming
+
+Elgato constrains the UUID and the directory; the npm package name is ours.
+
+| Thing                  | Value                                                     | Constrained by                                     |
+| ---------------------- | --------------------------------------------------------- | -------------------------------------------------- |
+| npm package            | `@dxos/composer-stream-deck`                              | repo convention only                               |
+| Elgato plugin UUID     | `org.dxos.composer`                                       | reverse-DNS, **lowercase** alphanumerics, `-`, `.` |
+| Build output directory | `org.dxos.composer.sdPlugin/` (gitignored)                | must be `<uuid>.sdPlugin`                          |
+| Action UUIDs           | `org.dxos.composer.favorite`, `org.dxos.composer.monitor` | prefixed with the plugin UUID                      |
+| Marketplace `Name`     | `Composer`                                                | free-form                                          |
+
+Two consequences: Composer's own plugin-key convention cannot carry over — `org.dxos.plugin.streamDeck`
+is an illegal Elgato UUID, since uppercase is not allowed — and the `.sdPlugin` directory is derived
+from the UUID, so it is a build output rather than a hand-maintained source tree. The UUID
+deliberately matches the Tauri bundle identifier: different registries, and to an Elgato user this
+plugin is "Composer".
 
 The protocol deliberately does **not** get its own package yet: it has one consumer until the device
 plugin exists. It lives in `src/protocol/Protocol.ts` behind the `./Protocol` export subpath — which
