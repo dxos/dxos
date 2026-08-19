@@ -31,17 +31,48 @@ Seed sizes: sqlite `SEED_ROWS=2,000`/`DELETE_POOL=20,000` (defaults); ECHO
 
 ## Batched insert (single flush per batch of 20)
 
-| Operation                                         | ECHO — automerge object                     | ECHO — feed object                            |
-| ------------------------------------------------- | ------------------------------------------- | --------------------------------------------- |
-| insert (batched x20) — per batch                  | 2.93 hz / 341.43ms                          | 4.97 hz / 201.16ms                            |
-| insert (batched x20) — per item (batch mean ÷ 20) | ~17.1ms/item                                | ~10.1ms/item                                  |
-| vs. single-insert per item                        | 46.85ms/item (**2.7x slower** than batched) | 179.69ms/item (**17.7x slower** than batched) |
+**Updated after the `#addOptimistic` fix below** — the feed column changed materially; automerge
+is a fresh run and moves only by ordinary run-to-run noise (that fix doesn't touch automerge code).
 
-Feed gets a much larger relative win from batching than automerge — consistent with
-FEED-TRACK.md's finding that feed's per-op cost is dominated by per-flush RPC overhead rather than
-a real per-object cost, so amortizing that RPC over 20 items removes most of it. Automerge's
-per-item cost has a real per-object component (Automerge document creation) that batching can't
-remove, so its relative win is smaller.
+| Operation                                         | ECHO — automerge object                     | ECHO — feed object                           |
+| ------------------------------------------------- | ------------------------------------------- | -------------------------------------------- |
+| insert (batched x20) — per batch                  | 3.24 hz / 308.66ms                          | 15.95 hz / 62.72ms                           |
+| insert (batched x20) — per item (batch mean ÷ 20) | ~15.4ms/item                                | ~3.14ms/item                                 |
+| vs. single-insert per item                        | 38.71ms/item (**2.5x slower** than batched) | 46.55ms/item (**14.8x slower** than batched) |
+
+Before the fix, feed's batch-of-20 per-item cost was ~10.1ms; it's now ~3.14ms — a ~3.2x
+improvement from fixing one method, at the _same_ batch size. Feed gets a much larger relative win
+from batching than automerge — consistent with FEED-TRACK.md's finding that feed's per-op cost is
+dominated by per-flush RPC overhead rather than a real per-object cost, so amortizing that RPC
+over 20 items removes most of it. Automerge's per-item cost has a real per-object component
+(Automerge document creation) that batching can't remove, so its relative win is smaller.
+
+## Feed batching at larger batch sizes (1,000 / 5,000) — the real bottleneck, found and fixed
+
+Prompted by "batching to 20 still leaves feed ~30x slower than raw SQLite — is that really as
+good as it gets?" Raw SQLite insert is 0.33ms/item; a scratch phase-timing script (fresh peer,
+timing the `db.add(obj, {to: feed})` loop separately from the single trailing `flush()`) gave:
+
+| Batch size | flush config     | add-phase ms/item (before fix) | add-phase ms/item (after fix)          |
+| ---------- | ---------------- | ------------------------------ | -------------------------------------- |
+| 1,000      | `indexes: false` | 0.575                          | 0.386                                  |
+| 5,000      | `indexes: false` | 1.238 (**worse** than 1,000!)  | 0.301 (better than 1,000, as expected) |
+
+The pre-fix numbers are the tell: per-item cost for the _client-side registration_ phase (before
+any RPC) got **worse** with a 5x bigger batch, the opposite of what batching should do. A CPU
+profile of the 5,000-item case (`DX_PROFILE_TESTS=1`) found the cause: `FeedHandle#addOptimistic`
+(`packages/core/echo/echo-client/src/feed/feed-handle.ts`) rebuilt a `Set` of every id in the
+current working set, and copied the whole working-set array, on **every single append call** —
+O(current working-set size) per call, O(n²) total across N appends, made worse by `_objects`
+holding reactive proxies (so every `.id` read during the rebuild went through the proxy `get`
+trap). Combined, `#addOptimistic` and the proxy-getter overhead it drove were roughly 25% of that
+profile's self-time. Full writeup, the exact fix, and verification (`echo-client`/`echo-client-e2e`
+full suites still pass) are in FEED-TRACK.md.
+
+With the fix, total (add + flush) per-item cost at batch=5,000 with `indexes: false` is
+**0.44ms/item — only ~1.3x slower than raw SQLite's 0.33ms/item.** Batching feed appends to a large
+batch size is now close to architecturally free relative to the underlying SQLite driver; the
+remaining gap is ordinary ECHO-layer overhead (RPC dispatch, schema validation), not a bug.
 
 ## Headline takeaways
 

@@ -43,37 +43,70 @@ Automerge doc per space, not per feed item) being touched incidentally, not per-
 
 ## Current findings
 
-**There is no feed-specific hotspot worth chasing.** Over half of wall time (53.6%) is idle
-(waiting on the SQLite/RPC round trip per operation), and the rest is generic ECHO plumbing
-(Effect runtime dispatch, SQLite driver execution) shared by every write path in the system, not
-something specific to feed placement. Feed operations are RPC/IO-latency-bound, not CPU-bound.
+At the 250-append scale this profile was taken at, there was no feed-specific CPU hotspot: over
+half of wall time (53.6%) was idle (waiting on the SQLite/RPC round trip per operation), and the
+rest was generic ECHO plumbing (Effect runtime dispatch, SQLite driver execution) shared by every
+write path, not something specific to feed placement.
+
+**That conclusion does not hold at larger working-set sizes — there IS a real, now-fixed,
+feed-specific hotspot: `FeedHandle#addOptimistic` rebuilt its entire working-set array (and a
+fresh `Set` of every existing id) on every single append call.**
+
+```ts
+// Before (packages/core/echo/echo-client/src/feed/feed-handle.ts):
+#addOptimistic(cores: FeedObjectCore[]): void {
+  const existingIds = new Set(this._objects.map((obj) => obj.id)); // O(current working-set size)
+  this._objects = [...this._objects, ...cores.map((core) => core.entity).filter((obj) => !existingIds.has(obj.id))];
+  this.updated.emit();
+}
+```
+
+`this._objects` holds reactive proxies, so every `.id` access during that dedup pass went through
+the proxy's `get` trap (`typed-handler.ts`'s intercept, which itself calls `isValidProxyTarget`) —
+not a cheap plain-object read. One append call therefore cost O(current working-set size), and N
+sequential appends cost O(N²) total. At N=250 (this profile's scale) that's ~31,000 touches —
+small enough to hide inside the idle/RPC-dominated picture above. Discovered by timing
+`db.add(obj, {to: feed})` in a loop at larger batch sizes (see THROUGHPUT-OVERVIEW.md): per-item
+cost for a 1,000-item batch's client-side registration phase was 0.575ms; at 5,000 items it rose
+to 1.238ms — _worse_ per item with a bigger batch, the opposite of what batching should do. A CPU
+profile of the 5,000-item case (`DX_PROFILE_TESTS=1`) confirmed `#addOptimistic` and its callback
+at 12.67% combined self-time, plus the proxy `get`/`isValidProxyTarget` overhead it drove (another
+~12.5%) — together the single largest chunk of the profile.
+
+**Fixed**: `feed-handle.ts` now maintains `#objectIds: Set<string>` incrementally (updated on
+append, delete, and full refresh) instead of rebuilding it from `_objects` on every call, so
+`#addOptimistic` is O(new items in this call) instead of O(current working-set size). Verified:
+per-item registration cost at 5,000 items dropped from 1.238ms (worse than 1,000 items) to
+0.301ms (better than 1,000 items, as batching should behave) — true amortization instead of
+quadratic blowup. `echo-client`'s and `echo-client-e2e`'s full test suites pass unchanged (525 +
+301 tests).
 
 Index-engine code (`entity-meta-index.ts`, `fts-index.ts`, `index-query-source-provider.ts`)
-appears in this profile at higher relative % than in the automerge-track profile (~0.5-1% here vs.
-<0.2% there) purely because the feed track has so much less _other_ CPU work competing for
-samples — not because feed mutations trigger disproportionately more indexing work in absolute
-terms. Confirmed by counting absolute hit counts for index-related frames in both profiles: they
-are comparable in raw sample count, just a larger percentage of a much smaller total.
+appears in the original 250-append profile at higher relative % than in the automerge-track
+profile (~0.5-1% here vs. <0.2% there) purely because the feed track had so much less _other_ CPU
+work competing for samples at that scale — not because feed mutations trigger disproportionately
+more indexing work in absolute terms. Confirmed by counting absolute hit counts for index-related
+frames in both profiles: they were comparable in raw sample count, just a larger percentage of a
+much smaller total.
 
 ## Proposed optimizations
 
-**No code-level optimization is proposed for the feed write/read path itself** — it is already
-near the minimum possible overhead for this architecture (one RPC + one SQL statement, no
-document-creation cost). The only lever that would move feed-op latency is reducing **round-trip
-count**, not per-op CPU:
-
-1. **Batch appends at the call site.** `FeedHandle` already supports batching internally
+1. **DONE: fix `#addOptimistic`'s O(n²) working-set rebuild** (`feed-handle.ts`) — see above.
+   Confirmed both by direct timing (batch-size scaling now amortizes correctly) and by full test
+   suite passes.
+2. **Batch appends at the call site.** `FeedHandle` already supports batching internally
    (`#sendAppendBatches()`), and the benchmark now measures this directly: `echo.bench.ts`'s
    "insert (batched xN, single flush)" bench (PR #12668) shows batching cuts per-item feed insert
    latency by a double-digit multiple, well past automerge's — feed benefits far more from
    batching because its cost is dominated by per-flush RPC/index overhead rather than a real
    per-object cost. See THROUGHPUT-OVERVIEW.md for the current measured ratio; the exact multiple
-   is corpus-size-sensitive (it moves with how many documents are loaded — see optimization #2
-   below and THROUGHPUT-OVERVIEW.md's "Why automerge update/delete looks so much worse" section),
-   so treat any single number as a snapshot, not a constant. Any production call site doing
-   single-append-then-flush-then-append-again should switch to append-many-then-flush-once
-   wherever the caller can tolerate the latency of batching.
-2. **(Shared with automerge track, not feed-specific)** If `EntityManager.flush()`'s disk-flush
+   is corpus-size-sensitive (it moves with how many documents are loaded — see optimization #3
+   below), so treat any single number as a snapshot, not a constant. Any production call site
+   doing single-append-then-flush-then-append-again should switch to append-many-then-flush-once
+   wherever the caller can tolerate the latency of batching. Now that #1 is fixed, batching at any
+   size delivers the amortization it was always meant to — previously, above a few hundred items
+   per batch, the O(n²) bug would eventually outweigh the RPC-amortization win.
+3. **(Shared with automerge track, not feed-specific)** If `EntityManager.flush()`'s disk-flush
    scoping is fixed per AUTOMERGE-TRACK.md optimization #2, feed operations benefit too, since
    `Database.flush()` (`packages/core/echo/echo-client/src/proxy-db/database.ts:725-728`)
    unconditionally calls both the entity-manager flush AND every feed handle's
@@ -81,6 +114,7 @@ count**, not per-op CPU:
 
 ## Status
 
-Analysis complete; no feed-specific optimization opportunity found beyond the batching guidance
-above, which is a call-site/usage recommendation rather than a code change to the feed path
-itself. The "batched insert" benchmark that quantifies this landed in PR #12668.
+Optimization #1 (the `#addOptimistic` O(n²) fix) is implemented and verified — see
+THROUGHPUT-OVERVIEW.md for the before/after numbers at batch sizes 1,000 and 5,000. #2 (batching
+guidance) is a call-site/usage recommendation, not a further code change. #3 is shared with
+AUTOMERGE-TRACK.md and not yet implemented.
