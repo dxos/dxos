@@ -798,9 +798,6 @@ Phased implementation plan (files, verification, risks): [`./PLAN.md`](./PLAN.md
   resolves on a cold or deep-link load, leaving the section permanently missing.
   Use `useObject(ref)` + `Obj.getReactiveOrUndefined` (see `ProjectArticle`'s
   instructions).
-- **Dev loop**: Projects, Routine, and Outliner are part of the composer-app
-  minimal plugin set (`serve-min`); keep the plugin list in sync with the
-  `optimizeDeps` brace glob in `vite.config.ts`.
 
 ## Testing
 

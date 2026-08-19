@@ -40,6 +40,26 @@ tasks:
     inputs:
       - scripts/check-boot-budget.mjs
       - out/composer/index.html
+  # Structural guardrail on the curated set: fails when a plugin `plugin-defs.production.tsx` does not
+  # name reached the bundle anyway. Read off the build's own sourcemaps rather than the UI — a plugin
+  # absent from the registry can still be in the bundle, which is the whole failure this catches.
+  check-plugin-set:
+    command: node scripts/check-plugin-set.mjs
+    deps:
+      # `DX_PLUGIN_SET` is a `bundle` cache input, so the env var alone selects the set — no separate
+      # bundle task. It rides the dep rather than this task: the set is a build-time decision, and a
+      # bundle built without it would be the full catalog while this check reported on it.
+      - target: bundle
+        env:
+          DX_PLUGIN_SET: production
+    inputs:
+      - scripts/check-plugin-set.mjs
+      - src/plugin-defs.production.tsx
+      - src/plugin-defs.core.tsx
+      # Globs, not the bare directory: moon hashes files, and a directory input is skipped with a
+      # warning — leaving the check's own subject out of its cache key.
+      - out/composer/index.html
+      - out/composer/assets/**/*
   # Runtime budget on startup: repeats the warm-cold harness scenario and gates on the MEDIAN
   # modules-at-ready. `--repeat-each` reuses one preview server across the runs, and the samples
   # accumulate via `appendRunSample`; the stale log is cleared first so a rerun cannot inherit a
@@ -68,10 +88,17 @@ tasks:
     deps:
       - bundle
       - fetch-ollama
-  # iOS counterpart of `tauri-build`; no sidecar (the ollama runtime is desktop-only).
+  # iOS counterpart of `tauri-build`; no sidecar (the ollama runtime is desktop-only). Embeds the
+  # PRODUCTION plugin set unconditionally — iOS is still deployed out of the `dev` environment, but what
+  # TestFlight carries should be what `composer.space` carries, not the full catalog that environment
+  # would otherwise select. `tauri-ios` (the dev loop) extends `serve-prod` for the same reason.
   tauri-ios-build:
     deps:
-      - bundle
+      # The env rides the dep, not just this task: `frontendDist` is built by `bundle`, so a bundle
+      # built without it would embed the full catalog while this task believed otherwise.
+      - target: bundle
+        env:
+          DX_PLUGIN_SET: production
   # Both native dev loops run this app's `vite dev` through `beforeDevCommand` (`tauri.ios.conf.json`
   # overrides only `bundle`), so they need exactly `serve`'s narrowed dependency set rather than the
   # `tauri` tag's whole-graph `^:build` — extended so the three inner loops cannot drift.
@@ -83,7 +110,7 @@ tasks:
       # otherwise be concatenated onto this command.
       mergeArgs: replace
   tauri-ios:
-    extends: serve
+    extends: serve-prod
     command: pnpm exec tauri ios dev
     options:
       mergeArgs: replace
@@ -170,6 +197,15 @@ tasks:
     command: pnpm exec vite preview --configLoader native
     options:
       mergeArgs: replace
+  # The same inner loop against the curated set `composer.space` ships (`DX_PLUGIN_SET=production`
+  # aliases `./plugin-defs` -> `plugin-defs.production.tsx` in vite.config.ts). Extends `serve` rather
+  # than restating its narrowed dependency set so the two cannot drift — and the fast local loop is now
+  # also the loop that matches production, so a plugin missing from the shipped set surfaces here
+  # rather than after a deploy.
+  serve-prod:
+    extends: serve
+    env:
+      DX_PLUGIN_SET: production
   # Production startup harness — all four `startup.spec.ts` scenarios (cold, warm-cold, throttled,
   # boot-loader paint) against `vite preview`. Its own task because the spec records benchmark rows
   # rather than asserting behaviour: `e2e` ignores it so a timing measurement never gates a merge.
