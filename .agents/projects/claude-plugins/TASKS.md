@@ -4,8 +4,8 @@ _Resume: PRs #12618 + #12620 MERGED — the `dxos` marketplace publishes `dxos` 
 `/dxos:project` is verified working in a live session. #12622 is open, carrying the
 `history`/`spawn`/`help` verbs. The `mcp` backend has still never touched a running space: next is
 the live round-trip (`dx mcp serve` up, `DX_PROJECT_BACKEND=mcp`, one list → new → track → tasks
-cycle checked in Composer). Uncommitted: none. Last: deleted `composer-plugin-dev` (its references
-taught an API deleted in #12414) and reworked the terse mode rules._
+cycle checked in Composer). Uncommitted: none. Last: added Phase 4 (consolidate to one MCP-native
+`project` skill, from the 2026-08-19 project-skills audit) — gated on the Phase 2 round-trip._
 
 ## Phase 1: Extract into a distributable plugin
 
@@ -164,9 +164,92 @@ someone who is asleep.
   - **The privacy boundary.** This is a model of a person, committed to a repo or synced to a
     space. Decide what is never recorded before recording anything.
 
+## Phase 4: Consolidate to one MCP-native `project` skill
+
+Planned 2026-08-19 from the project-skills audit. The workflow prose exists in three places today —
+the plugin's `SKILL.md`, the per-verb hook directives, and plugin-projects'
+`code-project-skill.md` (deliberately verb-parallel, ECHO-native) — plus a fourth relative,
+assistant-toolkit's `org.dxos.skill.project` (artifact filing; that name collision is the only
+reason the runtime skill is called `codeProject`). End-state: ONE skill definition + operation set
+in `plugin-projects`, projected by `@dxos/mcp-server`, consumed by this plugin over a bundled stdio
+server; the plugin keeps `/dxos:project` as a thin alias. Gated on Phase 2's live round-trip.
+Sibling work-streams: `plugin-projects` (runtime types/ops), `mcp` (server + projection),
+edge `mcp-operations` (tool surface).
+
+### Complete the operation contract
+
+- [ ] **Project `projectCreate`** — the `mcp` BACKEND directive promises it, but only
+      `projectList`/`projectGet`/`projectUpdate` are projected
+      (`plugin-projects/src/types/ProjectMcpOperation.ts`); the directive's scaffold-in-one-call
+      contract has no implementation behind it.
+- [ ] **Decide operation ownership** — `task*`/`milestone*`/`outline*` ops live in `plugin-tasks`,
+      annotated `skill=CODE_PROJECT_SKILL_KEY`. Either move them into `plugin-projects` (no compat
+      re-exports; update all call sites) or keep them and treat the annotation as the binding.
+- [ ] **Absorb `org.dxos.skill.project`** (assistant-toolkit) — its `artifact-add`/`artifact-list`
+      become `artifactAdd`/`artifactList` under the consolidated skill; delete the toolkit skill.
+      This frees the `project` prompt name.
+- [ ] **Rename `…skill.codeProject` → `…skill.project`** (prompt `/project`) — ONLY after the
+      absorption lands: projection throws on prompt-name collisions, so ordering is load-bearing.
+      `codeProject` was a collision artifact, never the intended name.
+
+### One prose source
+
+- [ ] **`code-project-skill.md` absorbs what only the plugin knows** — the `history`/`spawn`/`help`
+      verbs, the never-a-chip rule, the project resolution order. It becomes the canonical
+      instructions that the MCP prompt and `skillLoad` already serve verbatim.
+- [ ] **Plugin `SKILL.md` → stub** — trigger frontmatter + `allowed-tools` +
+      "call `skillLoad('project')`, follow it". Optional: a build-time copy of the canonical
+      markdown with a hash check (the `skills-lock.json` pattern) if offline readability matters.
+- [ ] **Hook directives shrink to verb + args** — the HOW moves to the skill. What irreducibly
+      stays hook-side: bare `/project` raw-text matching (or decide to retire the bare form and
+      delete the hook entirely), plus the "needed tool absent → say so and STOP" invariant.
+      Determinism is relocated, not lost: prose-directive + hand-edited YAML becomes command
+      expansion + typed tool schemas validated server-side.
+- [ ] **`commands/project.md` → `$ARGUMENTS` alias** over the tools; `allowed-tools` pre-approves
+      the read tools using the full plugin-scoped prefix (`mcp__plugin_dxos_<server>__*` — matchers
+      without the `plugin_` segment never fire for plugin-bundled servers).
+
+### Plugin bundles the server
+
+- [ ] **`.mcp.json` in the plugin root** — stdio `dx mcp serve` under a SHORT server name; it
+      appears in every tool name and in the auto-generated `/mcp__plugin_dxos_<server>__project`.
+- [ ] **Space binding moves server-side** — serve reads `.agents/projects/space.yml` (or
+      `DX_PROJECT_SPACE`) so tools arrive pre-scoped; `setup` writes the file; a missing binding is
+      a typed tool error, replacing the hook's registry `stat`.
+
+### Bridge and retirement
+
+- [ ] **Bridge posture while the server churns** — two distinguishable surfaces: `/dxos:project` +
+      `file` stays the daily driver; `codeProject` dogfoods under its own name;
+      `DX_PROJECT_BACKEND` stays as the session kill switch. Never dual-write — the Phase 2
+      no-cascade decision generalises to one writable store per project.
+- [ ] **Optional middle step: per-project ownership** — a registry/space.yml field names the store
+      per project; `list`/`resume` merge and label both stores. Gradual cutover with per-project
+      rollback, at the cost of routing logic.
+- [ ] **Decide the offline story BEFORE deleting the `file` branch** — either a read-only generated
+      mirror (`hydrate` exports TASKS.md marked generated, plus a follow-up inbox file imported on
+      next contact) or nothing (cloud sandbox/CI sessions lose project context). Hooks already do
+      not run in the sandbox, so everything moved out of the hook is a net gain there.
+- [ ] **Retire** — per-repo import (Phase 2's registry migration), delete the `file` branch from
+      `resolve_backend` + `DX_PROJECT_BACKEND` (or keep `file` one release as a read-only
+      tombstone), update docs, bump the plugin (enabling is not installing — users pick this up on
+      plugin update, not repo merge).
+
+### Experiments (not core)
+
+- [ ] **`sync-aliases`** — a verb that writes thin `.claude/commands/<name>.md` wrappers for every
+      projected prompt: dynamic short names without touching the plugin, at the cost of committed
+      generated files. Evaluate separately; do not fold into the core plan.
+
 ### References
 
 - Plugin: `tools/claude/plugins/dxos/` · [README](../../../tools/claude/plugins/dxos/README.md)
 - Predecessor work: `.agents/projects/agent-directives/` (PRs #12453, #12463)
 - Hook reference: https://code.claude.com/docs/en/hooks
 - Plugin reference: https://code.claude.com/docs/en/plugins-reference
+- Skill projection: `packages/core/compute/mcp-server/src/internal/projection.ts` (prompt name =
+  key's final segment; collisions throw; prompts take no parameters — `skillLoad` is the
+  model-side fetch)
+- Runtime skill: `packages/plugins/plugin-projects/src/skills/CodeProjectSkill.ts` +
+  `code-project-skill.md`; artifact skill:
+  `packages/core/compute/assistant-toolkit/src/skills/project/`
