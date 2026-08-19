@@ -392,7 +392,7 @@ const createSchemaActions = ({
                 const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
                   query: { uri: Obj.getURI(result.object) },
                 });
-                const [navigationTarget] = targets;
+                const navigationTarget = targets[0];
                 if (navigationTarget) {
                   yield* Operation.invoke(LayoutOperation.Open, {
                     subject: [navigationTarget.path],

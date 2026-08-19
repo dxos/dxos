@@ -93,7 +93,7 @@ export const makeGateway = Effect.fn(function* () {
 
     types: types.map((entity) => ({ typename: Type.getTypename(entity), version: Type.getVersion(entity) })),
 
-    listOperations: Effect.sync(() => serializableHandlers(handlers).map((record) => Obj.toJSON(record))),
+    listOperations: Effect.sync(() => Operation.serializable(handlers).map((record) => Obj.toJSON(record))),
 
     listSkills: Effect.sync(() =>
       skills.map((definition): Gateway.SkillRecord => {
@@ -115,26 +115,6 @@ export const makeGateway = Effect.fn(function* () {
     invokeOperation: (request) => invoke({ handlerSet, handlers, ambient }, request),
   } satisfies LocalGateway;
 });
-
-/**
- * Serializes each handler, dropping (with a warning) any whose schema cannot render as JSON Schema.
- * Listing is otherwise all-or-nothing: one such operation — e.g. `space.importSpace`, whose archive
- * payload is a `Uint8Array` — would take every other operation down with it.
- */
-const serializableHandlers = (
-  handlers: readonly Operation.WithHandler<Operation.Definition.Any>[],
-): Operation.PersistentOperation[] =>
-  handlers.flatMap((handler) => {
-    try {
-      return [Operation.serialize(handler)];
-    } catch (error) {
-      log.warn('operation is not serializable; excluded from the registry', {
-        key: String(handler.meta.key),
-        error: String(error),
-      });
-      return [];
-    }
-  });
 
 /** Operation keys travel with or without the `dxn:` prefix; compare them stripped. */
 const normalizeKey = (key: string): string => key.replace(/^dxn:/, '');

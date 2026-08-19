@@ -41,7 +41,7 @@ import * as CommentSkill from '@dxos/plugin-review/CommentSkill';
 import * as ScriptOperationHandlerSet from '@dxos/plugin-script/ScriptOperationHandlerSet';
 import * as ScriptSkill from '@dxos/plugin-script/ScriptSkill';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
-import { SpaceObjectOperationHandlerSet } from '@dxos/plugin-space/operations';
+import * as SpaceOperationHandlerSet from '@dxos/plugin-space/SpaceOperationHandlerSet';
 import * as TableOperationHandlerSet from '@dxos/plugin-table/TableOperationHandlerSet';
 import * as TableSkill from '@dxos/plugin-table/TableSkill';
 import * as TranscriptionOperationHandlerSet from '@dxos/plugin-transcription/TranscriptionOperationHandlerSet';
@@ -90,7 +90,7 @@ export const skillRegistry = makeRegistry({
 export const operationHandlers = OperationHandlerSet.merge(
   // NOTE: Operation handlers referenced by skills above need to be added here.
   ChatContextHandlers,
-  SpaceObjectOperationHandlerSet,
+  SpaceOperationHandlerSet.handlers,
   ChessOperationHandlerSet.handlers,
   InboxOperationHandlerSet.handlers,
   // Mail-provider handlers: InboxSendSkill / CalendarSkill reference provider ops, and a missing

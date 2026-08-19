@@ -109,11 +109,6 @@
       "types": "./dist/types/src/testing.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
     "./skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
@@ -163,6 +158,11 @@
       "source": "./src/types/SpaceObjectOperation.ts",
       "types": "./dist/types/src/types/SpaceObjectOperation.d.ts",
       "import": "./dist/lib/SpaceObjectOperation.mjs"
+    },
+    "./SpaceOperationHandlerSet": {
+      "source": "./src/operations/SpaceOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/SpaceOperationHandlerSet.d.ts",
+      "import": "./dist/lib/SpaceOperationHandlerSet.mjs"
     },
     "./SpaceOperation": {
       "source": "./src/types/SpaceOperation.ts",

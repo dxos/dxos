@@ -259,7 +259,7 @@ export default Capability.makeModule(
                     { query: { uri: Obj.getURI(chat) } },
                     { spaceId: space.db.spaceId },
                   );
-                  const [navigationTarget] = targets;
+                  const navigationTarget = targets[0];
                   if (navigationTarget) {
                     yield* Operation.invoke(
                       LayoutOperation.Open,

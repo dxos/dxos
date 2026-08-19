@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof TableOperation.OnTypeAdded> = TableO
       const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
         query: { uri: Obj.getURI(object) },
       });
-      const [navigationTarget] = targets;
+      const navigationTarget = targets[0];
       if (navigationTarget) {
         yield* Operation.invoke(LayoutOperation.Open, { subject: [navigationTarget.path], navigation: 'immediate' });
       }

@@ -4442,9 +4442,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../../../plugins/plugin-space
     devDependencies:
       '@dxos/ai':
         specifier: workspace:*
@@ -4488,6 +4485,9 @@ importers:
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../../plugins/plugin-routine
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-space
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../../plugins/plugin-table

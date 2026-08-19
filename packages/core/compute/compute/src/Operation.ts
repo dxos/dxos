@@ -17,6 +17,7 @@ import type * as Types from 'effect/Types';
 
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
 import type { URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { type NoHandlerError, RunAgainError } from './errors';
 import type { Operation } from './index';
@@ -422,6 +423,25 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
     services: operation.services.map((service) => service.key),
   });
 };
+
+/**
+ * Serializes each definition, dropping (with a warning) any whose schema cannot render as JSON
+ * Schema. Registry population is otherwise all-or-nothing: one such operation — e.g.
+ * `space.importSpace`, whose archive payload is a `Uint8Array` — would take every other operation
+ * down with it, which is what forced hosts to curate reduced handler sets.
+ */
+export const serializable = (operations: readonly Definition.Any[]): PersistentOperation[] =>
+  operations.flatMap((operation) => {
+    try {
+      return [serialize(operation)];
+    } catch (error) {
+      log.warn('operation is not serializable; excluded from the registry', {
+        key: String(operation.meta.key),
+        error: String(error),
+      });
+      return [];
+    }
+  });
 
 /**
  * Deserialize a persistent operation record to an operation definition.

@@ -288,7 +288,9 @@ export const AssistantTestBaseLayer = ({
           const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
           const registry = yield* Registry.Service;
           const handlers = yield* handlerSet.handlers;
-          registry.add(handlers.map(Operation.serialize));
+          // Tolerant, matching the CLI runtime: a non-serializable definition is dropped with a
+          // warning rather than failing the layer.
+          registry.add(Operation.serializable(handlers));
           return registry;
         }),
       ),

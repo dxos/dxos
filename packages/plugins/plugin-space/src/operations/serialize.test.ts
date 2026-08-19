@@ -32,7 +32,7 @@ describe('operation serialization', () => {
   // of them, and drops (or trips over) the ones that cannot serialize — so a projected verb whose
   // schema stops rendering as JSON Schema silently leaves the tool surface.
   test('every projected verb serializes into a PersistentOperation record', async ({ expect }) => {
-    const handlers = await SpaceOperationHandlerSet.getHandlers();
+    const handlers = await SpaceOperationHandlerSet.handlers.getHandlers();
     const byKey = new Map(handlers.map((handler) => [DXN.getName(handler.meta.key), handler]));
 
     const failures: string[] = [];
@@ -53,7 +53,7 @@ describe('operation serialization', () => {
   });
 
   test('projected verbs carry their mutation class through serialize', async ({ expect }) => {
-    const handlers = await SpaceOperationHandlerSet.getHandlers();
+    const handlers = await SpaceOperationHandlerSet.handlers.getHandlers();
     const projected = handlers
       .filter((handler) => PROJECTED_KEYS.includes(DXN.getName(handler.meta.key)))
       .map((handler) => {

@@ -202,7 +202,7 @@ export const CreateObjectDialog = ({
           const { targets } = yield* invoke(NavigationOperation.ResolveNavigationTargets, {
             query: { uri: Obj.getURI(result.object) },
           });
-          const [navigationTarget] = targets;
+          const navigationTarget = targets[0];
           if (navigationTarget) {
             yield* invoke(LayoutOperation.Open, {
               subject: [navigationTarget.path],

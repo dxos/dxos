@@ -12,7 +12,6 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Obj } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
 
 import * as Gateway from './Gateway';
 import * as Server from './Server';
@@ -71,14 +70,7 @@ export const gateway = ({
         operations.set(normalizeKey(String(operation.meta.key)), operation);
       }
     }
-    const records = [...operations.values()].flatMap((operation) => {
-      try {
-        return [Obj.toJSON(Operation.serialize(operation))];
-      } catch (error) {
-        log.warn('operation schema does not serialize; not listed', { key: operation.meta.key, error });
-        return [];
-      }
-    });
+    const records = Operation.serializable([...operations.values()]).map((record) => Obj.toJSON(record));
 
     return {
       spaceIds,

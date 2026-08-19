@@ -19,6 +19,7 @@ export default defineConfig({
     'hooks': 'src/hooks/index.ts',
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
+    'SpaceOperationHandlerSet': 'src/operations/SpaceOperationHandlerSet.ts',
     'plugin': 'src/plugin.ts',
     'skills': 'src/skills/index.ts',
     'DatabaseSkill': 'src/skills/DatabaseSkill.ts',

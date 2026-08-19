@@ -17,7 +17,7 @@ import { type RDF } from '@dxos/pipeline-rdf';
 import * as BrainOperationHandlerSet from '@dxos/plugin-brain/BrainOperationHandlerSet';
 import * as BrainSkill from '@dxos/plugin-brain/BrainSkill';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
-import { SpaceObjectOperationHandlerSet, SpaceOperationHandlerSet } from '@dxos/plugin-space/operations';
+import * as SpaceOperationHandlerSet from '@dxos/plugin-space/SpaceOperationHandlerSet';
 import { Message } from '@dxos/types';
 
 import { type ModelVariant } from '../models';
@@ -75,8 +75,7 @@ export const runAgentEval = async (config: AgentEvalConfig, testContext: TestCon
     ...(config.mode === 'hybrid' ? [HybridSkill.make()] : []),
   ];
   const operationHandlers = [
-    SpaceObjectOperationHandlerSet,
-    SpaceOperationHandlerSet,
+    SpaceOperationHandlerSet.handlers,
     ChatContextHandlers,
     ...(usesFactStore(config.mode) ? [BrainOperationHandlerSet.handlers] : []),
     ...(config.mode === 'rag' ? [RagOperationHandlerSet] : []),

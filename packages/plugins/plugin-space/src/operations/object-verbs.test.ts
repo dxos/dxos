@@ -189,7 +189,8 @@ describe('object verbs', () => {
           fields: { note: 'live' },
         });
 
-        const [relation] = yield* Database.query(Query.select(Filter.type(TestRelation))).run;
+        const relations = yield* Database.query(Query.select(Filter.type(TestRelation))).run;
+        const relation = relations[0];
         expect(Relation.getSource(relation).id).toBe(source.id);
         expect(Relation.getTarget(relation).id).toBe(target.id);
         expect(relation.note).toBe('live');
