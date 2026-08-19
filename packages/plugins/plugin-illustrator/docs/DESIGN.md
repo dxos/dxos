@@ -62,12 +62,32 @@ parse (uml.ts) → measureCell (uml-grid.ts) → PLACE → snap to GRID → emit
   receive uniform cells and the _oriented_ edge list (up-kinds reversed, matching
   `relationRanks`), and return node rects, which are then snapped to `GRID` and normalized to a
   zero origin.
-- Routing stays ours (`zRouter`): engine placement + grid-snapped orthogonal Z-routes satisfies
-  goals 1–3 without reconciling engine-produced route points with post-snap positions. ELK's
-  native `ORTHOGONAL` sections are a follow-up (`useEngineRoutes`) once snapping is done inside
-  the engine pass (fixed port positions + spacing as multiples of `GRID`).
+- Routing stays ours (below): engine placement + grid-snapped orthogonal routes satisfies goals
+  1–3 without reconciling engine-produced route points with post-snap positions. ELK's native
+  `ORTHOGONAL` sections are a follow-up (`useEngineRoutes`) once snapping is done inside the
+  engine pass (fixed port positions + spacing as multiples of `GRID`).
 - The scene output is renderer-neutral, so the same commands render via tldraw, the SVG variant,
   or a future excalidraw builder.
+
+### Routing (`uml-grid.ts` + `ortho-router.ts`)
+
+Connector routing is shared by every placement (grid, engines, rules, search) and layers four
+guarantees, applied in `emit`:
+
+1. **Ports** — terminals attaching to the same node side spread across it (ordered by peer
+   position) instead of stacking on the center, so approach segments of distinct relations never
+   coincide.
+2. **Straightening** — when a relation's nodes overlap on the cross axis, both terminals snap to
+   a shared free coordinate so the connector is a single straight segment rather than a jog.
+3. **Channels** — bent routes take distinct slots keyed on the shared gutter line (integer
+   offsets, so every bend sits on the minor grid); aligned parallels shift sideways instead of
+   coinciding.
+4. **Obstacle avoidance** (`makeAvoidingRouter`, the default) — A* over the fine grid with a
+   turn-dominant cost: a route never crosses a node, takes the fewest bends avoidance allows
+   (length breaks ties), pays a usage penalty for cells earlier edges ran through, and a
+   single-jog Z centers its middle run equidistant from the two node borders (kept only when the
+   shift clears obstacles and foreign channels). The plain `zRouter` (orthogonal Z through the
+   rank gutter) remains the per-edge fallback and the cheap route model for scoring.
 
 ### Engine options mapping
 
@@ -92,7 +112,7 @@ Built-in rules, by priority:
    vertically (root on top, arrows up), peers on one horizontal axis, parents centered over
    their subtrees (tidy tree).
 2. `linearChainRule` — the longest path through the remaining up-oriented relation graph
-   becomes a vertical arrows-up column.
+   renders as a left-to-right row.
 
 Rules are plain functions, so DSL axis constraints (below) can compile to a generated rule, and
 an engine-backed group (ELK laying out one group's interior) is just another rule.
@@ -101,8 +121,8 @@ an engine-backed group (ELK laying out one group's interior) is just another rul
 
 On top of the groups sits a scored search:
 
-- **Score**: +1 per straight (two-point) connector, −1 per crossing edge pair, computed over
-  cheap Z-routes (the A* router draws the final picture).
+- **Score**: +1 per straight or single-bend (L) connector, −1 per crossing edge pair, computed
+  over cheap Z-routes (the A* router draws the final picture).
 - **Search**: the longest chain seeds the center; a greedy tree walk repeatedly places the
   unplaced group connected to the earliest-placed node, trying axis-aligned candidates around
   the anchor (below/above preferred, then right/left, sliding off collisions) and keeping the
