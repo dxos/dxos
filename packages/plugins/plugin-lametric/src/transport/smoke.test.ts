@@ -15,7 +15,7 @@ type Captured = { method?: string; url?: string; headers: Record<string, unknown
 /** The real platform fetch, so the request is assembled and parsed exactly as the device sees it. */
 const nodeFetch: FetchLike = async (url, init) => {
   const response = await fetch(url, { method: init.method, headers: init.headers, body: init.body });
-  return { ok: response.ok, status: response.status };
+  return { ok: response.ok, status: response.status, json: () => response.json() };
 };
 
 describe('transport against a stand-in device', () => {
@@ -51,14 +51,7 @@ describe('transport against a stand-in device', () => {
 
   test('sends the widget update the device expects', async ({ expect }) => {
     const transport = selectTransport(
-      {
-        address: '127.0.0.1',
-        scheme: 'http',
-        port,
-        appId: 'com.lametric.abc',
-        widgetId: '123',
-        accessToken: 'secret',
-      },
+      { address: '127.0.0.1', scheme: 'http', port, apiKey: 'device-key', widgetId: 'diy-uuid' },
       nodeFetch,
     );
 
@@ -66,8 +59,8 @@ describe('transport against a stand-in device', () => {
     await transport!.push({ frames: toFrames([{ kind: 'stat', title: 'Objects', value: '42' }]) });
 
     expect(captured.method).toBe('POST');
-    expect(captured.url).toBe('/api/v1/dev/widget/update/com.lametric.abc/123');
-    expect(captured.headers['x-access-token']).toBe('secret');
+    expect(captured.url).toBe('/api/v2/widget/update/com.lametric.diy.devwidget/diy-uuid');
+    expect(captured.headers.authorization).toBe(`Basic ${btoa('dev:device-key')}`);
     expect(captured.headers['content-type']).toBe('application/json');
     expect(JSON.parse(captured.body)).toEqual({ frames: [{ text: '42 obj' }] });
   });
@@ -81,7 +74,7 @@ describe('transport against a stand-in device', () => {
     await new Promise<void>((resolve) => server.listen(port, '127.0.0.1', resolve));
 
     const transport = selectTransport(
-      { address: '127.0.0.1', scheme: 'http', port, appId: 'a', widgetId: 'b', accessToken: 'wrong' },
+      { address: '127.0.0.1', scheme: 'http', port, apiKey: 'wrong', widgetId: 'diy-uuid' },
       nodeFetch,
     );
     await expect(transport!.push({ frames: [] })).rejects.toThrow('401');

@@ -7,10 +7,11 @@ version: 0.1.0
 Shows a Composer space on a LaMetric TIME: a progress bar while a task is running, the space's
 statistics otherwise, cycled through the device's frames.
 
-Unlike the Stream Deck, no companion application is needed. The device is an HTTP server on the LAN
-and LaMetric's cloud is an HTTP server on the internet, and the two accept an identical widget
-update, so this plugin pushes directly. Requests go through Tauri's HTTP client because neither
-endpoint is reachable from a web view. Design:
+Unlike the Stream Deck, no companion application is needed: the device is an HTTP server on the LAN,
+so this plugin pushes to it directly. Local push goes through LaMetric's stock "My Data (DIY)" app,
+because a custom indicator app cannot be pushed to locally; cloud push, for use off the device's
+network, is a separate mechanism against a published app. Requests go through Tauri's HTTP client
+because neither endpoint is reachable from a web view. Design:
 `agents/superpowers/specs/2026-08-19-lametric-design.md`.
 
 ## Extensions
@@ -57,9 +58,10 @@ type TransportConfig
     address?: string
     port?: number                 # defaults to 4343 for https, 8080 for http
     scheme?: http | https
-    appId?: string
-    widgetId?: string
-    accessToken?: string
+    apiKey?: string               # local: password of a `dev` Basic credential
+    widgetId?: string             # discovered from the device for local push
+    appId?: string                # cloud only
+    accessToken?: string          # cloud only
 ```
 
 ```mdl
@@ -100,6 +102,11 @@ feat F-2: Transport
 
   req F-2.1: A configured device address is preferred over the cloud — it avoids a round-trip through
     LaMetric's servers and works with no internet.
+  req F-2.6: Local and cloud are different requests, not one request at two hosts. Local addresses the
+    stock DIY package over the device's v2 API with Basic `dev:<api key>`; cloud addresses a published
+    app over the v1 developer API with an access token. Only the body is shared.
+  req F-2.7: The DIY widget UUID is discovered from the device's app list, since it identifies one
+    installation and is shown nowhere in LaMetric's apps or portal.
   req F-2.2: Both paths issue their request through Tauri's HTTP client. LaMetric's cloud answers a
     CORS preflight with 405 and sends no `Access-Control-*` header, and the LAN device is plain HTTP
     or a self-signed certificate, so neither is reachable from the web view.
@@ -148,8 +155,14 @@ test T-3: Statistics fit without scrolling
 
 ```mdl
 test T-4: The device is only addressed when it is configured
-  given: an address but no access token
+  given: an address and a widget but no device API key
   then: no transport is built and no request is made
+```
+
+```mdl
+test T-7: The DIY widget is found on the device
+  given: a device app list containing the clock and the `com.lametric.diy.devwidget` package
+  then: the widget UUID of the DIY package is selected, and nothing is selected when it is absent
 ```
 
 ```mdl
@@ -161,8 +174,8 @@ test T-5: A burst of space changes becomes one push
 ```mdl
 test T-6: The request is what the device expects
   given: a stand-in HTTP device and a configured local transport
-  then: it receives POST /api/v1/dev/widget/update/<app>/<widget> with the access token header and
-    the frames as its body
+  then: it receives POST /api/v2/widget/update/com.lametric.diy.devwidget/<widget> with a Basic
+    `dev:<api key>` credential and the frames as its body
 ```
 
 ---

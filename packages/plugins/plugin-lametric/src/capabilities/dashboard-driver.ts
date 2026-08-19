@@ -7,12 +7,13 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import { log } from '@dxos/log';
 import { toMetrics } from '@dxos/plugin-space/dashboard';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import * as LaMetric from '#protocol';
 import { toFrames } from '#render';
-import { type LaMetricTransport, selectTransport, tauriFetch } from '#transport';
+import { type LaMetricTransport, discoverWidgetId, selectTransport, tauriFetch } from '#transport';
 import { LaMetricCapabilities } from '#types';
 
 import { Pusher } from './pusher';
@@ -49,20 +50,38 @@ export default Capability.makeModule(
     // The address decides which transport is used, so a settings change rebuilds rather than mutates.
     const rebuild = () => {
       pusher?.close();
+      pusher = undefined;
       const config = registry.get(settings);
-      const transport: LaMetricTransport | undefined = selectTransport(config, tauriFetch);
-      if (transport) {
+
+      const build = (widgetId: string | undefined) => {
+        const transport: LaMetricTransport | undefined = widgetId
+          ? selectTransport({ ...config, widgetId }, tauriFetch)
+          : undefined;
+        if (!transport) {
+          // An unconfigured device is not a failure, so the indicator stays silent.
+          registry.set(status, { state: 'idle' });
+          return;
+        }
         pusher = new Pusher({
           transport,
           minIntervalMs: config.minPushIntervalMs ?? DEFAULT_MIN_INTERVAL_MS,
           onStatus: (next) => registry.set(status, next),
         });
+        publish();
+      };
+
+      // The DIY widget's UUID identifies one installation of the stock app and appears nowhere in
+      // LaMetric's UI, so it has to come off the device unless the user has overridden it.
+      if (config.widgetId) {
+        build(config.widgetId);
       } else {
-        pusher = undefined;
-        // An unconfigured device is not a failure, so the indicator stays silent.
-        registry.set(status, { state: 'idle' });
+        void discoverWidgetId(config, tauriFetch)
+          .then(build)
+          .catch((error) => {
+            log('lametric could not read the device app list', { error });
+            registry.set(status, { state: 'idle' });
+          });
       }
-      publish();
     };
 
     const unsubscribe = [registry.subscribe(settings, rebuild), registry.subscribe(dashboard, publish)];

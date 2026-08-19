@@ -21,7 +21,8 @@ describe('LaMetric payload', () => {
     expect(() => decode({ frames: [{ nonsense: true }] })).toThrow();
   });
 
-  test('builds the widget path', ({ expect }) => {
-    expect(LaMetric.widgetPath('com.lametric.abc', '123')).toBe('/api/v1/dev/widget/update/com.lametric.abc/123');
+  test('local push addresses the stock DIY app, cloud push a published one', ({ expect }) => {
+    expect(LaMetric.localWidgetPath('diy-uuid')).toBe('/api/v2/widget/update/com.lametric.diy.devwidget/diy-uuid');
+    expect(LaMetric.cloudWidgetPath('com.lametric.abc', '123')).toBe('/api/v1/dev/widget/update/com.lametric.abc/123');
   });
 });

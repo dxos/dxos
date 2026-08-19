@@ -5,39 +5,34 @@ bar while a task is running, the space's statistics otherwise.
 
 ## Setup
 
-The device shows data through an *Indicator App*, so one has to exist before anything can be pushed
-to it. This is a one-time step and needs a LaMetric account.
+LaMetric does not allow a custom indicator app to be pushed to over the local network — local push
+goes through their stock **My Data (DIY)** app. Setup is therefore short, and needs no app of your
+own.
 
-### 1. Create the app
+### 1. Install My Data (DIY)
 
-On [developer.lametric.com](https://developer.lametric.com), create a new indicator app:
+From the LaMetric mobile app, install **My Data (DIY)** from the LaMetric Market onto your device.
 
-1. Pick an icon and enter an initial value — the default the device shows before the first push.
-2. Set the communication type to **`Local Push`**. This is the one that matters: it yields a push URL
-   pointing at the device on your own network, which is the transport this plugin prefers. `Next`.
-3. Enter a name and description, then `Save`.
-
-### 2. Publish and install it
-
-Click **`Publish`** and wait for the confirmation email, usually under two minutes. This is not
-optional — the device rejects updates to an unpublished app. Then install the app on your device from
-the LaMetric mobile app.
-
-### 3. Collect four values
+### 2. Collect two values
 
 | Value | Where |
 | --- | --- |
-| App ID, Widget ID | The app's **`Published V1`** tab. It shows a sample `curl` whose URL ends `/api/v1/dev/widget/update/<app-id>/<widget-id>` |
-| Access token | The `X-Access-Token` header in that same sample |
 | Device address | LaMetric mobile app → `Settings` → `Wi-Fi` → `IP Address` |
+| Device API key | The **Devices** section of your account on [developer.lametric.com](https://developer.lametric.com) |
 
-### 4. Configure the plugin
+### 3. Configure the plugin
 
-Enable the LaMetric plugin in Composer and fill those four fields in its settings.
+Enable the LaMetric plugin in Composer and fill in those two fields. That is the whole setup: the
+plugin reads the device's app list and finds the My Data (DIY) widget itself, because that widget's
+UUID identifies one installation of the app and is not shown anywhere in LaMetric's apps or portal.
 
-The device address is optional. With it, Composer pushes straight to the device over your network;
-without it, pushes go through LaMetric's cloud — which is slower and, if the app was created as
-`Local Push`, may not be accepted at all. Set the address if you have it.
+### Cloud push (optional, off-network)
+
+Pushing while away from the device's network is a **different mechanism**, not the same request to a
+different host: it needs a published indicator app of your own on developer.lametric.com, and its
+app ID, widget ID and access token go in the plugin's remaining settings fields. Leave the device
+address blank to use it. Local push is preferred whenever the address is set — it is faster and
+works with no internet.
 
 ## Desktop only
 
@@ -48,7 +43,7 @@ page.
 - LaMetric's cloud answers a CORS preflight with `405` and sends no `Access-Control-*` header, and
   the `X-Access-Token` header forces a preflight on every request.
 - The LAN device is plain HTTP (blocked as mixed content from an HTTPS page) or a self-signed
-  certificate on port 4343.
+  certificate on port 4343, and its `Authorization` header forces a preflight too.
 
 Supporting the browser means an edge worker proxying to `developer.lametric.com`. The transport
 interface already isolates the base URL, so that is a third implementation and nothing else changes.
@@ -67,6 +62,18 @@ them at a fixed rate, so a longer list delays every number in it.
 
 Favorites are not shown. LaMetric's buttons are not bindable from the API, so a favorite would be a
 name scrolling past with nothing to press.
+
+## The two transports
+
+They share only a body. Assuming otherwise is the mistake this section exists to prevent.
+
+| | Local | Cloud |
+| --- | --- | --- |
+| Host | `https://<device>:4343` (or `http://<device>:8080`) | `https://developer.lametric.com` |
+| Path | `/api/v2/widget/update/com.lametric.diy.devwidget/<widget>` | `/api/v1/dev/widget/update/<app>/<widget>` |
+| Auth | `Authorization: Basic dev:<device api key>` | `X-Access-Token: <token>` |
+| App | LaMetric's stock DIY app, a fixed package | a published app of your own |
+| Body | `{"frames": [...]}` | identical |
 
 ## Development
 

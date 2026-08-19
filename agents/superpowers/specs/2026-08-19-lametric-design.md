@@ -36,8 +36,30 @@ The device exposes **two** unrelated write surfaces:
 This design uses **(1) only**. It is the dashboard surface; (2) is the alert surface and is out of
 scope (see below).
 
-That (1) is byte-identical local and cloud is the single fact that makes this cheap: one payload
-builder, one transport interface, two base URLs.
+**Correction, 2026-08-19 (after implementation).** The original claim here — that local and cloud
+were byte-identical and differed only in base URL — was wrong, and it was the load-bearing premise of
+the transport design. LaMetric does not permit a custom indicator app to be pushed to locally; local
+push goes through their stock **My Data (DIY)** app, on a different API version, a different path,
+and a different authentication scheme:
+
+|      | Local                                                       | Cloud                                      |
+| ---- | ----------------------------------------------------------- | ------------------------------------------ |
+| Path | `/api/v2/widget/update/com.lametric.diy.devwidget/<widget>` | `/api/v1/dev/widget/update/<app>/<widget>` |
+| Auth | `Authorization: Basic dev:<device api key>`                 | `X-Access-Token: <token>`                  |
+| App  | LaMetric's stock DIY app, a fixed package                   | a published app of your own                |
+
+Only the `{frames: [...]}` body is shared. Verified against
+[`klein0r/ioBroker.lametric`](https://github.com/klein0r/ioBroker.lametric), which drives real
+hardware. Two consequences beyond the transport:
+
+- The DIY **widget UUID identifies one installation** and appears nowhere in LaMetric's apps or
+  portal, so the plugin discovers it from `GET /api/v2/device/apps`. That is required for setup to be
+  possible at all, not a convenience.
+- Setup for the common (local) case is **two values, not four**: the device address and the device
+  API key. No app to create, nothing to publish.
+
+Everything above the transport was unaffected: the payload schema, the frame projection, the pusher,
+the replica and the dashboard capability did not change.
 
 ## Why there is no second package
 

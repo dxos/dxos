@@ -13,6 +13,7 @@ export const translations = [
         'plugin.name': 'LaMetric',
         'device-connected.label': 'LaMetric connected',
         'settings-address.label': 'Device address',
+        'settings-apiKey.label': 'Device API key',
         'settings-appId.label': 'App ID',
         'settings-widgetId.label': 'Widget ID',
         'settings-accessToken.label': 'Access token',

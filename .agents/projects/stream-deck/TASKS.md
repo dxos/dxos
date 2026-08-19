@@ -123,9 +123,15 @@ The `.sdPlugin` bundle and the WebSocket transport. Needs the physical device an
       ([product page](https://store.lametric.com/products/lametric)). Designed and built 2026-08-19:
       [design](../../../agents/superpowers/specs/2026-08-19-lametric-design.md) ·
       [plan](../../../agents/superpowers/plans/2026-08-19-lametric.md).
-  - **No second package.** The device is an HTTP server on the LAN and LaMetric's cloud is an HTTP
-    server on the internet, and both accept an identical widget update — so there is no exclusivity
+  - **No second package.** The device is an HTTP server on the LAN, so there is no exclusivity
     problem and no `.sdPlugin` equivalent to build.
+  - **Local and cloud are different requests.** The design initially assumed one request at two
+    hosts; that was wrong. A custom indicator app cannot be pushed to locally — local push goes
+    through LaMetric's stock "My Data (DIY)" app at
+    `/api/v2/widget/update/com.lametric.diy.devwidget/<widget>` with Basic `dev:<device api key>`,
+    while cloud push uses the v1 developer API with an access token. Only the body is shared. The
+    widget UUID is discovered from `GET /api/v2/device/apps` because it appears nowhere in
+    LaMetric's UI. Corrected 2026-08-19 before hardware, from the ioBroker adapter's source.
   - **`plugin-space` now owns the projection.** `SpaceCapabilities.Dashboard` publishes the space's
     stats, tasks and favorites; both device plugins consume it, so N peripherals cost one set of
     queries rather than N. `KeySpec`/`DialSpec` became `Shortcut`/`MetricSpec` on the way in.

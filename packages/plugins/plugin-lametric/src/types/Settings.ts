@@ -11,17 +11,28 @@ export const Settings = Schema.Struct({
   address: Schema.optional(
     Schema.String.annotate({
       title: 'Device address',
-      description: 'IP address or hostname of the LaMetric on this network. Leave blank to push via the cloud.',
+      description: 'IP address or hostname of the LaMetric on this network.',
+    }),
+  ),
+  apiKey: Schema.optional(
+    Schema.String.annotate({
+      title: 'Device API key',
+      description: 'From the Devices section of your LaMetric developer account.',
+    }),
+  ),
+  widgetId: Schema.optional(
+    Schema.String.annotate({
+      title: 'Widget ID',
+      description: 'Found on the device automatically; only set this to override what was discovered.',
     }),
   ),
   appId: Schema.optional(
     Schema.String.annotate({
       title: 'App ID',
-      description: 'Indicator app ID from developer.lametric.com.',
+      description: 'Cloud push only: a published indicator app from developer.lametric.com.',
     }),
   ),
-  widgetId: Schema.optional(Schema.String.annotate({ title: 'Widget ID' })),
-  accessToken: Schema.optional(Schema.String.annotate({ title: 'Access token' })),
+  accessToken: Schema.optional(Schema.String.annotate({ title: 'Access token', description: 'Cloud push only.' })),
   minPushIntervalMs: Schema.optional(
     Schema.Number.annotate({
       title: 'Minimum push interval (ms)',
