@@ -87,7 +87,10 @@ export const installMicrophoneBridge = async (): Promise<boolean> => {
     node.connect(destination);
 
     globalThis.addEventListener(CHUNK_EVENT, (event) => {
-      const detail = (event as CustomEvent<string>).detail;
+      if (!(event instanceof CustomEvent)) {
+        return;
+      }
+      const detail: unknown = event.detail;
       if (typeof detail === 'string' && detail.length > 0) {
         const frames = decodeChunk(detail);
         node.port.postMessage(frames, [frames.buffer]);
@@ -116,11 +119,16 @@ export const installMicrophoneBridge = async (): Promise<boolean> => {
     log.info('microphone bridge installed');
     return true;
   } catch (err) {
-    // Native capture without a graph would hold the microphone open for nothing; both stops are
-    // best-effort on a path that already failed.
+    // Native capture without a graph would hold the microphone open for nothing. Cleanup failures
+    // are logged rather than thrown so the original setup failure is the error that propagates.
     capturing = false;
-    await invoke('stop_microphone_bridge').catch(() => {});
-    await context?.close().catch(() => {});
+    await invoke('stop_microphone_bridge').catch((stopErr) => {
+      capturing = true;
+      log.warn('could not stop native capture after failed bridge setup', { err: stopErr });
+    });
+    await context?.close().catch((closeErr) => {
+      log.warn('could not close the bridge audio context', { err: closeErr });
+    });
     throw err;
   }
 };

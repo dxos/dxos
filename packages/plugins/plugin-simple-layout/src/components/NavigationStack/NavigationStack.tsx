@@ -106,18 +106,23 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
    * to a nominal origin. Prior animations are committed before being cancelled so that value is the
    * pose actually on screen.
    */
+  /** Commits and cancels a layer's animations, leaving its on-screen pose behind as inline style. */
+  const flushAnimations = useCallback((layer: number) => {
+    for (const element of [panelRefs.current[layer], dimRefs.current[layer]]) {
+      for (const animation of element?.getAnimations() ?? []) {
+        try {
+          animation.commitStyles();
+        } catch {
+          // Commit throws for an element that is not rendered; cancelling alone is correct there.
+        }
+        animation.cancel();
+      }
+    }
+  }, []);
+
   const animatePose = useCallback(
     (layer: number, pose: Pose, duration: number) => {
-      for (const element of [panelRefs.current[layer], dimRefs.current[layer]]) {
-        for (const animation of element?.getAnimations() ?? []) {
-          try {
-            animation.commitStyles();
-          } catch {
-            // Commit throws for an element that is not rendered; cancelling alone is correct there.
-          }
-          animation.cancel();
-        }
-      }
+      flushAnimations(layer);
       if (duration <= 0) {
         applyPose(layer, pose);
         return;
@@ -133,7 +138,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
         fill: 'both',
       });
     },
-    [applyPose],
+    [applyPose, flushAnimations],
   );
 
   const settle = useCallback(
@@ -201,6 +206,10 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
       if (event.clientX - bounds.left > EDGE_WIDTH_PX) {
         return;
       }
+      // A settle may still be playing, and its fill:'both' animations would override the inline
+      // styles the tracked gesture writes — the panel would follow the animation, not the finger.
+      flushAnimations(index);
+      flushAnimations(index - 1);
       gestureRef.current = {
         pointerId: event.pointerId,
         startX: event.clientX,
@@ -211,7 +220,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
       };
       root.setPointerCapture(event.pointerId);
     },
-    [canPop],
+    [canPop, flushAnimations, index],
   );
 
   const handlePointerMove = useCallback(
