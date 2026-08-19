@@ -31,9 +31,6 @@ const SOURCE = trim`
       X ..> B
 `;
 
-const objectsOf = (commands: Scene.Command[]) =>
-  commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
-
 describe('uml-search', () => {
   test('score rewards straight lines and punishes crossings', ({ expect }) => {
     const model = parse(['classDiagram', 'class A', 'class B', 'A ..> B'].join('\n'));
@@ -106,3 +103,6 @@ describe('uml-search', () => {
     expect(overlap).toBe(false);
   });
 });
+
+const objectsOf = (commands: Scene.Command[]) =>
+  commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));

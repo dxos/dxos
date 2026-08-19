@@ -41,17 +41,20 @@ const segmentsOf = (points: readonly Point[]): Segment[] =>
 const crosses = ([a1, a2]: Segment, [b1, b2]: Segment): boolean => {
   const aVertical = a1.x === a2.x;
   const bVertical = b1.x === b2.x;
-  const min = (p: number, q: number) => Math.min(p, q);
-  const max = (p: number, q: number) => Math.max(p, q);
   if (aVertical !== bVertical) {
     const [v1, v2] = aVertical ? [a1, a2] : [b1, b2];
     const [h1, h2] = aVertical ? [b1, b2] : [a1, a2];
-    return v1.x > min(h1.x, h2.x) && v1.x < max(h1.x, h2.x) && h1.y > min(v1.y, v2.y) && h1.y < max(v1.y, v2.y);
+    return (
+      v1.x > Math.min(h1.x, h2.x) &&
+      v1.x < Math.max(h1.x, h2.x) &&
+      h1.y > Math.min(v1.y, v2.y) &&
+      h1.y < Math.max(v1.y, v2.y)
+    );
   }
   if (aVertical) {
-    return a1.x === b1.x && min(a1.y, a2.y) < max(b1.y, b2.y) && min(b1.y, b2.y) < max(a1.y, a2.y);
+    return a1.x === b1.x && Math.min(a1.y, a2.y) < Math.max(b1.y, b2.y) && Math.min(b1.y, b2.y) < Math.max(a1.y, a2.y);
   }
-  return a1.y === b1.y && min(a1.x, a2.x) < max(b1.x, b2.x) && min(b1.x, b2.x) < max(a1.x, a2.x);
+  return a1.y === b1.y && Math.min(a1.x, a2.x) < Math.max(b1.x, b2.x) && Math.min(b1.x, b2.x) < Math.max(a1.x, a2.x);
 };
 
 /** Direction changes along a polyline, ignoring zero-length segments. */
@@ -188,12 +191,14 @@ export const searchPlacement = (model: UmlModel, groups: Group[]): Map<string, S
     ];
 
     let best: { at: Point; score: number } | undefined;
-    for (const candidate of candidates) {
+    for (const [candidateIndex, candidate] of candidates.entries()) {
       // Slide along the placement axis (in grid steps) until the group's border clears others.
       const at = { x: snap(candidate.x), y: snap(candidate.y) };
       const bounds = placedBounds();
       let tries = 0;
-      const vertical = candidate.x === candidates[0].x || candidate.x === candidates[1].x;
+      // The first two candidates are the below/above placements; index, not coordinate
+      // coincidence, decides the slide axis.
+      const vertical = candidateIndex < 2;
       while (
         bounds.some((rect) => overlaps(rect, { x: at.x, y: at.y, w: connection.group.w, h: connection.group.h })) &&
         tries < 24

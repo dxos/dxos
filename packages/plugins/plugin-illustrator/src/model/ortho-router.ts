@@ -10,10 +10,8 @@
 //
 
 import type * as Scene from './scene';
-import type { Rect, RoutedRelation, Router } from './uml-grid';
+import { GRID, type Rect, type RoutedRelation, type Router } from './uml-grid';
 
-/** Grid step: the document fine grid, which ports and node borders already sit on. */
-const STEP = 8;
 /** Clearance kept between a route and any node border, in steps. */
 const CLEARANCE = 1;
 /** One bend costs as much as this many steps — turns dominate, distance breaks ties. */
@@ -37,6 +35,9 @@ const DY = [0, 1, 0, -1];
  * the (fenced-in) edges the search cannot reach; imported types keep this module cycle-free.
  */
 export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router => {
+  // Derived from the shared grid so retuning GRID keeps the modules in sync. Evaluated here, not
+  // at module scope: this module and uml-grid import each other, so GRID is TDZ during load.
+  const STEP = GRID / 4;
   const used = new Set<string>();
 
   // Inflated obstacle test, in grid coordinates.
@@ -212,11 +213,14 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
       : [[flowStart, flowEnd]];
 
     // Stubs step from the border past the clearance zone; A* runs between the stub ends.
+    // Rounded to whole cells: ports may sit on exact fractional coordinates (collision fallback),
+    // and a fractional goal cell would never match — the visible sub-cell offset lives in the
+    // first/last segment.
     const stub = (point: Point, dir: number, out: boolean): Point => {
       const sign = out ? 1 : -1;
       return {
-        x: point.x / STEP + DX[dir] * (CLEARANCE + 1) * sign,
-        y: point.y / STEP + DY[dir] * (CLEARANCE + 1) * sign,
+        x: Math.round(point.x / STEP) + DX[dir] * (CLEARANCE + 1) * sign,
+        y: Math.round(point.y / STEP) + DY[dir] * (CLEARANCE + 1) * sign,
       };
     };
 
