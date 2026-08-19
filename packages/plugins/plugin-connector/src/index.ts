@@ -7,6 +7,7 @@
 export * as Binding from './Binding';
 export * as ConnectorAuth from './ConnectorAuth';
 export * as ConnectorPlugin from './ConnectorPlugin';
+export * as SyncTemplate from './SyncTemplate';
 export * from './errors';
 export * from '#meta';
 export * from '#types';

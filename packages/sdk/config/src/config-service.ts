@@ -43,7 +43,7 @@ export const defaultConfig = new Config({
     },
     services: {
       edge: {
-        url: 'wss://dxos.network/',
+        url: 'https://dxos.network/',
       },
       iceProviders: [
         {
@@ -57,6 +57,12 @@ export const defaultConfig = new Config({
     },
   },
 });
+
+/** Aligns a fresh monorepo CLI profile with the backend Composer's local dev server talks to. */
+export const localDevConfig = new Config(
+  { runtime: { services: { edge: { url: 'https://main.dxos.network' } } } },
+  defaultConfig.values,
+);
 
 export class ConfigService extends Context.Service<ConfigService, Config>()('ConfigService') {
   static layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
@@ -84,13 +90,16 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
           ? Effect.fail(error)
           : Effect.gen(function* () {
               const Yaml = yield* Effect.promise(() => import('yaml'));
-              const configValues = defaultConfig.values;
+              // `DX_LOCAL_DEV` is set only by the monorepo's `bin/dx` wrapper, never by the
+              // published binary, so this never redirects a real user's first run to staging.
+              const useLocalDev = process.env.DX_LOCAL_DEV !== undefined && process.env.DX_LOCAL_DEV !== '0';
+              const configValues = (useLocalDev ? localDevConfig : defaultConfig).values;
               const fs = yield* FileSystem.FileSystem;
               const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
               yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });
               yield* fs.writeFileString(pathToCreate, Yaml.stringify(configValues));
-              // The written file carries only `defaultConfig`; the profile defaults stay out of it so
-              // they keep tracking the code rather than freezing into every profile ever created.
+              // Profile defaults stay out of the written file so they keep tracking the code
+              // rather than freezing into every profile ever created.
               return ConfigService.of(
                 new Config(processEnvDefaults(), configValues, profileBuiltinDefaults(args.profile).values),
               );

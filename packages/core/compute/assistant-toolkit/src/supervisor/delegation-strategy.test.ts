@@ -9,7 +9,7 @@ import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessa
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import { getSession } from '@dxos/compute/AgentService';
-import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
@@ -105,8 +105,7 @@ describe('makeDelegationStrategy', () => {
         invariant(outlineAfterTurn, 'Outline not created.');
         const taskSet = outlineAfterTurn.taskSet ? yield* Database.load(outlineAfterTurn.taskSet) : undefined;
         invariant(taskSet, 'Task set not created.');
-        const children = yield* Database.query(Query.select(Filter.id(taskSet.id)).children()).run;
-        const tasks = children.filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child));
+        const tasks = TaskSet.resolveTasks(taskSet);
         expect(tasks).toHaveLength(1);
         expect(tasks[0]).toMatchObject({ title: TASK_TITLE, assignee: { role: 'assistant' } });
 

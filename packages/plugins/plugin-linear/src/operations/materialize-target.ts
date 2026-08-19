@@ -46,7 +46,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.MaterializeLinearTar
           }
 
           const created = yield* Database.add(
-            Obj.make(TaskSet.TaskSet, {
+            TaskSet.make({
               [Obj.Meta]: { keys: [fkFor(teamId)] },
               name: remoteTarget.name,
             }),

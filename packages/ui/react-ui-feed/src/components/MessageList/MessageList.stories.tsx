@@ -15,11 +15,11 @@ const meta: Meta<FeedStoryProps> = {
   parameters: { layout: 'fullscreen' },
   args: {
     count: 100,
-    scrollPastEnd: true,
+    tailLines: 4,
   },
   argTypes: {
     debug: { control: 'boolean' },
-    scrollPastEnd: { control: 'boolean' },
+    tailLines: { control: 'number' },
   },
 };
 
@@ -36,7 +36,10 @@ type Story = StoryObj<FeedStoryProps>;
 
 /** Passive: the assistant-shaped feed under the shared harness. */
 export const Default: Story = {
-  args: { scenario: 'assistant', count: 200 },
+  args: {
+    scenario: 'assistant',
+    count: 200,
+  },
 };
 
 export const Small: Story = {

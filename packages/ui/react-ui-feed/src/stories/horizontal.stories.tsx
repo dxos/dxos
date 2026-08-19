@@ -6,11 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useRef } from 'react';
 import { expect } from 'storybook/test';
 
+import { ListModel, Window, type WindowController } from '@dxos/react-ui-virtual';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MarkdownBlock } from '../components';
-import { ListModel } from '../model';
-import { Window, type WindowController } from '../virtualizer/Window';
 
 /**
  * The inline axis against real content — editors, not boxes.

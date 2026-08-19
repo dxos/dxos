@@ -10,6 +10,6 @@
   },
   "env": {
     "production": { "name": "testbench" },
-    "main": { "name": "testbench-main" },
+    "nightly": { "name": "testbench-nightly" },
   },
 }

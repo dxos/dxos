@@ -19,8 +19,9 @@ streaming (8 rows/s; the class defaults were tuned for a single arrival).
 
 Decisions taken:
 
-- The virtualizer ships as an entry point of this package first (`@dxos/react-ui-feed/virtualizer`);
-  it graduates to `@dxos/react-ui-virtualizer` when a second consumer (mosaic) lands.
+- The virtualizer shipped as an entry point of this package first, then graduated to
+  `@dxos/react-ui-virtual` (placement, `useWindow`/`Window`, the follow, and `ListModel`);
+  this package depends on it and keeps the message-native layer.
 - The list consumes a **model**, not an array: a low-level `ListModel` (reactive via `@effect/atom`)
   the virtualizer binds to, and `FeedModel` as the native case — not an add-on. `fromMessages()`
   keeps the array form as an adapter.
@@ -170,7 +171,7 @@ component Virtualizer
     extents: Extents                  # measurements stay keyed by model id, never by index
     axis?: 'block' | 'inline'         # default block; only the binding maps extent to height/width
     overscan?: number                 # rows mounted before/beyond the visible window, per side (8)
-    reserve?: number                  # empty extent after the last row (scrollPastEnd), host-computed
+    reserve?: number                  # empty extent after the last row, part of the resting view
     sticky?: boolean                  # follow the tail as content arrives
   state:
     anchor: { id, index, start }      # the one authoritative position; everything else derived
@@ -203,7 +204,7 @@ component MessageList
     registry?: XmlWidgetRegistry                # XML tag -> React widget
     estimateSize?: number | (message, index) => number
     stickyBottom?: boolean
-    scrollPastEnd?: boolean                     # off by default
+    tailLines?: number                          # blank lines below the tail at rest; 0 by default
     overscan?: number
     debug?: boolean                             # borders, outlines + jump detector
     # NOT here, deliberately: decorations (née hits) and selection reach items via provider + hook
@@ -414,9 +415,9 @@ feat F-7: Model
 
 ```mdl
 feat F-8: Retrofit
-  req F-8.1: Extract the virtualizer (placement + useWindow + Window + tests) to the
-    @dxos/react-ui-feed/virtualizer entry point first; graduate to @dxos/react-ui-virtualizer when
-    mosaic consumes it.
+  req F-8.1: DONE — the virtualizer (placement + useWindow + Window + follow + ListModel + tests)
+    lives in its own package, @dxos/react-ui-virtual; this package depends on it and the
+    /virtualizer entry point is gone.
   req F-8.2: react-ui-mosaic VirtualStack (still on tanstack react-virtual) rebinds onto useWindow
     after the feed has soaked; its pagination hook becomes a ListModel.loadBefore/loadAfter
     consumer. Mosaic adds drag-and-drop, which the spike never exercised — behind a flag.
@@ -429,7 +430,7 @@ feat F-8: Retrofit
 
 ```mdl
 test T-1: Tail at rest with reserve
-  given: 500 varied-height messages, scrollPastEnd on
+  given: 500 varied-height messages, a tail reserve on
   then:
     - the feed opens with the last message resting on the viewport's bottom edge
     - the reserve is still scrollable; the last row reaches the top of the viewport and no further

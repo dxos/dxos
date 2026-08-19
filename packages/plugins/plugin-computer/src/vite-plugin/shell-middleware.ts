@@ -69,7 +69,9 @@ export const make = ({
   // macOS — makes every file inside it look like an escape.
   const realRoot = resolveWithin(root);
   const scriptsDir = materializeScripts();
-  log.info('computer shell mounted', { path, root: realRoot, scriptsDir });
+  // Debug, not info: the route mounts in every dev server this plugin is added to, and most sessions
+  // never call it — but the mounted root is the first thing to check when a tool misbehaves.
+  log.debug('computer shell mounted', { path, root: realRoot, scriptsDir });
 
   return async (req: IncomingMessage, res: ServerResponse, next: () => void): Promise<void> => {
     if (req.method !== 'POST' || !req.url?.startsWith(path)) {
