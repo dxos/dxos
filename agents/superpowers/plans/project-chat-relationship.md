@@ -46,6 +46,13 @@ query-invalidation coverage for re-index on a parent change — the existing `Co
 
 ### 2. Tests first, against today's behavior
 
+Done so far: `Filter.hasParent` landed with unit + e2e + reactivity coverage, and
+`assistant-toolkit/src/skills/project/conversation.test.ts` pins the full headless loop (Project ←
+parent — Chat, skills/objects bound on the feed, one prompt through `AgentService.getSession`,
+assertion on `project.artifacts`) in scripted and live-memoized flavors. The package decision:
+`@dxos/assistant-toolkit` is the only core package that has both the Chat/assistant runtime and may
+import `Project`; the live-graded evalite variant stays in `assistant-evals` (`projects.eval.ts`).
+
 Extend `Project.test.ts` and `Chat.test.ts` (plus a new `Chat.parent.test.ts` if it grows) to pin
 the semantics the migration must preserve:
 

@@ -650,6 +650,7 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
 
 - [ ] **Possibly move Project type from @dxos/compute to plugin-projects at end** — revisit once the plugin's shape settles.
 - [x] **Review CompanionTo reuse for project chats** — resolved in milestone 3: companion chat keeps `CompanionTo`; owned sessions use the ECHO parent edge. Agent-roster linkage still open.
+- [ ] **Record the live-model fixture for the Project conversation test** — `packages/core/compute/assistant-toolkit/src/skills/project/conversation.test.ts` gates its live flavor with `.skip`; run `DX_UPDATE_MODEL_FIXTURES=1 moon run assistant-toolkit:test -- src/skills/project/conversation.test.ts` with 1p credentials, commit `.store/conversations/**`, drop the `.skip`.
 - [ ] **Normalize Chat ownership onto the ECHO parent edge** — retire `Chat.CompanionTo`; audit at
       `packages/core/compute/compute/src/types/AUDIT.md`, plan at
       `agents/superpowers/plans/project-chat-relationship.md`. Blocked on `Filter.hasParent` in
