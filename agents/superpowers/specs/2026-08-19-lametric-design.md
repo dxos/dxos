@@ -117,7 +117,6 @@ Package shape follows `plugin-stream-deck` (which follows `plugin-sample`): `pri
 | --- | --- |
 | `protocol/LaMetric.ts` | Effect Schema for the widget payload. Not our protocol — LaMetric's, modelled so a malformed frame fails at the boundary rather than on the wire. |
 | `render/frames.ts` | Pure `MetricSpec[] → LaMetric.Frame[]`. Snapshot-testable in node. |
-| `render/icons.ts` | Constant table mapping a metric kind to a numeric LaMetric icon ID. |
 | `transport/LaMetricTransport.ts` | `{ push(payload): Promise<void> }` plus `selectTransport`. |
 | `transport/LocalTransport.ts` | `https://<address>:4343/api/v1/dev/widget/update/<app>/<widget>` via `@tauri-apps/plugin-http`. |
 | `transport/CloudTransport.ts` | `https://developer.lametric.com/api/v1/dev/widget/update/<app>/<widget>` via `fetch`. |
@@ -137,19 +136,27 @@ Package shape follows `plugin-stream-deck` (which follows `plugin-sample`): `pri
 
 The display is 37 pixels wide. Everything below follows from that.
 
-- **Progress, determinate** → `{icon, goalData: {start: 0, current: round(ratio * 100), end: 100,
-  unit: '%'}}`. The device draws its own bar.
-- **Progress, indeterminate** (task reports no total) → `{icon, text}` with the task label and its
-  current count. `goalData` requires an `end`, so there is nothing to draw a bar from.
-- **Statistic** → `{icon, text}` with a terse label, e.g. `42 objects`.
-- **No truncation.** The device scrolls text that does not fit, which is better than an ellipsis on
-  a 37-pixel line. Labels are kept short at the source instead.
+**Each `MetricSpec` maps to exactly one frame:**
+
+| Metric | Frame |
+| --- | --- |
+| Progress, determinate | `{goalData: {start: 0, current: round(ratio * 100), end: 100, unit: '%'}}` — the device draws its own bar |
+| Progress, indeterminate (no total) | `{text: '<title> <detail>'}` — `goalData` needs an `end`, so there is no bar to draw |
+| Statistic | `{text: '<value> <title lowercased>'}`, e.g. `42 objects` |
+
+- **No icons in v1.** The 8x8 colour block sits to the *left of* the text and takes width from it,
+  and LaMetric's built-in icon IDs have to be chosen by eye against the real display. Text-only
+  frames are wider and need no invented constants. Adding icons later changes one pure function.
+- **No truncation.** The device scrolls text that does not fit, which beats an ellipsis on a
+  37-pixel line. Labels are kept short at the source instead.
 - **At most 4 frames**, matching the Stream Deck's dial count. The device cycles frames at a fixed
   rate, so a longer list means a longer wait before a given number comes round again.
-- **Icons are numeric IDs**, from a small constant table. The in-DOM sprite is SVG and the colour
-  block is 8x8 — the Stream Deck's `resolveIcon` path does not apply.
 - **Favorites are not rendered.** With no bindable input a favorite is a name scrolling past, which
   is not worth a frame slot.
+
+**Known limitation:** a `goalData` frame shows no text, so a determinate task's name is not
+displayed. With a cycle of at most 4 frames and usually one active task this is acceptable; emitting
+a paired label frame is a tracked follow-up, not a v1 requirement.
 
 ## Transport selection and failure
 
@@ -234,7 +241,7 @@ is never echoed into chat, a log, or a commit.
 - **Notifications / alerts** (`/api/v2/device/notifications`). The natural follow-up — "task
   finished" pushed over whatever is showing. Needs a second credential (the device API key), a
   second client, and de-duplication so it does not spam. Tracked, not built.
-- **Favorites frames.** See the rendering rules.
+- **Favorites frames** and **frame icons**. See the rendering rules.
 - **Input.** Not reachable from the API.
 - **Browser support.** Needs an edge worker proxying to `developer.lametric.com`; see the
   transport section.
