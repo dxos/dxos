@@ -153,20 +153,39 @@ The display is 37 pixels wide. Everything below follows from that.
 
 ## Transport selection and failure
 
+**Both transports issue their request through `@tauri-apps/plugin-http`**, i.e. from Rust, not from
+the web view. This is not an optimisation — it is the only thing that works. Probed 2026-08-19:
+
 ```
-address configured AND isTauri()  →  LocalTransport
-app id + widget id + token set    →  CloudTransport
-otherwise                         →  no transport; the driver does nothing
+$ curl -X OPTIONS https://developer.lametric.com/api/v1/dev/widget/update/<app>/<widget> \
+    -H 'Origin: https://composer.space' -H 'Access-Control-Request-Method: POST'
+HTTP/2 405
+allow: GET,PUT,POST,DELETE          # no OPTIONS, and no Access-Control-* header on any response
 ```
 
-Local is preferred because it avoids a round-trip through LaMetric's servers and works without
-internet. Cloud is the fallback and the only option in a browser.
+`X-Access-Token` is not a CORS-safelisted request header, so every call preflights, and the
+preflight is refused. LaMetric's cloud endpoint is therefore unreachable from a browser, exactly as
+the LAN device is. One mechanism defeats both.
+
+```
+address configured  →  LocalTransport   (https://<address>:4343, or http://<address>:8080)
+credentials only    →  CloudTransport   (https://developer.lametric.com)
+not in Tauri        →  no transport; the driver does nothing
+```
+
+Local is preferred: it avoids a round-trip through LaMetric's servers and works without internet.
+Cloud covers the device being on a different network from Composer.
+
+**v1 is desktop-only.** Browser Composer gets a settings panel that says so. Supporting it means a
+DXOS edge worker proxying to `developer.lametric.com` — additive, because the transport interface
+already isolates the base URL, so it is a third implementation and nothing else changes. Tracked,
+not built.
 
 Failure handling mirrors the Stream Deck bridge's posture — **quiet by default**, because most users
 have no device:
 
 - A failed push is logged at `log`, not surfaced as an error.
-- Consecutive failures back off 1s → 30s, as in `StreamDeckBridge`.
+- Consecutive failures back off 1s to 30s, as in `StreamDeckBridge`.
 - The status indicator renders nothing until a push has succeeded.
 - Configuration that is absent is not an error. Configuration that is present but rejected with 401
   or 404 **is** surfaced in the settings panel, since only the user can fix it.
@@ -199,16 +218,16 @@ is never echoed into chat, a log, or a commit.
 | storybook | `VirtualLaMetric` over the three frame kinds and the empty state; a container story over a live seeded ECHO space. |
 | hardware | The real device, once the token is available. |
 
-## Spikes, before any transport code
+## Spikes
 
-Both are cheap and either can invalidate a transport:
-
-1. **Does `developer.lametric.com` send CORS headers?** If not, the cloud fallback cannot be called
-   from a browser and needs an edge proxy — which changes the fallback from "one fetch" to "an edge
-   worker", and must be known before it is designed in.
-2. **Does the Tauri http route actually reach `:4343`?** The device presents a self-signed
-   certificate. `@tauri-apps/plugin-http` issues the request from Rust, so it is not subject to
-   mixed-content or CORS, but the certificate still has to be accepted explicitly.
+1. ~~**Does `developer.lametric.com` send CORS headers?**~~ **Resolved 2026-08-19: no.** See the
+   transport section — it forces every transport through the Tauri HTTP client and makes v1
+   desktop-only.
+2. **Does the local device answer on plain HTTP?** The documented local push URL is
+   `https://<ip>:4343/...`, which presents a self-signed certificate. The device API is also served
+   over `http://<ip>:8080`. If the widget-update path answers there, `LocalTransport` needs no
+   certificate handling at all. Try 8080 first; fall back to 4343 with the plugin's
+   `danger.acceptInvalidCerts`. Needs the physical device.
 
 ## Out of scope
 
@@ -217,6 +236,8 @@ Both are cheap and either can invalidate a transport:
   second client, and de-duplication so it does not spam. Tracked, not built.
 - **Favorites frames.** See the rendering rules.
 - **Input.** Not reachable from the API.
+- **Browser support.** Needs an edge worker proxying to `developer.lametric.com`; see the
+  transport section.
 - **LaMetric SKY.** A different device with a different matrix; the frame model does not carry over.
 
 ## Consequences
