@@ -1,16 +1,16 @@
-name: Preview Deploy
+name: PR Deploy
 
-# Deploys the composer-app preview bundle built by preview.yml as a Cloudflare Worker preview Version
+# Deploys the composer-app bundle built by pr-build.yml as a Cloudflare Worker preview Version
 # (0% traffic, stable per-PR URL via `--preview-alias`) against composer-app's `dev` env — same EDGE
-# instance the build already targets (DX_EDGE_BASE_URL in preview.yml) and its dev-tier bindings, so PR
-# previews never touch production data. Deliberately not `nightly`: that Worker serves dogfooders against
-# EDGE production. Uses workflow_run so this workflow executes from the BASE branch
-# (trusted), which means secrets are safe to use here. The untrusted PR code never runs in this workflow —
-# we only download the pre-built artifact.
+# instance the build already targets (DX_EDGE_BASE_URL in pr-build.yml) and its dev-tier bindings, so PR
+# previews never touch production data. Deliberately not the `preview` environment: that Worker
+# (preview.composer.space) serves dogfooders against EDGE production. Uses workflow_run so this workflow
+# executes from the BASE branch (trusted), which means secrets are safe to use here. The untrusted PR code
+# never runs in this workflow — we only download the pre-built artifact.
 
 on:
   workflow_run:
-    workflows: ['Preview Build']
+    workflows: ['PR Build']
     types: [completed]
 
 permissions:

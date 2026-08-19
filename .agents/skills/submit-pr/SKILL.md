@@ -42,9 +42,9 @@ runs in. To land (merge) an existing PR, use the `land` skill.
 
 ## Composer preview URL — always surface
 
-The `preview-deploy.yml` workflow posts a sticky `composer-preview` comment with
+The `pr-deploy.yml` workflow posts a sticky `composer-preview` comment with
 a `*.workers.dev` preview-alias URL (a `wrangler versions upload --preview-alias`
-against composer-app's `main` env). Fetch it and include it verbatim next to the
+against composer-app's `dev` env). Fetch it and include it verbatim next to the
 PR link in chat summaries AND the final message:
 
 ```

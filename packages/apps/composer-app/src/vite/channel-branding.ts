@@ -12,7 +12,7 @@
 // To see a channel's artwork, bundle with its environment and preview the output — `vite preview` serves
 // `out/composer`:
 //
-//   DX_ENVIRONMENT=nightly moon run composer-app:bundle && pnpm exec vite preview
+//   DX_ENVIRONMENT=preview moon run composer-app:bundle && pnpm exec vite preview
 //
 // `moon run composer-app:serve` always shows production's, whatever `DX_ENVIRONMENT` says.
 
@@ -40,7 +40,7 @@ const FAVICONS = [
 
 /**
  * The variant a deploy environment brands itself with, or undefined for the released app.
- * Nightly is the channel people are asked to run alongside production, so it gets the mark that reads
+ * Preview is the channel people are asked to run alongside production, so it gets the mark that reads
  * least like it; the rest share one, since telling them apart from each other matters less than telling
  * any of them apart from the app holding real data.
  * Only a bundle is branded — the variant marks a deployed channel, so a dev server showing one would
@@ -53,7 +53,7 @@ export const channelVariant = (
   if (command !== 'build' || !environment || environment === 'production') {
     return undefined;
   }
-  return environment === 'nightly' ? 'purple' : 'rust';
+  return environment === 'preview' ? 'purple' : 'rust';
 };
 
 /**
