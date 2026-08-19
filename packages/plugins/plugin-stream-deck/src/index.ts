@@ -5,4 +5,4 @@
 export * as StreamDeckPlugin from './StreamDeckPlugin';
 export * from '#meta';
 export * from '#model';
-export * from '#protocol';
+export * as Protocol from '#protocol';

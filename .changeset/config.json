@@ -33,6 +33,7 @@
       "@dxos/codec-protobuf",
       "@dxos/codemorph",
       "@dxos/composer-forensics",
+      "@dxos/composer-stream-deck",
       "@dxos/compute",
       "@dxos/compute-hyperformula",
       "@dxos/compute-runtime",

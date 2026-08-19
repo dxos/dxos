@@ -14,6 +14,11 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#bridge": {
+      "source": "./src/bridge/index.ts",
+      "types": "./dist/types/src/bridge/index.d.ts",
+      "default": "./dist/lib/bridge.mjs"
+    },
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
@@ -45,9 +50,9 @@
       "default": "./dist/lib/plugin.mjs"
     },
     "#protocol": {
-      "source": "./src/protocol/index.ts",
-      "types": "./dist/types/src/protocol/index.d.ts",
-      "default": "./dist/lib/protocol.mjs"
+      "source": "./src/protocol/Protocol.ts",
+      "types": "./dist/types/src/protocol/Protocol.d.ts",
+      "default": "./dist/lib/Protocol.mjs"
     },
     "#render": {
       "source": "./src/render/index.ts",
@@ -114,9 +119,11 @@
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@types/ws": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "ws": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",

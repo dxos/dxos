@@ -7,3 +7,4 @@ export * from './icons';
 export * from './key';
 export * from './palette';
 export * from './text';
+export * from './useFrame';

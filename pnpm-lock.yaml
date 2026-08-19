@@ -192,6 +192,9 @@ catalogs:
     '@effect/wa-sqlite':
       specifier: ^0.1.2
       version: 0.1.2
+    '@elgato/streamdeck':
+      specifier: ^2.1.2
+      version: 2.1.2
     '@emoji-mart/data':
       specifier: ^1.1.2
       version: 1.1.2
@@ -717,6 +720,9 @@ catalogs:
     '@types/wicg-file-system-access':
       specifier: ^2020.9.6
       version: 2020.9.6
+    '@types/ws':
+      specifier: ^8.18.1
+      version: 8.18.1
     '@types/wtfnode':
       specifier: ^0.10.0
       version: 0.10.0
@@ -2975,6 +2981,25 @@ importers:
       vite-plugin-wasm:
         specifier: 'catalog:'
         version: 3.6.0(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
+
+  packages/apps/composer-stream-deck:
+    dependencies:
+      '@dxos/plugin-stream-deck':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-stream-deck
+      '@elgato/streamdeck':
+        specifier: 'catalog:'
+        version: 2.1.2
+      effect:
+        specifier: 4.0.0-rc.108
+        version: 4.0.0-rc.108
+      ws:
+        specifier: '>=8.17.1'
+        version: 8.18.3
+    devDependencies:
+      '@types/ws':
+        specifier: 'catalog:'
+        version: 8.18.1
 
   packages/apps/tasks:
     dependencies:
@@ -15271,6 +15296,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      '@types/ws':
+        specifier: 'catalog:'
+        version: 8.18.1
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -15280,6 +15308,9 @@ importers:
       vite:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+      ws:
+        specifier: '>=8.17.1'
+        version: 8.18.3
 
   packages/plugins/plugin-studio:
     dependencies:
@@ -25792,6 +25823,16 @@ packages:
 
   '@effect/wa-sqlite@0.1.2':
     resolution: {integrity: sha512-2JvJ9BDkBOwfeY/gXsC0XwEKC0AwisP2W5ABJ6mx14QyXTK12MGDIybDlHieuZt1TEFSMiKfpg7yyqyRWRooJQ==}
+
+  '@elgato/schemas@0.4.15':
+    resolution: {integrity: sha512-UpELAqazf52PFer+hqg/hvEhYoPHCH3R0af6P7Ih3Hk6xCCJENn7cA5TIpXAIGEWe6dIteHuo/e/iPGLUP7yXA==}
+
+  '@elgato/streamdeck@2.1.2':
+    resolution: {integrity: sha512-qj6NuDyYj8bE+XFnr+O5ynB1zojwugfWiK3oQYwweaOzOFs7fEE21v9z75EPC8wQr3cuuzI7m557TQLn5k/4mA==}
+    engines: {node: '>=20.5.1'}
+
+  '@elgato/utils@0.6.0':
+    resolution: {integrity: sha512-DkBf07zo0qzHkoMO2L8HSDlfEwI56rI0fWedJjXcafPpoePoZ/nzqi+xL60Ad2KpQzCxstyN65oqVZ/Ar6woNg==}
 
   '@emnapi/core@1.11.1':
     resolution: {integrity: sha512-RSvbQmHzdKzNsLYa/wHrbc3KN4sYLKAdPZxqiM2HATqv/SBk2/ENSHpvXGaLOMcsAyz0poEGqkmmKYG3OWiJEQ==}
@@ -47788,6 +47829,21 @@ snapshots:
       vitest: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
   '@effect/wa-sqlite@0.1.2': {}
+
+  '@elgato/schemas@0.4.15': {}
+
+  '@elgato/streamdeck@2.1.2':
+    dependencies:
+      '@elgato/schemas': 0.4.15
+      '@elgato/utils': 0.6.0
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@elgato/utils@0.6.0':
+    dependencies:
+      zod: 3.25.76
 
   '@emnapi/core@1.11.1':
     dependencies:

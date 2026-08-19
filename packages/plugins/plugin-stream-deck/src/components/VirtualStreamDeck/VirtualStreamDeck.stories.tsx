@@ -3,11 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type DialSpec, type KeySpec } from '#model';
-import { Protocol } from '#protocol';
+import * as Protocol from '#protocol';
+import { useFrame } from '#render';
 
 import { VirtualStreamDeck } from './VirtualStreamDeck';
 
@@ -38,25 +40,33 @@ const progress: (DialSpec | null)[] = [
   null,
 ];
 
+type StoryProps = {
+  keys?: (KeySpec | null)[];
+  dials?: (DialSpec | null)[];
+};
+
+// The frame is built inside the story so it goes through the same `useFrame` the app uses, icons and
+// all — the point of this component is that it shows exactly what the device is sent.
+const DefaultStory = ({ keys: keySpecs = keys, dials = stats }: StoryProps) => {
+  const frame = useFrame({ device, keys: keySpecs, dials });
+  return <VirtualStreamDeck device={device} frame={frame} />;
+};
+
 const meta = {
   title: 'plugins/plugin-stream-deck/VirtualStreamDeck',
-  component: VirtualStreamDeck,
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   parameters: { translations: [] },
-} satisfies Meta<typeof VirtualStreamDeck>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof VirtualStreamDeck>;
+type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: { device, keys, dials: stats },
-};
+export const Default: Story = {};
 
-export const Progress: Story = {
-  args: { device, keys, dials: progress },
-};
+export const Progress: Story = { args: { dials: progress } };
 
 export const Empty: Story = {
-  args: { device, keys: Array.from({ length: device.keys }, () => null), dials: [null, null, null, null] },
+  args: { keys: Array.from({ length: device.keys }, () => null), dials: [null, null, null, null] },
 };

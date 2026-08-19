@@ -3,7 +3,7 @@
 //
 
 import { type DialSpec } from '#model';
-import { type Protocol } from '#protocol';
+import type * as Protocol from '#protocol';
 
 /**
  * Projects a dial spec onto the wire's semantic feedback shape. The device plugin owns the mapping

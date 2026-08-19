@@ -159,7 +159,10 @@ monitor models, pure SVG renderers, unit tests, and a Storybook **virtual Stream
 4 dial segments) rendering the identical SVG from live ECHO data. Fully verifiable without a device.
 
 **M2 — the wire.** sdPlugin bundle (manifest, actions, WS server) and the plugin's WS client, with
-slot assignment and frame diffing. Verified against the real device.
+slot assignment and unchanged-frame suppression. Everything but the hardware is verified by
+`composer-stream-deck:smoke`, which runs the assembled bundle against a stand-in for the Stream Deck
+application — the bundle is the thing that breaks (decorators Node cannot execute, module
+initialization order, `ws` resolving to its browser build), and unit tests cannot see any of it.
 
 **M3 — interaction.** Key press → open object + focus window; disconnected state; settings surface
 for enabling the bridge and choosing the space.
@@ -177,3 +180,9 @@ Composer being closed entirely (admin vs. user views).
   Accepted for now, `StreamDeckLayout` in M4.
 - **Which space** — the currently active space. Multi-space aggregation is not in scope.
 - **Dial bindings** — open. Rotation and press are transported and logged; nothing is bound.
+- **Who drives the bridge** — M2 drives it from the dashboard surface, so the keys are live only while
+  that panel is open. A headless driver (a non-hook query subscription in a capability) is Phase 3;
+  the models are already pure functions over query results, so only the subscription changes.
+- **Other hardware** — a LaMetric TIME surface is tracked for later. It has no keys, so only the dial
+  half of this design carries over, and if its display can be driven directly over HTTP it needs no
+  host-application bridge at all.

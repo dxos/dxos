@@ -79,6 +79,9 @@
       "path": "packages/apps/composer-crx/tsconfig.json"
     },
     {
+      "path": "packages/apps/composer-stream-deck/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/compute/tsconfig.json"
     },
     {
