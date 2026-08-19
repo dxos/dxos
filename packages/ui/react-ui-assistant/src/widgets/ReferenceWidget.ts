@@ -6,8 +6,6 @@ import { WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 
-import { styles } from './defaults';
-
 export class ReferenceWidget extends WidgetType {
   constructor(
     private text: string,
@@ -21,8 +19,10 @@ export class ReferenceWidget extends WidgetType {
   }
 
   override toDOM() {
-    return Domino.of('div')
-      .classNames(styles.padding)
+    // Inline-level root: the tag is registered `block: false`, and a block box here would break the
+    // line on both sides — the sentence the reference sits in stops flowing around it.
+    return Domino.of('span')
+      .classNames('inline-flex align-baseline')
       .append(Domino.of('dx-anchor').classNames('dx-tag--anchor').attributes({ dxn: this.dxn }).text(this.text)).root;
   }
 }

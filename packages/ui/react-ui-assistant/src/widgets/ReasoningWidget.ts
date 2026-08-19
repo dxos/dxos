@@ -6,8 +6,6 @@ import { WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 
-import { styles } from './defaults';
-
 /**
  * Props used to derive a stable key for a reasoning block across CodeMirror widget rebuilds.
  * CodeMirror does not assign persistent IDs to widgets; streaming re-runs the factory each tick.
@@ -38,30 +36,28 @@ export class ReasoningWidget extends WidgetType {
   }
 
   override toDOM() {
-    return Domino.of('div')
-      .classNames(styles.padding)
-      .append(
-        Domino.of('div')
-          .classNames('relative overflow-hidden p-px', styles.border)
-          .attributes({ 'data-trail-container': '' })
-          .append(
-            Domino.of('div')
-              .classNames(
-                'relative z-10 dx-base-surface rounded-sm text-sm text-subdued py-1',
-                'grid grid-cols-[24px_1fr] gap-x-0.5 items-start',
-              )
-              .append(
-                Domino.of('div')
-                  .classNames('flex h-5 w-full shrink-0 items-center justify-center self-start')
-                  .append(Domino.svg('ph--brain--regular').classNames('shrink-0 size-4 opacity-70')),
-                Domino.of('div')
-                  .classNames('px-2 max-h-[5lh] overflow-y-auto dx-scrollbar-thin min-w-0')
-                  .text(this.text)
-                  .attributes({ 'data-reasoning-text': '' }),
-              ),
-            Domino.of('div').attributes({ 'data-id': this.#pos }),
-          ),
-      ).root;
+    return Domino.of('div').append(
+      Domino.of('div')
+        .classNames('relative overflow-hidden p-px border border-subdued-separator rounded-md')
+        .attributes({ 'data-trail-container': '' })
+        .append(
+          Domino.of('div')
+            .classNames(
+              'relative z-10 dx-base-surface rounded-md text-sm text-subdued py-1',
+              'grid grid-cols-[24px_1fr] gap-x-0.5 items-start',
+            )
+            .append(
+              Domino.of('div')
+                .classNames('flex h-5 w-full shrink-0 items-center justify-center self-start')
+                .append(Domino.svg('ph--brain--regular').classNames('shrink-0 size-4 opacity-70')),
+              Domino.of('div')
+                .classNames('px-2 max-h-[5lh] overflow-y-auto dx-scrollbar-thin min-w-0')
+                .text(this.text)
+                .attributes({ 'data-reasoning-text': '' }),
+            ),
+          Domino.of('div').attributes({ 'data-id': this.#pos }),
+        ),
+    ).root;
   }
 
   override updateDOM(dom: HTMLElement) {

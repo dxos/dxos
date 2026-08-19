@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './format-time';
 export * from './FallbackWidget';
 export * from './ReasoningWidget';
 export * from './ReferenceWidget';

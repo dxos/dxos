@@ -6,8 +6,6 @@ import { WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 
-import { styles } from './defaults';
-
 /**
  * Simple prompt widget.
  */
@@ -26,7 +24,7 @@ export class SelectWidget extends WidgetType {
   override toDOM() {
     return Domino.of('div')
       .attributes({ role: 'group' })
-      .classNames(styles.padding, 'flex flex-wrap gap-1')
+      .classNames('flex flex-wrap gap-1')
       .append(
         ...this.options.map((option) =>
           Domino.of('button')
