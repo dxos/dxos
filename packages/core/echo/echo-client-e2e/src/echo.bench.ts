@@ -85,7 +85,7 @@ const defineOperationBenches = (
       const { db, feed } = await ensureEcho();
       const base = 30_000_000 + batchInsertCounter;
       batchInsertCounter += BATCH_SIZE;
-      const values = Array.from({ length: BATCH_SIZE }, (_, index) => base + index);
+      const values = Array.from({ length: BATCH_SIZE }, (unusedValue, index) => base + index);
       await makeVariant(db, feed).insertBatch(values);
     },
     BENCH_OPTIONS,
