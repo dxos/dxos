@@ -11,3 +11,6 @@ DX_OTEL_ENDPOINT=/api/otel
 DX_POSTHOG_API_HOST=https://o.composer.space
 IPFS_API_SECRET=${IPFS_API_SECRET}
 # End common vars
+# The curated, fixed plugin set: no plugin registry, no dev plugin loader, and no non-shipped plugin
+# in the module graph (see plugin-defs.production.tsx). Nightly and dev keep the full catalog.
+DX_PLUGIN_SET=production

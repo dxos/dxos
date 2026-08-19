@@ -193,14 +193,32 @@ jobs:
         continue-on-error: true
         run: moon run composer-app:check-boot-budget
 
+      # What composer.space actually ships: fails when a plugin the production set does not name
+      # reached the bundle anyway. Same reasoning as the boot budget — it is a property of an import
+      # edge, invisible to the build, the tests, and the app's own UI (a plugin absent from the
+      # registry can still be in the bundle) — and it needs its own `DX_PLUGIN_SET=production` bundle,
+      # which no other step builds. Gated here so the PR that introduces the leak is the one that fails.
+      #
+      # The second bundle is cheap and must stay a separate STEP: steps are sequential, so peak memory
+      # stays at one rolldown build (two concurrent ones would risk an OOM on this runner), and the
+      # `^:build` graph is already warm from the boot budget above — measured at 22s against that
+      # step's 41s, in a job that runs ~4m30s of a 30 minute timeout.
+      - name: Check production plugin set
+        id: plugin_set
+        continue-on-error: true
+        run: moon run composer-app:check-plugin-set
+
       - name: Report slow-check failures
-        if: ${{ steps.knip.outcome == 'failure' || steps.boot_budget.outcome == 'failure' }}
+        if: ${{ steps.knip.outcome == 'failure' || steps.boot_budget.outcome == 'failure' || steps.plugin_set.outcome == 'failure' }}
         run: |
           if [ "${{ steps.knip.outcome }}" = failure ]; then
             echo '::error::knip failed — see the "Check dependencies" step.'
           fi
           if [ "${{ steps.boot_budget.outcome }}" = failure ]; then
             echo '::error::boot budget failed — see the "Check boot budget" step.'
+          fi
+          if [ "${{ steps.plugin_set.outcome }}" = failure ]; then
+            echo '::error::production plugin set check failed — see the "Check production plugin set" step.'
           fi
           exit 1
 
