@@ -22,7 +22,7 @@ import { OrganizationCardContent, PersonCardContent } from './RelatedCards';
  * true while a real plugin's surface is still loading, which would flash this stand-in on every
  * session's first plank.
  */
-const isUnclaimedType = (subject: unknown): subject is Obj.Unknown => {
+const isTypeUnavailable = (subject: unknown): subject is Obj.Unknown => {
   if (!Obj.isObject(subject)) {
     return false;
   }
@@ -172,7 +172,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'unsupportedTypeArticle',
         position: Position.last,
-        filter: AppSurface.subject(AppSurface.Article, isUnclaimedType),
+        filter: AppSurface.subject(AppSurface.Article, isTypeUnavailable),
         component: UnsupportedType,
         props: ({ role, data: { subject } }) => ({ role, typename: Obj.getTypename(subject) ?? '' }),
       }),
