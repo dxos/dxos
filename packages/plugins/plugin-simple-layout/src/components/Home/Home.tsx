@@ -81,7 +81,7 @@ const DebugControls = () => {
   }
 
   return (
-    <div role='group' className='flex items-center gap-2 pli-2 plb-1 text-description text-sm'>
+    <div role='group' className='flex items-center gap-2 px-2 py-1 text-description text-sm'>
       <Input.Root>
         <Input.Checkbox checked={remotePull} onCheckedChange={handleToggle} />
         <Input.Label>Pull remote news feeds</Input.Label>

@@ -1,5 +1,5 @@
 //
-// Copyright 2026 Daniel Thompson-Yvetot
+// Copyright 2026 DXOS.org
 //
 
 import { log } from '@dxos/log';
