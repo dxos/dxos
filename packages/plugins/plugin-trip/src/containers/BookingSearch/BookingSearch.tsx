@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { Banner, Select, Separator, useTranslation } from '@dxos/react-ui';
+import { Banner, Flex, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Empty } from '@dxos/react-ui-list';
 import { trim } from '@dxos/util';
@@ -194,7 +194,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
   const flightOffers = offers?.filter((offer): offer is BookingSearch.FlightOffer => offer._tag === 'flight');
 
   return (
-    <div className='flex flex-col dx-container'>
+    <Flex column classNames='dx-container'>
       {/* Query form: content-height (Viewport without `scroll`) — does not expand; offers fill the rest. */}
       <Form.Root
         schema={BookingSearch.FlightSearchFields}
@@ -243,7 +243,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
           )}
         </>
       )}
-    </div>
+    </Flex>
   );
 };
 

@@ -81,8 +81,8 @@ const testConnection: ConnectorSpec.TestConnection = ({ connection, client }) =>
 
 /**
  * Contributes the Bluesky connector entry. plugin-connector looks up by
- * `id`; sync runs through `BlueskyOperation.SyncBlueskyTargets` (one binding
- * per call), target discovery runs through `BlueskyOperation.GetBlueskyTargets`,
+ * `id`; sync runs through `BlueskyOperation.SyncBlueskyTargets` (account-level,
+ * all bindings), target discovery runs through `BlueskyOperation.GetBlueskyTargets`,
  * and `materializeTarget` creates the empty local Subscription.Feed bound to
  * each selected target.
  */

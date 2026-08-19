@@ -83,9 +83,6 @@
       "path": "../../plugins/plugin-brain"
     },
     {
-      "path": "../../plugins/plugin-client"
-    },
-    {
       "path": "../../plugins/plugin-discord"
     },
     {
@@ -99,9 +96,6 @@
     },
     {
       "path": "../../plugins/plugin-space"
-    },
-    {
-      "path": "../../plugins/plugin-testing"
     },
     {
       "path": "../../plugins/plugin-transcription"

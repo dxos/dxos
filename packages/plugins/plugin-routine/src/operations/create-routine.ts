@@ -23,13 +23,13 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = Ro
 
       // The scaffold returns a fully-wired in-memory routine graph (runnable, owned instructions, and trigger
       // all parented and bound by `makeRoutine`); AddObject's `Database.add` cascades the whole graph.
-      const draft = yield* template
+      const object = yield* template
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
       const targetNodeId = getRoutinesPath(db.spaceId);
       return yield* Operation.invoke(SpaceOperation.AddObject, {
-        object: draft,
+        object,
         target: db,
         targetNodeId,
       });

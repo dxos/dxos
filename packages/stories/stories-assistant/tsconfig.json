@@ -29,9 +29,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -123,9 +120,6 @@
     },
     {
       "path": "../../plugins/plugin-table"
-    },
-    {
-      "path": "../../plugins/plugin-testing"
     },
     {
       "path": "../../plugins/plugin-thread"

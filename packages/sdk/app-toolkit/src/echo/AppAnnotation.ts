@@ -26,12 +26,6 @@ export const DefaultSpaceAnnotation = Annotation.make({
   schema: Schema.String,
 });
 
-/** Skill keys associated with a schema type. Used by AI companion to auto-load skills. */
-export const SkillsAnnotation = Annotation.make<string[]>({
-  id: 'org.dxos.annotation.skills',
-  schema: Schema.mutable(Schema.Array(Schema.String)),
-});
-
 /** Graph node properties derived from schema (e.g. autofocus behavior). */
 export const GraphPropsAnnotation = Annotation.make<{ managesAutofocus?: boolean }>({
   id: 'org.dxos.annotation.graph-props',

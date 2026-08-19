@@ -1,0 +1,44 @@
+---
+id: org.dxos.plugin.computer
+name: ComputerPlugin
+version: 0.1.0
+---
+
+Proof-of-concept, dev-only coding harness for Composer ("Coding (Dev)"): a bash tool and a
+multi-string-replace edit tool, carried by a single vite dev-server route that runs a shell script
+under a configured root. Nothing is mounted outside a vite dev server.
+
+## Operations
+
+```mdl
+op bash
+  desc: Runs a shell script under the harness root and returns its output.
+  input:
+    script: string
+    cwd?: string         # relative to the harness root
+    timeout?: number     # ms, clamped by the host
+  output:
+    stdout: string
+    stderr: string
+    exitCode: number     # -1 when killed
+    success: boolean
+    signal?: string
+    timedOut: boolean
+    truncated: boolean
+    cwd: string          # absolute directory the script ran in
+    durationMs: number
+  effects: [shell:exec]
+```
+
+```mdl
+op edits
+  desc: Applies a batch of exact find/replace edits to files; all-or-nothing.
+  input:
+    edits: Array<{ path: string, oldString: string, newString: string, replaceAll?: boolean }>
+    cwd?: string
+  output:
+    applied: boolean
+    files: Array<{ path: string, replacements: number }>
+    error?: string       # set iff applied is false
+  effects: [shell:exec, fs:write]
+```

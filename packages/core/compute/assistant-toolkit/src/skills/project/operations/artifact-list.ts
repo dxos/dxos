@@ -13,12 +13,7 @@ const handler: Operation.WithHandler<typeof ArtifactList> = ArtifactList.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ project: projectRef }) {
       const project = yield* Database.load(projectRef);
-      if (!project.artifacts) {
-        return { artifacts: [] };
-      }
-
-      const collection = yield* Database.load(project.artifacts);
-      const artifacts = yield* Effect.forEach(collection.objects, (ref) =>
+      const artifacts = yield* Effect.forEach(project.artifacts, (ref) =>
         Database.load(ref).pipe(
           Effect.map((object) => ({
             dxn: Obj.getURI(object),

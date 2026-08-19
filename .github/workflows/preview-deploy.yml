@@ -1,9 +1,10 @@
 name: Preview Deploy
 
 # Deploys the composer-app preview bundle built by preview.yml as a Cloudflare Worker preview Version
-# (0% traffic, stable per-PR URL via `--preview-alias`) against composer-app's `main` env — same env the
-# build already targets (DX_EDGE_BASE_URL=edge-main in preview.yml) and its dev-tier bindings, so PR
-# previews never touch production data. Uses workflow_run so this workflow executes from the BASE branch
+# (0% traffic, stable per-PR URL via `--preview-alias`) against composer-app's `dev` env — same EDGE
+# instance the build already targets (DX_EDGE_BASE_URL in preview.yml) and its dev-tier bindings, so PR
+# previews never touch production data. Deliberately not `nightly`: that Worker serves dogfooders against
+# EDGE production. Uses workflow_run so this workflow executes from the BASE branch
 # (trusted), which means secrets are safe to use here. The untrusted PR code never runs in this workflow —
 # we only download the pre-built artifact.
 
@@ -23,7 +24,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      # Only the config is needed (not a full checkout) to resolve the `main` env's Worker name + bindings.
+      # Only the config is needed (not a full checkout) to resolve the `dev` env's Worker name + bindings.
       - name: Checkout wrangler config
         uses: actions/checkout@v5
         with:
@@ -71,7 +72,7 @@ jobs:
         run: |
           wrangler versions upload \
             --config packages/apps/composer-app/wrangler.jsonc \
-            --env main \
+            --env dev \
             --preview-alias "${{ steps.meta.outputs.preview_alias }}" \
             --assets preview/packages/apps/composer-app/out/composer \
             preview/packages/apps/composer-app/out/composer/_worker.js \

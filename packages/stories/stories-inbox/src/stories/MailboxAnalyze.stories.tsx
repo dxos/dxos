@@ -13,7 +13,6 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Role from '@dxos/app-framework/Role';
-import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ProgressMeter, useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
@@ -28,7 +27,6 @@ import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabili
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import * as BrainOperation from '@dxos/plugin-brain/BrainOperation';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
-import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import * as CrmOperation from '@dxos/plugin-crm/CrmOperation';
@@ -37,17 +35,15 @@ import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
 import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { ContactMessageExtractor } from '@dxos/plugin-inbox/operations';
+import * as MessageExtractor from '@dxos/plugin-inbox/MessageExtractor';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
-import { ProjectOperationHandlerSet } from '@dxos/plugin-projects/operations';
 import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
+import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
-import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as Booking from '@dxos/plugin-trip/Booking';
 import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
@@ -58,22 +54,18 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, Select, Toolbar } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TagIndex, Text } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/storybook-testing';
+import {
+  ModuleContainer,
+  StoryAiPlugin,
+  UpdateCompanionStubPlugin,
+  createStoryDecorators,
+} from '@dxos/storybook-testing';
 import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message, Organization, Person, Task } from '@dxos/types';
 
 import { StoryRole } from '../modules';
-import {
-  StoryAiPlugin,
-  StorySyncPlugin,
-  StoryTripAiPlugin,
-  seedFromFixture,
-  seedFromMessages,
-  seedFromObjects,
-  seedFromTrips,
-} from '../testing';
+import { StoryTripAiPlugin, seedFromFixture, seedFromMessages, seedFromObjects, seedFromTrips } from '../testing';
 import { StoryModulesPlugin } from '../testing/modules';
 
 /** Local Ollama model driving the `AnalyzeMailbox` fact variant; Ollama needs `strict: false`. */
@@ -288,7 +280,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         run: () =>
           invoker.invokePromise(
             InboxOperation.ExtractMailbox,
-            { mailbox: Ref.make(mailbox), extractorId: ContactMessageExtractor.id },
+            { mailbox: Ref.make(mailbox), extractorId: MessageExtractor.ContactMessageExtractor.id },
             { spaceId: space.id },
           ),
       },
@@ -573,7 +565,7 @@ const StoryProcessPlugin = Plugin.define(
   // The mailbox→project pipelines (Projects button) without activating the full ProjectsPlugin.
   Plugin.addModule(
     Capability.inlineModule('ProjectOperationHandlers', { provides: [Capabilities.OperationHandler] }, () =>
-      Effect.succeed([Capability.contribute(Capabilities.OperationHandler, ProjectOperationHandlerSet)]),
+      Effect.succeed([Capability.contribute(Capabilities.OperationHandler, ProjectOperationHandlerSet.handlers)]),
     ),
   ),
   // The assistant Settings capability the TracePanel (Trace/SwarmTrace cells) requires — contributed
@@ -616,79 +608,65 @@ type StoryArgs = { seed: 'fixture' | 'crm' | 'demo' | 'trip' };
 const meta = {
   title: 'stories/stories-inbox/MailboxAnalyze',
   render: DefaultStory,
-  decorators: [
-    withLayout({ layout: 'fullscreen' }),
-    withTheme(),
-    // Initializer form: the seed variant is a story arg, so one plugin set serves every story — and
-    // the client config branches on it too (`live` must survive the OAuth reload).
-    withPluginManager<StoryArgs>(({ args }) => ({
-      setupEvents: [ActivationEvents.Startup],
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin.make({
-          types: [
-            AccessToken.AccessToken,
-            Booking.Booking,
-            Connection.Connection,
-            Cursor.Cursor,
-            ExtractedFrom.ExtractedFrom,
-            Feed.Feed,
-            Mailbox.Mailbox,
-            Markdown.Document,
-            Message.Message,
-            Organization.Organization,
-            Person.Person,
-            ProfileOf.ProfileOf,
-            Segment.Segment,
-            Tag.Tag,
-            Trip.Trip,
-            TagIndex.TagIndex,
-            Text.Text,
-          ],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              // A persisted (`live`) profile already has its identity + mailbox.
-              if (client.halo.identity.get()) {
-                return;
-              }
+  // Initializer form: the seed variant is a story arg, so one plugin set serves every story.
+  decorators: createStoryDecorators<StoryArgs>(({ args }) => ({
+    setupEvents: [ActivationEvents.Startup],
+    types: [
+      AccessToken.AccessToken,
+      Booking.Booking,
+      Connection.Connection,
+      Cursor.Cursor,
+      ExtractedFrom.ExtractedFrom,
+      Feed.Feed,
+      Mailbox.Mailbox,
+      Markdown.Document,
+      Message.Message,
+      Organization.Organization,
+      Person.Person,
+      ProfileOf.ProfileOf,
+      Segment.Segment,
+      Tag.Tag,
+      Trip.Trip,
+      TagIndex.TagIndex,
+      Text.Text,
+    ],
+    onInit: async ({ space }) => {
+      const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
+      await space.db.flush();
 
-              const { defaultSpace: space } = yield* initializeIdentity(client);
-              yield* Effect.promise(async () => {
-                const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
-                await space.db.flush();
-
-                switch (args.seed) {
-                  case 'fixture':
-                    return seedFromFixture(space, mailbox);
-                  case 'crm':
-                    return seedFromObjects(space, mailbox);
-                  case 'demo':
-                    return seedFromMessages(space, mailbox);
-                  case 'trip':
-                    return seedFromTrips(space, mailbox);
-                }
-              });
-            }),
-        }),
-        StorybookPlugin.make({}),
-        SpacePlugin({}),
-        InboxPlugin(),
-        BrainPlugin.make(),
-        ConnectorPlugin.make(),
-        CrmPlugin.make(),
-        MarkdownPlugin.make(),
-        PreviewPlugin.make(),
-        ProgressPlugin.make(),
-        TripPlugin(),
-        // Both provide the `AiService` LayerSpec, so exactly one is registered per variant: the trip
-        // seed needs the canned flight payloads; every other variant targets local Ollama.
-        args.seed === 'trip' ? StoryTripAiPlugin() : StoryAiPlugin(),
-        StoryModulesPlugin(),
-        StoryProcessPlugin(),
-        StorySyncPlugin(),
-      ],
-    })),
-  ],
+      switch (args.seed) {
+        case 'fixture':
+          await seedFromFixture(space, mailbox);
+          break;
+        case 'crm':
+          await seedFromObjects(space, mailbox);
+          break;
+        case 'demo':
+          await seedFromMessages(space, mailbox);
+          break;
+        case 'trip':
+          await seedFromTrips(space, mailbox);
+          break;
+      }
+    },
+    plugins: [
+      SpacePlugin({}),
+      InboxPlugin(),
+      BrainPlugin.make(),
+      ConnectorPlugin.make(),
+      CrmPlugin.make(),
+      MarkdownPlugin.make(),
+      PreviewPlugin.make(),
+      ProgressPlugin.make(),
+      TripPlugin(),
+      // Both provide the `AiService` LayerSpec, so exactly one is registered per variant: the trip
+      // seed needs the canned flight payloads; every other variant targets local Ollama.
+      args.seed === 'trip' ? StoryTripAiPlugin() : StoryAiPlugin({ ai: 'ollama' }),
+      StoryModulesPlugin(),
+      StoryProcessPlugin(),
+      UpdateCompanionStubPlugin(),
+    ],
+  })),
   parameters: {
     layout: 'fullscreen',
     translations: [...debugTranslations, ...connectorTranslations],

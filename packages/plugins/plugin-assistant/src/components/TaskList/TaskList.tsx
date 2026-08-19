@@ -32,8 +32,8 @@ export const TaskList = composable<HTMLDivElement, TaskListProps>(
 
     return (
       <Listbox.Root>
-        <Listbox.Viewport {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
-          <Listbox.Content aria-label='Tasks'>
+        <Listbox.Viewport {...composableProps(props, { classNames: 'dx-container' })} thin ref={forwardedRef}>
+          <Listbox.Content classNames='h-[4lh] leading-8' aria-label='Tasks'>
             {items.map((item) => (
               <TaskListItem key={item.title} item={item} active={item.title === activeTitle} />
             ))}
@@ -51,7 +51,7 @@ type TaskListItemProps = {
 
 const TaskListItem = ({ item, active }: TaskListItemProps) => {
   return (
-    <Listbox.Item id={item.title} classNames='py-0'>
+    <Listbox.Item id={item.title}>
       <div className='flex items-center gap-2 min-w-0'>
         <Icon
           icon={item.done ? 'ph--check--regular' : 'ph--circle--regular'}

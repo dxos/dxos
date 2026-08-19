@@ -23,11 +23,36 @@ export type PluginConfig = {
   isStrict?: boolean;
 };
 
+/**
+ * Plugins `dx` pins on: always enabled, never disableable.
+ *
+ * Supplied explicitly rather than inherited from each plugin's `system` tag, because that tag is
+ * declared once in a plugin's `dx.config.ts` for every host — so the tag alone made `observability`,
+ * `connector` and `routine` non-disableable in the CLI purely because they are non-disableable in
+ * Composer. Only these four are load-bearing for `dx` itself: the client every command reaches for,
+ * the registry that contributes `dx plugin` (disabling it would strand the user with no way back),
+ * spaces, and the process manager.
+ */
+export const getCore = (): string[] => [
+  ClientPlugin.meta.profile.key,
+  ProcessManagerPlugin.meta.profile.key,
+  RegistryPlugin.meta.profile.key,
+  SpacePlugin.meta.profile.key,
+];
+
+/**
+ * Plugins enabled on a profile that has never been configured. Everything here is disableable;
+ * `getCore` is added on top by the manager.
+ *
+ * Chess and Sample are deliberately absent: they are demos, and a fresh `dx --help` should list
+ * work verbs rather than a chess game. `dx plugin enable` turns them on.
+ */
 export const getDefaults = (): string[] => [
-  ChessPlugin.meta.profile.key,
-  SamplePlugin.meta.profile.key,
+  ConnectorPlugin.meta.profile.key,
   InboxPlugin.meta.profile.key,
   MarkdownPlugin.meta.profile.key,
+  ObservabilityPlugin.meta.profile.key,
+  RoutinePlugin.meta.profile.key,
 ];
 
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {

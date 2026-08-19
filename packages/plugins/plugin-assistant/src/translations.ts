@@ -8,12 +8,14 @@ import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as assistantTranslations } from '@dxos/react-ui-assistant';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { meta } from '#meta';
 
 export const translations: Resource[] = [
+  ...assistantTranslations,
   ...componentsTranslations,
   ...formTranslations,
   {
@@ -104,6 +106,13 @@ export const translations: Resource[] = [
 
         'invocations.label': 'Invocations',
         'trace.label': 'Trace',
+
+        'trace-filter.menu': 'Filter processes',
+        'trace-filter-all.label': 'Show all',
+        'trace-filter-none.label': 'Hide all',
+        'trace-environment-app.label': 'App',
+        'trace-environment-space.label': 'Space',
+        'trace-environment-conversation.label': 'Conversation',
 
         'assistant-dialog.title': 'Assistant',
         'open-assistant.label': 'Open assistant',
