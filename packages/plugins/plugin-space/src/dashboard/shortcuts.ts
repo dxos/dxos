@@ -5,6 +5,7 @@
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Obj, type Tag } from '@dxos/echo';
 
+import { toSlots } from './slots';
 import { type Shortcut } from './types';
 
 /**
@@ -45,7 +46,7 @@ export const toShortcuts = (objects: readonly Obj.Unknown[], slots: number): (Sh
     })
     .sort((a, b) => a.label.localeCompare(b.label) || a.target.localeCompare(b.target));
 
-  return Array.from({ length: slots }, (_, index) => specs[index] ?? null);
+  return toSlots(specs, slots);
 };
 
 /**

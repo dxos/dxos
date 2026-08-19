@@ -4,10 +4,9 @@
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import { StreamDeckCapabilities } from '#types';
 
@@ -18,13 +17,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const BridgeDriver = Capability.lazyModule(
   'BridgeDriver',
   {
-    requires: [
-      Capabilities.AtomRegistry,
-      Capabilities.OperationInvoker,
-      Capabilities.PluginManager,
-      ClientCapabilities.Client,
-      AppCapabilities.Layout,
-    ],
+    requires: [Capabilities.AtomRegistry, Capabilities.OperationInvoker, SpaceCapabilities.Dashboard],
     provides: [StreamDeckCapabilities.BridgeStatus],
     activatesOn: ClientEvents.SpacesReady,
   },

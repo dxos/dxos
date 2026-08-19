@@ -4,6 +4,7 @@
 
 import { type Progress } from '@dxos/progress';
 
+import { toSlots } from './slots';
 import { type MetricSpec, type SpaceStats } from './types';
 
 const ACTIVE: readonly Progress.TaskStatus[] = ['pending', 'running'];
@@ -39,5 +40,5 @@ export const toMetrics = (
     ? active.slice(0, slots).map(toProgressMetric)
     : STAT_LABELS.map(([key, title]) => ({ kind: 'stat', title, value: String(stats[key]) }));
 
-  return Array.from({ length: slots }, (_, index) => specs[index] ?? null);
+  return toSlots(specs, slots);
 };
