@@ -92,6 +92,9 @@ export const translations = [
         'login-link-expired-toast.title': 'Login link expired',
         'login-link-expired-toast.description':
           'This login link is no longer valid. Please request a new one to log in.',
+        'login-failed-toast.title': 'Could not complete login',
+        'login-failed-toast.description':
+          'Something went wrong while authorizing this device. Please try logging in again.',
 
         'native-redirect.message': 'Opening in the Composer app...',
         'open-in-browser-button.label': 'Open here instead',
