@@ -8,10 +8,8 @@ import { type Client } from '@dxos/react-client';
 import { type Credential } from '@dxos/react-client/halo';
 
 /**
- * Whether a failed recovery was EDGE refusing the token itself (invalid, expired, already used)
- * rather than a failure of the recovery that followed. Walks the chain because the reason is raised
- * in client-services and reaches here wrapped: `IdentityError` carries its cause under `context`,
- * and the services RPC boundary reconstructs the error by name, not by class identity.
+ * Whether a failed recovery was EDGE refusing the token itself — walks the wrapper chain because
+ * the error arrives wrapped, with the cause under `context` rather than `cause`.
  */
 export const isInvalidRecoveryToken = (error: unknown): boolean => {
   // Wrapped errors can produce cyclic chains, so track what has been seen.

@@ -262,10 +262,7 @@ export class EdgeIdentityRecoveryManager {
     };
 
     const response = await this._edgeClient.recoverIdentity(ctx, request).catch((error) => {
-      // EDGE returns a token it cannot resolve as an `InvalidRecoveryTokenError` in the failure
-      // envelope, which `ErrorCodec` rebuilds by name as this error's `cause` — rethrow the local
-      // registered class so the name also survives the services RPC boundary and callers can offer
-      // a fresh link rather than reporting every failed recovery the same way.
+      // Rethrow the registered class so the token-rejection identity survives the services RPC boundary.
       if (error instanceof EdgeCallFailedError && InvalidRecoveryTokenError.is(error.cause)) {
         throw new InvalidRecoveryTokenError({ cause: error });
       }

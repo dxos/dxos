@@ -212,9 +212,7 @@ export class OnboardingManager {
       if (result === 'ok') {
         await this._setupRecovery();
       } else {
-        // Either way fall back to the ordinary login form, rather than leaving the user on the
-        // "authorizing" dialog forever: a refused token needs a fresh link, and any other failure
-        // is worth retrying from there.
+        // Fall back to the login form rather than leaving the user on the "authorizing" dialog forever.
         await this._showLoginFailedToast(result);
         await this._showWelcome();
       }
@@ -266,9 +264,7 @@ export class OnboardingManager {
   }
 
   /** `invokePromise` resolves with `{ error }` rather than rejecting, so the result must be
-   * inspected or a failed redemption is silently swallowed. Distinguishes a token EDGE refused
-   * (nothing a retry of this link can fix) from a recovery that failed for another reason, since
-   * the two need different things from the user. */
+   * inspected or a failed redemption is silently swallowed. */
   private async _login(): Promise<'ok' | 'invalid-token' | 'failed'> {
     invariant(this._token);
     const { error } = await this._invokePromise(ClientOperation.RedeemToken, { token: this._token });

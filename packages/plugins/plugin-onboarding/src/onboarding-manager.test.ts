@@ -15,11 +15,7 @@ import { InvalidRecoveryTokenError } from '@dxos/protocols';
 import { WELCOME_SCREEN } from './constants';
 import { OnboardingManager } from './onboarding-manager';
 
-/**
- * How a recovery failure reaches the manager: the HALO adapter wraps it in an `IdentityError` whose
- * cause travels under `context.error` rather than `cause`. Reproduced locally rather than imported,
- * so the test does not pull `@dxos/halo` in for one error shape.
- */
+/** The HALO adapter's wrapper shape: the cause travels under `context.error` rather than `cause`. */
 class WrappedIdentityError extends Error {
   constructor(public readonly context: { error: unknown }) {
     super('Identity operation failed');
@@ -105,17 +101,10 @@ describe('OnboardingManager', () => {
     expect(getCalls(ClientOperation.CreateAgent)).toHaveLength(0);
   });
 
-  //
-  // A magic-link redemption can fail because the link is spent, or because EDGE could not finish
-  // the recovery it authorized. Reporting both as "expired" sends the user to request link after
-  // link against a backend that is not going to answer differently.
-  //
   test('a refused token reports the link as expired', async ({ expect }) => {
     const { manager, toastIds } = await createManager({
       hubUrl: 'https://hub.example.com',
       token: 'test-token',
-      // Shaped as it arrives: raised in client-services, wrapped by the HALO adapter, and
-      // reconstructed by name across the services RPC boundary.
       redeemTokenError: new WrappedIdentityError({ error: new InvalidRecoveryTokenError() }),
     });
     await manager.initialize();
