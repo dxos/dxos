@@ -7,14 +7,13 @@ import React, { useCallback, useMemo } from 'react';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { Loading, useExpandPath, useMobileLayout } from '@dxos/plugin-deck';
+import { Loading, NavigationStack, useExpandPath, useMobileLayout } from '@dxos/plugin-deck';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '#hooks';
 
-import { NavigationStack } from '../NavigationStack';
 import { AppBar } from './AppBar';
 import { NavBar } from './NavBar';
 
