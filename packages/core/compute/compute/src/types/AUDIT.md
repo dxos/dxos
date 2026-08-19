@@ -32,10 +32,10 @@ Foundations (`@dxos/echo`) at the top; `@dxos/assistant-toolkit` at the bottom m
 
 ```mermaid
 graph BT
-  AT["@dxos/assistant-toolkit"] --> C["@dxos/compute"]
-  AT --> T["@dxos/types"]
-  AT --> S["@dxos/schema"]
-  AT --> E["@dxos/echo"]
+  AT["<b>@dxos/assistant-toolkit</b><br/>Chat · Agent · CompanionTo"] --> C["<b>@dxos/compute</b><br/>Project · Instructions · Skill"]
+  AT --> T["<b>@dxos/types</b><br/>Outline · TaskSet"]
+  AT --> S["<b>@dxos/schema</b><br/>Text"]
+  AT --> E["<b>@dxos/echo</b><br/>Feed · Obj.Unknown"]
   C --> T
   C --> S
   C --> E
