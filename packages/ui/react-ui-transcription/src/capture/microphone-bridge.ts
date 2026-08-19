@@ -1,5 +1,6 @@
 //
 // Copyright 2026 DXOS.org
+// Copyright 2026 Daniel Thompson-Yvetot
 //
 
 import { log } from '@dxos/log';
@@ -27,6 +28,8 @@ const decodeChunk = (encoded: string): Float32Array => {
 };
 
 let installed = false;
+/** Whether native capture is currently running; {@link stopMicrophoneBridge} clears it. */
+let capturing = false;
 
 /**
  * Routes `getUserMedia` audio through native capture.
@@ -47,8 +50,11 @@ let installed = false;
  */
 export const installMicrophoneBridge = async (): Promise<boolean> => {
   const invoke = getInvoke();
-  if (installed || !invoke || !navigator.mediaDevices?.getUserMedia) {
+  if (!invoke || !navigator.mediaDevices?.getUserMedia) {
     return installed;
+  }
+  if (installed && capturing) {
+    return true;
   }
 
   try {
@@ -57,6 +63,12 @@ export const installMicrophoneBridge = async (): Promise<boolean> => {
     // Absent off iOS, and expected there — the caller carries on with WebKit's own capture.
     log('microphone bridge unavailable', { err });
     return false;
+  }
+  capturing = true;
+
+  // The shim and graph survive a stop; a reinstall only needed native capture restarted.
+  if (installed) {
+    return true;
   }
 
   const context = new AudioContext({ sampleRate: BRIDGE_SAMPLE_RATE });
@@ -87,11 +99,12 @@ export const installMicrophoneBridge = async (): Promise<boolean> => {
     if (constraints.video) {
       const video = await original({ ...constraints, audio: false });
       for (const track of destination.stream.getAudioTracks()) {
-        video.addTrack(track);
+        // Cloned so a caller stopping its track does not end the shared destination track.
+        video.addTrack(track.clone());
       }
       return video;
     }
-    return destination.stream;
+    return new MediaStream(destination.stream.getAudioTracks().map((track) => track.clone()));
   };
 
   installed = true;
@@ -107,6 +120,7 @@ export const stopMicrophoneBridge = async (): Promise<void> => {
   }
   try {
     await invoke('stop_microphone_bridge');
+    capturing = false;
   } catch (err) {
     log('could not stop the microphone bridge', { err });
   }

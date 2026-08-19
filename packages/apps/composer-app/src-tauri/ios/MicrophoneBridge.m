@@ -19,9 +19,8 @@
 /// Sample rate the transcription pipeline expects; the engine's own rate is converted to it.
 static const double kBridgeSampleRate = 16000.0;
 
-/// Frames per delivery. ~100ms at 16 kHz: small enough to stream, large enough that the per-message
-/// cost of crossing into the webview stays negligible.
-static const AVAudioFrameCount kBridgeChunkFrames = 1600;
+/// Slack frames on top of the rate-scaled capacity, covering the converter's internal buffering.
+static const AVAudioFrameCount kBridgeCapacitySlack = 32;
 
 @interface DXOSMicrophoneBridge : NSObject
 @property(nonatomic, strong) AVAudioEngine *engine;
@@ -105,6 +104,7 @@ static const AVAudioFrameCount kBridgeChunkFrames = 1600;
   self.converter = [[AVAudioConverter alloc] initFromFormat:inputFormat toFormat:self.outputFormat];
   if (!self.converter) {
     NSLog(@"[MicrophoneBridge] no converter for %@", inputFormat);
+    [self abortStart];
     return NO;
   }
 
@@ -120,11 +120,23 @@ static const AVAudioFrameCount kBridgeChunkFrames = 1600;
   if (![self.engine startAndReturnError:&engineError]) {
     NSLog(@"[MicrophoneBridge] engine failed: %@", engineError);
     [input removeTapOnBus:0];
+    [self abortStart];
     return NO;
   }
 
   NSLog(@"[MicrophoneBridge] started at %.0f Hz", inputFormat.sampleRate);
   return YES;
+}
+
+/// Failure path once the session is active: leaving PlayAndRecord engaged would keep the device's
+/// audio re-routed for an app that is not capturing.
+- (void)abortStart {
+  self.engine = nil;
+  self.converter = nil;
+  self.outputFormat = nil;
+  [AVAudioSession.sharedInstance setActive:NO
+                               withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+                                     error:nil];
 }
 
 - (void)stop {
@@ -149,8 +161,13 @@ static const AVAudioFrameCount kBridgeChunkFrames = 1600;
     return;
   }
 
+  // Sized so the whole tap buffer fits in one conversion; a fixed capacity would truncate the
+  // callback whenever the hardware rate drops toward 16 kHz (e.g. a Bluetooth HFP route).
+  AVAudioFrameCount capacity =
+      (AVAudioFrameCount)ceil(buffer.frameLength * (kBridgeSampleRate / buffer.format.sampleRate)) +
+      kBridgeCapacitySlack;
   AVAudioPCMBuffer *converted = [[AVAudioPCMBuffer alloc] initWithPCMFormat:outputFormat
-                                                             frameCapacity:kBridgeChunkFrames];
+                                                             frameCapacity:capacity];
   __block BOOL consumed = NO;
   NSError *error = nil;
   AVAudioConverterOutputStatus status = [converter

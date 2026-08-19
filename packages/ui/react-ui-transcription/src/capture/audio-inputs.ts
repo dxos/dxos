@@ -1,5 +1,6 @@
 //
 // Copyright 2026 DXOS.org
+// Copyright 2026 Daniel Thompson-Yvetot
 //
 
 import { log } from '@dxos/log';
@@ -57,14 +58,20 @@ export const listAudioInputs = async (): Promise<AudioInputDevice[]> => {
     return [];
   }
 
-  const all = await navigator.mediaDevices.enumerateDevices();
-  return all
-    .filter((device) => device.kind === 'audioinput' && device.deviceId)
-    .map((device, index) => ({
-      deviceId: device.deviceId,
-      // Labels stay blank until a capture grant exists; an ordinal keeps the entry selectable.
-      label: device.label || `Microphone ${index + 1}`,
-    }));
+  // Callers discard the promise, so a rejection here would surface as an unhandled rejection.
+  try {
+    const all = await navigator.mediaDevices.enumerateDevices();
+    return all
+      .filter((device) => device.kind === 'audioinput' && device.deviceId)
+      .map((device, index) => ({
+        deviceId: device.deviceId,
+        // Labels stay blank until a capture grant exists; an ordinal keeps the entry selectable.
+        label: device.label || `Microphone ${index + 1}`,
+      }));
+  } catch (err) {
+    log('could not enumerate audio inputs', { err });
+    return [];
+  }
 };
 
 /**

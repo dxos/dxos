@@ -44,7 +44,8 @@ export type WhisperSegment = {
   /**
    * Probability of no speech in the segment.
    */
-  no_speech_prob: number;
+  /** Absent from some Whisper-compatible endpoints; treated as confident speech. */
+  no_speech_prob?: number;
 
   words: WhisperWord[];
 };

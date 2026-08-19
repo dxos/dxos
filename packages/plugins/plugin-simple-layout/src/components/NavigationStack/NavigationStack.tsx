@@ -68,18 +68,9 @@ export type NavigationStackProps = ThemedClassName<{
 }>;
 
 /**
- * Mobile presentation of the layout as a UIKit navigation stack: panels are z-stacked layers rather
- * than a scrolled row, so the outgoing panel can parallax and dim beneath the incoming one — motion a
- * scroller cannot express, since every child of a scroller translates at exactly the scroll rate.
- *
- * Poses are driven through the Web Animations API and written straight to the elements, never through
- * React state. A tracked gesture must land a transform every frame, and re-rendering the stack (each
- * panel being a full content surface) to move two layers cannot hold 60fps. It also makes interruption
- * free: a single-keyframe animation takes its start from the element's current computed transform, so
- * grabbing a panel mid-push continues from wherever it actually is.
- *
- * Back is an interactive left-edge pan, per UIKit; there is deliberately no forward swipe, because a
- * navigation stack cannot be swiped into a panel that has not been pushed.
+ * Mobile presentation of the layout as a UIKit navigation stack, with back as an interactive
+ * left-edge pan. Poses are written straight to the elements via the Web Animations API — re-rendering
+ * full content surfaces per gesture frame cannot hold 60fps.
  */
 export const NavigationStack = ({ classNames, items, index, onIndexChange, renderItem }: NavigationStackProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -275,6 +266,25 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
     [animatePose, index, onIndexChange, reducedMotion],
   );
 
+  // A cancelled pointer must never complete the pop: distance or cached velocity could clear the
+  // completion threshold, navigating on a gesture the platform took away (e.g. a system edge swipe).
+  const handlePointerCancel = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      const gesture = gestureRef.current;
+      if (!gesture || gesture.pointerId !== event.pointerId) {
+        return;
+      }
+      gestureRef.current = null;
+      if (rootRef.current?.hasPointerCapture(event.pointerId)) {
+        rootRef.current.releasePointerCapture(event.pointerId);
+      }
+      const duration = reducedMotion ? 0 : 120;
+      animatePose(index, poseFor(0, 0), duration);
+      animatePose(index - 1, poseFor(-1, 0), duration);
+    },
+    [animatePose, index, reducedMotion],
+  );
+
   return (
     <div
       ref={rootRef}
@@ -282,7 +292,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
     >
       {items.map((id, itemIndex) => {
         const offset = itemIndex - index;
@@ -299,10 +309,11 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
               panelRefs.current[itemIndex] = element;
             }}
             data-object-id={id}
-            aria-hidden={offset > 0 || undefined}
+            aria-hidden={offset !== 0 || undefined}
             // Panels off the top keep their DOM (and scroll offsets) but must not take focus or
-            // hit-test, or a tap can land on a panel the user cannot see.
-            inert={offset > 0 || offset < -1 || undefined}
+            // hit-test — including the covered panel at -1, or keyboard focus reaches invisible
+            // controls. It becomes the top panel (and interactive) the commit after a pop completes.
+            inert={offset !== 0 || undefined}
             // Opaque per layer: the outgoing panel only travels a third of the width, so the rest of it
             // stays underneath the incoming one and shows straight through a transparent panel.
             className={mx('absolute inset-0 dx-base-surface', nearby ? 'will-change-transform' : 'invisible')}

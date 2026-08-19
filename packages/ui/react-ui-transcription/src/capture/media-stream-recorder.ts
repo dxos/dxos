@@ -81,22 +81,30 @@ export class MediaStreamRecorder implements AudioRecorder {
     }
 
     const context = new AudioContext();
-    // WebKit hands back a suspended context and only a user gesture may resume it. Recording always
-    // begins from a tap, so this resolves — but without it every downstream node receives silence,
-    // which is indistinguishable from a muted microphone.
-    if (context.state === 'suspended') {
-      await context.resume();
-    }
+    let source: MediaStreamAudioSourceNode;
+    let node: AudioWorkletNode | ScriptProcessorNode;
+    try {
+      // WebKit hands back a suspended context and only a user gesture may resume it. Recording always
+      // begins from a tap, so this resolves — but without it every downstream node receives silence,
+      // which is indistinguishable from a muted microphone.
+      if (context.state === 'suspended') {
+        await context.resume();
+      }
 
-    const source = context.createMediaStreamSource(new MediaStream([this._mediaStreamTrack]));
-    const node = await this.#createCaptureNode(context);
-    source.connect(node);
-    // The worklet emits nothing, but Chromium only pulls a graph that reaches a destination; a zeroed
-    // gain keeps the microphone from being played back to the user.
-    const sink = context.createGain();
-    sink.gain.value = 0;
-    node.connect(sink);
-    sink.connect(context.destination);
+      source = context.createMediaStreamSource(new MediaStream([this._mediaStreamTrack]));
+      node = await this.#createCaptureNode(context);
+      source.connect(node);
+      // The worklet emits nothing, but Chromium only pulls a graph that reaches a destination; a zeroed
+      // gain keeps the microphone from being played back to the user.
+      const sink = context.createGain();
+      sink.gain.value = 0;
+      node.connect(sink);
+      sink.connect(context.destination);
+    } catch (err) {
+      // The context is not held on the instance until setup succeeds, so close it here or it leaks.
+      await context.close().catch(() => {});
+      throw err;
+    }
 
     this._context = context;
     this._source = source;

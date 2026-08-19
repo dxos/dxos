@@ -59,26 +59,22 @@ export const Home = (_: HomeProps) => {
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>
-      <DebugControls />
+      {/* Gated here so production performs no storage read and vitest (MODE 'test') renders no
+          ineffective control; `DEV` statically false lets the bundler drop the component. */}
+      {import.meta.env.DEV && import.meta.env.MODE === 'development' && <DebugControls />}
     </SearchPanel>
   );
 };
 
-/**
- * Developer toggles, rendered only in a dev build — `import.meta.env.DEV` is statically false in
- * production, so the bundler drops both the switch and its state.
- */
+/** Developer toggles; only mounted in a dev build. */
 const DebugControls = () => {
   const [remotePull, setRemotePull] = useState(() => getDevFlag(DevFlag.RemoteFeedPull));
 
   const handleToggle = useCallback((checked: boolean) => {
     setDevFlag(DevFlag.RemoteFeedPull, checked);
-    setRemotePull(checked);
+    // Read back rather than trusting `checked`: a failed storage write must not show as enabled.
+    setRemotePull(getDevFlag(DevFlag.RemoteFeedPull));
   }, []);
-
-  if (!import.meta.env.DEV) {
-    return null;
-  }
 
   return (
     <div role='group' className='flex items-center gap-2 px-2 py-1 text-description text-sm'>

@@ -75,8 +75,7 @@ export const Main = () => {
 
   useExpandPath(id);
 
-  // `history` holds the panels behind the current one — `Open` pushes the outgoing panel onto it and
-  // `Close` pops it back — so the stack the user navigated is exactly history plus the active panel.
+  // `Open` pushes onto `history` and `Close` pops it, so the navigated stack is history + active.
   const stack = useMemo(() => [...state.history, id], [state.history, id]);
 
   // Popping routes through `Close`, the same operation the app bar's back button invokes, so the
