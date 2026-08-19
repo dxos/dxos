@@ -589,6 +589,9 @@
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-stream-deck/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-studio/tsconfig.json"
     },
     {

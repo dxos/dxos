@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: stream-deck
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-08-19
+    summary: 'Hardware dashboard of a Composer space on a Stream Deck + — 8 keys show the space favorites (objects tagged `favorite`), 4 dial segments show progress monitors or space stats. Shipped as an Elgato .sdPlugin (coexists with the Elgato app, which holds the HID device exclusively) with Composer as the brain over a loopback WebSocket.'
+    tasks: .agents/projects/stream-deck/TASKS.md
+    design: .agents/projects/stream-deck/DESIGN.md
+    prs: []
+    resume: 'M1 DONE and green (build + lint + 26 node tests + 4 storybook tests). @dxos/plugin-stream-deck exists with the protocol (src/protocol, ./Protocol subpath — no separate package until the device plugin needs it), the favorites model (NOTE: Filter.tag matches a tag URI, not a label, so the keyless `favorite` Tag is resolved first), the monitor/stats model over useProgressMonitors, pure SVG renderers (Elgato setImage takes SVG strings, so nothing is rasterised), a VirtualStreamDeck component + 3 verified stories, a container deck-companion story over a seeded space, and registration in composer-app under isLabs. NEXT: author PLUGIN.mdl (required before the first PR), then Phase 2 — the .sdPlugin bundle + WebSocket, which needs the physical Stream Deck + and the Elgato app.'
   - name: client-startup-timeout
     status: active
     user: jdw

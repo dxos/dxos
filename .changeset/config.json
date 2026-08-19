@@ -311,6 +311,7 @@
       "@dxos/plugin-spotlight",
       "@dxos/plugin-stack",
       "@dxos/plugin-status-bar",
+      "@dxos/plugin-stream-deck",
       "@dxos/plugin-studio",
       "@dxos/plugin-support",
       "@dxos/plugin-table",
