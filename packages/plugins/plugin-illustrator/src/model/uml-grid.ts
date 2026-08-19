@@ -18,25 +18,32 @@ import { type UmlModel, type UmlRelation, parse, relationRanks, relationStyle, r
  * document gridSize (10) depending on zoom, so 40 — the step visible at working zoom — puts
  * node edges on rendered lines; finer 10-unit alignment only shows past ~0.7 zoom.
  */
-export const GRID = 40;
+export const GRID = 32;
 
 /** The document grid unit, used for sub-cell nudges (channel separation, label offsets). */
-const GRID_FINE = 10;
+const GRID_FINE = 8;
 
-const TITLE_FONT = Layout.FONT_METRICS.m;
-const MEMBER_FONT = Layout.FONT_METRICS.s;
-const MIN_W = 160;
-const MAX_W = 400;
-const PAD_X = 24;
+const MIN_W = GRID * 2;
+const MAX_W = GRID * 6;
+
+const PAD_X = GRID * 2;
 const TITLE_PAD = 10;
 const SECTION_PAD = 14;
 const GAP_MAIN = 80;
 const GAP_CROSS = 80;
 
+const TITLE_FONT = Layout.FONT_METRICS.m;
+const MEMBER_FONT = Layout.FONT_METRICS.s;
+
 const snap = (value: number) => Math.ceil(value / GRID) * GRID;
 
 /** Node rect in scene units. */
-export type Rect = { x: number; y: number; w: number; h: number };
+export type Rect = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
 
 export type RoutedRelation = {
   relation: UmlRelation;
@@ -82,17 +89,20 @@ export const zRouter: Router = ({ from, to, offset, horizontal }) => {
   return (alongY ? routeAlongY : routeAlongX)(from, to, offset * GRID_FINE);
 };
 
+/** Fixed cell size, in scene units; omitted dimensions are measured from content. */
+export type CellSize = { w?: number; h?: number };
+
 type Cell = { w: number; h: number; titleH: number };
 
 /** One cell fits the largest class: widest line (wrapped at maxWidth) and tallest member list. */
-const measureCell = (model: UmlModel, maxWidth: number): Cell => {
+const measureCell = (model: UmlModel, maxWidth: number, override: CellSize = {}): Cell => {
   const memberLines = (entry: UmlModel['classes'][number]) => [...entry.attributes, ...entry.methods];
   const titleW =
     Math.max(0, ...model.classes.map((entry) => Math.max(entry.label.length, (entry.stereotype?.length ?? 0) + 2))) *
     TITLE_FONT.charW;
   const memberW =
     Math.max(0, ...model.classes.flatMap((entry) => memberLines(entry).map((line) => line.length))) * MEMBER_FONT.charW;
-  const w = snap(Math.min(maxWidth, Math.max(MIN_W, Math.ceil(Math.max(titleW, memberW)) + PAD_X)));
+  const w = snap(override.w ?? Math.min(maxWidth, Math.max(MIN_W, Math.ceil(Math.max(titleW, memberW)) + PAD_X)));
   const wrapped = (length: number, font: Layout.FontMetrics) =>
     Math.max(1, Math.ceil((length * font.charW) / (w - PAD_X)));
   const titleLines = Math.max(
@@ -107,7 +117,9 @@ const measureCell = (model: UmlModel, maxWidth: number): Cell => {
   );
   const titleH = snap(titleLines * TITLE_FONT.lineH + TITLE_PAD);
   const bodyH = snap(bodyLines * MEMBER_FONT.lineH + SECTION_PAD);
-  return { w, h: titleH + bodyH, titleH };
+  // A fixed height still reserves the measured title bar; the body takes the remainder.
+  const h = override.h !== undefined ? Math.max(snap(override.h), titleH + GRID) : titleH + bodyH;
+  return { w, h, titleH };
 };
 
 export type CompileOptions = {
@@ -121,6 +133,8 @@ export type CompileOptions = {
   gapCross?: number;
   /** Maximum cell width, in scene units (default 400); longer lines wrap. */
   maxWidth?: number;
+  /** Fixed cell size (snapped to GRID); overrides measurement per dimension. */
+  cell?: CellSize;
   /** Connector routing (default `zRouter`). */
   route?: Router;
 };
@@ -136,7 +150,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
   const gapMain = snap(options.gapMain ?? GAP_MAIN);
   const gapCross = snap(options.gapCross ?? GAP_CROSS);
   const horizontal = model.direction === 'LR' || model.direction === 'RL';
-  const cell = measureCell(model, maxWidth);
+  const cell = measureCell(model, maxWidth, options.cell);
   const ranks = relationRanks(model);
 
   const lanes = new Map<number, string[]>();

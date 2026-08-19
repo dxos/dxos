@@ -51,15 +51,18 @@ type StoryArgs = {
   source: string;
   /** Grid layout (equal cells, orthogonal connectors) vs the compact layered layout. */
   layout: 'grid' | 'layered';
+  /** Fixed cell width (grid layout only); measured from content when unset. */
+  cellWidth?: number;
+  /** Fixed cell height (grid layout only); measured from content when unset. */
+  cellHeight?: number;
 };
 
-const DefaultStory = ({ source, layout }: StoryArgs) => {
+const DefaultStory = ({ source, layout, cellWidth, cellHeight }: StoryArgs) => {
   const objects = useMemo(() => {
-    const compile = layout === 'grid' ? UmlGrid.compile : Uml.compile;
-    return compile(source).flatMap((command): Scene.WorldObject[] =>
-      command.op === 'upsert-object' ? [command.object] : [],
-    );
-  }, [source, layout]);
+    const commands =
+      layout === 'grid' ? UmlGrid.compile(source, { cell: { w: cellWidth, h: cellHeight } }) : Uml.compile(source);
+    return commands.flatMap((command): Scene.WorldObject[] => (command.op === 'upsert-object' ? [command.object] : []));
+  }, [source, layout, cellWidth, cellHeight]);
 
   return (
     <SceneSvg classNames='dx-attention-surface' objects={objects} grid={layout === 'grid' ? UmlGrid.GRID : undefined} />
@@ -79,10 +82,16 @@ type Story = StoryObj<typeof meta>;
 
 /** UML definition rendered straight to SVG via the grid dialect — no canvas editor involved. */
 export const Default: Story = {
-  args: { source: CLASS_DIAGRAM, layout: 'grid' },
+  args: {
+    source: CLASS_DIAGRAM,
+    layout: 'grid',
+  },
 };
 
 /** The compact layered dialect through the same renderer; arrows resolve their bound refs. */
 export const Layered: Story = {
-  args: { source: CLASS_DIAGRAM, layout: 'layered' },
+  args: {
+    source: CLASS_DIAGRAM,
+    layout: 'layered',
+  },
 };

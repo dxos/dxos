@@ -106,6 +106,17 @@ describe('uml-grid', () => {
     }
   });
 
+  test('cell option fixes the node size', ({ expect }) => {
+    const snap = (value: number) => Math.ceil(value / GRID) * GRID;
+    const nodes = nodesOf(objectsOf(compile(CLASS_DIAGRAM, { cell: { w: 256, h: 480 } })));
+
+    for (const node of nodes) {
+      const [title, body] = node.elements as Scene.Box[];
+      expect(title.w).toBe(snap(256));
+      expect(title.h + body.h).toBe(snap(480));
+    }
+  });
+
   test('parallel relations between the same lanes take separate channels', ({ expect }) => {
     const source = ['classDiagram', 'class A', 'class B', 'class C', 'class D', 'A --> D : one', 'B --> C : two'].join(
       '\n',
