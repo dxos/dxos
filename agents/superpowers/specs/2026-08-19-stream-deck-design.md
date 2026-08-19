@@ -164,8 +164,12 @@ slot assignment and unchanged-frame suppression. Everything but the hardware is 
 application — the bundle is the thing that breaks (decorators Node cannot execute, module
 initialization order, `ws` resolving to its browser build), and unit tests cannot see any of it.
 
-**M3 — interaction.** Key press → open object + focus window; disconnected state; settings surface
-for enabling the bridge and choosing the space.
+**M3 — interaction.** Key press → open object + focus window, and a **headless driver** that owns the
+single bridge so the keys stay live with no surface rendered. The panel became a preview: it renders
+the frame but does not send it, because the device accepts one client and two publishers would fight.
+`KeySpec.target` therefore carries the graph navigation path (what `LayoutOperation.Open` consumes)
+rather than a DXN. A settings surface was deliberately dropped — the plugin registry toggle already
+turns the feature off.
 
 **M4 — later.** Dial bindings (undecided), persisted slot ordering (`StreamDeckLayout`), and edge
 mode: the same protocol served from edge instead of a local Composer, for a dashboard that survives
