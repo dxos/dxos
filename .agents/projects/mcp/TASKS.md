@@ -193,6 +193,64 @@ changes what a model sees lives in the shared package or it is a bug.
       assembly so both hosts register the same operations, skills and types.
 - [x] **Watch/reload** — `dx mcp serve --watch` (Milestone 7); an edit no longer needs a restart.
 
+## Milestone 8 — skills as the atomic MCP unit (user-directed 2026-08-19, PR #12616)
+
+Direction from the 2026-08-19 review: the skill definition is the unit of projection, not the
+operation. A host provides skill definitions; each opted-in skill becomes a prompt, and the
+operations its `tools` list names become the tools. The `skillLoad` pointer in a tool description
+derives from membership (the SEP-2640 shape) instead of the hand-maintained `mcpTool({ skill })`
+field, so a skill and its tools cannot drift — which also closes the audit's "`Skill.tools` unused
+by the projection" gap by construction. `Operation.mcpTool` keeps only per-operation metadata
+(tool-name override, safety); it no longer decides inclusion, and the never-consumed `aspect`
+field goes.
+
+- [ ] **Compute** — `Skill.Definition` gains `operations` (the definitions behind the ToolIds, so a
+      registry-less host can serialize them); `Operation.mcpTool` drops `skill` and `aspect`.
+- [ ] **Projection** — `Gateway.SkillRecord` gains `tools`; operations project iff named by an
+      opted-in skill's tools list; pointer sentence auto-appended; annotation optional (defaults:
+      name = key's final segment, no safety claims). `spaceId` ambient parameter only for
+      operations whose declared services include `Database.Service` (`@dxos/echo/Database/Service`
+      on the wire) — the parameter's presence tells the agent which calls are space-addressed.
+- [ ] **Plugins** — `CodeProjectSkill.tools` lists the task/outline/project verbs
+      (plugin-projects → plugin-tasks is already a real dependency; `skill-keys.ts` dies with the
+      `skill:` fields); `DatabaseSkill` sets `mcpPrompt: true` so its verbs keep projecting and its
+      workflow text becomes a prompt.
+- [ ] **`Server.fromSkills`** — in-process host API: `({ skills }) => Layer` requiring
+      `Operation.Service`, built on the same projection path as the Gateway wire form. The Gateway
+      survives — edge reaches its registry over an RPC binding and cannot hold live definitions —
+      so this is a second front door, not a replacement.
+- [ ] **Shared operation→tool projection** — one implementation of name derivation, description
+      assembly and schema massaging behind both assistant's `projectFunctionToTool` and
+      mcp-server's record projection.
+- [ ] **Edge follow-through** — on the next `@dxos/*` pin bump the worker picks the reshape up via
+      the package; its `SkillRecord` marshalling in operation-service gains `tools`.
+
+Follow-ups from the 2026-08-19 audit (none block PR #12616):
+
+- [ ] **`skillLoad` listing mode** (audit G2) — the model discovers a skill only via a tool
+      pointer or by failing a `skillLoad` whose error lists names; a pure-workflow skill referenced
+      by no projected tool is invisible. Make `skill` optional: omitted → return the listing
+      (`name`, `description`, `key` per skill). One tool, two modes, pre-aligned with SEP-2640's
+      `skills/list`/`skills/get` split. Mention the listing mode in `SERVER_INSTRUCTIONS` in one
+      clause — stay under the 2KB truncation.
+- [ ] **SEP-2640 tracking** (audit G3) — the draft has drifted from the shape the `SkillLoad`
+      comment cited: skills are now `skill://` _resources_ with `skills/list` / `skills/get`
+      methods, markdown + YAML frontmatter, optional resource manifests (SHA-256 digests) and
+      dependency declarations; the single load tool is the _client's_ affordance. Additive path
+      when it settles: declare the extension capability (Effect's `McpServer` forwards
+      `serverInfo.extensions`), serve `skills/list`/`skills/get` and `skill://<name>/SKILL.md` off
+      the existing `projectSkills` output (`SkillRecord` maps 1:1 onto the frontmatter), keep
+      `skillLoad` as the polyfill indefinitely. Do not build the manifest/asset part until the PR
+      settles. The stale Server.ts comment is fixed in the Milestone 8 projection work.
+- [ ] **`code-project-skill.md` fs fallback** (audit G5) — the space-binding gate reads
+      `.agents/projects/space.yml`, silently inapplicable on an fs-less client (claude.ai
+      connector). One line: no filesystem → ask the user for the space.
+- [ ] **CLAUDE.md fallback snippet** (audit) — the "point at the MCP server, no skills required"
+      thesis holds for Claude Code today (`SERVER_INSTRUCTIONS` survives ToolSearch deferral; the
+      `skillPointer` rides in each governed tool's description). Do **not** add a meta-skill or
+      plugin shim; reserve a one-paragraph CLAUDE.md snippet as the fallback for harnesses that
+      drop MCP `instructions`.
+
 ## Milestone 7 — third-party plugins and reload (design: [DESIGN.md](./DESIGN.md) §2-3)
 
 A shipped `dx` must load plugins it was not compiled with, and those plugins' operations and
@@ -274,6 +332,12 @@ reads as though disabling does not exist. DESIGN §2.3.
       trusted-publisher-and-explicit-enable, or a worker boundary (which would also solve reload).
       The install/enable boundary above makes the cheap end a real consent step, but bounds
       nothing after enable.
+      **Same question for third-party instruction text** (audit G4): `skillLoad` returns text the
+      server instructions tell the model to follow, and `Skill` is an ECHO type a collaborator
+      could edit in a space. Today projection is registry-only (`Gateway.listSkills` → registry),
+      which is what makes it safe — but nothing states or tests that invariant. State it in
+      mcp-server's README/DESIGN ("only registry-resolved skills project; database-resolved skills
+      never do") and pin it with a test. Decide before user-authored skills exist.
 
 ### Reload, stage 1 — our own dev loop
 
@@ -308,14 +372,30 @@ reads as though disabling does not exist. DESIGN §2.3.
       ESM import from a compiled binary; TS transpilation inside a standalone executable is a
       separate question and it decides whether `add --dev <path>` needs a build step at all.
       Measure before designing around either answer.
+- [ ] **Watch `plugins/<profile>.yml`; supervisor default on** (audit G1-A, ship first) — the
+      running server never notices a `dx plugin enable|disable|add|remove` from another terminal:
+      `Server.layer` reads the registry once and the `--watch` supervisor watches dev-install
+      source dirs only. Add the launched profile's `plugins/<profile>.yml` to the supervisor's
+      watch set and make the supervisor the default for `serve` (keep an opt-out). A plugin-set
+      change → settle-debounced child restart → handshake replay → the client sees the new surface
+      on the next `tools/list`. Reproduces the startup activation path exactly, so no
+      hot-activation delta; in-flight requests get the existing `-32603`, acceptable for a
+      human-driven change. ~20 lines.
 - [ ] **Watch a dev install** — re-import on change with a cache-busting query, rebuild the
       projected layer, emit `tools/list_changed` / `prompts/list_changed` (already emitted at
       startup, already acted on by clients). Same machinery as `add --dev`, driven by a watcher.
 - [ ] **Upstream: tool/prompt removal in `McpServer`** — it exposes `addTool`/`addPrompt` only, so
       a changed surface cannot replace the old one without rebuilding the server layer under the
-      live transport.
+      live transport. **Gate for in-process re-projection** (audit G1-B): the registry is
+      append-only (`tools.push` + `toolMap.set`), so re-adding a name _duplicates_ the
+      `tools/list` entry — worse than a no-op. Contribute `removeTool`/`replaceTool` upstream in
+      the `unstable` module. In-process re-projection stays closed until this and the type
+      re-registration below land; restart-on-change (above) covers plugin-set changes meanwhile.
 - [ ] **Idempotent (or per-load scoped) type registration** — re-importing a plugin that registers
-      ECHO types throws "Schema version already registered".
+      ECHO types throws "Schema version already registered". Second half of the G1-B gate.
+- [ ] **Edge open question (audit G1)** — is the worker's projection layer built per
+      request/isolate or per worker lifetime? Per-request means recompute-on-`tools/list` is
+      already live and G1 does not apply there; confirm in edge `mcp-operations`.
 
 ## Milestone 1 — local round-trip (current)
 
