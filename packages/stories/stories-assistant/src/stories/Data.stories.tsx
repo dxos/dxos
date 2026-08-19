@@ -412,7 +412,6 @@ export const WithCRM: Story = {
     skills: [
       AssistantSkill.key,
       CrmSkill.key,
-      // The old database skill split in two: object CRUD (plugin-space) and chat-context binding.
       DatabaseSkill.key,
       ChatContextSkill.key,
       InboxSkill.key,

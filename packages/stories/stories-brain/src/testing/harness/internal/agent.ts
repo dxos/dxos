@@ -66,8 +66,7 @@ export type AgentEvalResult = {
  */
 export const runAgentEval = async (config: AgentEvalConfig, testContext: TestContext): Promise<AgentEvalResult> => {
   const skills = [
-    // The old database skill split in two: object CRUD (plugin-space) and chat-context binding —
-    // the source arm reads the feed through the Database skill's query.
+    // The source arm reads the feed through the Database skill's query.
     DatabaseSkill.make(),
     ChatContextSkill.make(),
     ...(config.mode === 'facts' ? [BrainSkill.make()] : []),
