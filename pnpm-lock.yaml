@@ -22371,9 +22371,6 @@ importers:
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
-      wavefile:
-        specifier: 'catalog:'
-        version: 11.0.0
     devDependencies:
       '@types/react':
         specifier: ~19.2.17

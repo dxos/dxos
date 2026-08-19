@@ -38,8 +38,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "date-fns": "catalog:",
-    "wavefile": "catalog:"
+    "date-fns": "catalog:"
   },
   "devDependencies": {
     "@types/react": "catalog:",
