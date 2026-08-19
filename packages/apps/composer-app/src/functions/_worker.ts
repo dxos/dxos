@@ -19,14 +19,16 @@ type Env = {
 const OTEL_MAX_BODY_SIZE = 800 * 1024 * 1024; // 800MB.
 const FEEDBACK_LOGS_MAX_BODY_SIZE = LOG_STORE_MAX_BYTES;
 
-const ALLOWED_ORIGINS = new Set([
-  'https://composer.space',
-  'https://staging.composer.space',
-  'https://nightly.composer.space',
-]);
+/**
+ * `composer.space` and every subdomain — the apex plus each deploy channel (`nightly`, `staging`,
+ * `dev`, a future one) and any custom domain a channel is given. Ours outright, so there is no
+ * multi-tenant risk in allowing the whole apex rather than enumerating channel hostnames that
+ * would otherwise need a matching edit here every time one is added, renamed, or given a domain.
+ */
+const ALLOWED_ORIGIN_PATTERN = /^https:\/\/([a-z0-9-]+\.)?composer\.space$/;
 
 const corsHeaders = (origin: string | null): Record<string, string> => ({
-  'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.has(origin) ? origin : '',
+  'Access-Control-Allow-Origin': origin && ALLOWED_ORIGIN_PATTERN.test(origin) ? origin : '',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Content-Encoding',
   'Vary': 'Origin',
@@ -114,7 +116,7 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
   // Restrict to same-origin / known origins to avoid being abused as an open proxy.
   // Same-origin GETs typically omit Origin; allow when absent or when a known origin is set.
   const origin = request.headers.get('Origin');
-  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+  if (origin && !ALLOWED_ORIGIN_PATTERN.test(origin)) {
     return new Response('Forbidden', { status: 403 });
   }
 
@@ -281,7 +283,7 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
   }
 
   // Reject requests from disallowed origins server-side, not just via CORS headers.
-  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+  if (origin && !ALLOWED_ORIGIN_PATTERN.test(origin)) {
     return new Response('Forbidden', { status: 403, headers: corsHeaders(origin) });
   }
 
