@@ -245,6 +245,17 @@ field goes.
       drift-pinned in projection.test). The MCP projection maps it to
       `readOnlyHint`/`destructiveHint` as before and now also maps `Operation.idempotent` to
       `idempotentHint`. `mcpTool` keeps only `name`/`description` overrides (4 sites).
+- [x] **One handler set per plugin, on the subpath convention** (user directive 2026-08-19).
+      plugin-space carried two sets because `registry.add(handlers.map(Operation.serialize))`
+      (cli `runtime.ts`, `assistant-test-layer.ts`) threw on any non-JSON-serializable input schema
+      (`ImportSpace`'s `Uint8Array`), forcing a curated "serializable" subset beside the full set.
+      Fixed at the root: **`Operation.serializable(operations)`** in compute serializes tolerantly
+      (drop-with-warning), all four registration sites use it (cli runtime, assistant test layer,
+      CLI mcp gateway — whose local twin died — and `DxMcpService`). plugin-space now exports one
+      merged set as `@dxos/plugin-space/SpaceOperationHandlerSet` (the plugin-tasks pattern:
+      `src/operations/<X>OperationHandlerSet.ts`, barrel `export * as`, package subpath); the
+      public `./operations` subpath is gone. Six consumers repointed; single-element destructures
+      (`const [x] = xs`) replaced with index access per user note.
 - [ ] **Shared operation→tool projection** (assistant ⇄ mcp) — deferred with a plan, not dropped.
       What blocks a naive extraction: the two surfaces are deliberately different models of the
       same operation. The assistant presents refs as LLM-friendly URI _strings_ (`RefFromLLM`,

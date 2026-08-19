@@ -84,6 +84,14 @@ strict: the service materializes only from `InvokeOptions.spaceId` (or the paren
 environment for nested invocations), so every call site that needs the database passes
 `{ spaceId: db.spaceId }` in options — the create-object entries across the plugins included.
 
+Each plugin exposes one operation handler set, on the subpath convention. `@dxos/plugin-space`'s
+`./operations` subpath is replaced by `./SpaceOperationHandlerSet`, whose single `handlers` set
+carries every space operation — the separate curated "serializable" subset is gone, because the
+constraint that forced it is: the new `Operation.serializable(operations)` serializes a handler
+list tolerantly, dropping (with a warning) the few operations whose input schemas cannot render as
+JSON, so a registry can be fed the full set without an `ImportSpace`-style schema failing the whole
+registration.
+
 `@dxos/mcp-server` gains `DxMcpService`: `make({ skills })` yields the projected MCP surface
 (prompts, tools, `skillLoad`) requiring only `Operation.Service` — the in-process front door,
 beside the registry-backed `Gateway` that remote hosts keep. The package now exposes
