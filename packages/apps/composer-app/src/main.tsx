@@ -459,13 +459,16 @@ const main = async () => {
     logStore,
     onFatalError: (error) => raiseFatalError(error),
 
-    isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
+    // Strictly the deployed `dev` cloud environment (composer-dev, not nightly), or an explicit
+    // local opt-in — never the local inner loop by default, since DX_ENVIRONMENT is unset there. That
+    // keeps `serve`'s default plugin set lean; `DX_DEV=true` opts a local run into `dev`'s larger one
+    // (dev tooling plus the former "labs" additions — see `getDefaults` in plugin-defs.tsx).
+    isDev: config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'dev' || isTrue(config.values.runtime?.app?.env?.DX_DEV),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
     isPwa,
     isTauri,
     isPopover,
     isMobile,
-    isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 

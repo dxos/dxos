@@ -14,7 +14,6 @@ IPFS_API_SECRET=${IPFS_API_SECRET}
 DX_PWA=false
 DX_MINIFY=true
 DX_EDGE_ECHO_REPLICATOR=true
-DX_LABS=true
 # EDGE nightly. TODO(wittjosiah): `https://nightly.dxos.network/` once DX-1150 renames EDGE's `main`
 # environment — the instance is the same one, only the name changes.
 DX_EDGE_BASE_URL="https://main.dxos.network/"

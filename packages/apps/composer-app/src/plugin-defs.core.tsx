@@ -60,7 +60,6 @@ export type PluginConfig = State & {
   isLocal?: boolean;
   isPwa?: boolean;
   isTauri?: boolean;
-  isLabs?: boolean;
   isStrict?: boolean;
   isPopover?: boolean;
   isMobile?: boolean;

@@ -84,9 +84,9 @@ import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
 export type { PluginConfig, State } from './plugin-defs.core';
 
 /**
- * Plugin keys enabled by default for new users, per environment (dev/local/labs).
+ * Plugin keys enabled by default for new users, per environment (dev/local).
  */
-export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
+export const getDefaults = ({ isDev, isLocal }: PluginConfig): string[] =>
   [
     // Default
     AssistantPlugin.meta.profile.key,
@@ -105,16 +105,16 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
 
-    // Dev
-    isDev && [DebugPlugin.meta.profile.key, DevtoolsPlugin.meta.profile.key],
-
     // Local
     isLocal && SamplePlugin.meta.profile.key,
 
-    // Labs. Enabled only under the labs flag — a local dev build should not start with a
-    // different (larger) default set than production, which is what `isDev` here used to produce.
-    // They stay in the registry either way, so enabling one is still a settings toggle away.
-    isLabs && [
+    // Dev. `isDev` is strictly the `dev` cloud environment (`DX_ENVIRONMENT=dev`) or a local
+    // `DX_DEV=true` opt-in — nightly does NOT get this block, and neither does a plain local `serve`.
+    // They stay in the registry either way (see `getPlugins` below), so enabling one manually is
+    // still a settings toggle away; this only controls what a fresh identity starts with.
+    isDev && [
+      DebugPlugin.meta.profile.key,
+      DevtoolsPlugin.meta.profile.key,
       BloggerPlugin.meta.profile.key,
       BookmarksPlugin.meta.profile.key,
       CallsPlugin.meta.profile.key,
@@ -151,7 +151,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
  * plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
-  const { logStore, isDev, isLocal, isLabs, isTauri, isPopover, isMobile } = config;
+  const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
   return [
     ...getCorePlugins(config),
     AssistantPlugin.make(),
@@ -163,10 +163,11 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ChessComPlugin.make(),
     ReviewPlugin.make(),
     ConductorPlugin.make(),
-    // Dev-only coding harness: the assistant gets a bash tool and a file-edit tool. Deliberately
-    // absent from `getDefaults` — the developer enables it, and its tools stay unusable until the
-    // dev server mounts the route (see `ComputerShellPlugin` in vite.config.ts).
-    (isDev || isLabs) && ComputerPlugin.make(),
+    // Dev-only coding harness: the assistant gets a bash tool and a file-edit tool. Always in the
+    // registry (like Debug/Devtools below) — deliberately absent from `getDefaults` regardless of
+    // environment, since its tools stay unusable until the dev server mounts the route (see
+    // `ComputerShellPlugin` in vite.config.ts).
+    ComputerPlugin.make(),
     !isTauri && CrxPlugin.make(),
     DebugPlugin.make({ logStore }),
     DevtoolsPlugin.make(),
@@ -205,7 +206,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     SandboxPlugin.make(),
     ScriptPlugin.make(),
     SearchPlugin.make(),
-    (isDev || isLabs) && SidekickPlugin.make(),
+    SidekickPlugin.make(),
     SheetPlugin.make(),
     IllustratorPlugin.make(),
     TldrawPlugin.make(),
