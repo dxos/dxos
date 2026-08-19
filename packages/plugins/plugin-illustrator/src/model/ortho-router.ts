@@ -158,11 +158,11 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
       return fallback(edge);
     }
 
-    // Reconstruct, mark usage, and collapse collinear points.
+    // Reconstruct and collapse collinear points; usage is marked from the FINAL path below, so
+    // the centering pass can distinguish foreign channels from this edge's own cells.
     const cells: Point[] = [];
     for (let state: State | undefined = found; state; state = state.prev) {
       cells.unshift({ x: state.x, y: state.y });
-      used.add(key(state.x, state.y));
     }
     const points: Point[] = [start, ...cells.map((cell) => ({ x: cell.x * STEP, y: cell.y * STEP })), end];
     const simplified: Point[] = [points[0]];
@@ -177,6 +177,77 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
       }
     }
     simplified.push(points[points.length - 1]);
+
+    // A single-jog Z centers its middle run equidistant from the two node borders — the A* path
+    // is turn-minimal but expansion order lets it hug one node. Keep the shift only if the
+    // adjusted segments avoid every obstacle AND every cell earlier edges already run through,
+    // so parallel channels stay separated.
+    const clearRun = (a: Point, b: Point): boolean => {
+      const ax = Math.round(a.x / STEP);
+      const ay = Math.round(a.y / STEP);
+      const bx = Math.round(b.x / STEP);
+      const by = Math.round(b.y / STEP);
+      const steps = Math.max(Math.abs(bx - ax), Math.abs(by - ay));
+      const dx = Math.sign(bx - ax);
+      const dy = Math.sign(by - ay);
+      for (let step = 0; step <= steps; step++) {
+        if (blocked(ax + dx * step, ay + dy * step) || used.has(key(ax + dx * step, ay + dy * step))) {
+          return false;
+        }
+      }
+      return true;
+    };
+    // Stub checks start past the terminal's own clearance zone, which is legitimately "blocked".
+    const past = (from: Point, to: Point): Point => ({
+      x: from.x + Math.sign(to.x - from.x) * (CLEARANCE + 1) * STEP,
+      y: from.y + Math.sign(to.y - from.y) * (CLEARANCE + 1) * STEP,
+    });
+    if (simplified.length === 4) {
+      const [p0, p1, p2, p3] = simplified;
+      if (p1.y === p2.y && p0.y !== p3.y) {
+        const mid = Math.round((p0.y + p3.y) / 2 / STEP) * STEP;
+        const shifted = [
+          { x: p1.x, y: mid },
+          { x: p2.x, y: mid },
+        ];
+        if (
+          clearRun(shifted[0], shifted[1]) &&
+          clearRun(past(p0, shifted[0]), shifted[0]) &&
+          clearRun(shifted[1], past(p3, shifted[1]))
+        ) {
+          simplified[1] = shifted[0];
+          simplified[2] = shifted[1];
+        }
+      } else if (p1.x === p2.x && p0.x !== p3.x) {
+        const mid = Math.round((p0.x + p3.x) / 2 / STEP) * STEP;
+        const shifted = [
+          { x: mid, y: p1.y },
+          { x: mid, y: p2.y },
+        ];
+        if (
+          clearRun(shifted[0], shifted[1]) &&
+          clearRun(past(p0, shifted[0]), shifted[0]) &&
+          clearRun(shifted[1], past(p3, shifted[1]))
+        ) {
+          simplified[1] = shifted[0];
+          simplified[2] = shifted[1];
+        }
+      }
+    }
+
+    // Mark the final path's cells so later edges route (and center) around it.
+    for (let index = 0; index < simplified.length - 1; index++) {
+      const a = simplified[index];
+      const b = simplified[index + 1];
+      const ax = Math.round(a.x / STEP);
+      const ay = Math.round(a.y / STEP);
+      const steps = Math.max(Math.abs(Math.round(b.x / STEP) - ax), Math.abs(Math.round(b.y / STEP) - ay));
+      const dx = Math.sign(b.x - a.x);
+      const dy = Math.sign(b.y - a.y);
+      for (let step = 0; step <= steps; step++) {
+        used.add(key(ax + dx * step, ay + dy * step));
+      }
+    }
     return simplified;
   };
 };

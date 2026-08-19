@@ -54,10 +54,25 @@ const crosses = ([a1, a2]: Segment, [b1, b2]: Segment): boolean => {
   return a1.y === b1.y && min(a1.x, a2.x) < max(b1.x, b2.x) && min(b1.x, b2.x) < max(a1.x, a2.x);
 };
 
+/** Direction changes along a polyline, ignoring zero-length segments. */
+const bends = (route: readonly Point[]): number => {
+  const points = route.filter(
+    (point, index) => index === 0 || point.x !== route[index - 1].x || point.y !== route[index - 1].y,
+  );
+  let count = 0;
+  for (let index = 2; index < points.length; index++) {
+    const [a, b, c] = [points[index - 2], points[index - 1], points[index]];
+    if (!((a.x === b.x && b.x === c.x) || (a.y === b.y && b.y === c.y))) {
+      count++;
+    }
+  }
+  return count;
+};
+
 /**
- * Layout score over the placed subset: +1 per straight (two-point) route, −1 per crossing pair.
- * Routes come from the cheap Z-router — the score ranks candidates, the A* router draws the
- * final picture.
+ * Layout score over the placed subset: +1 per straight or single-bend (L) route, −1 per crossing
+ * pair. Routes come from the cheap Z-router — the score ranks candidates, the A* router draws
+ * the final picture.
  */
 export const scoreLayout = (model: UmlModel, rects: Map<string, Rect>): number => {
   const routes: Point[][] = [];
@@ -72,7 +87,7 @@ export const scoreLayout = (model: UmlModel, rects: Map<string, Rect>): number =
 
   let score = 0;
   for (const route of routes) {
-    if (route.length === 2) {
+    if (bends(route) <= 1) {
       score += 1;
     }
   }
