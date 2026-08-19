@@ -1,5 +1,7 @@
 //! Composer Tauri application entry point.
 
+#[cfg(target_os = "ios")]
+mod audio_input;
 mod asset_cache;
 #[cfg(desktop)]
 mod oauth;
@@ -127,6 +129,14 @@ pub fn run() {
         asset_cache::evict_plugin,
         asset_cache::resolve_cached_url,
         asset_cache::list_cached_plugins,
+        #[cfg(target_os = "ios")]
+        audio_input::list_audio_inputs,
+        #[cfg(target_os = "ios")]
+        audio_input::set_preferred_audio_input,
+        #[cfg(target_os = "ios")]
+        audio_input::start_microphone_bridge,
+        #[cfg(target_os = "ios")]
+        audio_input::stop_microphone_bridge,
     ]);
 
     #[cfg(desktop)]
