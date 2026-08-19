@@ -2,7 +2,7 @@
   "name": "@dxos/plugin-stream-deck",
   "version": "0.11.1",
   "private": true,
-  "description": "Project a space onto Stream Deck hardware \u2014 favorites on keys, progress and stats on dials.",
+  "description": "Project a space onto Stream Deck hardware — favorites on keys, progress and stats on dials.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {

@@ -24,7 +24,7 @@ const BUILD_TOOL_EXPORT = /^\.\/(vite|esbuild|rollup)-plugin$/;
 
 // `./plugin` is overloaded: every `@dxos/plugin-*` package exports its Composer plugin there, which
 // is browser code and needs `source`. Only a package that also declares a bundler plugin — the
-// `vite-plugin` moon tag composer-app's `serve-min` fans out to — means build tooling by it.
+// `vite-plugin` moon tag composer-app's `serve-prod` fans out to — means build tooling by it.
 const isBuildToolExport = (exportPath, moonYml) =>
   BUILD_TOOL_EXPORT.test(exportPath) ||
   (exportPath === './plugin' && (moonYml?.tags?.includes('vite-plugin') ?? false));
@@ -306,7 +306,7 @@ for (const { name, path: pkgPath } of packages) {
 
   // A package consumed from dist declares it by omitting the `source` export condition — which is
   // what keeps node/bun and vite resolving it the same way — and carries the `dist-runtime` moon
-  // tag, which fans its build out to tasks that otherwise skip `^:build` (composer-app:serve-min).
+  // tag, which fans its build out to tasks that otherwise skip `^:build` (composer-app:serve-prod).
   // The two must agree, or the tagged build is unused (or the missing one breaks the dev server).
   {
     const hasDistRuntimeTag = moonYml?.tags?.includes('dist-runtime') ?? false;
