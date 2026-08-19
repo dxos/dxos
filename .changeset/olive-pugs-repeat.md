@@ -6,6 +6,10 @@
 '@dxos/plugin-connector': minor
 '@dxos/plugin-observability': minor
 '@dxos/plugin-space': minor
+'@dxos/compute': minor
+'@dxos/mcp-server': minor
+'@dxos/plugin-projects': minor
+'@dxos/plugin-tasks': minor
 ---
 
 Space object CRUD is now projected from operations, and space operations no longer reach for app
@@ -54,3 +58,23 @@ results to objects reachable from the given ones — how queue-backed mail is ad
 The `discord` and `linear` skills are removed. Both advertised a tool whose handler set was
 registered nowhere, so invoking either failed at runtime; plugin-discord and plugin-linear already
 own connector-based sync for those services.
+
+Skill definitions are the atomic unit of MCP projection. A skill's `tools` list decides which
+operations project as MCP tools, and the load-the-skill-first pointer in each tool's description
+derives from that membership (the SEP-2640 shape) — `Operation.mcpTool` no longer decides
+inclusion or names a skill, keeping only per-operation metadata (tool-name override, safety); its
+`aspect` and `skill` fields are removed. An operation without the annotation projects with
+defaults: the key's final segment as the name and no safety claims. `DatabaseSkill` and
+`CodeProjectSkill` opt in with `mcpPrompt: true` and list their verbs (`CodeProjectSkill` now
+exports `operations`, spanning the project, task and outline verbs).
+
+Operation definitions gain `optionalServices` — services the handler reads via
+`Effect.serviceOption`, stated so the contract is visible off the definition and its serialized
+record. The MCP projection keys the ambient `spaceId` tool parameter off `Database.Service`
+appearing in `services` or `optionalServices`, so only space-addressed tools advertise it.
+
+`@dxos/mcp-server` gains `DxMcpService`: `make({ skills })` yields the projected MCP surface
+(prompts, tools, `skillLoad`) requiring only `Operation.Service` — the in-process front door,
+beside the registry-backed `Gateway` that remote hosts keep. The package now exposes
+per-namespace subpaths (`/Gateway`, `/Server`, `/DxMcpService`); wire-only hosts import the first
+two so their bundles never carry the operation runtime. `Gateway.SkillRecord` carries `tools`.

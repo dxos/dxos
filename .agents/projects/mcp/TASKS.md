@@ -204,24 +204,45 @@ by the projection" gap by construction. `Operation.mcpTool` keeps only per-opera
 (tool-name override, safety); it no longer decides inclusion, and the never-consumed `aspect`
 field goes.
 
-- [ ] **Compute** — `Skill.Definition` gains `operations` (the definitions behind the ToolIds, so a
-      registry-less host can serialize them); `Operation.mcpTool` drops `skill` and `aspect`.
-- [ ] **Projection** — `Gateway.SkillRecord` gains `tools`; operations project iff named by an
-      opted-in skill's tools list; pointer sentence auto-appended; annotation optional (defaults:
-      name = key's final segment, no safety claims). `spaceId` ambient parameter only for
-      operations whose declared services include `Database.Service` (`@dxos/echo/Database/Service`
-      on the wire) — the parameter's presence tells the agent which calls are space-addressed.
-- [ ] **Plugins** — `CodeProjectSkill.tools` lists the task/outline/project verbs
-      (plugin-projects → plugin-tasks is already a real dependency; `skill-keys.ts` dies with the
-      `skill:` fields); `DatabaseSkill` sets `mcpPrompt: true` so its verbs keep projecting and its
-      workflow text becomes a prompt.
-- [ ] **`Server.fromSkills`** — in-process host API: `({ skills }) => Layer` requiring
-      `Operation.Service`, built on the same projection path as the Gateway wire form. The Gateway
-      survives — edge reaches its registry over an RPC binding and cannot hold live definitions —
-      so this is a second front door, not a replacement.
-- [ ] **Shared operation→tool projection** — one implementation of name derivation, description
-      assembly and schema massaging behind both assistant's `projectFunctionToTool` and
-      mcp-server's record projection.
+- [x] **Compute** — `Skill.Definition` gains `operations` (the definitions behind the ToolIds, so a
+      registry-less host can serialize them); `Operation.mcpTool` drops `skill` and `aspect`. Also
+      added on the way: **`Operation.optionalServices`** — services the handler reads via
+      `Effect.serviceOption`, declared so the contract is visible off the definition and its wire
+      record; `addObject`/`addRelation`/`addType`/`removeObjects` state `Database.Service` there.
+- [x] **Projection** — `Gateway.SkillRecord` gains `tools`; operations project iff named by an
+      opted-in skill's tools list; pointer sentence auto-appended (multi-skill aware); annotation
+      optional (defaults: name = key's final segment, no safety claims; a malformed annotation
+      degrades to defaults rather than hiding the skill's tool). `spaceId` ambient parameter only
+      for operations with `Database.Service` in `services` or `optionalServices`
+      (`@dxos/echo/Database/Service` on the wire, drift-pinned in projection.test) — the
+      parameter's presence tells the agent which calls are space-addressed. SEP-2640 comment on
+      `SkillLoad` updated to the current draft.
+- [x] **Plugins** — `CodeProjectSkill.operations` lists the eleven project/task/outline verbs
+      (plugin-projects → plugin-tasks was already a real dependency; `skill-keys.ts` died with the
+      `skill:` fields); `DatabaseSkill` sets `mcpPrompt: true`. **Found on the way:** plugin-space's
+      `plugin.node.ts`/`plugin.workerd.ts` never added the `SkillDefinition` module, so the
+      Database skill was invisible to every headless host — annotations had been masking it.
+      Verified over a live stdio session: 27 tools, `database` + `codeProject` prompts, pointer and
+      spaceId placement as designed; `serve.test` 6/6.
+- [x] **`DxMcpService`** (`@dxos/mcp-server/DxMcpService`) — `make({ skills })` yields the
+      projected surface requiring only `Operation.Service`; skill definitions carry their
+      operations, serialized to the same wire records the registry-backed Gateway serves, so both
+      front doors drive one projection. The Gateway survives — edge reaches its registry over an
+      RPC binding and cannot hold live definitions. The package moved to per-namespace subpath
+      exports so wire-only hosts (`/Gateway`, `/Server`) never bundle the operation runtime.
+- [ ] **Shared operation→tool projection** (assistant ⇄ mcp) — deferred with a plan, not dropped.
+      What blocks a naive extraction: the two surfaces are deliberately different models of the
+      same operation. The assistant presents refs as LLM-friendly URI _strings_ (`RefFromLLM`,
+      which normalizes to space-local form and is entangled with `ArtifactURI`), names tools by
+      slugified `meta.name` (`create-task`), and massages JSON Schema for provider strict mode;
+      MCP presents refs as envelope objects, names tools by annotation/key segment (`taskCreate`),
+      and applies its own response passes. Converging any of these is a **model-facing change**:
+      chat-side it invalidates every model fixture (`parameters.tools` is in the match key),
+      MCP-side it changes client-visible schemas. Do it as its own PR: (1) extract the shared
+      schema-massaging core (null-branch dropping, openness, empty-params) into `@dxos/compute`
+      behavior-preserving; (2) audit whether MCP's emitted schemas have the optional-`anyOf:[T,
+    null]` defect the assistant already fixed — if so the shared core becomes a response pass;
+      (3) decide whether tool _names_ should converge (fixture regeneration budget required).
 - [ ] **Edge follow-through** — on the next `@dxos/*` pin bump the worker picks the reshape up via
       the package; its `SkillRecord` marshalling in operation-service gains `tools`.
 
