@@ -1,6 +1,11 @@
 # Stream Deck — Tasks
 
-_Resume: M1–M3 done and green (39 node + 6 storybook tests in plugin-stream-deck, 11 node + 10 smoke checks in composer-stream-deck, forced composer-app typecheck clean). `PLUGIN.mdl` authored. Everything except the physical device is verified. NEXT: install on the real device (`streamdeck link` + `restart`) and iterate on how the keys actually look at 144x144, then open the PR._
+_Resume: M1–M4 built and green. Stream Deck (#12678) is open; the LaMetric work is stacked on it on
+`claude/stream-deck-lametric-plugin-731d52`. `plugin-space` now owns the device-agnostic projection
+(`SpaceCapabilities.Dashboard`) and both device plugins consume it. Everything except the two
+physical devices is verified. NEXT: the LaMetric hardware pass (needs `.secrets/lametric.env`), then
+the Stream Deck hardware pass, then #12678's 15 CodeRabbit findings — one of which (no frame resent
+on reconnect) is already fixed on this branch._
 
 Design and decisions: [DESIGN.md](./DESIGN.md).
 
@@ -114,19 +119,37 @@ The `.sdPlugin` bundle and the WebSocket transport. Needs the physical device an
 
 ## Phase 4 (M4): Later
 
-- [ ] **LaMetric TIME support** — design a second hardware surface for the same space dashboard
-      ([product page](https://store.lametric.com/products/lametric)). Tracked 2026-08-19, not yet
-      designed; brainstorm before any code.
-  - Very different device from a Stream Deck: a small LED pixel display with no keys to bind, so the
-    "favorites on keys" model does not carry over. The natural mapping is the _dial_ half of this
-    project — progress monitors while a task runs, space stats otherwise — cycled through frames.
-  - **To verify first:** whether LaMetric exposes a local device API (and whether it needs a per-device
-    key), whether pushing requires their cloud, and what the display constraints are (matrix size,
-    icon format, frame/cycle model). Whether it needs a host application at all decides if this
-    reuses this project's architecture or is much simpler: if Composer or edge can push directly over
-    HTTP, there is no exclusivity problem and therefore no `.sdPlugin` equivalent to build.
-  - Reuse candidates: the favorites/monitor **models** and `toSpaceStats` are device-agnostic; the
-    renderers are not (SVG assumes a rasterizing host, not an LED matrix).
+- [x] **LaMetric TIME support** — a second hardware surface for the same space dashboard
+      ([product page](https://store.lametric.com/products/lametric)). Designed and built 2026-08-19:
+      [design](../../../agents/superpowers/specs/2026-08-19-lametric-design.md) ·
+      [plan](../../../agents/superpowers/plans/2026-08-19-lametric.md).
+  - **No second package.** The device is an HTTP server on the LAN and LaMetric's cloud is an HTTP
+    server on the internet, and both accept an identical widget update — so there is no exclusivity
+    problem and no `.sdPlugin` equivalent to build.
+  - **`plugin-space` now owns the projection.** `SpaceCapabilities.Dashboard` publishes the space's
+    stats, tasks and favorites; both device plugins consume it, so N peripherals cost one set of
+    queries rather than N. `KeySpec`/`DialSpec` became `Shortcut`/`MetricSpec` on the way in.
+  - **Verified without hardware:** 12 render tests, 6 transport tests, 5 pusher tests, 3 protocol
+    tests, 2 smoke tests against a stand-in HTTP device, 5 storybook stories rendered and screenshot.
+  - [ ] **End-to-end on the device** — needs `.secrets/lametric.env` (app id, widget id, token,
+        device ip) and a published Indicator App. Resolve the open spike while there: does the
+        widget-update path answer on plain `http://<ip>:8080`? If so `LocalTransport` needs no
+        certificate handling at all.
+
+### LaMetric follow-ups
+
+- [ ] **Browser support** — an edge worker proxying to `developer.lametric.com`. v1 is desktop-only:
+      the cloud answers a CORS preflight with 405 and sends no `Access-Control-*` header, and the LAN
+      device is plain HTTP or self-signed, so the web view can reach neither. The transport interface
+      isolates the base URL, so this is a third implementation and nothing else changes.
+- [ ] **A label beside a determinate task.** A `goalData` frame shows no text, so the display reads
+      "42%" without saying what is at 42%. Emitting a paired label frame is cheap (the cycle is
+      capped at 4 and there is usually one task) but was not a v1 requirement.
+- [ ] **Frame icons.** The 8x8 colour block takes width from the text and LaMetric's built-in icon
+      IDs have to be chosen by eye against the real display, so v1 is text-only.
+- [ ] **Alerts** via `/api/v2/device/notifications` — a transient push over whatever is showing, for
+      "task finished". Needs the device API key (a second credential), a second client, and
+      de-duplication so it does not spam.
 - [ ] **Dial bindings** — undecided; rotation/press are transported and logged until then.
 - [ ] **Persisted slot ordering** — a `StreamDeckLayout` ECHO object with ordered slots.
 - [ ] **Edge mode** — serve the same protocol from edge so the dashboard survives Composer being

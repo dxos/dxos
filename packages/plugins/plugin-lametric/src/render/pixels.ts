@@ -24,6 +24,7 @@ const drawText = (pixels: boolean[][], text: string, offset: number): void => {
     if (left + GLYPH_WIDTH < 0 || left >= WIDTH) {
       continue;
     }
+
     for (let row = 0; row < GLYPH_HEIGHT; row++) {
       for (let column = 0; column < GLYPH_WIDTH; column++) {
         const x = left + column;

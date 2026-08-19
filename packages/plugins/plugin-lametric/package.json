@@ -96,10 +96,12 @@
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/types/Settings.mjs"
-    }
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
+    "PLUGIN.mdl",
     "dist",
     "dx.config.ts",
     "src"
