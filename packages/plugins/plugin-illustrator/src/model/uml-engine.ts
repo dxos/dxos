@@ -13,7 +13,7 @@ import { layout as dagreLayout, graphlib } from '@dagrejs/dagre';
 import ELK from 'elkjs/lib/elk.bundled.js';
 
 import type * as Scene from './scene';
-import { type UmlModel, parse, relationRanks } from './uml';
+import { type Direction, type UmlModel, parse, relationRanks } from './uml';
 import { type Cell, GRID, type CompileOptions as GridCompileOptions, type Rect, emit, measureCell } from './uml-grid';
 
 export type Engine = 'dagre' | 'elk';
@@ -32,8 +32,11 @@ type PlaceOptions = {
   cell: Cell;
   gapMain: number;
   gapCross: number;
-  horizontal: boolean;
+  direction: Direction;
 };
+
+const DAGRE_DIRECTION: Record<Direction, string> = { TB: 'TB', BT: 'BT', LR: 'LR', RL: 'RL' };
+const ELK_DIRECTION: Record<Direction, string> = { TB: 'DOWN', BT: 'UP', LR: 'RIGHT', RL: 'LEFT' };
 
 /**
  * Edges oriented for layering: inheritance, realization, and dependency point at abstractions,
@@ -56,10 +59,10 @@ const snapRects = (rects: Map<string, Rect>): Map<string, Rect> => {
 };
 
 /** dagre: network-simplex layering + median-sweep crossing minimization. Sync. */
-const dagrePlace = (model: UmlModel, { cell, gapMain, gapCross, horizontal }: PlaceOptions): Map<string, Rect> => {
+const dagrePlace = (model: UmlModel, { cell, gapMain, gapCross, direction }: PlaceOptions): Map<string, Rect> => {
   const graph = new graphlib.Graph();
   graph.setGraph({
-    rankdir: horizontal ? 'LR' : 'TB',
+    rankdir: DAGRE_DIRECTION[direction],
     ranker: 'network-simplex',
     ranksep: gapMain,
     nodesep: gapCross,
@@ -87,14 +90,14 @@ const dagrePlace = (model: UmlModel, { cell, gapMain, gapCross, horizontal }: Pl
 /** ELK layered: layer-sweep crossing minimization + Brandes-Köpf placement. Async. */
 const elkPlace = async (
   model: UmlModel,
-  { cell, gapMain, gapCross, horizontal }: PlaceOptions,
+  { cell, gapMain, gapCross, direction }: PlaceOptions,
 ): Promise<Map<string, Rect>> => {
   const elk = new ELK();
   const result = await elk.layout({
     id: 'root',
     layoutOptions: {
       'elk.algorithm': 'layered',
-      'elk.direction': horizontal ? 'RIGHT' : 'DOWN',
+      'elk.direction': ELK_DIRECTION[direction],
       'elk.layered.spacing.nodeNodeBetweenLayers': String(gapMain),
       'elk.spacing.nodeNode': String(gapCross),
       // Favors long straight chains over balanced centering — fewer jagged connectors.
@@ -125,12 +128,11 @@ export const compile = async (source: string, options: CompileOptions = {}): Pro
   const { origin, scale, maxWidth = GRID * 6, engine = 'elk' } = options;
   const model = parse(source);
   const cell = measureCell(model, { maxWidth, cell: options.cell, titleHeight: options.titleHeight });
-  const horizontal = model.direction === 'LR' || model.direction === 'RL';
   const place: PlaceOptions = {
     cell,
     gapMain: snap(options.gapMain ?? GAP_MAIN),
     gapCross: snap(options.gapCross ?? GAP_CROSS),
-    horizontal,
+    direction: model.direction,
   };
   const rects = engine === 'dagre' ? dagrePlace(model, place) : await elkPlace(model, place);
   return emit({ model, cell, rects, ranks: relationRanks(model) }, { origin, scale });

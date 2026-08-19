@@ -216,6 +216,9 @@ const PluginManagerHost = ({
     return pluginManager;
   }, [options]);
 
+  // The ReactRoot contribution tracks `children` (recreated per render), but shutdown must not:
+  // tearing the manager down from a re-render's cleanup would leave the mounted story running
+  // against a dead manager.
   useEffect(() => {
     const [capability] = CapabilityManager.expandContributions([
       Capability.contribute(Capabilities.ReactRoot, {
@@ -230,6 +233,12 @@ const PluginManagerHost = ({
       module: 'org.dxos.app-framework.with-plugin-manager.lazy',
     });
 
+    return () => {
+      manager.capabilities.remove(capability.interface, capability.implementation);
+    };
+  }, [manager, contextId, children]);
+
+  useEffect(() => {
     // A story mounts one surface, so no demand ever reaches the modules gated behind it. The
     // `withPluginManager` path does this for us; this lazy path builds its own manager and so
     // must do it too, or Idle-gated contributions (assistant settings) never land and the first
@@ -237,10 +246,9 @@ const PluginManagerHost = ({
     EffectEx.runDetached(activateDemandGatedModules(manager));
 
     return () => {
-      manager.capabilities.remove(capability.interface, capability.implementation);
       void EffectEx.runAndForwardErrors(manager.shutdown());
     };
-  }, [manager, contextId, children]);
+  }, [manager]);
 
   // Forward `setupEvents` (e.g. SetupSettings) so plugins contribute their settings capabilities;
   // `useApp` is what fires them, and without this the lazy path skips them (the non-lazy

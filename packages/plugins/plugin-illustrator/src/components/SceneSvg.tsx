@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useId, useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -72,12 +72,15 @@ const wrapLines = (text: string, maxChars: number): string[] =>
 const RADIUS = 8;
 
 /** Rect path rounding only the top or bottom corners; the opposite edge stays square. */
-const partiallyRoundedRect = ({ x, y, w, h }: Rect, radius: number, corners: 'top' | 'bottom'): string =>
-  corners === 'top'
+const partiallyRoundedRect = ({ x, y, w, h }: Rect, cornerRadius: number, corners: 'top' | 'bottom'): string => {
+  // Clamp so small rects cannot produce self-overlapping path segments.
+  const radius = Math.min(cornerRadius, w / 2, h / 2);
+  return corners === 'top'
     ? `M ${x} ${y + h} L ${x} ${y + radius} Q ${x} ${y} ${x + radius} ${y} L ${x + w - radius} ${y} ` +
       `Q ${x + w} ${y} ${x + w} ${y + radius} L ${x + w} ${y + h} Z`
     : `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h - radius} Q ${x + w} ${y + h} ${x + w - radius} ${y + h} ` +
       `L ${x + radius} ${y + h} Q ${x} ${y + h} ${x} ${y + h - radius} Z`;
+};
 
 /** Muted stroke/text for elements the dialects mark grey (e.g. subgraph frames). */
 const colorClass = (color?: Scene.Color) => (color === 'grey' ? 'text-neutral-400 dark:text-neutral-500' : undefined);
@@ -172,9 +175,11 @@ type ElementProps = {
   object: Scene.WorldObject;
   element: Scene.Element;
   registry: Map<string, Rect>;
+  /** Per-instance arrowhead marker fragment id (multiple SceneSvgs may share a page). */
+  markerId: string;
 };
 
-const SceneElement = ({ object, element, registry }: ElementProps) => {
+const SceneElement = ({ object, element, registry, markerId }: ElementProps) => {
   const { x = 0, y = 0 } = object.origin ?? {};
   const scale = object.scale ?? 1;
   const map = (point: Point): Point => ({ x: x + point.x * scale, y: y + point.y * scale });
@@ -296,7 +301,7 @@ const SceneElement = ({ object, element, registry }: ElementProps) => {
             y2={end.y}
             strokeWidth={1.5}
             strokeDasharray={element.stroke ? strokeDash[element.stroke] : undefined}
-            markerEnd='url(#scene-svg-arrowhead)'
+            markerEnd={`url(#${markerId})`}
           />
           {element.text && (
             <MultilineText
@@ -328,12 +333,16 @@ export type SceneSvgProps = ThemedClassName<{
  */
 export const SceneSvg = ({ classNames, objects, grid }: SceneSvgProps) => {
   const { registry, viewBox } = useMemo(() => resolve(objects), [objects]);
+  // Fragment ids are document-global: derive per-instance ids so co-rendered scenes don't collide.
+  const instanceId = useId();
+  const markerId = `${instanceId}-arrowhead`;
+  const gridId = `${instanceId}-grid`;
 
   return (
     <svg viewBox={viewBox} className={mx('h-full w-full text-neutral-800 dark:text-neutral-200', classNames)}>
       <defs>
         <marker
-          id='scene-svg-arrowhead'
+          id={markerId}
           viewBox='0 0 10 10'
           refX='9'
           refY='5'
@@ -344,16 +353,16 @@ export const SceneSvg = ({ classNames, objects, grid }: SceneSvgProps) => {
           <path d='M 0 1 L 9 5 L 0 9 z' className='fill-neutral-800 dark:fill-neutral-200 stroke-none' />
         </marker>
         {grid && (
-          <pattern id='scene-svg-grid' width={grid} height={grid} patternUnits='userSpaceOnUse'>
+          <pattern id={gridId} width={grid} height={grid} patternUnits='userSpaceOnUse'>
             <path d={`M ${grid} 0 L 0 0 0 ${grid}`} className='fill-none stroke-neutral-500/20' strokeWidth={1} />
           </pattern>
         )}
       </defs>
-      {grid && <rect x='-10000' y='-10000' width='20000' height='20000' fill='url(#scene-svg-grid)' />}
+      {grid && <rect x='-10000' y='-10000' width='20000' height='20000' fill={`url(#${gridId})`} />}
       {objects.map((object) => (
         <g key={object.id}>
           {object.elements.map((element) => (
-            <SceneElement key={element.id} object={object} element={element} registry={registry} />
+            <SceneElement key={element.id} object={object} element={element} registry={registry} markerId={markerId} />
           ))}
         </g>
       ))}

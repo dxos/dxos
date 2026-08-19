@@ -76,25 +76,41 @@ export const inheritanceTreeRule: GroupRule = {
         continue;
       }
       const rects = new Map<string, Rect>();
+      // Cyclic or diamond hierarchies (LLM/user input) must not recurse forever; each node
+      // renders once, on first visit.
+      const claimable = (id: string) => unclaimed.has(id) && !rects.has(id);
+      const widths = new Map<string, number>();
       // Tidy-tree: a subtree is as wide as its children row (or one cell); parent centers over it.
       const layoutSubtree = (id: string, x: number, depth: number): number => {
-        const kids = (children.get(id) ?? []).filter((kid) => unclaimed.has(kid));
-        const widths = kids.map((kid) => subtreeWidth(kid));
-        const width = Math.max(cell.w, widths.reduce((sum, w) => sum + w, 0) + Math.max(0, kids.length - 1) * GAP);
-        let childX = x + (width - (widths.reduce((sum, w) => sum + w, 0) + Math.max(0, kids.length - 1) * GAP)) / 2;
+        rects.set(id, { x: 0, y: 0, w: cell.w, h: cell.h });
+        const kids = (children.get(id) ?? []).filter(claimable);
+        const kidWidths = kids.map((kid) => subtreeWidth(kid));
+        const rowWidth = kidWidths.reduce((sum, w) => sum + w, 0) + Math.max(0, kids.length - 1) * GAP;
+        const width = Math.max(cell.w, rowWidth);
+        let childX = x + (width - rowWidth) / 2;
         for (const [index, kid] of kids.entries()) {
           layoutSubtree(kid, childX, depth + 1);
-          childX += widths[index] + GAP;
+          childX += kidWidths[index] + GAP;
         }
         rects.set(id, { x: x + (width - cell.w) / 2, y: depth * (cell.h + GAP), w: cell.w, h: cell.h });
         return width;
       };
-      const subtreeWidth = (id: string): number => {
-        const kids = (children.get(id) ?? []).filter((kid) => unclaimed.has(kid));
-        if (kids.length === 0) {
+      const subtreeWidth = (id: string, seen: Set<string> = new Set()): number => {
+        const cached = widths.get(id);
+        if (cached !== undefined) {
+          return cached;
+        }
+        if (seen.has(id)) {
           return cell.w;
         }
-        return Math.max(cell.w, kids.reduce((sum, kid) => sum + subtreeWidth(kid), 0) + (kids.length - 1) * GAP);
+        seen.add(id);
+        const kids = (children.get(id) ?? []).filter((kid) => unclaimed.has(kid) && !rects.has(kid) && !seen.has(kid));
+        const width =
+          kids.length === 0
+            ? cell.w
+            : Math.max(cell.w, kids.reduce((sum, kid) => sum + subtreeWidth(kid, seen), 0) + (kids.length - 1) * GAP);
+        widths.set(id, width);
+        return width;
       };
       const width = layoutSubtree(root, 0, 0);
       const depth = Math.max(...[...rects.values()].map((rect) => rect.y)) + cell.h;

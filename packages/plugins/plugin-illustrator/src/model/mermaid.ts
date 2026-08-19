@@ -166,13 +166,16 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
   }
   const widest = Math.max(...[...lanes.values()].map((lane) => lane.length), 1);
 
+  // Axis-specific node sizes: for LR/RL the main axis advances by width and lanes stack by height.
+  const mainSize = horizontal ? NODE_W : NODE_H;
+  const crossSize = horizontal ? NODE_H : NODE_W;
   const positions = new Map<string, Scene.Point>();
   for (const [lane, members] of lanes) {
-    const span = members.length * NODE_W + (members.length - 1) * gapCross;
-    const offset = (widest * NODE_W + (widest - 1) * gapCross - span) / 2;
+    const span = members.length * crossSize + (members.length - 1) * gapCross;
+    const offset = (widest * crossSize + (widest - 1) * gapCross - span) / 2;
     members.forEach((node, index) => {
-      const cross = offset + index * (NODE_W + gapCross);
-      const main = lane * (NODE_H + gapMain);
+      const cross = offset + index * (crossSize + gapCross);
+      const main = lane * (mainSize + gapMain);
       positions.set(node.id, horizontal ? { x: main, y: cross } : { x: cross, y: main });
     });
   }

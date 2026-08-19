@@ -15,13 +15,12 @@ import type * as Scene from './scene';
 import { type UmlModel, type UmlRelation, parse, relationRanks, relationStyle, relationText } from './uml';
 
 /**
- * Snap unit for cells, gaps, and positions. tldraw renders grid lines every 1/4/16/64 × the
- * document gridSize (10) depending on zoom, so 40 — the step visible at working zoom — puts
- * node edges on rendered lines; finer 10-unit alignment only shows past ~0.7 zoom.
+ * Snap unit for cells, gaps, and positions, chosen so node edges land on the grid lines tldraw
+ * renders at working zoom (it draws lines at power-of-two multiples of its document gridSize).
  */
 export const GRID = 32;
 
-/** The document grid unit, used for sub-cell nudges (channel separation, label offsets). */
+/** Half-cell minor grid, used for sub-cell nudges (ports, channel separation, label offsets). */
 const GRID_FINE = GRID / 2;
 
 const MIN_W = GRID * 2;
@@ -212,8 +211,11 @@ export const measureCell = (model: UmlModel, { maxWidth, cell: override = {}, ti
   );
   const bodyLines = Math.max(
     1,
-    ...model.classes.map((entry) =>
-      memberLines(entry).reduce((sum, line) => sum + wrapped(line.length, MEMBER_FONT), 0),
+    ...model.classes.map(
+      (entry) =>
+        memberLines(entry).reduce((sum, line) => sum + wrapped(line.length, MEMBER_FONT), 0) +
+        // The emitted body inserts a blank separator line between attributes and methods.
+        (entry.attributes.length && entry.methods.length ? 1 : 0),
     ),
   );
   // A fixed header snaps to the fine grid so it can sit below one GRID cell; the measured
@@ -235,11 +237,11 @@ export type CompileOptions = {
   origin?: Scene.Point;
   /** Canvas px per scene unit. */
   scale?: number;
-  /** Gap between ranks along the flow direction, in scene units (default 80, snapped to GRID). */
+  /** Gap between ranks along the flow direction, in scene units (default GRID × 4, snapped). */
   gapMain?: number;
-  /** Gap between classes within a rank, in scene units (default 80, snapped to GRID). */
+  /** Gap between classes within a rank, in scene units (default GRID × 4, snapped). */
   gapCross?: number;
-  /** Maximum cell width, in scene units (default 400); longer lines wrap. */
+  /** Maximum cell width, in scene units (default GRID × 6); longer lines wrap. */
   maxWidth?: number;
   /** Fixed cell size (snapped to GRID); overrides measurement per dimension. */
   cell?: CellSize;

@@ -32,7 +32,9 @@ export const SvgHandler: ContentHandler = {
   identify: (record) => (isSvgRecord(record) ? { object: record.object, element: record.element } : undefined),
 
   render: (object, placement, content) => {
-    let order = Object.values(content).filter(isSvgRecord).length;
+    // Past the max, not the count: deletions leave gaps, and a reused order makes paint order
+    // ambiguous on read.
+    let order = Math.max(-1, ...Object.values(content).filter(isSvgRecord).map((record) => record.order)) + 1;
     const records: ContentMap = {};
     for (const element of object.elements) {
       records[`${object.id}/${element.id}`] = {
