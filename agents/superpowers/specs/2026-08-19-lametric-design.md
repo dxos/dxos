@@ -249,14 +249,31 @@ is never echoed into chat, a log, or a commit.
 
 ## Spikes
 
-1. ~~**Does `developer.lametric.com` send CORS headers?**~~ **Resolved 2026-08-19: no.** See the
-   transport section — it forces every transport through the Tauri HTTP client and makes v1
-   desktop-only.
-2. **Does the local device answer on plain HTTP?** The documented local push URL is
-   `https://<ip>:4343/...`, which presents a self-signed certificate. The device API is also served
-   over `http://<ip>:8080`. If the widget-update path answers there, `LocalTransport` needs no
-   certificate handling at all. Try 8080 first; fall back to 4343 with the plugin's
-   `danger.acceptInvalidCerts`. Needs the physical device.
+1. ~~**Does `developer.lametric.com` send CORS headers?**~~ **Resolved 2026-08-19: no.** It answers
+   `OPTIONS` with `405` and sends no `Access-Control-*` header at all, so the cloud path is
+   unreachable from any browser page.
+2. ~~**Does the local device answer on plain HTTP?**~~ **Resolved 2026-08-19 against real
+   hardware: yes.** Both ports answer:
+
+   ```
+   $ curl -s -D - -o /dev/null http://<device>:8080/api/v2
+   HTTP/1.1 401 Unauthorized
+   WWW-Authenticate: Basic realm="global"
+   Access-Control-Allow-Origin: *
+   Access-Control-Allow-Headers: *
+   Server: Lighttpd
+   ```
+
+   **This also corrects the "desktop-only" reasoning.** The _device_ is CORS-permissive — it returns
+   `Access-Control-Allow-Origin: *`. What blocks a hosted Composer is the transport, not CORS:
+   `http://…:8080` is mixed content from an HTTPS page, and `https://…:4343` presents a self-signed
+   certificate. From an `http://localhost` dev origin the device is reachable from the web view
+   directly. The Tauri client is still what a shipped desktop build uses, and the cloud path remains
+   unreachable from any browser, so the packaging conclusion stands — but only the cloud half of the
+   original justification was correct.
+
+   `LocalTransport` keeps `https://…:4343` as its default (encrypted in transit, and Tauri accepts
+   the certificate) with `scheme: 'http'` available for the plaintext port.
 
 ## Out of scope
 

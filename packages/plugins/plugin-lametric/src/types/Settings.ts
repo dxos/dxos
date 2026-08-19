@@ -7,6 +7,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { Format } from '@dxos/echo';
+
 export const Settings = Schema.Struct({
   address: Schema.optional(
     Schema.String.annotate({
@@ -15,7 +17,8 @@ export const Settings = Schema.Struct({
     }),
   ),
   apiKey: Schema.optional(
-    Schema.String.annotate({
+    // Rendered masked: this is a credential typed into a settings form.
+    Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
       title: 'Device API key',
       description: 'From the Devices section of your LaMetric developer account.',
     }),

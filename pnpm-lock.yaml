@@ -11492,6 +11492,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect

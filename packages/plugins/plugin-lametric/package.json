@@ -109,6 +109,7 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

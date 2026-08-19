@@ -15,14 +15,34 @@ From the LaMetric mobile app, install **My Data (DIY)** from the LaMetric Market
 
 ### 2. Collect two values
 
-| Value | Where |
-| --- | --- |
-| Device address | LaMetric mobile app → `Settings` → `Wi-Fi` → `IP Address` |
-| Device API key | The **Devices** section of your account on [developer.lametric.com](https://developer.lametric.com) |
+**Device address** — on the device itself, `Settings` → `Wi-Fi`, which lists its IP. If it is not
+shown there:
+
+- Your router's client list will name it (`LM` followed by digits).
+- Or find it by the ports it serves — the device answers on 8080 and 4343 and identifies itself with
+  a `Basic realm="global"` challenge:
+
+  ```bash
+  for i in $(seq 1 254); do (nc -z -G 1 -w 1 "192.168.1.$i" 8080 2>/dev/null && echo "192.168.1.$i") & done; wait
+  ```
+
+  Substitute your own subnet, then confirm the candidate:
+
+  ```bash
+  curl -s -D - -o /dev/null http://<address>:8080/api/v2
+  ```
+
+  A LaMetric answers `401` with `Server: Lighttpd` and `WWW-Authenticate: Basic realm="global"`.
+
+**Device API key** — the **Devices** section of your account on
+[developer.lametric.com](https://developer.lametric.com). The username is always the literal `dev`;
+this key is the password.
 
 ### 3. Configure the plugin
 
-Enable the LaMetric plugin in Composer and fill in those two fields. That is the whole setup: the
+Enable the LaMetric plugin in Composer and fill in those two fields **in the plugin's settings** —
+the key is stored there, masked, and never needs to go in a file or an environment variable. That is
+the whole setup: the
 plugin reads the device's app list and finds the My Data (DIY) widget itself, because that widget's
 UUID identifies one installation of the app and is not shown anywhere in LaMetric's apps or portal.
 
@@ -37,16 +57,21 @@ works with no internet.
 ## Desktop only
 
 Pushes are issued through Tauri's HTTP client, from Rust rather than from the web view, so **this
-plugin does nothing in a browser**. That is not a shortcut: neither endpoint is reachable from a web
-page.
+plugin does nothing in a browser build**. The reasons differ per transport, and CORS is only one of
+them:
 
-- LaMetric's cloud answers a CORS preflight with `405` and sends no `Access-Control-*` header, and
-  the `X-Access-Token` header forces a preflight on every request.
-- The LAN device is plain HTTP (blocked as mixed content from an HTTPS page) or a self-signed
-  certificate on port 4343, and its `Authorization` header forces a preflight too.
+- **Cloud**: `developer.lametric.com` answers a CORS preflight with `405` and sends no
+  `Access-Control-*` header, while `X-Access-Token` forces a preflight on every request. Genuinely
+  unreachable from any page.
+- **Device**: the device itself is permissive — it returns `Access-Control-Allow-Origin: *` and
+  `Access-Control-Allow-Headers: *`. What blocks a hosted Composer is the *transport*: `http://…:8080`
+  is mixed content from an HTTPS page, and `https://…:4343` presents a self-signed certificate the
+  browser will not accept. From an `http://localhost` dev origin the device is in fact reachable
+  directly.
 
-Supporting the browser means an edge worker proxying to `developer.lametric.com`. The transport
-interface already isolates the base URL, so that is a third implementation and nothing else changes.
+Browser support for the cloud path means an edge worker proxying to `developer.lametric.com`. The
+transport interface already isolates the origin, so that is another implementation and nothing else
+changes.
 
 ## What it shows
 
