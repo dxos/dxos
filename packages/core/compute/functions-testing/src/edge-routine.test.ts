@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Chat, ChatContextSkill, RunInstructions } from '@dxos/assistant-toolkit';
+import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { Client } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -16,6 +16,7 @@ import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN } from '@dxos/keys';
 import { dbg, log } from '@dxos/log';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { ErrorCodec } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Text } from '@dxos/schema';
@@ -58,7 +59,10 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
     space.db.add(Obj.make(TestSchema.Organization, { name: 'Globex Industries' }));
     space.db.add(Obj.make(TestSchema.Organization, { name: 'Initech' }));
 
-    const databaseSkill = space.db.add(ChatContextSkill.make());
+    // The instructions demand the Query tool, which lives on plugin-space's Database skill (the old
+    // database skill split in two; the chat-context half carries no object verbs). Passing requires
+    // the edge runtime's @dxos pin to carry the plugin-space verbs.
+    const databaseSkill = space.db.add(DatabaseSkill.make());
 
     const instructions = space.db.add(
       Instructions.make({

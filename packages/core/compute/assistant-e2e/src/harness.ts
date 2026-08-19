@@ -33,6 +33,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -161,6 +162,10 @@ const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions)
   }),
   RoutinePlugin.make(),
   InboxPlugin.make(),
+  // Registers the object-verb handlers (and the Database skill definition) so a test binding
+  // `DatabaseSkill` can actually invoke its tools; binding stays per-test, so memoized
+  // conversations for the default skill set are untouched.
+  SpacePlugin.make({}),
   ...(options.plugins ?? []),
 ];
 

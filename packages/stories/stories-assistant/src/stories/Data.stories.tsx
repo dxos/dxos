@@ -21,6 +21,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { meta as automationMeta } from '@dxos/plugin-routine';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { ViewModel } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
 import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
@@ -358,14 +359,22 @@ export const WithCRM: Story = {
   decorators: createDecorators({
     importSnapshot: loadMockInbox,
     lazyPlugins: async () => {
-      const [CrmPlugin, InboxPlugin, MarkdownPlugin, TablePlugin] = await Promise.all([
+      const [CrmPlugin, InboxPlugin, MarkdownPlugin, SpacePlugin, TablePlugin] = await Promise.all([
         import('@dxos/plugin-crm/CrmPlugin'),
         import('@dxos/plugin-inbox/InboxPlugin'),
         import('@dxos/plugin-markdown/MarkdownPlugin'),
+        // Registers the object-verb handlers behind the Database skill.
+        import('@dxos/plugin-space/SpacePlugin'),
         import('@dxos/plugin-table/TablePlugin'),
       ]);
       return {
-        plugins: [CrmPlugin.make(), InboxPlugin.make(), MarkdownPlugin.make(), TablePlugin.make()],
+        plugins: [
+          CrmPlugin.make(),
+          InboxPlugin.make(),
+          MarkdownPlugin.make(),
+          SpacePlugin.make({}),
+          TablePlugin.make(),
+        ],
       };
     },
     types: [
@@ -403,6 +412,8 @@ export const WithCRM: Story = {
     skills: [
       AssistantSkill.key,
       CrmSkill.key,
+      // The old database skill split in two: object CRUD (plugin-space) and chat-context binding.
+      DatabaseSkill.key,
       ChatContextSkill.key,
       InboxSkill.key,
       MarkdownSkill.key,

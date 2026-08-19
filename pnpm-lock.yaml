@@ -4411,6 +4411,9 @@ importers:
       '@dxos/plugin-sandbox':
         specifier: workspace:*
         version: link:../../../plugins/plugin-sandbox
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-space
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../../../plugins/plugin-testing
@@ -4439,6 +4442,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-space
     devDependencies:
       '@dxos/ai':
         specifier: workspace:*
@@ -5071,6 +5077,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-space
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols

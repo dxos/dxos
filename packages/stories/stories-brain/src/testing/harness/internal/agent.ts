@@ -16,6 +16,8 @@ import { DXN } from '@dxos/keys';
 import { type RDF } from '@dxos/pipeline-rdf';
 import * as BrainOperationHandlerSet from '@dxos/plugin-brain/BrainOperationHandlerSet';
 import * as BrainSkill from '@dxos/plugin-brain/BrainSkill';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
+import { SpaceObjectOperationHandlerSet, SpaceOperationHandlerSet } from '@dxos/plugin-space/operations';
 import { Message } from '@dxos/types';
 
 import { type ModelVariant } from '../models';
@@ -64,12 +66,17 @@ export type AgentEvalResult = {
  */
 export const runAgentEval = async (config: AgentEvalConfig, testContext: TestContext): Promise<AgentEvalResult> => {
   const skills = [
+    // The old database skill split in two: object CRUD (plugin-space) and chat-context binding —
+    // the source arm reads the feed through the Database skill's query.
+    DatabaseSkill.make(),
     ChatContextSkill.make(),
     ...(config.mode === 'facts' ? [BrainSkill.make()] : []),
     ...(config.mode === 'rag' ? [RagSkill.make()] : []),
     ...(config.mode === 'hybrid' ? [HybridSkill.make()] : []),
   ];
   const operationHandlers = [
+    SpaceObjectOperationHandlerSet,
+    SpaceOperationHandlerSet,
     ChatContextHandlers,
     ...(usesFactStore(config.mode) ? [BrainOperationHandlerSet.handlers] : []),
     ...(config.mode === 'rag' ? [RagOperationHandlerSet] : []),
