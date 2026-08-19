@@ -60,9 +60,11 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 //
 
 let registered;
+let pluginSocket;
 const commands = [];
 const streamDeck = new WebSocketServer({ host: '127.0.0.1', port: STREAM_DECK_PORT });
 streamDeck.on('connection', (socket) => {
+  pluginSocket = socket;
   socket.on('message', (data) => {
     const message = JSON.parse(String(data));
     if (message.event === 'registerPlugin') {
@@ -168,6 +170,22 @@ try {
     feedback.some((payload) => payload.indicator?.value === 50),
     feedback,
   );
+
+  // A press on the second Favorite key must reach Composer as slot 1 — slots are positional, so this
+  // is what proves the ordering the user sees matches the ordering the frame was built for.
+  pluginSocket.send(
+    JSON.stringify({
+      event: 'keyDown',
+      action: `${manifest.UUID}.favorite`,
+      context: `${manifest.UUID}.favorite:1`,
+      device: 'device-1',
+      payload: { controller: 'Keypad', coordinates: { column: 1, row: 0 }, isInMultiAction: false, settings: {} },
+    }),
+  );
+  await wait(300);
+
+  const input = inbox.find((message) => message._tag === 'input');
+  check('a key press is reported to Composer with its slot', input?.kind === 'keyDown' && input?.slot === 1, input);
 
   client.close();
 } finally {

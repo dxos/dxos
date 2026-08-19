@@ -18,6 +18,8 @@ export default defineConfig({
     Protocol: 'src/protocol/Protocol.ts',
     render: 'src/render/index.ts',
     translations: 'src/translations.ts',
+    types: 'src/types/index.ts',
+    StreamDeckCapabilities: 'src/types/StreamDeckCapabilities.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

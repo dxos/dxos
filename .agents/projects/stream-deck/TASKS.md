@@ -1,6 +1,6 @@
 # Stream Deck — Tasks
 
-_Resume: M1 and M2 are both done and green (build + lint + 34 node tests in plugin-stream-deck, 11 in composer-stream-deck, 4 storybook tests, 9 smoke checks). Everything except the physical device is verified: `composer-stream-deck:smoke` runs the assembled plugin against a stand-in Stream Deck application. NEXT: install on the real device (`streamdeck link` + `restart`), then Phase 3 (press → open object) and the headless bridge driver. `PLUGIN.mdl` still owed before the first PR._
+_Resume: M1–M3 done and green (39 node + 6 storybook tests in plugin-stream-deck, 11 node + 10 smoke checks in composer-stream-deck, forced composer-app typecheck clean). `PLUGIN.mdl` authored. Everything except the physical device is verified. NEXT: install on the real device (`streamdeck link` + `restart`) and iterate on how the keys actually look at 144x144, then open the PR._
 
 Design and decisions: [DESIGN.md](./DESIGN.md).
 
@@ -45,8 +45,8 @@ before the wire exists.
     initialise there — the reference `plugin-kanban` container story is blank too); they pass under
     `moon run plugin-stream-deck:test-storybook`.
 - [x] **Register the plugin** in `composer-app`'s `plugin-defs.tsx`, enabled only under `isLabs`.
-- [ ] **Author `PLUGIN.mdl`** — required before the plugin's first PR merges (`composer-plugins`
-      skill); transcribe the design plus the as-built plugin.
+- [x] **Author `PLUGIN.mdl`** — types, 4 features, 6 acceptance scenarios; wired as a plugin asset
+      (`dx.config.ts` `spec:` + `AppCapability.pluginAsset`).
 - [ ] **Changeset** — new private package, so likely none required; confirm against
       `agents/instructions/changesets.md`.
 
@@ -90,15 +90,27 @@ The `.sdPlugin` bundle and the WebSocket transport. Needs the physical device an
 
 ## Phase 3 (M3): Interaction
 
-- [ ] **Headless bridge driver** — Phase 2 drives the bridge from the dashboard surface, so the keys
-      only stay live while the panel is open. Move the model to a non-hook query subscription in a
-      capability so the device works with no surface rendered.
-- [ ] **Key press → open object** — resolve the slot against the last frame's DXN, dispatch the
-      open-object operation.
-- [ ] **Focus the window** on desktop (Tauri) when a key is pressed.
-- [ ] **Settings surface** — enable/disable the bridge, show connection state and the bound space.
-- [ ] **Status indicator** — surface bridge state in the app (disconnected is the normal state for
-      users without the hardware, so it must be quiet).
+### Tasks
+
+- [x] **Headless bridge driver** (`capabilities/bridge-driver.ts`) — owns the _only_ bridge, gated on
+      `ClientEvents.SpacesReady` rather than on the plugin's UI
+  - Subscribes to the layout atom (active space), a `Filter.everything()` query (stats), a `Tag` query
+    (rebinding favorites when the `favorite` tag appears or is deleted), the progress snapshot atom,
+    the plugin manager's `enabled` atom, and the icon registry (icons resolve out of the sprite
+    asynchronously, so a key can be published without its glyph and needs republishing).
+  - The panel no longer opens a bridge: the device accepts one client, so two would fight over it.
+    Surfaces read the new `StreamDeckCapabilities.BridgeStatus` atom instead.
+- [x] **Key press → open object** — `KeySpec.target` is now the graph navigation path, which is what
+      `LayoutOperation.Open` consumes, so a press needs no lookup. Resolved against the frame last
+      published rather than a re-query.
+- [x] **Focus the window** on desktop — `getCurrentWindow().show()` + `setFocus()`, guarded by
+      `isTauri()`. Verified on the wire by the smoke test's slot-1 press check.
+- [x] **Status indicator** — rendered only while a device is connected, since most users have no
+      device plugin and a permanent disconnected state would be rail noise. The panel shows the same
+      state as a caption.
+- [ ] **Settings surface** — deferred, not built. The plugin registry toggle already turns the whole
+      thing off, so a second switch would be redundant until there is something else to configure
+      (which space to bind, or a non-default port).
 
 ## Phase 4 (M4): Later
 

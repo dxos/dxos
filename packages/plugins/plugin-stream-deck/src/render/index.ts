@@ -3,6 +3,7 @@
 //
 
 export * from './dial';
+export * from './frame';
 export * from './icons';
 export * from './key';
 export * from './palette';

@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Annotation, DXN, Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
@@ -48,7 +49,10 @@ describe('favorites', () => {
     // Sorted by label, padded to the slot count.
     expect(specs.map((spec) => spec?.label)).toEqual(['Apple', 'Zebra', undefined, undefined]);
     expect(specs[0]).toMatchObject({ icon: 'ph--note--regular', hue: 'cyan' });
-    expect(specs[0]?.target).toBe(Obj.getURI(objects.find((object) => object.name === 'Apple')!));
+    // The key carries a navigation path, which is what opening the object consumes.
+    expect(specs[0]?.target).toBe(
+      GraphPath.getObjectPathFromObject(objects.find((object) => object.name === 'Apple')!),
+    );
   });
 
   test('ignores a keyed provider tag with the same label', async ({ expect }) => {

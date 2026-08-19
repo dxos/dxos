@@ -2,7 +2,7 @@
   "name": "@dxos/plugin-stream-deck",
   "version": "0.11.1",
   "private": true,
-  "description": "Project a space onto Stream Deck hardware — favorites on keys, progress and stats on dials.",
+  "description": "Project a space onto Stream Deck hardware \u2014 favorites on keys, progress and stats on dials.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -63,6 +63,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -86,10 +91,22 @@
       "source": "./src/protocol/Protocol.ts",
       "types": "./dist/types/src/protocol/Protocol.d.ts",
       "import": "./dist/lib/Protocol.mjs"
-    }
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "import": "./dist/lib/types.mjs"
+    },
+    "./StreamDeckCapabilities": {
+      "source": "./src/types/StreamDeckCapabilities.ts",
+      "types": "./dist/types/src/types/StreamDeckCapabilities.d.ts",
+      "import": "./dist/lib/StreamDeckCapabilities.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
+    "PLUGIN.mdl",
     "dist",
     "dx.config.ts",
     "src"
@@ -102,16 +119,17 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/progress": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
+    "@tauri-apps/api": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-client": "workspace:*",

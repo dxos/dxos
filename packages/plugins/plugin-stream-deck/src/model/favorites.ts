@@ -4,6 +4,7 @@
 
 import { useMemo } from 'react';
 
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { type Database, Filter, Obj, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 
@@ -26,14 +27,24 @@ const DEFAULT_ICON = 'ph--cube--regular';
  */
 export const toKeySpecs = (objects: readonly Obj.Unknown[], slots: number): (KeySpec | null)[] => {
   const specs = objects
-    .map((object): KeySpec => {
+    .flatMap((object): KeySpec[] => {
+      // An object with no database or no type URI has no navigation path, so a key for it could not
+      // open anything; drop it rather than surfacing a dead key.
+      let target: string;
+      try {
+        target = GraphPath.getObjectPathFromObject(object);
+      } catch {
+        return [];
+      }
       const icon = Obj.getIcon(object);
-      return {
-        target: Obj.getURI(object),
-        label: Obj.getLabel(object, { fallback: 'typename' }) ?? 'Object',
-        icon: icon?.icon ?? DEFAULT_ICON,
-        hue: icon?.hue,
-      };
+      return [
+        {
+          target,
+          label: Obj.getLabel(object, { fallback: 'typename' }) ?? 'Object',
+          icon: icon?.icon ?? DEFAULT_ICON,
+          hue: icon?.hue,
+        },
+      ];
     })
     .sort((a, b) => a.label.localeCompare(b.label) || a.target.localeCompare(b.target));
 

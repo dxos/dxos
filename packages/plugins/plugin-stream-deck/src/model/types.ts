@@ -7,7 +7,10 @@
  * (only the rendered SVG does), so it stays a plain type.
  */
 export type KeySpec = {
-  /** Object DXN; the press target. */
+  /**
+   * Graph navigation path of the object — what `LayoutOperation.Open` consumes, so a press needs no
+   * lookup. Carried through the frame, which makes the device stateless about what a key means.
+   */
   target: string;
   label: string;
   /** Icon name in the sprite convention, e.g. `ph--house--regular`. */

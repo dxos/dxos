@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { StreamDeckDashboardSurface } from './StreamDeckSurfaces';
+import { StreamDeckDashboardSurface, StreamDeckStatusSurface } from './StreamDeckSurfaces';
 
 export default Capability.makeModule(() =>
   Effect.succeed([
@@ -18,6 +18,11 @@ export default Capability.makeModule(() =>
         id: 'deckCompanion',
         filter: Surface.makeFilter(AppSurface.deckCompanion('streamDeck')),
         component: StreamDeckDashboardSurface,
+      }),
+      Surface.create({
+        id: 'statusIndicator',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        component: StreamDeckStatusSurface,
       }),
     ]),
   ]),

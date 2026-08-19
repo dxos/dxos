@@ -12,6 +12,7 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Stream Deck',
         'deck-companion.label': 'Stream Deck',
+        'device-connected.label': 'Stream Deck connected',
       },
     },
   },
