@@ -10,13 +10,13 @@ point-select / 50 filtered-scan / 250 update / 250 delete via `db.removeFeedItem
 `flush({ indexes: false })` isolation. 13,845 samples / 16.2s wall for the full workload — **~2.3x
 fewer samples / ~2.3x less wall time than the automerge track for the same op counts.**
 
-| Bucket | Share |
-|---|---|
-| idle (I/O wait) | **53.6%** |
-| Effect runtime | 10.5% |
-| SQLite driver | 7.0% |
-| Automerge WASM + doc-ID checksums (combined) | **1.8%** |
-| gc | 1.1% |
+| Bucket                                       | Share     |
+| -------------------------------------------- | --------- |
+| idle (I/O wait)                              | **53.6%** |
+| Effect runtime                               | 10.5%     |
+| SQLite driver                                | 7.0%      |
+| Automerge WASM + doc-ID checksums (combined) | **1.8%**  |
+| gc                                           | 1.1%      |
 
 Related benchmark: `packages/core/echo/echo-client-e2e/src/echo.bench.ts`'s "feed object" describe
 block (PR #12649, #12668).
@@ -50,7 +50,7 @@ something specific to feed placement. Feed operations are RPC/IO-latency-bound, 
 
 Index-engine code (`entity-meta-index.ts`, `fts-index.ts`, `index-query-source-provider.ts`)
 appears in this profile at higher relative % than in the automerge-track profile (~0.5-1% here vs.
-<0.2% there) purely because the feed track has so much less *other* CPU work competing for
+<0.2% there) purely because the feed track has so much less _other_ CPU work competing for
 samples — not because feed mutations trigger disproportionately more indexing work in absolute
 terms. Confirmed by counting absolute hit counts for index-related frames in both profiles: they
 are comparable in raw sample count, just a larger percentage of a much smaller total.

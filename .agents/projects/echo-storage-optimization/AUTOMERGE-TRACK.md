@@ -12,14 +12,14 @@ index-engine RPC as a shared confound between tracks — see "Confound found" be
 
 32,031 samples / 37.4s wall for the full workload. Bucket breakdown:
 
-| Bucket | Share |
-|---|---|
+| Bucket                                      | Share     |
+| ------------------------------------------- | --------- |
 | bs58check + noble-hashes (doc-ID checksums) | **20.1%** |
-| idle (I/O wait) | 21.9% |
-| Automerge WASM (all) | 10.4% |
-| SQLite driver | 9.8% |
-| Effect runtime | 6.4% |
-| gc | 1.1% |
+| idle (I/O wait)                             | 21.9%     |
+| Automerge WASM (all)                        | 10.4%     |
+| SQLite driver                               | 9.8%      |
+| Effect runtime                              | 6.4%      |
+| gc                                          | 1.1%      |
 
 Related benchmark: `packages/core/echo/echo-client-e2e/src/echo.bench.ts`'s "automerge object"
 describe block (PR #12649, #12668) — vitest-native `bench()` numbers for insert / select / scan /
@@ -114,7 +114,7 @@ either fixing #1/#2 (which ride on top of it) or changing the placement default.
 The original merged benchmark (`echo.bench.ts` pre-#12668) used `db.flush()`'s default
 `indexes: true`, which fires a full-DB `DataService.updateIndexes` RPC on **every** timed
 operation for both storage kinds identically. That diluted the real signal enough that the
-original numbers showed feed inserts *slower* than automerge inserts, which contradicts the
+original numbers showed feed inserts _slower_ than automerge inserts, which contradicts the
 architecture. Re-running with `flush({ indexes: false })` restored the expected direction (feed
 ~2.3x faster wall-clock for an equivalent workload — see FEED-TRACK.md). Index-engine code is
 <0.2% of this profile, confirming the isolation is clean; it is not a residual factor in findings
