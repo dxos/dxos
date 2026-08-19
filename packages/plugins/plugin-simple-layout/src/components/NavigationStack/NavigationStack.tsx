@@ -68,9 +68,8 @@ export type NavigationStackProps = ThemedClassName<{
 }>;
 
 /**
- * Mobile presentation of the layout as a UIKit navigation stack, with back as an interactive
- * left-edge pan. Poses are written straight to the elements via the Web Animations API — re-rendering
- * full content surfaces per gesture frame cannot hold 60fps.
+ * UIKit-style navigation stack for the mobile layout; poses are written straight to the elements
+ * because re-rendering full content surfaces per gesture frame cannot hold 60fps.
  */
 export const NavigationStack = ({ classNames, items, index, onIndexChange, renderItem }: NavigationStackProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -140,7 +139,10 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
   const settle = useCallback(
     (top: number, duration: number) => {
       for (let layer = 0; layer < items.length; layer++) {
-        animatePose(layer, poseFor(layer - top, 0), duration);
+        // Panels outside the animatable window are invisible; a zero duration writes their pose
+        // directly, so a deep history does not cost a cancelled-and-recreated animation per panel.
+        const animated = Math.abs(layer - top) <= 1;
+        animatePose(layer, poseFor(layer - top, 0), animated ? duration : 0);
       }
     },
     [animatePose, items.length],

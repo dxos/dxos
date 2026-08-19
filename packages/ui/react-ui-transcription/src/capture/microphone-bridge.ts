@@ -71,45 +71,58 @@ export const installMicrophoneBridge = async (): Promise<boolean> => {
     return true;
   }
 
-  const context = new AudioContext({ sampleRate: BRIDGE_SAMPLE_RATE });
-  if (context.state === 'suspended') {
-    await context.resume();
-  }
-  await context.audioWorklet.addModule(new URL('./bridge-processor.js', import.meta.url));
-
-  const node = new AudioWorkletNode(context, 'dxos-bridge-processor', { numberOfInputs: 0, outputChannelCount: [1] });
-  const destination = context.createMediaStreamDestination();
-  node.connect(destination);
-
-  globalThis.addEventListener(CHUNK_EVENT, (event) => {
-    const detail = (event as CustomEvent<string>).detail;
-    if (typeof detail === 'string' && detail.length > 0) {
-      const frames = decodeChunk(detail);
-      node.port.postMessage(frames, [frames.buffer]);
+  let context: AudioContext | undefined;
+  try {
+    context = new AudioContext({ sampleRate: BRIDGE_SAMPLE_RATE });
+    if (context.state === 'suspended') {
+      await context.resume();
     }
-  });
+    await context.audioWorklet.addModule(new URL('./bridge-processor.js', import.meta.url));
 
-  // Replaced rather than wrapped conditionally: audio requests are served from the bridge for as long
-  // as it is installed, and video requests fall through untouched.
-  const original = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-  navigator.mediaDevices.getUserMedia = async (constraints?: MediaStreamConstraints) => {
-    if (!constraints?.audio) {
-      return original(constraints);
-    }
-    if (constraints.video) {
-      const video = await original({ ...constraints, audio: false });
-      for (const track of destination.stream.getAudioTracks()) {
-        // Cloned so a caller stopping its track does not end the shared destination track.
-        video.addTrack(track.clone());
+    const node = new AudioWorkletNode(context, 'dxos-bridge-processor', {
+      numberOfInputs: 0,
+      outputChannelCount: [1],
+    });
+    const destination = context.createMediaStreamDestination();
+    node.connect(destination);
+
+    globalThis.addEventListener(CHUNK_EVENT, (event) => {
+      const detail = (event as CustomEvent<string>).detail;
+      if (typeof detail === 'string' && detail.length > 0) {
+        const frames = decodeChunk(detail);
+        node.port.postMessage(frames, [frames.buffer]);
       }
-      return video;
-    }
-    return new MediaStream(destination.stream.getAudioTracks().map((track) => track.clone()));
-  };
+    });
 
-  installed = true;
-  log.info('microphone bridge installed');
-  return true;
+    // Replaced rather than wrapped conditionally: audio requests are served from the bridge for as long
+    // as it is installed, and video requests fall through untouched.
+    const original = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getUserMedia = async (constraints?: MediaStreamConstraints) => {
+      if (!constraints?.audio) {
+        return original(constraints);
+      }
+      if (constraints.video) {
+        const video = await original({ ...constraints, audio: false });
+        for (const track of destination.stream.getAudioTracks()) {
+          // Cloned so a caller stopping its track does not end the shared destination track.
+          video.addTrack(track.clone());
+        }
+        return video;
+      }
+      return new MediaStream(destination.stream.getAudioTracks().map((track) => track.clone()));
+    };
+
+    installed = true;
+    log.info('microphone bridge installed');
+    return true;
+  } catch (err) {
+    // Native capture without a graph would hold the microphone open for nothing; both stops are
+    // best-effort on a path that already failed.
+    capturing = false;
+    await invoke('stop_microphone_bridge').catch(() => {});
+    await context?.close().catch(() => {});
+    throw err;
+  }
 };
 
 /** Stops native capture. The `getUserMedia` shim stays in place; a restart reuses the same graph. */
