@@ -14,15 +14,12 @@ import { parseBenchCount } from './testing/bench-util';
 
 // Same 5 operations as `sqlite.bench.ts`, run through the ECHO API instead of raw SQL, over the
 // two object storage kinds: automerge objects (`db.add`) and feed objects (`db.add(obj, { to:
-// feed })`) — the matrix the task asked for. `insert` measures the append-then-flush-per-item
-// pattern; `insert (batched)` measures multiple appends sharing a single flush, since flushing
-// per item forces an RPC/index round trip that batching (feed's `#sendAppendBatches`) is meant to
-// avoid — counting only the per-item pattern would understate feed's real throughput.
+// feed })`).
 const SEED_COUNT = parseBenchCount('ECHO_BENCH_SEED_COUNT', 200);
 // See the sizing note in `sqlite.bench.ts`.
 const DELETE_POOL = parseBenchCount('ECHO_BENCH_DELETE_POOL', 300);
-// Size of the batch inserted between a single flush in the "insert (batched)" bench, distinct
-// from the "insert" bench's append-then-flush-per-item pattern.
+// `insert (batched)` shares one flush across a batch, since flushing per item forces an RPC/index
+// round trip that batching avoids.
 const BATCH_SIZE = parseBenchCount('ECHO_BENCH_BATCH_SIZE', 20);
 const BENCH_OPTIONS = { time: 1_000 };
 
@@ -135,6 +132,10 @@ const defineOperationBenches = (
     async () => {
       const { db, feed } = await ensureEcho();
       const { deletePool } = await ensureSeed();
+      // The pool is finite; a bench can outrun it once warmup iterations are included.
+      if (deleteCounter >= deletePool.length) {
+        return;
+      }
       const obj = deletePool[deleteCounter++];
       await makeVariant(db, feed).remove(obj);
     },
