@@ -200,13 +200,15 @@ export const makeTool = (operation: Projection.ProjectedOperation) => {
     success: Schema.Record(Schema.String, Schema.Unknown),
     failure: ToolFailure,
   });
-  // An unannotated operation makes no safety claims — clients then assume possibly-destructive,
-  // the conservative default.
-  return operation.safety == null
-    ? tool
-    : tool
-        .annotate(Tool.Readonly, operation.safety === 'read')
-        .annotate(Tool.Destructive, operation.safety === 'destructive');
+  // An unclassified operation (no mutation annotation) makes no safety claims — clients then
+  // assume possibly-destructive, the conservative default. Idempotence is annotated independently.
+  const classified =
+    operation.mutation == null
+      ? tool
+      : tool
+          .annotate(Tool.Readonly, operation.mutation === 'none')
+          .annotate(Tool.Destructive, operation.mutation === 'destructive');
+  return operation.idempotent ? classified.annotate(Tool.Idempotent, true) : classified;
 };
 
 /** Dispatches one projected tool call: encode input, resolve the space, invoke, qualify refs. */

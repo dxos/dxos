@@ -622,6 +622,33 @@ export const VisibleAnnotation = Annotation.make({
 });
 
 /**
+ * The operation's effect on state: `none` is side-effect free, `write` mutates but is not
+ * irreversible, `destructive` deletes or otherwise cannot be undone. The middle value is
+ * informative — it says the author considered the operation and it is not destructive — which is
+ * why this is a three-value enum rather than two booleans. Absent ⇒ unclassified, which consumers
+ * treat conservatively (an MCP client badges the tool as possibly destructive).
+ *
+ * Operation-intrinsic, not projection config: the same fact serves MCP safety hints,
+ * confirm-before-run prompts, and read-only permission grants.
+ */
+export const MutationAnnotation = Annotation.make({
+  id: 'org.dxos.operation.mutation',
+  schema: Schema$.Literals(['none', 'write', 'destructive']),
+});
+
+export type Mutation = 'none' | 'write' | 'destructive';
+
+/**
+ * Pipeable combinator classifying the operation's effect on state — see {@link MutationAnnotation}.
+ * Apply at the definition site: `Operation.make({ ... }).pipe(Operation.mutation('none'))`.
+ */
+export const mutation = (value: Mutation) => annotate(MutationAnnotation, value);
+
+/** The operation's mutation class, or undefined when unclassified. Reads from the persisted record. */
+export const getMutation = (op: PersistentOperation): Mutation | undefined =>
+  Option.getOrUndefined(Annotation.get(op, MutationAnnotation));
+
+/**
  * Pipeable combinator that marks an operation visible. Apply at the definition site:
  * `Operation.make({ ... }).pipe(Operation.visible)`.
  */
@@ -638,23 +665,18 @@ export const isVisible = (op: PersistentOperation): boolean =>
  * Per-operation MCP tool metadata. Inclusion is not decided here: an operation projects as an MCP
  * tool when an opted-in skill's `tools` list names it (the skill definition is the atomic unit of
  * projection), and the load-the-skill-first pointer in the tool's description derives from that
- * membership. This annotation only customizes the projected tool.
+ * membership. This annotation only customizes the projected tool; safety hints come from
+ * {@link MutationAnnotation}, which is operation meta rather than projection config.
  */
 export const McpTool = Schema$.Struct({
   /**
    * Tool name as exposed to MCP clients; camelCase, domain-prefixed (e.g. `taskCreate`).
-   * Defaults to the operation key's final segment.
+   * Defaults to the operation key's final segment, so an override is only for keys whose final
+   * segment is too generic to stand alone as a tool name.
    */
   name: Schema$.optional(Schema$.String),
   /** Model-facing description; falls back to the operation's own description when absent. */
   description: Schema$.optional(Schema$.String),
-  /**
-   * Safety class the server maps to MCP tool hints: `read` is side-effect free (readOnlyHint),
-   * `write` mutates space data, `destructive` deletes or is otherwise irreversible. An
-   * unannotated operation makes no safety claims, which clients treat as possibly-destructive —
-   * the conservative default.
-   */
-  safety: Schema$.Literals(['read', 'write', 'destructive']),
 });
 export type McpTool = Schema$.Schema.Type<typeof McpTool>;
 

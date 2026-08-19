@@ -23,7 +23,7 @@ const CreateTask = Operation.make({
   input: Schema.Struct({ title: Schema.String }),
   output: Schema.Struct({ id: Schema.String }),
   services: [Database.Service],
-}).pipe(Operation.mcpTool({ name: 'taskCreate', safety: 'write' }));
+}).pipe(Operation.mutation('write'));
 
 const skillDefinition = (props: { mcpPrompt?: boolean } = {}): Skill.Definition => ({
   key: 'org.dxos.skill.tasks',

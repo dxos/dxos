@@ -62,11 +62,19 @@ own connector-based sync for those services.
 Skill definitions are the atomic unit of MCP projection. A skill's `tools` list decides which
 operations project as MCP tools, and the load-the-skill-first pointer in each tool's description
 derives from that membership (the SEP-2640 shape) — `Operation.mcpTool` no longer decides
-inclusion or names a skill, keeping only per-operation metadata (tool-name override, safety); its
-`aspect` and `skill` fields are removed. An operation without the annotation projects with
-defaults: the key's final segment as the name and no safety claims. `DatabaseSkill` and
-`CodeProjectSkill` opt in with `mcpPrompt: true` and list their verbs (`CodeProjectSkill` now
-exports `operations`, spanning the project, task and outline verbs).
+inclusion, keeping only genuinely-MCP overrides (a tool name for keys whose final segment is too
+generic, and a model-facing description); its `safety`, `aspect` and `skill` fields are removed.
+An operation without the annotation projects with defaults: the key's final segment as the name.
+`DatabaseSkill` and `CodeProjectSkill` opt in with `mcpPrompt: true` and list their verbs
+(`CodeProjectSkill` now exports `operations`, spanning the project, task, milestone and outline
+verbs).
+
+Safety generalized into operation meta: the new `Operation.mutation('none' | 'write' |
+'destructive')` annotation classifies an operation's effect on state — side-effect free, mutating
+but recoverable, or irreversible — as a fact about the operation rather than MCP projection
+config. The MCP server maps it to `readOnlyHint`/`destructiveHint` exactly as `safety` did, and
+now also maps the existing `Operation.idempotent` annotation to `idempotentHint`. An unclassified
+operation emits no hints, which clients treat as possibly-destructive.
 
 `addObject`, `addRelation` and `addType` now declare `Database.Service` as a required service, and
 the MCP projection keys the ambient `spaceId` tool parameter off that declaration — only

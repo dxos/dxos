@@ -51,7 +51,7 @@ const testGateway = ({
 const operation = (props: Partial<Projection.ProjectedOperation> = {}): Projection.ProjectedOperation => ({
   key: 'org.dxos.function.tasks.create',
   toolName: 'taskCreate',
-  safety: 'write',
+  mutation: 'write',
   skills: ['codeProject'],
   requiresSpace: true,
   parameters: {},

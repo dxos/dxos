@@ -21,6 +21,12 @@ import type * as Gateway from '../Gateway';
  */
 export const MCP_TOOL_ANNOTATION_ID = 'org.dxos.operation.mcp-tool';
 
+/** Annotation id of `Operation.MutationAnnotation`; same drift contract as the id above. */
+export const MUTATION_ANNOTATION_ID = 'org.dxos.operation.mutation';
+
+/** Annotation id of `Operation.IdempotentAnnotation`; same drift contract as the id above. */
+export const IDEMPOTENT_ANNOTATION_ID = 'org.dxos.operation.idempotent';
+
 /**
  * Anthropic tool-name constraint. The 64-char budget is shared with the client's
  * `mcp__<server>__` prefix, which is why fully-qualified operation keys cannot be tool names
@@ -35,12 +41,16 @@ const PROMPT_NAME_PATTERN = TOOL_NAME_PATTERN;
 const McpToolAnnotation = Schema.Struct({
   name: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
-  safety: Schema.Literals(['read', 'write', 'destructive']),
 });
 
 const decodeAnnotation = Schema.decodeUnknownResult(McpToolAnnotation);
 
-export type Safety = 'read' | 'write' | 'destructive';
+/** Wire form of `Operation.MutationAnnotation`. */
+const MutationAnnotation = Schema.Literals(['none', 'write', 'destructive']);
+
+const decodeMutation = Schema.decodeUnknownResult(MutationAnnotation);
+
+export type Mutation = 'none' | 'write' | 'destructive';
 
 /**
  * Tool parameter fields. Narrower than `Schema.Struct.Fields`: schemas rebuilt from JSON Schema
@@ -54,8 +64,13 @@ export type ProjectedOperation = {
   key: string;
   toolName: string;
   description?: string;
-  /** Absent when the operation carries no annotation: no safety claims, which clients treat as possibly-destructive. */
-  safety?: Safety;
+  /**
+   * The operation's effect on state (`Operation.MutationAnnotation`). Absent when unclassified —
+   * no safety hints are emitted, and clients treat the tool as possibly-destructive.
+   */
+  mutation?: Mutation;
+  /** Whether the operation is idempotent (`Operation.IdempotentAnnotation`). */
+  idempotent?: boolean;
   /** Prompt names of the projected skills whose `tools` list this operation — the projection's reason to exist. */
   skills: readonly string[];
   /**
@@ -260,6 +275,21 @@ export const projectOperations = (
       }
     }
 
+    let mutation: Mutation | undefined;
+    const rawMutation: unknown = meta?.annotations?.[MUTATION_ANNOTATION_ID];
+    if (rawMutation != null) {
+      const decoded = decodeMutation(rawMutation);
+      if (decoded._tag === 'Failure') {
+        log.warn('mutation annotation did not decode; projecting without safety hints', {
+          key: rawKey,
+          error: String(decoded.failure),
+        });
+      } else {
+        mutation = decoded.success;
+      }
+    }
+    const idempotent = meta?.annotations?.[IDEMPOTENT_ANNOTATION_ID] === true;
+
     const key = rawKey.replace(/^dxn:/, '');
     const toolName = annotation?.name ?? toNsid(rawKey).split('.').at(-1) ?? '';
     if (!TOOL_NAME_PATTERN.test(toolName)) {
@@ -286,7 +316,8 @@ export const projectOperations = (
       key,
       toolName,
       description,
-      safety: annotation?.safety,
+      mutation,
+      idempotent,
       skills: owningSkills,
       requiresSpace: (record.services ?? []).includes(DATABASE_SERVICE_KEY),
       parameters,

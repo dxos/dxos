@@ -42,13 +42,14 @@ export const Create = Operation.make({
   }),
 }).pipe(
   Operation.mcpTool({
+    // The key's final segment is a too-generic `create`; the override keeps the domain prefix.
     name: 'projectCreate',
     description:
       'Creates a project and its owned graph: agent instructions, an artifacts collection, and a ' +
       'task set for its tasks. Returns the project with a `taskSet` reference — pass that reference ' +
       'to taskCreate to record work against it.',
-    safety: 'write',
   }),
+  Operation.mutation('write'),
 );
 
 export const CreateChat = Operation.make({

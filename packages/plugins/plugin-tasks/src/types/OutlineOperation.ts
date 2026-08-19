@@ -76,7 +76,7 @@ export const GetOutline = Operation.make({
     content: Schema.String,
     items: Schema.Array(Schema.Struct({ title: Schema.String, done: Schema.Boolean })),
   }),
-}).pipe(Operation.mcpTool({ name: 'outlineGet', safety: 'read' }));
+}).pipe(Operation.mutation('none'));
 
 export const UpdateOutline = Operation.make({
   meta: {
@@ -98,4 +98,4 @@ export const UpdateOutline = Operation.make({
     id: Schema.String,
     content: Schema.String,
   }),
-}).pipe(Operation.mcpTool({ name: 'outlineUpdate', safety: 'write' }));
+}).pipe(Operation.mutation('write'));

@@ -194,14 +194,13 @@ export const AddObject = Operation.make({
   }),
 }).pipe(
   Operation.mcpTool({
-    name: 'addObject',
     description:
       'Creates an object in the space and files it so it appears in Composer. Describe it with ' +
       '`create` ({ "@type": "<typename>", ...properties }); the type must already be registered ' +
       '(see queryObjects). Reference values use the envelope form { "/": "echo:..." }. Omit ' +
       '`target` to file it at the space root.',
-    safety: 'write',
   }),
+  Operation.mutation('write'),
 );
 
 // TODO(wittjosiah): Rename `objects` to `entities` (covers objects, relations, and persisted types).
@@ -242,12 +241,11 @@ export const RemoveObjects = Operation.make({
   output: RemoveObjectsOutput,
 }).pipe(
   Operation.mcpTool({
-    name: 'removeObjects',
     description:
       'Deletes entities from the space and unlinks them from the collection that held them. Name ' +
       'them with `refs` (an array of { "/": "echo:..." } envelopes, as returned by queryObjects).',
-    safety: 'destructive',
   }),
+  Operation.mutation('destructive'),
 );
 
 /**
@@ -519,7 +517,7 @@ export const AddType = Operation.make({
     id: Schema.String,
     object: Type.getSchema(Type.Type),
   }),
-}).pipe(Operation.mcpTool({ name: 'addType', safety: 'write' }));
+}).pipe(Operation.mutation('write'));
 
 /** An object of the relation, live for an in-process caller and a reference for a remote one. */
 const RelationEnd = Schema.Union([Obj.Unknown, Ref.Ref(Obj.Unknown)]);
@@ -554,7 +552,7 @@ export const AddRelation = Operation.make({
   output: Schema.Struct({
     relation: Schema.Any,
   }),
-}).pipe(Operation.mcpTool({ name: 'addRelation', safety: 'write' }));
+}).pipe(Operation.mutation('write'));
 
 // TODO(wittjosiah): This appears to be unused.
 export const DuplicateObject = Operation.make({

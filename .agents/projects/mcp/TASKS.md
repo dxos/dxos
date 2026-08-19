@@ -236,6 +236,15 @@ field goes.
       front doors drive one projection. The Gateway survives — edge reaches its registry over an
       RPC binding and cannot hold live definitions. The package moved to per-namespace subpath
       exports so wire-only hosts (`/Gateway`, `/Server`) never bundle the operation runtime.
+- [x] **`mcpTool` justified down to its real payload** (user review, 2026-08-19). An audit found
+      27 of 28 `name:` overrides byte-identical to the key's final segment (deleted; the one real
+      override is `projectCreate`, whose key segment is a too-generic `create`) and `safety` to be
+      the annotation's only load-bearing field — which is not an MCP concept but an operation fact.
+      It generalized to **`Operation.mutation('none' | 'write' | 'destructive')`**, a first-class
+      operation annotation beside `idempotent`/`visible` (id `org.dxos.operation.mutation`,
+      drift-pinned in projection.test). The MCP projection maps it to
+      `readOnlyHint`/`destructiveHint` as before and now also maps `Operation.idempotent` to
+      `idempotentHint`. `mcpTool` keeps only `name`/`description` overrides (4 sites).
 - [ ] **Shared operation→tool projection** (assistant ⇄ mcp) — deferred with a plan, not dropped.
       What blocks a naive extraction: the two surfaces are deliberately different models of the
       same operation. The assistant presents refs as LLM-friendly URI _strings_ (`RefFromLLM`,

@@ -53,7 +53,7 @@ export const ListProjects = Operation.make({
       }),
     ),
   }),
-}).pipe(Operation.mcpTool({ name: 'projectList', safety: 'read' }));
+}).pipe(Operation.mutation('none'));
 
 export const GetProject = Operation.make({
   meta: {
@@ -83,7 +83,7 @@ export const GetProject = Operation.make({
     outline: Schema.optional(Schema.Struct({ id: Schema.String, content: Schema.String })),
     artifacts: Schema.Array(Schema.Struct({ id: Schema.String, typename: Schema.String })),
   }),
-}).pipe(Operation.mcpTool({ name: 'projectGet', safety: 'read' }));
+}).pipe(Operation.mutation('none'));
 
 export const UpdateProject = Operation.make({
   meta: {
@@ -103,4 +103,4 @@ export const UpdateProject = Operation.make({
   output: Schema.Struct({
     project: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'projectUpdate', safety: 'write' }));
+}).pipe(Operation.mutation('write'));

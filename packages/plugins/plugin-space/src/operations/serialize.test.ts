@@ -52,25 +52,27 @@ describe('operation serialization', () => {
     expect(failures).toEqual([]);
   });
 
-  test('projected verbs carry their mcpTool annotation through serialize', async ({ expect }) => {
+  test('projected verbs carry their mutation class through serialize', async ({ expect }) => {
     const handlers = await SpaceOperationHandlerSet.getHandlers();
     const projected = handlers
       .filter((handler) => PROJECTED_KEYS.includes(DXN.getName(handler.meta.key)))
-      .map((handler) => Operation.getMcpTool(Operation.serialize(handler))?.name)
-      .filter((name): name is string => name !== undefined)
-      .sort();
+      .map((handler) => {
+        const record = Operation.serialize(handler);
+        return [DXN.getName(handler.meta.key).split('.').at(-1), Operation.getMutation(record)] as const;
+      })
+      .sort(([a], [b]) => a!.localeCompare(b!));
 
     expect(projected).toEqual([
-      'addObject',
-      'addRelation',
-      'addTag',
-      'addType',
-      'getObjects',
-      'queryObjects',
-      'queryTypes',
-      'removeObjects',
-      'removeTag',
-      'updateObject',
+      ['addObject', 'write'],
+      ['addRelation', 'write'],
+      ['addTag', 'write'],
+      ['addType', 'write'],
+      ['getObjects', 'none'],
+      ['queryObjects', 'none'],
+      ['queryTypes', 'none'],
+      ['removeObjects', 'destructive'],
+      ['removeTag', 'write'],
+      ['updateObject', 'write'],
     ]);
   });
 });
