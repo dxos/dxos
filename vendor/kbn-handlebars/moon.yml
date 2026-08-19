@@ -4,6 +4,8 @@ language: typescript
 tags:
   - vendor
   - pack
+  # Publishes no `source` condition, so `@dxos/compute` resolves it to dist in tests too.
+  - dist-runtime
 workspace:
   inheritedTasks:
     exclude:

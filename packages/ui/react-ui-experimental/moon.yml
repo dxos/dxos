@@ -10,6 +10,11 @@ tasks:
   build:
     deps:
       - prebuild
+  # Importing this package from source is not enough on its own: `src/shaders/glsl/gen` is generated
+  # and gitignored, so a consumer that never builds it still needs the codegen to have run.
+  source-deps:
+    deps:
+      - ~:prebuild
   # Named `prebuild` so storybook's `#storybook:prebuild` reaches it; the gen dir does not exist until it runs.
   prebuild:
     command: pnpm run --silent glsl

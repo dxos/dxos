@@ -8,6 +8,12 @@ tasks:
   build:
     deps:
       - prebuild
+  # `#query-lite` and `@dxos/echo-query/api.d.ts?raw` (plugin-script's in-editor type hints) map at
+  # `dist/query-lite/`, with no `source` alternative — but `prebuild` alone produces them, so a
+  # source-importing consumer needs that rather than the whole `dist-runtime` build.
+  source-deps:
+    deps:
+      - ~:prebuild
   prebuild:
     deps:
       - echo-query:prebuild-lezer

@@ -9,7 +9,8 @@ tasks:
       - vite-plugin-icons:build
       - vite-plugin-import-source:build
       - vite-plugin-log:build
-      - ^:build
+      - target: ^:source-deps
+        cacheStrategy: hash
     inputs:
       - '@group(sources)'
       - /tools/storybook-react/.storybook/main.ts

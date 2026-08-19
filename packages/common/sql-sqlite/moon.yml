@@ -1,6 +1,10 @@
 layer: library
 language: typescript
 tags:
+  # Every export is `types`/`browser`/`node` only — no `source` condition — because the platform split
+  # (OPFS vs node sqlite, and the `@effect/wa-sqlite` alias below) is resolved by the bundle, not by
+  # conditions a consumer can re-derive. So dependents read dist, in tests as much as at runtime.
+  - dist-runtime
   - ts-build
   - ts-test
   - ts-test-browser

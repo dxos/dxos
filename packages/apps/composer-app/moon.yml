@@ -105,9 +105,7 @@ tasks:
       outputStyle: stream
     deps:
       - prebuild
-      - '#dist-runtime:build'
-      - '#vite-plugin:build'
-      - echo-query:prebuild-query-lite
+      - ^:source-deps
   # Diagnose a hung `serve`: samples the busiest `vite dev` (writing the call graph to
   # temp/) and, with `-- --kill`, force-kills it. Not cacheable — it inspects live process state.
   diagnose-serve:
@@ -128,30 +126,16 @@ tasks:
       - public/assets/plugin-tldraw
   # Dev server (`vite dev`) — the everyday inner loop, with the full plugin registry. Vite dev
   # resolves @dxos/* from source (importSource), so pre-building the whole graph is wasted work:
-  # only packages whose dist is actually consumed need it, and each kind declares itself by tag.
+  # only packages whose dist is actually consumed need it.
   serve:
     options:
       # The `vite` tag contributes `^:build`, and deps merge by append — without this the whole
-      # graph is still built and the tags below are redundant.
+      # graph is still built and the narrowing below is redundant.
       mergeDeps: replace
     deps:
       - prebuild
-      # dist consumed at runtime.
-      - '#dist-runtime:build'
-      # dist consumed at config-load time: `vite.config.ts` runs in Node, before importSource is
-      # active — and the plugin export itself publishes no `source` condition, so the app build
-      # takes its dist too rather than dragging Node-only source into the browser bundle
-      # (`pkg-lint`'s `build-tool-source-export` rule).
-      # The `vite-plugin` tag marks packages that *export a vite plugin this config loads*
-      # — not merely anything the config imports. A non-plugin import like `@dxos/util` stays
-      # untagged: the plugin packages depend on it, so their own `^:build` builds it first.
-      - '#vite-plugin:build'
-      # A build artifact, not runtime dist: plugin-script imports `@dxos/echo-query/api.d.ts?raw`
-      # for in-editor type hints, and vite's dependency scan aborts wholesale — pre-bundling
-      # nothing at all — if a single import in the crawl fails to resolve. Named explicitly because
-      # `prebuild`'s `^:prebuild` stops at the first hop: echo-query is reached through
-      # plugin-script, which has no `prebuild` task of its own to continue the chain.
-      - echo-query:prebuild-query-lite
+      # `source-deps` (`.moon/tasks/all.yml`) is that narrowed set, shared with every `:test*` task.
+      - ^:source-deps
   # Production startup harness — all four `startup.spec.ts` scenarios (cold, warm-cold, throttled,
   # boot-loader paint) against `vite preview`. Its own task because the spec records benchmark rows
   # rather than asserting behaviour: `e2e` ignores it so a timing measurement never gates a merge.

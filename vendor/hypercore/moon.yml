@@ -4,6 +4,9 @@ language: typescript
 tags:
   - vendor
   - pack
+  # JS sources with no `source` condition, so every consumer — including a vitest run — resolves the
+  # `hypercore` / `hypercore-crypto` subpaths to dist.
+  - dist-runtime
 workspace:
   inheritedTasks:
     exclude:

@@ -14,7 +14,8 @@ tasks:
       - esbuild-plugins:build
       - node-std:build
       - vite-plugin-import-source:build
-      - ^:build
+      - target: ^:source-deps
+        cacheStrategy: hash
     inputs:
       - '@group(sources)'
       - /vite.base.config.ts
@@ -47,7 +48,8 @@ tasks:
       - esbuild-plugins:build
       - node-std:build
       - vite-plugin-import-source:build
-      - ^:build
+      - target: ^:source-deps
+        cacheStrategy: hash
     preset: server
 
 inheritedBy:

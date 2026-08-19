@@ -30,3 +30,26 @@ implicitInputs:
   - /.pnpmfile.cjs
   - /pnpm-lock.yaml
   - /patches/*
+
+tasks:
+  # What a *source*-importing consumer needs from this project, and nothing more. Every `:test*` task
+  # depends on `^:source-deps` instead of `^:build`, because vitest resolves `@dxos/*` through the
+  # `source` export condition (`PluginImportSource` in `vite.base.config.ts`) — so compiling an
+  # upstream package's `dist/` is work whose output the test run never reads.
+  #
+  # A `noop` by default. `tag-dist-consumed.yml` documents the exceptions and resolves them to a real
+  # `build`; a project whose own `src/` is generated overrides this with `~:prebuild`.
+  #
+  # The `^:source-deps` chain and `@group(sources)` are also what keep the cache honest: `^:build` is
+  # what currently folds the upstream source closure into a downstream `:test` hash, so replacing it
+  # with nothing would leave `:test` hashing its own package alone and replaying a stale pass. That in
+  # turn is why `cacheStrategy: hash` is spelled out — since moon 2.3 a dependency declaring no
+  # `outputs` defaults to `ignored`, which is right for a lint/test dep and exactly wrong for a task
+  # whose only job is to carry hashes, and without it the chain runs while invalidating nothing.
+  source-deps:
+    command: noop
+    deps:
+      - target: ^:source-deps
+        cacheStrategy: hash
+    inputs:
+      - '@group(sources)'
