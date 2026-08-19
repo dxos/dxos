@@ -93,15 +93,15 @@ describe('uml', () => {
     expect((serializable.elements[0] as Scene.Box).text).toBe('«interface»\nSerializable');
   });
 
-  test('layers supertypes above subtypes', ({ expect }) => {
+  test('layers supertypes and dependency targets above, parts below', ({ expect }) => {
     const objects = objectsOf(compile(CLASS_DIAGRAM));
     const y = (id: string) => objects.find((object) => object.id === id)!.origin!.y;
 
     expect(y('Animal')).toBeLessThan(y('Dog'));
     expect(y('Serializable')).toBeLessThan(y('Dog'));
-    // Dog's dependents/parts sit below it.
+    // Dog's parts sit below it; what it depends on sits above, so the arrow reads upward.
     expect(y('Dog')).toBeLessThan(y('Leg'));
-    expect(y('Dog')).toBeLessThan(y('Bone'));
+    expect(y('Bone')).toBeLessThan(y('Dog'));
   });
 
   test('binds arrows to the compartments facing the peer, with UML styling', ({ expect }) => {

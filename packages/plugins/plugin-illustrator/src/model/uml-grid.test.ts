@@ -137,15 +137,38 @@ describe('uml-grid', () => {
     }
   });
 
+  test('aligned columns straighten connectors', ({ expect }) => {
+    const source = ['classDiagram', 'class A', 'class B', 'A <|-- B'].join('\n');
+    const objects = objectsOf(compile(source));
+    const edges = objects.find((object) => object.id === 'edges')!;
+
+    // The sole subtype sits directly below its supertype, so the arrow runs straight: a single
+    // two-point segment, no polyline waypoints.
+    expect(edges.elements.filter((element) => element.kind === 'line')).toHaveLength(0);
+    const [arrow] = edges.elements as Scene.Arrow[];
+    expect(arrow.start!.x).toBe(arrow.end!.x);
+    const [a, b] = ['A', 'B'].map((id) => objects.find((object) => object.id === id)!);
+    expect(a.origin!.x).toBe(b.origin!.x);
+  });
+
   test('parallel relations between the same lanes take separate channels', ({ expect }) => {
-    const source = ['classDiagram', 'class A', 'class B', 'class C', 'class D', 'A --> D : one', 'B --> C : two'].join(
-      '\n',
-    );
+    const source = [
+      'classDiagram',
+      'class A',
+      'class B',
+      'class C',
+      'class D',
+      'A --> C',
+      'A --> D',
+      'B --> C',
+      'B --> D',
+    ].join('\n');
     const edges = objectsOf(compile(source)).find((object) => object.id === 'edges')!;
     const paths = edges.elements.filter((element): element is Scene.Polyline => element.kind === 'line');
 
-    // Both edges bend through the same gutter; their channel runs must not share a coordinate.
-    expect(paths.length).toBe(2);
+    // Column alignment can straighten at most one of the crossing edges; the rest bend through
+    // the same gutter and their channel runs must not share a coordinate.
+    expect(paths.length).toBeGreaterThanOrEqual(2);
     const channels = paths.map((path) => path.points[1].y);
     expect(new Set(channels).size).toBe(paths.length);
   });

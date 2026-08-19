@@ -229,12 +229,16 @@ export const relationText = (relation: UmlRelation): string | undefined => {
   return text || undefined;
 };
 
-/** Rank flows supertype → subtype for inheritance/realization, source → target otherwise. */
+/**
+ * Rank so arrows read upward where UML convention points at abstractions — inheritance,
+ * realization, and dependency targets sit above their sources; containment and association
+ * flow downward (whole/source above part/target).
+ */
 export const relationRanks = (model: UmlModel): Map<string, number> =>
   Layout.rank(
     model.classes.map((entry) => entry.id),
     model.relations.map((relation) =>
-      relation.kind === 'inheritance' || relation.kind === 'realization'
+      relation.kind === 'inheritance' || relation.kind === 'realization' || relation.kind === 'dependency'
         ? { from: relation.to, to: relation.from }
         : { from: relation.from, to: relation.to },
     ),

@@ -21,7 +21,7 @@ import { type UmlModel, type UmlRelation, parse, relationRanks, relationStyle, r
 export const GRID = 32;
 
 /** The document grid unit, used for sub-cell nudges (channel separation, label offsets). */
-const GRID_FINE = 8;
+const GRID_FINE = GRID / 4;
 
 const MIN_W = GRID * 2;
 const MAX_W = GRID * 6;
@@ -30,7 +30,7 @@ const MIN_H = GRID * 2;
 const MAX_H = GRID * 5;
 
 const MIN_TITLE_H = GRID;
-const MAX_TITLE_H = GRID * 3;
+const MAX_TITLE_H = GRID * 2;
 
 const TITLE_PAD = GRID / 2;
 const TEXT_PAD = GRID_FINE * 1;
@@ -94,6 +94,52 @@ export const zRouter: Router = ({ from, to, offset, horizontal }) => {
   const sameLane = horizontal ? from.x === to.x : from.y === to.y;
   const alongY = horizontal ? sameLane : !sameLane;
   return (alongY ? routeAlongY : routeAlongX)(from, to, offset * GRID_FINE);
+};
+
+/**
+ * Assign each node an integer column: the first lane keeps declaration order, later lanes pull
+ * each node toward the mean column of its already-placed neighbours (ties keep declaration
+ * order, collisions shift right). Aligned columns turn rank-crossing connectors into straight
+ * lines — e.g. a sole subtype sits directly below its supertype.
+ */
+const assignColumns = (
+  model: UmlModel,
+  ranks: Map<string, number>,
+  lanes: Map<number, string[]>,
+): Map<string, number> => {
+  const neighbors = new Map<string, string[]>();
+  for (const relation of model.relations) {
+    neighbors.set(relation.from, [...(neighbors.get(relation.from) ?? []), relation.to]);
+    neighbors.set(relation.to, [...(neighbors.get(relation.to) ?? []), relation.from]);
+  }
+
+  const columns = new Map<string, number>();
+  const laneOrder = [...lanes.keys()].sort((left, right) => left - right);
+  laneOrder.forEach((lane, position) => {
+    const members = lanes.get(lane)!;
+    const desired = members.map((id, index) => {
+      const placed = (neighbors.get(id) ?? []).flatMap((peer) => (columns.has(peer) ? [columns.get(peer)!] : []));
+      const mean =
+        position > 0 && placed.length ? placed.reduce((sum, column) => sum + column, 0) / placed.length : index;
+      return { id, mean, index };
+    });
+    desired.sort((left, right) => left.mean - right.mean || left.index - right.index);
+    const used = new Set<number>();
+    for (const entry of desired) {
+      // Round half toward the left so a node between two parents aligns with the first; on
+      // collision take the nearest free column on either side.
+      let column = Math.ceil(entry.mean - 0.5);
+      for (let step = 1; used.has(column); step++) {
+        column = used.has(column - step) ? (used.has(column + step) ? column : column + step) : column - step;
+      }
+      used.add(column);
+      columns.set(entry.id, column);
+    }
+  });
+
+  // Normalize so the leftmost column is 0.
+  const min = Math.min(...columns.values(), 0);
+  return new Map([...columns].map(([id, column]) => [id, column - min]));
 };
 
 /** Fixed cell size, in scene units; omitted dimensions are measured from content. */
@@ -181,16 +227,15 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
     lanes.set(value, [...(lanes.get(value) ?? []), entry.id]);
   }
 
-  // Uniform cells make lanes a plain grid; centering offsets snap so nodes stay on it.
+  // Uniform cells make lanes a plain grid: nodes take shared integer columns (aligned via their
+  // neighbours) so as many connectors as possible run straight through the gutters.
   const cross = horizontal ? cell.h : cell.w;
   const main = horizontal ? cell.w : cell.h;
-  const widest = Math.max(...[...lanes.values()].map((lane) => lane.length), 1);
-  const span = (count: number) => count * cross + (count - 1) * gapCross;
+  const columns = assignColumns(model, ranks, lanes);
   const rects = new Map<string, Rect>();
   for (const [lane, members] of lanes) {
-    const offset = snap((span(widest) - span(members.length)) / 2);
-    members.forEach((id, index) => {
-      const crossOffset = offset + index * (cross + gapCross);
+    for (const id of members) {
+      const crossOffset = columns.get(id)! * (cross + gapCross);
       const mainOffset = lane * (main + gapMain);
       rects.set(id, {
         x: horizontal ? mainOffset : crossOffset,
@@ -198,7 +243,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
         w: cell.w,
         h: cell.h,
       });
-    });
+    }
   }
 
   const commands: Scene.Command[] = [];
