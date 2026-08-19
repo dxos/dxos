@@ -40,7 +40,13 @@ export const AutomationTemplates = Capability.lazyModule(
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./automation-templates'),
 );
-export const Schema = AppCapability.schema(() => import('./schema-defs'));
+// Not `AppCapability.schema`: the list depends on `experimentalTypes`, and only a module body sees
+// the plugin's options.
+export const Schema = Capability.lazyModule(
+  'schema',
+  { provides: [AppCapabilities.Schema] },
+  () => import('./schema-defs'),
+);
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
   provides: [RoutineCapabilities.AgentDelegationStrategy],
 });
