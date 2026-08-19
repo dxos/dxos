@@ -27,10 +27,12 @@ const MIN_W = GRID * 2;
 const MAX_W = GRID * 6;
 
 const MIN_H = GRID * 2;
-const MAX_H = GRID * 6;
+const MAX_H = GRID * 5;
 
 const PAD_X = GRID * 2;
-const TITLE_PAD = GRID / 4;
+/** Inset of body text from the frame border. */
+const TEXT_PAD = GRID_FINE * 2;
+const TITLE_PAD = GRID / 2;
 const SECTION_PAD = GRID / 2;
 const GAP_MAIN = GRID * 4;
 const GAP_CROSS = GRID * 4;
@@ -97,8 +99,14 @@ export type CellSize = { w?: number; h?: number };
 
 type Cell = { w: number; h: number; titleH: number };
 
+type MeasureOptions = {
+  maxWidth: number;
+  cell?: CellSize;
+  titleHeight?: number;
+};
+
 /** One cell fits the largest class: widest line (wrapped at maxWidth) and tallest member list. */
-const measureCell = (model: UmlModel, maxWidth: number, override: CellSize = {}): Cell => {
+const measureCell = (model: UmlModel, { maxWidth, cell: override = {}, titleHeight }: MeasureOptions): Cell => {
   const memberLines = (entry: UmlModel['classes'][number]) => [...entry.attributes, ...entry.methods];
   const titleW =
     Math.max(0, ...model.classes.map((entry) => Math.max(entry.label.length, (entry.stereotype?.length ?? 0) + 2))) *
@@ -107,7 +115,7 @@ const measureCell = (model: UmlModel, maxWidth: number, override: CellSize = {})
     Math.max(0, ...model.classes.flatMap((entry) => memberLines(entry).map((line) => line.length))) * MEMBER_FONT.charW;
   const w = snap(override.w ?? Math.min(maxWidth, Math.max(MIN_W, Math.ceil(Math.max(titleW, memberW)) + PAD_X)));
   const wrapped = (length: number, font: Layout.FontMetrics) =>
-    Math.max(1, Math.ceil((length * font.charW) / (w - PAD_X)));
+    Math.max(1, Math.ceil((length * font.charW) / (w - TEXT_PAD * 2)));
   const titleLines = Math.max(
     1,
     ...model.classes.map((entry) => wrapped(entry.label.length, TITLE_FONT) + (entry.stereotype ? 1 : 0)),
@@ -118,7 +126,11 @@ const measureCell = (model: UmlModel, maxWidth: number, override: CellSize = {})
       memberLines(entry).reduce((sum, line) => sum + wrapped(line.length, MEMBER_FONT), 0),
     ),
   );
-  const titleH = snap(titleLines * TITLE_FONT.lineH + TITLE_PAD);
+  // A fixed header snaps to the fine grid so it can sit below one GRID cell.
+  const titleH =
+    titleHeight !== undefined
+      ? Math.ceil(titleHeight / GRID_FINE) * GRID_FINE
+      : snap(titleLines * TITLE_FONT.lineH + TITLE_PAD);
   const bodyH = snap(bodyLines * MEMBER_FONT.lineH + SECTION_PAD);
   // Measured height clamps to the GRID-derived bounds (very large classes cap at MAX_H and may
   // elide content); an explicit override wins, still reserving the title bar.
@@ -140,6 +152,8 @@ export type CompileOptions = {
   maxWidth?: number;
   /** Fixed cell size (snapped to GRID); overrides measurement per dimension. */
   cell?: CellSize;
+  /** Fixed header height, in scene units (snapped to the fine grid); measured when unset. */
+  titleHeight?: number;
   /** Connector routing (default `zRouter`). */
   route?: Router;
 };
@@ -155,7 +169,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
   const gapMain = snap(options.gapMain ?? GAP_MAIN);
   const gapCross = snap(options.gapCross ?? GAP_CROSS);
   const horizontal = model.direction === 'LR' || model.direction === 'RL';
-  const cell = measureCell(model, maxWidth, options.cell);
+  const cell = measureCell(model, { maxWidth, cell: options.cell, titleHeight: options.titleHeight });
   const ranks = relationRanks(model);
 
   const lanes = new Map<number, string[]>();
@@ -200,7 +214,10 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
         id: entry.id,
         origin: { x: origin.x + rect.x * scale, y: origin.y + rect.y * scale },
         scale,
+        // One rounded frame encapsulates the node; the header rounds only its top corners so it
+        // sits flush against the frame, and members render as free left-aligned text below it.
         elements: [
+          { kind: 'rect', id: 'frame', x: 0, y: 0, w: cell.w, h: cell.h },
           {
             kind: 'rect',
             id: 'title',
@@ -210,17 +227,21 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
             h: cell.titleH,
             text: title,
             fill: 'solid',
+            corners: 'top',
           },
-          {
-            kind: 'rect',
-            id: 'body',
-            x: 0,
-            y: cell.titleH,
-            w: cell.w,
-            h: cell.h - cell.titleH,
-            ...(members ? { text: members } : {}),
-            weight: 's',
-          },
+          ...(members
+            ? [
+                {
+                  kind: 'text',
+                  id: 'body',
+                  x: TEXT_PAD,
+                  y: cell.titleH + SECTION_PAD / 2,
+                  w: cell.w - TEXT_PAD * 2,
+                  text: members,
+                  weight: 's',
+                } satisfies Scene.Text,
+              ]
+            : []),
         ],
       },
     });

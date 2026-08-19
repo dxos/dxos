@@ -55,14 +55,18 @@ type StoryArgs = {
   cellWidth?: number;
   /** Fixed cell height (grid layout only); measured from content when unset. */
   cellHeight?: number;
+  /** Fixed header height (grid layout only); measured from the title text when unset. */
+  headerHeight?: number;
 };
 
-const DefaultStory = ({ source, layout, cellWidth, cellHeight }: StoryArgs) => {
+const DefaultStory = ({ source, layout, cellWidth, cellHeight, headerHeight }: StoryArgs) => {
   const objects = useMemo(() => {
     const commands =
-      layout === 'grid' ? UmlGrid.compile(source, { cell: { w: cellWidth, h: cellHeight } }) : Uml.compile(source);
+      layout === 'grid'
+        ? UmlGrid.compile(source, { cell: { w: cellWidth, h: cellHeight }, titleHeight: headerHeight })
+        : Uml.compile(source);
     return commands.flatMap((command): Scene.WorldObject[] => (command.op === 'upsert-object' ? [command.object] : []));
-  }, [source, layout, cellWidth, cellHeight]);
+  }, [source, layout, cellWidth, cellHeight, headerHeight]);
 
   return (
     <SceneSvg classNames='dx-attention-surface' objects={objects} grid={layout === 'grid' ? UmlGrid.GRID : undefined} />

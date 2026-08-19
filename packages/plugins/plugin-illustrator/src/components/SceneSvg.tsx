@@ -46,6 +46,39 @@ const clipToBorder = (rect: Rect, target: Point): Point => {
 
 const strokeDash: Partial<Record<Scene.Stroke, string>> = { dashed: '6 4', dotted: '2 4' };
 
+/** Average glyph advance as a fraction of font size, for wrap estimates (UI sans). */
+const CHAR_EM = 0.6;
+
+/** Greedy word wrap per input line; SVG text has no native wrapping. */
+const wrapLines = (text: string, maxChars: number): string[] =>
+  text.split('\n').flatMap((line) => {
+    if (line.length <= maxChars) {
+      return [line];
+    }
+    const lines: string[] = [];
+    let current = '';
+    for (const word of line.split(' ')) {
+      const candidate = current ? `${current} ${word}` : word;
+      if (candidate.length > maxChars && current) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = candidate;
+      }
+    }
+    return [...lines, current];
+  });
+
+const RADIUS = 8;
+
+/** Rect path rounding only the top or bottom corners; the opposite edge stays square. */
+const partiallyRoundedRect = ({ x, y, w, h }: Rect, radius: number, corners: 'top' | 'bottom'): string =>
+  corners === 'top'
+    ? `M ${x} ${y + h} L ${x} ${y + radius} Q ${x} ${y} ${x + radius} ${y} L ${x + w - radius} ${y} ` +
+      `Q ${x + w} ${y} ${x + w} ${y + radius} L ${x + w} ${y + h} Z`
+    : `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h - radius} Q ${x + w} ${y + h} ${x + w - radius} ${y + h} ` +
+      `L ${x + radius} ${y + h} Q ${x} ${y + h} ${x} ${y + h - radius} Z`;
+
 /** Muted stroke/text for elements the dialects mark grey (e.g. subgraph frames). */
 const colorClass = (color?: Scene.Color) => (color === 'grey' ? 'text-neutral-400 dark:text-neutral-500' : undefined);
 
@@ -162,8 +195,17 @@ const SceneElement = ({ object, element, registry }: ElementProps) => {
             points={`${mid.x},${rect.y} ${rect.x + rect.w},${rect.y + rect.h} ${rect.x},${rect.y + rect.h}`}
             className={fill}
           />
+        ) : element.corners === 'top' || element.corners === 'bottom' ? (
+          <path d={partiallyRoundedRect(rect, RADIUS, element.corners)} className={fill} />
         ) : (
-          <rect x={rect.x} y={rect.y} width={rect.w} height={rect.h} rx={4} className={fill} />
+          <rect
+            x={rect.x}
+            y={rect.y}
+            width={rect.w}
+            height={rect.h}
+            rx={element.corners === 'none' ? 0 : RADIUS}
+            className={fill}
+          />
         );
       return (
         <g
@@ -201,16 +243,19 @@ const SceneElement = ({ object, element, registry }: ElementProps) => {
     }
     case 'text': {
       const anchor = map(element);
-      const lines = element.text.split('\n');
+      const textWeight = element.weight ?? 's';
+      const fontSize = FONT_SIZE[textWeight];
+      const maxChars = element.w ? Math.max(4, Math.floor((element.w * scale) / (fontSize * CHAR_EM))) : Infinity;
+      const lines = wrapLines(element.text, maxChars);
       return (
         <text
           x={anchor.x}
-          y={anchor.y + LINE_H[element.weight ?? 's'] / 2}
-          fontSize={FONT_SIZE[element.weight ?? 's']}
+          y={anchor.y + LINE_H[textWeight] / 2}
+          fontSize={fontSize}
           className={mx('fill-current', colorClass(element.color))}
         >
           {lines.map((line, index) => (
-            <tspan key={index} x={anchor.x} dy={index === 0 ? 0 : LINE_H[element.weight ?? 's']}>
+            <tspan key={index} x={anchor.x} dy={index === 0 ? 0 : LINE_H[textWeight]}>
               {line}
             </tspan>
           ))}

@@ -13,17 +13,26 @@ const objectsOf = (commands: Scene.Command[]) =>
 
 const nodesOf = (objects: Scene.WorldObject[]) => objects.filter((object) => object.id !== 'edges');
 
+const frameOf = (node: Scene.WorldObject) => node.elements.find((element) => element.id === 'frame') as Scene.Box;
+
 describe('uml-grid', () => {
-  test('every class renders as an equal-size title/body cell', ({ expect }) => {
+  test('every class renders as an equal-size frame with a top-rounded header', ({ expect }) => {
     const nodes = nodesOf(objectsOf(compile(CLASS_DIAGRAM)));
 
     expect(nodes).toHaveLength(6);
     const sizes = new Set(
       nodes.map((node) => {
-        expect(node.elements.map((element) => element.id)).toEqual(['title', 'body']);
-        const [title, body] = node.elements as Scene.Box[];
-        expect(body.y).toBe(title.h);
-        return `${title.w}x${title.h + body.h}`;
+        const [frame, title] = node.elements as Scene.Box[];
+        expect(frame.id).toBe('frame');
+        expect(title.id).toBe('title');
+        expect(title.corners).toBe('top');
+        expect(title.w).toBe(frame.w);
+        // Members render as free text inside the frame, not a third bordered rect.
+        const body = node.elements.find((element) => element.id === 'body');
+        if (body) {
+          expect(body.kind).toBe('text');
+        }
+        return `${frame.w}x${frame.h}`;
       }),
     );
     expect(sizes.size).toBe(1);
@@ -35,10 +44,9 @@ describe('uml-grid', () => {
     for (const node of nodes) {
       expect(node.origin!.x % GRID).toBe(0);
       expect(node.origin!.y % GRID).toBe(0);
-      for (const element of node.elements as Scene.Box[]) {
-        expect(element.w % GRID).toBe(0);
-        expect(element.h % GRID).toBe(0);
-      }
+      const frame = frameOf(node);
+      expect(frame.w % GRID).toBe(0);
+      expect(frame.h % GRID).toBe(0);
     }
   });
 
@@ -68,13 +76,13 @@ describe('uml-grid', () => {
     const objects = objectsOf(compile(CLASS_DIAGRAM));
     const edges = objects.find((object) => object.id === 'edges')!;
     const animal = objects.find((object) => object.id === 'Animal')!;
-    const [title, body] = animal.elements as Scene.Box[];
+    const frame = frameOf(animal);
 
     // `Animal <|-- Dog` renders upward: the head lands on Animal's bottom edge.
     const inheritance = edges.elements.find(
       (element): element is Scene.Arrow => element.kind === 'arrow' && element.id.startsWith('Dog-Animal'),
     )!;
-    expect(inheritance.end!.y).toBe(animal.origin!.y + title.h + body.h);
+    expect(inheritance.end!.y).toBe(animal.origin!.y + frame.h);
 
     const labels = edges.elements.filter((element) => element.kind === 'text');
     expect(labels.map((element) => (element as Scene.Text).text)).toEqual(
@@ -111,20 +119,21 @@ describe('uml-grid', () => {
     const source = ['classDiagram', 'class Big {', ...members, '}'].join('\n');
     const [big] = nodesOf(objectsOf(compile(source)));
 
-    const [title, body] = big.elements as Scene.Box[];
+    const frame = frameOf(big);
     // Far shorter than the unclamped member stack, whatever the tuned MAX_H is.
-    expect(title.h + body.h).toBeLessThan(30 * 26);
-    expect((title.h + body.h) % GRID).toBe(0);
+    expect(frame.h).toBeLessThan(30 * 26);
+    expect(frame.h % GRID).toBe(0);
   });
 
-  test('cell option fixes the node size', ({ expect }) => {
+  test('cell and titleHeight options fix the node size', ({ expect }) => {
     const snap = (value: number) => Math.ceil(value / GRID) * GRID;
-    const nodes = nodesOf(objectsOf(compile(CLASS_DIAGRAM, { cell: { w: 256, h: 480 } })));
+    const nodes = nodesOf(objectsOf(compile(CLASS_DIAGRAM, { cell: { w: 256, h: 480 }, titleHeight: 48 })));
 
     for (const node of nodes) {
-      const [title, body] = node.elements as Scene.Box[];
-      expect(title.w).toBe(snap(256));
-      expect(title.h + body.h).toBe(snap(480));
+      const [frame, title] = node.elements as Scene.Box[];
+      expect(frame.w).toBe(snap(256));
+      expect(frame.h).toBe(snap(480));
+      expect(title.h).toBe(48);
     }
   });
 
