@@ -19,8 +19,6 @@ import { isTruthy } from '@dxos/util';
 
 import { AssistantOperation, type AssistantOptions } from '#types';
 
-import { getChatsPath } from '../paths';
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* (pluginOptions: AssistantOptions.AssistantPluginOptions | void) {
     // Withholds the create entry, not the type, so an object made in a full-catalog build still opens.
@@ -41,7 +39,6 @@ export default Capability.makeModule(
               {
                 object,
                 target: options.target,
-                targetNodeId: options.targetNodeId ?? getChatsPath(options.db.spaceId),
               },
               { spaceId: options.db.spaceId },
             );
@@ -58,7 +55,6 @@ export default Capability.makeModule(
               {
                 object,
                 target: options.target,
-                targetNodeId: options.targetNodeId,
               },
               { spaceId: options.db.spaceId },
             );
@@ -74,7 +70,6 @@ export default Capability.makeModule(
               {
                 object,
                 target: options.target,
-                targetNodeId: options.targetNodeId,
               },
               { spaceId: options.db.spaceId },
             );
@@ -91,7 +86,6 @@ export default Capability.makeModule(
               {
                 object,
                 target: options.target,
-                targetNodeId: options.targetNodeId,
               },
               { spaceId: options.db.spaceId },
             );
