@@ -6,14 +6,13 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { Fragment } from 'react';
 
+import { useMobileLayout } from '@dxos/plugin-deck';
 import { DensityProvider, IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-
-import { useMobileLayout } from '../MobileLayout/MobileLayoutContext';
 
 const APP_BAR_NAME = 'SimpleLayout.AppBar';
 

@@ -4,14 +4,13 @@
 
 import React, { useLayoutEffect, useRef, useState } from 'react';
 
+import { DebugOverlay, MobileLayout } from '@dxos/plugin-deck';
 import { Splitter, type SplitterMode } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 
 import { useSimpleLayoutState } from '#hooks';
 
-import { DebugOverlay } from '../DebugOverlay';
 import { Dialog } from '../Dialog';
-import { MobileLayout } from '../MobileLayout';
 import { PopoverContent, PopoverRoot } from '../Popover';
 import { Drawer } from './Drawer';
 import { Main } from './Main';

@@ -117,7 +117,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta<MobileLayoutRootProps> = {
-  title: 'plugins/plugin-simple-layout/components/MobileLayout',
+  title: 'plugins/plugin-deck/components/MobileLayout',
   component: MobileLayout.Root,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'relative' })],

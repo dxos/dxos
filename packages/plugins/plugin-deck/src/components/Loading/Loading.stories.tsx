@@ -9,7 +9,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Loading } from './Loading';
 
 const meta = {
-  title: 'plugins/plugin-simple-layout/components/Loading',
+  title: 'plugins/plugin-deck/components/Loading',
   component: Loading,
   decorators: [withTheme()],
   parameters: {

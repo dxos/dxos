@@ -7,14 +7,13 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import type * as Node from '@dxos/app-graph/Node';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { Loading } from '@dxos/plugin-deck';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { Menu, useMenuActions } from '@dxos/react-ui-menu';
 
 import { useCompanions, useDrawerActions, useSimpleLayoutState } from '#hooks';
-
-import { Loading } from '../Loading';
 
 const DRAWER_NAME = 'SimpleLayout.Drawer';
 

@@ -6,6 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { Loading, useMobileLayout } from '@dxos/plugin-deck';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -13,8 +14,6 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '#hooks';
 
 import { useExpandPath } from '../hooks';
-import { Loading } from '../Loading';
-import { useMobileLayout } from '../MobileLayout/MobileLayoutContext';
 import { AppBar } from './AppBar';
 import { NavBar } from './NavBar';
 

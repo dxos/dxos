@@ -9,11 +9,11 @@ import { useMemo } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import * as Node from '@dxos/app-graph/Node';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useMobileLayout } from '@dxos/plugin-deck';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, createGapSeparator } from '@dxos/react-ui-menu';
 
-import { useMobileLayout } from '#components';
 import { meta } from '#meta';
 import { SimpleLayoutCapabilities } from '#types';
 
