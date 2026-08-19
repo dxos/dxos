@@ -64,7 +64,10 @@ Three distinct mechanisms currently express "this chat belongs to X":
 2. **Typed refs** on `Project` (`instructions`, `outline`, `taskSet`, `artifacts`).
 3. **`CompanionTo` relation** (`Chat` → `Obj.Unknown`) — the one being retired.
 
-## Current `Chat` ↔ companion wiring via `CompanionTo`
+## Former `Chat` ↔ companion wiring via `CompanionTo` (removed on this branch)
+
+> Historical record of the pre-migration state; every site below now uses the ECHO parent edge
+> (`Obj.setParent(chat, subject)`), and `standaloneChatsQuery` selects `Filter.hasParent(false)`.
 
 `CompanionTo` is a `Type.makeRelation` with `source: Chat`, `target: Obj.Unknown` and no payload
 beyond `id`. It is overloaded across two unrelated meanings:
@@ -103,12 +106,11 @@ therefore already redundant with the relation on the agent path.
 **two** things today: `CompanionTo` sources _and_ `Project` children. Collapsing companions onto the
 parent edge collapses those two subtractions into one.
 
-## Known gap for the migration
+## Known gap for the migration (resolved)
 
-There is no `Filter`/`Query` predicate for "object with no parent". `standaloneChatsQuery` is built
-by subtracting each known parent type's `children()`, which does not generalize once a chat can be
-parented to an arbitrary `Obj.Unknown`. Resolved by adding `Filter.hasParent` to `@dxos/echo` —
-step 1 of the plan.
+There was no `Filter`/`Query` predicate for "object with no parent"; `standaloneChatsQuery` was
+built by subtracting each known parent type's `children()`. Resolved: `Filter.hasParent` landed in
+`@dxos/echo` and the query is now `Filter.and(Filter.type(Chat), Filter.hasParent(false))`.
 
 ## Surfacing decision (not changed by this work)
 

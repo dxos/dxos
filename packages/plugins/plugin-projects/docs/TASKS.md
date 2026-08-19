@@ -652,11 +652,11 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
 - [x] **Review CompanionTo reuse for project chats** — resolved in milestone 3: companion chat keeps `CompanionTo`; owned sessions use the ECHO parent edge. Agent-roster linkage still open.
 - [ ] **Derive tool names from DXN keys** (approved 2026-08-19; chip spawned) — replace `makeToolName(meta.name)` with key-derived names (`markdown-create`), unify with `Skill.toolDefinitions`, add `Skill.toolName()` helper + bind-time uniqueness invariant, sweep hardcoded names, regenerate fixtures + the tool AUDIT. Decision record: `packages/core/compute/assistant/src/tool-runtime/AUDIT.md`.
 - [ ] **Record the live-model fixture for the Project conversation test** — `packages/core/compute/assistant-toolkit/src/skills/project/conversation.test.ts` gates its live flavor with `.skip`; run `DX_UPDATE_MODEL_FIXTURES=1 moon run assistant-toolkit:test -- src/skills/project/conversation.test.ts` with 1p credentials, commit `.store/conversations/**`, drop the `.skip`.
-- [ ] **Normalize Chat ownership onto the ECHO parent edge** — retire `Chat.CompanionTo`; audit at
-      `packages/core/compute/compute/src/types/AUDIT.md`, plan at
-      `agents/superpowers/plans/project-chat-relationship.md`. Blocked on `Filter.hasParent` in
-      `@dxos/echo` (step 1). Decided: lazy upgrade-on-read then drop, no ECHO migration; the
-      project-chats navtree connector stays in plugin-projects.
+- [x] **Normalize Chat ownership onto the ECHO parent edge** — DONE on this branch: `Filter.hasParent`
+      landed in `@dxos/echo`; all `CompanionTo` write/read sites migrated to `Obj.setParent` /
+      `children()` / `Obj.getParent`; `standaloneChatsQuery` is `hasParent(false)`; `CompanionTo`
+      deleted (pure drop, no migration — pre-launch). Audit:
+      `packages/core/compute/compute/src/types/AUDIT.md`.
 - [ ] **Unify project-context binding** across companion and standalone chats (shared hook keyed on the chat's parent) — closes the late-added-skills gap.
 - [ ] **Remove plugin-sidekick** — obviated (AUDIT.md notes it); deletion is a separate change.
 - [ ] **Consider merging plugin-routine into plugin-projects** — boundary is thin post-Routine-move.

@@ -37,15 +37,12 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         return;
       }
 
+      // The parent edge is the ownership statement: the chat belongs to its subject (cascades on
+      // delete, keeps it out of the standalone Chats section).
+      Obj.setParent(chat, companionTo);
       await invokePromise(SpaceOperation.AddObject, {
         object: chat,
         target: db,
-      });
-      await invokePromise(SpaceOperation.AddRelation, {
-        db,
-        schema: Chat.CompanionTo,
-        source: chat,
-        target: companionTo,
       });
       await invokePromise(AssistantOperation.SetCurrentChat, {
         companionTo,

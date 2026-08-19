@@ -47,7 +47,6 @@ export const OperationTestLayer = AssistantTestLayerWithTriggers({
     Agent.Agent,
     AiContext.Binding,
     Chat.Chat,
-    Chat.CompanionTo,
     Collection.Collection,
     Employer.Employer,
     Feed.Feed,

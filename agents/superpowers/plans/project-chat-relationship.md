@@ -30,6 +30,9 @@ One mechanism expresses "this chat belongs to X": `Obj.setParent(chat, subject)`
 
 ## Steps
 
+Status 2026-08-19: steps 1–7 are implemented on this branch (`Filter.hasParent`, all write/read
+sites migrated, `CompanionTo` deleted, tests flipped to parent-edge assertions). Remaining: PR.
+
 ### 1. ECHO: `Filter.hasParent` (blocking)
 
 `standaloneChatsQuery` currently subtracts `Project.children()`; with arbitrary parents that no
@@ -101,15 +104,12 @@ audit. No compatibility re-export (AGENTS.md). Grep for `CompanionTo` and confir
 the unrelated `app-surface.ts` type parameter and the `query-invalidation.test.ts` comment (update
 that comment).
 
-### 7. Existing data: lazy upgrade, then drop
+### 7. Existing data: dropped (SHIPPED)
 
-No ECHO migration. Between step 4 and step 6, read sites fall back to the relation when
-`Obj.getParent` yields nothing, and write the parent edge on the spot (upgrade-on-read). Step 6
-removes the fallback along with the type; any space not opened in between simply loses the
-companion association — acceptable for a pre-1.0 type whose chats remain reachable as standalone.
-
-Sequence it so the fallback exists for at least one released build before the delete, or land both
-together and accept the loss. Either is fine; do not delete first and add the fallback after.
+No ECHO migration and no read-side fallback shipped: a fallback would need the relation type it is
+falling back to, which step 6 deletes. Pre-launch, `CompanionTo` relations exist only in dev
+spaces; their chats revert to standalone (still reachable in the Chats section), and re-opening the
+companion panel re-parents on next persist. Decided with the user (pre-launch, no compatibility).
 
 ## Verification
 

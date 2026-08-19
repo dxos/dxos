@@ -108,8 +108,10 @@ export const createMailboxProjectExtension = () =>
 
 /**
  * A project's chats as its navtree children. Ownership is the ECHO parent edge (no `Project` schema
- * field), so the enumeration is a hierarchy query rather than a ref-array read; the `TypeSection`
- * extension that emits Project nodes leaves them childless.
+ * field) — the same edge every companion chat now uses — so what is project-specific here is only
+ * the DISPLAY: project chats surface in the navtree, other companions stay in their subject's
+ * companion panel. The enumeration is a hierarchy query rather than a ref-array read; the
+ * `TypeSection` extension that emits Project nodes leaves them childless.
  *
  * The `chat` url key is shared with plugin-assistant's Chats section on purpose — one key spanning
  * several connectors is how plugin-space addresses objects wherever they sit — so the path resolves

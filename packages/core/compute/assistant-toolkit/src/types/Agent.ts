@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import type { Harness } from '@dxos/assistant';
 import * as Instructions from '@dxos/compute/Instructions';
 import type * as Skill from '@dxos/compute/Skill';
-import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
@@ -21,7 +21,7 @@ import * as Chat from './Chat';
 /**
  * An agent identity: a personality (attribution DID) plus its preset payload (instructions with
  * text, skills, objects, and commands). Owns no conversation state — a chat is linked to the agent
- * it runs as by a `CompanionTo` relation, and durable work products live on a Project
+ * it runs as by the ECHO parent edge (the agent parents its chats), and durable work products live on a Project
  * (plugin-projects DESIGN.md, "Agent ↔ Project convergence").
  */
 
@@ -83,24 +83,28 @@ export const loadInstructions = (
   });
 
 /**
- * Resolves the agent's primary chat (the agent holds no chat ref).
+ * Resolves the agent's primary chat (the agent holds no chat ref): the latest chat parented to the
+ * agent. Entity ids are ULIDs, so the id order is creation order — `resetChatHistory` makes the
+ * replacement chat primary simply by creating it later.
  */
 export const loadChat = (agent: Agent): Effect.Effect<Chat.Chat | undefined, never, Database.Service> =>
   Effect.gen(function* () {
-    const chats = yield* Database.query(Query.select(Filter.id(agent.id)).targetOf(Chat.CompanionTo).source()).run;
-    const [chat] = chats.filter(Obj.instanceOf(Chat.Chat));
-    return chat;
+    const children = yield* Database.query(Query.select(Filter.id(agent.id)).children()).run;
+    return children
+      .filter(Obj.instanceOf(Chat.Chat))
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .at(-1);
   }).pipe(Effect.orDie);
 
 /**
  * Resolves the agent a chat runs as, if any. Plain (agentless) chats yield `undefined`.
- * Companion targets are untyped, so the agent is the one target of that type.
+ * The parent is loaded with the object, so this is synchronous — no query.
  */
-export const loadForChat = (chat: Chat.Chat): Effect.Effect<Agent | undefined, never, Database.Service> =>
-  Effect.gen(function* () {
-    const targets = yield* Database.query(Query.select(Filter.id(chat.id)).sourceOf(Chat.CompanionTo).target()).run;
-    return targets.find(Obj.instanceOf(Agent));
-  }).pipe(Effect.orDie);
+export const loadForChat = (chat: Chat.Chat): Effect.Effect<Agent | undefined> =>
+  Effect.sync(() => {
+    const parent = Obj.getParent(chat);
+    return parent && Obj.instanceOf(Agent, parent) ? parent : undefined;
+  });
 
 export type MakeProps = Omit<Obj.MakeProps<typeof Agent>, 'instructions'> & {
   instructions: string;
@@ -165,7 +169,7 @@ export const makeInitialized = (
         [Obj.Parent]: agent,
         feed: Ref.make(feed),
         // Steered through the chat's own channel: instructions render into the system prompt.
-        // Identity/attribution comes from the CompanionTo relation below.
+        // Identity/attribution comes from the parent edge (`Obj.Parent`: the agent).
         instructions: Ref.make(instructions),
       }),
     );
@@ -176,13 +180,6 @@ export const makeInitialized = (
         objects: [Ref.make(agent), Ref.make(chat), ...(contextObjects ?? [])],
       }),
     );
-    yield* Database.add(
-      Relation.make(Chat.CompanionTo, {
-        [Relation.Source]: chat,
-        [Relation.Target]: agent,
-      }),
-    );
-
     return agent;
   }).pipe(Effect.scoped);
 
@@ -234,22 +231,8 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
       }),
     );
 
-    // Retire the old companion link; the new chat becomes the primary.
-    const relations = yield* Database.query(Query.select(Filter.id(agent.id)).targetOf(Chat.CompanionTo)).run.pipe(
-      Effect.orDie,
-    );
-    for (const relation of relations) {
-      // Compare by id: the two query paths may resolve distinct proxy instances for the same chat.
-      if (Relation.getSource(relation).id === existingChat.id) {
-        yield* Database.remove(relation);
-      }
-    }
-    yield* Database.add(
-      Relation.make(Chat.CompanionTo, {
-        [Relation.Source]: chat,
-        [Relation.Target]: agent,
-      }),
-    );
+    // The old chat stays parented (history is retired, not deleted); the new chat is primary
+    // because `loadChat` resolves the latest child by creation order.
   }).pipe(Effect.scoped);
 
 export const getFromChatContext: Effect.Effect<

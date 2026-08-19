@@ -143,18 +143,3 @@ export const getFromContext: Effect.Effect<
 
   return chats[0];
 });
-
-/**
- * Relation between a Chat and companion objects (e.g., artifacts, or the agent identity the
- * conversation runs as — see `Agent.loadForChat`).
- */
-export class CompanionTo extends Type.makeRelation<CompanionTo>(
-  DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
-)({
-  source: Chat,
-  target: Obj.Unknown,
-})(
-  Schema.Struct({
-    id: Obj.ID,
-  }),
-) {}
