@@ -35,3 +35,13 @@ export const getDeck = (): Effect.Effect<DeckState, Error, Capability.Service> =
     invariant(deck, `Deck not found: ${state.activeDeck}`);
     return deck;
   });
+
+export type Platform = 'mobile' | 'desktop';
+
+/** Options for {@link DeckPlugin}. */
+export type DeckPluginOptions = {
+  /** Which root layout the plugin renders; state and operations are shared. */
+  platform?: Platform;
+};
+
+export const Platform = Capability.makeSingleton<Platform>()(`${meta.profile.key}.platform`);

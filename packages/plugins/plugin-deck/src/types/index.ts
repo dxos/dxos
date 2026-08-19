@@ -4,6 +4,7 @@
 
 export * as CompanionViewState from './CompanionViewState';
 export * as DeckCapabilities from './DeckCapabilities';
+export type { DeckPluginOptions } from './DeckCapabilities';
 export * as DeckOperation from './DeckOperation';
 export * as DeckRole from './DeckRole';
 export * as DeckSchema from './DeckSchema';
