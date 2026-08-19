@@ -6,16 +6,38 @@ bar while a task is running, the space's statistics otherwise.
 ## Setup
 
 The device shows data through an *Indicator App*, so one has to exist before anything can be pushed
-to it. This is a one-time step and only you can do it — it needs a LaMetric account.
+to it. This is a one-time step and needs a LaMetric account.
 
-1. On [developer.lametric.com](https://developer.lametric.com), create an indicator app with a
-   **push** data source, then publish it. Publishing is required before the device will accept an
-   update, and takes a couple of minutes.
-2. Install the app on your device.
-3. From the app's page, copy its **app ID**, **widget ID** and **access token**.
-4. In Composer, enable the LaMetric plugin and fill those three fields in its settings.
-5. Optionally set the **device address** — the LaMetric's IP on your network. With it, Composer
-   pushes straight to the device; without it, pushes go through LaMetric's cloud.
+### 1. Create the app
+
+On [developer.lametric.com](https://developer.lametric.com), create a new indicator app:
+
+1. Pick an icon and enter an initial value — the default the device shows before the first push.
+2. Set the communication type to **`Local Push`**. This is the one that matters: it yields a push URL
+   pointing at the device on your own network, which is the transport this plugin prefers. `Next`.
+3. Enter a name and description, then `Save`.
+
+### 2. Publish and install it
+
+Click **`Publish`** and wait for the confirmation email, usually under two minutes. This is not
+optional — the device rejects updates to an unpublished app. Then install the app on your device from
+the LaMetric mobile app.
+
+### 3. Collect four values
+
+| Value | Where |
+| --- | --- |
+| App ID, Widget ID | The app's **`Published V1`** tab. It shows a sample `curl` whose URL ends `/api/v1/dev/widget/update/<app-id>/<widget-id>` |
+| Access token | The `X-Access-Token` header in that same sample |
+| Device address | LaMetric mobile app → `Settings` → `Wi-Fi` → `IP Address` |
+
+### 4. Configure the plugin
+
+Enable the LaMetric plugin in Composer and fill those four fields in its settings.
+
+The device address is optional. With it, Composer pushes straight to the device over your network;
+without it, pushes go through LaMetric's cloud — which is slower and, if the app was created as
+`Local Push`, may not be accepted at all. Set the address if you have it.
 
 ## Desktop only
 

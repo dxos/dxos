@@ -27,7 +27,7 @@ export type VirtualLaMetricProps = {
  * Rasterised through the same pure function the tests use, so what is reviewed here is what the
  * hardware shows — including whether a line is too wide and has to scroll.
  */
-export const VirtualLaMetric = ({ frames, scale = 8, className }: VirtualLaMetricProps) => {
+export const VirtualLaMetric = ({ frames, scale = 6, className }: VirtualLaMetricProps) => {
   const [index, setIndex] = useState(0);
   const [offset, setOffset] = useState(0);
 
