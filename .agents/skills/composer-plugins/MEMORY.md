@@ -4,6 +4,20 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-08-19 — plugin-stream-deck (new plugin)
+
+- `Filter.tag(x)` matches a tag's **URI/EID**, NOT its label (`internal/Filter/match.ts` `matchesTag`). Query by label = resolve the `Tag` object first (`Filter.type(Tag.Tag)` + case-insensitive label match, keyless only per `Tag.isUserTag`), then `Filter.tag(Obj.getURI(tag))`. `Filter.tag('favorite')` silently matches nothing.
+- `GraphBuilder.createExtension({...})` returns an **Effect**, not an extension: the canonical shape is `const extensions = yield* Effect.all([createExtension(...), ...])` then `Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat())`. Wrapping each call in `Effect.succeed` yields `Effect[]` and fails the `BuilderExtensions` typecheck.
+- Capability barrels use the `AppCapability.*` makers (`appGraphBuilder(() => import(...))`, `surface(() => import(...), { roles })`); bare `Capability.lazyModule(fn)` needs 3 args and bypasses the maker's activation gate.
+- A story `render` fn must not return `null` — `ArgsStoryFn` rejects `JSX.Element | null` (`error TS2322`). Return `<div />` for the not-ready branch.
+- `withTheme`/`withLayout` come from `@dxos/react-ui/testing`, and `withTheme` is **called** (`withTheme()`); `@dxos/storybook-utils` does not export them.
+- Client-backed **container** stories do not render in an ad-hoc root-launched `storybook dev` (client worker never initialises; the reference `plugin-kanban` container story is equally blank). Verify container stories with `moon run <p>:test-storybook`; use component stories for visual/screenshot checks.
+- Lint rule `dxos-subpath-exports` requires a namespace re-exported from `src/index.ts` to have an exports-map entry whose subpath matches the namespace name (`Protocol` -> `./Protocol` -> `src/protocol/Protocol.ts`) plus the matching `vite.config.ts` entry — a `./protocol` barrel subpath does not satisfy it.
+- Translation keys must be dot.kebab-case (`plugin.name`, not `plugin name`) or `translation-key-format` fails lint.
+- Type DXN final segment must be camelCase: `org.dxos.type.test.streamDeckItem`, never `stream-deck-item` (the NSID check surfaces as a bizarre string-literal type error).
+- Rendering for hardware/off-document targets: build **SVG strings** and inline the icon (`[data-dx-icon-sprite] #<name>`.innerHTML + its viewBox), setting both `fill` and `color` so the sprite's `fill="currentColor"` resolves. Theme CSS custom properties do not exist outside the app, so such renderers need literal hex.
+- `useProgressMonitors()` (`@dxos/app-toolkit/ui`) degrades to an empty task list when no `ProgressRegistry` host is present, so it is safe in stories/tests without extra capabilities.
+
 ## 2026-07-28 — CLI / node plugin variants (React out of non-browser builds)
 
 - `Capability.lazy` / `OperationHandlerSet.keyed` / `React.lazy` defer the import at RUNTIME; a bundler still walks them. A `#capabilities` barrel that merely lists `ReactSurface` pulled the whole plugin UI into every node/bun build — `plugin-map/plugin` alone dragged `@dxos/react-ui-geo`'s 4.4 MB of country geometry into the `dx` binary. Fix is a node-conditioned barrel (`src/capabilities/node.ts` + a `node` condition on `#plugin`/`#capabilities`), matching what `plugin-client` already did.
