@@ -10,9 +10,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import * as Node from '@dxos/app-graph/Node';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
+import { Home, NavBranch } from '@dxos/plugin-deck';
 import { Position } from '@dxos/util';
-
-import { Home, NavBranch } from '#components';
 
 const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end'];
 
