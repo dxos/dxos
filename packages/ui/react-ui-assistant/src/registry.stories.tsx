@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { MarkdownStream } from '@dxos/react-ui-markdown';
+import { MarkdownBlock, WidgetStateProvider, createWidgetStateStore } from '@dxos/react-ui-feed';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { assistantRegistry } from './registry';
@@ -13,14 +13,23 @@ import { translations } from './translations';
 
 /**
  * Every tag {@link assistantRegistry} registers, rendered through the shipping path: the document
- * the renderer emits, parsed and decorated by the same editor the thread uses. One story per tag,
- * so a widget can be worked on in isolation without driving a whole conversation.
+ * the renderer emits, in the feed's own `MarkdownBlock` — the container a thread mounts per
+ * message. One story per tag, so a widget can be worked on in isolation without driving a whole
+ * conversation.
  */
 type StoryArgs = {
   content: string;
 };
 
-const DefaultStory = ({ content }: StoryArgs) => <MarkdownStream content={content} registry={assistantRegistry} />;
+// Shared across stories: the store is the thread's, not an item's — a widget's state has to survive
+// the item unmounting as the reader scrolls past it.
+const store = createWidgetStateStore();
+
+const DefaultStory = ({ content }: StoryArgs) => (
+  <WidgetStateProvider store={store}>
+    <MarkdownBlock text={content} registry={assistantRegistry} />
+  </WidgetStateProvider>
+);
 
 const escapeXml = (raw: string): string => raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -31,7 +40,7 @@ const tag = (name: string, content: string, attributes = ''): string =>
 const meta = {
   title: 'ui/react-ui-assistant/registry',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'p-4' })],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -48,7 +57,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Prompt: Story = {
   args: {
-    content: tag('prompt', 'How do I make a nested flex column scroll instead of growing?'),
+    content: tag('prompt', 'Hello world!'),
   },
 };
 
