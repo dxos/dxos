@@ -45,14 +45,22 @@ remove, so its relative win is smaller.
 
 ## Headline takeaways
 
-- **Raw SQLite is 100-1,000x faster than either ECHO storage kind** across every operation — this
-  is the expected cost of ECHO's RPC/schema/reactivity layer on top of the same underlying SQLite
-  driver, not a bug.
-- **Feed beats automerge on every single-op benchmark except point-select**, by 1.9x (delete) to
-  4.9x (insert) — matches the architectural expectation that feed avoids Automerge document
-  creation. Point-select is the one exception (automerge 334.5 hz vs. feed 31.4 hz) because a
-  by-ID automerge lookup hits the entity manager's in-memory doc-handle map directly, while feed's
-  by-ID query goes through the general index-backed `Query.select(...).from(feed)` path.
+- **Raw SQLite is roughly 100x to over 2,000x faster than either ECHO storage kind**, depending on
+  operation and storage kind — this is the expected cost of ECHO's RPC/schema/reactivity layer on
+  top of the same underlying SQLite driver, not a bug. The low end is automerge point-select
+  (~110x); the high end is automerge update/delete (~2,400x) and feed point-select (~1,170x), both
+  inflated by factors explained below rather than being a flat "ECHO overhead" multiple.
+- **The automerge-vs-feed comparison is mixed, not one-sided** — read directionally per op, not as
+  a blanket "feed wins":
+  - Feed is faster: filtered scan (~1.3x), update (~4.0x), delete (~3.5x).
+  - Automerge is faster: insert (~3.8x), point-select (~10.7x).
+  - Point-select favors automerge because a by-ID lookup hits the entity manager's in-memory
+    doc-handle map directly, while feed's by-ID query goes through the general index-backed
+    `Query.select(...).from(feed)` path.
+  - Insert and update/delete pull in opposite directions for a specific, verifiable reason — see
+    below — so don't treat this table as "automerge insert is just faster than feed insert" in
+    general; it reflects each bench's position in the run and the resulting corpus size at that
+    point, not a fixed per-op cost for either storage kind.
 - **Automerge's update/delete numbers here are NOT a stable "per-op" cost** — see below.
 
 ## Why automerge update/delete looks so much worse than the track file's isolated numbers
@@ -62,8 +70,9 @@ smaller corpus) don't show update/delete anywhere near 700ms/op. The gap is the 
 issue that same file documents as finding #2: `EntityManager.flush()`
 (`entity-manager.ts:662-685`) passes **every currently-loaded document handle** —
 `_getAllDocHandles()`, `entity-manager.ts:1420-1424` — to `Repo.flush()`/`DataService.flush`, not
-just the touched one. This run's `DELETE_POOL` default was raised from 300 to 1,000 in PR #12668
-(to fix a real correctness bug — see AUTOMERGE-TRACK.md's sibling finding in the delete bench), so
+just the touched one. This run's `DELETE_POOL` default was raised from 300 to 1,000 in
+`echo.bench.ts` (PR #12668, the delete-pool exhaustion guard added alongside it — that specific
+fix is in the benchmark file itself, not yet written up as its own AUTOMERGE-TRACK.md finding), so
 by the time the update/delete benches run, ~1,200 per-object Automerge documents are loaded into
 the space, and _every_ `db.flush()` call in this run walks all ~1,200 of them. This benchmark run
 is itself a live demonstration of that finding: raising `DELETE_POOL` for correctness had the
@@ -73,8 +82,26 @@ got somewhat slower with the larger corpus (shared `indexes: true` cost scales w
 count too, for both storage kinds) but nowhere near as much, since feed mutations don't add
 per-object Automerge document handles to `_getAllDocHandles()` in the first place.
 
+The same ordering effect explains why automerge's **insert** number (46.85ms) looks faster than
+feed's (179.69ms) in this table, apparently contradicting the update/delete story: within each
+describe block, `insert` and `insert (batched)` run _before_ `select (point)` first triggers
+`ensureSeed()`, so both storage kinds' insert benches run against a small, still-growing corpus,
+not the ~1,200-object one update/delete see. Automerge and feed's _absolute_ insert costs at that
+point aren't directly comparable to each other either, since the two storage kinds' describe
+blocks run one after another in the same worker process — the automerge suite's heavier work
+(document creation, checksum overhead) can leave more GC/heap pressure behind for the feed suite
+that runs right after it. Take the insert-vs-update/delete direction flip as a demonstration that
+_bench position and corpus size at that position_ matter as much as storage kind here, not as a
+claim that automerge inserts are reliably faster than feed inserts — AUTOMERGE-TRACK.md and
+FEED-TRACK.md's isolated, order-independent profiles are the more trustworthy source for
+per-op-type comparisons; this file is about realistic default-config throughput, corpus-size warts
+included.
+
 **Practical implication:** don't read the automerge column of the point-operations table above as
 "automerge update/delete costs ~700ms" — read it as "automerge update/delete cost grows with total
 loaded document count, and at ~1,200 loaded docs it's ~700ms here." Fixing AUTOMERGE-TRACK.md
-optimization #2 (scope the flush to the touched document) should flatten this back down to
-roughly the per-op cost shown in that file's isolated profile.
+optimization #2 (scope the flush to the touched document) would remove the O(loaded docs) scan
+component of that cost, but the run still uses `indexes: true`, so the remaining index-engine RPC
+(which itself scales with total corpus size, for both storage kinds) would still be there — expect
+a real improvement, not a full return to AUTOMERGE-TRACK.md's `indexes: false` isolated numbers
+without a follow-up measurement to confirm by how much.

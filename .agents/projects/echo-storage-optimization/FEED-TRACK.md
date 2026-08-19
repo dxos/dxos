@@ -65,10 +65,14 @@ count**, not per-op CPU:
 1. **Batch appends at the call site.** `FeedHandle` already supports batching internally
    (`#sendAppendBatches()`), and the benchmark now measures this directly: `echo.bench.ts`'s
    "insert (batched xN, single flush)" bench (PR #12668) shows batching cuts per-item feed insert
-   latency ~14x (vs. ~2.8x for automerge) — feed benefits far more from batching because its cost
-   is dominated by per-flush RPC/index overhead rather than a real per-object cost. Any production
-   call site doing single-append-then-flush-then-append-again should switch to
-   append-many-then-flush-once wherever the caller can tolerate the latency of batching.
+   latency by a double-digit multiple, well past automerge's — feed benefits far more from
+   batching because its cost is dominated by per-flush RPC/index overhead rather than a real
+   per-object cost. See THROUGHPUT-OVERVIEW.md for the current measured ratio; the exact multiple
+   is corpus-size-sensitive (it moves with how many documents are loaded — see optimization #2
+   below and THROUGHPUT-OVERVIEW.md's "Why automerge update/delete looks so much worse" section),
+   so treat any single number as a snapshot, not a constant. Any production call site doing
+   single-append-then-flush-then-append-again should switch to append-many-then-flush-once
+   wherever the caller can tolerate the latency of batching.
 2. **(Shared with automerge track, not feed-specific)** If `EntityManager.flush()`'s disk-flush
    scoping is fixed per AUTOMERGE-TRACK.md optimization #2, feed operations benefit too, since
    `Database.flush()` (`packages/core/echo/echo-client/src/proxy-db/database.ts:725-728`)
