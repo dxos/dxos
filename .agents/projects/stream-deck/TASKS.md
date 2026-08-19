@@ -1,6 +1,10 @@
 # Stream Deck — Tasks
 
-_Resume: M1–M4 built and green. Stream Deck (#12678) is open; the LaMetric work is stacked on it on
+_Resume (2026-08-19): NEXT GOAL is the **Stream Deck hardware pass** (M2's last open item) —
+LaMetric is done and working on real hardware. After that, design the **edge-hosted LaMetric app**
+under the follow-ups below; publishing a market app is deferred until that design exists.
+
+M1–M4 built and green. Stream Deck (#12678) is open; the LaMetric work is stacked on it on
 `claude/stream-deck-lametric-plugin-731d52`. `plugin-space` now owns the device-agnostic projection
 (`SpaceCapabilities.Dashboard`) and both device plugins consume it. Everything except the two
 physical devices is verified. NEXT: the LaMetric hardware pass (needs `.secrets/lametric.env`), then
@@ -143,12 +147,34 @@ The `.sdPlugin` bundle and the WebSocket transport. Needs the physical device an
         `http://<ip>:8080` answers, so the certificate path is optional; the device also returns
         `Access-Control-Allow-Origin: *`, so CORS never blocked it — mixed content and the
         self-signed certificate do.
-  - [ ] **In-app run** — the transport is proven on hardware, but the plugin has not yet driven the
-        device from a running `composer-app:tauri-dev` build. That exercises the settings surface,
-        the discovery-on-settings-change path, and the debounce under real space churn.
+  - [x] **Hardware pass complete** — statistics cycle on the device, driven through the real
+        `discoverWidgetId` / `selectTransport` / `toFrames` code. Two defects only hardware could
+        find, both fixed: frames need an explicit `index` (without it the device renders just the
+        first), and the DIY app must be set to **Push** in the LaMetric mobile app (with no mode
+        selected it answers `{"success":{"message":"ok"}}` and ignores the update). Note the device
+        does **not** validate the widget id — a bogus one also returns ok — so a 200 is not evidence
+        that anything rendered.
+  - [ ] **In-app run** — the transport and projection are proven on hardware, but the plugin has not
+        yet driven the device from a running `composer-app:tauri-dev` build. That exercises the
+        settings surface, discovery re-running on a settings change, and the debounce under real
+        space churn.
 
 ### LaMetric follow-ups
 
+- [ ] **Publish a DXOS indicator app to the LaMetric market — DEFERRED 2026-08-19.** Shipping to
+      users should not require them to install "My Data (DIY)" and pick a transport mode, but this is
+      not the next thing to build. Design it as an **edge** app rather than a push app (below) before
+      committing to publishing anything.
+- [ ] **Edge-hosted LaMetric app.** The promising shape, and the reason publishing is deferred rather
+      than scheduled: LaMetric's DIY app offers **Poll** alongside Push, so a published DXOS app
+      could simply _fetch_ its frames from a DXOS edge endpoint on the device's own schedule. That
+      inverts today's constraints in our favour: - No local push, so no device API key, no IP address, and nothing for the user to paste — the
+      setup collapses to installing the app and authorising a space. - No CORS problem and no Tauri dependency, because nothing is issued from the client at all;
+      the device talks to edge directly. - The display keeps working with Composer closed, which is the same motivation as the Stream
+      Deck project's "edge mode" item below — the two should be designed together.
+      What it needs: an edge route rendering `{frames}` for a space, an authorisation model for it
+      (the device sends no credential of ours), and a published app pointing at it. The frame
+      projection (`toMetrics` → `toFrames`) is unchanged and already device-agnostic.
 - [ ] **Browser support** — an edge worker proxying to `developer.lametric.com`. v1 is desktop-only:
       the cloud answers a CORS preflight with 405 and sends no `Access-Control-*` header, and the LAN
       device is plain HTTP or self-signed, so the web view can reach neither. The transport interface

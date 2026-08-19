@@ -95,6 +95,8 @@ feat F-1: What the device shows
   req F-1.5: Statistic labels are abbreviated at the source. Nine characters fit on 37 pixels, and a
     dashboard is read at a glance.
   req F-1.6: Favorites are not rendered: with no bindable input a favorite is a name scrolling past.
+  req F-1.7: Every frame carries an explicit `index`. Without one the device renders only the first
+    frame of the cycle.
 ```
 
 ```mdl
@@ -114,6 +116,8 @@ feat F-2: Transport
   req F-2.4: Incomplete configuration builds no transport and issues no request, which is the common
     case since most users have no device.
   req F-2.5: A rejected push is reported through `PushStatus` and logged, never thrown at the caller.
+  req F-2.8: A 2xx is not evidence that anything rendered. The device accepts a push to a widget id
+    that does not exist, so only the package and the body shape are actually validated.
 ```
 
 ```mdl
