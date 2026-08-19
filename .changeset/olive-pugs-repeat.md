@@ -10,6 +10,11 @@
 '@dxos/mcp-server': minor
 '@dxos/plugin-projects': minor
 '@dxos/plugin-tasks': minor
+'@dxos/plugin-blogger': minor
+'@dxos/plugin-code': minor
+'@dxos/plugin-commerce': minor
+'@dxos/plugin-inbox': minor
+'@dxos/plugin-studio': minor
 ---
 
 Space object CRUD is now projected from operations, and space operations no longer reach for app
@@ -83,6 +88,16 @@ space-qualified refs it is given, so it declares nothing and carries no paramete
 strict: the service materializes only from `InvokeOptions.spaceId` (or the parent process's
 environment for nested invocations), so every call site that needs the database passes
 `{ spaceId: db.spaceId }` in options — the create-object entries across the plugins included.
+
+`@dxos/app-toolkit` gains `NavigationResolver.forType(type, { getPath, getLabel?, position?, pages? })`
+— the whole body of the common custom-section navigation resolver (load the queried object, check it
+is an instance of the type, answer the section's path for it), so contributing one is a one-call
+module. Sections built with `TypeSection.createTypeSectionExtension` still need no resolver at all:
+their url binding ends in the typename, which plugin-space's generic lookup already reads.
+plugin-studio and plugin-inbox now use the helper, and the custom-shaped sections that were missing
+a resolver gained one through it — plugin-blogger (Publication), plugin-code (CodeProject) and
+plugin-commerce (Provider) — so their objects resolve to their sections instead of only the generic
+database path.
 
 Each plugin exposes one operation handler set, on the subpath convention. `@dxos/plugin-space`'s
 `./operations` subpath is replaced by `./SpaceOperationHandlerSet`, whose single `handlers` set

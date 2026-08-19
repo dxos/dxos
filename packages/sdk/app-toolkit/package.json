@@ -101,6 +101,11 @@
       "types": "./dist/types/src/app/NativePasskey.d.ts",
       "import": "./dist/lib/app/NativePasskey.mjs"
     },
+    "./NavigationResolver": {
+      "source": "./src/app/NavigationResolver.ts",
+      "types": "./dist/types/src/app/NavigationResolver.d.ts",
+      "import": "./dist/lib/app/NavigationResolver.mjs"
+    },
     "./NavigationOperation": {
       "source": "./src/operations/NavigationOperation.ts",
       "types": "./dist/types/src/operations/NavigationOperation.d.ts",

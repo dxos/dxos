@@ -8,6 +8,10 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
+  // Graph start, not the plugin's own surface: a deep link is resolved before any surface exists.
+  activatesOn: ActivationEvents.Idle,
+});
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });

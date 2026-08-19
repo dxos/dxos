@@ -256,6 +256,18 @@ field goes.
       `src/operations/<X>OperationHandlerSet.ts`, barrel `export * as`, package subpath); the
       public `./operations` subpath is gone. Six consumers repointed; single-element destructures
       (`const [x] = xs`) replaced with index access per user note.
+- [x] **`NavigationResolver.forType`** (user question 2026-08-19: "does every plugin with a custom
+      section need a resolver now?"). Findings: the resolver mechanism is a week old (fa36e263,
+      2026-08-12) — nothing was "always true"; sections built with
+      `TypeSection.createTypeSectionExtension` need NO resolver (plugin-space's generic
+      `findTypeSectionPath` reads their url binding); only custom-shaped sections do, and of ~6 such
+      plugins only inbox and studio had one. Added the helper to `@dxos/app-toolkit`
+      (`NavigationResolver.forType`, 4 unit tests), converted studio + inbox, and filled the
+      evident gaps: blogger (Publication), code (CodeProject), commerce (Provider, with a new
+      `paths.ts` sharing the section segment with the graph builder). Judgment calls left open:
+      crm (its section holds type-collection nodes, no per-object nodes — a resolver would target
+      the type node, a different contract) and blogger's Post (lives under its Publication — needs
+      a back-reference walk, not the type-at-section shape).
 - [ ] **Shared operation→tool projection** (assistant ⇄ mcp) — deferred with a plan, not dropped.
       What blocks a naive extraction: the two surfaces are deliberately different models of the
       same operation. The assistant presents refs as LLM-friendly URI _strings_ (`RefFromLLM`,
