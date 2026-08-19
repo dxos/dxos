@@ -29,10 +29,12 @@ const MAX_W = GRID * 6;
 const MIN_H = GRID * 2;
 const MAX_H = GRID * 5;
 
-const PAD_X = GRID * 2;
-/** Inset of body text from the frame border. */
-const TEXT_PAD = GRID_FINE * 2;
+const MIN_TITLE_H = GRID;
+const MAX_TITLE_H = GRID * 3;
+
 const TITLE_PAD = GRID / 2;
+const TEXT_PAD = GRID_FINE * 1;
+const PAD_X = GRID * 2;
 const SECTION_PAD = GRID / 2;
 const GAP_MAIN = GRID * 4;
 const GAP_CROSS = GRID * 4;
@@ -126,11 +128,12 @@ const measureCell = (model: UmlModel, { maxWidth, cell: override = {}, titleHeig
       memberLines(entry).reduce((sum, line) => sum + wrapped(line.length, MEMBER_FONT), 0),
     ),
   );
-  // A fixed header snaps to the fine grid so it can sit below one GRID cell.
+  // A fixed header snaps to the fine grid so it can sit below one GRID cell; the measured
+  // default clamps to the GRID-derived title bounds.
   const titleH =
     titleHeight !== undefined
       ? Math.ceil(titleHeight / GRID_FINE) * GRID_FINE
-      : snap(titleLines * TITLE_FONT.lineH + TITLE_PAD);
+      : Math.min(MAX_TITLE_H, Math.max(MIN_TITLE_H, snap(titleLines * TITLE_FONT.lineH + TITLE_PAD)));
   const bodyH = snap(bodyLines * MEMBER_FONT.lineH + SECTION_PAD);
   // Measured height clamps to the GRID-derived bounds (very large classes cap at MAX_H and may
   // elide content); an explicit override wins, still reserving the title bar.
