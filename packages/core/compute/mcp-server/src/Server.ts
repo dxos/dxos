@@ -204,7 +204,9 @@ export const makeTool = (operation: Projection.ProjectedOperation) => {
   // the conservative default.
   return operation.safety == null
     ? tool
-    : tool.annotate(Tool.Readonly, operation.safety === 'read').annotate(Tool.Destructive, operation.safety === 'destructive');
+    : tool
+        .annotate(Tool.Readonly, operation.safety === 'read')
+        .annotate(Tool.Destructive, operation.safety === 'destructive');
 };
 
 /** Dispatches one projected tool call: encode input, resolve the space, invoke, qualify refs. */

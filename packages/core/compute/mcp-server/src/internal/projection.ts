@@ -198,10 +198,7 @@ const isStruct = (schema: Schema.Codec<any, any>): schema is Schema.Codec<any, a
 export const DATABASE_SERVICE_KEY = '@dxos/echo/Database/Service';
 
 /** NSID of a registry key: `dxn:` prefix and `:<version>` tail stripped — the form ToolIds carry. */
-const toNsid = (key: string): string =>
-  key
-    .replace(/^dxn:/, '')
-    .replace(/:\d+\.\d+\.\d+$/, '');
+const toNsid = (key: string): string => key.replace(/^dxn:/, '').replace(/:\d+\.\d+\.\d+$/, '');
 
 /**
  * Projects registry records into tool descriptors — driven by the projected skills.
