@@ -27,10 +27,11 @@ Package dependency direction: `@dxos/assistant-toolkit` → `@dxos/compute` (Cha
 ## Package dependencies
 
 Workspace `dependencies` edges between the audited packages (arrow points at the dependency).
-`@dxos/assistant-toolkit` sits at the top: it may import `Project`, never the reverse.
+Foundations (`@dxos/echo`) at the top; `@dxos/assistant-toolkit` at the bottom may import
+`Project`, never the reverse.
 
 ```mermaid
-graph TD
+graph BT
   AT["@dxos/assistant-toolkit"] --> C["@dxos/compute"]
   AT --> T["@dxos/types"]
   AT --> S["@dxos/schema"]
