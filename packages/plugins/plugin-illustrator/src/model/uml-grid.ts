@@ -97,20 +97,36 @@ export const zRouter: Router = ({ from, to, offset, horizontal }) => {
 };
 
 /**
+ * Pull strength per relation kind when aligning columns: parts stick to their whole's column
+ * before subtypes, which in turn beat loose dependencies/associations.
+ */
+const COLUMN_WEIGHT: Record<UmlRelation['kind'], number> = {
+  composition: 4,
+  aggregation: 3,
+  inheritance: 2,
+  realization: 2,
+  dependency: 1,
+  association: 1,
+};
+
+/**
  * Assign each node an integer column: the first lane keeps declaration order, later lanes pull
- * each node toward the mean column of its already-placed neighbours (ties keep declaration
- * order, collisions shift right). Aligned columns turn rank-crossing connectors into straight
- * lines — e.g. a sole subtype sits directly below its supertype.
+ * each node toward the weighted mean column of its already-placed neighbours. The strongest-tied
+ * node picks its column first, so a part claims the column under its whole even when weaker
+ * relations compete for it; collisions take the free column nearest the desired mean. Aligned
+ * columns turn rank-crossing connectors into straight lines.
  */
 const assignColumns = (
   model: UmlModel,
   ranks: Map<string, number>,
   lanes: Map<number, string[]>,
 ): Map<string, number> => {
-  const neighbors = new Map<string, string[]>();
+  type Link = { peer: string; weight: number };
+  const neighbors = new Map<string, Link[]>();
   for (const relation of model.relations) {
-    neighbors.set(relation.from, [...(neighbors.get(relation.from) ?? []), relation.to]);
-    neighbors.set(relation.to, [...(neighbors.get(relation.to) ?? []), relation.from]);
+    const weight = COLUMN_WEIGHT[relation.kind];
+    neighbors.set(relation.from, [...(neighbors.get(relation.from) ?? []), { peer: relation.to, weight }]);
+    neighbors.set(relation.to, [...(neighbors.get(relation.to) ?? []), { peer: relation.from, weight }]);
   }
 
   const columns = new Map<string, number>();
@@ -118,19 +134,29 @@ const assignColumns = (
   laneOrder.forEach((lane, position) => {
     const members = lanes.get(lane)!;
     const desired = members.map((id, index) => {
-      const placed = (neighbors.get(id) ?? []).flatMap((peer) => (columns.has(peer) ? [columns.get(peer)!] : []));
+      const placed = (neighbors.get(id) ?? []).filter((link) => columns.has(link.peer));
+      const pull = placed.reduce((sum, link) => sum + link.weight, 0);
       const mean =
-        position > 0 && placed.length ? placed.reduce((sum, column) => sum + column, 0) / placed.length : index;
-      return { id, mean, index };
+        position > 0 && pull > 0
+          ? placed.reduce((sum, link) => sum + link.weight * columns.get(link.peer)!, 0) / pull
+          : index;
+      return { id, mean, pull, index };
     });
-    desired.sort((left, right) => left.mean - right.mean || left.index - right.index);
+    desired.sort((left, right) => right.pull - left.pull || left.index - right.index);
     const used = new Set<number>();
     for (const entry of desired) {
-      // Round half toward the left so a node between two parents aligns with the first; on
-      // collision take the nearest free column on either side.
-      let column = Math.ceil(entry.mean - 0.5);
+      // Round half toward the left so a node between two equal parents aligns with the first;
+      // on collision take the free column nearest the desired mean.
+      const base = Math.ceil(entry.mean - 0.5);
+      let column = base;
       for (let step = 1; used.has(column); step++) {
-        column = used.has(column - step) ? (used.has(column + step) ? column : column + step) : column - step;
+        const left = base - step;
+        const right = base + step;
+        if (!used.has(left) && (used.has(right) || Math.abs(left - entry.mean) <= Math.abs(right - entry.mean))) {
+          column = left;
+        } else if (!used.has(right)) {
+          column = right;
+        }
       }
       used.add(column);
       columns.set(entry.id, column);
