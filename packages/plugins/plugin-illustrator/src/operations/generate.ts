@@ -8,8 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { Mermaid, Uml } from '#model';
 import { DrawingOperation } from '#types';
-
-import { resolveVariant } from '../util/load-drawing';
+import { resolveVariant } from '#util';
 
 const handler: Operation.WithHandler<typeof DrawingOperation.Generate> = DrawingOperation.Generate.pipe(
   Operation.withHandler(

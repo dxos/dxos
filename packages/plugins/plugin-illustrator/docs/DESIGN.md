@@ -1,0 +1,108 @@
+# Diagram layout engines — design
+
+Status: spike (2026-08). Owner: plugin-illustrator.
+
+## Context
+
+The illustrator dialects (mermaid flowchart, UML class, UML grid) compile diagram _models_ into
+the renderer-neutral scene DSL; the dialect owns layout because mermaid carries no coordinates
+(see `src/model/dialect.ts`). Today's layout is hand-rolled:
+
+- `layout.ts` — longest-path layering with DFS cycle-breaking (shared ranking).
+- `uml.ts` — variable-size compartment boxes, lanes centered on the widest lane.
+- `uml-grid.ts` — equal-size cells on the tldraw grid (`GRID = 32`), a one-pass weighted
+  barycenter column assignment (`assignColumns`), and pluggable orthogonal Z-routing.
+
+The hand-rolled column pass is a heuristic: it has no crossing-minimization sweep, no proper
+coordinate assignment, and degrades as diagrams grow. This spike evaluates delegating placement
+to an off-the-shelf layered-layout engine while keeping everything else (parsing, measuring,
+grid snapping, routing, emission) ours.
+
+## Goals
+
+1. **Align to a grid** — node edges sit on the tldraw document grid; connectors run through
+   gutters on grid lines.
+2. **Minimize line crossings** — proper layer-sweep crossing minimization, not declaration order.
+3. **Minimize jagged lines** — coordinate assignment that favors straight (vertically aligned)
+   chains; orthogonal routes with as few bends as possible.
+4. **Arrows read upward toward abstractions** — inheritance, realization, and dependency targets
+   rank above their sources (`relationRanks` orientation); containment/association flow down.
+5. **Gather peers on the same axis** — classes at the same depth share a lane; siblings of a
+   common parent sit adjacent.
+
+## Engine comparison
+
+|                         | hand-rolled (`uml-grid`)         | dagre (`@dagrejs/dagre`) | ELK (`elkjs`)                                               |
+| ----------------------- | -------------------------------- | ------------------------ | ----------------------------------------------------------- |
+| Layering                | longest-path + back-edge removal | network-simplex          | network-simplex (+ constraints)                             |
+| Crossing minimization   | none (one-pass barycenter)       | median/greedy sweep      | layer sweep (Sugiyama)                                      |
+| Coordinate assignment   | integer columns                  | Brandes-Köpf-ish         | Brandes-Köpf / network-simplex                              |
+| Orthogonal edge routing | ours (Z-router)                  | splines (unused)         | native `ORTHOGONAL` sections                                |
+| Constraints (future)    | —                                | limited                  | layer/position constraints, `INTERACTIVE` modes, partitions |
+| Size / runtime          | 0                                | ~30 kB, sync             | ~1.4 MB (bundled), async                                    |
+
+Both engines are wired behind one seam (below); ELK is the strategic choice (constraints,
+interactive re-layout, orthogonal routing) and dagre the lightweight baseline.
+
+## Architecture
+
+The engines replace exactly one step — placement. Everything else is unchanged and shared with
+the hand-rolled dialects:
+
+```
+parse (uml.ts) → measureCell (uml-grid.ts) → PLACE → snap to GRID → emit (uml-grid.ts)
+                                              ↑
+                            lanes+columns | dagre | elk
+```
+
+- `uml-grid.ts` exports its `measureCell` and `emit` halves; its own `compile` composes them
+  with the barycenter placement.
+- `uml-engine.ts` provides `compile(source, { engine: 'dagre' | 'elk', ... })` returning
+  `Promise<Scene.Command[]>` (ELK is async; dagre is wrapped for a uniform surface). Engines
+  receive uniform cells and the _oriented_ edge list (up-kinds reversed, matching
+  `relationRanks`), and return node rects, which are then snapped to `GRID` and normalized to a
+  zero origin.
+- Routing stays ours (`zRouter`): engine placement + grid-snapped orthogonal Z-routes satisfies
+  goals 1–3 without reconciling engine-produced route points with post-snap positions. ELK's
+  native `ORTHOGONAL` sections are a follow-up (`useEngineRoutes`) once snapping is done inside
+  the engine pass (fixed port positions + spacing as multiples of `GRID`).
+- The scene output is renderer-neutral, so the same commands render via tldraw, the SVG variant,
+  or a future excalidraw builder.
+
+### Engine options mapping
+
+- dagre: `ranker: 'network-simplex'`, `ranksep = gapMain`, `nodesep = gapCross`,
+  `rankdir = TB | LR`.
+- ELK: `elk.algorithm: layered`, `elk.direction: DOWN | RIGHT`,
+  `elk.layered.spacing.nodeNodeBetweenLayers = gapMain`, `elk.spacing.nodeNode = gapCross`,
+  `elk.layered.nodePlacement.strategy: BRANDES_KOEPF` (straightness),
+  `elk.layered.considerModelOrder.strategy: PREFER_NODES` (stable sibling order).
+
+## SVG renderer as a variant
+
+`SceneSvg` renders scene objects as plain SVG. To make it a peer of the tldraw/excalidraw
+renderers rather than a story-only component, it is contributed as a `DrawingVariant`
+(`IllustratorCapabilities.VariantProvider`), like `plugin-tldraw`'s:
+
+- `SVG_SCHEMA` discriminates the base `Drawing.Canvas`.
+- `SvgHandler` (a `ContentHandler`) stores scene elements as records verbatim — the scene DSL
+  _is_ the persistence format — so `applyCommands` provides upsert/remove/move for free and
+  `read` reconstructs the scene losslessly.
+- `SvgArticle`/`SvgCard` render the canvas through `SceneSvg`.
+
+This gives agents (via the drawing/UML skills) a third render target with zero renderer
+dependencies, useful for export and for headless/CI rendering.
+
+## Future work
+
+1. **Hand curation** — users drag nodes; `move-object` already persists positions through the
+   builder. Re-layout should then run ELK in `INTERACTIVE` mode (crossing minimization +
+   placement seeded from current coordinates), so a re-generate respects manual arrangement
+   instead of resetting it.
+2. **DSL axis constraints** — extend the mermaid-adjacent source with layout directives, e.g.
+   `%% horizontal: A, B, C` (same lane, this order) and `%% vertical: A, X` (same column).
+   Mapping: horizontal → ELK `inLayerConstraint`/same layer assignment; vertical → shared
+   `elk.alignment` / position constraint. The parser already ignores unknown lines, so the
+   directives are backward-compatible comments.
+3. **Engine-native orthogonal routing** — see above (`useEngineRoutes`).
+4. **Flowchart dialect** — move `mermaid.ts` placement onto the same engine seam.

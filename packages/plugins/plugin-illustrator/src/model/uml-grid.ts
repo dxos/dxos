@@ -171,16 +171,16 @@ const assignColumns = (
 /** Fixed cell size, in scene units; omitted dimensions are measured from content. */
 export type CellSize = { w?: number; h?: number };
 
-type Cell = { w: number; h: number; titleH: number };
+export type Cell = { w: number; h: number; titleH: number };
 
-type MeasureOptions = {
+export type MeasureOptions = {
   maxWidth: number;
   cell?: CellSize;
   titleHeight?: number;
 };
 
 /** One cell fits the largest class: widest line (wrapped at maxWidth) and tallest member list. */
-const measureCell = (model: UmlModel, { maxWidth, cell: override = {}, titleHeight }: MeasureOptions): Cell => {
+export const measureCell = (model: UmlModel, { maxWidth, cell: override = {}, titleHeight }: MeasureOptions): Cell => {
   const memberLines = (entry: UmlModel['classes'][number]) => [...entry.attributes, ...entry.methods];
   const titleW =
     Math.max(0, ...model.classes.map((entry) => Math.max(entry.label.length, (entry.stereotype?.length ?? 0) + 2))) *
@@ -233,6 +233,20 @@ export type CompileOptions = {
   route?: Router;
 };
 
+/** A placed diagram: the parsed model plus per-class node rects (scene units). */
+export type Placement = {
+  model: UmlModel;
+  cell: Cell;
+  rects: Map<string, Rect>;
+  ranks: Map<string, number>;
+};
+
+export type EmitOptions = {
+  origin?: Scene.Point;
+  scale?: number;
+  route?: Router;
+};
+
 /**
  * Compile a mermaid class diagram into scene commands with equal-size grid-aligned nodes: per
  * class a `title` bar plus a `body` compartment filling the cell, and an `edges` object holding
@@ -272,6 +286,18 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
     }
   }
 
+  return emit({ model, cell, rects, ranks }, { origin, scale, route });
+};
+
+/**
+ * Emit scene commands from a placed model — the shared back half of `compile`, also used by the
+ * engine-backed dialects (`uml-engine.ts`) which supply their own placement.
+ */
+export const emit = (
+  { model, cell, rects, ranks }: Placement,
+  { origin = { x: 0, y: 0 }, scale = 1, route = zRouter }: EmitOptions = {},
+): Scene.Command[] => {
+  const horizontal = model.direction === 'LR' || model.direction === 'RL';
   const commands: Scene.Command[] = [];
 
   for (const entry of model.classes) {

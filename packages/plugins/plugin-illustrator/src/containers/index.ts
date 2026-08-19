@@ -4,3 +4,4 @@
 
 export * from './DrawingArticle';
 export * from './DrawingCard';
+export * from './SvgArticle';

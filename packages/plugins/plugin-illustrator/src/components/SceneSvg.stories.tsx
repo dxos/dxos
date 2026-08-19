@@ -3,12 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { type Scene, Uml, UmlGrid } from '#model';
+import { type Scene, Uml, UmlEngine, UmlGrid } from '#model';
 
 import { SceneSvg } from './SceneSvg';
 
@@ -47,29 +47,82 @@ const CLASS_DIAGRAM = trim`
       DrawingBuilder <|.. ExcalidrawBuilder
 `;
 
+/** Denser graph (fan-in/fan-out and cross-links) where crossing minimization becomes visible. */
+const COMPLEX_DIAGRAM = trim`
+  classDiagram
+      direction TB
+
+      class Node {
+          <<abstract>>
+          +id: string
+      }
+      class Container
+      class Leaf
+      class Registry
+      class Index
+      class Query
+      class Store
+      class Cache
+      class Codec
+
+      Node <|-- Container
+      Node <|-- Leaf
+      Container *-- Node : children
+      Registry o-- Node
+      Index ..> Registry
+      Query ..> Index
+      Query ..> Store
+      Store *-- Cache
+      Store ..> Codec
+      Registry ..> Codec
+      Container ..> Store
+`;
+
+type LayoutKind = 'grid' | 'layered' | 'dagre' | 'elk';
+
 type StoryArgs = {
   source: string;
-  /** Grid layout (equal cells, orthogonal connectors) vs the compact layered layout. */
-  layout: 'grid' | 'layered';
-  /** Fixed cell width (grid layout only); measured from content when unset. */
+  /** Placement: hand-rolled grid/layered, or engine-backed (dagre | elk) on the same grid cells. */
+  layout: LayoutKind;
+  /** Fixed cell width (grid layouts only); measured from content when unset. */
   cellWidth?: number;
-  /** Fixed cell height (grid layout only); measured from content when unset. */
+  /** Fixed cell height (grid layouts only); measured from content when unset. */
   cellHeight?: number;
-  /** Fixed header height (grid layout only); measured from the title text when unset. */
+  /** Fixed header height (grid layouts only); measured from the title text when unset. */
   headerHeight?: number;
 };
 
+const objectsOf = (commands: Scene.Command[]): Scene.WorldObject[] =>
+  commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
+
 const DefaultStory = ({ source, layout, cellWidth, cellHeight, headerHeight }: StoryArgs) => {
-  const objects = useMemo(() => {
+  const [objects, setObjects] = useState<Scene.WorldObject[]>([]);
+  // Async: the ELK engine returns a promise; the sync dialects resolve immediately.
+  useEffect(() => {
+    let cancelled = false;
+    const options = { cell: { w: cellWidth, h: cellHeight }, titleHeight: headerHeight };
     const commands =
-      layout === 'grid'
-        ? UmlGrid.compile(source, { cell: { w: cellWidth, h: cellHeight }, titleHeight: headerHeight })
-        : Uml.compile(source);
-    return commands.flatMap((command): Scene.WorldObject[] => (command.op === 'upsert-object' ? [command.object] : []));
+      layout === 'layered'
+        ? Promise.resolve(Uml.compile(source))
+        : layout === 'grid'
+          ? Promise.resolve(UmlGrid.compile(source, options))
+          : UmlEngine.compile(source, { ...options, engine: layout });
+    void commands.then((resolved) => {
+      if (!cancelled) {
+        setObjects(objectsOf(resolved));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [source, layout, cellWidth, cellHeight, headerHeight]);
 
   return (
-    <SceneSvg classNames='dx-attention-surface' objects={objects} grid={layout === 'grid' ? UmlGrid.GRID : undefined} />
+    <SceneSvg
+      classNames='dx-attention-surface'
+      objects={objects}
+      grid={layout !== 'layered' ? UmlGrid.GRID : undefined}
+    />
   );
 };
 
@@ -78,6 +131,9 @@ const meta = {
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen' },
+  argTypes: {
+    layout: { control: 'select', options: ['grid', 'layered', 'dagre', 'elk'] },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -97,5 +153,29 @@ export const Layered: Story = {
   args: {
     source: CLASS_DIAGRAM,
     layout: 'layered',
+  },
+};
+
+/** dagre placement (network-simplex + median sweep) on the same grid cells and Z-routing. */
+export const Dagre: Story = {
+  args: {
+    source: COMPLEX_DIAGRAM,
+    layout: 'dagre',
+  },
+};
+
+/** ELK layered placement (layer sweep + Brandes-Köpf) — the constraint-capable engine. */
+export const Elk: Story = {
+  args: {
+    source: COMPLEX_DIAGRAM,
+    layout: 'elk',
+  },
+};
+
+/** The hand-rolled barycenter pass on the dense graph, for side-by-side comparison. */
+export const GridComplex: Story = {
+  args: {
+    source: COMPLEX_DIAGRAM,
+    layout: 'grid',
   },
 };
