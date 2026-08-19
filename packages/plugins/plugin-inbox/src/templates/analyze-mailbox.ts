@@ -42,7 +42,7 @@ export const analyzeMailbox: RoutineCapabilities.Template = {
         name: name ?? `Analyze — ${mailbox.name ?? 'Mailbox'}`,
         spec: { kind: 'runnable', runnable: Ref.fromURI(InboxOperation.AnalyzeMailbox.meta.key) },
         trigger: Trigger.make({
-          enabled: false,
+          enabled: true,
           spec: Trigger.specTimer(DEFAULT_CRON),
           // Resolved at scaffold time so the routine's input is inspectable; an unnamed mailbox
           // yields none and the cascade reports the correspondent stage as skipped.

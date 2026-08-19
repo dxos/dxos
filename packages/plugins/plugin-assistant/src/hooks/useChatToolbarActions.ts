@@ -86,7 +86,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
         );
 
       if (chats.length > 0) {
-        builder.group(
+        builder.separator().group(
           'chats',
           {
             label: ['chat-history.label', { ns: meta.profile.key }],

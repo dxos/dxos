@@ -10,6 +10,6 @@
   },
   "env": {
     "production": { "name": "tasks" },
-    "main": { "name": "tasks-main" },
+    "nightly": { "name": "tasks-nightly" },
   },
 }

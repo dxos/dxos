@@ -12,6 +12,8 @@ import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID } from '@dxos/keys';
+import { Connection, Cursor } from '@dxos/link';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as GoogleOperation from '@dxos/plugin-google/GoogleOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -128,6 +130,19 @@ export const generator = () => ({
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagUri = Obj.getURI(tag);
 
+        // The sync operation is account-level: the trigger input names the connection that
+        // authenticates the mailbox's binding, not the mailbox itself.
+        const cursors = await space.db.query(Filter.type(Cursor.Cursor)).run();
+        const binding = cursors.find(
+          (cursor): cursor is Cursor.ExternalCursor => Cursor.isExternal(cursor) && Binding.targets(cursor, mailbox),
+        );
+        invariant(binding, 'Mailbox has no sync binding');
+        // Matched by entity id (`Binding.isForConnection`), not by ref-prop equality — a raw filter
+        // compares `echo:` URI spellings, which vary for one object and can never-match.
+        const connections = await space.db.query(Filter.type(Connection.Connection)).run();
+        const connection = connections.find((candidate) => Binding.isForConnection(binding, candidate));
+        invariant(connection, 'Mailbox binding has no connection');
+
         const objects = range(n, () => {
           const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagUri));
           const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagUri));
@@ -139,7 +154,7 @@ export const generator = () => ({
               spec: Trigger.specTimer('* * * * *'), // Every minute.
               runnable: Ref.make(Operation.serialize(GoogleOperation.GoogleMailSync)),
               input: {
-                mailbox: Ref.make(mailbox),
+                connection: Ref.make(connection),
               },
             }),
           );

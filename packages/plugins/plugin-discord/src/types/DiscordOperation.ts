@@ -10,7 +10,7 @@ import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
-import { Connection, Cursor } from '@dxos/link';
+import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
@@ -39,7 +39,7 @@ export const GetDiscordChannels = Operation.make({
 
 /**
  * Find-or-create the empty local feed-backed `Channel` for a selected Discord
- * channel so a {@link Cursor.Cursor} can reference it as its sync target.
+ * channel so a `Cursor.Cursor` can reference it as its sync target.
  * Keyed by the Discord channel id foreign key, so it is idempotent across
  * re-selection.
  */
@@ -55,23 +55,21 @@ export const MaterializeDiscordTarget = Operation.make({
 });
 
 /**
- * Pull-only sync of the single Discord channel bound by a {@link Cursor.Cursor}.
+ * Pull-only sync of every Discord channel bound to a connection.
  *
- * Loads the binding, asks Discord for messages newer than `binding.max`,
- * maps each into a `@dxos/types` `Message`, and appends them to the bound
- * Channel's feed. Updates the binding's `max`/`lastTick`/`lastError`.
+ * Fans out over the connection's external-sync cursors (see `Binding.syncAll`):
+ * for each binding, asks Discord for messages newer than `binding.max`, maps each into
+ * a `@dxos/types` `Message`, and appends them to the bound Channel's feed. Updates each
+ * binding's `max`/`lastTick`/`lastError`.
  */
 export const SyncDiscordChannel = Operation.make({
   meta: {
     key: makeKey('syncDiscordChannel'),
     name: 'Sync Discord Channel',
-    description: 'Reconcile messages for the Discord channel bound by a Cursor.',
+    description: 'Reconcile messages for every Discord channel bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',
   },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor),
-  }),
+  input: ConnectorSpec.SyncInput,
   output: Schema.Struct({
     pulled: Schema.Struct({
       added: Schema.Number,

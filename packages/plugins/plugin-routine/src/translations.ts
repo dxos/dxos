@@ -29,6 +29,7 @@ export const translations: Resource[] = [
         'plugin.name': 'Routine',
         'automation-panel.label': 'Routines',
         'create-panel.template.placeholder': 'Search templates...',
+        'create-panel.scaffold-error.label': 'The template could not be prepared. Pick a template to try again.',
 
         'schedule.kind.once.label': 'Once',
         'schedule.kind.hourly.label': 'Hourly',

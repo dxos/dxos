@@ -1,6 +1,28 @@
 # plugin-projects — Tasks
 
-_Resume: M5 Phases 1+3 + Phase 2 core MERGED as PR #12431; **Phase 4 DXOS SIDE MERGED as PR #12440** 2026-08-03 (McpToolAnnotation + all 12 §7.2 verbs, annotation verified through `Operation.serialize`). Also merged from this branch: #12442 (story rename) and #12444 (doc corrections). The checklist loop is now covered by CI play scripts in `stories-assistant/Chat.stories.tsx` — `WithPlanningScripted` (scripted `update-tasks`, title-keyed upsert does not duplicate) and `WithSubAgentsTest2` (delegation adds an unchecked item, checks it off on sub-agent completion); `WithPlanning`/`WithSubAgentsTest1` are the live `!test` counterparts. Next: Phase 2 remainder (templates scaffold/adopt TaskSet, app-graph task nodes, goals authoring, stories-projects play test); Phase 4 edge projection is the peer agent's. Do NOT pin a worktree in resume pointers — each session works in its harness-assigned worktree. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
+_Resume (2026-08-15, branch `claude/projects-task-sets-modeling-b5rk70`, PR #12595):
+**M6 Phases 1–2 IMPLEMENTED** (design + code). "Cleanup project data model" is live:
+`Project@0.4.0` with inline `artifacts` and NO `goals`/`routines`; underneath it, the task model —
+`Milestone` (`org.dxos.type.milestone@0.1.0`, no status — progress derived), `TaskSet@0.3.0` with
+required ordered `tasks` (flat, sub-tasks included) + `milestones` arrays and derived-view helpers,
+`Task@0.3.0` with `milestone`/`parentTask` refs. Eight new/reworked task verbs
+(taskDelete/taskMove + milestone CRUD/Move/List) enforce the cross-object invariants; linear+github
+now mirror remote milestones. Full repo build green after merging main (two large connector-sync
+conflicts reconciled — main's `Binding`/`ConnectorSync` refactor kept, milestone logic reapplied on
+top); affected-package tests green (types 28, plugin-tasks 29, plugin-projects 28,
+assistant-toolkit 71, linear 18, github 13, crm 15, brain 18, space 54). Exemplar fixture
+regenerated at the new versions.
+GOTCHAS worth remembering: (1) a suspended optional schema (`Task.parentTask`) rejects
+`= undefined` — clear with `delete`; (2) `db.add` cascades over refs, NOT parent edges; (3)
+compare refs by entity id parsed off the URI (`EID.tryParse` + `getEntityId`), never `.target`,
+since stored refs are local while `Obj.getURI` is space-qualified, and `Ref.hasEntityId` matches
+local refs only.
+NEXT: Phase 3 (outline-first skill rule + `promote-task`), then Phases 4–5 (routine staleness,
+deletion guards). Deferred within Phases 1–2: nested sub-task rendering in `react-ui-task`,
+milestone authoring UI, and sub-issue → `parentTask` sync (needs new API fetching in both
+connectors)._
+
+_Superseded pointer (2026-08-03): M5 Phases 1+3 + Phase 2 core MERGED as PR #12431; **Phase 4 DXOS SIDE MERGED as PR #12440** 2026-08-03 (McpToolAnnotation + all 12 §7.2 verbs, annotation verified through `Operation.serialize`). Also merged from this branch: #12442 (story rename) and #12444 (doc corrections). The checklist loop is now covered by CI play scripts in `stories-assistant/Chat.stories.tsx` — `WithPlanningScripted` (scripted `update-tasks`, title-keyed upsert does not duplicate) and `WithSubAgentsTest2` (delegation adds an unchecked item, checks it off on sub-agent completion); `WithPlanning`/`WithSubAgentsTest1` are the live `!test` counterparts. Next: Phase 2 remainder (templates scaffold/adopt TaskSet, app-graph task nodes, goals authoring, stories-projects play test); Phase 4 edge projection is the peer agent's. Do NOT pin a worktree in resume pointers — each session works in its harness-assigned worktree. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
 
 _Superseded pointer (2026-07-29): Milestone 4 (USE-CASES.md) groundwork + UC-A + UC-B + UC-C implemented and OPEN as PR #12389 (one growing PR, per user direction 2026-07-29; leave open for review — do NOT auto-merge). §2.1 decision RATIFIED by the user (keep `artifacts` as outputs; routines inherit project scope; no schema change — scope travels via `instructions.objects`/`skills` seeding). Check GREEN on 668f48f01f (all jobs; two review-fix rounds: public-deps inversion, CreateProjectPanel story context, six CodeRabbit threads fixed/answered). Preview: https://pr-12389-composer-main.dxos.workers.dev. NOTE: commits from 3f6744347c on are UNSIGNED (1Password signing agent unreachable mid-session). Next: user walkthrough of the three `stories-projects` stories (each has numbered manual steps), then land. Live-model runs NOT executed — no `DX_ANTHROPIC_API_KEY` in the session env (`sender-ledger.eval.ts` authored but unverified; run live before trusting it). Earlier context: #12335…#12386 merged; #12388 (would have ended the registry entry) CLOSED unmerged. Still open: URL binding for project chats (MAJOR, needs Josiah)._
 
@@ -60,7 +82,8 @@ Initial priority (user, 2026-07-24):
       STILL OPEN: the intermittent "first click into empty deck attends but opens no plank" (repro needed).
 - [x] **Tool-call churn in project chats** — (#12386) the skill-manager prompt no longer mandates a
       `query-skills` call before every `enable-skills` (the list is already rendered into the prompt), project
-      chats pre-bind the artifact-type skills, and `create-object` points at type-specific create tools.
+      chats pre-bind the artifact-type skills (pre-binding since removed, 2026-08-18 — `Project`'s
+      `SkillsAnnotation` carries only the project skill), and `create-object` points at type-specific create tools.
       USER-VERIFIED LIVE on the #12386 preview, 2026-07-29. Model-behavioral, so a single run is not a
       guarantee — `assistant-evals` `projects.eval.ts` is the repeatable check: RUN LIVE 2026-07-29, 100% (all three scorers, 24s).
 - [x] **PR strategy decision** — moot: the three MS2 commits shipped inside #12335's squash; verified present on main (ProjectArticle `getReactiveOrUndefined`, format.ts `## Instructions` + `<label>`, Projects.stories.tsx, minimal plugin set).
@@ -371,7 +394,8 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
       with CRUD wired to TaskOperation verbs; storybook smoke 2/2 in Chromium. Candidate second
       consumers: plugin-assistant chat task list (currently checklist-form), kanban adoption.
       REMAINING: templates scaffold/adopt a TaskSet; app-graph task nodes under a project;
-      goals authoring UI; stories-projects play test; kanban adoption (separate PR per §9.2).
+      goals authoring UI (OBSOLETED by M6 — goals removed, milestones replace; becomes milestone
+      authoring); stories-projects play test; kanban adoption (separate PR per §9.2).
 - [~] **Phase 4 — MCP verbs** — DXOS SIDE MERGED 2026-08-03 as PR #12440 (edge side pending). Ownership
   RATIFIED (MILESTONE-5 §7.3): **dxos defines, edge projects**; an edge-only tool is a
   contract defect. Contract in §7.4.
@@ -411,6 +435,126 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
       shared space; goals/tasks mirrored; task-planning skill registry `tasksDxn` once the sync
       spec lands; Claude Desktop demo over the tunnel.
 
+## Milestone 6: cleanup project data model — uni-directional refs, milestones, delete guards
+
+Designed 2026-08-14 (josiah × claude, session branch `claude/projects-task-sets-modeling-b5rk70`).
+Design: DESIGN.md § "Cleanup project data model" (covers `Project` slimming and, as a subset, the
+task/milestone model) and § "Routine staleness and deletion guards". `Project` slimming is the
+overarching change; the task model is the piece of it that reaches one level down into `TaskSet`.
+Supersedes M5's parent-edge containment; un-defers M5's `Milestone` under its original name —
+`Milestone` over `Phase` (second pass, same day): ecosystem term, and **milestones replace
+`Project.goals`** (Goal struct removed). Carries the M5 "NO MIGRATIONS (nothing deployed)"
+assumption — re-confirm at Phase 1. **Sequencing (user, 2026-08-14): Phases 1–2 (basic model
+changes + simplification) come first; skill/outline-first/promotion work is deliberately LATER
+(Phase 3); routines are pulled out in Phase 2 WITHOUT waiting for guards — staleness (Phase 4) and
+deletion guards (Phase 5) are separate planned follow-ups.**
+
+### Phase 1 — task schema v2
+
+- [x] **`Milestone` type** — `org.dxos.type.milestone@0.1.0` in `@dxos/types`: name, description?
+      (carries "what done means" — absorbs Goal), targetDate? (`Format.DateOnly`); NO stored status.
+      Registered in plugin-space `capabilities/schema.ts` + `schema.node.ts` + `schema.workerd.ts`
+      and plugin-tasks `schema.workerd.ts`.
+- [x] **`TaskSet` arrays** — `0.2.0 → 0.3.0`; `milestones`/`tasks` required ordered arrays, docstring
+      rewritten. Derived views live on the same module (`resolveTasks`, `resolveMilestones`,
+      `rootTasks`, `subTasks`, `effectiveMilestoneId`, `tasksForMilestone`, `backlogTasks`,
+      `milestoneProgress`) and compare **entity ids parsed off ref URIs**, never `.target`, so they
+      work on React snapshots too. Covered by `TaskSet.test.ts` (7 tests).
+- [x] **`Task` refs** — `0.2.0 → 0.3.0`; `milestone?` + `parentTask?` (self-ref via
+      `Schema.suspend`). PITFALL: a suspended optional schema rejects an `undefined` assignment —
+      clear these fields with `delete`, not `= undefined`.
+- [x] **`TaskOperation` verbs uphold the invariants** — shared `operations/task-set-membership.ts`
+      (findTaskSet/findMilestoneTaskSet via the reverse-ref index, addTaskToSet, addMilestoneToSet,
+      collectSubtree, removeTasksFromSet, reorder, refEntityId). NEW verbs: `taskDelete`, `taskMove`,
+      `milestoneCreate`/`Update`/`Delete`/`Move`/`List`. `taskCreate` gained `parentTask` (renamed
+      from `parent`) + `milestone`; `taskUpdate` gained nullable `milestone`/`parentTask` (null =
+      backlog / promote to root) and refuses a re-parent into the task's own subtree.
+- [x] **`TaskSetArticle` renders from the flat array** — one flat list of every task in the set,
+      in array order. Delete routes through `taskDelete` rather than `db.remove`, which is what
+      sweeps the array. Milestone sections with derived `done/total` were built and then removed
+      (2026-08-18, user): the article shows tasks only, and `ProjectArticle` carries a read-only
+      milestone list in place of the retired Goals section. NOT DONE, both follow-ups below:
+      milestone grouping in the task list, and nested sub-tasks (`react-ui-task`'s `TaskList` is flat).
+- [x] **Sync mapping** — linear/github: milestones now mirror as `Milestone` objects keyed by
+      foreign key (both API layers extended to fetch them), `task.milestone` set from the remote
+      issue and cleared on remote unassignment, membership reconciled through a shared
+      `setTaskContainer` (idempotent; moves strip the ref from the old set). Remote milestone
+      status is deliberately dropped — progress is derived.
+      NOT DONE: **sub-issues → `task.parentTask` is not wired** — neither API layer fetches
+      hierarchy (Linear needs `parent { id }` on the issues query; GitHub needs the `sub_issues`
+      endpoint). Tracked as a follow-up.
+- [x] **Re-confirm NO MIGRATIONS** — carried forward from M5; no migrations written. Versions
+      bumped: taskSet `0.3.0`, task `0.3.0`, milestone `0.1.0`, project `0.4.0`. The onboarding
+      exemplar fixture was regenerated (`pnpm run build-exemplar`) so it carries the new versions
+      plus two milestones. **Re-confirm with the user before this lands if anything has deployed.**
+
+### Phase 2 — project slimming
+
+- [x] **`artifacts` → inline `Ref<Obj.Unknown>[]`** — Collection indirection dropped everywhere
+      (skill add/list, scaffold, ProjectArticle, get-project, mailbox helpers, stories/evals).
+      `handleDeleteArtifact` splices the array itself and calls `RemoveObjects` with no target,
+      because that param must be a `Collection` and there no longer is one.
+- [x] **Remove `Project.goals` + the `Goal` struct** — GoalList + Goals section deleted,
+      `goals.label` removed, `goalCount`/`goals` dropped from the projectList/projectGet/
+      projectUpdate MCP verbs. Milestones render through the TaskSet's Tasks section.
+      NOT DONE: a dedicated milestone **authoring** UI (create/rename/reorder from the article) —
+      milestones are currently authored through the verbs; carried forward from the obsoleted
+      "goals authoring UI" item.
+- [x] **Remove `Project.routines` + the routine→project parent edge** — done in CreateRoutine,
+      ProjectArticle (gallery + handler gone), and all five templates.
+      **Trap found while doing it:** `db.add` cascades over **refs**, not parent edges, so with
+      both removed nothing in the project's graph reached a template-scaffolded routine and
+      `db.add(project)` silently dropped it. Every template now persists its routine explicitly.
+      Tests flipped to assert routines SURVIVE project deletion (`delete-project.test.ts`,
+      `inbox-research.test.ts`), with comments marking that deliberate and pointing at Phases 4–5.
+
+### Phase 3 — outline-first + promote-task (deliberately after the model changes)
+
+- [ ] **Skill text: outline-first rule** — ProjectSkill + planning skill + MCP code-project skill:
+      default writes are outline checklist lines; promote only for assignee / delegation / external
+      mirror; fix the M5 dogfood mapping (`$track` ⇒ outline upsert, NOT `taskCreate`) in
+      MILESTONE-5.md §8 and the skill instructions.
+- [ ] **`promote-task` verb** — outline line → Task in the project's TaskSet (array + parent edge),
+      checkbox state → `task.status`, markdown line rewritten with the `echo://` backlink (label
+      follows renames); **milestone-aware**: heading find-or-creates a `Milestone`, sets
+      `task.milestone`.
+- [ ] **Promotion eval** — extend the checklist-loop coverage: agent promotes a line, human
+      completes the Task, checklist line reflects it (the M5 follow-up, now unblocked by the verb).
+- [ ] **Registry-port repair guidance** — re-port `TASKS.md`s that were bulk-minted into Tasks:
+      outline near-verbatim, promote only qualifying lines (likely a handful; done items stay
+      markdown). Applies to the mcp-space-service port flow (cross-stream, coordinate there).
+
+### Phase 4 — routine staleness
+
+- [ ] **`Trigger.disabledReason?`** — structured reason beside `enabled` — kind
+      (`'stale-dependency' | 'failure' | 'user'`) plus optional offending `ref` and `at`;
+      distinct from the transient failure cooldown.
+- [ ] **Dispatcher pre-flight** — resolve source refs (spec.feed / cursor target / subscription
+      scope) before fire; tombstoned ⇒ persist disable + reason (lazy disable is accepted — no
+      deletion watcher).
+- [ ] **`RunInstructions` trace warning** — dead context ref still skipped, now recorded on the run
+      trace so degradation is diagnosable in `RoutineTraceCompanion`.
+- [ ] **UI badges + sweep** — companion/card badge computed live from dangling source/context refs
+      (`Obj.isDeleted` on resolution); space-level stale-routines list; flag-and-confirm delete
+      only, never auto-delete.
+
+### Phase 5 — deletion guards (generic; motivated here, home is app-framework/plugin-space; separate follow-up, does not gate Phase 2)
+
+- [ ] **Guard capability + contract** — `{ appliesTo, check(objects) => GuardVerdict[] }`;
+      verdict = severity (`warn | block`), message, optional subjects, and at most one
+      `alternative: { label, operation, input }`; batch semantics (full deletion set, one card).
+- [ ] **Delete-flow integration** — no verdicts ⇒ today's frictionless path; card composes all
+      verdicts, Continue iff no block; alternative = run operation → re-run guards → complete the
+      delete automatically (re-check authorizes, not the click).
+- [ ] **Agent path** — typed `DeleteGuarded { verdicts }` failure; `acknowledge` param as the
+      programmatic warn-level Continue; block unacknowledgeable on both surfaces.
+- [ ] **Undo unit** — executed alternative + primary delete commit as one undo; costed as the
+      hardest piece, design before building.
+- [ ] **Consumer 1: projects/routines guard** — warn + subjects via `connectedRoutinesQuery` +
+      alternative "Delete N routines".
+- [ ] **Consumer 2: type-deletion guard** — block when instances/views reference the stored type +
+      alternative "Delete N objects of this type" (reverse-ref machinery).
+
 ## Milestone 4 (scoping): what comes after this PR
 
 - [ ] **Write the post-PR milestone doc** — the through-line across `Chat`, `Plan`, the delegation
@@ -428,6 +572,48 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
 ## Follow-ups / deferred (design reviews)
 
 - [ ] **Knowledge base for memory** — tracked 2026-08-01 (user), scope TBD.
+
+- [ ] **Milestone rendering in `TaskSetArticle`** — tracked 2026-08-18 (user). The article renders
+      one flat list of every task in the set; milestone sections, the backlog split, derived
+      progress and the sub-task tree are all deliberately deferred. The model carries them already
+      (`TaskSet.milestones`, `Task.milestone`/`parentTask`) and the derived-view helpers
+      (`rootTasks`, `tasksForMilestone`, `backlogTasks`, `milestoneProgress`) are written and unit
+      tested, so this is a view-layer task: reinstate the per-milestone grouping with progress in
+      the header. Keep subscriptions leaf-pushed — the grouping needs each task's `milestone` and
+      `parentTask` read through property atoms, never a whole-list subscription. Milestones also
+      still have no create/rename/reorder UI; the five milestone verbs are agent-only for now.
+
+- [ ] **`ProjectMcpOperation` is misnamed and its seam is unguarded** — tracked 2026-08-18 (user).
+      The split from `ProjectOperation` is load-bearing but is about the _import graph_, not MCP:
+      the module stays a leaf (compute/echo/keys only) so the edge operation-service and workerd can
+      load the definitions without dragging `@dxos/app-framework`, `@dxos/assistant-toolkit`,
+      `@dxos/ai`, `@dxos/plugin-inbox`. Tree-shaking does not help — `Operation.make(...)` runs at
+      module level. Two defects: (1) the name contradicts itself, since `ProjectOperation.Create`
+      is also MCP-projected (`projectCreate`), so the four CRUD tools sit either side of a seam the
+      name does not describe; (2) nothing enforces the seam — a `Database.Service`-only verb added
+      to `ProjectOperation`, or an app-graph import added to `ProjectMcpOperation`, breaks remote
+      loading silently with no failing test. The verbs do NOT duplicate (disjoint sets, four
+      distinct tool names). Preferred fix: invert the naming so the portable module keeps the plain
+      `ProjectOperation` name and the app-graph verbs move to `ProjectAppOperation` — the default
+      namespace is then the portable one and the heavy module justifies itself — plus a check that
+      the portable module's import graph stays leaf. Keep the `MILESTONE-5.md` §7.2/§7.4 pointer.
+      Pre-existing on main; deliberately not folded into #12595.
+
+- [x] **Companion-created routines miss project scope seeding** — resolved 2026-08-18 via the
+      annotation route: `SkillsAnnotation` moved from `@dxos/app-toolkit/AppAnnotation` to
+      `@dxos/compute/Skill` (id-keyed, so only import paths changed — ~14 call sites), and `Project`
+      now carries it (just `org.dxos.skill.project`, plain-key idiom — the artifact-type pre-binding
+      was a latency optimization, dropped per user call; sessions enable those on demand). The blank
+      routine template's scaffold already reads the subject type's annotation, so project routines
+      seed correctly with no project-specific template. `ProjectOperation.CreateRoutine` (zero
+      invokers after the toolbar change: not MCP-exposed, no UI) deleted along with
+      `seedProjectScope` and `skills/keys.ts`; `create-chat` now reads the annotation instead of
+      restating the key list.
+- [x] **Project companion chat misses `ProjectSkill` + artifact skills** — resolved 2026-08-18 by
+      the same `SkillsAnnotation` on `Project` (see above): `ChatCompanion.useSkills` reads the
+      annotation, so the companion chat now binds the same skills `ProjectOperation.CreateChat`
+      binds. The two chat flows' remaining differences are lifecycle/placement and cardinality only
+      (see the TODO in `create-chat.ts`).
 
 - [x] **`Chat.agent` removed; linkage is the `CompanionTo` relation** — the field (phase B) was the
       edge that closed the Agent↔Chat import cycle and forced both types into one module behind
@@ -476,5 +662,5 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
       project's existing Tasks/Plan/Milestones plus chat history, so the daily questions stay
       non-redundant and shrink as the model of the user's goals fills in — an agent that re-asks
       what it already knows is the failure mode to design against). Open: where the answers land.
-      Goals authoring is already an open Phase 2 item, so this likely feeds that rather than
-      introducing a new type.
+      UPDATED by M6 (goals removed, milestones replace): the answers' likely home is the TaskSet's
+      milestones (+ the outline for free-form notes) rather than a goals surface or a new type.

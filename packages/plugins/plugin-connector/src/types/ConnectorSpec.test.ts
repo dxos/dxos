@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Cursor } from '@dxos/link';
+import { Connection } from '@dxos/link';
 
 import * as ConnectorSpec from './ConnectorSpec';
 
@@ -23,7 +23,7 @@ class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.test.targetC
 
 const TestSync = Operation.make({
   meta: { key: DXN.make('org.dxos.test.targetConnectors.sync'), name: 'Test Sync' },
-  input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+  input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
   output: Schema.Any,
 });
 

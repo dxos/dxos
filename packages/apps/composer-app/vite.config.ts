@@ -27,6 +27,7 @@ import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 import { bootChunking } from './src/vite/boot-chunking';
+import { bootMarkPath, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding';
 import { optimizeDepsInclude } from './src/vite/optimize-deps';
 import { traceBootLeak } from './src/vite/trace-boot-leak';
 
@@ -494,7 +495,10 @@ export default defineConfig((env) => ({
     // without it.
     bootLoaderPlugin({
       markSvg: (() => {
-        const markPath = path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
+        // A prerelease bundle brands its own; production and any dev server get the released mark.
+        const markPath =
+          bootMarkPath(dirname, channelVariant(env.command)) ??
+          path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
         try {
           return readFileSync(markPath, 'utf8');
         } catch (error) {
@@ -504,6 +508,8 @@ export default defineConfig((env) => ({
         }
       })(),
     }),
+
+    channelFaviconPlugin(dirname, channelVariant(env.command)),
 
     VitePWA({
       // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).

@@ -2,10 +2,38 @@
 
 Design: [`plugin-assistant/docs/AUDIT.md`](../../../packages/plugins/plugin-assistant/docs/AUDIT.md)
 (the audit is the design doc for this project; there is no separate DESIGN.md).
-Branch `claude/ai-chat-interface-restructure-bdc043`. No PR yet.
+Branch `claude/ai-chat-interface-restructure-bdc043`. PR #12627 merged; PR #12648 open.
 
 Related: `chat` (josiah) owns the data model and the plugin-chat rename; this project owns the
 rendering layer. Track B and C touch `react-ui-thread`, so coordinate before moving its internals.
+
+## Phase 2 — packages (PR #12648, 2026-08-18)
+
+- [x] `@dxos/react-ui-virtual` — Placement, useWindow/Window, useFollow, ScrollFollower, ListModel
+      extracted from react-ui-feed; feed depends on it, `/virtualizer` endpoint removed.
+- [x] `@dxos/react-ui-assistant` — ChatThread composite on the feed engine: view-typed renderer,
+      ported XML widgets (tool runs as one `<toolkit>` JSON tag), MessageChrome +
+      Prompt/AssistantToolbar, ChatThreadController, `/testing` generator, canonical story.
+- [x] plugin-assistant rewired: ChatThread dir deleted, MessageSyncer retired, Chat.tsx inlines the
+      package thread, SurfaceWidget injected, ChatView moved to the package.
+- [x] Defect: useFollow/useFeedNavigation identities stabilized (controller-in-state loop).
+- [ ] Update storybook to show tasks (Chat.TaskList in the assistant stories).
+- [ ] Long-document list renumbering: a 100-line ordered list renumbers (36. "Line seventy-six")
+      after scrolling — CodeMirror renders a slice of the document and the markdown list numbering
+      appears to be assigned from the rendered slice, not source positions (ui-editor
+      decorateMarkdown). Reproduce with a single message containing a 100-item ordered list.
+- [x] Synthetic context renders inside the prompt bubble — FIXED: the chrome renders synthetic
+      text blocks as a dimmed collapsible panel above the bubble (react-ui-assistant MessageChrome
+      SyntheticContext); the renderer excludes them from the item's document.
+- [ ] plugin-mermaid extension (story `plugins/plugin-mermaid/extensions/mermaid--default`):
+      center the diagram in `.cm-mermaid` and fix node labels not rendering (the chip session for
+      this was deleted before it ran).
+- [ ] Live app re-test: thinking view shows reasoning blocks (AiRequest now parses cot/think/
+      reasoning tags into reasoning blocks); typewriter cadence feel (MarkdownBlock drip: min 2
+      chars/frame, catch-up divisor 30); awaiting user fixtures for the remaining streaming and
+      list-renumbering reports.
+- [ ] mosaic VirtualStack rebind onto react-ui-virtual (SPEC F-8.2).
+- [ ] npm publish of react-ui-virtual / react-ui-feed / react-ui-assistant (changesets post-merge).
 
 ## Phase 0 — audit
 

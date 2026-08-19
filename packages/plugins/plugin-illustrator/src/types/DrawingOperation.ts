@@ -80,12 +80,12 @@ export const Generate = Operation.make({
     key: makeKey('generate'),
     name: 'Generate Drawing',
     description:
-      'Replaces a drawing with a diagram compiled from a mermaid flowchart description. The dialect owns layout, so no coordinates are supplied.',
+      'Replaces a drawing with a diagram compiled from a mermaid description (flowchart or classDiagram). The dialect owns layout, so no coordinates are supplied.',
     icon: 'ph--graph--regular',
   },
   input: Schema.Struct({
     drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to generate into.' }),
-    source: Schema.String.annotate({ description: 'Mermaid flowchart source.' }),
+    source: Schema.String.annotate({ description: 'Mermaid source: a flowchart or a classDiagram.' }),
   }),
   output: Schema.Struct({
     ...SceneOutput,

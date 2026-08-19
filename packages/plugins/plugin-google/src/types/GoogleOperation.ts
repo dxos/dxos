@@ -11,7 +11,7 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Ref, Type } from '@dxos/echo';
-import { Connection, Cursor } from '@dxos/link';
+import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as MailSend from '@dxos/plugin-inbox/MailSend';
 // Referenced in the emitted .d.ts of the operations below; importing it lets TypeScript name it.
@@ -65,9 +65,7 @@ export const GoogleMailSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
-    }),
+    ...ConnectorSpec.SyncInput.fields,
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
       Schema.annotate({
@@ -102,9 +100,7 @@ export const GoogleCalendarSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose target is the Calendar to sync.',
-    }),
+    ...ConnectorSpec.SyncInput.fields,
     googleCalendarId: Schema.optional(Schema.String),
     syncBackDays: Schema.optional(Schema.Number),
     syncForwardDays: Schema.optional(Schema.Number),
@@ -166,9 +162,7 @@ export const GoogleContactsSync = Operation.make({
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose externalId is the contact group to sync.',
-    }),
+    ...ConnectorSpec.SyncInput.fields,
     pageSize: Schema.optional(Schema.Number),
   }),
   output: Schema.Struct({

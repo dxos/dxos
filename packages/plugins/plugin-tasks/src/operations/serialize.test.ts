@@ -40,12 +40,19 @@ describe('operation serialization', () => {
       .sort();
 
     expect(projected).toEqual([
+      'milestoneCreate',
+      'milestoneDelete',
+      'milestoneList',
+      'milestoneMove',
+      'milestoneUpdate',
       'outlineGet',
       'outlineUpdate',
       'taskAssign',
       'taskComplete',
       'taskCreate',
+      'taskDelete',
       'taskList',
+      'taskMove',
       'taskUpdate',
     ]);
   });
