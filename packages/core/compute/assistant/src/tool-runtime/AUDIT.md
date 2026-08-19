@@ -17,6 +17,43 @@ app/runtime operations that only become tools if a skill binds them.
 - **Duplicate tool names among skill-wired operations: `create`, `open`, `update`** — two skills bound into one session would collide.
 - Duplicate tool names across all operations: `create`, `fibonacci`, `forex-effect`, `open`, `query`, `reply`, `sleep`, `update`.
 
+## Analysis and recommendation (approved)
+
+The display name doubling as the model's API identifier has four costs, all observed in this repo:
+
+1. **Cosmetic edits are breaking changes.** Rewording `meta.name` renames the tool the model calls
+   and invalidates every memoized conversation fixture that recorded it (fixtures hash the request,
+   which embeds tool definitions, and recorded turns call tools by name).
+2. **Collisions are live, not hypothetical.** `create` is claimed by plugin-markdown, plugin-script,
+   and plugin-sheet; `open` by plugin-markdown and plugin-transcription; `update` by plugin-markdown
+   and plugin-script. A session binding two of those skills gets two tools with one name.
+3. **Two identifier spaces.** `Skill.toolDefinitions` stores key-derived `ToolId`s while the runtime
+   exposes name-derived strings, reconciled by a lookup that exists only to bridge the mismatch.
+4. **Prompt drift is uncheckable.** Skill instruction texts name tools in free prose (ProjectSkill
+   says "the add-artifact tool"; the tool is `add-project-artifact`), and nothing ties the prose to
+   the definition.
+
+**Decision (approved): derive the tool name from the DXN key; never from display copy.**
+
+- Derivation: strip the constant `org.dxos.function.` prefix, kebab-case each camelCase segment,
+  join with `-`. `org.dxos.function.markdown.create` → `markdown-create`;
+  `org.dxos.function.project.artifactAdd` → `project-artifact-add`;
+  `org.dxos.function.runInstructions` → `run-instructions`. The key's namespace segment prefixes
+  the name, so cross-skill collisions become structurally impossible (keys are registry-unique).
+- `meta.name` reverts to pure display copy — freely editable, never model-facing.
+- One derivation shared by `makeToolName` (this directory's `services.ts`) and
+  `Skill.toolDefinitions`, deleting the bridging lookup.
+- A `Skill.toolName(op)` helper for embedding names in skill instruction text, so prose references
+  are derived from the operation constant instead of hand-written.
+- A bind-time uniqueness `invariant` at toolkit assembly as a regression backstop.
+- Migration (pre-launch, no compatibility shims): sweep instruction texts and scripted tests for
+  hardcoded names (the table below is the inventory), regenerate all memoized fixtures once
+  (`DX_UPDATE_MODEL_FIXTURES=1 moon run '#model-fixture:test'`), regenerate this audit.
+
+Trade-off accepted: keys are noun-first in places (`artifactAdd` → `project-artifact-add`, not
+`add-project-artifact`). Determinism beats verb-first aesthetics; a key rename remains available
+pre-launch where it grates.
+
 ## Operations
 
 | Package                      | File                                             | DXN key                                                     | `meta.name`                     | Tool the model calls              | Wired |
