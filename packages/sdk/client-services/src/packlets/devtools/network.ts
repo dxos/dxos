@@ -2,8 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Stream } from '@dxos/codec-protobuf/stream';
+import * as Effect from 'effect/Effect';
+import * as EffectStream from 'effect/Stream';
+
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
@@ -11,14 +14,18 @@ import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
-export const subscribeToNetworkStatus = ({ signalManager }: { signalManager: SignalManager }) =>
-  new Stream<DevtoolsHost.SubscribeToSignalStatusResponse>(({ next, close }) => {
+export const subscribeToNetworkStatus = ({
+  signalManager,
+}: {
+  signalManager: SignalManager;
+}): EffectStream.Stream<DevtoolsHost.SubscribeToSignalStatusResponse, Error> =>
+  EffectEx.streamFromEmitter<DevtoolsHost.SubscribeToSignalStatusResponse, Error>((emit) => {
     const update = () => {
       try {
         const status = signalManager.getStatus?.();
-        next({ servers: status });
+        emit.single({ servers: status });
       } catch (err: any) {
-        close(err);
+        emit.fail(err);
       }
     };
 
@@ -32,8 +39,8 @@ export const subscribeToSignal = ({
 }: {
   signalManager: SignalManager;
   networkManager: SwarmNetworkManager;
-}) =>
-  new Stream<SignalResponse>(({ next }) => {
+}): EffectStream.Stream<SignalResponse, Error> =>
+  EffectEx.streamFromEmitter<SignalResponse, Error>((emit) => {
     const ctx = new Context();
 
     // Observe point-to-point messages delivered to this node's own peer. The subscription owns its
@@ -45,7 +52,7 @@ export const subscribeToSignal = ({
         .subscribeMessages({
           peer,
           onMessage: (message) => {
-            next({
+            emit.single({
               message: {
                 author: PublicKey.from(message.author.peerKey).asUint8Array(),
                 recipient: message.recipient
@@ -68,7 +75,7 @@ export const subscribeToSignal = ({
     }
 
     signalManager.swarmEvent.on(ctx, (swarmEvent) => {
-      next({
+      emit.single({
         swarmEvent: swarmEvent.peerAvailable
           ? {
               peerAvailable: {
@@ -81,14 +88,19 @@ export const subscribeToSignal = ({
         receivedAt: new Date(),
       });
     });
-    return () => {
-      void unsubscribe?.();
-      return ctx.dispose();
-    };
+
+    return Effect.promise(async () => {
+      await unsubscribe?.();
+      await ctx.dispose();
+    });
   });
 
-export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: SwarmNetworkManager }) =>
-  new Stream<DevtoolsHost.SubscribeToNetworkTopicsResponse>(({ next, close }) => {
+export const subscribeToNetworkTopics = ({
+  networkManager,
+}: {
+  networkManager: SwarmNetworkManager;
+}): EffectStream.Stream<DevtoolsHost.SubscribeToNetworkTopicsResponse, Error> =>
+  EffectEx.streamFromEmitter<DevtoolsHost.SubscribeToNetworkTopicsResponse, Error>((emit) => {
     const update = () => {
       try {
         const topics = networkManager.topics;
@@ -96,9 +108,9 @@ export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: S
           topic,
           label: networkManager.getSwarm(topic)?.label ?? topic.toHex(),
         }));
-        next({ topics: labeledTopics });
+        emit.single({ topics: labeledTopics });
       } catch (err: any) {
-        close(err);
+        emit.fail(err);
       }
     };
     networkManager.topicsUpdated.on(update);
@@ -106,12 +118,16 @@ export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: S
     update();
   });
 
-export const subscribeToSwarmInfo = ({ networkManager }: { networkManager: SwarmNetworkManager }) =>
-  new Stream<DevtoolsHost.SubscribeToSwarmInfoResponse>(({ next }) => {
+export const subscribeToSwarmInfo = ({
+  networkManager,
+}: {
+  networkManager: SwarmNetworkManager;
+}): EffectStream.Stream<DevtoolsHost.SubscribeToSwarmInfoResponse, Error> =>
+  EffectEx.streamFromEmitter<DevtoolsHost.SubscribeToSwarmInfoResponse, Error>((emit) => {
     const update = () => {
       const info = networkManager.connectionLog?.swarms;
       if (info) {
-        next({ data: info });
+        emit.single({ data: info });
       }
     };
     networkManager.connectionLog?.update.on(update);
