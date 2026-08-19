@@ -17,7 +17,7 @@ runtime:
     hub:
       url: https://hub-staging.dxos.workers.dev/
     edge:
-      url: ws://localhost:8787/
+      url: http://localhost:8787/
     iceProviders:
       - urls: https://dxos.network/ice
     sandbox:

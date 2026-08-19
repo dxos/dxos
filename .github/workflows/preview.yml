@@ -50,7 +50,9 @@ jobs:
         env:
           NODE_ENV: production
           LOG_FILTER: error
-          DX_EDGE_BASE_URL: https://main.dxos.network
+          # EDGE nightly — the instance Composer `dev` targets, so a preview and a dev deploy see the same
+          # data. TODO(wittjosiah): `https://nightly.dxos.network` after the EDGE rename (DX-1150).
+          DX_EDGE_BASE_URL: https://main.dxos.network/
 
       - name: Write deploy metadata
         run: |

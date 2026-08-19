@@ -15,6 +15,7 @@ import { isTauri } from '@dxos/util';
 import { meta } from '#meta';
 
 import { SHORTCUTS_DIALOG } from '../../constants';
+import { downloadUrl } from './download';
 
 // Mirrors the welcome plugin's ABOUT_DIALOG constant (composer-app/src/plugins/welcome);
 // inlined because composer-app is not a workspace dependency.
@@ -23,7 +24,6 @@ const ABOUT_DIALOG = 'org.dxos.plugin.welcome.component.about-dialog';
 const DOCS_URL = 'https://docs.dxos.org/composer/introduction/';
 const DISCORD_URL = 'https://dxos.org/discord';
 const GITHUB_URL = 'https://github.com/dxos/dxos';
-const DOWNLOAD_URL = 'https://web.crabnebula.cloud/dxos/composer/releases';
 
 export const HelpMenu = () => {
   const { t } = useTranslation(meta.profile.key);
@@ -43,6 +43,9 @@ export const HelpMenu = () => {
     },
     [invokePromise],
   );
+
+  // The dashboard on production, the channel's own latest installer elsewhere.
+  const downloadHref = downloadUrl(config.values.runtime?.app?.env?.DX_ENVIRONMENT);
 
   return (
     <DropdownMenu.Root>
@@ -79,7 +82,7 @@ export const HelpMenu = () => {
             </DropdownMenu.Item>
             {!isTauri() && (
               <DropdownMenu.Item asChild>
-                <a href={DOWNLOAD_URL} target='_blank' rel='noopener noreferrer'>
+                <a href={downloadHref} target='_blank' rel='noopener noreferrer'>
                   <Icon icon='ph--download-simple--regular' size={4} />
                   <span>{t('download-apps.label')}</span>
                 </a>

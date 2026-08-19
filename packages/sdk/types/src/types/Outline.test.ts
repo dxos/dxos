@@ -82,17 +82,20 @@ describe('Outline', () => {
 
       expect(task.title).to.eq('Buy milk');
       expect(task.status).to.eq('todo');
-      expect(Obj.getParent(task)?.id).to.eq(outline.taskSet?.target?.id);
+      // Membership is the set's array; the parent edge rides along so the task cascades with it.
+      const taskSet = outline.taskSet?.target;
+      expect(taskSet?.tasks.map((ref) => ref.target?.id)).to.deep.eq([task.id]);
+      expect(Obj.getParent(task)?.id).to.eq(taskSet?.id);
     });
 
-    test('parents every task to the same lazily created task set', async ({ expect }) => {
+    test('files every task into the same lazily created task set', async ({ expect }) => {
       const outline = db.add(Outline.make());
       await db.flush();
 
       const first = await Outline.createTask(outline, db, 'First');
       const second = await Outline.createTask(outline, db, 'Second');
 
-      expect(Obj.getParent(second)?.id).to.eq(Obj.getParent(first)?.id);
+      expect(outline.taskSet?.target?.tasks.map((ref) => ref.target?.id)).to.deep.eq([first.id, second.id]);
     });
 
     test('extra props reach the task', async ({ expect }) => {
