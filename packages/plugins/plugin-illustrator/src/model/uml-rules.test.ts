@@ -59,21 +59,21 @@ describe('uml-rules', () => {
     expect(container.x).not.toBe(leaf.x);
   });
 
-  test('chain rule claims the longest linear relation and stacks it arrows-up', ({ expect }) => {
+  test('chain rule claims the longest linear relation and renders it left to right', ({ expect }) => {
     const model = parse(SOURCE);
     const cell = measureCell(model, { maxWidth: 192 });
     const unclaimed = new Set(model.classes.map((entry) => entry.id));
     inheritanceTreeRule.apply(model, unclaimed, cell);
     const [group] = linearChainRule.apply(model, unclaimed, cell);
 
-    // Query ..> Index ..> Registry ..> Codec is the longest chain; targets sit above sources.
+    // Query ..> Index ..> Registry ..> Codec is the longest chain; targets sit to the right.
     expect([...group.rects.keys()].sort()).toEqual(['Codec', 'Index', 'Query', 'Registry']);
-    const y = (id: string) => group.rects.get(id)!.y;
-    expect(y('Codec')).toBeLessThan(y('Registry'));
-    expect(y('Registry')).toBeLessThan(y('Index'));
-    expect(y('Index')).toBeLessThan(y('Query'));
-    // A column: shared x.
-    expect(new Set([...group.rects.values()].map((rect) => rect.x)).size).toBe(1);
+    const x = (id: string) => group.rects.get(id)!.x;
+    expect(x('Query')).toBeLessThan(x('Index'));
+    expect(x('Index')).toBeLessThan(x('Registry'));
+    expect(x('Registry')).toBeLessThan(x('Codec'));
+    // A row: shared y.
+    expect(new Set([...group.rects.values()].map((rect) => rect.y)).size).toBe(1);
   });
 
   test('compiles all nodes with non-overlapping group frames', ({ expect }) => {

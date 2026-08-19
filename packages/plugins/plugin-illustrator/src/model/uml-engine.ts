@@ -14,15 +14,7 @@ import ELK from 'elkjs/lib/elk.bundled.js';
 
 import type * as Scene from './scene';
 import { type UmlModel, parse, relationRanks } from './uml';
-import {
-  type Cell,
-  GRID,
-  type CompileOptions as GridCompileOptions,
-  type Rect,
-  emit,
-  measureCell,
-  zRouter,
-} from './uml-grid';
+import { type Cell, GRID, type CompileOptions as GridCompileOptions, type Rect, emit, measureCell } from './uml-grid';
 
 export type Engine = 'dagre' | 'elk';
 
@@ -141,5 +133,5 @@ export const compile = async (source: string, options: CompileOptions = {}): Pro
     horizontal,
   };
   const rects = engine === 'dagre' ? dagrePlace(model, place) : await elkPlace(model, place);
-  return emit({ model, cell, rects, ranks: relationRanks(model) }, { origin, scale, route: zRouter });
+  return emit({ model, cell, rects, ranks: relationRanks(model) }, { origin, scale });
 };

@@ -10,6 +10,7 @@
 //
 
 import * as Layout from './layout';
+import { makeAvoidingRouter } from './ortho-router';
 import type * as Scene from './scene';
 import { type UmlModel, type UmlRelation, parse, relationRanks, relationStyle, relationText } from './uml';
 
@@ -21,7 +22,7 @@ import { type UmlModel, type UmlRelation, parse, relationRanks, relationStyle, r
 export const GRID = 32;
 
 /** The document grid unit, used for sub-cell nudges (channel separation, label offsets). */
-const GRID_FINE = GRID / 4;
+const GRID_FINE = GRID / 2;
 
 const MIN_W = GRID * 2;
 const MAX_W = GRID * 6;
@@ -269,7 +270,7 @@ export type EmitOptions = {
  */
 export const compile = (source: string, options: CompileOptions = {}): Scene.Command[] => {
   const model = parse(source);
-  const { origin = { x: 0, y: 0 }, scale = 1, maxWidth = MAX_W, route = zRouter } = options;
+  const { origin = { x: 0, y: 0 }, scale = 1, maxWidth = MAX_W, route } = options;
   const gapMain = snap(options.gapMain ?? GAP_MAIN);
   const gapCross = snap(options.gapCross ?? GAP_CROSS);
   const horizontal = model.direction === 'LR' || model.direction === 'RL';
@@ -310,9 +311,11 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
  */
 export const emit = (
   { model, cell, rects, ranks }: Placement,
-  { origin = { x: 0, y: 0 }, scale = 1, route = zRouter }: EmitOptions = {},
+  { origin = { x: 0, y: 0 }, scale = 1, route }: EmitOptions = {},
 ): Scene.Command[] => {
   const horizontal = model.direction === 'LR' || model.direction === 'RL';
+  // Default routing avoids every node (fewest turns), falling back to the Z-router per edge.
+  const router = route ?? makeAvoidingRouter([...rects.values()], zRouter);
   const commands: Scene.Command[] = [];
 
   for (const entry of model.classes) {
@@ -433,14 +436,78 @@ export const emit = (
       });
     }
 
+    // Straightening: when a relation's nodes overlap on the cross axis, snap both terminals to a
+    // shared free coordinate so the connector runs straight — a jog between stacked (or abreast)
+    // nodes reads as noise. The spread ports above are the collision set; singles sit on centers.
+    const takenBySide = new Map<string, Map<UmlRelation, number>>();
+    for (const [key, slots] of portGroups) {
+      const nodeId = key.slice(0, key.lastIndexOf(':'));
+      const rect = rects.get(nodeId)!;
+      const across = key.endsWith(':top') || key.endsWith(':bottom');
+      const coords = new Map<UmlRelation, number>();
+      for (const slot of slots) {
+        const port = ports.get(slot.relation)?.[slot.end ? 'end' : 'start'];
+        coords.set(slot.relation, port ?? (across ? rect.x + rect.w / 2 : rect.y + rect.h / 2));
+      }
+      takenBySide.set(key, coords);
+    }
+    const fineSnap = (value: number) => Math.round(value / GRID_FINE) * GRID_FINE;
+    for (const relation of model.relations) {
+      const from = rects.get(relation.from)!;
+      const to = rects.get(relation.to)!;
+      const sameLane = horizontal ? from.x === to.x : from.y === to.y;
+      const alongY = horizontal ? sameLane : !sameLane;
+      const lo = alongY ? Math.max(from.x, to.x) + GRID_FINE : Math.max(from.y, to.y) + GRID_FINE;
+      const hi = alongY
+        ? Math.min(from.x + from.w, to.x + to.w) - GRID_FINE
+        : Math.min(from.y + from.h, to.y + to.h) - GRID_FINE;
+      if (lo > hi) {
+        continue;
+      }
+      const startKey = alongY
+        ? `${relation.from}:${to.y >= from.y ? 'bottom' : 'top'}`
+        : `${relation.from}:${to.x >= from.x ? 'right' : 'left'}`;
+      const endKey = alongY
+        ? `${relation.to}:${to.y >= from.y ? 'top' : 'bottom'}`
+        : `${relation.to}:${to.x >= from.x ? 'left' : 'right'}`;
+      const entry = ports.get(relation) ?? {};
+      const startCoord = entry.start ?? (alongY ? from.x + from.w / 2 : from.y + from.h / 2);
+      const endCoord = entry.end ?? (alongY ? to.x + to.w / 2 : to.y + to.h / 2);
+      const isFree = (coord: number) =>
+        ![startKey, endKey].some((side) =>
+          [...(takenBySide.get(side) ?? new Map<UmlRelation, number>())].some(
+            ([peer, taken]) => peer !== relation && Math.abs(taken - coord) < GRID_FINE,
+          ),
+        );
+      const base = Math.min(hi, Math.max(lo, fineSnap((startCoord + endCoord) / 2)));
+      let chosen: number | undefined;
+      for (let step = 0; step <= Math.ceil((hi - lo) / GRID_FINE) && chosen === undefined; step++) {
+        for (const candidate of step === 0 ? [base] : [base - step * GRID_FINE, base + step * GRID_FINE]) {
+          if (candidate >= lo && candidate <= hi && isFree(candidate)) {
+            chosen = candidate;
+            break;
+          }
+        }
+      }
+      if (chosen === undefined) {
+        continue;
+      }
+      entry.start = chosen;
+      entry.end = chosen;
+      ports.set(relation, entry);
+      takenBySide.get(startKey)?.set(relation, chosen);
+      takenBySide.get(endKey)?.set(relation, chosen);
+    }
+
     const assigned = new Map<string, number>();
     const elements: Scene.Element[] = [];
     model.relations.forEach((relation, index) => {
       const gutter = gutterOf(relation);
       const position = assigned.get(gutter) ?? 0;
       assigned.set(gutter, position + 1);
-      const offset = position - (gutters.get(gutter)! - 1) / 2;
-      const points = route({
+      // Integer slots so every jog stays on the minor grid (shift = offset × GRID_FINE).
+      const offset = position - Math.floor((gutters.get(gutter)! - 1) / 2);
+      const points = router({
         relation,
         from: rects.get(relation.from)!,
         to: rects.get(relation.to)!,

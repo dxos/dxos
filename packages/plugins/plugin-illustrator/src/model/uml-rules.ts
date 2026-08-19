@@ -13,15 +13,7 @@
 import * as Layout from './layout';
 import type * as Scene from './scene';
 import { type UmlModel, parse, relationRanks } from './uml';
-import {
-  type Cell,
-  GRID,
-  type CompileOptions as GridCompileOptions,
-  type Rect,
-  emit,
-  measureCell,
-  zRouter,
-} from './uml-grid';
+import { type Cell, GRID, type CompileOptions as GridCompileOptions, type Rect, emit, measureCell } from './uml-grid';
 
 const GAP = GRID * 2;
 const GROUP_GAP = GRID * 3;
@@ -120,7 +112,7 @@ export const inheritanceTreeRule: GroupRule = {
 
 /**
  * Longest linear chain: the longest path through the still-unclaimed up-oriented relation graph
- * becomes a vertical column, arrows pointing up (each target directly above its source).
+ * renders left to right (each target directly right of its source).
  */
 export const linearChainRule: GroupRule = {
   id: 'chain',
@@ -164,13 +156,13 @@ export const linearChainRule: GroupRule = {
     }
 
     const rects = new Map<string, Rect>();
-    // Chain runs source → target; targets sit above, so the first node lands at the bottom.
+    // Chain runs source → target, reading left to right.
     chain.forEach((id, index) => {
-      rects.set(id, { x: 0, y: (chain.length - 1 - index) * (cell.h + GAP), w: cell.w, h: cell.h });
+      rects.set(id, { x: index * (cell.w + GAP), y: 0, w: cell.w, h: cell.h });
       unclaimed.delete(id);
     });
     return [
-      { id: `chain:${chain[0]}`, rule: 'chain', rects, w: cell.w, h: chain.length * cell.h + (chain.length - 1) * GAP },
+      { id: `chain:${chain[0]}`, rule: 'chain', rects, w: chain.length * cell.w + (chain.length - 1) * GAP, h: cell.h },
     ];
   },
 };
@@ -271,5 +263,5 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
     }
   }
 
-  return [...frames, ...emit({ model, cell, rects, ranks: relationRanks(model) }, { origin, scale, route: zRouter })];
+  return [...frames, ...emit({ model, cell, rects, ranks: relationRanks(model) }, { origin, scale })];
 };
