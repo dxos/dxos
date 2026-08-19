@@ -650,6 +650,11 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
 
 - [ ] **Possibly move Project type from @dxos/compute to plugin-projects at end** — revisit once the plugin's shape settles.
 - [x] **Review CompanionTo reuse for project chats** — resolved in milestone 3: companion chat keeps `CompanionTo`; owned sessions use the ECHO parent edge. Agent-roster linkage still open.
+- [ ] **Normalize Chat ownership onto the ECHO parent edge** — retire `Chat.CompanionTo`; audit at
+      `packages/core/compute/compute/src/types/AUDIT.md`, plan at
+      `agents/superpowers/plans/project-chat-relationship.md`. Blocked on `Filter.hasParent` in
+      `@dxos/echo` (step 1). Decided: lazy upgrade-on-read then drop, no ECHO migration; the
+      project-chats navtree connector stays in plugin-projects.
 - [ ] **Unify project-context binding** across companion and standalone chats (shared hook keyed on the chat's parent) — closes the late-added-skills gap.
 - [ ] **Remove plugin-sidekick** — obviated (AUDIT.md notes it); deletion is a separate change.
 - [ ] **Consider merging plugin-routine into plugin-projects** — boundary is thin post-Routine-move.
