@@ -108,12 +108,8 @@ export const getDefaults = ({ isDev, isLocal }: PluginConfig): string[] =>
     // Local
     isLocal && SamplePlugin.meta.profile.key,
 
-    // Dev. `isDev` is strictly the `dev` cloud environment (`DX_ENVIRONMENT=dev`) or a local
-    // `DX_DEV=true` opt-in — nightly does NOT get this block, and neither does a plain local `serve`.
-    // Everything here except Sidekick stays in the registry either way (see `getPlugins` below), so
-    // enabling one manually is still a settings toggle away; this only controls what a fresh identity
-    // starts with. Sidekick (like Computer, absent from this list since it is never default-on) is
-    // gated on `isDev` for availability too, so outside dev it is not in the registry at all.
+    // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` — not nightly, not a
+    // plain `serve`). Sidekick is also gated on `isDev` for availability, not just defaults (below).
     isDev && [
       DebugPlugin.meta.profile.key,
       DevtoolsPlugin.meta.profile.key,
@@ -165,10 +161,8 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ChessComPlugin.make(),
     ReviewPlugin.make(),
     ConductorPlugin.make(),
-    // Dev-only coding harness: the assistant gets a bash tool and a file-edit tool. Gated on `isDev`
-    // for availability, not just defaults — unlike Debug/Devtools below, it is absent from the
-    // registry entirely outside dev, and its tools stay unusable until the dev server mounts the
-    // route (see `ComputerShellPlugin` in vite.config.ts) even when it is present.
+    // Dev-only coding harness, gated on `isDev` for availability (not just defaults, unlike
+    // Debug/Devtools below) since its tools need the dev server's route (vite.config.ts).
     isDev && ComputerPlugin.make(),
     !isTauri && CrxPlugin.make(),
     DebugPlugin.make({ logStore }),

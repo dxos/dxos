@@ -16,9 +16,8 @@ export type UnsupportedTypeProps = {
 };
 
 /**
- * Inert stand-in for an object no enabled plugin can render, so a plank states what it holds instead
- * of rendering empty. Deliberately offers no remedy — it reports status only. Which objects reach it
- * is the surface's call — see `capabilities/react-surface.ts`.
+ * Inert, status-only stand-in for an object no enabled plugin can render — offers no remedy; which
+ * objects reach it is `capabilities/react-surface.ts`'s call.
  */
 export const UnsupportedType = ({ role, typename }: UnsupportedTypeProps) => {
   const { t } = useTranslation(meta.profile.key);

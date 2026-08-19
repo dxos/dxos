@@ -18,14 +18,9 @@ import { UnsupportedType } from '../components';
 import { OrganizationCardContent, PersonCardContent } from './RelatedCards';
 
 /**
- * True when no enabled plugin owns the object's type, read off the type registry.
- *
- * Deliberately NOT read off "no other article candidate matched": this contribution is part of the
- * `cardContent`/`article`-role-gated `ReactSurface` module, which loads once either role is first
- * requested — for the frames before a real plugin's surface arrives, the absence of a candidate is
- * also true, and this stand-in would flash on the first plank a session opens. Plugins register
- * their schema in the boot idle wave instead, long before a user opens anything, so the registry
- * answers the question without racing.
+ * Checked against the type registry rather than "no other candidate matched" — the latter is also
+ * true while a real plugin's surface is still loading, which would flash this stand-in on every
+ * session's first plank.
  */
 const isUnclaimedType = (subject: unknown): subject is Obj.Unknown => {
   if (!Obj.isObject(subject)) {
@@ -172,10 +167,8 @@ export default Capability.makeModule(() =>
       //   },
       // }),
 
-      // Last article candidate, and the plank takes `limit={1}` — so this renders only when
-      // nothing else claims the object. A curated plugin set shares a backend with the full-catalog
-      // build, so an object created there can arrive with no plugin that renders it; an empty plank
-      // would read as data loss.
+      // Last-resort candidate (plank `limit={1}`) for an object whose plugin is absent — e.g. one
+      // created in a build that shares a backend with a full-catalog build.
       Surface.create({
         id: 'unsupportedTypeArticle',
         position: Position.last,
