@@ -32,8 +32,8 @@ Foundations (`@dxos/echo`) at the top; `@dxos/assistant-toolkit` at the bottom m
 
 ```mermaid
 graph BT
-  AT["<b>@dxos/assistant-toolkit</b><br/>Chat · Agent · CompanionTo"] --> C["<b>@dxos/compute</b><br/>Project · Instructions · Skill"]
-  AT --> T["<b>@dxos/types</b><br/>Outline · TaskSet"]
+  AT["<b>@dxos/assistant-toolkit</b><br/>Chat · Agent · CompanionTo"] --> C["<b>@dxos/compute</b><br/>Project · Instructions · Skill · Routine"]
+  AT --> T["<b>@dxos/types</b><br/>Outline · TaskSet · Task"]
   AT --> S["<b>@dxos/schema</b><br/>Text"]
   AT --> E["<b>@dxos/echo</b><br/>Feed · Obj.Unknown"]
   C --> T
@@ -42,65 +42,6 @@ graph BT
   T --> S
   T --> E
   S --> E
-```
-
-## Type graph
-
-Packages as namespaces; solid arrows are typed refs (or the arbitrary-object array), open arrows are
-the ECHO parent edge, dashed is the relation being retired.
-
-```mermaid
-classDiagram
-  direction LR
-
-  namespace dxos_compute {
-    class Project
-    class Instructions
-    class Skill
-  }
-
-  namespace dxos_assistant_toolkit {
-    class Chat
-    class Agent
-    class CompanionTo
-  }
-
-  namespace dxos_types {
-    class Outline
-    class TaskSet
-  }
-
-  namespace dxos_schema {
-    class Text
-  }
-
-  namespace dxos_echo {
-    class Feed
-    class ObjUnknown
-  }
-
-  Project --> Instructions : instructions
-  Project --> Outline : outline
-  Project --> TaskSet : taskSet
-  Project --> ObjUnknown : artifacts[]
-  Instructions --> Text : text
-  Instructions --> Skill : skills[]
-  Instructions --> ObjUnknown : objects[]
-  Agent --> Instructions : instructions
-  Chat --> Feed : feed
-  Chat --> Instructions : instructions
-  Chat --> Outline : outline
-
-  Project o-- Chat : parent
-  Project o-- TaskSet : parent
-  Project o-- Instructions : parent
-  Agent o-- Chat : parent
-  Agent o-- Instructions : parent
-  Chat o-- Feed : parent
-  Instructions o-- Text : parent
-
-  Chat ..> Agent : CompanionTo (retire)
-  Chat ..> ObjUnknown : CompanionTo (retire)
 ```
 
 ## Edge inventory
