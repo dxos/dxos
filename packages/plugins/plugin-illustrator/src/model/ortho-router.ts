@@ -62,9 +62,54 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
   type Terminal = { point: Point; dir: number };
   type Found = { cost: number; cells: Point[] };
 
+  /** Binary min-heap on cost + estimate, so each pop is O(log n) instead of a frontier scan. */
+  const heapPush = (heap: State[], state: State) => {
+    heap.push(state);
+    let index = heap.length - 1;
+    while (index > 0) {
+      const parent = (index - 1) >> 1;
+      if (heap[parent].cost + heap[parent].estimate <= heap[index].cost + heap[index].estimate) {
+        break;
+      }
+      [heap[parent], heap[index]] = [heap[index], heap[parent]];
+      index = parent;
+    }
+  };
+  const heapPop = (heap: State[]): State => {
+    const top = heap[0];
+    const last = heap.pop()!;
+    if (heap.length > 0) {
+      heap[0] = last;
+      let index = 0;
+      for (;;) {
+        const left = index * 2 + 1;
+        const right = left + 1;
+        let smallest = index;
+        if (
+          left < heap.length &&
+          heap[left].cost + heap[left].estimate < heap[smallest].cost + heap[smallest].estimate
+        ) {
+          smallest = left;
+        }
+        if (
+          right < heap.length &&
+          heap[right].cost + heap[right].estimate < heap[smallest].cost + heap[smallest].estimate
+        ) {
+          smallest = right;
+        }
+        if (smallest === index) {
+          break;
+        }
+        [heap[smallest], heap[index]] = [heap[index], heap[smallest]];
+        index = smallest;
+      }
+    }
+    return top;
+  };
+
   /**
-   * Bounded A* between two stub ends (grid coordinates). The grid is small (canvas / STEP) and
-   * turns dominate, so the frontier stays shallow; undefined when the target is unreachable.
+   * Bounded A* between two stub ends (grid coordinates). Successors already dominated by a
+   * settled state are pruned before pushing; undefined when the target is unreachable.
    */
   const search = (source: Point, startDir: number, target: Point, endDir: number): Found | undefined => {
     const open: State[] = [
@@ -79,14 +124,8 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
     const settled = new Map<string, number>();
     let found: State | undefined;
 
-    for (let iterations = 0; open.length > 0 && iterations < 20_000; iterations++) {
-      let bestIndex = 0;
-      for (let index = 1; index < open.length; index++) {
-        if (open[index].cost + open[index].estimate < open[bestIndex].cost + open[bestIndex].estimate) {
-          bestIndex = index;
-        }
-      }
-      const current = open.splice(bestIndex, 1)[0];
+    for (let iterations = 0; open.length > 0 && iterations < 50_000; iterations++) {
+      const current = heapPop(open);
       if (current.x === target.x && current.y === target.y) {
         found = current;
         break;
@@ -114,7 +153,12 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
           (used.has(key(x, y)) ? USED_COST : 0) +
           // Entering the target off-axis forces one more bend at arrival; fold it in.
           (x === target.x && y === target.y && dir !== endDir ? TURN_COST : 0);
-        open.push({
+        const successorKey = `${x}:${y}:${dir}`;
+        const dominated = settled.get(successorKey);
+        if (dominated !== undefined && dominated <= cost) {
+          continue;
+        }
+        heapPush(open, {
           x,
           y,
           dir,

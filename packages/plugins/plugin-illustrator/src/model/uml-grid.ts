@@ -429,11 +429,17 @@ export const emit = (
       const rect = rects.get(nodeId)!;
       const across = key.endsWith(':top') || key.endsWith(':bottom');
       slots.sort((left, right) => left.order - right.order);
+      // Dense sides can round two slots onto the same minor-grid line; fall back to the exact
+      // fractional coordinate so ports stay collision-free (and monotone in slot order).
+      const taken = new Set<number>();
       slots.forEach((slot, index) => {
         const fraction = (index + 1) / (slots.length + 1);
-        const coord = across ? rect.x + rect.w * fraction : rect.y + rect.h * fraction;
+        const exact = across ? rect.x + rect.w * fraction : rect.y + rect.h * fraction;
+        const rounded = Math.round(exact / GRID_FINE) * GRID_FINE;
+        const coord = taken.has(rounded) ? exact : rounded;
+        taken.add(coord);
         const entry = ports.get(slot.relation) ?? {};
-        entry[slot.end ? 'end' : 'start'] = Math.round(coord / GRID_FINE) * GRID_FINE;
+        entry[slot.end ? 'end' : 'start'] = coord;
         ports.set(slot.relation, entry);
       });
     }

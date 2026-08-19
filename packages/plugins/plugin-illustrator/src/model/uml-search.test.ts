@@ -61,7 +61,7 @@ describe('uml-search', () => {
     expect(scoreLayout(crossing, crossed)).toBeLessThan(0);
   });
 
-  test('search starts from the chain and never scores worse than the rank packing', ({ expect }) => {
+  test('search starts from the chain and compile keeps the higher-scoring layout', ({ expect }) => {
     const model = parse(SOURCE);
     const cell = measureCell(model, { maxWidth: 192 });
     const groups = buildGroups(model, cell, [inheritanceTreeRule, linearChainRule]);
@@ -70,7 +70,19 @@ describe('uml-search', () => {
     const packed = packGroups(model, groups);
     const searchedScore = scoreLayout(model, resolveRects(groups, searched));
     const packedScore = scoreLayout(model, resolveRects(groups, packed));
-    expect(searchedScore).toBeGreaterThanOrEqual(packedScore);
+
+    // The guarantee is the SELECTION, not search superiority (the search is greedy): the compiled
+    // layout scores at least as high as either candidate.
+    const compiled = objectsOf(compile(SOURCE)).filter(
+      (object) => !object.id.startsWith('group:') && object.id !== 'edges',
+    );
+    const rects = new Map(
+      compiled.map((object) => {
+        const frame = object.elements[0] as Scene.Box;
+        return [object.id, { x: object.origin!.x, y: object.origin!.y, w: frame.w, h: frame.h }];
+      }),
+    );
+    expect(scoreLayout(model, rects)).toBeGreaterThanOrEqual(Math.max(searchedScore, packedScore));
 
     // The chain group anchors the layout; the hierarchy sits axis-aligned next to it.
     const chain = groups.find((group) => group.rule === 'chain')!;

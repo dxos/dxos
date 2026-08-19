@@ -267,7 +267,7 @@ export const frameCommands = (
   { origin = { x: 0, y: 0 }, scale = 1 }: { origin?: Scene.Point; scale?: number } = {},
 ): Scene.Command[] =>
   groups
-    .filter((group) => group.rects.size > 1)
+    .filter((group) => group.rects.size > 1 && origins.has(group.id))
     .map((group) => {
       const at = origins.get(group.id)!;
       return {

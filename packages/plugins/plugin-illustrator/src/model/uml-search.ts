@@ -75,6 +75,7 @@ const bends = (route: readonly Point[]): number => {
  * the final picture.
  */
 export const scoreLayout = (model: UmlModel, rects: Map<string, Rect>): number => {
+  const horizontal = model.direction === 'LR' || model.direction === 'RL';
   const routes: Point[][] = [];
   for (const relation of model.relations) {
     const from = rects.get(relation.from);
@@ -82,7 +83,7 @@ export const scoreLayout = (model: UmlModel, rects: Map<string, Rect>): number =
     if (!from || !to) {
       continue;
     }
-    routes.push(zRouter({ relation, from, to, horizontal: false, offset: 0 }));
+    routes.push(zRouter({ relation, from, to, horizontal, offset: 0 }));
   }
 
   let score = 0;
@@ -124,6 +125,10 @@ export const searchPlacement = (model: UmlModel, groups: Group[]): Map<string, S
   const seed =
     groups.find((group) => group.rule === 'chain') ??
     [...groups].sort((left, right) => right.rects.size - left.rects.size)[0];
+  // An empty or unparseable source yields no groups; compile then emits an empty scene.
+  if (!seed) {
+    return new Map();
+  }
 
   const origins = new Map<string, Point>();
   origins.set(seed.id, { x: 0, y: 0 });
