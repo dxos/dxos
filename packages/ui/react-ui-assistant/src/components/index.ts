@@ -4,4 +4,3 @@
 
 export * from './ChatThread';
 export * from './MessageChrome';
-export * from './widgets';

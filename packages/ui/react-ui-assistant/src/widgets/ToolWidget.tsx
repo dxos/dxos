@@ -12,7 +12,7 @@ import { type ContentBlock } from '@dxos/types';
 import { type XmlWidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 import { isNonNullable, safeParseJson } from '@dxos/util';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '../translations';
 
 export type ToolWidgetProps = XmlWidgetProps;
 

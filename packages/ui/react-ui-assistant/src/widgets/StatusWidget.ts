@@ -21,7 +21,7 @@ export class StatusWidget extends WidgetType {
   override toDOM() {
     return Domino.of('div').append(
       Domino.of('div')
-        .classNames('relative overflow-hidden rounded-sm')
+        .classNames('relative overflow-hidden rounded-md')
         .append(
           Domino.of('div')
             .classNames('grid grid-cols-[24px_1fr] gap-x-0.5 gap-y-0 items-start px-0.5 py-0.5 text-placeholder')
@@ -33,7 +33,7 @@ export class StatusWidget extends WidgetType {
                 .classNames('relative min-w-0')
                 .append(
                   Domino.of('div')
-                    .classNames('relative z-10 rounded-sm text-sm leading-5')
+                    .classNames('relative z-10 rounded-md text-sm leading-5')
                     .attributes({ 'data-status-text': '' })
                     .text(this.text),
                 ),

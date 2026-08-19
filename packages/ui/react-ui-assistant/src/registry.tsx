@@ -14,7 +14,7 @@ import {
   SuggestionWidget,
   SummaryWidget,
   ToolWidget,
-} from './components';
+} from './widgets';
 
 /**
  * Floor for a portaled panel's collapsed height, reserved before its content paints. `heightMode:

@@ -12,7 +12,7 @@ import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
-import { formatTime } from '../widgets';
+import { formatTime } from './format-time';
 
 //
 // Context

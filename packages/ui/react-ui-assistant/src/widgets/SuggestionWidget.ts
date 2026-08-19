@@ -30,7 +30,7 @@ export class SuggestionWidget extends WidgetType {
     // error accumulates down the document, and the turn-fold gutter markers end up visibly misaligned.
     // Adjacent chips are likewise spaced with trailing padding rather than a margin.
     return Domino.of('span')
-      .classNames(mx('inline-flex max-w-[calc(100cqi-8px)] py-1 pe-1 overflow-hidden'))
+      .classNames(mx('inline-flex max-w-[calc(100cqi-8px)] overflow-hidden'))
       .append(
         Domino.of('button')
           .attributes({
@@ -40,9 +40,7 @@ export class SuggestionWidget extends WidgetType {
           })
           .classNames(mx('dx-button gap-2 w-full overflow-hidden'))
           .append(
-            Domino.of('dx-icon').attributes({
-              icon: 'ph--lightning--regular',
-            }),
+            Domino.of('dx-icon').attributes({ icon: 'ph--lightning--regular' }),
             Domino.of('span').classNames('flex-1 truncate min-w-0').text(this.text),
           ),
       ).root;
