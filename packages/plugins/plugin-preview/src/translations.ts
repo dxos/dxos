@@ -17,6 +17,10 @@ export const translations = [
         'open-object.label': 'Open',
         'add-object-to-space.label': 'Add to space',
         'more-options.label': 'More options',
+        'unsupported-type.title': 'Nothing here can open this',
+        'unsupported-type.message':
+          'This item is a {{typename}}, and no plugin in this version of Composer knows how to show it. Nothing is lost — it is still stored in the space.',
+        'unsupported-type-open.label': 'Open in the full version',
       },
     },
   },

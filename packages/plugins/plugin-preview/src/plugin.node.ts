@@ -7,7 +7,9 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
 
-export const PreviewPlugin = Plugin.define(meta).pipe(
+import type { PreviewPluginOptions } from './types';
+
+export const PreviewPlugin = Plugin.define<PreviewPluginOptions>(meta).pipe(
   Plugin.addModule(AppCapability.schema(() => import('./capabilities/schema'))),
   Plugin.make,
 );

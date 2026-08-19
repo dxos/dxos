@@ -24,6 +24,7 @@ tasks:
       - $DX_MINIFY
       - $DX_OTEL_ENDPOINT
       - $DX_OTEL_HEADERS
+      - $DX_PLUGIN_SET
       - $DX_PWA
       - $DX_POSTHOG_API_KEY
       - $DX_POSTHOG_API_HOST

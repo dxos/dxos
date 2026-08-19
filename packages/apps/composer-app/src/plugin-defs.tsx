@@ -47,15 +47,12 @@ import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MeetingPlugin from '@dxos/plugin-meeting/MeetingPlugin';
 import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
-import * as NativeFilesystemPlugin from '@dxos/plugin-native-filesystem/NativeFilesystemPlugin';
-import * as NativePlugin from '@dxos/plugin-native/NativePlugin';
 import * as OsrmPlugin from '@dxos/plugin-osrm/OsrmPlugin';
 import * as PaymentsPlugin from '@dxos/plugin-payments/PaymentsPlugin';
 import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
-import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
-import * as PwaPlugin from '@dxos/plugin-pwa/PwaPlugin';
+import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
@@ -153,10 +150,11 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     .flat();
 
 /**
- * Full Composer plugin registry: shared core infrastructure plus every content plugin.
+ * Full Composer plugin registry (nightly and dev): shared core infrastructure, the plugin registry
+ * and every content plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
-  const { logStore, isDev, isLocal, isLabs, isPwa, isTauri, isPopover, isMobile } = config;
+  const { logStore, isDev, isLocal, isLabs, isTauri } = config;
   return [
     ...getCorePlugins(config),
     AssistantPlugin.make(),
@@ -196,18 +194,17 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     MarkdownPlugin.make(),
     MeetingPlugin.make(),
     MermaidPlugin.make(),
-    isTauri && !isMobile && !isPopover && NativePlugin.make(),
-    isTauri && !isMobile && !isPopover && NativeFilesystemPlugin.make(),
     OsrmPlugin.make(),
     TasksPlugin.make(),
     PaymentsPlugin.make(),
     PipelinePlugin.make(),
     PresenterPlugin.make(),
-    PreviewPlugin.make(),
     ProjectsPlugin.make(),
+    // Only the full set carries the registry: the plugin catalog, its settings surface and the dev
+    // plugin loader are what "nightly is extensible" means, and production ships none of them.
+    RegistryPlugin.make(),
     CommercePlugin.make(),
     CrmPlugin.make(),
-    !isTauri && isPwa && PwaPlugin.make(),
     isLocal && SamplePlugin.make(),
     SandboxPlugin.make(),
     ScriptPlugin.make(),

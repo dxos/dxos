@@ -798,9 +798,10 @@ Phased implementation plan (files, verification, risks): [`./PLAN.md`](./PLAN.md
   resolves on a cold or deep-link load, leaving the section permanently missing.
   Use `useObject(ref)` + `Obj.getReactiveOrUndefined` (see `ProjectArticle`'s
   instructions).
-- **Dev loop**: Projects, Routine, and Outliner are part of the composer-app
-  minimal plugin set (`serve-min`); keep the plugin list in sync with the
-  `optimizeDeps` brace glob in `vite.config.ts`.
+- **Dev loop**: Projects and Routine are part of the composer-app production
+  plugin set (`plugin-defs.production.tsx`, served by `serve-min`), and the
+  outliner ships inside plugin-tasks. The `optimizeDeps` brace glob is derived
+  from that file, so adding a plugin needs no `vite.config.ts` edit.
 
 ## Testing
 

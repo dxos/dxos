@@ -15,11 +15,14 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as DeckPlugin from '@dxos/plugin-deck/DeckPlugin';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
+import * as NativeFilesystemPlugin from '@dxos/plugin-native-filesystem/NativeFilesystemPlugin';
+import * as NativePlugin from '@dxos/plugin-native/NativePlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
 import * as ObservabilityPlugin from '@dxos/plugin-observability/ObservabilityPlugin';
 import * as OnboardingPlugin from '@dxos/plugin-onboarding/OnboardingPlugin';
+import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
-import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
+import * as PwaPlugin from '@dxos/plugin-pwa/PwaPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SettingsPlugin from '@dxos/plugin-settings/SettingsPlugin';
 import * as SimpleLayoutPlugin from '@dxos/plugin-simple-layout/SimpleLayoutPlugin';
@@ -27,6 +30,7 @@ import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as SpotlightPlugin from '@dxos/plugin-spotlight/SpotlightPlugin';
 import * as StatusBarPlugin from '@dxos/plugin-status-bar/StatusBarPlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
+import { isTruthy } from '@dxos/util';
 
 import { downloadLogs } from './util';
 
@@ -45,6 +49,12 @@ export type State = {
 export type PluginConfig = State & {
   /** Raises a fatal client-initialization failure to the entry point (see `onFatalError` in main.tsx). */
   onFatalError?: (error: unknown) => void;
+  /**
+   * Origin of a build carrying every plugin. Set only by a curated set (`plugin-defs.production.tsx`),
+   * where an object whose plugin this build omits needs somewhere it CAN be opened; the full set is
+   * that destination and leaves it unset.
+   */
+  extensibleAppUrl?: string;
   isDev?: boolean;
   isLocal?: boolean;
   isPwa?: boolean;
@@ -57,7 +67,10 @@ export type PluginConfig = State & {
 
 /**
  * Infrastructure plugins shared by every plugin set (`plugin-defs.tsx` and
- * `plugin-defs.minimal.tsx`) — options here are the single source of truth.
+ * `plugin-defs.production.tsx`) — options here are the single source of truth.
+ *
+ * Registry is deliberately NOT here: production ships without it (no plugin catalog, no dev plugin
+ * loader), so membership in the full set is what makes the registry a nightly-only surface.
  */
 export const getCorePlugins = ({
   appKey,
@@ -67,7 +80,9 @@ export const getCorePlugins = ({
   observability,
   logStore,
   onFatalError,
+  extensibleAppUrl,
   isLocal,
+  isPwa,
   isTauri,
   isPopover,
   isMobile,
@@ -122,9 +137,18 @@ export const getCorePlugins = ({
       downloadLogs: () => downloadLogs(logStore),
     }),
     OnboardingPlugin.make({ generateExemplarSpace: !isLocal }),
+    // Desktop-only host integrations; the ollama sidecar and the native file picker have no web
+    // counterpart, and neither the mobile shell nor the popover window mounts their surfaces.
+    isTauri && !isMobile && !isPopover && NativePlugin.make(),
+    isTauri && !isMobile && !isPopover && NativeFilesystemPlugin.make(),
+    // `tags: ['system']` already; core membership makes that true in practice — every set gets the
+    // preview panel rather than each list re-declaring it. It also owns the stand-in for an object
+    // whose plugin the build omits, which is why the curated set's alternative origin arrives here.
+    PreviewPlugin.make({ extensibleAppUrl }),
     ProcessManagerPlugin(),
     ProgressPlugin.make(),
-    RegistryPlugin.make(),
+    // The service worker is a build-time decision (`DX_PWA`), and Tauri ships its own shell.
+    !isTauri && isPwa && PwaPlugin.make(),
     RoutinePlugin.make(),
     SettingsPlugin.make(),
     SpacePlugin.make({
@@ -138,5 +162,5 @@ export const getCorePlugins = ({
       appName: 'Composer',
       platform: isMobile ? 'mobile' : 'desktop',
     }),
-  ];
+  ].filter(isTruthy);
 };
