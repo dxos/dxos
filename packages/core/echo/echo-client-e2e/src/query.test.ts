@@ -3733,6 +3733,69 @@ describe('Query', () => {
     });
   });
 
+  describe('Filter.hasParent', () => {
+    test('selects parented vs unparented objects', async () => {
+      const { db } = await builder.createDatabase();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: 'Child' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'Standalone' }));
+      await db.flush();
+
+      const roots = await db.query(Query.select(Filter.hasParent(false))).run();
+      expect(roots.map((obj: any) => obj.name).sort()).toEqual(['Parent', 'Standalone']);
+
+      const children = await db.query(Query.select(Filter.hasParent())).run();
+      expect(children.map((obj: any) => obj.name)).toEqual(['Child']);
+    });
+
+    test('combines with a type filter, keeping the type-indexed select', async () => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Root' }));
+      db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: person, name: 'Dependent' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'OtherType' }));
+      await db.flush();
+
+      const objects = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.hasParent(false))))
+        .run();
+      expect(objects).toHaveLength(1);
+      expect(objects[0]).toMatchObject({ name: 'Root' });
+    });
+
+    test('negation inverts the predicate', async () => {
+      const { db } = await builder.createDatabase();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: 'Child' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.not(Filter.hasParent()))).run();
+      expect(objects.map((obj: any) => obj.name)).toEqual(['Parent']);
+    });
+
+    test('reacts to Obj.setParent after the fact', async () => {
+      const { db } = await builder.createDatabase();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      const chat = db.add(Obj.make(TestSchema.Expando, { name: 'Chat' }));
+      await db.flush();
+
+      const query = db.query(Query.select(Filter.hasParent(false)));
+      const unsubscribe = query.subscribe(() => {});
+      onTestFinished(unsubscribe);
+      await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
+
+      // Adopting the chat must eject it from the unparented result set without a re-run.
+      Obj.setParent(chat, parent);
+      await db.flush({ updates: true });
+      await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
+      expect(query.results.map((obj: any) => obj.name)).toEqual(['Parent']);
+
+      // And orphaning it again must re-admit it.
+      Obj.setParent(chat, undefined);
+      await db.flush({ updates: true });
+      await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
+    });
+  });
+
   describe('Result caching', () => {
     test('repeated query() with the same serialized query returns the same instance and atom', async () => {
       const { db } = await builder.createDatabase();

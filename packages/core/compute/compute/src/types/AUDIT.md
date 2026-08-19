@@ -24,6 +24,84 @@ Companion plan: [`agents/superpowers/plans/project-chat-relationship.md`](../../
 Package dependency direction: `@dxos/assistant-toolkit` → `@dxos/compute` (Chat imports
 `Project`; `Project` never imports `Chat`). Any normalization must keep that direction.
 
+## Package dependencies
+
+Workspace `dependencies` edges between the audited packages (arrow points at the dependency).
+`@dxos/assistant-toolkit` sits at the top: it may import `Project`, never the reverse.
+
+```mermaid
+graph TD
+  AT["@dxos/assistant-toolkit"] --> C["@dxos/compute"]
+  AT --> T["@dxos/types"]
+  AT --> S["@dxos/schema"]
+  AT --> E["@dxos/echo"]
+  C --> T
+  C --> S
+  C --> E
+  T --> S
+  T --> E
+  S --> E
+```
+
+## Type graph
+
+Packages as namespaces; solid arrows are typed refs (or the arbitrary-object array), open arrows are
+the ECHO parent edge, dashed is the relation being retired.
+
+```mermaid
+classDiagram
+  direction LR
+
+  namespace dxos_compute {
+    class Project
+    class Instructions
+    class Skill
+  }
+
+  namespace dxos_assistant_toolkit {
+    class Chat
+    class Agent
+    class CompanionTo
+  }
+
+  namespace dxos_types {
+    class Outline
+    class TaskSet
+  }
+
+  namespace dxos_schema {
+    class Text
+  }
+
+  namespace dxos_echo {
+    class Feed
+    class ObjUnknown
+  }
+
+  Project --> Instructions : instructions
+  Project --> Outline : outline
+  Project --> TaskSet : taskSet
+  Project --> ObjUnknown : artifacts[]
+  Instructions --> Text : text
+  Instructions --> Skill : skills[]
+  Instructions --> ObjUnknown : objects[]
+  Agent --> Instructions : instructions
+  Chat --> Feed : feed
+  Chat --> Instructions : instructions
+  Chat --> Outline : outline
+
+  Project o-- Chat : parent
+  Project o-- TaskSet : parent
+  Project o-- Instructions : parent
+  Agent o-- Chat : parent
+  Agent o-- Instructions : parent
+  Chat o-- Feed : parent
+  Instructions o-- Text : parent
+
+  Chat ..> Agent : CompanionTo (retire)
+  Chat ..> ObjUnknown : CompanionTo (retire)
+```
+
 ## Edge inventory
 
 Three distinct mechanisms currently express "this chat belongs to X":

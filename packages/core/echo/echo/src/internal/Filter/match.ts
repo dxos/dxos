@@ -6,10 +6,12 @@ import * as semver from 'semver';
 
 import { EncodedReference, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { DXN, EID } from '@dxos/keys';
+import { assumeType } from '@dxos/util';
 
 import { getTypeURI } from '../Annotation/annotations';
 import { getMetaChecked } from '../common/api/meta';
-import { type AnyEntity } from '../common/types';
+import { type AnyEntity, ParentId } from '../common/types';
+import { type InternalObjectProps } from '../Entity/model';
 import { objectToJSON } from '../Obj/json-serializer';
 
 /**
@@ -289,6 +291,11 @@ export const filterMatchEntity = (filter: QueryAST.Filter, entity: AnyEntity): b
 
     case 'child-of': {
       throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
+    }
+
+    case 'has-parent': {
+      assumeType<InternalObjectProps>(entity);
+      return (entity[ParentId] !== undefined) === filter.value;
     }
 
     case 'in-query': {
