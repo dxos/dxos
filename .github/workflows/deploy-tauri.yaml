@@ -449,8 +449,10 @@ jobs:
 
       # No artifact reuse here, unlike the desktop job: the shared `composer-bundle` is built for this
       # workflow's environment (iOS only builds from `dev`), so it carries the full plugin catalog. iOS
-      # ships the curated production set, so the bundle is always built here via
-      # `tauri-ios-build` -> `bundle-production`. iOS embeds the frontend but needs no ollama sidecar.
+      # ships the curated production set, so the bundle is always built here — `tauri-ios-build` carries
+      # `DX_PLUGIN_SET=production` on its `bundle` dep. iOS embeds the frontend but needs no ollama sidecar.
+      # TODO(wittjosiah): Restore the artifact reuse once iOS is deployed on production deploys — the
+      # shared bundle is the production set there, so rebuilding it here would be pure duplicated work.
       - name: Build Tauri app for iOS
         run: moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
         env:
