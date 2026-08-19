@@ -32,7 +32,7 @@ in-repo) ships `NavigationStack.tsx` and the `Main.tsx` stack wiring in `plugin-
 plus the native iOS microphone bridge (`src-tauri/.../MicrophoneBridge.m`, `audio_input.rs`,
 `react-ui-transcription/src/capture/microphone-bridge.ts`) that voice input needs on device.
 
-**Land #12644 first** (task chip created 2026-08-19). This PR then *moves* `NavigationStack` into
+**Land #12644 first** (task chip created 2026-08-19). This PR then _moves_ `NavigationStack` into
 `plugin-deck`. Fallback if it stalls: port `NavigationStack.tsx` + the `Main.tsx` stack wiring from
 the fetched head (`pr-12644`, oid `81e39a2d45`) with attribution, and flag the conflict to Daniel.
 
@@ -63,7 +63,7 @@ Moves from `plugin-simple-layout` into `plugin-deck`:
 - `components/MobileLayout/` **as-is** (hard requirement): `MobileLayout.tsx` (iOS keyboard
   detection, safe-area insets, scroll lock, auto-scroll), context, stories.
 - New `containers/MobileLayout/` (deck-side): `MobileDeckLayout` composing `MobileLayout.Root/Panel`
-  + `Splitter` + `NavigationStack` (from #12644) + `AppBar` / `NavBar` / `Drawer` / `Main`.
+  - `Splitter` + `NavigationStack` (from #12644) + `AppBar` / `NavBar` / `Drawer` / `Main`.
 - `Home` (spaces list) and `NavBranch` surfaces, registered only in mobile mode.
 - `capabilities/react-root.tsx` branches on the platform option: `DeckLayout` (desktop) vs
   `MobileDeckLayout` (mobile). State, operations, url-handler, app-graph-builder stay single.
@@ -74,7 +74,7 @@ Moves from `plugin-simple-layout` into `plugin-deck`:
 
 - **Stack = the active deck's `active` list.** Root (workspace/Home) at the bottom, visible panel =
   last entry. `Open` pushes, `Close` pops, edge-swipe invokes `LayoutOperation.Close` (same
-  operation as the app-bar back chevron). `active` *is* the history on mobile — no `history` field.
+  operation as the app-bar back chevron). `active` _is_ the history on mobile — no `history` field.
   Desktop renders the same list side-by-side; operations unchanged.
 - **Drawer = complementary.** `complementarySidebarState` drives splitter mode
   (`closed→start`, `collapsed→split`, `expanded→end`); `complementarySidebarPanel` selects the

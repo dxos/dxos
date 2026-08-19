@@ -4,7 +4,7 @@
 
 **Goal:** Fold mobile layout into `plugin-deck` (one layout plugin, one state machine, two root renderers), delete `plugin-simple-layout`, and ship a stripped-down Composer to the iOS simulator showing spaces → Chat → ChatThread with voice input.
 
-**Architecture:** `plugin-deck` gains a `platform: 'mobile' | 'desktop'` option. Desktop renders the existing `DeckLayout`; mobile renders a new `MobileDeckLayout` that projects the *same* deck state as a UIKit navigation stack (`deck.active` is the stack; Open pushes, Close pops, left-edge swipe-back invokes Close) with a bottom Splitter drawer driven by the complementary-sidebar state. `plugin-simple-layout` is deleted; its `MobileLayout` (iOS keyboard/safe-area), `Home`, `NavBranch` components move into `plugin-deck`.
+**Architecture:** `plugin-deck` gains a `platform: 'mobile' | 'desktop'` option. Desktop renders the existing `DeckLayout`; mobile renders a new `MobileDeckLayout` that projects the _same_ deck state as a UIKit navigation stack (`deck.active` is the stack; Open pushes, Close pops, left-edge swipe-back invokes Close) with a bottom Splitter drawer driven by the complementary-sidebar state. `plugin-simple-layout` is deleted; its `MobileLayout` (iOS keyboard/safe-area), `Home`, `NavBranch` components move into `plugin-deck`.
 
 **Tech Stack:** TypeScript, React, Effect (`effect/unstable/reactivity/Atom`), `@dxos/app-framework` plugins/capabilities, moon, vitest, Storybook, Tauri iOS.
 
@@ -16,7 +16,7 @@
 - No casts to silence the type-checker (`as any`, `as unknown as T`, non-null `!`). `as const` is fine.
 - Workspace deps: in-repo `@dxos/*` packages use `"workspace:*"` in dependencies, `"workspace:^"` in peerDependencies. Never catalog for in-repo packages.
 - No compatibility re-exports or shims when moving code — update every call site in the same change.
-- Comments state *why* in one clause, end with a period. Never narrate history ("moved from plugin-simple-layout" is banned).
+- Comments state _why_ in one clause, end with a period. Never narrate history ("moved from plugin-simple-layout" is banned).
 - Run `pnpm format` (oxfmt, from repo root) and stage the result before every commit.
 - Commit messages: `scope: description` + trailer `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
 - Before each commit: `git status` — include the user's own concurrent edits in the commit; never ask, never exclude, never mention them.
@@ -45,7 +45,17 @@ Use the Browser pane (`preview_start` with a launch.json entry), adding to `.cla
     {
       "name": "composer-mobile",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "packages/apps/composer-app", "exec", "vite", "dev", "--configLoader", "native", "--port", "5199"],
+      "runtimeArgs": [
+        "--dir",
+        "packages/apps/composer-app",
+        "exec",
+        "vite",
+        "dev",
+        "--configLoader",
+        "native",
+        "--port",
+        "5199"
+      ],
       "port": 5199
     }
   ]
@@ -99,6 +109,7 @@ Screenshot via the simulator tool. Expected: Composer boots to onboarding or Hom
 ### Task 3: `plugin-deck` platform option + Platform capability + mobile layout mode
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-deck/src/types/DeckCapabilities.ts`
 - Modify: `packages/plugins/plugin-deck/src/DeckPlugin.ts`
 - Modify: `packages/plugins/plugin-deck/src/plugin.ts`
@@ -107,6 +118,7 @@ Screenshot via the simulator tool. Expected: Composer boots to onboarding or Hom
 - Modify: `packages/plugins/plugin-magazine/src/containers/SubscriptionsArticle/SubscriptionsArticle.tsx`
 
 **Interfaces:**
+
 - Produces: `type Platform = 'mobile' | 'desktop'`; `type DeckPluginOptions = { platform?: Platform }`; capability `DeckCapabilities.Platform` (singleton of `Platform`); the `AppCapabilities.Layout` atom reports `mode: 'mobile'` when platform is mobile. Later tasks (5, 9, 10, 11) consume `DeckCapabilities.Platform` and `DeckPluginOptions`.
 
 - [ ] **Step 1: Add the Platform capability and options type**
@@ -174,10 +186,12 @@ pnpm format && git add -A && git commit -m "plugin-deck: add platform option, Pl
 ### Task 4: Stack-push projection in `layout.ts` (TDD)
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-deck/src/layout.ts`
 - Test: `packages/plugins/plugin-deck/src/layout.test.ts`
 
 **Interfaces:**
+
 - Produces: `pushSubjectsToStack(active: readonly string[], subjects: readonly string[]): string[]` — consumed by Task 5's Open handler.
 
 - [ ] **Step 1: Write the failing tests**
@@ -250,11 +264,13 @@ pnpm format && git add -A && git commit -m "plugin-deck: add pushSubjectsToStack
 ### Task 5: Mobile semantics in the operation handlers
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-deck/src/operations/open.ts`
 - Modify: `packages/plugins/plugin-deck/src/operations/switch-workspace.ts`
 - Modify: `packages/plugins/plugin-deck/src/operations/update-complementary.ts`
 
 **Interfaces:**
+
 - Consumes: `DeckCapabilities.Platform` (Task 3), `pushSubjectsToStack` (Task 4).
 - Produces: on mobile, `Open` pushes (never solo-navigates), `SwitchWorkspace` does not auto-open the first child, and `UpdateComplementary` honors an explicit `input.state` even when `subject` is set. Tasks 9/10 rely on all three.
 
@@ -263,9 +279,8 @@ pnpm format && git add -A && git commit -m "plugin-deck: add pushSubjectsToStack
 In `open.ts`, read the platform once near the top (beside the existing `Capability.get(AppCapabilities.AppGraph)`):
 
 ```ts
-const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
-  Effect.catch(() => Effect.succeed('desktop' as const)),
-);
+const platform =
+  yield * Capability.get(DeckCapabilities.Platform).pipe(Effect.catch(() => Effect.succeed('desktop' as const)));
 ```
 
 (The catch keeps unit/story harnesses that activate the handler without the state module working; match the file's existing `Effect.catch` idiom at line ~37.)
@@ -326,11 +341,13 @@ pnpm format && git add -A && git commit -m "plugin-deck: mobile open/switch-work
 ### Task 6: Move `MobileLayout`, `DebugOverlay`, `Loading` into plugin-deck
 
 **Files:**
+
 - Move: `packages/plugins/plugin-simple-layout/src/components/{MobileLayout,DebugOverlay,Loading}/` → `packages/plugins/plugin-deck/src/components/`
 - Modify: `packages/plugins/plugin-deck/src/components/index.ts`
 - Modify: `packages/plugins/plugin-deck/package.json` (add `@dxos/react-ui-search` — needed in Task 7's Home/NavBranch, added here with the dep pass)
 
 **Interfaces:**
+
 - Produces: `MobileLayout.Root` / `MobileLayout.Panel` (props unchanged: `MobileLayoutRootProps { transition?, onKeyboardOpenChange? }`, `MobileLayoutPanelProps { safe? }`), `useMobileLayout(consumerName): { keyboardOpen: boolean }` from `MobileLayoutContext`, `Loading`, `DebugOverlay.Root`. Consumed by Tasks 9–11.
 
 - [ ] **Step 1: Move the directories**
@@ -373,11 +390,13 @@ pnpm format && git add -A && git commit -m "plugin-deck: absorb MobileLayout, De
 ### Task 7: Move `Home`, `NavBranch`, `useExpandPath` into plugin-deck
 
 **Files:**
+
 - Move: `packages/plugins/plugin-simple-layout/src/components/{Home,NavBranch}/` → `packages/plugins/plugin-deck/src/components/`
 - Create: `packages/plugins/plugin-deck/src/components/hooks.ts` (moved `useExpandPath`)
 - Modify: `packages/plugins/plugin-deck/src/translations.ts`
 
 **Interfaces:**
+
 - Produces: `Home` (no props), `NavBranch({ id })`, `useExpandPath(nodeId?)`. Consumed by Tasks 10 (Main panel) and 11 (surfaces).
 
 - [ ] **Step 1: Move**
@@ -407,10 +426,12 @@ pnpm format && git add -A && git commit -m "plugin-deck: absorb Home, NavBranch,
 ### Task 8: NavigationStack into plugin-deck
 
 **Files:**
+
 - Create: `packages/plugins/plugin-deck/src/components/NavigationStack/NavigationStack.tsx`
 - Create: `packages/plugins/plugin-deck/src/components/NavigationStack/index.ts`
 
 **Interfaces:**
+
 - Produces: `NavigationStack({ classNames, items, index, onIndexChange, renderItem })` — `items: string[]` root-first, `index` = top of stack, `onIndexChange(index)` fired when an interactive pop completes, `renderItem(id, index) => ReactNode`. Consumed by Task 10.
 
 - [ ] **Step 1: Determine the source**
@@ -446,6 +467,7 @@ pnpm format && git add -A && git commit -m "plugin-deck: add NavigationStack (fr
 ### Task 9: Mobile hooks in plugin-deck (stack projection, app bar, navbar, drawer)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-deck/src/hooks/useMobileStack.ts`
 - Create: `packages/plugins/plugin-deck/src/hooks/useMobileAppBar.ts`
 - Create: `packages/plugins/plugin-deck/src/hooks/useMobileActions.ts` (navbar + drawer actions + shared companion-action builder)
@@ -455,16 +477,17 @@ These are ports of `plugin-simple-layout/src/hooks/{useAppBarProps,useNavbarActi
 
 **State mapping (used by all three hooks):**
 
-| simple-layout | deck |
-|---|---|
-| `state.active` (single id) | top of stack: `deck.active[deck.active.length - 1]` |
-| `state.workspace` | `state.activeDeck`, with `DeckSchema.DEFAULT_DECK_ID` treated as `Node.RootId` |
-| `state.history` | `deck.active.slice(0, -1)` |
+| simple-layout                                    | deck                                                                                                                                  |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `state.active` (single id)                       | top of stack: `deck.active[deck.active.length - 1]`                                                                                   |
+| `state.workspace`                                | `state.activeDeck`, with `DeckSchema.DEFAULT_DECK_ID` treated as `Node.RootId`                                                        |
+| `state.history`                                  | `deck.active.slice(0, -1)`                                                                                                            |
 | `state.drawerState` `'closed'/'open'/'expanded'` | `state.complementarySidebarState` `'closed'/'collapsed'/'expanded'` — but drawer is only open when `complementarySidebarPanel` is set |
-| `state.companionVariant` | `state.complementarySidebarPanel` |
-| drawer state writes | `updateState` on `DeckCapabilities.State` (direct atom write, same package) |
+| `state.companionVariant`                         | `state.complementarySidebarPanel`                                                                                                     |
+| drawer state writes                              | `updateState` on `DeckCapabilities.State` (direct atom write, same package)                                                           |
 
 **Interfaces:**
+
 - Consumes: `useDeckState()` (existing), `DeckCapabilities.State` atom, `useMobileLayout` (Task 6), `PLANK_COMPANION_TYPE` (already exported from `#types` `DeckSchema`).
 - Produces:
   - `useMobileStack(): { stack: string[]; topId: string; rootId: string; pop: () => void }` — `rootId = activeDeck === DEFAULT_DECK_ID ? Node.RootId : activeDeck`; `stack = [rootId, ...deck.active]`; `topId = stack[stack.length - 1]`; `pop()` invokes `LayoutOperation.Close { subject: [deck.active[deck.active.length - 1]] }` when active is non-empty, else invokes `LayoutOperation.SwitchWorkspace { subject: Node.RootId }` when `rootId !== Node.RootId`.
@@ -559,6 +582,7 @@ pnpm format && git add -A && git commit -m "plugin-deck: mobile stack/app-bar/dr
 ### Task 10: `MobileDeckLayout` container + AppBar/NavBar/Drawer/Main + story
 
 **Files:**
+
 - Create: `packages/plugins/plugin-deck/src/containers/MobileLayout/MobileDeckLayout.tsx`
 - Create: `packages/plugins/plugin-deck/src/containers/MobileLayout/MobileAppBar.tsx` (move+rename of simple-layout `AppBar.tsx`)
 - Create: `packages/plugins/plugin-deck/src/containers/MobileLayout/MobileNavBar.tsx` (move+rename of `NavBar.tsx`)
@@ -569,6 +593,7 @@ pnpm format && git add -A && git commit -m "plugin-deck: mobile stack/app-bar/dr
 - Modify: `packages/plugins/plugin-deck/src/containers/index.ts`
 
 **Interfaces:**
+
 - Consumes: `MobileLayout.Root/Panel`, `NavigationStack`, `Home`/`NavBranch` (via surfaces, not direct imports), `useMobileStack`/`useMobileAppBar`/`useMobileNavbarActions`/`useMobileDrawerActions`, deck's `Dialog`, `PopoverRoot`/`PopoverContent`, `Toaster` from `../DeckLayout` — import these three from `../DeckLayout` directly (export them from `containers/DeckLayout` index if not already).
 - Produces: `MobileDeckLayout({ onDismissToast })` — same props contract as `DeckLayout`. Consumed by Task 11's react-root.
 
@@ -669,10 +694,12 @@ pnpm format && git add -A && git commit -m "plugin-deck: MobileDeckLayout contai
 ### Task 11: Branch react-root; register mobile surfaces
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-deck/src/capabilities/react-root.tsx`
 - Modify: `packages/plugins/plugin-deck/src/capabilities/react-surface.ts`
 
 **Interfaces:**
+
 - Consumes: `DeckPluginOptions` (module props), `MobileDeckLayout` (Task 10), `Home`/`NavBranch` (Task 7).
 - Produces: mobile Composer renders `MobileDeckLayout`; `Home` on `attendableId === Node.RootId`, `NavBranch` on workspace/branch nodes (mobile only).
 
@@ -730,6 +757,7 @@ pnpm format && git add -A && git commit -m "plugin-deck: platform-branched react
 ### Task 12: Composer wiring — plugin set, layout selection; delete plugin-simple-layout
 
 **Files:**
+
 - Modify: `packages/apps/composer-app/src/plugin-defs.core.tsx`
 - Create: `packages/apps/composer-app/src/plugin-defs.mobile.tsx`
 - Modify: `packages/apps/composer-app/vite.config.ts`
@@ -739,6 +767,7 @@ pnpm format && git add -A && git commit -m "plugin-deck: platform-branched react
 - Delete: `packages/plugins/plugin-simple-layout/` (entire package)
 
 **Interfaces:**
+
 - Consumes: `DeckPluginOptions` re-export (Task 3), all moved components/hooks.
 - Produces: `DX_PLUGIN_SET=mobile` builds the mobile registry; mobile/desktop both run on DeckPlugin.
 
@@ -892,6 +921,7 @@ Screenshots at each step via the simulator tool; note failures honestly. Anythin
 ### Task 15: Changeset, project ledger, PR
 
 **Files:**
+
 - Create: `.changeset/<generated-name>.md`
 - Modify: project `TASKS.md` if a `/dxos:project` entry exists for this stream (check `.agents/projects/registry.yml`; if none, skip — do not create one unprompted).
 
