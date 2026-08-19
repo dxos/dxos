@@ -20,6 +20,21 @@ export { makeCreateObjectEntryForDatabaseType } from '../util';
 
 export const Commands = AppCapability.commands(() => import('./commands'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const Dashboard = Capability.lazyModule(
+  'Dashboard',
+  {
+    requires: [
+      Capabilities.AtomRegistry,
+      Capabilities.PluginManager,
+      ClientCapabilities.Client,
+      AppCapabilities.Layout,
+    ],
+    provides: [SpaceCapabilities.Dashboard],
+    // Runtime event: there is no space to project until the client observes them.
+    activatesOn: ClientEvents.SpacesReady,
+  },
+  () => import('./dashboard'),
+);
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {

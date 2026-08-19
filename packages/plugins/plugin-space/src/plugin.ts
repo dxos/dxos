@@ -12,6 +12,7 @@ import {
   AppGraphBuilder,
   Commands,
   CreateObject,
+  Dashboard,
   IdentityCreated,
   NavigationHandler,
   NavigationTargetResolver,
@@ -36,6 +37,7 @@ export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).p
   // TODO(wittjosiah): Could some of these commands make use of operations?
   Plugin.addModule(Commands),
   Plugin.addModule(CreateObject),
+  Plugin.addModule(Dashboard),
   Plugin.addModule(NavigationHandler),
   Plugin.addModule(NavigationTargetResolver),
   Plugin.addModule(OperationHandler),
