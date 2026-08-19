@@ -33,10 +33,10 @@ import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
-// Opt-in `DX_PLUGIN_SET=minimal` swaps the full plugin registry for plugin-defs.minimal.tsx
-// without touching main.tsx — for a faster boot when the full registry is not needed.
-const isMinimalPluginSet = process.env.DX_PLUGIN_SET === 'minimal';
-const pluginSetFile = isMinimalPluginSet ? 'src/plugin-defs.minimal.tsx' : 'src/plugin-defs.tsx';
+// `DX_PLUGIN_SET=production` swaps in plugin-defs.production.tsx at build time (not a runtime flag),
+// so a non-shipped plugin never enters the bundle.
+const isProductionPluginSet = process.env.DX_PLUGIN_SET === 'production';
+const pluginSetFile = isProductionPluginSet ? 'src/plugin-defs.production.tsx' : 'src/plugin-defs.tsx';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -92,12 +92,12 @@ const syncWasmInit = (): PluginOption => {
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
 
 /**
- * Glob matching the entry of every plugin the minimal registry can reach, for optimize-deps
- * scanning. Derived from the registry sources so adding a plugin to `plugin-defs.minimal.tsx`
+ * Glob matching the entry of every plugin the production set can reach, for optimize-deps
+ * scanning. Derived from the set's sources so adding a plugin to `plugin-defs.production.tsx`
  * needs no edit here; a specifier scan is enough because a missed plugin costs a
  * "discovered new dependencies" reload rather than a wrong build.
  */
-const minimalPluginEntries = () => {
+const productionPluginEntries = () => {
   const names = new Set<string>();
   for (const file of [pluginSetFile, 'src/plugin-defs.core.tsx']) {
     const source = readFileSync(path.join(dirname, file), 'utf8');
@@ -294,9 +294,9 @@ export default defineConfig((env) => ({
     // also listed as direct deps of composer-app in package.json. An entry that stops resolving
     // costs a warning per start, not a failed scan.
     //
-    // `DX_PLUGIN_SET=minimal` keeps the scan instead: the list covers the full registry, and
+    // `DX_PLUGIN_SET=production` keeps the scan instead: the list covers the full registry, and
     // pre-bundling all of it is the cost that mode exists to avoid.
-    include: isMinimalPluginSet ? undefined : optimizeDepsInclude,
+    include: isProductionPluginSet ? undefined : optimizeDepsInclude,
     // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
     // to `internal.html` / `devtools.html` / `reset.html` don't trip a
     // "discovered new dependencies" reload mid-session.
@@ -315,10 +315,12 @@ export default defineConfig((env) => ({
       './devtools.html',
       './reset.html',
       './recovery.html',
-      // Under DX_PLUGIN_SET=minimal, scan only the plugins the minimal registry can reach,
-      // read from the registry sources themselves — the hand-maintained list this replaces
-      // had drifted from them (missing `tasks`/`progress`, still naming a removed `outliner`).
-      isMinimalPluginSet ? minimalPluginEntries() : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
+      // Under DX_PLUGIN_SET=production, scan only the plugins that set can reach, read from its
+      // sources themselves — the hand-maintained list this replaces had drifted from them
+      // (missing `tasks`/`progress`, still naming a removed `outliner`).
+      isProductionPluginSet
+        ? productionPluginEntries()
+        : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
   resolve: {
@@ -327,7 +329,11 @@ export default defineConfig((env) => ({
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
     // native node: polyfill layer handle subpaths like `node:util/types`.
     alias: [
-      ...(isMinimalPluginSet ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }] : []),
+      // Applies to `build` as much as `serve`: this alias is the whole mechanism by which the
+      // production bundle's module graph never reaches a non-shipped plugin.
+      ...(isProductionPluginSet
+        ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }]
+        : []),
       { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
       { find: /^node:util$/, replacement: '@dxos/node-std/util' },
       { find: /^node:path$/, replacement: '@dxos/node-std/path' },

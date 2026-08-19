@@ -459,13 +459,14 @@ const main = async () => {
     logStore,
     onFatalError: (error) => raiseFatalError(error),
 
-    isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
+    // Strictly the `dev` cloud environment (not preview) or a local `DX_DEV=true` opt-in, so a plain
+    // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
+    isDev: config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'dev' || isTrue(config.values.runtime?.app?.env?.DX_DEV),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
     isPwa,
     isTauri,
     isPopover,
     isMobile,
-    isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 

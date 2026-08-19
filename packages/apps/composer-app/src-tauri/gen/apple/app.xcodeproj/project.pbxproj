@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1086C81FD5F8DF5914BA2EE5 /* AVFAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBEE1F773C334A5C2BC070A0 /* AVFAudio.framework */; };
 		299814393FFBF154FAD94CA8 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F3673D372C5ABDD1AD6E7067 /* QuartzCore.framework */; };
 		3036F7131E55779ABF15BD58 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 02B7F8347F94B067E6B27396 /* LaunchScreen.storyboard */; };
 		31585529C029A01BE249A285 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E81BD6B453D87B7F7B1597B /* CoreGraphics.framework */; };
@@ -18,6 +19,7 @@
 		836D84C5F07860664DAF79C8 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8F57162F5CC7AEDD55F173D /* WebKit.framework */; };
 		9D59FB167BB4E699DA17D1E9 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04B56F58E2E44DDE1D67E7B7 /* MetalKit.framework */; };
 		AF1B35141FED2AEFAC75CC1E /* KeyboardHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = D4A2BF4603B28618E252B22E /* KeyboardHandler.m */; };
+		B4F9D041A7890FD34FF1F26E /* MicrophoneBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = D0A6E0165AC84468367213A3 /* MicrophoneBridge.m */; };
 		C6BD59C055C986EA4A77FDA2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AF1DE57E7D9CF13BB2E0E038 /* Assets.xcassets */; };
 		C869023DDFE275D42F3FBF29 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 39EEC6A55698228E08917A52 /* libapp.a */; };
 		E68F6CFDAED6503ABB4044A5 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE1209BFDECB28E00189B168 /* Metal.framework */; };
@@ -30,6 +32,7 @@
 		057FF83A79028A4E5D56C8F5 /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
 		0E2B15F176E4B041AE33EEEA /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		1631E4CFBB715FFDBF919C8C /* main.rs */ = {isa = PBXFileReference; path = main.rs; sourceTree = "<group>"; };
+		1686DD0B09161FAA9559E70F /* audio_input.rs */ = {isa = PBXFileReference; path = audio_input.rs; sourceTree = "<group>"; };
 		17A13C8001E86AB80E34514A /* mod.rs */ = {isa = PBXFileReference; path = mod.rs; sourceTree = "<group>"; };
 		17B52554D60D361AFE791C3E /* lib.rs */ = {isa = PBXFileReference; path = lib.rs; sourceTree = "<group>"; };
 		1E81BD6B453D87B7F7B1597B /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -40,13 +43,17 @@
 		426A6AA3A324524105DF8699 /* server.rs */ = {isa = PBXFileReference; path = server.rs; sourceTree = "<group>"; };
 		682535EEFE1DA20BE07B123C /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		81E326B61ED92E1D1EECF952 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		825DF9A2E3A1FAE194238F42 /* xattr_cmd.rs */ = {isa = PBXFileReference; path = xattr_cmd.rs; sourceTree = "<group>"; };
+		86742E13D1D5A792B4B27430 /* asset_cache.rs */ = {isa = PBXFileReference; path = asset_cache.rs; sourceTree = "<group>"; };
 		8C764003772D249B5F60A148 /* config.rs */ = {isa = PBXFileReference; path = config.rs; sourceTree = "<group>"; };
 		9FACFFCB6E3743955F72464C /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		AF1DE57E7D9CF13BB2E0E038 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CE1209BFDECB28E00189B168 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		CF674524E34966183631754E /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
+		D0A6E0165AC84468367213A3 /* MicrophoneBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MicrophoneBridge.m; sourceTree = "<group>"; };
 		D4A2BF4603B28618E252B22E /* KeyboardHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyboardHandler.m; sourceTree = "<group>"; };
 		D8F57162F5CC7AEDD55F173D /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		EBEE1F773C334A5C2BC070A0 /* AVFAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFAudio.framework; path = System/Library/Frameworks/AVFAudio.framework; sourceTree = SDKROOT; };
 		F1114037344C4CD1ED0EA50F /* menubar.rs */ = {isa = PBXFileReference; path = menubar.rs; sourceTree = "<group>"; };
 		F3673D372C5ABDD1AD6E7067 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		FBC720DFA1D01F55B0A32344 /* app_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = app_iOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -58,6 +65,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C869023DDFE275D42F3FBF29 /* libapp.a in Frameworks */,
+				1086C81FD5F8DF5914BA2EE5 /* AVFAudio.framework in Frameworks */,
 				31585529C029A01BE249A285 /* CoreGraphics.framework in Frameworks */,
 				E68F6CFDAED6503ABB4044A5 /* Metal.framework in Frameworks */,
 				9D59FB167BB4E699DA17D1E9 /* MetalKit.framework in Frameworks */,
@@ -83,6 +91,7 @@
 		1BBF8C620E54F8C028CA130C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				EBEE1F773C334A5C2BC070A0 /* AVFAudio.framework */,
 				1E81BD6B453D87B7F7B1597B /* CoreGraphics.framework */,
 				39EEC6A55698228E08917A52 /* libapp.a */,
 				CE1209BFDECB28E00189B168 /* Metal.framework */,
@@ -148,10 +157,13 @@
 		855775165ACE55D883F89EB3 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				86742E13D1D5A792B4B27430 /* asset_cache.rs */,
+				1686DD0B09161FAA9559E70F /* audio_input.rs */,
 				17B52554D60D361AFE791C3E /* lib.rs */,
 				1631E4CFBB715FFDBF919C8C /* main.rs */,
 				F1114037344C4CD1ED0EA50F /* menubar.rs */,
 				33208EB49CA0E3DDDF73D0C4 /* window_state.rs */,
+				825DF9A2E3A1FAE194238F42 /* xattr_cmd.rs */,
 				15830A2FDD2F009F73C9F802 /* oauth */,
 				57A3B3AFAA9D9EC94907DB1F /* spotlight */,
 			);
@@ -195,12 +207,13 @@
 			children = (
 				D4A2BF4603B28618E252B22E /* KeyboardHandler.m */,
 				682535EEFE1DA20BE07B123C /* main.mm */,
+				D0A6E0165AC84468367213A3 /* MicrophoneBridge.m */,
 				329C38BE5E8B40354375D0D0 /* bindings */,
 			);
 			path = app;
 			sourceTree = "<group>";
 		};
-		"TEMP_28A49CEA-F183-4A9A-BC7F-1B0374CA9436" /* x86_64 */ = {
+		"TEMP_12BE653B-C302-4B3B-B22D-5BEF6D088C0C" /* x86_64 */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -245,7 +258,6 @@
 				};
 			};
 			buildConfigurationList = B302E784349268C93E6F0A36 /* Build configuration list for PBXProject "app" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -255,6 +267,7 @@
 			mainGroup = 87648061424F20D5D4871E9E;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
+			productRefGroup = EE72B6AC647386A11F795E44 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -307,6 +320,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AF1B35141FED2AEFAC75CC1E /* KeyboardHandler.m in Sources */,
+				B4F9D041A7890FD34FF1F26E /* MicrophoneBridge.m in Sources */,
 				53CDD0ACFBE8BDF1550B2E53 /* main.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

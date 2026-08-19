@@ -8,7 +8,7 @@
 // (`wrangler secret put`).
 //
 // The 1Password item's fields are matched by section label: a field in a section named "shared" applies to
-// every target; a field in a section matching the raw Cloudflare Worker name (e.g. "composer-nightly", from
+// every target; a field in a section matching the raw Cloudflare Worker name (e.g. "composer-preview", from
 // wrangler.jsonc's `env.<env>.name`) applies only there. Only CONCEALED fields are read.
 //
 // Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses) — the account associated
