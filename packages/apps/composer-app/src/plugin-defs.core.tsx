@@ -96,8 +96,6 @@ export const getCorePlugins = ({
   const layoutPlugin = isPopover ? SpotlightPlugin.make() : isMobile ? SimpleLayoutPlugin.make({}) : DeckPlugin.make();
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
-    // Driven entirely by a type annotation, so it depends on no content plugin and any of them can opt
-    // in — which is why it belongs to every set rather than the full catalog alone.
     AtprotoPlugin.make(),
     AttentionPlugin.make(),
     ClientPlugin.make({
@@ -146,21 +144,11 @@ export const getCorePlugins = ({
       downloadLogs: () => downloadLogs(logStore),
     }),
     OnboardingPlugin.make({ generateExemplarSpace: !isLocal }),
-    // Desktop-only host integration; the ollama sidecar has no web counterpart, and neither the
-    // mobile shell nor the popover window mounts its surfaces.
     isTauri && !isMobile && !isPopover && NativePlugin.make(),
-    // Core membership makes its `system` tag true in practice — every set gets the preview panel
-    // rather than each list re-declaring it. It also owns the stand-in for an object whose type no
-    // enabled plugin can render, which a curated set is the case that produces.
     PreviewPlugin.make(),
     ProcessManagerPlugin(),
     ProgressPlugin.make(),
-    // The service worker is a build-time decision (`DX_PWA`), and Tauri ships its own shell.
     !isTauri && isPwa && PwaPlugin.make(),
-    // The plugin catalog, its settings surface and the dev plugin loader all live here, so this flag
-    // is the whole of "the registry is hidden". The lazy body still gets a chunk in a curated build —
-    // it is simply never imported; keeping non-shipped plugins out of the graph is `DX_PLUGIN_SET`'s
-    // job, not this flag's.
     isExtensible && RegistryPlugin.make(),
     RoutinePlugin.make(),
     SettingsPlugin.make(),
