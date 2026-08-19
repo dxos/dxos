@@ -105,6 +105,15 @@ const tag = (name: string, content: string, block: ContentBlock.Any, attributes?
 
 const escapeXml = (raw: string): string => raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+/**
+ * Whether a message is the reader's own prompt. Role alone cannot say: tool results travel back as
+ * `user`-role messages (the AI protocol convention), and a synthetic turn is system-generated input
+ * — neither is the reader speaking, so neither gets the prompt frame or counts as a stop.
+ */
+export const isPrompt = (message: Message.Message): boolean =>
+  message.sender.role === 'user' &&
+  message.blocks.some((block) => block._tag === 'text' && block.disposition !== 'synthetic');
+
 /** Plain text of a message, used by search and copy so both read the same projection. */
 export const messageText = (message: Message.Message, renderer: MessageRenderer): string => {
   const content = renderer(message);

@@ -164,6 +164,16 @@ export const make: {
  * Rides in the object's meta rather than on `Definition`, so it survives into a persisted skill —
  * `Definition` is a build-time factory type and cannot describe a skill stored in a space.
  */
+/**
+ * Skill keys a session scoped to an instance of the annotated type should carry — read by the AI
+ * companion, the blank routine template, and project chat creation. Held as plain dotted keys so the
+ * annotated type does not depend on the plugin that owns each skill.
+ */
+export const SkillsAnnotation = Annotation.make<string[]>({
+  id: 'org.dxos.annotation.skills',
+  schema: Schema.mutable(Schema.Array(Schema.String)),
+});
+
 export const McpPromptAnnotation = Annotation.make({
   id: 'org.dxos.skill.mcp-prompt',
   schema: Schema.Boolean,

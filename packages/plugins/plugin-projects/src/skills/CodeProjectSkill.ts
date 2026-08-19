@@ -41,6 +41,11 @@ export const operations: readonly Operation.Definition.Any[] = [
   TaskOperation.CompleteTask,
   TaskOperation.AssignTask,
   TaskOperation.ListTasks,
+  TaskOperation.CreateMilestone,
+  TaskOperation.UpdateMilestone,
+  TaskOperation.DeleteMilestone,
+  TaskOperation.MoveMilestone,
+  TaskOperation.ListMilestones,
   OutlineOperation.GetOutline,
   OutlineOperation.UpdateOutline,
 ];

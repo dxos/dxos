@@ -31,11 +31,10 @@ import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/storybook-testing';
+import { ModuleContainer, UpdateCompanionStubPlugin } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { StoryRole } from '../modules';
-import { StorySyncPlugin } from '../testing';
 import { StoryModulesPlugin } from '../testing/modules';
 
 const TYPES = [
@@ -88,7 +87,7 @@ const DECORATORS = [
       PreviewPlugin.make(),
       ProgressPlugin.make(),
       RoutinePlugin.make(),
-      StorySyncPlugin(),
+      UpdateCompanionStubPlugin(),
       StoryModulesPlugin(),
       StorybookPlugin.make({}),
     ],

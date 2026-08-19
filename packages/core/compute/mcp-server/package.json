@@ -38,11 +38,11 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "effect": "catalog:",
-    "@dxos/compute": "workspace:*"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*"

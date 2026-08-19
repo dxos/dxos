@@ -9,11 +9,11 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
-import { Task, TaskSet } from '@dxos/types';
+import { Milestone, Task, TaskSet } from '@dxos/types';
 
 import { LINEAR_SOURCE } from '../constants';
 import { LinearApi } from '../services';
-import { pushTeamUpdates, upsertProject, upsertTask } from './sync';
+import { pushTeamUpdates, upsertMilestone, upsertProject, upsertTask } from './sync';
 
 const issue = (overrides: Partial<LinearApi.Issue> = {}): LinearApi.Issue => ({
   id: 'issue-1',
@@ -37,6 +37,14 @@ const project = (overrides: Partial<LinearApi.Project> = {}): LinearApi.Project 
   ...overrides,
 });
 
+const projectMilestone = (overrides: Partial<LinearApi.ProjectMilestone> = {}): LinearApi.ProjectMilestone => ({
+  id: 'ms-1',
+  name: 'Beta',
+  description: 'feature complete',
+  targetDate: '2026-06-01',
+  ...overrides,
+});
+
 describe('plugin-linear sync', () => {
   let builder: EchoTestBuilder;
 
@@ -50,7 +58,14 @@ describe('plugin-linear sync', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, TaskSet.TaskSet, Task.Task]);
+    graph.registry.add([
+      AccessToken.AccessToken,
+      Connection.Connection,
+      Cursor.Cursor,
+      TaskSet.TaskSet,
+      Task.Task,
+      Milestone.Milestone,
+    ]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: LINEAR_SOURCE, token: 'tok' }));
     const connection = db.add(
       Obj.make(Connection.Connection, { name: 'Linear', connectorId: 'linear', accessToken: Ref.make(token) }),
@@ -67,7 +82,7 @@ describe('plugin-linear sync', () => {
     if (!Cursor.isExternal(binding)) {
       throw new Error('expected external cursor');
     }
-    return { db, binding };
+    return { db, binding, teamRoot };
   };
 
   test('first pull seeds snapshot and creates a Task', async ({ expect }) => {
@@ -358,5 +373,97 @@ describe('plugin-linear sync', () => {
 
     expect(result.projects).toBe(1);
     expect(projectInput).toEqual({ description: 'rewritten' });
+  });
+
+  test('pull adds the task to the set once, however many passes run', async ({ expect }) => {
+    const { db, binding, teamRoot } = await setup();
+    const layer = Database.layer(db);
+
+    const first = await Effect.gen(function* () {
+      return yield* upsertTask(binding, issue(), teamRoot);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    await Effect.gen(function* () {
+      yield* upsertTask(binding, issue(), teamRoot);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    expect(teamRoot.tasks.map((ref) => ref.target?.id)).toEqual([first.task.id]);
+    // The parent edge rides along so the task cascades with the set.
+    expect(Obj.getParent(first.task)?.id).toBe(teamRoot.id);
+  });
+
+  test('an issue moved between projects moves its ref', async ({ expect }) => {
+    const { db, binding, teamRoot } = await setup();
+    const layer = Database.layer(db);
+    const other = db.add(TaskSet.make({ name: 'Other project' }));
+
+    const first = await Effect.gen(function* () {
+      const result = yield* upsertTask(binding, issue(), teamRoot);
+      yield* Database.flush();
+      return result;
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    await Effect.gen(function* () {
+      yield* upsertTask(binding, issue(), other);
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    expect(teamRoot.tasks).toEqual([]);
+    expect(other.tasks.map((ref) => ref.target?.id)).toEqual([first.task.id]);
+    expect(Obj.getParent(first.task)?.id).toBe(other.id);
+  });
+
+  test('milestones are mirrored onto the set and assigned to their issues', async ({ expect }) => {
+    const { db, binding, teamRoot } = await setup();
+    const layer = Database.layer(db);
+
+    const { task, milestone } = await Effect.gen(function* () {
+      const milestone = yield* upsertMilestone(teamRoot, projectMilestone());
+      const { task } = yield* upsertTask(
+        binding,
+        issue({ projectMilestone: { id: projectMilestone().id } }),
+        teamRoot,
+        milestone,
+      );
+      return { task, milestone };
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    expect(teamRoot.milestones.map((ref) => ref.target?.id)).toEqual([milestone.id]);
+    expect(milestone.name).toBe('Beta');
+    expect(milestone.targetDate).toBe('2026-06-01');
+    expect(task.milestone?.target?.id).toBe(milestone.id);
+  });
+
+  test('re-pulling a milestone updates it in place without a second ref', async ({ expect }) => {
+    const { db, binding, teamRoot } = await setup();
+    const layer = Database.layer(db);
+    void binding;
+
+    const second = await Effect.gen(function* () {
+      yield* upsertMilestone(teamRoot, projectMilestone());
+      return yield* upsertMilestone(teamRoot, projectMilestone({ name: 'Beta 2', targetDate: '2026-07-01' }));
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    expect(teamRoot.milestones).toHaveLength(1);
+    expect(second.name).toBe('Beta 2');
+    expect(second.targetDate).toBe('2026-07-01');
+  });
+
+  test('an issue unassigned from its milestone remotely is cleared locally', async ({ expect }) => {
+    const { db, binding, teamRoot } = await setup();
+    const layer = Database.layer(db);
+
+    const task = await Effect.gen(function* () {
+      const milestone = yield* upsertMilestone(teamRoot, projectMilestone());
+      const { task } = yield* upsertTask(
+        binding,
+        issue({ projectMilestone: { id: projectMilestone().id } }),
+        teamRoot,
+        milestone,
+      );
+      yield* upsertTask(binding, issue(), teamRoot);
+      return task;
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    expect(task.milestone).toBeUndefined();
   });
 });

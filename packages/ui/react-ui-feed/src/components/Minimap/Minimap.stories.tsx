@@ -6,10 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
+import { ListModel, Window, type WindowController, type WindowState } from '@dxos/react-ui-virtual';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ListModel } from '../../model';
-import { Window, type WindowController, type WindowState } from '../../virtualizer';
 import { Minimap } from './Minimap';
 
 /**

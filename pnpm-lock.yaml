@@ -147,6 +147,9 @@ catalogs:
     '@crxjs/vite-plugin':
       specifier: ^2.4.0
       version: 2.4.0
+    '@dagrejs/dagre':
+      specifier: ^3.1.1
+      version: 3.1.1
     '@dxos/wa-sqlite':
       specifier: ^0.2.1
       version: 0.2.1
@@ -984,6 +987,9 @@ catalogs:
     domain-browser:
       specifier: ^4.22.0
       version: 4.22.0
+    elkjs:
+      specifier: ^0.12.0
+      version: 0.12.0
     emoji-mart:
       specifier: ^5.5.2
       version: 5.5.2
@@ -5133,6 +5139,9 @@ importers:
 
   packages/core/compute/mcp-server:
     dependencies:
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -5146,9 +5155,6 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
     devDependencies:
-      '@dxos/compute':
-        specifier: workspace:*
-        version: link:../compute
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -5608,6 +5614,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../mesh/teleport
@@ -7515,9 +7524,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/halo':
-        specifier: workspace:*
-        version: link:../../core/halo/halo
       '@dxos/halo-react':
         specifier: workspace:*
         version: link:../../core/halo/halo-react
@@ -7569,6 +7575,9 @@ importers:
       '@dxos/react-list':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-list
+      '@dxos/react-ui-assistant':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-assistant
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -7587,9 +7596,6 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
-      '@dxos/react-ui-markdown':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-markdown
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
@@ -7636,9 +7642,6 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
     devDependencies:
-      '@dxos/lit-ui':
-        specifier: workspace:*
-        version: link:../../ui/lit-ui
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
@@ -10898,6 +10901,9 @@ importers:
 
   packages/plugins/plugin-illustrator:
     dependencies:
+      '@dagrejs/dagre':
+        specifier: 'catalog:'
+        version: 3.1.1
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -10940,6 +10946,9 @@ importers:
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
+      elkjs:
+        specifier: 'catalog:'
+        version: 0.12.0
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -10950,6 +10959,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
@@ -13162,6 +13174,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -18528,9 +18543,6 @@ importers:
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
       '@dxos/plugin-board':
         specifier: workspace:*
         version: link:../../plugins/plugin-board
@@ -18582,9 +18594,6 @@ importers:
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../plugins/plugin-table
-      '@dxos/plugin-testing':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-testing
       '@dxos/plugin-thread':
         specifier: workspace:*
         version: link:../../plugins/plugin-thread
@@ -18736,9 +18745,6 @@ importers:
       '@dxos/pipeline-transcription':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-transcription
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-client
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
@@ -18751,9 +18757,6 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
-      '@dxos/plugin-testing':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-testing
       '@dxos/plugin-transcription':
         specifier: workspace:*
         version: link:../../plugins/plugin-transcription
@@ -19072,9 +19075,6 @@ importers:
         specifier: ~19.2.7
         version: 19.2.7(react@19.2.7)
     devDependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../../core/compute/ai
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -19087,9 +19087,6 @@ importers:
       '@dxos/plugin-brain':
         specifier: workspace:*
         version: link:../../plugins/plugin-brain
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-client
       '@dxos/plugin-crm':
         specifier: workspace:*
         version: link:../../plugins/plugin-crm
@@ -19105,9 +19102,6 @@ importers:
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../plugins/plugin-table
-      '@dxos/plugin-testing':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-testing
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -19132,6 +19126,9 @@ importers:
 
   packages/stories/storybook-testing:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -19156,12 +19153,18 @@ importers:
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -19607,6 +19610,79 @@ importers:
       tabster:
         specifier: 'catalog:'
         version: 8.5.5
+      vite:
+        specifier: '>=8.2.1'
+        version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
+  packages/ui/react-ui-assistant:
+    dependencies:
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.9
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../react-ui-components
+      '@dxos/react-ui-feed':
+        specifier: workspace:*
+        version: link:../react-ui-feed
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../react-ui-syntax-highlighter
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
+      '@dxos/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../ui-editor
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@radix-ui/react-context':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
+      effect:
+        specifier: 4.0.0-rc.108
+        version: 4.0.0-rc.108
+    devDependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/react-ui-markdown':
+        specifier: workspace:*
+        version: link:../react-ui-markdown
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.17)
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
       vite:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -20775,6 +20851,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-virtual':
+        specifier: workspace:*
+        version: link:../react-ui-virtual
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -20809,9 +20888,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
-      effect:
-        specifier: 4.0.0-rc.108
-        version: 4.0.0-rc.108
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -22320,6 +22396,37 @@ importers:
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
+      vite:
+        specifier: '>=8.2.1'
+        version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
+  packages/ui/react-ui-virtual:
+    dependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+      effect:
+        specifier: 4.0.0-rc.108
+        version: 4.0.0-rc.108
+    devDependencies:
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.17)
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -25440,6 +25547,12 @@ packages:
 
   '@dabh/diagnostics@2.0.3':
     resolution: {integrity: sha512-hrlQOIi7hAfzsMqlGSFyVucrx38O+j6wiGOf//H2ecvIEqYN4ADBSS2iLMh5UFyDunCNniUIPk/q3riFv45xRA==}
+
+  '@dagrejs/dagre@3.1.1':
+    resolution: {integrity: sha512-zroZB1dFOFiGgv4Xcrn1DckB1o4aOikPqD2NDQPV0WM//CXGcS6xiD0rNkqHmw6FEg4tabt4nxPLwgCWT+Vb2A==}
+
+  '@dagrejs/graphlib@4.0.5':
+    resolution: {integrity: sha512-7xrBTqIts3o+PMUZX97wSc+7TUbW+/rULzGNCTP6yooNVDXbzw4Wutg/H/xOutTB/c/k0YqOAavgPh4/Zk9PFA==}
 
   '@dependents/detective-less@5.0.1':
     resolution: {integrity: sha512-Y6+WUMsTFWE5jb20IFP4YGa5IrGY/+a/FbOSjDF/wz9gepU2hwCYSXRHP/vPwBvwcY3SVMASt4yXxbXNXigmZQ==}
@@ -34340,6 +34453,9 @@ packages:
 
   electron-to-chromium@1.5.345:
     resolution: {integrity: sha512-F9JXQGiMrz6yVNPI2qOVPvB9HzjH5cGzhs8oJ6A28V5L/YnzN/0KsuiibqF+F1Fd9qxFzD1BUnYSd8JfULxTwg==}
+
+  elkjs@0.12.0:
+    resolution: {integrity: sha512-YZcKynxVxYoKIOEpywEPwCFdg+BTbxQRNf3pbwdDCvc8O3kQD8bmIwSxKU1eOTVc4Xo+VG9Te+575mlfvOrhEQ==}
 
   elkjs@0.9.3:
     resolution: {integrity: sha512-f/ZeWvW/BCXbhGEf1Ujp29EASo/lk1FDnETgNKwJrsVvGZhUWCZyg3xLJjAsxfOmt8KjswHmI5EwCQcPMpOYhQ==}
@@ -47419,6 +47535,12 @@ snapshots:
       enabled: 2.0.0
       kuler: 2.0.0
 
+  '@dagrejs/dagre@3.1.1':
+    dependencies:
+      '@dagrejs/graphlib': 4.0.5
+
+  '@dagrejs/graphlib@4.0.5': {}
+
   '@dependents/detective-less@5.0.1':
     dependencies:
       gonzales-pe: 4.3.0
@@ -56775,6 +56897,8 @@ snapshots:
       jake: 10.8.5
 
   electron-to-chromium@1.5.345: {}
+
+  elkjs@0.12.0: {}
 
   elkjs@0.9.3: {}
 

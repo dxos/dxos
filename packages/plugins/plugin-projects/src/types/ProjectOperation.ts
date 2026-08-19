@@ -11,7 +11,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import * as Routine from '@dxos/compute/Routine';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -60,17 +59,6 @@ export const CreateChat = Operation.make({
   }),
   output: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
-  }),
-});
-
-export const CreateRoutine = Operation.make({
-  meta: { key: makeKey('createRoutine'), name: 'Create Project Routine', icon: 'ph--lightning--regular' },
-  services: [Capability.Service, Database.Service],
-  input: Schema.Struct({
-    project: Type.getSchema(Project.Project),
-  }),
-  output: Schema.Struct({
-    routine: Type.getSchema(Routine.Routine),
   }),
 });
 

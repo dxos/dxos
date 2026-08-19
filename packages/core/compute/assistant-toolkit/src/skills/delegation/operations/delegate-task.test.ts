@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
@@ -66,8 +66,7 @@ describe('DelegateTask', () => {
         invariant(chat, 'Agent chat not found.');
         const outline = yield* Database.load(chat.outline!);
         const taskSet = yield* Database.load(outline.taskSet!);
-        const children = yield* Database.query(Query.select(Filter.id(taskSet.id)).children()).run;
-        const tasks = children.filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child));
+        const tasks = TaskSet.resolveTasks(taskSet);
         expect(tasks).toHaveLength(1);
         expect(tasks[0]).toMatchObject({
           title: 'Research widgets',
@@ -105,8 +104,7 @@ describe('DelegateTask', () => {
         invariant(chat, 'Agent chat not found.');
         const outline = yield* Database.load(chat.outline!);
         const taskSet = yield* Database.load(outline.taskSet!);
-        const children = yield* Database.query(Query.select(Filter.id(taskSet.id)).children()).run;
-        const tasks = children.filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child));
+        const tasks = TaskSet.resolveTasks(taskSet);
         expect(tasks).toHaveLength(2);
       },
       Effect.provide(TestLayer),

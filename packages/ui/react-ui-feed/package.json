@@ -22,11 +22,6 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
-    "./virtualizer": {
-      "source": "./src/virtualizer/index.ts",
-      "types": "./dist/types/src/virtualizer/index.d.ts",
-      "import": "./dist/lib/virtualizer.mjs"
-    },
     "./debug": {
       "source": "./src/debug/index.ts",
       "types": "./dist/types/src/debug/index.d.ts",
@@ -42,6 +37,7 @@
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-virtual": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
@@ -55,7 +51,6 @@
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"

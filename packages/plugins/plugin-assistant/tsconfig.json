@@ -73,9 +73,6 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/halo/halo"
-    },
-    {
       "path": "../../core/halo/halo-react"
     },
     {
@@ -106,13 +103,13 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../../ui/lit-ui"
-    },
-    {
       "path": "../../ui/react-primitives/react-list"
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-assistant"
     },
     {
       "path": "../../ui/react-ui-attention"
@@ -134,9 +131,6 @@
     },
     {
       "path": "../../ui/react-ui-list"
-    },
-    {
-      "path": "../../ui/react-ui-markdown"
     },
     {
       "path": "../../ui/react-ui-menu"

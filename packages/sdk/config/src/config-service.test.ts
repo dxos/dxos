@@ -65,7 +65,7 @@ describe('ConfigService.load', () => {
   test('bootstraps against production when a config file is missing', async ({ expect }) => {
     restoreEnv = withEnv({ DX_LOCAL_DEV: undefined });
     const { config } = await createMissing('production');
-    expect(config.get(EDGE_URL)).toEqual('wss://dxos.network/');
+    expect(config.get(EDGE_URL)).toEqual('https://dxos.network/');
   });
 
   test('bootstraps against the main/staging edge under DX_LOCAL_DEV, matching Composer local dev', async ({
@@ -79,7 +79,7 @@ describe('ConfigService.load', () => {
   test('DX_LOCAL_DEV=0 opts back out to production', async ({ expect }) => {
     restoreEnv = withEnv({ DX_LOCAL_DEV: '0' });
     const { config } = await createMissing('opt-out');
-    expect(config.get(EDGE_URL)).toEqual('wss://dxos.network/');
+    expect(config.get(EDGE_URL)).toEqual('https://dxos.network/');
   });
 });
 
