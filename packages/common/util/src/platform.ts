@@ -86,3 +86,16 @@ export const getHostPlatform = () => {
     return 'unknown';
   }
 };
+
+/**
+ * Whether the app is running as the native iOS app (Tauri mobile).
+ * iPadOS reports itself as macOS, so a multi-touch screen disambiguates it from a real Mac (which
+ * reports no touch points even with a trackpad).
+ */
+export const isIosApp = () => {
+  if (!isTauri()) {
+    return false;
+  }
+  const platform = getHostPlatform();
+  return platform === 'ios' || (platform === 'macos' && navigator.maxTouchPoints > 1);
+};

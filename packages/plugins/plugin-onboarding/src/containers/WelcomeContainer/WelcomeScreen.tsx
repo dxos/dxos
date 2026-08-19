@@ -17,12 +17,19 @@ import * as PasskeyError from '@dxos/plugin-client/PasskeyError';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
+import { isIosApp } from '@dxos/util';
 
 import { joinWaitlist, login } from '../../credentials';
 import { useForceDarkTheme } from '../../hooks';
 import { OnboardingOperation } from '../../operations';
 import { translations } from '../../translations';
 import { Welcome, type WelcomeError, WelcomeState, passkeyError } from './Welcome';
+
+/**
+ * The native iOS app is scoped down to passkey login while the other flows are unsupported there:
+ * no sign-up, and no login method other than a passkey.
+ */
+const passkeyOnly = isIosApp();
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();
@@ -270,15 +277,15 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         state={state}
         error={error}
         identity={identity}
-        onEmailLogin={handleLogin}
+        onEmailLogin={!passkeyOnly ? handleLogin : undefined}
         onPasskey={!identity ? handlePasskey : undefined}
-        onJoinIdentity={!identity ? handleJoinIdentity : undefined}
-        onRecoverIdentity={!identity ? handleRecoverIdentity : undefined}
-        onRecoverWithOAuth={!identity ? handleRecoverWithOAuth : undefined}
-        onValidateInvitationCode={!identity ? handleValidateInvitationCode : undefined}
-        onCreateAccount={!identity ? handleCreateAccount : undefined}
-        onCreateAccountWithOAuth={!identity ? handleCreateAccountWithOAuth : undefined}
-        onJoinWaitlist={handleJoinWaitlist}
+        onJoinIdentity={!identity && !passkeyOnly ? handleJoinIdentity : undefined}
+        onRecoverIdentity={!identity && !passkeyOnly ? handleRecoverIdentity : undefined}
+        onRecoverWithOAuth={!identity && !passkeyOnly ? handleRecoverWithOAuth : undefined}
+        onValidateInvitationCode={!identity && !passkeyOnly ? handleValidateInvitationCode : undefined}
+        onCreateAccount={!identity && !passkeyOnly ? handleCreateAccount : undefined}
+        onCreateAccountWithOAuth={!identity && !passkeyOnly ? handleCreateAccountWithOAuth : undefined}
+        onJoinWaitlist={!passkeyOnly ? handleJoinWaitlist : undefined}
       />
     </ThemeProvider>
   );
