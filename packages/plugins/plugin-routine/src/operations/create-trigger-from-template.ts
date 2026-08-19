@@ -9,7 +9,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
 import * as Trigger from '@dxos/compute/Trigger';
-import { type Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, type Feed, Filter, Obj, Ref } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { RoutineOperation } from '#types';
@@ -57,10 +57,11 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTe
           }
         }
 
+        // AddObject declares Database.Service; a spaceId-less invocation satisfies it from the calling context.
         yield* Operation.invoke(SpaceOperation.AddObject, {
           object: trigger,
           target: db,
-        });
+        }).pipe(Effect.provide(Database.layer(db)));
         yield* Operation.invoke(LayoutOperation.Open, {
           subject: [getRoutinesSettingsPath(db.spaceId)],
           workspace: GraphPath.getSpacePath(db.spaceId),

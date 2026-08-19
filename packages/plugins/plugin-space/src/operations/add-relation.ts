@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Relation, Scope, Type } from '@dxos/echo';
@@ -21,10 +20,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddRelation> = SpaceO
 
       const source = yield* resolveEnd(input.source);
       const target = yield* resolveEnd(input.target);
-      // Without an explicit database the source object names it, and only the ambient context is
-      // left for a caller that passed references alone.
-      const ambient = yield* Effect.serviceOption(Database.Service);
-      const db = input.db ?? Obj.getDatabase(source) ?? Option.getOrUndefined(ambient)?.db;
+      // The declared service is the fallback; an explicit `db` or the source object's own wins.
+      const { db: ambientDb } = yield* Database.Service;
+      const db = input.db ?? Obj.getDatabase(source) ?? ambientDb;
       invariant(db, 'Database not found.');
 
       const schema = input.schema ?? (yield* resolveRelationType(db, input.typename));
@@ -43,8 +41,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddRelation> = SpaceO
 
 export default handler;
 
-// Resolved through the ref itself rather than `Database.Service`: the app's call sites invoke with
-// no spaceId, so a declared service would die before the handler runs.
+// Resolved through the ref itself so an end may name a different space than the declared database.
 const resolveEnd = Effect.fnUntraced(function* (end: Obj.Unknown | Ref.Ref<Obj.Unknown>) {
   return Ref.isRef(end) ? ((yield* Effect.promise(() => end.load())) as Obj.Unknown) : end;
 });

@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Type } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { TableOperation } from '#types';
@@ -17,7 +17,10 @@ const handler: Operation.WithHandler<typeof TableOperation.OnTypeAdded> = TableO
         db,
         typename: Type.getTypename(type),
       });
-      yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object });
+      // AddObject declares Database.Service; a spaceId-less invocation satisfies it from the calling context.
+      yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object }).pipe(
+        Effect.provide(Database.layer(db)),
+      );
       const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
         query: { uri: Obj.getURI(object) },
       });

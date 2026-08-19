@@ -15,7 +15,7 @@ import {
 } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
-import { type Database, type Obj } from '@dxos/echo';
+import { Database, type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { type CreateEntryOverride, ObjectProperties } from '@dxos/react-ui-form';
 
@@ -46,13 +46,14 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
         return {
           inputSchema: entry.inputSchema,
           createObject: async (values: any, db: Database.Database): Promise<Obj.Unknown> => {
-            const result = await entry
-              .createObject(values, { db, target: db })
-              .pipe(
-                Effect.provideService(Capability.Service, manager.capabilities),
-                Effect.provideService(Operation.Service, operationInvoker),
-                Effect.runPromise,
-              );
+            const result = await entry.createObject(values, { db, target: db }).pipe(
+              // The entries' verbs declare Database.Service; satisfied from the calling context
+              // since no explicit space is named.
+              Effect.provide(Database.layer(db)),
+              Effect.provideService(Capability.Service, manager.capabilities),
+              Effect.provideService(Operation.Service, operationInvoker),
+              Effect.runPromise,
+            );
             return result.object;
           },
         };

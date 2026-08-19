@@ -3,7 +3,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { getTypeURIFromQuery } from '@dxos/schema';
@@ -24,7 +24,10 @@ const handler: Operation.WithHandler<typeof TableOperation.AddRow> = TableOperat
       const schema = types.find((t) => Type.getURI(t) === typeUri);
       invariant(schema);
       const object = Obj.make(Type.assertObject(schema), data);
-      yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object });
+      // AddObject declares Database.Service; a spaceId-less invocation satisfies it from the calling context.
+      yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object }).pipe(
+        Effect.provide(Database.layer(db)),
+      );
     }),
   ),
 );

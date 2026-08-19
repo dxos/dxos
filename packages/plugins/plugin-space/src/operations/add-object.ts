@@ -1,7 +1,6 @@
 // Copyright 2025 DXOS.org
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as Operation from '@dxos/compute/Operation';
@@ -24,14 +23,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       // ref itself rather than `Database.Service`, which the app's call sites give no space to.
       const targetRef = Ref.isRef(input.target) ? input.target : undefined;
       const target = (targetRef ? yield* Effect.promise(() => targetRef.load()) : input.target) as any;
-      // Without a target the database has to come from the ambient context — read optionally, so
-      // declaring the service (which the app's spaceId-less call sites cannot resolve) is not needed.
-      const ambient = yield* Effect.serviceOption(Database.Service);
-      const db = target
-        ? Database.isDatabase(target)
-          ? target
-          : Obj.getDatabase(target)
-        : Option.getOrUndefined(ambient)?.db;
+      // The declared service is the fallback; a target that names a database wins, since the caller
+      // said where to file.
+      const { db: ambientDb } = yield* Database.Service;
+      const db = (target ? (Database.isDatabase(target) ? target : Obj.getDatabase(target)) : undefined) ?? ambientDb;
       invariant(db, 'Database not found.');
 
       let object: Obj.Unknown;

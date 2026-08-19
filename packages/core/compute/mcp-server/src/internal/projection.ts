@@ -59,8 +59,8 @@ export type ProjectedOperation = {
   /** Prompt names of the projected skills whose `tools` list this operation — the projection's reason to exist. */
   skills: readonly string[];
   /**
-   * Whether the operation is space-addressed — `Database.Service` appears in its declared or
-   * optional services — which is what decides the ambient `spaceId` tool parameter.
+   * Whether the operation is space-addressed — it declares `Database.Service` — which is what
+   * decides the ambient `spaceId` tool parameter.
    */
   requiresSpace: boolean;
   /** Tool parameters reconstructed from the operation's serialized input schema. */
@@ -282,14 +282,13 @@ export const projectOperations = (
     const baseDescription = annotation?.description ?? record.description ?? record.name;
     const description = [baseDescription, skillPointer(owningSkills)].filter(Boolean).join(' ');
 
-    const declaredServices = [...(record.services ?? []), ...(record.optionalServices ?? [])];
     projected.push({
       key,
       toolName,
       description,
       safety: annotation?.safety,
       skills: owningSkills,
-      requiresSpace: declaredServices.includes(DATABASE_SERVICE_KEY),
+      requiresSpace: (record.services ?? []).includes(DATABASE_SERVICE_KEY),
       parameters,
       inputSchema,
     });

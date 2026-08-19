@@ -163,9 +163,9 @@ export const AddObject = Operation.make({
     description: 'Add an object to a space.',
     icon: 'ph--plus--regular',
   },
-  // Read via `Effect.serviceOption` in the handler: the app's call sites invoke without a spaceId,
-  // so a required declaration would fail to resolve for them.
-  optionalServices: [Database.Service],
+  // Required: the caller names the database — an explicit spaceId, or a database provided in the
+  // calling context (the app's create-object dispatch does the latter).
+  services: [Database.Service],
   input: Schema.Struct({
     object: Schema.optional(Obj.Unknown).annotate({ description: 'The object to add, already instantiated.' }),
     // A caller that cannot hold a live object — anything across an RPC boundary — describes one
@@ -225,8 +225,8 @@ export const RemoveObjects = Operation.make({
     description: 'Remove entities (objects, relations, or persisted types) from a space.',
     icon: 'ph--trash--regular',
   },
-  // The handler loads entities through the refs, but the contract is space-addressed.
-  optionalServices: [Database.Service],
+  // No Database.Service: the space comes from the input itself (live entities, or refs that are
+  // always space-qualified on the MCP surface), never from a resolvable context.
   services: [Capability.Service],
   input: Schema.Struct({
     objects: Schema.optional(Schema.Array(Entity.Unknown)).annotate({ description: 'The entities to remove.' }),
@@ -495,7 +495,7 @@ export const AddType = Operation.make({
     description: 'Add a type to the space.',
     icon: 'ph--code--regular',
   },
-  optionalServices: [Database.Service],
+  services: [Database.Service],
   input: Schema.Struct({
     // The live schema an in-process caller holds; a remote caller sends the JSON Schema and the
     // handler builds the type from it. Exactly one is required.
@@ -533,7 +533,7 @@ export const AddRelation = Operation.make({
       'query the types to find one.',
     icon: 'ph--link--regular',
   },
-  optionalServices: [Database.Service],
+  services: [Database.Service],
   input: Schema.Struct({
     source: RelationEnd,
     target: RelationEnd,

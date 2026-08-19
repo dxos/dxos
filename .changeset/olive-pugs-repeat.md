@@ -68,10 +68,15 @@ defaults: the key's final segment as the name and no safety claims. `DatabaseSki
 `CodeProjectSkill` opt in with `mcpPrompt: true` and list their verbs (`CodeProjectSkill` now
 exports `operations`, spanning the project, task and outline verbs).
 
-Operation definitions gain `optionalServices` — services the handler reads via
-`Effect.serviceOption`, stated so the contract is visible off the definition and its serialized
-record. The MCP projection keys the ambient `spaceId` tool parameter off `Database.Service`
-appearing in `services` or `optionalServices`, so only space-addressed tools advertise it.
+`addObject`, `addRelation` and `addType` now declare `Database.Service` as a required service, and
+the MCP projection keys the ambient `spaceId` tool parameter off that declaration — only
+space-addressed tools advertise it (`removeObjects` takes its space from the entities or
+space-qualified refs it is given, so it declares nothing and carries no parameter). To make the
+requirement satisfiable everywhere, eager service resolution learned one rule: when an invocation
+names no explicit space, a declared service already present in the calling context is satisfied by
+it — an explicit `spaceId` still resolves through the resolver and overrides. The app's
+create-object dispatch points and the direct spaceId-less call sites scope their invocations with
+`Effect.provide(Database.layer(db))` accordingly.
 
 `@dxos/mcp-server` gains `DxMcpService`: `make({ skills })` yields the projected MCP surface
 (prompts, tools, `skillLoad`) requiring only `Operation.Service` — the in-process front door,

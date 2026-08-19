@@ -90,15 +90,6 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
    * These services will be automatically provided to the handler at invocation time.
    */
   readonly services: readonly Context.Key<any, any>[];
-
-  /**
-   * Effect services this operation uses when the caller's context carries them, read via
-   * `Effect.serviceOption` rather than resolved eagerly — so their absence never fails the
-   * invocation. Declared so the contract is visible off the definition (and its serialized
-   * record): the MCP projection keys the ambient `spaceId` parameter off `Database.Service`
-   * appearing in `services` or here.
-   */
-  readonly optionalServices: readonly Context.Key<any, any>[];
 }
 
 /**
@@ -209,14 +200,10 @@ export const isOperationWithHandler = (value: unknown): value is WithHandler<Def
  * Props for creating an Operation definition.
  * Derived from OperationDefinition with executionMode made optional (defaults to 'async').
  */
-export type Props<I, O> = Omit<
-  Definition<I, O>,
-  DefinitionTypeId | 'pipe' | 'executionMode' | 'types' | 'services' | 'optionalServices'
-> & {
+export type Props<I, O> = Omit<Definition<I, O>, DefinitionTypeId | 'pipe' | 'executionMode' | 'types' | 'services'> & {
   readonly executionMode?: 'sync' | 'async';
   readonly types?: Definition<I, O>['types'];
   readonly services?: Definition<I, O>['services'];
-  readonly optionalServices?: Definition<I, O>['optionalServices'];
 };
 
 /**
@@ -237,7 +224,6 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
     executionMode: props.executionMode ?? 'async',
     types: props.types ?? [],
     services: props.services ?? [],
-    optionalServices: props.optionalServices ?? [],
     pipe() {
       // eslint-disable-next-line prefer-rest-params
       return Pipeable.pipeArguments(this, arguments);
@@ -388,11 +374,6 @@ export class PersistentOperation extends Type.makeObject<PersistentOperation>(
      */
     services: Schema$.optional(Schema$.Array(Schema$.String)),
 
-    /**
-     * Services used when ambient but never required (see `Definition.optionalServices`).
-     */
-    optionalServices: Schema$.optional(Schema$.Array(Schema$.String)),
-
     // Local binding to a function name.
     // TODO(dmaretskyi): Add this field to Operation.Definition.
     binding: Schema$.optional(Schema$.String),
@@ -439,8 +420,6 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
     inputSchema: JsonSchema.toJsonSchema(operation.input),
     outputSchema: JsonSchema.toJsonSchema(operation.output),
     services: operation.services.map((service) => service.key),
-    optionalServices:
-      operation.optionalServices.length > 0 ? operation.optionalServices.map((service) => service.key) : undefined,
   });
 };
 
@@ -455,7 +434,6 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
     input: record.inputSchema ? JsonSchema.toEffectSchema(record.inputSchema) : Schema$.Unknown,
     output: record.outputSchema ? JsonSchema.toEffectSchema(record.outputSchema) : Schema$.Unknown,
     services: record.services?.map((service) => Context.Service(service)) ?? [],
-    optionalServices: record.optionalServices?.map((service) => Context.Service(service)) ?? [],
     executionMode: 'async',
     types: [],
     meta: {

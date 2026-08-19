@@ -1,7 +1,6 @@
 // Copyright 2025 DXOS.org
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -19,8 +18,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOpera
         'Pass exactly one of `type` (instantiated) or `jsonSchema` (described).',
       );
 
-      const ambient = yield* Effect.serviceOption(Database.Service);
-      const db = input.db ?? Option.getOrUndefined(ambient)?.db;
+      const { db: ambientDb } = yield* Database.Service;
+      const db = input.db ?? ambientDb;
       invariant(db, 'Database not found.');
 
       const type = yield* Effect.promise(() => db.addType(input.type ?? describedType(input)));

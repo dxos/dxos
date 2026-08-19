@@ -205,15 +205,22 @@ by the projection" gap by construction. `Operation.mcpTool` keeps only per-opera
 field goes.
 
 - [x] **Compute** — `Skill.Definition` gains `operations` (the definitions behind the ToolIds, so a
-      registry-less host can serialize them); `Operation.mcpTool` drops `skill` and `aspect`. Also
-      added on the way: **`Operation.optionalServices`** — services the handler reads via
-      `Effect.serviceOption`, declared so the contract is visible off the definition and its wire
-      record; `addObject`/`addRelation`/`addType`/`removeObjects` state `Database.Service` there.
+      registry-less host can serialize them); `Operation.mcpTool` drops `skill` and `aspect`.
+      **Correction (user, 2026-08-19):** the first cut added `optionalServices` for the
+      `Effect.serviceOption` reads; that mechanism is gone. `addObject`/`addRelation`/`addType`
+      declare `Database.Service` **required**, and eager resolution learned the rule that makes it
+      satisfiable everywhere: with no explicit space named, a declared service already present in
+      the calling context is satisfied by it (an explicit `spaceId` still resolves through the
+      resolver and overrides — pinned in ProcessManager.test). The app's three create-object
+      dispatch points and the ~13 direct spaceId-less call sites scope their invocations with
+      `Effect.provide(Database.layer(db))`. `removeObjects` stays undeclared: its space comes from
+      the input itself (live entities or space-qualified refs), so it carries no `spaceId` tool
+      parameter either.
 - [x] **Projection** — `Gateway.SkillRecord` gains `tools`; operations project iff named by an
       opted-in skill's tools list; pointer sentence auto-appended (multi-skill aware); annotation
       optional (defaults: name = key's final segment, no safety claims; a malformed annotation
       degrades to defaults rather than hiding the skill's tool). `spaceId` ambient parameter only
-      for operations with `Database.Service` in `services` or `optionalServices`
+      for operations declaring `Database.Service`
       (`@dxos/echo/Database/Service` on the wire, drift-pinned in projection.test) — the
       parameter's presence tells the agent which calls are space-addressed. SEP-2640 comment on
       `SkillLoad` updated to the current draft.
@@ -241,7 +248,7 @@ field goes.
       MCP-side it changes client-visible schemas. Do it as its own PR: (1) extract the shared
       schema-massaging core (null-branch dropping, openness, empty-params) into `@dxos/compute`
       behavior-preserving; (2) audit whether MCP's emitted schemas have the optional-`anyOf:[T,
-    null]` defect the assistant already fixed — if so the shared core becomes a response pass;
+  null]` defect the assistant already fixed — if so the shared core becomes a response pass;
       (3) decide whether tool _names_ should converge (fixture regeneration budget required).
 - [ ] **Edge follow-through** — on the next `@dxos/*` pin bump the worker picks the reshape up via
       the package; its `SkillRecord` marshalling in operation-service gains `tools`.

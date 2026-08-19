@@ -194,7 +194,11 @@ export const CreateObjectDialog = ({
 
         const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
         invariant(db, 'Missing database');
-        const result = yield* metadata.createObject(data, { db, target, targetNodeId });
+        // The entries' verbs declare Database.Service; with no explicit space the invocation is
+        // satisfied from the calling context, so scope it to the dialog's database here.
+        const result = yield* metadata
+          .createObject(data, { db, target, targetNodeId })
+          .pipe(Effect.provide(Database.layer(db)));
         const shouldNavigate = _shouldNavigate ?? (() => true);
         if (shouldNavigate(result.object)) {
           // Resolved after the fact rather than returned by the create: where an object lives in

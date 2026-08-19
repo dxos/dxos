@@ -597,9 +597,20 @@ export class ProcessManagerImpl implements Manager {
       ]);
       const externalServices = definition.services.filter((tag: Context.Key<any, any>) => !builtinTagKeys.has(tag.key));
 
+      // A caller that names no space may instead hand a declared service down its own context — the
+      // app's create-object dispatch scopes a database this way — so with no explicit space, tags
+      // the process inherits are already satisfied and only the rest resolve. An explicit space
+      // overrides inheritance: the caller asked for that space's services, not for its own.
+      const inheritedContext = yield* Effect.context<never>();
+      const unresolvedServices =
+        resolutionContext.space != null
+          ? externalServices
+          : externalServices.filter((tag: Context.Key<any, any>) =>
+              Option.isNone(Context.getOption(inheritedContext, tag)),
+            );
       let serviceCtx: Context.Context<never> = Context.empty() as Context.Context<never>;
-      if (externalServices.length > 0) {
-        serviceCtx = yield* ServiceResolver.resolveAll(externalServices, resolutionContext).pipe(
+      if (unresolvedServices.length > 0) {
+        serviceCtx = yield* ServiceResolver.resolveAll(unresolvedServices, resolutionContext).pipe(
           Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
           Effect.provideService(Scope.Scope, scope),
           Effect.orDie,
@@ -807,9 +818,20 @@ export class ProcessManagerImpl implements Manager {
       ]);
       const externalServices = definition.services.filter((tag: Context.Key<any, any>) => !builtinTagKeys.has(tag.key));
 
+      // A caller that names no space may instead hand a declared service down its own context — the
+      // app's create-object dispatch scopes a database this way — so with no explicit space, tags
+      // the process inherits are already satisfied and only the rest resolve. An explicit space
+      // overrides inheritance: the caller asked for that space's services, not for its own.
+      const inheritedContext = yield* Effect.context<never>();
+      const unresolvedServices =
+        resolutionContext.space != null
+          ? externalServices
+          : externalServices.filter((tag: Context.Key<any, any>) =>
+              Option.isNone(Context.getOption(inheritedContext, tag)),
+            );
       let serviceCtx: Context.Context<never> = Context.empty() as Context.Context<never>;
-      if (externalServices.length > 0) {
-        serviceCtx = yield* ServiceResolver.resolveAll(externalServices, resolutionContext).pipe(
+      if (unresolvedServices.length > 0) {
+        serviceCtx = yield* ServiceResolver.resolveAll(unresolvedServices, resolutionContext).pipe(
           Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
           Effect.provideService(Scope.Scope, scope),
           Effect.orDie,

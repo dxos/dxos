@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
@@ -50,14 +50,18 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
         // of the two rendered lists (query results or drafts). Removing the draft first left a frame in
         // which the persisted relation was not yet queryable and the draft was gone — the comment
         // flashed out of the companion. (The render dedupes the brief draft/persisted overlap.)
-        yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db });
+        // The space verbs declare Database.Service; this spaceId-less invocation satisfies it from
+        // the calling context.
+        yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db }).pipe(
+          Effect.provide(Database.layer(db)),
+        );
         const { relation } = yield* Operation.invoke(SpaceOperation.AddRelation, {
           db,
           schema: AnchoredTo.AnchoredTo,
           source: thread,
           target: subject,
           fields: { anchor: draft.anchor, branch: draft.branch },
-        });
+        }).pipe(Effect.provide(Database.layer(db)));
 
         // Persisting spans two awaits, during which a `Delete` for this comment can run. It sees the
         // anchor still listed as a draft, drops that entry, and returns — so without this the thread

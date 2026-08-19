@@ -26,18 +26,15 @@ const record = ({
   description,
   properties,
   services,
-  optionalServices,
 }: {
   key: string;
   annotation?: Record<string, unknown>;
   description?: string;
   properties?: Record<string, unknown>;
   services?: readonly string[];
-  optionalServices?: readonly string[];
 }) => ({
   'name': key,
   ...(services ? { services } : {}),
-  ...(optionalServices ? { optionalServices } : {}),
   description,
   '@meta': {
     key,
@@ -127,17 +124,16 @@ describe('Projection', () => {
       expect(projected.toolName).to.equal('taskCreate');
     });
 
-    test('requiresSpace reads Database.Service from declared or optional services', ({ expect }) => {
+    test('requiresSpace reads Database.Service from the declared services', ({ expect }) => {
       const projected = Projection.projectOperations(
         [
           record({ key: 'org.dxos.a.declared', services: [Projection.DATABASE_SERVICE_KEY] }),
-          record({ key: 'org.dxos.a.ambient', optionalServices: [Projection.DATABASE_SERVICE_KEY] }),
           record({ key: 'org.dxos.a.spaceless' }),
         ],
-        [owner('database', ['org.dxos.a.declared', 'org.dxos.a.ambient', 'org.dxos.a.spaceless'])],
+        [owner('database', ['org.dxos.a.declared', 'org.dxos.a.spaceless'])],
         [],
       );
-      expect(projected.map((operation) => operation.requiresSpace)).to.deep.equal([true, true, false]);
+      expect(projected.map((operation) => operation.requiresSpace)).to.deep.equal([true, false]);
     });
 
     test("the tool name defaults to the key's final segment, and `dxn:` is stripped", ({ expect }) => {
