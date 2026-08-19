@@ -66,7 +66,10 @@ tasks:
       - scripts/check-plugin-set.mjs
       - src/plugin-defs.production.tsx
       - src/plugin-defs.core.tsx
-      - out/composer
+      # Globs, not the bare directory: moon hashes files, and a directory input is skipped with a
+      # warning — leaving the check's own subject out of its cache key.
+      - out/composer/index.html
+      - out/composer/assets/**/*
   # Runtime budget on startup: repeats the warm-cold harness scenario and gates on the MEDIAN
   # modules-at-ready. `--repeat-each` reuses one preview server across the runs, and the samples
   # accumulate via `appendRunSample`; the stale log is cleared first so a rerun cannot inherit a
