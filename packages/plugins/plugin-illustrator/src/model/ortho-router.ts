@@ -58,42 +58,15 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
     y1: Math.ceil(Math.max(...ys) / STEP) + MARGIN,
   };
 
-  return (edge: RoutedRelation): Point[] => {
-    const { from, to, horizontal, ports } = edge;
-    // Terminal sides mirror the Z-router (and the port assignment in `emit`).
-    const sameLane = horizontal ? from.x === to.x : from.y === to.y;
-    const alongY = horizontal ? sameLane : !sameLane;
+  type State = { x: number; y: number; dir: number; cost: number; estimate: number; prev?: State };
+  type Terminal = { point: Point; dir: number };
+  type Found = { cost: number; cells: Point[] };
 
-    let start: Point;
-    let end: Point;
-    let startDir: number;
-    let endDir: number;
-    if (alongY) {
-      const down = to.y >= from.y;
-      start = { x: ports?.start ?? from.x + from.w / 2, y: down ? from.y + from.h : from.y };
-      end = { x: ports?.end ?? to.x + to.w / 2, y: down ? to.y : to.y + to.h };
-      startDir = down ? 1 : 3;
-      endDir = down ? 1 : 3;
-    } else {
-      const right = to.x >= from.x;
-      start = { x: right ? from.x + from.w : from.x, y: ports?.start ?? from.y + from.h / 2 };
-      end = { x: right ? to.x : to.x + to.w, y: ports?.end ?? to.y + to.h / 2 };
-      startDir = right ? 0 : 2;
-      endDir = right ? 0 : 2;
-    }
-
-    // Stubs step from the border past the clearance zone; A* runs between the stub ends.
-    const stub = (point: Point, dir: number, out: boolean): Point => {
-      const sign = out ? 1 : -1;
-      return {
-        x: point.x / STEP + DX[dir] * (CLEARANCE + 1) * sign,
-        y: point.y / STEP + DY[dir] * (CLEARANCE + 1) * sign,
-      };
-    };
-    const source = stub(start, startDir, true);
-    const target = stub(end, endDir, false);
-
-    type State = { x: number; y: number; dir: number; cost: number; estimate: number; prev?: State };
+  /**
+   * Bounded A* between two stub ends (grid coordinates). The grid is small (canvas / STEP) and
+   * turns dominate, so the frontier stays shallow; undefined when the target is unreachable.
+   */
+  const search = (source: Point, startDir: number, target: Point, endDir: number): Found | undefined => {
     const open: State[] = [
       {
         x: source.x,
@@ -106,8 +79,6 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
     const settled = new Map<string, number>();
     let found: State | undefined;
 
-    // Bounded A*: the grid is small (canvas / STEP) and turns dominate, so the frontier stays
-    // shallow; bail to the Z-router if the target is unreachable (fully fenced).
     for (let iterations = 0; open.length > 0 && iterations < 20_000; iterations++) {
       let bestIndex = 0;
       for (let index = 1; index < open.length; index++) {
@@ -155,16 +126,79 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
     }
 
     if (!found) {
+      return undefined;
+    }
+    const cells: Point[] = [];
+    for (let state: State | undefined = found; state; state = state.prev) {
+      cells.unshift({ x: state.x, y: state.y });
+    }
+    return { cost: found.cost, cells };
+  };
+
+  return (edge: RoutedRelation): Point[] => {
+    const { from, to, horizontal, ports } = edge;
+    // Flow-axis faces mirror the Z-router (and the port assignment in `emit`).
+    const sameLane = horizontal ? from.x === to.x : from.y === to.y;
+    const alongY = horizontal ? sameLane : !sameLane;
+
+    const down = to.y >= from.y;
+    const right = to.x >= from.x;
+    const flowStart: Terminal = alongY
+      ? { point: { x: ports?.start ?? from.x + from.w / 2, y: down ? from.y + from.h : from.y }, dir: down ? 1 : 3 }
+      : { point: { x: right ? from.x + from.w : from.x, y: ports?.start ?? from.y + from.h / 2 }, dir: right ? 0 : 2 };
+    const flowEnd: Terminal = alongY
+      ? { point: { x: ports?.end ?? to.x + to.w / 2, y: down ? to.y : to.y + to.h }, dir: down ? 1 : 3 }
+      : { point: { x: right ? to.x : to.x + to.w, y: ports?.end ?? to.y + to.h / 2 }, dir: right ? 0 : 2 };
+    // Cross-axis faces enable single-bend Ls when the displacement is diagonal — a fixed
+    // flow-face pair forces a Z between laterally offset nodes.
+    const crossStart: Terminal = alongY
+      ? { point: { x: right ? from.x + from.w : from.x, y: from.y + from.h / 2 }, dir: right ? 0 : 2 }
+      : { point: { x: from.x + from.w / 2, y: down ? from.y + from.h : from.y }, dir: down ? 1 : 3 };
+    const crossEnd: Terminal = alongY
+      ? { point: { x: right ? to.x : to.x + to.w, y: to.y + to.h / 2 }, dir: right ? 0 : 2 }
+      : { point: { x: to.x + to.w / 2, y: down ? to.y : to.y + to.h }, dir: down ? 1 : 3 };
+
+    const diagonal = alongY ? flowStart.point.x !== flowEnd.point.x : flowStart.point.y !== flowEnd.point.y;
+    const configurations: [Terminal, Terminal][] = diagonal
+      ? [
+          [flowStart, flowEnd],
+          [crossStart, flowEnd],
+          [flowStart, crossEnd],
+        ]
+      : [[flowStart, flowEnd]];
+
+    // Stubs step from the border past the clearance zone; A* runs between the stub ends.
+    const stub = (point: Point, dir: number, out: boolean): Point => {
+      const sign = out ? 1 : -1;
+      return {
+        x: point.x / STEP + DX[dir] * (CLEARANCE + 1) * sign,
+        y: point.y / STEP + DY[dir] * (CLEARANCE + 1) * sign,
+      };
+    };
+
+    let start: Point | undefined;
+    let end: Point | undefined;
+    let best: Found | undefined;
+    for (const [startTerminal, endTerminal] of configurations) {
+      const result = search(
+        stub(startTerminal.point, startTerminal.dir, true),
+        startTerminal.dir,
+        stub(endTerminal.point, endTerminal.dir, false),
+        endTerminal.dir,
+      );
+      if (result && (!best || result.cost < best.cost)) {
+        best = result;
+        start = startTerminal.point;
+        end = endTerminal.point;
+      }
+    }
+    if (!best || !start || !end) {
       return fallback(edge);
     }
 
     // Reconstruct and collapse collinear points; usage is marked from the FINAL path below, so
     // the centering pass can distinguish foreign channels from this edge's own cells.
-    const cells: Point[] = [];
-    for (let state: State | undefined = found; state; state = state.prev) {
-      cells.unshift({ x: state.x, y: state.y });
-    }
-    const points: Point[] = [start, ...cells.map((cell) => ({ x: cell.x * STEP, y: cell.y * STEP })), end];
+    const points: Point[] = [start, ...best.cells.map((cell) => ({ x: cell.x * STEP, y: cell.y * STEP })), end];
     const simplified: Point[] = [points[0]];
     for (let index = 1; index < points.length - 1; index++) {
       const previous = simplified[simplified.length - 1];
