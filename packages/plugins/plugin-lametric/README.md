@@ -9,9 +9,20 @@ LaMetric does not allow a custom indicator app to be pushed to over the local ne
 goes through their stock **My Data (DIY)** app. Setup is therefore short, and needs no app of your
 own.
 
-### 1. Install My Data (DIY)
+### 1. Install My Data (DIY) and set it to Push
 
-From the LaMetric mobile app, install **My Data (DIY)** from the LaMetric Market onto your device.
+The device only displays apps from LaMetric's market and offers no way to draw arbitrary pixels.
+**My Data (DIY)** is their generic "bring your own data" app: it renders a `frames` array you supply.
+Composer never writes to the display directly — it writes frames into this app's slot. That is the
+role `@dxos/composer-stream-deck` plays for the Stream Deck, except LaMetric ships it, which is why
+this project needs no companion application of its own.
+
+1. From the LaMetric mobile app, install **My Data (DIY)** from the LaMetric Market.
+2. Open it and set its mode to **Push**.
+
+**Both steps are required.** With no mode selected the app has no data source: it ignores every
+update, answers `{"success":{"message":"ok"}}` regardless, and keeps showing its placeholder — an
+arrow and a zero.
 
 ### 2. Collect two values
 

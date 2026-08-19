@@ -32,11 +32,17 @@ export const GoalData = Schema.Struct({
 });
 export type GoalData = Schema.Schema.Type<typeof GoalData>;
 
+/**
+ * Position in the cycle. Without it the device shows only the first frame — verified on hardware,
+ * where three unindexed frames rendered as one.
+ */
+const index = Schema.optional(Schema.Number);
+
 /** Text scrolls when it does not fit, which beats an ellipsis on a 37-pixel line. */
-export const TextFrame = Schema.Struct({ text: Schema.String });
+export const TextFrame = Schema.Struct({ text: Schema.String, index });
 export type TextFrame = Schema.Schema.Type<typeof TextFrame>;
 
-export const GoalFrame = Schema.Struct({ goalData: GoalData });
+export const GoalFrame = Schema.Struct({ goalData: GoalData, index });
 export type GoalFrame = Schema.Schema.Type<typeof GoalFrame>;
 
 export const Frame = Schema.Union([TextFrame, GoalFrame]);

@@ -17,15 +17,15 @@ const SHORT_LABELS: Record<string, string> = {
   Plugins: 'plugins',
 };
 
-const toFrame = (metric: MetricSpec): LaMetric.Frame => {
+const toFrame = (metric: MetricSpec, index: number): LaMetric.Frame => {
   if (metric.kind === 'stat') {
-    return { text: `${metric.value} ${SHORT_LABELS[metric.title] ?? metric.title.toLowerCase()}` };
+    return { text: `${metric.value} ${SHORT_LABELS[metric.title] ?? metric.title.toLowerCase()}`, index };
   }
   // `goalData` needs an end, so a task reporting no total gets a text frame rather than a bar.
   if (metric.ratio === undefined) {
-    return { text: [metric.title, metric.detail].filter(Boolean).join(' ') };
+    return { text: [metric.title, metric.detail].filter(Boolean).join(' '), index };
   }
-  return { goalData: { start: 0, current: Math.round(metric.ratio * 100), end: 100, unit: '%' } };
+  return { goalData: { start: 0, current: Math.round(metric.ratio * 100), end: 100, unit: '%' }, index };
 };
 
 /**

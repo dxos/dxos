@@ -62,7 +62,7 @@ describe('transport against a stand-in device', () => {
     expect(captured.url).toBe('/api/v2/widget/update/com.lametric.diy.devwidget/diy-uuid');
     expect(captured.headers.authorization).toBe(`Basic ${btoa('dev:device-key')}`);
     expect(captured.headers['content-type']).toBe('application/json');
-    expect(JSON.parse(captured.body)).toEqual({ frames: [{ text: '42 obj' }] });
+    expect(JSON.parse(captured.body)).toEqual({ frames: [{ text: '42 obj', index: 0 }] });
   });
 
   test('surfaces a rejection from the device', async ({ expect }) => {
