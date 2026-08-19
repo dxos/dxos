@@ -17,7 +17,7 @@ import * as PasskeyError from '@dxos/plugin-client/PasskeyError';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
-import { isIosApp } from '@dxos/util';
+import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { joinWaitlist, login } from '../../credentials';
 import { useForceDarkTheme } from '../../hooks';
@@ -25,11 +25,14 @@ import { OnboardingOperation } from '../../operations';
 import { translations } from '../../translations';
 import { Welcome, type WelcomeError, WelcomeState, passkeyError } from './Welcome';
 
+const hostPlatform = isTauri() ? getHostPlatform() : undefined;
+
 /**
- * The native iOS app is scoped down to passkey login while the other flows are unsupported there:
- * no sign-up, and no login method other than a passkey.
+ * The native iOS app is scoped down to passkey login while the other flows are unsupported there: no
+ * sign-up, and no login method other than a passkey. iPadOS reports itself as macOS, so a multi-touch
+ * screen tells it apart from a real Mac (which reports no touch points even with a trackpad).
  */
-const passkeyOnly = isIosApp();
+const passkeyOnly = hostPlatform === 'ios' || (hostPlatform === 'macos' && navigator.maxTouchPoints > 1);
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();
