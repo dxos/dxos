@@ -23,6 +23,8 @@ import { getChatsPath } from '../paths';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* (pluginOptions: AssistantOptions.AssistantPluginOptions | void) {
+    // Withholds the create entry, not the type: an `Agent` or `Sequence` made in a full-catalog
+    // build still resolves and renders here, it just cannot be created.
     const experimentalTypes = pluginOptions?.experimentalTypes ?? true;
     // Annotated rather than inferred so the `false` members don't cost the entries their contextual
     // typing — `createObject`'s parameters come from `CreateObjectEntry`.
