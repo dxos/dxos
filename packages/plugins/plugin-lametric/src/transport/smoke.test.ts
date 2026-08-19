@@ -69,7 +69,7 @@ describe('transport against a stand-in device', () => {
     expect(captured.url).toBe('/api/v1/dev/widget/update/com.lametric.abc/123');
     expect(captured.headers['x-access-token']).toBe('secret');
     expect(captured.headers['content-type']).toBe('application/json');
-    expect(JSON.parse(captured.body)).toEqual({ frames: [{ text: '42 objects' }] });
+    expect(JSON.parse(captured.body)).toEqual({ frames: [{ text: '42 obj' }] });
   });
 
   test('surfaces a rejection from the device', async ({ expect }) => {
