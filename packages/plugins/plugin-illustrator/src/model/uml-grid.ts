@@ -26,11 +26,14 @@ const GRID_FINE = 8;
 const MIN_W = GRID * 2;
 const MAX_W = GRID * 6;
 
+const MIN_H = GRID * 2;
+const MAX_H = GRID * 6;
+
 const PAD_X = GRID * 2;
-const TITLE_PAD = 10;
-const SECTION_PAD = 14;
-const GAP_MAIN = 80;
-const GAP_CROSS = 80;
+const TITLE_PAD = GRID / 4;
+const SECTION_PAD = GRID / 2;
+const GAP_MAIN = GRID * 4;
+const GAP_CROSS = GRID * 4;
 
 const TITLE_FONT = Layout.FONT_METRICS.m;
 const MEMBER_FONT = Layout.FONT_METRICS.s;
@@ -117,8 +120,10 @@ const measureCell = (model: UmlModel, maxWidth: number, override: CellSize = {})
   );
   const titleH = snap(titleLines * TITLE_FONT.lineH + TITLE_PAD);
   const bodyH = snap(bodyLines * MEMBER_FONT.lineH + SECTION_PAD);
-  // A fixed height still reserves the measured title bar; the body takes the remainder.
-  const h = override.h !== undefined ? Math.max(snap(override.h), titleH + GRID) : titleH + bodyH;
+  // Measured height clamps to the GRID-derived bounds (very large classes cap at MAX_H and may
+  // elide content); an explicit override wins, still reserving the title bar.
+  const measured = Math.min(MAX_H, Math.max(MIN_H, titleH + bodyH));
+  const h = override.h !== undefined ? Math.max(snap(override.h), titleH + GRID) : measured;
   return { w, h, titleH };
 };
 
@@ -196,7 +201,16 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
         origin: { x: origin.x + rect.x * scale, y: origin.y + rect.y * scale },
         scale,
         elements: [
-          { kind: 'rect', id: 'title', x: 0, y: 0, w: cell.w, h: cell.titleH, text: title, fill: 'solid' },
+          {
+            kind: 'rect',
+            id: 'title',
+            x: 0,
+            y: 0,
+            w: cell.w,
+            h: cell.titleH,
+            text: title,
+            fill: 'solid',
+          },
           {
             kind: 'rect',
             id: 'body',

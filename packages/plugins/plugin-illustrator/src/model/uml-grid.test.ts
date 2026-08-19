@@ -106,6 +106,17 @@ describe('uml-grid', () => {
     }
   });
 
+  test('default height clamps to the GRID-derived bounds', ({ expect }) => {
+    const members = Array.from({ length: 30 }, (_, index) => `  +field${index}: string`);
+    const source = ['classDiagram', 'class Big {', ...members, '}'].join('\n');
+    const [big] = nodesOf(objectsOf(compile(source)));
+
+    const [title, body] = big.elements as Scene.Box[];
+    // Far shorter than the unclamped member stack, whatever the tuned MAX_H is.
+    expect(title.h + body.h).toBeLessThan(30 * 26);
+    expect((title.h + body.h) % GRID).toBe(0);
+  });
+
   test('cell option fixes the node size', ({ expect }) => {
     const snap = (value: number) => Math.ceil(value / GRID) * GRID;
     const nodes = nodesOf(objectsOf(compile(CLASS_DIAGRAM, { cell: { w: 256, h: 480 } })));
