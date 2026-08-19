@@ -60,7 +60,8 @@ Useful to confirm the origin exists even when OPFS mapping is unclear.
 | Origin                                    | Typical use                  |
 | ----------------------------------------- | ---------------------------- |
 | `https://composer.space`                  | Production                   |
-| `https://nightly.composer.space`          | Nightly (dogfood)            |
+| `https://preview.composer.space`          | Preview (dogfood)            |
+| `https://nightly.composer.space`          | Retired (pre-rename dogfood) |
 | `https://main.composer.space`             | Retired (pre-2026 profiles)  |
 | `https://labs.composer.space`             | Retired (pre-2026 profiles)  |
 | `https://<branch>.composer-app.pages.dev` | PR previews                  |

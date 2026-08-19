@@ -25,7 +25,7 @@ const FEEDBACK_LOGS_MAX_BODY_SIZE = LOG_STORE_MAX_BYTES;
  * this Worker's own origin. Derived from the request's own URL rather than a static per-channel
  * list, so it is correct for the canonical domain, a PR-preview `*.workers.dev` alias, and local
  * dev alike, with no edit needed when a channel is added, renamed, or given a domain — and a
- * sibling channel (nightly calling dev's Worker, say) is never permitted, since it is never this
+ * sibling channel (preview calling dev's Worker, say) is never permitted, since it is never this
  * Worker's own origin.
  */
 const isAllowedOrigin = (request: Request, origin: string | null): boolean =>

@@ -12,7 +12,7 @@ describe('prereleaseChannel', () => {
   });
 
   test('every other environment names its own channel', ({ expect }) => {
-    expect(prereleaseChannel('nightly')).toBe('nightly');
+    expect(prereleaseChannel('preview')).toBe('preview');
     expect(prereleaseChannel('dev')).toBe('dev');
     expect(prereleaseChannel('staging')).toBe('staging');
   });
@@ -34,8 +34,8 @@ describe('downloadUrl', () => {
   });
 
   test('a prerelease channel links straight at its own latest installer', ({ expect }) => {
-    expect(downloadUrl('nightly')).toBe(
-      'https://cdn.crabnebula.app/download/dxos/composer/latest/platform/dmg-aarch64?channel=nightly',
+    expect(downloadUrl('preview')).toBe(
+      'https://cdn.crabnebula.app/download/dxos/composer/latest/platform/dmg-aarch64?channel=preview',
     );
     expect(downloadUrl('dev')).toBe(
       'https://cdn.crabnebula.app/download/dxos/composer/latest/platform/dmg-aarch64?channel=dev',
