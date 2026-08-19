@@ -16,10 +16,11 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, type Entity, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -50,6 +51,28 @@ import {
  */
 const collectionDeck = (object: Obj.Unknown, hasCollectionArticle: boolean): DeckSpec.DeckSpec | undefined =>
   !hasCollectionArticle && Obj.instanceOf(Collection.Collection, object) ? { initial: 'children' } : undefined;
+
+/**
+ * Typenames something in this build can render: a schema an enabled plugin registered, or one the
+ * space itself stores. An object outside the set has no article, so the tree omits it rather than
+ * offering a row that opens nothing — a curated build (`DX_PLUGIN_SET=production`) shares its backend
+ * with full-catalog builds, so it does meet their objects.
+ *
+ * TODO(wittjosiah): Name the plugin that would render the object instead of hiding it.
+ */
+const getClaimedTypenames = (types: readonly Entity.Unknown[]): ReadonlySet<string> =>
+  new Set(
+    types
+      .filter(Type.isType)
+      .map((type) => Type.getTypename(type))
+      .filter(isNonNullable),
+  );
+
+const isClaimed = (typenames: ReadonlySet<string>, object: Obj.Unknown): boolean => {
+  const typename = Obj.getTypename(object);
+  // No typename at all is not a missing plugin — leave those to the renderers.
+  return !typename || typenames.has(typename);
+};
 
 export const createCollectionExtensions = Effect.fnUntraced(function* ({
   shareableLinkOrigin,
@@ -145,13 +168,15 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         }
 
         const rawRefs = collection.objects ?? [];
+        const claimed = getClaimedTypenames(get(space.db.query(TypeOptions.allTypesQuery).atom));
 
         const objects = rawRefs
           .map((ref: any) => {
             get(Obj.atom(ref));
             return ref.target;
           })
-          .filter(isNonNullable);
+          .filter(isNonNullable)
+          .filter((object: Obj.Unknown) => isClaimed(claimed, object));
 
         return Effect.succeed(
           objects
@@ -212,13 +237,15 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
         const collectionSnapshot = get(Obj.atom(collection));
         const refs = collectionSnapshot.objects ?? [];
+        const claimed = db ? getClaimedTypenames(get(db.query(TypeOptions.allTypesQuery).atom)) : undefined;
 
         const objects = refs
           .map((ref: any) => {
             get(Obj.atom(ref));
             return ref.target;
           })
-          .filter(isNonNullable);
+          .filter(isNonNullable)
+          .filter((object: Obj.Unknown) => !claimed || isClaimed(claimed, object));
 
         return Effect.succeed(
           objects
