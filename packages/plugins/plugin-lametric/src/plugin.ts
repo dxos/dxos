@@ -5,12 +5,13 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { LaMetricSettings } from '#capabilities';
+import { DashboardDriver, LaMetricSettings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const LaMetricPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(LaMetricSettings),
+  Plugin.addModule(DashboardDriver),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
