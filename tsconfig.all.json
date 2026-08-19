@@ -475,6 +475,9 @@
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-lametric/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-library/tsconfig.json"
     },
     {
