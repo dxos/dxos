@@ -83,10 +83,10 @@ const partiallyRoundedRect = ({ x, y, w, h }: Rect, radius: number, corners: 'to
 const colorClass = (color?: Scene.Color) => (color === 'grey' ? 'text-neutral-400 dark:text-neutral-500' : undefined);
 
 type Resolved = {
-  objects: readonly Scene.WorldObject[];
+  viewBox: string;
   /** Absolute box rects keyed by `objectId/elementId`, for arrow binding. */
   registry: Map<string, Rect>;
-  viewBox: string;
+  objects: readonly Scene.WorldObject[];
 };
 
 const resolve = (objects: readonly Scene.WorldObject[]): Resolved => {
@@ -124,13 +124,19 @@ const resolve = (objects: readonly Scene.WorldObject[]): Resolved => {
       }
     }
   }
+
   const xs = points.map((point) => point.x);
   const ys = points.map((point) => point.y);
   const minX = Math.min(0, ...xs) - MARGIN;
   const minY = Math.min(0, ...ys) - MARGIN;
   const maxX = Math.max(MARGIN, ...xs) + MARGIN;
   const maxY = Math.max(MARGIN, ...ys) + MARGIN;
-  return { objects, registry, viewBox: `${minX} ${minY} ${maxX - minX} ${maxY - minY}` };
+
+  return {
+    objects,
+    registry,
+    viewBox: `${minX} ${minY} ${maxX - minX} ${maxY - minY}`,
+  };
 };
 
 type MultilineTextProps = {

@@ -78,6 +78,25 @@ parse (uml.ts) → measureCell (uml-grid.ts) → PLACE → snap to GRID → emit
   `elk.layered.nodePlacement.strategy: BRANDES_KOEPF` (straightness),
   `elk.layered.considerModelOrder.strategy: PREFER_NODES` (stable sibling order).
 
+## Rule-based grouping (`uml-rules.ts`)
+
+Generic engines optimize global metrics; they cannot know that an inheritance tree should _read_
+as a tree. The rule layer sits above placement: prioritized `GroupRule`s claim disjoint node
+groups from the model and lay each out internally; leftovers become singletons; groups then pack
+as super-nodes (ranked by their up-oriented cross-group edges) with non-overlapping dashed
+borders, and the shared channel/port router connects across.
+
+Built-in rules, by priority:
+
+1. `inheritanceTreeRule` — each supertype with subtypes claims its tree: hierarchy stacked
+   vertically (root on top, arrows up), peers on one horizontal axis, parents centered over
+   their subtrees (tidy tree).
+2. `linearChainRule` — the longest path through the remaining up-oriented relation graph
+   becomes a vertical arrows-up column.
+
+Rules are plain functions, so DSL axis constraints (below) can compile to a generated rule, and
+an engine-backed group (ELK laying out one group's interior) is just another rule.
+
 ## SVG renderer as a variant
 
 `SceneSvg` renders scene objects as plain SVG. To make it a peer of the tldraw/excalidraw

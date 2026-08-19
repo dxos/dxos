@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { type Scene, Uml, UmlEngine, UmlGrid } from '#model';
+import { type Scene, Uml, UmlEngine, UmlGrid, UmlRules } from '#model';
 
 import { SceneSvg } from './SceneSvg';
 
@@ -78,7 +78,7 @@ const COMPLEX_DIAGRAM = trim`
       Container ..> Store
 `;
 
-type LayoutKind = 'grid' | 'layered' | 'dagre' | 'elk';
+type LayoutKind = 'grid' | 'layered' | 'dagre' | 'elk' | 'rules';
 
 type StoryArgs = {
   source: string;
@@ -106,7 +106,9 @@ const DefaultStory = ({ source, layout, cellWidth, cellHeight, headerHeight }: S
         ? Promise.resolve(Uml.compile(source))
         : layout === 'grid'
           ? Promise.resolve(UmlGrid.compile(source, options))
-          : UmlEngine.compile(source, { ...options, engine: layout });
+          : layout === 'rules'
+            ? Promise.resolve(UmlRules.compile(source, options))
+            : UmlEngine.compile(source, { ...options, engine: layout });
     void commands.then((resolved) => {
       if (!cancelled) {
         setObjects(objectsOf(resolved));
@@ -132,7 +134,7 @@ const meta = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen' },
   argTypes: {
-    layout: { control: 'select', options: ['grid', 'layered', 'dagre', 'elk'] },
+    layout: { control: 'select', options: ['grid', 'layered', 'dagre', 'elk', 'rules'] },
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -177,5 +179,17 @@ export const GridComplex: Story = {
   args: {
     source: COMPLEX_DIAGRAM,
     layout: 'grid',
+  },
+};
+
+/**
+ * Rule-based grouping: the inheritance tree (Node/Container/Leaf) renders as a tree, the longest
+ * dependency chain (Query → Index → Registry → Codec) as an arrows-up column, each in its own
+ * framed group; leftovers pack around them.
+ */
+export const Rules: Story = {
+  args: {
+    source: COMPLEX_DIAGRAM,
+    layout: 'rules',
   },
 };
