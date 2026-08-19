@@ -19,9 +19,13 @@ export const subscribeToKeyringKeys = ({
   EffectEx.streamFromEmitter<DevtoolsHost.SubscribeToKeyringKeysResponse, Error>((emit) => {
     const ctx = Context.default();
     const update = async () => {
-      emit.single({
-        keys: await keyring.list(),
-      });
+      try {
+        emit.single({
+          keys: await keyring.list(),
+        });
+      } catch (err: any) {
+        emit.fail(err);
+      }
     };
     keyring.keysUpdate.on(ctx, update);
     scheduleTask(ctx, update);

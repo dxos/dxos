@@ -29,8 +29,10 @@ export const subscribeToNetworkStatus = ({
       }
     };
 
-    signalManager.statusChanged?.on(() => update());
+    const unsubscribe = signalManager.statusChanged?.on(() => update());
     update();
+
+    return Effect.sync(() => unsubscribe?.());
   });
 
 export const subscribeToSignal = ({
@@ -113,9 +115,11 @@ export const subscribeToNetworkTopics = ({
         emit.fail(err);
       }
     };
-    networkManager.topicsUpdated.on(update);
+    const unsubscribe = networkManager.topicsUpdated.on(update);
 
     update();
+
+    return Effect.sync(() => unsubscribe());
   });
 
 export const subscribeToSwarmInfo = ({
@@ -130,8 +134,10 @@ export const subscribeToSwarmInfo = ({
         emit.single({ data: info });
       }
     };
-    networkManager.connectionLog?.update.on(update);
+    const unsubscribe = networkManager.connectionLog?.update.on(update);
     update();
+
+    return Effect.sync(() => unsubscribe?.());
   });
 
 export const getNetworkPeers = (
