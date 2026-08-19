@@ -92,14 +92,18 @@ export const Welcome = ({
   const defaultLoginPrimary: LoginMethod =
     supportsPasskeys && onPasskey ? 'passkey' : onEmailLogin ? 'email' : 'atproto';
 
-  // Sign-up is offered only when a sign-up handler is supplied; the iOS app supplies none, so the
-  // screen collapses to the login form with no tablist.
-  const signupEnabled = !!onValidateInvitationCode || !!onJoinWaitlist;
+  // Each sign-up mode needs its own handler — the invitation-code form can only fail without a
+  // validator, and the screen supplies the waitlist alone once an identity exists. With neither (the
+  // iOS app) the screen collapses to the login form with no tablist.
+  const codeSignupEnabled = !!onValidateInvitationCode;
+  const waitlistEnabled = !!onJoinWaitlist;
+  const signupEnabled = codeSignupEnabled || waitlistEnabled;
+  const defaultSignupMode: SignupMode = codeSignupEnabled ? 'code' : 'waitlist';
 
   // Tab + sub-state. Live in component state since they're transient UI.
   const [tab, setTab] = useState<Tab>('login');
   const [loginPrimary, setLoginPrimary] = useState<LoginMethod>(defaultLoginPrimary);
-  const [signupMode, setSignupMode] = useState<SignupMode>('code');
+  const [signupMode, setSignupMode] = useState<SignupMode>(defaultSignupMode);
   const [signupStep, setSignupStep] = useState<SignupStep>('collect');
 
   // Inputs.
@@ -352,7 +356,7 @@ export const Welcome = ({
               setTab(next);
               if (next === 'signup') {
                 setSignupStep('collect');
-                setSignupMode('code');
+                setSignupMode(defaultSignupMode);
               }
             }}
           >
@@ -369,7 +373,7 @@ export const Welcome = ({
               <Tabs.Panel value='login'>{loginTab}</Tabs.Panel>
 
               <Tabs.Panel value='signup'>
-                {signupStep === 'collect' && signupMode === 'code' && (
+                {signupStep === 'collect' && signupMode === 'code' && codeSignupEnabled && (
                   <Flex column gap='xl'>
                     <Flex column gap='sm'>
                       <h2 className='text-2xl'>{t('signup-code.title')}</h2>
@@ -389,11 +393,15 @@ export const Welcome = ({
                       onSubmit={handleValidateCode}
                       validation={codeError}
                     />
-                    <SwapLink onClick={() => setSignupMode('waitlist')}>{t('no-invitation-code-link.label')}</SwapLink>
+                    {waitlistEnabled && (
+                      <SwapLink onClick={() => setSignupMode('waitlist')}>
+                        {t('no-invitation-code-link.label')}
+                      </SwapLink>
+                    )}
                   </Flex>
                 )}
 
-                {signupStep === 'collect' && signupMode === 'waitlist' && (
+                {signupStep === 'collect' && signupMode === 'waitlist' && waitlistEnabled && (
                   <Flex column gap='xl'>
                     <Flex column gap='sm'>
                       <h2 className='text-2xl'>{t('waitlist.title')}</h2>
@@ -411,7 +419,9 @@ export const Welcome = ({
                       submitDisabled={!validEmail(waitlistEmail) || pending}
                       onSubmit={handleJoinWaitlist}
                     />
-                    <SwapLink onClick={() => setSignupMode('code')}>{t('have-invitation-code-link.label')}</SwapLink>
+                    {codeSignupEnabled && (
+                      <SwapLink onClick={() => setSignupMode('code')}>{t('have-invitation-code-link.label')}</SwapLink>
+                    )}
                   </Flex>
                 )}
 

@@ -83,7 +83,7 @@ export const EmailPrimary: Story = {
     ...signupArgs,
     onJoinIdentity: () => console.log('join identity'),
     onRecoverIdentity: () => console.log('recover identity'),
-    onRecoverWithOAuth: async () => console.log('recover oauth'),
+    onRecoverWithOAuth: () => console.log('recover oauth'),
   },
 };
 
