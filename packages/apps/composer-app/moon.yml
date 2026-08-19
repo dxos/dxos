@@ -16,7 +16,7 @@ tasks:
   # the Cloudflare worker. `build:functions` emits `_worker.js` after `vite build` so it survives
   # Vite's `emptyOutDir`.
   bundle:
-    script: pnpm exec vite build && pnpm run --silent build:functions
+    script: pnpm exec vite build --configLoader native && pnpm run --silent build:functions
     deps:
       - prebuild
   # The bundle Playwright serves, as its own target rather than an `env` override on `e2e`'s `bundle`
@@ -157,10 +157,18 @@ tasks:
   # resolves @dxos/* from source (importSource), so pre-building the whole graph is wasted work:
   # only packages whose dist is actually consumed need it, and each kind declares itself by tag.
   serve:
+    # `--configLoader native` loads `vite.config.ts` with node's own type stripping instead of
+    # pre-bundling it with Rolldown, so the config's own dependency graph is resolved exactly as
+    # node resolves it at runtime. Vite plans to make it the default; the config is kept compatible
+    # (extensionful relative imports, `import.meta.dirname`) so both loaders agree.
+    command: pnpm exec vite dev --configLoader native
     options:
       # The `vite` tag contributes `^:build`, and deps merge by append — without this the whole
       # graph is still built and the tags below are redundant.
       mergeDeps: replace
+      # Args merge by append too, so the tag's own `exec vite dev` would be concatenated onto this
+      # command's.
+      mergeArgs: replace
     deps:
       - prebuild
       # dist consumed at runtime.
@@ -179,6 +187,16 @@ tasks:
       # `prebuild`'s `^:prebuild` stops at the first hop: echo-query is reached through
       # plugin-script, which has no `prebuild` task of its own to continue the chain.
       - echo-query:prebuild-query-lite
+      # Dist consumed by the dev server itself: the `dx-agent-claude` plugin imports the middleware
+      # in `configureServer`. Named explicitly rather than tagged — it exports no vite plugin, and
+      # nothing in the browser graph reaches it.
+      - agent-claude:build
+  # `vite preview` still evaluates `vite.config.ts`, so it takes the same loader as `serve` and
+  # `bundle` — one loader per app, or a config change can pass in dev and fail serving the bundle.
+  preview:
+    command: pnpm exec vite preview --configLoader native
+    options:
+      mergeArgs: replace
   # The same inner loop against the curated set `composer.space` ships (`DX_PLUGIN_SET=production`
   # aliases `./plugin-defs` -> `plugin-defs.production.tsx` in vite.config.ts). Extends `serve` rather
   # than restating its narrowed dependency set so the two cannot drift — and the fast local loop is now
