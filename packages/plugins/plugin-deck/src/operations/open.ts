@@ -20,7 +20,13 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { DeckCapabilities } from '#types';
 
-import { addSubjectsToActiveDeck, resolveLevelOpen, resolveSeededPlanks, updatePlankNames } from '../layout';
+import {
+  addSubjectsToActiveDeck,
+  pushSubjectsToStack,
+  resolveLevelOpen,
+  resolveSeededPlanks,
+  updatePlankNames,
+} from '../layout';
 import { computeActiveUpdates, openableChildren, resolveDeckSpec } from '../util';
 import { updateActiveDeck } from './helpers';
 
@@ -30,6 +36,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       log('LayoutOperation.Open handler start');
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
+      const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
+        Effect.catch(() => Effect.succeed('desktop' as const)),
+      );
 
       // Validate navigation targets, redirecting to 404 if not found. Existence/loading is delegated
       // to the NavigationTargetLoader capability (contributed by plugin-client) so this layout plugin
@@ -170,7 +179,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             : undefined;
 
         let next: string[];
-        if (levelOpen) {
+        if (platform === 'mobile') {
+          // A stack has one open semantic: push (or surface) the subjects; solo-replace, pivots, and
+          // seeded side-by-side planks are deck-geometry concepts with no stack analog.
+          next = pushSubjectsToStack(deck.active, input.subject);
+        } else if (levelOpen) {
           next = levelOpen.next;
         } else if (seeded) {
           next = seeded;
