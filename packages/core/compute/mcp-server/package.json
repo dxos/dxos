@@ -16,6 +16,21 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./DxMcpService": {
+      "source": "./src/DxMcpService.ts",
+      "types": "./dist/types/src/DxMcpService.d.ts",
+      "import": "./dist/lib/DxMcpService.mjs"
+    },
+    "./Gateway": {
+      "source": "./src/Gateway.ts",
+      "types": "./dist/types/src/Gateway.d.ts",
+      "import": "./dist/lib/Gateway.mjs"
+    },
+    "./Server": {
+      "source": "./src/Server.ts",
+      "types": "./dist/types/src/Server.d.ts",
+      "import": "./dist/lib/Server.mjs"
     }
   },
   "files": [
@@ -26,10 +41,10 @@
     "@dxos/echo": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "@dxos/compute": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/compute": "workspace:*",
     "@dxos/effect": "workspace:*"
   },
   "publishConfig": {
