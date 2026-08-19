@@ -10962,6 +10962,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
@@ -18537,9 +18540,6 @@ importers:
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
       '@dxos/plugin-board':
         specifier: workspace:*
         version: link:../../plugins/plugin-board
@@ -18591,9 +18591,6 @@ importers:
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../plugins/plugin-table
-      '@dxos/plugin-testing':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-testing
       '@dxos/plugin-thread':
         specifier: workspace:*
         version: link:../../plugins/plugin-thread
@@ -18745,9 +18742,6 @@ importers:
       '@dxos/pipeline-transcription':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-transcription
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-client
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
@@ -18760,9 +18754,6 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
-      '@dxos/plugin-testing':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-testing
       '@dxos/plugin-transcription':
         specifier: workspace:*
         version: link:../../plugins/plugin-transcription
@@ -19081,9 +19072,6 @@ importers:
         specifier: ~19.2.7
         version: 19.2.7(react@19.2.7)
     devDependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../../core/compute/ai
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -19096,9 +19084,6 @@ importers:
       '@dxos/plugin-brain':
         specifier: workspace:*
         version: link:../../plugins/plugin-brain
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-client
       '@dxos/plugin-crm':
         specifier: workspace:*
         version: link:../../plugins/plugin-crm
@@ -19114,9 +19099,6 @@ importers:
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../plugins/plugin-table
-      '@dxos/plugin-testing':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-testing
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
