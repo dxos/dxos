@@ -49,7 +49,7 @@ interactive re-layout, orthogonal routing) and dagre the lightweight baseline.
 The engines replace exactly one step — placement. Everything else is unchanged and shared with
 the hand-rolled dialects:
 
-```
+```text
 parse (uml.ts) → measureCell (uml-grid.ts) → PLACE → snap to GRID → emit (uml-grid.ts)
                                               ↑
                             lanes+columns | dagre | elk

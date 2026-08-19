@@ -39,9 +39,6 @@ const SOURCE = trim`
       Container ..> Store
 `;
 
-const objectsOf = (commands: Scene.Command[]) =>
-  commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
-
 describe('uml-rules', () => {
   test('inheritance rule claims the tree: root on top, peers on one horizontal axis', ({ expect }) => {
     const model = parse(SOURCE);
@@ -76,6 +73,21 @@ describe('uml-rules', () => {
     expect(new Set([...group.rects.values()].map((rect) => rect.y)).size).toBe(1);
   });
 
+  test('tolerates a cyclic hierarchy without recursing forever', ({ expect }) => {
+    const source = ['classDiagram', 'Root <|-- A', 'A <|-- B', 'B <|-- A'].join('\n');
+    const model = parse(source);
+    const cell = measureCell(model, { maxWidth: 192 });
+    const unclaimed = new Set(model.classes.map((entry) => entry.id));
+
+    const groups = inheritanceTreeRule.apply(model, unclaimed, cell);
+    const claimed = new Set(groups.flatMap((group) => [...group.rects.keys()]));
+    expect(claimed.has('Root')).toBe(true);
+    // Every node renders at most once.
+    for (const group of groups) {
+      expect(group.rects.size).toBe(new Set(group.rects.keys()).size);
+    }
+  });
+
   test('compiles all nodes with non-overlapping group frames', ({ expect }) => {
     const objects = objectsOf(compile(SOURCE));
     const nodes = objects.filter((object) => !object.id.startsWith('group:') && object.id !== 'edges');
@@ -92,3 +104,6 @@ describe('uml-rules', () => {
     expect(overlap).toBe(false);
   });
 });
+
+const objectsOf = (commands: Scene.Command[]) =>
+  commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));

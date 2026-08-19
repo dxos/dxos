@@ -77,9 +77,9 @@ const partiallyRoundedRect = ({ x, y, w, h }: Rect, cornerRadius: number, corner
   const radius = Math.min(cornerRadius, w / 2, h / 2);
   return corners === 'top'
     ? `M ${x} ${y + h} L ${x} ${y + radius} Q ${x} ${y} ${x + radius} ${y} L ${x + w - radius} ${y} ` +
-      `Q ${x + w} ${y} ${x + w} ${y + radius} L ${x + w} ${y + h} Z`
+        `Q ${x + w} ${y} ${x + w} ${y + radius} L ${x + w} ${y + h} Z`
     : `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h - radius} Q ${x + w} ${y + h} ${x + w - radius} ${y + h} ` +
-      `L ${x + radius} ${y + h} Q ${x} ${y + h} ${x} ${y + h - radius} Z`;
+        `L ${x + radius} ${y + h} Q ${x} ${y + h} ${x} ${y + h - radius} Z`;
 };
 
 /** Muted stroke/text for elements the dialects mark grey (e.g. subgraph frames). */

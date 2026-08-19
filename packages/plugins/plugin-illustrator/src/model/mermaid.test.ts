@@ -109,7 +109,6 @@ describe('mermaid', () => {
   test('gap options spread the layout', ({ expect }) => {
     const compact = objectsOf(compile(FLOWCHART));
     const spread = objectsOf(compile(FLOWCHART, { gapMain: 200, gapCross: 120 }));
-    const origin = (objects: Scene.WorldObject[], id: string) => objects.find((object) => object.id === id)!.origin!;
 
     expect(origin(spread, 'A').y - origin(spread, 'X').y).toBeGreaterThan(
       origin(compact, 'A').y - origin(compact, 'X').y,
@@ -117,6 +116,14 @@ describe('mermaid', () => {
     expect(Math.abs(origin(spread, 'C').x - origin(spread, 'B').x)).toBeGreaterThan(
       Math.abs(origin(compact, 'C').x - origin(compact, 'B').x),
     );
+  });
+
+  test('LR flowcharts advance the main axis by node width', ({ expect }) => {
+    const objects = objectsOf(compile(['flowchart LR', 'A[A]', 'B[B]', 'A --> B'].join('\n')));
+
+    // Main-axis step = NODE_W (100) + gapMain (60); lanes share the cross axis.
+    expect(origin(objects, 'B').x - origin(objects, 'A').x).toBe(160);
+    expect(origin(objects, 'B').y).toBe(origin(objects, 'A').y);
   });
 
   test('ignores comments and tolerates unknown syntax', ({ expect }) => {
@@ -127,3 +134,5 @@ describe('mermaid', () => {
     expect(graph.edges).toEqual([{ from: 'A', to: 'B' }]);
   });
 });
+
+const origin = (objects: Scene.WorldObject[], id: string) => objects.find((object) => object.id === id)!.origin!;

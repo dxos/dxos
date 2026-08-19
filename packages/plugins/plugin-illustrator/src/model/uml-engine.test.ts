@@ -25,9 +25,21 @@ describe.each(engines)('uml-engine (%s)', (engine) => {
       expect(node.origin!.y % GRID).toBe(0);
     }
 
-    // Equal cells: no two nodes share a position.
-    const positions = new Set(nodes.map((node) => `${node.origin!.x}:${node.origin!.y}`));
-    expect(positions.size).toBe(nodes.length);
+    // Equal cells: no two node frames intersect (distinct origins alone would allow overlap).
+    const frames = nodes.map((node) => {
+      const frame = node.elements[0] as Scene.Box;
+      return { x: node.origin!.x, y: node.origin!.y, w: frame.w, h: frame.h };
+    });
+    for (let a = 0; a < frames.length; a++) {
+      for (let b = a + 1; b < frames.length; b++) {
+        const overlap =
+          frames[a].x < frames[b].x + frames[b].w &&
+          frames[b].x < frames[a].x + frames[a].w &&
+          frames[a].y < frames[b].y + frames[b].h &&
+          frames[b].y < frames[a].y + frames[a].h;
+        expect(overlap).toBe(false);
+      }
+    }
   });
 
   test('ranks supertypes and dependency targets above their sources', async ({ expect }) => {
