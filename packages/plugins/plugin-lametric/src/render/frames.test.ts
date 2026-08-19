@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 import { type MetricSpec } from '@dxos/plugin-space/dashboard';
 
 import { toFrames } from './frames';
+import { overflows } from './pixels';
 
 describe('toFrames', () => {
   test('maps a determinate task to a goal frame', ({ expect }) => {
@@ -19,9 +20,15 @@ describe('toFrames', () => {
     expect(toFrames([metric])).toEqual([{ text: 'Syncing 12' }]);
   });
 
-  test('maps a statistic to a text frame', ({ expect }) => {
+  test('maps a statistic to a text frame, short enough not to scroll', ({ expect }) => {
     const metric: MetricSpec = { kind: 'stat', title: 'Objects', value: '42' };
-    expect(toFrames([metric])).toEqual([{ text: '42 objects' }]);
+    expect(toFrames([metric])).toEqual([{ text: '42 obj' }]);
+    expect(overflows(toFrames([metric])[0])).toBe(false);
+  });
+
+  test('falls back to the lowercased title for an unknown statistic', ({ expect }) => {
+    const metric: MetricSpec = { kind: 'stat', title: 'Widgets', value: '7' };
+    expect(toFrames([metric])).toEqual([{ text: '7 widgets' }]);
   });
 
   test('drops empty slots and caps the cycle', ({ expect }) => {

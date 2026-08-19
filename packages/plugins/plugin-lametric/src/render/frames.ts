@@ -6,9 +6,20 @@ import { type MetricSpec } from '@dxos/plugin-space/dashboard';
 
 import * as LaMetric from '#protocol';
 
+/**
+ * Short forms for the statistic labels. Nine characters fit before the device starts scrolling, and
+ * a dashboard is read at a glance — `42 obj` is legible standing still where `42 objects` is not.
+ */
+const SHORT_LABELS: Record<string, string> = {
+  Objects: 'obj',
+  Feeds: 'feeds',
+  Types: 'types',
+  Plugins: 'plugins',
+};
+
 const toFrame = (metric: MetricSpec): LaMetric.Frame => {
   if (metric.kind === 'stat') {
-    return { text: `${metric.value} ${metric.title.toLowerCase()}` };
+    return { text: `${metric.value} ${SHORT_LABELS[metric.title] ?? metric.title.toLowerCase()}` };
   }
   // `goalData` needs an end, so a task reporting no total gets a text frame rather than a bar.
   if (metric.ratio === undefined) {

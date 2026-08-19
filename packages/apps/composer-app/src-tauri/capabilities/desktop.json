@@ -16,11 +16,25 @@
     "fs:read-all",
     {
       "identifier": "fs:allow-watch",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
     },
     {
       "identifier": "fs:scope",
-      "allow": [{ "path": "**" }, { "path": "**/.composer" }, { "path": "**/.composer/**" }]
+      "allow": [
+        {
+          "path": "**"
+        },
+        {
+          "path": "**/.composer"
+        },
+        {
+          "path": "**/.composer/**"
+        }
+      ]
     },
     "fs:write-all",
     "macos-passkey:default",
@@ -38,6 +52,20 @@
     },
     "opener:allow-open-url",
     "opener:default",
-    "updater:default"
+    "updater:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://developer.lametric.com/*"
+        },
+        {
+          "url": "http://*:8080/*"
+        },
+        {
+          "url": "https://*:4343/*"
+        }
+      ]
+    }
   ]
 }
