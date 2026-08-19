@@ -92,7 +92,7 @@ export const loadChat = (agent: Agent): Effect.Effect<Chat.Chat | undefined, nev
     const children = yield* Database.query(Query.select(Filter.id(agent.id)).children()).run;
     return children
       .filter(Obj.instanceOf(Chat.Chat))
-      .sort((a, b) => a.id.localeCompare(b.id))
+      .sort((left, right) => left.id.localeCompare(right.id))
       .at(-1);
   }).pipe(Effect.orDie);
 

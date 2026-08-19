@@ -26,7 +26,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
         );
         const existingChat = children
           .filter(Obj.instanceOf(Chat.Chat))
-          .sort((a, b) => a.id.localeCompare(b.id))
+          .sort((left, right) => left.id.localeCompare(right.id))
           .at(-1);
         if (existingChat) {
           // Cache the persisted chat so the graph connector can resolve it immediately
