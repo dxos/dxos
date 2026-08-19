@@ -22,7 +22,6 @@ import {
   type RecoverIdentityRequest as EdgeRecoverIdentityRequest,
   InvalidRecoveryTokenError,
   type RecoverIdentityResponseBody,
-  RECOVERY_TOKEN_INVALID,
 } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type RecoverIdentityRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -263,10 +262,11 @@ export class EdgeIdentityRecoveryManager {
     };
 
     const response = await this._edgeClient.recoverIdentity(ctx, request).catch((error) => {
-      // EDGE marks a token it cannot resolve with a discriminator in `data`, which the error codec
-      // drops at the services RPC boundary — rethrow as a typed error so callers can offer a fresh
-      // link rather than reporting every failed recovery the same way.
-      if (error instanceof EdgeCallFailedError && error.data?.type === RECOVERY_TOKEN_INVALID) {
+      // EDGE returns a token it cannot resolve as an `InvalidRecoveryTokenError` in the failure
+      // envelope, which `ErrorCodec` rebuilds by name as this error's `cause` — rethrow the local
+      // registered class so the name also survives the services RPC boundary and callers can offer
+      // a fresh link rather than reporting every failed recovery the same way.
+      if (error instanceof EdgeCallFailedError && InvalidRecoveryTokenError.is(error.cause)) {
         throw new InvalidRecoveryTokenError({ cause: error });
       }
       throw error;

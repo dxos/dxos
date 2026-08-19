@@ -65,9 +65,9 @@ registerErrorMessageContext('InvalidInvitationError', InvalidInvitationError);
 
 /**
  * A recovery token (email magic link) no longer resolves to an identity — invalid, expired, or
- * already redeemed. Registered so the name survives the services RPC boundary: `EdgeCallFailedError`
- * carries the discriminator in `data`, which the error codec drops, so a surface that needs to tell
- * "request a fresh link" from "recovery failed" must see a distinct error type instead.
+ * already redeemed. EDGE returns it through `EdgeFailure.error`, whose codec preserves only the
+ * error *name*; registered here so the same name also survives the services RPC boundary, letting a
+ * surface tell "request a fresh link" from "recovery failed" by type.
  */
 export class InvalidRecoveryTokenError extends BaseError.extend(
   'InvalidRecoveryTokenError',

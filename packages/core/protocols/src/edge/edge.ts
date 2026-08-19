@@ -327,14 +327,6 @@ export type EdgeAuthChallenge = {
   challenge: string;
 };
 
-/**
- * `EdgeFailure.data.type` marking a recovery token (email magic link) that no longer resolves to an
- * identity — invalid, expired, or already redeemed. Distinguishes "ask for a fresh link" from an
- * EDGE-side failure, which is otherwise indistinguishable to the client. Mirrored as a literal by
- * db-service's recovery handler in the edge repo.
- */
-export const RECOVERY_TOKEN_INVALID = 'recovery_token_invalid';
-
 export enum OAuthProvider {
   ATLASSIAN = 'atlassian',
   ATPROTO = 'atproto',
