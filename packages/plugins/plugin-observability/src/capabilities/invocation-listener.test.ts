@@ -8,7 +8,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import * as ObservabilityMapping from '@dxos/app-framework/ObservabilityMapping';
+import * as ObservabilityMapping from '@dxos/app-toolkit/ObservabilityMapping';
 import * as Operation from '@dxos/compute/Operation';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';

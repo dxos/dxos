@@ -1,6 +1,7 @@
 // Copyright 2025 DXOS.org
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -36,10 +37,20 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOpera
         }
       });
 
-      // A headless host has neither modules to activate nor UI capabilities to run; the type is
-      // added either way, and only the app's follow-on work is skipped.
-      yield* Plugin.activateIfAvailable(SpaceEvents.TypeAdded);
-      const onTypeAdded = yield* Capability.getAllAvailable(SpaceCapabilities.OnTypeAdded);
+      // The app's follow-on work, read from the ambient context rather than declared: a headless
+      // host (edge, `dx mcp serve`) binds neither manager, and a declared service resolves eagerly
+      // and would die there. Activation comes first — it is what makes a lazy module contribute its
+      // `OnTypeAdded` callback.
+      const pluginManager = yield* Effect.serviceOption(Plugin.Service);
+      yield* Option.match(pluginManager, {
+        onNone: () => Effect.void,
+        onSome: (manager) => manager.activate(SpaceEvents.TypeAdded),
+      });
+      const capabilityManager = yield* Effect.serviceOption(Capability.Service);
+      const onTypeAdded = Option.match(capabilityManager, {
+        onNone: () => [],
+        onSome: (manager) => manager.getAll(SpaceCapabilities.OnTypeAdded),
+      });
       yield* Effect.all(
         onTypeAdded.map((callback) => callback({ db, type, show: input.show })),
         { concurrency: 'unbounded' },

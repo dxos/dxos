@@ -3,5 +3,4 @@
 //
 
 export * from './history';
-export * from './observability';
 export * from './ProcessManagerPlugin';

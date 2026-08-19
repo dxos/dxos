@@ -85,17 +85,6 @@ export const getOption = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<Optio
   Effect.map(getAll(interfaceDef), (all) => Option.fromNullishOr(all[0]));
 
 /**
- * The capability's contributions, or none when no capability manager is bound at all.
- * Unlike {@link getAll} this declares no requirement, so an operation shared with a headless host
- * can read the app's contributions without a declared service that resolves eagerly and dies there.
- */
-export const getAllAvailable = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T[]> =>
-  Effect.map(
-    Effect.serviceOption(Service),
-    Option.match({ onNone: () => [], onSome: (manager) => manager.getAll(interfaceDef) }),
-  );
-
-/**
  * Wait for a capability to be available.
  * @param interfaceDef The interface definition of the capability.
  * @returns The capability implementation once available.

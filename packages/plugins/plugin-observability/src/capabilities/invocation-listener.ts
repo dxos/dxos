@@ -7,7 +7,8 @@ import * as Stream from 'effect/Stream';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as ObservabilityMapping from '@dxos/app-framework/ObservabilityMapping';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ObservabilityMapping from '@dxos/app-toolkit/ObservabilityMapping';
 import { log } from '@dxos/log';
 
 import { ObservabilityOperation } from '#types';
@@ -53,7 +54,7 @@ export const listen = (
 
 /**
  * Sends the observability event a successful invocation stands for, for operations that registered
- * one via {@link Capabilities.ObservabilityMapping}.
+ * one via {@link AppCapabilities.ObservabilityMapping}.
  *
  * The listener, not the operation, owns telemetry: a portable verb (`space.addObject`, run equally
  * on a headless host) cannot invoke a plugin's `SendEvent` without binding itself to that plugin. A
@@ -63,7 +64,7 @@ export const listen = (
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const invoker = yield* Capabilities.OperationInvoker;
-    const mappings = yield* Capabilities.ObservabilityMapping;
+    const mappings = yield* AppCapabilities.ObservabilityMapping;
 
     yield* Effect.forkScoped(
       listen(

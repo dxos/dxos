@@ -29,8 +29,6 @@ export default defineConfig({
     'core/plugin-manifest': 'src/core/plugin-manifest.ts',
     'core/registry': 'src/core/registry.ts',
     'common/Role': 'src/common/Role.ts',
-    'plugin-process-manager/observability/observability-mapping':
-      'src/plugin-process-manager/observability/observability-mapping.ts',
     'plugin-process-manager/history/undo-mapping': 'src/plugin-process-manager/history/undo-mapping.ts',
     'plugin-process-manager/history/undo-registry': 'src/plugin-process-manager/history/undo-registry.ts',
   },

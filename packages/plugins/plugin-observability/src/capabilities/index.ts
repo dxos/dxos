@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { ObservabilityCapabilities, ObservabilityEvents, ObservabilityOptions } from '#types';
@@ -31,7 +32,7 @@ export const ClientReady = Capability.lazyModule(
 export const InvocationListener = Capability.lazyModule(
   'InvocationListener',
   {
-    requires: [Capabilities.OperationInvoker, Capabilities.ObservabilityMapping],
+    requires: [Capabilities.OperationInvoker, AppCapabilities.ObservabilityMapping],
     provides: [],
     // Idle rather than Startup: contributed mappings are read live, so the listener only has to be
     // running before the first user action, not before the plugins that register events.

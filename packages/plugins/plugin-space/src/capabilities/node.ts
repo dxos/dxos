@@ -4,6 +4,7 @@
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
@@ -34,7 +35,7 @@ export const OperationHandler = Capability.lazyModule(
 export const ObservabilityMappings = Capability.lazyModule(
   'ObservabilityMappings',
   {
-    provides: [Capabilities.ObservabilityMapping],
+    provides: [AppCapabilities.ObservabilityMapping],
     props: (options: SpaceSchema.SpacePluginOptions) => ({ observability: options.observability }),
   },
   () => import('./observability-mappings'),

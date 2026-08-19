@@ -28,7 +28,6 @@ import { OperationInvoker as OperationInvoker$ } from '@dxos/operation';
 import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core';
 import type {
   HistoryTracker as HistoryTracker$,
-  ObservabilityMapping as ObservabilityMapping$,
   UndoMapping as UndoMapping$,
   UndoRegistry as UndoRegistry$,
 } from '../plugin-process-manager';
@@ -253,17 +252,6 @@ export type UndoMapping = UndoMapping$.UndoMapping;
  * @category Capability
  */
 export const UndoMapping = Capability$.make<UndoMapping[]>()('org.dxos.app-framework.capability.undoMapping');
-
-export type ObservabilityMapping = ObservabilityMapping$.ObservabilityMapping;
-
-/**
- * Observability event registration - contributed by the plugin that owns the operation, consumed by
- * a listener over the invocation stream so the operation itself stays free of telemetry.
- * @category Capability
- */
-export const ObservabilityMapping = Capability$.make<ObservabilityMapping[]>()(
-  'org.dxos.app-framework.capability.observabilityMapping',
-);
 
 /**
  * Operation invoker backed by the process manager. Spawns a process per

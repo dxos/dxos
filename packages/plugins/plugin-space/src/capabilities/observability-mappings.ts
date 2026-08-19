@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as ObservabilityMapping from '@dxos/app-framework/ObservabilityMapping';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ObservabilityMapping from '@dxos/app-toolkit/ObservabilityMapping';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { MigrationVersionAnnotation } from '@dxos/migrations';
 
@@ -27,11 +27,11 @@ export default Capability.makeModule(
     // Contributed even when the host opts out, so the capability the listener requires always
     // resolves; the empty registration is what turns the events off.
     if (!observability) {
-      return [Capability.contribute(Capabilities.ObservabilityMapping, [])];
+      return [Capability.contribute(AppCapabilities.ObservabilityMapping, [])];
     }
 
     return [
-      Capability.contribute(Capabilities.ObservabilityMapping, [
+      Capability.contribute(AppCapabilities.ObservabilityMapping, [
         ObservabilityMapping.make({
           operation: SpaceOperation.Create,
           event: 'space.create',
