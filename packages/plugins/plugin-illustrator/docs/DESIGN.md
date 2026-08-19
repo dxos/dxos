@@ -97,6 +97,25 @@ Built-in rules, by priority:
 Rules are plain functions, so DSL axis constraints (below) can compile to a generated rule, and
 an engine-backed group (ELK laying out one group's interior) is just another rule.
 
+### Scored placement search (`uml-search.ts`)
+
+On top of the groups sits a scored search:
+
+- **Score**: +1 per straight (two-point) connector, −1 per crossing edge pair, computed over
+  cheap Z-routes (the A* router draws the final picture).
+- **Search**: the longest chain seeds the center; a greedy tree walk repeatedly places the
+  unplaced group connected to the earliest-placed node, trying axis-aligned candidates around
+  the anchor (below/above preferred, then right/left, sliding off collisions) and keeping the
+  best-scoring one.
+- **Selection**: the final layout is whichever of {search, rank packing} scores higher.
+
+**Can ELK/dagre implement this?** No — the search is necessarily custom. Both are one-shot
+global optimizers: no scoring callback, no incremental "place the next node" API, no way to
+substitute a custom objective. They fit the mechanism only as (a) group-interior layouters, (b)
+extra whole-layout candidates fed to the same scorer, and (c) ELK `INTERACTIVE` as a polish
+pass over the search's result. The custom part stays small (~200 lines) precisely because the
+groups reduce placement to uniform cells on a grid.
+
 ## SVG renderer as a variant
 
 `SceneSvg` renders scene objects as plain SVG. To make it a peer of the tldraw/excalidraw

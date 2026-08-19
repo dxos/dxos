@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { type Scene, Uml, UmlEngine, UmlGrid, UmlRules } from '#model';
+import { type Scene, Uml, UmlEngine, UmlGrid, UmlRules, UmlSearch } from '#model';
 
 import { SceneSvg } from './SceneSvg';
 
@@ -78,7 +78,7 @@ const COMPLEX_DIAGRAM = trim`
       Container ..> Store
 `;
 
-type LayoutKind = 'grid' | 'layered' | 'dagre' | 'elk' | 'rules';
+type LayoutKind = 'grid' | 'layered' | 'dagre' | 'elk' | 'rules' | 'search';
 
 type StoryArgs = {
   source: string;
@@ -108,7 +108,9 @@ const DefaultStory = ({ source, layout, cellWidth, cellHeight, headerHeight }: S
           ? Promise.resolve(UmlGrid.compile(source, options))
           : layout === 'rules'
             ? Promise.resolve(UmlRules.compile(source, options))
-            : UmlEngine.compile(source, { ...options, engine: layout });
+            : layout === 'search'
+              ? Promise.resolve(UmlSearch.compile(source, options))
+              : UmlEngine.compile(source, { ...options, engine: layout });
     void commands.then((resolved) => {
       if (!cancelled) {
         setObjects(objectsOf(resolved));
@@ -134,7 +136,7 @@ const meta = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen' },
   argTypes: {
-    layout: { control: 'select', options: ['grid', 'layered', 'dagre', 'elk', 'rules'] },
+    layout: { control: 'select', options: ['grid', 'layered', 'dagre', 'elk', 'rules', 'search'] },
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -191,5 +193,16 @@ export const Rules: Story = {
   args: {
     source: COMPLEX_DIAGRAM,
     layout: 'rules',
+  },
+};
+
+/**
+ * Scored placement search: the chain anchors the center; groups place next to their neighbours
+ * where the score (+1 straight, −1 crossing) is highest; the better of {search, packing} wins.
+ */
+export const Search: Story = {
+  args: {
+    source: COMPLEX_DIAGRAM,
+    layout: 'search',
   },
 };

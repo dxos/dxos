@@ -172,17 +172,8 @@ export type CompileOptions = Omit<GridCompileOptions, 'route'> & {
   rules?: GroupRule[];
 };
 
-/**
- * Compile with rule-based grouping: rules claim groups, leftovers become singletons, groups pack
- * as super-nodes ranked by their cross-group edges (lanes advance vertically; no borders overlap
- * by construction), and multi-node groups render a dashed frame behind their members.
- */
-export const compile = (source: string, options: CompileOptions = {}): Scene.Command[] => {
-  const { origin = { x: 0, y: 0 }, scale = 1, maxWidth = GRID * 6 } = options;
-  const rules = options.rules ?? [inheritanceTreeRule, linearChainRule];
-  const model = parse(source);
-  const cell = measureCell(model, { maxWidth, cell: options.cell, titleHeight: options.titleHeight });
-
+/** Run the rules over the model; leftovers become singleton groups. */
+export const buildGroups = (model: UmlModel, cell: Cell, rules: GroupRule[]): Group[] => {
   const unclaimed = new Set(model.classes.map((entry) => entry.id));
   const groups: Group[] = [];
   for (const rule of rules) {
@@ -196,9 +187,14 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
       h: cell.h,
     });
   }
+  return groups;
+};
 
-  // Pack groups as super-nodes: rank by up-oriented cross-group edges (target group above), then
-  // lay ranks out as rows, bottom rank last — mirroring the node-level convention.
+/**
+ * Pack groups as super-nodes: rank by up-oriented cross-group edges (target group above), then
+ * lay ranks out as rows, bottom rank last — mirroring the node-level convention.
+ */
+export const packGroups = (model: UmlModel, groups: Group[]): Map<string, Scene.Point> => {
   const groupOf = new Map<string, Group>();
   for (const group of groups) {
     for (const id of group.rects.keys()) {
@@ -230,17 +226,35 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
     }
     y += Math.max(...members.map((group) => group.h)) + GROUP_GAP;
   }
+  return origins;
+};
 
-  // Absolute node rects; group frames paint first, behind their members.
+/** Absolute node rects for a (possibly partial) group placement. */
+export const resolveRects = (groups: Group[], origins: Map<string, Scene.Point>): Map<string, Rect> => {
   const rects = new Map<string, Rect>();
-  const frames: Scene.Command[] = [];
   for (const group of groups) {
-    const at = origins.get(group.id)!;
+    const at = origins.get(group.id);
+    if (!at) {
+      continue;
+    }
     for (const [id, rect] of group.rects) {
       rects.set(id, { ...rect, x: at.x + rect.x, y: at.y + rect.y });
     }
-    if (group.rects.size > 1) {
-      frames.push({
+  }
+  return rects;
+};
+
+/** Dashed frames behind multi-node groups. */
+export const frameCommands = (
+  groups: Group[],
+  origins: Map<string, Scene.Point>,
+  { origin = { x: 0, y: 0 }, scale = 1 }: { origin?: Scene.Point; scale?: number } = {},
+): Scene.Command[] =>
+  groups
+    .filter((group) => group.rects.size > 1)
+    .map((group) => {
+      const at = origins.get(group.id)!;
+      return {
         op: 'upsert-object',
         object: {
           id: `group:${group.id}`,
@@ -259,9 +273,24 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
             },
           ],
         },
-      });
-    }
-  }
+      };
+    });
 
-  return [...frames, ...emit({ model, cell, rects, ranks: relationRanks(model) }, { origin, scale })];
+/**
+ * Compile with rule-based grouping: rules claim groups, leftovers become singletons, groups pack
+ * as super-nodes ranked by their cross-group edges (lanes advance vertically; no borders overlap
+ * by construction), and multi-node groups render a dashed frame behind their members.
+ */
+export const compile = (source: string, options: CompileOptions = {}): Scene.Command[] => {
+  const { origin = { x: 0, y: 0 }, scale = 1, maxWidth = GRID * 6 } = options;
+  const rules = options.rules ?? [inheritanceTreeRule, linearChainRule];
+  const model = parse(source);
+  const cell = measureCell(model, { maxWidth, cell: options.cell, titleHeight: options.titleHeight });
+  const groups = buildGroups(model, cell, rules);
+  const origins = packGroups(model, groups);
+  const rects = resolveRects(groups, origins);
+  return [
+    ...frameCommands(groups, origins, { origin, scale }),
+    ...emit({ model, cell, rects, ranks: relationRanks(model) }, { origin, scale }),
+  ];
 };

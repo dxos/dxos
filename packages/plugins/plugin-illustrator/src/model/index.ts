@@ -13,3 +13,4 @@ export * as Uml from './uml';
 export * as UmlEngine from './uml-engine';
 export * as UmlGrid from './uml-grid';
 export * as UmlRules from './uml-rules';
+export * as UmlSearch from './uml-search';
