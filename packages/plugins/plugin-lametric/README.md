@@ -46,6 +46,28 @@ the whole setup: the
 plugin reads the device's app list and finds the My Data (DIY) widget itself, because that widget's
 UUID identifies one installation of the app and is not shown anywhere in LaMetric's apps or portal.
 
+### 4. Run the desktop app
+
+The plugin only pushes from a Tauri build, so `vite dev` in a browser will do nothing:
+
+```bash
+moon run composer-app:tauri-dev
+```
+
+The first run compiles the Rust side, including the newly added `tauri-plugin-http`, so expect it to
+take a while; later runs are incremental. Once Composer is up, enable **LaMetric** in the plugin
+registry, open its settings, and enter the device address and API key. Pushing starts as soon as both
+are set — there is nothing to press.
+
+If the display does not change, check in this order:
+
+1. **Is My Data (DIY) the app currently on screen?** The device only shows one app at a time; press
+   its side buttons to reach it. Frames are pushed whether or not it is showing.
+2. **Is the address right?** `curl -s -D - -o /dev/null http://<address>:8080/api/v2` should answer
+   `401` with `Basic realm="global"`.
+3. **Is the key right?** Adding `-u dev:<key>` to that same request should turn the `401` into a
+   `200`.
+
 ### Cloud push (optional, off-network)
 
 Pushing while away from the device's network is a **different mechanism**, not the same request to a

@@ -137,10 +137,15 @@ The `.sdPlugin` bundle and the WebSocket transport. Needs the physical device an
     queries rather than N. `KeySpec`/`DialSpec` became `Shortcut`/`MetricSpec` on the way in.
   - **Verified without hardware:** 12 render tests, 6 transport tests, 5 pusher tests, 3 protocol
     tests, 2 smoke tests against a stand-in HTTP device, 5 storybook stories rendered and screenshot.
-  - [ ] **End-to-end on the device** — needs `.secrets/lametric.env` (app id, widget id, token,
-        device ip) and a published Indicator App. Resolve the open spike while there: does the
-        widget-update path answer on plain `http://<ip>:8080`? If so `LocalTransport` needs no
-        certificate handling at all.
+  - [x] **End-to-end on the device** — verified 2026-08-19 against real hardware, driving the actual
+        `discoverWidgetId` / `selectTransport` / `toFrames` code rather than curl. Discovery found the
+        DIY widget, statistics rendered, and a progress sweep (10 → 100%) drew the bar. Plain
+        `http://<ip>:8080` answers, so the certificate path is optional; the device also returns
+        `Access-Control-Allow-Origin: *`, so CORS never blocked it — mixed content and the
+        self-signed certificate do.
+  - [ ] **In-app run** — the transport is proven on hardware, but the plugin has not yet driven the
+        device from a running `composer-app:tauri-dev` build. That exercises the settings surface,
+        the discovery-on-settings-change path, and the debounce under real space churn.
 
 ### LaMetric follow-ups
 
