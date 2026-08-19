@@ -58,8 +58,10 @@ export type RoutedRelation = {
   to: Rect;
   /** True when the diagram flows LR/RL, so ranks stack along x. */
   horizontal: boolean;
-  /** Sequence number among relations sharing a routing channel, for parallel-edge separation. */
+  /** Channel slot among relations sharing a gutter, centered on it (shift = offset × GRID_FINE). */
   offset: number;
+  /** Terminal cross-axis coordinates (port positions); node-edge centers when omitted. */
+  ports?: { start?: number; end?: number };
 };
 
 /**
@@ -69,31 +71,44 @@ export type RoutedRelation = {
 export type Router = (edge: RoutedRelation) => Scene.Point[];
 
 /** Z route along y: leave the facing horizontal edge, run a channel at mid, enter the peer's. */
-const routeAlongY = (from: Rect, to: Rect, shift: number): Scene.Point[] => {
+const routeAlongY = (from: Rect, to: Rect, shift: number, ports?: RoutedRelation['ports']): Scene.Point[] => {
   const down = to.y >= from.y;
-  const start = { x: from.x + from.w / 2, y: down ? from.y + from.h : from.y };
-  const end = { x: to.x + to.w / 2, y: down ? to.y : to.y + to.h };
+  const start = { x: ports?.start ?? from.x + from.w / 2, y: down ? from.y + from.h : from.y };
+  const end = { x: ports?.end ?? to.x + to.w / 2, y: down ? to.y : to.y + to.h };
+  if (start.x === end.x) {
+    // Aligned terminals: a straight line, shifted sideways so parallel edges stay distinct.
+    return [
+      { x: start.x + shift, y: start.y },
+      { x: end.x + shift, y: end.y },
+    ];
+  }
   const mid = snap((start.y + end.y) / 2) + shift;
-  return start.x === end.x ? [start, end] : [start, { x: start.x, y: mid }, { x: end.x, y: mid }, end];
+  return [start, { x: start.x, y: mid }, { x: end.x, y: mid }, end];
 };
 
 /** Z route along x; mirror of `routeAlongY`. */
-const routeAlongX = (from: Rect, to: Rect, shift: number): Scene.Point[] => {
+const routeAlongX = (from: Rect, to: Rect, shift: number, ports?: RoutedRelation['ports']): Scene.Point[] => {
   const right = to.x >= from.x;
-  const start = { x: right ? from.x + from.w : from.x, y: from.y + from.h / 2 };
-  const end = { x: right ? to.x : to.x + to.w, y: to.y + to.h / 2 };
+  const start = { x: right ? from.x + from.w : from.x, y: ports?.start ?? from.y + from.h / 2 };
+  const end = { x: right ? to.x : to.x + to.w, y: ports?.end ?? to.y + to.h / 2 };
+  if (start.y === end.y) {
+    return [
+      { x: start.x, y: start.y + shift },
+      { x: end.x, y: end.y + shift },
+    ];
+  }
   const mid = snap((start.x + end.x) / 2) + shift;
-  return start.y === end.y ? [start, end] : [start, { x: mid, y: start.y }, { x: mid, y: end.y }, end];
+  return [start, { x: mid, y: start.y }, { x: mid, y: end.y }, end];
 };
 
 /**
  * Default router: an orthogonal Z along the flow axis — rank-crossing edges route through the
  * inter-rank gutter (channel shifted per parallel edge); same-rank edges route out the side.
  */
-export const zRouter: Router = ({ from, to, offset, horizontal }) => {
+export const zRouter: Router = ({ from, to, offset, horizontal, ports }) => {
   const sameLane = horizontal ? from.x === to.x : from.y === to.y;
   const alongY = horizontal ? sameLane : !sameLane;
-  return (alongY ? routeAlongY : routeAlongX)(from, to, offset * GRID_FINE);
+  return (alongY ? routeAlongY : routeAlongX)(from, to, offset * GRID_FINE, ports);
 };
 
 /**
@@ -348,19 +363,90 @@ export const emit = (
   }
 
   if (model.relations.length > 0) {
-    // Count parallel edges per lane pair so the router can separate their channels.
-    const channels = new Map<string, number>();
+    // A route's channel run sits on the gutter line at the midpoint between its terminals, so ALL
+    // edges sharing that line — not just those between the same rank pair — must take distinct
+    // channels or their runs overlap. Straight edges (aligned terminals) share the column/row line
+    // instead, and the router shifts them sideways. Offsets center each block on its line.
+    const gutterOf = (relation: UmlRelation): string => {
+      const from = rects.get(relation.from)!;
+      const to = rects.get(relation.to)!;
+      const sameLane = horizontal ? from.x === to.x : from.y === to.y;
+      const alongY = horizontal ? sameLane : !sameLane;
+      if (alongY) {
+        if (from.x + from.w / 2 === to.x + to.w / 2) {
+          return `v:${from.x + from.w / 2}`;
+        }
+        const startY = to.y >= from.y ? from.y + from.h : from.y;
+        const endY = to.y >= from.y ? to.y : to.y + to.h;
+        return `y:${snap((startY + endY) / 2)}`;
+      }
+      if (from.y + from.h / 2 === to.y + to.h / 2) {
+        return `h:${from.y + from.h / 2}`;
+      }
+      const startX = to.x >= from.x ? from.x + from.w : from.x;
+      const endX = to.x >= from.x ? to.x : to.x + to.w;
+      return `x:${snap((startX + endX) / 2)}`;
+    };
+
+    const gutters = new Map<string, number>();
+    for (const relation of model.relations) {
+      const gutter = gutterOf(relation);
+      gutters.set(gutter, (gutters.get(gutter) ?? 0) + 1);
+    }
+
+    // Port distribution: terminals attaching to the same node side spread across it (ordered by
+    // peer position) instead of stacking on the center — the final approach segments of distinct
+    // relations would otherwise coincide exactly.
+    type PortSlot = { relation: UmlRelation; end: boolean; order: number };
+    const portGroups = new Map<string, PortSlot[]>();
+    const addSlot = (key: string, slot: PortSlot) => portGroups.set(key, [...(portGroups.get(key) ?? []), slot]);
+    for (const relation of model.relations) {
+      const from = rects.get(relation.from)!;
+      const to = rects.get(relation.to)!;
+      const sameLane = horizontal ? from.x === to.x : from.y === to.y;
+      const alongY = horizontal ? sameLane : !sameLane;
+      if (alongY) {
+        const down = to.y >= from.y;
+        addSlot(`${relation.from}:${down ? 'bottom' : 'top'}`, { relation, end: false, order: to.x + to.w / 2 });
+        addSlot(`${relation.to}:${down ? 'top' : 'bottom'}`, { relation, end: true, order: from.x + from.w / 2 });
+      } else {
+        const right = to.x >= from.x;
+        addSlot(`${relation.from}:${right ? 'right' : 'left'}`, { relation, end: false, order: to.y + to.h / 2 });
+        addSlot(`${relation.to}:${right ? 'left' : 'right'}`, { relation, end: true, order: from.y + from.h / 2 });
+      }
+    }
+    const ports = new Map<UmlRelation, { start?: number; end?: number }>();
+    for (const [key, slots] of portGroups) {
+      if (slots.length < 2) {
+        continue;
+      }
+      const nodeId = key.slice(0, key.lastIndexOf(':'));
+      const rect = rects.get(nodeId)!;
+      const across = key.endsWith(':top') || key.endsWith(':bottom');
+      slots.sort((left, right) => left.order - right.order);
+      slots.forEach((slot, index) => {
+        const fraction = (index + 1) / (slots.length + 1);
+        const coord = across ? rect.x + rect.w * fraction : rect.y + rect.h * fraction;
+        const entry = ports.get(slot.relation) ?? {};
+        entry[slot.end ? 'end' : 'start'] = Math.round(coord / GRID_FINE) * GRID_FINE;
+        ports.set(slot.relation, entry);
+      });
+    }
+
+    const assigned = new Map<string, number>();
     const elements: Scene.Element[] = [];
     model.relations.forEach((relation, index) => {
-      const key = `${ranks.get(relation.from) ?? 0}:${ranks.get(relation.to) ?? 0}`;
-      const offset = channels.get(key) ?? 0;
-      channels.set(key, offset + 1);
+      const gutter = gutterOf(relation);
+      const position = assigned.get(gutter) ?? 0;
+      assigned.set(gutter, position + 1);
+      const offset = position - (gutters.get(gutter)! - 1) / 2;
       const points = route({
         relation,
         from: rects.get(relation.from)!,
         to: rects.get(relation.to)!,
         horizontal,
         offset,
+        ports: ports.get(relation),
       });
       const id = `${relation.from}-${relation.to}-${index}`;
       const style = relationStyle(relation.kind);
