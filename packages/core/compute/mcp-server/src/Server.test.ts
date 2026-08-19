@@ -52,6 +52,8 @@ const operation = (props: Partial<Projection.ProjectedOperation> = {}): Projecti
   key: 'org.dxos.function.tasks.create',
   toolName: 'taskCreate',
   safety: 'write',
+  skills: ['codeProject'],
+  requiresSpace: true,
   parameters: {},
   ...props,
 });
@@ -135,11 +137,25 @@ describe('Server', () => {
     });
   });
 
+  describe('makeTool', () => {
+    test('a space-addressed operation gains the ambient spaceId parameter; others do not', ({ expect }) => {
+      const spaceAddressed = Server.makeTool(operation({ requiresSpace: true }));
+      const spaceless = Server.makeTool(operation({ requiresSpace: false }));
+      expect(Object.keys(spaceAddressed.parametersSchema.fields)).to.include('spaceId');
+      expect(Object.keys(spaceless.parametersSchema.fields)).to.not.include('spaceId');
+    });
+
+    test('an operation declaring its own spaceId keeps it, without the ambient duplicate', ({ expect }) => {
+      const tool = Server.makeTool(operation({ requiresSpace: true, parameters: { spaceId: Schema.String } }));
+      expect(tool.parametersSchema.fields.spaceId).to.equal(Schema.String);
+    });
+  });
+
   describe('registry loading', () => {
     test('a registry outage degrades to an empty projection rather than failing the request', async ({ expect }) => {
       const { gateway } = testGateway({ outage: true });
       const [operations, skills] = await EffectEx.runPromise(
-        Effect.all([Server.loadOperations([]), Server.loadSkills([])]).pipe(
+        Effect.all([Server.loadOperations([], []), Server.loadSkills([])]).pipe(
           Effect.provideService(Gateway.Service, gateway),
         ),
       );

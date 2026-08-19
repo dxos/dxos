@@ -25,6 +25,7 @@ export const IdentityCreated = Capability.lazyModule(
   },
   () => import('./identity-created'),
 );
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const OperationHandler = Capability.lazyModule(
   'OperationHandler',
   { provides: [Capabilities.OperationHandler] },

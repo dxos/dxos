@@ -106,6 +106,8 @@ export const makeGateway = Effect.fn(function* () {
           description: skill.description,
           instructions: skill.instructions?.source?.target?.content,
           mcpPrompt: Skill.isMcpPrompt(skill),
+          // The atomic unit of projection: these ToolIds decide which operations become tools.
+          tools: [...skill.tools],
         };
       }),
     ),

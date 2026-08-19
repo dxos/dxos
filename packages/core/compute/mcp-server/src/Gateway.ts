@@ -39,6 +39,11 @@ export type SkillRecord = {
   readonly instructions?: string;
   /** Whether the skill opted into MCP projection (`Skill.McpPromptAnnotation`). */
   readonly mcpPrompt?: boolean;
+  /**
+   * The skill's tool ids (operation NSIDs). Skills are the atomic unit of projection: these decide
+   * which operations project as tools alongside the skill's prompt.
+   */
+  readonly tools?: readonly string[];
 };
 
 export type InvokeRequest = {

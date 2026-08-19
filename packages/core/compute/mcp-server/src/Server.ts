@@ -33,10 +33,12 @@ import * as wireInternal from './internal/wire';
  * (https://modelcontextprotocol.io/specification/2025-06-18/server/prompts) — so a model can never
  * fetch one on its own. Tools are the model-controlled primitive, so the load step is a tool.
  *
- * This is the shape the MCP "Skills over MCP" working group is standardizing: skill listings carry
- * lightweight metadata, and "the host exposes a single skill-loading tool to the model, keyed by
- * skill name" (SEP-2640, https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2640).
- * When the extension lands in clients this tool becomes an alias for it, not a redesign.
+ * The MCP "Skills over MCP" draft (SEP-2640, extension id `io.modelcontextprotocol/skills`,
+ * https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2640) models skills as
+ * `skill://` resources served through `skills/list` / `skills/get`; the single model-invocable
+ * load tool is the *client's* affordance over them. This server-side tool is the polyfill for
+ * clients without the extension — serving the resources alongside it is additive when the draft
+ * settles, and `projectSkills` already yields everything the frontmatter needs.
  */
 export const SkillLoad = Tool.make('skillLoad', {
   description:
@@ -121,17 +123,18 @@ export const loadSkillByName = (
   );
 
 /**
- * Fetches the registry and projects annotated operations.
+ * Fetches the registry and projects the operations the given skills' tools name.
  *
  * A registry outage degrades to zero projected tools (the host's static surface keeps serving). A
  * name collision inside {@link Projection.projectOperations} throws as a defect and deliberately
  * escapes: that is an authorship error, not an outage.
  */
 export const loadOperations = (
+  skills: readonly Projection.ProjectedSkill[],
   reservedNames: readonly string[],
 ): Effect.Effect<Projection.ProjectedOperation[], never, Gateway.Service> =>
   Effect.flatMap(Gateway.Service, (gateway) => gateway.listOperations).pipe(
-    Effect.map((operations) => Projection.projectOperations(operations, reservedNames)),
+    Effect.map((operations) => Projection.projectOperations(operations, skills, reservedNames)),
     Effect.catch((error) => {
       log.warn('operation registry unavailable; serving static tools only', { error: error.message });
       return Effect.succeed<Projection.ProjectedOperation[]>([]);
@@ -183,18 +186,26 @@ export const toolsLayer = (
 };
 
 /** The MCP tool descriptor for a projected operation, carrying its safety hints. */
-export const makeTool = (operation: Projection.ProjectedOperation) =>
-  Tool.make(operation.toolName, {
+export const makeTool = (operation: Projection.ProjectedOperation) => {
+  const tool = Tool.make(operation.toolName, {
     description: operation.description,
     parameters: Schema.Struct({
       ...operation.parameters,
-      ...('spaceId' in operation.parameters ? {} : { spaceId: spaceInternal.idParameter }),
+      // Only space-addressed operations gain the ambient parameter: its presence is what tells the
+      // model which calls need a space id at all.
+      ...(operation.requiresSpace && !('spaceId' in operation.parameters)
+        ? { spaceId: spaceInternal.idParameter }
+        : {}),
     }),
     success: Schema.Record(Schema.String, Schema.Unknown),
     failure: ToolFailure,
-  })
-    .annotate(Tool.Readonly, operation.safety === 'read')
-    .annotate(Tool.Destructive, operation.safety === 'destructive');
+  });
+  // An unannotated operation makes no safety claims — clients then assume possibly-destructive,
+  // the conservative default.
+  return operation.safety == null
+    ? tool
+    : tool.annotate(Tool.Readonly, operation.safety === 'read').annotate(Tool.Destructive, operation.safety === 'destructive');
+};
 
 /** Dispatches one projected tool call: encode input, resolve the space, invoke, qualify refs. */
 export const makeHandler =
@@ -271,10 +282,9 @@ export const layer = ({ reservedToolNames = [], reservedPromptNames = [] }: Laye
   Gateway.Service
 > =>
   Effect.gen(function* () {
-    const [operations, skills] = yield* Effect.all(
-      [loadOperations([...reservedToolNames, SkillLoad.name]), loadSkills(reservedPromptNames)],
-      { concurrency: 2 },
-    );
+    // Skills first: they are the atomic unit of projection, so the tool set derives from them.
+    const skills = yield* loadSkills(reservedPromptNames);
+    const operations = yield* loadOperations(skills, [...reservedToolNames, SkillLoad.name]);
     return Layer.mergeAll(
       McpServer.toolkit(SkillToolkit).pipe(Layer.provide(SkillHandlers)),
       ...(operations.length > 0 ? [toolsLayer(operations)] : []),

@@ -36,9 +36,6 @@ const McpToolAnnotation = Schema.Struct({
   name: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
   safety: Schema.Literals(['read', 'write', 'destructive']),
-  aspect: Schema.optional(Schema.String),
-  /** Prompt name of the skill whose workflow this tool belongs to; see {@link skillPointer}. */
-  skill: Schema.optional(Schema.String),
 });
 
 const decodeAnnotation = Schema.decodeUnknownResult(McpToolAnnotation);
@@ -57,7 +54,15 @@ export type ProjectedOperation = {
   key: string;
   toolName: string;
   description?: string;
-  safety: Safety;
+  /** Absent when the operation carries no annotation: no safety claims, which clients treat as possibly-destructive. */
+  safety?: Safety;
+  /** Prompt names of the projected skills whose `tools` list this operation — the projection's reason to exist. */
+  skills: readonly string[];
+  /**
+   * Whether the operation is space-addressed — `Database.Service` appears in its declared or
+   * optional services — which is what decides the ambient `spaceId` tool parameter.
+   */
+  requiresSpace: boolean;
   /** Tool parameters reconstructed from the operation's serialized input schema. */
   parameters: Fields;
   /**
@@ -74,6 +79,8 @@ export type ProjectedSkill = {
   promptName: string;
   description?: string;
   instructions: string;
+  /** NSIDs of the skill's tools — the operations this skill projects. */
+  tools: readonly string[];
 };
 
 /**
@@ -86,9 +93,12 @@ export type ProjectedSkill = {
  * behavioral lever (https://www.anthropic.com/engineering/writing-tools-for-agents), and the
  * `skillLoad` hop this points into is the shape of the MCP Skills-over-MCP extension (SEP-2640).
  */
-const skillPointer = (skill: string): string =>
-  `Part of the '${skill}' workflow — call skillLoad('${skill}') and follow its instructions before ` +
-  'first use, unless they are already in context.';
+const skillPointer = (skills: readonly string[]): string =>
+  skills.length === 1
+    ? `Part of the '${skills[0]}' workflow — call skillLoad('${skills[0]}') and follow its instructions before ` +
+      'first use, unless they are already in context.'
+    : `Part of the ${skills.map((name) => `'${name}'`).join(' and ')} workflows — call skillLoad for each and ` +
+      'follow their instructions before first use, unless they are already in context.';
 
 /** `$id` of the reference declaration ECHO emits for a `Ref` field. */
 const REF_SCHEMA_ID = '/schemas/echo/ref';
@@ -184,13 +194,27 @@ const isOptionalField = (
 const isStruct = (schema: Schema.Codec<any, any>): schema is Schema.Codec<any, any> & { readonly fields: Fields } =>
   'fields' in schema;
 
+/** Context key of `Database.Service`; drift is pinned by `projection.test.ts`. */
+export const DATABASE_SERVICE_KEY = '@dxos/echo/Database/Service';
+
+/** NSID of a registry key: `dxn:` prefix and `:<version>` tail stripped — the form ToolIds carry. */
+const toNsid = (key: string): string =>
+  key
+    .replace(/^dxn:/, '')
+    .replace(/:\d+\.\d+\.\d+$/, '');
+
 /**
- * Projects registry records into tool descriptors.
+ * Projects registry records into tool descriptors — driven by the projected skills.
+ *
+ * The skill definition is the atomic unit of projection: an operation projects iff a projected
+ * skill's `tools` list names it, and the load-the-skill-first pointer appended to the tool's
+ * description derives from that membership (the SEP-2640 shape). The operation's own MCP
+ * annotation, when present, only customizes the tool (name override, safety hints); a skill tools
+ * entry that names no operation record is a provider tool or an operation the registry does not
+ * carry, and projects nothing.
  *
  * Records arrive in wire form: `PersistentOperation` serializes with meta as a plain `@meta`
- * property carrying `key` and `annotations`, and with input/output as JSON Schema. Only records
- * carrying the MCP annotation project; everything else in the registry stays invisible to MCP
- * clients.
+ * property carrying `key` and `annotations`, and with input/output as JSON Schema.
  *
  * Name collisions throw: two operations claiming one tool name is an authorship error the contract
  * wants surfaced loudly at projection time, not resolved silently. `reservedNames` covers the
@@ -198,27 +222,49 @@ const isStruct = (schema: Schema.Codec<any, any>): schema is Schema.Codec<any, a
  */
 export const projectOperations = (
   operations: readonly Gateway.OperationRecord[],
+  skills: readonly ProjectedSkill[],
   reservedNames: readonly string[],
 ): ProjectedOperation[] => {
+  // NSID → prompt names of the skills whose tools list it.
+  const owners = new Map<string, string[]>();
+  for (const skill of skills) {
+    for (const tool of skill.tools) {
+      const nsid = toNsid(tool);
+      owners.set(nsid, [...(owners.get(nsid) ?? []), skill.promptName]);
+    }
+  }
+
   const projected: ProjectedOperation[] = [];
   // Records are JSON off the wire; each field is checked below rather than trusted from a type.
   for (const record of operations as Array<Record<string, any>>) {
     const meta = record?.['@meta'];
     const rawKey: unknown = meta?.key;
+    if (typeof rawKey !== 'string' || rawKey.length === 0) {
+      continue;
+    }
+    const owningSkills = owners.get(toNsid(rawKey));
+    if (owningSkills == null) {
+      continue;
+    }
+
+    // A malformed annotation degrades to defaults rather than hiding the tool: inclusion belongs
+    // to the skill, so a metadata authoring error must not silently shrink the skill's surface.
+    let annotation: Schema.Schema.Type<typeof McpToolAnnotation> | undefined;
     const rawAnnotation: unknown = meta?.annotations?.[MCP_TOOL_ANNOTATION_ID];
-    if (typeof rawKey !== 'string' || rawKey.length === 0 || rawAnnotation == null) {
-      continue;
+    if (rawAnnotation != null) {
+      const decoded = decodeAnnotation(rawAnnotation);
+      if (decoded._tag === 'Failure') {
+        log.warn('mcp-tool annotation did not decode; projecting with defaults', {
+          key: rawKey,
+          error: String(decoded.failure),
+        });
+      } else {
+        annotation = decoded.success;
+      }
     }
-    const decoded = decodeAnnotation(rawAnnotation);
-    if (decoded._tag === 'Failure') {
-      log.warn('mcp-tool annotation did not decode; operation skipped', {
-        key: rawKey,
-        error: String(decoded.failure),
-      });
-      continue;
-    }
+
     const key = rawKey.replace(/^dxn:/, '');
-    const toolName = decoded.success.name ?? key.split('.').at(-1) ?? '';
+    const toolName = annotation?.name ?? toNsid(rawKey).split('.').at(-1) ?? '';
     if (!TOOL_NAME_PATTERN.test(toolName)) {
       log.warn('projected tool name violates the tool-name constraint; operation skipped', { key, toolName });
       continue;
@@ -236,17 +282,17 @@ export const projectOperations = (
       }
     }
 
-    const baseDescription = decoded.success.description ?? record.description ?? record.name;
-    const description =
-      decoded.success.skill == null
-        ? baseDescription
-        : [baseDescription, skillPointer(decoded.success.skill)].filter(Boolean).join(' ');
+    const baseDescription = annotation?.description ?? record.description ?? record.name;
+    const description = [baseDescription, skillPointer(owningSkills)].filter(Boolean).join(' ');
 
+    const declaredServices = [...(record.services ?? []), ...(record.optionalServices ?? [])];
     projected.push({
       key,
       toolName,
       description,
-      safety: decoded.success.safety,
+      safety: annotation?.safety,
+      skills: owningSkills,
+      requiresSpace: declaredServices.includes(DATABASE_SERVICE_KEY),
       parameters,
       inputSchema,
     });
@@ -291,6 +337,7 @@ export const projectSkills = (
       promptName,
       description: skill.description ?? skill.name,
       instructions: skill.instructions,
+      tools: skill.tools ?? [],
     });
   }
 
