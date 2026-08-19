@@ -20,13 +20,14 @@ export const submitPrompt = async (canvasElement: HTMLElement, text: string): Pr
   }
 
   const needle = text.slice(0, 30);
-  // The prompt editor itself holds the text until it clears; anywhere else (the thread renders
-  // sent messages in their own read-only CodeMirror) counts as submitted.
+  // The prompt editor itself holds the text until it clears; any OTHER editor line containing the
+  // needle (the thread renders sent messages in their own read-only CodeMirror) counts as
+  // submitted. Match on `.cm-line` textContent — not leaf elements — because markdown decorations
+  // (e.g. a linkified URL) split the line into child spans, and a leaf-only check then never fires.
   const promptRoot = editor.closest('.cm-editor');
   const submitted = () =>
-    [...canvasElement.querySelectorAll('*')].some(
-      (node) =>
-        node.childElementCount === 0 && node.closest('.cm-editor') !== promptRoot && node.textContent?.includes(needle),
+    [...canvasElement.querySelectorAll<HTMLElement>('.cm-line')].some(
+      (line) => line.closest('.cm-editor') !== promptRoot && line.textContent?.includes(needle),
     );
 
   // Empties the composer, so a retry typed after a slow-rendering (but successful) submit is not
