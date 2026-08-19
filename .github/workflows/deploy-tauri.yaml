@@ -453,6 +453,24 @@ jobs:
       # `DX_PLUGIN_SET=production` on its `bundle` dep. iOS embeds the frontend but needs no ollama sidecar.
       # TODO(wittjosiah): Restore the artifact reuse once iOS is deployed on production deploys — the
       # shared bundle is the production set there, so rebuilding it here would be pure duplicated work.
+      # Previous approach, kept here to restore verbatim when that day comes:
+      #
+      # - name: Download Composer bundle
+      #   continue-on-error: true
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: composer-bundle
+      #     path: packages/apps/composer-app/out/composer
+      #
+      # - name: Build Tauri app for iOS
+      #   run: |
+      #     if [ -f packages/apps/composer-app/out/composer/index.html ]; then
+      #       echo "Using prebuilt Composer bundle — tauri ios build bare (no moon)."
+      #       ( cd packages/apps/composer-app && pnpm exec tauri ios build --export-method=app-store-connect )
+      #     else
+      #       echo "No prebuilt bundle (unexpected) — falling back to moon."
+      #       moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
+      #     fi
       - name: Build Tauri app for iOS
         run: moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
         env:

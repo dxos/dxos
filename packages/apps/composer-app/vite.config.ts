@@ -34,7 +34,7 @@ const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 // `DX_PLUGIN_SET=production` swaps the full plugin registry for plugin-defs.production.tsx without
-// touching main.tsx — the curated set `composer.space` ships, and the `serve-min` inner loop.
+// touching main.tsx — the curated set `composer.space` ships, and the `serve-prod` inner loop.
 //
 // Build-time rather than a runtime flag: a flag would hide the registry UI while every plugin still
 // entered the bundle, so the non-shipped plugins would keep paying for themselves. Selecting the set

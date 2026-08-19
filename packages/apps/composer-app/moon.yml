@@ -91,7 +91,7 @@ tasks:
   # iOS counterpart of `tauri-build`; no sidecar (the ollama runtime is desktop-only). Embeds the
   # PRODUCTION plugin set unconditionally — iOS is still deployed out of the `dev` environment, but what
   # TestFlight carries should be what `composer.space` carries, not the full catalog that environment
-  # would otherwise select. `tauri-ios` (the dev loop) extends `serve-min` for the same reason.
+  # would otherwise select. `tauri-ios` (the dev loop) extends `serve-prod` for the same reason.
   tauri-ios-build:
     deps:
       # The env rides the dep, not just this task: `frontendDist` is built by `bundle`, so a bundle
@@ -110,7 +110,7 @@ tasks:
       # otherwise be concatenated onto this command.
       mergeArgs: replace
   tauri-ios:
-    extends: serve-min
+    extends: serve-prod
     command: pnpm exec tauri ios dev
     options:
       mergeArgs: replace
@@ -202,7 +202,7 @@ tasks:
   # than restating its narrowed dependency set so the two cannot drift — and the fast local loop is now
   # also the loop that matches production, so a plugin missing from the shipped set surfaces here
   # rather than after a deploy.
-  serve-min:
+  serve-prod:
     extends: serve
     env:
       DX_PLUGIN_SET: production

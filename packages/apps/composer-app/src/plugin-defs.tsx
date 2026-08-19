@@ -110,8 +110,10 @@ export const getDefaults = ({ isDev, isLocal }: PluginConfig): string[] =>
 
     // Dev. `isDev` is strictly the `dev` cloud environment (`DX_ENVIRONMENT=dev`) or a local
     // `DX_DEV=true` opt-in — nightly does NOT get this block, and neither does a plain local `serve`.
-    // They stay in the registry either way (see `getPlugins` below), so enabling one manually is
-    // still a settings toggle away; this only controls what a fresh identity starts with.
+    // Everything here except Sidekick stays in the registry either way (see `getPlugins` below), so
+    // enabling one manually is still a settings toggle away; this only controls what a fresh identity
+    // starts with. Sidekick (like Computer, absent from this list since it is never default-on) is
+    // gated on `isDev` for availability too, so outside dev it is not in the registry at all.
     isDev && [
       DebugPlugin.meta.profile.key,
       DevtoolsPlugin.meta.profile.key,
@@ -163,11 +165,11 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ChessComPlugin.make(),
     ReviewPlugin.make(),
     ConductorPlugin.make(),
-    // Dev-only coding harness: the assistant gets a bash tool and a file-edit tool. Always in the
-    // registry (like Debug/Devtools below) — deliberately absent from `getDefaults` regardless of
-    // environment, since its tools stay unusable until the dev server mounts the route (see
-    // `ComputerShellPlugin` in vite.config.ts).
-    ComputerPlugin.make(),
+    // Dev-only coding harness: the assistant gets a bash tool and a file-edit tool. Gated on `isDev`
+    // for availability, not just defaults — unlike Debug/Devtools below, it is absent from the
+    // registry entirely outside dev, and its tools stay unusable until the dev server mounts the
+    // route (see `ComputerShellPlugin` in vite.config.ts) even when it is present.
+    isDev && ComputerPlugin.make(),
     !isTauri && CrxPlugin.make(),
     DebugPlugin.make({ logStore }),
     DevtoolsPlugin.make(),
@@ -206,7 +208,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     SandboxPlugin.make(),
     ScriptPlugin.make(),
     SearchPlugin.make(),
-    SidekickPlugin.make(),
+    isDev && SidekickPlugin.make(),
     SheetPlugin.make(),
     IllustratorPlugin.make(),
     TldrawPlugin.make(),

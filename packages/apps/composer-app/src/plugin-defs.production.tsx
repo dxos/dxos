@@ -17,7 +17,7 @@ export type { PluginConfig, State } from './plugin-defs.core';
 
 /**
  * Curated set `composer.space` ships (opt-in via `DX_PLUGIN_SET=production`; also the local
- * `serve-min` inner loop and every iOS build, so the fast loop is the one that matches production):
+ * `serve-prod` inner loop and every iOS build, so the fast loop is the one that matches production):
  * core infrastructure plus Assistant, Markdown, Projects, Review, Tasks (which owns the outliner),
  * Thread and Transcription.
  *

@@ -14,7 +14,41 @@ import { Organization, Person, Pipeline, Task } from '@dxos/types';
 import { Position } from '@dxos/util';
 
 import { ExpandoCard, FormCard, JsonCard, PersonCardIcon, ProjectCard, TaskCard } from '../cards';
+import { UnsupportedType } from '../components';
 import { OrganizationCardContent, PersonCardContent } from './RelatedCards';
+
+/**
+ * True when no enabled plugin owns the object's type, read off the type registry.
+ *
+ * Deliberately NOT read off "no other article candidate matched": this contribution is part of the
+ * `cardContent`/`article`-role-gated `ReactSurface` module, which loads once either role is first
+ * requested — for the frames before a real plugin's surface arrives, the absence of a candidate is
+ * also true, and this stand-in would flash on the first plank a session opens. Plugins register
+ * their schema in the boot idle wave instead, long before a user opens anything, so the registry
+ * answers the question without racing.
+ */
+const isUnclaimedType = (subject: unknown): subject is Obj.Unknown => {
+  if (!Obj.isObject(subject)) {
+    return false;
+  }
+  const typename = Obj.getTypename(subject);
+  if (!typename) {
+    return false;
+  }
+  try {
+    const db = Obj.getDatabase(subject);
+    return (
+      !!db &&
+      !db.graph.registry
+        .list()
+        .filter(Type.isType)
+        .some((type) => Type.getTypename(type) === typename)
+    );
+  } catch {
+    // Not attached to a database (a story, a detached object) — nothing to conclude, so stay out.
+    return false;
+  }
+};
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -137,6 +171,18 @@ export default Capability.makeModule(() =>
       //     );
       //   },
       // }),
+
+      // Last article candidate, and the plank takes `limit={1}` — so this renders only when
+      // nothing else claims the object. A curated plugin set shares a backend with the full-catalog
+      // build, so an object created there can arrive with no plugin that renders it; an empty plank
+      // would read as data loss.
+      Surface.create({
+        id: 'unsupportedTypeArticle',
+        position: Position.last,
+        filter: AppSurface.subject(AppSurface.Article, isUnclaimedType),
+        component: UnsupportedType,
+        props: ({ role, data: { subject } }) => ({ role, typename: Obj.getTypename(subject) ?? '' }),
+      }),
     ]),
   ),
 );
