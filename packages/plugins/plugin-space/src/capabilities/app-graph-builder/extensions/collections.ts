@@ -53,10 +53,9 @@ const collectionDeck = (object: Obj.Unknown, hasCollectionArticle: boolean): Dec
   !hasCollectionArticle && Obj.instanceOf(Collection.Collection, object) ? { initial: 'children' } : undefined;
 
 /**
- * Typenames available in this build: a schema an enabled plugin registered, or one the space itself
- * stores. An object of an unavailable type has no article, so the tree omits it rather than offering
- * a row that opens nothing — a curated build (`DX_PLUGIN_SET=production`) shares its backend with
- * full-catalog builds, so it does meet their objects.
+ * Typenames available in this build — schemas registered by enabled plugins, plus those stored in the
+ * space — so the tree can omit an object whose type has no article rather than offer a row that opens
+ * nothing.
  *
  * TODO(wittjosiah): Name the plugin that would render the object instead of hiding it.
  */
