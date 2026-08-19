@@ -163,6 +163,9 @@ export const AddObject = Operation.make({
     description: 'Add an object to a space.',
     icon: 'ph--plus--regular',
   },
+  // Read via `Effect.serviceOption` in the handler: the app's call sites invoke without a spaceId,
+  // so a required declaration would fail to resolve for them.
+  optionalServices: [Database.Service],
   input: Schema.Struct({
     object: Schema.optional(Obj.Unknown).annotate({ description: 'The object to add, already instantiated.' }),
     // A caller that cannot hold a live object — anything across an RPC boundary — describes one
@@ -198,7 +201,6 @@ export const AddObject = Operation.make({
       '(see queryObjects). Reference values use the envelope form { "/": "echo:..." }. Omit ' +
       '`target` to file it at the space root.',
     safety: 'write',
-    aspect: 'space',
   }),
 );
 
@@ -223,6 +225,8 @@ export const RemoveObjects = Operation.make({
     description: 'Remove entities (objects, relations, or persisted types) from a space.',
     icon: 'ph--trash--regular',
   },
+  // The handler loads entities through the refs, but the contract is space-addressed.
+  optionalServices: [Database.Service],
   services: [Capability.Service],
   input: Schema.Struct({
     objects: Schema.optional(Schema.Array(Entity.Unknown)).annotate({ description: 'The entities to remove.' }),
@@ -243,7 +247,6 @@ export const RemoveObjects = Operation.make({
       'Deletes entities from the space and unlinks them from the collection that held them. Name ' +
       'them with `refs` (an array of { "/": "echo:..." } envelopes, as returned by queryObjects).',
     safety: 'destructive',
-    aspect: 'space',
   }),
 );
 
@@ -492,6 +495,7 @@ export const AddType = Operation.make({
     description: 'Add a type to the space.',
     icon: 'ph--code--regular',
   },
+  optionalServices: [Database.Service],
   input: Schema.Struct({
     // The live schema an in-process caller holds; a remote caller sends the JSON Schema and the
     // handler builds the type from it. Exactly one is required.
@@ -515,7 +519,7 @@ export const AddType = Operation.make({
     id: Schema.String,
     object: Type.getSchema(Type.Type),
   }),
-}).pipe(Operation.mcpTool({ name: 'addType', safety: 'write', aspect: 'space' }));
+}).pipe(Operation.mcpTool({ name: 'addType', safety: 'write' }));
 
 /** An object of the relation, live for an in-process caller and a reference for a remote one. */
 const RelationEnd = Schema.Union([Obj.Unknown, Ref.Ref(Obj.Unknown)]);
@@ -529,6 +533,7 @@ export const AddRelation = Operation.make({
       'query the types to find one.',
     icon: 'ph--link--regular',
   },
+  optionalServices: [Database.Service],
   input: Schema.Struct({
     source: RelationEnd,
     target: RelationEnd,
@@ -549,7 +554,7 @@ export const AddRelation = Operation.make({
   output: Schema.Struct({
     relation: Schema.Any,
   }),
-}).pipe(Operation.mcpTool({ name: 'addRelation', safety: 'write', aspect: 'space' }));
+}).pipe(Operation.mcpTool({ name: 'addRelation', safety: 'write' }));
 
 // TODO(wittjosiah): This appears to be unused.
 export const DuplicateObject = Operation.make({

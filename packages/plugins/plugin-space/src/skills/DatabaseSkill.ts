@@ -16,26 +16,31 @@ export const key = 'org.dxos.skill.database';
  * Reading and writing a space's objects, types, relations and tags, over the same verbs the app and
  * the MCP surface use — the plugin that owns the objects owns the skill that manipulates them.
  */
+/**
+ * The skill's verbs; listing them here is what projects them as MCP tools (the skill definition is
+ * the atomic unit of projection).
+ */
+export const operations = [
+  SpaceOperation.AddObject,
+  SpaceOperation.AddRelation,
+  SpaceOperation.AddType,
+  SpaceObjectOperation.GetObjects,
+  SpaceObjectOperation.QueryObjects,
+  SpaceObjectOperation.QueryTypes,
+  SpaceObjectOperation.UpdateObject,
+  SpaceOperation.RemoveObjects,
+  SpaceObjectOperation.AddTag,
+  SpaceObjectOperation.RemoveTag,
+];
+
 export const make = (): Skill.Skill =>
   Skill.make({
     key: key,
     name: 'Database',
     description: 'Query, read, create, update and remove objects in the current space.',
     agentCanEnable: true,
-    tools: Skill.toolDefinitions({
-      operations: [
-        SpaceOperation.AddObject,
-        SpaceOperation.AddRelation,
-        SpaceOperation.AddType,
-        SpaceObjectOperation.GetObjects,
-        SpaceObjectOperation.QueryObjects,
-        SpaceObjectOperation.QueryTypes,
-        SpaceObjectOperation.UpdateObject,
-        SpaceOperation.RemoveObjects,
-        SpaceObjectOperation.AddTag,
-        SpaceObjectOperation.RemoveTag,
-      ],
-    }),
+    mcpPrompt: true,
+    tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
         You can query, read, create, update and remove objects in the current space.

@@ -47,7 +47,7 @@ export const GetObjects = Operation.make({
   output: Schema.Struct({
     objects: Schema.Array(Schema.Unknown),
   }),
-}).pipe(Operation.mcpTool({ name: 'getObjects', safety: 'read', aspect: 'space' }));
+}).pipe(Operation.mcpTool({ name: 'getObjects', safety: 'read' }));
 
 export const UpdateObject = Operation.make({
   meta: {
@@ -66,7 +66,7 @@ export const UpdateObject = Operation.make({
   output: Schema.Struct({
     object: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'updateObject', safety: 'write', aspect: 'space' }));
+}).pipe(Operation.mcpTool({ name: 'updateObject', safety: 'write' }));
 
 export const QueryObjects = Operation.make({
   meta: {
@@ -99,7 +99,7 @@ export const QueryObjects = Operation.make({
   output: Schema.Struct({
     results: Schema.Array(Schema.Unknown),
   }),
-}).pipe(Operation.mcpTool({ name: 'queryObjects', safety: 'read', aspect: 'space' }));
+}).pipe(Operation.mcpTool({ name: 'queryObjects', safety: 'read' }));
 
 export const AddTag = Operation.make({
   meta: {
@@ -116,7 +116,7 @@ export const AddTag = Operation.make({
   output: Schema.Struct({
     object: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'addTag', safety: 'write', aspect: 'space' }));
+}).pipe(Operation.mcpTool({ name: 'addTag', safety: 'write' }));
 
 export const RemoveTag = Operation.make({
   meta: {
@@ -133,7 +133,7 @@ export const RemoveTag = Operation.make({
   output: Schema.Struct({
     object: Schema.Unknown,
   }),
-}).pipe(Operation.mcpTool({ name: 'removeTag', safety: 'write', aspect: 'space' }));
+}).pipe(Operation.mcpTool({ name: 'removeTag', safety: 'write' }));
 
 /**
  * Distinct from the hosts' `listTypes` tool, which reports the types the host registry carries:
@@ -159,4 +159,4 @@ export const QueryTypes = Operation.make({
   output: Schema.Struct({
     types: Schema.Array(Schema.Unknown),
   }),
-}).pipe(Operation.mcpTool({ name: 'queryTypes', safety: 'read', aspect: 'space' }));
+}).pipe(Operation.mcpTool({ name: 'queryTypes', safety: 'read' }));

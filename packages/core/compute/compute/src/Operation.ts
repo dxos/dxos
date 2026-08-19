@@ -20,8 +20,6 @@ import type { URI } from '@dxos/keys';
 
 import { type NoHandlerError, RunAgainError } from './errors';
 import type { Operation } from './index';
-// Type-only, so the module cycle (`Skill` imports this module) never exists in emitted code.
-import type * as Skill from './types/Skill';
 
 /**
  * Schema type that accepts any Encoded form but requires no Context.
@@ -92,6 +90,15 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
    * These services will be automatically provided to the handler at invocation time.
    */
   readonly services: readonly Context.Key<any, any>[];
+
+  /**
+   * Effect services this operation uses when the caller's context carries them, read via
+   * `Effect.serviceOption` rather than resolved eagerly — so their absence never fails the
+   * invocation. Declared so the contract is visible off the definition (and its serialized
+   * record): the MCP projection keys the ambient `spaceId` parameter off `Database.Service`
+   * appearing in `services` or here.
+   */
+  readonly optionalServices: readonly Context.Key<any, any>[];
 }
 
 /**
@@ -202,10 +209,14 @@ export const isOperationWithHandler = (value: unknown): value is WithHandler<Def
  * Props for creating an Operation definition.
  * Derived from OperationDefinition with executionMode made optional (defaults to 'async').
  */
-export type Props<I, O> = Omit<Definition<I, O>, DefinitionTypeId | 'pipe' | 'executionMode' | 'types' | 'services'> & {
+export type Props<I, O> = Omit<
+  Definition<I, O>,
+  DefinitionTypeId | 'pipe' | 'executionMode' | 'types' | 'services' | 'optionalServices'
+> & {
   readonly executionMode?: 'sync' | 'async';
   readonly types?: Definition<I, O>['types'];
   readonly services?: Definition<I, O>['services'];
+  readonly optionalServices?: Definition<I, O>['optionalServices'];
 };
 
 /**
@@ -226,6 +237,7 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
     executionMode: props.executionMode ?? 'async',
     types: props.types ?? [],
     services: props.services ?? [],
+    optionalServices: props.optionalServices ?? [],
     pipe() {
       // eslint-disable-next-line prefer-rest-params
       return Pipeable.pipeArguments(this, arguments);
@@ -376,6 +388,11 @@ export class PersistentOperation extends Type.makeObject<PersistentOperation>(
      */
     services: Schema$.optional(Schema$.Array(Schema$.String)),
 
+    /**
+     * Services used when ambient but never required (see `Definition.optionalServices`).
+     */
+    optionalServices: Schema$.optional(Schema$.Array(Schema$.String)),
+
     // Local binding to a function name.
     // TODO(dmaretskyi): Add this field to Operation.Definition.
     binding: Schema$.optional(Schema$.String),
@@ -422,6 +439,8 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
     inputSchema: JsonSchema.toJsonSchema(operation.input),
     outputSchema: JsonSchema.toJsonSchema(operation.output),
     services: operation.services.map((service) => service.key),
+    optionalServices:
+      operation.optionalServices.length > 0 ? operation.optionalServices.map((service) => service.key) : undefined,
   });
 };
 
@@ -436,6 +455,7 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
     input: record.inputSchema ? JsonSchema.toEffectSchema(record.inputSchema) : Schema$.Unknown,
     output: record.outputSchema ? JsonSchema.toEffectSchema(record.outputSchema) : Schema$.Unknown,
     services: record.services?.map((service) => Context.Service(service)) ?? [],
+    optionalServices: record.optionalServices?.map((service) => Context.Service(service)) ?? [],
     executionMode: 'async',
     types: [],
     meta: {
@@ -637,45 +657,33 @@ export const isVisible = (op: PersistentOperation): boolean =>
   Option.getOrElse(Annotation.get(op, VisibleAnnotation), () => false);
 
 /**
- * Projection marker for an operation exposed as an MCP tool to external agents.
- * See plugin-projects `MILESTONE-5.md` §7.4 for the full contract.
+ * Per-operation MCP tool metadata. Inclusion is not decided here: an operation projects as an MCP
+ * tool when an opted-in skill's `tools` list names it (the skill definition is the atomic unit of
+ * projection), and the load-the-skill-first pointer in the tool's description derives from that
+ * membership. This annotation only customizes the projected tool.
  */
 export const McpTool = Schema$.Struct({
-  /** Tool name as exposed to MCP clients; camelCase, domain-prefixed (e.g. `taskCreate`). */
-  name: Schema$.String,
+  /**
+   * Tool name as exposed to MCP clients; camelCase, domain-prefixed (e.g. `taskCreate`).
+   * Defaults to the operation key's final segment.
+   */
+  name: Schema$.optional(Schema$.String),
   /** Model-facing description; falls back to the operation's own description when absent. */
   description: Schema$.optional(Schema$.String),
   /**
    * Safety class the server maps to MCP tool hints: `read` is side-effect free (readOnlyHint),
-   * `write` mutates space data, `destructive` deletes or is otherwise irreversible.
+   * `write` mutates space data, `destructive` deletes or is otherwise irreversible. An
+   * unannotated operation makes no safety claims, which clients treat as possibly-destructive —
+   * the conservative default.
    */
   safety: Schema$.Literals(['read', 'write', 'destructive']),
-  /**
-   * Aspect/toolset, for server-side filtering (e.g. `/mcp?toolsets=tasks`).
-   *
-   * TODO(wittjosiah): Remove? Nothing reads it — the MCP projection decodes the field and drops it,
-   * and no toolset filtering exists. Not an MCP concept either: the specification's tool definition
-   * has no grouping field, so this would stay a server-side convention.
-   */
-  aspect: Schema$.optional(Schema$.String),
-  /**
-   * Prompt name of the skill whose workflow this tool belongs to (a skill key's final segment,
-   * e.g. `codeProject`) — derived by {@link mcpTool} from the governing skill's `Definition`;
-   * never written by hand. The MCP projection appends a load-the-skill-first pointer to the tool's
-   * description and serves the skill body through its `skillLoad` tool, so a model discovers the
-   * workflow from the tool it is about to call — progressive disclosure in the direction of the
-   * MCP "Skills over MCP" extension (SEP-2640), whose hosts likewise expose a model-invocable
-   * skill-loading tool keyed by skill name. MCP prompts cannot serve this purpose: the spec makes
-   * them user-controlled, so a model can never fetch one on its own.
-   */
-  skill: Schema$.optional(Schema$.String),
 });
 export type McpTool = Schema$.Schema.Type<typeof McpTool>;
 
 /**
- * Annotation that opts an operation into MCP projection. The annotation rides through
- * {@link serialize} into the persisted record, so a remote projector (edge mcp-space-service)
- * discovers tools from the operation registry rather than a hand-maintained table.
+ * Annotation carrying {@link McpTool}. It rides through {@link serialize} into the persisted
+ * record, so a remote projector (edge mcp-space-service) reads it off the operation registry
+ * rather than a hand-maintained table.
  *
  * Projected operations must be remotely invocable: refs (not live objects) in, JSON snapshots
  * out, schemas that survive serialization, and worker-safe handlers — MILESTONE-5.md §7.4.
@@ -686,23 +694,10 @@ export const McpToolAnnotation = Annotation.make({
 });
 
 /**
- * Pipeable combinator that opts an operation into MCP projection. Apply at the definition site:
+ * Pipeable combinator attaching {@link McpTool} metadata. Apply at the definition site:
  * `Operation.make({ ... }).pipe(Operation.mcpTool({ name: 'taskComplete', safety: 'write' }))`.
- *
- * `skill` takes the governing skill's `Skill.Definition`, so the annotation cannot name a skill
- * that does not ship. A bare key is accepted for the case the definition cannot be imported —
- * where doing so would close a plugin dependency cycle, the trade plugin-projects' `skills/keys.ts`
- * documents for artifact skills. Either way the key's final segment is what persists: the
- * coordinate the MCP surface uses for both the prompt and `skillLoad`.
  */
-export const mcpTool = ({
-  skill,
-  ...props
-}: Omit<McpTool, 'skill'> & { skill?: Skill.Definition | DXN.Name<string> }) =>
-  annotate(McpToolAnnotation, {
-    ...props,
-    ...(skill == null ? {} : { skill: (typeof skill === 'string' ? skill : skill.key).split('.').at(-1) }),
-  });
+export const mcpTool = (props: McpTool) => annotate(McpToolAnnotation, props);
 
 /**
  * Returns the MCP projection descriptor when the operation is annotated for it, else undefined.

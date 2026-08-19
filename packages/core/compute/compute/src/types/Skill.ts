@@ -196,8 +196,8 @@ export const toolDefinitions = ({
   tools = [],
   operations = [],
 }: {
-  tools?: string[];
-  operations?: Operation.Definition.Any[];
+  tools?: readonly string[];
+  operations?: readonly Operation.Definition.Any[];
 }) => [...operations.map((op) => ToolId.make(DXN.getName(op.meta.key))), ...tools.map((tool) => ToolId.make(tool))];
 
 /**
@@ -206,6 +206,12 @@ export const toolDefinitions = ({
 export type Definition = {
   key: DXN.Name<string>;
   make: () => Skill;
+  /**
+   * Operation definitions behind the skill's `tools` list, for hosts that serve the skill without
+   * a registry to resolve ToolIds against (see mcp-server `Server.fromSkills`). Optional: a skill
+   * consumed only through a registry-backed host does not need it.
+   */
+  operations?: readonly Operation.Definition.Any[];
 };
 
 /**
