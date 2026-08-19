@@ -20,15 +20,19 @@ const OTEL_MAX_BODY_SIZE = 800 * 1024 * 1024; // 800MB.
 const FEEDBACK_LOGS_MAX_BODY_SIZE = LOG_STORE_MAX_BYTES;
 
 /**
- * `composer.space` and every subdomain — the apex plus each deploy channel (`nightly`, `staging`,
- * `dev`, a future one) and any custom domain a channel is given. Ours outright, so there is no
- * multi-tenant risk in allowing the whole apex rather than enumerating channel hostnames that
- * would otherwise need a matching edit here every time one is added, renamed, or given a domain.
+ * Whether a request's `Origin` matches the origin this exact deployment is being served from.
+ * Same-origin GETs/HEADs often omit `Origin` — those pass by default; when present it must equal
+ * this Worker's own origin. Derived from the request's own URL rather than a static per-channel
+ * list, so it is correct for the canonical domain, a PR-preview `*.workers.dev` alias, and local
+ * dev alike, with no edit needed when a channel is added, renamed, or given a domain — and a
+ * sibling channel (nightly calling dev's Worker, say) is never permitted, since it is never this
+ * Worker's own origin.
  */
-const ALLOWED_ORIGIN_PATTERN = /^https:\/\/([a-z0-9-]+\.)?composer\.space$/;
+const isAllowedOrigin = (request: Request, origin: string | null): boolean =>
+  !origin || origin === new URL(request.url).origin;
 
-const corsHeaders = (origin: string | null): Record<string, string> => ({
-  'Access-Control-Allow-Origin': origin && ALLOWED_ORIGIN_PATTERN.test(origin) ? origin : '',
+const corsHeaders = (request: Request, origin: string | null): Record<string, string> => ({
+  'Access-Control-Allow-Origin': origin && isAllowedOrigin(request, origin) ? origin : '',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Content-Encoding',
   'Vary': 'Origin',
@@ -38,7 +42,7 @@ const corsHeaders = (origin: string | null): Record<string, string> => ({
 const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response> => {
   const origin = request.headers.get('Origin');
   if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    return new Response(null, { status: 204, headers: corsHeaders(request, origin) });
   }
 
   if (request.method !== 'POST') {
@@ -113,10 +117,9 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  // Restrict to same-origin / known origins to avoid being abused as an open proxy.
-  // Same-origin GETs typically omit Origin; allow when absent or when a known origin is set.
+  // Restrict to same-origin, to avoid being abused as an open proxy.
   const origin = request.headers.get('Origin');
-  if (origin && !ALLOWED_ORIGIN_PATTERN.test(origin)) {
+  if (!isAllowedOrigin(request, origin)) {
     return new Response('Forbidden', { status: 403 });
   }
 
@@ -275,24 +278,24 @@ const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
 const handleOtelProxy = async (request: Request, env: Env, signal: string): Promise<Response> => {
   const origin = request.headers.get('Origin');
   if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    return new Response(null, { status: 204, headers: corsHeaders(request, origin) });
   }
 
   if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405, headers: corsHeaders(origin) });
+    return new Response('Method not allowed', { status: 405, headers: corsHeaders(request, origin) });
   }
 
   // Reject requests from disallowed origins server-side, not just via CORS headers.
-  if (origin && !ALLOWED_ORIGIN_PATTERN.test(origin)) {
-    return new Response('Forbidden', { status: 403, headers: corsHeaders(origin) });
+  if (!isAllowedOrigin(request, origin)) {
+    return new Response('Forbidden', { status: 403, headers: corsHeaders(request, origin) });
   }
 
   if (!env.SIGNOZ_INGEST_URL || !env.SIGNOZ_INGESTION_KEY) {
-    return new Response('OTel proxy not configured', { status: 503, headers: corsHeaders(origin) });
+    return new Response('OTel proxy not configured', { status: 503, headers: corsHeaders(request, origin) });
   }
 
   if (!request.body) {
-    return new Response('Empty body', { status: 400, headers: corsHeaders(origin) });
+    return new Response('Empty body', { status: 400, headers: corsHeaders(request, origin) });
   }
 
   const upstreamHeaders: Record<string, string> = {
@@ -342,18 +345,18 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
   await pipePromise;
 
   if (sizeExceeded) {
-    return new Response('Payload too large', { status: 413, headers: corsHeaders(origin) });
+    return new Response('Payload too large', { status: 413, headers: corsHeaders(request, origin) });
   }
 
   if (!upstreamResponse) {
-    return new Response('Bad gateway', { status: 502, headers: corsHeaders(origin) });
+    return new Response('Bad gateway', { status: 502, headers: corsHeaders(request, origin) });
   }
 
   return new Response(upstreamResponse.body, {
     status: upstreamResponse.status,
     headers: {
       'Content-Type': upstreamResponse.headers.get('Content-Type') ?? 'application/json',
-      ...corsHeaders(origin),
+      ...corsHeaders(request, origin),
     },
   });
 };
