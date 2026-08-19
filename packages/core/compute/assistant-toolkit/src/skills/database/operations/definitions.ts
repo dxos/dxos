@@ -28,7 +28,7 @@ export const Query = Operation.make({
 
       <output_format>
         You can choose to either return the full object data, or just the DXN, type and label.
-        When expecting a lot of results, run with includeContent=false to not pollute the context, and then load specific objects using the load tool.
+        When expecting a lot of results, run with includeContent=false to not pollute the context, and then load specific objects using the database-load tool.
 
         You can choose to get the content right away, if you don't expect a lot of results.
         To load content right away, run with includeContent=true.
@@ -135,7 +135,7 @@ export const ObjectCreate = Operation.make({
       Creates a new object of any type and adds it to the current space.
       When a type has its own create tool (e.g. the markdown skill creates documents), prefer that
       tool — it builds the object's owned parts correctly. Use this one for types that have none.
-      Get the full JSON Schema from the schema-list tool (pass \`typenames: [typename]\`) and ensure
+      Get the full JSON Schema from the database-schema-list tool (pass \`typenames: [typename]\`) and ensure
       that the data matches the corresponding schema.
       References are provided in the following format: { "/": "echo:..." }.
       Reference examples: { "/": "echo:///01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
@@ -297,7 +297,7 @@ export const RelationCreate = Operation.make({
     icon: 'ph--arrows-merge--regular',
     description: trim`
       Creates a new relation and adds it to the current space.
-      Get the full JSON Schema from the schema-list tool (pass \`typenames: [typename]\`) and ensure
+      Get the full JSON Schema from the database-schema-list tool (pass \`typenames: [typename]\`) and ensure
       that the data matches the corresponding schema.
     `,
   },

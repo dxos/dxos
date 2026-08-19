@@ -16,7 +16,7 @@ import { SchemaAdd } from './definitions';
 
 EntityId.dangerouslyDisableRandomness();
 
-// A representative draft-07 JSON Schema as a model would emit for the `add-schema` tool.
+// A representative draft-07 JSON Schema as a model would emit for the `database-schema-add` tool.
 const PROJECT_JSON_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   type: 'object',

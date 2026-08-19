@@ -16,6 +16,7 @@ import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import type { URI } from '@dxos/keys';
 
 import { type NoHandlerError, RunAgainError } from './errors';
@@ -324,6 +325,39 @@ export const withHandler: {
 export const opaqueHandler = <T extends Operation.Definition.Any>(
   handler: Operation.WithHandler<T>,
 ): Operation.WithHandler<Operation.Definition.Any> => handler;
+
+//
+// Tool projection
+//
+
+/**
+ * Constant namespace prefix elided from tool names; keys outside it keep every segment.
+ */
+const TOOL_NAME_KEY_PREFIX = 'org.dxos.function.';
+
+/**
+ * Derives the model-facing tool name for an operation from its DXN key — never from `meta.name`,
+ * which is display copy and must stay freely editable without renaming the tool the model calls.
+ * The key's namespace segment prefixes the name, so cross-skill collisions are structurally
+ * impossible (keys are registry-unique).
+ *
+ * @example `org.dxos.function.markdown.create` → `markdown-create`
+ * @example `org.dxos.function.project.artifactAdd` → `project-artifact-add`
+ */
+export const toolName = (op: Definition.Any): string => toolNameFromKey(op.meta.key);
+
+/**
+ * {@link toolName} for a raw registry key (a DXN or bare NSID), e.g. a persisted record's meta key.
+ */
+export const toolNameFromKey = (key: string): string => {
+  const nsid = DXN.isDXN(key) ? DXN.getName(key) : key;
+  const stripped = nsid.startsWith(TOOL_NAME_KEY_PREFIX) ? nsid.slice(TOOL_NAME_KEY_PREFIX.length) : nsid;
+  const name = stripped.split('.').map(kebabCase).join('-');
+  invariant(/^[a-z][a-z0-9-_]*$/.test(name), `Invalid tool name: ${name}`);
+  return name;
+};
+
+const kebabCase = (segment: string): string => segment.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 
 //
 // Invocation Interfaces

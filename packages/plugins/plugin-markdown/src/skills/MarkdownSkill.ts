@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -47,12 +48,13 @@ export const make = (): Skill.Skill =>
 
         You can also work on a document without touching the live copy by branching it:
         - When asked to edit in a branch (or to propose changes for review), first create a branch
-          with the create-branch tool, then apply the edits with the update tool passing the returned
+          with the ${Operation.toolName(MarkdownOperation.CreateBranch)} tool, then apply the edits with the
+          ${Operation.toolName(MarkdownOperation.Update)} tool passing the returned
           branchId. Leave the branch unmerged so the changes can be reviewed. Do not merge unless asked.
-        - Merge a branch back into the document with the merge-branch tool once its changes are approved.
-        - Record a named checkpoint of the current content with the create-checkpoint tool.
+        - Merge a branch back into the document with the ${Operation.toolName(MarkdownOperation.MergeBranch)} tool once its changes are approved.
+        - Record a named checkpoint of the current content with the ${Operation.toolName(MarkdownOperation.CreateCheckpoint)} tool.
 
-        When the user refers to "the selection" or "the selected text", call the get-selection tool
+        When the user refers to "the selection" or "the selected text", call the ${Operation.toolName(MarkdownOperation.GetSelection)} tool
         once (no arguments) to retrieve exactly what they have selected before acting on it; it
         already reports the current selection across open documents, so do not call it per document.
         An empty result means nothing is selected — ask what text they mean rather than guessing.

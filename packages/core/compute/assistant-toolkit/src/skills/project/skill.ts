@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
@@ -15,7 +16,7 @@ const instructions = trim`
   You are working in the context of a project (its reference is bound into this chat).
   The project owns a collection of artifacts: the durable work products of this project.
   When you create an object the user asked for (a document, outline, sheet, contact, …), file it
-  into the project's artifacts with the add-artifact tool so the project owns it.
+  into the project's artifacts with the ${Operation.toolName(ArtifactAdd)} tool so the project owns it.
   When looking for the project's existing material, list its artifacts first rather than searching
   the whole space.
 `;

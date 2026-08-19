@@ -91,7 +91,7 @@ const extractArtifactIds = (value: unknown): string[] => {
 /**
  * The durable agent tasks awaiting a sub-agent for this conversation: in-progress tasks of the
  * working outline's task set whose assignee is an agent. Ordinary checklist items (markdown) are
- * never spawned — delegation happens only through the promotion the delegate-task tool performs.
+ * never spawned — delegation happens only through the promotion the delegation-delegate-task tool performs.
  */
 const findPendingTasks = (
   chat: Chat.Chat,

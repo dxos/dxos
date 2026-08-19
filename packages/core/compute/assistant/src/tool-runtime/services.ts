@@ -16,7 +16,7 @@ import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '
 import { OpaqueToolkit } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { todo } from '@dxos/debug';
-import { DXN, Filter, Ref, Registry } from '@dxos/echo';
+import { Filter, Ref, Registry } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
@@ -44,13 +44,17 @@ export const makeToolResolverFromOperations = <R = never>({
               return tool;
             }
 
-            // Normalize to a full DXN key (tool IDs are plain NSIDs, stored keys are full DXNs).
-            const key = DXN.isDXN(id) ? id : `dxn:${id}`;
+            // Tool names derive from operation keys lossily (`Operation.toolNameFromKey`), so the
+            // registry is matched by re-deriving each record's name rather than reconstructing a key.
             const results = yield* Effect.promise(() =>
-              registry.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
+              registry.query(Filter.type(Operation.PersistentOperation)).run(),
             );
-            if (results.length > 0) {
-              return projectFunctionToTool(Operation.deserialize(results[0]));
+            const record = results.find((record) => {
+              const key = Operation.getKey(record);
+              return key != null && Operation.toolNameFromKey(key) === id;
+            });
+            if (record) {
+              return projectFunctionToTool(Operation.deserialize(record));
             }
             return yield* Effect.fail(new AiToolNotFoundError(id));
           }),
@@ -183,7 +187,7 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
 
   const fields = createStructFieldsFromSchema(fn.input);
   const parametersSchema = Object.keys(fields).length === 0 ? EMPTY_PARAMETERS_SCHEMA : Schema.Struct(fields);
-  const tool = Tool.dynamic(makeToolName(fn.meta.name ?? fn.meta.key), {
+  const tool = Tool.dynamic(Operation.toolName(fn), {
     description: fn.meta.description,
     // A dynamic tool's JSON Schema is passed to the provider verbatim (`Tool.getJsonSchema` returns
     // it before any transformer runs), which is the only way to keep what the model is told and what
@@ -275,15 +279,6 @@ const withoutNull = (value: unknown): unknown => {
   }
   const only = withoutNull(branches[0]);
   return typeof only === 'object' && only !== null ? { ...rest, ...only } : only;
-};
-
-/**
- * @returns Tool name produced from function name by escaping invalid characters.
- */
-const makeToolName = (name: string) => {
-  const toolName = name.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-');
-  invariant(toolName.match(/^[a-z_][a-z0-9-_]*$/));
-  return toolName;
 };
 
 // TODO(dmaretskyi): Factor out.

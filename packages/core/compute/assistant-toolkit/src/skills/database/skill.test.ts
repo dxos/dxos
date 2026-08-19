@@ -31,7 +31,7 @@ const TestLayer = AssistantTestLayer({
   aiServicePreset: 'direct',
 });
 
-// A representative draft-07 JSON Schema as a model would emit for the `add-schema` tool.
+// A representative draft-07 JSON Schema as a model would emit for the `database-schema-add` tool.
 const PROJECT_JSON_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   type: 'object',
@@ -425,7 +425,7 @@ describe('Database Skill', { tags: ['model-fixture'] }, () => {
           A mock email was stored only on a feed (queue), not as a regular space document: organization "Lot Booking Co"
           mentioning a parking reservation.
 
-          Use the Query tool once: full-text "reservation", includeQueues true, includeContent false, limit 20.
+          Use the database-query tool once: full-text "reservation", includeQueues true, includeContent false, limit 20.
           Confirm the results include Lot Booking Co.
         `);
         yield* agent.waitForCompletion();
@@ -574,7 +574,7 @@ describe('Database Skill', { tags: ['model-fixture'] }, () => {
           skills: [DatabaseSkill.make()],
         });
         yield* agent.submitPrompt(
-          `Call query tool with precisely ${JSON.stringify({
+          `Call database-query tool with precisely ${JSON.stringify({
             includeContent: false,
             limit: 10,
             typename: Type.getTypename(Organization.Organization),

@@ -22,7 +22,7 @@ import { getDefaultSkills } from '../skills';
 // The plugin-projects system test: a Chat runs in a Project's context (the project's own
 // Instructions, passed by reference) and the model is directed to create a markdown document.
 // Graded on DB effects: the document exists, is bound into the session context, and is filed
-// into the project's artifacts (the ProjectSkill add-artifact tool) — binding alone proves the
+// into the project's artifacts (the ProjectSkill project-artifact-add tool) — binding alone proves the
 // session saw the object; only the artifacts check proves the project owns it.
 
 const PROJECT_NAME = 'Voyage';
@@ -96,7 +96,7 @@ evalite('Projects — project chat creates and files an artifact', {
     },
     {
       name: 'document-filed',
-      description: "The document is in the project's artifacts (add-artifact tool).",
+      description: "The document is in the project's artifacts (project-artifact-add tool).",
       scorer: ({ output }) => (output.dbQuery.filed ? 1 : 0),
     },
     {
