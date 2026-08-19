@@ -10,7 +10,7 @@ import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { Channel } from '@dxos/types';
 
@@ -77,9 +77,9 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
 
   return (
     <div>
-      <div className='px-2 min-h-[3rem] flex justify-end items-center'>
+      <Flex align='center' justify='end' classNames='px-2 min-h-[3rem]'>
         <Button onClick={handleCreateMeeting}>{t('create-meeting.label')}</Button>
-      </div>
+      </Flex>
       <Listbox.Root>
         <Listbox.Viewport>
           <Listbox.Content aria-label={t('meeting-list.label')}>

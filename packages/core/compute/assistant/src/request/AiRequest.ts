@@ -258,6 +258,9 @@ export class Request {
         withoutToolCallParsing,
         AiParser.parseResponse({
           emitPartial: true,
+          // Tagged chain-of-thought (<cot>/<think>/<reasoning>) becomes reasoning blocks, which the
+          // UI renders per view type; flattened to prose it can neither be shown nor hidden.
+          parseReasoningTags: true,
           onBegin: () => observer.onBegin(),
           onBlock: (block) => observer.onBlock(block),
           onPart: (part) => observer.onPart(part as any),

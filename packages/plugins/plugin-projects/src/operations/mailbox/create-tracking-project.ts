@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, type DXN, Obj, Ref } from '@dxos/echo';
+import { Database, type DXN, Ref } from '@dxos/echo';
 import { extractDomain, isFreeMailDomain, normalizeEmail, organizationNameFromDomain } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
@@ -110,10 +110,9 @@ const handler = ProjectOperation.CreateTrackingProject.pipe(
           concurrency: 1,
         }),
       });
-      Obj.setParent(routine, project);
-      Obj.update(project, (project) => {
-        project.routines = [...project.routines, Ref.make(routine)];
-      });
+      // Persisted on its own: the routine reaches the project through its trigger input, not through
+      // any ref the project holds, so nothing would carry it into the database otherwise.
+      db.add(routine);
 
       // Initial backfill, for the pipeline that has one: the feed's existing history becomes the
       // starting task set, so the project is useful before its first trigger fires.

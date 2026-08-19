@@ -21,7 +21,7 @@ import { Markdown, MarkdownOperation } from '#types';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
-  operationHandlers: MarkdownOperationHandlerSet,
+  operationHandlers: MarkdownOperationHandlerSet.handlers,
   types: [SpaceProperties, Collection.Collection, Markdown.Document, Text.Text, HasSubject.HasSubject, Feed.Feed],
 });
 

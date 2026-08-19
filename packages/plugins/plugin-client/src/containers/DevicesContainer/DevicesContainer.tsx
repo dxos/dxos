@@ -12,7 +12,7 @@ import { useDevices, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Button, Clipboard, Icon, IconButton, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Flex, Icon, IconButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
@@ -129,7 +129,9 @@ const DeviceInvitation = (props: Pick<DeviceInvitationProps, 'createInvitationUr
       return;
     }
     setPending(true);
-    void EffectEx.runPromise(identityService.share())
+    // Requested explicitly because `share()` defaults to no authentication, which would leave the
+    // invitation code as the only factor guarding an identity.
+    void EffectEx.runPromise(identityService.share({ authMethod: 'shared-secret' }))
       .then(async (created) => {
         // Playwright reads this line off the console to drive the device-invitation flows.
         if (client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
@@ -162,8 +164,20 @@ const DeviceInvitationImpl = ({
   onInvitationDone,
   onInvitationCreate,
 }: DeviceInvitationProps) => {
+  const client = useClient();
   const { event, code } = useInvitationFlow(flow);
   const url = code && createInvitationUrl(code);
+
+  // Logged separately from the invitation code Playwright reads on creation, because the host only
+  // learns the auth code once a guest has connected.
+  useEffect(() => {
+    if (
+      event?._tag === 'readyForAuthentication' &&
+      client.config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production'
+    ) {
+      log.info(JSON.stringify({ authCode: event.authCode }));
+    }
+  }, [event?._tag]);
 
   // Every terminal event returns to the creation view; parking on the completion icon would strand
   // a failed or cancelled invitation with no way to retry.
@@ -241,7 +255,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
     <>
       <p className='text-description'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content]'>
-        <div className='flex justify-center py-4'>
+        <Flex justify='center' classNames='py-4'>
           <div className='w-full md:max-w-80 aspect-square relative text-description'>
             <QR
               rounding={100}
@@ -257,20 +271,20 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
               <Emoji text={emoji} />
             </Centered>
           </div>
-        </div>
+        </Flex>
         <span id={qrLabel} className='sr-only'>
           {t('qr.label')}
         </span>
       </div>
       {/* TODO(burdon): Factor out button bar */}
-      <div className='flex justify-center'>
-        <div className='flex gap-2'>
+      <Flex justify='center'>
+        <Flex gap='sm'>
           <Clipboard.Button value={url ?? 'never'} />
           <Button variant='ghost' onClick={onCancel}>
             {t('cancel.label')}
           </Button>
-        </div>
-      </div>
+        </Flex>
+      </Flex>
     </>
   );
 };
@@ -294,9 +308,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
 const InvitationComplete = ({ succeeded }: { succeeded: boolean }) => {
   return succeeded ? (
-    <Icon icon='ph--check--regular' size={6} classNames='m-1.5' />
+    <Icon icon='ph--check--regular' size={6} classNames='m-trim-xs' />
   ) : (
-    <Icon icon='ph--x--regular' size={6} classNames='m-1.5' />
+    <Icon icon='ph--x--regular' size={6} classNames='m-trim-xs' />
   );
 };
 

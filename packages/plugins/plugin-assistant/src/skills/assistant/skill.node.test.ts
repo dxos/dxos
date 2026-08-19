@@ -14,7 +14,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 
-import AssistantSkill from './skill';
+import * as AssistantSkill from './AssistantSkill';
 
 EntityId.dangerouslyDisableRandomness();
 

@@ -45,16 +45,6 @@ import { findInCause } from '../util/error-cause';
 import { type ProcessorRequestContext, createPromptContent } from './prompt';
 
 /**
- * @deprecated Services type for the old direct-conversation processor path.
- * Retained for backward compatibility with CLI and update-name.
- */
-export type AiChatServices =
-  | Credential.CredentialsService
-  | Database.Service
-  | AiService.AiService
-  | Trace.TraceService;
-
-/**
  * Space-scoped services materialised by the layer passed into
  * {@link AiChatProcessor}. Mirrors the tag list that
  * {@link useChatProcessor} passes to {@link ServiceResolver.provide}.

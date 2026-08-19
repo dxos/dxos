@@ -11,14 +11,13 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import * as Routine from '@dxos/compute/Routine';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
-import { CodeProjectSkillDefinition } from '#skills';
+import { CodeProjectSkill } from '#skills';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
@@ -51,7 +50,7 @@ export const Create = Operation.make({
       'to taskCreate to record work against it.',
     safety: 'write',
     aspect: 'projects',
-    skill: CodeProjectSkillDefinition,
+    skill: CodeProjectSkill,
   }),
 );
 
@@ -63,17 +62,6 @@ export const CreateChat = Operation.make({
   }),
   output: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
-  }),
-});
-
-export const CreateRoutine = Operation.make({
-  meta: { key: makeKey('createRoutine'), name: 'Create Project Routine', icon: 'ph--lightning--regular' },
-  services: [Capability.Service, Database.Service],
-  input: Schema.Struct({
-    project: Type.getSchema(Project.Project),
-  }),
-  output: Schema.Struct({
-    routine: Type.getSchema(Routine.Routine),
   }),
 });
 

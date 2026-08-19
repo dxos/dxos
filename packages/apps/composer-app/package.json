@@ -19,7 +19,8 @@
     "icons": "npm run icons:cp && npm run icons:pwa && npm run icons:mstile",
     "icons:": "sips -z 150 150 ./assets/icon-1024x1024.png --out ./public/mstile-icon-150x150.png",
     "icons:cp": "cp ./assets/favicon.svg ./public/icon.svg",
-    "icons:pwa": "pwa-asset-generator --icon-only --favicon --index=index.html ./public/icon.svg ./public"
+    "icons:pwa": "pwa-asset-generator --icon-only --favicon --index=index.html ./public/icon.svg ./public",
+    "icons:variants": "node scripts/gen-icon-variants.mjs"
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
@@ -62,6 +63,7 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-code": "workspace:*",
     "@dxos/plugin-commerce": "workspace:*",
+    "@dxos/plugin-computer": "workspace:*",
     "@dxos/plugin-conductor": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-crm": "workspace:*",

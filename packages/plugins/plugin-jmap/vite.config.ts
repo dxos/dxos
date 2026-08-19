@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'JmapOperationHandlerSet': 'src/operations/JmapOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'JmapPlugin': 'src/JmapPlugin.ts',
     'JmapOperation': 'src/types/JmapOperation.ts',

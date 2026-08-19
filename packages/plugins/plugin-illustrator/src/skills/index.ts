@@ -3,3 +3,4 @@
 //
 
 export { default as DrawingSkill } from './drawing-skill';
+export { default as UmlSkill } from './uml-skill';

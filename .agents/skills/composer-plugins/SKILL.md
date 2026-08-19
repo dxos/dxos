@@ -269,6 +269,13 @@ toolbar wiring (threading `attendableId`), schema-driven `Form` editing (no nati
 components), translations, and storybook setup. For authoring brand-new `@dxos/react-ui` primitives, see
 the **composite-components** skill.
 
+**Before committing UI, grep the diff for dead classes.** The `tailwindcss-logical` dialect
+(`pis-*`, `pbs-*`, `pli-*`, `mis-*`, `is-*`, `bs-*`, `min-bs-*`, …) was dropped in the Tailwind v4
+migration and now compiles to nothing — silently, so nothing errors and nothing lints. It is the
+highest-frequency UI regression in this repo, and worst when the dead class was load-bearing (a
+`min-bs-*` height floor, a `min-is-0` letting a grid child shrink), because the failure surfaces far
+from its cause. Replacement table and the grep are in **composer-ui** § "Sizing vs logical utilities".
+
 ### Capability (`src/capabilities/`)
 
 Plugin modules that contribute functionality to the framework. Each is a single file with a default export using `Capability.makeModule()`. The barrel `index.ts` uses only makers (`AppCapability.*`) or `Capability.lazyModule()` exports. Do NOT add non-lazy exports.

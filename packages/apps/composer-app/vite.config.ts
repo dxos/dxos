@@ -26,6 +26,7 @@ import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
+import { bootMarkPath, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
@@ -380,6 +381,10 @@ export default defineConfig((env) => ({
       },
     },
 
+    // Hosts the computer harness's shell route against the vite process cwd. Imported dynamically
+    // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
+    import('@dxos/plugin-computer/vite-plugin').then(({ ComputerShellPlugin }) => ComputerShellPlugin()),
+
     // RSS proxy middleware for CORS-free feed fetching.
     {
       name: 'rss-proxy',
@@ -489,7 +494,10 @@ export default defineConfig((env) => ({
     // without it.
     bootLoaderPlugin({
       markSvg: (() => {
-        const markPath = path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
+        // A prerelease bundle brands its own; production and any dev server get the released mark.
+        const markPath =
+          bootMarkPath(dirname, channelVariant(env.command)) ??
+          path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
         try {
           return readFileSync(markPath, 'utf8');
         } catch (error) {
@@ -499,6 +507,8 @@ export default defineConfig((env) => ({
         }
       })(),
     }),
+
+    channelFaviconPlugin(dirname, channelVariant(env.command)),
 
     VitePWA({
       // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
