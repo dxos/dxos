@@ -17,7 +17,6 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Obj, Type } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { Gateway } from '@dxos/mcp-server';
 import * as CodeProjectSkill from '@dxos/plugin-projects/CodeProjectSkill';
 // Narrow subpath imports: these plugins declare React surfaces, and a bundler follows the dynamic
