@@ -61,7 +61,6 @@ Useful to confirm the origin exists even when OPFS mapping is unclear.
 | ----------------------------------------- | ---------------------------- |
 | `https://composer.space`                  | Production                   |
 | `https://preview.composer.space`          | Preview (dogfood)            |
-| `https://nightly.composer.space`          | Retired (pre-rename dogfood) |
 | `https://main.composer.space`             | Retired (pre-2026 profiles)  |
 | `https://labs.composer.space`             | Retired (pre-2026 profiles)  |
 | `https://<branch>.composer-app.pages.dev` | PR previews                  |

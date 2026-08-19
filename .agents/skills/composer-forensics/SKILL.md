@@ -28,7 +28,7 @@ safe-mode storage.
 
 - **Live doctor session** — user can open `/recovery.html` and debug port; app broken or slow ([DOCTOR.md](DOCTOR.md)).
 - Inspect, extract, dump, or forensically analyze a Composer profile (offline).
-- Debug data loss, corruption, or unexpected state on `composer.space`, `preview.composer.space`, retired origins (`nightly.composer.space`, `main.composer.space`, `labs.composer.space`), or PR preview deploys.
+- Debug data loss, corruption, or unexpected state on `composer.space`, `preview.composer.space`, retired origins (`main.composer.space`, `labs.composer.space`), or PR preview deploys.
 - Offline analysis of identity, spaces, feeds, objects, automerge documents.
 
 ## Safety

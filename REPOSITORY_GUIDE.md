@@ -71,14 +71,46 @@ pnpm watch
 
 Examples of ways to start up different workloads in dev mode:
 
-| Command                       | Description                           |
-| :---------------------------- | :------------------------------------ |
-| `moon run tasks-app:serve`    | Runs the `tasks-app` in dev mode      |
-| `moon run composer-app:serve` | Runs the `composer-app` in dev mode   |
-| `moon run docs:serve`         | Runs the `docs` astro app in dev mode |
+| Command                            | Description                                              |
+| :--------------------------------- | :------------------------------------------------------- |
+| `moon run tasks-app:serve`         | Runs the `tasks-app` in dev mode                         |
+| `moon run composer-app:serve`      | Runs the `composer-app` in dev mode                      |
+| `moon run composer-app:serve-prod` | Same, with the curated plugin set `composer.space` ships |
+| `moon run docs:serve`              | Runs the `docs` astro app in dev mode                    |
 
 Use `--quiet` to suppress progress output (recommended for LLMs to keep context fresh).
 Use `--on-failure=continue` to continue running other unrelated tasks even if some fail.
+
+### Plugin sets
+
+Composer builds one of **two plugin sets**, chosen at build time by `DX_PLUGIN_SET`:
+
+| Set            | Selected by                | Plugins                                   | Registry                         |
+| :------------- | :------------------------- | :---------------------------------------- | :------------------------------- |
+| full (default) | `DX_PLUGIN_SET` unset      | `src/plugin-defs.tsx` — the whole catalog | yes, incl. the dev plugin loader |
+| curated        | `DX_PLUGIN_SET=production` | `src/plugin-defs.production.tsx`          | no                               |
+
+`vite.config.ts` aliases `./plugin-defs` to the selected file, so **selection is build-time, not a
+runtime flag** — a plugin the curated set doesn't name never enters the module graph (that's the
+bundle-size half of it; a runtime toggle would ship everything and merely hide the UI).
+`composer-app:check-plugin-set` reads the build's own sourcemaps and fails if one leaks in; **Check**
+runs it beside `check-boot-budget`.
+
+Consequences worth knowing before you debug something:
+
+- **`composer.space` and every iOS build ship the curated set**; `preview`, `dev` and `staging` ship
+  the full one. So the plugin registry, the dev plugin loader and most plugins are simply absent from
+  production — not broken.
+- **Both talk to Edge prod**, so an object created on preview can be opened in production with no
+  plugin that renders it. plugin-preview contributes a last-resort notice for that case rather than
+  failing.
+- **`serve-prod` is the local equivalent** of a production build, so a plugin missing from the
+  curated set surfaces before a deploy rather than after.
+
+Enabled-by-default plugins are a separate axis from bundled ones: `getDefaults` in `plugin-defs.tsx`
+turns the dev-only set on for the `dev` environment only. Locally, opt in with `DX_DEV=true` — a
+plain `serve` deliberately keeps the lean set so local development isn't weighed down by plugins
+you're not looking at.
 
 ### Vite's native config loader
 
@@ -247,12 +279,12 @@ You can still pull a specific one on demand: `git fetch origin tag composer/prev
 `--force` — an explicit fetch doesn't skip the clobber check, only the automatic tag-following does), or
 check without touching local refs at all: `git ls-remote --tags origin 'composer/*'`.
 
-| Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                             |
-| -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | --------------------------------- |
-| **dev**        | `composer-dev…`          | EDGE preview | manual → `dev`                    | composer              | desktop + iOS → TestFlight        |
-| **preview**    | `preview.composer.space` | EDGE prod    | auto, 07:00 UTC daily from `main` | all `preview`-enabled | dogfood build; desktop only       |
-| **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused         |
-| **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release |
+| Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                                                                                       |
+| -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | ------------------------------------------------------------------------------------------- |
+| **dev**        | `composer-dev…`          | EDGE preview | manual → `dev`                    | composer              | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
+| **preview**    | `preview.composer.space` | EDGE prod    | auto, 07:00 UTC daily from `main` | all `preview`-enabled | dogfood build; desktop only                                                                 |
+| **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused                                                                   |
+| **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release; **curated plugin set** (see [Plugin sets](#plugin-sets)) |
 
 Local dev talks to EDGE preview by default; point it at EDGE dev or a local EDGE with `DX_EDGE_BASE_URL`.
 

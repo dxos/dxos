@@ -78,7 +78,7 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     hooks: Schema.optional(Schema.Array(Schema.suspend(() => Hook))),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'sky' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'amber' }),
   ),
 ) {}
 
