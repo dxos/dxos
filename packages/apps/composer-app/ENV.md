@@ -14,7 +14,7 @@ variables (`DX_EDGE_BASE_URL`, `DX_HUB_URL`, PostHog keys, …).
 
 **Two things are called "preview".** The `preview` ENVIRONMENT above is the daily dogfood deploy on its
 own Worker and domain. A per-PR preview is something else: a Worker preview _version_ of the `dev` env,
-uploaded by `pr-build.yml`/`pr-deploy.yml` (`wrangler versions upload --preview-alias pr-N`), so a PR
+built by `pr-build.yml` and uploaded by `pr-deploy.yml` (`wrangler versions upload --preview-alias pr-N`), so a PR
 preview and a `dev` deploy see the same EDGE data.
 
 Local dev (`moon run composer-app:serve`) reads [`dx-local.yml`](./dx-local.yml) and defaults to EDGE
