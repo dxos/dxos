@@ -29,31 +29,35 @@ describe('operation serialization', () => {
     expect(failures).toEqual([]);
   });
 
-  // The projection marker must survive serialization: the edge reads it off the operation
-  // registry rather than a curated table (MILESTONE-5.md §7.4).
-  test('MCP-projected verbs carry their annotation through serialize', async ({ expect }) => {
+  // The safety marker must survive serialization: a remote host derives the MCP hints
+  // (readOnly/destructive) from the registry record rather than a curated table
+  // (MILESTONE-5.md §7.4). Inclusion itself is skill-driven and not tested here.
+  test('mutation annotations survive serialize', async ({ expect }) => {
     const handlers = await TasksOperationHandlerSet.handlers.getHandlers();
-    const projected = handlers
-      .map((handler) => Operation.getMcpTool(Operation.serialize(handler)))
-      .filter((tool): tool is NonNullable<typeof tool> => tool !== undefined)
-      .map((tool) => tool.name)
-      .sort();
+    const annotated = Object.fromEntries(
+      handlers
+        .map((handler): [string | undefined, Operation.Mutation | undefined] => [
+          String(handler.meta.key).split('.').at(-1),
+          Operation.getMutation(Operation.serialize(handler)),
+        ])
+        .filter(([, mutation]) => mutation !== undefined),
+    );
 
-    expect(projected).toEqual([
-      'milestoneCreate',
-      'milestoneDelete',
-      'milestoneList',
-      'milestoneMove',
-      'milestoneUpdate',
-      'outlineGet',
-      'outlineUpdate',
-      'taskAssign',
-      'taskComplete',
-      'taskCreate',
-      'taskDelete',
-      'taskList',
-      'taskMove',
-      'taskUpdate',
-    ]);
+    expect(annotated).toEqual({
+      milestoneCreate: 'write',
+      milestoneDelete: 'destructive',
+      milestoneList: 'none',
+      milestoneMove: 'write',
+      milestoneUpdate: 'write',
+      outlineGet: 'none',
+      outlineUpdate: 'write',
+      taskAssign: 'write',
+      taskComplete: 'write',
+      taskCreate: 'write',
+      taskDelete: 'destructive',
+      taskList: 'none',
+      taskMove: 'write',
+      taskUpdate: 'write',
+    });
   });
 });
