@@ -3,8 +3,30 @@
 //
 
 import { invariant } from '@dxos/invariant';
+import { InvalidRecoveryTokenError } from '@dxos/protocols';
 import { type Client } from '@dxos/react-client';
 import { type Credential } from '@dxos/react-client/halo';
+
+/**
+ * Whether a failed recovery was EDGE refusing the token itself (invalid, expired, already used)
+ * rather than a failure of the recovery that followed. Walks the chain because the reason is raised
+ * in client-services and reaches here wrapped: `IdentityError` carries its cause under `context`,
+ * and the services RPC boundary reconstructs the error by name, not by class identity.
+ */
+export const isInvalidRecoveryToken = (error: unknown): boolean => {
+  // Wrapped errors can produce cyclic chains, so track what has been seen.
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  while (typeof current === 'object' && current !== null && !seen.has(current)) {
+    seen.add(current);
+    if (InvalidRecoveryTokenError.is(current)) {
+      return true;
+    }
+    const { cause, context } = current as { cause?: unknown; context?: { error?: unknown } };
+    current = cause ?? context?.error;
+  }
+  return false;
+};
 
 export const removeQueryParamByValue = (valueToRemove: string) => {
   if (typeof window === 'undefined') {

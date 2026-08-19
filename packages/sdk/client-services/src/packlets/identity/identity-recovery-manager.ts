@@ -18,8 +18,11 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   EdgeAuthChallengeError,
+  EdgeCallFailedError,
   type RecoverIdentityRequest as EdgeRecoverIdentityRequest,
+  InvalidRecoveryTokenError,
   type RecoverIdentityResponseBody,
+  RECOVERY_TOKEN_INVALID,
 } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type RecoverIdentityRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -259,7 +262,15 @@ export class EdgeIdentityRecoveryManager {
       ...fields,
     };
 
-    const response = await this._edgeClient.recoverIdentity(ctx, request);
+    const response = await this._edgeClient.recoverIdentity(ctx, request).catch((error) => {
+      // EDGE marks a token it cannot resolve with a discriminator in `data`, which the error codec
+      // drops at the services RPC boundary — rethrow as a typed error so callers can offer a fresh
+      // link rather than reporting every failed recovery the same way.
+      if (error instanceof EdgeCallFailedError && error.data?.type === RECOVERY_TOKEN_INVALID) {
+        throw new InvalidRecoveryTokenError({ cause: error });
+      }
+      throw error;
+    });
 
     await this.#acceptRecoveredIdentity({
       authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),

@@ -10,9 +10,22 @@ import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import type * as Operation from '@dxos/compute/Operation';
 import { ClientOperation } from '@dxos/plugin-client';
+import { InvalidRecoveryTokenError } from '@dxos/protocols';
 
 import { WELCOME_SCREEN } from './constants';
 import { OnboardingManager } from './onboarding-manager';
+
+/**
+ * How a recovery failure reaches the manager: the HALO adapter wraps it in an `IdentityError` whose
+ * cause travels under `context.error` rather than `cause`. Reproduced locally rather than imported,
+ * so the test does not pull `@dxos/halo` in for one error shape.
+ */
+class WrappedIdentityError extends Error {
+  constructor(public readonly context: { error: unknown }) {
+    super('Identity operation failed');
+    this.name = 'IdentityError';
+  }
+}
 
 // No hubUrl is passed, so auth is skipped — the local/dev Composer configuration.
 describe('OnboardingManager', () => {
@@ -91,6 +104,35 @@ describe('OnboardingManager', () => {
     expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(0);
     expect(getCalls(ClientOperation.CreateAgent)).toHaveLength(0);
   });
+
+  //
+  // A magic-link redemption can fail because the link is spent, or because EDGE could not finish
+  // the recovery it authorized. Reporting both as "expired" sends the user to request link after
+  // link against a backend that is not going to answer differently.
+  //
+  test('a refused token reports the link as expired', async ({ expect }) => {
+    const { manager, toastIds } = await createManager({
+      hubUrl: 'https://hub.example.com',
+      token: 'test-token',
+      // Shaped as it arrives: raised in client-services, wrapped by the HALO adapter, and
+      // reconstructed by name across the services RPC boundary.
+      redeemTokenError: new WrappedIdentityError({ error: new InvalidRecoveryTokenError() }),
+    });
+    await manager.initialize();
+
+    expect(toastIds()).toEqual(['login-link-expired-toast']);
+  });
+
+  test('any other redemption failure reports a failed login, not an expired link', async ({ expect }) => {
+    const { manager, toastIds } = await createManager({
+      hubUrl: 'https://hub.example.com',
+      token: 'test-token',
+      redeemTokenError: new WrappedIdentityError({ error: new Error('Halo space not initialized.') }),
+    });
+    await manager.initialize();
+
+    expect(toastIds()).toEqual(['login-failed-toast']);
+  });
 });
 
 const createClient = async () => {
@@ -104,15 +146,21 @@ const createClient = async () => {
   return client;
 };
 
-const createInvoker = () => {
+const createInvoker = (failures: Map<string, Error> = new Map()) => {
   const calls: { key: string; input: unknown }[] = [];
   const invokePromise: Capabilities.OperationInvoker['invokePromise'] = async (operation, ...args) => {
-    calls.push({ key: String(operation.meta.key), input: args[0] });
-    return {};
+    const key = String(operation.meta.key);
+    calls.push({ key, input: args[0] });
+    // `invokePromise` reports a failed operation as `{ error }` rather than by rejecting.
+    return failures.has(key) ? { error: failures.get(key) } : {};
   };
   const getCalls = (operation: Operation.Definition.Any) =>
     calls.filter((call) => call.key === String(operation.meta.key));
-  return { invokePromise, getCalls, calls };
+  const toastIds = () =>
+    calls
+      .filter((call) => call.key === String(LayoutOperation.AddToast.meta.key))
+      .map((call) => (call.input as { id: string }).id);
+  return { invokePromise, getCalls, calls, toastIds };
 };
 
 /**
@@ -144,9 +192,11 @@ const createManager = async (options: {
   identity?: boolean;
   deviceInvitationCode?: string;
   hubUrl?: string;
+  token?: string;
   email?: string;
   accountInvitationCode?: string;
   emailProbe?: 'exists' | 'available' | 'unavailable';
+  redeemTokenError?: Error;
 }) => {
   const client = await createClient();
   if (options.identity) {
@@ -155,15 +205,20 @@ const createManager = async (options: {
   if (options.emailProbe !== undefined) {
     stubEmailProbe(options.emailProbe);
   }
-  const { invokePromise, getCalls, calls } = createInvoker();
+  const failures = new Map<string, Error>();
+  if (options.redeemTokenError !== undefined) {
+    failures.set(String(ClientOperation.RedeemToken.meta.key), options.redeemTokenError);
+  }
+  const { invokePromise, getCalls, calls, toastIds } = createInvoker(failures);
   const manager = new OnboardingManager({
     invokePromise,
     client,
     deviceInvitationCode: options.deviceInvitationCode,
     hubUrl: options.hubUrl,
+    token: options.token,
     email: options.email,
     accountInvitationCode: options.accountInvitationCode,
   });
   onTestFinished(() => manager.destroy());
-  return { manager, getCalls, calls };
+  return { manager, getCalls, calls, toastIds };
 };

@@ -63,6 +63,19 @@ export class InvalidInvitationError extends BaseError.extend('InvalidInvitationE
 
 registerErrorMessageContext('InvalidInvitationError', InvalidInvitationError);
 
+/**
+ * A recovery token (email magic link) no longer resolves to an identity — invalid, expired, or
+ * already redeemed. Registered so the name survives the services RPC boundary: `EdgeCallFailedError`
+ * carries the discriminator in `data`, which the error codec drops, so a surface that needs to tell
+ * "request a fresh link" from "recovery failed" must see a distinct error type instead.
+ */
+export class InvalidRecoveryTokenError extends BaseError.extend(
+  'InvalidRecoveryTokenError',
+  'Recovery token is invalid, expired, or already used.',
+) {}
+
+registerErrorMessageContext('InvalidRecoveryTokenError', InvalidRecoveryTokenError);
+
 export class AlreadyJoinedError extends BaseError.extend('AlreadyJoinedError') {}
 
 registerErrorMessageContext('AlreadyJoinedError', AlreadyJoinedError);

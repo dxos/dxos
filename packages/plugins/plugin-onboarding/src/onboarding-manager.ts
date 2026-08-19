@@ -24,7 +24,7 @@ import { osTranslations } from '@dxos/ui-theme';
 import hero from '../assets/hero.webp?url';
 import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants';
 import { meta } from './meta';
-import { queryAllCredentials, removeQueryParamByValue } from './util';
+import { isInvalidRecoveryToken, queryAllCredentials, removeQueryParamByValue } from './util';
 
 export type OnboardingManagerProps = {
   invokePromise: Capabilities.OperationInvoker['invokePromise'];
@@ -208,12 +208,14 @@ export class OnboardingManager {
       // the existing identity. Awaiting `_login()` lets HALO finish replicating
       // any pre-existing IdentityRecovery credentials before `_setupRecovery`
       // checks them, so we don't prompt a user who already has a passkey.
-      if (await this._login()) {
+      const result = await this._login();
+      if (result === 'ok') {
         await this._setupRecovery();
       } else {
-        // Token was invalid, expired, or already used: fall back to the ordinary login form so the
-        // user can request a fresh link, rather than leaving them on the "authorizing" dialog forever.
-        await this._showLoginExpiredToast();
+        // Either way fall back to the ordinary login form, rather than leaving the user on the
+        // "authorizing" dialog forever: a refused token needs a fresh link, and any other failure
+        // is worth retrying from there.
+        await this._showLoginFailedToast(result);
         await this._showWelcome();
       }
     }
@@ -263,18 +265,20 @@ export class OnboardingManager {
     });
   }
 
-  /** Resolves false when the token was rejected -- `invokePromise` resolves with `{ error }` rather
-   * than rejecting, so the result must be inspected or a failed redemption is silently swallowed. */
-  private async _login(): Promise<boolean> {
+  /** `invokePromise` resolves with `{ error }` rather than rejecting, so the result must be
+   * inspected or a failed redemption is silently swallowed. Distinguishes a token EDGE refused
+   * (nothing a retry of this link can fix) from a recovery that failed for another reason, since
+   * the two need different things from the user. */
+  private async _login(): Promise<'ok' | 'invalid-token' | 'failed'> {
     invariant(this._token);
     const { error } = await this._invokePromise(ClientOperation.RedeemToken, { token: this._token });
     removeQueryParamByValue(this._token);
     removeQueryParamByValue('login');
     if (error) {
       log.warn('token redemption failed', { error });
-      return false;
+      return isInvalidRecoveryToken(error) ? 'invalid-token' : 'failed';
     }
-    return true;
+    return 'ok';
   }
 
   /**
@@ -389,11 +393,12 @@ export class OnboardingManager {
     });
   }
 
-  private async _showLoginExpiredToast(): Promise<void> {
+  private async _showLoginFailedToast(reason: 'invalid-token' | 'failed'): Promise<void> {
+    const id = reason === 'invalid-token' ? 'login-link-expired-toast' : 'login-failed-toast';
     await this._invokePromise(LayoutOperation.AddToast, {
-      id: 'login-link-expired-toast',
-      title: ['login-link-expired-toast.title', { ns: meta.profile.key }],
-      description: ['login-link-expired-toast.description', { ns: meta.profile.key }],
+      id,
+      title: [`${id}.title`, { ns: meta.profile.key }],
+      description: [`${id}.description`, { ns: meta.profile.key }],
       icon: 'ph--warning--regular',
       closeLabel: ['close.label', { ns: osTranslations }],
     });
