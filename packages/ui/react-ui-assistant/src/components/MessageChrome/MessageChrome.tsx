@@ -31,7 +31,13 @@ type MessageChromeContextValue = {
   debug?: boolean;
 };
 
-const [MessageChromeProvider, useMessageChromeContext] = createContext<MessageChromeContextValue>(MESSAGE_CHROME_NAME);
+// The default keeps the chrome usable without a provider: every field is optional configuration,
+// and a missing provider (standalone use, or a dev hot-update re-pairing the context) must not
+// throw and take the whole thread down with it.
+const [MessageChromeProvider, useMessageChromeContext] = createContext<MessageChromeContextValue>(
+  MESSAGE_CHROME_NAME,
+  {},
+);
 
 export { MessageChromeProvider };
 
