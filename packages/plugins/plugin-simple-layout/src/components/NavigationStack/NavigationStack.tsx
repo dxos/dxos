@@ -37,6 +37,9 @@ const COMPLETE_THRESHOLD = 0.5;
 /** A flick completes the pop regardless of distance travelled (px/ms). */
 const COMPLETE_VELOCITY = 0.5;
 
+/** Cached velocity older than this at release is a pause, not a flick (ms). */
+const VELOCITY_MAX_AGE_MS = 100;
+
 type Pose = { x: number; dim: number };
 
 /**
@@ -100,12 +103,6 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
     }
   }, []);
 
-  /**
-   * Animates a layer to `pose`. One keyframe on purpose: the implicit start is the element's current
-   * computed value, so an interrupted animation continues from where it is rather than snapping back
-   * to a nominal origin. Prior animations are committed before being cancelled so that value is the
-   * pose actually on screen.
-   */
   /** Commits and cancels a layer's animations, leaving its on-screen pose behind as inline style. */
   const flushAnimations = useCallback((layer: number) => {
     for (const element of [panelRefs.current[layer], dimRefs.current[layer]]) {
@@ -120,6 +117,11 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
     }
   }, []);
 
+  /**
+   * Animates a layer to `pose`. One keyframe on purpose: the implicit start is the element's current
+   * computed value (prior animations are flushed first), so an interrupted animation continues from
+   * where it is rather than snapping back to a nominal origin.
+   */
   const animatePose = useCallback(
     (layer: number, pose: Pose, duration: number) => {
       flushAnimations(layer);
@@ -252,7 +254,10 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
       }
       const travelled = Math.max(0, event.clientX - gesture.startX);
       const ratio = travelled / Math.max(1, gesture.width);
-      const complete = ratio > COMPLETE_THRESHOLD || gesture.velocity > COMPLETE_VELOCITY;
+      // A stationary finger fires no moves, so cached velocity survives a pause; expire it or a
+      // fast-drag-then-hold release would still count as a flick.
+      const flick = event.timeStamp - gesture.lastT <= VELOCITY_MAX_AGE_MS && gesture.velocity > COMPLETE_VELOCITY;
+      const complete = ratio > COMPLETE_THRESHOLD || flick;
       gestureRef.current = null;
       if (rootRef.current?.hasPointerCapture(event.pointerId)) {
         rootRef.current.releasePointerCapture(event.pointerId);

@@ -17,14 +17,22 @@ type TauriGlobal = {
 
 const getInvoke = () => (globalThis as TauriGlobal).__TAURI__?.core?.invoke;
 
-const decodeChunk = (encoded: string): Float32Array => {
-  const binary = atob(encoded);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index++) {
-    bytes[index] = binary.charCodeAt(index);
+/** Undefined for a payload that is not valid base64-encoded Float32 PCM; the chunk is dropped. */
+const decodeChunk = (encoded: string): Float32Array | undefined => {
+  try {
+    const binary = atob(encoded);
+    if (binary.length % Float32Array.BYTES_PER_ELEMENT !== 0) {
+      return undefined;
+    }
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index++) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+    // The native side writes host-endian Float32; every platform this runs on is little-endian.
+    return new Float32Array(bytes.buffer);
+  } catch {
+    return undefined;
   }
-  // The native side writes host-endian Float32; every platform this runs on is little-endian.
-  return new Float32Array(bytes.buffer);
 };
 
 let installed = false;
@@ -93,7 +101,9 @@ export const installMicrophoneBridge = async (): Promise<boolean> => {
       const detail: unknown = event.detail;
       if (typeof detail === 'string' && detail.length > 0) {
         const frames = decodeChunk(detail);
-        node.port.postMessage(frames, [frames.buffer]);
+        if (frames) {
+          node.port.postMessage(frames, [frames.buffer]);
+        }
       }
     });
 
