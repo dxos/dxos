@@ -18,7 +18,7 @@ export default defineConfig({
   // Two-peer specs boot two app instances per worker, so 4 overloads the cell.
   workers: 3,
   webServer: {
-    command: 'pnpm vite preview',
+    command: 'pnpm vite preview --configLoader native',
     port: 4173,
     timeout: 300_000,
   },

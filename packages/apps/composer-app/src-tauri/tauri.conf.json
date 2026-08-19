@@ -18,7 +18,7 @@
     "withGlobalTauri": true
   },
   "build": {
-    "beforeDevCommand": "node scripts/fetch-ollama.mjs && vite dev",
+    "beforeDevCommand": "node scripts/fetch-ollama.mjs && vite dev --configLoader native",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../out/composer"
   },
