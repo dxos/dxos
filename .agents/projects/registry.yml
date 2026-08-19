@@ -11,7 +11,7 @@ projects:
     user: dmaretskyi
     host: cloud-sandbox
     created: 2026-08-19
-    summary: 'CPU-profile ECHO write/read/update/delete over its two object storage kinds (automerge objects vs feed objects) and find optimization opportunities per kind — they have distinct hotspots, so tracked as two files instead of one TASKS/DESIGN pair.'
+    summary: 'CPU-profile ECHO write/read/update/delete over its two object storage kinds (automerge objects vs feed objects) and find optimization opportunities per kind — they have distinct hotspots, so tracked as two files instead of one TASKS/DESIGN pair, plus a third THROUGHPUT-OVERVIEW.md comparing raw sqlite/automerge/feed ops/sec.'
     tasks: .agents/projects/echo-storage-optimization/AUTOMERGE-TRACK.md
     design: .agents/projects/echo-storage-optimization/FEED-TRACK.md
     prs: [12649, 12668]
