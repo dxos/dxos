@@ -71,10 +71,16 @@ jobs:
           # a toggle — so it's left unset rather than misused for this.)
           package-manager-cache: false
 
+      # Only when missing: the runner images already ship `jq` (every other job in the deploy uses it
+      # with no install), and `apt-get update` here has hung for 12-40 minutes on the depot runners,
+      # which is most of this job's wall time when it isn't stalling it outright.
       - name: Install jq
         run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
+          if ! command -v jq > /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y jq
+          fi
+          jq --version
 
       - name: Resolve build numbers
         id: bump-version
