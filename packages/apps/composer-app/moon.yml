@@ -28,21 +28,6 @@ tasks:
       DX_EDGE_BASE_URL: 'https://dxos.network'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: 'false'
-  # The curated set `composer.space` ships (`DX_PLUGIN_SET=production` aliases `./plugin-defs` to
-  # `plugin-defs.production.tsx`). Its own task rather than an `env` override on a `bundle` dep, for the
-  # reason `bundle-e2e` states: a dependency-level override is hashed into that dependency and yields a
-  # bundle nothing else can hydrate. Consumed by `check-plugin-set` and by the iOS builds, which ship
-  # the production set unconditionally.
-  bundle-production:
-    extends: bundle
-    env:
-      DX_PLUGIN_SET: production
-  # The production set under the e2e environment — the two axes are independent, and Playwright needs
-  # `DX_PWA=false` (the service worker breaks `page.route`) while a shipped bundle must keep it on.
-  bundle-production-e2e:
-    extends: bundle-e2e
-    env:
-      DX_PLUGIN_SET: production
   # Structural budget on the eager boot graph (entry + modulepreload closure). Its own task rather
   # than a step inside `bundle`: a perf budget must not fail the local build you are running in
   # order to measure the very thing it is budgeting. `check-boot-budget` runs in the `check` job, so
@@ -61,7 +46,12 @@ tasks:
   check-plugin-set:
     command: node scripts/check-plugin-set.mjs
     deps:
-      - bundle-production
+      # `DX_PLUGIN_SET` is a `bundle` cache input, so the env var alone selects the set — no separate
+      # bundle task. It rides the dep rather than this task: the set is a build-time decision, and a
+      # bundle built without it would be the full catalog while this check reported on it.
+      - target: bundle
+        env:
+          DX_PLUGIN_SET: production
     inputs:
       - scripts/check-plugin-set.mjs
       - src/plugin-defs.production.tsx
@@ -104,7 +94,11 @@ tasks:
   # would otherwise select. `tauri-ios` (the dev loop) extends `serve-min` for the same reason.
   tauri-ios-build:
     deps:
-      - bundle-production
+      # The env rides the dep, not just this task: `frontendDist` is built by `bundle`, so a bundle
+      # built without it would embed the full catalog while this task believed otherwise.
+      - target: bundle
+        env:
+          DX_PLUGIN_SET: production
   # Both native dev loops run this app's `vite dev` through `beforeDevCommand` (`tauri.ios.conf.json`
   # overrides only `bundle`), so they need exactly `serve`'s narrowed dependency set rather than the
   # `tauri` tag's whole-graph `^:build` — extended so the three inner loops cannot drift.
@@ -218,37 +212,6 @@ tasks:
     deps:
       - prebuild
       - ^:build
-  # The `e2e` suite against a production-set build. Its own task rather than an `env` on `e2e` because
-  # the bundle under it differs and the spec set is narrower (see playwright-production.config.ts):
-  # `inbox.spec.ts` needs plugins the curated set deliberately omits.
-  e2e-production:
-    command: pnpm exec playwright test --config=src/playwright/playwright-production.config.ts
-    # Restated rather than inherited: `e2e-production` is its own task name, so the `e2e` tag
-    # contributes nothing to it. Declared here and never as a workflow `env`, for the reason
-    # `.moon/tasks/tag-e2e.yml` gives — moon hashes the AMBIENT value of an env-var input.
-    env:
-      DX_EDGE_BASE_URL: 'https://dxos.network'
-      DX_TELEMETRY_TAG: e2e
-      DX_PWA: 'false'
-    deps:
-      - prebuild
-      - test-utils:build
-      - vite-plugin-icons:build
-      - bundle-production-e2e
-    inputs:
-      - src/playwright/playwright-production.config.ts
-      - src/playwright/ignored-specs.ts
-      - '@group(sources)'
-      - '@group(tests)'
-      - $CI
-      - $CONFIG_DYNAMIC
-      - $DX_E2E_RUN_ID
-      - $DX_ENVIRONMENT
-      - $DX_HOST
-      - $DX_HUB_URL
-      - $DX_IPDATA_API_KEY
-      - $DX_SHARED_WORKER
-      - $PLAYWRIGHT_BROWSER
   # Welcome-screen focus regression — drives Storybook on :9009 rather than the app, so it cannot
   # run under `e2e`'s `vite preview` web server.
   e2e-welcome-focus:

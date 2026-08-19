@@ -9,38 +9,34 @@ import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
+import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 
 import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
 
 export type { PluginConfig, State } from './plugin-defs.core';
 
 /**
- * Where an object this set cannot open can be opened. The full catalog ships to nightly, and both
- * environments point at the same backend (DX-1144), so the object really is there.
- */
-const EXTENSIBLE_APP_URL = 'https://nightly.composer.space/';
-
-/**
  * Curated set `composer.space` ships (opt-in via `DX_PLUGIN_SET=production`; also the local
- * `serve-min` inner loop, so the fast loop is the one that matches production): core
- * infrastructure plus Assistant, Markdown, Projects, Review, Tasks (which owns the outliner) and
- * Thread.
+ * `serve-min` inner loop and every iOS build, so the fast loop is the one that matches production):
+ * core infrastructure plus Assistant, Markdown, Projects, Review, Tasks (which owns the outliner),
+ * Thread and Transcription.
  *
  * Selection is build-time, not a runtime flag: a flag would hide the registry UI while still
- * bundling every plugin, so the small-bundle half of the goal would never land. Hiding the
- * registry is a consequence — it lives in `plugin-defs.tsx`, the full set.
+ * bundling every plugin, so the small-bundle half of the goal would never land. `isExtensible`
+ * additionally withholds the registry itself, which core carries for both sets.
  *
  * Deliberately absent: `inbox` + its `google` / `jmap` mail providers (not yet vetted for
  * production), and the dev-only `debug`, `devtools`, `sample`, `computer` and `sidekick`.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
-  ...getCorePlugins({ ...config, extensibleAppUrl: EXTENSIBLE_APP_URL }),
+  ...getCorePlugins({ ...config, isExtensible: false }),
   AssistantPlugin.make(),
   MarkdownPlugin.make(),
   ProjectsPlugin.make(),
   ReviewPlugin.make(),
   TasksPlugin.make(),
   ThreadPlugin.make(),
+  TranscriptionPlugin.make(),
 ];
 
 /**

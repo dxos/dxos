@@ -19,8 +19,7 @@ export const translations = [
         'more-options.label': 'More options',
         'unsupported-type.title': 'Nothing here can open this',
         'unsupported-type.message':
-          'This item is a {{typename}}, and no plugin in this version of Composer knows how to show it. Nothing is lost — it is still stored in the space.',
-        'unsupported-type-open.label': 'Open in the full version',
+          'No enabled plugin supports {{typename}}, so there is nothing to show. The item itself is unchanged and still stored in the space.',
       },
     },
   },

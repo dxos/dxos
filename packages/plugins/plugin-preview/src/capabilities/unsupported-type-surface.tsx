@@ -11,8 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { Position } from '@dxos/util';
 
-import { UnsupportedTypeArticle } from '../containers';
-import type { PreviewPluginOptions } from '../types';
+import { UnsupportedType } from '../components';
 
 /**
  * True when no enabled plugin owns the object's type, read off the type registry.
@@ -48,21 +47,22 @@ const isUnclaimedType = (subject: unknown): subject is Obj.Unknown => {
 
 /**
  * Last article candidate, and the plank takes `limit={1}` — so this renders only when nothing else
- * claims the object.
+ * claims the object. A curated plugin set shares a backend with the full-catalog build, so an object
+ * created there can arrive with no plugin that renders it; an empty plank would read as data loss.
  *
  * Its own module rather than a member of `react-surface.ts`: role gating means declaring
  * `org.dxos.role.article` there would load the card surfaces (forms, JSON highlighter) on the first
  * article render anywhere. This module is one component.
  */
-export default Capability.makeModule(({ extensibleAppUrl }: PreviewPluginOptions) =>
+export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'unsupportedTypeArticle',
         position: Position.last,
         filter: AppSurface.subject(AppSurface.Article, isUnclaimedType),
-        component: UnsupportedTypeArticle,
-        props: ({ role, data }) => ({ ...data, role, extensibleAppUrl }),
+        component: UnsupportedType,
+        props: ({ role, data: { subject } }) => ({ role, typename: Obj.getTypename(subject) ?? '' }),
       }),
     ]),
   ),

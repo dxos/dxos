@@ -21,16 +21,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A curated build: the object's plugin is absent here, but a full-catalog build can open it. */
 export const Default: Story = {
-  args: {
-    typename: 'dxos.org/type/Board',
-    href: 'https://nightly.composer.space/',
-  },
-};
-
-/** A full-catalog build: nowhere else to send the user, so no link. */
-export const NoAlternative: Story = {
   args: {
     typename: 'dxos.org/type/Board',
   },

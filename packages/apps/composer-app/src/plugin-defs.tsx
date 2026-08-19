@@ -4,7 +4,6 @@
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
-import * as AtprotoPlugin from '@dxos/plugin-atproto/AtprotoPlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
 import * as BlueskyPlugin from '@dxos/plugin-bluesky/BlueskyPlugin';
 import * as BoardPlugin from '@dxos/plugin-board/BoardPlugin';
@@ -47,12 +46,12 @@ import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MeetingPlugin from '@dxos/plugin-meeting/MeetingPlugin';
 import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
+import * as NativeFilesystemPlugin from '@dxos/plugin-native-filesystem/NativeFilesystemPlugin';
 import * as OsrmPlugin from '@dxos/plugin-osrm/OsrmPlugin';
 import * as PaymentsPlugin from '@dxos/plugin-payments/PaymentsPlugin';
 import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
-import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
@@ -65,7 +64,6 @@ import * as SlackPlugin from '@dxos/plugin-slack/SlackPlugin';
 import * as SpacetimePlugin from '@dxos/plugin-spacetime/SpacetimePlugin';
 import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
 import * as StudioPlugin from '@dxos/plugin-studio/StudioPlugin';
-import * as SupportPlugin from '@dxos/plugin-support/SupportPlugin';
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as TerraPlugin from '@dxos/plugin-terra/TerraPlugin';
@@ -82,7 +80,6 @@ import * as ZenPlugin from '@dxos/plugin-zen/ZenPlugin';
 import { isTruthy } from '@dxos/util';
 
 import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
-import { steps } from './util';
 
 export type { PluginConfig, State } from './plugin-defs.core';
 
@@ -150,15 +147,14 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     .flat();
 
 /**
- * Full Composer plugin registry (nightly and dev): shared core infrastructure, the plugin registry
- * and every content plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
+ * Full Composer plugin registry (nightly and dev): shared core infrastructure plus every content
+ * plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
-  const { logStore, isDev, isLocal, isLabs, isTauri } = config;
+  const { logStore, isDev, isLocal, isLabs, isTauri, isPopover, isMobile } = config;
   return [
     ...getCorePlugins(config),
     AssistantPlugin.make(),
-    AtprotoPlugin.make(),
     BoardPlugin.make(),
     BookmarksPlugin.make(),
     BrainPlugin.make(),
@@ -194,15 +190,15 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     MarkdownPlugin.make(),
     MeetingPlugin.make(),
     MermaidPlugin.make(),
+    // Desktop-only, and not core: the native file picker is a full-catalog capability, unlike
+    // plugin-native's host integration.
+    isTauri && !isMobile && !isPopover && NativeFilesystemPlugin.make(),
     OsrmPlugin.make(),
     TasksPlugin.make(),
     PaymentsPlugin.make(),
     PipelinePlugin.make(),
     PresenterPlugin.make(),
     ProjectsPlugin.make(),
-    // Only the full set carries the registry: the plugin catalog, its settings surface and the dev
-    // plugin loader are what "nightly is extensible" means, and production ships none of them.
-    RegistryPlugin.make(),
     CommercePlugin.make(),
     CrmPlugin.make(),
     isLocal && SamplePlugin.make(),
@@ -216,7 +212,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ExcalidrawPlugin.make(),
     CodePlugin.make(),
     StackPlugin.make(),
-    SupportPlugin.make({ helpSteps: steps }),
     TablePlugin.make(),
     TerraPlugin.make(),
     ThreadPlugin.make(),

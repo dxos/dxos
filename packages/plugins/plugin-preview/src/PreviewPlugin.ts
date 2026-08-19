@@ -13,5 +13,3 @@ export const meta = pluginMeta;
 
 /** Constructs the plugin; the body loads on first enable. */
 export const make = Plugin.lazy(meta, () => import('#plugin'));
-
-export type { PreviewPluginOptions } from './types';

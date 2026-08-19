@@ -10,12 +10,12 @@ import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Client, type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
+import * as AtprotoPlugin from '@dxos/plugin-atproto/AtprotoPlugin';
 import * as AttentionPlugin from '@dxos/plugin-attention/AttentionPlugin';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as DeckPlugin from '@dxos/plugin-deck/DeckPlugin';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
-import * as NativeFilesystemPlugin from '@dxos/plugin-native-filesystem/NativeFilesystemPlugin';
 import * as NativePlugin from '@dxos/plugin-native/NativePlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
 import * as ObservabilityPlugin from '@dxos/plugin-observability/ObservabilityPlugin';
@@ -23,16 +23,18 @@ import * as OnboardingPlugin from '@dxos/plugin-onboarding/OnboardingPlugin';
 import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import * as PwaPlugin from '@dxos/plugin-pwa/PwaPlugin';
+import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SettingsPlugin from '@dxos/plugin-settings/SettingsPlugin';
 import * as SimpleLayoutPlugin from '@dxos/plugin-simple-layout/SimpleLayoutPlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as SpotlightPlugin from '@dxos/plugin-spotlight/SpotlightPlugin';
 import * as StatusBarPlugin from '@dxos/plugin-status-bar/StatusBarPlugin';
+import * as SupportPlugin from '@dxos/plugin-support/SupportPlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 import { isTruthy } from '@dxos/util';
 
-import { downloadLogs } from './util';
+import { downloadLogs, steps } from './util';
 
 const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
 
@@ -50,11 +52,10 @@ export type PluginConfig = State & {
   /** Raises a fatal client-initialization failure to the entry point (see `onFatalError` in main.tsx). */
   onFatalError?: (error: unknown) => void;
   /**
-   * Origin of a build carrying every plugin. Set only by a curated set (`plugin-defs.production.tsx`),
-   * where an object whose plugin this build omits needs somewhere it CAN be opened; the full set is
-   * that destination and leaves it unset.
+   * Whether this build exposes the plugin registry — the catalog, its settings surface and the dev
+   * plugin loader. Defaults to true; the curated set (`plugin-defs.production.tsx`) turns it off.
    */
-  extensibleAppUrl?: string;
+  isExtensible?: boolean;
   isDev?: boolean;
   isLocal?: boolean;
   isPwa?: boolean;
@@ -69,8 +70,14 @@ export type PluginConfig = State & {
  * Infrastructure plugins shared by every plugin set (`plugin-defs.tsx` and
  * `plugin-defs.production.tsx`) — options here are the single source of truth.
  *
- * Registry is deliberately NOT here: production ships without it (no plugin catalog, no dev plugin
- * loader), so membership in the full set is what makes the registry a nightly-only surface.
+ * **Every `system`-tagged plugin belongs in this list, and every plugin in this list is
+ * `tags: ['system']`** (force-enabled, never a user-facing toggle). The two must agree, in both
+ * directions.
+ *
+ * That agreement is maintained BY HAND, and has to be for now: deriving the list by filtering one
+ * catalog of every plugin on the tag would put every plugin in the module graph — the import is what
+ * bundles it, so a build-time list is the only thing that keeps the non-shipped ones out (see
+ * `DX_PLUGIN_SET` in vite.config.ts). Adding a `system` plugin therefore means adding it here too.
  */
 export const getCorePlugins = ({
   appKey,
@@ -80,7 +87,7 @@ export const getCorePlugins = ({
   observability,
   logStore,
   onFatalError,
-  extensibleAppUrl,
+  isExtensible = true,
   isLocal,
   isPwa,
   isTauri,
@@ -90,6 +97,9 @@ export const getCorePlugins = ({
   const layoutPlugin = isPopover ? SpotlightPlugin.make() : isMobile ? SimpleLayoutPlugin.make({}) : DeckPlugin.make();
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
+    // Driven entirely by a type annotation, so it depends on no content plugin and any of them can opt
+    // in — which is why it belongs to every set rather than the full catalog alone.
+    AtprotoPlugin.make(),
     AttentionPlugin.make(),
     ClientPlugin.make({
       client,
@@ -137,18 +147,22 @@ export const getCorePlugins = ({
       downloadLogs: () => downloadLogs(logStore),
     }),
     OnboardingPlugin.make({ generateExemplarSpace: !isLocal }),
-    // Desktop-only host integrations; the ollama sidecar and the native file picker have no web
-    // counterpart, and neither the mobile shell nor the popover window mounts their surfaces.
+    // Desktop-only host integration; the ollama sidecar has no web counterpart, and neither the
+    // mobile shell nor the popover window mounts its surfaces.
     isTauri && !isMobile && !isPopover && NativePlugin.make(),
-    isTauri && !isMobile && !isPopover && NativeFilesystemPlugin.make(),
-    // `tags: ['system']` already; core membership makes that true in practice — every set gets the
-    // preview panel rather than each list re-declaring it. It also owns the stand-in for an object
-    // whose plugin the build omits, which is why the curated set's alternative origin arrives here.
-    PreviewPlugin.make({ extensibleAppUrl }),
+    // Core membership makes its `system` tag true in practice — every set gets the preview panel
+    // rather than each list re-declaring it. It also owns the stand-in for an object whose type no
+    // enabled plugin can render, which a curated set is the case that produces.
+    PreviewPlugin.make(),
     ProcessManagerPlugin(),
     ProgressPlugin.make(),
     // The service worker is a build-time decision (`DX_PWA`), and Tauri ships its own shell.
     !isTauri && isPwa && PwaPlugin.make(),
+    // The plugin catalog, its settings surface and the dev plugin loader all live here, so this flag
+    // is the whole of "the registry is hidden". The lazy body still gets a chunk in a curated build —
+    // it is simply never imported; keeping non-shipped plugins out of the graph is `DX_PLUGIN_SET`'s
+    // job, not this flag's.
+    isExtensible && RegistryPlugin.make(),
     RoutinePlugin.make(),
     SettingsPlugin.make(),
     SpacePlugin.make({
@@ -158,6 +172,7 @@ export const getCorePlugins = ({
       invitationUrlHandler: false,
     }),
     StatusBarPlugin.make(),
+    SupportPlugin.make({ helpSteps: steps }),
     ThemePlugin.make({
       appName: 'Composer',
       platform: isMobile ? 'mobile' : 'desktop',

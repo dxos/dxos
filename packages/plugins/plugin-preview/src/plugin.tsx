@@ -9,9 +9,7 @@ import { PreviewPopover, ReactSurface, Schema, UnsupportedTypeSurface } from '#c
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-import type { PreviewPluginOptions } from './types';
-
-export const PreviewPlugin = Plugin.define<PreviewPluginOptions>(meta).pipe(
+export const PreviewPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(UnsupportedTypeSurface),

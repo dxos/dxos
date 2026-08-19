@@ -6,7 +6,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { PreviewEvents } from '../events';
-import type { PreviewPluginOptions } from '../types';
 
 export const PreviewPopover = Capability.lazyModule(
   'PreviewPopover',
@@ -24,5 +23,4 @@ export const Schema = AppCapability.schema(() => import('./schema'));
  */
 export const UnsupportedTypeSurface = AppCapability.surface(() => import('./unsupported-type-surface'), {
   roles: ['org.dxos.role.article'],
-  props: ({ extensibleAppUrl }: PreviewPluginOptions) => ({ extensibleAppUrl }),
 });
