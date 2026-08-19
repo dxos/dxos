@@ -235,12 +235,6 @@ edge `mcp-operations` (tool surface).
       tombstone), update docs, bump the plugin (enabling is not installing — users pick this up on
       plugin update, not repo merge).
 
-### Experiments (not core)
-
-- [ ] **`sync-aliases`** — a verb that writes thin `.claude/commands/<name>.md` wrappers for every
-      projected prompt: dynamic short names without touching the plugin, at the cost of committed
-      generated files. Evaluate separately; do not fold into the core plan.
-
 ### References
 
 - Plugin: `tools/claude/plugins/dxos/` · [README](../../../tools/claude/plugins/dxos/README.md)
