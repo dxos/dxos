@@ -92,10 +92,10 @@ export const Welcome = ({
   const defaultLoginPrimary: LoginMethod =
     supportsPasskeys && onPasskey ? 'passkey' : onEmailLogin ? 'email' : 'atproto';
 
-  // Each sign-up mode needs its own handler — the invitation-code form can only fail without a
-  // validator, and the screen supplies the waitlist alone once an identity exists. With neither (the
-  // iOS app) the screen collapses to the login form with no tablist.
-  const codeSignupEnabled = !!onValidateInvitationCode;
+  // A sign-up mode is offered only when its handlers can complete it: a code needs both a validator
+  // and a creation path, and the screen supplies the waitlist alone once an identity exists. With
+  // neither (the iOS app) the screen collapses to the login form with no tablist.
+  const codeSignupEnabled = !!onValidateInvitationCode && (!!onCreateAccount || !!onCreateAccountWithOAuth);
   const waitlistEnabled = !!onJoinWaitlist;
   const signupEnabled = codeSignupEnabled || waitlistEnabled;
   const defaultSignupMode: SignupMode = codeSignupEnabled ? 'code' : 'waitlist';
@@ -431,25 +431,29 @@ export const Welcome = ({
                       <h2 className='text-2xl'>{t('signup-auth.title')}</h2>
                       <p className='text-description'>{t('signup-auth.description')}</p>
                     </Flex>
-                    <InlineForm
-                      inputProps={{
-                        ref: emailRef,
-                        placeholder: t('email-input.placeholder'),
-                        value: email,
-                        onChange: (ev) => setEmail(ev.target.value.trim()),
-                        onKeyDown: handleAuthEmailKeyDown,
-                      }}
-                      submitLabel={t('continue-button.label')}
-                      submitDisabled={!validEmail(email) || pending}
-                      onSubmit={handleCreateAccount}
-                      validation={signupEmailError}
-                    />
-                    {error === 'account-exists' && (
-                      <SwapLink onClick={handleSwitchToEmailLogin}>{t('log-in-instead-link.label')}</SwapLink>
+                    {onCreateAccount && (
+                      <>
+                        <InlineForm
+                          inputProps={{
+                            ref: emailRef,
+                            placeholder: t('email-input.placeholder'),
+                            value: email,
+                            onChange: (ev) => setEmail(ev.target.value.trim()),
+                            onKeyDown: handleAuthEmailKeyDown,
+                          }}
+                          submitLabel={t('continue-button.label')}
+                          submitDisabled={!validEmail(email) || pending}
+                          onSubmit={handleCreateAccount}
+                          validation={signupEmailError}
+                        />
+                        {error === 'account-exists' && (
+                          <SwapLink onClick={handleSwitchToEmailLogin}>{t('log-in-instead-link.label')}</SwapLink>
+                        )}
+                      </>
                     )}
                     {onCreateAccountWithOAuth && (
                       <>
-                        <OrDivider>{t('or-divider.label')}</OrDivider>
+                        {onCreateAccount && <OrDivider>{t('or-divider.label')}</OrDivider>}
                         <Flex column gap='sm'>
                           <p className='text-description'>{t('atmosphere-account-button.label')}</p>
                           <InlineForm
