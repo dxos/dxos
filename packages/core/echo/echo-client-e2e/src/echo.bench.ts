@@ -16,8 +16,10 @@ import { parseBenchCount } from './testing/bench-util';
 // two object storage kinds: automerge objects (`db.add`) and feed objects (`db.add(obj, { to:
 // feed })`).
 const SEED_COUNT = parseBenchCount('ECHO_BENCH_SEED_COUNT', 200);
-// See the sizing note in `sqlite.bench.ts`.
-const DELETE_POOL = parseBenchCount('ECHO_BENCH_DELETE_POOL', 300);
+// Sized past what tinybench's 1s time floor could plausibly consume even after a large speedup,
+// since a no-op past the pool's end (see the delete bench's exhaustion guard) would otherwise be
+// counted as delete throughput and skew the reported hz.
+const DELETE_POOL = parseBenchCount('ECHO_BENCH_DELETE_POOL', 1_000);
 // `insert (batched)` shares one flush across a batch, since flushing per item forces an RPC/index
 // round trip that batching avoids.
 const BATCH_SIZE = parseBenchCount('ECHO_BENCH_BATCH_SIZE', 20);
@@ -75,6 +77,8 @@ const defineOperationBenches = (
     BENCH_OPTIONS,
   );
 
+  // hz below is batches/sec (one invocation inserts BATCH_SIZE objects), not items/sec — divide
+  // the reported mean by BATCH_SIZE to compare against `insert`'s per-item latency.
   bench(
     `insert (batched x${BATCH_SIZE}, single flush)`,
     async () => {
