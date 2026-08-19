@@ -23,6 +23,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    typename: 'dxos.org/type/Board',
+    typename: 'org.dxos.type.board',
   },
 };
