@@ -31,12 +31,6 @@ const DefaultStory = ({ content }: StoryArgs) => (
   </WidgetStateProvider>
 );
 
-const escapeXml = (raw: string): string => raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-/** The renderer's own tag shape: content is escaped, so the widget parses back exactly what it sent. */
-const tag = (name: string, content: string, attributes = ''): string =>
-  `<${name}${attributes}>${escapeXml(content)}</${name}>`;
-
 const meta = {
   title: 'ui/react-ui-assistant/registry',
   component: DefaultStory,
@@ -57,7 +51,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Prompt: Story = {
   args: {
-    content: tag('prompt', 'Hello world!'),
+    content: '<prompt>Hello world!</prompt>',
   },
 };
 
@@ -69,38 +63,33 @@ export const LinkPreview: Story = {
 
 export const Synthetic: Story = {
   args: {
-    content: tag('synthetic', 'Trigger fired: inbox.message.received (3 new messages).'),
+    content: '<synthetic>Trigger fired: inbox.message.received (3 new messages).</synthetic>',
   },
 };
 
 export const Reasoning: Story = {
   args: {
-    content: tag(
-      'reasoning',
-      'The user is asking about nested flex layouts and overflow. I should mention min-height 0 and grid track sizing.',
-    ),
+    content:
+      '<reasoning>The user is asking about nested flex layouts and overflow. I should mention min-height 0 and grid track sizing.</reasoning>',
   },
 };
 
 export const Status: Story = {
   args: {
-    content: tag('status', 'Searching the workspace…'),
+    content: '<status>Searching the workspace…</status>',
   },
 };
 
 export const Reference: Story = {
   args: {
-    content: `Filed under ${tag('reference', 'Design notes', ' ref="dxn:echo:@:01J8Z1QK0000000000000000"')}.`,
+    content: 'Filed under <reference ref="dxn:echo:@:01J8Z1QK0000000000000000">Design notes</reference>.',
   },
 };
 
 export const Suggestion: Story = {
   args: {
-    content: [
-      tag('suggestion', 'Show me the layout rules'),
-      tag('suggestion', 'Explain min-h-0'),
-      tag('suggestion', 'Draft a fix'),
-    ].join(' '),
+    content:
+      '<suggestion>Show me the layout rules</suggestion> <suggestion>Explain min-h-0</suggestion> <suggestion>Draft a fix</suggestion>',
   },
 };
 
@@ -113,7 +102,7 @@ export const Select: Story = {
 
 export const Stats: Story = {
   args: {
-    content: tag('stats', '1,204 tokens · 2.4s'),
+    content: '<stats>1,204 tokens · 2.4s</stats>',
   },
 };
 
@@ -123,43 +112,40 @@ export const Stats: Story = {
 
 export const Toolkit: Story = {
   args: {
-    content: tag(
-      'toolkit',
-      JSON.stringify([
-        {
-          _tag: 'toolCall',
-          toolCallId: 'tc-story-1',
-          name: 'example_tool',
-          input: JSON.stringify({ query: 'status', limit: 10 }),
-          providerExecuted: false,
-        },
-        {
-          _tag: 'toolResult',
-          toolCallId: 'tc-story-1',
-          name: 'example_tool',
-          result: JSON.stringify({ ok: true, rows: [{ id: 1 }, { id: 2 }] }),
-          providerExecuted: false,
-        },
-      ]),
-    ),
+    content: `<toolkit>${JSON.stringify([
+      {
+        _tag: 'toolCall',
+        toolCallId: 'tc-story-1',
+        name: 'example_tool',
+        input: JSON.stringify({ query: 'status', limit: 10 }),
+        providerExecuted: false,
+      },
+      {
+        _tag: 'toolResult',
+        toolCallId: 'tc-story-1',
+        name: 'example_tool',
+        result: JSON.stringify({ ok: true, rows: [{ id: 1 }, { id: 2 }] }),
+        providerExecuted: false,
+      },
+    ])}</toolkit>`,
   },
 };
 
 export const Summary: Story = {
   args: {
-    content: tag('summary', 'The thread settled on min-h-0 for every flex ancestor of the scroll viewport.'),
+    content: '<summary>The thread settled on min-h-0 for every flex ancestor of the scroll viewport.</summary>',
   },
 };
 
 // Rendered by the fallback here; the host overrides it with a widget that can dispatch the surface.
 export const Surface: Story = {
   args: {
-    content: tag('surface', JSON.stringify({ id: 'obj-1' }), ' role="card"'),
+    content: `<surface role="card">${JSON.stringify({ id: 'obj-1' })}</surface>`,
   },
 };
 
 export const Json: Story = {
   args: {
-    content: tag('json', JSON.stringify({ _tag: 'unknown', payload: { value: 42 } })),
+    content: `<json>${JSON.stringify({ _tag: 'unknown', payload: { value: 42 } })}</json>`,
   },
 };
