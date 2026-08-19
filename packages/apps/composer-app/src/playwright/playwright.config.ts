@@ -6,13 +6,11 @@ import { defineConfig } from '@playwright/test';
 
 import { e2ePreset } from '@dxos/test-utils/playwright';
 
+import { UNHOSTABLE_SPECS } from './ignored-specs';
+
 export default defineConfig({
   ...e2ePreset(import.meta.dirname),
-  // Specs this config cannot host: `startup.spec.ts` records benchmark rows rather than asserting
-  // behaviour, `dev-*` needs `vite serve` rather than this config's `vite preview`, and
-  // `welcome-focus.spec.ts` drives Storybook on :9009. Each has its own config and moon task
-  // (`e2e-startup`, `e2e-dev`, `e2e-welcome-focus`).
-  testIgnore: ['**/startup.spec.ts', '**/dev-*.spec.ts', '**/welcome-focus.spec.ts'],
+  testIgnore: UNHOSTABLE_SPECS,
   timeout: 60_000,
   expect: { timeout: 10_000 },
   // Two-peer specs boot two app instances per worker, so 4 overloads the cell.

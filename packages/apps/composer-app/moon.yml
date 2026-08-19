@@ -233,8 +233,8 @@ tasks:
       - vite-plugin-icons:build
       - bundle-production-e2e
     inputs:
-      - src/playwright/playwright.config.ts
       - src/playwright/playwright-production.config.ts
+      - src/playwright/ignored-specs.ts
       - '@group(sources)'
       - '@group(tests)'
       - $CI
