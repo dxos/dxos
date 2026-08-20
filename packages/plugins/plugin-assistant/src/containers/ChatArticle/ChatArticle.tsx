@@ -106,11 +106,11 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
             <ChatComponent.Content>
               <div className='dx-container relative'>
                 {/* Thread outline. */}
-                <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />
+                {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
                 {/* Main thread. */}
                 <ChatComponent.Thread viewType={viewType} tailLines={4} onViewUsage={handleViewUsage} />
                 {/* Floating thread status. */}
-                {viewType !== 'summary' && (
+                {!mobile && viewType !== 'summary' && (
                   <div className='absolute bottom-2 left-0 right-0'>
                     <div className='dx-document px-4'>
                       <ChatComponent.Status classNames='px-3 rounded-sm bg-group-surface' />
