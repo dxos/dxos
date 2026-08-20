@@ -2,6 +2,7 @@
   "$schema": "../gen/schemas/ios-schema.json",
   "identifier": "ios-capability",
   "permissions": [
+    "core:default",
     "haptics:allow-impact-feedback",
     "haptics:allow-notification-feedback",
     "haptics:allow-selection-feedback",

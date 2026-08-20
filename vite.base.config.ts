@@ -14,7 +14,7 @@ import { defineConfig as viteDefineConfig, type Plugin, type UserConfig } from '
 import Inspect from 'vite-plugin-inspect';
 import solid from 'vite-plugin-solid';
 import WasmPlugin from 'vite-plugin-wasm';
-import { UserWorkspaceConfig, type ViteUserConfig, defineProject } from 'vitest/config';
+import { type UserWorkspaceConfig, type ViteUserConfig, defineProject } from 'vitest/config';
 import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
@@ -25,7 +25,7 @@ import PluginImportSource from '@dxos/vite-plugin-import-source';
 // build the plugin first, which introduces a moon dep cycle through @dxos/log
 // (vite-plugin-log -> log -> ... -> log:test -> vite-plugin-log).
 import { DxosLogPlugin } from './tools/vite-plugin-log/src/plugin.ts';
-import { TEST_TAGS } from './vitest.tags';
+import { TEST_TAGS } from './vitest.tags.ts';
 
 export { TEST_TAGS };
 
@@ -44,6 +44,10 @@ const NODE_STD_MODULES = [
   'stream',
   'util',
 ];
+
+// This file sits at the workspace root. `import.meta.dirname` rather than `__dirname` so the file
+// loads unchanged under vite's native config loader, where it is a real ESM module in node.
+const workspaceRoot = import.meta.dirname;
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
@@ -748,8 +752,8 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
 
   const projectType = resolveProjectType();
   const moonRerunReporter = createMoonRerunReporter({ moonProject: packageDirName, projectType });
-  const resultsDirectory = join(__dirname, 'test-results', packageDirName, ...(projectType ? [projectType] : []));
-  const reportsDirectory = join(__dirname, 'coverage', packageDirName, ...(projectType ? [projectType] : []));
+  const resultsDirectory = join(workspaceRoot, 'test-results', packageDirName, ...(projectType ? [projectType] : []));
+  const reportsDirectory = join(workspaceRoot, 'coverage', packageDirName, ...(projectType ? [projectType] : []));
   // The v8 coverage provider imports `node:inspector/promises`, which the workerd runtime does not
   // provide — coverage is unsupported for the workers pool, so never enable it for the workerd project.
   const coverageEnabled = Boolean(process.env.VITEST_COVERAGE) && projectType !== 'workerd';
