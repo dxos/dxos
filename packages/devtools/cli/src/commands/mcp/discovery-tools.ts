@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
-import { Server } from '@dxos/mcp-server';
+import { McpServer } from '@dxos/mcp-server';
 
-import { type LocalGateway } from './gateway';
+import { type LocalRegistry } from './registry';
 
 /**
  * Read-only discovery over what this host assembled, mirroring EDGE's `mcp-space-service` tools of
@@ -32,7 +32,7 @@ export const ListPlugins = Tool.make('listPlugins', {
       }),
     ),
   }),
-  failure: Server.ToolFailure,
+  failure: McpServer.ToolFailure,
 })
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
@@ -50,7 +50,7 @@ export const ListTypes = Tool.make('listTypes', {
       }),
     ),
   }),
-  failure: Server.ToolFailure,
+  failure: McpServer.ToolFailure,
 })
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
@@ -68,7 +68,7 @@ export const ListOperations = Tool.make('listOperations', {
       }),
     ),
   }),
-  failure: Server.ToolFailure,
+  failure: McpServer.ToolFailure,
 })
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
@@ -87,14 +87,14 @@ const metaString = (operation: Record<string, unknown>, field: string): string |
   return isRecord(meta) ? optionalString(meta[field]) : undefined;
 };
 
-export const discoveryHandlers = (gateway: LocalGateway) =>
+export const discoveryHandlers = (registry: LocalRegistry) =>
   DiscoveryToolkit.of({
-    listPlugins: () => Effect.succeed({ plugins: gateway.plugins }),
+    listPlugins: () => Effect.succeed({ plugins: registry.plugins }),
 
-    listTypes: () => Effect.succeed({ types: gateway.types }),
+    listTypes: () => Effect.succeed({ types: registry.types }),
 
     listOperations: () =>
-      gateway.listOperations.pipe(
+      registry.listOperations.pipe(
         // Serialized `PersistentOperation` records carry schemas and metadata; project the fields a
         // model needs to pick an operation, not the whole record.
         Effect.map((operations) => ({
@@ -105,6 +105,6 @@ export const discoveryHandlers = (gateway: LocalGateway) =>
             description: optionalString(operation.description),
           })),
         })),
-        Effect.mapError((error) => Server.failure('operation_failed', error.message)),
+        Effect.mapError((error) => McpServer.failure('operation_failed', error.message)),
       ),
   });

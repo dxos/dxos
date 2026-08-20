@@ -14,8 +14,6 @@ import { Outline, Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { CODE_PROJECT_SKILL_KEY } from './skill-keys';
-
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const CreateOutline = Operation.make({
@@ -78,7 +76,7 @@ export const GetOutline = Operation.make({
     content: Schema.String,
     items: Schema.Array(Schema.Struct({ title: Schema.String, done: Schema.Boolean })),
   }),
-}).pipe(Operation.mcpTool({ name: 'outlineGet', safety: 'read', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
+}).pipe(Operation.mutation('none'));
 
 export const UpdateOutline = Operation.make({
   meta: {
@@ -100,4 +98,4 @@ export const UpdateOutline = Operation.make({
     id: Schema.String,
     content: Schema.String,
   }),
-}).pipe(Operation.mcpTool({ name: 'outlineUpdate', safety: 'write', aspect: 'tasks', skill: CODE_PROJECT_SKILL_KEY }));
+}).pipe(Operation.mutation('write'));

@@ -53,9 +53,6 @@ export const AutomationTemplates = Capability.lazyModule(
 );
 export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
   requires: [ClientCapabilities.Client],
-  // Graph start, not the inbox's own: a deep link is resolved before any inbox surface exists,
-  // so gating this on the surface that the resolution leads to would never resolve.
-  activatesOn: ActivationEvents.Idle,
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,

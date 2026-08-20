@@ -2,23 +2,47 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
+import * as OutlineOperation from '@dxos/plugin-tasks/OutlineOperation';
+import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import { Text } from '@dxos/schema';
+
+import { ProjectMcpOperation, ProjectOperation } from '#types';
 
 // The workflow content lives beside this module as markdown so it can be edited as prose.
 import instructions from './code-project-skill.md?raw';
 
 export const key = 'org.dxos.plugin.projects.skill.codeProject';
 
+/** The workflow's verbs; listing them here is what projects them as MCP tools. */
+export const operations: readonly Operation.Definition.Any[] = [
+  ProjectOperation.Create,
+  ProjectMcpOperation.ListProjects,
+  ProjectMcpOperation.GetProject,
+  ProjectMcpOperation.UpdateProject,
+  TaskOperation.CreateTask,
+  TaskOperation.UpdateTask,
+  TaskOperation.CompleteTask,
+  TaskOperation.AssignTask,
+  TaskOperation.ListTasks,
+  TaskOperation.CreateMilestone,
+  TaskOperation.UpdateMilestone,
+  TaskOperation.DeleteMilestone,
+  TaskOperation.MoveMilestone,
+  TaskOperation.ListMilestones,
+  OutlineOperation.GetOutline,
+  OutlineOperation.UpdateOutline,
+];
+
 /**
  * Project-management workflow for agents driving the projected MCP verbs: work-stream projects
  * with task ledgers, outlines, and design documents in an ECHO space.
  *
  * The final key segment doubles as the projected MCP prompt name, so this skill answers to
- * `/codeProject`. Plain `project` belongs to assistant-toolkit's `org.dxos.skill.project`, a
- * chat-context skill for filing artifacts; a shared segment would be a prompt-name collision, which
- * the projection raises rather than resolving silently.
+ * `/codeProject`; plain `project` belongs to assistant-toolkit's `org.dxos.skill.project`, and a
+ * shared segment would be a prompt-name collision.
  */
 export const make = (): Skill.Skill =>
   Skill.make({
@@ -33,5 +57,5 @@ export const make = (): Skill.Skill =>
     instructions: {
       source: Ref.make(Text.make({ content: instructions })),
     },
-    tools: [],
+    tools: Skill.toolDefinitions({ operations }),
   });

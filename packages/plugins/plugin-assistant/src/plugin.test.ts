@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import { AgentWizardSkill, ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -174,7 +174,7 @@ describe('AssistantPlugin', () => {
       await harness.runPromise(
         Effect.gen(function* () {
           const skills = yield* Effect.forEach(
-            [DatabaseSkill, AssistantSkill, SkillManagerSkill, AgentWizardSkill],
+            [ChatContextSkill, AssistantSkill, SkillManagerSkill, AgentWizardSkill],
             (_) => Skill.resolve(_.key),
           );
           expect(skills).toHaveLength(4);

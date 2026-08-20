@@ -51,6 +51,11 @@
       "types": "./dist/types/src/echo/AppMigrations.d.ts",
       "import": "./dist/lib/echo/AppMigrations.mjs"
     },
+    "./ObservabilityMapping": {
+      "source": "./src/app-framework/ObservabilityMapping.ts",
+      "types": "./dist/types/src/app-framework/ObservabilityMapping.d.ts",
+      "import": "./dist/lib/app-framework/ObservabilityMapping.mjs"
+    },
     "./AppNode": {
       "source": "./src/app-graph/AppNode.ts",
       "types": "./dist/types/src/app-graph/AppNode.d.ts",
@@ -100,6 +105,11 @@
       "source": "./src/app/NativePasskey.ts",
       "types": "./dist/types/src/app/NativePasskey.d.ts",
       "import": "./dist/lib/app/NativePasskey.mjs"
+    },
+    "./NavigationResolver": {
+      "source": "./src/app/NavigationResolver.ts",
+      "types": "./dist/types/src/app/NavigationResolver.d.ts",
+      "import": "./dist/lib/app/NavigationResolver.mjs"
     },
     "./NavigationOperation": {
       "source": "./src/operations/NavigationOperation.ts",
