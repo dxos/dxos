@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- Generated as a macOS template (monochrome) menu bar icon, derived from @dxos/brand composer-icon.svg. -->
+<!-- Pre-thinning reference for the macOS template (monochrome) menu bar icon, derived from @dxos/brand composer-icon.svg. The shipped src-tauri/icons/menubarTemplate.png additionally erodes each ring by ~20px in raster space (bands unmoved, just narrower) so the four rings read as distinct swoops at 22px instead of one solid disc; this file predates that step. -->
 <svg width="100%" height="100%" viewBox="-22.960 7.040 241.920 241.920" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
   <g transform="matrix(0.969697,0,0,1,-570.182,0)">
     <rect x="588" y="0" width="264" height="256" style="fill:none;"/>
