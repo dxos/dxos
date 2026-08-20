@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
+import * as Schedule from 'effect/Schedule';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
@@ -14,22 +16,23 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database } from '@dxos/echo';
+import { type SpaceId } from '@dxos/keys';
 
 import { ClientCapabilities } from '#types';
 
-import { createSpaceFeedReplicationProgressKey, createSpaceReplicationProgressKey } from '../progress';
-
-type MonitorUpdate = {
-  readonly label: string;
-  readonly current: number;
-  readonly total: number;
-  readonly note?: string;
-};
+import { type MonitorUpdate, createSpaceReplicationProgressKey, toSpaceUpdate } from '../progress';
 
 /**
- * Publishes per-space replication backlog — automerge documents and ECHO feed blocks — into the
- * {@link AppCapabilities.ProgressRegistry}. Subscribes to the combined sync-state stream and drops
- * monitors once a space catches up.
+ * Reconciliation interval. The sync-state streams are the primary signal; a periodic re-read
+ * guarantees a monitor cannot outlive its backlog if an update is ever missed (a dropped stream,
+ * a leader change), which would otherwise leave the indicator spinning forever.
+ */
+const RECONCILE_INTERVAL = Duration.seconds(10);
+
+/**
+ * Publishes per-space replication backlog — automerge documents and ECHO feed blocks combined into a
+ * single monitor per space — into the {@link AppCapabilities.ProgressRegistry}. Subscribes to the
+ * combined sync-state stream and drops a space's monitor once it catches up.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -69,9 +72,7 @@ export default Capability.makeModule(
       }
       monitor.set(update.current);
       monitor.total(update.total);
-      if (update.note !== undefined) {
-        monitor.note(update.note);
-      }
+      monitor.note(update.note ?? '');
     };
 
     // A space that has not finished initializing throws from its `properties` getter, and the
@@ -80,29 +81,57 @@ export default Capability.makeModule(
     const getSpaceName = (space: Space): string | undefined =>
       space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined;
 
+    // The spaces subscription re-delivers the whole list on every change, so subscribing blindly
+    // would stack a fiber per space per delivery — duplicate writers then race over one monitor key.
+    const subscribed = new Set<SpaceId>();
     const runtime = yield* Effect.context<Scope.Scope>();
-    const subscribeSpace = (space: Space): void =>
+    const subscribeSpace = (space: Space): void => {
+      if (subscribed.has(space.id)) {
+        return;
+      }
+      subscribed.add(space.id);
+
       void Effect.gen(function* () {
-        const fiber = processManagerRuntime.runFork(
+        const key = createSpaceReplicationProgressKey(space.id);
+        const apply = (state: Database.SyncState) => applyMonitor(key, toSpaceUpdate(getSpaceName(space), state));
+        const provide = ServiceResolver.provide({ space: space.id }, Database.Service);
+
+        const streamFiber = processManagerRuntime.runFork(
           Database.subscribeToSyncState().pipe(
-            Stream.runForEach(
-              Effect.fnUntraced(function* (state) {
-                const name = getSpaceName(space);
-                applyMonitor(createSpaceReplicationProgressKey(space.id), toDocumentUpdate(name, state));
-                applyMonitor(createSpaceFeedReplicationProgressKey(space.id), toFeedUpdate(name, state));
-              }),
-            ),
-            Effect.provide(ServiceResolver.provide({ space: space.id }, Database.Service)),
+            Stream.runForEach((state) => Effect.sync(() => apply(state))),
+            Effect.provide(provide),
+          ),
+        );
+        const reconcileFiber = processManagerRuntime.runFork(
+          Database.getSyncState().pipe(
+            Effect.map(apply),
+            Effect.repeat(Schedule.spaced(RECONCILE_INTERVAL)),
+            Effect.provide(provide),
           ),
         );
 
-        yield* Effect.addFinalizer(() => Fiber.interrupt(fiber));
+        yield* Effect.addFinalizer(() =>
+          Effect.all([Fiber.interrupt(streamFiber), Fiber.interrupt(reconcileFiber)], { discard: true }),
+        );
       }).pipe(Effect.provide(runtime), Effect.runFork);
+    };
+
+    // A space that leaves the list (closed, left) never emits another sync state, so its monitor
+    // would linger forever — drop it here instead.
+    const pruneMonitors = (spaces: readonly Space[]): void => {
+      const live = new Set(spaces.map((space) => createSpaceReplicationProgressKey(space.id)));
+      for (const key of [...monitors.keys()]) {
+        if (!live.has(key)) {
+          applyMonitor(key, undefined);
+        }
+      }
+    };
 
     const spacesSubscription = client.spaces.subscribe((spaces) => {
       for (const space of spaces) {
         subscribeSpace(space);
       }
+      pruneMonitors(spaces);
     });
     yield* Effect.addFinalizer(() => Effect.sync(() => spacesSubscription.unsubscribe()));
     for (const space of client.spaces.get()) {
@@ -112,43 +141,3 @@ export default Capability.makeModule(
     return [];
   }),
 );
-
-/** Derives the automerge document monitor state, or `undefined` when caught up. */
-const toDocumentUpdate = (name: string | undefined, state: Database.SyncState): MonitorUpdate | undefined => {
-  const unsynced = state.unsyncedDocumentCount;
-  if (unsynced === 0) {
-    return undefined;
-  }
-
-  const total = state.totalDocumentCount > 0 ? state.totalDocumentCount : unsynced;
-  return {
-    label: getSpaceProgressLabel(name ?? 'Space', 'CRDTs'),
-    current: Math.max(0, total - unsynced),
-    total,
-  };
-};
-
-/** Derives the ECHO feed block monitor state, or `undefined` when caught up. */
-const toFeedUpdate = (name: string | undefined, state: Database.SyncState): MonitorUpdate | undefined => {
-  const blocksToPull = Number(state.blocksToPull);
-  const blocksToPush = Number(state.blocksToPush);
-  const pending = blocksToPull + blocksToPush;
-  if (pending === 0) {
-    return undefined;
-  }
-
-  const totalBlocks = Number(state.totalBlocks);
-  const total = totalBlocks > 0 ? totalBlocks : pending;
-  return {
-    label: getSpaceProgressLabel(name ?? 'Space', 'Feeds'),
-    current: Math.max(0, total - pending),
-    total,
-    note: `↓${blocksToPull} ↑${blocksToPush}`,
-  };
-};
-
-/** Human label for a space progress monitor. */
-const getSpaceProgressLabel = (name: string | undefined, suffix?: string): string => {
-  const name_ = name ?? 'Space';
-  return suffix ? `${name_} · ${suffix}` : name_;
-};
