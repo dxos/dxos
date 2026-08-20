@@ -36,6 +36,14 @@ describe('renderDial', () => {
     expect(renderDial({ kind: 'progress', title: 'Syncing', ratio: -1 })).toMatchObject({ bar: 0, value: '0%' });
   });
 
+  test('drops a non-finite bar rather than serializing it to null', ({ expect }) => {
+    expect(renderDial({ kind: 'progress', title: 'Syncing', ratio: Number.NaN })).toEqual({
+      title: 'Syncing',
+      value: '…',
+      bar: undefined,
+    });
+  });
+
   test('renders a stat', ({ expect }) => {
     expect(renderDial({ kind: 'stat', title: 'Objects', value: '128' })).toEqual({
       title: 'Objects',

@@ -25,6 +25,11 @@ export const escapeXml = (value: string): string =>
  * Overflow past the last line is ellipsised.
  */
 export const wrapText = (value: string, maxChars: number, maxLines: number): string[] => {
+  // A zero budget has no last line to ellipsise.
+  if (maxLines <= 0) {
+    return [];
+  }
+
   const words = value.trim().split(/\s+/).filter(Boolean);
   if (!words.length) {
     return [];

@@ -46,10 +46,12 @@ export class MonitorAction extends SingletonAction {
   // Last frame applied, so a segment placed later can be brought up to date immediately.
   #dials: readonly (Protocol.DialFeedback | null)[] = [];
 
+  /** Supplies the input sink and connection state; called once at startup. */
   bind(host: MonitorHost): void {
     this.#host = host;
   }
 
+  /** Applies the dial feedback from a frame, in slot order; extra segments are blanked. */
   async apply(dials: readonly (Protocol.DialFeedback | null)[]): Promise<void> {
     this.#dials = dials;
     const instances = assignSlots([...this.actions]);
@@ -63,6 +65,7 @@ export class MonitorAction extends SingletonAction {
     );
   }
 
+  /** Paints every placed segment with the offline state and forgets the retained frame. */
   async clear(): Promise<void> {
     this.#dials = [];
     await Promise.all(

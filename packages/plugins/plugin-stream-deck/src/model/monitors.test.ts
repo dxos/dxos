@@ -59,6 +59,14 @@ describe('toDialSpecs', () => {
     expect(toDialSpecs([task({ current: 50 })], stats, 1)[0]).toMatchObject({ ratio: 1 });
   });
 
+  test('treats a non-finite ratio as indeterminate', ({ expect }) => {
+    // A non-finite bar serializes to `null`, which the device would reject along with the frame.
+    expect(toDialSpecs([task({ current: Number.NaN })], stats, 1)[0]).toMatchObject({ ratio: undefined });
+    expect(toDialSpecs([task({ current: Number.POSITIVE_INFINITY })], stats, 1)[0]).toMatchObject({
+      ratio: undefined,
+    });
+  });
+
   test('truncates to the available dials', ({ expect }) => {
     const tasks = Array.from({ length: 6 }, (_, index) => task({ name: `task-${index}` }));
     expect(toDialSpecs(tasks, stats, 4)).toHaveLength(4);

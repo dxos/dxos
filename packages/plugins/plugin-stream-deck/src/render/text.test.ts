@@ -35,6 +35,10 @@ describe('wrapText', () => {
     expect(wrapText('A   B', 11, 2)).toEqual(['A B']);
   });
 
+  test('returns nothing when there is no line budget', ({ expect }) => {
+    expect(wrapText('Notes', 11, 0)).toEqual([]);
+  });
+
   test('returns nothing for a blank label', ({ expect }) => {
     expect(wrapText('   ', 11, 2)).toEqual([]);
   });

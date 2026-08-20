@@ -15,8 +15,12 @@ const STAT_LABELS: readonly [keyof SpaceStats, string][] = [
   ['plugins', 'Plugins'],
 ];
 
-/** A producer is free to report a negative or overshooting `current`; the dial promises `[0, 1]`. */
-const clampRatio = (ratio: number): number => Math.max(0, Math.min(1, ratio));
+/**
+ * A producer is free to report a negative, overshooting or non-finite `current`; the dial promises a
+ * fraction in `[0, 1]`, and a non-finite value would serialize to `null` and fail the wire decode.
+ */
+const clampRatio = (ratio: number): number | undefined =>
+  Number.isFinite(ratio) ? Math.max(0, Math.min(1, ratio)) : undefined;
 
 const toProgressDial = (task: Progress.TaskProgress): DialSpec => ({
   kind: 'progress',

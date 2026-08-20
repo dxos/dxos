@@ -32,6 +32,7 @@ export class FavoriteAction extends SingletonAction {
   // Last frame applied, so a key placed later can be brought up to date immediately.
   #keys: readonly (Protocol.KeyImage | null)[] = [];
 
+  /** Supplies the input sink and connection state; called once at startup. */
   bind(host: FavoriteHost): void {
     this.#host = host;
   }
@@ -43,6 +44,7 @@ export class FavoriteAction extends SingletonAction {
     await Promise.all(instances.map((instance, slot) => instance.setImage(keys[slot]?.svg ?? offlineKey())));
   }
 
+  /** Paints every placed key with the offline state and forgets the retained frame. */
   async clear(): Promise<void> {
     this.#keys = [];
     await Promise.all(assignSlots([...this.actions]).map((instance) => instance.setImage(offlineKey())));
