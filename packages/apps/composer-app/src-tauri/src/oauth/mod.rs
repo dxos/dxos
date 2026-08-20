@@ -217,15 +217,17 @@ pub fn open_oauth_window(app: AppHandle, url: String, callback_path: String) -> 
         let _ = existing.close();
     }
 
+    // kms-service builds the callback from the `Origin` of the initiate request verbatim, so the
+    // flow returns to the app's own origin and nowhere else. Requiring it keeps a page the provider
+    // redirected to from forging a callback of its own with tokens the app would then store.
+    let app_origin = format!("http://localhost:{}", crate::webview_port(&app.config().identifier));
     let handle = app.clone();
     WebviewWindowBuilder::new(&app, OAUTH_WINDOW_LABEL, WebviewUrl::External(auth_url))
         .title("Sign in")
         .inner_size(520.0, 720.0)
         .center()
         .on_navigation(move |url| {
-            // Matching the path rather than the app's own origin keeps this working wherever
-            // kms-service sends the flow back to.
-            if url.path() != callback_path {
+            if url.origin().ascii_serialization() != app_origin || url.path() != callback_path {
                 return true;
             }
 
