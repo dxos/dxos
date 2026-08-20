@@ -3,7 +3,7 @@
 Language learning for Composer: vocabulary decks, flashcard drilling with score tracking, AI
 vocabulary extraction from any text, and a reader companion that reveals translations on hover.
 
-See [`DESIGN.md`](./DESIGN.md) for the architecture and the phased plan.
+See [`docs/DESIGN.md`](./docs/DESIGN.md) for the architecture and the phased plan.
 
 ## DXOS Resources
 
