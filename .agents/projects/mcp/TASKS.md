@@ -268,6 +268,11 @@ field goes.
       crm (its section holds type-collection nodes, no per-object nodes — a resolver would target
       the type node, a different contract) and blogger's Post (lives under its Publication — needs
       a back-reference walk, not the type-at-section shape).
+      **Follow-up (user review):** every resolver now takes the `navigationResolver` maker's
+      `Startup` default. Inbox and studio had overridden it to `Idle` (and the new ones copied
+      them), which contradicts the reason the maker defaults to `Startup` — URL restore runs
+      during boot, so an idle-registered resolver is absent exactly when the deep link it answers
+      is being handled.
 - [ ] **Shared operation→tool projection** (assistant ⇄ mcp) — deferred with a plan, not dropped.
       What blocks a naive extraction: the two surfaces are deliberately different models of the
       same operation. The assistant presents refs as LLM-friendly URI _strings_ (`RefFromLLM`,
