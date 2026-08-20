@@ -4,10 +4,11 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Instructions from '@dxos/compute/Instructions';
-import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
@@ -71,18 +72,22 @@ describe('Chat', () => {
   );
 
   it.effect(
-    'the parent edge links a chat to an arbitrary companion subject',
+    'linkCompanion links a chat to an arbitrary subject: annotation ref + parent edge',
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat;
         const subject = yield* Database.add(Instructions.make({ text: 'Steer.' }));
-        Obj.setParent(chat, subject);
+        Chat.linkCompanion({ chat, subject });
         yield* Database.flush();
 
         expect(Obj.getParent(chat)?.id).toBe(subject.id);
-        // Standalone again once unparented — the edge, not a field, carries companionship.
-        Obj.setParent(chat, undefined);
-        expect(Obj.getParent(chat)).toBeUndefined();
+        const chats = Annotation.get(subject, Chat.CompanionChatAnnotation).pipe(Option.getOrElse(() => []));
+        expect(chats.map((ref) => ref.uri)).toEqual([Ref.make(chat).uri]);
+
+        // Idempotent per chat: linking again adds no duplicate ref.
+        Chat.linkCompanion({ chat, subject });
+        const again = Annotation.get(subject, Chat.CompanionChatAnnotation).pipe(Option.getOrElse(() => []));
+        expect(again).toHaveLength(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

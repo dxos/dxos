@@ -761,17 +761,13 @@ export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
 };
 
 /**
- * Whether the typename is admitted by an annotation's typename list ('*' admits any).
+ * Whether the parent's own data or meta annotations hold a ref to the child. A parent edge without
+ * one leaves the child reachable only by index query (no graph path reaches it), and the child
+ * would not read as owned content of the parent.
  */
-const admitsTypename = (admitted: readonly string[] | undefined, typename: string | undefined): boolean =>
-  !!admitted && (admitted.includes(internal.ANY_TYPENAME) || (!!typename && admitted.includes(typename)));
-
-/**
- * Whether the parent's own data holds a ref to the child.
- */
-const parentRefsChild = (parent: Unknown, childId: EntityId): boolean => {
+const parentRefsChild = (parent: Any, childId: EntityId): boolean => {
   let found = false;
-  deepMapValues(parent, (value, recurse) => {
+  const visit = (value: unknown, recurse: (value: unknown) => unknown): unknown => {
     if (found) {
       return value;
     }
@@ -783,36 +779,12 @@ const parentRefsChild = (parent: Unknown, childId: EntityId): boolean => {
       return value;
     }
     return recurse(value);
-  });
+  };
+  deepMapValues(parent, visit);
+  if (!found) {
+    deepMapValues(getMeta(parent).annotations, visit);
+  }
   return found;
-};
-
-/**
- * Whether a parent edge from `child` to `parent` is declared: the parent holds a ref to the child,
- * the parent's type carries `ChildrenAnnotation` admitting the child's type, or the child's type
- * carries `ParentAnnotation` admitting the parent's type. An undeclared edge leaves the child
- * reachable only by index query (no graph path reaches it).
- */
-export const isDeclaredParentEdge = (child: Unknown, parent: Any): boolean => {
-  const childTypename = internal.getTypename(child);
-  const parentTypename = internal.getTypename(parent);
-  assumeType<internal.InternalObjectProps>(child);
-  assumeType<internal.InternalObjectProps>(parent);
-  const childSchema = child[internal.SchemaId];
-  const parentSchema = parent[internal.SchemaId];
-  if (
-    parentSchema &&
-    admitsTypename(Option.getOrUndefined(internal.ChildrenAnnotation.get(parentSchema)), childTypename)
-  ) {
-    return true;
-  }
-  if (
-    childSchema &&
-    admitsTypename(Option.getOrUndefined(internal.ParentAnnotation.get(childSchema)), parentTypename)
-  ) {
-    return true;
-  }
-  return parentRefsChild(parent as Unknown, child.id);
 };
 
 /**
@@ -820,15 +792,15 @@ export const isDeclaredParentEdge = (child: Unknown, parent: Any): boolean => {
  * If a parent (or any transitive parent) is deleted, the object will be deleted.
  * Only objects are allowed to have a parent.
  *
- * The edge must be declared (see {@link isDeclaredParentEdge}); an undeclared edge currently only
- * warns while call sites are swept.
+ * The parent must hold a ref to the child (in its data, or in an object annotation — e.g.
+ * `Chat.CompanionChatAnnotation`); a ref-less edge currently only warns while call sites are swept.
  */
-// TODO(burdon): Promote the declared-edge warning to an invariant once call sites are swept.
+// TODO(burdon): Promote the ref-less-edge warning to an invariant once call sites are swept.
 export const setParent = (entity: Unknown, parent: Any | undefined) => {
   assertArgument(isObject(entity), 'Expected an object');
   assertArgument(parent === undefined || isObject(parent), 'Expected an object');
-  if (parent !== undefined && !isDeclaredParentEdge(entity, parent)) {
-    log.warn('undeclared parent edge: parent holds no ref to child and neither type declares the edge', {
+  if (parent !== undefined && !parentRefsChild(parent, entity.id)) {
+    log.warn('parent edge without a ref from parent to child', {
       child: internal.getTypename(entity),
       parent: internal.getTypename(parent),
     });

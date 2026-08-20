@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext, SessionLink } from '@dxos/assistant';
+import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -82,8 +83,8 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
       }
 
       if (companionTo) {
-        // Wire the forked chat as a companion (parent edge) and switch to it without navigating away.
-        Obj.setParent(newChat, companionTo);
+        // Wire the forked chat as a companion and switch to it without navigating away.
+        Chat.linkCompanion({ chat: newChat, subject: companionTo });
         yield* Database.flush();
         const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
         yield* Effect.promise(() =>

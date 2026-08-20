@@ -5,9 +5,6 @@
 // @import-as-namespace
 
 export {
-  ANY_TYPENAME,
-  ChildrenAnnotation,
-  ChildrenAnnotationId,
   DEFAULT_LAYOUT_NAME,
   DescriptionAnnotation,
   FieldLookupAnnotationId,
@@ -26,8 +23,6 @@ export {
   IconAnnotation,
   IconFromRefAnnotation,
   LabelAnnotation,
-  ParentAnnotation,
-  ParentAnnotationId,
   ReferenceAnnotation,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,

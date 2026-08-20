@@ -166,13 +166,13 @@ export const makeInitialized = (
 
     const chat = yield* Database.add(
       Chat.make({
-        [Obj.Parent]: agent,
         feed: Ref.make(feed),
         // Steered through the chat's own channel: instructions render into the system prompt.
-        // Identity/attribution comes from the parent edge (`Obj.Parent`: the agent).
+        // Identity/attribution comes from the companion link (ref on the agent + parent edge).
         instructions: Ref.make(instructions),
       }),
     );
+    Chat.linkCompanion({ chat, subject: agent });
     Obj.setParent(feed, chat);
     yield* Effect.promise(() =>
       contextBinder.bind({
@@ -218,11 +218,11 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
 
     const chat = yield* Database.add(
       Chat.make({
-        [Obj.Parent]: agent,
         feed: Ref.make(feed),
         instructions: agent.instructions,
       }),
     );
+    Chat.linkCompanion({ chat, subject: agent });
     Obj.setParent(feed, chat);
     yield* Effect.promise(() =>
       contextBinder.bind({

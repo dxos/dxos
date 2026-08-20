@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import type { Harness } from '@dxos/assistant';
@@ -49,13 +50,37 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
       icon: 'ph--sparkle--regular',
       hue: 'amber',
     }),
-    // A chat is parented to whatever subject it accompanies (a Project, an Agent, a document, ...),
-    // and the subject holds no ref back — the chat's own type vouches for the ref-less edge.
-    Annotation.ParentAnnotation.set(['*']),
   ),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props);
+
+/**
+ * Refs to the chats accompanying an object, stored on the subject itself (replaces the former
+ * `CompanionTo` relation): the annotation is deleted with the subject, and its refs make the
+ * parented chats real children — referenced and cascaded — rather than ref-less parent-edge
+ * orphans reachable only by index query.
+ */
+export const CompanionChatAnnotation = Annotation.make({
+  id: 'org.dxos.assistant.companionChats',
+  schema: Schema.Array(Ref.Ref(Chat)),
+});
+
+/**
+ * Links a chat to the subject it accompanies (a Project, an Agent, a document, ...): a ref on the
+ * subject via {@link CompanionChatAnnotation} plus the ECHO parent edge. Idempotent per chat.
+ */
+export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unknown }): void => {
+  Obj.update(subject, (subject) => {
+    const chats = Annotation.get(subject, CompanionChatAnnotation).pipe(
+      Option.getOrElse((): readonly Ref.Ref<Chat>[] => []),
+    );
+    if (!chats.some((ref) => ref.uri === Ref.make(chat).uri)) {
+      Annotation.set(subject, CompanionChatAnnotation, [...chats, Ref.make(chat)]);
+    }
+  });
+  Obj.setParent(chat, subject);
+};
 
 /**
  * Returns the conversation's working outline, creating one lazily: a project chat (parented to a

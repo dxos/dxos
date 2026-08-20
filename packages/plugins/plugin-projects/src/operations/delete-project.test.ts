@@ -54,7 +54,7 @@ describe('deleting a project', () => {
     // Mirrors ProjectOperation.CreateChat: the chat is owned by the parent edge, not a ref field.
     const feed = db.add(Feed.make());
     const chat = db.add(Chat.make({ name: 'Chat', feed: Ref.make(feed) }));
-    Obj.setParent(chat, project);
+    Chat.linkCompanion({ chat, subject: project });
 
     // Mirrors the routine-template create flow: neither owned nor referenced by the project — the
     // routine reaches it only through its own instructions, which is the edge the companion queries.

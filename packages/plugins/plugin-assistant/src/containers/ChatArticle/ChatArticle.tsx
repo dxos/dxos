@@ -121,8 +121,8 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline
-                  preset={preset?.id}
                   online={online}
+                  preset={preset?.id}
                   companionTo={companionTo}
                 />
               </div>

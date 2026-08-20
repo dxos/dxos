@@ -62,12 +62,12 @@ const seedProjectChat = Effect.fnUntraced(function* () {
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(
     Chat.make({
-      [Obj.Parent]: project,
       name: `${PROJECT_NAME} chat`,
       feed: Ref.make(feed),
       instructions: Ref.make(instructions),
     }),
   );
+  Chat.linkCompanion({ chat, subject: project });
   Obj.setParent(feed, chat);
 
   const skill = yield* Database.add(ProjectSkill.make());

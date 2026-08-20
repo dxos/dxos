@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
-import { Feed, Obj, Ref } from '@dxos/echo';
+import { Feed, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
 import { standaloneChatsQuery } from './app-graph-builder';
@@ -31,15 +31,16 @@ describe('standalone chats query', () => {
 
     const standalone = makeChat('Standalone');
 
-    // Companion: parented to its subject, so it belongs to that object's companion panel.
+    // Companion: linked to its subject (annotation ref + parent edge), so it belongs to that
+    // object's companion panel.
     const companionSubject = db.add(Project.make({ name: 'Subject' }));
     const companion = makeChat('Companion');
-    Obj.setParent(companion, companionSubject);
+    Chat.linkCompanion({ chat: companion, subject: companionSubject });
 
-    // Project chat: parented to a project, so it is that project's navtree child.
+    // Project chat: linked to its project, so it is that project's navtree child.
     const project = db.add(Project.make({ name: 'Project' }));
     const projectChat = makeChat('Project chat');
-    Obj.setParent(projectChat, project);
+    Chat.linkCompanion({ chat: projectChat, subject: project });
 
     await db.flush({ indexes: true });
 
