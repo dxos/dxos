@@ -157,7 +157,9 @@ export const ProfileContainer = () => {
           <Form.Row label={label} description={t('did.description')}>
             <Input.Root>
               <ButtonGroup classNames='w-full'>
-                <Input.TextInput value={getValue()} disabled classNames='min-w-64' />
+                {/* `flex-1 min-w-0` lets the field shrink below its content width so the copy button
+                    stays inside the row at phone widths; a fixed `min-w-*` would push it past the panel edge. */}
+                <Input.TextInput value={getValue()} disabled classNames='flex-1 min-w-0' />
                 <Clipboard.IconButton value={getValue() ?? ''} />
               </ButtonGroup>
             </Input.Root>
