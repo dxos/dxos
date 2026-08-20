@@ -8,13 +8,14 @@ import React, { useCallback } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { DeckLayout } from '#containers';
+import { DeckLayout, MobileDeckLayout } from '#containers';
 import { useDeckState } from '#hooks';
 import { meta } from '#meta';
+import type { DeckCapabilities } from '#types';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(Capabilities.ReactRoot, {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* ({ platform = 'desktop' }: DeckCapabilities.DeckPluginOptions = {}) {
+    return Capability.contribute(Capabilities.ReactRoot, {
       id: meta.profile.key,
       root: () => {
         const { state, updateEphemeral } = useDeckState();
@@ -46,8 +47,12 @@ export default Capability.makeModule(() =>
           [state.toasts, updateEphemeral],
         );
 
-        return <DeckLayout onDismissToast={handleDismissToast} />;
+        return platform === 'mobile' ? (
+          <MobileDeckLayout onDismissToast={handleDismissToast} />
+        ) : (
+          <DeckLayout onDismissToast={handleDismissToast} />
+        );
       },
-    }),
-  ),
+    });
+  }),
 );
