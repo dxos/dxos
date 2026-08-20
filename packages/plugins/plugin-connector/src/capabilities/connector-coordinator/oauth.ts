@@ -4,11 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import { Context as DxContext } from '@dxos/context';
 import { type Key } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { log } from '@dxos/log';
 
 import { ConnectorSpec } from '#types';
+
+import { OAUTH_REDIRECT_PATH } from '../../constants';
 
 /**
  * Parses `postMessage` payload from the OAuth relay into a narrow result.
@@ -67,6 +71,7 @@ export const initiateOAuthFlow = (
   });
 
 export const openOAuthPopupWindow = (authUrl: string): Effect.Effect<void, never> =>
+  openNativeWindow(authUrl) ??
   Effect.sync(() => {
     window.open(authUrl, 'oauthPopup', 'width=500,height=600');
   });
@@ -77,6 +82,24 @@ export const openOAuthPopupWindow = (authUrl: string): Effect.Effect<void, never
  * nullifies `window.opener` and rejects popups.
  */
 export const openOAuthRedirectWindow = (authUrl: string): Effect.Effect<void, never> =>
+  openNativeWindow(authUrl) ??
   Effect.sync(() => {
     window.open(authUrl, '_blank');
   });
+
+/**
+ * On desktop both variants collapse into one: WKWebView returns null from `window.open`, so the
+ * shell hosts the auth page in a window of its own and relays the callback back. That window has no
+ * opener either, which is the case Edge already answers by redirecting to {@link OAUTH_REDIRECT_PATH}
+ * instead of relaying via `postMessage` — so the popup variant lands on the redirect path too.
+ *
+ * Returns undefined off Tauri, leaving the browser path to the caller.
+ */
+const openNativeWindow = (authUrl: string): Effect.Effect<void, never> | undefined =>
+  NativeOAuth.supportsNativeOAuthWindow()
+    ? Effect.promise(() => NativeOAuth.openNativeOAuthWindow(authUrl, OAUTH_REDIRECT_PATH)).pipe(
+        // The browser path cannot report a failure to open either; the flow stalls until the user
+        // retries, and the log is the only trace of why.
+        Effect.catchCause((cause) => Effect.sync(() => log.warn('failed to open native OAuth window', { cause }))),
+      )
+    : undefined;

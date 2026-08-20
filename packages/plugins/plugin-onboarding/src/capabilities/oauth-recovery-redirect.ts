@@ -12,7 +12,6 @@ import * as Account from '@dxos/app-toolkit/Account';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import { type Client } from '@dxos/client';
-import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client';
@@ -72,25 +71,6 @@ const readRedirectParams = (): RedirectParams | undefined => {
   window.history.replaceState(null, '', '/');
 
   return params;
-};
-
-/**
- * Decode a callback URL the native shell intercepted. Nothing navigated here, so unlike the browser
- * path there is no location to strip; the path is still checked, since only the recovery callback
- * carries these params.
- */
-const readNativeCallbackParams = (urlString: string): RedirectParams | undefined => {
-  try {
-    const url = new URL(urlString);
-    if (url.pathname !== OAUTH_RECOVERY_REDIRECT_PATH) {
-      log.warn('oauth recovery callback: unexpected path', { pathname: url.pathname });
-      return undefined;
-    }
-    return parseRedirectParams(url);
-  } catch (error) {
-    log.warn('oauth recovery callback: unparseable url', { error });
-    return undefined;
-  }
 };
 
 const readSnapshot = (accessTokenId: string | undefined): OAuthRecoveryPendingSnapshot | undefined => {
@@ -160,25 +140,6 @@ const finalize = Effect.fnUntraced(function* (params: RedirectParams) {
 });
 
 /**
- * Callback URLs the native shell intercepts, as a stream: the listener registers asynchronously and
- * each callback has to be finalized with this module's services, which a bare listener cannot carry.
- */
-const nativeCallbacks = EffectEx.streamFromEmitter<string>((emit) => {
-  let unlisten: (() => void) | undefined;
-  let stopped = false;
-  void NativeOAuth.listenForNativeOAuthCallback((url) => emit.single(url)).then((fn) => {
-    unlisten = fn;
-    if (stopped) {
-      fn();
-    }
-  });
-  return Effect.sync(() => {
-    stopped = true;
-    unlisten?.();
-  });
-});
-
-/**
  * Startup module that finalizes redirect-flow OAuth-recovery callbacks.
  *
  * atproto/bsky nullifies `window.opener`, so the register / recovery flows cannot relay their
@@ -204,10 +165,10 @@ export default Capability.makeModule(
       // The shell cancels the callback navigation rather than booting a second copy of the app in
       // its OAuth window, so on desktop the params arrive as an event instead of a page load.
       yield* Effect.forkDetach(
-        nativeCallbacks.pipe(
+        NativeOAuth.nativeOAuthCallbacks(OAUTH_RECOVERY_REDIRECT_PATH).pipe(
           Stream.runForEach((url) =>
             Effect.suspend(() => {
-              const callbackParams = readNativeCallbackParams(url);
+              const callbackParams = parseRedirectParams(url);
               return callbackParams ? finalize(callbackParams) : Effect.void;
             }),
           ),

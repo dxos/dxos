@@ -14,6 +14,10 @@
  * to the app origin, and relays that URL here for the running app to finalize.
  */
 
+import * as Effect from 'effect/Effect';
+import type * as Stream from 'effect/Stream';
+
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
@@ -41,9 +45,47 @@ export const openNativeOAuthWindow = async (authUrl: string, callbackPath: strin
 };
 
 /**
- * Subscribe to the callback URLs the shell intercepts, resolving with an unsubscribe function.
+ * Subscribe to the callbacks the shell intercepts for one flow, resolving with an unsubscribe
+ * function.
+ *
+ * The event is app-wide while a callback belongs to exactly one flow, so anything that is not this
+ * flow's `callbackPath` is another listener's and is dropped here rather than at each call site.
  */
-export const listenForNativeOAuthCallback = async (onCallback: (url: string) => void): Promise<() => void> => {
+export const listenForNativeOAuthCallback = async (
+  callbackPath: string,
+  onCallback: (url: URL) => void,
+): Promise<() => void> => {
   const { listen } = await import('@tauri-apps/api/event');
-  return listen<string>(OAUTH_CALLBACK_EVENT, ({ payload }) => onCallback(payload));
+  return listen<string>(OAUTH_CALLBACK_EVENT, ({ payload }) => {
+    try {
+      const url = new URL(payload);
+      if (url.pathname === callbackPath) {
+        onCallback(url);
+      }
+    } catch (error) {
+      log.warn('unparseable OAuth callback url', { error });
+    }
+  });
 };
+
+/**
+ * The shell's callbacks for one flow, as a stream.
+ *
+ * The listener registers asynchronously and each callback is handled by an effect that needs its
+ * caller's services, which a bare listener callback cannot carry.
+ */
+export const nativeOAuthCallbacks = (callbackPath: string): Stream.Stream<URL> =>
+  EffectEx.streamFromEmitter<URL>((emit) => {
+    let unlisten: (() => void) | undefined;
+    let stopped = false;
+    void listenForNativeOAuthCallback(callbackPath, (url) => emit.single(url)).then((fn) => {
+      unlisten = fn;
+      if (stopped) {
+        fn();
+      }
+    });
+    return Effect.sync(() => {
+      stopped = true;
+      unlisten?.();
+    });
+  });
