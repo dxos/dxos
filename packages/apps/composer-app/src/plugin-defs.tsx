@@ -86,7 +86,7 @@ export type { PluginConfig, State } from './plugin-defs.core';
 /**
  * Plugin keys enabled by default for new users, per environment (dev/local).
  */
-export const getDefaults = ({ isDev, isLocal }: PluginConfig): string[] =>
+export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[] =>
   [
     // Default
     AssistantPlugin.meta.profile.key,
@@ -108,7 +108,12 @@ export const getDefaults = ({ isDev, isLocal }: PluginConfig): string[] =>
     // Local
     isLocal && SamplePlugin.meta.profile.key,
 
-    // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` — not nightly, not a
+    // Transcription. On by default everywhere: the chat prompt picks the microphone up on its own —
+    // it reads the plugin's capabilities optionally, so enabling it changes no other surface. Still
+    // listed under labs below; the dedupe at the end collapses the two entries.
+    TranscriptionPlugin.meta.profile.key,
+
+    // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` — not preview, not a
     // plain `serve`). Sidekick is also gated on `isDev` for availability, not just defaults (below).
     isDev && [
       DebugPlugin.meta.profile.key,
@@ -142,10 +147,12 @@ export const getDefaults = ({ isDev, isLocal }: PluginConfig): string[] =>
     ],
   ]
     .filter(isTruthy)
-    .flat();
+    .flat()
+    // Deduped: a mobile labs build lists transcription in both sets.
+    .filter((key, index, keys) => keys.indexOf(key) === index);
 
 /**
- * Full Composer plugin registry (nightly and dev): shared core infrastructure plus every content
+ * Full Composer plugin registry (preview and dev): shared core infrastructure plus every content
  * plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {

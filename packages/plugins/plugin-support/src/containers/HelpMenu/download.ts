@@ -5,7 +5,7 @@
 /** CrabNebula's release dashboard. Lists the primary channel only. */
 export const DOWNLOAD_URL = 'https://web.crabnebula.cloud/dxos/composer/releases';
 
-// CrabNebula's dashboard has no page for a prerelease channel, so a nightly deployment cannot link there
+// CrabNebula's dashboard has no page for a prerelease channel, so a preview deployment cannot link there
 // for its own installer. The CDN's download endpoint can: it is public, channel-addressable, and 302s to
 // the channel's latest installer (the DMG, not the updater archive). It has to be a navigation rather
 // than a fetch — the CDN sends no CORS headers, so a script here can never read what it happily serves

@@ -1,16 +1,18 @@
-name: Preview Build
+name: PR Build
 
-# Builds the composer-app bundle for PR previews and uploads it as an artifact.
+# Builds the composer-app bundle for per-PR previews and uploads it as an artifact.
 # NO secrets are exposed here — this workflow runs untrusted PR code safely.
-# The artifact is picked up by preview-deploy.yml (workflow_run) which runs
-# from the base branch with secrets and performs the Cloudflare Pages deploy.
+# The artifact is picked up by pr-deploy.yml (workflow_run) which runs
+# from the base branch with secrets and performs the Cloudflare deploy.
+# Named for the trigger, not the output: `preview` is a deploy ENVIRONMENT
+# (preview.composer.space), while these are Worker preview versions of `dev`.
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
 concurrency:
-  group: preview-build-${{ github.event.pull_request.number }}
+  group: pr-build-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -50,8 +52,8 @@ jobs:
         env:
           NODE_ENV: production
           LOG_FILTER: error
-          # EDGE nightly — the instance Composer `dev` targets, so a preview and a dev deploy see the same
-          # data. TODO(wittjosiah): `https://nightly.dxos.network` after the EDGE rename (DX-1150).
+          # EDGE preview — the instance Composer `dev` targets, so a PR preview and a dev deploy see the
+          # same data. TODO(wittjosiah): `https://preview.dxos.network` after the EDGE rename (DX-1150).
           DX_EDGE_BASE_URL: https://main.dxos.network/
 
       - name: Write deploy metadata

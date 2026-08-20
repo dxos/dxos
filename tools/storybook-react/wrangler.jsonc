@@ -12,6 +12,6 @@
   },
   "env": {
     "production": { "name": "storybook-react" },
-    "nightly": { "name": "storybook-react-nightly" },
+    "preview": { "name": "storybook-react-preview" },
   },
 }
