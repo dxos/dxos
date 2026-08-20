@@ -111,7 +111,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 <ChatComponent.Thread viewType={viewType} tailLines={4} onViewUsage={handleViewUsage} />
                 {/* Floating thread status. */}
                 {!mobile && viewType !== 'summary' && (
-                  <div className='absolute bottom-2 left-0 right-0'>
+                  <div data-testid='assistant.chat-status' className='absolute bottom-2 left-0 right-0'>
                     <div className='dx-document px-4'>
                       <ChatComponent.Status classNames='px-3 rounded-sm bg-group-surface' />
                     </div>

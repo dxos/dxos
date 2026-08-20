@@ -92,6 +92,26 @@ const sendButton = (canvasElement: HTMLElement) => {
   return button;
 };
 
+/** Two turns: the marker rail needs two prompts to appear, and the status pill needs one to finish. */
+const TWO_TURNS = [
+  { prompt: 'Hello', reply: 'Hi — how can I help?' },
+  { prompt: 'What is a feed?', reply: 'A feed is an append-only log.' },
+];
+
+const driveTurns = async (canvasElement: HTMLElement, messages: { prompt: string; reply: string }[]) => {
+  for (const { prompt, reply } of messages) {
+    await submitPrompt(canvasElement, prompt);
+    await waitFor(() => void expect(threadText(canvasElement)).toContain(reply), { timeout: 15_000, interval: 200 });
+  }
+};
+
+/** The chrome the desktop shell wraps the thread in, all of which the mobile app drops. */
+const desktopOnlyChrome = (canvasElement: HTMLElement) => ({
+  onlineSwitch: canvasElement.querySelector('input.dx-checkbox--switch'),
+  outlineRail: canvasElement.querySelector('[role="navigation"]'),
+  statusPill: canvasElement.querySelector('[data-testid="assistant.chat-status"]'),
+});
+
 type StoryArgs = {
   /** Turns the story drives: each prompt is submitted, and its reply is what the scripted model returns. */
   messages?: { prompt: string; reply: string }[];
@@ -262,18 +282,52 @@ export const Send: Story = {
 };
 
 /**
- * The mobile app's treatment. The online indicator is dropped — it is read-only, controls nothing,
- * and the action row is tight — while the send control stays, being the only submit affordance a
- * touch keyboard has. Keyed to the platform, not the viewport, so a narrowed desktop window is
- * unaffected.
+ * The desktop baseline for the platform-gated chrome: after two turns the marker rail, the floating
+ * status pill and the online indicator are all present. Without this, `MobilePlatform`'s absence
+ * assertions would pass against a thread that never rendered them in the first place.
+ */
+export const DesktopPlatform: Story = {
+  args: {
+    platform: 'desktop',
+    messages: TWO_TURNS,
+  },
+  play: async ({ canvasElement, args: { messages = [] } }) => {
+    await driveTurns(canvasElement, messages);
+    await waitFor(
+      () => {
+        const { onlineSwitch, outlineRail, statusPill } = desktopOnlyChrome(canvasElement);
+        expect(onlineSwitch).not.toBeNull();
+        expect(outlineRail).not.toBeNull();
+        // Non-empty, not merely present: the wrapper renders whether or not the pill has anything
+        // to report, so its text is what proves the pill itself rendered.
+        expect(statusPill?.textContent ?? '').not.toBe('');
+      },
+      { timeout: 10_000, interval: 200 },
+    );
+  },
+};
+
+/**
+ * The mobile app's treatment of the same thread. The marker rail (a precision target pinned outside
+ * the text column), the floating status pill (which would cover the reply it reports on) and the
+ * read-only online indicator are all dropped; the send control stays, being the only submit
+ * affordance a touch keyboard has. Keyed to the platform, not the viewport, so a narrowed desktop
+ * window is unaffected.
  */
 export const MobilePlatform: Story = {
   args: {
     platform: 'mobile',
+    messages: TWO_TURNS,
   },
-  play: async ({ canvasElement }) => {
-    await waitFor(() => void expect(sendButton(canvasElement)).toBeTruthy(), { timeout: 15_000, interval: 300 });
-    await expect(canvasElement.querySelector('input.dx-checkbox--switch')).toBeNull();
+  play: async ({ canvasElement, args: { messages = [] } }) => {
+    await driveTurns(canvasElement, messages);
+
+    const { onlineSwitch, outlineRail, statusPill } = desktopOnlyChrome(canvasElement);
+    await expect(onlineSwitch).toBeNull();
+    await expect(outlineRail).toBeNull();
+    await expect(statusPill).toBeNull();
+
+    await expect(sendButton(canvasElement)).toBeTruthy();
   },
 };
 
