@@ -12,7 +12,7 @@ import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
+import { Input, type ThemedClassName, useDynamicRef, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import {
   ChatEditor,
   type ChatEditorController,
@@ -70,6 +70,12 @@ export const ChatPrompt = ({
   companionTo,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
+
+  // The online switch is a read-only indicator of a setting configured elsewhere, so it is the first
+  // thing to drop when the action row has to compete with the send control for width. `md` is the
+  // deck's own mobile threshold (`useBreakpoints`), and a viewport query (not the boot-time platform
+  // capability) so a narrow desktop window sheds it too.
+  const [wideEnoughForIndicators] = useMediaQuery('md');
 
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
@@ -203,7 +209,7 @@ export const ChatPrompt = ({
             onSend={handleSend}
             onEvent={handleEvent}
           >
-            {online !== undefined && (
+            {online !== undefined && wideEnoughForIndicators && (
               <Input.Root>
                 <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
                 {/* Read-only: the provider is configured in Assistant settings, not toggled here. */}
