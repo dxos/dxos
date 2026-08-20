@@ -338,8 +338,14 @@ const TOOL_NAME_KEY_PREFIX = 'org.dxos.function.';
 /**
  * Derives the model-facing tool name for an operation from its DXN key — never from `meta.name`,
  * which is display copy and must stay freely editable without renaming the tool the model calls.
- * The key's namespace segment prefixes the name, so cross-skill collisions are structurally
- * impossible (keys are registry-unique).
+ * The key's namespace segment prefixes the name, which is what removes the cross-skill collisions
+ * that a bare verb produced (three skills each claimed `create`).
+ *
+ * The mapping is not injective: kebab-casing makes a camelCase segment and an already-hyphenated one
+ * converge, so `webSearch` and `web-search` both yield `web-search`, and hyphenated segments are in
+ * live keys (`plugin-crm`, `web-search`). Registry-key uniqueness therefore does not by itself
+ * guarantee tool-name uniqueness. Two such keys are an authoring error, caught in the two places both
+ * keys are visible at once: {@link findToolNameCollisions} over a whole set, and the tool resolver.
  *
  * @example `org.dxos.function.markdown.create` → `markdown-create`
  * @example `org.dxos.function.project.artifactAdd` → `project-artifact-add`
@@ -358,6 +364,22 @@ export const toolNameFromKey = (key: string): string => {
 };
 
 const kebabCase = (segment: string): string => segment.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+
+/**
+ * Groups a set of operations by derived tool name, returning only the names claimed more than once.
+ *
+ * {@link toolName} is not injective (see its note), so a set of registry-unique keys can still
+ * collide. Call this wherever a complete operation set is assembled — the resolver sees keys one at a
+ * time and can only catch a collision once a colliding name is actually requested.
+ */
+export const findToolNameCollisions = (operations: readonly Definition.Any[]): Map<string, readonly DXN.DXN[]> => {
+  const byName = new Map<string, DXN.DXN[]>();
+  for (const op of operations) {
+    const name = toolName(op);
+    byName.set(name, [...(byName.get(name) ?? []), op.meta.key]);
+  }
+  return new Map([...byName].filter(([, keys]) => keys.length > 1));
+};
 
 //
 // Invocation Interfaces

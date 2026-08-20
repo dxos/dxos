@@ -34,6 +34,27 @@ export const makeToolResolverFromOperations = <R = never>({
     Effect.gen(function* () {
       const toolkitProvider = yield* OpaqueToolkit.OpaqueToolkitProvider;
       const registry = yield* Registry.Service;
+
+      // Tool names derive from operation keys lossily (`Operation.toolNameFromKey`), so a record is
+      // matched by re-deriving its name rather than by reconstructing a key — which rules out the
+      // indexed key lookup and would otherwise mean scanning every operation per resolution. The
+      // index is built once and refreshed on a miss, since operations register as late as host idle.
+      let index: Map<string, Operation.PersistentOperation[]> | undefined;
+      const buildIndex = Effect.fn('buildToolNameIndex')(function* () {
+        const records = yield* Effect.promise(() => registry.query(Filter.type(Operation.PersistentOperation)).run());
+        const built = new Map<string, Operation.PersistentOperation[]>();
+        for (const record of records) {
+          const key = Operation.getKey(record);
+          if (key == null) {
+            continue;
+          }
+          const name = Operation.toolNameFromKey(key);
+          built.set(name, [...(built.get(name) ?? []), record]);
+        }
+        index = built;
+        return built;
+      });
+
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
@@ -44,19 +65,24 @@ export const makeToolResolverFromOperations = <R = never>({
               return tool;
             }
 
-            // Tool names derive from operation keys lossily (`Operation.toolNameFromKey`), so the
-            // registry is matched by re-deriving each record's name rather than reconstructing a key.
-            const results = yield* Effect.promise(() =>
-              registry.query(Filter.type(Operation.PersistentOperation)).run(),
-            );
-            const record = results.find((record) => {
-              const key = Operation.getKey(record);
-              return key != null && Operation.toolNameFromKey(key) === id;
-            });
-            if (record) {
-              return projectFunctionToTool(Operation.deserialize(record));
+            let matches = (index ?? (yield* buildIndex())).get(id);
+            if (matches == null) {
+              // A miss may just mean the index predates the operation's registration.
+              matches = (yield* buildIndex()).get(id);
             }
-            return yield* Effect.fail(new AiToolNotFoundError(id));
+            if (matches == null) {
+              return yield* Effect.fail(new AiToolNotFoundError(id));
+            }
+            // Two keys deriving one name (`webSearch` vs `web-search`) is an authoring error. Picking
+            // the first match would silently shadow the other, so it fails here instead — the only
+            // place both keys are visible at once (a ToolId no longer distinguishes them).
+            invariant(
+              matches.length === 1,
+              `Tool name "${id}" is claimed by ${matches.length} operations: ${matches
+                .map((record) => Operation.getKey(record))
+                .join(', ')}`,
+            );
+            return projectFunctionToTool(Operation.deserialize(matches[0]));
           }),
       } satisfies Context.Service.Shape<typeof ToolResolverService>;
     }),
