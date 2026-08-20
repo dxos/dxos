@@ -46,6 +46,21 @@ describe('operation serialization', () => {
     expect(failures).toEqual([]);
   });
 
+  // The draft branch is a struct with an open rest signature; losing `additionalProperties` on the
+  // wire made the round-trip rebuild it closed, so every field beyond `@type` was silently dropped
+  // before the handler ran.
+  test('the addObject draft keeps its open rest signature on the wire', async ({ expect }) => {
+    const handlers = await SpaceOperationHandlerSet.handlers.getHandlers();
+    const addObject = handlers.find(
+      (handler) => DXN.getName(handler.meta.key) === 'org.dxos.plugin.space.operation.addObject',
+    );
+    expect(addObject).toBeDefined();
+    const record = Operation.serialize(addObject!);
+    const branches = record.inputSchema?.properties?.object?.anyOf ?? [];
+    const draft = branches.find((branch) => branch.properties?.['@type'] != null);
+    expect(draft?.additionalProperties).toBe(true);
+  });
+
   test('projected verbs carry their mutation class through serialize', async ({ expect }) => {
     const handlers = await SpaceOperationHandlerSet.handlers.getHandlers();
     const projected = handlers

@@ -179,6 +179,9 @@ const invoke = (
     ),
     Effect.provideContext(ambient),
     Effect.mapError(McpRegistry.error),
+    // A handler that throws dies rather than fails; surfaced as the call's error so the client
+    // sees the message instead of an opaque internal-server-error.
+    Effect.catchDefect((defect) => Effect.fail(McpRegistry.error(defect))),
   );
 };
 

@@ -53,13 +53,23 @@ const instantiate = Effect.fnUntraced(function* (db: Database.Database, draft: S
     db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run(),
   );
   const schema = types.find((type) => Type.getTypename(type) === typename);
-  invariant(schema, `Schema not found: ${typename}`);
-  invariant(Type.isObject(schema), `Schema is not an object schema: ${typename}`);
-  return Obj.make(
-    schema,
-    deepMapValues(properties, (value, recurse) =>
-      // References arrive as envelopes; a detached object cannot carry a live `Ref`.
-      EncodedReference.isEncodedReference(value) ? db.makeRef(EncodedReference.toURI(value)) : recurse(value),
-    ),
-  );
+  if (!schema) {
+    return yield* Effect.fail(new Error(`Schema not found: ${typename}`));
+  }
+  if (!Type.isObject(schema)) {
+    return yield* Effect.fail(new Error(`Schema is not an object schema: ${typename}`));
+  }
+  // A draft is caller input, so a validation throw is a failure with the message the caller needs,
+  // not a defect that reaches a remote host as an opaque server error.
+  return yield* Effect.try({
+    try: () =>
+      Obj.make(
+        schema,
+        deepMapValues(properties, (value, recurse) =>
+          // References arrive as envelopes; a detached object cannot carry a live `Ref`.
+          EncodedReference.isEncodedReference(value) ? db.makeRef(EncodedReference.toURI(value)) : recurse(value),
+        ),
+      ),
+    catch: (error) => new Error(`Invalid draft for ${typename}: ${error instanceof Error ? error.message : error}`),
+  });
 });
