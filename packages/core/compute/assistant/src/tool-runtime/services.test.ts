@@ -2,16 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as AnthropicStructuredOutput from 'effect/unstable/ai/AnthropicStructuredOutput';
 import * as Tool from 'effect/unstable/ai/Tool';
 import { describe, test } from 'vitest';
 
+import { OpaqueToolkit, ToolId, ToolResolverService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, Registry } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
+import { EffectEx } from '@dxos/effect';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { createStructFieldsFromSchema, projectFunctionToTool } from './services';
+import { createStructFieldsFromSchema, makeToolResolverFromOperations, projectFunctionToTool } from './services';
 
 describe('createStructFieldsFromSchema', () => {
   const SPACE = SpaceId.random();
@@ -155,5 +160,42 @@ describe('projectFunctionToTool', () => {
       properties: { any: 1 },
     });
     expect(decoded.properties).toEqual({ any: 1 });
+  });
+});
+
+describe('makeToolResolverFromOperations', () => {
+  const op = (key: string) =>
+    Operation.serialize(
+      Operation.make({
+        meta: { key: DXN.make(key as any), name: 'Display Copy' },
+        input: Schema.Struct({ value: Schema.String }),
+        output: Schema.Struct({ ok: Schema.Boolean }),
+      }),
+    );
+
+  const resolve = (registry: ReturnType<typeof makeRegistry>, id: string) =>
+    Effect.gen(function* () {
+      const resolver = yield* ToolResolverService;
+      return yield* resolver.resolve(ToolId.make(id));
+    }).pipe(
+      Effect.provide(makeToolResolverFromOperations().pipe(Layer.provide(Layer.succeed(Registry.Service, registry)))),
+      Effect.provide(OpaqueToolkit.providerLayer(OpaqueToolkit.empty)),
+      EffectEx.runPromise,
+    );
+
+  test('resolves an operation the registry carries, by its derived tool name', async ({ expect }) => {
+    const registry = makeRegistry({ initial: [op('org.dxos.function.markdown.create')] });
+    const tool = await resolve(registry, 'markdown-create');
+    expect(tool.name).toBe('markdown-create');
+  });
+
+  // The index is cached, so a name that resolved once must not keep resolving after a second claimant
+  // registers: a stale hit would silently pick one of two operations rather than report the ambiguity.
+  test('a collision registered after the index was built still fails', async ({ expect }) => {
+    const registry = makeRegistry({ initial: [op('org.dxos.function.webSearch.fetch')] });
+    expect((await resolve(registry, 'web-search-fetch')).name).toBe('web-search-fetch');
+
+    registry.add([op('org.dxos.function.web-search.fetch')]);
+    await expect(resolve(registry, 'web-search-fetch')).rejects.toThrow(/claimed by 2 operations/);
   });
 });

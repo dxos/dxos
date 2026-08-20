@@ -256,7 +256,14 @@ export const projectOperations = (
     if (typeof rawKey !== 'string' || rawKey.length === 0) {
       continue;
     }
-    const owningSkills = owners.get(Operation.toolNameFromKey(rawKey));
+    // Derived once, non-throwing: `rawKey` is untrusted JSON, and a key that cannot yield a valid name
+    // must cost only its own tool rather than aborting the whole projection.
+    const toolName = Operation.tryToolNameFromKey(rawKey);
+    if (toolName == null) {
+      log.warn('operation key cannot derive a valid tool name; operation skipped', { key: rawKey });
+      continue;
+    }
+    const owningSkills = owners.get(toolName);
     if (owningSkills == null) {
       continue;
     }
@@ -265,7 +272,6 @@ export const projectOperations = (
     const idempotent = meta?.annotations?.[Operation.IdempotentAnnotation.key] === true;
 
     const key = rawKey.replace(/^dxn:/, '');
-    const toolName = Operation.toolNameFromKey(rawKey);
     if (!TOOL_NAME_PATTERN.test(toolName)) {
       log.warn('projected tool name violates the tool-name constraint; operation skipped', { key, toolName });
       continue;

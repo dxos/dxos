@@ -80,6 +80,12 @@ describe('findToolNameCollisions', () => {
   const makeOp = (key: string) =>
     Operation.make({ meta: { key: DXN.make(key as any) }, input: Schema.Void, output: Schema.Void });
 
+  // One operation bound by two skills reaches the check twice; that is the same tool, not a clash.
+  test('a repeated binding of one operation is not a collision', ({ expect }) => {
+    const op = makeOp('org.dxos.function.markdown.create');
+    expect(Operation.findToolNameCollisions([op, op]).size).toBe(0);
+  });
+
   test('reports nothing for distinct names', ({ expect }) => {
     const collisions = Operation.findToolNameCollisions([
       makeOp('org.dxos.function.markdown.create'),
@@ -97,5 +103,19 @@ describe('findToolNameCollisions', () => {
     ]);
     expect([...collisions.keys()]).toEqual(['web-search-fetch']);
     expect(collisions.get('web-search-fetch')).toHaveLength(2);
+  });
+});
+
+describe('tryToolNameFromKey', () => {
+  test('derives the same name as toolNameFromKey for a well-formed key', ({ expect }) => {
+    expect(Operation.tryToolNameFromKey('org.dxos.function.markdown.create')).toBe('markdown-create');
+  });
+
+  // Registry records arrive as JSON, so a key that cannot yield a valid name must cost only its own
+  // tool — the throwing variant would abort every tool in the projection.
+  test('returns undefined for a key that cannot yield a valid name', ({ expect }) => {
+    expect(Operation.tryToolNameFromKey('org.dxos.function.9lives.go')).toBeUndefined();
+    expect(Operation.tryToolNameFromKey('')).toBeUndefined();
+    expect(() => Operation.toolNameFromKey('org.dxos.function.9lives.go')).toThrow();
   });
 });

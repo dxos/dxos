@@ -29,6 +29,8 @@ export const makeToolResolverFromOperations = <R = never>({
   never,
   OpaqueToolkit.OpaqueToolkitProvider | Registry.Service | R
 > => {
+  // `Layer.effect` runs construction in the layer's own scope, so the subscription below is released
+  // with the layer.
   return Layer.effect(
     ToolResolverService,
     Effect.gen(function* () {
@@ -37,9 +39,19 @@ export const makeToolResolverFromOperations = <R = never>({
 
       // Tool names derive from operation keys lossily (`Operation.toolNameFromKey`), so a record is
       // matched by re-deriving its name rather than by reconstructing a key — which rules out the
-      // indexed key lookup and would otherwise mean scanning every operation per resolution. The
-      // index is built once and refreshed on a miss, since operations register as late as host idle.
+      // indexed key lookup and would otherwise mean scanning every operation per resolution.
       let index: Map<string, Operation.PersistentOperation[]> | undefined;
+      // Dropped on any registry change rather than only on a lookup miss: a hit against a stale index
+      // would resolve a name whose second claimant registered after the build, silently picking one
+      // of two operations instead of reporting the ambiguity below.
+      yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          registry.changed.on(() => {
+            index = undefined;
+          }),
+        ),
+        (unsubscribe) => Effect.sync(() => unsubscribe()),
+      );
       const buildIndex = Effect.fn('buildToolNameIndex')(function* () {
         const records = yield* Effect.promise(() => registry.query(Filter.type(Operation.PersistentOperation)).run());
         const built = new Map<string, Operation.PersistentOperation[]>();
@@ -65,11 +77,9 @@ export const makeToolResolverFromOperations = <R = never>({
               return tool;
             }
 
-            let matches = (index ?? (yield* buildIndex())).get(id);
-            if (matches == null) {
-              // A miss may just mean the index predates the operation's registration.
-              matches = (yield* buildIndex()).get(id);
-            }
+            // A miss is conclusive: any registration since the build dropped the index above, so a
+            // rebuild here would only re-scan the registry for every id that is not an operation.
+            const matches = (index ?? (yield* buildIndex())).get(id);
             if (matches == null) {
               return yield* Effect.fail(new AiToolNotFoundError(id));
             }

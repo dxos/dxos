@@ -355,14 +355,31 @@ export const toolName = (op: Definition.Any): string => toolNameFromKey(op.meta.
  * {@link toolName} for a raw registry key (a DXN or bare NSID), e.g. a persisted record's meta key.
  */
 export const toolNameFromKey = (key: string): string => {
-  const nsid = DXN.isDXN(key) ? DXN.getName(key) : key;
-  const stripped = nsid.startsWith(TOOL_NAME_KEY_PREFIX) ? nsid.slice(TOOL_NAME_KEY_PREFIX.length) : nsid;
-  const name = stripped.split('.').map(kebabCase).join('-');
-  invariant(/^[a-z][a-z0-9-_]*$/.test(name), `Invalid tool name: ${name}`);
+  const name = deriveToolName(key);
+  invariant(TOOL_NAME_REGEXP.test(name), `Invalid tool name: ${name}`);
   return name;
 };
 
+/** Shape every derived tool name must have — the model-facing identifier contract. */
+const TOOL_NAME_REGEXP = /^[a-z][a-z0-9-_]*$/;
+
+const deriveToolName = (key: string): string => {
+  const nsid = DXN.isDXN(key) ? DXN.getName(key) : key;
+  const stripped = nsid.startsWith(TOOL_NAME_KEY_PREFIX) ? nsid.slice(TOOL_NAME_KEY_PREFIX.length) : nsid;
+  return stripped.split('.').map(kebabCase).join('-');
+};
+
 const kebabCase = (segment: string): string => segment.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+
+/**
+ * {@link toolNameFromKey} for a key that is not known to be well-formed — a record off the wire, whose
+ * `@meta.key` is untrusted JSON. Returns undefined instead of failing, so one malformed entry costs its
+ * own tool rather than every tool in the projection.
+ */
+export const tryToolNameFromKey = (key: string): string | undefined => {
+  const name = deriveToolName(key);
+  return TOOL_NAME_REGEXP.test(name) ? name : undefined;
+};
 
 /**
  * Groups a set of operations by derived tool name, returning only the names claimed more than once.
@@ -372,12 +389,13 @@ const kebabCase = (segment: string): string => segment.replace(/([a-z0-9])([A-Z]
  * time and can only catch a collision once a colliding name is actually requested.
  */
 export const findToolNameCollisions = (operations: readonly Definition.Any[]): Map<string, readonly DXN.DXN[]> => {
-  const byName = new Map<string, DXN.DXN[]>();
+  // Keyed by key, not by occurrence: one operation bound by two skills is the same tool, not a clash.
+  const byName = new Map<string, Set<DXN.DXN>>();
   for (const op of operations) {
     const name = toolName(op);
-    byName.set(name, [...(byName.get(name) ?? []), op.meta.key]);
+    byName.set(name, (byName.get(name) ?? new Set()).add(op.meta.key));
   }
-  return new Map([...byName].filter(([, keys]) => keys.length > 1));
+  return new Map([...byName].filter(([, keys]) => keys.size > 1).map(([name, keys]) => [name, [...keys]]));
 };
 
 //
