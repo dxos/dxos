@@ -47,13 +47,10 @@ const dirname = import.meta.dirname;
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
 const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
 
-// These packages' default (`browser`-conditioned) entrypoints initialize their wasm with
-// top-level await, and WebKit evaluates a module before its dependencies when a graph reached by
-// concurrent dynamic imports contains top-level await, leaving sibling bindings in TDZ (plugin
-// activation fails with "undefined is not an object"). Serve and build alike, resolve them to
-// their `slim` entrypoints — which perform no wasm work at module evaluation — and initialize
-// explicitly per realm via `initAutomergeWasm()` (src/util/automerge-wasm.ts) before the client
-// boots.
+// These packages' `browser`-conditioned entrypoints initialize their wasm with top-level await,
+// which WebKit evaluates out of order under concurrent dynamic imports (TDZ, "undefined is not an
+// object" at plugin activation) — so resolve them to their `slim` entrypoints and initialize
+// explicitly per realm via `initAutomergeWasm()` before the client boots.
 const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo', '@automerge/automerge-subduction'];
 
 /**

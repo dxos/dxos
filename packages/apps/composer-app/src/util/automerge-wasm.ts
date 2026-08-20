@@ -19,9 +19,16 @@ let initialized: Promise<void> | undefined;
  * callers share one initialization. URL inputs keep wasm-bindgen on `instantiateStreaming`.
  */
 export const initAutomergeWasm = (): Promise<void> => {
+  // A rejection clears the memo so a later call retries instead of caching a transient failure.
   initialized ??= Promise.all([
     initializeWasm(automergeWasmUrl),
     initSubductionWasm({ module_or_path: subductionWasmUrl }),
-  ]).then(() => undefined);
+  ]).then(
+    () => undefined,
+    (error) => {
+      initialized = undefined;
+      throw error;
+    },
+  );
   return initialized;
 };

@@ -20,11 +20,16 @@ import { Rng, store } from './common';
 // LOAD
 //
 
-// `wnfs/web` (unlike the default `browser` entry) does no wasm work at module evaluation —
-// top-level await in a bundle graph trips WebKit's TDZ bug (see composer-app's `slimWasm`) — so
-// this single wnfs chokepoint initializes explicitly. The glue's no-arg init resolves the wasm
-// via `new URL(..., import.meta.url)`, which bundlers rewrite to the emitted asset.
+// `wnfs/web` does no wasm work at module evaluation — top-level await in a bundle graph trips
+// WebKit's TDZ bug (see composer-app's `slimWasm`) — so this single chokepoint initializes
+// explicitly, clearing the memo on failure so a transient error does not disable wnfs for good.
 let wasmReady: Promise<unknown> | undefined;
+
+const initWnfsWasmOnce = (): Promise<unknown> =>
+  (wasmReady ??= initWnfsWasm().catch((error: unknown) => {
+    wasmReady = undefined;
+    throw error;
+  }));
 
 export const loadWnfs = async ({
   space,
@@ -35,7 +40,7 @@ export const loadWnfs = async ({
   blockstore: Blockstore;
   instances?: WnfsCapabilities.Instances;
 }) => {
-  await (wasmReady ??= initWnfsWasm());
+  await initWnfsWasmOnce();
 
   // TODO(wittjosiah): Remove.
   // Delete old properties if they exist (pre-DX-971 migration cleanup).
