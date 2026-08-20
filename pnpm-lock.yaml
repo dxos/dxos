@@ -15275,9 +15275,6 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
-      '@dxos/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client

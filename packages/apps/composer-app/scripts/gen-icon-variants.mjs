@@ -35,7 +35,7 @@ const brandMark = join(root, '..', '..', 'ui', 'brand', 'assets', 'icons', 'comp
  */
 const VARIANTS = {
   purple: {
-    icons: 'icons-nightly',
+    icons: 'icons-preview',
     hue: 282,
     saturation: 1,
     lightness: 1,

@@ -94,16 +94,17 @@ from the UUID, so it is a build output rather than a hand-maintained source tree
 deliberately matches the Tauri bundle identifier: different registries, and to an Elgato user this
 plugin is "Composer".
 
-The protocol deliberately does **not** get its own package yet: it has one consumer until the device
-plugin exists. It lives in `src/protocol/Protocol.ts` behind the `./Protocol` export subpath — which
-imports only `effect`, so a Node consumer can take it without pulling React — and moves to
-`packages/common/stream-deck-protocol` if a third consumer (e.g. the edge variant) ever appears.
+The protocol lives in `src/protocol/Protocol.ts` behind the `./Protocol` export subpath, which imports
+only `effect` so the device plugin can take it without pulling React. Both packages now consume it,
+which is exactly the arrangement a shared subpath is for; it moves to
+`packages/common/stream-deck-protocol` only if a consumer appears that cannot depend on the plugin
+package at all — the edge variant, most likely.
 
 ### `@dxos/plugin-stream-deck` internals
 
 - `model/favorites.ts` — the space's favorites → `KeySpec[]` (`{ target, label, icon, hue }`), sorted
-  stably by label then target. Phase 1 keeps **query order with no persisted slot assignment**; a
-  `StreamDeckLayout` object with ordered slots is a later step.
+  stably by label then target. Slot assignment is **derived, not persisted**: adding a favorite can
+  therefore move the others, and a `StreamDeckLayout` object with fixed slots is a later step.
   **`Filter.tag` matches a tag's URI, not its label**, so the query is two steps: find the space's
   keyless `Tag` labelled `favorite`, then `Filter.tag(Obj.getURI(tag))`. A keyed provider tag that
   happens to be labelled "favorite" belongs to that provider and is ignored.
@@ -180,8 +181,8 @@ Composer being closed entirely (admin vs. user views).
 - **Favorite = the canonical `favorite` ECHO tag.** ECHO already has first-class tags
   (`Obj.getMeta(obj).tags`, `Obj.addTag`, `Tag.findOrCreate`, `Filter.tag`), so no new annotation
   primitive is introduced. Note `Filter.tag` takes a tag URI, not a label — see the model above.
-- **Slot order** — phase 1 uses query order; positions can reshuffle when a favorite is added.
-  Accepted for now, `StreamDeckLayout` in M4.
+- **Slot order** — derived from the stable `(label, target)` sort rather than persisted, so adding a
+  favorite can move the others. Accepted for now, `StreamDeckLayout` in M4.
 - **Which space** — the currently active space. Multi-space aggregation is not in scope.
 - **Dial bindings** — open. Rotation and press are transported and logged; nothing is bound.
 - **Who drives the bridge** — M2 drives it from the dashboard surface, so the keys are live only while

@@ -46,6 +46,7 @@ export const useIcons = (names: readonly string[]): Record<string, IconMarkup> =
     () => '',
   );
 
+  const key = names.join(',');
   return useMemo(() => {
     const resolved: Record<string, IconMarkup> = {};
     for (const name of names) {
@@ -55,6 +56,7 @@ export const useIcons = (names: readonly string[]): Record<string, IconMarkup> =
       }
     }
     return resolved;
-    // `revision` is the subscription's snapshot: it changes precisely when the resolvable set does.
-  }, [revision]);
+    // Keyed on both the requested names and the resolvable ones: `revision` alone is identical for
+    // two different unresolved names, which would skip `requestIcon` for the second.
+  }, [key, revision]);
 };

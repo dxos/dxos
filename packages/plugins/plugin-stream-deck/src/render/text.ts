@@ -29,6 +29,9 @@ export const wrapText = (value: string, maxChars: number, maxLines: number): str
   if (!words.length) {
     return [];
   }
+  // Compared against the normalized text: measuring against the raw value would count collapsed
+  // whitespace as dropped content and ellipsise a label that fits.
+  const normalized = words.join(' ');
 
   const lines: string[] = [];
   let line = '';
@@ -53,7 +56,7 @@ export const wrapText = (value: string, maxChars: number, maxLines: number): str
 
   const truncated = lines.length < maxLines ? lines : lines.slice(0, maxLines);
   const consumed = truncated.join(' ').length;
-  if (consumed < value.trim().length && truncated.length === maxLines) {
+  if (consumed < normalized.length && truncated.length === maxLines) {
     const last = truncated[maxLines - 1];
     truncated[maxLines - 1] = `${last.slice(0, Math.max(0, maxChars - 1))}…`;
   }

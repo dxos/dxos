@@ -9,7 +9,7 @@ on:
   workflow_call:
     inputs:
       environment:
-        description: Target environment (dev | nightly | staging | production).
+        description: Target environment (dev | preview | staging | production).
         type: string
         required: true
       ref:
@@ -25,7 +25,7 @@ on:
       ios:
         # Only `dev` builds iOS today, and it goes to TestFlight. The app is not shipped yet, so there is
         # nothing for the other environments to release to and no reason to spend 90 minutes of macOS
-        # runner on them. TODO(wittjosiah): once the app ships — nightly and staging on their own TestFlight
+        # runner on them. TODO(wittjosiah): once the app ships — preview and staging on their own TestFlight
         # streams, production to the App Store.
         description: Build the iOS app and upload it to TestFlight (desktop always builds).
         type: boolean
@@ -86,7 +86,7 @@ jobs:
             echo "::error::not a semver version: $VERSION" && exit 1
           fi
           case "$ENVIRONMENT" in
-            dev | nightly | staging | production) ;;
+            dev | preview | staging | production) ;;
             *) echo "::error::unknown environment: $ENVIRONMENT" && exit 1 ;;
           esac
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"

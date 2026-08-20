@@ -29,8 +29,9 @@ if (!existsSync(entry)) {
   process.exit(1);
 }
 
-// Elgato requires {major}.{minor}.{patch}.{build}; the package carries three parts.
-const [major = '0', minor = '0', patch = '0'] = pkg.version.split('.');
+// Elgato requires four numeric parts; the package carries three, and a prerelease suffix such as
+// `-next.0` is not numeric, so it is dropped rather than passed through as a patch.
+const [major = '0', minor = '0', patch = '0'] = pkg.version.split('-')[0].split('.');
 manifest.Version = `${major}.${minor}.${patch}.0`;
 
 const outDir = join(projectRoot, `${manifest.UUID}.sdPlugin`);

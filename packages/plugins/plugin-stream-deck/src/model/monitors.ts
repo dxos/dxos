@@ -15,10 +15,13 @@ const STAT_LABELS: readonly [keyof SpaceStats, string][] = [
   ['plugins', 'Plugins'],
 ];
 
+/** A producer is free to report a negative or overshooting `current`; the dial promises `[0, 1]`. */
+const clampRatio = (ratio: number): number => Math.max(0, Math.min(1, ratio));
+
 const toProgressDial = (task: Progress.TaskProgress): DialSpec => ({
   kind: 'progress',
   title: task.label ?? task.name,
-  ratio: task.total && task.total > 0 ? Math.min(1, task.current / task.total) : undefined,
+  ratio: task.total && task.total > 0 ? clampRatio(task.current / task.total) : undefined,
   detail: task.total ? `${task.current}/${task.total}` : String(task.current),
 });
 

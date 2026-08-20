@@ -30,9 +30,8 @@ if (!existsSync(join(pluginDir, 'bin/plugin.mjs'))) {
   process.exit(1);
 }
 
-// Ports are fixed rather than ephemeral: the bridge port is the plugin's own contract, and the
-// stand-in port is passed to the child. Both are loopback-only.
-const STREAM_DECK_PORT = 28765;
+// The bridge port is fixed because it is the plugin's contract; the stand-in takes an ephemeral port
+// so the check cannot collide with a Stream Deck application already running. Both are loopback-only.
 const BRIDGE_PORT = 21435;
 
 const info = {
@@ -55,6 +54,24 @@ const check = (label, condition, detail) => {
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Waits for an observable condition instead of a fixed delay: a loaded runner can take far longer
+ * than any delay worth hard-coding, and a delay that is long enough to be safe makes the check slow
+ * for everyone.
+ */
+const until = async (label, predicate, timeout = 15_000) => {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    if (predicate()) {
+      return true;
+    }
+    await wait(25);
+  }
+  console.error(`fail  timed out waiting for ${label}`);
+  failures.push(`timeout: ${label}`);
+  return false;
+};
+
 //
 // Stand in for the Stream Deck application.
 //
@@ -62,7 +79,13 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let registered;
 let pluginSocket;
 const commands = [];
-const streamDeck = new WebSocketServer({ host: '127.0.0.1', port: STREAM_DECK_PORT });
+const streamDeck = new WebSocketServer({ host: '127.0.0.1', port: 0 });
+// The child dials this port on startup, so it must be listening before the spawn.
+await new Promise((resolve, reject) => {
+  streamDeck.once('listening', resolve);
+  streamDeck.once('error', reject);
+});
+const streamDeckPort = streamDeck.address().port;
 streamDeck.on('connection', (socket) => {
   pluginSocket = socket;
   socket.on('message', (data) => {
@@ -85,11 +108,13 @@ streamDeck.on('connection', (socket) => {
         payload: { controller, coordinates: { column, row: 0 }, isInMultiAction: false, settings: {} },
       }),
     );
-  setTimeout(() => {
+  // Stream Deck sends these once the plugin has registered, which is the only ordering the plugin
+  // can rely on.
+  void until('registration', () => registered !== undefined).then(() => {
     appear(`${manifest.UUID}.favorite`, 'Keypad', 0);
     appear(`${manifest.UUID}.favorite`, 'Keypad', 1);
     appear(`${manifest.UUID}.monitor`, 'Encoder', 0);
-  }, 300);
+  });
 });
 
 const child = spawn(
@@ -97,7 +122,7 @@ const child = spawn(
   [
     'bin/plugin.mjs',
     '-port',
-    String(STREAM_DECK_PORT),
+    String(streamDeckPort),
     '-pluginUUID',
     manifest.UUID,
     '-registerEvent',
@@ -112,7 +137,13 @@ let exited;
 child.on('exit', (code) => (exited = code));
 
 try {
-  await wait(1500);
+  await until('the plugin to register', () => registered !== undefined);
+  await until(
+    'the offline state to be applied',
+    () =>
+      commands.some((command) => command.event === 'setImage') &&
+      commands.some((command) => command.event === 'setFeedback'),
+  );
 
   check('the plugin process is still running', exited === undefined, { exitCode: exited });
   check('the plugin registered with Stream Deck', registered === manifest.UUID, { registered });
@@ -138,7 +169,7 @@ try {
     client.once('open', resolve);
     client.once('error', reject);
   });
-  await wait(200);
+  await until('the greeting', () => inbox.length > 0);
 
   check('the bridge greets Composer with the device profile', inbox[0]?._tag === 'hello', inbox[0]);
   check(
@@ -155,7 +186,10 @@ try {
       dials: [{ title: 'Objects', value: '128', bar: 0.5 }],
     }),
   );
-  await wait(500);
+  await until(
+    'the frame to reach the device',
+    () => commands.slice(before).filter((command) => command.event === 'setImage').length >= 2,
+  );
 
   const applied = commands.slice(before);
   check('the frame reached the keys', applied.filter((command) => command.event === 'setImage').length === 2, applied);
@@ -173,19 +207,23 @@ try {
 
   // A press on the second Favorite key must reach Composer as slot 1 — slots are positional, so this
   // is what proves the ordering the user sees matches the ordering the frame was built for.
-  pluginSocket.send(
-    JSON.stringify({
-      event: 'keyDown',
-      action: `${manifest.UUID}.favorite`,
-      context: `${manifest.UUID}.favorite:1`,
-      device: 'device-1',
-      payload: { controller: 'Keypad', coordinates: { column: 1, row: 0 }, isInMultiAction: false, settings: {} },
-    }),
-  );
-  await wait(300);
+  if (!pluginSocket) {
+    check('a key press is reported to Composer with its slot', false, 'the plugin never connected');
+  } else {
+    pluginSocket.send(
+      JSON.stringify({
+        event: 'keyDown',
+        action: `${manifest.UUID}.favorite`,
+        context: `${manifest.UUID}.favorite:1`,
+        device: 'device-1',
+        payload: { controller: 'Keypad', coordinates: { column: 1, row: 0 }, isInMultiAction: false, settings: {} },
+      }),
+    );
+    await until('the key press to be reported', () => inbox.some((message) => message._tag === 'input'));
 
-  const input = inbox.find((message) => message._tag === 'input');
-  check('a key press is reported to Composer with its slot', input?.kind === 'keyDown' && input?.slot === 1, input);
+    const input = inbox.find((message) => message._tag === 'input');
+    check('a key press is reported to Composer with its slot', input?.kind === 'keyDown' && input?.slot === 1, input);
+  }
 
   client.close();
 } finally {

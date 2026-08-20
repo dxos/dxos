@@ -6,6 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
+/** Counts and indices arrive from the device; a non-integer or negative value is malformed. */
+const NonNegativeInt = Schema.Number.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0));
+const PositiveInt = Schema.Number.check(Schema.isInt(), Schema.isGreaterThan(0));
+
 /**
  * Bumped whenever the message shapes below change incompatibly. The bridge closes the connection
  * rather than guessing when the two sides disagree.
@@ -21,12 +25,12 @@ export const DEFAULT_PORT = 21435;
  */
 export const DeviceProfile = Schema.Struct({
   model: Schema.String,
-  keys: Schema.Number,
-  dials: Schema.Number,
+  keys: NonNegativeInt,
+  dials: NonNegativeInt,
   /** Key image size in pixels, `[width, height]`. */
-  keySize: Schema.Tuple([Schema.Number, Schema.Number]),
+  keySize: Schema.Tuple([PositiveInt, PositiveInt]),
   /** Touch-strip segment size in pixels, one segment per dial. */
-  dialSize: Schema.Tuple([Schema.Number, Schema.Number]),
+  dialSize: Schema.Tuple([PositiveInt, PositiveInt]),
 });
 export type DeviceProfile = Schema.Schema.Type<typeof DeviceProfile>;
 
@@ -62,7 +66,7 @@ export type DialFeedback = Schema.Schema.Type<typeof DialFeedback>;
 /** Device -> brain: sent once on connect. */
 export const Hello = Schema.Struct({
   _tag: Schema.Literal('hello'),
-  protocol: Schema.Number,
+  protocol: NonNegativeInt,
   device: DeviceProfile,
 });
 export type Hello = Schema.Schema.Type<typeof Hello>;
@@ -74,9 +78,9 @@ export type InputKind = Schema.Schema.Type<typeof InputKind>;
 export const Input = Schema.Struct({
   _tag: Schema.Literal('input'),
   kind: InputKind,
-  slot: Schema.Number,
+  slot: NonNegativeInt,
   /** Detent count for `dialRotate`; negative is counter-clockwise. */
-  ticks: Schema.optional(Schema.Number),
+  ticks: Schema.optional(Schema.Number.check(Schema.isInt())),
 });
 export type Input = Schema.Schema.Type<typeof Input>;
 

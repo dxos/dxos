@@ -31,6 +31,11 @@ describe('renderDial', () => {
     });
   });
 
+  test('clamps a bar the model let through out of range', ({ expect }) => {
+    expect(renderDial({ kind: 'progress', title: 'Syncing', ratio: 1.5 })).toMatchObject({ bar: 1, value: '100%' });
+    expect(renderDial({ kind: 'progress', title: 'Syncing', ratio: -1 })).toMatchObject({ bar: 0, value: '0%' });
+  });
+
   test('renders a stat', ({ expect }) => {
     expect(renderDial({ kind: 'stat', title: 'Objects', value: '128' })).toEqual({
       title: 'Objects',

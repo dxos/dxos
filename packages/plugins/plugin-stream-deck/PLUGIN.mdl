@@ -72,7 +72,9 @@ type KeyImage
   desc: One rendered key on the wire. Elgato's setImage accepts SVG, so nothing is rasterised.
   fields:
     svg: string
-    target?: string               # echoed back with a press, so the device stays stateless
+    target?: string               # informational: input reports a slot, which Composer resolves
+                                  # against its last published frame, so the device keeps no
+                                  # domain state
 ```
 
 ```mdl

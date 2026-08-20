@@ -9,7 +9,7 @@ import { AppGraphBuilder, BridgeDriver, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
+// eslint-disable-next-line import/no-relative-packages -- The spec ships as a plugin asset, which needs a relative raw import.
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const StreamDeckPlugin = Plugin.define(meta).pipe(

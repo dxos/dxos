@@ -43,12 +43,15 @@ export class MonitorAction extends SingletonAction {
   override readonly manifestId = MONITOR_ACTION_UUID;
 
   #host?: MonitorHost;
+  // Last frame applied, so a segment placed later can be brought up to date immediately.
+  #dials: readonly (Protocol.DialFeedback | null)[] = [];
 
   bind(host: MonitorHost): void {
     this.#host = host;
   }
 
   async apply(dials: readonly (Protocol.DialFeedback | null)[]): Promise<void> {
+    this.#dials = dials;
     const instances = assignSlots([...this.actions]);
     await Promise.all(
       instances.map((instance, slot) => {
@@ -61,7 +64,7 @@ export class MonitorAction extends SingletonAction {
   }
 
   async clear(): Promise<void> {
-    await this.apply([]);
+    this.#dials = [];
     await Promise.all(
       assignSlots([...this.actions]).map((instance) =>
         'setFeedback' in instance ? instance.setFeedback(toFeedback(offlineDial)) : Promise.resolve(),
@@ -75,7 +78,9 @@ export class MonitorAction extends SingletonAction {
     if ('setFeedbackLayout' in ev.action) {
       await ev.action.setFeedbackLayout(LAYOUT);
     }
-    if (!this.#host?.connected()) {
+    if (this.#host?.connected()) {
+      await this.apply(this.#dials);
+    } else {
       await this.clear();
     }
   }

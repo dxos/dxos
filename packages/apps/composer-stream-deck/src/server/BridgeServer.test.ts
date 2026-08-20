@@ -148,6 +148,8 @@ describe('BridgeServer', () => {
     await closed;
 
     expect(server.connected).toBe(true);
+    // The device never went offline, so the offline render must not have been triggered.
+    expect(disconnects).toBe(0);
     second.close();
   });
 

@@ -34,6 +34,9 @@ export class BridgeServer {
   #server?: WebSocketServer;
   #client?: WebSocket;
   readonly #options: BridgeServerOptions;
+  // Device writes are chained rather than fired concurrently: an older frame finishing after a newer
+  // one — or after the disconnect clear — would leave stale content on the hardware.
+  #rendering: Promise<void> = Promise.resolve();
 
   constructor(options: BridgeServerOptions) {
     this.#options = options;
@@ -90,7 +93,7 @@ export class BridgeServer {
     }
     this.#client = undefined;
     this.#log('client disconnected');
-    await this.#options.onDisconnect().catch((error) => this.#log('offline render failed', error));
+    await this.#render(() => this.#options.onDisconnect(), 'offline render failed');
   }
 
   // Every inbound message is guarded: a malformed or unknown frame from Composer must never take
@@ -110,7 +113,13 @@ export class BridgeServer {
       return;
     }
 
-    await this.#options.onFrame(frame.success).catch((error) => this.#log('frame failed to apply', error));
+    await this.#render(() => this.#options.onFrame(frame.success), 'frame failed to apply');
+  }
+
+  /** Appends one device write to the ordered chain; a failure never breaks the chain. */
+  #render(operation: () => Promise<void>, message: string): Promise<void> {
+    this.#rendering = this.#rendering.then(operation).catch((error) => this.#log(message, error));
+    return this.#rendering;
   }
 
   #log(message: string, context?: unknown): void {

@@ -54,6 +54,11 @@ describe('toDialSpecs', () => {
     });
   });
 
+  test('clamps a ratio a producer reports out of range', ({ expect }) => {
+    expect(toDialSpecs([task({ current: -5 })], stats, 1)[0]).toMatchObject({ ratio: 0 });
+    expect(toDialSpecs([task({ current: 50 })], stats, 1)[0]).toMatchObject({ ratio: 1 });
+  });
+
   test('truncates to the available dials', ({ expect }) => {
     const tasks = Array.from({ length: 6 }, (_, index) => task({ name: `task-${index}` }));
     expect(toDialSpecs(tasks, stats, 4)).toHaveLength(4);

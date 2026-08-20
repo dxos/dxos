@@ -88,7 +88,12 @@ export default Capability.makeModule(
 
     const bridge = new StreamDeckBridge({
       onStateChange: (state) => registry.set(status, { state, device: bridge.device }),
-      onHello: (device) => registry.set(status, { state: 'connected', device }),
+      onHello: (device) => {
+        registry.set(status, { state: 'connected', device });
+        // Frames are dropped while disconnected, so the first frame has to follow the greeting —
+        // otherwise an idle Composer leaves the device on its offline keys until something changes.
+        publish();
+      },
       onInput: (input) => {
         // Dial bindings are undecided. The events are transported anyway, so binding them later needs
         // no protocol change.

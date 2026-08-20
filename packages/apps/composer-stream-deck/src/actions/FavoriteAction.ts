@@ -29,6 +29,8 @@ export class FavoriteAction extends SingletonAction {
   override readonly manifestId = FAVORITE_ACTION_UUID;
 
   #host?: FavoriteHost;
+  // Last frame applied, so a key placed later can be brought up to date immediately.
+  #keys: readonly (Protocol.KeyImage | null)[] = [];
 
   bind(host: FavoriteHost): void {
     this.#host = host;
@@ -36,18 +38,22 @@ export class FavoriteAction extends SingletonAction {
 
   /** Applies the key images from a frame, in slot order; extra slots are left offline. */
   async apply(keys: readonly (Protocol.KeyImage | null)[]): Promise<void> {
+    this.#keys = keys;
     const instances = assignSlots([...this.actions]);
     await Promise.all(instances.map((instance, slot) => instance.setImage(keys[slot]?.svg ?? offlineKey())));
   }
 
   async clear(): Promise<void> {
+    this.#keys = [];
     await Promise.all(assignSlots([...this.actions]).map((instance) => instance.setImage(offlineKey())));
   }
 
-  // A key that appears while Composer is absent would otherwise show the manifest icon and look
-  // functional; paint the offline state until the first frame arrives.
+  // A key that appears shows the manifest icon until told otherwise, which looks functional but is
+  // not; paint the offline state, or replay the current frame when Composer is already connected.
   override async onWillAppear(_ev: WillAppearEvent): Promise<void> {
-    if (!this.#host?.connected()) {
+    if (this.#host?.connected()) {
+      await this.apply(this.#keys);
+    } else {
       await this.clear();
     }
   }

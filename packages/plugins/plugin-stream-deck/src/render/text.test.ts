@@ -31,6 +31,10 @@ describe('wrapText', () => {
     expect(wrapText('Unmaintainability', 11, 1)).toEqual(['Unmaintain…']);
   });
 
+  test('does not ellipsise a label that only had extra whitespace', ({ expect }) => {
+    expect(wrapText('A   B', 11, 2)).toEqual(['A B']);
+  });
+
   test('returns nothing for a blank label', ({ expect }) => {
     expect(wrapText('   ', 11, 2)).toEqual([]);
   });

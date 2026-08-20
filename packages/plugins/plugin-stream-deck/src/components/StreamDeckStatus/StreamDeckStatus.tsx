@@ -19,7 +19,12 @@ export type StreamDeckStatusProps = {
 export const StreamDeckStatus = ({ model }: StreamDeckStatusProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <span title={model ?? t('device-connected.label')} data-testid='stream-deck.status'>
+    <span
+      role='status'
+      aria-label={model ?? t('device-connected.label')}
+      title={model ?? t('device-connected.label')}
+      data-testid='stream-deck.status'
+    >
       <Icon icon='ph--squares-four--regular' size={5} classNames='text-cyan-400' />
     </span>
   );

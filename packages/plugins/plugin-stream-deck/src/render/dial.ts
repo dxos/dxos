@@ -12,10 +12,13 @@ import type * as Protocol from '#protocol';
 export const renderDial = (spec: DialSpec): Protocol.DialFeedback => {
   switch (spec.kind) {
     case 'progress': {
+      // Clamped here as well as in the model: `bar` is only JSON-stringified on the way out, so no
+      // schema enforces the `[0, 1]` contract the device relies on.
+      const bar = spec.ratio === undefined ? undefined : Math.max(0, Math.min(1, spec.ratio));
       return {
         title: spec.title,
-        value: spec.detail ?? (spec.ratio === undefined ? '…' : `${Math.round(spec.ratio * 100)}%`),
-        bar: spec.ratio,
+        value: spec.detail ?? (bar === undefined ? '…' : `${Math.round(bar * 100)}%`),
+        bar,
       };
     }
     case 'stat': {

@@ -114,7 +114,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     // listed under labs below; the dedupe at the end collapses the two entries.
     TranscriptionPlugin.meta.profile.key,
 
-    // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` — not nightly, not a
+    // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` — not preview, not a
     // plain `serve`). Sidekick is also gated on `isDev` for availability, not just defaults (below).
     isDev && [
       DebugPlugin.meta.profile.key,
@@ -154,7 +154,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     .filter((key, index, keys) => keys.indexOf(key) === index);
 
 /**
- * Full Composer plugin registry (nightly and dev): shared core infrastructure plus every content
+ * Full Composer plugin registry (preview and dev): shared core infrastructure plus every content
  * plugin. `plugin-defs.production.tsx` is the curated set `composer.space` ships.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
