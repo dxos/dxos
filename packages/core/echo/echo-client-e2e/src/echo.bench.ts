@@ -14,14 +14,20 @@ import { parseBenchCount } from './testing/bench-util';
 
 // Same 5 operations as `sqlite.bench.ts`, run through the ECHO API instead of raw SQL, over the
 // two object storage kinds: automerge objects (`db.add`) and feed objects (`db.add(obj, { to:
-// feed })`) — the matrix the task asked for.
+// feed })`).
 const SEED_COUNT = parseBenchCount('ECHO_BENCH_SEED_COUNT', 200);
-// See the sizing note in `sqlite.bench.ts`.
-const DELETE_POOL = parseBenchCount('ECHO_BENCH_DELETE_POOL', 300);
+// Sized past what tinybench's 1s time floor could plausibly consume even after a large speedup,
+// since a no-op past the pool's end (see the delete bench's exhaustion guard) would otherwise be
+// counted as delete throughput and skew the reported hz.
+const DELETE_POOL = parseBenchCount('ECHO_BENCH_DELETE_POOL', 1_000);
+// `insert (batched)` shares one flush across a batch, since flushing per item forces an RPC/index
+// round trip that batching avoids.
+const BATCH_SIZE = parseBenchCount('ECHO_BENCH_BATCH_SIZE', 20);
 const BENCH_OPTIONS = { time: 1_000 };
 
 type Variant = {
   insert: (value: number) => Promise<TestSchema.Expando>;
+  insertBatch: (values: number[]) => Promise<TestSchema.Expando[]>;
   scope: (filter: Filter.Any) => Query.Any;
   remove: (obj: TestSchema.Expando) => Promise<void>;
 };
@@ -40,6 +46,7 @@ const defineOperationBenches = (
   type SeedState = { seeded: TestSchema.Expando[]; deletePool: TestSchema.Expando[] };
   let seedPromise: Promise<SeedState> | undefined;
   let insertCounter = 0;
+  let batchInsertCounter = 0;
   let deleteCounter = 0;
 
   const ensureSeed = (): Promise<SeedState> => {
@@ -66,6 +73,20 @@ const defineOperationBenches = (
     async () => {
       const { db, feed } = await ensureEcho();
       await makeVariant(db, feed).insert(10_000_000 + insertCounter++);
+    },
+    BENCH_OPTIONS,
+  );
+
+  // hz below is batches/sec (one invocation inserts BATCH_SIZE objects), not items/sec — divide
+  // the reported mean by BATCH_SIZE to compare against `insert`'s per-item latency.
+  bench(
+    `insert (batched x${BATCH_SIZE}, single flush)`,
+    async () => {
+      const { db, feed } = await ensureEcho();
+      const base = 30_000_000 + batchInsertCounter;
+      batchInsertCounter += BATCH_SIZE;
+      const values = Array.from({ length: BATCH_SIZE }, (unusedValue, index) => base + index);
+      await makeVariant(db, feed).insertBatch(values);
     },
     BENCH_OPTIONS,
   );
@@ -115,6 +136,10 @@ const defineOperationBenches = (
     async () => {
       const { db, feed } = await ensureEcho();
       const { deletePool } = await ensureSeed();
+      // The pool is finite; a bench can outrun it once warmup iterations are included.
+      if (deleteCounter >= deletePool.length) {
+        return;
+      }
       const obj = deletePool[deleteCounter++];
       await makeVariant(db, feed).remove(obj);
     },
@@ -158,6 +183,11 @@ describe('echo benchmarks (feed objects vs automerge objects)', { tags: ['manual
           await db.flush();
           return obj;
         },
+        insertBatch: async (values) => {
+          const objs = values.map((value) => db.add(Obj.make(TestSchema.Expando, { value, label: `label-${value}` })));
+          await db.flush();
+          return objs;
+        },
         scope: (filter) => Query.select(filter),
         remove: async (obj) => {
           db.remove(obj);
@@ -175,6 +205,13 @@ describe('echo benchmarks (feed objects vs automerge objects)', { tags: ['manual
           const obj = db.add(Obj.make(TestSchema.Expando, { value, label: `label-${value}` }), { to: feed });
           await db.flush();
           return obj;
+        },
+        insertBatch: async (values) => {
+          const objs = values.map((value) =>
+            db.add(Obj.make(TestSchema.Expando, { value, label: `label-${value}` }), { to: feed }),
+          );
+          await db.flush();
+          return objs;
         },
         scope: (filter) => Query.select(filter).from(feed),
         remove: async (obj) => {

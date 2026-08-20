@@ -34,6 +34,18 @@ const hostPlatform = isTauri() ? getHostPlatform() : undefined;
  */
 const passkeyOnly = hostPlatform === 'ios' || (hostPlatform === 'macos' && navigator.maxTouchPoints > 1);
 
+/**
+ * Whether the native app offers email sign-in. Off because the emailed link can only return to a web
+ * origin — the app's own origin is a bundled `localhost` asset server no mail client can usefully
+ * open — and the web app hands a link back to the native app only when `enableNativeRedirect` is
+ * set, which still defaults to false. Until then the link would strand the user in a browser tab
+ * instead of the app they started from, so the option is hidden rather than offered broken. Flip
+ * this to true once native redirects are the default.
+ */
+const NATIVE_EMAIL_LOGIN_ENABLED: boolean = false;
+
+const emailLoginEnabled = !passkeyOnly && (!isTauri() || NATIVE_EMAIL_LOGIN_ENABLED);
+
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();
   const identity = useIdentity();
@@ -280,7 +292,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         state={state}
         error={error}
         identity={identity}
-        onEmailLogin={!passkeyOnly ? handleLogin : undefined}
+        onEmailLogin={emailLoginEnabled ? handleLogin : undefined}
         onPasskey={!identity ? handlePasskey : undefined}
         onJoinIdentity={!identity && !passkeyOnly ? handleJoinIdentity : undefined}
         onRecoverIdentity={!identity && !passkeyOnly ? handleRecoverIdentity : undefined}

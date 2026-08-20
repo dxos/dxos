@@ -3,7 +3,7 @@ name: Deploy Apps
 # Single workflow for all app deploys. The deployable apps are listed in scripts/apps.mjs (a package dir
 # per app); everything else — Worker name, bundle task, output dir, and which environments it targets — is
 # derived from that app's `wrangler.jsonc`. The app set for an env follows its config's `env.*` sections:
-# nightly → all nightly-enabled apps (auto, daily); dev → composer; staging → composer + docs;
+# preview → all preview-enabled apps (auto, daily); dev → composer; staging → composer + docs;
 # production → all. Fully decoupled from npm publishing.
 #
 # Production additionally cuts a versioned Composer release (bump composer-app/crx, commit to main, tag
@@ -18,18 +18,18 @@ name: Deploy Apps
 # Environments.
 
 on:
-  # Nightly: `main`'s tip, once a day, rather than a deploy per commit. 07:00 UTC = 03:00 EDT / 02:00 EST
+  # Preview: `main`'s tip, once a day, rather than a deploy per commit. 07:00 UTC = 03:00 EDT / 02:00 EST
   # (cron has no timezone, so the wall-clock hour shifts by one across US DST).
   schedule:
     - cron: '0 7 * * *'
   workflow_dispatch:
     inputs:
       environment:
-        # Defaults the app set (each app's wrangler.jsonc `env.*`): dev → composer, nightly → all,
+        # Defaults the app set (each app's wrangler.jsonc `env.*`): dev → composer, preview → all,
         # staging → composer + docs, production → all. Choose the commit via the branch/tag selector.
         description: Target environment
         type: choice
-        options: [dev, nightly, staging, production]
+        options: [dev, preview, staging, production]
         default: dev
       app:
         # Optional — deploy a single app instead of the whole environment (e.g. a docs hotfix to
@@ -50,7 +50,7 @@ concurrency:
   # One in-flight deploy per environment. Superseding is right everywhere except production, where the
   # `release` job has already pushed a commit and a `composer-v*` tag by the time the artifacts build —
   # cancelling there would strand a tagged release with nothing published against it.
-  group: deploy-${{ inputs.environment || 'nightly' }}
+  group: deploy-${{ inputs.environment || 'preview' }}
   cancel-in-progress: ${{ inputs.environment != 'production' }}
 
 permissions:
@@ -58,7 +58,7 @@ permissions:
 
 jobs:
   # Resolve the run into named booleans so downstream `if:` conditions stay readable. Outputs:
-  #   env      — resolved environment (dev | nightly | staging | production).
+  #   env      — resolved environment (dev | preview | staging | production).
   #   app      — app to deploy, or `all`.
   #   release  — cut a versioned Composer release (production + Composer in the set).
   #   bundle   — build the shared Composer bundle (Composer in the set).
@@ -80,8 +80,8 @@ jobs:
           IN_ENV: ${{ inputs.environment }}
           IN_APP: ${{ inputs.app }}
         run: |
-          # Resolve the environment: the dispatch input, else `nightly` (the scheduled run).
-          env="${IN_ENV:-nightly}"
+          # Resolve the environment: the dispatch input, else `preview` (the scheduled run).
+          env="${IN_ENV:-preview}"
           app="${IN_APP:-all}"
 
           # Does Composer participate? (drives release / bundle / tauri).
@@ -175,9 +175,9 @@ jobs:
   # so About, the feedback report and the updater all agree on what you are running. Production ships the
   # release job's clean version; every other environment gets `<next patch>-<env>.<build>`.
   #
-  # The next patch, not the shipped one: a prerelease sorts below its own release, so numbering nightly
-  # against the shipped version would make every nightly look like a downgrade from stable and nobody could
-  # move to it. `<build>` counts that channel's builds of that base version, claimed by an immutable
+  # The next patch, not the shipped one: a prerelease sorts below its own release, so numbering a preview
+  # build against the shipped version would make it look like a downgrade from stable and nobody could move
+  # to it. `<build>` counts that channel's builds of that base version, claimed by an immutable
   # `composer-<env>-<base>-<n>` tag — pushing the tag IS the claim, so a run that loses a race recounts
   # instead of shipping a duplicate number.
   version:
@@ -283,7 +283,7 @@ jobs:
 
       # Stamp the version BEFORE the bundle: `runtime.app.build.version` (what About and the feedback
       # report show) is read out of package.json at vite build time, so a bundle built without this
-      # would report the last shipped version on a nightly.
+      # would report the last shipped version on a preview build.
       - name: Stamp the Composer version
         run: |
           jq --arg version "$VERSION" '.version = $version' packages/apps/composer-app/package.json > version.tmp
@@ -394,8 +394,8 @@ jobs:
 
       # Floating pointer to the SHA deployed for each app+env (the branch-pointer replacement). Every env
       # tags each app it deployed — per-app even for `all`, so an individual redeploy (hotfix) moves only
-      # that app's tag. Nightly carries one too: it is a daily snapshot of `main`, not `main` itself, so
-      # the branch tip is no longer an answer to "what is on nightly?".
+      # that app's tag. Preview carries one too: it is a daily snapshot of `main`, not `main` itself, so
+      # the branch tip is no longer an answer to "what is on preview?".
       - name: Update deploy pointer tags
         run: |
           for app in $(.github/workflows/scripts/apps.mjs "$DEPLOY_ENV" "$DEPLOY_APP"); do
@@ -404,12 +404,12 @@ jobs:
             git push -f origin "refs/tags/$tag"
           done
 
-      # Every environment but `nightly`: a dispatched deploy is sporadic, so its success is news to whoever
-      # pressed the button. Nightly lands at the same time every day and can be assumed to have worked —
+      # Every environment but `preview`: a dispatched deploy is sporadic, so its success is news to whoever
+      # pressed the button. Preview lands at the same time every day and can be assumed to have worked —
       # its failure still notifies below. No "started" ping either way; the deploy is no longer slow enough
       # for one to earn its place.
       - name: Notify Discord — deploy succeeded
-        if: success() && env.DEPLOY_ENV != 'nightly'
+        if: success() && env.DEPLOY_ENV != 'preview'
         continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
@@ -419,8 +419,8 @@ jobs:
             '{content: (":white_check_mark: Deployed **" + $app + "** to `" + $env + "`\nRun: " + $url)}')
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
-      # Unconditional, nightly included — a silent nightly is only safe to read as success if a broken one
-      # says so.
+      # Unconditional, preview included — a silent preview deploy is only safe to read as success if a
+      # broken one says so.
       - name: Notify Discord — deploy failed
         # Skip only when it was the "app targets this environment" check that failed — that's an invalid
         # app/environment combo caught before any deploy was attempted, not a real deploy failure. Anything
@@ -436,8 +436,8 @@ jobs:
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
   # A run that breaks before `deploy` must still say so: a prep failure (release, version, build-bundle)
-  # skips `deploy`, so its own failure ping never fires — and since nightly successes are deliberately
-  # silent, a silent broken nightly would read as a good one.
+  # skips `deploy`, so its own failure ping never fires — and since preview successes are deliberately
+  # silent, a silent broken preview deploy would read as a good one.
   notify-prep-failure:
     needs: [plan, release, version, build-bundle]
     if: ${{ !cancelled() && needs.plan.result == 'success' && (needs.release.result == 'failure' || needs.version.result == 'failure' || needs.build-bundle.result == 'failure') }}
@@ -457,7 +457,7 @@ jobs:
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
   # Desktop/mobile build for Composer — every environment ships a desktop app, so dogfooders on the
-  # nightly channel get the same daily build the web deploy does. iOS ships on `dev` alone for now (see the
+  # preview channel get the same daily build the web deploy does. iOS ships on `dev` alone for now (see the
   # `ios` input). CrabNebula channel is derived from the environment inside the reusable workflow. On
   # production it builds the bumped release commit.
   tauri:

@@ -16,8 +16,8 @@ runtime:
   services:
     agentHosting:
       type: LOCAL_TESTING
-    # EDGE nightly by default. Point at EDGE dev or a local EDGE with DX_EDGE_BASE_URL.
-    # TODO(wittjosiah): `https://nightly.dxos.network` after the EDGE rename (DX-1150).
+    # EDGE preview by default. Point at EDGE dev or a local EDGE with DX_EDGE_BASE_URL.
+    # TODO(wittjosiah): `https://preview.dxos.network` after the EDGE rename (DX-1150).
     edge:
       url: https://main.dxos.network/
     sandbox:
