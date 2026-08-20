@@ -16,6 +16,7 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as DeckPlugin from '@dxos/plugin-deck/DeckPlugin';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
+import * as MobilePlugin from '@dxos/plugin-mobile/MobilePlugin';
 import * as NativePlugin from '@dxos/plugin-native/NativePlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
 import * as ObservabilityPlugin from '@dxos/plugin-observability/ObservabilityPlugin';
@@ -93,9 +94,13 @@ export const getCorePlugins = ({
   isPopover,
   isMobile,
 }: PluginConfig): Plugin.Plugin[] => {
-  const layoutPlugin = isPopover
-    ? SpotlightPlugin.make()
-    : DeckPlugin.make({ platform: isMobile ? 'mobile' : 'desktop' });
+  // Mobile is two plugins, not one: headless Deck (state/ops, no root/surfaces) plus Mobile (root +
+  // surfaces) rendering over it — one state machine, plugin-mobile is only ever the renderer.
+  const layoutPlugins: Plugin.Plugin[] = isPopover
+    ? [SpotlightPlugin.make()]
+    : isMobile
+      ? [DeckPlugin.make({ platform: 'mobile' }), MobilePlugin.make()]
+      : [DeckPlugin.make({ platform: 'desktop' })];
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
     AtprotoPlugin.make(),
@@ -138,7 +143,7 @@ export const getCorePlugins = ({
     // targets. Without it a plugin like Inbox contributes connectors nobody ever asks for.
     ConnectorPlugin.make(),
     GraphPlugin.make(),
-    layoutPlugin,
+    ...layoutPlugins,
     NavTreePlugin.make(),
     ObservabilityPlugin.make({
       namespace: appKey,

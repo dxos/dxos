@@ -2493,6 +2493,9 @@ importers:
       '@dxos/plugin-mermaid':
         specifier: workspace:*
         version: link:../../plugins/plugin-mermaid
+      '@dxos/plugin-mobile':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-mobile
       '@dxos/plugin-native':
         specifier: workspace:*
         version: link:../../plugins/plugin-native
