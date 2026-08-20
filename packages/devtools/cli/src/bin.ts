@@ -15,6 +15,7 @@ import * as Option from 'effect/Option';
 import * as Command from 'effect/unstable/cli/Command';
 
 import { createCliApp } from '@dxos/app-framework/cli';
+import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import { unrefTimeout } from '@dxos/async';
 import { ConfigService, DXOS_VERSION } from '@dxos/client';
 import { DEFAULT_PROFILE } from '@dxos/client-protocol';
@@ -40,6 +41,11 @@ if (level) {
   filter = levels[level] ?? LogLevel.ERROR;
 }
 log.config({ filter });
+
+// Same registry Composer populates at boot. Without it `Migrations.targetVersion` is undefined, so
+// every space `dx` creates is stamped with no version and Composer then reports it as pending
+// migration.
+AppMigrations.define();
 
 let leaksTracker: any;
 if (process.env.DX_TRACK_LEAKS) {

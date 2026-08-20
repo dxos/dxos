@@ -10,8 +10,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { CommandConfig, flushAndSync, spaceLayer } from '@dxos/cli-util';
+import { CommandConfig, syncAllToEdge } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
@@ -42,8 +41,9 @@ export const handler = Effect.fn(function* ({
     yield* invoke(ClientOperation.CreateAgent);
   }
 
-  const { defaultSpace: space } = yield* AppSpace.setupIdentitySpaces(client);
-  yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
+  // `CreateIdentity` already fired `IdentityCreated`, which provisions the identity's spaces;
+  // provisioning them again mints a second, unstamped pair and re-points the default designation.
+  yield* syncAllToEdge();
 
   if (json) {
     yield* Console.log(

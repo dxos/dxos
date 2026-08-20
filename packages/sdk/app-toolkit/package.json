@@ -46,6 +46,11 @@
       "types": "./dist/types/src/app-framework/AppCapability.d.ts",
       "import": "./dist/lib/app-framework/AppCapability.mjs"
     },
+    "./AppMigrations": {
+      "source": "./src/echo/AppMigrations.ts",
+      "types": "./dist/types/src/echo/AppMigrations.d.ts",
+      "import": "./dist/lib/echo/AppMigrations.mjs"
+    },
     "./AppNode": {
       "source": "./src/app-graph/AppNode.ts",
       "types": "./dist/types/src/app-graph/AppNode.d.ts",
@@ -193,6 +198,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/migrations": "workspace:*",
     "@dxos/progress": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
