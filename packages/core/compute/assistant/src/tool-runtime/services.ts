@@ -44,34 +44,45 @@ export const makeToolResolverFromOperations = <R = never>({
       let index: Map<string, Operation.PersistentOperation[]> | undefined;
       // Dropped on any registry change rather than only on a lookup miss: a hit against a stale index
       // would resolve a name whose second claimant registered after the build, silently picking one
-      // of two operations instead of reporting the ambiguity below.
+      // of two operations instead of reporting the ambiguity below. The counter carries that signal
+      // across the query's own await, where clearing `index` alone would be undone by the assignment
+      // of a snapshot the change is already missing from.
+      let generation = 0;
       yield* Effect.acquireRelease(
         Effect.sync(() =>
           registry.changed.on(() => {
             index = undefined;
+            generation++;
           }),
         ),
         (unsubscribe) => Effect.sync(() => unsubscribe()),
       );
       const buildIndex = Effect.fn('buildToolNameIndex')(function* () {
-        const records = yield* Effect.promise(() => registry.query(Filter.type(Operation.PersistentOperation)).run());
-        const built = new Map<string, Operation.PersistentOperation[]>();
-        for (const record of records) {
-          const key = Operation.getKey(record);
-          if (key == null) {
-            continue;
+        // Retries rather than caching a snapshot the registry has already moved past; a change during
+        // the query is rare and finite, so this settles on the first quiet pass.
+        while (true) {
+          const seen = generation;
+          const records = yield* Effect.promise(() => registry.query(Filter.type(Operation.PersistentOperation)).run());
+          const built = new Map<string, Operation.PersistentOperation[]>();
+          for (const record of records) {
+            const key = Operation.getKey(record);
+            if (key == null) {
+              continue;
+            }
+            // Non-throwing: a record's key is untrusted, and one that cannot derive a valid name must
+            // cost only its own tool rather than every registry-backed tool in the index.
+            const name = Operation.tryToolNameFromKey(key);
+            if (name == null) {
+              log.warn('operation key cannot derive a valid tool name; not indexed', { key });
+              continue;
+            }
+            built.set(name, [...(built.get(name) ?? []), record]);
           }
-          // Non-throwing: a record's key is untrusted, and one that cannot derive a valid name must
-          // cost only its own tool rather than every registry-backed tool in the index.
-          const name = Operation.tryToolNameFromKey(key);
-          if (name == null) {
-            log.warn('operation key cannot derive a valid tool name; not indexed', { key });
-            continue;
+          if (generation === seen) {
+            index = built;
+            return built;
           }
-          built.set(name, [...(built.get(name) ?? []), record]);
         }
-        index = built;
-        return built;
       });
 
       return {

@@ -193,6 +193,29 @@ describe('makeToolResolverFromOperations', () => {
     expect(tool.name).toBe('markdown-create');
   });
 
+  // The query is an await point, so a registration landing mid-build must not be lost: clearing the
+  // cache alone would be undone by the assignment of the snapshot taken before the change.
+  test('a collision registered while the index was being built still fails', async ({ expect }) => {
+    const registry = makeRegistry({ initial: [op('org.dxos.function.webSearch.fetch')] });
+    // Fires the registration inside the first query, after the snapshot is taken but before it is cached.
+    let pending: (() => void) | undefined = () => registry.add([op('org.dxos.function.web-search.fetch')]);
+    const query = registry.query.bind(registry);
+    (registry as any).query = (...args: Parameters<typeof query>) => {
+      const result = query(...args);
+      const run = result.run.bind(result);
+      result.run = async () => {
+        const records = await run();
+        pending?.();
+        pending = undefined;
+        return records;
+      };
+      return result;
+    };
+
+    const attempt = withResolver(registry, (resolve) => resolve('web-search-fetch'));
+    await expect(attempt).rejects.toThrow(/claimed by 2 operations/);
+  });
+
   // Both resolutions share one resolver, so the second reads an index the first already built: without
   // invalidation the stale hit would silently pick one of two claimants instead of reporting the
   // ambiguity. A resolver per call would pass either way, since the second would build a fresh index.
