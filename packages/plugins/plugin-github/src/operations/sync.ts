@@ -14,7 +14,7 @@ import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
-import { Organization, Person, Task, TaskSet } from '@dxos/types';
+import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { GitHubOperation } from '#types';
@@ -144,6 +144,36 @@ const sinceFromOptions = (options: GitHubOperation.SyncOptions | undefined): str
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 };
 
+/** GitHub reports `due_on` as an ISO datetime; `Milestone.targetDate` is date-only. */
+const dueOnToTargetDate = (dueOn: string | null | undefined): string | undefined => dueOn?.slice(0, 10) ?? undefined;
+
+/**
+ * Move a task into `container`. Membership and order are the `TaskSet.tasks` array; the ECHO parent
+ * edge is set alongside only so deletion cascades, so both are written together. Idempotent —
+ * sync runs repeatedly and must never append a second ref for a task already in the set.
+ */
+export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Task, container: TaskSet.TaskSet) {
+  if (container.tasks.some(Ref.hasEntityId(task.id))) {
+    return;
+  }
+  // The reverse-ref index, not `Obj.getParent`: the array states membership, the parent edge does not.
+  const previous = yield* Database.query(
+    Query.select(Filter.id(task.id)).referencedBy(TaskSet.TaskSet, 'tasks'),
+  ).run.pipe(Effect.orElseSucceed(() => []));
+  for (const set of previous) {
+    if (set.id === container.id) {
+      continue;
+    }
+    Obj.update(set, (set) => {
+      set.tasks = set.tasks.filter((ref) => !Ref.hasEntityId(task.id)(ref));
+    });
+  }
+  Obj.update(container, (container) => {
+    container.tasks = [...container.tasks, Ref.make(task)];
+  });
+  Obj.setParent(task, container);
+});
+
 //
 // Pull (snapshot-driven three-way merge for Project + Task; simple upsert for Org/Person)
 //
@@ -254,7 +284,7 @@ const upsertProject = Effect.fn('upsertProject')(function* (
     return existing;
   }
 
-  const created = Obj.make(TaskSet.TaskSet, {
+  const created = TaskSet.make({
     [Obj.Meta]: { keys: [fkFor(repo.id)] },
     name: repo.full_name,
     description: repo.description ?? undefined,
@@ -265,15 +295,56 @@ const upsertProject = Effect.fn('upsertProject')(function* (
 });
 
 /**
+ * Pull a GitHub milestone into ECHO. Mirrored remote-wins without a snapshot merge — milestones
+ * are pull-only (nothing here pushes milestone edits back), so there is no local side to protect.
+ */
+export const upsertMilestone = Effect.fn('upsertMilestone')(function* (
+  taskSet: TaskSet.TaskSet,
+  remote: GitHubApi.GitHubMilestone,
+) {
+  const name = remote.title;
+  const description = remote.description ?? undefined;
+  // GitHub's open/closed milestone state is deliberately not mapped: `Milestone` derives progress
+  // from its tasks, so a stored status could contradict the work it contains.
+  const targetDate = dueOnToTargetDate(remote.due_on);
+
+  const existing = yield* findByForeignId<Milestone.Milestone>(Milestone.Milestone, remote.id);
+  const milestone =
+    existing ??
+    (yield* Database.add(Milestone.make({ [Obj.Meta]: { keys: [fkFor(remote.id)] }, name, description, targetDate })));
+  if (existing) {
+    Obj.update(existing, (existing) => {
+      existing.name = name;
+      existing.description = description;
+      existing.targetDate = targetDate;
+    });
+  }
+  // Sequence is the `milestones` array; the parent edge only carries deletion cascade.
+  if (!taskSet.milestones.some(Ref.hasEntityId(milestone.id))) {
+    Obj.update(taskSet, (taskSet) => {
+      taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
+    });
+    Obj.setParent(milestone, taskSet);
+  }
+  return milestone;
+});
+
+/**
  * Pull a GitHub issue into ECHO as a Task. Same merge shape as
  * {@link upsertProject}, against snapshot fields {title, description, status}.
  * Non-mapped fields (`Task.priority`, `Task.estimate`, etc.) are preserved.
+ *
+ * Set membership is NOT wired here: this runs concurrently per issue and `TaskSet.tasks` is a
+ * shared array, so the caller applies {@link setTaskContainer} sequentially afterwards.
+ *
+ * `milestone` is the local mirror of `issue.milestone`, mirrored remote-wins outside the snapshot
+ * merge (nothing pushes milestone edits back, so there is no local side to protect).
  */
-const upsertTask = Effect.fn('upsertTask')(function* (
+export const upsertTask = Effect.fn('upsertTask')(function* (
   binding: Cursor.ExternalCursor,
   issue: GitHubApi.GitHubIssue,
   assignedPerson: Person.Person | undefined,
-  taskSet: TaskSet.TaskSet,
+  milestone: Milestone.Milestone | undefined,
 ) {
   const remoteFields: Required<TaskSnapshot> = {
     title: issue.title,
@@ -316,11 +387,16 @@ const upsertTask = Effect.fn('upsertTask')(function* (
       if (assignedPerson && !existing.assignee?.contact) {
         existing.assignee = { contact: Ref.make(assignedPerson) };
       }
+      if (milestone) {
+        if (existing.milestone?.target?.id !== milestone.id) {
+          existing.milestone = Ref.make(milestone);
+        }
+        // Clear only when GitHub itself reports no milestone; a merely unresolved one would
+        // otherwise wipe a perfectly good local assignment.
+      } else if (issue.milestone == null && existing.milestone !== undefined) {
+        existing.milestone = undefined;
+      }
     });
-    // Containment is the ECHO parent edge; re-parent when the issue moved repos.
-    if (Obj.getParent(existing)?.id !== taskSet.id) {
-      Obj.setParent(existing, taskSet);
-    }
     Cursor.writeSnapshot(binding, fid, remoteFields);
     return { task: existing, created: false };
   }
@@ -331,9 +407,9 @@ const upsertTask = Effect.fn('upsertTask')(function* (
     description: issue.body ?? '',
     status: issueStateToTaskStatus(issue.state),
     assignee: assignedPerson ? { contact: Ref.make(assignedPerson) } : undefined,
+    milestone: milestone ? Ref.make(milestone) : undefined,
   });
   const persisted = yield* Database.add(created);
-  Obj.setParent(persisted, taskSet);
   Cursor.writeSnapshot(binding, fid, remoteFields);
   return { task: persisted, created: true };
 });
@@ -593,11 +669,19 @@ const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.
         return yield* Effect.fail(new GitHubProjectMissingError());
       }
 
+      // Milestones before issues: an issue's `milestone` has to resolve to a local mirror, and the
+      // repo endpoint also surfaces milestones no open issue points at yet.
+      const milestoneByRemoteId = new Map<number, Milestone.Milestone>();
+      const remoteMilestones = yield* GitHubApi.fetchRepoMilestones(remoteRepo.owner.login, remoteRepo.name);
+      for (const remoteMilestone of remoteMilestones) {
+        milestoneByRemoteId.set(remoteMilestone.id, yield* upsertMilestone(localProject, remoteMilestone));
+      }
+
       let pulledTasks = 0;
       const since = sinceFromOptions(options);
       const issues = yield* GitHubApi.fetchRepoIssues(remoteRepo.owner.login, remoteRepo.name, { since });
       const remoteIssuesById = new Map<string, GitHubApi.GitHubIssue>();
-      yield* Effect.forEach(
+      const pulled = yield* Effect.forEach(
         issues,
         (issue) =>
           Effect.gen(function* () {
@@ -606,8 +690,9 @@ const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.
             // `ensurePerson` dedups across fibers.
             const assigneeUser = issue.assignees?.[0];
             const assignedPerson = assigneeUser ? yield* ensurePerson(assigneeUser, undefined) : undefined;
+            const milestone = issue.milestone ? milestoneByRemoteId.get(issue.milestone.id) : undefined;
 
-            const { created } = yield* upsertTask(binding, issue, assignedPerson, localProject);
+            const { task, created } = yield* upsertTask(binding, issue, assignedPerson, milestone);
             remoteIssuesById.set(String(issue.id), issue);
             if (created) {
               pulledTasks++;
@@ -616,9 +701,16 @@ const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.
             // TODO(wittjosiah): Comments sync disabled — re-enable once
             // chunked/yielded to avoid automerge_wasm crash when upserting
             // many comments in one tick.
+            return task;
           }),
         { concurrency: ISSUE_CONCURRENCY },
       );
+
+      // Sequential: `TaskSet.tasks` is one shared array, so concurrent appends would drop entries.
+      // `Effect.forEach` preserves input order, so the set's order mirrors GitHub's.
+      for (const task of pulled) {
+        yield* setTaskContainer(task, localProject);
+      }
 
       // Push: snapshot-diff the local Project + Tasks for this repo and
       // PATCH only the diverged fields.

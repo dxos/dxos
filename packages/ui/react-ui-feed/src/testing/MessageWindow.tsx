@@ -5,12 +5,11 @@
 import React, { type ComponentType, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Column } from '@dxos/react-ui';
+import { Window, type WindowController, type WindowState, useListModel } from '@dxos/react-ui-virtual';
 import { type Message } from '@dxos/types';
 
 import { HtmlBlock, MarkdownBlock, type MessageChromeProps } from '../components';
-import { useListModel } from '../model';
 import { type MessageRenderer, defaultRenderer } from '../model';
-import { Window, type WindowController, type WindowState } from '../virtualizer';
 
 /**
  * A feed of real messages placed by `Window`, and nothing else.

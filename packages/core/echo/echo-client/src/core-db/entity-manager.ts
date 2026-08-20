@@ -148,6 +148,11 @@ export class EntityManager implements IDatabaseBinding {
   /** Fires when service connection is re-established after a leader change. */
   private readonly _reconnected = new Event<void>();
 
+  /** Public view of {@link EntityManager._reconnected}, so sibling streams can re-establish too. */
+  get reconnected(): ReadOnlyEvent<void> {
+    return this._reconnected;
+  }
+
   // ── Automerge document state ────────────────────────────────────────────
   private _spaceRootDocHandle: DocHandleProxy<DatabaseDirectory> | null = null;
 

@@ -3,7 +3,7 @@ description: Compute the channel for a Crab Nebula release
 
 inputs:
   environment:
-    description: Target environment (labs | staging | production).
+    description: Target environment (dev | preview | staging | production).
     required: true
 
 outputs:

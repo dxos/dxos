@@ -24,12 +24,13 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
-import { Message } from '@dxos/types';
+import { Text } from '@dxos/schema';
+import { Message, Outline } from '@dxos/types';
 
 import { translations } from '#translations';
 
 import { AssistantPlugin } from '../../plugin';
-import { ChatArticle } from './ChatArticle';
+import { ChatArticle, ChatArticleProps } from './ChatArticle';
 
 /**
  * Replaces the AI service the plugin would build with a scripted model, so a story can drive the real
@@ -79,16 +80,18 @@ const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
 type StoryArgs = {
   /** Turns the story drives: each prompt is submitted, and its reply is what the scripted model returns. */
   messages?: { prompt: string; reply: string }[];
-};
+  /** Seed the chat's working outline, so the article renders its `Chat.TaskList`. */
+  tasks?: Outline.ChecklistItem[];
+} & Pick<ChatArticleProps, 'debug'>;
 
-const DefaultStory = () => {
+const DefaultStory = ({ debug }: StoryArgs) => {
   const [space] = useSpaces();
   const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
   if (!chat) {
     return <Loading />;
   }
 
-  return <ChatArticle role='article' subject={chat} attendableId='story' />;
+  return <ChatArticle role='article' subject={chat} attendableId='story' debug={debug} />;
 };
 
 const meta = {
@@ -96,12 +99,12 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withPluginManager<StoryArgs>(({ args: { messages = [] } }) => {
+    withPluginManager<StoryArgs>(({ args: { messages = [], tasks = [] } }) => {
       return {
         plugins: [
           ...corePlugins(),
           ClientPlugin.make({
-            types: [Chat.Chat, Feed.Feed, Message.Message],
+            types: [Chat.Chat, Feed.Feed, Message.Message, Outline.Outline, Text.Text],
             config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
             onClientInitialized: ({ client }) =>
               Effect.gen(function* () {
@@ -109,7 +112,17 @@ const meta = {
                 const [space] = client.spaces.get();
                 yield* Effect.promise(() => space.waitUntilReady());
                 const feed = space.db.add(Feed.make());
-                space.db.add(Chat.make({ name: 'Test', feed: Ref.make(feed) }));
+                const outline = tasks.length
+                  ? space.db.add(Outline.make({ content: tasks.map(Outline.renderChecklistItem).join('\n') }))
+                  : undefined;
+                const chat = space.db.add(
+                  Chat.make({ name: 'Test', feed: Ref.make(feed), outline: outline && Ref.make(outline) }),
+                );
+                if (chat.outline) {
+                  // The task list reads the outline through the ref's resolve-once atom; load it so
+                  // the story renders without waiting on a lazy resolution that nothing triggers.
+                  yield* Effect.promise(() => chat.outline!.load());
+                }
 
                 yield* Effect.promise(() => space.db.flush({ indexes: true }));
               }),
@@ -138,7 +151,30 @@ export default meta;
 
 type Story = StoryObj<StoryArgs>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    debug: false,
+  },
+};
+
+/** The article's working checklist: `Chat.TaskList` reading the chat's outline through context. */
+export const Tasks: Story = {
+  args: {
+    tasks: [
+      { title: 'Gather the requirements', done: true },
+      { title: 'Draft the plan', done: true },
+      { title: 'Implement the change', done: false },
+      { title: 'Verify and ship', done: false },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => void expect(canvasElement.textContent ?? '').toContain('Implement the change'), {
+      timeout: 10_000,
+      interval: 300,
+    });
+    await expect(canvasElement.textContent ?? '').toContain('Gather the requirements');
+  },
+};
 
 /**
  * Drives the real request loop against the scripted model — no network and no seeded feed. This is the

@@ -501,7 +501,7 @@ one variable.
 moved the wrong box.
 
 Drive the surface from a story ("Verifying a story in a worktree" above), the local app, or the PR's own
-`pr-<n>-composer-main.dxos.workers.dev` preview once CI has deployed it:
+`pr-<n>-composer-dev.dxos.workers.dev` preview once CI has deployed it:
 
 ```ts
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2 });

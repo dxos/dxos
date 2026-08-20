@@ -17,6 +17,9 @@ export const translations = [
         'open-object.label': 'Open',
         'add-object-to-space.label': 'Add to space',
         'more-options.label': 'More options',
+        'unsupported-type.title': 'Nothing here can open this',
+        'unsupported-type.message':
+          'No enabled plugin supports {{typename}}, so there is nothing to show. The item itself is unchanged and still stored in the space.',
       },
     },
   },
