@@ -87,8 +87,6 @@ const createDefaultPlugins = async (options: {
   }),
   RoutinePlugin.make(),
   InboxPlugin.make(),
-  // Registers the object-verb handlers (and the Database skill definition) so an eval binding
-  // `DatabaseSkill` can invoke its tools; binding stays per-eval.
   SpacePlugin.make({}),
   ...(options.plugins ?? []),
 ];

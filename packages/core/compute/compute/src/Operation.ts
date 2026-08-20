@@ -425,16 +425,16 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
 };
 
 /**
- * Serializes each definition, dropping (with a warning) any whose schema cannot render as JSON
- * Schema, so one unserializable operation (e.g. `space.importSpace`) does not fail registry
- * population for every other.
+ * Serializes each definition, dropping any whose schema cannot render as JSON Schema, so one
+ * unserializable operation (e.g. `space.importSpace`) does not fail registry population for every
+ * other.
  */
 export const serializable = (operations: readonly Definition.Any[]): PersistentOperation[] =>
   operations.flatMap((operation) => {
     try {
       return [serialize(operation)];
     } catch (error) {
-      log.warn('operation is not serializable; excluded from the registry', {
+      log.verbose('operation is not serializable; excluded from the registry', {
         key: String(operation.meta.key),
         error: String(error),
       });

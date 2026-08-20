@@ -59,7 +59,6 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
     space.db.add(Obj.make(TestSchema.Organization, { name: 'Globex Industries' }));
     space.db.add(Obj.make(TestSchema.Organization, { name: 'Initech' }));
 
-    // Passing requires the edge runtime's @dxos pin to carry plugin-space's Query verb.
     const databaseSkill = space.db.add(DatabaseSkill.make());
 
     const instructions = space.db.add(
