@@ -35,7 +35,7 @@ export type ChatActionsProps = ThemedClassName<
     debug?: boolean;
     /** Submits the current prompt; the send control renders only when provided. */
     onSend?: () => void;
-    /** Whether the prompt currently holds submittable text. */
+    /** Whether the prompt holds text and the processor would accept it; drives the send control's enablement. */
     canSend?: boolean;
     onEvent?: (event: ChatEvent) => void;
   }>
@@ -269,9 +269,9 @@ export const ChatActions = ({
       {/* Enter is the only other way to submit, and a touch keyboard offers no such affordance. */}
       {onSend && (
         <IconButton
-          disabled={!canSend || !!processing}
+          disabled={!canSend}
           variant='ghost'
-          classNames={mx(TOUCH_TARGET, canSend && !processing && 'text-accent-text')}
+          classNames={mx(TOUCH_TARGET, canSend && 'text-accent-text')}
           icon='ph--paper-plane-right--regular'
           iconOnly
           label={t('send.label')}

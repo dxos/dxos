@@ -7,12 +7,14 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
+import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Input, type ThemedClassName, useDynamicRef, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
+import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import {
   ChatEditor,
   type ChatEditorController,
@@ -71,11 +73,10 @@ export const ChatPrompt = ({
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
 
-  // The online switch is a read-only indicator of a setting configured elsewhere, so it is the first
-  // thing to drop when the action row has to compete with the send control for width. `md` is the
-  // deck's own mobile threshold (`useBreakpoints`), and a viewport query (not the boot-time platform
-  // capability) so a narrow desktop window sheds it too.
-  const [wideEnoughForIndicators] = useMediaQuery('md');
+  // Platform, not viewport: the mobile app drops this read-only indicator at every width, while a
+  // narrowed desktop window keeps it. Optional so a harness without the deck plugin (storybook,
+  // tests) still renders the prompt, defaulting to the desktop treatment.
+  const platform = useOptionalCapability(DeckCapabilities.Platform) ?? 'desktop';
 
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
@@ -111,17 +112,24 @@ export const ChatPrompt = ({
   );
 
   // The editor owns the prompt text; only its emptiness is mirrored into React so the send control
-  // can disable itself without re-rendering the prompt on every keystroke's content.
-  const [canSend, setCanSend] = useState(false);
+  // can disable itself without re-rendering the prompt on every keystroke's content. Dictation is
+  // deliberately not counted: pending text lives in a StateField and reaches the document only when
+  // the user confirms it, which is the same point at which Enter would stop committing and start
+  // submitting.
+  const [hasText, setHasText] = useState(false);
   const emptinessExtension = useMemo(
     () =>
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
-          setCanSend(update.state.doc.toString().trim().length > 0);
+          setHasText(update.state.doc.toString().trim().length > 0);
         }
       }),
     [],
   );
+
+  // Keyed to `active`, the same signal `handleSubmit` guards on — `streaming` only flips on the
+  // first agent token, so gating on it would leave the control enabled but inert until then.
+  const canSend = hasText && !active;
 
   const extensions = useMemo(
     () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
@@ -209,7 +217,7 @@ export const ChatPrompt = ({
             onSend={handleSend}
             onEvent={handleEvent}
           >
-            {online !== undefined && wideEnoughForIndicators && (
+            {online !== undefined && platform !== 'mobile' && (
               <Input.Root>
                 <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
                 {/* Read-only: the provider is configured in Assistant settings, not toggled here. */}
