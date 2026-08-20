@@ -16,19 +16,22 @@ let initialized: Promise<void> | undefined;
  * The bundler resolves the automerge packages to their `slim` entrypoints (`slimWasm` in
  * vite.config.ts), which do no wasm work at module evaluation — so every realm must await this
  * before its first automerge call (client boot, Repo construction). Idempotent; concurrent
- * callers share one initialization. URL inputs keep wasm-bindgen on `instantiateStreaming`.
+ * callers share one initialization, and a failed attempt is retried on the next call. URL inputs
+ * keep wasm-bindgen on `instantiateStreaming`.
  */
 export const initAutomergeWasm = (): Promise<void> => {
-  // A rejection clears the memo so a later call retries instead of caching a transient failure.
-  initialized ??= Promise.all([
+  // Both inits settle before a failure clears the memo — clearing on the first rejection would
+  // let a retry overlap the still-pending sibling — and the retry then re-runs both (wasm-bindgen
+  // caches an already-initialized module, so the succeeded half is a no-op).
+  initialized ??= Promise.allSettled([
     initializeWasm(automergeWasmUrl),
     initSubductionWasm({ module_or_path: subductionWasmUrl }),
-  ]).then(
-    () => undefined,
-    (error) => {
+  ]).then((results) => {
+    const failed = results.find((result) => result.status === 'rejected');
+    if (failed) {
       initialized = undefined;
-      throw error;
-    },
-  );
+      throw failed.reason;
+    }
+  });
   return initialized;
 };
