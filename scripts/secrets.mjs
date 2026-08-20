@@ -271,7 +271,8 @@ for (const target of targets) {
       `\n  ${versioned.length} secret(s) landed in a NEW UNDEPLOYED version of "${workerName}": ` +
         `${versioned.join(', ')}\n` +
         '  They take effect on the next deploy or `versions upload` — the currently deployed version does\n' +
-        '  not have them. Verify with `wrangler versions secret list`.',
+        '  not have them. Verify with `wrangler versions secret list --latest-version` — without that flag\n' +
+        '  the command reports the DEPLOYED version, which is exactly the one that lacks them.',
     );
   }
 
