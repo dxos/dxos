@@ -28,8 +28,7 @@ describe('Local AI', () => {
         Create a new organization called "Cyberdyne Systems".
         Query the database to confirm that the organization is created and the query tool is working.
       `,
-      // Creating and querying objects is the Database skill's job (the old database skill split in
-      // two; the chat-context half carries no object verbs).
+      // Creating and querying objects is the Database skill's job.
       skills: [Ref.make(DatabaseSkill.make())],
     }),
     {

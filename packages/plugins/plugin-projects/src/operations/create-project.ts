@@ -44,8 +44,6 @@ const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOp
         { spaceId: db.spaceId },
       );
       invariant(Obj.instanceOf(Project.Project, result.object), 'Expected a Project.');
-      // This caller knows where a project belongs in the tree, so it spells the path rather than
-      // having the add compute one.
       const nodePath = GraphPath.getSpacePath(
         db.spaceId,
         GraphPath.GroupSegments.ai,

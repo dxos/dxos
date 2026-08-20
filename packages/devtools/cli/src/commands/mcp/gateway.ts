@@ -66,8 +66,7 @@ export const makeGateway = Effect.fn(function* () {
     ProjectOperationHandlerSet.handlers,
     TasksOperationHandlerSet.handlers,
   );
-  // An operation reaching the registry from both an activated plugin and the CLI's curated chat
-  // list must project once; a second registration is a tool-name collision, which the projection
+  // A second registration of the same operation is a tool-name collision, which the projection
   // raises rather than resolving silently.
   const handlers = dedupeOperations(yield* handlerSet.handlers);
   const skills = dedupeByKey([...capabilities.getAll(AppCapabilities.SkillDefinition), CodeProjectSkill]);
@@ -105,7 +104,6 @@ export const makeGateway = Effect.fn(function* () {
           description: skill.description,
           instructions: skill.instructions?.source?.target?.content,
           mcpPrompt: Skill.isMcpPrompt(skill),
-          // The atomic unit of projection: these ToolIds decide which operations become tools.
           tools: [...skill.tools],
         };
       }),

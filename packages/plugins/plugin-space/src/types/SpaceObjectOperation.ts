@@ -18,9 +18,7 @@ import { meta } from '#meta';
  * Deliberately a leaf module: it imports only compute/echo/keys, so a headless host (the edge
  * operation-service, `dx mcp serve`) loads these definitions without the app-only graph that
  * `SpaceOperation` pulls in (`@dxos/client`, `@dxos/app-framework/Capability`, invitations).
- *
- * The mutating half of the surface lives in `SpaceOperation`: `addObject` files an object into the
- * space and `removeObjects` takes it out, both mirroring `Database.add` / `Database.remove`.
+
  */
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);

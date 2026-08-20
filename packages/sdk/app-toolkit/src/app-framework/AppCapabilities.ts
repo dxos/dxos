@@ -407,8 +407,7 @@ export type ObservabilityMapping = ObservabilityMapping$.ObservabilityMapping;
 
 /**
  * Observability event registration — contributed by the plugin that owns the operation, consumed by
- * a listener over the invocation stream so the operation itself stays free of telemetry. Product
- * telemetry is an app concern, which is why this lives here rather than in the framework.
+ * a listener over the invocation stream so the operation itself stays free of telemetry.
  * @category Capability
  */
 export const ObservabilityMapping = Capability$.make<ObservabilityMapping[]>()(

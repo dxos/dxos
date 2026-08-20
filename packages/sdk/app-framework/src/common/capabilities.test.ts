@@ -49,8 +49,7 @@ describe('getAtomValueOption', () => {
     }),
   );
 
-  // The headless case: a worker contributes no atom registry at all, which is what made the
-  // non-optional helper fail there.
+  // The headless case: a worker contributes no atom registry at all.
   it.effect('is none when the atom registry itself is uncontributed', () =>
     Effect.gen(function* () {
       const { manager } = setup({ withRegistry: false });

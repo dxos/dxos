@@ -37,10 +37,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOpera
         }
       });
 
-      // The app's follow-on work, read from the ambient context rather than declared: a headless
-      // host (edge, `dx mcp serve`) binds neither manager, and a declared service resolves eagerly
-      // and would die there. Activation comes first — it is what makes a lazy module contribute its
-      // `OnTypeAdded` callback.
+      // Read from the ambient context rather than declared: a headless host (edge, `dx mcp serve`)
+      // binds neither manager, and a declared service would resolve eagerly and die there.
+      // Activation first, since it is what makes a lazy module contribute its `OnTypeAdded` callback.
       const pluginManager = yield* Effect.serviceOption(Plugin.Service);
       yield* Option.match(pluginManager, {
         onNone: () => Effect.void,

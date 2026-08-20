@@ -8,14 +8,8 @@ import { trim } from '@dxos/util';
 
 import { SpaceObjectOperation, SpaceOperation } from '#types';
 
-// The key the chat-bound skill has always had: the identity follows the verbs, so a chat already
-// bound to it keeps reading and writing objects after the move.
 export const key = 'org.dxos.skill.database';
 
-/**
- * Reading and writing a space's objects, types, relations and tags, over the same verbs the app and
- * the MCP surface use — the plugin that owns the objects owns the skill that manipulates them.
- */
 /**
  * The skill's verbs; listing them here is what projects them as MCP tools (the skill definition is
  * the atomic unit of projection).

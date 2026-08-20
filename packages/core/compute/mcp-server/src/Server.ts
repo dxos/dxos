@@ -200,8 +200,7 @@ export const makeTool = (operation: Projection.ProjectedOperation) => {
     success: Schema.Record(Schema.String, Schema.Unknown),
     failure: ToolFailure,
   });
-  // An unclassified operation (no mutation annotation) makes no safety claims — clients then
-  // assume possibly-destructive, the conservative default. Idempotence is annotated independently.
+  // An unclassified operation makes no safety claims — clients then assume possibly-destructive.
   const classified =
     operation.mutation == null
       ? tool

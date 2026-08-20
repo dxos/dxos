@@ -35,9 +35,7 @@ const make = () =>
   });
 
 /**
- * @deprecated Superseded by plugin-projects, which owns the project model. This is the primitive
- * predecessor — artifact filing against a chat-bound project — and is slated for removal once its
- * two evals (`projects`, `sender-ledger`) move to the plugin's skill.
+ * @deprecated Use the plugin-projects skill, which owns the project model.
  */
 const skill: Skill.Definition = {
   key: SKILL_KEY,

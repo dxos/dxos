@@ -200,8 +200,7 @@ export const CreateObjectDialog = ({
         const result = yield* metadata.createObject(data, { db, target, targetNodeId });
         const shouldNavigate = _shouldNavigate ?? (() => true);
         if (shouldNavigate(result.object)) {
-          // Resolved after the fact rather than returned by the create: where an object lives in
-          // the tree is the resolver's question, and the operations are no longer chained.
+          // Where an object lands in the tree is the resolver's question, not the create's.
           const { targets } = yield* invoke(NavigationOperation.ResolveNavigationTargets, {
             query: { uri: Obj.getURI(result.object) },
           });

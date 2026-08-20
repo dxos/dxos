@@ -59,9 +59,7 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
     space.db.add(Obj.make(TestSchema.Organization, { name: 'Globex Industries' }));
     space.db.add(Obj.make(TestSchema.Organization, { name: 'Initech' }));
 
-    // The instructions demand the Query tool, which lives on plugin-space's Database skill (the old
-    // database skill split in two; the chat-context half carries no object verbs). Passing requires
-    // the edge runtime's @dxos pin to carry the plugin-space verbs.
+    // Passing requires the edge runtime's @dxos pin to carry plugin-space's Query verb.
     const databaseSkill = space.db.add(DatabaseSkill.make());
 
     const instructions = space.db.add(

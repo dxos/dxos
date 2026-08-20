@@ -56,10 +56,8 @@ export const listen = (
  * Sends the observability event a successful invocation stands for, for operations that registered
  * one via {@link AppCapabilities.ObservabilityMapping}.
  *
- * The listener, not the operation, owns telemetry: a portable verb (`space.addObject`, run equally
- * on a headless host) cannot invoke a plugin's `SendEvent` without binding itself to that plugin. A
- * different host substitutes a different listener over the same stream and the operations are
- * unchanged. Mirrors the undo history tracker, which derives inverses the same way.
+ * The listener owns telemetry so a portable verb (`space.addObject`, run equally on a headless
+ * host) need not bind itself to this plugin's `SendEvent`.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

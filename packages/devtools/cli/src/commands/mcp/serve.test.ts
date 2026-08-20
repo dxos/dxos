@@ -42,9 +42,8 @@ const REQUESTS = [
 const STATIC_TOOLS = ['whoami', 'listSpaces', 'listPlugins', 'listTypes', 'listOperations'];
 
 /**
- * Object CRUD, which is no longer host-local: plugin-space contributes it as annotated operations,
- * so these names prove the projection reaches the registry rather than a hand-written toolkit.
- * Named after the ECHO API (`Database.add` / `Database.remove`), not create/delete.
+ * Object CRUD contributed by plugin-space as operations, so these names prove the projection
+ * reaches the registry; named after the ECHO API (`Database.add` / `Database.remove`).
  */
 const PROJECTED_OBJECT_TOOLS = [
   'addObject',

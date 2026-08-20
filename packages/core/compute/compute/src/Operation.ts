@@ -426,9 +426,8 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
 
 /**
  * Serializes each definition, dropping (with a warning) any whose schema cannot render as JSON
- * Schema. Registry population is otherwise all-or-nothing: one such operation — e.g.
- * `space.importSpace`, whose archive payload is a `Uint8Array` — would take every other operation
- * down with it, which is what forced hosts to curate reduced handler sets.
+ * Schema, so one unserializable operation (e.g. `space.importSpace`) does not fail registry
+ * population for every other.
  */
 export const serializable = (operations: readonly Definition.Any[]): PersistentOperation[] =>
   operations.flatMap((operation) => {
@@ -643,13 +642,8 @@ export const VisibleAnnotation = Annotation.make({
 
 /**
  * The operation's effect on state: `none` is side-effect free, `write` mutates but is not
- * irreversible, `destructive` deletes or otherwise cannot be undone. The middle value is
- * informative — it says the author considered the operation and it is not destructive — which is
- * why this is a three-value enum rather than two booleans. Absent ⇒ unclassified, which consumers
- * treat conservatively (an MCP client badges the tool as possibly destructive).
- *
- * Operation-intrinsic, not projection config: the same fact serves MCP safety hints,
- * confirm-before-run prompts, and read-only permission grants.
+ * irreversible, `destructive` deletes or otherwise cannot be undone. Absent ⇒ unclassified, which
+ * consumers treat conservatively (an MCP client badges the tool as possibly destructive).
  */
 export const MutationAnnotation = Annotation.make({
   id: 'org.dxos.operation.mutation',

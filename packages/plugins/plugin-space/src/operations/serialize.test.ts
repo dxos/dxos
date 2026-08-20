@@ -9,11 +9,7 @@ import { DXN } from '@dxos/keys';
 
 import { SpaceOperationHandlerSet } from '#operations';
 
-/**
- * Keys of the verbs a remote host projects as MCP tools. Everything else in this set drives the
- * app and is not required to survive serialization (`importSpace` carries a `Uint8Array`,
- * `snapshot` a `Blob`), so this asserts the projected subset rather than the whole registry.
- */
+/** Keys of the verbs a remote host projects as MCP tools; the rest are app-only and need not serialize. */
 const PROJECTED_KEYS = [
   'org.dxos.plugin.space.operation.addObject',
   'org.dxos.plugin.space.operation.addRelation',
@@ -28,9 +24,7 @@ const PROJECTED_KEYS = [
 ];
 
 describe('operation serialization', () => {
-  // A remote host builds a `PersistentOperation` for every registered handler before invoking any
-  // of them, and drops (or trips over) the ones that cannot serialize — so a projected verb whose
-  // schema stops rendering as JSON Schema silently leaves the tool surface.
+  // A projected verb whose schema stops rendering as JSON Schema silently leaves the tool surface.
   test('every projected verb serializes into a PersistentOperation record', async ({ expect }) => {
     const handlers = await SpaceOperationHandlerSet.handlers.getHandlers();
     const byKey = new Map(handlers.map((handler) => [DXN.getName(handler.meta.key), handler]));

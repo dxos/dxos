@@ -171,12 +171,8 @@ export const AddObject = Operation.make({
   services: [Database.Service],
   input: Schema.Struct({
     object: Schema.optional(Obj.Unknown).annotate({ description: 'The object to add, already instantiated.' }),
-    // A caller that cannot hold a live object — anything across an RPC boundary — describes one
-    // instead, and the handler instantiates it against the space's type registry. Two fields rather
-    // than a union because the branches address different callers: `Obj.Unknown` projects as bare
-    // `{ id }`, so a discriminated union would make a remote caller choose a branch it cannot
-    // populate. Exactly one is required, enforced in the handler — `invoke` does not decode its
-    // input, so a schema-level refinement would not run.
+    // Two fields rather than a union because `Obj.Unknown` projects as bare `{ id }`, which a
+    // remote caller cannot populate; the handler enforces exactly one.
     create: Schema.optional(ObjectDraft).annotate({
       description: 'Description of an object to create and add, when no instantiated object is available.',
     }),
@@ -189,8 +185,6 @@ export const AddObject = Operation.make({
       description: 'The database or collection to add to, or a reference to the collection.',
     }),
   }),
-  // No navigation path: where an object lands in the tree is resolved on demand by
-  // `NavigationOperation.ResolveNavigationTargets`, which is the single entry point for it.
   output: Schema.Struct({
     id: Schema.String,
     object: Obj.Unknown,
@@ -221,8 +215,7 @@ export const RemoveObjects = Operation.make({
       'when the entities themselves are not held.',
     icon: 'ph--trash--regular',
   },
-  // No Database.Service: the space comes from the input itself (live entities, or refs that are
-  // always space-qualified on the MCP surface), never from a resolvable context.
+  // The space comes from the input itself — live entities, or refs that are always space-qualified.
   services: [Capability.Service],
   input: Schema.Struct({
     objects: Schema.optional(Schema.Array(Entity.Unknown)).annotate({ description: 'The entities to remove.' }),

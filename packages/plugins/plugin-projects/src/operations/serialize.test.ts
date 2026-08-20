@@ -29,9 +29,7 @@ describe('operation serialization', () => {
     expect(failures).toEqual([]);
   });
 
-  // The safety marker must survive serialization: a remote host derives the MCP hints
-  // (readOnly/destructive) from the registry record rather than a curated table
-  // (MILESTONE-5.md §7.4). Inclusion itself is skill-driven and not tested here.
+  // A remote host derives the MCP readOnly/destructive hints from the serialized record.
   test('mutation annotations survive serialize', async ({ expect }) => {
     const handlers = await ProjectOperationHandlerSet.handlers.getHandlers();
     const annotated = Object.fromEntries(

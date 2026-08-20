@@ -28,10 +28,6 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('Chat Context Skill', { tags: ['model-fixture'] }, () => {
-  //
-  // Schema
-  //
-
   it.effect(
     'context-add: add object to chat context',
     Effect.fnUntraced(

@@ -207,12 +207,9 @@ const toNsid = (key: string): string => key.replace(/^dxn:/, '').replace(/:\d+\.
 /**
  * Projects registry records into tool descriptors — driven by the projected skills.
  *
- * The skill definition is the atomic unit of projection: an operation projects iff a projected
- * skill's `tools` list names it, and the load-the-skill-first pointer appended to the tool's
- * description derives from that membership (the SEP-2640 shape). The operation's own MCP
- * annotation, when present, only customizes the tool (name override, safety hints); a skill tools
- * entry that names no operation record is a provider tool or an operation the registry does not
- * carry, and projects nothing.
+ * An operation projects iff a projected skill's `tools` list names it, and that membership
+ * produces the load-the-skill-first pointer appended to the tool's description (the SEP-2640
+ * shape); a tools entry naming no operation record projects nothing.
  *
  * Records arrive in wire form: `PersistentOperation` serializes with meta as a plain `@meta`
  * property carrying `key` and `annotations`, and with input/output as JSON Schema.

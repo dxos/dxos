@@ -14,9 +14,9 @@ const getStudioPath = (spaceId: string): string =>
 export const getArtifactsPath = (spaceId: string): string => `${getStudioPath(spaceId)}/${ARTIFACTS_SEGMENT}`;
 
 /**
- * Where the nav tree shows an artifact: a child of the virtual "Artifacts" node. The node is virtual,
- * so its url binding ends in the studio segment rather than a typename and the generic type-section
- * lookup cannot derive this path — hence the plugin resolves its own type.
+ * Where the nav tree shows an artifact: a child of the virtual "Artifacts" node, whose url binding
+ * ends in the studio segment rather than a typename, so the generic type-section lookup cannot
+ * derive it.
  */
 export const getArtifactPath = (spaceId: string, objectId: string): string =>
   `${getArtifactsPath(spaceId)}/${objectId}`;

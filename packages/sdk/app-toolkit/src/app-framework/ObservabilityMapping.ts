@@ -17,11 +17,8 @@ export type OutputOf<T> = T extends Operation.Definition<any, infer O> ? O : nev
 /**
  * Registers the observability event a successful invocation of an operation stands for.
  *
- * The same shape as `UndoMapping`, and for the same reason: an operation that emitted its own
- * event would have to reach a host capability to do it, binding a portable verb to whichever plugin
- * happens to implement telemetry. A listener over the invocation stream (contributed by
- * plugin-observability in the app, by something else entirely on a headless host) keeps the
- * operation ignorant of both.
+ * A listener over the invocation stream emits the event, so a portable verb is never bound to
+ * whichever plugin implements telemetry (mirrors `UndoMapping`).
  *
  * @template Op - The operation whose invocation the event stands for.
  */

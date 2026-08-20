@@ -17,15 +17,11 @@ import * as Gateway from './Gateway';
 import * as Server from './Server';
 
 /**
- * The in-process front door to the MCP surface: hand it skill definitions, get the projected
- * server. Skills are the atomic unit of projection, so this is the whole input — each definition
- * becomes a prompt and the operations behind its tools become the tools, exactly as they would
- * through a registry-backed {@link Gateway.Service}. That gateway survives for hosts whose
- * registry sits across an RPC boundary (edge); this module is for hosts that hold the definitions
- * in-process and provide `Operation.Service`.
+ * In-process MCP surface over skill definitions: each becomes a prompt and the operations behind
+ * its tools become the tools, invoked through the ambient `Operation.Service`.
  *
- * This module needs the operation runtime; a wire-only host (edge) imports the `Gateway`/`Server`
- * subpaths instead of the root barrel so its bundle never carries it.
+ * A wire-only host (edge) imports the `Gateway`/`Server` subpaths instead of the root barrel, so
+ * the operation runtime this module needs never enters its bundle.
  */
 
 export type Options = {
@@ -62,8 +58,7 @@ export const gateway = ({
     const invoker = yield* Operation.Service;
     const built = skills.map((definition) => ({ definition, skill: definition.make() }));
 
-    // One record per operation whatever the number of skills naming it; a definition whose schema
-    // cannot render as JSON Schema is dropped with a warning rather than failing the listing.
+    // One record per operation whatever the number of skills naming it.
     const operations = new Map<string, Operation.Definition.Any>();
     for (const { definition } of built) {
       for (const operation of definition.operations ?? []) {

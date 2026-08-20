@@ -87,8 +87,8 @@ export const chatLayer = ({
           const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
           const registry = yield* Registry.Service;
           const handlers = yield* handlerSet.handlers;
-          // Tolerant: one non-serializable definition (importSpace's Uint8Array) must not take the
-          // whole registry down — this is what lets a plugin register a single, complete handler set.
+          // One non-serializable definition (importSpace's `Uint8Array`) must not take the whole
+          // registry down.
           registry.add(Operation.serializable(handlers));
           return registry;
         }),

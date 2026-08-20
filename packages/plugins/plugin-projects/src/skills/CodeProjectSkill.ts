@@ -16,21 +16,7 @@ import instructions from './code-project-skill.md?raw';
 
 export const key = 'org.dxos.plugin.projects.skill.codeProject';
 
-/**
- * Project-management workflow for agents driving the projected MCP verbs: work-stream projects
- * with task ledgers, outlines, and design documents in an ECHO space.
- *
- * The final key segment doubles as the projected MCP prompt name, so this skill answers to
- * `/codeProject`. Plain `project` belongs to assistant-toolkit's `org.dxos.skill.project`, a
- * chat-context skill for filing artifacts; a shared segment would be a prompt-name collision, which
- * the projection raises rather than resolving silently.
- */
-/**
- * The workflow's verbs. Listing them here is what projects them as MCP tools: the skill definition
- * is the atomic unit of projection, and a tool's load-the-skill-first pointer derives from this
- * membership. Task and outline verbs live in plugin-tasks (a real dependency already); filing tasks
- * into a project's task set is this workflow's job, so the skill that owns the workflow lists them.
- */
+/** The workflow's verbs; listing them here is what projects them as MCP tools. */
 export const operations: readonly Operation.Definition.Any[] = [
   ProjectOperation.Create,
   ProjectMcpOperation.ListProjects,
@@ -50,6 +36,14 @@ export const operations: readonly Operation.Definition.Any[] = [
   OutlineOperation.UpdateOutline,
 ];
 
+/**
+ * Project-management workflow for agents driving the projected MCP verbs: work-stream projects
+ * with task ledgers, outlines, and design documents in an ECHO space.
+ *
+ * The final key segment doubles as the projected MCP prompt name, so this skill answers to
+ * `/codeProject`; plain `project` belongs to assistant-toolkit's `org.dxos.skill.project`, and a
+ * shared segment would be a prompt-name collision.
+ */
 export const make = (): Skill.Skill =>
   Skill.make({
     key,

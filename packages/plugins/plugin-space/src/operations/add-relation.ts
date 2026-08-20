@@ -20,7 +20,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddRelation> = SpaceO
 
       const source = yield* resolveEnd(input.source);
       const target = yield* resolveEnd(input.target);
-      // The declared service is the fallback; an explicit `db` or the source object's own wins.
       const { db: ambientDb } = yield* Database.Service;
       const db = input.db ?? Obj.getDatabase(source) ?? ambientDb;
       invariant(db, 'Database not found.');

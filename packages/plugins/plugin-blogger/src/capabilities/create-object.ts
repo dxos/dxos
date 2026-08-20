@@ -32,8 +32,6 @@ export default Capability.makeModule(
                 {
                   object,
                   target: options.target,
-                  // Absent a caller-supplied target (e.g. the space's generic create menu), navigate to
-                  // the new Publication under the Publications section rather than the database subtree.
                 },
                 { spaceId: options.db.spaceId },
               );
