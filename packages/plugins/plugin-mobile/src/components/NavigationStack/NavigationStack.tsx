@@ -226,7 +226,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
   );
 
   const handlePointerMove = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
+    (event: PointerEvent) => {
       const gesture = gestureRef.current;
       if (!gesture || gesture.pointerId !== event.pointerId) {
         return;
@@ -247,7 +247,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
   );
 
   const handlePointerUp = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
+    (event: PointerEvent) => {
       const gesture = gestureRef.current;
       if (!gesture || gesture.pointerId !== event.pointerId) {
         return;
@@ -285,7 +285,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
   // A cancelled pointer must never complete the pop: distance or cached velocity could clear the
   // completion threshold, navigating on a gesture the platform took away (e.g. a system edge swipe).
   const handlePointerCancel = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
+    (event: PointerEvent) => {
       const gesture = gestureRef.current;
       if (!gesture || gesture.pointerId !== event.pointerId) {
         return;
@@ -301,14 +301,27 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
     [animatePose, index, reducedMotion],
   );
 
+  // Only the gesture's start is scoped to the stack; the rest is bound to `window` because a
+  // terminal event that misses the stack root would strand the panels at the pose the last move
+  // wrote — a permanent sliver of the parked panel with no way back. WebKit releases an implicit
+  // pointer capture when the platform takes the touch over and then delivers `pointerup` to the
+  // original hit-test target, which is routinely outside this subtree.
+  useEffect(() => {
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerCancel);
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerCancel);
+    };
+  }, [handlePointerMove, handlePointerUp, handlePointerCancel]);
+
   return (
     <div
       ref={rootRef}
       className={mx('relative overflow-hidden touch-pan-y', classNames)}
       onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerCancel}
     >
       {items.map((id, itemIndex) => {
         const offset = itemIndex - index;
