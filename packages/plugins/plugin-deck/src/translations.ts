@@ -58,6 +58,8 @@ export const translations = [
         'plugin-failure-action.label': 'Open Registry',
         'plugin-failure-action.alt': 'Open Plugin Registry',
         'main-menu.label': 'Main menu',
+        'back.label': 'Back',
+        'done.label': 'Done',
         'expand-drawer.label': 'Expand drawer',
         'collapse-drawer.label': 'Collapse drawer',
         'close-drawer.label': 'Close drawer',

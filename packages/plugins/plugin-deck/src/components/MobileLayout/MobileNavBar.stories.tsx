@@ -13,7 +13,7 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
-import { NavBar } from './NavBar';
+import { MobileNavBar } from './MobileNavBar';
 
 const MAIN_MENU_GROUP_ID = 'navbar-main-menu';
 
@@ -51,7 +51,7 @@ const buildDefaultActions = (): ActionGraphProps => {
     icon: 'ph--plus--regular',
     iconOnly: true,
     label: 'Main menu',
-    testId: 'simpleLayoutPlugin.addSpace',
+    testId: 'deckPlugin.addSpace',
   });
   const companions = [
     createMenuAction('companion-browse', () => console.log('Browse'), {
@@ -90,14 +90,14 @@ const buildDefaultActions = (): ActionGraphProps => {
 };
 
 const meta = {
-  title: 'plugins/plugin-simple-layout/components/NavBar',
-  component: NavBar,
+  title: 'plugins/plugin-deck/components/MobileLayout/MobileNavBar',
+  component: MobileNavBar,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withRegistry],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof NavBar>;
+} satisfies Meta<typeof MobileNavBar>;
 
 export default meta;
 
@@ -106,7 +106,7 @@ type Story = StoryObj<typeof meta>;
 const DefaultStory = ({ onAction }: { onAction: (action: { id: string }) => void }) => {
   const actions = useMemo(() => Atom.make(buildDefaultActions()).pipe(Atom.keepAlive), []);
 
-  return <NavBar classNames='border-y border-separator' actions={actions} onAction={onAction} />;
+  return <MobileNavBar classNames='border-y border-separator' actions={actions} onAction={onAction} />;
 };
 
 export const Default: Story = {
@@ -144,7 +144,7 @@ export const Default: Story = {
 const CompanionsOnlyStory = () => {
   const actions = useMemo(() => Atom.make(buildCompanionOnlyActions()).pipe(Atom.keepAlive), []);
 
-  return <NavBar actions={actions} onAction={(action) => console.log('Action:', action.id)} />;
+  return <MobileNavBar actions={actions} onAction={(action) => console.log('Action:', action.id)} />;
 };
 
 export const CompanionsOnly: Story = {
@@ -155,7 +155,7 @@ export const CompanionsOnly: Story = {
 const EmptyStory = () => {
   const actions = useMemo(() => Atom.make(buildEmptyActions()).pipe(Atom.keepAlive), []);
 
-  return <NavBar actions={actions} onAction={(action) => console.log('Action:', action.id)} />;
+  return <MobileNavBar actions={actions} onAction={(action) => console.log('Action:', action.id)} />;
 };
 
 export const Empty: Story = {

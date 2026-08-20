@@ -6,7 +6,6 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { Fragment } from 'react';
 
-import { useMobileLayout } from '@dxos/plugin-deck';
 import { DensityProvider, IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
@@ -14,9 +13,11 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-const APP_BAR_NAME = 'SimpleLayout.AppBar';
+import { useMobileLayout } from './MobileLayoutContext';
 
-export type AppBarProps = {
+const APP_BAR_NAME = 'MobileLayout.AppBar';
+
+export type MobileAppBarProps = {
   /** Title/label to display in the banner. */
   title?: string;
   /** Action graph atom for the dropdown menu. */
@@ -34,7 +35,7 @@ export type AppBarProps = {
 /**
  * AppBar component that renders a title, optional back button, and actions dropdown.
  */
-export const AppBar = composable<HTMLDivElement, AppBarProps>(
+export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
   ({ classNames, title, actions, showBackButton, popoverAnchorId, onAction, onBack, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
     const menuActions = useMenuActions(actions);
@@ -94,4 +95,4 @@ export const AppBar = composable<HTMLDivElement, AppBarProps>(
   },
 );
 
-AppBar.displayName = APP_BAR_NAME;
+MobileAppBar.displayName = APP_BAR_NAME;

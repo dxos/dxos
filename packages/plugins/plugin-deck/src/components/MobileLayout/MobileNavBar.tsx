@@ -8,9 +8,9 @@ import React from 'react';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
 
-const NAVBAR_NAME = 'SimpleLayout.NavBar';
+const NAVBAR_NAME = 'MobileLayout.NavBar';
 
-export type NavBarProps = {
+export type MobileNavBarProps = {
   /** Action graph atom for the toolbar. */
   actions: Atom.Atom<ActionGraphProps>;
   /** Action executor callback. */
@@ -20,16 +20,18 @@ export type NavBarProps = {
 /**
  * Presentational navbar component that renders a toolbar from an action graph.
  */
-export const NavBar = composable<HTMLDivElement, NavBarProps>(({ actions, onAction, ...props }, forwardedRef) => {
-  const menuActions = useMenuActions(actions);
+export const MobileNavBar = composable<HTMLDivElement, MobileNavBarProps>(
+  ({ actions, onAction, ...props }, forwardedRef) => {
+    const menuActions = useMenuActions(actions);
 
-  return (
-    <Menu.Root {...menuActions} alwaysActive onAction={onAction}>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-        <Menu.Items />
-      </Menu.Toolbar>
-    </Menu.Root>
-  );
-});
+    return (
+      <Menu.Root {...menuActions} alwaysActive onAction={onAction}>
+        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+          <Menu.Items />
+        </Menu.Toolbar>
+      </Menu.Root>
+    );
+  },
+);
 
-NavBar.displayName = NAVBAR_NAME;
+MobileNavBar.displayName = NAVBAR_NAME;

@@ -5,54 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { addEventListener, combine } from '@dxos/async';
 import { Column, Flex, Input, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { WithKeyboard } from '../../testing';
 import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout';
-
-/**
- * Simulate ios keyboard.
- */
-const WithKeyboard = ({ children }: PropsWithChildren) => {
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
-
-  useEffect(() => {
-    return combine(
-      addEventListener(document, 'focusin', (event: FocusEvent) => {
-        const target = event.target as HTMLElement;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-          setKeyboardOpen(true);
-        }
-      }),
-      addEventListener(document, 'focusout', (event: FocusEvent) => {
-        const target = event.target as HTMLElement;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-          setKeyboardOpen(false);
-        }
-      }),
-    );
-  }, []);
-
-  useEffect(() => {
-    const keyboardHeight = keyboardOpen ? 300 : 0;
-    document.documentElement.style.setProperty('--kb-height', `${keyboardHeight}px`);
-    document.documentElement.style.setProperty('--kb-open', keyboardOpen ? '1' : '0');
-
-    // Dispatch custom keyboard event that useIOSKeyboard listens for.
-    window.dispatchEvent(
-      new CustomEvent('keyboard', {
-        detail: {
-          type: keyboardOpen ? 'show' : 'hide',
-          height: keyboardHeight,
-          duration: 300,
-        },
-      }),
-    );
-  }, [keyboardOpen]);
-
-  return <div className='h-screen relative'>{children}</div>;
-};
 
 const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) => {
   return (

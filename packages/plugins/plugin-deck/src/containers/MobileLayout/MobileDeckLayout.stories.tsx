@@ -1,9 +1,10 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -14,12 +15,23 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DeckStoryPlugin, STORY_ITEMS } from '../../testing';
-import { DeckLayout } from './DeckLayout';
+import { DeckStoryPlugin, STORY_ITEMS, WithKeyboard } from '../../testing';
+import { MobileDeckLayout } from './MobileDeckLayout';
+
+/**
+ * The drawer opens from the navbar's companion tabs, and the keyboard from focusing any text input;
+ * both drive the splitter, which is what this story is for.
+ */
+const DefaultStory = () => (
+  <WithKeyboard>
+    <MobileDeckLayout />
+  </WithKeyboard>
+);
 
 const meta = {
-  title: 'plugins/plugin-deck/containers/DeckLayout',
-  component: DeckLayout,
+  title: 'plugins/plugin-deck/containers/MobileDeckLayout',
+  component: MobileDeckLayout,
+  render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
@@ -30,27 +42,35 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof DeckLayout>;
+} satisfies Meta<typeof MobileDeckLayout>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
 
-export const OnePlank: Story = {
-  render: () => {
-    const { invokePromise } = useOperationInvoker();
-    useAsyncEffect(async () => {
-      // A singleton `active` list renders fullbleed; opening into a fresh deck yields that directly.
-      await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
-    });
-
-    return <DeckLayout />;
+    // The app bar and the navbar are the chrome the layout owns; the drawer contributes its own toolbar.
+    await expect(await canvas.findByRole('banner')).toBeInTheDocument();
+    await expect((await canvas.findAllByRole('toolbar')).length).toBeGreaterThan(0);
   },
 };
 
-export const ManyPlanks: Story = {
+export const OnePanel: Story = {
+  render: () => {
+    const { invokePromise } = useOperationInvoker();
+    useAsyncEffect(async () => {
+      await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
+    });
+
+    return <DefaultStory />;
+  },
+};
+
+export const Stack: Story = {
   render: () => {
     const { invokePromise } = useOperationInvoker();
     useAsyncEffect(async () => {
@@ -62,6 +82,6 @@ export const ManyPlanks: Story = {
       });
     });
 
-    return <DeckLayout />;
+    return <DefaultStory />;
   },
 };

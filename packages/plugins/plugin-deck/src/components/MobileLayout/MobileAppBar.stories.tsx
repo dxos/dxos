@@ -7,14 +7,14 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 import { type Mock, expect, fn, screen, userEvent, within } from 'storybook/test';
 
-import { MobileLayout } from '@dxos/plugin-deck';
 import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
-import { AppBar, type AppBarProps } from './AppBar';
+import { MobileAppBar, type MobileAppBarProps } from './MobileAppBar';
+import { MobileLayout } from './MobileLayout';
 
 const buildEmptyActions = (): ActionGraphProps => ({ nodes: [], edges: [] });
 
@@ -39,7 +39,7 @@ const buildDefaultActions = (): ActionGraphProps => {
   return result;
 };
 
-type StoryArgs = Omit<AppBarProps, 'actions'> & {
+type StoryArgs = Omit<MobileAppBarProps, 'actions'> & {
   actions: ActionGraphProps;
 };
 
@@ -47,13 +47,13 @@ const DefaultStory = ({ actions: actionsProp, ...props }: StoryArgs) => {
   const actions = useMemo(() => Atom.make(actionsProp).pipe(Atom.keepAlive), [actionsProp]);
   return (
     <MobileLayout.Root>
-      <AppBar {...props} actions={actions} />
+      <MobileAppBar {...props} actions={actions} />
     </MobileLayout.Root>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-simple-layout/components/AppBar',
+  title: 'plugins/plugin-deck/components/MobileLayout/MobileAppBar',
   render: DefaultStory,
   decorators: [
     withTheme(),
@@ -95,8 +95,8 @@ export const Default: Story = {
     await userEvent.click(backButton);
     await expect(args.onBack).toHaveBeenCalledTimes(1);
 
-    // Test actions menu opens and action fires.
-    const menuTrigger = canvas.getByRole('button', { name: /actions/i });
+    // Test actions menu opens and action fires (`actions-menu.label` reads "Options" in plugin-deck).
+    const menuTrigger = canvas.getByRole('button', { name: /options/i });
     await expect(menuTrigger).toBeInTheDocument();
     await userEvent.click(menuTrigger);
 

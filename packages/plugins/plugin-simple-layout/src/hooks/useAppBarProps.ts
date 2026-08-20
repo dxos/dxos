@@ -12,11 +12,11 @@ import * as Graph from '@dxos/app-graph/Graph';
 import * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { type MobileAppBarProps } from '@dxos/plugin-deck';
 import { useActionRunner, useNode } from '@dxos/plugin-graph/hooks';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 
-import { type AppBarProps } from '#components';
 import { meta } from '#meta';
 import { SimpleLayoutCapabilities } from '#types';
 
@@ -24,7 +24,7 @@ import { SimpleLayoutCapabilities } from '#types';
  * Hook that computes all AppBar props from the app graph.
  * Derives activeId from state atom. Returns props ready to spread into the AppBar component.
  */
-export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
+export const useAppBarProps = (): Omit<MobileAppBarProps, 'classNames'> => {
   const { t } = useTranslation(meta.profile.key);
   const stateAtom = useCapability(SimpleLayoutCapabilities.State);
   const state = useAtomValue(stateAtom);

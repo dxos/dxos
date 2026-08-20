@@ -9708,6 +9708,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -14625,9 +14628,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme

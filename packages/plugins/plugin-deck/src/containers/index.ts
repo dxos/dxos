@@ -9,3 +9,4 @@ export * from './Sidebar';
 
 export const DeckLayout: ComponentType<any> = lazy(() => import('./DeckLayout'));
 export const DeckSettings: ComponentType<any> = lazy(() => import('./DeckSettings'));
+export const MobileDeckLayout: ComponentType<any> = lazy(() => import('./MobileLayout'));

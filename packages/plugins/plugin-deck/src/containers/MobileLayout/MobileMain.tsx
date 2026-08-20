@@ -1,28 +1,20 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import {
-  Loading,
-  MobileAppBar,
-  MobileNavBar,
-  NavigationStack,
-  useExpandPath,
-  useMobileLayout,
-} from '@dxos/plugin-deck';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
-import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '#hooks';
+import { Loading, MobileAppBar, MobileNavBar, NavigationStack, useExpandPath, useMobileLayout } from '#components';
+import { useDeckState, useMobileAppBar, useMobileNavbarActions, useMobileStack } from '#hooks';
 
-const MAIN_NAME = 'SimpleLayout.Main';
-const MAIN_PANEL_NAME = 'SimpleLayout.MainPanel';
+const MAIN_NAME = 'MobileDeckLayout.Main';
+const MAIN_PANEL_NAME = 'MobileDeckLayout.MainPanel';
 
 type MainPanelProps = {
   id: string;
@@ -63,32 +55,21 @@ const MainPanel = ({ id, popoverAnchorId }: MainPanelProps) => {
 MainPanel.displayName = MAIN_PANEL_NAME;
 
 /**
- * Main content component.
+ * Mobile main content: the deck's active panels projected as a navigation stack.
  */
-export const Main = () => {
-  const { state } = useSimpleLayoutState();
-  const id = state.active ?? state.workspace;
-  const attentionAttrs = useAttentionAttributes(id);
+export const MobileMain = () => {
+  const { state } = useDeckState();
+  const { stack, topId, pop } = useMobileStack();
+  const attentionAttrs = useAttentionAttributes(topId);
   const { keyboardOpen } = useMobileLayout(MAIN_NAME);
-  const { actions, onAction } = useNavbarActions();
-  const appBarProps = useAppBarProps();
-  const { invokePromise } = useOperationInvoker();
+  const { actions, onAction } = useMobileNavbarActions();
+  const appBarProps = useMobileAppBar();
 
-  useExpandPath(id);
+  useExpandPath(topId);
 
-  // `Open` pushes onto `history` and `Close` pops it, so the navigated stack is history + active.
-  const stack = useMemo(() => [...state.history, id], [state.history, id]);
-
-  // Popping routes through `Close`, the same operation the app bar's back button invokes, so the
-  // chevron and the swipe cannot disagree about what "back" means.
-  const handleNavigate = useCallback(() => {
-    if (state.active) {
-      void invokePromise(LayoutOperation.Close, { subject: [state.active] });
-    }
-  }, [invokePromise, state.active]);
-
-  // TODO(burdon): BUG: When showing ANY statusbar the size progressively shrinks when the keyboard opens/closes.
-  const showNavBar = !keyboardOpen && !state.isPopover && state.drawerState === 'closed';
+  // The drawer occupies the bottom of the screen when open, so the navbar would collide with it.
+  const drawerClosed = !state.complementarySidebarPanel || state.complementarySidebarState === 'closed';
+  const showNavBar = !keyboardOpen && drawerClosed;
 
   return (
     <Panel.Root {...attentionAttrs} classNames='dx-document'>
@@ -100,7 +81,7 @@ export const Main = () => {
           classNames='size-full'
           items={stack}
           index={stack.length - 1}
-          onIndexChange={handleNavigate}
+          onIndexChange={pop}
           renderItem={(itemId) => <MainPanel id={itemId} popoverAnchorId={state.popoverAnchorId} />}
         />
       </Panel.Content>
@@ -113,4 +94,4 @@ export const Main = () => {
   );
 };
 
-Main.displayName = MAIN_NAME;
+MobileMain.displayName = MAIN_NAME;
