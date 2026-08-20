@@ -14,7 +14,36 @@ import { Organization, Person, Pipeline, Task } from '@dxos/types';
 import { Position } from '@dxos/util';
 
 import { ExpandoCard, FormCard, JsonCard, PersonCardIcon, ProjectCard, TaskCard } from '../cards';
+import { UnsupportedType } from '../components';
 import { OrganizationCardContent, PersonCardContent } from './RelatedCards';
+
+/**
+ * Checked against the type registry rather than "no other candidate matched" — the latter is also
+ * true while a real plugin's surface is still loading, which would flash this stand-in on every
+ * session's first plank.
+ */
+const isTypeUnavailable = (subject: unknown): subject is Obj.Unknown => {
+  if (!Obj.isObject(subject)) {
+    return false;
+  }
+  const typename = Obj.getTypename(subject);
+  if (!typename) {
+    return false;
+  }
+  try {
+    const db = Obj.getDatabase(subject);
+    return (
+      !!db &&
+      !db.graph.registry
+        .list()
+        .filter(Type.isType)
+        .some((type) => Type.getTypename(type) === typename)
+    );
+  } catch {
+    // Not attached to a database (a story, a detached object) — nothing to conclude, so stay out.
+    return false;
+  }
+};
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -137,6 +166,16 @@ export default Capability.makeModule(() =>
       //     );
       //   },
       // }),
+
+      // Last-resort candidate (plank `limit={1}`) for an object whose plugin is absent — e.g. one
+      // created in a build that shares a backend with a full-catalog build.
+      Surface.create({
+        id: 'unsupportedTypeArticle',
+        position: Position.last,
+        filter: AppSurface.subject(AppSurface.Article, isTypeUnavailable),
+        component: UnsupportedType,
+        props: ({ role, data: { subject } }) => ({ role, typename: Obj.getTypename(subject) ?? '' }),
+      }),
     ]),
   ),
 );

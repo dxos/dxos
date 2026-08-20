@@ -6,6 +6,7 @@ export * from './array-to-hex';
 export * from './array';
 export * from './assume';
 export * from './binder';
+export * from './dev-flag';
 export * from './bitfield';
 export * from './browser-storage';
 export * from './callback-collection';
