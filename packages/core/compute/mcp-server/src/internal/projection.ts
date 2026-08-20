@@ -42,30 +42,31 @@ export type Fields = { readonly [key: string]: Schema.Codec<any, any> };
 export type ProjectedOperation = {
   /** Operation key without the `dxn:` prefix — the form the gateway dispatches on. */
   key: string;
-  toolName: string;
-  description?: string;
+  /** The tool as the model sees it. */
+  tool: {
+    name: string;
+    description?: string;
+    /** What the model writes into: ref fields widened to also accept a JSON string. */
+    parameters: Fields;
+    /**
+     * Whether the operation is space-addressed — it declares `Database.Service` — which is what
+     * adds the ambient `spaceId` parameter.
+     */
+    requiresSpace: boolean;
+    /** Behavioral hints; an absent value makes no claim, which clients read conservatively. */
+    hints: {
+      /** The operation's effect on state (`Operation.MutationAnnotation`). */
+      mutation?: Mutation;
+      /** `Operation.IdempotentAnnotation`. */
+      idempotent?: boolean;
+    };
+  };
   /**
-   * The operation's effect on state (`Operation.MutationAnnotation`). Absent when unclassified —
-   * no safety hints are emitted, and clients treat the tool as possibly-destructive.
+   * What `tool.parameters` encode back through on the way to the gateway — un-widened and without
+   * `spaceId`, because the tool layer decodes ref envelopes into live `Ref`s and those do not
+   * survive an RPC boundary.
    */
-  mutation?: Mutation;
-  /** Whether the operation is idempotent (`Operation.IdempotentAnnotation`). */
-  idempotent?: boolean;
-  /** Prompt names of the projected skills whose `tools` list this operation — the projection's reason to exist. */
-  skills: readonly string[];
-  /**
-   * Whether the operation is space-addressed — it declares `Database.Service` — which is what
-   * decides the ambient `spaceId` tool parameter.
-   */
-  requiresSpace: boolean;
-  /** Tool parameters reconstructed from the operation's serialized input schema. */
-  parameters: Fields;
-  /**
-   * The reconstructed input schema, kept for re-encoding: the tool layer *decodes* arguments
-   * (ref envelopes become live `Ref`s), but the gateway needs the wire form back — live refs do
-   * not survive an RPC boundary.
-   */
-  inputSchema?: Schema.Codec<any, any>;
+  wireSchema?: Schema.Codec<any, any>;
 };
 
 export type ProjectedSkill = {
@@ -259,12 +260,12 @@ export const projectOperations = (
     }
 
     let parameters: Fields = {};
-    let inputSchema: Schema.Codec<any, any> | undefined;
+    let wireSchema: Schema.Codec<any, any> | undefined;
     if (record.inputSchema != null) {
       const reconstructed = JsonSchema.toEffectSchema(record.inputSchema);
       if (isStruct(reconstructed)) {
         parameters = tolerateStringifiedRefs(reconstructed.fields, record.inputSchema);
-        inputSchema = reconstructed;
+        wireSchema = reconstructed;
       } else {
         log.warn('operation input schema is not an object; projected without parameters', { key });
       }
@@ -275,19 +276,19 @@ export const projectOperations = (
 
     projected.push({
       key,
-      toolName,
-      description,
-      mutation,
-      idempotent,
-      skills: owningSkills,
-      requiresSpace: (record.services ?? []).includes(DATABASE_SERVICE_KEY),
-      parameters,
-      inputSchema,
+      tool: {
+        name: toolName,
+        description,
+        parameters,
+        requiresSpace: (record.services ?? []).includes(DATABASE_SERVICE_KEY),
+        hints: { mutation, idempotent },
+      },
+      wireSchema,
     });
   }
 
   assertUniqueNames(
-    projected.map((operation) => ({ name: operation.toolName, source: operation.key })),
+    projected.map((operation) => ({ name: operation.tool.name, source: operation.key })),
     reservedNames,
     'tool',
   );

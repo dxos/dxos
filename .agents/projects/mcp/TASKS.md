@@ -320,6 +320,14 @@ field goes.
       the drift tests are gone. **Found while measuring:** `package.json` exported `./Gateway` and
       `./Server` but the vite config had no entries for them, so those files were never emitted and
       the subpaths only resolved in-repo via `source`; entries added.
+- [x] **`ProjectedOperation` structured by audience** (user, 2026-08-20). The flat shape mixed the
+      model-facing descriptor with the dispatch data, which is what made `inputSchema` read as if
+      it were the tool's own schema. Now `{ key, tool: { name, description, parameters,
+    requiresSpace, hints: { mutation, idempotent } }, wireSchema }`: `parameters` (decode, ref
+      fields widened to accept a JSON string) and `wireSchema` (encode, un-widened, no `spaceId`)
+      sit on opposite sides of the boundary and read that way. `hints` matches MCP's own
+      readOnly/destructive/idempotent grouping and is what `makeTool` consumes as a unit. Dropped
+      the write-only `skills` field — the pointer it justified is already in `description`.
 - [ ] **Shared operation→tool projection** (assistant ⇄ mcp) — deferred with a plan, not dropped.
       What blocks a naive extraction: the two surfaces are deliberately different models of the
       same operation. The assistant presents refs as LLM-friendly URI _strings_ (`RefFromLLM`,

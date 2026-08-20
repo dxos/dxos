@@ -48,14 +48,15 @@ const testGateway = ({
   };
 };
 
-const operation = (props: Partial<Projection.ProjectedOperation> = {}): Projection.ProjectedOperation => ({
+const operation = (tool: Partial<Projection.ProjectedOperation['tool']> = {}): Projection.ProjectedOperation => ({
   key: 'org.dxos.function.tasks.create',
-  toolName: 'taskCreate',
-  mutation: 'write',
-  skills: ['codeProject'],
-  requiresSpace: true,
-  parameters: {},
-  ...props,
+  tool: {
+    name: 'taskCreate',
+    parameters: {},
+    requiresSpace: true,
+    hints: { mutation: 'write' },
+    ...tool,
+  },
 });
 
 const skill = (props: { key: string; instructions: string }) => ({ ...props, mcpPrompt: true, name: props.key });

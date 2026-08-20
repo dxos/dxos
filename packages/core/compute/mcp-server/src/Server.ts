@@ -174,7 +174,7 @@ export const toolsLayer = (
     Effect.gen(function* () {
       const gateway = yield* Gateway.Service;
       return Object.fromEntries(
-        projected.map((operation) => [operation.toolName, makeHandler(gateway, operation)]),
+        projected.map((operation) => [operation.tool.name, makeHandler(gateway, operation)]),
       ) as never;
     }),
   );
@@ -186,28 +186,27 @@ export const toolsLayer = (
 };
 
 /** The MCP tool descriptor for a projected operation, carrying its safety hints. */
-export const makeTool = (operation: Projection.ProjectedOperation) => {
-  const tool = Tool.make(operation.toolName, {
-    description: operation.description,
+export const makeTool = ({ tool: descriptor }: Projection.ProjectedOperation) => {
+  const tool = Tool.make(descriptor.name, {
+    description: descriptor.description,
     parameters: Schema.Struct({
-      ...operation.parameters,
+      ...descriptor.parameters,
       // Only space-addressed operations gain the ambient parameter: its presence is what tells the
       // model which calls need a space id at all.
-      ...(operation.requiresSpace && !('spaceId' in operation.parameters)
+      ...(descriptor.requiresSpace && !('spaceId' in descriptor.parameters)
         ? { spaceId: spaceInternal.idParameter }
         : {}),
     }),
     success: Schema.Record(Schema.String, Schema.Unknown),
     failure: ToolFailure,
   });
+  const { mutation, idempotent } = descriptor.hints;
   // An unclassified operation makes no safety claims — clients then assume possibly-destructive.
   const classified =
-    operation.mutation == null
+    mutation == null
       ? tool
-      : tool
-          .annotate(Tool.Readonly, operation.mutation === 'none')
-          .annotate(Tool.Destructive, operation.mutation === 'destructive');
-  return operation.idempotent ? classified.annotate(Tool.Idempotent, true) : classified;
+      : tool.annotate(Tool.Readonly, mutation === 'none').annotate(Tool.Destructive, mutation === 'destructive');
+  return idempotent ? classified.annotate(Tool.Idempotent, true) : classified;
 };
 
 /** Dispatches one projected tool call: encode input, resolve the space, invoke, qualify refs. */
@@ -218,15 +217,15 @@ export const makeHandler =
     // An operation that declares `spaceId` itself keeps it: {@link makeTool} adds the ambient
     // parameter only when the operation has none, so stripping it unconditionally would drop a
     // required field before the encode below.
-    const decodedInput = 'spaceId' in operation.parameters ? (args ?? {}) : withoutSpaceId;
+    const decodedInput = 'spaceId' in operation.tool.parameters ? (args ?? {}) : withoutSpaceId;
     const targetSpaceId = typeof spaceId === 'string' ? spaceId : undefined;
     // The tool layer decoded the arguments (ref envelopes became live `Ref`s); encode back to the
     // wire form the gateway expects — live refs cannot cross an RPC boundary.
     const encodeInput =
-      operation.inputSchema != null
-        ? Schema.encodeUnknownEffect(operation.inputSchema)(decodedInput).pipe(
+      operation.wireSchema != null
+        ? Schema.encodeUnknownEffect(operation.wireSchema)(decodedInput).pipe(
             Effect.mapError((error) =>
-              failure('invalid_request', `${operation.toolName} input did not encode: ${String(error)}`),
+              failure('invalid_request', `${operation.tool.name} input did not encode: ${String(error)}`),
             ),
           )
         : Effect.succeed<unknown>(decodedInput);

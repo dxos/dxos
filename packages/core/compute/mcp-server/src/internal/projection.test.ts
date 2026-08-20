@@ -79,11 +79,11 @@ describe('Projection', () => {
         [owner('codeProject', ['org.dxos.function.test.doThing'])],
         [],
       );
-      expect(projected.toolName).to.equal('doThing');
-      expect(projected.mutation).to.equal('write');
-      expect(projected.idempotent).to.be.true;
-      expect(projected.requiresSpace).to.be.true;
-      expect(Object.keys(projected.parameters)).to.deep.equal(['value']);
+      expect(projected.tool.name).to.equal('doThing');
+      expect(projected.tool.hints.mutation).to.equal('write');
+      expect(projected.tool.hints.idempotent).to.be.true;
+      expect(projected.tool.requiresSpace).to.be.true;
+      expect(Object.keys(projected.tool.parameters)).to.deep.equal(['value']);
     });
   });
 
@@ -94,7 +94,7 @@ describe('Projection', () => {
         [owner('codeProject', ['org.dxos.function.tasks.taskCreate'])],
         [],
       );
-      expect(projected.map((operation) => operation.toolName)).to.deep.equal(['taskCreate']);
+      expect(projected.map((operation) => operation.tool.name)).to.deep.equal(['taskCreate']);
     });
 
     test('an unclassified operation projects with no mutation class', ({ expect }) => {
@@ -103,8 +103,8 @@ describe('Projection', () => {
         [owner('codeProject', ['org.dxos.function.tasks.taskCreate'])],
         [],
       );
-      expect(projected.toolName).to.equal('taskCreate');
-      expect(projected.mutation).to.be.undefined;
+      expect(projected.tool.name).to.equal('taskCreate');
+      expect(projected.tool.hints.mutation).to.be.undefined;
     });
 
     test('a versioned key and its unversioned ToolId still join', ({ expect }) => {
@@ -113,7 +113,7 @@ describe('Projection', () => {
         [owner('codeProject', ['org.dxos.function.tasks.taskCreate'])],
         [],
       );
-      expect(projected.toolName).to.equal('taskCreate');
+      expect(projected.tool.name).to.equal('taskCreate');
     });
 
     test('the mutation annotation rides through, one value per class', ({ expect }) => {
@@ -126,7 +126,11 @@ describe('Projection', () => {
         [owner('database', ['org.dxos.a.query', 'org.dxos.a.update', 'org.dxos.a.remove'])],
         [],
       );
-      expect(projected.map((operation) => operation.mutation)).to.deep.equal(['none', 'write', 'destructive']);
+      expect(projected.map((operation) => operation.tool.hints.mutation)).to.deep.equal([
+        'none',
+        'write',
+        'destructive',
+      ]);
     });
 
     test('requiresSpace reads Database.Service from the declared services', ({ expect }) => {
@@ -138,7 +142,7 @@ describe('Projection', () => {
         [owner('database', ['org.dxos.a.declared', 'org.dxos.a.spaceless'])],
         [],
       );
-      expect(projected.map((operation) => operation.requiresSpace)).to.deep.equal([true, false]);
+      expect(projected.map((operation) => operation.tool.requiresSpace)).to.deep.equal([true, false]);
     });
 
     test("the tool name defaults to the key's final segment, and `dxn:` is stripped", ({ expect }) => {
@@ -147,7 +151,7 @@ describe('Projection', () => {
         [owner('codeProject', ['org.dxos.function.tasks.taskComplete'])],
         [],
       );
-      expect(projected.toolName).to.equal('taskComplete');
+      expect(projected.tool.name).to.equal('taskComplete');
       expect(projected.key).to.equal('org.dxos.function.tasks.taskComplete');
     });
 
@@ -168,8 +172,8 @@ describe('Projection', () => {
         [owner('codeProject', ['org.dxos.function.tasks.taskCreate'])],
         [],
       );
-      expect(projected.toolName).to.equal('taskCreate');
-      expect(projected.mutation).to.be.undefined;
+      expect(projected.tool.name).to.equal('taskCreate');
+      expect(projected.tool.hints.mutation).to.be.undefined;
     });
 
     test('membership appends the load-first pointer to the description', ({ expect }) => {
@@ -178,9 +182,8 @@ describe('Projection', () => {
         [owner('codeProject', ['org.dxos.function.projects.projectCreate'])],
         [],
       );
-      expect(projected.description).to.include('Creates a project.');
-      expect(projected.description).to.include("skillLoad('codeProject')");
-      expect(projected.skills).to.deep.equal(['codeProject']);
+      expect(projected.tool.description).to.include('Creates a project.');
+      expect(projected.tool.description).to.include("skillLoad('codeProject')");
     });
 
     test('an operation shared by two skills names both workflows', ({ expect }) => {
@@ -192,8 +195,7 @@ describe('Projection', () => {
         ],
         [],
       );
-      expect(projected.description).to.include("'codeProject' and 'inbox' workflows");
-      expect(projected.skills).to.deep.equal(['codeProject', 'inbox']);
+      expect(projected.tool.description).to.include("'codeProject' and 'inbox' workflows");
     });
 
     test('a name collision with a static tool fails loudly, naming both claimants', ({ expect }) => {
@@ -231,7 +233,7 @@ describe('Projection', () => {
       )[0];
 
     test('a ref argument decodes whether it arrives as an object or JSON-stringified', async ({ expect }) => {
-      const parameters = Schema.Struct(projectRef().parameters);
+      const parameters = Schema.Struct(projectRef().tool.parameters);
       const envelope = { '/': 'echo://BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/01J000000000000000000000000' };
 
       const structured = await EffectEx.runPromise(Schema.decodeUnknownEffect(parameters)({ taskSet: envelope }));
@@ -242,7 +244,7 @@ describe('Projection', () => {
     });
 
     test('a ref argument that is neither an envelope nor JSON is still a decode failure', async ({ expect }) => {
-      const parameters = Schema.Struct(projectRef().parameters);
+      const parameters = Schema.Struct(projectRef().tool.parameters);
       const result = await EffectEx.runPromise(
         Effect.result(Schema.decodeUnknownEffect(parameters)({ taskSet: 'not a ref' })),
       );

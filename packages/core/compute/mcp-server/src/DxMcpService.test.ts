@@ -80,8 +80,8 @@ describe('DxMcpService', () => {
     // The same records drive the projection, closing the loop to the tool surface.
     const projectedSkills = Projection.projectSkills(skills, []);
     const projected = Projection.projectOperations(operations, projectedSkills, []);
-    expect(projected.map((operation) => operation.toolName)).to.deep.equal(['taskCreate']);
-    expect(projected[0].requiresSpace).to.be.true;
+    expect(projected.map((operation) => operation.tool.name)).to.deep.equal(['taskCreate']);
+    expect(projected[0].tool.requiresSpace).to.be.true;
   });
 
   test('invokes through the ambient Operation.Service, decoding input and passing the space', async ({ expect }) => {
