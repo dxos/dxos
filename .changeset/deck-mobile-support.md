@@ -10,7 +10,6 @@ drawer; plugin-simple-layout is retired and the layout mode it reported as `'sim
 The mobile renderer itself lives in the new (unpublished) `@dxos/plugin-mobile`, which reads deck
 state and owns no state of its own. `plugin-deck` keeps every operation, the URL handler and the
 layout state, and `DeckPlugin.make({ platform: 'mobile' })` now means headless: it contributes no
-React root and no mobile surfaces, leaving those to the mobile plugin. Deck additionally exposes
-`./hooks` (`useDeckState`, `useCompanions`, `useSelectedCompanion`, `useDismissToast`), `./overlays`
-(the shared dialog/popover/toaster shell) and `./testing` (the story harness) so a co-registered
-renderer can drive them.
+React root and no mobile surfaces, leaving those to the mobile plugin. Deck additionally exposes a
+`./hooks` entrypoint, `./overlays` (the shared dialog/popover/toaster shell) and `./testing` (the
+story harness) so a co-registered renderer can drive them.
