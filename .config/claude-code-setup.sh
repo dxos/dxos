@@ -32,4 +32,9 @@ moon setup
 log "pnpm install"
 CI=true HUSKY=0 pnpm install --prefer-offline
 
+# 4. Claude Code plugin (/dxos:project). Enabling in .claude/settings.json does not install it,
+#    and a cloud container's ~/.claude starts empty — bake it into the cached image here.
+log "claude plugin bootstrap"
+bash .claude/scripts/bootstrap-plugins.sh
+
 log "Environment ready."

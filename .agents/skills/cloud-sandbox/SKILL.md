@@ -4,9 +4,9 @@ description: >-
   Working inside the Claude Code cloud sandbox (Claude Code on the web, remote sessions,
   scheduled runs). Use when CLAUDE_CODE_REMOTE is set; when `moon`, `gh`, or `oxfmt` are
   "command not found"; when Chromium or Playwright fails with ERR_CONNECTION_RESET or a TLS
-  error against an HTTPS host that curl reaches fine; when /mode, /project, or the branch and
-  worktree guard hooks appear to do nothing; or when a build or dev server unexpectedly
-  triggers a full pnpm install.
+  error against an HTTPS host that curl reaches fine; when /dxos:project answers `Unknown
+  command` or a plugin's skills are missing from the session; or when a build or dev server
+  unexpectedly triggers a full pnpm install.
 ---
 
 # Working in the Claude Code cloud sandbox
@@ -21,41 +21,68 @@ several of their instructions do not hold here.
 (`CCR_AGENT_PROXY_ENABLED`, `CCR_EGRESS_GATEWAY_ENABLED`, …). Any of these means the sandbox.
 `/root/.ccr/README.md` documents the network proxy from the platform side.
 
-## Project hooks do NOT run
+## Project hooks DO run — plugins do not install themselves
 
-`.claude/settings.json` hooks are inert in cloud sessions. Consequences:
+`.claude/settings.json` hooks fire here exactly as they do locally. `mode.sh` injects the
+`RESPONSE RULES` block on every prompt, so `/mode terse|normal` works, and `guard-branch.sh` /
+`guard-worktree.sh` deny as usual — still a backstop rather than a guarantee, so check
+`git branch --show-current` before the first edit regardless.
 
-- `.claude/hooks/mode.sh` never injects the `RESPONSE RULES` block, and `/mode terse|normal` does
-  nothing. **Read the response rules from `AGENTS.md` → "Responding to the user" directly** —
-  nothing re-injects them mid-session.
-- `.claude/hooks/track.sh` never fires, so `/project …` does not work. Maintain `TASKS.md` /
-  `DESIGN.md` by hand when the work needs tracking.
-- `guard-branch.sh` and `guard-worktree.sh` deny nothing. The Non-negotiables they back (never
-  create/switch branches or worktrees, never edit while on `main`) still apply in full — **you are
-  the only thing enforcing them.** Check `git branch --show-current` before the first edit.
+What does not survive a fresh container is `~/.claude`. It starts with an empty
+`installed_plugins.json` and only the official marketplace known, and `enabledPlugins` /
+`extraKnownMarketplaces` in `.claude/settings.json` merely _declare_ — nothing fetches. So every
+plugin listed there is absent: `/dxos:project` answers `Unknown command`, and the skills those
+plugins ship (`task-planning`, `superpowers:*`) never appear in the session's skill list. Repo
+skills are unaffected — they arrive through the `.claude/skills -> ../.agents/skills` symlink,
+a different mechanism entirely.
 
-There is no `SessionStart` hook either, so no `SESSION CONTEXT` block: run
+Fix it with the repo's idempotent bootstrap, which registers the marketplace from the local
+checkout (no network) and installs:
+
+```bash
+bash .claude/scripts/bootstrap-plugins.sh
+```
+
+Installing does not retrofit the session you are in; a fresh session in the same container picks
+the plugin up. That is why the same script runs from `.config/claude-code-setup.sh` — where the
+environment's setup command is wired, the install is baked into the cached image and the first
+session already has it.
+
+`claude plugin uninstall` and `claude plugin marketplace remove` **rewrite tracked
+`.claude/settings.json`**, stripping the `dxos` entries out of `enabledPlugins` and
+`extraKnownMarketplaces`. `git diff` after either, and restore. Plain `add`/`install` leave the
+file alone.
+
+There is no repo `SessionStart` hook emitting a `SESSION CONTEXT` block: run
 `git rev-parse --show-toplevel && git branch --show-current` before any file op.
 
-## Tooling not on PATH
+## Tooling not on PATH — and possibly not installed at all
 
-`moon`, `gh`, and `oxfmt` are all missing. `pnpm` and `node` are present (`/opt/node22/bin`).
+`pnpm` and `node` are always present (`/opt/node22/bin`); `gh` never is. Everything else hangs on
+whether the environment's setup command ran `.config/claude-code-setup.sh`. Where it did not,
+`proto`, `moon`, and `node_modules` are all absent, so `pnpm exec moon` fails too — check before
+concluding a command is broken:
 
-| `AGENTS.md` says                            | In the sandbox                                                        |
-| ------------------------------------------- | --------------------------------------------------------------------- |
-| `moon run <package>:<task>`                 | `pnpm exec moon run <package>:<task>` (or `./node_modules/.bin/moon`) |
-| `gh run list --branch … --workflow "Check"` | `mcp__github__*` tools only — there is no `gh`                        |
-| `pnpm format`                               | works (goes through pnpm); a bare `oxfmt` does not                    |
+```bash
+command -v proto moon; ls node_modules | wc -l   # 0 => setup never ran
+```
+
+| `AGENTS.md` says     | Setup ran                      | Setup did not run                             |
+| -------------------- | ------------------------------ | --------------------------------------------- |
+| `moon run <pkg>:<t>` | `pnpm exec moon run <pkg>:<t>` | `bash .config/claude-code-setup.sh` (10+ min) |
+| `pnpm format`        | works                          | `pnpm dlx oxfmt@0.63` — matches the root pin  |
+| `gh run list …`      | `mcp__github__*` tools only    | same — there is no `gh` either way            |
 
 GitHub's REST API is **also unreachable from the shell**: `curl https://api.github.com/…` returns
 `GitHub access is not enabled for this session`, with or without a token. Never build a poll loop or
 `Monitor` around it — it fails identically whether CI is red, green, or still running, so silence
 means nothing. Read run status through the `mcp__github__*` tools, which go through the server side.
 
-## Dependencies are installed but not built
+## Dependencies are never built, and may not even be installed
 
-The clone ships `node_modules` but no build outputs. A first `moon run <app>:serve` runs a pnpm
-install and then builds the whole dependency graph — expect 10+ minutes. Bundled sub-packages may
+The clone ships no build outputs, and `node_modules` only where the setup command ran. A first
+`moon run <app>:serve` runs a pnpm install and then builds the whole dependency graph — expect
+10+ minutes. Bundled sub-packages may
 still be missing afterward: `@dxos/shell` needs `moon run shell:bundle` explicitly, or the app's
 shell entry 500s with `Failed to resolve import "@dxos/shell/style.css"`. Build before running
 anything, and budget for it.
