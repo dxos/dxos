@@ -81,17 +81,6 @@ const createWorkerFactory = (storageLockKey: string) => () => {
 
 type Connected = { clientToWorker: MessagePort; workerToClient: MessagePort; isOwner: boolean };
 
-/** Polls until `predicate` holds; the events under test are driven by locks and timers, not promises. */
-const waitFor = async (predicate: () => boolean, timeout: number): Promise<void> => {
-  const deadline = Date.now() + timeout;
-  while (!predicate()) {
-    if (Date.now() > deadline) {
-      throw new Error('timed out waiting for condition');
-    }
-    await sleep(50);
-  }
-};
-
 const makeConnection = (
   hub: ReturnType<typeof createHub>,
   keys: { leaderLockKey: string; storageLockKey: string },
@@ -99,8 +88,6 @@ const makeConnection = (
   options: { maxLeaderFailures?: number } = {},
 ) => {
   const connectedTrigger = new Trigger<Connected>();
-  // Every connect (initial and post-failover) is recorded; `connected` still resolves on the first.
-  const connects: Connected[] = [];
   const failures: unknown[] = [];
   const connection = new Client.Connection({
     createWorker: createWorkerFactory(keys.storageLockKey),
@@ -110,12 +97,11 @@ const makeConnection = (
     maxLeaderFailures: options.maxLeaderFailures,
     onPersistentFailure: (error) => failures.push(error),
     onConnect: async ({ clientToWorker, workerToClient, isOwner }) => {
-      connects.push({ clientToWorker, workerToClient, isOwner });
       connectedTrigger.wake({ clientToWorker, workerToClient, isOwner });
       return { close: async () => {} };
     },
   });
-  return { connection, connected: connectedTrigger.wait(), connects, failures };
+  return { connection, connected: connectedTrigger.wait(), failures };
 };
 
 describe('Connection multi-client', () => {
