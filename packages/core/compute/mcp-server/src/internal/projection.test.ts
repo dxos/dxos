@@ -39,7 +39,7 @@ const record = ({
   '@meta': {
     key,
     annotations: {
-      ...(mutation ? { [Projection.MUTATION_ANNOTATION_ID]: mutation } : {}),
+      ...(mutation ? { [Operation.MutationAnnotation.key]: mutation } : {}),
     },
   },
   ...(properties ? { inputSchema: { type: 'object', properties, required: Object.keys(properties) } } : {}),
@@ -136,7 +136,7 @@ describe('Projection', () => {
     test('requiresSpace reads Database.Service from the declared services', ({ expect }) => {
       const projected = Projection.projectOperations(
         [
-          record({ key: 'org.dxos.a.declared', services: [Projection.DATABASE_SERVICE_KEY] }),
+          record({ key: 'org.dxos.a.declared', services: [Database.Service.key] }),
           record({ key: 'org.dxos.a.spaceless' }),
         ],
         [owner('database', ['org.dxos.a.declared', 'org.dxos.a.spaceless'])],

@@ -323,7 +323,7 @@ field goes.
 - [x] **`ProjectedOperation` structured by audience** (user, 2026-08-20). The flat shape mixed the
       model-facing descriptor with the dispatch data, which is what made `inputSchema` read as if
       it were the tool's own schema. Now `{ key, tool: { name, description, parameters,
-  requiresSpace, hints: { mutation, idempotent } }, wireSchema }`: `parameters` (decode, ref
+requiresSpace, hints: { mutation, idempotent } }, wireSchema }`: `parameters` (decode, ref
       fields widened to accept a JSON string) and `wireSchema` (encode, un-widened, no `spaceId`)
       sit on opposite sides of the boundary and read that way. `hints` matches MCP's own
       readOnly/destructive/idempotent grouping and is what `makeTool` consumes as a unit. Dropped

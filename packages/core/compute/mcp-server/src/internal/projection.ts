@@ -15,10 +15,6 @@ import { log } from '@dxos/log';
 
 import type * as Gateway from '../Gateway';
 
-export const MUTATION_ANNOTATION_ID = Operation.MutationAnnotation.key;
-
-export const IDEMPOTENT_ANNOTATION_ID = Operation.IdempotentAnnotation.key;
-
 /**
  * Anthropic tool-name constraint. The 64-char budget is shared with the client's
  * `mcp__<server>__` prefix, which is why fully-qualified operation keys cannot be tool names
@@ -189,9 +185,6 @@ const isOptionalField = (
 const isStruct = (schema: Schema.Codec<any, any>): schema is Schema.Codec<any, any> & { readonly fields: Fields } =>
   'fields' in schema;
 
-/** Context key `Operation.serialize` writes for an operation declaring `Database.Service`. */
-export const DATABASE_SERVICE_KEY = Database.Service.key;
-
 /** NSID of a registry key: `dxn:` prefix and `:<version>` tail stripped — the form ToolIds carry. */
 const toNsid = (key: string): string => key.replace(/^dxn:/, '').replace(/:\d+\.\d+\.\d+$/, '');
 
@@ -269,8 +262,8 @@ export const projectOperations = (
       continue;
     }
 
-    const mutation = readMutation(meta?.annotations?.[MUTATION_ANNOTATION_ID], rawKey);
-    const idempotent = meta?.annotations?.[IDEMPOTENT_ANNOTATION_ID] === true;
+    const mutation = readMutation(meta?.annotations?.[Operation.MutationAnnotation.key], rawKey);
+    const idempotent = meta?.annotations?.[Operation.IdempotentAnnotation.key] === true;
 
     const key = rawKey.replace(/^dxn:/, '');
     const toolName = toNsid(rawKey).split('.').at(-1) ?? '';
@@ -290,7 +283,7 @@ export const projectOperations = (
         name: toolName,
         description,
         parameters,
-        requiresSpace: (record.services ?? []).includes(DATABASE_SERVICE_KEY),
+        requiresSpace: (record.services ?? []).includes(Database.Service.key),
         hints: { mutation, idempotent },
       },
       wireSchema,
