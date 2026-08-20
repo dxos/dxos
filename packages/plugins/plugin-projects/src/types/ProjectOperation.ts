@@ -27,8 +27,8 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  */
 export const Create = Operation.make({
   meta: {
-    // `projectCreate`, not `create`: the key's final segment is the projected tool name, and a bare
-    // `create` is too generic to stand alone among the other tools.
+    // `projectCreate`, not `create`: the whole key derives the tool name, so a bare `create` would
+    // read as `projects-create` — accurate, but the verb alone is too generic to stand on its own.
     key: makeKey('projectCreate'),
     name: 'Create Project',
     description:

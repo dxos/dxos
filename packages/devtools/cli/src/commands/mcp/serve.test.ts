@@ -8,6 +8,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import * as Operation from '@dxos/compute/Operation';
+
 import { dxBin } from '../../testing';
 
 /**
@@ -56,7 +58,15 @@ const PROJECTED_OBJECT_TOOLS = [
   'removeTag',
   'addRelation',
   'addType',
-];
+].map((verb) => spaceTool(verb));
+
+/** Tool name of a plugin-space operation verb, derived the way the projection derives it. */
+function spaceTool(verb: string): string {
+  return Operation.toolNameFromKey(`org.dxos.plugin.space.operation.${verb}`);
+}
+
+const TASK_CREATE_TOOL = Operation.toolNameFromKey('org.dxos.plugin.tasks.operation.taskCreate');
+const PROJECT_CREATE_TOOL = Operation.toolNameFromKey('org.dxos.plugin.projects.operation.projectCreate');
 
 type Response = { id?: number; result?: any };
 
@@ -131,8 +141,8 @@ describe('dx mcp serve', () => {
     const names = tools.map((tool) => tool.name);
     expect(names).to.include('skillLoad');
     // Annotated operations project; the registry the CLI assembles carries the project/task verbs.
-    expect(names).to.include('taskCreate');
-    expect(names).to.include('projectCreate');
+    expect(names).to.include(TASK_CREATE_TOOL);
+    expect(names).to.include(PROJECT_CREATE_TOOL);
 
     // Every advertised schema declares an object, and a ref parameter is narrowed to its object
     // shape rather than the untyped `anyOf` the toolkit renders — both response passes, on the
@@ -140,7 +150,7 @@ describe('dx mcp serve', () => {
     for (const tool of tools) {
       expect(tool.inputSchema.type, `${tool.name} input schema`).to.equal('object');
     }
-    const taskSet = tools.find((tool) => tool.name === 'taskCreate')!.inputSchema.properties.taskSet;
+    const taskSet = tools.find((tool) => tool.name === TASK_CREATE_TOOL)!.inputSchema.properties.taskSet;
     expect(taskSet.type).to.equal('object');
     expect(taskSet).to.not.have.property('anyOf');
 
@@ -198,8 +208,8 @@ describe('dx mcp serve', () => {
 
     const byName = new Map(tools.map((tool) => [tool.name, tool.annotations]));
     expect(byName.get('whoami')?.readOnlyHint).to.be.true;
-    expect(byName.get('removeObjects')?.destructiveHint).to.be.true;
-    expect(byName.get('addObject')?.destructiveHint).to.be.false;
+    expect(byName.get(spaceTool('removeObjects'))?.destructiveHint).to.be.true;
+    expect(byName.get(spaceTool('addObject'))?.destructiveHint).to.be.false;
   });
 
   // This profile has no identity, which is the interesting case: the tool has to say so as a tool
