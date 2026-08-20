@@ -52,7 +52,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
         <ScrollArea.Root centered padding thin>
           <ScrollArea.Viewport>
             <Mosaic.Stack
-              classNames='gap-1'
+              classNames='py-2 gap-1'
               draggable={false}
               items={results}
               getId={(item) => item.id}

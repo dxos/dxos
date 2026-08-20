@@ -38,7 +38,8 @@ const ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-ite
 
 /**
  * App bar state for the mobile layout: title, dropdown actions, and back button track the top of the
- * mobile stack (see {@link useMobileStack}) rather than the deck's plank set.
+ * stack (see {@link useMobileStack}) rather than the attended plank, since a stack shows one plank
+ * at a time and the app bar is chrome for that one.
  */
 export const useMobileAppBar = (): MobileAppBar => {
   const { t } = useTranslation(meta.profile.key);
