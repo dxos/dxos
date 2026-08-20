@@ -6,14 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Context as DxContext } from '@dxos/context';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ATPROTO_OAUTH_SCOPES, type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
 import { RedeemOAuthRecovery } from './definitions';
-import { createEdgeHttpClient, openAuthPage } from './shared';
+import { beginOAuthFlow, createEdgeHttpClient } from './shared';
 
 /**
  * Recover an existing identity by completing an OAuth flow with a registered recovery provider
@@ -48,20 +47,12 @@ const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRe
         ...(data.loginHint ? { loginHint: data.loginHint } : {}),
       };
 
-      const initiateResponse = yield* Effect.tryPromise({
-        try: () => edgeClient.initiateOAuthFlow(DxContext.default(), initiateRequest),
-        catch: (error) => new Error(`OAuth initiate failed: ${error instanceof Error ? error.message : String(error)}`),
-      });
-
       // The finalizer needs only the one-time `recoveryProof` carried in the redirect URL — no
       // localStorage snapshot is required for recovery (unlike register, which stashes the
       // invitation code + hub URL).
       log.info('redeeming OAuth recovery (redirect flow)', { provider, accessTokenId });
 
-      // Hand the auth URL to a browser tab or, on desktop, to the shell's OAuth window. After auth
-      // the flow arrives back at `/redirect/oauth-recovery`, where the recovery finalizer redeems
-      // the proof. Failing to open it is fatal — the flow can never complete.
-      yield* openAuthPage(initiateResponse.authUrl);
+      yield* beginOAuthFlow(edgeClient, initiateRequest);
     }),
   ),
 );

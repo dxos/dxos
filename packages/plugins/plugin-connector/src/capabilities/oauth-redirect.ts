@@ -69,7 +69,7 @@ export default Capability.makeModule(
       yield* Effect.forkDetach(finalize(tokens));
     }
 
-    if (NativeOAuth.supportsNativeOAuthWindow()) {
+    if (NativeOAuth.supportsNativeOAuth()) {
       yield* Effect.forkDetach(
         NativeOAuth.nativeOAuthCallbacks(OAUTH_REDIRECT_PATH).pipe(
           Stream.runForEach((url) =>

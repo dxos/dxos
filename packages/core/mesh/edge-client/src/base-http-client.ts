@@ -92,6 +92,25 @@ export abstract class BaseHttpClient {
     return this._baseUrl;
   }
 
+  /**
+   * The `Authorization` header this client would send on an authenticated call, minting one first
+   * if none is cached or the cached one has gone stale.
+   *
+   * For callers that have to make an EDGE request outside this client — the native OAuth flow
+   * issues `/oauth/initiate` from Rust, the only place the `Origin` header can be set to the
+   * loopback callback server. Resolves undefined when there is nothing to present (no identity, or
+   * the challenge round trip failed), which EDGE endpoints that `skipAuth` accept.
+   */
+  async getAuthHeader(): Promise<string | undefined> {
+    if (this._apiKey) {
+      return undefined;
+    }
+    if (!this._authHeader || this._authHeaderIsStale()) {
+      await this._prefetchAuthHeader();
+    }
+    return this._authHeader;
+  }
+
   setIdentity(identity: EdgeIdentity): void {
     if (this._edgeIdentity?.identityDid !== identity.identityDid || this._edgeIdentity?.peerKey !== identity.peerKey) {
       this._edgeIdentity = identity;

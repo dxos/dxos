@@ -8,11 +8,8 @@ import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import { Context as DxContext } from '@dxos/context';
 import { type Key } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { log } from '@dxos/log';
 
 import { ConnectorSpec } from '#types';
-
-import { OAUTH_REDIRECT_PATH } from '../../constants';
 
 /**
  * Parses `postMessage` payload from the OAuth relay into a narrow result.
@@ -51,55 +48,59 @@ export const decodeOAuthMessageData = (
 export const isOAuthShapedMessage = (data: unknown): boolean =>
   typeof data === 'object' && data !== null && ('success' in data || 'accessTokenId' in data);
 
-export const initiateOAuthFlow = (
+/**
+ * Ask EDGE for the provider's authorization URL and send the user to it.
+ *
+ * Returns once the page is open — completion arrives out of band, at {@link OAUTH_REDIRECT_PATH}.
+ *
+ * The platforms diverge at the initiate call, not just at the opening. In the browser the app calls
+ * EDGE itself and the result comes back through the opener or a redirect to its own origin. On
+ * desktop the flow has to run in the system browser (providers refuse embedded webviews), so EDGE
+ * must redirect to the shell's loopback server instead — and EDGE takes that target from the
+ * request's `Origin`, which only Rust can set. So the shell issues the initiate call too.
+ */
+export const beginOAuthFlow = (
   edge: EdgeHttpClient,
   spaceId: Key.SpaceId,
   oauth: NonNullable<ConnectorSpec.ConnectorEntry['oauth']>,
   accessTokenId: string,
   loginHint: string | undefined,
-): Effect.Effect<{ authUrl: string }, Error> =>
-  Effect.tryPromise({
-    try: () =>
-      edge.initiateOAuthFlow(DxContext.default(), {
-        provider: oauth.provider,
-        scopes: [...oauth.scopes],
-        spaceId,
-        accessTokenId,
-        ...(loginHint ? { loginHint } : {}),
-      }),
-    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-  });
+): Effect.Effect<void, Error> =>
+  NativeOAuth.supportsNativeOAuth()
+    ? Effect.tryPromise({
+        try: async () =>
+          NativeOAuth.startNativeOAuth({
+            edgeUrl: edge.baseUrl,
+            provider: oauth.provider,
+            scopes: [...oauth.scopes],
+            spaceId,
+            accessTokenId,
+            authHeader: await edge.getAuthHeader(),
+            ...(loginHint ? { loginHint } : {}),
+          }),
+        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+      })
+    : Effect.gen(function* () {
+        const { authUrl } = yield* Effect.tryPromise({
+          try: () =>
+            edge.initiateOAuthFlow(DxContext.default(), {
+              provider: oauth.provider,
+              scopes: [...oauth.scopes],
+              spaceId,
+              accessTokenId,
+              ...(loginHint ? { loginHint } : {}),
+            }),
+          catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+        });
 
-export const openOAuthPopupWindow = (authUrl: string): Effect.Effect<void, never> =>
-  openNativeWindow(authUrl) ??
-  Effect.sync(() => {
-    window.open(authUrl, 'oauthPopup', 'width=500,height=600');
-  });
-
-/**
- * Open the auth URL in a new top-level browser tab. Used for
- * `useRedirectFlow` connectors (e.g. atproto) where the auth server
- * nullifies `window.opener` and rejects popups.
- */
-export const openOAuthRedirectWindow = (authUrl: string): Effect.Effect<void, never> =>
-  openNativeWindow(authUrl) ??
-  Effect.sync(() => {
-    window.open(authUrl, '_blank');
-  });
-
-/**
- * On desktop both variants collapse into one: WKWebView returns null from `window.open`, so the
- * shell hosts the auth page in a window of its own and relays the callback back. That window has no
- * opener either, which is the case Edge already answers by redirecting to {@link OAUTH_REDIRECT_PATH}
- * instead of relaying via `postMessage` — so the popup variant lands on the redirect path too.
- *
- * Returns undefined off Tauri, leaving the browser path to the caller.
- */
-const openNativeWindow = (authUrl: string): Effect.Effect<void, never> | undefined =>
-  NativeOAuth.supportsNativeOAuthWindow()
-    ? Effect.promise(() => NativeOAuth.openNativeOAuthWindow(authUrl, OAUTH_REDIRECT_PATH)).pipe(
-        // The browser path cannot report a failure to open either; the flow stalls until the user
-        // retries, and the log is the only trace of why.
-        Effect.catchCause((cause) => Effect.sync(() => log.warn('failed to open native OAuth window', { cause }))),
-      )
-    : undefined;
+        // `useRedirectFlow` connectors (e.g. atproto) get a top-level tab: their auth server
+        // nullifies `window.opener` and rejects popups, so the result comes back via a redirect to
+        // this origin rather than `postMessage`.
+        yield* Effect.sync(() => {
+          if (oauth.useRedirectFlow) {
+            window.open(authUrl, '_blank');
+          } else {
+            window.open(authUrl, 'oauthPopup', 'width=500,height=600');
+          }
+        });
+      });

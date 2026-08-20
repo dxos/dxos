@@ -210,7 +210,8 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@tauri-apps/api": "catalog:"
+    "@tauri-apps/api": "catalog:",
+    "@tauri-apps/plugin-opener": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",

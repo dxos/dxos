@@ -6,14 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Context as DxContext } from '@dxos/context';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ATPROTO_OAUTH_SCOPES, type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
 import { RegisterOAuthRecovery } from './definitions';
-import { createEdgeHttpClient, oauthRecoveryPendingKey, openAuthPage } from './shared';
+import { beginOAuthFlow, createEdgeHttpClient, oauthRecoveryPendingKey } from './shared';
 
 /**
  * Begins OAuth recovery registration (redirect flow).
@@ -48,11 +47,6 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
         ...(data.loginHint ? { loginHint: data.loginHint } : {}),
       };
 
-      const initiateResponse = yield* Effect.tryPromise({
-        try: () => edgeClient.initiateOAuthFlow(DxContext.default(), initiateRequest),
-        catch: (error) => new Error(`OAuth initiate failed: ${error instanceof Error ? error.message : String(error)}`),
-      });
-
       // Persist what the finalizer needs to complete registration after the redirect reload.
       yield* Effect.try(() =>
         localStorage.setItem(
@@ -70,10 +64,7 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
 
       log.info('registering OAuth recovery (redirect flow)', { provider, accessTokenId });
 
-      // Hand the auth URL to a browser tab or, on desktop, to the shell's OAuth window. After auth
-      // the flow arrives back at `/redirect/oauth-recovery`, where the recovery finalizer takes
-      // over. Failing to open it is fatal — the flow can never complete.
-      yield* openAuthPage(initiateResponse.authUrl);
+      yield* beginOAuthFlow(edgeClient, initiateRequest);
     }),
   ),
 );

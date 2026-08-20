@@ -6,16 +6,13 @@ use std::sync::Arc;
 
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE, ORIGIN};
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, Manager, State, Url, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, State};
 use tokio::sync::Mutex;
 
 use server::OAuthServer;
 
-/// Label of the transient window that hosts a provider's authorization page.
-const OAUTH_WINDOW_LABEL: &str = "oauth";
-
-/// Event carrying the callback URL this window was redirected to, as an absolute URL string.
-const OAUTH_CALLBACK_EVENT: &str = "dxos:oauth-callback";
+/// Event carrying a callback URL the loopback server received, as an absolute URL string.
+pub const OAUTH_CALLBACK_EVENT: &str = "dxos:oauth-callback";
 
 /// OAuth result returned from the callback.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,6 +25,23 @@ pub struct OAuthResult {
     pub reason: Option<String>,
 }
 
+/// Params an OAuth-recovery callback carries back (the `register` and `recovery` purposes).
+///
+/// Kept apart from `OAuthResult`: recovery never yields an access token, and the `recovery` purpose
+/// carries no `accessTokenId` either, so there is nothing to key a per-token lookup on.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct OAuthRecoveryResult {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub access_token_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub registration_token: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recovery_proof: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
 /// Request body for initiating OAuth flow.
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -38,6 +52,14 @@ struct InitiateOAuthRequest {
     access_token_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     native_app_redirect: Option<bool>,
+    // Account recovery: `purpose` selects the flow, `register_recovery` asks kms-service to write
+    // the recovery binding, and atproto needs `login_hint` to resolve the user's auth server.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    purpose: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    register_recovery: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    login_hint: Option<String>,
 }
 
 /// Response from Edge for OAuth initiation.
@@ -75,7 +97,7 @@ impl OAuthServerState {
 /// Starts the OAuth callback server.
 /// Returns the port number the server is listening on.
 #[tauri::command]
-pub async fn start_oauth_server(state: State<'_, OAuthServerState>) -> Result<u16, String> {
+pub async fn start_oauth_server(app: AppHandle, state: State<'_, OAuthServerState>) -> Result<u16, String> {
     let mut server_lock = state.server.lock().await;
 
     // If server is already running, return existing port.
@@ -85,7 +107,7 @@ pub async fn start_oauth_server(state: State<'_, OAuthServerState>) -> Result<u1
 
     // Create and start new server.
     let mut server = OAuthServer::new();
-    let port = server.start().await?;
+    let port = server.start(app).await?;
     *server_lock = Some(server);
 
     Ok(port)
@@ -119,6 +141,20 @@ pub async fn get_oauth_result(
     }
 }
 
+/// Gets the OAuth-recovery callback params, if one has arrived.
+/// Returns None if no result is available yet.
+#[tauri::command]
+pub async fn get_oauth_recovery_result(
+    state: State<'_, OAuthServerState>,
+) -> Result<Option<OAuthRecoveryResult>, String> {
+    let server_lock = state.server.lock().await;
+
+    match &*server_lock {
+        Some(server) => Ok(server.get_recovery_result().await),
+        None => Err("OAuth server not running".to_string()),
+    }
+}
+
 /// Initiates OAuth flow by making request to Edge with correct Origin header.
 /// This bypasses browser restrictions on setting the Origin header.
 #[tauri::command]
@@ -131,6 +167,9 @@ pub async fn initiate_oauth_flow(
     redirect_origin: String,
     auth_header: Option<String>,
     native_app_redirect: Option<bool>,
+    purpose: Option<String>,
+    register_recovery: Option<bool>,
+    login_hint: Option<String>,
 ) -> Result<String, String> {
     let client = reqwest::Client::new();
 
@@ -162,6 +201,9 @@ pub async fn initiate_oauth_flow(
         space_id,
         access_token_id,
         native_app_redirect,
+        purpose,
+        register_recovery,
+        login_hint,
     };
 
     let response = client
@@ -189,61 +231,4 @@ pub async fn initiate_oauth_flow(
         .data
         .map(|d| d.auth_url)
         .ok_or_else(|| "No auth URL in response".to_string())
-}
-
-/// Opens a provider's authorization page in a window the app owns, and relays the post-auth
-/// redirect back to the app instead of following it.
-///
-/// The web app hands the page to a new tab and lets the redirect land back on its own origin, but
-/// neither half of that works here: WKWebView returns null from `window.open`, and a system browser
-/// would finalize the flow against its own storage rather than the app's. Loading the redirect in
-/// this window is no better — it would boot a second copy of the app in a window no capability
-/// grants Tauri access to — so a navigation to `callback_path` is cancelled and its URL emitted for
-/// the main window, which finalizes the flow against the client already running there.
-///
-/// No capability lists `OAUTH_WINDOW_LABEL`, so the provider's page is refused every command the
-/// IPC bridge exposes.
-#[tauri::command]
-pub fn open_oauth_window(app: AppHandle, url: String, callback_path: String) -> Result<(), String> {
-    let auth_url = Url::parse(&url).map_err(|error| format!("Invalid auth URL: {}", error))?;
-    // The URL crosses from the webview, so anything but a remote authorization endpoint here would
-    // be a way for page scripts to open privileged content in a window of the app's own making.
-    if auth_url.scheme() != "https" {
-        return Err(format!("Unsupported auth URL scheme: {}", auth_url.scheme()));
-    }
-
-    // An abandoned attempt may still hold the label; the flow is single-use, so take the slot over.
-    if let Some(existing) = app.get_webview_window(OAUTH_WINDOW_LABEL) {
-        let _ = existing.close();
-    }
-
-    // kms-service builds the callback from the `Origin` of the initiate request verbatim, so the
-    // flow returns to the app's own origin and nowhere else. Requiring it keeps a page the provider
-    // redirected to from forging a callback of its own with tokens the app would then store.
-    let app_origin = format!("http://localhost:{}", crate::webview_port(&app.config().identifier));
-    let handle = app.clone();
-    WebviewWindowBuilder::new(&app, OAUTH_WINDOW_LABEL, WebviewUrl::External(auth_url))
-        .title("Sign in")
-        .inner_size(520.0, 720.0)
-        .center()
-        .on_navigation(move |url| {
-            if url.origin().ascii_serialization() != app_origin || url.path() != callback_path {
-                return true;
-            }
-
-            let _ = handle.emit(OAUTH_CALLBACK_EVENT, url.as_str());
-            // Closing from inside the navigation decision would re-enter the webview delegate that
-            // is asking, so the window is dropped on the next tick instead.
-            let close_handle = handle.clone();
-            tauri::async_runtime::spawn(async move {
-                if let Some(window) = close_handle.get_webview_window(OAUTH_WINDOW_LABEL) {
-                    let _ = window.close();
-                }
-            });
-            false
-        })
-        .build()
-        .map_err(|error| format!("Failed to open OAuth window: {}", error))?;
-
-    Ok(())
 }

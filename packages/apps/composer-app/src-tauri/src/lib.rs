@@ -154,8 +154,8 @@ pub fn run() {
         oauth::start_oauth_server,
         oauth::stop_oauth_server,
         oauth::get_oauth_result,
+        oauth::get_oauth_recovery_result,
         oauth::initiate_oauth_flow,
-        oauth::open_oauth_window,
         #[cfg(unix)]
         xattr_cmd::get_xattr,
         #[cfg(unix)]

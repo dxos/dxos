@@ -161,7 +161,7 @@ export default Capability.makeModule(
       yield* Effect.forkDetach(finalize(params));
     }
 
-    if (NativeOAuth.supportsNativeOAuthWindow()) {
+    if (NativeOAuth.supportsNativeOAuth()) {
       // The shell cancels the callback navigation rather than booting a second copy of the app in
       // its OAuth window, so on desktop the params arrive as an event instead of a page load.
       yield* Effect.forkDetach(

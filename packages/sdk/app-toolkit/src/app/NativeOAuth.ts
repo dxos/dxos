@@ -7,11 +7,15 @@
 /**
  * Native OAuth bridge for the Tauri shell.
  *
- * The web app hands a provider's authorization page to a new tab and lets the post-auth redirect
- * land back on its own origin. The desktop app has neither half available: WKWebView returns null
- * from `window.open`, and a system browser would finalize the flow against its own storage rather
- * than the app's. The shell instead hosts the page in a window it owns, cancels the redirect back
- * to the app origin, and relays that URL here for the running app to finalize.
+ * The web app opens a tab and lets EDGE redirect it back to its own origin. Neither half works on
+ * desktop: WKWebView returns null from `window.open`, and providers refuse to authenticate inside
+ * an embedded webview anyway — Google's `disallowed_useragent` policy names `WKWebView` on macOS.
+ * So the flow runs in the user's real browser, where their existing sessions, password manager and
+ * 2FA already live, and returns to a loopback server the shell owns.
+ *
+ * That server's origin has to be the one EDGE redirects to, and EDGE takes it from the `Origin`
+ * header of the initiate request — which page script cannot set. Hence `/oauth/initiate` is issued
+ * from Rust here rather than through `EdgeHttpClient`.
  */
 
 import * as Effect from 'effect/Effect';
@@ -21,32 +25,57 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-/** Tauri event carrying an intercepted callback URL, as an absolute URL string. */
+/** Tauri event carrying a callback the loopback server received, as an absolute URL string. */
 export const OAUTH_CALLBACK_EVENT = 'dxos:oauth-callback';
 
 /**
- * Whether the authorization page has to be hosted by the shell rather than a browser tab.
+ * Whether OAuth has to run through the shell rather than a browser tab the app opens itself.
  *
- * The `open_oauth_window` command behind it is registered for desktop targets only; native mobile
- * onboarding is passkey-only and never reaches an OAuth flow.
+ * The commands behind it are registered for desktop targets only; native mobile onboarding is
+ * passkey-only and never reaches an OAuth flow.
  */
-export const supportsNativeOAuthWindow = (): boolean => isTauri();
+export const supportsNativeOAuth = (): boolean => isTauri();
 
-/**
- * Open a provider's authorization page in the shell's OAuth window.
- *
- * @param callbackPath Path of the redirect that ends the flow; the shell cancels that navigation
- * and emits its URL rather than letting the window follow it.
- */
-export const openNativeOAuthWindow = async (authUrl: string, callbackPath: string): Promise<void> => {
-  log('opening native OAuth window', { callbackPath });
-  const { invoke } = await import('@tauri-apps/api/core');
-  await invoke('open_oauth_window', { url: authUrl, callbackPath });
+/** The client's `InitiateOAuthFlowRequest`, as the shell's initiate command takes it. */
+export type NativeOAuthRequest = {
+  edgeUrl: string;
+  provider: string;
+  scopes: string[];
+  spaceId: string;
+  accessTokenId: string;
+  /** The caller's EDGE presentation, so EDGE can associate the flow with the current identity. */
+  authHeader?: string;
+  /** Account recovery only — selects the flow and asks EDGE to write the recovery binding. */
+  purpose?: 'register' | 'recovery';
+  registerRecovery?: boolean;
+  /** atproto handle or DID; atproto cannot resolve the user's auth server without it. */
+  loginHint?: string;
 };
 
 /**
- * Subscribe to the callbacks the shell intercepts for one flow, resolving with an unsubscribe
- * function.
+ * Begin an OAuth flow in the system browser.
+ *
+ * Returns once the browser is open. Completion arrives out of band, on
+ * {@link nativeOAuthCallbacks} — this never waits for it.
+ */
+export const startNativeOAuth = async (request: NativeOAuthRequest): Promise<void> => {
+  const { invoke } = await import('@tauri-apps/api/core');
+  const { openUrl } = await import('@tauri-apps/plugin-opener');
+
+  const port = await invoke<number>('start_oauth_server');
+  const redirectOrigin = `http://localhost:${port}`;
+  log('starting native OAuth flow', { provider: request.provider, purpose: request.purpose, port });
+
+  const authUrl = await invoke<string>('initiate_oauth_flow', { ...request, redirectOrigin });
+
+  // Via the relay page rather than the provider directly, so the browser reaches the provider from
+  // the same origin the callback returns to.
+  await openUrl(`${redirectOrigin}/oauth-relay?authUrl=${encodeURIComponent(authUrl)}`);
+};
+
+/**
+ * Subscribe to the callbacks the loopback server receives for one flow, resolving with an
+ * unsubscribe function.
  *
  * The event is app-wide while a callback belongs to exactly one flow, so anything that is not this
  * flow's `callbackPath` is another listener's and is dropped here rather than at each call site.
