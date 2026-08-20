@@ -22,8 +22,6 @@ export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).p
   Plugin.addModule(Commands),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  // Skills are the atomic unit of MCP projection, so a headless host needs the Database skill for
-  // its verbs to project at all.
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(AppCapability.schema(() => import('./schema.node'))),
   Plugin.addModule(ObservabilityMappings),

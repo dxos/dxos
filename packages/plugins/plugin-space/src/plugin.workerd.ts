@@ -14,8 +14,6 @@ import { meta } from '#meta';
 // capability, so resolving it here would drag React into a bundle that cannot load it.
 export const SpacePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
-  // Skills are the atomic unit of MCP projection, so a headless host needs the Database skill for
-  // its verbs to project at all.
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(AppCapability.schema(() => import('./schema.workerd'))),
 
