@@ -403,7 +403,7 @@ Follow-ups from the 2026-08-19 audit (none block PR #12616):
 
 Direction: reshape the operation→tool projection after the Cloudflare/PostHog MCP servers — a
 small fixed tool surface instead of one tool per operation, so the tool list stops cluttering the
-model's context. The model *finds* operations through a generic discovery tool and *calls* them
+model's context. The model _finds_ operations through a generic discovery tool and _calls_ them
 through a generic invoke tool; per-operation schemas enter context only on demand. Skills stay the
 unit of governance (only operations named by an opted-in skill's `tools` list are discoverable or
 invocable), and `skillLoad` stays. Branch `claude/operation-tool-projection-rykf3p`. Plan
