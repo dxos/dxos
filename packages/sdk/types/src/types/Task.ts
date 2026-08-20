@@ -101,6 +101,9 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),
+    // A sub-task is parented to its parent task for the deletion cascade; the queryable hierarchy
+    // is the child's `parentTask` ref, so the parent holds no ref down — declared here.
+    Annotation.ChildrenAnnotation.set(['org.dxos.type.task']),
   ),
 ) {}
 

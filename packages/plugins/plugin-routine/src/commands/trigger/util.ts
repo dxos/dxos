@@ -15,8 +15,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import {
   Annotation,
   Database,
-  Entity,
   type Error as EchoError,
+  Entity,
   Feed,
   Filter,
   Obj,

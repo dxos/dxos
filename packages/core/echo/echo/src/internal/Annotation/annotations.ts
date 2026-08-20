@@ -279,6 +279,29 @@ export const HiddenAnnotationId = '@dxos/schema/annotation/Hidden';
 export const HiddenAnnotation = createAnnotationHelper<boolean>(HiddenAnnotationId);
 
 /**
+ * Wildcard admitting any typename in {@link ChildrenAnnotation} / {@link ParentAnnotation}.
+ */
+export const ANY_TYPENAME = '*';
+
+/**
+ * Declares the child typenames instances of this type may parent (`Obj.setParent`) WITHOUT holding
+ * a ref to the child (`'*'` admits any). A ref-less parent edge leaves the child reachable only by
+ * index query, so the edge must be declared somewhere; this is the parent-side declaration that
+ * such children are expected to accumulate here.
+ */
+export const ChildrenAnnotationId = '@dxos/schema/annotation/Children';
+export const ChildrenAnnotation = createAnnotationHelper<readonly string[]>(ChildrenAnnotationId);
+
+/**
+ * Declares the parent typenames instances of this type may be parented to (`Obj.setParent`) without
+ * the parent holding a ref (`'*'` admits any). The child-side counterpart of
+ * {@link ChildrenAnnotation} — e.g. a companion chat is parented to an arbitrary subject the chat's
+ * own type vouches for.
+ */
+export const ParentAnnotationId = '@dxos/schema/annotation/Parent';
+export const ParentAnnotation = createAnnotationHelper<readonly string[]>(ParentAnnotationId);
+
+/**
  * Identifies label property or JSON path expression.
  * Either a string or an array of strings representing field accessors each matched in priority order.
  */

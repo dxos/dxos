@@ -46,10 +46,10 @@ describe('deleting a project', () => {
     // Mirrors the create-object capability: owned instructions, artifacts listed by ref.
     const project = db.add(Project.make({ name: 'Test' }));
     const instructions = Instructions.make({ name: 'Instructions', text: 'Focus on this project.' });
-    Obj.setParent(instructions, project);
     Obj.update(project, (project) => {
       project.instructions = Ref.make(instructions);
     });
+    Obj.setParent(instructions, project);
 
     // Mirrors ProjectOperation.CreateChat: the chat is owned by the parent edge, not a ref field.
     const feed = db.add(Feed.make());

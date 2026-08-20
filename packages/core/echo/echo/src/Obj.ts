@@ -14,7 +14,8 @@ import * as Schema from 'effect/Schema';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EntityId, type URI } from '@dxos/keys';
+import { EID, EntityId, type URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -760,13 +761,78 @@ export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
 };
 
 /**
+ * Whether the typename is admitted by an annotation's typename list ('*' admits any).
+ */
+const admitsTypename = (admitted: readonly string[] | undefined, typename: string | undefined): boolean =>
+  !!admitted && (admitted.includes(internal.ANY_TYPENAME) || (!!typename && admitted.includes(typename)));
+
+/**
+ * Whether the parent's own data holds a ref to the child.
+ */
+const parentRefsChild = (parent: Unknown, childId: EntityId): boolean => {
+  let found = false;
+  deepMapValues(parent, (value, recurse) => {
+    if (found) {
+      return value;
+    }
+    if (Ref.isRef(value)) {
+      const eid = EID.tryParse(value.uri);
+      if (eid && EID.getEntityId(eid) === childId) {
+        found = true;
+      }
+      return value;
+    }
+    return recurse(value);
+  });
+  return found;
+};
+
+/**
+ * Whether a parent edge from `child` to `parent` is declared: the parent holds a ref to the child,
+ * the parent's type carries `ChildrenAnnotation` admitting the child's type, or the child's type
+ * carries `ParentAnnotation` admitting the parent's type. An undeclared edge leaves the child
+ * reachable only by index query (no graph path reaches it).
+ */
+export const isDeclaredParentEdge = (child: Unknown, parent: Any): boolean => {
+  const childTypename = internal.getTypename(child);
+  const parentTypename = internal.getTypename(parent);
+  assumeType<internal.InternalObjectProps>(child);
+  assumeType<internal.InternalObjectProps>(parent);
+  const childSchema = child[internal.SchemaId];
+  const parentSchema = parent[internal.SchemaId];
+  if (
+    parentSchema &&
+    admitsTypename(Option.getOrUndefined(internal.ChildrenAnnotation.get(parentSchema)), childTypename)
+  ) {
+    return true;
+  }
+  if (
+    childSchema &&
+    admitsTypename(Option.getOrUndefined(internal.ParentAnnotation.get(childSchema)), parentTypename)
+  ) {
+    return true;
+  }
+  return parentRefsChild(parent as Unknown, child.id);
+};
+
+/**
  * Sets the parent of an object.
  * If a parent (or any transitive parent) is deleted, the object will be deleted.
  * Only objects are allowed to have a parent.
+ *
+ * The edge must be declared (see {@link isDeclaredParentEdge}); an undeclared edge currently only
+ * warns while call sites are swept.
  */
+// TODO(burdon): Promote the declared-edge warning to an invariant once call sites are swept.
 export const setParent = (entity: Unknown, parent: Any | undefined) => {
   assertArgument(isObject(entity), 'Expected an object');
   assertArgument(parent === undefined || isObject(parent), 'Expected an object');
+  if (parent !== undefined && !isDeclaredParentEdge(entity, parent)) {
+    log.warn('undeclared parent edge: parent holds no ref to child and neither type declares the edge', {
+      child: internal.getTypename(entity),
+      parent: internal.getTypename(parent),
+    });
+  }
   assumeType<internal.InternalObjectProps>(entity);
   assumeType<internal.InternalObjectProps | undefined>(parent);
   entity[internal.ParentId] = parent;

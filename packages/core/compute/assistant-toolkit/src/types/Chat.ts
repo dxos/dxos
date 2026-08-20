@@ -49,6 +49,9 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
       icon: 'ph--sparkle--regular',
       hue: 'amber',
     }),
+    // A chat is parented to whatever subject it accompanies (a Project, an Agent, a document, ...),
+    // and the subject holds no ref back — the chat's own type vouches for the ref-less edge.
+    Annotation.ParentAnnotation.set(['*']),
   ),
 ) {}
 

@@ -50,7 +50,6 @@ let seeded: { space: Space; project: Project.Project; taskSet: TaskSet.TaskSet }
 const seedProject = (space: Space) => {
   const project = Project.make({ name: PROJECT_NAME, description: 'Track the plugin-projects milestone.' });
   const instructions = Instructions.make({ text: 'You are an assistant focused on this project.' });
-  Obj.setParent(instructions, project);
   // `Project.make` materializes the owned task set, so the seed uses that one rather than
   // substituting its own — swapping it would leave the project's own set orphaned.
   const taskSet = project.taskSet?.target;
@@ -62,6 +61,7 @@ const seedProject = (space: Space) => {
     project.instructions = Ref.make(instructions);
     project.artifacts = [Ref.make(artifact)];
   });
+  Obj.setParent(instructions, project);
 
   space.db.add(project);
 

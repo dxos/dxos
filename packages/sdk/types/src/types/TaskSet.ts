@@ -38,6 +38,10 @@ export class TaskSet extends Type.makeObject<TaskSet>(DXN.make('org.dxos.type.ta
     Schema.annotate({ title: 'Task Set' }),
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-square-offset--regular', hue: 'indigo' }),
+    // Tasks and milestones are parented for the deletion cascade while membership lives in the
+    // `tasks`/`milestones` arrays, so the parent edge itself is ref-less by design — declared here
+    // (see `Obj.isDeclaredParentEdge`).
+    Annotation.ChildrenAnnotation.set(['org.dxos.type.task', 'org.dxos.type.milestone']),
   ),
 ) {}
 

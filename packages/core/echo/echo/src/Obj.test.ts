@@ -2,18 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
-import { EID } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 
+import * as Annotation from './Annotation';
 import * as Entity from './Entity';
 import { SnapshotKindId } from './internal';
 import * as Obj from './Obj';
 import * as Ref from './Ref';
 import * as Relation from './Relation';
 import { TestSchema } from './testing';
-import type * as Type from './Type';
+import * as Type from './Type';
 
 describe('Obj', () => {
   describe('make', () => {
@@ -748,6 +750,35 @@ describe('Obj', () => {
 
       Obj.setParent(child, undefined);
       expect(Obj.getParent(child)).toBeUndefined();
+    });
+
+    test('isDeclaredParentEdge: a ref in the parent declares the edge', () => {
+      const person = Obj.make(TestSchema.Person, { name: 'manager' });
+      const task = Obj.make(TestSchema.Task, { title: 'task' });
+      expect(Obj.isDeclaredParentEdge(task, person)).toBe(false);
+
+      Obj.update(person, (person) => {
+        person.tasks = [Ref.make(task)];
+      });
+      expect(Obj.isDeclaredParentEdge(task, person)).toBe(true);
+    });
+
+    test('isDeclaredParentEdge: annotations declare ref-less edges', () => {
+      const AnnotatedParent = Type.makeObject(DXN.make('com.example.type.annotatedParent', '0.1.0'))(
+        Schema.Struct({}).pipe(Annotation.ChildrenAnnotation.set([Type.getTypename(TestSchema.Person)!])),
+      );
+      const AnnotatedChild = Type.makeObject(DXN.make('com.example.type.annotatedChild', '0.1.0'))(
+        Schema.Struct({}).pipe(Annotation.ParentAnnotation.set(['*'])),
+      );
+
+      // Parent-side: the parent type admits Person children, nothing else.
+      const parent = Obj.make(AnnotatedParent, {});
+      expect(Obj.isDeclaredParentEdge(Obj.make(TestSchema.Person, { name: 'child' }), parent)).toBe(true);
+      expect(Obj.isDeclaredParentEdge(Obj.make(TestSchema.Task, { title: 'child' }), parent)).toBe(false);
+
+      // Child-side wildcard: the child type vouches for any parent (the companion-chat shape).
+      const anywhere = Obj.make(AnnotatedChild, {});
+      expect(Obj.isDeclaredParentEdge(anywhere, Obj.make(TestSchema.Organization, { name: 'subject' }))).toBe(true);
     });
 
     test('create object with Obj.Parent in props', () => {
