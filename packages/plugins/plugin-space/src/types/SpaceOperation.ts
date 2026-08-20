@@ -171,8 +171,8 @@ export const AddObject = Operation.make({
   services: [Database.Service],
   input: Schema.Struct({
     object: Schema.optional(Obj.Unknown).annotate({ description: 'The object to add, already instantiated.' }),
-    // Two fields rather than a union because `Obj.Unknown` projects as bare `{ id }`, which a
-    // remote caller cannot populate; the handler enforces exactly one.
+    // Two fields rather than a union: an MCP tool's input schema must be a top-level object, and a
+    // union projects with no parameters at all, so the handler enforces exactly one.
     create: Schema.optional(ObjectDraft).annotate({
       description: 'Description of an object to create and add, when no instantiated object is available.',
     }),
