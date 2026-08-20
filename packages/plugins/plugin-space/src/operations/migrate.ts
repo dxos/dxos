@@ -15,12 +15,12 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Migrate> = SpaceOpera
       const { space, version: targetVersion } = input;
 
       if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
-        yield* Capabilities.updateAtomValueOption(SpaceCapabilities.EphemeralState, (current) => ({
+        yield* Capabilities.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
           ...current,
           sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: true },
         }));
         yield* Effect.promise(() => space.internal.migrate());
-        yield* Capabilities.updateAtomValueOption(SpaceCapabilities.EphemeralState, (current) => ({
+        yield* Capabilities.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
           ...current,
           sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: false },
         }));

@@ -44,7 +44,7 @@ export const createGenerator = <S extends Type.AnyObj>(
           .find((s) => Type.getTypename(s) === typename)
       : undefined;
     if (!view && !staticSchema) {
-      await invokePromise(SpaceOperation.AddType, { db: space.db, type: schema, show: false });
+      await invokePromise(SpaceOperation.AddType, { type: schema, show: false }, { spaceId: space.id });
     }
 
     // Create objects.

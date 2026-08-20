@@ -6,7 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { SpaceObjectOperation, SpaceOperation } from '#types';
+import { SpaceOperation } from '#types';
 
 export const key = 'org.dxos.skill.database';
 
@@ -18,13 +18,13 @@ export const operations = [
   SpaceOperation.AddObject,
   SpaceOperation.AddRelation,
   SpaceOperation.AddType,
-  SpaceObjectOperation.GetObjects,
-  SpaceObjectOperation.QueryObjects,
-  SpaceObjectOperation.QueryTypes,
-  SpaceObjectOperation.UpdateObject,
+  SpaceOperation.GetObjects,
+  SpaceOperation.QueryObjects,
+  SpaceOperation.QueryTypes,
+  SpaceOperation.UpdateObject,
   SpaceOperation.RemoveObjects,
-  SpaceObjectOperation.AddTag,
-  SpaceObjectOperation.RemoveTag,
+  SpaceOperation.AddTag,
+  SpaceOperation.RemoveTag,
 ];
 
 export const make = (): Skill.Skill =>

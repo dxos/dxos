@@ -9,14 +9,15 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, JsonSchema, Query, Scope, Type, View } from '@dxos/echo';
 
-import { SpaceObjectOperation } from '#types';
+import { SpaceOperation } from '#types';
 
 // Machinery the agent addresses through its own surface rather than as data, so listing them only
 // spends context.
+// TODO(wittjosiah): Remove?
 const EXCLUDED_TYPES = [Type.Type, View.View, Instructions.Instructions, Skill.Skill, Feed.Feed];
 const excludedTypenames = EXCLUDED_TYPES.map((type) => Type.getTypename(type));
 
-const handler: Operation.WithHandler<typeof SpaceObjectOperation.QueryTypes> = SpaceObjectOperation.QueryTypes.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.QueryTypes> = SpaceOperation.QueryTypes.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ typenames, limit }) {
       const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))

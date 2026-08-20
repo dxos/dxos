@@ -149,11 +149,6 @@
       "types": "./dist/types/src/types/SpaceForm.d.ts",
       "import": "./dist/lib/SpaceForm.mjs"
     },
-    "./SpaceObjectOperation": {
-      "source": "./src/types/SpaceObjectOperation.ts",
-      "types": "./dist/types/src/types/SpaceObjectOperation.d.ts",
-      "import": "./dist/lib/SpaceObjectOperation.mjs"
-    },
     "./SpaceOperationHandlerSet": {
       "source": "./src/operations/SpaceOperationHandlerSet.ts",
       "types": "./dist/types/src/operations/SpaceOperationHandlerSet.d.ts",

@@ -41,7 +41,6 @@ export default Capability.makeModule(
               const result = yield* Operation.invoke(
                 SpaceOperation.AddType,
                 {
-                  db: options.db,
                   name: props.name,
                   type: createDefaultSchema(),
                 },

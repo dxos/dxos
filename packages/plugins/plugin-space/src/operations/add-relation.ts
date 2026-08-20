@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddRelation> = SpaceO
       const source = yield* resolveEnd(input.source);
       const target = yield* resolveEnd(input.target);
       const { db: ambientDb } = yield* Database.Service;
-      const db = input.db ?? Obj.getDatabase(source) ?? ambientDb;
+      const db = Obj.getDatabase(source) ?? ambientDb;
       invariant(db, 'Database not found.');
 
       const schema = input.schema ?? (yield* resolveRelationType(db, input.typename));

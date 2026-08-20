@@ -3,13 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 
-import { SpaceObjectOperation } from '#types';
+import { SpaceOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof SpaceObjectOperation.QueryObjects> = SpaceObjectOperation.QueryObjects.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = SpaceOperation.QueryObjects.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({
       in: parents,
@@ -21,28 +22,23 @@ const handler: Operation.WithHandler<typeof SpaceObjectOperation.QueryObjects> =
     }) {
       const { db } = yield* Database.Service;
 
-      let query: Query.Any;
-      if (text) {
-        query = Query.all(...text.split(' ').map((term) => Query.select(Filter.text(term, { type: 'full-text' }))));
-        if (typename !== undefined) {
-          query = query.select(Filter.type(yield* resolveType(typename)));
-        }
-      } else if (typename) {
-        query = Query.select(Filter.type(yield* resolveType(typename)));
-      } else {
-        query = Query.select(Filter.everything());
-      }
+      const present = (value: string | undefined): value is string => !!value;
+      const selected = yield* Match.value({ text, typename }).pipe(
+        Match.withReturnType<Effect.Effect<Query.Any, Error, Database.Service>>(),
+        Match.when({ text: present, typename: present }, ({ text, typename }) =>
+          resolveType(typename).pipe(Effect.map((type) => fullText(text).select(Filter.type(type)))),
+        ),
+        Match.when({ text: present }, ({ text }) => Effect.succeed(fullText(text))),
+        Match.when({ typename: present }, ({ typename }) =>
+          resolveType(typename).pipe(Effect.map((type) => Query.select(Filter.type(type)))),
+        ),
+        Match.orElse(() => Effect.succeed(Query.select(Filter.everything()))),
+      );
 
-      if (parents && parents.length > 0) {
-        query = query.select(Filter.childOf(parents));
-      }
-
-      query = query.limit(limit);
-      if (includeQueues) {
-        // Must scope to the current space: `from({ allFeedsFromSpaces: true })` alone has no spaceIds, so the
-        // SQL index returns nothing (see EntityMetaIndex.buildSourceCondition).
-        query = query.from(db, { includeFeeds: true });
-      }
+      const scoped = parents && parents.length > 0 ? selected.select(Filter.childOf(parents)) : selected;
+      // Queues must be scoped to the current space: `from({ allFeedsFromSpaces: true })` alone has no
+      // spaceIds, so the SQL index returns nothing (see EntityMetaIndex.buildSourceCondition).
+      const query = includeQueues ? scoped.limit(limit).from(db, { includeFeeds: true }) : scoped.limit(limit);
 
       yield* Database.flush();
       const results = yield* Database.query(query).run;
@@ -58,6 +54,10 @@ const handler: Operation.WithHandler<typeof SpaceObjectOperation.QueryObjects> =
 );
 
 export default handler;
+
+/** Every term must match, so the words of a phrase narrow the result rather than widening it. */
+const fullText = (text: string): Query.Any =>
+  Query.all(...text.split(' ').map((term) => Query.select(Filter.text(term, { type: 'full-text' }))));
 
 /**
  * Resolves a typename against the types registered for the space, so the filter uses the same type

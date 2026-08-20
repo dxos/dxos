@@ -87,7 +87,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
         // Wire the forked chat as a companion and switch to it without navigating away.
         yield* Operation.invoke(
           SpaceOperation.AddRelation,
-          { db, schema: Chat.CompanionTo, source: newChat, target: companionTo },
+          { schema: Chat.CompanionTo, source: newChat, target: companionTo },
           { spaceId: db.spaceId },
         );
         const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);

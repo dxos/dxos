@@ -291,6 +291,19 @@ field goes.
       them), which contradicts the reason the maker defaults to `Startup` — URL restore runs
       during boot, so an idle-registered resolver is absent exactly when the deep link it answers
       is being handled.
+- [x] **Review follow-ups (user, 2026-08-20)** — `SpaceObjectOperation` folded into
+      `SpaceOperation` (one namespace; the leaf-module split was never exercised — edge does not
+      import it and every in-repo consumer already pulled both through `#types`). `addType`/
+      `addRelation` lost their `db` input, so the database only ever comes from `Database.Service`
+      keyed by the `spaceId` option; that surfaced a missed sweep site in `ChatCompanion`, which
+      invoked `AddObject`/`AddRelation` with no options at all. `Migrate` went back to the
+      non-optional `updateAtomValue` — it has two app-only callers and is not projected, so the
+      optional variant bought nothing, and `updateAtomValueOption` is deleted with its last user
+      (`getAtomValueOption` stays: `removeObjects` is projected and genuinely runs headless).
+      `query-objects` branches through `Match` instead of `let`+`if`, and `object-verbs.test.ts`
+      split into one suite per handler beside the existing `create`/`collect-garbage` tests, with
+      shared fixtures in `operations/testing.ts`. TODOs added: fold `queryTypes` into `queryObjects`
+      as one general query verb, and revisit `EXCLUDED_TYPES`.
 - [ ] **Shared operation→tool projection** (assistant ⇄ mcp) — deferred with a plan, not dropped.
       What blocks a naive extraction: the two surfaces are deliberately different models of the
       same operation. The assistant presents refs as LLM-friendly URI _strings_ (`RefFromLLM`,

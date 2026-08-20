@@ -54,7 +54,6 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
         const { relation } = yield* Operation.invoke(
           SpaceOperation.AddRelation,
           {
-            db,
             schema: AnchoredTo.AnchoredTo,
             source: thread,
             target: subject,

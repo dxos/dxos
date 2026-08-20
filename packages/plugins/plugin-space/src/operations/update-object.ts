@@ -8,9 +8,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 
-import { SpaceObjectOperation } from '#types';
+import { SpaceOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof SpaceObjectOperation.UpdateObject> = SpaceObjectOperation.UpdateObject.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.UpdateObject> = SpaceOperation.UpdateObject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ object, properties }) {
       const { db } = yield* Database.Service;

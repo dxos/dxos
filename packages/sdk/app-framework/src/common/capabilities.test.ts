@@ -10,7 +10,7 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Capability from '../core/capability';
 import * as CapabilityManager from '../core/capability-manager';
-import { AtomRegistry, getAtomValue, getAtomValueOption, updateAtomValueOption } from './capabilities';
+import { AtomRegistry, getAtomValue, getAtomValueOption } from './capabilities';
 
 const Counter = Capability.makeSingleton<Atom.Writable<number>>()('org.dxos.test.capability.counter');
 
@@ -66,28 +66,6 @@ describe('getAtomValueOption', () => {
         Effect.result,
       );
       expect(result._tag).toBe('Failure');
-    }),
-  );
-});
-
-describe('updateAtomValueOption', () => {
-  it.effect('writes through when the capability is contributed', () =>
-    Effect.gen(function* () {
-      const { manager, atom, registry } = setup();
-      yield* updateAtomValueOption(Counter, (current) => current + 1).pipe(
-        Effect.provideService(Capability.Service, manager),
-      );
-      expect(registry.get(atom)).toBe(2);
-    }),
-  );
-
-  it.effect('is a no-op when the capability is uncontributed', () =>
-    Effect.gen(function* () {
-      const { manager, atom, registry } = setup({ withAtom: false });
-      yield* updateAtomValueOption(Counter, (current) => current + 1).pipe(
-        Effect.provideService(Capability.Service, manager),
-      );
-      expect(registry.get(atom)).toBe(1);
     }),
   );
 });

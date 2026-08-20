@@ -33,7 +33,6 @@ export default defineConfig({
     'SpaceCapability': 'src/types/SpaceCapability.ts',
     'types/Settings': 'src/types/Settings.ts',
     'CollectionOperation': 'src/types/CollectionOperation.ts',
-    'SpaceObjectOperation': 'src/types/SpaceObjectOperation.ts',
     'SpaceOperation': 'src/types/SpaceOperation.ts',
     'types': 'src/types/index.ts',
   },

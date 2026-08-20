@@ -86,6 +86,12 @@ config. The MCP server maps it to `readOnlyHint`/`destructiveHint` exactly as `s
 now also maps the existing `Operation.idempotent` annotation to `idempotentHint`. An unclassified
 operation emits no hints, which clients treat as possibly-destructive.
 
+The space operations are one namespace: `SpaceObjectOperation`'s verbs (`getObjects`,
+`queryObjects`, `queryTypes`, `updateObject`, `addTag`, `removeTag`) move into `SpaceOperation`, and
+the `@dxos/plugin-space/SpaceObjectOperation` subpath is removed — import them from
+`@dxos/plugin-space/SpaceOperation`. `addType` and `addRelation` also drop their `db` input: the
+database comes from `Database.Service`, which callers key with `{ spaceId }` in the invoke options.
+
 `addObject`, `addRelation` and `addType` now declare `Database.Service` as a required service, and
 the MCP projection keys the ambient `spaceId` tool parameter off that declaration — only
 space-addressed tools advertise it (`removeObjects` takes its space from the entities or

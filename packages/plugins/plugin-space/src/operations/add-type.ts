@@ -19,9 +19,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOpera
         'Pass exactly one of `type` (instantiated) or `jsonSchema` (described).',
       );
 
-      const { db: ambientDb } = yield* Database.Service;
-      const db = input.db ?? ambientDb;
-      invariant(db, 'Database not found.');
+      const { db } = yield* Database.Service;
 
       const type = yield* Effect.promise(() => db.addType(input.type ?? describedType(input)));
       Type.update(type, (draft) => {

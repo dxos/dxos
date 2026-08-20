@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity } from '@dxos/echo';
 
-import { SpaceObjectOperation } from '#types';
+import { SpaceOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof SpaceObjectOperation.RemoveTag> = SpaceObjectOperation.RemoveTag.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.RemoveTag> = SpaceOperation.RemoveTag.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ tag, object }) {
       const resolved = yield* Database.load(object);

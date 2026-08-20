@@ -336,24 +336,6 @@ export const updateAtomValue = <T>(
   });
 
 /**
- * Update an atom capability value if it is contributed, else do nothing.
- *
- * The write counterpart to {@link getAtomValueOption}, for operations whose atom write is UI
- * bookkeeping (progress flags, ephemeral state) that a headless host has no consumer for.
- *
- * @example yield* Capabilities.updateAtomValueOption(SpaceCapabilities.EphemeralState, (s) => ({ ...s, busy: true }));
- */
-export const updateAtomValueOption = <T>(
-  atomCapability: Capability$.InterfaceDef<Atom.Writable<T>>,
-  fn: (current: T) => T,
-): Effect.Effect<void, never, Capability$.Service> =>
-  Effect.gen(function* () {
-    const registry = yield* Capability$.getOption(AtomRegistry);
-    const atom = yield* Capability$.getOption(atomCapability);
-    Option.map(Option.all([registry, atom]), ([registry, atom]) => registry.set(atom, fn(registry.get(atom))));
-  });
-
-/**
  * Subscribe to an atom capability.
  * @example const unsubscribe = yield* Capabilities.subscribeAtom(CommentCapabilities.Settings, (value) => ...);
  */

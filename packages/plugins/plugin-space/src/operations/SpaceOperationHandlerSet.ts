@@ -5,15 +5,15 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { SpaceObjectOperation, SpaceOperation } from '#types';
+import { SpaceOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
-  SpaceObjectOperation.AddTag.pipe(Operation.lazyHandler(() => import('./add-tag'))),
-  SpaceObjectOperation.GetObjects.pipe(Operation.lazyHandler(() => import('./get-objects'))),
-  SpaceObjectOperation.QueryObjects.pipe(Operation.lazyHandler(() => import('./query-objects'))),
-  SpaceObjectOperation.QueryTypes.pipe(Operation.lazyHandler(() => import('./query-types'))),
-  SpaceObjectOperation.RemoveTag.pipe(Operation.lazyHandler(() => import('./remove-tag'))),
-  SpaceObjectOperation.UpdateObject.pipe(Operation.lazyHandler(() => import('./update-object'))),
+  SpaceOperation.AddTag.pipe(Operation.lazyHandler(() => import('./add-tag'))),
+  SpaceOperation.GetObjects.pipe(Operation.lazyHandler(() => import('./get-objects'))),
+  SpaceOperation.QueryObjects.pipe(Operation.lazyHandler(() => import('./query-objects'))),
+  SpaceOperation.QueryTypes.pipe(Operation.lazyHandler(() => import('./query-types'))),
+  SpaceOperation.RemoveTag.pipe(Operation.lazyHandler(() => import('./remove-tag'))),
+  SpaceOperation.UpdateObject.pipe(Operation.lazyHandler(() => import('./update-object'))),
   SpaceOperation.AddObject.pipe(Operation.lazyHandler(() => import('./add-object'))),
   SpaceOperation.AddRelation.pipe(Operation.lazyHandler(() => import('./add-relation'))),
   SpaceOperation.AddType.pipe(Operation.lazyHandler(() => import('./add-type'))),
