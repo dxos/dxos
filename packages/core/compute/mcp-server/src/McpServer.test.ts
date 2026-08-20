@@ -14,6 +14,7 @@ import { Database } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, SpaceId } from '@dxos/keys';
 
+import * as Catalog from './internal/catalog';
 import * as Projection from './internal/projection';
 import * as McpRegistry from './McpRegistry';
 import * as McpServer from './McpServer';
@@ -53,55 +54,85 @@ const testGateway = ({
   };
 };
 
-const operation = (tool: Partial<Projection.ProjectedOperation['tool']> = {}): Projection.ProjectedOperation => ({
-  key: 'org.dxos.function.tasks.create',
-  tool: {
-    name: 'taskCreate',
-    parameters: {},
-    requiresSpace: true,
-    hints: { mutation: 'write' },
-    ...tool,
-  },
-});
+const KEY = 'org.dxos.function.tasks.create';
+
+/**
+ * A catalog over one operation. Its input passes through untouched by default (no `wireSchema`,
+ * the non-object-input case), so a test that is not about validation states its arguments plainly.
+ */
+const catalogOf = (
+  overrides: {
+    parameters?: Projection.Fields;
+    wireSchema?: Schema.Codec<any, any>;
+    entry?: Partial<Projection.OperationEntry>;
+  } = {},
+): Catalog.Catalog =>
+  Catalog.make([
+    {
+      key: KEY,
+      entry: { key: KEY, skills: ['codeProject'], requiresSpace: true, mutation: 'write', ...overrides.entry },
+      parameters: overrides.parameters ?? {},
+      wireSchema: overrides.wireSchema,
+    },
+  ]);
+
+const invoke = (
+  gateway: McpRegistry.Shape,
+  args: { key?: string; input?: Record<string, unknown>; spaceId?: string },
+  catalog: Catalog.Catalog = catalogOf(),
+) => McpServer.invoke(gateway, catalog, { key: args.key ?? KEY, input: args.input, spaceId: args.spaceId });
 
 const skill = (props: { key: string; instructions: string }) => ({ ...props, mcpPrompt: true, name: props.key });
 
 describe('McpServer', () => {
-  describe('projected tool handler', () => {
-    test('dispatches the operation into the session default space', async ({ expect }) => {
+  describe('invokeOperation', () => {
+    test('dispatches the named operation into the session default space', async ({ expect }) => {
       const { gateway, invocations } = testGateway();
-      const result = await EffectEx.runPromise(McpServer.makeHandler(gateway, operation())({ title: 'Write tests' }));
-      expect(invocations).to.deep.equal([
-        { key: 'org.dxos.function.tasks.create', input: { title: 'Write tests' }, spaceId: SPACE_A },
-      ]);
+      const result = await EffectEx.runPromise(invoke(gateway, { input: { title: 'Write tests' } }));
+      expect(invocations).to.deep.equal([{ key: KEY, input: { title: 'Write tests' }, spaceId: SPACE_A }]);
       expect(result).to.deep.equal({ ok: true });
+    });
+
+    test('an unknown key points at findOperations rather than failing opaquely', async ({ expect }) => {
+      const { gateway, invocations } = testGateway();
+      const result = await EffectEx.runPromise(Effect.result(invoke(gateway, { key: 'org.dxos.nope' })));
+      expect(failureOf(result).code).to.equal('invalid_request');
+      expect(failureOf(result).message).to.include('findOperations');
+      expect(invocations).to.have.length(0);
+    });
+
+    test('a key spelled with its dxn: prefix or version still dispatches', async ({ expect }) => {
+      const { gateway, invocations } = testGateway();
+      await EffectEx.runPromise(invoke(gateway, { key: `dxn:${KEY}:0.1.0` }));
+      expect(invocations[0].key).to.equal(KEY);
     });
 
     test('a non-object output is wrapped, because structuredContent must be an object', async ({ expect }) => {
       const { gateway } = testGateway({ output: 42 });
-      const result = await EffectEx.runPromise(McpServer.makeHandler(gateway, operation())({}));
-      expect(result).to.deep.equal({ output: 42 });
+      expect(await EffectEx.runPromise(invoke(gateway, {}))).to.deep.equal({ output: 42 });
     });
 
     test('space-less references in the result are qualified with the space they resolved in', async ({ expect }) => {
       const { gateway } = testGateway({ output: { taskSet: { '/': 'echo:///01J000000000000000000000000' } } });
-      const result = await EffectEx.runPromise(McpServer.makeHandler(gateway, operation())({}));
+      const result = await EffectEx.runPromise(invoke(gateway, {}));
       expect(result).to.deep.equal({ taskSet: { '/': `echo://${SPACE_A}/01J000000000000000000000000` } });
     });
 
     test('a reference reachable by two paths is qualified on both', async ({ expect }) => {
       const shared = { '/': 'echo:///01J000000000000000000000000' };
       const { gateway } = testGateway({ output: { first: shared, second: shared } });
-      const result = await EffectEx.runPromise(McpServer.makeHandler(gateway, operation())({}));
+      const result = await EffectEx.runPromise(invoke(gateway, {}));
       const qualified = { '/': `echo://${SPACE_A}/01J000000000000000000000000` };
       expect(result).to.deep.equal({ first: qualified, second: qualified });
     });
 
-    test('an operation that declares spaceId itself receives it as input', async ({ expect }) => {
+    test('an operation that declares spaceId itself keeps it, and it selects the space', async ({ expect }) => {
       const { gateway, invocations } = testGateway();
-      await EffectEx.runPromise(
-        McpServer.makeHandler(gateway, operation({ parameters: { spaceId: Schema.String } }))({ spaceId: SPACE_A }),
-      );
+      const catalog = catalogOf({
+        parameters: { spaceId: Schema.String },
+        wireSchema: Schema.Struct({ spaceId: Schema.String }),
+      });
+      await EffectEx.runPromise(invoke(gateway, { input: { spaceId: SPACE_A } }, catalog));
       expect(invocations[0].input).to.deep.equal({ spaceId: SPACE_A });
       expect(invocations[0].spaceId).to.equal(SPACE_A);
     });
@@ -109,21 +140,18 @@ describe('McpServer', () => {
     test('a space-qualified ref argument selects its space when spaceId is omitted', async ({ expect }) => {
       const { gateway, invocations } = testGateway({ spaceIds: [SPACE_A, SPACE_B] });
       await EffectEx.runPromise(
-        McpServer.makeHandler(
-          gateway,
-          operation(),
-        )({ taskSet: { '/': `echo://${SPACE_B}/01J000000000000000000000000` } }),
+        invoke(gateway, { input: { taskSet: { '/': `echo://${SPACE_B}/01J000000000000000000000000` } } }),
       );
       expect(invocations[0].spaceId).to.equal(SPACE_B);
     });
 
-    test('an explicit spaceId still wins over the reference hint', async ({ expect }) => {
+    test('an explicit spaceId still wins over the reference hint, and stays out of the input', async ({ expect }) => {
       const { gateway, invocations } = testGateway({ spaceIds: [SPACE_A, SPACE_B] });
       await EffectEx.runPromise(
-        McpServer.makeHandler(
-          gateway,
-          operation(),
-        )({ spaceId: SPACE_A, taskSet: { '/': `echo://${SPACE_B}/01J000000000000000000000000` } }),
+        invoke(gateway, {
+          spaceId: SPACE_A,
+          input: { taskSet: { '/': `echo://${SPACE_B}/01J000000000000000000000000` } },
+        }),
       );
       expect(invocations[0].spaceId).to.equal(SPACE_A);
       expect(invocations[0].input).to.not.have.property('spaceId');
@@ -131,32 +159,52 @@ describe('McpServer', () => {
 
     test('a space outside the session context is refused before the operation runs', async ({ expect }) => {
       const { gateway, invocations } = testGateway();
-      const result = await EffectEx.runPromise(
-        Effect.result(McpServer.makeHandler(gateway, operation())({ spaceId: SPACE_B })),
-      );
+      const result = await EffectEx.runPromise(Effect.result(invoke(gateway, { spaceId: SPACE_B })));
       expect(failureOf(result).code).to.equal('space_not_in_context');
       expect(invocations).to.have.length(0);
     });
 
     test('an operation failure carries the underlying message, not an Effect envelope', async ({ expect }) => {
       const { gateway } = testGateway({ outage: true });
-      const result = await EffectEx.runPromise(Effect.result(McpServer.makeHandler(gateway, operation())({})));
+      const result = await EffectEx.runPromise(Effect.result(invoke(gateway, {})));
       expect(failureOf(result).message).to.include('registry unavailable');
       expect(failureOf(result).code).to.equal('operation_failed');
     });
-  });
 
-  describe('makeTool', () => {
-    test('a space-addressed operation gains the ambient spaceId parameter; others do not', ({ expect }) => {
-      const spaceAddressed = McpServer.makeTool(operation({ requiresSpace: true }));
-      const spaceless = McpServer.makeTool(operation({ requiresSpace: false }));
-      expect(Object.keys(spaceAddressed.parametersSchema.fields)).to.include('spaceId');
-      expect(Object.keys(spaceless.parametersSchema.fields)).to.not.include('spaceId');
+    // Input arrives as raw JSON rather than through a per-operation tool schema, so this handler is
+    // the only thing standing between a malformed call and the operation's own internals.
+    test('input is validated against the schema, naming the lookup that returns it', async ({ expect }) => {
+      const { gateway, invocations } = testGateway();
+      const catalog = catalogOf({
+        parameters: { title: Schema.String },
+        wireSchema: Schema.Struct({ title: Schema.String }),
+      });
+      const result = await EffectEx.runPromise(Effect.result(invoke(gateway, { input: { title: 42 } }, catalog)));
+      expect(failureOf(result).code).to.equal('invalid_request');
+      expect(failureOf(result).message).to.include('findOperations');
+      expect(invocations).to.have.length(0);
     });
 
-    test('an operation declaring its own spaceId keeps it, without the ambient duplicate', ({ expect }) => {
-      const tool = McpServer.makeTool(operation({ requiresSpace: true, parameters: { spaceId: Schema.String } }));
-      expect(tool.parametersSchema.fields.spaceId).to.equal(Schema.String);
+    test('a valid input reaches the registry in wire form', async ({ expect }) => {
+      const { gateway, invocations } = testGateway();
+      const catalog = catalogOf({
+        parameters: { title: Schema.String },
+        wireSchema: Schema.Struct({ title: Schema.String }),
+      });
+      await EffectEx.runPromise(invoke(gateway, { input: { title: 'Ship it' } }, catalog));
+      expect(invocations[0].input).to.deep.equal({ title: 'Ship it' });
+    });
+  });
+
+  describe('findOperations', () => {
+    test('the fixed surface is three tools, whatever the registry holds', ({ expect }) => {
+      expect([...McpServer.TOOL_NAMES]).to.deep.equal(['findOperations', 'invokeOperation', 'skillLoad']);
+    });
+
+    test('a search returns rows without schemas; naming keys returns them', ({ expect }) => {
+      const catalog = catalogOf({ entry: { name: 'Create Task', description: 'Creates a task.', inputSchema: {} } });
+      expect(catalog.find({ query: 'creates' })[0]).to.not.have.property('inputSchema');
+      expect(catalog.find({ keys: [KEY] })[0]).to.have.property('inputSchema');
     });
   });
 
@@ -164,7 +212,7 @@ describe('McpServer', () => {
     test('a registry outage degrades to an empty projection rather than failing the request', async ({ expect }) => {
       const { gateway } = testGateway({ outage: true });
       const [operations, skills] = await EffectEx.runPromise(
-        Effect.all([McpServer.loadOperations([], []), McpServer.loadSkills([])]).pipe(
+        Effect.all([McpServer.loadOperations([]), McpServer.loadSkills([])]).pipe(
           Effect.provideService(McpRegistry.Service, gateway),
         ),
       );
@@ -174,23 +222,37 @@ describe('McpServer', () => {
   });
 
   describe('skillLoad', () => {
-    const run = (gateway: McpRegistry.Shape, name: string) =>
+    const run = (gateway: McpRegistry.Shape, name?: string) =>
       EffectEx.runPromise(Effect.result(McpServer.loadSkillByName(gateway, name)));
 
-    test('returns the skill instructions by prompt name, or by full registry key', async ({ expect }) => {
-      const { gateway } = testGateway({
-        skills: [skill({ key: 'org.dxos.plugin.projects.skill.codeProject', instructions: 'Bind a space first.' })],
+    const withSkills = () =>
+      testGateway({
+        skills: [
+          skill({ key: 'org.dxos.plugin.projects.skill.codeProject', instructions: 'Bind a space first.' }),
+          skill({ key: 'org.dxos.skill.database', instructions: 'Query before writing.' }),
+        ],
       });
+
+    test('returns the skill instructions by prompt name, or by full registry key', async ({ expect }) => {
+      const { gateway } = withSkills();
       const byName = await run(gateway, 'codeProject');
       const byKey = await run(gateway, 'dxn:org.dxos.plugin.projects.skill.codeProject');
       expect(successOf(byName).instructions).to.equal('Bind a space first.');
       expect(successOf(byKey).instructions).to.equal('Bind a space first.');
+      expect(successOf(byName).skills.map((entry) => entry.name)).to.deep.equal(['codeProject']);
+    });
+
+    // With no per-operation tool descriptions left to carry skill pointers, a model that has not
+    // called findOperations yet needs a way to see what workflows exist at all.
+    test('no skill named lists them all, without instructions', async ({ expect }) => {
+      const { gateway } = withSkills();
+      const listing = successOf(await run(gateway));
+      expect(listing.skills.map((entry) => entry.name)).to.deep.equal(['codeProject', 'database']);
+      expect(listing.instructions).to.be.undefined;
     });
 
     test('an unknown skill fails with the available names', async ({ expect }) => {
-      const { gateway } = testGateway({
-        skills: [skill({ key: 'org.dxos.plugin.projects.skill.codeProject', instructions: 'Bind a space first.' })],
-      });
+      const { gateway } = withSkills();
       expect(failureOf(await run(gateway, 'nope')).message).to.include('codeProject');
     });
 
@@ -337,11 +399,12 @@ describe('McpServer.fromSkills', () => {
     const operations = await EffectEx.runPromise(gateway.listOperations);
     expect(operations).to.have.length(1);
 
-    // The same records drive the projection, closing the loop to the tool surface.
+    // The same records drive the projection, closing the loop to the catalog the tools serve.
     const projectedSkills = Projection.projectSkills(skills, []);
-    const projected = Projection.projectOperations(operations, projectedSkills, []);
-    expect(projected.map((operation) => operation.tool.name)).to.deep.equal(['taskCreate']);
-    expect(projected[0].tool.requiresSpace).to.be.true;
+    const projected = Projection.projectOperations(operations, projectedSkills);
+    expect(projected.map((operation) => operation.key)).to.deep.equal(['org.dxos.function.tasks.taskCreate']);
+    expect(projected[0].entry.requiresSpace).to.be.true;
+    expect(Catalog.make(projected).find({ query: 'task' })).to.have.length(1);
   });
 
   test('invokes through the ambient Operation.Service, decoding input and passing the space', async ({ expect }) => {

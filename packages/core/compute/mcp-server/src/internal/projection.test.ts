@@ -77,13 +77,12 @@ describe('Projection', () => {
       const [projected] = Projection.projectOperations(
         [Obj.toJSON(Operation.serialize(operation))],
         [owner('codeProject', ['org.dxos.function.test.doThing'])],
-        [],
       );
-      expect(projected.tool.name).to.equal('doThing');
-      expect(projected.tool.hints.mutation).to.equal('write');
-      expect(projected.tool.hints.idempotent).to.be.true;
-      expect(projected.tool.requiresSpace).to.be.true;
-      expect(Object.keys(projected.tool.parameters)).to.deep.equal(['value']);
+      expect(projected.entry.key).to.equal('org.dxos.function.test.doThing');
+      expect(projected.entry.mutation).to.equal('write');
+      expect(projected.entry.idempotent).to.be.true;
+      expect(projected.entry.requiresSpace).to.be.true;
+      expect(Object.keys(projected.parameters)).to.deep.equal(['value']);
     });
   });
 
@@ -92,28 +91,24 @@ describe('Projection', () => {
       const projected = Projection.projectOperations(
         [record({ key: 'org.dxos.function.tasks.taskCreate' }), record({ key: 'org.dxos.function.tasks.internal' })],
         [owner('codeProject', ['org.dxos.function.tasks.taskCreate'])],
-        [],
       );
-      expect(projected.map((operation) => operation.tool.name)).to.deep.equal(['taskCreate']);
+      expect(projected.map((operation) => operation.key)).to.deep.equal(['org.dxos.function.tasks.taskCreate']);
     });
 
     test('an unclassified operation projects with no mutation class', ({ expect }) => {
       const [projected] = Projection.projectOperations(
         [record({ key: 'org.dxos.function.tasks.taskCreate' })],
         [owner('codeProject', ['org.dxos.function.tasks.taskCreate'])],
-        [],
       );
-      expect(projected.tool.name).to.equal('taskCreate');
-      expect(projected.tool.hints.mutation).to.be.undefined;
+      expect(projected.entry.mutation).to.be.undefined;
     });
 
     test('a versioned key and its unversioned ToolId still join', ({ expect }) => {
       const [projected] = Projection.projectOperations(
         [record({ key: 'dxn:org.dxos.function.tasks.taskCreate:0.1.0', mutation: 'write' })],
         [owner('codeProject', ['org.dxos.function.tasks.taskCreate'])],
-        [],
       );
-      expect(projected.tool.name).to.equal('taskCreate');
+      expect(projected.entry.mutation).to.equal('write');
     });
 
     test('the mutation annotation rides through, one value per class', ({ expect }) => {
@@ -124,13 +119,8 @@ describe('Projection', () => {
           record({ key: 'org.dxos.a.remove', mutation: 'destructive' }),
         ],
         [owner('database', ['org.dxos.a.query', 'org.dxos.a.update', 'org.dxos.a.remove'])],
-        [],
       );
-      expect(projected.map((operation) => operation.tool.hints.mutation)).to.deep.equal([
-        'none',
-        'write',
-        'destructive',
-      ]);
+      expect(projected.map((operation) => operation.entry.mutation)).to.deep.equal(['none', 'write', 'destructive']);
     });
 
     test('requiresSpace reads Database.Service from the declared services', ({ expect }) => {
@@ -140,82 +130,69 @@ describe('Projection', () => {
           record({ key: 'org.dxos.a.spaceless' }),
         ],
         [owner('database', ['org.dxos.a.declared', 'org.dxos.a.spaceless'])],
-        [],
       );
-      expect(projected.map((operation) => operation.tool.requiresSpace)).to.deep.equal([true, false]);
+      expect(projected.map((operation) => operation.entry.requiresSpace)).to.deep.equal([true, false]);
     });
 
-    test("the tool name defaults to the key's final segment, and `dxn:` is stripped", ({ expect }) => {
+    test('the key is the operation identity, with `dxn:` stripped', ({ expect }) => {
       const [projected] = Projection.projectOperations(
         [record({ key: 'dxn:org.dxos.function.tasks.taskComplete', mutation: 'write' })],
         [owner('codeProject', ['org.dxos.function.tasks.taskComplete'])],
-        [],
       );
-      expect(projected.tool.name).to.equal('taskComplete');
       expect(projected.key).to.equal('org.dxos.function.tasks.taskComplete');
+      expect(projected.entry.key).to.equal(projected.key);
     });
 
-    test('a key segment violating the tool-name constraint is skipped rather than advertised', ({ expect }) => {
-      // Over the 64-char budget the client's `mcp__<server>__` prefix shares.
+    // The per-operation tool surface derived a name from the key's final segment, so a long
+    // segment could not be advertised and two operations sharing one collided. Addressed by key,
+    // neither is a constraint — and dropping them is what lets an operation keep its natural key.
+    test('a key segment longer than a tool name could be still projects', ({ expect }) => {
       const segment = 'a'.repeat(65);
       const projected = Projection.projectOperations(
         [record({ key: `org.dxos.function.tasks.${segment}` })],
         [owner('codeProject', [`org.dxos.function.tasks.${segment}`])],
-        [],
       );
-      expect(projected).to.have.length(0);
+      expect(projected).to.have.length(1);
     });
 
-    test('an undecodable mutation degrades to no hints rather than hiding the tool', ({ expect }) => {
+    test('two operations sharing a final key segment both project', ({ expect }) => {
+      const projected = Projection.projectOperations(
+        [record({ key: 'org.dxos.function.tasks.create' }), record({ key: 'org.dxos.function.projects.create' })],
+        [owner('codeProject', ['org.dxos.function.tasks.create', 'org.dxos.function.projects.create'])],
+      );
+      expect(projected.map((operation) => operation.key)).to.deep.equal([
+        'org.dxos.function.tasks.create',
+        'org.dxos.function.projects.create',
+      ]);
+    });
+
+    test('an undecodable mutation degrades to no class rather than hiding the operation', ({ expect }) => {
       const [projected] = Projection.projectOperations(
         [record({ key: 'org.dxos.function.tasks.taskCreate', mutation: 'sideways' })],
         [owner('codeProject', ['org.dxos.function.tasks.taskCreate'])],
-        [],
       );
-      expect(projected.tool.name).to.equal('taskCreate');
-      expect(projected.tool.hints.mutation).to.be.undefined;
+      expect(projected.entry.key).to.equal('org.dxos.function.tasks.taskCreate');
+      expect(projected.entry.mutation).to.be.undefined;
     });
 
-    test('membership appends the load-first pointer to the description', ({ expect }) => {
-      const [projected] = Projection.projectOperations(
-        [record({ key: 'org.dxos.function.projects.projectCreate', description: 'Creates a project.' })],
-        [owner('codeProject', ['org.dxos.function.projects.projectCreate'])],
-        [],
-      );
-      expect(projected.tool.description).to.include('Creates a project.');
-      expect(projected.tool.description).to.include("skillLoad('codeProject')");
-    });
-
-    test('an operation shared by two skills names both workflows', ({ expect }) => {
+    test('the entry names the skills that govern it, so the model knows what to load first', ({ expect }) => {
       const [projected] = Projection.projectOperations(
         [record({ key: 'org.dxos.function.tasks.taskCreate', description: 'Creates a task.' })],
         [
           owner('codeProject', ['org.dxos.function.tasks.taskCreate']),
           owner('inbox', ['org.dxos.function.tasks.taskCreate']),
         ],
-        [],
       );
-      expect(projected.tool.description).to.include("'codeProject' and 'inbox' workflows");
+      expect(projected.entry.description).to.equal('Creates a task.');
+      expect(projected.entry.skills).to.deep.equal(['codeProject', 'inbox']);
     });
 
-    test('a name collision with a static tool fails loudly, naming both claimants', ({ expect }) => {
-      expect(() =>
-        Projection.projectOperations(
-          [record({ key: 'org.dxos.function.objects.createObject' })],
-          [owner('database', ['org.dxos.function.objects.createObject'])],
-          ['createObject'],
-        ),
-      ).to.throw(/createObject.*<static tool>.*org.dxos.function.objects.createObject/s);
-    });
-
-    test('two operations claiming one tool name fail loudly', ({ expect }) => {
-      expect(() =>
-        Projection.projectOperations(
-          [record({ key: 'org.dxos.function.tasks.create' }), record({ key: 'org.dxos.function.projects.create' })],
-          [owner('codeProject', ['org.dxos.function.tasks.create', 'org.dxos.function.projects.create'])],
-          [],
-        ),
-      ).to.throw(/name collision/);
+    test('the input schema rides on the entry, for a keys lookup to hand back', ({ expect }) => {
+      const [projected] = Projection.projectOperations(
+        [record({ key: 'org.dxos.function.tasks.taskCreate', properties: { title: { type: 'string' } } })],
+        [owner('codeProject', ['org.dxos.function.tasks.taskCreate'])],
+      );
+      expect((projected.entry.inputSchema as any).properties.title).to.deep.equal({ type: 'string' });
     });
   });
 
@@ -229,11 +206,10 @@ describe('Projection', () => {
           }),
         ],
         [owner('codeProject', ['org.dxos.function.tasks.create'])],
-        [],
       )[0];
 
     test('a ref argument decodes whether it arrives as an object or JSON-stringified', async ({ expect }) => {
-      const parameters = Schema.Struct(projectRef().tool.parameters);
+      const parameters = Schema.Struct(projectRef().parameters);
       const envelope = { '/': 'echo://BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/01J000000000000000000000000' };
 
       const structured = await EffectEx.runPromise(Schema.decodeUnknownEffect(parameters)({ taskSet: envelope }));
@@ -244,7 +220,7 @@ describe('Projection', () => {
     });
 
     test('a ref argument that is neither an envelope nor JSON is still a decode failure', async ({ expect }) => {
-      const parameters = Schema.Struct(projectRef().tool.parameters);
+      const parameters = Schema.Struct(projectRef().parameters);
       const result = await EffectEx.runPromise(
         Effect.result(Schema.decodeUnknownEffect(parameters)({ taskSet: 'not a ref' })),
       );
@@ -303,6 +279,15 @@ describe('Projection', () => {
           [],
         ),
       ).to.throw(/prompt name collision/);
+    });
+
+    test('a collision with a host static prompt names both claimants', ({ expect }) => {
+      expect(() =>
+        Projection.projectSkills(
+          [skill({ key: 'org.dxos.plugin.a.skill.codeProject', instructions: 'A', mcpPrompt: true })],
+          ['codeProject'],
+        ),
+      ).to.throw(/codeProject.*<static prompt>.*org.dxos.plugin.a.skill.codeProject/s);
     });
   });
 });

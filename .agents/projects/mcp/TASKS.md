@@ -406,32 +406,56 @@ small fixed tool surface instead of one tool per operation, so the tool list sto
 model's context. The model _finds_ operations through a generic discovery tool and _calls_ them
 through a generic invoke tool; per-operation schemas enter context only on demand. Skills stay the
 unit of governance (only operations named by an opted-in skill's `tools` list are discoverable or
-invocable), and `skillLoad` stays. Branch `claude/operation-tool-projection-rykf3p`. Plan
-presented 2026-08-20 — NOT yet approved; items below are the proposal, not commitments.
+invocable), and `skillLoad` stays. Branch `claude/operation-tool-projection-rykf3p`, PR #12692.
+Plan approved by the user 2026-08-20 on all four questions as recommended: replace the per-tool
+projection outright (no mode toggle), one `invokeOperation` rather than a read/write split, keep
+projecting skills as prompts, retire the CLI's static `listOperations` in the same PR. Design and
+the three things that stopped being load-bearing: [DESIGN.md](./DESIGN.md) §1.0.
 
-- [ ] `findOperations` (package tool) — search/filter the skill-governed operations: optional
-      `query` (name/description match), `skill`, and `keys`; compact rows by default (key, name,
-      description, mutation/idempotent hints, requiresSpace, owning skills); full input/output
-      JSON Schema only when `keys` names specific operations. Read-only, idempotent.
-- [ ] `invokeOperation` (package tool) — `{ key, input, spaceId? }`; validates input against the
-      operation's schema for actionable errors (keeping the stringified-ref tolerance), resolves
-      the space (same `resolveId`/`hintFromInput` path), dispatches through the unchanged
-      `McpRegistry.Shape`, qualifies refs, wraps non-object outputs.
-- [ ] `skillLoad` listing mode (pulls forward audit G2) — with no per-tool descriptions carrying
-      skill pointers, omitted-`skill` listing becomes load-bearing for discovery.
-- [ ] SERVER_INSTRUCTIONS rewrite — describe the find → skillLoad → invoke loop; stay under the
-      2KB truncation.
-- [ ] `McpServer.layer`/`fromSkills` serve the generic surface; per-operation `toolsLayer`,
-      `makeTool`, per-op name collision contract retire (reserved names still guard the three
-      package tools against host statics).
-- [ ] CLI host: retire static `listOperations` (subsumed by `findOperations`); keep `whoami`,
-      `listSpaces`, `listPlugins`, `listTypes`; rewrite `serve.test.ts` assertions.
-- [ ] Tests: mcp-server unit tests over the new tools (projection catalog, invoke round-trip,
-      ref widening, spaceId placement); live stdio verification.
-- [ ] Edge follow-through on the next pin bump (its static toolkits unaffected; its `SkillRecord`
-      marshalling already carries `tools`).
-- [ ] Open questions (presented with the plan): replace outright vs. mode toggle; one invoke tool
-      vs. read/write split for client-side safety gating; whether prompts (skills) still project.
+**Measured: `dx mcp serve` advertises 7 tools where it advertised 27** — 4 host statics plus the
+three below — and the count no longer grows with the registry.
+
+- [x] `findOperations` — optional `query` (all whitespace-separated terms must match key, name or
+      description, case-insensitive), `skill`, and `keys`; compact rows by default (key, name,
+      description, owning skills, requiresSpace, mutation/idempotent); full input/output JSON
+      Schema only for a `keys` lookup, which also wins over the other filters. Read-only,
+      idempotent. Catalog + search live in `internal/catalog.ts` (9 unit tests).
+- [x] `invokeOperation` — `{ key, input, spaceId? }`; the key resolves in any spelling (`dxn:`
+      prefix, `:version` tail); input is validated against the operation's own schema (keeping the
+      stringified-ref tolerance) and a failure names the `keys` lookup that returns the schema;
+      space resolution is the unchanged `resolveId` / declared-`spaceId` / `hintFromInput` ladder;
+      dispatch, ref qualification and non-object output wrapping are unchanged.
+- [x] `skillLoad` listing mode (closes audit G2) — `skill` is optional; omitted returns every
+      skill (name, key, description) with no instructions. Load mode returns the single matched
+      skill in the same `skills` array plus `instructions`, so there is one output shape rather
+      than two optional halves.
+- [x] SERVER_INSTRUCTIONS rewritten around the find → skillLoad → invoke loop, still under the 2KB
+      truncation. Pinned by a wire test, since nothing else tells a model the verbs are behind two
+      tools rather than being tools.
+- [x] `McpServer.layer` / `fromSkills` serve the generic surface; `toolsLayer`, `makeTool`, the
+      per-operation `makeHandler` and the tool-name/collision contract are gone. `reservedToolNames`
+      now guards only this package's three names, and does so loudly at layer build.
+- [x] `Wire.narrowRefSchemas` deleted with its tests — it existed to un-widen ref parameters in
+      advertised per-operation schemas, and nothing advertises one any more. The decode-side
+      `tolerateStringifiedRefs` stays: a model writing `input` by hand from a ref declaration that
+      carries no `type: object` may still send the envelope as a JSON string.
+- [x] CLI host: static `listOperations` retired (subsumed by `findOperations`, which filters and
+      serves schemas as well); `whoami`, `listSpaces`, `listPlugins`, `listTypes` kept.
+- [x] Tests green: mcp-server 65 (catalog 9, projection 19, wire 7, server 30) and the CLI's live
+      stdio session 9/9 over a real MCP handshake — fixed tool list, catalog reaching the registry
+      (project/task verbs + plugin-space's object CRUD), a `keys` lookup returning a real schema,
+      an unknown key failing with a pointer to `findOperations`, and the skill listing.
+- [ ] Edge follow-through on the next pin bump (its static toolkits are unaffected; its
+      `SkillRecord` marshalling already carries `tools`). Its own `listOperations` static tool
+      should retire the same way.
+- [ ] Watch: the cost this shape accepts is that a client can no longer auto-approve a read —
+      `invokeOperation` is marked possibly-destructive because some operation behind it is. If the
+      permission friction bites, the answer is the read/write split deferred at question 2, not a
+      per-operation tool.
+- [ ] Follow-up: an advertised ref parameter is a bare `$id: '/schemas/echo/ref'` declaration in
+      the JSON Schema `findOperations` hands back, so the envelope shape is stated only in
+      SERVER_INSTRUCTIONS. Fixing ECHO's serialization to declare `type: 'object'` (the standing
+      TODO in `projection.ts`) would make the schema self-describing and retire the widening.
 
 ## Milestone 7 — third-party plugins and reload (design: [DESIGN.md](./DESIGN.md) §2-3)
 

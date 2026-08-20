@@ -7,10 +7,39 @@ dxos-side decisions those two don't cover.
 
 ## 1. Two hosts, one surface
 
-`@dxos/mcp-server` owns everything that decides what a model sees: annotated operations as tools,
-opted-in skills as prompts, `skillLoad`, name derivation and the collision contract, ref widening,
-the wire response passes, and the stdio transport that applies them. A host supplies a `Gateway`
-— reach the registry, invoke an operation, name the session's spaces — and nothing else.
+`@dxos/mcp-server` owns everything that decides what a model sees: the three-tool surface over the
+operation catalog, opted-in skills as prompts, `skillLoad`, ref widening, the wire response passes,
+and the stdio transport that applies them. A host supplies an `McpRegistry` — reach the registry,
+invoke an operation, name the session's spaces — and nothing else.
+
+### 1.0 Operations are found, not advertised (2026-08-20)
+
+The projection spent one MCP tool per operation, so every operation's name, description and full
+input schema entered the client's context at `tools/list` whether or not the task touched it — and
+the cost grew with every plugin a host enabled (27 tools on `dx mcp serve` before this change,
+7 after). The Cloudflare and PostHog MCP servers answer this the same way, and so does this one
+now: a fixed surface of `findOperations` (search; a `keys` lookup returns the schemas),
+`invokeOperation` (dispatch by key) and `skillLoad`.
+
+Three consequences worth stating, because each removes something that used to be load-bearing:
+
+- **The tool-name contract is gone.** A tool name was the key's final segment inside a 64-char
+  budget, so a long segment could not be advertised and two operations sharing a segment were a
+  collision the projection threw on. Addressed by key, neither is a constraint — and the reserved-name
+  check now guards only this package's three names against a host's static toolkit.
+- **Safety moved from annotations to data.** A per-operation tool carried
+  `readOnlyHint`/`destructiveHint`, which is what a client turns into its permission prompt. One
+  dispatch tool cannot: it is marked possibly-destructive because some operation behind it is, so a
+  client can no longer auto-approve a read. The classification still reaches the _model_, on the
+  `mutation` field of the row. That is the real cost of this shape, and it is why a read/write tool
+  split stays on the table if the permission friction bites.
+- **The skill pointer moved with it.** A governed tool's description used to carry "call
+  skillLoad('x') first"; a row names its skills as a field instead, and `skillLoad` gained a listing
+  mode so a model can see the workflows before it has searched for any operation.
+
+What did not change: skills remain the atomic unit of projection (an operation is reachable only if
+an opted-in skill's `tools` list names it), the `McpRegistry` contract is untouched, and both hosts
+pick the reshape up from the package — EDGE on its next pin bump.
 
 Two hosts consume it: edge's `mcp-space-service` (OAuth, grants, service bindings, trace feed) and
 `dx mcp serve` (stdio, local client, no auth by design — OAuth is host-layer and host-layer is what

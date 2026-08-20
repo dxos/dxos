@@ -19,6 +19,7 @@ import { Obj } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import * as Catalog from './internal/catalog';
 import * as McpRegistry from './McpRegistry';
 export { ToolFailure, type ToolFailureCode, failure } from './internal/failure';
 import { ToolFailure, failure } from './internal/failure';
@@ -47,21 +48,31 @@ import * as wireInternal from './internal/wire';
 export const SkillLoad = Tool.make('skillLoad', {
   description:
     'Loads a skill: the instructions for a multi-tool workflow hosted on this server. Call this ' +
-    "before first using any tool whose description names a skill (e.g. \"part of the 'codeProject' " +
-    'workflow"), and follow the returned instructions — they define required setup, argument ' +
-    'conventions, and ordering that the tool descriptions alone do not carry. Also useful when the ' +
-    'user asks for a workflow by name. The same skills are exposed to users as prompts; loading one ' +
-    'here brings the identical text into context without user action. No side effects.',
+    'before first invoking any operation whose findOperations row names a skill, and follow the ' +
+    'returned instructions — they define required setup, argument conventions, and ordering that ' +
+    'operation descriptions alone do not carry. Omit the skill argument to list every skill this ' +
+    'server offers. The same skills are exposed to users as prompts; loading one here brings the ' +
+    'identical text into context without user action. No side effects.',
   parameters: Schema.Struct({
-    skill: Schema.String.annotate({
-      description: "Skill name as given in a tool description or prompt listing (e.g. 'codeProject').",
-    }),
+    skill: Schema.optional(
+      Schema.String.annotate({
+        description:
+          "Skill name as given in a findOperations row or the prompt listing (e.g. 'codeProject'). " +
+          'Omit to list the available skills instead of loading one.',
+      }),
+    ),
   }),
   success: Schema.Struct({
-    name: Schema.String,
-    key: Schema.String.annotate({ description: 'Fully-qualified registry key of the skill definition.' }),
-    description: Schema.optional(Schema.String),
-    instructions: Schema.String.annotate({ description: 'The full workflow text. Follow it.' }),
+    skills: Schema.Array(
+      Schema.Struct({
+        name: Schema.String,
+        key: Schema.String.annotate({ description: 'Fully-qualified registry key of the skill definition.' }),
+        description: Schema.optional(Schema.String),
+      }),
+    ).annotate({ description: 'Every skill when none was named, otherwise just the one that was loaded.' }),
+    instructions: Schema.optional(
+      Schema.String.annotate({ description: "The named skill's full workflow text. Follow it." }),
+    ),
   }),
   failure: ToolFailure,
 })
@@ -71,25 +82,126 @@ export const SkillLoad = Tool.make('skillLoad', {
   .annotate(Tool.Destructive, false)
   .annotate(Tool.Idempotent, true);
 
-export const SkillToolkit = Toolkit.make(SkillLoad);
+/**
+ * Discovery over the operations this server can invoke.
+ *
+ * Operations are data a model searches rather than tools it is handed: a host registers dozens,
+ * and advertising each as its own MCP tool spends the client's context on schemas for operations
+ * the task will never touch. The cost of the indirection is one extra round trip before the first
+ * call, which is why the schemas come back from this same tool rather than from a third one.
+ */
+export const FindOperations = Tool.make('findOperations', {
+  description:
+    'Finds the operations this server can run — the verbs that read and write objects in DXOS ' +
+    'spaces. Start here: search with a query describing the task, then call invokeOperation with ' +
+    'the key of the operation you chose. Rows are compact (key, description, the skills the ' +
+    'operation belongs to, whether it targets a space, and whether it mutates); pass keys to get ' +
+    "the named operations' full input and output JSON Schema, which you need before invoking one " +
+    'for the first time. Omit every argument to list everything available. No side effects.',
+  parameters: Schema.Struct({
+    query: Schema.optional(
+      Schema.String.annotate({
+        description:
+          "Words to match against operation keys, names and descriptions (e.g. 'create task'). All " +
+          'terms must match. Omit to match everything.',
+      }),
+    ),
+    skill: Schema.optional(
+      Schema.String.annotate({ description: "Only operations belonging to this skill (e.g. 'codeProject')." }),
+    ),
+    keys: Schema.optional(
+      Schema.Array(Schema.String).annotate({
+        description:
+          'Exact operation keys. Naming them returns their full input and output schemas instead ' +
+          'of compact rows — the lookup to run once you have chosen what to invoke.',
+      }),
+    ),
+  }),
+  success: Schema.Struct({
+    operations: Schema.Array(
+      Schema.Struct({
+        key: Schema.String.annotate({ description: 'Pass this to invokeOperation.' }),
+        name: Schema.optional(Schema.String),
+        description: Schema.optional(Schema.String),
+        skills: Schema.Array(Schema.String).annotate({
+          description: 'Skills this operation belongs to; load one with skillLoad before invoking.',
+        }),
+        requiresSpace: Schema.Boolean.annotate({
+          description: 'Whether the operation acts on a space, making invokeOperation spaceId load-bearing.',
+        }),
+        mutation: Schema.optional(
+          Schema.String.annotate({
+            description: "Effect on state: 'none' reads, 'write' creates or updates, 'destructive' deletes.",
+          }),
+        ),
+        idempotent: Schema.optional(Schema.Boolean),
+        inputSchema: Schema.optional(
+          Schema.Unknown.annotate({ description: 'JSON Schema of the input; returned for a keys lookup only.' }),
+        ),
+        outputSchema: Schema.optional(Schema.Unknown),
+      }),
+    ),
+  }),
+  failure: ToolFailure,
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true);
 
 /**
- * `skillLoad` handlers.
+ * The single dispatch tool.
+ *
+ * Safety is a property of the operation rather than of this tool, so the hints a per-operation
+ * tool once carried — and which a client turns into its permission prompt — cannot ride on the
+ * annotations here: it is marked possibly-destructive because some operation reached through it
+ * is. The per-operation classification still reaches the model, on the `mutation` field of the
+ * `findOperations` row.
+ */
+export const InvokeOperation = Tool.make('invokeOperation', {
+  description:
+    'Invokes an operation by key — how every read and write on this server is performed. Find the ' +
+    'key with findOperations and fetch its input schema (findOperations with keys) before the ' +
+    "first call; input must match that schema. Check the operation's mutation class in its row " +
+    'before invoking: this tool is as destructive as whatever it is asked to run. References ' +
+    'between objects travel as {"/": "echo://<spaceId>/<objectId>"} envelopes — pass them back ' +
+    'exactly as received.',
+  parameters: Schema.Struct({
+    key: Schema.String.annotate({ description: 'Operation key, exactly as findOperations reported it.' }),
+    input: Schema.optional(
+      Schema.Record(Schema.String, Schema.Unknown).annotate({
+        description: "The operation's arguments, matching the input schema findOperations returned for this key.",
+      }),
+    ),
+    spaceId: spaceInternal.idParameter,
+  }),
+  success: Schema.Record(Schema.String, Schema.Unknown),
+  failure: ToolFailure,
+})
+  .annotate(Tool.Readonly, false)
+  .annotate(Tool.Destructive, true);
+
+/** The whole fixed tool surface: discovery, dispatch, and skill loading. */
+export const ServerToolkit = Toolkit.make(FindOperations, InvokeOperation, SkillLoad);
+
+/** Names this package claims; a host's static toolkit may not take one. */
+export const TOOL_NAMES = [FindOperations.name, InvokeOperation.name, SkillLoad.name] as const;
+
+export type SkillListing = {
+  skills: readonly { name: string; key: string; description?: string }[];
+  instructions?: string;
+};
+
+/**
+ * Resolves a skill by prompt name (or full registry key) to the body `skillLoad` returns; with no
+ * name, lists them all.
  *
  * A registry outage is a failure here, not an empty result: "skill not found" must mean the name
  * is wrong, never that the backend was down — an actionable error beats an opaque one.
  */
-export const SkillHandlers = SkillToolkit.toLayer(
-  Effect.map(McpRegistry.Service, (gateway) =>
-    SkillToolkit.of({ skillLoad: ({ skill }) => loadSkillByName(gateway, skill) }),
-  ),
-);
-
-/** Resolves a skill by prompt name (or full registry key) to the body `skillLoad` returns. */
 export const loadSkillByName = (
   gateway: McpRegistry.Shape,
-  skill: string,
-): Effect.Effect<{ name: string; key: string; description?: string; instructions: string }, ToolFailure> =>
+  skill: string | undefined,
+): Effect.Effect<SkillListing, ToolFailure> =>
   gateway.listSkills.pipe(
     Effect.mapError((error) => failure('operation_failed', `skillLoad failed: ${error.message}`)),
     // The same projection the prompts use, so a skill answers to exactly one name in both
@@ -103,6 +215,14 @@ export const loadSkillByName = (
       }),
     ),
     Effect.flatMap((projected) => {
+      const summarize = (candidate: Projection.ProjectedSkill) => ({
+        name: candidate.promptName,
+        key: candidate.key,
+        description: candidate.description,
+      });
+      if (skill == null) {
+        return Effect.succeed<SkillListing>({ skills: projected.map(summarize) });
+      }
       // Registry keys carry a `dxn:` prefix; accept the caller's spelling with or without it.
       const requested = skill.replace(/^dxn:/, '');
       const match = projected.find(
@@ -117,30 +237,25 @@ export const loadSkillByName = (
           ),
         );
       }
-      return Effect.succeed({
-        name: match.promptName,
-        key: match.key,
-        description: match.description,
-        instructions: match.instructions,
-      });
+      return Effect.succeed<SkillListing>({ skills: [summarize(match)], instructions: match.instructions });
     }),
   );
 
 /**
  * Fetches the registry and projects the operations the given skills' tools name.
  *
- * A registry outage degrades to zero projected tools (the host's static surface keeps serving). A
- * name collision inside {@link Projection.projectOperations} throws as a defect and deliberately
- * escapes: that is an authorship error, not an outage.
+ * A registry outage degrades to an empty catalog: `findOperations` then reports nothing to call,
+ * and the host's static surface keeps serving.
  */
 export const loadOperations = (
   skills: readonly Projection.ProjectedSkill[],
-  reservedNames: readonly string[],
 ): Effect.Effect<Projection.ProjectedOperation[], never, McpRegistry.Service> =>
   Effect.flatMap(McpRegistry.Service, (gateway) => gateway.listOperations).pipe(
-    Effect.map((operations) => Projection.projectOperations(operations, skills, reservedNames)),
+    Effect.map((operations) => Projection.projectOperations(operations, skills)),
     Effect.catch((error) => {
-      log.warn('operation registry unavailable; serving static tools only', { error: error.message });
+      log.warn('operation registry unavailable; findOperations will report nothing to call', {
+        error: error.message,
+      });
       return Effect.succeed<Projection.ProjectedOperation[]>([]);
     }),
   );
@@ -157,102 +272,101 @@ export const loadSkills = (
     }),
   );
 
-/**
- * Builds the MCP toolkit layer for projected operations.
- *
- * A projected tool gains the session's optional `spaceId` parameter unless the operation declares
- * one itself; the ambient parameter is stripped before invocation. Ref-valued inputs are already envelope-shaped in the operations' own schemas — the
- * upstream verbs were written to be invocable from a remote host. Outputs are objects by upstream
- * convention; a non-object output is wrapped as `{ output }` because MCP requires
- * `structuredContent` to be a JSON object.
- */
-export const toolsLayer = (
-  projected: readonly Projection.ProjectedOperation[],
-): Layer.Layer<never, never, McpRegistry.Service> => {
-  const tools = projected.map(makeTool);
-  // A toolkit assembled from runtime data has no per-tool type information to keep, so the casts
-  // through this function restate what the registry cannot prove: the handler record matches the
-  // toolkit built from the same list, one entry per projected operation.
-  const toolkit = Toolkit.make(...(tools as any[]));
-  const handlers = toolkit.toLayer(
-    Effect.gen(function* () {
-      const gateway = yield* McpRegistry.Service;
-      return Object.fromEntries(
-        projected.map((operation) => [operation.tool.name, makeHandler(gateway, operation)]),
-      ) as never;
-    }),
+/** The fixed tool surface, bound to a catalog: discovery and dispatch over the projected operations. */
+export const surfaceLayer = (catalog: Catalog.Catalog): Layer.Layer<never, never, McpRegistry.Service> =>
+  McpServer$.toolkit(ServerToolkit).pipe(
+    Layer.provide(
+      ServerToolkit.toLayer(
+        Effect.map(McpRegistry.Service, (gateway) =>
+          ServerToolkit.of({
+            findOperations: (query) => Effect.succeed({ operations: catalog.find(query) }),
+            invokeOperation: (args) => invoke(gateway, catalog, args),
+            skillLoad: ({ skill }) => loadSkillByName(gateway, skill),
+          }),
+        ),
+      ),
+    ),
   );
-  return McpServer$.toolkit(toolkit).pipe(Layer.provide(handlers)) as unknown as Layer.Layer<
-    never,
-    never,
-    McpRegistry.Service
-  >;
-};
 
-/** The MCP tool descriptor for a projected operation, carrying its safety hints. */
-export const makeTool = ({ tool: descriptor }: Projection.ProjectedOperation) => {
-  const tool = Tool.make(descriptor.name, {
-    description: descriptor.description,
-    parameters: Schema.Struct({
-      ...descriptor.parameters,
-      // Only space-addressed operations gain the ambient parameter: its presence is what tells the
-      // model which calls need a space id at all.
-      ...(descriptor.requiresSpace && !('spaceId' in descriptor.parameters)
-        ? { spaceId: spaceInternal.idParameter }
-        : {}),
-    }),
-    success: Schema.Record(Schema.String, Schema.Unknown),
-    failure: ToolFailure,
-  });
-  const { mutation, idempotent } = descriptor.hints;
-  // An unclassified operation makes no safety claims — clients then assume possibly-destructive.
-  const classified =
-    mutation == null
-      ? tool
-      : tool.annotate(Tool.Readonly, mutation === 'none').annotate(Tool.Destructive, mutation === 'destructive');
-  return idempotent ? classified.annotate(Tool.Idempotent, true) : classified;
-};
+/**
+ * Dispatches one `invokeOperation` call: validate the input, resolve the space, invoke, qualify refs.
+ *
+ * The input arrives as raw JSON rather than through a per-operation tool schema, so validating it
+ * here is what turns a malformed call into an error naming the offending field instead of a
+ * failure from somewhere inside the handler. Ref-valued inputs are envelope-shaped in the
+ * operations' own schemas — the upstream verbs were written to be invocable from a remote host —
+ * and the decode/encode round trip also normalizes a ref the model sent JSON-stringified. Outputs
+ * are objects by upstream convention; a non-object output is wrapped as `{ output }` because MCP
+ * requires `structuredContent` to be a JSON object.
+ */
+export const invoke = (
+  gateway: McpRegistry.Shape,
+  catalog: Catalog.Catalog,
+  { key, input, spaceId }: { key: string; input?: Record<string, unknown>; spaceId?: string },
+): Effect.Effect<Record<string, unknown>, ToolFailure> => {
+  const operation = catalog.get(key);
+  if (!operation) {
+    return Effect.fail(
+      failure(
+        'invalid_request',
+        `Unknown operation: '${key}'. Call findOperations to list the operations this server can run.`,
+      ),
+    );
+  }
 
-/** Dispatches one projected tool call: encode input, resolve the space, invoke, qualify refs. */
-export const makeHandler =
-  (gateway: McpRegistry.Shape, operation: Projection.ProjectedOperation) =>
-  (args: Record<string, unknown> | undefined): Effect.Effect<Record<string, unknown>, ToolFailure> => {
-    const { spaceId, ...withoutSpaceId } = args ?? {};
-    // An operation that declares `spaceId` itself keeps it: {@link makeTool} adds the ambient
-    // parameter only when the operation has none, so stripping it unconditionally would drop a
-    // required field before the encode below.
-    const decodedInput = 'spaceId' in operation.tool.parameters ? (args ?? {}) : withoutSpaceId;
-    const targetSpaceId = typeof spaceId === 'string' ? spaceId : undefined;
-    // The tool layer decoded the arguments (ref envelopes became live `Ref`s); encode back to the
-    // wire form the gateway expects — live refs cannot cross an RPC boundary.
-    const encodeInput =
-      operation.wireSchema != null
-        ? Schema.encodeUnknownEffect(operation.wireSchema)(decodedInput).pipe(
-            Effect.mapError((error) =>
-              failure('invalid_request', `${operation.tool.name} input did not encode: ${String(error)}`),
+  const arguments_ = input ?? {};
+  const wireInput =
+    operation.decodeSchema != null && operation.wireSchema != null
+      ? Schema.decodeUnknownEffect(operation.decodeSchema)(arguments_).pipe(
+          Effect.flatMap(Schema.encodeUnknownEffect(operation.wireSchema)),
+          Effect.mapError((error) =>
+            failure(
+              'invalid_request',
+              `${operation.key} input did not match its schema: ${String(error)}. Call findOperations ` +
+                `with keys: ['${operation.key}'] for the schema it expects.`,
             ),
-          )
-        : Effect.succeed<unknown>(decodedInput);
-    return encodeInput.pipe(
-      // The space is resolved after encoding, because the wire form is where a reference argument
-      // states which space it belongs to.
-      Effect.flatMap((input) =>
-        spaceInternal.resolveId(gateway.spaceIds, targetSpaceId ?? spaceInternal.hintFromInput(input)).pipe(
+          ),
+        )
+      : Effect.succeed<unknown>(arguments_);
+
+  return wireInput.pipe(
+    // The space is resolved after encoding, because the wire form is where a reference argument
+    // states which space it belongs to. An operation declaring `spaceId` itself states it there.
+    Effect.flatMap((wire) =>
+      spaceInternal
+        .resolveId(
+          gateway.spaceIds,
+          spaceId ?? declaredSpaceId(operation, arguments_) ?? spaceInternal.hintFromInput(wire),
+        )
+        .pipe(
           Effect.flatMap((resolvedSpaceId) =>
-            gateway.invokeOperation({ key: operation.key, input, spaceId: resolvedSpaceId }).pipe(
+            gateway.invokeOperation({ key: operation.key, input: wire, spaceId: resolvedSpaceId }).pipe(
               Effect.mapError((error) => failure('operation_failed', `${operation.key} failed: ${error.message}`)),
               Effect.map((output) => spaceInternal.qualifyRefs(output, resolvedSpaceId)),
             ),
           ),
         ),
-      ),
-      Effect.map((output) =>
-        output !== null && typeof output === 'object' && !Array.isArray(output)
-          ? (output as Record<string, unknown>)
-          : { output },
-      ),
-    );
-  };
+    ),
+    Effect.map((output) =>
+      output !== null && typeof output === 'object' && !Array.isArray(output)
+        ? (output as Record<string, unknown>)
+        : { output },
+    ),
+  );
+};
+
+/**
+ * The space named by the operation's own `spaceId` field, when it declares one.
+ *
+ * Such an operation takes its target inside `input` rather than through the tool's ambient
+ * parameter, and that value is as much a statement of which space the call targets as the ambient
+ * one — without reading it the call would run against the session default while the operation
+ * itself acted on the space it was given.
+ */
+const declaredSpaceId = (operation: Catalog.CatalogEntry, input: Record<string, unknown>): string | undefined => {
+  const declared = 'spaceId' in operation.parameters ? input.spaceId : undefined;
+  return typeof declared === 'string' ? declared : undefined;
+};
 
 /**
  * Builds the prompt layers for projected skills. The instructions text is captured at projection
@@ -271,16 +385,17 @@ export const promptsLayer = (projected: readonly Projection.ProjectedSkill[]): L
   );
 
 export type LayerOptions = {
-  /** Names of the host's statically-defined tools; a projected operation may not claim one. */
+  /** Names of the host's statically-defined tools; none may be one of {@link TOOL_NAMES}. */
   readonly reservedToolNames?: readonly string[];
   /** Names of the host's statically-defined prompts; a projected skill may not claim one. */
   readonly reservedPromptNames?: readonly string[];
 };
 
 /**
- * The whole projected surface — annotated operations as tools, opted-in skills as prompts, and
- * `skillLoad` — read from the registry when the layer is built. Hosts merge their own static
- * toolkits alongside and declare those names as reserved.
+ * The whole projected surface — `findOperations` / `invokeOperation` / `skillLoad` over the
+ * operations opted-in skills name, plus those skills as prompts — read from the registry when the
+ * layer is built. Hosts merge their own static toolkits alongside and declare those names as
+ * reserved.
  */
 export const layer = ({ reservedToolNames = [], reservedPromptNames = [] }: LayerOptions = {}): Layer.Layer<
   never,
@@ -288,14 +403,16 @@ export const layer = ({ reservedToolNames = [], reservedPromptNames = [] }: Laye
   McpRegistry.Service
 > =>
   Effect.gen(function* () {
-    // Skills first: they are the atomic unit of projection, so the tool set derives from them.
+    const claimed = reservedToolNames.filter((name) => (TOOL_NAMES as readonly string[]).includes(name));
+    if (claimed.length > 0) {
+      // Loud at layer build: a host static tool of the same name would shadow this package's,
+      // leaving the server advertising one tool and dispatching the other.
+      throw new Error(`MCP tool name collision: the host reserves names this server defines: ${claimed.join(', ')}.`);
+    }
+    // Skills first: they are the atomic unit of projection, so the catalog derives from them.
     const skills = yield* loadSkills(reservedPromptNames);
-    const operations = yield* loadOperations(skills, [...reservedToolNames, SkillLoad.name]);
-    return Layer.mergeAll(
-      McpServer$.toolkit(SkillToolkit).pipe(Layer.provide(SkillHandlers)),
-      ...(operations.length > 0 ? [toolsLayer(operations)] : []),
-      ...(skills.length > 0 ? [promptsLayer(skills)] : []),
-    );
+    const operations = yield* loadOperations(skills);
+    return Layer.mergeAll(surfaceLayer(Catalog.make(operations)), ...(skills.length > 0 ? [promptsLayer(skills)] : []));
   }).pipe(Layer.unwrap);
 
 //

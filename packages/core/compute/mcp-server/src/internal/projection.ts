@@ -16,14 +16,14 @@ import { log } from '@dxos/log';
 import type * as McpRegistry from '../McpRegistry';
 
 /**
- * Anthropic tool-name constraint. The 64-char budget is shared with the client's
- * `mcp__<server>__` prefix, which is why fully-qualified operation keys cannot be tool names
- * (they also carry dots) — names default to the key's final segment instead.
+ * Anthropic tool-name constraint, shared with the client's `mcp__<server>__` prefix inside a
+ * 64-char budget. Prompt names surface as `/mcp__<server>__<name>` and are held to it too.
+ *
+ * Operations are no longer named by it: they are addressed by their registry key through
+ * `invokeOperation`, so the key needs no shortening and two operations sharing a final segment is
+ * no longer a collision.
  */
-const TOOL_NAME_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
-
-/** Same constraint as tool names; prompt names surface as `/mcp__<server>__<name>`. */
-const PROMPT_NAME_PATTERN = TOOL_NAME_PATTERN;
+const PROMPT_NAME_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
 
 const decodeMutation = Schema.decodeUnknownResult(Operation.MutationAnnotation.schema);
 
@@ -34,32 +34,44 @@ const decodeMutation = Schema.decodeUnknownResult(Operation.MutationAnnotation.s
  */
 export type Fields = { readonly [key: string]: Schema.Codec<any, any> };
 
-export type ProjectedOperation = {
-  /** Operation key without the `dxn:` prefix — the form the gateway dispatches on. */
+/**
+ * One operation as `findOperations` returns it — the whole of what the model is told about an
+ * operation, and the reason its schemas are separable: a catalog row costs a few dozen tokens
+ * where an input schema costs hundreds, so the schemas travel only when the model asks for them
+ * by key.
+ */
+export type OperationEntry = {
+  /** Operation key without the `dxn:` prefix — what `invokeOperation` dispatches on. */
   key: string;
-  /** The tool as the model sees it. */
-  tool: {
-    name: string;
-    description?: string;
-    /** What the model writes into: ref fields widened to also accept a JSON string. */
-    parameters: Fields;
-    /**
-     * Whether the operation is space-addressed — it declares `Database.Service` — which is what
-     * adds the ambient `spaceId` parameter.
-     */
-    requiresSpace: boolean;
-    /** Behavioral hints; an absent value makes no claim, which clients read conservatively. */
-    hints: {
-      /** The operation's effect on state (`Operation.MutationAnnotation`). */
-      mutation?: Operation.Mutation;
-      /** `Operation.IdempotentAnnotation`. */
-      idempotent?: boolean;
-    };
-  };
+  name?: string;
+  description?: string;
+  /** Prompt names of the skills whose `tools` list names this operation. */
+  skills: readonly string[];
   /**
-   * What `tool.parameters` encode back through on the way to the gateway — un-widened and without
-   * `spaceId`, because the tool layer decodes ref envelopes into live `Ref`s and those do not
-   * survive an RPC boundary.
+   * Whether the operation is space-addressed — it declares `Database.Service` — which is what
+   * makes `invokeOperation`'s `spaceId` load-bearing for this call.
+   */
+  requiresSpace: boolean;
+  /** The operation's effect on state (`Operation.MutationAnnotation`); absent claims nothing. */
+  mutation?: Operation.Mutation;
+  /** `Operation.IdempotentAnnotation`. */
+  idempotent?: boolean;
+  /** Input JSON Schema, exactly as the registry serialized it; returned on request only. */
+  inputSchema?: unknown;
+  /** Output JSON Schema, same. */
+  outputSchema?: unknown;
+};
+
+export type ProjectedOperation = {
+  /** Operation key without the `dxn:` prefix — the form the registry dispatches on. */
+  key: string;
+  /** What the model is told about this operation. */
+  entry: OperationEntry;
+  /** What an `invokeOperation` input decodes through: ref fields widened to accept a JSON string. */
+  parameters: Fields;
+  /**
+   * What the decoded input encodes back through on the way to the registry — un-widened, because
+   * decoding turns ref envelopes into live `Ref`s and those do not survive an RPC boundary.
    */
   wireSchema?: Schema.Codec<any, any>;
 };
@@ -73,23 +85,6 @@ export type ProjectedSkill = {
   /** NSIDs of the skill's tools — the operations this skill projects. */
   tools: readonly string[];
 };
-
-/**
- * The load-the-skill-first pointer appended to a governed tool's description.
- *
- * The workflow's rules live in a skill the model has usually not loaded — prompts are
- * user-controlled by specification, so the model cannot fetch one itself — and the tool
- * description is the one piece of server text guaranteed in front of the model at the moment it
- * chooses to call the tool. Anthropic's tool-writing guidance makes descriptions the primary
- * behavioral lever (https://www.anthropic.com/engineering/writing-tools-for-agents), and the
- * `skillLoad` hop this points into is the shape of the MCP Skills-over-MCP extension (SEP-2640).
- */
-const skillPointer = (skills: readonly string[]): string =>
-  skills.length === 1
-    ? `Part of the '${skills[0]}' workflow — call skillLoad('${skills[0]}') and follow its instructions before ` +
-      'first use, unless they are already in context.'
-    : `Part of the ${skills.map((name) => `'${name}'`).join(' and ')} workflows — call skillLoad for each and ` +
-      'follow their instructions before first use, unless they are already in context.';
 
 /** `$id` of the reference declaration ECHO emits for a `Ref` field. */
 const REF_SCHEMA_ID = '/schemas/echo/ref';
@@ -121,16 +116,14 @@ const isRefProperty = (property: any): boolean => {
  * Widens ref-valued parameters to also accept the envelope as a JSON *string*.
  *
  * A `Ref` serializes to a declaration schema (`$id: '/schemas/echo/ref'`) that carries no
- * `"type": "object"`. Clients deciding which arguments are structured key off that keyword, so a
- * ref argument reaches us JSON-stringified — `"{\"/\":\"echo:///01J…\"}"` — and the tool layer
- * rejects the whole call with a parameter decode failure that names the declaration rather than
- * the string it actually got. Accepting both forms keeps the projection working whatever the
- * client decides, which is the only part of this we control; the object form still decodes
- * directly and is unaffected.
+ * `"type": "object"`, so nothing in the schema a model is shown says the value is structured — and
+ * a model writing `input` by hand from that schema can perfectly reasonably send
+ * `"{\"/\":\"echo:///01J…\"}"`. Without this the call fails on a decode error naming the
+ * declaration rather than the string it actually got. The object form still decodes directly and
+ * is unaffected.
  *
- * TODO(wittjosiah): Handle upstream — see `Wire.widenEchoRefSchemas`. If ECHO's reference
- * serialization declared `type: 'object'`, clients would send the envelope structured and neither
- * this widening nor the narrowing that undoes it on the wire would exist. Deferred: it changes
+ * TODO(wittjosiah): Handle upstream. If ECHO's reference serialization declared `type: 'object'`
+ * the schema would state the shape and this widening would not exist. Deferred: it changes
  * persisted schemas and older readers decode such a reference as a plain struct.
  */
 export const tolerateStringifiedRefs = (fields: Fields, inputSchema: any): Fields => {
@@ -222,23 +215,18 @@ const readInput = (inputSchema: unknown, key: string): { parameters: Fields; wir
   );
 
 /**
- * Projects registry records into tool descriptors — driven by the projected skills.
+ * Projects registry records into catalog entries — driven by the projected skills.
  *
- * An operation projects iff a projected skill's `tools` list names it, and that membership
- * produces the load-the-skill-first pointer appended to the tool's description (the SEP-2640
- * shape); a tools entry naming no operation record projects nothing.
+ * An operation projects iff a projected skill's `tools` list names it, and that membership is
+ * reported on the entry as `skills` (the SEP-2640 shape: the model loads the named skill before
+ * invoking); a tools entry naming no operation record projects nothing.
  *
  * Records arrive in wire form: `PersistentOperation` serializes with meta as a plain `@meta`
  * property carrying `key` and `annotations`, and with input/output as JSON Schema.
- *
- * Name collisions throw: two operations claiming one tool name is an authorship error the contract
- * wants surfaced loudly at projection time, not resolved silently. `reservedNames` covers the
- * host's statically-defined tools.
  */
 export const projectOperations = (
   operations: readonly McpRegistry.OperationRecord[],
   skills: readonly ProjectedSkill[],
-  reservedNames: readonly string[],
 ): ProjectedOperation[] => {
   // NSID → prompt names of the skills whose tools list it.
   const owners = new Map<string, string[]>();
@@ -266,35 +254,26 @@ export const projectOperations = (
     const idempotent = meta?.annotations?.[Operation.IdempotentAnnotation.key] === true;
 
     const key = rawKey.replace(/^dxn:/, '');
-    const toolName = toNsid(rawKey).split('.').at(-1) ?? '';
-    if (!TOOL_NAME_PATTERN.test(toolName)) {
-      log.warn('projected tool name violates the tool-name constraint; operation skipped', { key, toolName });
-      continue;
-    }
-
     const { parameters, wireSchema } = readInput(record.inputSchema, key);
-
-    const baseDescription = record.description ?? record.name;
-    const description = [baseDescription, skillPointer(owningSkills)].filter(Boolean).join(' ');
 
     projected.push({
       key,
-      tool: {
-        name: toolName,
-        description,
-        parameters,
+      entry: {
+        key,
+        name: record.name,
+        description: record.description,
+        skills: owningSkills,
         requiresSpace: (record.services ?? []).includes(Database.Service.key),
-        hints: { mutation, idempotent },
+        mutation,
+        idempotent: idempotent ? true : undefined,
+        inputSchema: record.inputSchema,
+        outputSchema: record.outputSchema,
       },
+      parameters,
       wireSchema,
     });
   }
 
-  assertUniqueNames(
-    projected.map((operation) => ({ name: operation.tool.name, source: operation.key })),
-    reservedNames,
-    'tool',
-  );
   return projected;
 };
 
@@ -333,27 +312,26 @@ export const projectSkills = (
     });
   }
 
-  assertUniqueNames(
+  assertUniquePromptNames(
     projected.map((skill) => ({ name: skill.promptName, source: skill.key })),
     reservedNames,
-    'prompt',
   );
   return projected;
 };
 
-const assertUniqueNames = (
+/**
+ * Two skills claiming one prompt name is an authorship error the contract wants surfaced loudly at
+ * projection time, not resolved silently. `reservedNames` covers the host's static prompts.
+ */
+const assertUniquePromptNames = (
   claims: readonly { name: string; source: string }[],
   reservedNames: readonly string[],
-  kind: 'tool' | 'prompt',
 ): void => {
-  const holders = new Map<string, string>(reservedNames.map((name) => [name, `<static ${kind}>`]));
+  const holders = new Map<string, string>(reservedNames.map((name) => [name, '<static prompt>']));
   for (const claim of claims) {
     const holder = holders.get(claim.name);
     if (holder !== undefined) {
-      throw new Error(
-        `MCP ${kind} name collision: '${claim.name}' claimed by both ${holder} and ${claim.source}.` +
-          (kind === 'tool' ? ' Rename one of the operation keys so their final segments differ.' : ''),
-      );
+      throw new Error(`MCP prompt name collision: '${claim.name}' claimed by both ${holder} and ${claim.source}.`);
     }
     holders.set(claim.name, claim.source);
   }
