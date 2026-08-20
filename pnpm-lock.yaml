@@ -15323,6 +15323,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-status-bar':
+        specifier: workspace:*
+        version: link:../plugin-status-bar
       '@dxos/progress':
         specifier: workspace:*
         version: link:../../core/compute/progress

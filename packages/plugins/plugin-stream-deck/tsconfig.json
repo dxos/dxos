@@ -67,6 +67,9 @@
       "path": "../plugin-space"
     },
     {
+      "path": "../plugin-status-bar"
+    },
+    {
       "path": "../plugin-testing"
     },
     {
