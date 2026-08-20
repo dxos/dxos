@@ -350,32 +350,26 @@ requiresSpace, hints: { mutation, idempotent } }, wireSchema }`: `parameters` (d
       that it belongs elsewhere.
 - [ ] **Reconcile the assistant and MCP operation→tool projections** — they should share what is
       genuinely shared, even though the surfaces stay different. Deferred, not dropped.
-
-      **Where they differ** (re-verified 2026-08-20 against the code, not the note):
-
-          1. **Different inputs, not just different style.** The assistant projects from the *live*
-             definition — `createStructFieldsFromSchema` walks `schema.ast` of an in-process Effect
-             schema (`assistant/src/tool-runtime/services.ts`). MCP projects from the *serialized wire
-             record* — `readInput` runs `JsonSchema.toEffectSchema` over a JSON Schema that already
-             round-tripped. Any shared core has to sit below both, after reconstruction.
-          2. **Refs are advertised in opposite shapes, deliberately.** `mapSchemaTypeForLLM` rewrites
-             every ref node into `RefFromLLM` (a URI *string* with a description); MCP keeps the
-             `{ "/": "echo:..." }` envelope and widens it via `tolerateStringifiedRefs` to also accept a
-             JSON string. Both decode to a `Ref`; what the model is told differs. (This is why the
-             shared `addObject` description carries no envelope sentence — it cannot be true on both.)
-          3. **Names differ.** `makeToolName` lowercases and hyphenates (`create-task`); MCP takes the
-             key's final segment (`taskCreate`).
-
-          **What that costs to converge:** any of the three is model-facing — chat-side it invalidates
-          every model fixture (the tool set is in the match key), MCP-side it changes client-visible
-          names and schemas.
-
-          **Plan, as its own PR:** (1) extract the shared schema-massaging core (null-branch dropping,
-          openness, empty-params) into `@dxos/compute`, behavior-preserving; (2) audit whether MCP's
-          emitted schemas carry the optional-`anyOf:[T, null]` defect the assistant already fixed — if
-          so the shared core becomes a response pass; (3) decide whether tool *names* should converge
-          (needs a fixture-regeneration budget).
-
+      Differences re-verified 2026-08-20 against the code, not the earlier note.
+      **Different inputs, not just style:** the assistant projects from the _live_ definition
+      (`createStructFieldsFromSchema` walks `schema.ast` of an in-process Effect schema, in
+      `assistant/src/tool-runtime/services.ts`), while MCP projects from the _serialized wire
+      record_ (`readInput` runs `JsonSchema.toEffectSchema` over JSON Schema that already
+      round-tripped) — so a shared core has to sit below both, after reconstruction.
+      **Refs are advertised in opposite shapes, deliberately:** `mapSchemaTypeForLLM` rewrites every
+      ref node into `RefFromLLM` (a URI _string_ with a description); MCP keeps the
+      `{ "/": "echo:..." }` envelope and widens it via `tolerateStringifiedRefs` to also accept a
+      JSON string. Both decode to a `Ref`; what the model is told differs — which is why the shared
+      `addObject` description carries no envelope sentence, since it cannot be true on both.
+      **Names differ:** `makeToolName` lowercases and hyphenates (`create-task`), MCP takes the
+      key's final segment (`taskCreate`).
+      **Cost to converge:** any of the three is model-facing — chat-side it invalidates every model
+      fixture (the tool set is in the match key), MCP-side it changes client-visible names and
+      schemas. **Plan, as its own PR:** (1) extract the shared schema-massaging core (null-branch
+      dropping, openness, empty-params) into `@dxos/compute`, behavior-preserving; (2) audit whether
+      MCP's emitted schemas carry the optional-`anyOf:[T, null]` defect the assistant already fixed,
+      in which case the shared core becomes a response pass; (3) decide whether tool _names_ should
+      converge (needs a fixture-regeneration budget).
 - [ ] **Edge follow-through** — on the next `@dxos/*` pin bump the worker picks the reshape up via
       the package; its `SkillRecord` marshalling in operation-service gains `tools`.
 
