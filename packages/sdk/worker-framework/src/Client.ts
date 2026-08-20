@@ -2,13 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AsyncTask, Event, Trigger, sleepWithContext } from '@dxos/async';
+import { AsyncTask, Event, Trigger, asyncTimeout, sleepWithContext } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { MaybePromise } from '@dxos/util';
 
-import { isAbortError, requestExclusiveLockWithTimeout, waitWithLockOrRpcTimeout } from './internal/locks';
+import {
+  LOCK_OR_RPC_WAIT_TIMEOUT,
+  isAbortError,
+  lockOrRpcTimeoutError,
+  requestExclusiveLock,
+  waitWithLockOrRpcTimeout,
+} from './internal/locks';
 import * as WorkerProtocol from './WorkerProtocol';
 
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
@@ -109,7 +115,9 @@ export class Connection extends Resource {
   #leaderSession: LeaderSession | undefined;
   #coordinator: WorkerProtocol.WorkerCoordinator | undefined;
 
-  // Timestamp (ms) of the last heartbeat seen from any leader; 0 if none observed yet.
+  // Timestamp (ms) of the last heartbeat seen from any leader. Seeded at open so "not yet observed"
+  // is measured from when we started listening — otherwise a tab that opens between two heartbeats
+  // reads the epoch as an infinitely stale leader and steals the lock from a healthy one.
   #lastLeaderHeartbeat = 0;
   // Timestamp (ms) of the last steal attempt; gates against thrashing re-election.
   #lastStealAttempt = 0;
@@ -121,6 +129,8 @@ export class Connection extends Resource {
 
   readonly #initialConnection = new Trigger<void>();
   #isInitialConnection = true;
+  // Last error the connect task failed with, surfaced by `_open` in place of the bare timeout.
+  #lastConnectError: unknown;
   readonly #reconnectCallbacks: Array<() => Promise<void>> = [];
 
   readonly closed = new Event<Error | undefined>();
@@ -157,16 +167,31 @@ export class Connection extends Resource {
 
   override async _open(): Promise<void> {
     log('worker-connection: opening', { clientId: this.#clientId });
+    this.#lastLeaderHeartbeat = Date.now();
     this.#coordinator = await this.#createCoordinator();
     this.#coordinator.onMessage.on(this._ctx, (message) => {
-      if (message.type === 'leader-heartbeat') {
+      // `new-leader` is proof of life too, and it is the first thing a freshly elected leader sends —
+      // counting it avoids a steal in the window before its first heartbeat lands.
+      if (message.type === 'leader-heartbeat' || message.type === 'new-leader') {
         this.#lastLeaderHeartbeat = Date.now();
       }
     });
     this.#watchLeader();
     this.#connectTask.open();
-    await waitWithLockOrRpcTimeout(this.#connectTask.runBlocking(), 'running worker connection initial connect task');
-    await waitWithLockOrRpcTimeout(this.#initialConnection.wait(), 'establishing initial worker connection');
+    // The connect task retries on its own, so its first run completing is not the readiness signal —
+    // only `#initialConnection` is. Bounding that first run separately would reject `open()` for a
+    // follower whose leader is merely slow to hand out a port.
+    this.#connectTask.schedule();
+    // One full attempt: wait out the port exchange, then open the connection handle. Derived from
+    // `portTimeout` so a caller that widens the port wait widens the boot budget with it.
+    const openTimeout = this.#leaderPortTimeout + LOCK_OR_RPC_WAIT_TIMEOUT;
+    await asyncTimeout(
+      this.#initialConnection.wait(),
+      openTimeout,
+      lockOrRpcTimeoutError('establishing initial worker connection', openTimeout),
+    ).catch((error) => {
+      throw this.#lastConnectError ?? error;
+    });
     log('worker-connection: initial connection established');
   }
 
@@ -181,48 +206,41 @@ export class Connection extends Resource {
     queueMicrotask(async () => {
       try {
         log('worker-connection: requesting leader lock', { clientId: this.#clientId });
-        await requestExclusiveLockWithTimeout(
-          this.#leaderLockKey,
-          'acquiring worker leader lock',
-          this._ctx.signal,
-          async () => {
-            log('worker-connection: leader lock acquired (this tab is leader)', { clientId: this.#clientId });
-            invariant(this.#coordinator);
-            invariant(!this.#leaderSession);
+        await requestExclusiveLock(this.#leaderLockKey, this._ctx.signal, async () => {
+          log('worker-connection: leader lock acquired (this tab is leader)', { clientId: this.#clientId });
+          invariant(this.#coordinator);
+          invariant(!this.#leaderSession);
 
-            const sendHeartbeat = () =>
-              this.#coordinator?.sendMessage({ type: 'leader-heartbeat', leaderId: this.#clientId });
-            sendHeartbeat();
-            const heartbeat = setInterval(sendHeartbeat, this.#leaderHeartbeatInterval);
+          const sendHeartbeat = () =>
+            this.#coordinator?.sendMessage({ type: 'leader-heartbeat', leaderId: this.#clientId });
+          sendHeartbeat();
+          const heartbeat = setInterval(sendHeartbeat, this.#leaderHeartbeatInterval);
 
-            this.#leaderSession = new LeaderSession(
-              this.#createWorker,
-              this.#coordinator,
-              this.#config,
-              this.#clientId,
-            );
-            const done = new Trigger();
-            this.#leaderDone = done;
-            this._ctx.onDispose(() => done.wake());
-            this.#leaderSession.onClose.on((error) => {
-              log('worker-connection: leader session closed', { hasError: !!error });
-              this.#leaderSession = undefined;
-              if (error) {
-                done.throw(error);
-              } else {
-                done.wake();
-              }
-            });
-            try {
-              await waitWithLockOrRpcTimeout(this.#leaderSession.open(), 'opening worker leader session');
-              this.#leaderFailureCount = 0;
-              await done.wait();
-            } finally {
-              clearInterval(heartbeat);
-              this.#leaderDone = undefined;
+          this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator, this.#config, this.#clientId);
+          const done = new Trigger();
+          this.#leaderDone = done;
+          // Removed in the `finally` below: election re-enters on every steal/failure, so a
+          // permanent registration would grow the connection's dispose list for the tab's lifetime.
+          const removeDoneDisposer = this._ctx.onDispose(() => done.wake());
+          this.#leaderSession.onClose.on((error) => {
+            log('worker-connection: leader session closed', { hasError: !!error });
+            this.#leaderSession = undefined;
+            if (error) {
+              done.throw(error);
+            } else {
+              done.wake();
             }
-          },
-        );
+          });
+          try {
+            await waitWithLockOrRpcTimeout(this.#leaderSession.open(), 'opening worker leader session');
+            this.#leaderFailureCount = 0;
+            await done.wait();
+          } finally {
+            removeDoneDisposer();
+            clearInterval(heartbeat);
+            this.#leaderDone = undefined;
+          }
+        });
         log('worker-connection: leader lock released');
       } catch (error: any) {
         if (isAbortError(error) && this._ctx.disposed) {
@@ -336,6 +354,7 @@ export class Connection extends Resource {
 
       const { clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner } = result;
       log('worker-connection: connected to worker', { leaderId, isOwner });
+      this.#lastConnectError = undefined;
 
       queueMicrotask(async () => {
         try {
@@ -371,8 +390,11 @@ export class Connection extends Resource {
         this.reconnected.emit();
       }
     } catch (err: any) {
+      // Deliberately does not settle `#initialConnection`: a Trigger cannot be re-armed once it
+      // throws, so rejecting here would fail `open()` permanently for a failure the reschedule below
+      // recovers from — the tab then sits on a boot spinner while its worker connection is live.
+      this.#lastConnectError = err;
       log.warn('worker-connection: connect task failed, will reschedule', { err });
-      this.#initialConnection.throw(err);
       log.catch(err);
       void ctx.dispose();
       this.#connectTask?.schedule();

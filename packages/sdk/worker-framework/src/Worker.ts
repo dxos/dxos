@@ -158,6 +158,10 @@ export const run = ({
           break;
         }
         case 'start-session': {
+          // TODO(wittjosiah): De-dupe by session attempt, not by clientId alone. A tab whose connect
+          //  failed after receiving its ports (e.g. the handle open rejected before `WorkerService.start`
+          //  registered a tab-liveness lock) is never released from this set, so its retries are all
+          //  discarded and it can never reconnect to this worker.
           if (tabsProcessed.has(message.clientId)) {
             log('ignoring duplicate client', { clientId: message.clientId });
             break;

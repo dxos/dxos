@@ -8,6 +8,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Event, Trigger, asyncTimeout, sleep } from '@dxos/async';
 
 import * as Client from './Client';
+import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks';
 import * as Worker from './Worker';
 import * as WorkerProtocol from './WorkerProtocol';
 
@@ -80,23 +81,41 @@ const createWorkerFactory = (storageLockKey: string) => () => {
 
 type Connected = { clientToWorker: MessagePort; workerToClient: MessagePort; isOwner: boolean };
 
+/** Polls until `predicate` holds; the events under test are driven by locks and timers, not promises. */
+const waitFor = async (predicate: () => boolean, timeout: number): Promise<void> => {
+  const deadline = Date.now() + timeout;
+  while (!predicate()) {
+    if (Date.now() > deadline) {
+      throw new Error('timed out waiting for condition');
+    }
+    await sleep(50);
+  }
+};
+
 const makeConnection = (
   hub: ReturnType<typeof createHub>,
   keys: { leaderLockKey: string; storageLockKey: string },
   leaderTimeouts = { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
+  options: { maxLeaderFailures?: number } = {},
 ) => {
   const connectedTrigger = new Trigger<Connected>();
+  // Every connect (initial and post-failover) is recorded; `connected` still resolves on the first.
+  const connects: Connected[] = [];
+  const failures: unknown[] = [];
   const connection = new Client.Connection({
     createWorker: createWorkerFactory(keys.storageLockKey),
     createCoordinator: () => hub.connect(),
     leaderLockKey: keys.leaderLockKey,
     leaderTimeouts,
+    maxLeaderFailures: options.maxLeaderFailures,
+    onPersistentFailure: (error) => failures.push(error),
     onConnect: async ({ clientToWorker, workerToClient, isOwner }) => {
+      connects.push({ clientToWorker, workerToClient, isOwner });
       connectedTrigger.wake({ clientToWorker, workerToClient, isOwner });
       return { close: async () => {} };
     },
   });
-  return { connection, connected: connectedTrigger.wait() };
+  return { connection, connected: connectedTrigger.wait(), connects, failures };
 };
 
 describe('Connection multi-client', () => {
@@ -195,6 +214,44 @@ describe('Connection multi-client', () => {
     await sleep(200);
     expect(calls).toBe(1);
   });
+
+  test(
+    'a follower waiting on the leader lock is never reported as a failure',
+    async () => {
+      const hub = createHub();
+      const keys = uniqueKeys();
+
+      const leader = makeConnection(hub, keys);
+      await asyncTimeout(leader.connection.open(), 5_000);
+      onTestFinished(async () => {
+        await leader.connection.close();
+      });
+      const leaderInfo = await asyncTimeout(leader.connected, 5_000);
+      expect(leaderInfo.isOwner).toBe(true);
+
+      // `maxLeaderFailures: 1` escalates on the very first failure, so any misreading of "another tab
+      // holds the lock" as a leader-session failure is caught immediately.
+      const follower = makeConnection(hub, keys, undefined, { maxLeaderFailures: 1 });
+      await asyncTimeout(follower.connection.open(), 5_000);
+      onTestFinished(async () => {
+        await follower.connection.close();
+      });
+      const followerInfo = await asyncTimeout(follower.connected, 5_000);
+      expect(followerInfo.isOwner).toBe(false);
+
+      // Outlive the lock/RPC budget. A bounded wait on the leader lock expires here, and the election
+      // loop reports the expiry as a failed leader session: the tab escalates to `onPersistentFailure`
+      // (a coordinated reload in dev) even though it is connected and healthy.
+      await sleep(LOCK_OR_RPC_WAIT_TIMEOUT + 1_000);
+      expect(follower.failures).toEqual([]);
+
+      // And the more damaging half: a timed-out request leaves the lock's wait queue, so while the
+      // follower backs off there is nobody positioned to take over when the leader goes away.
+      const { pending } = await navigator.locks.query();
+      expect((pending ?? []).map(({ name }) => name)).toContain(keys.leaderLockKey);
+    },
+    LOCK_OR_RPC_WAIT_TIMEOUT + 30_000,
+  );
 
   test('rejects a non-positive maxLeaderFailures', () => {
     const hub = createHub();
