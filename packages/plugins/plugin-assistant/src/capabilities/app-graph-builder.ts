@@ -28,6 +28,7 @@ import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Attention } from '@dxos/react-ui-attention';
+import { AI_ACTION_ICON } from '@dxos/ui-types';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
@@ -80,6 +81,7 @@ export default Capability.makeModule(
               id: GraphPath.GroupSegments.ai,
               type: GraphPath.GroupTypes.ai,
               label: ['nav-tree-group-ai.label', { ns: meta.profile.key }],
+              icon: AI_ACTION_ICON,
               space,
               position: 300,
             }),

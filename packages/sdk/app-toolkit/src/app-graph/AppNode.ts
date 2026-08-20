@@ -368,12 +368,18 @@ export const makeGroup = ({
   id,
   type,
   label,
+  icon,
+  iconHue = 'neutral',
   space,
   position,
 }: {
   id: string;
   type: string;
   label: Translations.Label;
+  /** Mobile renders a group as a NavBranch list row (desktop shows only the dense label), so an
+   * omitted icon falls back to a letter avatar there. */
+  icon?: string;
+  iconHue?: string;
   space: Space;
   position?: Position.Position;
 }): Node.NodeArg<null> => ({
@@ -382,6 +388,7 @@ export const makeGroup = ({
   data: null,
   properties: {
     label,
+    ...(icon !== undefined && { icon, iconHue }),
     disposition: 'group',
     draggable: false,
     droppable: false,

@@ -103,7 +103,9 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
       fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
-      classNames={mx('dx-focus-ring cursor-pointer', isSelected && 'bg-selected-surface')}
+      // The search list auto-selects the first row for keyboard nav; a coarse (touch) pointer has no
+      // keyboard focus to reflect, so the highlight would just read as an unexplained random row.
+      classNames={mx('dx-focus-ring cursor-pointer', isSelected && 'bg-selected-surface pointer-coarse:bg-transparent')}
       onClick={handleSelect}
     >
       <Card.Header>

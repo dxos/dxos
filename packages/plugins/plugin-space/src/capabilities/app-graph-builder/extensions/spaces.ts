@@ -295,6 +295,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: GraphPath.GroupSegments.communications,
             type: GraphPath.GroupTypes.communications,
             label: ['nav-tree-group-comm.label', { ns: meta.profile.key }],
+            icon: 'ph--chats--regular',
             space,
             position: 100,
           }),

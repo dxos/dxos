@@ -7,13 +7,11 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
-import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import {
   ChatEditor,
@@ -26,7 +24,7 @@ import { pendingText } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
 
-import { useChatKeymapExtensions } from '#hooks';
+import { useChatKeymapExtensions, usePlatform } from '#hooks';
 import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
@@ -73,10 +71,7 @@ export const ChatPrompt = ({
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
 
-  // Platform, not viewport: the mobile app drops this read-only indicator at every width, while a
-  // narrowed desktop window keeps it. Optional so a harness without the deck plugin (storybook,
-  // tests) still renders the prompt, defaulting to the desktop treatment.
-  const platform = useOptionalCapability(DeckCapabilities.Platform) ?? 'desktop';
+  const platform = usePlatform();
 
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);

@@ -19,7 +19,7 @@ import { type ChatView } from '@dxos/react-ui-assistant';
 import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
-import { useChatProcessor, useChatServices, usePresets, useSelectionContext } from '#hooks';
+import { useChatProcessor, useChatServices, usePlatform, usePresets, useSelectionContext } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
 export type ChatArticleProps = Merge<
@@ -32,6 +32,10 @@ export type ChatArticleProps = Merge<
 export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
   ({ role, attendableId, subject: chat, companionTo, debug, onEvent, onSubmit }, forwardedRef) => {
     const registry = useRegistry();
+    // The marker rail is a hover/precision target pinned to the thread's left edge, and the status
+    // pill floats over the last turn — on a phone the rail has nowhere to live outside the text and
+    // the pill covers the reply it reports on. Neither has a toggle to orphan; both are passive.
+    const mobile = usePlatform() === 'mobile';
     const settings = useAtomCapability(AssistantCapabilities.Settings);
     const atomRegistry = useCapability(Capabilities.AtomRegistry);
     const stateAtom = useCapability(AssistantCapabilities.State);
@@ -121,8 +125,8 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline
-                  preset={preset?.id}
                   online={online}
+                  preset={preset?.id}
                   companionTo={companionTo}
                 />
               </div>

@@ -95,6 +95,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             id: GraphPath.GroupSegments.content,
             type: GraphPath.GroupTypes.content,
             label: ['nav-tree-group-content.label', { ns: meta.profile.key }],
+            icon: 'ph--files--regular',
             space,
             position: 200,
           }),
