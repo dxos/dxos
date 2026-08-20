@@ -2,8 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as EffectStream from 'effect/Stream';
+
 import { SubscriptionList } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
+import { EffectEx } from '@dxos/effect';
 import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,8 +25,8 @@ type FeedInfo = {
 export const subscribeToFeeds = (
   { feedStore, spaceManager }: { feedStore: FeedStore<FeedMessage>; spaceManager: SpaceManager },
   { feedKeys }: DevtoolsHost.SubscribeToFeedsRequest,
-) => {
-  return new Stream<DevtoolsHost.SubscribeToFeedsResponse>(({ next }) => {
+): EffectStream.Stream<DevtoolsHost.SubscribeToFeedsResponse, Error> => {
+  return EffectEx.streamFromEmitter<DevtoolsHost.SubscribeToFeedsResponse, Error>((emit) => {
     const subscriptions = new SubscriptionList();
     const feedMap = new ComplexMap<PublicKey, FeedInfo>(PublicKey.hash);
 
@@ -42,7 +45,7 @@ export const subscribeToFeeds = (
           }
         });
 
-      next({
+      emit.single({
         feeds: Array.from(feedMap.values()).map(({ feed, owner }) => ({
           feedKey: feed.key,
           length: feed.properties.length,
@@ -56,9 +59,9 @@ export const subscribeToFeeds = (
     subscriptions.add(feedStore.feedOpened.on(update));
     update();
 
-    return () => {
+    return Effect.sync(() => {
       subscriptions.clear();
-    };
+    });
   });
 };
 
@@ -82,8 +85,8 @@ const findFeedOwner = (
 export const subscribeToFeedBlocks = (
   { feedStore }: { feedStore: FeedStore<FeedMessage> },
   { feedKey, maxBlocks = 10 }: DevtoolsHost.SubscribeToFeedBlocksRequest,
-) => {
-  return new Stream<SubscribeToFeedBlocksResponse>(({ next }) => {
+): EffectStream.Stream<SubscribeToFeedBlocksResponse, Error> => {
+  return EffectEx.streamFromEmitter<SubscribeToFeedBlocksResponse, Error>((emit) => {
     if (!feedKey) {
       return;
     }
@@ -98,7 +101,7 @@ export const subscribeToFeedBlocks = (
 
       const update = async () => {
         if (!feed.properties.length) {
-          next({ blocks: [] });
+          emit.single({ blocks: [] });
           return;
         }
 
@@ -112,7 +115,7 @@ export const subscribeToFeedBlocks = (
           }
         }
 
-        next({
+        emit.single({
           blocks: blocks.slice(-maxBlocks),
         });
 
@@ -127,9 +130,9 @@ export const subscribeToFeedBlocks = (
       await update();
     });
 
-    return () => {
+    return Effect.sync(() => {
       subscriptions.clear();
       clearTimeout(timeout);
-    };
+    });
   });
 };

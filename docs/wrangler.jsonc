@@ -13,6 +13,6 @@
   "env": {
     "production": { "name": "docs" },
     "staging": { "name": "docs-staging" },
-    "nightly": { "name": "docs-nightly" },
+    "preview": { "name": "docs-preview" },
   },
 }

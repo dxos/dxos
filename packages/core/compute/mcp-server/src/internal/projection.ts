@@ -3,47 +3,30 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as SchemaGetter from 'effect/SchemaGetter';
 import * as SchemaIssue from 'effect/SchemaIssue';
 
-import { JsonSchema } from '@dxos/echo';
+import * as Operation from '@dxos/compute/Operation';
+import { Database, JsonSchema } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import type * as Gateway from '../Gateway';
-
-/**
- * Annotation id under which `Operation.mcpTool` persists the projection descriptor.
- *
- * Declared here rather than imported from `@dxos/compute` so a host bundling this package does not
- * also bundle the operation runtime; `Projection.test.ts` fails if the two definitions drift.
- */
-export const MCP_TOOL_ANNOTATION_ID = 'org.dxos.operation.mcp-tool';
+import type * as McpRegistry from '../McpRegistry';
 
 /**
  * Anthropic tool-name constraint. The 64-char budget is shared with the client's
- * `mcp__<server>__` prefix, which is why fully-qualified operation keys cannot be tool names
- * (they also carry dots) — names default to the key's final segment instead.
+ * `mcp__<server>__` prefix, which is why a fully-qualified operation key cannot be a tool name (it
+ * also carries dots) — names come from `Operation.toolNameFromKey`, the same derivation the in-app
+ * runtime uses, so one operation carries one name on both surfaces.
  */
 const TOOL_NAME_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
 
 /** Same constraint as tool names; prompt names surface as `/mcp__<server>__<name>`. */
 const PROMPT_NAME_PATTERN = TOOL_NAME_PATTERN;
 
-/** Wire form of `Operation.McpTool`, with `name` optional (defaults to the key's final segment). */
-const McpToolAnnotation = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  description: Schema.optional(Schema.String),
-  safety: Schema.Literals(['read', 'write', 'destructive']),
-  aspect: Schema.optional(Schema.String),
-  /** Prompt name of the skill whose workflow this tool belongs to; see {@link skillPointer}. */
-  skill: Schema.optional(Schema.String),
-});
-
-const decodeAnnotation = Schema.decodeUnknownResult(McpToolAnnotation);
-
-export type Safety = 'read' | 'write' | 'destructive';
+const decodeMutation = Schema.decodeUnknownResult(Operation.MutationAnnotation.schema);
 
 /**
  * Tool parameter fields. Narrower than `Schema.Struct.Fields`: schemas rebuilt from JSON Schema
@@ -55,17 +38,31 @@ export type Fields = { readonly [key: string]: Schema.Codec<any, any> };
 export type ProjectedOperation = {
   /** Operation key without the `dxn:` prefix — the form the gateway dispatches on. */
   key: string;
-  toolName: string;
-  description?: string;
-  safety: Safety;
-  /** Tool parameters reconstructed from the operation's serialized input schema. */
-  parameters: Fields;
+  /** The tool as the model sees it. */
+  tool: {
+    name: string;
+    description?: string;
+    /** What the model writes into: ref fields widened to also accept a JSON string. */
+    parameters: Fields;
+    /**
+     * Whether the operation is space-addressed — it declares `Database.Service` — which is what
+     * adds the ambient `spaceId` parameter.
+     */
+    requiresSpace: boolean;
+    /** Behavioral hints; an absent value makes no claim, which clients read conservatively. */
+    hints: {
+      /** The operation's effect on state (`Operation.MutationAnnotation`). */
+      mutation?: Operation.Mutation;
+      /** `Operation.IdempotentAnnotation`. */
+      idempotent?: boolean;
+    };
+  };
   /**
-   * The reconstructed input schema, kept for re-encoding: the tool layer *decodes* arguments
-   * (ref envelopes become live `Ref`s), but the gateway needs the wire form back — live refs do
-   * not survive an RPC boundary.
+   * What `tool.parameters` encode back through on the way to the gateway — un-widened and without
+   * `spaceId`, because the tool layer decodes ref envelopes into live `Ref`s and those do not
+   * survive an RPC boundary.
    */
-  inputSchema?: Schema.Codec<any, any>;
+  wireSchema?: Schema.Codec<any, any>;
 };
 
 export type ProjectedSkill = {
@@ -74,6 +71,8 @@ export type ProjectedSkill = {
   promptName: string;
   description?: string;
   instructions: string;
+  /** NSIDs of the skill's tools — the operations this skill projects. */
+  tools: readonly string[];
 };
 
 /**
@@ -86,9 +85,12 @@ export type ProjectedSkill = {
  * behavioral lever (https://www.anthropic.com/engineering/writing-tools-for-agents), and the
  * `skillLoad` hop this points into is the shape of the MCP Skills-over-MCP extension (SEP-2640).
  */
-const skillPointer = (skill: string): string =>
-  `Part of the '${skill}' workflow — call skillLoad('${skill}') and follow its instructions before ` +
-  'first use, unless they are already in context.';
+const skillPointer = (skills: readonly string[]): string =>
+  skills.length === 1
+    ? `Part of the '${skills[0]}' workflow — call skillLoad('${skills[0]}') and follow its instructions before ` +
+      'first use, unless they are already in context.'
+    : `Part of the ${skills.map((name) => `'${name}'`).join(' and ')} workflows — call skillLoad for each and ` +
+      'follow their instructions before first use, unless they are already in context.';
 
 /** `$id` of the reference declaration ECHO emits for a `Ref` field. */
 const REF_SCHEMA_ID = '/schemas/echo/ref';
@@ -184,76 +186,111 @@ const isOptionalField = (
 const isStruct = (schema: Schema.Codec<any, any>): schema is Schema.Codec<any, any> & { readonly fields: Fields } =>
   'fields' in schema;
 
+/** The mutation class an annotation claims; an undecodable value claims nothing. */
+const readMutation = (raw: unknown, key: string): Operation.Mutation | undefined =>
+  raw == null
+    ? undefined
+    : Match.value(decodeMutation(raw)).pipe(
+        Match.when({ _tag: 'Success' }, ({ success }) => success),
+        Match.orElse(({ failure }) => {
+          log.warn('mutation annotation did not decode; projecting without safety hints', {
+            key,
+            error: String(failure),
+          });
+          return undefined;
+        }),
+      );
+
 /**
- * Projects registry records into tool descriptors.
+ * The two schemas a tool call travels through: `parameters` is what the model writes into (ref
+ * fields widened to also accept a JSON string) and `wireSchema` is what those encode back through.
+ * A non-object input yields neither — MCP has nowhere to put parameters that are not fields.
+ */
+const readInput = (inputSchema: unknown, key: string): { parameters: Fields; wireSchema?: Schema.Codec<any, any> } =>
+  Match.value(inputSchema == null ? undefined : JsonSchema.toEffectSchema(inputSchema as any)).pipe(
+    Match.when(Match.undefined, () => ({ parameters: {} })),
+    Match.when(isStruct, (reconstructed) => ({
+      parameters: tolerateStringifiedRefs(reconstructed.fields, inputSchema),
+      wireSchema: reconstructed,
+    })),
+    Match.orElse(() => {
+      log.warn('operation input schema is not an object; projected without parameters', { key });
+      return { parameters: {} };
+    }),
+  );
+
+/**
+ * Projects registry records into tool descriptors — driven by the projected skills.
+ *
+ * An operation projects iff a projected skill's `tools` list names it, and that membership
+ * produces the load-the-skill-first pointer appended to the tool's description (the SEP-2640
+ * shape); a tools entry naming no operation record projects nothing.
  *
  * Records arrive in wire form: `PersistentOperation` serializes with meta as a plain `@meta`
- * property carrying `key` and `annotations`, and with input/output as JSON Schema. Only records
- * carrying the MCP annotation project; everything else in the registry stays invisible to MCP
- * clients.
+ * property carrying `key` and `annotations`, and with input/output as JSON Schema.
  *
  * Name collisions throw: two operations claiming one tool name is an authorship error the contract
  * wants surfaced loudly at projection time, not resolved silently. `reservedNames` covers the
  * host's statically-defined tools.
  */
 export const projectOperations = (
-  operations: readonly Gateway.OperationRecord[],
+  operations: readonly McpRegistry.OperationRecord[],
+  skills: readonly ProjectedSkill[],
   reservedNames: readonly string[],
 ): ProjectedOperation[] => {
+  // Derived tool name → prompt names of the skills whose tools list it. A skill's `tools` entries
+  // are already the derived names (`Skill.toolDefinitions`), so both sides of this match use the one
+  // derivation rather than the operation key's NSID.
+  const owners = new Map<string, string[]>();
+  for (const skill of skills) {
+    for (const tool of skill.tools) {
+      owners.set(tool, [...(owners.get(tool) ?? []), skill.promptName]);
+    }
+  }
+
   const projected: ProjectedOperation[] = [];
   // Records are JSON off the wire; each field is checked below rather than trusted from a type.
   for (const record of operations as Array<Record<string, any>>) {
     const meta = record?.['@meta'];
     const rawKey: unknown = meta?.key;
-    const rawAnnotation: unknown = meta?.annotations?.[MCP_TOOL_ANNOTATION_ID];
-    if (typeof rawKey !== 'string' || rawKey.length === 0 || rawAnnotation == null) {
+    if (typeof rawKey !== 'string' || rawKey.length === 0) {
       continue;
     }
-    const decoded = decodeAnnotation(rawAnnotation);
-    if (decoded._tag === 'Failure') {
-      log.warn('mcp-tool annotation did not decode; operation skipped', {
-        key: rawKey,
-        error: String(decoded.failure),
-      });
+    const owningSkills = owners.get(Operation.toolNameFromKey(rawKey));
+    if (owningSkills == null) {
       continue;
     }
+
+    const mutation = readMutation(meta?.annotations?.[Operation.MutationAnnotation.key], rawKey);
+    const idempotent = meta?.annotations?.[Operation.IdempotentAnnotation.key] === true;
+
     const key = rawKey.replace(/^dxn:/, '');
-    const toolName = decoded.success.name ?? key.split('.').at(-1) ?? '';
+    const toolName = Operation.toolNameFromKey(rawKey);
     if (!TOOL_NAME_PATTERN.test(toolName)) {
       log.warn('projected tool name violates the tool-name constraint; operation skipped', { key, toolName });
       continue;
     }
 
-    let parameters: Fields = {};
-    let inputSchema: Schema.Codec<any, any> | undefined;
-    if (record.inputSchema != null) {
-      const reconstructed = JsonSchema.toEffectSchema(record.inputSchema);
-      if (isStruct(reconstructed)) {
-        parameters = tolerateStringifiedRefs(reconstructed.fields, record.inputSchema);
-        inputSchema = reconstructed;
-      } else {
-        log.warn('operation input schema is not an object; projected without parameters', { key });
-      }
-    }
+    const { parameters, wireSchema } = readInput(record.inputSchema, key);
 
-    const baseDescription = decoded.success.description ?? record.description ?? record.name;
-    const description =
-      decoded.success.skill == null
-        ? baseDescription
-        : [baseDescription, skillPointer(decoded.success.skill)].filter(Boolean).join(' ');
+    const baseDescription = record.description ?? record.name;
+    const description = [baseDescription, skillPointer(owningSkills)].filter(Boolean).join(' ');
 
     projected.push({
       key,
-      toolName,
-      description,
-      safety: decoded.success.safety,
-      parameters,
-      inputSchema,
+      tool: {
+        name: toolName,
+        description,
+        parameters,
+        requiresSpace: (record.services ?? []).includes(Database.Service.key),
+        hints: { mutation, idempotent },
+      },
+      wireSchema,
     });
   }
 
   assertUniqueNames(
-    projected.map((operation) => ({ name: operation.toolName, source: operation.key })),
+    projected.map((operation) => ({ name: operation.tool.name, source: operation.key })),
     reservedNames,
     'tool',
   );
@@ -266,7 +303,7 @@ export const projectOperations = (
  * contract as the tool projection.
  */
 export const projectSkills = (
-  skills: readonly Gateway.SkillRecord[],
+  skills: readonly McpRegistry.SkillRecord[],
   reservedNames: readonly string[],
 ): ProjectedSkill[] => {
   const projected: ProjectedSkill[] = [];
@@ -291,6 +328,7 @@ export const projectSkills = (
       promptName,
       description: skill.description ?? skill.name,
       instructions: skill.instructions,
+      tools: skill.tools ?? [],
     });
   }
 
@@ -313,7 +351,7 @@ const assertUniqueNames = (
     if (holder !== undefined) {
       throw new Error(
         `MCP ${kind} name collision: '${claim.name}' claimed by both ${holder} and ${claim.source}.` +
-          (kind === 'tool' ? ' Set an explicit `name` in the mcpTool annotation of one of them.' : ''),
+          (kind === 'tool' ? ' Rename one of the operation keys so their final segments differ.' : ''),
       );
     }
     holders.set(claim.name, claim.source);

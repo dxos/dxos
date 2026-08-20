@@ -15,7 +15,11 @@ const handler: Operation.WithHandler<typeof CrxOperation.AddNoteFromSnapshot> = 
   Operation.withHandler(
     Effect.fn(function* ({ snapshot, target }) {
       const note = toNote(snapshot);
-      const { id } = yield* Operation.invoke(SpaceOperation.AddObject, { object: note, target });
+      const { id } = yield* Operation.invoke(
+        SpaceOperation.AddObject,
+        { object: note, target },
+        { spaceId: target.spaceId },
+      );
       return { id };
     }),
   ),

@@ -97,6 +97,11 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
   teardown race hides real failures). Tolerate a specific known signature only
   via a narrowly-scoped `onUnhandledError`, never a blanket ignore. Full rule →
   `code-style` skill.
+- **Never change or remove a copyright notice.** A contributor's copyright line
+  stays exactly as written. The only permitted edit — when the lint header rule
+  demands it — is ADDING a `Copyright <year> DXOS.org` line alongside the
+  author's, never replacing it. Anything beyond that requires explicit
+  direction from the user.
 - **New packages are private.** Every new package MUST set `"private": true` in
   `package.json`; it is removed manually only after a trusted publisher exists.
 - **Workspace deps use `workspace:*`.** Any in-repo `@dxos` package is added with
