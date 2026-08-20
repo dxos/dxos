@@ -6,6 +6,7 @@ import { type KeyDownEvent, type KeyUpEvent, SingletonAction, type WillAppearEve
 
 import type * as Protocol from '@dxos/plugin-stream-deck/Protocol';
 
+import { toImageUri } from '../image';
 import { offlineKey } from '../offline';
 import { assignSlots, slotOf } from '../server/slots';
 
@@ -37,11 +38,13 @@ export class FavoriteAction extends SingletonAction {
   /** Applies the key images from a frame, in slot order; extra slots are left offline. */
   async apply(keys: readonly (Protocol.KeyImage | null)[]): Promise<void> {
     const instances = assignSlots([...this.actions]);
-    await Promise.all(instances.map((instance, slot) => instance.setImage(keys[slot]?.svg ?? offlineKey())));
+    await Promise.all(
+      instances.map((instance, slot) => instance.setImage(toImageUri(keys[slot]?.svg ?? offlineKey()))),
+    );
   }
 
   async clear(): Promise<void> {
-    await Promise.all(assignSlots([...this.actions]).map((instance) => instance.setImage(offlineKey())));
+    await Promise.all(assignSlots([...this.actions]).map((instance) => instance.setImage(toImageUri(offlineKey()))));
   }
 
   // A key that appears while Composer is absent would otherwise show the manifest icon and look

@@ -158,7 +158,15 @@ try {
   await wait(500);
 
   const applied = commands.slice(before);
-  check('the frame reached the keys', applied.filter((command) => command.event === 'setImage').length === 2, applied);
+  const images = applied.filter((command) => command.event === 'setImage').map((command) => command.payload.image);
+  check('the frame reached the keys', images.length === 2, applied);
+  // The application rejects a bare SVG string and silently falls back to the manifest icon, so
+  // asserting that setImage was merely called cannot tell a working key from a blank one.
+  check(
+    'key images are encoded as data URIs',
+    images.length > 0 && images.every((image) => typeof image === 'string' && image.startsWith('data:image/svg+xml')),
+    images.map((image) => String(image).slice(0, 40)),
+  );
   const feedback = applied.filter((command) => command.event === 'setFeedback').map((command) => command.payload);
   check(
     'the frame reached the dial',

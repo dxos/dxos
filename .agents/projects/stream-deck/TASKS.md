@@ -93,7 +93,17 @@ The `.sdPlugin` bundle and the WebSocket transport. Needs the physical device an
       applied frame. Caught four bugs unit tests could not see: a preserved decorator (invalid JS in
       Node), a module-scope schema built before its module initialized, `ws` resolving to its browser
       build, and Node builtins being bundled through unprefixed specifiers.
-- [ ] **End-to-end on hardware** — favorites on keys, monitors on the strip. Needs the device:
+- [x] **End-to-end on hardware** — verified 2026-08-19 on a real Stream Deck +. Dials, key
+      rendering and key/dial input all confirmed. One defect only hardware could find: `setImage`
+      was passed a **bare SVG string**, which the SDK's typings say is accepted but the application
+      rejects, silently falling back to the manifest icon — so every key looked like a plugin that
+      had never run, including the offline state. Fixed by wrapping in
+      `data:image/svg+xml;charset=utf8,<percent-encoded>`; base64 was tried first and is _also_
+      rejected. The smoke test now asserts the payload form, not just that `setImage` was called.
+      Two setup steps that silently do nothing are recorded in the package README: the Stream Deck
+      application must be restarted (not just the plugin) after a first `link`, and `Monitor` is an
+      Encoder action so it is hidden until the touch strip is selected.
+- [ ] ~~End-to-end on hardware~~ — superseded, original note:
       `streamdeck link packages/apps/composer-stream-deck/org.dxos.composer.sdPlugin` then
       `streamdeck restart org.dxos.composer`, with Composer's Stream Deck panel open.
 
