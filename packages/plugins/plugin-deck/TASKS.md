@@ -217,6 +217,12 @@ one settles rather than leaving it a permanent preference.
       plank's direction of travel. Either promote `slide` into `FoldSpine` and delete the harness, or move
       it behind a `Settings` flag beside `overscroll` — it should not stay as story-only CSS.
 
+## Follow-ups
+
+- [ ] **Rename `plugin-native-filesystem` → `plugin-filesystem`** — requested during the mobile
+      unification (PR #12676); full package rename per repo rules (no compat re-exports, every call
+      site updated in the same change, `workspace:*` deps intact).
+
 ## Done
 
 - [x] **Companion beside the attended plank** — the companion renders next to the plank it belongs to,
