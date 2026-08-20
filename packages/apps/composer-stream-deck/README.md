@@ -32,17 +32,41 @@ moon run composer-stream-deck:pack       # -> composer-stream-deck.streamDeckPlu
 
 ## Install for development
 
-The Elgato CLI links the assembled directory into Stream Deck's plugin folder and restarts the
-plugin, so the dev loop is `assemble` then `restart`:
+The Elgato CLI links the assembled directory into Stream Deck's plugin folder, so the dev loop is
+`assemble` then link:
 
 ```bash
 npm install -g @elgato/cli@latest
 streamdeck link packages/apps/composer-stream-deck/org.dxos.composer.sdPlugin
-streamdeck restart org.dxos.composer
 ```
 
-Then drag **Composer → Favorite** onto keys and **Composer → Monitor** onto dials. Slots are
-assigned by position, so the top-left Favorite key is favorite 1.
+**Restart the Stream Deck application itself the first time, not just the plugin.** The application
+only scans for plugins at startup, so `streamdeck restart org.dxos.composer` on a *newly linked*
+plugin is a silent no-op: the CLI reports success, the deep link is logged, and nothing launches.
+Quit and reopen the app instead. Once it has been seen once, `streamdeck restart` is enough for
+subsequent code changes.
+
+Verify it is actually hosted before looking for pixels:
+
+```bash
+pgrep -fl org.dxos.composer     # Elgato spawns the plugin under its own bundled Node
+nc -z 127.0.0.1 21435           # the bridge server this plugin listens on
+```
+
+### Placing the actions
+
+Slots are positional — nothing renders until actions are placed, and an empty profile shows nothing
+at all.
+
+1. Drag **Composer → Favorite** onto keys. Slots are ordered by row, then column, so the top-left
+   Favorite key is favorite 1.
+2. **Click the touch strip in the Stream Deck app to reveal the encoder actions**, then drag
+   **Composer → Monitor** onto a dial. `Monitor` declares `Controllers: ["Encoder"]`, so it does not
+   appear in the action list while the key grid is selected — which reads as a missing action rather
+   than a filtered one.
+
+With the actions placed and Composer not running, every placed key and dial shows the dim
+"Composer offline" state. That alone confirms the plugin is hosted and rendering.
 
 ## Protocol
 
