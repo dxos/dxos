@@ -4,6 +4,17 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-08-20 — plugin-lingo (new plugin scaffold)
+
+- `Capability.contribute(Capabilities.OperationHandler, XOperationHandlerSet)` takes the SET, not `.handlers` — `.handlers` fails the overload (`plugin-bookmarks/src/capabilities/operation-handler.ts` is the reference).
+- A settings module must declare what it provides: `AppCapability.settings(() => import('./settings'), { provides: [XCapabilities.Settings] })`. Without `provides` the module type does not match.
+- A `Capability` named `Settings` cannot live in a file importing `./Settings` — the `@dxos/rules(import-as-namespace)` lint forces `import * as Settings`, which collides. Name the schema module `<Plugin>Settings.ts` and namespace-export it as `<Plugin>Settings` (plugin-markdown dodges it instead by re-exporting Settings through `Markdown.ts`).
+- `@dxos/rules(dxos-subpath-exports)`: every namespace re-exported from `src/types/index.ts` needs its own `exports` entry in `package.json` AND a matching `vite.config.ts` entry. Adding a type is three edits, not one.
+- effect rc-108 API: `Schema.decodeUnknown` and `Effect.fromNullable` do NOT exist. Use `Schema.decodeUnknownEffect(schema)(value)` and `Option.match(..., { onNone, onSome })`.
+- `useAtomValue` imports from `@effect/atom-react/Hooks`, not the package root.
+- `useObjects(refs)` is deprecated (whole-list subscription). For "the objects belonging to X", put the ref on the CHILD and query it (`Filter.type(Child, { parent: Ref.make(x) })`) instead of holding a `Ref[]` array on the parent — one write to append, and the view is an ordinary reactive `useQuery`.
+- Logical utilities are still dead: `bs-full`, `max-is-80` etc. compile to nothing. Use `h-full`, `max-w-80`.
+
 ## 2026-07-28 — CLI / node plugin variants (React out of non-browser builds)
 
 - `Capability.lazy` / `OperationHandlerSet.keyed` / `React.lazy` defer the import at RUNTIME; a bundler still walks them. A `#capabilities` barrel that merely lists `ReactSurface` pulled the whole plugin UI into every node/bun build — `plugin-map/plugin` alone dragged `@dxos/react-ui-geo`'s 4.4 MB of country geometry into the `dx` binary. Fix is a node-conditioned barrel (`src/capabilities/node.ts` + a `node` condition on `#plugin`/`#capabilities`), matching what `plugin-client` already did.

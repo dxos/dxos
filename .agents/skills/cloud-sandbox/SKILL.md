@@ -52,6 +52,44 @@ GitHub's REST API is **also unreachable from the shell**: `curl https://api.gith
 `Monitor` around it — it fails identically whether CI is red, green, or still running, so silence
 means nothing. Read run status through the `mcp__github__*` tools, which go through the server side.
 
+### `moon` itself may not run at all
+
+moon loads its `javascript`/`bun` toolchains as WASM plugins from ghcr, whose blob host
+(`pkg-containers.githubusercontent.com`) the egress gateway answers 403 to. When it does, EVERY
+`pnpm exec moon run …` dies with `plugin::loader::registry::load_failure` — build, test and lint
+are all unavailable, and nothing can be validated the normal way. Confirm with
+`curl -sS "$HTTPS_PROXY/__agentproxy/status"` (the host appears under `recentRelayFailures`).
+
+Fallback: typecheck against SOURCES instead of built `dist/types`, via the `source` export
+condition every `@dxos` package declares. Write a throwaway config in the package, run it, delete it:
+
+```jsonc
+// packages/<...>/<pkg>/tsconfig.check.json
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "incremental": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "emitDeclarationOnly": false,
+    "noEmit": true,
+    "customConditions": ["source"],
+    "types": ["node", "vite/client"],
+    "skipLibCheck": true,
+  },
+  "include": ["dx.config.ts", "src/**/*.ts", "src/**/*.tsx"],
+}
+```
+
+Run `pnpm exec tsc -p tsconfig.check.json | grep -E "^(src|dx\\.config)"` — filter to the package's
+own paths. The hundreds of `../../…` errors are pre-existing and not yours: codegen'd packages
+(`@dxos/protocols`) have no sources to resolve. This catches real type errors but is NOT the build
+— no vite, no declaration emit, no project references — so say so when reporting.
+
+`pnpm exec oxlint <paths>` and `pnpm format` still work; neither goes through moon.
+
 ## Dependencies are installed but not built
 
 The clone ships `node_modules` but no build outputs. A first `moon run <app>:serve` runs a pnpm
