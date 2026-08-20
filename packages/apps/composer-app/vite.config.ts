@@ -64,10 +64,14 @@ const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo',
 const slimWasm = (): PluginOption => {
   // `browser` is deliberately absent; the rest mirrors what vite would apply for the client.
   const resolver = new ResolverFactory({ conditionNames: ['source', 'import', 'module', 'default'] });
+  let isBuild = false;
 
   return {
     name: 'dxos-slim-wasm',
     enforce: 'pre',
+    configResolved: (config) => {
+      isBuild = config.command === 'build';
+    },
     resolveId: {
       order: 'pre',
       handler: (source, importer) => {
@@ -76,6 +80,13 @@ const slimWasm = (): PluginOption => {
         }
         const pkg = SLIM_WASM_PACKAGES.find((name) => source === name || source.startsWith(`${name}/`));
         if (!pkg) {
+          return null;
+        }
+        // automerge-repo is redirected only at build: a serve-time redirect would hand out a raw
+        // `/@fs` path that bypasses its optimizer chunk, and repo's dist imports CJS deps
+        // (`debug`, …) that only the prebundle's ESM interop makes importable. The prebundled
+        // fullfat chunk's automerge/subduction imports are externalized and still land here.
+        if (pkg === '@automerge/automerge-repo' && !isBuild) {
           return null;
         }
         // Subpaths resolve as requested (`/slim`, `/slim/next`); asset requests (`?url`) fail the
@@ -276,8 +287,11 @@ export default defineConfig((env) => ({
   optimizeDeps: {
     // The wasm packages `slimWasm` redirects must not be pre-bundled: the optimizer resolves
     // with its own pipeline (the `browser` condition, so the bundler entry) and importers would
-    // land on that chunk's top-level await regardless of what the plugin resolves.
-    exclude: ['@dxos/wa-sqlite', ...SLIM_WASM_PACKAGES],
+    // land on that chunk's top-level await regardless of what the plugin resolves. automerge-repo
+    // is deliberately NOT excluded: it has CJS deps (`debug`, …) that need the prebundle's ESM
+    // interop, and its prebundled chunk's externalized automerge/subduction imports still resolve
+    // through `slimWasm` at serve time.
+    exclude: ['@dxos/wa-sqlite', '@automerge/automerge', '@automerge/automerge-subduction'],
     // The full set of dep entrypoints the app reaches, so vite's optimize-deps phase pre-bundles
     // them up front rather than discovering them mid-load (when a dynamic import unwraps a new
     // subpath), which forces a full page reload with the "Discovered new dependencies" banner —
