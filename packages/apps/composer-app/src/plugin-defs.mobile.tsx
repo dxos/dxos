@@ -21,7 +21,8 @@ export type { PluginConfig, State } from './plugin-defs.core';
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
   ...getCorePlugins({ ...config, isExtensible: false }),
-  AssistantPlugin.make(),
+  // `Agent` and `Sequence` are unfinished, so the mobile set does not offer creating them either.
+  AssistantPlugin.make({ experimentalTypes: false }),
   MarkdownPlugin.make(),
   ProjectsPlugin.make(),
   TranscriptionPlugin.make(),
