@@ -10,6 +10,23 @@ Run the following to generate the Windows icon.
 pnpm run icons:mstile
 ```
 
+## Menu bar icon
+
+The macOS menu bar shows a template image: the system throws the artwork's colour away and tints its
+silhouette to match the bar, light or dark. The mark cannot go there as it stands, because its four rings sit
+edge to edge and are told apart by colour alone — drop the colour and they merge into a solid disc. So the
+menu bar gets its own copy with the rings cut apart.
+
+| Artwork | Source | Generated | Used by |
+| --- | --- | --- | --- |
+| Menu bar icon | `@dxos/brand`'s `composer-icon.svg` | `src-tauri/icons/menubarTemplate.png` | `src-tauri/src/menubar.rs` |
+
+To regenerate it after the mark changes:
+
+```bash
+pnpm icons:menubar
+```
+
 ## Per-channel brand artwork
 
 Every non-production channel deploys as its own app and installs beside the released one, so each ships a
