@@ -76,6 +76,14 @@ export const useMobileAppBar = (): MobileAppBar => {
   const showBackButton = stack.length > 1 || rootId !== Node.RootId;
   const onBack = useCallback(() => pop(), [pop]);
 
+  // `Menu` would hand the action its menu group as `parent`, but the graph extensions compose a
+  // popover's anchor id as `caller:parent.id` — so without the panel's own node the rename popover
+  // anchors to nothing and Radix parks it off-screen. Matches how the desktop plank invokes.
+  const onAction = useCallback<ActionExecutor>(
+    (action, params) => runAction(action, { ...params, parent: node }),
+    [runAction, node],
+  );
+
   const popoverAnchorId =
     node && state.popoverAnchorId === `${meta.profile.key}:${node.id}` ? state.popoverAnchorId : undefined;
 
@@ -85,6 +93,6 @@ export const useMobileAppBar = (): MobileAppBar => {
     showBackButton,
     popoverAnchorId,
     onBack,
-    onAction: runAction,
+    onAction,
   };
 };
