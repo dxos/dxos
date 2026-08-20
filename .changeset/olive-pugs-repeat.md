@@ -121,5 +121,5 @@ registration.
 `@dxos/mcp-server` gains `DxMcpService`: `make({ skills })` yields the projected MCP surface
 (prompts, tools, `skillLoad`) requiring only `Operation.Service` — the in-process front door,
 beside the registry-backed `Gateway` that remote hosts keep. The package now exposes
-per-namespace subpaths (`/Gateway`, `/Server`, `/DxMcpService`); wire-only hosts import the first
-two so their bundles never carry the operation runtime. `Gateway.SkillRecord` carries `tools`.
+per-namespace subpaths (`/Gateway`, `/Server`, `/DxMcpService`), each with a build entry so the
+published package can resolve them. `Gateway.SkillRecord` carries `tools`.

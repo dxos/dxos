@@ -650,7 +650,7 @@ export const MutationAnnotation = Annotation.make({
   schema: Schema$.Literals(['none', 'write', 'destructive']),
 });
 
-export type Mutation = 'none' | 'write' | 'destructive';
+export type Mutation = Schema$.Schema.Type<typeof MutationAnnotation.schema>;
 
 /**
  * Pipeable combinator classifying the operation's effect on state — see {@link MutationAnnotation}.

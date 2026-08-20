@@ -309,6 +309,17 @@ field goes.
       boundary (its own doc says so), and serializing inside the handler denied in-process callers
       the reactive handle for no gain. `queryObjects`'s summary branch still builds
       `{ dxn, typename, label }` — that is a projection, not serialization.
+- [x] **One definition of the annotation vocabulary** (user, 2026-08-20). `projection.ts` had kept
+      its own copy of the mutation literals, the annotation ids and the `Database.Service` key,
+      policed by drift tests, on the premise that importing `@dxos/compute/Operation` would drag
+      the operation runtime into a wire-only host. Measured, that premise was false: the built
+      `chunk-Operation.mjs` is ~20KB whose only externals are `@dxos/echo` and `@dxos/log`, both of
+      which the wire chunk already loads — `Operation` is definitions, the runtime lives in
+      `compute-runtime`. The projection now derives all four from the single source
+      (`MutationAnnotation.key`/`.schema`, `IdempotentAnnotation.key`, `Database.Service.key`) and
+      the drift tests are gone. **Found while measuring:** `package.json` exported `./Gateway` and
+      `./Server` but the vite config had no entries for them, so those files were never emitted and
+      the subpaths only resolved in-repo via `source`; entries added.
 - [ ] **Shared operation→tool projection** (assistant ⇄ mcp) — deferred with a plan, not dropped.
       What blocks a naive extraction: the two surfaces are deliberately different models of the
       same operation. The assistant presents refs as LLM-friendly URI _strings_ (`RefFromLLM`,

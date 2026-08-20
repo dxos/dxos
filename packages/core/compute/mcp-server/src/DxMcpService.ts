@@ -20,8 +20,8 @@ import * as Server from './Server';
  * In-process MCP surface over skill definitions: each becomes a prompt and the operations behind
  * its tools become the tools, invoked through the ambient `Operation.Service`.
  *
- * A wire-only host (edge) imports the `Gateway`/`Server` subpaths instead of the root barrel, so
- * the operation runtime this module needs never enters its bundle.
+ * A host that only serves a remote registry imports the `Gateway`/`Server` subpaths instead of the
+ * root barrel, which leaves this module's `Skill` and invoker dependencies out of its graph.
  */
 
 export type Options = {

@@ -8,21 +8,15 @@ import * as SchemaAST from 'effect/SchemaAST';
 import * as SchemaGetter from 'effect/SchemaGetter';
 import * as SchemaIssue from 'effect/SchemaIssue';
 
-import { JsonSchema } from '@dxos/echo';
+import * as Operation from '@dxos/compute/Operation';
+import { Database, JsonSchema } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import type * as Gateway from '../Gateway';
 
-/**
- * Annotation id of `Operation.MutationAnnotation`.
- *
- * Declared here rather than imported from `@dxos/compute` so a host bundling this package does not
- * also bundle the operation runtime; `Projection.test.ts` fails if the two definitions drift.
- */
-export const MUTATION_ANNOTATION_ID = 'org.dxos.operation.mutation';
+export const MUTATION_ANNOTATION_ID = Operation.MutationAnnotation.key;
 
-/** Annotation id of `Operation.IdempotentAnnotation`; same drift contract as the id above. */
-export const IDEMPOTENT_ANNOTATION_ID = 'org.dxos.operation.idempotent';
+export const IDEMPOTENT_ANNOTATION_ID = Operation.IdempotentAnnotation.key;
 
 /**
  * Anthropic tool-name constraint. The 64-char budget is shared with the client's
@@ -34,12 +28,9 @@ const TOOL_NAME_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
 /** Same constraint as tool names; prompt names surface as `/mcp__<server>__<name>`. */
 const PROMPT_NAME_PATTERN = TOOL_NAME_PATTERN;
 
-/** Wire form of `Operation.MutationAnnotation`. */
-const MutationAnnotation = Schema.Literals(['none', 'write', 'destructive']);
+const decodeMutation = Schema.decodeUnknownResult(Operation.MutationAnnotation.schema);
 
-const decodeMutation = Schema.decodeUnknownResult(MutationAnnotation);
-
-export type Mutation = 'none' | 'write' | 'destructive';
+export type Mutation = Operation.Mutation;
 
 /**
  * Tool parameter fields. Narrower than `Schema.Struct.Fields`: schemas rebuilt from JSON Schema
@@ -198,8 +189,8 @@ const isOptionalField = (
 const isStruct = (schema: Schema.Codec<any, any>): schema is Schema.Codec<any, any> & { readonly fields: Fields } =>
   'fields' in schema;
 
-/** Context key of `Database.Service`; drift is pinned by `projection.test.ts`. */
-export const DATABASE_SERVICE_KEY = '@dxos/echo/Database/Service';
+/** Context key `Operation.serialize` writes for an operation declaring `Database.Service`. */
+export const DATABASE_SERVICE_KEY = Database.Service.key;
 
 /** NSID of a registry key: `dxn:` prefix and `:<version>` tail stripped — the form ToolIds carry. */
 const toNsid = (key: string): string => key.replace(/^dxn:/, '').replace(/:\d+\.\d+\.\d+$/, '');

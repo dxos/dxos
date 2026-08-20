@@ -7,8 +7,10 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    // Own entry so a wire-only host importing the root barrel never bundles the operation runtime.
+    // One entry per subpath the package exports, or the built package cannot resolve them.
     DxMcpService: 'src/DxMcpService.ts',
+    Gateway: 'src/Gateway.ts',
+    Server: 'src/Server.ts',
   },
   test: { node: true },
 });

@@ -162,8 +162,6 @@ const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions)
   }),
   RoutinePlugin.make(),
   InboxPlugin.make(),
-  // Registers the object-verb handlers and the Database skill definition, so a test binding
-  // `DatabaseSkill` can invoke its tools.
   SpacePlugin.make({}),
   ...(options.plugins ?? []),
 ];

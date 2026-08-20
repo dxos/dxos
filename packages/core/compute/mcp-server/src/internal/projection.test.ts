@@ -66,15 +66,6 @@ const owner = (promptName: string, tools: readonly string[]): Projection.Project
 
 describe('Projection', () => {
   describe('annotation contract', () => {
-    test('the mutation and idempotent annotation ids match the ones the combinators write', ({ expect }) => {
-      expect(Projection.MUTATION_ANNOTATION_ID).to.equal(Operation.MutationAnnotation.key);
-      expect(Projection.IDEMPOTENT_ANNOTATION_ID).to.equal(Operation.IdempotentAnnotation.key);
-    });
-
-    test('the Database.Service key matches the one `Operation.serialize` writes', ({ expect }) => {
-      expect(Projection.DATABASE_SERVICE_KEY).to.equal(Database.Service.key);
-    });
-
     test('an operation named by a skill projects, with its annotations applied', ({ expect }) => {
       const operation = Operation.make({
         meta: { key: DXN.make('org.dxos.function.test.doThing'), name: 'Do thing' },
