@@ -5,7 +5,14 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, Schema } from '#capabilities';
+import {
+  AppGraphBuilder,
+  CreateObject,
+  NavigationTargetResolver,
+  OperationHandler,
+  ReactSurface,
+  Schema,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -27,6 +34,7 @@ export const BloggerPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
   Plugin.addModule(CreateObject),
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(NavigationTargetResolver),
   Plugin.make,
 );
 

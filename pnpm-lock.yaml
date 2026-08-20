@@ -2280,6 +2280,9 @@ importers:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
         version: 2.6.0-subduction.40(patch_hash=c4764ed525f0bdb6137709c93b74398e61f657f155144a8401c9d3004177ebc7)
+      '@automerge/automerge-subduction':
+        specifier: 0.16.0
+        version: 0.16.0(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)
       '@codemirror/autocomplete':
         specifier: 'catalog:'
         version: 6.20.3
@@ -4405,6 +4408,9 @@ importers:
       '@dxos/plugin-sandbox':
         specifier: workspace:*
         version: link:../../../plugins/plugin-sandbox
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-space
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../../../plugins/plugin-testing
@@ -4476,6 +4482,9 @@ importers:
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../../plugins/plugin-routine
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-space
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../../plugins/plugin-table
@@ -4533,9 +4542,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../../echo/echo-protocol
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
@@ -4569,9 +4575,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      dfx:
-        specifier: 'catalog:'
-        version: 1.0.15(effect@4.0.0-rc.108)
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
@@ -5071,6 +5074,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-space
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
@@ -5139,6 +5145,9 @@ importers:
 
   packages/core/compute/mcp-server:
     dependencies:
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -5152,9 +5161,6 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
     devDependencies:
-      '@dxos/compute':
-        specifier: workspace:*
-        version: link:../compute
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -12484,6 +12490,9 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
     devDependencies:
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/compute/operation
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -13168,6 +13177,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-tasks':
+        specifier: workspace:*
+        version: link:../plugin-tasks
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -13202,9 +13214,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-tasks':
-        specifier: workspace:*
-        version: link:../plugin-tasks
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -14743,6 +14752,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react

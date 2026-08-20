@@ -31,11 +31,14 @@ export default Capability.makeModule(
             }
             return Kanban.makeItems({ name: props.name, pivotField: props.initialPivotColumn ?? '' });
           });
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: options.target,
-            targetNodeId: options.targetNodeId,
-          });
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          );
         }),
     });
   }),

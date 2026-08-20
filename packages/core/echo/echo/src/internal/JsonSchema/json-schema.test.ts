@@ -763,6 +763,40 @@ describe('json-to-effect', () => {
     const decoded = Schema.decodeUnknownSync(toEffectSchema(jsonSchema))({ properties: { any: 1, keys: 'ok' } });
     expect(decoded).to.deep.eq({ properties: { any: 1, keys: 'ok' } });
   });
+
+  // The same v4 omission hits a struct's rest signature, where the round-trip silently dropped
+  // every undeclared field (`addObject`'s draft kept only `@type`). The restore is unambiguous:
+  // a closed struct always carries `additionalProperties: false` explicitly.
+  test('a struct with an open rest signature survives the round-trip', ({ expect }) => {
+    const input = Schema.Struct({
+      draft: Schema.StructWithRest(Schema.Struct({ '@type': Schema.String }), [
+        Schema.Record(Schema.String, Schema.Unknown),
+      ]),
+      closed: Schema.Struct({ name: Schema.String }),
+    });
+
+    const jsonSchema = toJsonSchema(input);
+    expect(jsonSchema.properties?.draft?.additionalProperties).to.eq(true);
+    expect(jsonSchema.properties?.closed?.additionalProperties).to.eq(false);
+
+    // Lossless: re-serializing the decoded schema reproduces the document.
+    expect(toJsonSchema(toEffectSchema(jsonSchema))).to.deep.eq(jsonSchema);
+
+    // The undeclared fields survive decode; the closed struct still rejects them.
+    const decoded = Schema.decodeUnknownSync(toEffectSchema(jsonSchema))({
+      draft: { '@type': 'org.dxos.type.task', 'title': 'Fix the schema' },
+      closed: { name: 'ok' },
+    });
+    expect(decoded).to.deep.eq({
+      draft: { '@type': 'org.dxos.type.task', 'title': 'Fix the schema' },
+      closed: { name: 'ok' },
+    });
+    const stripped = Schema.decodeUnknownSync(toEffectSchema(jsonSchema))({
+      draft: { '@type': 'org.dxos.type.task' },
+      closed: { name: 'ok', extra: 'stripped' },
+    });
+    expect((stripped as { closed: Record<string, unknown> }).closed).to.deep.eq({ name: 'ok' });
+  });
 });
 
 describe('reference', () => {

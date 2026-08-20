@@ -40,10 +40,14 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       // Ref on the subject (annotation) + parent edge: the chat belongs to its subject (cascades
       // on delete, keeps it out of the standalone Chats section).
       Chat.linkCompanion({ chat, subject: companionTo });
-      await invokePromise(SpaceOperation.AddObject, {
-        object: chat,
-        target: db,
-      });
+      await invokePromise(
+        SpaceOperation.AddObject,
+        {
+          object: chat,
+          target: db,
+        },
+        { spaceId: db.spaceId },
+      );
       await invokePromise(AssistantOperation.SetCurrentChat, {
         companionTo,
         chat,

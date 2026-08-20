@@ -10,6 +10,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   ClientReady,
+  InvocationListener,
   Namespace,
   Observability,
   ObservabilitySettings,
@@ -41,6 +42,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.Observabil
       ),
   })),
   Plugin.addModule(OperationHandler),
+  Plugin.addModule(InvocationListener),
   Plugin.addModule(PrivacyNotice),
   Plugin.addModule(ClientReady),
   Plugin.make,
