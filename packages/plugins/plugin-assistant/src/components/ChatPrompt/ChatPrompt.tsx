@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
-import React, { useCallback, useEffect, useId, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
@@ -103,9 +104,22 @@ export const ChatPrompt = ({
     [commandsRef],
   );
 
+  // The editor owns the prompt text; only its emptiness is mirrored into React so the send control
+  // can disable itself without re-rendering the prompt on every keystroke's content.
+  const [canSend, setCanSend] = useState(false);
+  const emptinessExtension = useMemo(
+    () =>
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          setCanSend(update.state.doc.toString().trim().length > 0);
+        }
+      }),
+    [],
+  );
+
   const extensions = useMemo(
-    () => [keymapExtensions, pendingText(), commandsExtension],
-    [keymapExtensions, commandsExtension],
+    () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
+    [keymapExtensions, commandsExtension, emptinessExtension],
   );
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
@@ -117,6 +131,18 @@ export const ChatPrompt = ({
     },
     [event],
   );
+
+  // Routed through `handleSubmit` so the button and the Enter keybinding share one submit path;
+  // the reset and refocus mirror what the `submit()` extension does for Enter.
+  const handleSend = useCallback(() => {
+    const text = editorRef.current?.getText().trim();
+    if (!text?.length) {
+      return;
+    }
+    if (handleSubmit(text)) {
+      editorRef.current?.setText('', true);
+    }
+  }, [handleSubmit]);
 
   const handleEvent = useCallback<NonNullable<ChatActionsProps['onEvent']>>(
     (ev) => {
@@ -173,6 +199,8 @@ export const ChatPrompt = ({
             microphone={true}
             docId={docId}
             processing={streaming}
+            canSend={canSend}
+            onSend={handleSend}
             onEvent={handleEvent}
           >
             {online !== undefined && (
