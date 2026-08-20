@@ -36,9 +36,9 @@ const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
     useLockBodyScroll(keyboardOpen);
     useAutoScroll();
 
-    // Fire synchronously after DOM mutation (before paint) so SimpleLayout's Splitter mode
-    // change is batched into the same paint as the keyboard open state change, preventing
-    // intermediate render frames from showing an un-adjusted layout.
+    // Fire synchronously after DOM mutation (before paint) so the consumer's own layout change is
+    // batched into the same paint as the keyboard open state change, preventing intermediate render
+    // frames from showing an un-adjusted layout.
     useLayoutEffect(() => onKeyboardOpenChange?.(keyboardOpen), [keyboardOpen, onKeyboardOpenChange]);
 
     return (

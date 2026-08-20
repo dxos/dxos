@@ -37,8 +37,8 @@ export type MobileAppBar = {
 const ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-item'];
 
 /**
- * Mobile equivalent of `useAppBarProps`: title, dropdown actions, and back button track the top of
- * the mobile stack (see {@link useMobileStack}) instead of simple-layout's single `active`/`workspace`.
+ * App bar state for the mobile layout: title, dropdown actions, and back button track the top of the
+ * mobile stack (see {@link useMobileStack}) rather than the deck's plank set.
  */
 export const useMobileAppBar = (): MobileAppBar => {
   const { t } = useTranslation(meta.profile.key);

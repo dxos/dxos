@@ -304,7 +304,6 @@
       "@dxos/plugin-settings",
       "@dxos/plugin-sheet",
       "@dxos/plugin-sidekick",
-      "@dxos/plugin-simple-layout",
       "@dxos/plugin-slack",
       "@dxos/plugin-space",
       "@dxos/plugin-spacetime",

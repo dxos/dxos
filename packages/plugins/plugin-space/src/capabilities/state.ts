@@ -43,11 +43,10 @@ export default Capability.makeModule(
     }).pipe(Atom.keepAlive);
 
     const manager = yield* Capabilities.PluginManager;
-    // Update navigableCollections based on plugin state.
+    // Update navigableCollections based on plugin state: stack is the one plugin that renders a
+    // collection as its own article, so without it the deck opens the collection's contents instead.
     const updateNavigableCollections = () => {
-      const enabled =
-        manager.getEnabled().includes('org.dxos.plugin.stack') ||
-        manager.getEnabled().includes('org.dxos.plugin.simpleLayout');
+      const enabled = manager.getEnabled().includes('org.dxos.plugin.stack');
       const current = registry.get(ephemeralAtom);
       if (enabled !== current.navigableCollections) {
         registry.update(ephemeralAtom, (c) => ({ ...c, navigableCollections: enabled }));

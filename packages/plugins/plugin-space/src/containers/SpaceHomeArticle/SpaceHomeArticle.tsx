@@ -37,7 +37,7 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
   const { actions, onAction } = useMenuActions(attendableId);
   const layout = useLayout();
   // The card-scale gutter is a fifth of a phone viewport; mobile steps down to the dialog scale.
-  const gutter = layout.mode === 'mobile' || layout.mode === 'simple' ? 'md' : 'lg';
+  const gutter = layout.mode === 'mobile' ? 'md' : 'lg';
 
   return (
     <Panel.Root role={role}>

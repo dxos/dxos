@@ -26,7 +26,6 @@ import * as PwaPlugin from '@dxos/plugin-pwa/PwaPlugin';
 import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SettingsPlugin from '@dxos/plugin-settings/SettingsPlugin';
-import * as SimpleLayoutPlugin from '@dxos/plugin-simple-layout/SimpleLayoutPlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as SpotlightPlugin from '@dxos/plugin-spotlight/SpotlightPlugin';
 import * as StatusBarPlugin from '@dxos/plugin-status-bar/StatusBarPlugin';
@@ -66,8 +65,9 @@ export type PluginConfig = State & {
 };
 
 /**
- * Infrastructure plugins shared by every plugin set (`plugin-defs.tsx` and
- * `plugin-defs.production.tsx`) — options here are the single source of truth.
+ * Infrastructure plugins shared by every plugin set (`plugin-defs.tsx`,
+ * `plugin-defs.production.tsx` and `plugin-defs.mobile.tsx`) — options here are the single source of
+ * truth.
  *
  * **Every `system`-tagged plugin belongs in this list, and every plugin in this list is
  * `tags: ['system']`** (force-enabled, never a user-facing toggle). The two must agree, in both
@@ -93,7 +93,9 @@ export const getCorePlugins = ({
   isPopover,
   isMobile,
 }: PluginConfig): Plugin.Plugin[] => {
-  const layoutPlugin = isPopover ? SpotlightPlugin.make() : isMobile ? SimpleLayoutPlugin.make({}) : DeckPlugin.make();
+  const layoutPlugin = isPopover
+    ? SpotlightPlugin.make()
+    : DeckPlugin.make({ platform: isMobile ? 'mobile' : 'desktop' });
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
     AtprotoPlugin.make(),
