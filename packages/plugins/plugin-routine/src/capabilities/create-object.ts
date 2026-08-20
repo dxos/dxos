@@ -14,8 +14,6 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { CreateRoutinePanel } from '#components';
 import { RoutineOperation } from '#types';
 
-import { getRoutinesPath } from '../paths';
-
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
 export default Capability.makeModule(
@@ -30,11 +28,11 @@ export default Capability.makeModule(
         options: CreateOptions,
       ) =>
         draft
-          ? Operation.invoke(SpaceOperation.AddObject, {
-              object: draft,
-              target: options.db,
-              targetNodeId: getRoutinesPath(options.db.spaceId),
-            })
+          ? Operation.invoke(
+              SpaceOperation.AddObject,
+              { object: draft, target: options.db },
+              { spaceId: options.db.spaceId },
+            )
           : Operation.invoke(RoutineOperation.CreateRoutine, { db: options.db, templateId, name }),
     });
   }),

@@ -20,7 +20,6 @@ import {
   listStandardSitePublications,
   searchStandardSiteHandles,
 } from '../operations/sources';
-import { getMagazinesPath } from '../paths';
 
 const StandardSiteCreate = Schema.Struct({
   ...CreateSubscription.StandardSiteCreateBase.fields,
@@ -94,11 +93,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = CreateSubscription.makeSubscriptionFromCreate(props);
-              const result = yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
+              const result = yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
               // Auto-sync after creation if URL is provided.
               if (object.url) {
                 yield* Operation.schedule(
@@ -116,11 +118,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const magazine = Magazine.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object: magazine,
-                target: options.target,
-                targetNodeId: getMagazinesPath(options.db.spaceId),
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object: magazine,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
       ]),

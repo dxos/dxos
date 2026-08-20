@@ -12,8 +12,6 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { Blog } from '#types';
 
-import { getPublicationsPath } from '../paths';
-
 // `BloggerOperation.AddPublication`/`AddPost` persist via `CollectionModel.add` and return a `Ref`
 // for agent/skill callers; they don't produce the `{ id, subject, object }` shape the generic
 // "create object" menu needs to navigate to the new object, so both entries below construct the
@@ -29,13 +27,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Blog.makePublication(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                // Absent a caller-supplied target (e.g. the space's generic create menu), navigate to
-                // the new Publication under the Publications section rather than the database subtree.
-                targetNodeId: options.targetNodeId ?? getPublicationsPath(options.db.spaceId),
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
         {
@@ -43,11 +42,11 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Blog.makePost(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                { object, target: options.target },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
       ]),

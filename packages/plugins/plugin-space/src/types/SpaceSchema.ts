@@ -135,7 +135,6 @@ export interface TypedObjectSerializer<T extends Obj.Unknown = Obj.Unknown> {
  */
 export type CreateObjectResult = {
   id: string;
-  subject: readonly string[];
   object: Obj.Unknown;
 };
 

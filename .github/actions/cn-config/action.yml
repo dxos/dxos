@@ -6,7 +6,7 @@ inputs:
     description: 'Version'
     required: true
   environment:
-    description: Target environment (dev | nightly | staging | production) — selects the updater channel.
+    description: Target environment (dev | preview | staging | production) — selects the updater channel.
     required: true
   suffix-identifier:
     description: >-
@@ -58,7 +58,7 @@ runs:
       shell: bash
 
     # Each non-production channel installs as its own app. macOS keys both the application container and
-    # the WKWebView data store on the bundle identifier, so a distinct one is what lets a nightly build
+    # the WKWebView data store on the bundle identifier, so a distinct one is what lets a preview build
     # run beside the released one instead of sharing — and migrating — its storage. Production keeps the
     # bare identifier every existing install already carries.
     - name: Update identity in tauri.conf.json
@@ -68,7 +68,7 @@ runs:
         TAURI_CONF: ${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}
       run: |
         case "$ENVIRONMENT" in
-          dev | nightly | staging) ;;
+          dev | preview | staging) ;;
           *) echo "::error::cn-config: unknown environment: $ENVIRONMENT" && exit 1 ;;
         esac
         label="$(printf '%s' "${ENVIRONMENT:0:1}" | tr '[:lower:]' '[:upper:]')${ENVIRONMENT:1}"
@@ -80,7 +80,7 @@ runs:
         echo "identity -> $(jq -r '.identifier + " / " + .productName' "$TAURI_CONF")"
       shell: bash
 
-    # Side-by-side installs are only useful if you can tell them apart: nightly gets the purple mark, every
+    # Side-by-side installs are only useful if you can tell them apart: preview gets the purple mark, every
     # other prerelease the rust one, and the blue mark stays the released app's alone. The web bundle
     # brands its favicon and boot loader to match (`src/vite/channel-branding.ts`).
     - name: Update icon in tauri.conf.json
@@ -91,7 +91,7 @@ runs:
         WORKING_DIRECTORY: ${{ inputs.working-directory }}
       run: |
         case "$ENVIRONMENT" in
-          nightly) icons=icons-nightly ;;
+          preview) icons=icons-preview ;;
           *) icons=icons-rust ;;
         esac
         for file in 32x32.png 128x128.png 128x128@2x.png icon.icns icon.ico; do

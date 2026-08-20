@@ -50,18 +50,18 @@
       },
       "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" }],
     },
-    // The daily dogfood build (nightly.composer.space) — deployed from `main` on a schedule, talking to
-    // EDGE production.
-    "nightly": {
-      "name": "composer-nightly",
+    // The daily dogfood build (preview.composer.space) — deployed from `main` on a schedule, talking to
+    // EDGE production. Distinct from the per-PR previews, which are Worker versions of `dev` below.
+    "preview": {
+      "name": "composer-preview",
       "vars": {
         "APPLE_TEAM_ID": "9428WC5MR8",
-        "ENVIRONMENT": "nightly",
+        "ENVIRONMENT": "preview",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
       "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
     },
-    // Deployed on demand, talking to EDGE nightly; also the Worker PR previews upload versions to.
+    // Deployed on demand, talking to EDGE preview; also the Worker PR previews upload versions to.
     "dev": {
       "name": "composer-dev",
       "vars": {

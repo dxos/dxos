@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { Database, Type } from '@dxos/echo';
-import { DXN, EID } from '@dxos/keys';
+import * as NavigationResolver from '@dxos/app-toolkit/NavigationResolver';
 import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 
 import { meta } from '#meta';
@@ -17,39 +16,19 @@ import { getMailboxPath } from '../paths';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const resolver: AppCapabilities.NavigationTargetResolver = (query) =>
-      Effect.gen(function* () {
-        if (!query?.uri) {
-          return [
-            {
-              path: SettingsPath.getPluginSettingsSectionPath(meta.profile.key),
-              label: 'Inbox settings',
-              type: 'settings',
-            },
-          ];
-        }
-
-        const targetUri = EID.tryParse(query.uri) ?? DXN.tryMake(query.uri);
-        if (!targetUri) {
-          return [];
-        }
-
-        const { db } = yield* Database.Service;
-        const ref = db.makeRef(targetUri);
-        const object = yield* Database.load(ref).pipe(Effect.catch(() => Effect.succeed(null)));
-        if (!object || !Mailbox.instanceOf(object)) {
-          return [];
-        }
-
-        return [
+    return Capability.contribute(
+      AppCapabilities.NavigationTargetResolver,
+      NavigationResolver.forType(Mailbox.Mailbox, {
+        getPath: ({ spaceId, objectId }) => getMailboxPath(spaceId, objectId),
+        getLabel: (mailbox) => mailbox.name ?? '',
+        pages: [
           {
-            path: getMailboxPath(db.spaceId, object.id),
-            label: (object as Mailbox.Mailbox).name ?? '',
-            type: Type.getTypename(Mailbox.Mailbox),
+            path: SettingsPath.getPluginSettingsSectionPath(meta.profile.key),
+            label: 'Inbox settings',
+            type: 'settings',
           },
-        ];
-      });
-
-    return Capability.contribute(AppCapabilities.NavigationTargetResolver, resolver);
+        ],
+      }),
+    );
   }),
 );

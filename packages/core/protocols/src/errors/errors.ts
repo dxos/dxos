@@ -63,6 +63,17 @@ export class InvalidInvitationError extends BaseError.extend('InvalidInvitationE
 
 registerErrorMessageContext('InvalidInvitationError', InvalidInvitationError);
 
+/**
+ * A recovery token (email magic link) no longer resolves to an identity — registered because error
+ * identity crosses the EDGE and services RPC boundaries by name.
+ */
+export class InvalidRecoveryTokenError extends BaseError.extend(
+  'InvalidRecoveryTokenError',
+  'Recovery token is invalid, expired, or already used.',
+) {}
+
+registerErrorMessageContext('InvalidRecoveryTokenError', InvalidRecoveryTokenError);
+
 export class AlreadyJoinedError extends BaseError.extend('AlreadyJoinedError') {}
 
 registerErrorMessageContext('AlreadyJoinedError', AlreadyJoinedError);
