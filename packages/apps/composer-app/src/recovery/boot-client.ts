@@ -9,6 +9,7 @@ import { Config, defs } from '@dxos/config';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { setupConfig } from '../util';
+import { initAutomergeWasm } from '../util/automerge-wasm';
 
 let bootedClient: Client | undefined;
 
@@ -24,6 +25,10 @@ export const bootRecoveryClient = async (): Promise<Client> => {
   if (bootedClient) {
     return bootedClient;
   }
+
+  // This client hosts echo in-page; automerge is slim-resolved and must be initialized before
+  // it (see util/automerge-wasm.ts).
+  await initAutomergeWasm();
 
   const base = await setupConfig();
   const config = new Config(

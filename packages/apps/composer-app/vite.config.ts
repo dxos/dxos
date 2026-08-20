@@ -47,39 +47,41 @@ const dirname = import.meta.dirname;
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
 const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
 
-// Only these packages' default-condition entry is free of top-level await; the `browser` one imports
-// `.wasm` as a module.
-const SYNC_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-subduction'];
+// These packages' default (`browser`-conditioned) entrypoints initialize their wasm with
+// top-level await, and WebKit evaluates a module before its dependencies when a graph reached by
+// concurrent dynamic imports contains top-level await, leaving sibling bindings in TDZ (plugin
+// activation fails with "undefined is not an object"). Serve and build alike, resolve them to
+// their `slim` entrypoints — which perform no wasm work at module evaluation — and initialize
+// explicitly per realm via `initAutomergeWasm()` (src/util/automerge-wasm.ts) before the client
+// boots.
+const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo', '@automerge/automerge-subduction'];
 
 /**
- * Resolves {@link SYNC_WASM_PACKAGES} without the `browser` condition, selecting their
- * synchronous-init entrypoints so no top-level await enters the module graph.
+ * Resolves {@link SLIM_WASM_PACKAGES} to `slim`, and their subpaths without the `browser`
+ * condition — subduction's `browser`-conditioned `/slim` is still the top-level-await bundler
+ * glue, so pinning the non-browser resolution keeps one wasm instance shared by every importer.
  */
-// TODO(wittjosiah): Remove the need for this rather than waiting on a WebKit fix — either the
-//  automerge wasm packages stop requiring top-level await, or our bundling and dependencies change
-//  so the TDZ is unreachable. Only `serve` needs it, but the Tauri app renders in a WebKit web
-//  view, so that covers dev there too.
-const syncWasmInit = (): PluginOption => {
+const slimWasm = (): PluginOption => {
   // `browser` is deliberately absent; the rest mirrors what vite would apply for the client.
   const resolver = new ResolverFactory({ conditionNames: ['source', 'import', 'module', 'default'] });
 
   return {
-    name: 'dxos-sync-wasm-init',
+    name: 'dxos-slim-wasm',
     enforce: 'pre',
-    // The base64 entry costs ~33% over the binary, which a production bundle must not pay.
-    apply: 'serve',
     resolveId: {
       order: 'pre',
       handler: (source, importer) => {
-        // Subpaths too: `./slim` re-exports the same wasm glue as the package root, so redirecting
-        // only the root would split the two across separate wasm instances and leave the signer
-        // that `/slim` hands out uninitialized.
-        const matched = SYNC_WASM_PACKAGES.some((pkg) => source === pkg || source.startsWith(`${pkg}/`));
-        if (!importer || !matched) {
+        if (!importer) {
           return null;
         }
-
-        const resolved = resolver.sync(path.dirname(importer), source);
+        const pkg = SLIM_WASM_PACKAGES.find((name) => source === name || source.startsWith(`${name}/`));
+        if (!pkg) {
+          return null;
+        }
+        // Subpaths resolve as requested (`/slim`, `/slim/next`); asset requests (`?url`) fail the
+        // resolver and fall through to vite.
+        const target = source === pkg ? `${pkg}/slim` : source;
+        const resolved = resolver.sync(path.dirname(importer), target);
         return resolved.error || !resolved.path ? null : resolved.path;
       },
     },
@@ -134,7 +136,7 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   }),
   // WebKit evaluates a module before its dependencies when a graph reached by concurrent dynamic
   // imports contains top-level await, leaving bindings in TDZ.
-  syncWasmInit(),
+  slimWasm(),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
   wasm(),
@@ -272,10 +274,10 @@ export default defineConfig((env) => ({
     },
   },
   optimizeDeps: {
-    // The wasm packages `syncWasmInit` redirects must not be pre-bundled: the optimizer resolves
+    // The wasm packages `slimWasm` redirects must not be pre-bundled: the optimizer resolves
     // with its own pipeline (the `browser` condition, so the bundler entry) and importers would
     // land on that chunk's top-level await regardless of what the plugin resolves.
-    exclude: ['@dxos/wa-sqlite', ...SYNC_WASM_PACKAGES],
+    exclude: ['@dxos/wa-sqlite', ...SLIM_WASM_PACKAGES],
     // The full set of dep entrypoints the app reaches, so vite's optimize-deps phase pre-bundles
     // them up front rather than discovering them mid-load (when a dynamic import unwraps a new
     // subpath), which forces a full page reload with the "Discovered new dependencies" banner —
