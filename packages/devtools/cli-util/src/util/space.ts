@@ -157,6 +157,8 @@ export const syncAllToEdge = Effect.fn(function* () {
     yield* Console.log(`Syncing ${spaces.length} space(s) to EDGE...`);
   }
 
+  // Concurrent, because each space's sync is a wait on its own replication round: serially, a
+  // profile with N spaces pays N times the per-space timeout before the command can exit.
   yield* Effect.forEach(
     spaces,
     Effect.fn(function* (space: Space) {
@@ -164,7 +166,7 @@ export const syncAllToEdge = Effect.fn(function* () {
       yield* Effect.promise(() => space.db.flush());
       yield* syncSpaceToEdge(space);
     }),
-    { discard: true },
+    { concurrency: 'unbounded', discard: true },
   );
 });
 

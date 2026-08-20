@@ -9,4 +9,5 @@ describe('spaces sync', () => {
   it.todo('should sync a synced space');
   it.todo('should sync an unsynced space');
   it.todo('should sync a missing space');
+  it.todo('should sync every space when no space id is given');
 });
