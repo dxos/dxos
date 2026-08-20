@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Schedule from 'effect/Schedule';
-import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -49,15 +48,6 @@ export default Capability.makeModule(
 
     const monitors = new Map<string, AppCapabilities.ProgressMonitor>();
 
-    yield* Effect.addFinalizer(() =>
-      Effect.sync(() => {
-        for (const monitor of monitors.values()) {
-          monitor.remove();
-        }
-        monitors.clear();
-      }),
-    );
-
     const applyMonitor = (key: string, update: MonitorUpdate | undefined): void => {
       if (update === undefined) {
         monitors.get(key)?.remove();
@@ -83,46 +73,58 @@ export default Capability.makeModule(
 
     // The spaces subscription re-delivers the whole list on every change, so subscribing blindly
     // would stack a fiber per space per delivery — duplicate writers then race over one monitor key.
-    const subscribed = new Set<SpaceId>();
-    const runtime = yield* Effect.context<Scope.Scope>();
+    const subscriptions = new Map<SpaceId, Fiber.Fiber<unknown, unknown>[]>();
     const subscribeSpace = (space: Space): void => {
-      if (subscribed.has(space.id)) {
+      if (subscriptions.has(space.id)) {
         return;
       }
-      subscribed.add(space.id);
 
-      void Effect.gen(function* () {
-        const key = createSpaceReplicationProgressKey(space.id);
-        const apply = (state: Database.SyncState) => applyMonitor(key, toSpaceUpdate(getSpaceName(space), state));
-        const provide = ServiceResolver.provide({ space: space.id }, Database.Service);
+      const key = createSpaceReplicationProgressKey(space.id);
+      const apply = (state: Database.SyncState) => applyMonitor(key, toSpaceUpdate(getSpaceName(space), state));
+      const provide = ServiceResolver.provide({ space: space.id }, Database.Service);
 
-        const streamFiber = processManagerRuntime.runFork(
+      subscriptions.set(space.id, [
+        processManagerRuntime.runFork(
           Database.subscribeToSyncState().pipe(
             Stream.runForEach((state) => Effect.sync(() => apply(state))),
             Effect.provide(provide),
           ),
-        );
-        const reconcileFiber = processManagerRuntime.runFork(
+        ),
+        processManagerRuntime.runFork(
           Database.getSyncState().pipe(
             Effect.map(apply),
             Effect.repeat(Schedule.spaced(RECONCILE_INTERVAL)),
             Effect.provide(provide),
           ),
-        );
-
-        yield* Effect.addFinalizer(() =>
-          Effect.all([Fiber.interrupt(streamFiber), Fiber.interrupt(reconcileFiber)], { discard: true }),
-        );
-      }).pipe(Effect.provide(runtime), Effect.runFork);
+        ),
+      ]);
     };
 
+    const unsubscribeSpace = (spaceId: SpaceId): void => {
+      const fibers = subscriptions.get(spaceId);
+      if (!fibers) {
+        return;
+      }
+      subscriptions.delete(spaceId);
+      applyMonitor(createSpaceReplicationProgressKey(spaceId), undefined);
+      Effect.runFork(Effect.all(fibers.map(Fiber.interrupt), { discard: true }));
+    };
+
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        for (const spaceId of [...subscriptions.keys()]) {
+          unsubscribeSpace(spaceId);
+        }
+      }),
+    );
+
     // A space that leaves the list (closed, left) never emits another sync state, so its monitor
-    // would linger forever — drop it here instead.
-    const pruneMonitors = (spaces: readonly Space[]): void => {
-      const live = new Set(spaces.map((space) => createSpaceReplicationProgressKey(space.id)));
-      for (const key of [...monitors.keys()]) {
-        if (!live.has(key)) {
-          applyMonitor(key, undefined);
+    // would linger forever — and its still-running fibers would re-register it.
+    const pruneSpaces = (spaces: readonly Space[]): void => {
+      const live = new Set(spaces.map((space) => space.id));
+      for (const spaceId of [...subscriptions.keys()]) {
+        if (!live.has(spaceId)) {
+          unsubscribeSpace(spaceId);
         }
       }
     };
@@ -131,7 +133,7 @@ export default Capability.makeModule(
       for (const space of spaces) {
         subscribeSpace(space);
       }
-      pruneMonitors(spaces);
+      pruneSpaces(spaces);
     });
     yield* Effect.addFinalizer(() => Effect.sync(() => spacesSubscription.unsubscribe()));
     for (const space of client.spaces.get()) {

@@ -8,17 +8,6 @@ import { type Database } from '@dxos/echo';
 
 import { toSpaceUpdate } from './space-sync-progress';
 
-const makeState = (state: Partial<Database.SyncState>): Database.SyncState => ({
-  localDocumentCount: 0,
-  remoteDocumentCount: 0,
-  totalDocumentCount: 0,
-  unsyncedDocumentCount: 0,
-  blocksToPull: '0',
-  blocksToPush: '0',
-  totalBlocks: '0',
-  ...state,
-});
-
 describe('toSpaceUpdate', () => {
   test('caught up on both backlogs yields no monitor', () => {
     expect(toSpaceUpdate('Space', makeState({ totalDocumentCount: 10, totalBlocks: '100' }))).toBeUndefined();
@@ -37,7 +26,7 @@ describe('toSpaceUpdate', () => {
     );
     expect(update).toEqual({
       label: 'Notes',
-      current: 98, // (10 + 100) − (4 + 8)
+      current: 98,
       total: 110,
       note: '4 CRDTs · ↓6 ↑2',
     });
@@ -60,4 +49,16 @@ describe('toSpaceUpdate', () => {
       note: '↓0 ↑2',
     });
   });
+});
+
+/** A fully caught-up sync state, overridden per case. */
+const makeState = (state: Partial<Database.SyncState>): Database.SyncState => ({
+  localDocumentCount: 0,
+  remoteDocumentCount: 0,
+  totalDocumentCount: 0,
+  unsyncedDocumentCount: 0,
+  blocksToPull: '0',
+  blocksToPush: '0',
+  totalBlocks: '0',
+  ...state,
 });
