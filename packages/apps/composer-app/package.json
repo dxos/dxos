@@ -19,8 +19,8 @@
     "icons": "npm run icons:cp && npm run icons:pwa && npm run icons:mstile",
     "icons:": "sips -z 150 150 ./assets/icon-1024x1024.png --out ./public/mstile-icon-150x150.png",
     "icons:cp": "cp ./assets/favicon.svg ./public/icon.svg",
-    "icons:pwa": "pwa-asset-generator --icon-only --favicon --index=index.html ./public/icon.svg ./public",
     "icons:menubar": "node scripts/gen-menubar-icon.mjs",
+    "icons:pwa": "pwa-asset-generator --icon-only --favicon --index=index.html ./public/icon.svg ./public",
     "icons:variants": "node scripts/gen-icon-variants.mjs"
   },
   "dependencies": {
@@ -151,7 +151,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/ui": "workspace:*",

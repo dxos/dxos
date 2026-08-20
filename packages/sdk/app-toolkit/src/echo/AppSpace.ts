@@ -126,9 +126,9 @@ export const getDefaultSpace = (client: SpaceResolver): Space | undefined => {
 /**
  * Create the two spaces every profile starts with, and designate the second as the default.
  *
- * Shared by the app's identity-created module, the `halo create` CLI command and the story/test
- * harnesses so the shape of a new profile is defined once. It lives here rather than in
- * plugin-space because plugin-client (CLI, test harness) cannot depend on plugin-space.
+ * Shared by the app's identity-created module and the story/test harnesses so the shape of a new
+ * profile is defined once. It lives here rather than in plugin-space because plugin-client (CLI,
+ * test harness) cannot depend on plugin-space.
  *
  * Both are locked at genesis: the settings space holds configuration that must never be shared,
  * and the first space is private until the user decides otherwise. Both replicate through EDGE so
