@@ -650,12 +650,11 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
 
 - [x] **Possibly move Project type from @dxos/compute to plugin-projects at end** — rejected 2026-08-19: `pipeline-email` (core) consumes Project, and core cannot import a plugin; the compute/assistant-toolkit placement rule is recorded in `packages/core/compute/compute/src/types/AUDIT.md`.
 - [x] **Review CompanionTo reuse for project chats** — superseded: `CompanionTo` is deleted; ALL chats (companion, project, agent) use the ECHO parent edge — see the parent-edge normalization entry below. Agent-roster linkage still open.
-- [ ] **`ChildrenAnnotation` + `Obj.setParent` invariant** (wittjosiah review on PR #12675, 2026-08-19) —
-      a ref-less parent edge leaves the child discoverable only by index query; add an `@dxos/echo`
-      type-level annotation declaring accepted child types, and an invariant in `Obj.setParent`
-      requiring the parent to hold a ref to the child OR carry the annotation. Must cover today's
-      ref-less parents: project chats (`create-chat.ts`), `Agent.makeInitialized`'s chat, companion
-      chats. Thread: https://github.com/dxos/dxos/pull/12675#discussion_r3816670221
+- [ ] **Promote the `Obj.setParent` declared-edge warning to an invariant** — mechanism landed on
+      PR #12675 (2748c142bd): `ChildrenAnnotation`/`ParentAnnotation` + `Obj.isDeclaredParentEdge`,
+      warn-only. Remaining: sweep the ~60 `setParent` call sites repo-wide (watch `undeclared parent
+      edge` warnings in test logs), annotate or reorder each, then replace the warn with
+      `invariant`. Thread: https://github.com/dxos/dxos/pull/12675#discussion_r3816670221
 - [x] **Rename `packages/core/echo/echo/src/Err.ts` → `Error.ts`** — DONE 2026-08-20: subpath is
       `@dxos/echo/Error`, barrel namespace is `Error`; modules that also use the global alias as
       `EchoError` locally.
