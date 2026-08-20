@@ -22,12 +22,14 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
   - `main` → STOP, write nothing, tell the user. Never create a worktree or
     branch to escape — the harness owns those.
 - **Cloud sandbox sessions differ.** If `CLAUDE_CODE_REMOTE` is set you are in the Claude Code
-  cloud sandbox, where `.claude/settings.json` hooks do NOT run: `/mode` and `/project` are
-  inert, and the branch/worktree guards enforce nothing — you are the only thing upholding the
-  Non-negotiables. `moon`, `gh`, and `oxfmt` are not on `PATH` (use `pnpm exec moon`
-  and the `mcp__github__*` tools), dependencies are installed but not built, and the container
-  is ephemeral, so push before you stop. Full details, including how to reach HTTPS from
-  Chromium → `cloud-sandbox` skill.
+  cloud sandbox. `.claude/settings.json` hooks fire there as they do locally, so `/mode` and the
+  branch/worktree guards behave normally. What is missing is everything outside the clone:
+  `~/.claude` starts empty, so `/dxos:project` answers `Unknown command` until
+  `.claude/scripts/bootstrap-plugins.sh` installs the plugin, and `gh` is absent (use the
+  `mcp__github__*` tools). `moon`, `oxfmt`, and `node_modules` exist only where the environment
+  ran `.config/claude-code-setup.sh` — establish which case you are in before running a build.
+  The container is ephemeral, so push before you stop. Full details, including how to reach HTTPS
+  from Chromium → `cloud-sandbox` skill.
 - First reply: confirm these instructions and follow the reporting rule below.
 - If unsure how to implement something, ask rather than guess.
 
