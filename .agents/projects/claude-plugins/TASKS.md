@@ -5,7 +5,10 @@ _Resume: PRs #12618 + #12620 MERGED — the `dxos` marketplace publishes `dxos` 
 `history`/`spawn`/`help` verbs. The `mcp` backend has still never touched a running space: next is
 the live round-trip (`dx mcp serve` up, `DX_PROJECT_BACKEND=mcp`, one list → new → track → tasks
 cycle checked in Composer). Uncommitted: none. Last: added Phase 4 (consolidate to one MCP-native
-`project` skill, from the 2026-08-19 project-skills audit) — gated on the Phase 2 round-trip._
+`project` skill, from the 2026-08-19 project-skills audit) — gated on the Phase 2 round-trip.
+2026-08-20: #12616 landed (skills are the atomic unit of MCP projection) — Phase 4's operation
+contract is largely done (projectCreate projects, tools-list membership); next is the round-trip,
+then absorb the deprecated toolkit skill and rename codeProject → project._
 
 ## Phase 1: Extract into a distributable plugin
 
@@ -178,16 +181,22 @@ edge `mcp-operations` (tool surface).
 
 ### Complete the operation contract
 
-- [ ] **Project `projectCreate`** — the `mcp` BACKEND directive promises it, but only
-      `projectList`/`projectGet`/`projectUpdate` are projected
-      (`plugin-projects/src/types/ProjectMcpOperation.ts`); the directive's scaffold-in-one-call
-      contract has no implementation behind it.
-- [ ] **Decide operation ownership** — `task*`/`milestone*`/`outline*` ops live in `plugin-tasks`,
-      annotated `skill=CODE_PROJECT_SKILL_KEY`. Either move them into `plugin-projects` (no compat
-      re-exports; update all call sites) or keep them and treat the annotation as the binding.
-- [ ] **Absorb `org.dxos.skill.project`** (assistant-toolkit) — its `artifact-add`/`artifact-list`
-      become `artifactAdd`/`artifactList` under the consolidated skill; delete the toolkit skill.
-      This frees the `project` prompt name.
+Largely landed by #12616 ("skills are the atomic unit of MCP projection", merged 2026-08-20 as
+63e500bb): the skill's `tools` list now decides projection (`Operation.mcpTool` deleted),
+`ProjectOperation.Create` is keyed `projectCreate` and sits in `CodeProjectSkill.operations`,
+safety became `Operation.mutation`, observability moved to registered `ObservabilityMapping`s, and
+plugin-space CRUD projects from one definition for both hosts (the CLI's hand-written object
+toolkit is deleted; `Gateway`/`Server` became `McpRegistry`/`McpServer`).
+
+- [x] **Project `projectCreate`** — landed in #12616 via `CodeProjectSkill.operations` membership.
+      Residual: the handler still resolves templates via `Capability.getAll` — the live round-trip
+      must confirm headless invoke works in the CLI registry (blank-template fallback exists).
+- [x] **Operation ownership** — resolved by #12616's design, without moving code: membership lives
+      solely in the skill's `tools` list; `task*`/`milestone*`/`outline*` stay in `plugin-tasks`
+      (`skill-keys.ts` deleted).
+- [ ] **Absorb `org.dxos.skill.project`** (assistant-toolkit) — #12616 marked it `@deprecated`
+      pointing at plugin-projects; finish it: move `artifact-add`/`artifact-list` under the
+      consolidated skill, delete the toolkit skill. This frees the `project` prompt name.
 - [ ] **Rename `…skill.codeProject` → `…skill.project`** (prompt `/project`) — ONLY after the
       absorption lands: projection throws on prompt-name collisions, so ordering is load-bearing.
       `codeProject` was a collision artifact, never the intended name.
