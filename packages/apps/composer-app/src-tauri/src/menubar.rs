@@ -37,8 +37,9 @@ pub fn init_menubar(app: &AppHandle, spotlight_config: SpotlightConfig) -> Resul
 
     // A monochrome template image, not the colored dock icon: macOS recolors template images to match
     // the menu bar's light/dark appearance, the same way the built-in status icons behave.
-    let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/menubarTemplate.png"))
-        .map_err(|e| e.to_string())?;
+    // `include_image!` decodes the PNG at build time (path relative to the crate manifest), so the
+    // binary needs no runtime decoder — `Image::from_bytes` would require tauri's `image-png` feature.
+    let icon = tauri::include_image!("./icons/menubarTemplate.png");
 
     TrayIconBuilder::new()
         .icon(icon)
