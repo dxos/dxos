@@ -10,6 +10,16 @@ Run the following to generate the Windows icon.
 pnpm run icons:mstile
 ```
 
+## Menu bar icon
+
+`src-tauri/icons/menubarTemplate.png` is the macOS menu bar icon, embedded directly by `menubar.rs`. It is a
+template image, so macOS discards its colour and tints the alpha channel to match the menu bar — the black
+fill is Apple's authoring convention, not a rendered colour.
+
+It is derived from `@dxos/brand`'s `composer-icon.svg`, flattened to a single fill and recentred, then thinned
+by ~4.2 units (20px at a 4.8 px/unit render). The thinning is load-bearing: the mark's four rings are exactly
+contiguous — they are separated by colour alone — so a plain monochrome flatten renders as one solid disc.
+
 ## Per-channel brand artwork
 
 Every non-production channel deploys as its own app and installs beside the released one, so each ships a
