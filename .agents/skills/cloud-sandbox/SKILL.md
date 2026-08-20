@@ -21,47 +21,47 @@ several of their instructions do not hold here.
 (`CCR_AGENT_PROXY_ENABLED`, `CCR_EGRESS_GATEWAY_ENABLED`, …). Any of these means the sandbox.
 `/root/.ccr/README.md` documents the network proxy from the platform side.
 
-## Project hooks DO run — plugins do not install themselves
+## Project hooks run; plugins do not install themselves
 
-`.claude/settings.json` hooks fire here exactly as they do locally. `mode.sh` injects the
-`RESPONSE RULES` block on every prompt, so `/mode terse|normal` works, and `guard-branch.sh` /
-`guard-worktree.sh` deny as usual — still a backstop rather than a guarantee, so check
-`git branch --show-current` before the first edit regardless.
+`.claude/settings.json` hooks fire here as they do locally: `mode.sh` injects the `RESPONSE RULES`
+block on every prompt, so `/mode terse|normal` works, and `guard-branch.sh` / `guard-worktree.sh`
+deny edits whose target working tree is on `main`. They are a backstop, not a guarantee — check
+`git branch --show-current` before the first edit.
 
-What does not survive a fresh container is `~/.claude`. It starts with an empty
-`installed_plugins.json` and only the official marketplace known, and `enabledPlugins` /
-`extraKnownMarketplaces` in `.claude/settings.json` merely _declare_ — nothing fetches. So every
-plugin listed there is absent: `/dxos:project` answers `Unknown command`, and the skills those
-plugins ship (`task-planning`, `superpowers:*`) never appear in the session's skill list. Repo
-skills are unaffected — they arrive through the `.claude/skills -> ../.agents/skills` symlink,
-a different mechanism entirely.
+`~/.claude` does not survive a fresh container. It starts with an empty `installed_plugins.json`
+and only the official marketplace known, and `enabledPlugins` / `extraKnownMarketplaces` in
+`.claude/settings.json` only _declare_ a plugin — nothing fetches one. Every plugin listed there
+is therefore absent: `/dxos:project` answers `Unknown command`, and the skills those plugins ship
+(`task-planning`, `superpowers:*`) are missing from the session's skill list. Skills committed to
+the repo arrive by a different route — the `.claude/skills -> ../.agents/skills` symlink — and
+are always there.
 
-Fix it with the repo's idempotent bootstrap, which registers the marketplace from the local
-checkout (no network) and installs:
+The repo's bootstrap registers the marketplace from the local checkout (no network) and installs.
+It is idempotent:
 
 ```bash
 bash .claude/scripts/bootstrap-plugins.sh
 ```
 
-Installing does not retrofit the session you are in; a fresh session in the same container picks
-the plugin up. That is why the same script runs from `.config/claude-code-setup.sh` — where the
-environment's setup command is wired, the install is baked into the cached image and the first
-session already has it.
+Installing does not retrofit the running session; a fresh session in the same container is the
+first to see the plugin. `.config/claude-code-setup.sh` runs the same script, so where the
+environment's setup command is wired the install lands in the cached image and the first session
+already has it.
 
 `claude plugin uninstall` and `claude plugin marketplace remove` **rewrite tracked
 `.claude/settings.json`**, stripping the `dxos` entries out of `enabledPlugins` and
-`extraKnownMarketplaces`. `git diff` after either, and restore. Plain `add`/`install` leave the
-file alone.
+`extraKnownMarketplaces`. `git diff` after either, and restore. `add` and `install` leave the file
+alone.
 
-There is no repo `SessionStart` hook emitting a `SESSION CONTEXT` block: run
+No `SessionStart` hook emits a `SESSION CONTEXT` block: run
 `git rev-parse --show-toplevel && git branch --show-current` before any file op.
 
-## Tooling not on PATH — and possibly not installed at all
+## Tooling not on PATH
 
-`pnpm` and `node` are always present (`/opt/node22/bin`); `gh` never is. Everything else hangs on
-whether the environment's setup command ran `.config/claude-code-setup.sh`. Where it did not,
-`proto`, `moon`, and `node_modules` are all absent, so `pnpm exec moon` fails too — check before
-concluding a command is broken:
+`pnpm` and `node` are present (`/opt/node22/bin`); `gh` is not. `proto`, `moon`, and
+`node_modules` exist only where the environment's setup command ran
+`.config/claude-code-setup.sh`; without it `pnpm exec moon` fails too. Establish which case you
+are in before concluding a command is broken:
 
 ```bash
 command -v proto moon; ls node_modules | wc -l   # 0 => setup never ran
@@ -78,14 +78,14 @@ GitHub's REST API is **also unreachable from the shell**: `curl https://api.gith
 `Monitor` around it — it fails identically whether CI is red, green, or still running, so silence
 means nothing. Read run status through the `mcp__github__*` tools, which go through the server side.
 
-## Dependencies are never built, and may not even be installed
+## Nothing is prebuilt, and `node_modules` may be missing
 
 The clone ships no build outputs, and `node_modules` only where the setup command ran. A first
 `moon run <app>:serve` runs a pnpm install and then builds the whole dependency graph — expect
-10+ minutes. Bundled sub-packages may
-still be missing afterward: `@dxos/shell` needs `moon run shell:bundle` explicitly, or the app's
-shell entry 500s with `Failed to resolve import "@dxos/shell/style.css"`. Build before running
-anything, and budget for it.
+10+ minutes. Bundled sub-packages may still be missing afterward: `@dxos/shell` needs
+`moon run shell:bundle` explicitly, or the app's shell entry 500s with
+`Failed to resolve import "@dxos/shell/style.css"`. Build before running anything, and budget
+for it.
 
 A task whose inputs have not changed replays its cached result, so after editing a library, e2e
 bundles pick the edit up only once the library actually rebuilds. When a fix "doesn't work", confirm
