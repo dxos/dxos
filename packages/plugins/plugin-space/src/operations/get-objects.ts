@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Entity } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 
 import { SpaceOperation } from '#types';
 
@@ -13,7 +13,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.GetObjects> = SpaceOp
   Operation.withHandler(
     Effect.fnUntraced(function* ({ objects }) {
       const resolved = yield* Effect.forEach(objects, (object) => Database.load(object));
-      return { objects: resolved.map((object) => Entity.toJSON(object)) };
+      return { objects: resolved };
     }),
   ),
 );

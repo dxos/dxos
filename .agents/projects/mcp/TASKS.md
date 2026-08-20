@@ -304,6 +304,11 @@ field goes.
       split into one suite per handler beside the existing `create`/`collect-garbage` tests, with
       shared fixtures in `operations/testing.ts`. TODOs added: fold `queryTypes` into `queryObjects`
       as one general query verb, and revisit `EXCLUDED_TYPES`.
+- [x] **Handlers return live entities** (user, 2026-08-20) — the object verbs no longer call
+      `Entity.toJSON` themselves: `Gateway.snapshot` already replaces live entities at the wire
+      boundary (its own doc says so), and serializing inside the handler denied in-process callers
+      the reactive handle for no gain. `queryObjects`'s summary branch still builds
+      `{ dxn, typename, label }` — that is a projection, not serialization.
 - [ ] **Shared operation→tool projection** (assistant ⇄ mcp) — deferred with a plan, not dropped.
       What blocks a naive extraction: the two surfaces are deliberately different models of the
       same operation. The assistant presents refs as LLM-friendly URI _strings_ (`RefFromLLM`,

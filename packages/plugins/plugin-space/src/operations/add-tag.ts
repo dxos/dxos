@@ -14,7 +14,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddTag> = SpaceOperat
     Effect.fnUntraced(function* ({ tag, object }) {
       const resolved = yield* Database.load(object);
       Entity.update(resolved, (resolved) => Entity.addTag(resolved, tag));
-      return { object: Entity.toJSON(resolved) };
+      return { object: resolved };
     }),
   ),
 );

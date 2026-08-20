@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Entity, Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 
 import { SpaceOperation } from '#types';
@@ -27,7 +27,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.UpdateObject> = Space
           );
         }
       });
-      return { object: Entity.toJSON(resolved) };
+      return { object: resolved };
     }),
   ),
 );

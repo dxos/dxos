@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 
 import { SpaceOperation } from '#types';
 
@@ -45,7 +45,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = Space
       return {
         results: results.map((object) =>
           includeContent
-            ? Entity.toJSON(object)
+            ? object
             : { dxn: Obj.getURI(object), typename: Obj.getTypename(object), label: Obj.getLabel(object) },
         ),
       };
