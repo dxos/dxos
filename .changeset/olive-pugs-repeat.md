@@ -66,10 +66,13 @@ own connector-based sync for those services.
 
 Skill definitions are the atomic unit of MCP projection. A skill's `tools` list decides which
 operations project as MCP tools, and the load-the-skill-first pointer in each tool's description
-derives from that membership (the SEP-2640 shape) — `Operation.mcpTool` no longer decides
-inclusion, keeping only genuinely-MCP overrides (a tool name for keys whose final segment is too
-generic, and a model-facing description); its `safety`, `aspect` and `skill` fields are removed.
-An operation without the annotation projects with defaults: the key's final segment as the name.
+derives from that membership (the SEP-2640 shape). **`Operation.mcpTool` is removed** — with
+inclusion decided by skills and safety carried by `Operation.mutation`, nothing was left that the
+operation's own meta could not say: a tool's name is the key's final segment and its description is
+the operation's `description`. The three surviving overrides moved into meta, and
+`ProjectOperation.Create`'s key becomes `projectCreate` (its final segment was a too-generic
+`create`, and the key is now what names the tool). Folding those descriptions into meta also puts
+them in front of the in-app assistant, which never saw the MCP-only text.
 `DatabaseSkill` and `CodeProjectSkill` opt in with `mcpPrompt: true` and list their verbs
 (`CodeProjectSkill` now exports `operations`, spanning the project, task, milestone and outline
 verbs).

@@ -26,7 +26,17 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  * scaffolds the owned instructions/artifacts graph, and files the project in the Projects section.
  */
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Project', icon: 'ph--stack--regular' },
+  meta: {
+    // `projectCreate`, not `create`: the key's final segment is the projected tool name, and a bare
+    // `create` is too generic to stand alone among the other tools.
+    key: makeKey('projectCreate'),
+    name: 'Create Project',
+    description:
+      'Creates a project and its owned graph: agent instructions, an artifacts collection, and a ' +
+      'task set for its tasks. Returns the project with a `taskSet` reference — pass that reference ' +
+      'to taskCreate to record work against it.',
+    icon: 'ph--stack--regular',
+  },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -40,17 +50,7 @@ export const Create = Operation.make({
     subject: Schema.Array(Schema.String),
     project: Type.getSchema(Project.Project),
   }),
-}).pipe(
-  Operation.mcpTool({
-    // The key's final segment is a too-generic `create`; the override keeps the domain prefix.
-    name: 'projectCreate',
-    description:
-      'Creates a project and its owned graph: agent instructions, an artifacts collection, and a ' +
-      'task set for its tasks. Returns the project with a `taskSet` reference — pass that reference ' +
-      'to taskCreate to record work against it.',
-  }),
-  Operation.mutation('write'),
-);
+}).pipe(Operation.mutation('write'));
 
 export const CreateChat = Operation.make({
   meta: { key: makeKey('createChat'), name: 'Create Project Chat', icon: 'ph--chat-text--regular' },

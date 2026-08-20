@@ -20,8 +20,8 @@ changes what a model sees lives in the shared package or it is a bug.
       annotated operations as tools, opted-in skills as prompts, `skillLoad`, name/collision
       rules, ref widening, and the wire response passes. Hosts supply a `Gateway` (reach the
       registry, invoke an operation, name the session's spaces) and a transport; nothing else
-      about the surface is theirs. 32 unit tests, including a parity test that fails if the
-      annotation id drifts from `Operation.McpToolAnnotation`.
+      about the surface is theirs. 32 unit tests, including parity tests that fail if an
+      annotation id drifts from the combinator that writes it.
 - [x] **`dx mcp serve`** — stdio host over the CLI's own plugin registry. Verified live against a
       real MCP handshake: 22 tools (project/task/outline verbs + `skillLoad`, plus the ported
       static toolkits), `codeProject` as a prompt, `skillLoad` returning the skill body and the
@@ -244,7 +244,18 @@ field goes.
       operation annotation beside `idempotent`/`visible` (id `org.dxos.operation.mutation`,
       drift-pinned in projection.test). The MCP projection maps it to
       `readOnlyHint`/`destructiveHint` as before and now also maps `Operation.idempotent` to
-      `idempotentHint`. `mcpTool` keeps only `name`/`description` overrides (4 sites).
+      `idempotentHint`. `mcpTool` kept only `name`/`description` overrides (4 sites).
+- [x] **`Operation.mcpTool` removed outright** (user, 2026-08-20: "well we should remove it now").
+      Once inclusion was skill-driven and safety lived in `Operation.mutation`, the four remaining
+      overrides said nothing the operation's own meta could not: the tool name is the key's final
+      segment, the description is `meta.description`. The three descriptions folded into meta —
+      which also puts them in front of the in-app assistant, which never read the MCP-only text —
+      and `ProjectOperation.Create`'s key became `projectCreate`, so the key names the tool rather
+      than an override doing it. The wire-encoding sentences (`{ "/": "echo:..." }` envelopes) were
+      dropped rather than shared: refs encode differently per surface (the assistant presents them
+      as URI strings), so per-surface encoding belongs in the field schemas, not a shared sentence.
+      `McpTool`/`McpToolAnnotation`/`mcpTool`/`getMcpTool` are gone from compute, and the projection
+      no longer reads or drift-pins the annotation.
 - [x] **One handler set per plugin, on the subpath convention** (user directive 2026-08-19).
       plugin-space carried two sets because `registry.add(handlers.map(Operation.serialize))`
       (cli `runtime.ts`, `assistant-test-layer.ts`) threw on any non-JSON-serializable input schema

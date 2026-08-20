@@ -14,14 +14,11 @@ import { log } from '@dxos/log';
 import type * as Gateway from '../Gateway';
 
 /**
- * Annotation id under which `Operation.mcpTool` persists the projection descriptor.
+ * Annotation id of `Operation.MutationAnnotation`.
  *
  * Declared here rather than imported from `@dxos/compute` so a host bundling this package does not
  * also bundle the operation runtime; `Projection.test.ts` fails if the two definitions drift.
  */
-export const MCP_TOOL_ANNOTATION_ID = 'org.dxos.operation.mcp-tool';
-
-/** Annotation id of `Operation.MutationAnnotation`; same drift contract as the id above. */
 export const MUTATION_ANNOTATION_ID = 'org.dxos.operation.mutation';
 
 /** Annotation id of `Operation.IdempotentAnnotation`; same drift contract as the id above. */
@@ -36,14 +33,6 @@ const TOOL_NAME_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
 
 /** Same constraint as tool names; prompt names surface as `/mcp__<server>__<name>`. */
 const PROMPT_NAME_PATTERN = TOOL_NAME_PATTERN;
-
-/** Wire form of `Operation.McpTool`, with `name` optional (defaults to the key's final segment). */
-const McpToolAnnotation = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  description: Schema.optional(Schema.String),
-});
-
-const decodeAnnotation = Schema.decodeUnknownResult(McpToolAnnotation);
 
 /** Wire form of `Operation.MutationAnnotation`. */
 const MutationAnnotation = Schema.Literals(['none', 'write', 'destructive']);
@@ -259,22 +248,6 @@ export const projectOperations = (
       continue;
     }
 
-    // A malformed annotation degrades to defaults rather than hiding the tool: inclusion belongs
-    // to the skill, so a metadata authoring error must not silently shrink the skill's surface.
-    let annotation: Schema.Schema.Type<typeof McpToolAnnotation> | undefined;
-    const rawAnnotation: unknown = meta?.annotations?.[MCP_TOOL_ANNOTATION_ID];
-    if (rawAnnotation != null) {
-      const decoded = decodeAnnotation(rawAnnotation);
-      if (decoded._tag === 'Failure') {
-        log.warn('mcp-tool annotation did not decode; projecting with defaults', {
-          key: rawKey,
-          error: String(decoded.failure),
-        });
-      } else {
-        annotation = decoded.success;
-      }
-    }
-
     let mutation: Mutation | undefined;
     const rawMutation: unknown = meta?.annotations?.[MUTATION_ANNOTATION_ID];
     if (rawMutation != null) {
@@ -291,7 +264,7 @@ export const projectOperations = (
     const idempotent = meta?.annotations?.[IDEMPOTENT_ANNOTATION_ID] === true;
 
     const key = rawKey.replace(/^dxn:/, '');
-    const toolName = annotation?.name ?? toNsid(rawKey).split('.').at(-1) ?? '';
+    const toolName = toNsid(rawKey).split('.').at(-1) ?? '';
     if (!TOOL_NAME_PATTERN.test(toolName)) {
       log.warn('projected tool name violates the tool-name constraint; operation skipped', { key, toolName });
       continue;
@@ -309,7 +282,7 @@ export const projectOperations = (
       }
     }
 
-    const baseDescription = annotation?.description ?? record.description ?? record.name;
+    const baseDescription = record.description ?? record.name;
     const description = [baseDescription, skillPointer(owningSkills)].filter(Boolean).join(' ');
 
     projected.push({
@@ -387,7 +360,7 @@ const assertUniqueNames = (
     if (holder !== undefined) {
       throw new Error(
         `MCP ${kind} name collision: '${claim.name}' claimed by both ${holder} and ${claim.source}.` +
-          (kind === 'tool' ? ' Set an explicit `name` in the mcpTool annotation of one of them.' : ''),
+          (kind === 'tool' ? ' Rename one of the operation keys so their final segments differ.' : ''),
       );
     }
     holders.set(claim.name, claim.source);

@@ -22,7 +22,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  * operation-service, workerd) can load these definitions without dragging the app-only graph
  * that `ProjectOperation`'s creation verbs pull in (`@dxos/app-framework`,
  * `@dxos/assistant-toolkit`). Placement is about that import graph, not about projectability:
- * `projects.create` is itself projected as `projectCreate` (#12591) and a host satisfies its
+ * `projects.projectCreate` is itself projected (#12591) and a host satisfies its
  * `Capability.Service` by building a PluginManager, as the CLI gateway does.
  *
  * Exported as its own namespace (not re-exported through `ProjectOperation`): the namespace-export

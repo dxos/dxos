@@ -44,20 +44,10 @@ describe('operation serialization', () => {
     );
 
     expect(annotated).toEqual({
-      create: 'write',
+      projectCreate: 'write',
       projectGet: 'none',
       projectList: 'none',
       projectUpdate: 'write',
     });
-  });
-
-  // `create` is the one verb whose key segment is too generic for a tool name, so its
-  // `mcpTool({ name })` override is load-bearing and must reach the remote registry.
-  test('the projectCreate name override survives serialize', async ({ expect }) => {
-    const handlers = await ProjectOperationHandlerSet.handlers.getHandlers();
-    const create = handlers.find((handler) => String(handler.meta.key).endsWith('.operation.create'));
-    expect(create).toBeDefined();
-    const tool = create && Operation.getMcpTool(Operation.serialize(create));
-    expect(tool?.name).toEqual('projectCreate');
   });
 });

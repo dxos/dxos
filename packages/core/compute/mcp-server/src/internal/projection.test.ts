@@ -22,14 +22,12 @@ const REF_SCHEMA = {
 /** Registry record in wire form: meta as a plain `@meta` property, input as JSON Schema. */
 const record = ({
   key,
-  annotation,
   mutation,
   description,
   properties,
   services,
 }: {
   key: string;
-  annotation?: Record<string, unknown>;
   mutation?: string;
   description?: string;
   properties?: Record<string, unknown>;
@@ -41,7 +39,6 @@ const record = ({
   '@meta': {
     key,
     annotations: {
-      ...(annotation ? { [Projection.MCP_TOOL_ANNOTATION_ID]: annotation } : {}),
       ...(mutation ? { [Projection.MUTATION_ANNOTATION_ID]: mutation } : {}),
     },
   },
@@ -69,10 +66,6 @@ const owner = (promptName: string, tools: readonly string[]): Projection.Project
 
 describe('Projection', () => {
   describe('annotation contract', () => {
-    test('the annotation id matches the one `Operation.mcpTool` writes', ({ expect }) => {
-      expect(Projection.MCP_TOOL_ANNOTATION_ID).to.equal(Operation.McpToolAnnotation.key);
-    });
-
     test('the mutation and idempotent annotation ids match the ones the combinators write', ({ expect }) => {
       expect(Projection.MUTATION_ANNOTATION_ID).to.equal(Operation.MutationAnnotation.key);
       expect(Projection.IDEMPOTENT_ANNOTATION_ID).to.equal(Operation.IdempotentAnnotation.key);
@@ -82,13 +75,13 @@ describe('Projection', () => {
       expect(Projection.DATABASE_SERVICE_KEY).to.equal(Database.Service.key);
     });
 
-    test('an operation named by a skill projects, with `Operation.mcpTool` metadata applied', ({ expect }) => {
+    test('an operation named by a skill projects, with its annotations applied', ({ expect }) => {
       const operation = Operation.make({
         meta: { key: DXN.make('org.dxos.function.test.doThing'), name: 'Do thing' },
         input: Schema.Struct({ value: Schema.String }),
         output: Schema.Struct({ ok: Schema.Boolean }),
         services: [Database.Service],
-      }).pipe(Operation.mcpTool({ name: 'doThing' }), Operation.mutation('write'), Operation.idempotent);
+      }).pipe(Operation.mutation('write'), Operation.idempotent);
 
       const [projected] = Projection.projectOperations(
         [Obj.toJSON(Operation.serialize(operation))],
@@ -106,17 +99,14 @@ describe('Projection', () => {
   describe('projectOperations', () => {
     test("only operations named by a projected skill's tools project", ({ expect }) => {
       const projected = Projection.projectOperations(
-        [
-          record({ key: 'org.dxos.function.tasks.create', annotation: { name: 'taskCreate' } }),
-          record({ key: 'org.dxos.function.tasks.internal', annotation: { name: 'internal' } }),
-        ],
-        [owner('codeProject', ['org.dxos.function.tasks.create'])],
+        [record({ key: 'org.dxos.function.tasks.taskCreate' }), record({ key: 'org.dxos.function.tasks.internal' })],
+        [owner('codeProject', ['org.dxos.function.tasks.taskCreate'])],
         [],
       );
       expect(projected.map((operation) => operation.toolName)).to.deep.equal(['taskCreate']);
     });
 
-    test('an unannotated operation projects with defaults: key-segment name, no mutation class', ({ expect }) => {
+    test('an unclassified operation projects with no mutation class', ({ expect }) => {
       const [projected] = Projection.projectOperations(
         [record({ key: 'org.dxos.function.tasks.taskCreate' })],
         [owner('codeProject', ['org.dxos.function.tasks.taskCreate'])],
@@ -170,18 +160,20 @@ describe('Projection', () => {
       expect(projected.key).to.equal('org.dxos.function.tasks.taskComplete');
     });
 
-    test('a name violating the tool-name constraint is skipped rather than advertised', ({ expect }) => {
+    test('a key segment violating the tool-name constraint is skipped rather than advertised', ({ expect }) => {
+      // Over the 64-char budget the client's `mcp__<server>__` prefix shares.
+      const segment = 'a'.repeat(65);
       const projected = Projection.projectOperations(
-        [record({ key: 'org.dxos.function.tasks.create', annotation: { name: 'task.create' } })],
-        [owner('codeProject', ['org.dxos.function.tasks.create'])],
+        [record({ key: `org.dxos.function.tasks.${segment}` })],
+        [owner('codeProject', [`org.dxos.function.tasks.${segment}`])],
         [],
       );
       expect(projected).to.have.length(0);
     });
 
-    test('undecodable annotations degrade to defaults rather than hiding the tool', ({ expect }) => {
+    test('an undecodable mutation degrades to no hints rather than hiding the tool', ({ expect }) => {
       const [projected] = Projection.projectOperations(
-        [record({ key: 'org.dxos.function.tasks.taskCreate', annotation: { name: 42 }, mutation: 'sideways' })],
+        [record({ key: 'org.dxos.function.tasks.taskCreate', mutation: 'sideways' })],
         [owner('codeProject', ['org.dxos.function.tasks.taskCreate'])],
         [],
       );
@@ -191,13 +183,8 @@ describe('Projection', () => {
 
     test('membership appends the load-first pointer to the description', ({ expect }) => {
       const [projected] = Projection.projectOperations(
-        [
-          record({
-            key: 'org.dxos.function.projects.create',
-            annotation: { name: 'projectCreate', description: 'Creates a project.' },
-          }),
-        ],
-        [owner('codeProject', ['org.dxos.function.projects.create'])],
+        [record({ key: 'org.dxos.function.projects.projectCreate', description: 'Creates a project.' })],
+        [owner('codeProject', ['org.dxos.function.projects.projectCreate'])],
         [],
       );
       expect(projected.description).to.include('Creates a project.');
@@ -231,10 +218,7 @@ describe('Projection', () => {
     test('two operations claiming one tool name fail loudly', ({ expect }) => {
       expect(() =>
         Projection.projectOperations(
-          [
-            record({ key: 'org.dxos.function.tasks.create', annotation: { name: 'create' } }),
-            record({ key: 'org.dxos.function.projects.create', annotation: { name: 'create' } }),
-          ],
+          [record({ key: 'org.dxos.function.tasks.create' }), record({ key: 'org.dxos.function.projects.create' })],
           [owner('codeProject', ['org.dxos.function.tasks.create', 'org.dxos.function.projects.create'])],
           [],
         ),

@@ -160,7 +160,10 @@ export const AddObject = Operation.make({
   meta: {
     key: makeKey('addObject'),
     name: 'Add Object',
-    description: 'Add an object to a space.',
+    description:
+      'Creates an object in the space and files it so it appears in Composer. Describe it with ' +
+      '`create` ({ "@type": "<typename>", ...properties }); the type must already be registered ' +
+      '(see queryObjects). Omit `target` to file it at the space root.',
     icon: 'ph--plus--regular',
   },
   // Required: the caller names the database — an explicit spaceId, or a database provided in the
@@ -192,16 +195,7 @@ export const AddObject = Operation.make({
     id: Schema.String,
     object: Obj.Unknown,
   }),
-}).pipe(
-  Operation.mcpTool({
-    description:
-      'Creates an object in the space and files it so it appears in Composer. Describe it with ' +
-      '`create` ({ "@type": "<typename>", ...properties }); the type must already be registered ' +
-      '(see queryObjects). Reference values use the envelope form { "/": "echo:..." }. Omit ' +
-      '`target` to file it at the space root.',
-  }),
-  Operation.mutation('write'),
-);
+}).pipe(Operation.mutation('write'));
 
 // TODO(wittjosiah): Rename `objects` to `entities` (covers objects, relations, and persisted types).
 export const RemoveObjectsOutput = Schema.Struct({
@@ -221,7 +215,10 @@ export const RemoveObjects = Operation.make({
   meta: {
     key: makeKey('removeObjects'),
     name: 'Remove Objects',
-    description: 'Remove entities (objects, relations, or persisted types) from a space.',
+    description:
+      'Deletes entities (objects, relations, or persisted types) from the space and unlinks them ' +
+      'from the collection that held them. Name them with `refs` (as returned by queryObjects) ' +
+      'when the entities themselves are not held.',
     icon: 'ph--trash--regular',
   },
   // No Database.Service: the space comes from the input itself (live entities, or refs that are
@@ -239,14 +236,7 @@ export const RemoveObjects = Operation.make({
     }),
   }),
   output: RemoveObjectsOutput,
-}).pipe(
-  Operation.mcpTool({
-    description:
-      'Deletes entities from the space and unlinks them from the collection that held them. Name ' +
-      'them with `refs` (an array of { "/": "echo:..." } envelopes, as returned by queryObjects).',
-  }),
-  Operation.mutation('destructive'),
-);
+}).pipe(Operation.mutation('destructive'));
 
 /**
  * Reclaim the storage held by a space's deleted objects. Permanent — the objects are removed
