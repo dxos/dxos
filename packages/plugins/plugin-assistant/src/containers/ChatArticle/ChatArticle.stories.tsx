@@ -296,11 +296,11 @@ export const DesktopPlatform: Story = {
     await waitFor(
       () => {
         const { onlineSwitch, outlineRail, statusPill } = desktopOnlyChrome(canvasElement);
-        expect(onlineSwitch).not.toBeNull();
-        expect(outlineRail).not.toBeNull();
+        void expect(onlineSwitch).not.toBeNull();
+        void expect(outlineRail).not.toBeNull();
         // Non-empty, not merely present: the wrapper renders whether or not the pill has anything
         // to report, so its text is what proves the pill itself rendered.
-        expect(statusPill?.textContent ?? '').not.toBe('');
+        void expect(statusPill?.textContent ?? '').not.toBe('');
       },
       { timeout: 10_000, interval: 200 },
     );
