@@ -1,0 +1,1 @@
+../../../packages/plugins/plugin-lingo/DESIGN.md

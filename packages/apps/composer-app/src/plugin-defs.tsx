@@ -40,6 +40,7 @@ import * as JmapPlugin from '@dxos/plugin-jmap/JmapPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
 import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
+import * as LingoPlugin from '@dxos/plugin-lingo/LingoPlugin';
 import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
 import * as MapPluginSolid from '@dxos/plugin-map-solid/MapPlugin';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
@@ -125,6 +126,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       CodePlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
       LibraryPlugin.meta.profile.key,
+      LingoPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
@@ -189,6 +191,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     JmapPlugin.make(),
     KanbanPlugin.make(),
     LibraryPlugin.make(),
+    LingoPlugin.make(),
     MapPlugin.make(),
     isLocal && MapPluginSolid.make(),
     MarkdownPlugin.make(),
