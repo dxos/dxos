@@ -15,6 +15,7 @@
 '@dxos/plugin-commerce': minor
 '@dxos/plugin-inbox': minor
 '@dxos/plugin-studio': minor
+'@dxos/echo': patch
 ---
 
 Space object CRUD is now projected from operations, and space operations no longer reach for app
@@ -127,3 +128,10 @@ registry through `Gateway`. The name deliberately shadows effect's `McpServer` b
 it — `toolkit` and `layerStdio` are re-exported, so a host needs one import rather than two under
 different names. The package exports `/Gateway` and `/McpServer`, each with a build entry so the
 published package can resolve them. `Gateway.SkillRecord` carries `tools`.
+
+Fixed in `@dxos/echo` along the way: a struct with an open rest signature (`Schema.StructWithRest`)
+now survives the JSON Schema round-trip. Effect 4 omits `additionalProperties` when the rest
+signature's value type is unconstrained, and the serializer only restored it for bare records — so
+the decoder rebuilt the struct closed and `addObject`'s draft silently dropped every field beyond
+`@type`. The restore now applies whenever the key is absent, which is unambiguous: a closed struct
+always carries `additionalProperties: false` explicitly.
