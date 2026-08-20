@@ -399,6 +399,40 @@ Follow-ups from the 2026-08-19 audit (none block PR #12616):
       plugin shim; reserve a one-paragraph CLAUDE.md snippet as the fallback for harnesses that
       drop MCP `instructions`.
 
+## Milestone 9 — generic discovery + invoke surface (user-directed 2026-08-20)
+
+Direction: reshape the operation→tool projection after the Cloudflare/PostHog MCP servers — a
+small fixed tool surface instead of one tool per operation, so the tool list stops cluttering the
+model's context. The model *finds* operations through a generic discovery tool and *calls* them
+through a generic invoke tool; per-operation schemas enter context only on demand. Skills stay the
+unit of governance (only operations named by an opted-in skill's `tools` list are discoverable or
+invocable), and `skillLoad` stays. Branch `claude/operation-tool-projection-rykf3p`. Plan
+presented 2026-08-20 — NOT yet approved; items below are the proposal, not commitments.
+
+- [ ] `findOperations` (package tool) — search/filter the skill-governed operations: optional
+      `query` (name/description match), `skill`, and `keys`; compact rows by default (key, name,
+      description, mutation/idempotent hints, requiresSpace, owning skills); full input/output
+      JSON Schema only when `keys` names specific operations. Read-only, idempotent.
+- [ ] `invokeOperation` (package tool) — `{ key, input, spaceId? }`; validates input against the
+      operation's schema for actionable errors (keeping the stringified-ref tolerance), resolves
+      the space (same `resolveId`/`hintFromInput` path), dispatches through the unchanged
+      `McpRegistry.Shape`, qualifies refs, wraps non-object outputs.
+- [ ] `skillLoad` listing mode (pulls forward audit G2) — with no per-tool descriptions carrying
+      skill pointers, omitted-`skill` listing becomes load-bearing for discovery.
+- [ ] SERVER_INSTRUCTIONS rewrite — describe the find → skillLoad → invoke loop; stay under the
+      2KB truncation.
+- [ ] `McpServer.layer`/`fromSkills` serve the generic surface; per-operation `toolsLayer`,
+      `makeTool`, per-op name collision contract retire (reserved names still guard the three
+      package tools against host statics).
+- [ ] CLI host: retire static `listOperations` (subsumed by `findOperations`); keep `whoami`,
+      `listSpaces`, `listPlugins`, `listTypes`; rewrite `serve.test.ts` assertions.
+- [ ] Tests: mcp-server unit tests over the new tools (projection catalog, invoke round-trip,
+      ref widening, spaceId placement); live stdio verification.
+- [ ] Edge follow-through on the next pin bump (its static toolkits unaffected; its `SkillRecord`
+      marshalling already carries `tools`).
+- [ ] Open questions (presented with the plan): replace outright vs. mode toggle; one invoke tool
+      vs. read/write split for client-side safety gating; whether prompts (skills) still project.
+
 ## Milestone 7 — third-party plugins and reload (design: [DESIGN.md](./DESIGN.md) §2-3)
 
 A shipped `dx` must load plugins it was not compiled with, and those plugins' operations and
