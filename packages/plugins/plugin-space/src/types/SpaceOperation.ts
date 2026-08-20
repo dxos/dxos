@@ -162,7 +162,7 @@ export const AddObject = Operation.make({
     name: 'Add Object',
     description:
       'Creates an object in the space and files it so it appears in Composer. Describe it with ' +
-      '`create` ({ "@type": "<typename>", ...properties }); the type must already be registered ' +
+      '`{ "@type": "<typename>", ...properties }`; the type must already be registered ' +
       '(see queryObjects). Omit `target` to file it at the space root.',
     icon: 'ph--plus--regular',
   },
@@ -170,11 +170,11 @@ export const AddObject = Operation.make({
   // calling context (the app's create-object dispatch does the latter).
   services: [Database.Service],
   input: Schema.Struct({
-    object: Schema.optional(Obj.Unknown).annotate({ description: 'The object to add, already instantiated.' }),
-    // Two fields rather than a union: an MCP tool's input schema must be a top-level object, and a
-    // union projects with no parameters at all, so the handler enforces exactly one.
-    create: Schema.optional(ObjectDraft).annotate({
-      description: 'Description of an object to create and add, when no instantiated object is available.',
+    // A union rather than two optional fields, so the schema itself admits exactly one form: a
+    // caller that cannot hold a live object — anything across an RPC boundary — describes one, and
+    // the handler instantiates it against the space's type registry.
+    object: Schema.Union([Obj.Unknown, ObjectDraft]).annotate({
+      description: 'The object to add: an instantiated object, or a description of one to create.',
     }),
     // A reference is the only form of the three that survives an RPC boundary, so a remote caller
     // names the target collection that way; in-process callers keep passing the live entity.

@@ -22,7 +22,9 @@ plugins to do it.
 
 `addObject`, `getObject`, `updateObject`, `removeObjects` and `queryObjects` are MCP-projected
 operations, so a remote agent reads and writes space objects through the same verbs the app uses.
-`addObject` and `removeObjects` accept references and object descriptions alongside live entities,
+`addObject` takes one `object` field that is a union of a live entity and a `{ "@type", ...props }`
+description, so the schema itself admits exactly one form rather than two optional fields policed by
+a handler check; `removeObjects` accepts references alongside live entities,
 and space operations no longer require a capability manager they never use — both so a host without
 the app's UI capabilities can still invoke them.
 

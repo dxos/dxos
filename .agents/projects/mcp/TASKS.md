@@ -73,7 +73,14 @@ changes what a model sees lives in the shared package or it is a bug.
   - [x] **Phase 2b** — each mutating verb grew a wire-shaped alternative _beside_ its live-entity
         input rather than replacing it, so no in-process call site changed: `addObject` takes
         `create` (a `{ '@type', ...props }` draft instantiated against the space's type registry) or
-        `object`, and a `Ref(Collection)` target; `removeObjects` takes `refs` or `objects`. The
+        `object`, and a `Ref(Collection)` target; `removeObjects` takes `refs` or `objects`.
+        **Revised (user, 2026-08-20):** `addObject`'s two optional fields collapsed into one
+        `object: Union([Obj.Unknown, ObjectDraft])`, so exactly-one is structural instead of a
+        handler invariant. A union at the _top_ level would not work — an MCP `inputSchema` must be
+        a `type: object`, and the projection reads parameters off the top-level fields, so a
+        top-level union projects with none (measured). Under a field it renders as `anyOf` and the
+        handler discriminates with `Obj.isObject`. No in-process call site changed: they pass a live
+        object, which is still the first branch. The
         database comes from `Effect.serviceOption(Database.Service)` — reading the ambient context
         without declaring it, because declared services resolve eagerly and the app's call sites
         invoke with no spaceId. `createObject` is deliberately absent: a detached object cannot

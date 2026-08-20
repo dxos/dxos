@@ -14,11 +14,6 @@ import { SpaceOperation } from '#types';
 const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOperation.AddObject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      invariant(
-        (input.object == null) !== (input.create == null),
-        'Pass exactly one of `object` (instantiated) or `create` (described).',
-      );
-
       // A remote caller can only name the target collection by reference; resolve it through the
       // ref itself rather than `Database.Service`, which the app's call sites give no space to.
       const targetRef = Ref.isRef(input.target) ? input.target : undefined;
@@ -29,13 +24,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       const db = (target ? (Database.isDatabase(target) ? target : Obj.getDatabase(target)) : undefined) ?? ambientDb;
       invariant(db, 'Database not found.');
 
-      let object: Obj.Unknown;
-      if (input.object != null) {
-        object = input.object;
-      } else {
-        invariant(input.create, 'Pass exactly one of `object` or `create`.');
-        object = yield* instantiate(db, input.create);
-      }
+      // The union's two branches: a live entity passes through, a description is instantiated.
+      const object = Obj.isObject(input.object) ? input.object : yield* instantiate(db, input.object);
 
       yield* CollectionModel.add({
         object,
