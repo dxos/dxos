@@ -253,6 +253,37 @@ describe('Connection multi-client', () => {
     LOCK_OR_RPC_WAIT_TIMEOUT + 30_000,
   );
 
+  test('reconnects after a connect attempt fails past the port exchange', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    let attempts = 0;
+    const connected = new Trigger<void>();
+    const connection = new Client.Connection({
+      createWorker: createWorkerFactory(keys.storageLockKey),
+      createCoordinator: () => hub.connect(),
+      leaderLockKey: keys.leaderLockKey,
+      leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
+      onConnect: async () => {
+        // Fails only after the worker has handed out ports and claimed the clientId — the shape of a
+        // handle that rejects before `WorkerService.start` registers a tab-liveness lock, so nothing
+        // on the tab side will ever close the session the worker is holding.
+        if (++attempts === 1) {
+          throw new Error('TEST: transient connect failure');
+        }
+        connected.wake();
+        return { close: async () => {} };
+      },
+    });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    await asyncTimeout(connection.open(), 10_000);
+    await asyncTimeout(connected.wait(), 10_000);
+    expect(attempts).toBeGreaterThan(1);
+  });
+
   test('rejects a non-positive maxLeaderFailures', () => {
     const hub = createHub();
     const keys = uniqueKeys();

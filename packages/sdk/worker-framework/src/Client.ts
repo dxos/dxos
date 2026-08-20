@@ -131,6 +131,9 @@ export class Connection extends Resource {
   #isInitialConnection = true;
   // Last error the connect task failed with, surfaced by `_open` in place of the bare timeout.
   #lastConnectError: unknown;
+  // Monotonic connect-attempt counter sent with `request-port`, so the worker can tell a raced
+  // duplicate of the current attempt from a reconnect after a failed one.
+  #connectAttempt = 0;
   readonly #reconnectCallbacks: Array<() => Promise<void>> = [];
 
   readonly closed = new Event<Error | undefined>();
@@ -295,6 +298,9 @@ export class Connection extends Resource {
 
   #connectTask = new AsyncTask(async () => {
     const ctx = this._ctx.derive();
+    // One attempt per run: the heartbeat-driven re-requests below belong to this same attempt, so
+    // the worker keeps discarding them as duplicates rather than churning the session.
+    const attempt = ++this.#connectAttempt;
 
     const handleLeaderStopped = async () => {
       log('worker-connection: lost connection');
@@ -326,6 +332,7 @@ export class Connection extends Resource {
             this.#coordinator?.sendMessage({
               type: 'request-port',
               clientId: this.#clientId,
+              attempt,
             });
           }
         });
@@ -342,6 +349,7 @@ export class Connection extends Resource {
         this.#coordinator.sendMessage({
           type: 'request-port',
           clientId: this.#clientId,
+          attempt,
         });
       });
 
@@ -535,7 +543,7 @@ class LeaderSession extends Resource {
           }
           break;
         case 'request-port':
-          this.#sendMessage({ type: 'start-session', clientId: msg.clientId });
+          this.#sendMessage({ type: 'start-session', clientId: msg.clientId, attempt: msg.attempt });
           break;
         default:
           break;
