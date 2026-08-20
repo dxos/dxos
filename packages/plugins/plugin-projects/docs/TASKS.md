@@ -648,7 +648,7 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
       nondeterministic tool-error recovery and cannot replay-converge; covered live by
       `planning.eval.ts`. Un-gate only if recording strategy changes.
 
-- [ ] **Possibly move Project type from @dxos/compute to plugin-projects at end** — revisit once the plugin's shape settles.
+- [x] **Possibly move Project type from @dxos/compute to plugin-projects at end** — rejected 2026-08-19: `pipeline-email` (core) consumes Project, and core cannot import a plugin; the compute/assistant-toolkit placement rule is recorded in `packages/core/compute/compute/src/types/AUDIT.md`.
 - [x] **Review CompanionTo reuse for project chats** — superseded: `CompanionTo` is deleted; ALL chats (companion, project, agent) use the ECHO parent edge — see the parent-edge normalization entry below. Agent-roster linkage still open.
 - [ ] **`ChildrenAnnotation` + `Obj.setParent` invariant** (wittjosiah review on PR #12675, 2026-08-19) —
       a ref-less parent edge leaves the child discoverable only by index query; add an `@dxos/echo`

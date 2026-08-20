@@ -112,6 +112,21 @@ There was no `Filter`/`Query` predicate for "object with no parent"; `standalone
 built by subtracting each known parent type's `children()`. Resolved: `Filter.hasParent` landed in
 `@dxos/echo` and the query is now `Filter.and(Filter.type(Chat), Filter.hasParent(false))`.
 
+## Package placement rule (decided 2026-08-19)
+
+The `@dxos/compute` / `@dxos/assistant-toolkit` type split is load-bearing, not accidental: **a
+type lives in `@dxos/compute` if it is harness-independent automation vocabulary; in
+`@dxos/assistant-toolkit` if its companion code needs the conversation runtime.**
+`Project`/`Skill`/`Instructions`/`Routine`/`Trigger` pass the first test (`pipeline-email` builds a
+Project corpus and `plugin-routine` compiles Instructions without touching an AI client);
+`Chat`/`Agent` fail it (`Chat.getFromContext` resolves through the Harness,
+`Agent.makeInitialized` drives `AiContext.Binder`). Consolidating in either direction creates a
+package cycle: `Skill`/`Instructions` have consumers below assistant-toolkit (including
+`@dxos/assistant` itself), and `Chat`/`Agent` depend — lazily but structurally — on
+`@dxos/assistant`, which depends on `@dxos/compute`. `Project` is the one movable piece, and moving
+it (to assistant-toolkit or plugin-projects) would force non-AI consumers (`pipeline-email`)
+through the AI runtime or a plugin — rejected.
+
 ## Surfacing decision (not changed by this work)
 
 Companion chats on ordinary artifacts are reached through the companion panel and are deliberately
