@@ -99,6 +99,28 @@ export const ReleaseOutsideStack: Story = {
   },
 };
 
+/**
+ * The stack root must clip, never scroll. `overflow: hidden` is a scroll container and a panel parked
+ * off-screen right makes it scrollable, so a `scrollIntoView` from inside a freshly pushed panel
+ * carries the whole stack sideways — Chromium clamps it back as the panel lands, WebKit leaves it
+ * there and the panel is off-screen and untappable for good.
+ */
+export const RootDoesNotScroll: Story = {
+  args: { index: 0 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const host = await canvas.findByTestId('stack-host');
+    const stack = host.firstElementChild as HTMLElement;
+
+    // Panels ahead of the top rest at 100%, so a scroll container would have somewhere to scroll to.
+    stack.scrollLeft = 200;
+    await expect(stack.scrollLeft).toBe(0);
+
+    const panels = canvasElement.querySelectorAll<HTMLElement>('[data-object-id]');
+    await expect(panels[0].getBoundingClientRect().left).toBeCloseTo(stack.getBoundingClientRect().left, 0);
+  },
+};
+
 /** A cancelled gesture snaps back rather than completing a pop the platform took away. */
 export const CancelledGesture: Story = {
   play: async ({ canvasElement }) => {

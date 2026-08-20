@@ -118,9 +118,14 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
   }, []);
 
   /**
-   * Animates a layer to `pose`. One keyframe on purpose: the implicit start is the element's current
-   * computed value (prior animations are flushed first), so an interrupted animation continues from
-   * where it is rather than snapping back to a nominal origin.
+   * Animates a layer to `pose`, starting from the pose its elements are holding as inline style —
+   * `flushAnimations` has just left the interrupted value there, so a cut-short animation continues
+   * from where it is rather than snapping back to a nominal origin.
+   *
+   * The resting pose is written as style and the animation dropped once it lands, rather than left
+   * standing as a fill: a filled pose is a px matrix the moment `commitStyles` bakes it, so it stops
+   * tracking the width it was a percentage of, and it vanishes entirely if anything cancels the
+   * animation.
    */
   const animatePose = useCallback(
     (layer: number, pose: Pose, duration: number) => {
@@ -129,16 +134,21 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
         applyPose(layer, pose);
         return;
       }
-      panelRefs.current[layer]?.animate([{ transform: transformFor(pose) }], {
-        duration,
-        easing: TRANSITION_EASING,
-        fill: 'both',
-      });
-      dimRefs.current[layer]?.animate([{ opacity: pose.dim }], {
-        duration,
-        easing: TRANSITION_EASING,
-        fill: 'both',
-      });
+      const options: KeyframeAnimationOptions = { duration, easing: TRANSITION_EASING, fill: 'both' };
+      const panel = panelRefs.current[layer];
+      if (panel) {
+        const transform = transformFor(pose);
+        const animation = panel.animate([{ transform: panel.style.transform || 'none' }, { transform }], options);
+        animation.onfinish = () => animation.cancel();
+        panel.style.transform = transform;
+      }
+      const dim = dimRefs.current[layer];
+      if (dim) {
+        const opacity = String(pose.dim);
+        const animation = dim.animate([{ opacity: dim.style.opacity || '0' }, { opacity }], options);
+        animation.onfinish = () => animation.cancel();
+        dim.style.opacity = opacity;
+      }
     },
     [applyPose, flushAnimations],
   );
@@ -155,12 +165,11 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
     [animatePose, items.length],
   );
 
-  // Layers that have been given a pose at least once. A single-keyframe animation starts from the
-  // element's current computed transform, and a panel mounted by this render has none — it computes to
-  // identity, so animating it to its resting place is a no-op from 0% to 0% and the push does not move.
-  // Newly mounted layers are therefore planted at the pose they *would* have held before this
-  // navigation (offset measured against the previous index, so an incoming panel starts off-screen
-  // right) and animated home from there.
+  // Layers that have been given a pose at least once. An animation starts from the pose on the
+  // element's inline style, and a panel mounted by this render has none — it would animate its resting
+  // place to itself and the push would not move. Newly mounted layers are therefore planted at the
+  // pose they *would* have held before this navigation (offset measured against the previous index, so
+  // an incoming panel starts off-screen right) and animated home from there.
   const posedRef = useRef<Set<number>>(new Set());
   const previousIndexRef = useRef(index);
   // Set when an interactive pop has already animated itself; the index change it triggers arrives a
@@ -320,7 +329,11 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
   return (
     <div
       ref={rootRef}
-      className={mx('relative overflow-hidden touch-pan-y', classNames)}
+      // Clipped, not hidden: `overflow: hidden` is a scroll container, and the incoming panel parked
+      // off-screen right makes it scrollable. Any `scrollIntoView` from content inside a freshly
+      // pushed panel then scrolls the whole stack sideways — Chromium clamps it back as the panel
+      // slides home, WebKit does not recompute the overflow and leaves the stack parked off-screen.
+      className={mx('relative overflow-clip touch-pan-y', classNames)}
       onPointerDown={handlePointerDown}
     >
       {items.map((id, itemIndex) => {
