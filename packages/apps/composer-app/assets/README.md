@@ -12,13 +12,20 @@ pnpm run icons:mstile
 
 ## Menu bar icon
 
-`src-tauri/icons/menubarTemplate.png` is the macOS menu bar icon, embedded directly by `menubar.rs`. It is a
-template image, so macOS discards its colour and tints the alpha channel to match the menu bar — the black
-fill is Apple's authoring convention, not a rendered colour.
+The macOS menu bar shows a template image: the system throws the artwork's colour away and tints its
+silhouette to match the bar, light or dark. The mark cannot go there as it stands, because its four rings sit
+edge to edge and are told apart by colour alone — drop the colour and they merge into a solid disc. So the
+menu bar gets its own copy with the rings cut apart.
 
-It is derived from `@dxos/brand`'s `composer-icon.svg`, flattened to a single fill and recentred, then thinned
-by ~4.2 units (20px at a 4.8 px/unit render). The thinning is load-bearing: the mark's four rings are exactly
-contiguous — they are separated by colour alone — so a plain monochrome flatten renders as one solid disc.
+| Artwork | Source | Generated | Used by |
+| --- | --- | --- | --- |
+| Menu bar icon | `@dxos/brand`'s `composer-icon.svg` | `src-tauri/icons/menubarTemplate.png` | `src-tauri/src/menubar.rs` |
+
+To regenerate it after the mark changes:
+
+```bash
+pnpm icons:menubar
+```
 
 ## Per-channel brand artwork
 
