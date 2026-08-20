@@ -2,15 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Graph from '@dxos/app-graph/Graph';
 import type * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { Avatar, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
+import { Empty } from '@dxos/react-ui-list';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
@@ -21,6 +25,50 @@ import { useExpandPath } from '../hooks';
 
 export type NavBranchProps = {
   id: string;
+};
+
+/**
+ * Ids of the given nodes that are section groups with nothing under them.
+ *
+ * A group node (Communications, Content, Assistant, System, …) is a label over the children other
+ * plugins hang off it, not a destination of its own — desktop's navtree drops an empty one outright
+ * (`TreeItem`), and mobile has to do the same or the row opens a permanently blank panel. Whether a
+ * group is empty is a property of the running plugin set (no inbox plugin leaves Communications with
+ * no contributor at all) and of the space's contents (the Assistant sections appear with the first
+ * chat), so it is read reactively rather than decided once.
+ */
+const useEmptyGroupIds = (graph: Graph.ExpandableGraph, nodes: Node.Node[]): ReadonlySet<string> => {
+  const groupIds = useMemo(
+    () => nodes.filter((node) => node.properties.disposition === 'group').map((node) => node.id),
+    [nodes],
+  );
+  // Identity-stable key: `groupIds` is a fresh array whenever the graph re-emits this branch's
+  // children, and rebuilding the atom on every emission would drop its subscriptions each time.
+  const groupKey = groupIds.join('\n');
+
+  // Groups sit one level below this branch, so `useExpandPath` does not reach their children; without
+  // expanding them their connectors never run and every group would read as empty.
+  useEffect(() => {
+    for (const groupId of groupKey.split('\n').filter(Boolean)) {
+      Graph.expandSync(graph, groupId, 'child');
+    }
+  }, [graph, groupKey]);
+
+  const emptyIdsAtom = useMemo(
+    () =>
+      Atom.make(
+        (get) =>
+          new Set(
+            groupKey
+              .split('\n')
+              .filter(Boolean)
+              .filter((groupId) => get(graph.connections(groupId, 'child')).length === 0),
+          ),
+      ),
+    [graph, groupKey],
+  );
+
+  return useAtomValue(emptyIdsAtom);
 };
 
 /**
@@ -35,10 +83,11 @@ export const NavBranch = ({ id }: NavBranchProps) => {
   useExpandPath(id);
 
   const children = useConnections(graph, id, 'child');
+  const emptyGroupIds = useEmptyGroupIds(graph, children);
 
   const visibleChildren = useMemo(
-    () => children.filter((node) => node.properties.disposition !== 'hidden'),
-    [children],
+    () => children.filter((node) => node.properties.disposition !== 'hidden' && !emptyGroupIds.has(node.id)),
+    [children, emptyGroupIds],
   );
 
   const { results, handleSearch } = useSearchListResults({
@@ -51,13 +100,19 @@ export const NavBranch = ({ id }: NavBranchProps) => {
       <Mosaic.Container asChild>
         <ScrollArea.Root centered padding thin>
           <ScrollArea.Viewport>
-            <Mosaic.Stack
-              classNames='py-2 gap-1'
-              draggable={false}
-              items={results}
-              getId={(item) => item.id}
-              Tile={NavBranchTile}
-            />
+            {results.length === 0 ? (
+              // A branch with no openable children is a legitimate state (an unpopulated section, or a
+              // search that matched nothing); rendering nothing at all reads as a broken screen.
+              <Empty label={t(visibleChildren.length === 0 ? 'empty-branch.message' : 'no-results.message')} />
+            ) : (
+              <Mosaic.Stack
+                classNames='py-2 gap-1'
+                draggable={false}
+                items={results}
+                getId={(item) => item.id}
+                Tile={NavBranchTile}
+              />
+            )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>

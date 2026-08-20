@@ -22,6 +22,8 @@ export const translations = [
         'expand-drawer.label': 'Expand drawer',
         'collapse-drawer.label': 'Collapse drawer',
         'close-drawer.label': 'Close drawer',
+        'empty-branch.message': 'Nothing here yet.',
+        'no-results.message': 'No matches.',
       },
     },
   },
