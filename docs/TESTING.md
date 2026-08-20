@@ -74,3 +74,7 @@ resolve error — reload once.
 - Unknown `DX_PLUGIN_SET` values fall through silently to the full registry.
 - General tap-target flakiness in the simulator persists vs the old baseline (likely coordinate
   scaling in the harness, not the app — worth one human sanity pass, hence A3).
+- App-bar "Done" button is a no-op while the keyboard is open (pre-existing, carried over from
+  plugin-simple-layout).
+- `Card fullWidth` semantics changed repo-wide (tracks the container instead of holding a minimum
+  width) — worth eyeballing 2-3 desktop fullWidth cards during the manual pass.

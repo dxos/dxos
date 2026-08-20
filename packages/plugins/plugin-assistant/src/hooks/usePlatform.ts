@@ -14,6 +14,10 @@ import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
  *
  * The capability is optional so a harness that loads no deck plugin (storybook, tests) still renders,
  * taking the desktop treatment.
+ *
+ * Reads `DeckCapabilities.Platform` rather than `useLayout()` because `Layout.mode` is an open string
+ * contract for whatever a layout plugin reports, while `Platform` is the typed, boot-fixed source this
+ * hook actually needs.
  */
 export const usePlatform = (): DeckCapabilities.Platform =>
   useOptionalCapability(DeckCapabilities.Platform) ?? 'desktop';

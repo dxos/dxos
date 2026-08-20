@@ -44,4 +44,4 @@ export type DeckPluginOptions = {
   platform?: Platform;
 };
 
-export const Platform = Capability.makeSingleton<Platform>()(`${meta.profile.key}.platform`);
+export const Platform = Capability.makeSingleton<Platform>()(`${meta.profile.key}.capability.platform`);
