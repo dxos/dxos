@@ -12,10 +12,11 @@ variables (`DX_EDGE_BASE_URL`, `DX_HUB_URL`, PostHog keys, …).
 | `staging`    | `composer-staging` | `staging.composer.space`    | EDGE prod    | on demand (kept, unused)            |
 | `production` | `composer`         | `composer.space`            | EDGE prod    | on demand; cuts a release           |
 
-**Two things are called "preview".** The `preview` ENVIRONMENT above is the daily dogfood deploy on its
-own Worker and domain. A per-PR preview is something else: a Worker preview _version_ of the `dev` env,
-built by `pr-build.yml` and uploaded by `pr-deploy.yml` (`wrangler versions upload --preview-alias pr-N`), so a PR
-preview and a `dev` deploy see the same EDGE data.
+**`preview` titles that environment and nothing else.** Per-PR deploys are Cloudflare Worker preview
+versions of the `dev` env, so `--preview-alias` and the workflows' own internals still say preview —
+accurate, and Cloudflare's vocabulary. What they are never _titled_ is preview: the workflows are
+`pr-build.yml` and `pr-deploy.yml`, named for their trigger. A PR deploy lands on
+`pr-<n>-composer-dev.dxos.workers.dev`, so it and a `dev` deploy see the same EDGE data.
 
 Local dev (`moon run composer-app:serve`) reads [`dx-local.yml`](./dx-local.yml) and defaults to EDGE
 preview; override with `DX_EDGE_BASE_URL` to reach EDGE dev or a local EDGE.
