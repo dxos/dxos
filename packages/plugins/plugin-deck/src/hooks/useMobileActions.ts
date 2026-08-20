@@ -19,6 +19,7 @@ import {
   type ActionGraphProps,
   createGapSeparator,
   createMenuItemGroup,
+  graphActions,
 } from '@dxos/react-ui-menu';
 import { Position } from '@dxos/util';
 
@@ -55,7 +56,7 @@ type CompanionActionsConfig = {
 
 /**
  * Creates action graph nodes and edges for companion tab actions, shared between the mobile navbar
- * and drawer. Ported from `plugin-simple-layout`'s `createCompanionActions`, mapped onto deck state.
+ * and drawer.
  */
 const createMobileCompanionActions = (
   graph: AppCapabilities.AppGraph['graph'],
@@ -118,7 +119,6 @@ const createMobileCompanionActions = (
 
 /**
  * Builds the mobile navbar actions including companion tabs, separator, and main menu dropdown.
- * Ported from `plugin-simple-layout`'s `useNavbarActions`.
  */
 export const useMobileNavbarActions = (): MobileNavbarActions => {
   const { t } = useTranslation(meta.profile.key);
@@ -149,13 +149,14 @@ export const useMobileNavbarActions = (): MobileNavbarActions => {
         nodes.push(mainMenuGroup);
         edges.push({ source: 'root', target: mainMenuGroup.id, relation: 'child' });
 
-        const rootActions = get(graph.actions(Node.RootId));
-        const menuActions = rootActions.filter((node) => node.properties.disposition === 'menu');
-
-        menuActions.forEach((menuAction) => {
-          nodes.push(menuAction as ActionGraphProps['nodes'][number]);
-          edges.push({ source: MAIN_MENU_GROUP_ID, target: menuAction.id, relation: 'child' });
+        // `graphActions` returns typed `ActionGraphProps` directly, so no cast is needed to bridge
+        // `@dxos/app-graph`'s `Node.ActionLike[]` into `@dxos/react-ui-menu`'s node/edge shape.
+        const menu = graphActions(graph, get, Node.RootId, {
+          rootId: MAIN_MENU_GROUP_ID,
+          filter: (action) => action.properties.disposition === 'menu',
         });
+        nodes.push(...menu.nodes);
+        edges.push(...menu.edges);
 
         return { nodes, edges };
       }),
@@ -167,7 +168,6 @@ export const useMobileNavbarActions = (): MobileNavbarActions => {
 
 /**
  * Builds the mobile drawer actions including companion tabs and toolbar buttons.
- * Ported from `plugin-simple-layout`'s `useDrawerActions`.
  */
 export const useMobileDrawerActions = (consumerName: string): MobileDrawerActions => {
   const { t } = useTranslation(meta.profile.key);

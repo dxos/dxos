@@ -11,7 +11,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { useActionRunner, useNode } from '@dxos/plugin-graph/hooks';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { type ActionExecutor, type ActionGraphProps } from '@dxos/react-ui-menu';
+import { type ActionExecutor, type ActionGraphProps, graphActions } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { DeckCapabilities, DeckSchema } from '#types';
@@ -63,16 +63,11 @@ export const useMobileAppBar = (): MobileAppBar => {
         const activeId =
           deck.active[deck.active.length - 1] ??
           (state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? Node.RootId : state.activeDeck);
-        const allActions = get(graph.actions(activeId));
-        const filtered = allActions.filter((action) => ACTION_DISPOSITIONS.includes(action.properties.disposition));
-        const nodes: ActionGraphProps['nodes'] = filtered as ActionGraphProps['nodes'];
-        const edges: ActionGraphProps['edges'] = filtered.map((action) => ({
-          source: 'root',
-          target: action.id,
-          relation: 'child',
-        }));
-
-        return { nodes, edges };
+        // `graphActions` returns typed `ActionGraphProps` directly, so no cast is needed to bridge
+        // `@dxos/app-graph`'s `Node.ActionLike[]` into `@dxos/react-ui-menu`'s node/edge shape.
+        return graphActions(graph, get, activeId, {
+          filter: (action) => ACTION_DISPOSITIONS.includes(action.properties.disposition),
+        });
       }),
     [graph, stateAtom],
   );
