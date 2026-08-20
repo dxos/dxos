@@ -432,9 +432,47 @@ export class QueryPlanner {
           });
         }
 
+        // Root-executable = evaluable by `filterMatchDoc` at the root (not only as a nested
+        // predicate inside an `object` filter). Property-level filters (`compare`, `in`, `range`,
+        // `contains`) are excluded.
+        const isRootExecutable = (filter: QueryAST.Filter): boolean => {
+          switch (filter.type) {
+            case 'object':
+            case 'tag':
+            case 'has-parent':
+              return true;
+            case 'not':
+              return isRootExecutable(filter.filter);
+            case 'or':
+              return filter.filters.every(isRootExecutable);
+            default:
+              return false;
+          }
+        };
+
         // child-of and has-parent both plan as post-filters appended to the remaining filters'
         // plan, so `and(type(X), hasParent(false))` keeps its type-indexed select.
         if (childOfFilters.length > 0 || hasParentFilters.length > 0) {
+          // A negated conjunction cannot distribute over its conjuncts (`not(and(a, b))` is not
+          // `not(a) && b`), so under inversion the WHOLE negated AND becomes one post-filter —
+          // possible only when every conjunct is root-executable (child-of is not).
+          if (context.selectionInverted) {
+            if (childOfFilters.length > 0 || !flatFilters.every(isRootExecutable)) {
+              throw queryTooComplexError(context.originalQuery);
+            }
+            return QueryPlan.Plan.make([
+              {
+                _tag: 'SelectStep',
+                scope: context.scope,
+                selector: { _tag: 'WildcardSelector' },
+              },
+              ...this._generateDeletedHandlingSteps(context),
+              {
+                _tag: 'FilterStep',
+                filter: { type: 'not', filter: { type: 'and', filters: flatFilters } },
+              },
+            ]);
+          }
           const remainingFilters: QueryAST.Filter[] = [...otherFilters, ...timestampFilters];
           const innerPlan =
             remainingFilters.length === 1
@@ -459,23 +497,6 @@ export class QueryPlanner {
         }
 
         // Simple AND: all filters are root-executable against in-memory objects after a wildcard select.
-        // Supports combining true root selectors (`object`, `tag`) plus negations / unions of those.
-        // Property-level filters (`compare`, `in`, `range`, `contains`) are intentionally excluded because
-        // `filterMatchDoc` only handles them as nested predicates inside an `object` filter, not at the root.
-        const isRootExecutable = (filter: QueryAST.Filter): boolean => {
-          switch (filter.type) {
-            case 'object':
-            case 'tag':
-            case 'has-parent':
-              return true;
-            case 'not':
-              return isRootExecutable(filter.filter);
-            case 'or':
-              return filter.filters.every(isRootExecutable);
-            default:
-              return false;
-          }
-        };
         if (flatFilters.every(isRootExecutable)) {
           const innerFilter: QueryAST.Filter = { type: 'and', filters: flatFilters };
           const plannedFilter: QueryAST.Filter = context.selectionInverted

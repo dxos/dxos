@@ -446,15 +446,15 @@ export const resolve: {
  * ```
  *
  */
-export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundError, never> = Effect.fn(
-  'Database.load',
-)(function* (ref) {
-  const object = yield* Effect.promise(() => ref.tryLoad());
-  if (!object) {
-    return yield* Effect.fail(new Error.EntityNotFoundError(ref.uri));
-  }
-  return object;
-});
+export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundError, never> = Effect.fn('Database.load')(
+  function* (ref) {
+    const object = yield* Effect.promise(() => ref.tryLoad());
+    if (!object) {
+      return yield* Effect.fail(new Error.EntityNotFoundError(ref.uri));
+    }
+    return object;
+  },
+);
 
 /**
  * Adds an object or relation to the database.

@@ -3734,7 +3734,7 @@ describe('Query', () => {
   });
 
   describe('Filter.hasParent', () => {
-    test('selects parented vs unparented objects', async () => {
+    test('selects parented vs unparented objects', async ({ expect }) => {
       const { db } = await builder.createDatabase();
       const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
       db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: 'Child' }));
@@ -3748,7 +3748,7 @@ describe('Query', () => {
       expect(children.map((obj: any) => obj.name)).toEqual(['Child']);
     });
 
-    test('combines with a type filter, keeping the type-indexed select', async () => {
+    test('combines with a type filter, keeping the type-indexed select', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
       const person = db.add(Obj.make(TestSchema.Person, { name: 'Root' }));
       db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: person, name: 'Dependent' }));
@@ -3762,7 +3762,7 @@ describe('Query', () => {
       expect(objects[0]).toMatchObject({ name: 'Root' });
     });
 
-    test('negation inverts the predicate', async () => {
+    test('negation inverts the predicate', async ({ expect }) => {
       const { db } = await builder.createDatabase();
       const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
       db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: 'Child' }));
@@ -3772,7 +3772,25 @@ describe('Query', () => {
       expect(objects.map((obj: any) => obj.name)).toEqual(['Parent']);
     });
 
-    test('reacts to Obj.setParent after the fact', async () => {
+    test('a negated type-and-parent conjunction negates the whole conjunction', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const rootPerson = db.add(Obj.make(TestSchema.Person, { name: 'RootPerson' }));
+      db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: rootPerson, name: 'ChildPerson' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'RootExpando' }));
+      await db.flush();
+
+      // not(and(type, hasParent(false))) must exclude ONLY the unparented person — a distributed
+      // negation (not(type) && hasParent(false)) would wrongly drop the parented person too.
+      const objects = await db
+        .query(Query.select(Filter.not(Filter.and(Filter.type(TestSchema.Person), Filter.hasParent(false)))))
+        .run();
+      const names = objects.map((obj: any) => obj.name);
+      expect(names).toContain('ChildPerson');
+      expect(names).toContain('RootExpando');
+      expect(names).not.toContain('RootPerson');
+    });
+
+    test('reacts to Obj.setParent after the fact', async ({ expect }) => {
       const { db } = await builder.createDatabase();
       const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
       const chat = db.add(Obj.make(TestSchema.Expando, { name: 'Chat' }));

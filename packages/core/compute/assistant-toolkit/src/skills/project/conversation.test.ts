@@ -26,13 +26,9 @@ const { text, toolCall } = ScriptedLanguageModel;
 
 EntityId.dangerouslyDisableRandomness();
 
-// The full Project–Chat–assistant loop, headless: a Chat parented to a Project (the ownership
-// edge ProjectOperation.CreateChat sets), the ProjectSkill and the project bound into the chat's
-// feed context, one prompt through the agent session, and the observable effect asserted on the
-// PROJECT — the assistant filed an object into `project.artifacts`. Two flavors of the same
-// scenario: a scripted model pins the operation wiring deterministically; a memoized live model
-// (replayed from `.store/conversations` in CI, regenerated with DX_UPDATE_MODEL_FIXTURES=1)
-// proves a real model drives the same loop from the prompt alone.
+// The full Project–Chat–assistant loop, headless, asserted on the PROJECT (`artifacts` gains the
+// filed object): a scripted model pins the operation wiring; a memoized live model proves a real
+// model drives the same loop from the prompt alone.
 
 const PROJECT_NAME = 'Voyage';
 const DOC_CONTENT = 'Trip notes: packing list.';
@@ -55,12 +51,7 @@ const TYPES = [
   Text.Text,
 ];
 
-/**
- * Seeds the pair the way `ProjectOperation.CreateChat` wires it: chat parented to the project
- * (ownership is the ECHO parent edge, no schema field), instructions shared by reference, skills
- * and context objects reaching the session through feed bindings. The document stands in for a
- * companion subject's artifact (e.g. the Markdown doc a chat companion is bound to).
- */
+/** Seeds the pair the way `ProjectOperation.CreateChat` wires it: parent edge, shared instructions ref, feed bindings. */
 const seedProjectChat = Effect.fnUntraced(function* () {
   const instructions = yield* Database.add(
     Instructions.make({ name: `${PROJECT_NAME} instructions`, text: `You manage the "${PROJECT_NAME}" project.` }),
@@ -92,9 +83,8 @@ const seedProjectChat = Effect.fnUntraced(function* () {
 
 describe('Project conversation', () => {
   {
-    // The script array is mutable on purpose: the scripted model reads turns at call time, and the
-    // artifact-add input needs the seeded objects' URIs, which exist only once the test body has
-    // run the seed. The layer captures the array; the test fills it before submitting the prompt.
+    // Mutable on purpose: the tool-call input needs seeded URIs, so the test fills the captured
+    // array after the seed runs (the scripted model reads turns at call time).
     const scriptedTurns: ScriptedLanguageModel.ScriptedTurn[] = [];
 
     const ScriptedTestLayer = AssistantTestLayer({
@@ -110,8 +100,7 @@ describe('Project conversation', () => {
         function* ({ expect }) {
           const { project, chat, feed, doc } = yield* seedProjectChat();
 
-          // The chat is the project's child — the edge every read path (outline sharing, navtree,
-          // cascade delete) hangs off.
+          // The parent edge is what every read path (outline sharing, navtree, cascade) hangs off.
           expect(Obj.getParent(chat)?.id).toBe(project.id);
           expect(project.artifacts).toHaveLength(0);
 

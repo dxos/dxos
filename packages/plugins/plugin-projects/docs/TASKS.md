@@ -653,7 +653,7 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
 - [ ] **Promote the `Obj.setParent` declared-edge warning to an invariant** — mechanism landed on
       PR #12675 (2748c142bd): `ChildrenAnnotation`/`ParentAnnotation` + `Obj.isDeclaredParentEdge`,
       warn-only. Remaining: sweep the ~60 `setParent` call sites repo-wide (watch `undeclared parent
-      edge` warnings in test logs), annotate or reorder each, then replace the warn with
+  edge` warnings in test logs), annotate or reorder each, then replace the warn with
       `invariant`. Thread: https://github.com/dxos/dxos/pull/12675#discussion_r3816670221
 - [x] **Rename `packages/core/echo/echo/src/Err.ts` → `Error.ts`** — DONE 2026-08-20: subpath is
       `@dxos/echo/Error`, barrel namespace is `Error`; modules that also use the global alias as

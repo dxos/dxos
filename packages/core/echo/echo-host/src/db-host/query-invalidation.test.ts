@@ -363,8 +363,7 @@ describe('QueryExecutor.matchesHint — nested Filter.in(projection)', () => {
 // ---------------------------------------------------------------------------
 // QueryExecutor.matchesHint — id-rooted relation traversal
 //
-// The shape (historically the companion chat-history toolbar, before chats moved to the parent
-// edge):
+// The shape:
 //   Query.select(Filter.id(primary.id)).targetOf(SomeRelation).source()
 // i.e. it is rooted at a FIXED object id and traverses inbound relations. When a new source +
 // relation are persisted, the primary object is NOT re-indexed, so the indexing hint mentions

@@ -859,7 +859,7 @@ describe('query api', () => {
       });
     });
 
-    test('hasParent AST, decode, and pretty-print', () => {
+    test('hasParent AST, decode, and pretty-print', ({ expect }) => {
       const filter = Filter.hasParent(false);
       expect(filter.ast).toMatchObject({ type: 'has-parent', value: false });
       Schema.decodeSync(Schema.toType(QueryAST.Filter))(filter.ast);
@@ -867,7 +867,7 @@ describe('query api', () => {
       expect(Filter.hasParent().ast).toMatchObject({ type: 'has-parent', value: true });
     });
 
-    test('hasParent matches via toPredicate', () => {
+    test('hasParent matches via toPredicate', ({ expect }) => {
       const parent = Obj.make(TestSchema.Person, { name: 'Parent' });
       const child = Obj.make(TestSchema.Person, { name: 'Child' });
       Obj.setParent(child, parent);
