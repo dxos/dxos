@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import type { Blockstore } from 'interface-blockstore';
 import { CID } from 'multiformats';
 import * as Uint8Arrays from 'uint8arrays';
-import { AccessKey, PrivateDirectory, PrivateForest, PrivateNode } from 'wnfs';
+import initWnfsWasm, { AccessKey, PrivateDirectory, PrivateForest, PrivateNode } from 'wnfs/web';
 
 import { Annotation, Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
@@ -20,6 +20,12 @@ import { Rng, store } from './common';
 // LOAD
 //
 
+// `wnfs/web` (unlike the default `browser` entry) does no wasm work at module evaluation —
+// top-level await in a bundle graph trips WebKit's TDZ bug (see composer-app's `slimWasm`) — so
+// this single wnfs chokepoint initializes explicitly. The glue's no-arg init resolves the wasm
+// via `new URL(..., import.meta.url)`, which bundlers rewrite to the emitted asset.
+let wasmReady: Promise<unknown> | undefined;
+
 export const loadWnfs = async ({
   space,
   blockstore,
@@ -29,6 +35,8 @@ export const loadWnfs = async ({
   blockstore: Blockstore;
   instances?: WnfsCapabilities.Instances;
 }) => {
+  await (wasmReady ??= initWnfsWasm());
+
   // TODO(wittjosiah): Remove.
   // Delete old properties if they exist (pre-DX-971 migration cleanup).
   const propsAny = space.properties as any;
