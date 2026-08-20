@@ -12,7 +12,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { type EntityNotFoundError } from '@dxos/echo/Err';
+import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 

@@ -19,7 +19,7 @@ import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
-import * as Err from './Err';
+import * as Error from './Error';
 import * as internal from './internal';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
 import * as objInternal from './internal/Obj';
@@ -262,15 +262,15 @@ export const getSnapshot: <T extends Unknown>(obj: T) => Snapshot<T> = objIntern
  * );
  * ```
  */
-export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<T, Err.GetReactiveError> =>
+export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<T, Error.GetReactiveError> =>
   Effect.gen(function* () {
     const db = internal.getDatabase(snapshot);
     if (!db) {
-      return yield* Effect.fail(new Err.GetReactiveError({ reason: 'no-database', snapshotId: snapshot.id }));
+      return yield* Effect.fail(new Error.GetReactiveError({ reason: 'no-database', snapshotId: snapshot.id }));
     }
     const obj = db.getObjectById(snapshot.id);
     if (!obj) {
-      return yield* Effect.fail(new Err.GetReactiveError({ reason: 'object-not-found', snapshotId: snapshot.id }));
+      return yield* Effect.fail(new Error.GetReactiveError({ reason: 'object-not-found', snapshotId: snapshot.id }));
     }
     return obj as T;
   });
@@ -294,7 +294,7 @@ export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Eff
  *
  * @param snapshot - A snapshot of the object (from `Obj.getSnapshot`).
  * @returns The reactive object.
- * @throws {Err.GetReactiveError} When the object cannot be resolved.
+ * @throws {Error.GetReactiveError} When the object cannot be resolved.
  */
 export const getReactiveOrThrow = <T extends Unknown>(snapshot: Snapshot<T>): T =>
   Effect.runSync(getReactive(snapshot));

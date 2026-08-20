@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import * as Err from './Err';
+import * as Error from './Error';
 import * as internal from './internal';
 import * as Obj from './Obj';
 
@@ -34,7 +34,7 @@ export type Edit = {
 export const update = (obj: Obj.Unknown, path: KeyPath | string | number, newText: string): void => {
   const { handler, target } = resolve(obj, 'update');
   if (typeof handler.textUpdate !== 'function') {
-    throw new Err.TextNotSupportedError('update');
+    throw new Error.TextNotSupportedError('update');
   }
   handler.textUpdate(target, normalizePath(path), newText);
 };
@@ -54,7 +54,7 @@ export const splice = (
 ): string => {
   const { handler, target } = resolve(obj, 'splice');
   if (typeof handler.textSplice !== 'function') {
-    throw new Err.TextNotSupportedError('splice');
+    throw new Error.TextNotSupportedError('splice');
   }
   return handler.textSplice(target, normalizePath(path), start, deleteCount, insert);
 };
@@ -64,7 +64,7 @@ export const splice = (
  * full string. Implemented on top of {@link splice} so it works for both backends.
  *
  * An edit with a missing or empty `oldString` appends its `newString`. A non-`replaceAll` edit whose
- * `oldString` is not found throws {@link Err.TextEditNotFoundError}.
+ * `oldString` is not found throws {@link Error.TextEditNotFoundError}.
  *
  * Must be called inside `Obj.update(obj, () => { ... })`.
  */
@@ -89,7 +89,7 @@ export const apply = (obj: Obj.Unknown, path: KeyPath | string | number, edits: 
     } else {
       const idx = text.indexOf(edit.oldString);
       if (idx === -1) {
-        throw new Err.TextEditNotFoundError(edit.oldString);
+        throw new Error.TextEditNotFoundError(edit.oldString);
       }
       splice(obj, keyPath, idx, edit.oldString.length, edit.newString);
     }
@@ -108,7 +108,7 @@ const normalizePath = (path: KeyPath | string | number): KeyPath =>
  */
 const resolve = (obj: Obj.Unknown, operation: string) => {
   if (!internal.isProxy(obj)) {
-    throw new Err.TextNotSupportedError(operation);
+    throw new Error.TextNotSupportedError(operation);
   }
   const handler = internal.getProxyHandler(obj);
   const target = internal.getProxyTarget(obj);

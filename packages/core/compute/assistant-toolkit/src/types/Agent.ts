@@ -11,7 +11,7 @@ import type { Harness } from '@dxos/assistant';
 import * as Instructions from '@dxos/compute/Instructions';
 import type * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Err';
+import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 
