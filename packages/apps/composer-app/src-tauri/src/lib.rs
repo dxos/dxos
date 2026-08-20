@@ -34,9 +34,19 @@ pub fn webview_port(identifier: &str) -> u16 {
 /// Whether the asset server can still claim this channel's port. `tauri-plugin-localhost` only panics
 /// on a background thread when its bind fails, leaving the webview to load whatever else answers there
 /// — so the port is probed before the plugin is registered rather than after it has failed.
+///
+/// Every address `localhost` resolves to has to be free, not merely the first: the plugin binds whichever
+/// one it reaches first while the webview resolves the name itself, so a port held on the other address
+/// family would still hand the window foreign content.
 #[cfg(all(not(debug_assertions), desktop))]
 fn port_available(port: u16) -> bool {
-    std::net::TcpListener::bind(("127.0.0.1", port)).is_ok()
+    use std::net::{TcpListener, ToSocketAddrs};
+
+    match ("localhost", port).to_socket_addrs() {
+        Ok(addresses) => addresses.into_iter().all(|address| TcpListener::bind(address).is_ok()),
+        // A resolver failure is no evidence the port is taken; leave the verdict to the plugin's own bind.
+        Err(_) => true,
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -196,9 +206,9 @@ pub fn run() {
                 #[cfg(not(debug_assertions))]
                 if port_taken {
                     let message = format!(
-                        "Another application is already using port {}, which Composer's {} channel serves its app from.\n\nQuit that application and open Composer again.",
-                        localhost_port,
+                        "Composer's {} channel serves its app from port {}, which another program is already using — most often a second copy of Composer that is still running.\n\nQuit it and open Composer again.",
                         release_channel.label(),
+                        localhost_port,
                     );
                     log::error!("{}", message);
                     eprintln!("[composer] {}", message);
