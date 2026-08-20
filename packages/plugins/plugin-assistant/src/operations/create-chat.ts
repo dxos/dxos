@@ -7,12 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { AiContext } from '@dxos/assistant';
-import { AgentWizardSkill, AlarmSkill, Chat, DatabaseSkill } from '@dxos/assistant-toolkit';
+import { AgentWizardSkill, AlarmSkill, Chat, ChatContextSkill } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
 import { AssistantSkill } from '#skills';
 import { AssistantOperation } from '#types';
@@ -42,9 +43,14 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       yield* Effect.promise(() =>
         binder.use((b: AiContext.Binder) =>
           b.bind({
-            skills: [AssistantSkill, DatabaseSkill, AgentWizardSkill, SkillManagerSkill, AlarmSkill].map(({ key }) =>
-              Ref.fromURI(Skill.registryURI(key)),
-            ),
+            skills: [
+              AssistantSkill,
+              DatabaseSkill,
+              ChatContextSkill,
+              AgentWizardSkill,
+              SkillManagerSkill,
+              AlarmSkill,
+            ].map(({ key }) => Ref.fromURI(Skill.registryURI(key))),
             objects: [Ref.make(chat)],
           }),
         ),

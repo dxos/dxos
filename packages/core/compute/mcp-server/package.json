@@ -16,6 +16,16 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./McpRegistry": {
+      "source": "./src/McpRegistry.ts",
+      "types": "./dist/types/src/McpRegistry.d.ts",
+      "import": "./dist/lib/McpRegistry.mjs"
+    },
+    "./McpServer": {
+      "source": "./src/McpServer.ts",
+      "types": "./dist/types/src/McpServer.d.ts",
+      "import": "./dist/lib/McpServer.mjs"
     }
   },
   "files": [
@@ -23,13 +33,13 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/compute": "workspace:*",
     "@dxos/effect": "workspace:*"
   },
   "publishConfig": {

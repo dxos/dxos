@@ -604,18 +604,18 @@ const addJsonSchemaFields = (ast: SchemaAST.AST, schema: JsonSchemaType): Schema
   SchemaAST.annotate(ast, schema as SchemaAST.Annotations);
 
 /**
- * Restores the `additionalProperties` of an open record.
+ * Restores the `additionalProperties` of an open record or a struct's open rest signature.
  *
  * v4 omits it when an index signature's value type is unconstrained (`Any`/`Unknown` serialize to the
- * empty schema), leaving a bare `{type: 'object'}`. Absent `additionalProperties` means "anything
- * allowed" in JSON Schema, but ECHO's decoder keys record-ness off the field's presence, so the
- * round-trip rebuilt `Schema.Struct({})` and the record silently stopped accepting keys. The three
- * emitted object shapes are distinguishable: a closed struct carries `properties` and
- * `additionalProperties: false`, an empty struct arrives as the `anyOf` pair `restoreEmptyObject`
- * handles, and only an open record has neither key.
+ * empty schema) — for a bare record and for `StructWithRest` alike. Absent `additionalProperties`
+ * means "anything allowed" in JSON Schema, but ECHO's decoder keys record-ness off the field's
+ * presence, so the round-trip rebuilt a closed struct and the open keys were silently dropped. The
+ * omission is unambiguous: a closed struct always carries `additionalProperties: false` explicitly,
+ * a constrained index signature carries its value schema, and an empty struct arrives as the `anyOf`
+ * pair `restoreEmptyObject` handles — only a dropped unconstrained signature lacks the key.
  */
 const restoreOpenRecord = (node: Record<string, any>): Record<string, any> => {
-  if (node.type !== 'object' || 'properties' in node || 'additionalProperties' in node) {
+  if (node.type !== 'object' || 'additionalProperties' in node) {
     return node;
   }
   return { ...node, additionalProperties: true };

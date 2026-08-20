@@ -5,7 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { OperationHandler } from '#capabilities';
+import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 
 // Headless variant registered by workers (e.g. the edge operation-service). The capabilities come
@@ -14,6 +14,7 @@ import { meta } from '#meta';
 // capability, so resolving it here would drag React into a bundle that cannot load it.
 export const SpacePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(AppCapability.schema(() => import('./schema.workerd'))),
 
   Plugin.make,
