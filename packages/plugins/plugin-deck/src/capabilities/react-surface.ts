@@ -17,7 +17,10 @@ import { DeckSettings } from '#containers';
 import { meta } from '#meta';
 import type { DeckCapabilities } from '#types';
 
-const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end'];
+// 'group' covers AppNode.makeGroup's navtree section-group nodes (Communications, Content,
+// Assistant, System, …) — they carry no role, only disposition, so without it mobile pushed a
+// blank panel for every category row except the role:'branch' ones (e.g. Settings).
+const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end', 'group'];
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ platform = 'desktop' }: DeckCapabilities.DeckPluginOptions = {}) {
