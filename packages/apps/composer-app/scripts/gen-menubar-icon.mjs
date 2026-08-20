@@ -61,10 +61,7 @@ const circle = (radius, sweep) =>
 
 /** One clip path keeping every band and dropping the gaps between them. */
 const bandClip = () => {
-  const rings = EDGES.slice(1).flatMap((outer, index) => [
-    circle(outer - GAP, 1),
-    circle(EDGES[index] + GAP, 0),
-  ]);
+  const rings = EDGES.slice(1).flatMap((outer, index) => [circle(outer - GAP, 1), circle(EDGES[index] + GAP, 0)]);
   return `<defs><clipPath id="bands"><path d="${rings.join('')}"/></clipPath></defs>`;
 };
 
