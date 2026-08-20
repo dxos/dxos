@@ -12,6 +12,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { Common, getSpace, syncAllToEdge, waitForSync, withTimeout } from '@dxos/cli-util';
 import { type Key } from '@dxos/echo';
 
+/** Sync the named space to EDGE, or every space of the identity when no id is given. */
 export const handler = ({ spaceId, spaceTimeout }: { spaceId: Option.Option<Key.SpaceId>; spaceTimeout: number }) =>
   Effect.gen(function* () {
     // Every space rather than the default one: the spaces holding a profile's settings and
