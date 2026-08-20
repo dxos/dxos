@@ -31,6 +31,12 @@ describe('wrapText', () => {
     expect(wrapText('Unmaintainability', 11, 1)).toEqual(['Unmaintain…']);
   });
 
+  test('marks a hard-split word even when it does not fill the line budget', ({ expect }) => {
+    // The production budget is two lines, so a single long word took this path and was cut silently.
+    expect(wrapText('Unmaintainability', 11, 2)).toEqual(['Unmaintain…']);
+    expect(wrapText('Infrastructure', 11, 2)).toEqual(['Infrastruc…']);
+  });
+
   test('does not ellipsise a label that only had extra whitespace', ({ expect }) => {
     expect(wrapText('A   B', 11, 2)).toEqual(['A B']);
   });

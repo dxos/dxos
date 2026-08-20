@@ -61,9 +61,11 @@ export const wrapText = (value: string, maxChars: number, maxLines: number): str
 
   const truncated = lines.length < maxLines ? lines : lines.slice(0, maxLines);
   const consumed = truncated.join(' ').length;
-  if (consumed < normalized.length && truncated.length === maxLines) {
-    const last = truncated[maxLines - 1];
-    truncated[maxLines - 1] = `${last.slice(0, Math.max(0, maxChars - 1))}…`;
+  // Keyed on dropped content rather than on filling every line: a single oversized word is
+  // hard-split into one line, which would otherwise be cut with no ellipsis to show for it.
+  if (consumed < normalized.length && truncated.length > 0) {
+    const index = truncated.length - 1;
+    truncated[index] = `${truncated[index].slice(0, Math.max(0, maxChars - 1))}…`;
   }
 
   return truncated;
