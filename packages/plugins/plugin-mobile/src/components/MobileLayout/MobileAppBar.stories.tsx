@@ -53,7 +53,7 @@ const DefaultStory = ({ actions: actionsProp, ...props }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-deck/components/MobileLayout/MobileAppBar',
+  title: 'plugins/plugin-mobile/components/MobileLayout/MobileAppBar',
   render: DefaultStory,
   decorators: [
     withTheme(),
@@ -95,7 +95,7 @@ export const Default: Story = {
     await userEvent.click(backButton);
     await expect(args.onBack).toHaveBeenCalledTimes(1);
 
-    // Test actions menu opens and action fires (`actions-menu.label` reads "Options" in plugin-deck).
+    // Test actions menu opens and action fires (`actions-menu.label` reads "Options" in plugin-mobile).
     const menuTrigger = canvas.getByRole('button', { name: /options/i });
     await expect(menuTrigger).toBeInTheDocument();
     await userEvent.click(menuTrigger);

@@ -67,6 +67,21 @@
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./package.json": "./package.json",
+    "./hooks": {
+      "source": "./src/hooks/index.ts",
+      "types": "./dist/types/src/hooks/index.d.ts",
+      "import": "./dist/lib/hooks.mjs"
+    },
+    "./overlays": {
+      "source": "./src/containers/Overlays/index.ts",
+      "types": "./dist/types/src/containers/Overlays/index.d.ts",
+      "import": "./dist/lib/overlays.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -153,7 +168,6 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -173,7 +187,6 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

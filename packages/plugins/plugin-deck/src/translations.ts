@@ -3,14 +3,10 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
-import { translations as searchTranslations } from '@dxos/react-ui-search/translations';
 
 import { meta } from '#meta';
 
-// Search translations ride the layout plugin: the mobile Home/NavBranch search panels are the
-// only registrar for @dxos/react-ui-search strings.
 export const translations = [
-  ...searchTranslations,
   {
     'en-US': {
       [meta.profile.key]: {
@@ -35,7 +31,6 @@ export const translations = [
         'error-fallback.copy.label': 'Copy',
         'plank-heading-fallback.label': 'Untitled',
         'breadcrumbs.label': 'Navigation history',
-        'actions-menu.label': 'Options',
         'pending.heading': 'Loading…',
         'insert-plank.label': 'Open',
         'resize.label': 'Drag to resize',
@@ -61,12 +56,6 @@ export const translations = [
         'plugin-failure.description': 'See Plugin Registry for details.',
         'plugin-failure-action.label': 'Open Registry',
         'plugin-failure-action.alt': 'Open Plugin Registry',
-        'main-menu.label': 'Main menu',
-        'back.label': 'Back',
-        'done.label': 'Done',
-        'expand-drawer.label': 'Expand drawer',
-        'collapse-drawer.label': 'Collapse drawer',
-        'close-drawer.label': 'Close drawer',
       },
     },
   },

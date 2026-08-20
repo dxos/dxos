@@ -6,12 +6,13 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { useCompanions, useDeckState, useSelectedCompanion } from '@dxos/plugin-deck/hooks';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { Menu, useMenuActions } from '@dxos/react-ui-menu';
 
 import { Loading } from '#components';
-import { useCompanions, useDeckState, useMobileDrawerActions, useMobileStack, useSelectedCompanion } from '#hooks';
+import { useMobileDrawerActions, useMobileStack } from '#hooks';
 
 const DRAWER_NAME = 'MobileDeckLayout.Drawer';
 

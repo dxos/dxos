@@ -90,7 +90,7 @@ const buildDefaultActions = (): ActionGraphProps => {
 };
 
 const meta = {
-  title: 'plugins/plugin-deck/components/MobileLayout/MobileNavBar',
+  title: 'plugins/plugin-mobile/components/MobileLayout/MobileNavBar',
   component: MobileNavBar,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withRegistry],
   parameters: {

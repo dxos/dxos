@@ -4,22 +4,24 @@
 
 import React, { useLayoutEffect, useState } from 'react';
 
+import { useDeckState } from '@dxos/plugin-deck/hooks';
+import { Dialog, PopoverContent, PopoverRoot, Toaster, type ToasterProps } from '@dxos/plugin-deck/overlays';
 import { Splitter, type SplitterMode } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 
 import { DebugOverlay, MobileLayout } from '#components';
-import { useDeckState } from '#hooks';
 
-import { type DeckLayoutProps, Dialog, PopoverContent, PopoverRoot, Toaster } from '../DeckLayout';
 import { MobileDrawer } from './MobileDrawer';
 import { MobileMain } from './MobileMain';
 
 const MOBILE_DECK_LAYOUT_NAME = 'MobileDeckLayout';
 
+export type MobileDeckLayoutProps = Pick<ToasterProps, 'onDismissToast'>;
+
 /**
  * Mobile root layout: a navigation stack of the deck's active panels over a companion drawer.
  */
-export const MobileDeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
+export const MobileDeckLayout = ({ onDismissToast }: MobileDeckLayoutProps) => {
   const { state } = useDeckState();
   const { toasts } = state;
   const [keyboardOpen, setKeyboardOpen] = useState(false);

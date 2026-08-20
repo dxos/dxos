@@ -11,6 +11,9 @@ import * as Node from '@dxos/app-graph/Node';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
+import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
+import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
+import { type DeckStateHook, useDeckState } from '@dxos/plugin-deck/hooks';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
@@ -25,9 +28,6 @@ import { Position } from '@dxos/util';
 
 import { useMobileLayout } from '#components';
 import { meta } from '#meta';
-import { DeckCapabilities, DeckSchema } from '#types';
-
-import { type DeckStateHook, useDeckState } from './useDeckState';
 
 const MAIN_MENU_GROUP_ID = 'navbar-main-menu';
 

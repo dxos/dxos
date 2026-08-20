@@ -9,14 +9,15 @@ import { useCapability } from '@dxos/app-framework/ui';
 import * as Node from '@dxos/app-graph/Node';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
+import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
+import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
+import { useDeckState } from '@dxos/plugin-deck/hooks';
 import { useActionRunner, useNode } from '@dxos/plugin-graph/hooks';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, graphActions } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { DeckCapabilities, DeckSchema } from '#types';
 
-import { useDeckState } from './useDeckState';
 import { useMobileStack } from './useMobileStack';
 
 export type MobileAppBar = {

@@ -9,13 +9,15 @@ import { expect, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { DeckStoryPlugin, STORY_ITEMS } from '@dxos/plugin-deck/testing';
+import { translations as deckTranslations } from '@dxos/plugin-deck/translations';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DeckStoryPlugin, STORY_ITEMS, WithKeyboard } from '../../testing';
+import { WithKeyboard } from '../../testing';
 import { MobileDeckLayout } from './MobileDeckLayout';
 
 /**
@@ -29,7 +31,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'plugins/plugin-deck/containers/MobileDeckLayout',
+  title: 'plugins/plugin-mobile/containers/MobileDeckLayout',
   component: MobileDeckLayout,
   render: DefaultStory,
   decorators: [
@@ -40,7 +42,9 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    // The deck owns the dialog/popover/toast overlays this layout renders, so its namespace has to
+    // be registered alongside the mobile one.
+    translations: [...deckTranslations, ...translations],
   },
 } satisfies Meta<typeof MobileDeckLayout>;
 

@@ -6,12 +6,13 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { useDeckState } from '@dxos/plugin-deck/hooks';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { Loading, MobileAppBar, MobileNavBar, NavigationStack, useExpandPath, useMobileLayout } from '#components';
-import { useDeckState, useMobileAppBar, useMobileNavbarActions, useMobileStack } from '#hooks';
+import { useMobileAppBar, useMobileNavbarActions, useMobileStack } from '#hooks';
 
 const MAIN_NAME = 'MobileDeckLayout.Main';
 const MAIN_PANEL_NAME = 'MobileDeckLayout.MainPanel';

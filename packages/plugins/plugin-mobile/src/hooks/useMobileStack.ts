@@ -7,10 +7,8 @@ import { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as Node from '@dxos/app-graph/Node';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-
-import { DeckSchema } from '#types';
-
-import { useDeckState } from './useDeckState';
+import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
+import { useDeckState } from '@dxos/plugin-deck/hooks';
 
 export type MobileStack = {
   /** Panel ids, root (workspace list panel) first; the visible panel is last. */
