@@ -656,6 +656,9 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
       requiring the parent to hold a ref to the child OR carry the annotation. Must cover today's
       ref-less parents: project chats (`create-chat.ts`), `Agent.makeInitialized`'s chat, companion
       chats. Thread: https://github.com/dxos/dxos/pull/12675#discussion_r3816670221
+- [ ] **Rename `packages/core/echo/echo/src/Err.ts` → `Error.ts`** — tracked 2026-08-19 (user). Update
+      the `@dxos/echo/Err` export path and every `from '@dxos/echo/Err'` import; no compatibility
+      re-export.
 - [ ] **Derive tool names from DXN keys** (approved 2026-08-19; chip spawned) — replace `makeToolName(meta.name)` with key-derived names (`markdown-create`), unify with `Skill.toolDefinitions`, add `Skill.toolName()` helper + bind-time uniqueness invariant, sweep hardcoded names, regenerate fixtures + the tool AUDIT. Decision record: `packages/core/compute/assistant/src/tool-runtime/AUDIT.md`.
 - [ ] **Record the live-model fixture for the Project conversation test** — `packages/core/compute/assistant-toolkit/src/skills/project/conversation.test.ts` gates its live flavor with `.skip`; run `DX_UPDATE_MODEL_FIXTURES=1 moon run assistant-toolkit:test -- src/skills/project/conversation.test.ts` with 1p credentials, commit `.store/conversations/**`, drop the `.skip`.
 - [x] **Normalize Chat ownership onto the ECHO parent edge** — DONE on this branch: `Filter.hasParent`
