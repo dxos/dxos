@@ -25,17 +25,22 @@ resolve error — reload once.
 
 ## A. Fixed on the branch — verify on device
 
-| #   | Steps                                                                           | Expected                                                                                                                         |
-| --- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| A1  | Space Home → "Get started" cards                                                | Cards fit the viewport; ~16pt side margins; NO horizontal page scroll.                                                           |
-| A2  | Any list panel (MY SPACE) → search field at bottom                              | Placeholder reads "Search…", not `search.placeholder`.                                                                           |
-| A3  | Tap the app-bar back chevron repeatedly from nested panels                      | Every tap pops exactly one panel; target feels comfortably tappable (44pt); no mis-taps into neighbors.                          |
-| A4  | Item → ⋮ menu → Rename                                                          | Popover opens anchored to the menu button (was broken).                                                                          |
-| A5  | Space Home → tap a "Get started" card once                                      | Card fires reliably on first tap (was unresponsive on iOS); a new chat opens with the prompt running.                            |
-| A6  | Space list: ⋮ → Add to space → Session                                          | Creates and opens a chat (alternate chat path).                                                                                  |
-| A7  | Categories: MY SPACE → Settings / Communications / Content / Assistant / System | Each shows a list panel of its children (fix in flight at time of writing — if still blank, that fix hasn't landed/rebuilt yet). |
-| A8  | Chat prompt (after the in-flight commit lands)                                  | A Send button is visible and submits the drafted message; disabled while empty/processing.                                       |
-| A9  | Chat prompt on mobile                                                           | No offline switch (still present on desktop).                                                                                    |
+| #   | Steps                                                                           | Expected                                                                                                                            |
+| --- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| A1  | Space Home → "Get started" cards                                                | Cards fit the viewport; ~16pt side margins; NO horizontal page scroll.                                                              |
+| A2  | Any list panel (MY SPACE) → search field at bottom                              | Placeholder reads "Search…", not `search.placeholder`.                                                                              |
+| A3  | Tap the app-bar back chevron repeatedly from nested panels                      | Every tap pops exactly one panel; target feels comfortably tappable (44pt); no mis-taps into neighbors.                             |
+| A4  | Item → ⋮ menu → Rename                                                          | Popover opens anchored to the menu button (was broken).                                                                             |
+| A5  | Space Home → tap a "Get started" card once                                      | Card fires reliably on first tap (was unresponsive on iOS); a new chat opens with the prompt running.                               |
+| A6  | Space list: ⋮ → Add to space → Session                                          | Creates and opens a chat (alternate chat path).                                                                                     |
+| A7  | Categories: MY SPACE → Settings / Communications / Content / Assistant / System | Each shows a list panel of its children; each category row has a real icon (chats/files/sparkle/gear), not a letter avatar.         |
+| A8  | Chat prompt                                                                     | A Send button is visible and submits the drafted message; disabled while empty or while a request is active (never a silent no-op). |
+| A9  | Chat prompt on mobile                                                           | No offline switch (still present on desktop, any width).                                                                            |
+| A10 | Open a chat on mobile                                                           | No outline rail on the left, no status pill; turn navigation (toolbar arrows) still works.                                          |
+| A11 | Settings → Profile                                                              | DID field shrinks; copy button stays inside the panel.                                                                              |
+| A12 | Registry → open a plugin (e.g. Markdown)                                        | No horizontal scroll; text column uses most of the width.                                                                           |
+| A13 | Registry plugin list                                                            | Cards visibly distinct from the panel background.                                                                                   |
+| A14 | Any list panel on touch                                                         | First row is not highlighted at rest (keyboard selection unaffected on desktop).                                                    |
 
 ## B. Simulator-verified, needs a human/device pass
 
