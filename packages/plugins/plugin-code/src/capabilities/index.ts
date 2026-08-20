@@ -21,6 +21,7 @@ export const BuildRunState = Capability.lazyModule(
   () => import('./build-run-state'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });

@@ -10,9 +10,13 @@ import { ARTIFACTS_SEGMENT, STUDIO_SEGMENT } from './constants';
 const getStudioPath = (spaceId: string): string =>
   GraphPath.getSpacePath(spaceId, GraphPath.GroupSegments.content, STUDIO_SEGMENT);
 
-/**
- * Canonical qualified path to the virtual "Artifacts" node under a space's Studio section. Artifacts
- * are children of this node, so it is the create target that lands navigation in the Studio section
- * rather than the database subtree.
- */
+/** Canonical qualified path to the virtual "Artifacts" node under a space's Studio section. */
 export const getArtifactsPath = (spaceId: string): string => `${getStudioPath(spaceId)}/${ARTIFACTS_SEGMENT}`;
+
+/**
+ * Where the nav tree shows an artifact: a child of the virtual "Artifacts" node, whose url binding
+ * ends in the studio segment rather than a typename, so the generic type-section lookup cannot
+ * derive it.
+ */
+export const getArtifactPath = (spaceId: string, objectId: string): string =>
+  `${getArtifactsPath(spaceId)}/${objectId}`;
