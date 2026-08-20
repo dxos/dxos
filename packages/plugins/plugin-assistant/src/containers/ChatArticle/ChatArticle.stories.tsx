@@ -11,12 +11,14 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Chat } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -95,6 +97,8 @@ type StoryArgs = {
   messages?: { prompt: string; reply: string }[];
   /** Seed the chat's working outline, so the article renders its `Chat.TaskList`. */
   tasks?: Outline.ChecklistItem[];
+  /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
+  platform?: DeckCapabilities.Platform;
 } & Pick<ChatArticleProps, 'debug'>;
 
 const DefaultStory = ({ debug }: StoryArgs) => {
@@ -112,7 +116,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withPluginManager<StoryArgs>(({ args: { messages = [], tasks = [] } }) => {
+    withPluginManager<StoryArgs>(({ args: { messages = [], tasks = [], platform } }) => {
       return {
         plugins: [
           ...corePlugins(),
@@ -150,7 +154,11 @@ const meta = {
           PreviewPlugin.make(),
           StorybookPlugin.make({}),
         ],
-        capabilities,
+        // Contributed directly rather than by loading the deck plugin: the prompt reads only this
+        // one value, so a story can stand in for the mobile shell without its layout.
+        capabilities: platform
+          ? [...capabilities, Capability.contribute(DeckCapabilities.Platform, platform)]
+          : capabilities,
       };
     }),
   ],
@@ -250,6 +258,22 @@ export const Send: Story = {
     // left in the editor, hence a negative assertion rather than an emptiness one).
     await expect(composerText(canvasElement)).not.toContain(prompt);
     await waitFor(() => void expect(sendButton(canvasElement).disabled).toBe(true), { timeout: 5_000, interval: 100 });
+  },
+};
+
+/**
+ * The mobile app's treatment. The online indicator is dropped — it is read-only, controls nothing,
+ * and the action row is tight — while the send control stays, being the only submit affordance a
+ * touch keyboard has. Keyed to the platform, not the viewport, so a narrowed desktop window is
+ * unaffected.
+ */
+export const MobilePlatform: Story = {
+  args: {
+    platform: 'mobile',
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => void expect(sendButton(canvasElement)).toBeTruthy(), { timeout: 15_000, interval: 300 });
+    await expect(canvasElement.querySelector('input.dx-checkbox--switch')).toBeNull();
   },
 };
 
