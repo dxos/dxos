@@ -104,20 +104,19 @@ export const signup = Command.make(
     // (a retry could not redeem again). Composer re-provisions the agent on every boot.
     yield* invoke(ClientOperation.CreateAgent).pipe(
       Effect.catch((error) =>
-        Console.log(
-          `Warning: account created, but the EDGE agent could not be provisioned (${String(error)}). ` +
+        warn(
+          `account created, but the EDGE agent could not be provisioned (${String(error)}). ` +
             'Opening Composer will retry automatically.',
         ),
       ),
     );
 
     // `dx` force-exits as soon as the command returns, so the identity's spaces only reach EDGE if
-    // they are drained here. Non-fatal like the agent above -- the code cannot be redeemed twice --
-    // and caught by cause because a sync timeout surfaces as a defect, not a typed error.
+    // they are drained here. Caught by cause: a sync timeout surfaces as a defect, not a typed error.
     yield* syncAllToEdge().pipe(
       Effect.catchCause((cause) =>
-        Console.log(
-          `Warning: account created, but the spaces could not be synced to EDGE (${Cause.pretty(cause)}). ` +
+        warn(
+          `account created, but the spaces could not be synced to EDGE (${Cause.pretty(cause)}). ` +
             'They will sync the next time this profile connects.',
         ),
       ),
@@ -145,6 +144,9 @@ export const signup = Command.make(
   // The Atmosphere method writes the connected account's credential to the default space.
   Command.provideEffectDiscard(() => withTypes(AccessToken.AccessToken, Connection.Connection)),
 );
+
+/** Non-fatal notice, on stderr so that `--json` leaves the account document alone on stdout. */
+const warn = (message: string) => Console.error(`Warning: ${message}`);
 
 const printAccount = (account: Omit<Account.SignUpResult, 'accountId'> & { identityDid: string }) =>
   FormBuilder.make({ title: 'Account' }).pipe(

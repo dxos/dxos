@@ -42,9 +42,8 @@ if (level) {
 }
 log.config({ filter });
 
-// Same registry Composer populates at boot. Without it `Migrations.targetVersion` is undefined, so
-// every space `dx` creates is stamped with no version and Composer then reports it as pending
-// migration.
+// Before any command can create a space: an unset `Migrations.targetVersion` stamps no version, and
+// Composer then reports the space as pending migration.
 AppMigrations.define();
 
 let leaksTracker: any;
