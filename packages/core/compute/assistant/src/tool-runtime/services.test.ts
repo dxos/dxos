@@ -173,10 +173,14 @@ describe('makeToolResolverFromOperations', () => {
       }),
     );
 
-  const resolve = (registry: ReturnType<typeof makeRegistry>, id: string) =>
+  /** Runs `body` against one resolver instance, so a cached index persists across its resolutions. */
+  const withResolver = <A>(
+    registry: ReturnType<typeof makeRegistry>,
+    body: (resolve: (id: string) => Effect.Effect<Tool.Any, any>) => Effect.Effect<A, any>,
+  ) =>
     Effect.gen(function* () {
       const resolver = yield* ToolResolverService;
-      return yield* resolver.resolve(ToolId.make(id));
+      return yield* body((id) => resolver.resolve(ToolId.make(id)));
     }).pipe(
       Effect.provide(makeToolResolverFromOperations().pipe(Layer.provide(Layer.succeed(Registry.Service, registry)))),
       Effect.provide(OpaqueToolkit.providerLayer(OpaqueToolkit.empty)),
@@ -185,17 +189,22 @@ describe('makeToolResolverFromOperations', () => {
 
   test('resolves an operation the registry carries, by its derived tool name', async ({ expect }) => {
     const registry = makeRegistry({ initial: [op('org.dxos.function.markdown.create')] });
-    const tool = await resolve(registry, 'markdown-create');
+    const tool = await withResolver(registry, (resolve) => resolve('markdown-create'));
     expect(tool.name).toBe('markdown-create');
   });
 
-  // The index is cached, so a name that resolved once must not keep resolving after a second claimant
-  // registers: a stale hit would silently pick one of two operations rather than report the ambiguity.
+  // Both resolutions share one resolver, so the second reads an index the first already built: without
+  // invalidation the stale hit would silently pick one of two claimants instead of reporting the
+  // ambiguity. A resolver per call would pass either way, since the second would build a fresh index.
   test('a collision registered after the index was built still fails', async ({ expect }) => {
     const registry = makeRegistry({ initial: [op('org.dxos.function.webSearch.fetch')] });
-    expect((await resolve(registry, 'web-search-fetch')).name).toBe('web-search-fetch');
-
-    registry.add([op('org.dxos.function.web-search.fetch')]);
-    await expect(resolve(registry, 'web-search-fetch')).rejects.toThrow(/claimed by 2 operations/);
+    const attempt = withResolver(registry, (resolve) =>
+      Effect.gen(function* () {
+        const first = yield* resolve('web-search-fetch');
+        yield* Effect.sync(() => registry.add([op('org.dxos.function.web-search.fetch')]));
+        return { first: first.name, second: yield* Effect.result(resolve('web-search-fetch')) };
+      }),
+    );
+    await expect(attempt).rejects.toThrow(/claimed by 2 operations/);
   });
 });

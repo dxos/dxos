@@ -19,6 +19,7 @@ import { todo } from '@dxos/debug';
 import { Filter, Ref, Registry } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import { RefFromLLM } from '../util';
 
@@ -60,7 +61,13 @@ export const makeToolResolverFromOperations = <R = never>({
           if (key == null) {
             continue;
           }
-          const name = Operation.toolNameFromKey(key);
+          // Non-throwing: a record's key is untrusted, and one that cannot derive a valid name must
+          // cost only its own tool rather than every registry-backed tool in the index.
+          const name = Operation.tryToolNameFromKey(key);
+          if (name == null) {
+            log.warn('operation key cannot derive a valid tool name; not indexed', { key });
+            continue;
+          }
           built.set(name, [...(built.get(name) ?? []), record]);
         }
         index = built;
