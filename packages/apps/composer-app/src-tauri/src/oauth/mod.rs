@@ -6,10 +6,16 @@ use std::sync::Arc;
 
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE, ORIGIN};
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, Emitter, Manager, State, Url, WebviewUrl, WebviewWindowBuilder};
 use tokio::sync::Mutex;
 
 use server::OAuthServer;
+
+/// Label of the transient window that hosts a provider's authorization page.
+const OAUTH_WINDOW_LABEL: &str = "oauth";
+
+/// Event carrying the callback URL this window was redirected to, as an absolute URL string.
+const OAUTH_CALLBACK_EVENT: &str = "dxos:oauth-callback";
 
 /// OAuth result returned from the callback.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -183,4 +189,59 @@ pub async fn initiate_oauth_flow(
         .data
         .map(|d| d.auth_url)
         .ok_or_else(|| "No auth URL in response".to_string())
+}
+
+/// Opens a provider's authorization page in a window the app owns, and relays the post-auth
+/// redirect back to the app instead of following it.
+///
+/// The web app hands the page to a new tab and lets the redirect land back on its own origin, but
+/// neither half of that works here: WKWebView returns null from `window.open`, and a system browser
+/// would finalize the flow against its own storage rather than the app's. Loading the redirect in
+/// this window is no better — it would boot a second copy of the app in a window no capability
+/// grants Tauri access to — so a navigation to `callback_path` is cancelled and its URL emitted for
+/// the main window, which finalizes the flow against the client already running there.
+///
+/// No capability lists `OAUTH_WINDOW_LABEL`, so the provider's page is refused every command the
+/// IPC bridge exposes.
+#[tauri::command]
+pub fn open_oauth_window(app: AppHandle, url: String, callback_path: String) -> Result<(), String> {
+    let auth_url = Url::parse(&url).map_err(|error| format!("Invalid auth URL: {}", error))?;
+    // The URL crosses from the webview, so anything but a remote authorization endpoint here would
+    // be a way for page scripts to open privileged content in a window of the app's own making.
+    if auth_url.scheme() != "https" {
+        return Err(format!("Unsupported auth URL scheme: {}", auth_url.scheme()));
+    }
+
+    // An abandoned attempt may still hold the label; the flow is single-use, so take the slot over.
+    if let Some(existing) = app.get_webview_window(OAUTH_WINDOW_LABEL) {
+        let _ = existing.close();
+    }
+
+    let handle = app.clone();
+    WebviewWindowBuilder::new(&app, OAUTH_WINDOW_LABEL, WebviewUrl::External(auth_url))
+        .title("Sign in")
+        .inner_size(520.0, 720.0)
+        .center()
+        .on_navigation(move |url| {
+            // Matching the path rather than the app's own origin keeps this working wherever
+            // kms-service sends the flow back to.
+            if url.path() != callback_path {
+                return true;
+            }
+
+            let _ = handle.emit(OAUTH_CALLBACK_EVENT, url.as_str());
+            // Closing from inside the navigation decision would re-enter the webview delegate that
+            // is asking, so the window is dropped on the next tick instead.
+            let close_handle = handle.clone();
+            tauri::async_runtime::spawn(async move {
+                if let Some(window) = close_handle.get_webview_window(OAUTH_WINDOW_LABEL) {
+                    let _ = window.close();
+                }
+            });
+            false
+        })
+        .build()
+        .map_err(|error| format!("Failed to open OAuth window: {}", error))?;
+
+    Ok(())
 }

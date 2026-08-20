@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
+import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import { type Client } from '@dxos/client';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -51,3 +54,23 @@ export type OAuthRecoveryPendingSnapshot = {
   /** Hub-service URL the invitation code is redeemed against. */
   hubUrl: string;
 };
+
+/**
+ * Open a provider's authorization page.
+ *
+ * The browser gets a new tab, which the post-auth redirect lands back in. The desktop app has no
+ * tabs — WKWebView refuses `window.open` — so the shell hosts the page in a window of its own and
+ * relays the redirect back to the running app instead (see `NativeOAuth`).
+ */
+export const openAuthPage = (authUrl: string): Effect.Effect<void, Error> =>
+  NativeOAuth.supportsNativeOAuthWindow()
+    ? Effect.tryPromise({
+        try: () => NativeOAuth.openNativeOAuthWindow(authUrl, OAUTH_RECOVERY_REDIRECT_PATH),
+        catch: (error) =>
+          new Error(`Unable to open OAuth window: ${error instanceof Error ? error.message : String(error)}`),
+      })
+    : Effect.suspend(() =>
+        window.open(authUrl, '_blank')
+          ? Effect.void
+          : Effect.fail(new Error('Unable to open OAuth recovery window (popup blocked?).')),
+      );

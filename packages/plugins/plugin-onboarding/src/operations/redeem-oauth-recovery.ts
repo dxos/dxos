@@ -13,18 +13,19 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ATPROTO_OAUTH_SCOPES, type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
 import { RedeemOAuthRecovery } from './definitions';
-import { createEdgeHttpClient } from './shared';
+import { createEdgeHttpClient, openAuthPage } from './shared';
 
 /**
  * Recover an existing identity by completing an OAuth flow with a registered recovery provider
  * (e.g. atproto / Atmosphere), using the redirect flow.
  *
- * Initiates the OAuth flow and opens the provider authorization URL in a new tab. Because
+ * Initiates the OAuth flow and opens the provider authorization URL away from the app. Because
  * atproto/bsky nullifies `window.opener`, kms-service finalizes via a top-level redirect to
  * `/redirect/oauth-recovery` (carrying the one-time `recoveryProof`) rather than a `postMessage`
- * relay. The recovery finalizer reads the proof on boot and redeems it via
+ * relay. The recovery finalizer reads the proof — from the page it lands on in the browser, or
+ * from the callback the shell relays on desktop — and redeems it via
  * `IdentityService.recoverIdentity` to admit this device into HALO. This operation returns as soon
- * as the auth tab is open — it does not await completion.
+ * as the auth page is open — it does not await completion.
  */
 const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRecovery.pipe(
   Operation.withHandler(
@@ -57,14 +58,10 @@ const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRe
       // invitation code + hub URL).
       log.info('redeeming OAuth recovery (redirect flow)', { provider, accessTokenId });
 
-      // Open the auth URL in a new tab. After auth, kms-service redirects the tab to
-      // `/redirect/oauth-recovery`, where the recovery finalizer redeems the proof. A null return
-      // means the popup was blocked — fail rather than silently continue (the flow can never
-      // complete).
-      const authWindow = yield* Effect.sync(() => window.open(initiateResponse.authUrl, '_blank'));
-      if (!authWindow) {
-        return yield* Effect.fail(new Error('Unable to open OAuth recovery window (popup blocked?).'));
-      }
+      // Hand the auth URL to a browser tab or, on desktop, to the shell's OAuth window. After auth
+      // the flow arrives back at `/redirect/oauth-recovery`, where the recovery finalizer redeems
+      // the proof. Failing to open it is fatal — the flow can never complete.
+      yield* openAuthPage(initiateResponse.authUrl);
     }),
   ),
 );

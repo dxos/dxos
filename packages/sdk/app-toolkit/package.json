@@ -91,6 +91,11 @@
       "types": "./dist/types/src/operations/LayoutOperation.d.ts",
       "import": "./dist/lib/operations/LayoutOperation.mjs"
     },
+    "./NativeOAuth": {
+      "source": "./src/app/NativeOAuth.ts",
+      "types": "./dist/types/src/app/NativeOAuth.d.ts",
+      "import": "./dist/lib/app/NativeOAuth.mjs"
+    },
     "./NativePasskey": {
       "source": "./src/app/NativePasskey.ts",
       "types": "./dist/types/src/app/NativePasskey.d.ts",

@@ -13,17 +13,18 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ATPROTO_OAUTH_SCOPES, type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
 import { RegisterOAuthRecovery } from './definitions';
-import { createEdgeHttpClient, oauthRecoveryPendingKey } from './shared';
+import { createEdgeHttpClient, oauthRecoveryPendingKey, openAuthPage } from './shared';
 
 /**
  * Begins OAuth recovery registration (redirect flow).
  *
- * Initiates the OAuth flow and opens the provider authorization URL in a new tab. Because
+ * Initiates the OAuth flow and opens the provider authorization URL away from the app. Because
  * atproto/bsky nullifies `window.opener`, kms-service finalizes via a top-level redirect to
- * `/redirect/oauth-recovery` rather than a `postMessage` relay. The redirect reloads the app in a
- * fresh tab, so the invitation code + hub URL needed to complete registration are persisted to
- * `localStorage` (keyed by `accessTokenId`) here, and the recovery finalizer reads them back on
- * boot. This operation returns as soon as the auth tab is open — it does not await completion.
+ * `/redirect/oauth-recovery` rather than a `postMessage` relay. In the browser that redirect
+ * reloads the app in a fresh tab, so the invitation code + hub URL needed to complete registration
+ * are persisted to `localStorage` (keyed by `accessTokenId`) here and read back by the recovery
+ * finalizer. This operation returns as soon as the auth page is open — it does not await
+ * completion.
  */
 const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAuthRecovery.pipe(
   Operation.withHandler(
@@ -69,13 +70,10 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
 
       log.info('registering OAuth recovery (redirect flow)', { provider, accessTokenId });
 
-      // Open the auth URL in a new tab. After auth, kms-service redirects the tab to
-      // `/redirect/oauth-recovery`, where the recovery finalizer takes over. A null return means the
-      // popup was blocked — fail rather than silently continue (the flow can never complete).
-      const authWindow = yield* Effect.sync(() => window.open(initiateResponse.authUrl, '_blank'));
-      if (!authWindow) {
-        return yield* Effect.fail(new Error('Unable to open OAuth recovery window (popup blocked?).'));
-      }
+      // Hand the auth URL to a browser tab or, on desktop, to the shell's OAuth window. After auth
+      // the flow arrives back at `/redirect/oauth-recovery`, where the recovery finalizer takes
+      // over. Failing to open it is fatal — the flow can never complete.
+      yield* openAuthPage(initiateResponse.authUrl);
     }),
   ),
 );
