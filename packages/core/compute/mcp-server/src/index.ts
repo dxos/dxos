@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Gateway from './Gateway';
+export * as McpRegistry from './McpRegistry';
 export * as McpServer from './McpServer';

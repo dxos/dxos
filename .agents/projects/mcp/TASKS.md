@@ -337,19 +337,45 @@ requiresSpace, hints: { mutation, idempotent } }, wireSchema }`: `parameters` (d
       per the repo's `Schema$` convention. Also: the `Mutation` re-export in the projection is gone
       (use `Operation.Mutation`), and the two `let`+`if` blocks became `Match`-driven `readMutation`
       / `readInput` helpers, the latter naming the decode/encode pair it returns.
-- [ ] **Shared operation→tool projection** (assistant ⇄ mcp) — deferred with a plan, not dropped.
-      What blocks a naive extraction: the two surfaces are deliberately different models of the
-      same operation. The assistant presents refs as LLM-friendly URI _strings_ (`RefFromLLM`,
-      which normalizes to space-local form and is entangled with `ArtifactURI`), names tools by
-      slugified `meta.name` (`create-task`), and massages JSON Schema for provider strict mode;
-      MCP presents refs as envelope objects, names tools by annotation/key segment (`taskCreate`),
-      and applies its own response passes. Converging any of these is a **model-facing change**:
-      chat-side it invalidates every model fixture (`parameters.tools` is in the match key),
-      MCP-side it changes client-visible schemas. Do it as its own PR: (1) extract the shared
-      schema-massaging core (null-branch dropping, openness, empty-params) into `@dxos/compute`
-      behavior-preserving; (2) audit whether MCP's emitted schemas have the optional-`anyOf:[T,
-null]` defect the assistant already fixed — if so the shared core becomes a response pass;
-      (3) decide whether tool _names_ should converge (fixture regeneration budget required).
+- [x] **`Gateway` renamed to `McpRegistry`** (user, 2026-08-20). "Gateway" collides with the
+      ecosystem's meaning — an MCP gateway proxies _other_ MCP servers — while ours is the backend:
+      the host's link to its operation registry. `Registry` alone was taken (echo's, and compute's
+      `OperationRegistry` is a different thing: the in-process store, not a link to one), and the
+      `Mcp` prefix is honest rather than noise here, since the contract already carries MCP
+      concepts (`SkillRecord.mcpPrompt`, `tools`). The CLI's implementation vocabulary moved with
+      it (`gateway.ts` → `registry.ts`, `makeGateway` → `makeRegistry`, `LocalGateway` →
+      `LocalRegistry`). **Edge's operation-service implements this interface** and picks the rename
+      up on the next pin bump. Left as-is: `spaceIds` on the shape is session scope rather than
+      registry content — the one member no registry-flavored name covers, and the honest signal
+      that it belongs elsewhere.
+- [ ] **Reconcile the assistant and MCP operation→tool projections** — they should share what is
+      genuinely shared, even though the surfaces stay different. Deferred, not dropped.
+
+      **Where they differ** (re-verified 2026-08-20 against the code, not the note):
+
+          1. **Different inputs, not just different style.** The assistant projects from the *live*
+             definition — `createStructFieldsFromSchema` walks `schema.ast` of an in-process Effect
+             schema (`assistant/src/tool-runtime/services.ts`). MCP projects from the *serialized wire
+             record* — `readInput` runs `JsonSchema.toEffectSchema` over a JSON Schema that already
+             round-tripped. Any shared core has to sit below both, after reconstruction.
+          2. **Refs are advertised in opposite shapes, deliberately.** `mapSchemaTypeForLLM` rewrites
+             every ref node into `RefFromLLM` (a URI *string* with a description); MCP keeps the
+             `{ "/": "echo:..." }` envelope and widens it via `tolerateStringifiedRefs` to also accept a
+             JSON string. Both decode to a `Ref`; what the model is told differs. (This is why the
+             shared `addObject` description carries no envelope sentence — it cannot be true on both.)
+          3. **Names differ.** `makeToolName` lowercases and hyphenates (`create-task`); MCP takes the
+             key's final segment (`taskCreate`).
+
+          **What that costs to converge:** any of the three is model-facing — chat-side it invalidates
+          every model fixture (the tool set is in the match key), MCP-side it changes client-visible
+          names and schemas.
+
+          **Plan, as its own PR:** (1) extract the shared schema-massaging core (null-branch dropping,
+          openness, empty-params) into `@dxos/compute`, behavior-preserving; (2) audit whether MCP's
+          emitted schemas carry the optional-`anyOf:[T, null]` defect the assistant already fixed — if
+          so the shared core becomes a response pass; (3) decide whether tool *names* should converge
+          (needs a fixture-regeneration budget).
+
 - [ ] **Edge follow-through** — on the next `@dxos/*` pin bump the worker picks the reshape up via
       the package; its `SkillRecord` marshalling in operation-service gains `tools`.
 

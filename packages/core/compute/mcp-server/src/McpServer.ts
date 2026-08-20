@@ -19,7 +19,7 @@ import { Obj } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import * as Gateway from './Gateway';
+import * as McpRegistry from './McpRegistry';
 export { ToolFailure, type ToolFailureCode, failure } from './internal/failure';
 import { ToolFailure, failure } from './internal/failure';
 import * as iconInternal from './internal/icon';
@@ -80,14 +80,14 @@ export const SkillToolkit = Toolkit.make(SkillLoad);
  * is wrong, never that the backend was down — an actionable error beats an opaque one.
  */
 export const SkillHandlers = SkillToolkit.toLayer(
-  Effect.map(Gateway.Service, (gateway) =>
+  Effect.map(McpRegistry.Service, (gateway) =>
     SkillToolkit.of({ skillLoad: ({ skill }) => loadSkillByName(gateway, skill) }),
   ),
 );
 
 /** Resolves a skill by prompt name (or full registry key) to the body `skillLoad` returns. */
 export const loadSkillByName = (
-  gateway: Gateway.Shape,
+  gateway: McpRegistry.Shape,
   skill: string,
 ): Effect.Effect<{ name: string; key: string; description?: string; instructions: string }, ToolFailure> =>
   gateway.listSkills.pipe(
@@ -136,8 +136,8 @@ export const loadSkillByName = (
 export const loadOperations = (
   skills: readonly Projection.ProjectedSkill[],
   reservedNames: readonly string[],
-): Effect.Effect<Projection.ProjectedOperation[], never, Gateway.Service> =>
-  Effect.flatMap(Gateway.Service, (gateway) => gateway.listOperations).pipe(
+): Effect.Effect<Projection.ProjectedOperation[], never, McpRegistry.Service> =>
+  Effect.flatMap(McpRegistry.Service, (gateway) => gateway.listOperations).pipe(
     Effect.map((operations) => Projection.projectOperations(operations, skills, reservedNames)),
     Effect.catch((error) => {
       log.warn('operation registry unavailable; serving static tools only', { error: error.message });
@@ -148,8 +148,8 @@ export const loadOperations = (
 /** Fetches the registry and projects opted-in skills; same failure split as {@link loadOperations}. */
 export const loadSkills = (
   reservedNames: readonly string[],
-): Effect.Effect<Projection.ProjectedSkill[], never, Gateway.Service> =>
-  Effect.flatMap(Gateway.Service, (gateway) => gateway.listSkills).pipe(
+): Effect.Effect<Projection.ProjectedSkill[], never, McpRegistry.Service> =>
+  Effect.flatMap(McpRegistry.Service, (gateway) => gateway.listSkills).pipe(
     Effect.map((skills) => Projection.projectSkills(skills, reservedNames)),
     Effect.catch((error) => {
       log.warn('skill registry unavailable; serving static prompts only', { error: error.message });
@@ -168,7 +168,7 @@ export const loadSkills = (
  */
 export const toolsLayer = (
   projected: readonly Projection.ProjectedOperation[],
-): Layer.Layer<never, never, Gateway.Service> => {
+): Layer.Layer<never, never, McpRegistry.Service> => {
   const tools = projected.map(makeTool);
   // A toolkit assembled from runtime data has no per-tool type information to keep, so the casts
   // through this function restate what the registry cannot prove: the handler record matches the
@@ -176,7 +176,7 @@ export const toolsLayer = (
   const toolkit = Toolkit.make(...(tools as any[]));
   const handlers = toolkit.toLayer(
     Effect.gen(function* () {
-      const gateway = yield* Gateway.Service;
+      const gateway = yield* McpRegistry.Service;
       return Object.fromEntries(
         projected.map((operation) => [operation.tool.name, makeHandler(gateway, operation)]),
       ) as never;
@@ -185,7 +185,7 @@ export const toolsLayer = (
   return McpServer$.toolkit(toolkit).pipe(Layer.provide(handlers)) as unknown as Layer.Layer<
     never,
     never,
-    Gateway.Service
+    McpRegistry.Service
   >;
 };
 
@@ -215,7 +215,7 @@ export const makeTool = ({ tool: descriptor }: Projection.ProjectedOperation) =>
 
 /** Dispatches one projected tool call: encode input, resolve the space, invoke, qualify refs. */
 export const makeHandler =
-  (gateway: Gateway.Shape, operation: Projection.ProjectedOperation) =>
+  (gateway: McpRegistry.Shape, operation: Projection.ProjectedOperation) =>
   (args: Record<string, unknown> | undefined): Effect.Effect<Record<string, unknown>, ToolFailure> => {
     const { spaceId, ...withoutSpaceId } = args ?? {};
     // An operation that declares `spaceId` itself keeps it: {@link makeTool} adds the ambient
@@ -285,7 +285,7 @@ export type LayerOptions = {
 export const layer = ({ reservedToolNames = [], reservedPromptNames = [] }: LayerOptions = {}): Layer.Layer<
   never,
   never,
-  Gateway.Service
+  McpRegistry.Service
 > =>
   Effect.gen(function* () {
     // Skills first: they are the atomic unit of projection, so the tool set derives from them.
@@ -422,14 +422,14 @@ export type Options = {
 const normalizeKey = (key: string): string => key.replace(/^dxn:/, '').replace(/:\d+\.\d+\.\d+$/, '');
 
 /**
- * Builds a {@link Gateway.Shape} over the definitions: skills listed with their tools, operations
+ * Builds a {@link McpRegistry.Shape} over the definitions: skills listed with their tools, operations
  * serialized to wire records, invocation through the ambient `Operation.Service` with the target
  * space passed as `InvokeOptions.spaceId`.
  */
 export const gateway = ({
   skills,
   spaceIds = [],
-}: Pick<Options, 'skills' | 'spaceIds'>): Effect.Effect<Gateway.Shape, never, Operation.Service> =>
+}: Pick<Options, 'skills' | 'spaceIds'>): Effect.Effect<McpRegistry.Shape, never, Operation.Service> =>
   Effect.gen(function* () {
     const invoker = yield* Operation.Service;
     const built = skills.map((definition) => ({ definition, skill: definition.make() }));
@@ -447,7 +447,7 @@ export const gateway = ({
       spaceIds,
       listOperations: Effect.succeed(records),
       listSkills: Effect.succeed(
-        built.map(({ definition, skill }): Gateway.SkillRecord => ({
+        built.map(({ definition, skill }): McpRegistry.SkillRecord => ({
           key: String(definition.key),
           name: skill.name,
           description: skill.description,
@@ -462,28 +462,28 @@ export const gateway = ({
         Effect.gen(function* () {
           const operation = operations.get(normalizeKey(key));
           if (!operation) {
-            return yield* Effect.fail(Gateway.error(`Operation not found: ${key}`));
+            return yield* Effect.fail(McpRegistry.error(`Operation not found: ${key}`));
           }
           // A named target that does not parse is an error, not a fallback: silently running the
           // call against the invoker's default context is not the space the caller asked for.
           const targetSpaceId = spaceId != null && SpaceId.isValid(spaceId) ? spaceId : undefined;
           if (spaceId != null && targetSpaceId == null) {
-            return yield* Effect.fail(Gateway.error(`Invalid spaceId: ${spaceId}`));
+            return yield* Effect.fail(McpRegistry.error(`Invalid spaceId: ${spaceId}`));
           }
           // Arguments arrive in wire form (ref envelopes); `invoke` does not decode its input, so
           // the projected schema is applied here, at the boundary where they arrive.
           const decoded = yield* Schema.decodeUnknownEffect(operation.input)(input).pipe(
-            Effect.mapError(Gateway.error),
+            Effect.mapError(McpRegistry.error),
           );
           const output = yield* invoker
             .invoke(operation, decoded, targetSpaceId != null ? { spaceId: targetSpaceId } : undefined)
             .pipe(
-              Effect.mapError(Gateway.error),
-              Effect.catchDefect((defect) => Effect.fail(Gateway.error(defect))),
+              Effect.mapError(McpRegistry.error),
+              Effect.catchDefect((defect) => Effect.fail(McpRegistry.error(defect))),
             );
-          return Gateway.snapshot(output);
+          return McpRegistry.snapshot(output);
         }),
-    } satisfies Gateway.Shape;
+    } satisfies McpRegistry.Shape;
   });
 
 /**
@@ -498,5 +498,5 @@ export const fromSkills = ({
   reservedPromptNames,
 }: Options): Layer.Layer<never, never, Operation.Service> =>
   layer({ reservedToolNames, reservedPromptNames }).pipe(
-    Layer.provide(Layer.effect(Gateway.Service, gateway({ skills, spaceIds }))),
+    Layer.provide(Layer.effect(McpRegistry.Service, gateway({ skills, spaceIds }))),
   );

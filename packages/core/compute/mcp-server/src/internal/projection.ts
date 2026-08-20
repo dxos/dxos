@@ -13,7 +13,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, JsonSchema } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import type * as Gateway from '../Gateway';
+import type * as McpRegistry from '../McpRegistry';
 
 /**
  * Anthropic tool-name constraint. The 64-char budget is shared with the client's
@@ -236,7 +236,7 @@ const readInput = (inputSchema: unknown, key: string): { parameters: Fields; wir
  * host's statically-defined tools.
  */
 export const projectOperations = (
-  operations: readonly Gateway.OperationRecord[],
+  operations: readonly McpRegistry.OperationRecord[],
   skills: readonly ProjectedSkill[],
   reservedNames: readonly string[],
 ): ProjectedOperation[] => {
@@ -304,7 +304,7 @@ export const projectOperations = (
  * contract as the tool projection.
  */
 export const projectSkills = (
-  skills: readonly Gateway.SkillRecord[],
+  skills: readonly McpRegistry.SkillRecord[],
   reservedNames: readonly string[],
 ): ProjectedSkill[] => {
   const projected: ProjectedSkill[] = [];

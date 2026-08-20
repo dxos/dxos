@@ -17,10 +17,10 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./Gateway": {
-      "source": "./src/Gateway.ts",
-      "types": "./dist/types/src/Gateway.d.ts",
-      "import": "./dist/lib/Gateway.mjs"
+    "./McpRegistry": {
+      "source": "./src/McpRegistry.ts",
+      "types": "./dist/types/src/McpRegistry.d.ts",
+      "import": "./dist/lib/McpRegistry.mjs"
     },
     "./McpServer": {
       "source": "./src/McpServer.ts",

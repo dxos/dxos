@@ -17,7 +17,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Obj, Type } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
-import { Gateway } from '@dxos/mcp-server';
+import { McpRegistry } from '@dxos/mcp-server';
 import * as CodeProjectSkill from '@dxos/plugin-projects/CodeProjectSkill';
 // Narrow subpath imports: these plugins declare React surfaces, and a bundler follows the dynamic
 // import behind a lazy capability, so activating them would pull React into the CLI binary.
@@ -27,11 +27,11 @@ import * as TasksOperationHandlerSet from '@dxos/plugin-tasks/TasksOperationHand
 import { chatLayer, operationHandlers, types } from '../../util';
 
 /**
- * What the static toolkits need beyond the seam: the gateway answers for the registry, but
+ * What the static toolkits need beyond the seam: the registry answers for the operations, but
  * `whoami`/`listSpaces` read the live client and `listPlugins`/`listTypes` report what this host
- * assembled, neither of which a `Gateway` describes.
+ * assembled, neither of which `McpRegistry.Shape` describes.
  */
-export type LocalGateway = Gateway.Shape & {
+export type LocalRegistry = McpRegistry.Shape & {
   readonly client: Client;
   readonly plugins: readonly PluginRecord[];
   readonly types: readonly TypeRecord[];
@@ -41,17 +41,17 @@ export type PluginRecord = { readonly key: string; readonly name?: string };
 export type TypeRecord = { readonly typename: string; readonly version: string };
 
 /**
- * The local MCP gateway: the registry the CLI already runs operations against, presented in the
- * wire shape the projection consumes. `dx mcp serve` is the deployed server's local twin, so every
- * difference from EDGE's gateway is host-layer — no OAuth grant to narrow the session (it sees
- * every visible space), and operations run in-process instead of over a service binding.
+ * The local MCP registry: the operations the CLI already runs, presented in the wire shape the
+ * projection consumes. `dx mcp serve` is the deployed server's local twin, so every difference
+ * from EDGE's registry is host-layer — no OAuth grant to narrow the session (it sees every visible
+ * space), and operations run in-process instead of over a service binding.
  */
-export const makeGateway = Effect.fn(function* () {
+export const makeRegistry = Effect.fn(function* () {
   const client = yield* ClientService;
   const capabilities = yield* Capability.Service;
   const manager = yield* Capability.get(Capabilities.PluginManager);
   const active = new Set(manager.getActive());
-  // Captured so an invocation can erase its own requirements: the tool handlers this gateway
+  // Captured so an invocation can erase its own requirements: the tool handlers this registry
   // backs are invoked by the MCP server layer, which knows nothing of the CLI's services.
   const ambient = yield* Effect.context<ClientService>();
 
@@ -94,7 +94,7 @@ export const makeGateway = Effect.fn(function* () {
     listOperations: Effect.sync(() => Operation.serializable(handlers).map((record) => Obj.toJSON(record))),
 
     listSkills: Effect.sync(() =>
-      skills.map((definition): Gateway.SkillRecord => {
+      skills.map((definition): McpRegistry.SkillRecord => {
         // `make()` builds a detached skill whose instructions template holds its text in a
         // ref-embedded `Text` created in-process, so the target always resolves here.
         const skill = definition.make();
@@ -110,7 +110,7 @@ export const makeGateway = Effect.fn(function* () {
     ),
 
     invokeOperation: (request) => invoke({ handlerSet, handlers, ambient }, request),
-  } satisfies LocalGateway;
+  } satisfies LocalRegistry;
 });
 
 /** Operation keys travel with or without the `dxn:` prefix; compare them stripped. */
@@ -152,17 +152,17 @@ type InvocationContext = {
 
 const invoke = (
   { handlerSet, handlers, ambient }: InvocationContext,
-  { key, input, spaceId }: Gateway.InvokeRequest,
-): Effect.Effect<unknown, Gateway.Error> => {
+  { key, input, spaceId }: McpRegistry.InvokeRequest,
+): Effect.Effect<unknown, McpRegistry.Error> => {
   // A named target that does not parse is an error, not a fallback: treating it as absent runs the
   // call against the session's default space, which is not the space the caller asked for.
   if (spaceId != null && !SpaceId.isValid(spaceId)) {
-    return Effect.fail(Gateway.error(`Invalid spaceId: ${spaceId}`));
+    return Effect.fail(McpRegistry.error(`Invalid spaceId: ${spaceId}`));
   }
   return Effect.gen(function* () {
     const handler = handlers.find((candidate) => normalizeKey(String(candidate.meta.key)) === normalizeKey(key));
     if (!handler) {
-      return yield* Effect.fail(Gateway.error(`Operation not found: ${key}`));
+      return yield* Effect.fail(McpRegistry.error(`Operation not found: ${key}`));
     }
 
     const operations = yield* Operation.Service;
@@ -170,7 +170,7 @@ const invoke = (
     // reference resolves against the database the call targets.
     const decoded = yield* Schema.decodeUnknownEffect(handler.input)(input);
     const output = yield* operations.invoke(handler, decoded);
-    return Gateway.snapshot(output);
+    return McpRegistry.snapshot(output);
   }).pipe(
     Effect.provide(
       // The space is baked into the layer, so it is built per call rather than once per server;
@@ -178,7 +178,7 @@ const invoke = (
       chatLayer({ provider: 'edge', spaceId: spaceIdOption(spaceId), functions: handlerSet }),
     ),
     Effect.provideContext(ambient),
-    Effect.mapError(Gateway.error),
+    Effect.mapError(McpRegistry.error),
   );
 };
 

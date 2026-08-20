@@ -15,11 +15,11 @@ import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import { CommandConfig } from '@dxos/cli-util';
 import { DXOS_VERSION } from '@dxos/client';
 import { log } from '@dxos/log';
-import { Gateway, McpServer } from '@dxos/mcp-server';
+import { McpRegistry, McpServer } from '@dxos/mcp-server';
 import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
 
 import { DiscoveryToolkit, discoveryHandlers } from './discovery-tools';
-import { makeGateway } from './gateway';
+import { makeRegistry } from './registry';
 import { SpaceToolkit, spaceHandlers } from './space-tools';
 import { WATCH_CHILD_ENV, formatReady } from './watch-protocol';
 
@@ -84,13 +84,13 @@ export const serve = Command.make(
     yield* manager.activate(ActivationEvents.Idle);
     yield* manager.activate(AppActivationEvents.AssistantStart);
 
-    const gateway = yield* makeGateway();
+    const registry = yield* makeRegistry();
     // stdout carries the protocol, so progress goes to the log (stderr).
-    log.info('serving MCP over stdio', { spaces: gateway.spaceIds.length });
+    log.info('serving MCP over stdio', { spaces: registry.spaceIds.length });
 
     const staticToolkits = Layer.mergeAll(
-      McpServer.toolkit(SpaceToolkit).pipe(Layer.provide(SpaceToolkit.toLayer(spaceHandlers(gateway)))),
-      McpServer.toolkit(DiscoveryToolkit).pipe(Layer.provide(DiscoveryToolkit.toLayer(discoveryHandlers(gateway)))),
+      McpServer.toolkit(SpaceToolkit).pipe(Layer.provide(SpaceToolkit.toLayer(spaceHandlers(registry)))),
+      McpServer.toolkit(DiscoveryToolkit).pipe(Layer.provide(DiscoveryToolkit.toLayer(discoveryHandlers(registry)))),
     );
 
     // Written before the transport blocks: the child's stdin is a pipe, so anything the supervisor
@@ -102,7 +102,7 @@ export const serve = Command.make(
     yield* Layer.launch(
       Layer.mergeAll(
         McpServer.layer({ reservedToolNames: STATIC_TOOL_NAMES }).pipe(
-          Layer.provide(Layer.succeed(Gateway.Service, gateway)),
+          Layer.provide(Layer.succeed(McpRegistry.Service, registry)),
         ),
         staticToolkits,
       ).pipe(

@@ -118,8 +118,10 @@ list tolerantly, dropping (with a warning) the few operations whose input schema
 JSON, so a registry can be fed the full set without an `ImportSpace`-style schema failing the whole
 registration.
 
-`@dxos/mcp-server`'s `Server` namespace is now `McpServer`, and it absorbs the skill-backed
-surface: `McpServer.fromSkills({ skills })` yields the projected MCP surface (prompts, tools,
+`@dxos/mcp-server`'s two namespaces are renamed. `Gateway` becomes **`McpRegistry`** — "gateway"
+reads as an MCP proxy fronting other servers, which is the opposite of what it is: the host's link
+to its operation registry, which a host implements (`/McpRegistry`). `Server` becomes `McpServer`,
+and it absorbs the skill-backed surface: `McpServer.fromSkills({ skills })` yields the projected MCP surface (prompts, tools,
 `skillLoad`) requiring only `Operation.Service`, beside `McpServer.layer` for a host reading a
 registry through `Gateway`. The name deliberately shadows effect's `McpServer` because it wraps
 it — `toolkit` and `layerStdio` are re-exported, so a host needs one import rather than two under

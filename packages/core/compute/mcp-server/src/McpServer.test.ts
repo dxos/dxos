@@ -14,15 +14,15 @@ import { Database } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, SpaceId } from '@dxos/keys';
 
-import * as Gateway from './Gateway';
 import * as Projection from './internal/projection';
+import * as McpRegistry from './McpRegistry';
 import * as McpServer from './McpServer';
 
 const SPACE = SpaceId.random();
 const SPACE_A = SpaceId.random();
 const SPACE_B = SpaceId.random();
 
-type Invocation = Gateway.InvokeRequest;
+type Invocation = McpRegistry.InvokeRequest;
 
 const testGateway = ({
   spaceIds = [SPACE_A],
@@ -32,13 +32,13 @@ const testGateway = ({
   outage,
 }: {
   spaceIds?: readonly string[];
-  operations?: readonly Gateway.OperationRecord[];
-  skills?: readonly Gateway.SkillRecord[];
+  operations?: readonly McpRegistry.OperationRecord[];
+  skills?: readonly McpRegistry.SkillRecord[];
   output?: unknown;
   outage?: boolean;
-} = {}): { gateway: Gateway.Shape; invocations: Invocation[] } => {
+} = {}): { gateway: McpRegistry.Shape; invocations: Invocation[] } => {
   const invocations: Invocation[] = [];
-  const fail = Effect.fail(new Gateway.Error({ message: 'registry unavailable' }));
+  const fail = Effect.fail(new McpRegistry.Error({ message: 'registry unavailable' }));
   return {
     invocations,
     gateway: {
@@ -165,7 +165,7 @@ describe('McpServer', () => {
       const { gateway } = testGateway({ outage: true });
       const [operations, skills] = await EffectEx.runPromise(
         Effect.all([McpServer.loadOperations([], []), McpServer.loadSkills([])]).pipe(
-          Effect.provideService(Gateway.Service, gateway),
+          Effect.provideService(McpRegistry.Service, gateway),
         ),
       );
       expect(operations).to.deep.equal([]);
@@ -174,7 +174,7 @@ describe('McpServer', () => {
   });
 
   describe('skillLoad', () => {
-    const run = (gateway: Gateway.Shape, name: string) =>
+    const run = (gateway: McpRegistry.Shape, name: string) =>
       EffectEx.runPromise(Effect.result(McpServer.loadSkillByName(gateway, name)));
 
     test('returns the skill instructions by prompt name, or by full registry key', async ({ expect }) => {
@@ -254,7 +254,7 @@ describe('McpServer', () => {
   describe('snapshot', () => {
     test('an object reachable by two paths is snapshotted on both', ({ expect }) => {
       const shared = { title: 'shared' };
-      const result = Gateway.snapshot({ first: shared, second: shared }) as Record<string, unknown>;
+      const result = McpRegistry.snapshot({ first: shared, second: shared }) as Record<string, unknown>;
       expect(result).to.deep.equal({ first: shared, second: shared });
       // The second path must reach the snapshot too; returning the input there is how a live entity
       // escapes into a result.

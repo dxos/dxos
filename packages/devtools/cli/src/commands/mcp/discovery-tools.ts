@@ -9,7 +9,7 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { McpServer } from '@dxos/mcp-server';
 
-import { type LocalGateway } from './gateway';
+import { type LocalRegistry } from './registry';
 
 /**
  * Read-only discovery over what this host assembled, mirroring EDGE's `mcp-space-service` tools of
@@ -87,14 +87,14 @@ const metaString = (operation: Record<string, unknown>, field: string): string |
   return isRecord(meta) ? optionalString(meta[field]) : undefined;
 };
 
-export const discoveryHandlers = (gateway: LocalGateway) =>
+export const discoveryHandlers = (registry: LocalRegistry) =>
   DiscoveryToolkit.of({
-    listPlugins: () => Effect.succeed({ plugins: gateway.plugins }),
+    listPlugins: () => Effect.succeed({ plugins: registry.plugins }),
 
-    listTypes: () => Effect.succeed({ types: gateway.types }),
+    listTypes: () => Effect.succeed({ types: registry.types }),
 
     listOperations: () =>
-      gateway.listOperations.pipe(
+      registry.listOperations.pipe(
         // Serialized `PersistentOperation` records carry schemas and metadata; project the fields a
         // model needs to pick an operation, not the whole record.
         Effect.map((operations) => ({

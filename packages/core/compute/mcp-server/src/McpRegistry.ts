@@ -69,10 +69,10 @@ export type Shape = {
  * world, and the whole of what a host supplies. Reaching the registry over a Cloudflare service
  * binding or through an in-process plugin manager is a host concern; what the model sees is not.
  */
-export class Service extends Context.Service<Service, Shape>()('@dxos/mcp-server/Gateway') {}
+export class Service extends Context.Service<Service, Shape>()('@dxos/mcp-server/McpRegistry') {}
 
 /**
- * Replaces live ECHO entities in an operation's result with wire snapshots — what every gateway
+ * Replaces live ECHO entities in an operation's result with wire snapshots — what every registry
  * must return, whatever it invoked. An operation returning a live object is right in-process, but a
  * proxy carries none of its properties through JSON.
  */
