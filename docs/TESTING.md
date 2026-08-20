@@ -1,0 +1,71 @@
+# Mobile (plugin-deck) manual testing plan
+
+Branch `claude/plugin-deck-mobile-support-2ae1dd` — PR [#12676](https://github.com/dxos/dxos/pull/12676).
+Everything below either cannot be verified by automation in this environment or was machine-verified
+only in the iOS **simulator** / desktop Chromium and deserves a human pass. Each item states the
+expected result; check it off or note the deviation.
+
+## Setup
+
+Fresh simulator/device build (frontend must be built with the mobile set first):
+
+```bash
+cd packages/apps/composer-app && DX_PLUGIN_SET=mobile pnpm exec vite build --configLoader native
+```
+
+```bash
+cd packages/apps/composer-app && ./scripts/ios-build.sh --debug --sim
+```
+
+Install/launch: the built app is `src-tauri/gen/apple/build/arm64-sim/Composer.app`
+(`xcrun simctl install booted <path>` / `xcrun simctl launch booted org.dxos.composer`).
+Browser-mobile equivalent (faster iteration): `DX_MOBILE=1 moon run composer-app:serve -- --port 5199`
+at a 375×812 viewport. Note: a first load after a cold Vite start can fail with a lazy-plugin
+resolve error — reload once.
+
+## A. Fixed on the branch — verify on device
+
+| # | Steps | Expected |
+|---|---|---|
+| A1 | Space Home → "Get started" cards | Cards fit the viewport; ~16pt side margins; NO horizontal page scroll. |
+| A2 | Any list panel (MY SPACE) → search field at bottom | Placeholder reads "Search…", not `search.placeholder`. |
+| A3 | Tap the app-bar back chevron repeatedly from nested panels | Every tap pops exactly one panel; target feels comfortably tappable (44pt); no mis-taps into neighbors. |
+| A4 | Item → ⋮ menu → Rename | Popover opens anchored to the menu button (was broken). |
+| A5 | Space Home → tap a "Get started" card once | Card fires reliably on first tap (was unresponsive on iOS); a new chat opens with the prompt running. |
+| A6 | Space list: ⋮ → Add to space → Session | Creates and opens a chat (alternate chat path). |
+| A7 | Categories: MY SPACE → Settings / Communications / Content / Assistant / System | Each shows a list panel of its children (fix in flight at time of writing — if still blank, that fix hasn't landed/rebuilt yet). |
+| A8 | Chat prompt (after the in-flight commit lands) | A Send button is visible and submits the drafted message; disabled while empty/processing. |
+| A9 | Chat prompt on mobile | No offline switch (still present on desktop). |
+
+## B. Simulator-verified, needs a human/device pass
+
+| # | Steps | Expected |
+|---|---|---|
+| B1 | Left-edge swipe from ~8pt into the screen on a pushed panel | Interactive pop with parallax; release past halfway completes, else snaps back. Feel should match UIKit. |
+| B2 | Open a chat, focus the prompt (real device or sim with software keyboard: I/O → Keyboard → toggle "Connect Hardware Keyboard" OFF) | Layout shrinks smoothly with the keyboard; no jump/flicker; app bar shows Done state; nav bar hides. Keyboard close restores layout. |
+| B3 | Drawer: in a panel with companions, tap a companion icon in the navbar | Bottom drawer opens at half height; expand → full; close → hidden. With keyboard open, drawer behavior stays sane. |
+| B4 | Voice: mic button in the chat prompt | Permission prompt on first use; recording starts; transcript text appears. **Known open defect: transcript accept/reject buttons were unresponsive in the sim walkthrough (Med-2, not yet fixed) — please confirm.** |
+| B5 | Rotate the device | Portrait lock holds (from #12644). |
+| B6 | Safe areas on a notched device | App bar under the notch is padded (env(safe-area-inset-top)); bottom drawer clears the home indicator. |
+
+## C. Cannot be machine-tested here — human only
+
+| # | Steps | Expected |
+|---|---|---|
+| C1 | Real iPhone (not simulator) install & boot | App boots; single-client mode (no SharedWorker crash); identity provisioning works. |
+| C2 | Voice quality end-to-end on hardware mic | Speech transcribed with usable accuracy; #12644's native mic bridge routes audio (check speaker/bluetooth switching). |
+| C3 | Device invitation: pair the mobile app with a desktop Composer (space invitation) | Space syncs both ways; edits on desktop appear on mobile and vice versa. |
+| C4 | Scroll feel on long lists (NavBranch with many items) | 60fps-ish, momentum + edge bounce; no rubber-band fights with the pull gestures. |
+| C5 | Backgrounding/foregrounding the app mid-chat | State survives; no white flash or reload loop. |
+| C6 | Low-connectivity behavior | Assistant errors surface as messages/toasts, not blank screens (EDGE `createAgent` 500s were observed in dev). |
+| C7 | Long session battery/thermals | No obvious runaway (the deck logs `startup timeout` warnings in constrained environments — should not appear on device). |
+
+## D. Known open items (tracked, not blockers for the morning pass)
+
+- Transcript accept/reject unresponsive on iOS (Task-14 Med-2) — B4 above.
+- Sub-44pt touch targets exist outside the app bar (systemic; app bar fixed, rest follows the
+  coarse-pointer scaling documented-but-unimplemented in `spacing.css`).
+- `check-plugin-set` CI task guards only the `production` set; the `mobile` set has no CI guard.
+- Unknown `DX_PLUGIN_SET` values fall through silently to the full registry.
+- General tap-target flakiness in the simulator persists vs the old baseline (likely coordinate
+  scaling in the harness, not the app — worth one human sanity pass, hence A3).
