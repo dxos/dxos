@@ -38,7 +38,7 @@ removed as a result.
 Skills move to the plugins that own their subject. `@dxos/plugin-connector` now owns the
 `connectors` skill (import `ConnectorsSkill` from it; enabling ConnectorPlugin contributes it), and
 `@dxos/plugin-space` owns the **Database** skill — object CRUD over the projected verbs, exported as
-`DatabaseSkill` from `@dxos/plugin-space/skills`.
+`DatabaseSkill` from `@dxos/plugin-space/DatabaseSkill`.
 
 `@dxos/assistant-toolkit`'s own database skill is now chat-context binding alone
 (`contextAdd`/`contextRemove`), so it is renamed: `ChatContextSkill`, keyed `org.dxos.skill.chatContext`,
