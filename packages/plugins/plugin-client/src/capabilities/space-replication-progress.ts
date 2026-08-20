@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -16,6 +17,7 @@ import { type Space, SpaceState } from '@dxos/client/echo';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { ClientCapabilities } from '#types';
 
@@ -87,12 +89,15 @@ export default Capability.makeModule(
         processManagerRuntime.runFork(
           Database.subscribeToSyncState().pipe(
             Stream.runForEach((state) => Effect.sync(() => apply(state))),
+            Effect.catchCause((cause) => reportSyncFailure('sync state stream failed', space.id, cause)),
             Effect.provide(provide),
           ),
         ),
         processManagerRuntime.runFork(
+          // Caught inside the loop so a transient read failure cannot kill reconciliation.
           Database.getSyncState().pipe(
             Effect.map(apply),
+            Effect.catchCause((cause) => reportSyncFailure('sync state read failed', space.id, cause)),
             Effect.repeat(Schedule.spaced(RECONCILE_INTERVAL)),
             Effect.provide(provide),
           ),
@@ -118,8 +123,7 @@ export default Capability.makeModule(
       }),
     );
 
-    // A space that leaves the list (closed, left) never emits another sync state, so its monitor
-    // would linger forever — and its still-running fibers would re-register it.
+    // A departed space stops emitting sync state, so its monitor and fibers must be torn down here.
     const pruneSpaces = (spaces: readonly Space[]): void => {
       const live = new Set(spaces.map((space) => space.id));
       for (const spaceId of [...subscriptions.keys()]) {
@@ -143,3 +147,14 @@ export default Capability.makeModule(
     return [];
   }),
 );
+
+/**
+ * Swallows a sync-state failure so the reconciliation loop survives it (a rejected read arrives as a
+ * defect via `Effect.promise`); interruption is teardown, not a fault, so it is not reported.
+ */
+const reportSyncFailure = (message: string, space: SpaceId, cause: Cause.Cause<unknown>): Effect.Effect<void> =>
+  Effect.sync(() => {
+    if (!Cause.hasInterrupts(cause)) {
+      log.warn(message, { space, cause });
+    }
+  });
