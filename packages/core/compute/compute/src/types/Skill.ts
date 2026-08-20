@@ -215,7 +215,7 @@ export type Definition = {
   make: () => Skill;
   /**
    * Operation definitions behind the skill's `tools` list, for hosts that serve the skill without
-   * a registry to resolve ToolIds against (see mcp-server `DxMcpService`). Absent ⇒ the skill is
+   * a registry to resolve ToolIds against (see mcp-server `McpServer.fromSkills`). Absent ⇒ the skill is
    * only served through a registry-backed host.
    */
   operations?: readonly Operation.Definition.Any[];

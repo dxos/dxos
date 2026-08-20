@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
-import { Server } from '@dxos/mcp-server';
+import { McpServer } from '@dxos/mcp-server';
 
 import { type LocalGateway } from './gateway';
 
@@ -32,7 +32,7 @@ export const ListPlugins = Tool.make('listPlugins', {
       }),
     ),
   }),
-  failure: Server.ToolFailure,
+  failure: McpServer.ToolFailure,
 })
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
@@ -50,7 +50,7 @@ export const ListTypes = Tool.make('listTypes', {
       }),
     ),
   }),
-  failure: Server.ToolFailure,
+  failure: McpServer.ToolFailure,
 })
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
@@ -68,7 +68,7 @@ export const ListOperations = Tool.make('listOperations', {
       }),
     ),
   }),
-  failure: Server.ToolFailure,
+  failure: McpServer.ToolFailure,
 })
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
@@ -105,6 +105,6 @@ export const discoveryHandlers = (gateway: LocalGateway) =>
             description: optionalString(operation.description),
           })),
         })),
-        Effect.mapError((error) => Server.failure('operation_failed', error.message)),
+        Effect.mapError((error) => McpServer.failure('operation_failed', error.message)),
       ),
   });

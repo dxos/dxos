@@ -323,11 +323,20 @@ field goes.
 - [x] **`ProjectedOperation` structured by audience** (user, 2026-08-20). The flat shape mixed the
       model-facing descriptor with the dispatch data, which is what made `inputSchema` read as if
       it were the tool's own schema. Now `{ key, tool: { name, description, parameters,
-    requiresSpace, hints: { mutation, idempotent } }, wireSchema }`: `parameters` (decode, ref
+  requiresSpace, hints: { mutation, idempotent } }, wireSchema }`: `parameters` (decode, ref
       fields widened to accept a JSON string) and `wireSchema` (encode, un-widened, no `spaceId`)
       sit on opposite sides of the boundary and read that way. `hints` matches MCP's own
       readOnly/destructive/idempotent grouping and is what `makeTool` consumes as a unit. Dropped
       the write-only `skills` field — the pointer it justified is already in `description`.
+- [x] **`DxMcpService` folded into `McpServer`** (user, 2026-08-20). One namespace instead of
+      `Server` + `DxMcpService`: `McpServer.layer` reads a registry through `Gateway`,
+      `McpServer.fromSkills` serves definitions held in process, and `McpServer.gateway` builds the
+      skill-backed `Gateway.Shape` the latter layers over. The name shadows effect's `McpServer`
+      deliberately — ours wraps it, so `toolkit`/`layerStdio` are re-exported and `serve.ts` no
+      longer imports both under different names; inside the module effect's is aliased `McpServer$`
+      per the repo's `Schema$` convention. Also: the `Mutation` re-export in the projection is gone
+      (use `Operation.Mutation`), and the two `let`+`if` blocks became `Match`-driven `readMutation`
+      / `readInput` helpers, the latter naming the decode/encode pair it returns.
 - [ ] **Shared operation→tool projection** (assistant ⇄ mcp) — deferred with a plan, not dropped.
       What blocks a naive extraction: the two surfaces are deliberately different models of the
       same operation. The assistant presents refs as LLM-friendly URI _strings_ (`RefFromLLM`,

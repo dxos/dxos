@@ -8,9 +8,8 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     // One entry per subpath the package exports, or the built package cannot resolve them.
-    DxMcpService: 'src/DxMcpService.ts',
     Gateway: 'src/Gateway.ts',
-    Server: 'src/Server.ts',
+    McpServer: 'src/McpServer.ts',
   },
   test: { node: true },
 });

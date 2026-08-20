@@ -9,10 +9,14 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Sink from 'effect/Sink';
 import * as EffectStdio from 'effect/Stdio';
-import * as McpServer from 'effect/unstable/ai/McpServer';
+import * as McpServer$ from 'effect/unstable/ai/McpServer';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
+import { Obj } from '@dxos/echo';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Gateway from './Gateway';
@@ -178,7 +182,7 @@ export const toolsLayer = (
       ) as never;
     }),
   );
-  return McpServer.toolkit(toolkit).pipe(Layer.provide(handlers)) as unknown as Layer.Layer<
+  return McpServer$.toolkit(toolkit).pipe(Layer.provide(handlers)) as unknown as Layer.Layer<
     never,
     never,
     Gateway.Service
@@ -257,7 +261,7 @@ export const makeHandler =
 export const promptsLayer = (projected: readonly Projection.ProjectedSkill[]): Layer.Layer<never> =>
   Layer.mergeAll(
     ...(projected.map((skill) =>
-      McpServer.prompt({
+      McpServer$.prompt({
         name: skill.promptName,
         description: skill.description,
         parameters: {},
@@ -288,7 +292,7 @@ export const layer = ({ reservedToolNames = [], reservedPromptNames = [] }: Laye
     const skills = yield* loadSkills(reservedPromptNames);
     const operations = yield* loadOperations(skills, [...reservedToolNames, SkillLoad.name]);
     return Layer.mergeAll(
-      McpServer.toolkit(SkillToolkit).pipe(Layer.provide(SkillHandlers)),
+      McpServer$.toolkit(SkillToolkit).pipe(Layer.provide(SkillHandlers)),
       ...(operations.length > 0 ? [toolsLayer(operations)] : []),
       ...(skills.length > 0 ? [promptsLayer(skills)] : []),
     );
@@ -303,9 +307,16 @@ export const layer = ({ reservedToolNames = [], reservedPromptNames = [] }: Laye
 //
 
 /**
+ * Effect's own server pieces, re-exported so a host composing its static toolkits and transport
+ * needs one `McpServer` import rather than two under different names.
+ */
+export const toolkit = McpServer$.toolkit;
+export const layerStdio = McpServer$.layerStdio;
+
+/**
  * Platform stdio with the response passes applied to every outgoing message.
  *
- * Wraps whatever `Stdio` the runtime provides, so a host installs it beneath `McpServer.layerStdio`
+ * Wraps whatever `Stdio` the runtime provides, so a host installs it beneath effect's `McpServer.layerStdio`
  * and needs to know nothing about the passes.
  */
 export const stdio: Layer.Layer<EffectStdio.Stdio, never, EffectStdio.Stdio> = Layer.effect(
@@ -320,10 +331,10 @@ export const stdio: Layer.Layer<EffectStdio.Stdio, never, EffectStdio.Stdio> = L
 
 /**
  * The same passes over an HTTP response body, plus the batch unwrap the transport requires, for a
- * host that owns its own transport (`McpServer.layerHttp` behind a worker's fetch handler).
+ * host that owns its own transport (effect's `McpServer.layerHttp` behind a worker's fetch handler).
  *
  * `serverInfo` is merged into the `initialize` result on top of the shared identity: the MCP
- * `Implementation` may carry `title`, `websiteUrl` and `icons`, and `McpServer` offers no way to
+ * `Implementation` may carry `title`, `websiteUrl` and `icons`, and effect's `McpServer` offers no way to
  * supply them. Pass `icons` here — they need an origin, which only the host knows.
  */
 export const normalizeResponse = async (
@@ -384,3 +395,108 @@ export const icons = iconInternal.icons;
 export const iconResponse = iconInternal.iconResponse;
 export const ICON_LIGHT_PATH = iconInternal.ICON_LIGHT_PATH;
 export const ICON_DARK_PATH = iconInternal.ICON_DARK_PATH;
+
+//
+// Skill-backed surface: definitions held in process, rather than a registry read over the gateway.
+//
+
+export type Options = {
+  /**
+   * Skill definitions to serve. Each must carry `operations` (the definitions behind its ToolIds)
+   * for its tools to project — there is no registry here to resolve them against — and only skills
+   * whose built object opts in via `mcpPrompt` project at all.
+   */
+  skills: readonly Skill.Definition[];
+  /**
+   * Spaces the session may address; the first is the fallback when a call omits `spaceId`.
+   * Empty (the default) means unrestricted — the invoker's own database context decides.
+   */
+  spaceIds?: readonly string[];
+  /** Names of the host's statically-defined tools; a projected operation may not claim one. */
+  reservedToolNames?: readonly string[];
+  /** Names of the host's statically-defined prompts; a projected skill may not claim one. */
+  reservedPromptNames?: readonly string[];
+};
+
+/** NSID equality for a definition key against an invoke-request key (`dxn:`/version stripped). */
+const normalizeKey = (key: string): string => key.replace(/^dxn:/, '').replace(/:\d+\.\d+\.\d+$/, '');
+
+/**
+ * Builds a {@link Gateway.Shape} over the definitions: skills listed with their tools, operations
+ * serialized to wire records, invocation through the ambient `Operation.Service` with the target
+ * space passed as `InvokeOptions.spaceId`.
+ */
+export const gateway = ({
+  skills,
+  spaceIds = [],
+}: Pick<Options, 'skills' | 'spaceIds'>): Effect.Effect<Gateway.Shape, never, Operation.Service> =>
+  Effect.gen(function* () {
+    const invoker = yield* Operation.Service;
+    const built = skills.map((definition) => ({ definition, skill: definition.make() }));
+
+    // One record per operation whatever the number of skills naming it.
+    const operations = new Map<string, Operation.Definition.Any>();
+    for (const { definition } of built) {
+      for (const operation of definition.operations ?? []) {
+        operations.set(normalizeKey(String(operation.meta.key)), operation);
+      }
+    }
+    const records = Operation.serializable([...operations.values()]).map((record) => Obj.toJSON(record));
+
+    return {
+      spaceIds,
+      listOperations: Effect.succeed(records),
+      listSkills: Effect.succeed(
+        built.map(({ definition, skill }): Gateway.SkillRecord => ({
+          key: String(definition.key),
+          name: skill.name,
+          description: skill.description,
+          // Detached skills hold their instructions in a ref-embedded `Text` created in-process,
+          // so the target always resolves here.
+          instructions: skill.instructions?.source?.target?.content,
+          mcpPrompt: Skill.isMcpPrompt(skill),
+          tools: [...skill.tools],
+        })),
+      ),
+      invokeOperation: ({ key, input, spaceId }) =>
+        Effect.gen(function* () {
+          const operation = operations.get(normalizeKey(key));
+          if (!operation) {
+            return yield* Effect.fail(Gateway.error(`Operation not found: ${key}`));
+          }
+          // A named target that does not parse is an error, not a fallback: silently running the
+          // call against the invoker's default context is not the space the caller asked for.
+          const targetSpaceId = spaceId != null && SpaceId.isValid(spaceId) ? spaceId : undefined;
+          if (spaceId != null && targetSpaceId == null) {
+            return yield* Effect.fail(Gateway.error(`Invalid spaceId: ${spaceId}`));
+          }
+          // Arguments arrive in wire form (ref envelopes); `invoke` does not decode its input, so
+          // the projected schema is applied here, at the boundary where they arrive.
+          const decoded = yield* Schema.decodeUnknownEffect(operation.input)(input).pipe(
+            Effect.mapError(Gateway.error),
+          );
+          const output = yield* invoker
+            .invoke(operation, decoded, targetSpaceId != null ? { spaceId: targetSpaceId } : undefined)
+            .pipe(
+              Effect.mapError(Gateway.error),
+              Effect.catchDefect((defect) => Effect.fail(Gateway.error(defect))),
+            );
+          return Gateway.snapshot(output);
+        }),
+    } satisfies Gateway.Shape;
+  });
+
+/**
+ * The projected surface over skill definitions held in this process, requiring only the operation
+ * invoker — {@link layer}'s counterpart for a host with no registry to read. Merge the host's
+ * transport beneath either.
+ */
+export const fromSkills = ({
+  skills,
+  spaceIds,
+  reservedToolNames,
+  reservedPromptNames,
+}: Options): Layer.Layer<never, never, Operation.Service> =>
+  layer({ reservedToolNames, reservedPromptNames }).pipe(
+    Layer.provide(Layer.effect(Gateway.Service, gateway({ skills, spaceIds }))),
+  );

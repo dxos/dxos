@@ -118,8 +118,10 @@ list tolerantly, dropping (with a warning) the few operations whose input schema
 JSON, so a registry can be fed the full set without an `ImportSpace`-style schema failing the whole
 registration.
 
-`@dxos/mcp-server` gains `DxMcpService`: `make({ skills })` yields the projected MCP surface
-(prompts, tools, `skillLoad`) requiring only `Operation.Service` — the in-process front door,
-beside the registry-backed `Gateway` that remote hosts keep. The package now exposes
-per-namespace subpaths (`/Gateway`, `/Server`, `/DxMcpService`), each with a build entry so the
+`@dxos/mcp-server`'s `Server` namespace is now `McpServer`, and it absorbs the skill-backed
+surface: `McpServer.fromSkills({ skills })` yields the projected MCP surface (prompts, tools,
+`skillLoad`) requiring only `Operation.Service`, beside `McpServer.layer` for a host reading a
+registry through `Gateway`. The name deliberately shadows effect's `McpServer` because it wraps
+it — `toolkit` and `layerStdio` are re-exported, so a host needs one import rather than two under
+different names. The package exports `/Gateway` and `/McpServer`, each with a build entry so the
 published package can resolve them. `Gateway.SkillRecord` carries `tools`.

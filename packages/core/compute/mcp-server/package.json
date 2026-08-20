@@ -17,20 +17,15 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./DxMcpService": {
-      "source": "./src/DxMcpService.ts",
-      "types": "./dist/types/src/DxMcpService.d.ts",
-      "import": "./dist/lib/DxMcpService.mjs"
-    },
     "./Gateway": {
       "source": "./src/Gateway.ts",
       "types": "./dist/types/src/Gateway.d.ts",
       "import": "./dist/lib/Gateway.mjs"
     },
-    "./Server": {
-      "source": "./src/Server.ts",
-      "types": "./dist/types/src/Server.d.ts",
-      "import": "./dist/lib/Server.mjs"
+    "./McpServer": {
+      "source": "./src/McpServer.ts",
+      "types": "./dist/types/src/McpServer.d.ts",
+      "import": "./dist/lib/McpServer.mjs"
     }
   },
   "files": [

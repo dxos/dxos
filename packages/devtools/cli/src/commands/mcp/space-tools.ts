@@ -9,7 +9,7 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { type Space } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
-import { Server } from '@dxos/mcp-server';
+import { McpServer } from '@dxos/mcp-server';
 
 import { type LocalGateway } from './gateway';
 
@@ -45,7 +45,7 @@ export const WhoAmI = Tool.make('whoami', {
       description: 'Data spaces this session can operate on; the first is the default for tool calls.',
     }),
   }),
-  failure: Server.ToolFailure,
+  failure: McpServer.ToolFailure,
 })
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
@@ -57,7 +57,7 @@ export const ListSpaces = Tool.make('listSpaces', {
     "`spaceId`. The identity's own HALO space is not a data space and is never listed.",
   parameters: Schema.Struct({}),
   success: Schema.Struct({ spaces: Schema.Array(SpaceInfo) }),
-  failure: Server.ToolFailure,
+  failure: McpServer.ToolFailure,
 })
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
@@ -119,7 +119,7 @@ export const spaceHandlers = (gateway: LocalGateway) =>
         const identity = gateway.client.halo.identity.get();
         if (!identity) {
           return yield* Effect.fail(
-            Server.failure('invalid_request', 'No identity on this profile. Run `dx account login` first.'),
+            McpServer.failure('invalid_request', 'No identity on this profile. Run `dx account login` first.'),
           );
         }
         return {

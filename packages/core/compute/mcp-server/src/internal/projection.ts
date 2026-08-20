@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as SchemaGetter from 'effect/SchemaGetter';
@@ -30,8 +31,6 @@ const PROMPT_NAME_PATTERN = TOOL_NAME_PATTERN;
 
 const decodeMutation = Schema.decodeUnknownResult(Operation.MutationAnnotation.schema);
 
-export type Mutation = Operation.Mutation;
-
 /**
  * Tool parameter fields. Narrower than `Schema.Struct.Fields`: schemas rebuilt from JSON Schema
  * carry no decoding or encoding services, and saying so keeps the tool handlers' requirement
@@ -56,7 +55,7 @@ export type ProjectedOperation = {
     /** Behavioral hints; an absent value makes no claim, which clients read conservatively. */
     hints: {
       /** The operation's effect on state (`Operation.MutationAnnotation`). */
-      mutation?: Mutation;
+      mutation?: Operation.Mutation;
       /** `Operation.IdempotentAnnotation`. */
       idempotent?: boolean;
     };
@@ -196,6 +195,39 @@ export const DATABASE_SERVICE_KEY = Database.Service.key;
 /** NSID of a registry key: `dxn:` prefix and `:<version>` tail stripped — the form ToolIds carry. */
 const toNsid = (key: string): string => key.replace(/^dxn:/, '').replace(/:\d+\.\d+\.\d+$/, '');
 
+/** The mutation class an annotation claims; an undecodable value claims nothing. */
+const readMutation = (raw: unknown, key: string): Operation.Mutation | undefined =>
+  raw == null
+    ? undefined
+    : Match.value(decodeMutation(raw)).pipe(
+        Match.when({ _tag: 'Success' }, ({ success }) => success),
+        Match.orElse(({ failure }) => {
+          log.warn('mutation annotation did not decode; projecting without safety hints', {
+            key,
+            error: String(failure),
+          });
+          return undefined;
+        }),
+      );
+
+/**
+ * The two schemas a tool call travels through: `parameters` is what the model writes into (ref
+ * fields widened to also accept a JSON string) and `wireSchema` is what those encode back through.
+ * A non-object input yields neither — MCP has nowhere to put parameters that are not fields.
+ */
+const readInput = (inputSchema: unknown, key: string): { parameters: Fields; wireSchema?: Schema.Codec<any, any> } =>
+  Match.value(inputSchema == null ? undefined : JsonSchema.toEffectSchema(inputSchema as any)).pipe(
+    Match.when(Match.undefined, () => ({ parameters: {} })),
+    Match.when(isStruct, (reconstructed) => ({
+      parameters: tolerateStringifiedRefs(reconstructed.fields, inputSchema),
+      wireSchema: reconstructed,
+    })),
+    Match.orElse(() => {
+      log.warn('operation input schema is not an object; projected without parameters', { key });
+      return { parameters: {} };
+    }),
+  );
+
 /**
  * Projects registry records into tool descriptors — driven by the projected skills.
  *
@@ -237,19 +269,7 @@ export const projectOperations = (
       continue;
     }
 
-    let mutation: Mutation | undefined;
-    const rawMutation: unknown = meta?.annotations?.[MUTATION_ANNOTATION_ID];
-    if (rawMutation != null) {
-      const decoded = decodeMutation(rawMutation);
-      if (decoded._tag === 'Failure') {
-        log.warn('mutation annotation did not decode; projecting without safety hints', {
-          key: rawKey,
-          error: String(decoded.failure),
-        });
-      } else {
-        mutation = decoded.success;
-      }
-    }
+    const mutation = readMutation(meta?.annotations?.[MUTATION_ANNOTATION_ID], rawKey);
     const idempotent = meta?.annotations?.[IDEMPOTENT_ANNOTATION_ID] === true;
 
     const key = rawKey.replace(/^dxn:/, '');
@@ -259,17 +279,7 @@ export const projectOperations = (
       continue;
     }
 
-    let parameters: Fields = {};
-    let wireSchema: Schema.Codec<any, any> | undefined;
-    if (record.inputSchema != null) {
-      const reconstructed = JsonSchema.toEffectSchema(record.inputSchema);
-      if (isStruct(reconstructed)) {
-        parameters = tolerateStringifiedRefs(reconstructed.fields, record.inputSchema);
-        wireSchema = reconstructed;
-      } else {
-        log.warn('operation input schema is not an object; projected without parameters', { key });
-      }
-    }
+    const { parameters, wireSchema } = readInput(record.inputSchema, key);
 
     const baseDescription = record.description ?? record.name;
     const description = [baseDescription, skillPointer(owningSkills)].filter(Boolean).join(' ');

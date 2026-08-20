@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
-import * as McpServer from 'effect/unstable/ai/McpServer';
 import * as Command from 'effect/unstable/cli/Command';
 import * as Options from 'effect/unstable/cli/Flag';
 
@@ -16,7 +15,7 @@ import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import { CommandConfig } from '@dxos/cli-util';
 import { DXOS_VERSION } from '@dxos/client';
 import { log } from '@dxos/log';
-import { Gateway, Server } from '@dxos/mcp-server';
+import { Gateway, McpServer } from '@dxos/mcp-server';
 import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
 
 import { DiscoveryToolkit, discoveryHandlers } from './discovery-tools';
@@ -102,19 +101,19 @@ export const serve = Command.make(
 
     yield* Layer.launch(
       Layer.mergeAll(
-        Server.layer({ reservedToolNames: STATIC_TOOL_NAMES }).pipe(
+        McpServer.layer({ reservedToolNames: STATIC_TOOL_NAMES }).pipe(
           Layer.provide(Layer.succeed(Gateway.Service, gateway)),
         ),
         staticToolkits,
       ).pipe(
         Layer.provide(
           McpServer.layerStdio({
-            name: Server.identity.name,
+            name: McpServer.identity.name,
             version: DXOS_VERSION,
             protocols: [McpProtocol.v2025_06_18],
           }),
         ),
-        Layer.provide(Server.stdio),
+        Layer.provide(McpServer.stdio),
       ),
     );
   }),
