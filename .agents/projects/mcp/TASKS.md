@@ -130,6 +130,17 @@ changes what a model sees lives in the shared package or it is a bug.
         every call: without this, a CLI profile with no identity could not call `queryPlugins`.
         Three unit tests in `McpServer.test.ts`, and `serve.test` invokes `queryPlugins` over a live
         session with no spaces.
+  - [x] **`whoami` carries the space listing again** (review, wittjosiah) — dropping `querySpaces`
+        had left a regression against main: the first commit thinned `whoami.spaces` from full
+        descriptions to bare ids on the promise that `querySpaces` would carry name and member
+        count, so removing that operation took both off the CLI entirely. `describeSpaces` is
+        restored into `whoami`, which is also the right shape rather than a patch — the base's
+        `listSpaces` and `whoami` both returned the _same_ `describeSpaces()` call, so the second
+        tool only spent a surface slot on a value the first already had. One tool, not two, and
+        `identityDid` is kept. The set still comes from `host.spaceIds` (what dispatch actually
+        accepts) with the client supplying labels, so it is neither the pre-PR behaviour nor
+        `querySpaces`'s `client.spaces` scan.
+
   - [x] **`querySpaces` and the Space skill dropped from this pass** (review, wittjosiah) — the
         point of the port is an isomorphic surface, and this verb could not have one. The two hosts
         derive session spaces from different places by construction: the CLI computes them from the
