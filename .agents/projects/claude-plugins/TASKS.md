@@ -11,7 +11,9 @@ contract is largely done (projectCreate projects, tools-list membership); next i
 then absorb the deprecated toolkit skill and rename codeProject → project. 2026-08-21: #12692
 replaced per-operation tools with the generic `queryOperations`/`invokeOperation`/`loadSkill`
 surface (7 tools where there were 27) — the hook's `mcp` directive is rewritten for it, which
-unblocks the round-trip._
+unblocks the round-trip. 2026-08-21: the consolidation landed — one `project` skill in
+plugin-projects (toolkit skill absorbed, `codeProject` renamed, prose consolidated), full workspace
+build green. NEXT: the live round-trip, then the plugin stub + bundled `dx mcp serve`._
 
 ## Phase 1: Extract into a distributable plugin
 
@@ -197,18 +199,27 @@ toolkit is deleted; `Gateway`/`Server` became `McpRegistry`/`McpServer`).
 - [x] **Operation ownership** — resolved by #12616's design, without moving code: membership lives
       solely in the skill's `tools` list; `task*`/`milestone*`/`outline*` stay in `plugin-tasks`
       (`skill-keys.ts` deleted).
-- [ ] **Absorb `org.dxos.skill.project`** (assistant-toolkit) — #12616 marked it `@deprecated`
-      pointing at plugin-projects; finish it: move `artifact-add`/`artifact-list` under the
-      consolidated skill, delete the toolkit skill. This frees the `project` prompt name.
-- [ ] **Rename `…skill.codeProject` → `…skill.project`** (prompt `/project`) — ONLY after the
-      absorption lands: projection throws on prompt-name collisions, so ordering is load-bearing.
-      `codeProject` was a collision artifact, never the intended name.
+- [x] **Absorbed `org.dxos.skill.project`** (2026-08-21) — `artifactAdd`/`artifactList` moved into
+      `ProjectMcpOperation` (keys under `org.dxos.plugin.projects.operation.*`) with handlers in
+      plugin-projects; the toolkit skill is deleted. Consumers updated in the same change, no
+      shims: `Project`'s `SkillsAnnotation`, both routine templates + tests, plugin-assistant's
+      registrations, the CLI host, and two assistant-evals files (which needed a new
+      `plugin-projects` dependency).
+      **Consequence to watch:** the annotation is what binds skills into a chat opened on a Project
+      (`create-chat.ts`, `ChatCompanion.tsx`), so a Composer project chat now loads the full
+      workflow doc where it used to load ~15 lines of artifact-filing prose. If that reads as too
+      much context, restructure the instructions — do not re-split the skill.
+- [x] **Renamed `…skill.codeProject` → `…skill.project`** (2026-08-21) — prompt is now `/project`.
+      Files renamed `ProjectSkill.ts` / `project-skill.md`; public subpath is
+      `@dxos/plugin-projects/ProjectSkill`. Changeset added for the breaking export changes.
 
 ### One prose source
 
-- [ ] **`code-project-skill.md` absorbs what only the plugin knows** — the `history`/`spawn`/`help`
-      verbs, the never-a-chip rule, the project resolution order. It becomes the canonical
-      instructions that the MCP prompt and `skillLoad` already serve verbatim.
+- [x] **`project-skill.md` is the canonical doc** (2026-08-21) — gained the `spawn`/`help`/`history`
+      verbs, the never-a-chip discipline rule, the resume worktree guidance, three mistake rows and
+      an Artifacts section for the absorbed verbs. **`history` cannot work against the space store:**
+      `Project` records no PRs, so the doc says so and stops rather than guessing from git — a real
+      gap in the file→space migration, and the one verb the file backend still does better.
 - [ ] **Plugin `SKILL.md` → stub** — trigger frontmatter + `allowed-tools` +
       "call `loadSkill('project')`, follow it" (the tool was renamed from `skillLoad` in #12692). Optional: a build-time copy of the canonical
       markdown with a hash check (the `skills-lock.json` pattern) if offline readability matters.
