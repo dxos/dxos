@@ -1,6 +1,6 @@
 # plugin-search — Tasks
 
-_Resume: Milestones 1 and 1.5 COMPLETE. FTS + type composition (Milestone 3, first half) COMPLETE — the planner folds `and(text-search, type)` into a type-scoped `TextSelector`, the FTS SQL filters on `typeDXN`, and plugin-search scopes its query to user-visible types (`useSearchableTypeUris` + `TypeOptions.isUserType`, shared with the nav tree's Database section; collections stay searchable). Remaining in M3: in-memory text-search matcher, mailbox mixed text+structural adoption, agent-tool searchKind. Next: those, or Milestone 2 (cross-space fan-out + RRF merge)._
+_Resume: Milestones 1 and 1.5 COMPLETE. FTS + type composition (Milestone 3, first half) COMPLETE — the planner folds `and(text-search, type)` into a type-scoped `TextSelector`, the FTS SQL filters on `typeDXN`, plugin-search scopes its query to user-visible types (`useSearchableTypeUris` + `TypeOptions.isUserType`, shared with the nav tree's Database section; collections stay searchable), and the mailbox composes free text with the message type and tag-member ids so search stays scoped to a tag view. Remaining in M3: in-memory text-search matcher, predicate (`from:`) search, agent-tool searchKind. Next: those, or Milestone 2 (cross-space fan-out + RRF merge)._
 
 Work-stream: unify Composer search across lexical (FTS5), semantic (vector),
 structured/RDF, and agent planes; tiered client/EDGE vector index synced via feeds.
@@ -92,8 +92,10 @@ Client fan-out across loaded spaces + RRF merge; scope toggle. See ROADMAP M2.
       FTS SQL filters on `typeDXN` (shared `buildTypeDxnCondition`); plugin-search scopes
       its query to user-visible types (`TypeOptions.isUserType`, shared with the nav
       Database section; collections included).
-- [ ] Adopt the composition in the mailbox (mixed text+structural — see
-      `mailbox-search.ts` `buildMailboxSelection`).
+- [x] **Adopt the composition in the mailbox** — `buildMailboxSelection` composes free text
+      with the message type and rewrites root tag terms to `TagIndex` id selections, so a
+      text search stays scoped to the active tag view. Structural terms other than tags are
+      still dropped from a mixed query (predicate search — see M1.5 follow-ups).
 - [ ] Add `searchKind: 'full-text' | 'vector' | 'hybrid'` to the `database.query`
       agent tool.
 

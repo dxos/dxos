@@ -5,6 +5,7 @@
 import { Filter, Query, type QueryAST } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
+import { isNonNullable } from '@dxos/util';
 
 /** Whether the filter AST contains a text-search node anywhere. */
 const findTextSearch = (ast: QueryAST.Filter): QueryAST.FilterTextSearch | undefined => {
@@ -21,24 +22,65 @@ const findTextSearch = (ast: QueryAST.Filter): QueryAST.FilterTextSearch | undef
   }
 };
 
+/** Tag uris AND-composed at the filter's root. Tags under `or`/`not` cannot be soundly rewritten to id selections. */
+const collectRootTagUris = (ast: QueryAST.Filter): string[] => {
+  switch (ast.type) {
+    case 'tag':
+      return [ast.tag];
+    case 'and':
+      return ast.filters.flatMap(collectRootTagUris);
+    default:
+      return [];
+  }
+};
+
+/** The root-level tag uris of a parsed filter — the tags {@link buildMailboxSelection} can resolve to member ids. */
+export const getFilterTagUris = (filter: Filter.Any | undefined): string[] =>
+  filter ? collectRootTagUris(filter.ast) : [];
+
+export type MailboxSelectionOptions = {
+  /**
+   * Member ids for a tag uri, from the mailbox's `TagIndex`. Feed messages carry no `meta.tags` of
+   * their own — membership lives in the `TagIndex` — so a text search can only stay scoped to a tag
+   * view by rewriting its tag terms to id selections. Returning undefined (or omitting the
+   * resolver) drops that tag term from the text selection, as before.
+   */
+  resolveTagIds?: (tagUri: string) => readonly EntityId[] | undefined;
+};
+
 /**
  * Build the message-list view filter from the mailbox search box: messages matching this filter are
  * what qualify a thread for the list (see {@link buildThreadSemiJoin}).
  *
- * Free-text search routes to a lone full-text select over the message feed — the message
- * type is implied by the feed scope. Structural-only filters (`from:`, `#tag`) compose with
- * the message type as normal. Mixed text + structural still drops the structural part here:
- * the executor now supports AND-ing a text-search with type/props filters, but adopting the
- * composition in the mailbox is tracked for plugin-search Milestone 3.
+ * Free-text search routes to the FTS index, composed with the message type — and, in a tag view,
+ * with the tag's members: root tag terms are rewritten to `TagIndex` id selections (intersected
+ * when several) via {@link MailboxSelectionOptions.resolveTagIds}, so typing a term inside a tag
+ * view searches within it. Structural terms other than tags are still dropped from a mixed query
+ * (predicate search is tracked in plugin-search TASKS.md). Structural-only filters (`from:`,
+ * `#tag`) compose with the message type as before.
  */
-export const buildMailboxSelection = (filterText: string, filter: Filter.Any | undefined): Filter.Any => {
+export const buildMailboxSelection = (
+  filterText: string,
+  filter: Filter.Any | undefined,
+  options?: MailboxSelectionOptions,
+): Filter.Any => {
   const base = Filter.type(Message.Message);
   if (filterText.trim().length === 0 || !filter) {
     return base;
   }
   const textSearch = findTextSearch(filter.ast);
   if (textSearch) {
-    return Filter.text(textSearch.text, { type: 'full-text' });
+    const text = Filter.text(textSearch.text, { type: 'full-text' });
+    const idSets = collectRootTagUris(filter.ast)
+      .map((tagUri) => options?.resolveTagIds?.(tagUri))
+      .filter(isNonNullable);
+    if (idSets.length === 0) {
+      return Filter.and(base, text);
+    }
+    const [first, ...rest] = idSets;
+    const memberIds = rest.reduce((acc, set) => acc.filter((id) => set.includes(id)), first);
+    // `Filter.id()` of an empty intersection is `Filter.nothing()`: a tag with no members matches nothing.
+    return Filter.and(base, Filter.id(...memberIds), text);
   }
   return Filter.and(base, filter);
 };
