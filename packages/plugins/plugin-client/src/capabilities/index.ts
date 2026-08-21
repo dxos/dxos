@@ -21,9 +21,9 @@ export const AccountCache = Capability.lazyModule(
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   activatesOn: ClientEvents.Initialized,
 });
-// Node-specific implementation spliced by `dx-plugin gen` (see overrides.node.ts): a node host has
-// the OAuth callback server and filesystem the browser command set omits (`account`, `profile`).
-export const Commands = AppCapability.commands(() => import('./commands'));
+// `#commands` resolves per condition: a node host has the OAuth callback server and filesystem the
+// browser command set omits (`account`, `profile`).
+export const Commands = AppCapability.commands(() => import('#commands'));
 export const HubHttpClient = Capability.lazyModule(
   'HubHttpClient',
   {

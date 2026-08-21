@@ -15,13 +15,7 @@ export const DevPluginLoader = Capability.lazyModule(
   { requires: [Capabilities.PluginManager, Capabilities.AtomRegistry, RegistryCapabilities.Settings], provides: [] },
   () => import('./dev-plugin-loader'),
 );
-// Empty in the browser: `registry publish` reaches the vite plugin's Node-only build tooling, so
-// only the node barrel loads the real command graph, via overrides.node.ts. Also included in
-// browser: `AppCapability.commands`'s own doc comment says the command graph is demand-gated on
-// `ActivationEvents.CommandsRequested`, fired both by the `dx` CLI at boot and by a browser host
-// when someone opens the devtools terminal — so activating this module in browser too (with its
-// empty list, since there are no browser-safe registry commands) is consistent with that intent.
-export const Commands = AppCapability.commands([]);
+export const Commands = AppCapability.commands(() => import('#commands'));
 // `workerd` added (this plugin previously had no workerd-active modules at all): with the
 // three-entry split gone, the canonical `plugin.tsx` always imports `#capabilities`, so if no
 // module here carries a `workerd` annotation the generator never emits `gen/workerd.ts` and a

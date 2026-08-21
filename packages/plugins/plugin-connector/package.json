@@ -24,6 +24,15 @@
       "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
+    "#commands": {
+      "source": {
+        "node": "./src/capabilities/commands.ts",
+        "default": "./src/capabilities/commands.browser.ts"
+      },
+      "types": "./dist/types/src/capabilities/commands.d.ts",
+      "node": "./dist/lib/commands.mjs",
+      "default": "./dist/lib/commands.browser.mjs"
+    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",

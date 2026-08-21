@@ -34,6 +34,17 @@
       "types": "./dist/types/src/meta.d.ts",
       "default": "./dist/lib/meta.mjs"
     },
+    "#operation-handler": {
+      "source": {
+        "workerd": "./src/capabilities/operation-handler.headless.ts",
+        "node": "./src/capabilities/operation-handler.headless.ts",
+        "default": "./src/capabilities/operation-handler.ts"
+      },
+      "types": "./dist/types/src/capabilities/operation-handler.d.ts",
+      "workerd": "./dist/lib/operation-handler.headless.mjs",
+      "node": "./dist/lib/operation-handler.headless.mjs",
+      "default": "./dist/lib/operation-handler.mjs"
+    },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",

@@ -29,11 +29,7 @@ export const BuiltinConnectors = Capability.lazyModule(
 );
 // Empty in the browser: `connector oauth` needs a Bun callback server, so only the node barrel
 // loads the real command graph, via overrides.node.ts. Also included in browser: `AppCapability
-// .commands`'s own doc comment says the command graph is demand-gated on
-// `ActivationEvents.CommandsRequested`, fired both by the `dx` CLI at boot and by a browser host
-// when someone opens the devtools terminal — so activating this module in browser too (with its
-// empty list, since there are no browser-safe connector commands) is consistent with that intent.
-export const Commands = AppCapability.commands([]);
+export const Commands = AppCapability.commands(() => import('#commands'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
   environments: ['node'],
 });
