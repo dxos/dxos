@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
+import { type Segmentation } from '@dxos/nlp';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
@@ -16,18 +17,23 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { type VocabularyOptions, vocabulary } from '#extensions';
+import { type SegmentSide, type SegmentsOptions, segments, setSegments, setSelected } from '#extensions';
 
 export type ReaderPaneProps = ThemedClassName<
-  Pick<VocabularyOptions, 'lookup' | 'locale' | 'render' | 'translate' | 'highlight'> & {
+  Pick<SegmentsOptions, 'render' | 'onSelect' | 'onActivate'> & {
     content: string;
     /** Render markdown decorations; pass `false` to read the source with its markup intact. */
     markdown?: boolean;
+    /** Which text this pane holds; decides which of a segment's two ranges it decorates. */
+    side?: SegmentSide;
+    analysis?: Segmentation;
+    /** Externally-driven selection — how the other pane's selection is mirrored here. */
+    selected?: string;
   }
 >;
 
 /**
- * One read-only pane of the reader companion: the source text with vocabulary revealed.
+ * One read-only pane of the reader companion: the source text with its analysis revealed.
  *
  * Read-only by construction — the companion never writes to the document it is reading, so the
  * source object stays owned by whichever plugin (markdown, inbox, …) actually renders it.
@@ -35,11 +41,12 @@ export type ReaderPaneProps = ThemedClassName<
 export const ReaderPane = ({
   content,
   markdown = true,
-  lookup,
-  locale,
+  side = 'source',
+  analysis,
+  selected,
   render,
-  translate,
-  highlight = true,
+  onSelect,
+  onActivate,
   classNames,
 }: ReaderPaneProps) => {
   const { themeMode } = useThemeContext();
@@ -52,12 +59,34 @@ export const ReaderPane = ({
         // The language bundle only highlights; `decorateMarkdown` is what hides the markup, so the
         // reader needs both to show prose rather than source.
         markdown && [createMarkdownExtensions(), decorateMarkdown()],
-        vocabulary({ lookup, locale, render, translate, highlight }),
+        segments({ side, render, onSelect, onActivate }),
       ].filter(isTruthy),
-    [themeMode, markdown, lookup, locale, render, translate, highlight],
+    [themeMode, markdown, side, render, onSelect, onActivate],
   );
 
-  const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
+  const { parentRef, view } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
+
+  // Analysis arrives after the editor mounts (a model round-trip, or a cache read), so it is
+  // dispatched rather than passed as an initial extension.
+  useEffect(() => {
+    if (!view || !analysis) {
+      return;
+    }
+
+    view.dispatch({
+      effects: setSegments.of({
+        segments: analysis.segments,
+        hash: (side === 'source' ? analysis.sourceHash : analysis.targetHash) ?? '',
+      }),
+    });
+  }, [view, analysis, side]);
+
+  // Mirrors the other pane: an external selection is applied without re-running local tracking.
+  useEffect(() => {
+    if (view && selected !== undefined) {
+      view.dispatch({ effects: setSelected.of(selected) });
+    }
+  }, [view, selected]);
 
   return <div className={mx('flex min-h-0 overflow-hidden', classNames)} ref={parentRef} />;
 };

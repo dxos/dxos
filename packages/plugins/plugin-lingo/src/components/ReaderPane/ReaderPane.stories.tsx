@@ -3,12 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type VocabularyLookup, normalizeToken } from '#extensions';
+import { type VocabularyEntry, type VocabularyLookup, deckSegments, normalizeToken } from '#extensions';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
@@ -16,11 +16,13 @@ import { createTooltipRenderer } from '../../containers/ReaderArticle/renderTool
 import { TEST_PASSAGE, makeTestDeck } from '../../testing';
 import { ReaderPane } from './ReaderPane';
 
-const ReaderPaneStory = ({ translate }: { translate?: boolean }) => {
+const ReaderPaneStory = () => {
   const { t } = useTranslation(pluginMeta.profile.key);
+  const [selected, setSelected] = useState<string>();
+
   const lookup = useMemo<VocabularyLookup>(() => {
     const { words } = makeTestDeck();
-    const index = new Map(
+    const index = new Map<string, VocabularyEntry>(
       words.map((word) => [
         normalizeToken(word.term),
         {
@@ -35,17 +37,20 @@ const ReaderPaneStory = ({ translate }: { translate?: boolean }) => {
     return (token) => index.get(token);
   }, []);
 
-  // The hover card is only registered when `render` is supplied, so the story passes the same
-  // renderer the container uses; without it the tooltip path is never exercised.
-  const render = useMemo(() => createTooltipRenderer({ t, onAdd: ({ token }) => console.log('add', token) }), [t]);
+  // The deck pass is deterministic, so this story exercises segments without a model.
+  const analysis = useMemo(() => deckSegments(TEST_PASSAGE, lookup, 'ja'), [lookup]);
+
+  // The popover is only registered when `render` is supplied; without it that path is never
+  // exercised.
+  const render = useMemo(() => createTooltipRenderer({ t, onAdd: ({ text }) => console.log('add', text) }), [t]);
 
   return (
     <ReaderPane
       content={TEST_PASSAGE}
-      lookup={lookup}
-      locale='ja'
+      analysis={analysis}
+      selected={selected}
       render={render}
-      translate={translate}
+      onSelect={(segment) => setSelected(segment?.id)}
       classNames='h-full'
     />
   );
@@ -53,14 +58,13 @@ const ReaderPaneStory = ({ translate }: { translate?: boolean }) => {
 
 const meta = {
   title: 'plugins/plugin-lingo/components/ReaderPane',
-  render: (args: { translate?: boolean }) => <ReaderPaneStory {...args} />,
+  render: () => <ReaderPaneStory />,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: { layout: 'fullscreen', translations },
-} satisfies Meta<{ translate?: boolean }>;
+} satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Original: Story = { args: { translate: false } };
-export const Translated: Story = { args: { translate: true } };
+export const Default: Story = {};

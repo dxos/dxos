@@ -13,9 +13,16 @@ import { Panel, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { ReaderPane } from '#components';
-import { type VocabularyEntry, type VocabularyLookup, normalizeToken } from '#extensions';
+import {
+  type SegmentTooltipProps,
+  type VocabularyEntry,
+  type VocabularyLookup,
+  deckSegments,
+  mergeSegmentations,
+  normalizeToken,
+} from '#extensions';
 import { meta } from '#meta';
-import { LingoCapabilities, LingoOperation, type LingoSettings, Vocabulary, Word } from '#types';
+import { Analysis, LingoCapabilities, LingoOperation, type LingoSettings, Vocabulary, Word } from '#types';
 
 import { createTooltipRenderer } from './renderTooltip';
 import { useSourceText } from './useSourceText';
@@ -74,7 +81,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   }, [words]);
 
   const handleAddWord = useCallback(
-    ({ token, context }: { token: string; context: string }) => {
+    ({ text: token, context }: SegmentTooltipProps) => {
       if (!deck || !invokePromise) {
         return;
       }
@@ -128,6 +135,50 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
     };
   }, [mode, text, deck, db, invokePromise, passage?.source]);
 
+  // Only meaningful while it still describes the current text.
+  const passageText = passage && passage.source === text ? passage.text : undefined;
+
+  // The cached analysis for this subject, if one has been computed. Reading it from the database
+  // rather than holding the operation's result keeps a re-analysis in another pane visible here.
+  const analyses = useQuery(db, Filter.type(Analysis.Analysis));
+  const subjectUri = subject && Obj.getURI(subject);
+  const stored = analyses.find((candidate) => candidate.subject.uri === subjectUri);
+  const analysis = useMemo(() => {
+    // Deck vocabulary is deterministic and needs no model, so it decorates before (and without) an
+    // analysis; analyzed vocab wins where the two overlap.
+    const locale = deck?.language.target?.code;
+    const deckOnly = text ? deckSegments(text, lookup, locale) : undefined;
+    if (!text || !stored || Analysis.isStale(stored, text)) {
+      return deckOnly;
+    }
+
+    return mergeSegmentations(
+      {
+        sourceHash: stored.sourceHash,
+        targetHash: stored.targetHash,
+        segments: [...stored.segments],
+      },
+      deckOnly!,
+    );
+  }, [text, stored, lookup, deck]);
+
+  // The structural selection, shared by both panes: selecting a clause in one addresses the same
+  // clause in the other, which is the whole point of the paired ranges.
+  const [selected, setSelected] = useState<string>();
+  const handleSelect = useCallback((segment?: { id: string }) => setSelected(segment?.id), []);
+
+  const handleAnalyze = useCallback(() => {
+    if (!subject || !text || !deck || !invokePromise) {
+      return;
+    }
+
+    void invokePromise(
+      LingoOperation.AnalyzeText,
+      { subject: Ref.make(subject), text, language: deck.language, translation: passageText, refresh: true },
+      { spaceId: db?.spaceId, notify: { error: ['analyze-error.message', { ns: meta.profile.key }] } },
+    );
+  }, [db, subject, text, deck, invokePromise, passageText]);
+
   const handleExtract = useCallback(() => {
     if (!deck || !textRef || !invokePromise) {
       return;
@@ -180,6 +231,17 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
         )
         .separator()
         .action(
+          'analyze',
+          {
+            label: ['analyze.label', { ns: meta.profile.key }],
+            icon: 'ph--brackets-angle--regular',
+            disposition: 'toolbar',
+            disabled: !deck || !text,
+            testId: 'lingo.reader.analyze',
+          },
+          handleAnalyze,
+        )
+        .action(
           'extract',
           {
             label: ['extract.label', { ns: meta.profile.key }],
@@ -191,15 +253,15 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
           handleExtract,
         )
         .build(),
-    [mode, deck, decks, textRef, handleExtract, t],
+    [mode, deck, decks, text, textRef, handleAnalyze, handleExtract, t],
   );
 
   const paneProps = {
     content: text ?? '',
-    lookup,
-    locale: deck?.language.target?.code,
+    analysis: settings.highlightKnownWords ? analysis : undefined,
+    selected,
     render,
-    highlight: settings.highlightKnownWords,
+    onSelect: handleSelect,
   };
 
   return (
@@ -218,15 +280,14 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
             // comparable. The second is the whole article translated, not the source with known
             // terms swapped — until it arrives, the term swap stands in.
             <div className='grid grid-cols-2 gap-2 min-h-0'>
-              <ReaderPane {...paneProps} />
-              {passage?.source === text ? (
-                <ReaderPane {...paneProps} content={passage.text} highlight={false} render={undefined} />
-              ) : (
-                <ReaderPane {...paneProps} translate />
-              )}
+              <ReaderPane {...paneProps} side='source' />
+              <ReaderPane {...paneProps} side='target' content={passageText ?? text ?? ''} />
             </div>
           ) : (
-            <ReaderPane {...paneProps} translate={mode === 'translation'} />
+            <ReaderPane
+              {...paneProps}
+              {...(mode === 'translation' && { side: 'target', content: passageText ?? text ?? '' })}
+            />
           )}
         </Panel.Content>
       </Panel.Root>
