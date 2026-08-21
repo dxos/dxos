@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: sdk-metrics
+    status: active
+    user: dmaretskyi
+    host: Dmytros-MacBook-Pro-M4
+    created: 2026-08-21
+    summary: 'Instrument the SDK with a fixed set of OTel metrics (spaces, EDGE ws reconnects, documents loaded, sync-stuck detection, memory) exported through the existing observability OTLP path to SigNoz, plus the dashboard and alerts.'
+    tasks: .agents/projects/sdk-metrics/TASKS.md
+    design: .agents/projects/sdk-metrics/DESIGN.md
+    prs: []
+    resume: 'Spec written, no code yet. Key finding: the SDK -> OTel -> OTLP -> SigNoz pipeline ALREADY EXISTS and is enabled for Composer (metrics: true at composer-app/src/util/config.ts:90) — RemoteMetrics in @dxos/tracing is the collector-free SDK facade, OtelMetrics registers itself as its processor, and client-observability.ts already produces network/runtime/per-space gauges. So this is not a pipeline build; it is 5 exporter fixes + 11 new instruments + a dashboard. Phase 1 (blocking) fixes: (P1) exporter has no temporalityPreference so counters export cumulative and every browser reload reads as a counter reset; (P2) session.id is stamped as a metrics RESOURCE attribute so every page reload mints a permanent new ClickHouse fingerprint — SigNoz does no write-time sampling, so cardinality is the only cost lever; (P3) createGauge/createCounter called on every record; (P4) MetricsMethods is push-only, which is why providers poll on a 10-min timer against a 60s export interval producing mostly-gap series — add observe() -> createObservableGauge and every new gauge uses it; (P5) MetricData.unit is discarded and default histogram buckets are ms-shaped, capping at 10000. New metrics per DESIGN.md: spaces.count/ready.count; documents.count{local|remote} + unsynced.count from getSyncSummary (sdk/client/src/echo/util.ts:23); edge ws reconnect.count{bounded reason enum}/connected/connect.duration via trace.metrics from edge-client.ts:355 (edge-client must NOT depend on @dxos/observability); sync episode.duration histogram + stalled.duration observable gauge — BOTH are needed because an episode that never closes never records a histogram sample, so the histogram alone cannot see a permanently stuck client; memory phase migrates the existing heap gauges to observe() with By units (keeping names so history is not orphaned) and adds memory.bytes{scope} via measureUserAgentSpecificMemory to cover the shared/dedicated workers that performance.memory cannot see. Two cross-project couplings: the memory phase overlaps jdw memory-usage project (300-400MB resting target, scripts/memory/soak.mjs) — coordinate names; and the sync provider must NOT add a fresh 1Hz poll because memory-usage PR #12561 (open) adds no-change backoff to space sync-state polling to kill exactly that idle churn. BLOCKED on Phase 5 only: the signoz MCP server is configured but unauthenticated, so nothing is verified against a live instance and the dashboard/cardinality check cannot run. NEXT: implement Phase 1 (packages/common/tracing + packages/sdk/observability).'
   - name: echo-storage-optimization
     status: active
     user: dmaretskyi
