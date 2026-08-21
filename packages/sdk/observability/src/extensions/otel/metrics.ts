@@ -2,75 +2,161 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Meter } from '@opentelemetry/api';
-import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
-import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
+import {
+  type Attributes,
+  type Counter,
+  type Gauge,
+  type Histogram,
+  type MetricOptions,
+  type ObservableGauge,
+  type ObservableResult,
+} from '@opentelemetry/api';
+import { AggregationTemporalityPreference, OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
+import {
+  AggregationType,
+  InstrumentType,
+  MeterProvider,
+  PeriodicExportingMetricReader,
+  type ViewOptions,
+} from '@opentelemetry/sdk-metrics';
 
+import { type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type MetricData, TRACE_PROCESSOR } from '@dxos/tracing';
+import { type MetricData, type MetricObserver, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel';
 
 const EXPORT_INTERVAL = 60 * 1000;
 
+const METER_NAME = 'dxos-observability';
+
+/**
+ * Explicit bucket boundaries for the SDK's duration histograms, in seconds.
+ * The OTel defaults are millisecond-shaped and top out at 10,000, so every duration
+ * past ten seconds would land in the overflow bucket.
+ *
+ * A histogram costs one series per boundary (plus `_count`/`_sum`) in the metrics
+ * backend, so these are deliberately short and per-instrument: a single catch-all view
+ * would have to span both ranges and pay for buckets neither instrument uses. Views
+ * must not overlap — two matching views produce two duplicate metric streams.
+ */
+const HISTOGRAM_VIEWS: ViewOptions[] = [
+  {
+    instrumentType: InstrumentType.HISTOGRAM,
+    instrumentName: 'dxos.edge.ws.connect.duration',
+    aggregation: {
+      type: AggregationType.EXPLICIT_BUCKET_HISTOGRAM,
+      options: { boundaries: [0.1, 0.25, 0.5, 1, 2, 5, 10, 30, 60] },
+    },
+  },
+  {
+    instrumentType: InstrumentType.HISTOGRAM,
+    instrumentName: 'dxos.echo.sync.episode.duration',
+    aggregation: {
+      type: AggregationType.EXPLICIT_BUCKET_HISTOGRAM,
+      options: { boundaries: [1, 5, 15, 30, 60, 120, 300, 600, 1800, 3600] },
+    },
+  },
+];
+
 export class OtelMetrics {
   private _meterProvider: MeterProvider;
-  private _meter: Meter;
+  // Instruments are cached rather than created per record: the meter dedupes by descriptor,
+  // so re-creating one on every sample is pure allocation on a hot path. One map per kind
+  // keeps the lookup exactly typed — a shared map would need a cast on every read.
+  readonly #counters = new Map<string, Counter>();
+  readonly #gauges = new Map<string, Gauge>();
+  readonly #histograms = new Map<string, Histogram>();
+  readonly #observableGauges = new Map<string, ObservableGauge>();
 
   constructor(private readonly options: OtelOptions) {
     // TODO: improve error handling/logging
     //  https://github.com/open-telemetry/opentelemetry-js/issues/4823
     setDiagLogger(options.consoleDiagLogLevel);
 
-    const grafanaMetricReader = new PeriodicExportingMetricReader({
+    const metricReader = new PeriodicExportingMetricReader({
       exporter: new OTLPMetricExporter({
         url: resolveOtlpUrl(this.options.endpoint + '/v1/metrics'),
         headers: this.options.headers,
+        // Clients are short-lived and reload constantly. A cumulative counter restarting at 0
+        // on every reload reads as a counter reset downstream and corrupts every rate panel.
+        temporalityPreference: AggregationTemporalityPreference.DELTA,
       }),
       exportIntervalMillis: EXPORT_INTERVAL,
     });
 
     this._meterProvider = new MeterProvider({
       resource: this.options.resource,
-      readers: [grafanaMetricReader],
+      readers: [metricReader],
+      views: HISTOGRAM_VIEWS,
     });
-    this._meter = this._meterProvider.getMeter('dxos-observability');
 
     const metrics = {
       // TODO: update metrics names and remove prefix?
       increment: (name: string, value?: number, data?: MetricData) => {
-        this.increment(name, value, convertTags(data));
+        this.increment(name, value, convertTags(data), data);
       },
       distribution: (name: string, value: number, data?: MetricData) => {
-        this.distribution(name, value, convertTags(data));
+        this.distribution(name, value, convertTags(data), data);
       },
-      set: (name: string, value: number | string, data?: MetricData) => {
+      set: (_name: string, _value: number | string, _data?: MetricData) => {
         // Not implemented, not part of Otel spec.
       },
       gauge: (name: string, value: number, data?: MetricData) => {
-        this.gauge(name, value, convertTags(data));
+        this.gauge(name, value, convertTags(data), data);
+      },
+      observe: (name: string, callback: MetricObserver, data?: MetricData) => {
+        return this.observe(name, callback, convertTags(data), data);
       },
     };
 
     TRACE_PROCESSOR.remoteMetrics.registerProcessor(metrics);
   }
 
-  gauge(name: string, value: number, tags?: any): void {
-    const gauge = this._meter.createGauge(name);
+  gauge(name: string, value: number, tags?: Attributes, data?: MetricData): void {
+    const gauge = this.#cached(this.#gauges, name, data, (options) => this.#meter.createGauge(name, options));
     log('otel gauge', { name, value, tags: { ...this.options.getTags(), ...tags } });
     gauge.record(value, { ...this.options.getTags(), ...tags });
   }
 
-  increment(name: string, value?: number, tags?: any): void {
-    const counter = this._meter.createCounter(name);
+  increment(name: string, value?: number, tags?: Attributes, data?: MetricData): void {
+    const counter = this.#cached(this.#counters, name, data, (options) => this.#meter.createCounter(name, options));
     log('otel counter', { name, value, tags: { ...this.options.getTags(), ...tags } });
     counter.add(value ?? 1, { ...this.options.getTags(), ...tags });
   }
 
-  distribution(name: string, value: number, tags?: any): void {
-    const distribution = this._meter.createHistogram(name);
+  distribution(name: string, value: number, tags?: Attributes, data?: MetricData): void {
+    const histogram = this.#cached(this.#histograms, name, data, (options) =>
+      this.#meter.createHistogram(name, options),
+    );
     log('otel distribution', { name, value, tags: { ...this.options.getTags(), ...tags } });
-    distribution.record(value, { ...this.options.getTags(), ...tags });
+    histogram.record(value, { ...this.options.getTags(), ...tags });
+  }
+
+  /**
+   * Registers a callback read once per export interval.
+   * Tags are resolved inside the callback because identity tags (`did`, `deviceKey`) are
+   * set asynchronously after startup — capturing them at registration time would pin
+   * every observed metric to the empty tag set.
+   */
+  observe(name: string, callback: MetricObserver, tags?: Attributes, data?: MetricData): CleanupFn {
+    const gauge = this.#cached(this.#observableGauges, name, data, (options) =>
+      this.#meter.createObservableGauge(name, options),
+    );
+
+    const observe = (result: ObservableResult) => {
+      const value = callback();
+      if (value === undefined || !Number.isFinite(value)) {
+        return;
+      }
+
+      const attributes = { ...this.options.getTags(), ...tags };
+      log('otel observable gauge', { name, value, tags: attributes });
+      result.observe(value, attributes);
+    };
+
+    gauge.addCallback(observe);
+    return () => gauge.removeCallback(observe);
   }
 
   flush(): Promise<void> {
@@ -78,17 +164,54 @@ export class OtelMetrics {
   }
 
   close(): Promise<void> {
+    this.#counters.clear();
+    this.#gauges.clear();
+    this.#histograms.clear();
+    this.#observableGauges.clear();
     return this._meterProvider.shutdown();
+  }
+
+  get #meter() {
+    return this._meterProvider.getMeter(METER_NAME);
+  }
+
+  /**
+   * Returns the cached instrument, creating it on first use.
+   * The unit/description of the first caller wins, matching OTel's own
+   * duplicate-instrument semantics.
+   */
+  #cached<T>(
+    cache: Map<string, T>,
+    name: string,
+    data: MetricData | undefined,
+    create: (options: MetricOptions) => T,
+  ): T {
+    const existing = cache.get(name);
+    if (existing) {
+      return existing;
+    }
+
+    const instrument = create({ unit: data?.unit, description: data?.description });
+    cache.set(name, instrument);
+    return instrument;
   }
 }
 
-const convertTags = (data?: MetricData) => {
-  if (data && data.tags) {
-    return Object.entries(data.tags).reduce<{ [key: string]: any }>((obj, [key, value]) => {
-      obj[key] = value;
-      return obj;
-    }, {});
-  } else {
+/**
+ * Projects {@link MetricData} tags onto OTel attributes.
+ * Nullish values are dropped rather than forwarded: they are not valid attribute values,
+ * so the SDK would warn and discard them anyway.
+ */
+const convertTags = (data?: MetricData): Attributes => {
+  const tags = data?.tags;
+  if (!tags) {
     return {};
   }
+
+  return Object.entries(tags).reduce<Attributes>((attributes, [key, value]) => {
+    if (value !== null && value !== undefined) {
+      attributes[key] = value;
+    }
+    return attributes;
+  }, {});
 };

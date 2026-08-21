@@ -3,38 +3,45 @@
 Metric specs, units, attributes, and the cardinality rationale live in
 [DESIGN.md](./DESIGN.md). Task headlines here reference it rather than repeating it.
 
-## Phase 1: Exporter prerequisites
+## Phase 1: Exporter prerequisites — DONE
 
 Defects in the existing OTLP exporter config that would corrupt or bloat anything
 added later. All in `packages/sdk/observability` + `packages/common/tracing`; no
 new instruments yet.
 
+Verified: `tracing:test` 15/15, `observability:test` 63 passed + 1 skipped, both
+packages lint clean, and `composer-app:build` green downstream (285 tasks).
+
 ### Tasks
 
-- [ ] **Switch counters/histograms to delta temporality** (P1)
-  - `OTLPMetricExporter` in `packages/sdk/observability/src/extensions/otel/metrics.ts`
-    takes no `temporalityPreference`, so it exports cumulative; browser reloads then
-    read as counter resets in SigNoz.
-- [ ] **Drop `session.id` from the metrics resource** (P2)
-  - `extension.ts` stamps it as a resource attribute, so it lands on metrics too —
-    one new ClickHouse fingerprint per page reload, forever.
-  - Build a **separate resource for `MeterProvider`** — `extension.ts` hands one
-    resource object to logs, metrics, and traces alike. A `View` cannot do this:
-    `attributeKeys` filters datapoint attributes, not provider-level resource
-    attributes.
-  - Add an exported-payload test: `session.id` absent from metrics, present on
-    traces and logs.
-- [ ] **Cache instruments in `OtelMetrics`** (P3)
-  - `createGauge`/`createCounter` are currently called on every single record.
-- [ ] **Add `observe()` to `RemoteMetrics`** (P4)
-  - `packages/common/tracing/src/remote/metrics.ts`: `observe(name, () => value, data): CleanupFn`,
-    mapped to `createObservableGauge` in `OtelMetrics`.
-  - Unblocks every gauge in Phases 2-4; also fixes the 10-min-poll vs 60s-export
-    sparsity in the existing providers.
-  - Unit test the fan-out + cleanup in `packages/common/tracing`.
-- [ ] **Pass `unit`/`description` through, register histogram `View`s** (P5)
-  - `MetricData.unit` is currently discarded. Default OTel bucket boundaries are
-    ms-shaped and cap at 10,000 — wrong for the seconds-scale durations below.
+- [x] **Switch counters/histograms to delta temporality** (P1) — `OTLPMetricExporter`
+      now takes `temporalityPreference: AggregationTemporalityPreference.DELTA`.
+- [x] **Drop `session.id` from the metrics resource** (P2) — extracted
+      `createResources()` in `extension.ts`, which builds the logs/traces resource
+      (with `session.id`) and a separate metrics resource (without). `OtelMetrics`
+      gets the latter. Covered by `extension.test.ts`.
+  - Confirmed a `View` could not have done this: `ViewOptions.attributesProcessors`
+    operates on datapoint attributes only.
+- [x] **Cache instruments in `OtelMetrics`** (P3) — one `Map` per instrument kind, so
+      the lookup stays exactly typed without a cast.
+- [x] **Add `observe()` to `RemoteMetrics`** (P4) — `observe(name, callback, data): CleanupFn`
+      in `packages/common/tracing/src/remote/metrics.ts`, mapped to
+      `createObservableGauge`. Threaded through `Metrics`, the `Observability` facade,
+      and the OTel `ExtensionApi`.
+  - Observations registered before a processor attaches are **replayed** on
+    `registerProcessor` — SDK code registers gauges at startup, long before the
+    collector exists, so without the replay they would never be read.
+  - Tags resolve inside the collection callback, since `did`/`deviceKey` arrive
+    asynchronously via `setTags`.
+  - 6 unit tests in `remote/metrics.test.ts` (fan-out, replay, double-register,
+    cleanup across late processors, no-processor no-op).
+- [x] **Pass `unit`/`description` through, register histogram `View`s** (P5) — added
+      `description` to `MetricData` and a `MetricMeta` param on the extension API;
+      instruments are created with both. Two non-overlapping explicit-bucket views
+      registered for the Phase 3/4 histograms (inert until those instruments exist —
+      two matching views would produce duplicate streams, so there is no catch-all).
+  - Also tightened `tags?: any` to `Attributes` and made `convertTags` drop nullish
+    values, which are not valid OTel attribute values.
 
 ## Phase 2: Spaces, documents, memory
 

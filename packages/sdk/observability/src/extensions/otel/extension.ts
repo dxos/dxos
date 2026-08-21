@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
+import { type Resource, defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
@@ -109,15 +109,15 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     tags.set('ctx.tag', clientTag);
   }
 
-  const resource = defaultResource().merge(
-    resourceFromAttributes({
+  const { resource, metricsResource } = createResources(
+    {
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: serviceVersion,
-      'session.id': crypto.randomUUID(),
       'deployment.environment': environment,
       'dxos.process.type': detectProcessType(),
       ...(clientTag ? { 'ctx.tag': clientTag } : {}),
-    }),
+    },
+    crypto.randomUUID(),
   );
 
   const logs = logsEnabled
@@ -134,7 +134,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     ? new OtelMetrics({
         endpoint: resolvedEndpoint,
         headers: resolvedHeaders,
-        resource,
+        resource: metricsResource,
         getTags: () => Object.fromEntries(tags),
       })
     : undefined;
@@ -212,9 +212,10 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         ? ({
             kind: 'metrics',
             isAvailable: () => Effect.succeed(true),
-            gauge: (name, value, tags) => metrics.gauge(name, value, tags),
-            increment: (name, value, tags) => metrics.increment(name, value, tags),
-            distribution: (name, value, tags) => metrics.distribution(name, value, tags),
+            gauge: (name, value, tags, meta) => metrics.gauge(name, value, tags, meta),
+            increment: (name, value, tags, meta) => metrics.increment(name, value, tags, meta),
+            distribution: (name, value, tags, meta) => metrics.distribution(name, value, tags, meta),
+            observe: (name, callback, tags, meta) => metrics.observe(name, callback, tags, meta),
           } satisfies ExtensionApi)
         : undefined,
       traces ? ({ kind: 'traces', isAvailable: () => Effect.succeed(true) } satisfies ExtensionApi) : undefined,
@@ -222,6 +223,24 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   };
 
   return extension;
+});
+
+/**
+ * Builds the resource for logs/traces and the separate one for metrics.
+ *
+ * Metrics deliberately omit `session.id`. It is per-page-load, and a metrics backend keys
+ * each series on its full attribute set, so a fresh UUID every reload mints a permanent new
+ * series that never merges with any other — unbounded growth for no query value (correlating
+ * a single session is what traces and logs are for). This has to be a separate resource
+ * rather than a View: views filter datapoint attributes via `attributesProcessors` and have
+ * no reach into provider-level resource attributes.
+ */
+export const createResources = (
+  attributes: Record<string, string>,
+  sessionId: string,
+): { resource: Resource; metricsResource: Resource } => ({
+  resource: defaultResource().merge(resourceFromAttributes({ ...attributes, 'session.id': sessionId })),
+  metricsResource: defaultResource().merge(resourceFromAttributes(attributes)),
 });
 
 /**
