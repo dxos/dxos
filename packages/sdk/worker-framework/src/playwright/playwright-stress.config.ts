@@ -3,6 +3,7 @@
 //
 
 import { defineConfig } from '@playwright/test';
+import { resolve } from 'node:path';
 
 import { e2ePreset } from '@dxos/test-utils/playwright';
 
@@ -19,6 +20,12 @@ export default defineConfig({
   ...preset,
   webServer: {
     command: `pnpm exec vite dev --config src/playwright/harness/vite.config.ts --port ${HARNESS_PORT}`,
+    // Playwright defaults `cwd` to the config's own directory, which is two levels below the package
+    // root the command's paths are written against.
+    cwd: resolve(import.meta.dirname, '../..'),
+    // Above Playwright's 60s default: the first launch of a run pays vite's cold dependency
+    // optimization, which a loaded machine can drag out past a minute.
+    timeout: 180_000,
     // Probed by url, not port: vite binds the socket before it can serve, and a bare TCP probe
     // satisfied in that gap hands the first test an ERR_CONNECTION_REFUSED.
     url: `http://localhost:${HARNESS_PORT}`,

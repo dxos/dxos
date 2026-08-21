@@ -9,11 +9,27 @@ import { StressFleet } from './stress-fleet';
 import { HARNESS_URL } from './stress-harness-server';
 import { assertRecovered } from './stress-recovery';
 
-// Overridable so a failing CI/local run can be replayed exactly, and so a soak can be dialled up
-// without editing the suite.
-const SEED = Number(process.env.DX_STRESS_SEED) || 1;
-const ITERATIONS = Number(process.env.DX_STRESS_ITERATIONS) || 30;
-const INITIAL_TABS = Number(process.env.DX_STRESS_TABS) || 2;
+/**
+ * Reads a positive-integer knob. Throws rather than coercing: `Number('tow') || 2` would silently
+ * run a soak at the default workload and report success.
+ */
+const positiveIntEnv = (name: string, fallback: number): number => {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') {
+    return fallback;
+  }
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`${name} must be a positive integer, got ${JSON.stringify(raw)}`);
+  }
+  return value;
+};
+
+// Overridable so a failing run can be replayed exactly, and so a soak can be dialled up without
+// editing the suite.
+const SEED = positiveIntEnv('DX_STRESS_SEED', 1);
+const ITERATIONS = positiveIntEnv('DX_STRESS_ITERATIONS', 30);
+const INITIAL_TABS = positiveIntEnv('DX_STRESS_TABS', 2);
 
 // Two tabs is the smallest fleet where leadership is observable — with one tab there is no peer to
 // steal a stale leader's lock, so the failover commands would be no-ops.
@@ -22,7 +38,15 @@ const MIN_TABS = 2;
 // A single command can burn ~10s (bounded hangs, stale-timeout-driven re-election), and the recovery
 // phase adds its own budget on top, so the walk is sized in minutes rather than seconds.
 const RANDOM_WALK_TIMEOUT_MS = ITERATIONS * 20_000 + 180_000;
-const SCRIPTED_TIMEOUT_MS = 300_000;
+// The scripted test runs a full recovery phase after EVERY command, so its budget scales with the
+// command count — a fixed total would abort on the timeout and blame the test rather than the
+// command, which is the whole point of running them one at a time.
+const SCRIPTED_TIMEOUT_MS = STRESS_COMMANDS.length * 60_000 + 180_000;
+
+const log = (message: string) => {
+  // eslint-disable-next-line no-console
+  console.log(`[stress] ${message}`);
+};
 
 /**
  * Manually-run stress suite: real Chromium, real tabs, a real dedicated worker, and a real
@@ -40,10 +64,6 @@ test.describe('worker-framework stress', () => {
     const context = await browser.newContext();
     const fleet = new StressFleet(context, HARNESS_URL);
     const history: string[] = [];
-    const log = (message: string) => {
-      // eslint-disable-next-line no-console
-      console.log(`[stress] ${message}`);
-    };
 
     try {
       for (let index = 0; index < INITIAL_TABS; index++) {
@@ -74,10 +94,6 @@ test.describe('worker-framework stress', () => {
 
     const context = await browser.newContext();
     const fleet = new StressFleet(context, HARNESS_URL);
-    const log = (message: string) => {
-      // eslint-disable-next-line no-console
-      console.log(`[stress] ${message}`);
-    };
 
     try {
       const random = seededRandom(SEED);

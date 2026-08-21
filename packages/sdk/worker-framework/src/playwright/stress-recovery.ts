@@ -39,6 +39,9 @@ export const assertRecovered = async (fleet: StressFleet, log: (message: string)
   // Exactly one leader, and every tab agrees on which one it is.
   const leaderIds = new Set(statuses.map(({ status }) => status?.leaderId));
   expect(leaderIds.size, `all tabs must agree on the leader, saw ${[...leaderIds].join(', ')}`).toBe(1);
+  // Size 1 alone is satisfied by every tab reporting `undefined` — "nobody was elected" is a
+  // recovery failure, not agreement.
+  expect([...leaderIds][0], 'a leader must be elected').toBeTruthy();
 
   // The worker answers every tab — a wedged worker holding the lock would hang here, not pass.
   for (const tab of fleet.tabs) {

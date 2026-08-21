@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
+
 import { HANG_FOREVER_MS, type StressFleet, type StressTab } from './stress-fleet';
 
 /** Bounded worker hang, long enough to outlast the leader stale timeout (5s) it is meant to provoke. */
@@ -25,8 +27,12 @@ export type StressCommand = {
   readonly run: (ctx: StressCommandContext) => Promise<void>;
 };
 
-const pick = <T>({ random }: StressCommandContext, items: readonly T[]): T =>
-  items[Math.floor(random() * items.length)];
+const pick = <T>({ random }: StressCommandContext, items: readonly T[]): T => {
+  // Asserted rather than encoded in the `T` return type alone: a future command that forgets its
+  // `enabled` guard would otherwise get `undefined` typed as `T` and fail somewhere unrelated.
+  invariant(items.length > 0, 'cannot pick from an empty list');
+  return items[Math.floor(random() * items.length)];
+};
 
 const pickTab = (ctx: StressCommandContext): StressTab => pick(ctx, ctx.fleet.tabs);
 
@@ -95,7 +101,9 @@ export const STRESS_COMMANDS: readonly StressCommand[] = [
     // steals. Blocking the leader alone provokes nothing while its worker keeps serving existing
     // tabs, which is why the two halves are one command.
     name: 'block-leader-main-thread-and-open-tab',
-    enabled: ({ fleet }) => fleet.tabs.length > 0,
+    // Bounded by MAX_TABS like `open-tab`: this command grows the fleet too, so without the ceiling
+    // a long soak walks past it.
+    enabled: ({ fleet }) => fleet.tabs.length > 0 && fleet.tabs.length < MAX_TABS,
     run: async (ctx) => {
       const leader = (await ctx.fleet.findLeader()) ?? pickTab(ctx);
       await leader.blockMainThread(BLOCK_MAIN_THREAD_MS);
