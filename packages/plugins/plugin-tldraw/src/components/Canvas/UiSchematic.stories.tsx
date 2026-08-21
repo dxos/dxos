@@ -49,7 +49,7 @@ const DefaultStory = () => {
   });
 
   return (
-    <div className='grid grid-cols-[20rem_1fr] bs-full is-full'>
+    <div className='grid grid-cols-[20rem_1fr] w-full h-full'>
       <pre className='overflow-auto p-4 text-xs border-ie border-separator'>{ascii}</pre>
       <Panel.Root>
         <Panel.Content asChild>
