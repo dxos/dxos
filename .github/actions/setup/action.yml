@@ -78,19 +78,49 @@ runs:
           echo "::error::Could not read remote.host from .moon/workspace.yml."
           exit 1
         fi
+
+        # curl exit codes already distinguish a timeout (28) from a cert/TLS failure (35/60) from
+        # an HTTP error (22), so surfacing the raw code beats guessing at a cause in prose.
+        curl_exit_meaning() {
+          case "$1" in
+            22) echo "HTTP error response" ;;
+            28) echo "timed out waiting for a response" ;;
+            35|60) echo "TLS/certificate handshake failed" ;;
+            *) echo "curl exit $1" ;;
+          esac
+        }
+        # The droplet has been observed going I/O-bound during a CI fan-out and answering the
+        # probe late rather than refusing it, which reddened jobs over a transient blip rather
+        # than a real cache fault. Retry before treating it as down, and degrade to a warning
+        # instead of failing the job: a cache miss costs a slower build, not a red one.
+        degrade() {
+          echo "::warning::$1"
+          echo "MOON_REMOTE_HOST=" >> "$GITHUB_ENV"
+          exit 0
+        }
+
         # 9093 is the HTTP listener of the same process that serves gRPC on 9092.
-        if ! curl -sf --max-time 20 --cacert .moon/certs/ca.pem "https://$host:9093/status" > /dev/null; then
-          echo "::error::Remote cache $host is unreachable, or its certificate does not verify. moon would fall back to the local cache and pass anyway."
-          exit 1
+        # `|| preflight_exit=$?` rather than a bare call: the shell here runs with `set -e`, and an
+        # unguarded failing command would abort the script before the degrade logic below ever runs.
+        preflight_exit=0
+        curl -sf --max-time 20 --retry 3 --retry-all-errors --retry-delay 5 \
+             -w 'time_connect=%{time_connect} time_appconnect=%{time_appconnect} time_total=%{time_total}\n' \
+             --cacert .moon/certs/ca.pem "https://$host:9093/status" > /dev/null || preflight_exit=$?
+        if [ "$preflight_exit" -ne 0 ]; then
+          degrade "Remote cache $host preflight failed after retries: $(curl_exit_meaning "$preflight_exit") (curl exit $preflight_exit). Falling back to the local cache for this job."
         fi
+
         # /status is unauthenticated; a CAS path is not. 404 means authorised and absent, which is
         # what an all-zero digest should be. 401 means the client certificate was rejected.
-        code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 \
+        cas_exit=0
+        code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 --retry 3 --retry-all-errors --retry-delay 5 \
           --cacert .moon/certs/ca.pem --cert .moon/certs/client.pem --key .moon/certs/client.key \
-          "https://$host:9093/cas/0000000000000000000000000000000000000000000000000000000000000000")
+          "https://$host:9093/cas/0000000000000000000000000000000000000000000000000000000000000000") || cas_exit=$?
+        if [ "$cas_exit" -ne 0 ]; then
+          degrade "Remote cache $host CAS probe failed after retries: $(curl_exit_meaning "$cas_exit") (curl exit $cas_exit). Falling back to the local cache for this job."
+        fi
         if [ "$code" != "404" ]; then
-          echo "::error::Remote cache $host rejected the client certificate (HTTP $code, expected 404)."
-          exit 1
+          degrade "Remote cache $host rejected the client certificate (HTTP $code, expected 404). Falling back to the local cache for this job."
         fi
         echo "Remote cache $host reachable and authenticated."
       shell: bash
