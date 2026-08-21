@@ -72,7 +72,7 @@ export const add: Command.Command<
         return yield* Effect.fail(new Error(`Unknown typename: ${selectedTypename}`));
       }
 
-      const result = yield* metadata.createObject({}, { db, target: collection ?? db });
+      const result = yield* metadata.createObject({}, { db, target: collection });
       const object = result.object;
       if (!Obj.isObject(object)) {
         return yield* Effect.fail(new Error(`Invalid object: ${object}`));

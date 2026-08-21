@@ -176,6 +176,53 @@ describe('EdgeHttpClient auth refresh', () => {
     expect((putCall![1]?.headers as Record<string, string> | undefined)?.Authorization).toBeUndefined();
   });
 
+  test('getAuthHeader withholds a header minted for a different identity', async ({ expect }) => {
+    // The stale prefetch never commits (`_prefetchAuthHeaderOnce` checks first), so reproducing this
+    // needs a SECOND prefetch to commit the new identity's header while the first caller is parked.
+    let releaseFirstAuth = () => {};
+    const gate = new Promise<void>((resolve) => {
+      releaseFirstAuth = resolve;
+    });
+    let signalAuthStarted = () => {};
+    const authStarted = new Promise<void>((resolve) => {
+      signalAuthStarted = resolve;
+    });
+    let authCallCount = 0;
+    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
+      const url = String(input instanceof URL ? input : (input.url ?? input));
+      if (url.endsWith('/auth')) {
+        if (authCallCount++ === 0) {
+          signalAuthStarted();
+          await gate;
+        }
+        return new Response(
+          JSON.stringify({ success: true, data: { challenge: 'Y2hhbGxlbmdl', expiresInMs: 300_000 } }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        );
+      }
+      return new Response(null, { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    client.setIdentity(identity);
+    const header = client.getAuthHeader();
+    await authStarted;
+
+    // Swap, then let a second caller mint and commit a header for the NEW identity.
+    client.setIdentity({ ...identity, identityDid: 'did:halo:other' });
+    const otherHeader = await client.getAuthHeader();
+    expect(otherHeader).toBeDefined();
+
+    releaseFirstAuth();
+
+    // The first caller asked on behalf of the original identity; what is cached is not its header.
+    await expect(header).resolves.toBeUndefined();
+  });
+
   test('a settling prefetch does not clear a newer single-flight guard', async ({ expect }) => {
     // Both of the first two `/auth` round trips are parked, so the FIRST can settle while the
     // SECOND is still in flight — the only ordering in which a stale `finally` can clear a live

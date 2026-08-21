@@ -176,13 +176,14 @@ export const AddObject = Operation.make({
     object: Schema.Union([Obj.Unknown, ObjectDraft]).annotate({
       description: 'The object to add: an instantiated object, or a description of one to create.',
     }),
-    // A reference is the only form of the three that survives an RPC boundary, so a remote caller
-    // names the target collection that way; in-process callers keep passing the live entity.
-    // Absent, the object is filed at the space root.
+    // A reference is the only form that survives an RPC boundary, so a remote caller names the
+    // target collection that way; in-process callers keep passing the live entity. Absent, the
+    // object is filed at the space root of the database the runtime resolved from the space id —
+    // a database is never an input, since it cannot cross a process boundary.
     target: Schema.optional(
-      Schema.Union([Database.Database, Type.getSchema(Collection.Collection), Ref.Ref(Collection.Collection)]),
+      Schema.Union([Type.getSchema(Collection.Collection), Ref.Ref(Collection.Collection)]),
     ).annotate({
-      description: 'The database or collection to add to, or a reference to the collection.',
+      description: 'The collection to add to, or a reference to it. Omit to file at the space root.',
     }),
   }),
   output: Schema.Struct({

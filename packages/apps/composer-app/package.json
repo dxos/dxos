@@ -151,7 +151,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/ui": "workspace:*",
