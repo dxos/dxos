@@ -42,6 +42,27 @@ live Composer captures and TTS, produced unattended.
 - `K7` (one dataset, four renderings) CONFIRMED real — Organizations render as cards, Table
   and Kanban over the same objects.
 
+## Credentials + env binding (2026-08-21) — DONE
+
+- [x] `.env.tpl` -> `.env` via `op inject` (9 keys); three template faults fixed (vault name,
+      archived duplicate item shadowing HeyGen, unquoted values) — `agents/demo-video/CREDENTIALS.md`
+- [x] `.claude/scripts/keyserve.py` + permission rule — loopback secret handoff, no transcript exposure
+- [x] HeyGen wired into the running instance; verified `/v3/voices` 200, 4 private voices
+- [x] **Env binding mechanism** — `envBinding` on a connector + `dev-secrets.ts` + plugin-connector
+      `EnvCredentials`; cold boot re-provisions from `.env` in ~30s. HeyGen + Ideogram declare bindings.
+- [ ] **ROTATE THE HEYGEN KEY** — ~36 chars of it were printed into the session transcript by a
+      careless grep of transformed dev-server output. Rotate at app.heygen.com/developers/api, then
+      update the 1Password `HeyGen` item and re-run `op inject -f -i .env.tpl -o .env`.
+- [ ] Tidy the ARCHIVED duplicate `HeyGen` item in 1Password so the refs can go back to titles
+
+## Recording (2026-08-21)
+
+- [x] `K7` animatic — "one dataset, four renderings", 42.3s, **all four beats from live captures**
+      (Organizations cards / Table / Kanban / People). `temp/demo-video-spike/out/k7-one-dataset.mp4`
+- [x] Fixed a real ffmpeg fault: `zoompan` `d=` counts output frames PER INPUT frame, so the usual
+      `-loop 1 -t <dur>` form overran every segment into black. Single-input-frame form now.
+- [ ] Re-render narration through HeyGen instead of `say` (the connection is live)
+
 ## Phase 1 — the five hybrid clips (days 2-7)
 
 ### Creative
