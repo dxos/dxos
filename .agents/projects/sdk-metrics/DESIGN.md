@@ -300,22 +300,24 @@ extension's own internals are excluded — they are untouched here.
 | EDGE non-histogram                  | 1 counter × 7 `reason`, 1 gauge       | 8               |
 | Memory                              | 6 gauges + 1 gauge × 4 `scope`        | 10              |
 | Sync `stalled.duration`             | 1 gauge                               | 1               |
-| **Subtotal, non-histogram**         | **16**                                | **28**          |
+| **Subtotal, non-histogram**         | **18**                                | **28**          |
 | `edge.ws.connect.duration`          | histogram, 9 boundaries × 2 `outcome` | 24              |
 | `sync.episode.duration`             | histogram, 10 boundaries              | 13              |
 | **Total**                           | **20**                                | **65**          |
 
 **Histograms dominate — 37 of 65 series.** An explicit-bucket histogram is not one
-series: SigNoz stores it as one `_bucket` series per boundary (plus `+Inf`) along
-with `_count` and `_sum`, so 9 boundaries × 2 attribute values costs 24 series, more
-than every gauge in the Spaces, Documents, and EDGE groups combined. Two
-consequences:
+series: SigNoz stores it as one `_bucket` series per boundary plus one for `+Inf`,
+along with `_count` and `_sum` — so `boundaries + 3` series per attribute
+combination. `connect.duration` is therefore `(9 + 3) × 2 outcomes = 24`, more than
+every gauge in the Spaces, Documents, and EDGE groups combined, and
+`episode.duration` is `10 + 3 = 13`. Two consequences:
 
 - The "≤2 attribute values" instinct is the wrong lever on a histogram. Adding one
-  binary attribute to a 10-bucket histogram costs 12 series; adding one to a gauge
+  binary attribute to a 10-boundary histogram costs 13 series; adding one to a gauge
   costs 1.
-- **If the budget needs cutting, cut boundaries before labels.** Halving
-  `connect.duration` to `[0.5, 2, 10, 60]` saves 12 series on its own.
+- **If the budget needs cutting, cut boundaries before labels.** Reducing
+  `connect.duration` from 9 boundaries to `[0.5, 2, 10, 60]` takes it from 24 series
+  to 14, saving 10 on its own.
 
 At 65 series per device the fleet cost is linear in devices — 10k active devices is
 ~650k series, before the `time_series_v4` row per series and one `samples_v4` row
