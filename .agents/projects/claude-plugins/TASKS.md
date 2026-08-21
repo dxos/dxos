@@ -8,7 +8,10 @@ cycle checked in Composer). Uncommitted: none. Last: added Phase 4 (consolidate 
 `project` skill, from the 2026-08-19 project-skills audit) — gated on the Phase 2 round-trip.
 2026-08-20: #12616 landed (skills are the atomic unit of MCP projection) — Phase 4's operation
 contract is largely done (projectCreate projects, tools-list membership); next is the round-trip,
-then absorb the deprecated toolkit skill and rename codeProject → project._
+then absorb the deprecated toolkit skill and rename codeProject → project. 2026-08-21: #12692
+replaced per-operation tools with the generic `queryOperations`/`invokeOperation`/`loadSkill`
+surface (7 tools where there were 27) — the hook's `mcp` directive is rewritten for it, which
+unblocks the round-trip._
 
 ## Phase 1: Extract into a distributable plugin
 
@@ -207,16 +210,25 @@ toolkit is deleted; `Gateway`/`Server` became `McpRegistry`/`McpServer`).
       verbs, the never-a-chip rule, the project resolution order. It becomes the canonical
       instructions that the MCP prompt and `skillLoad` already serve verbatim.
 - [ ] **Plugin `SKILL.md` → stub** — trigger frontmatter + `allowed-tools` +
-      "call `skillLoad('project')`, follow it". Optional: a build-time copy of the canonical
+      "call `loadSkill('project')`, follow it" (the tool was renamed from `skillLoad` in #12692). Optional: a build-time copy of the canonical
       markdown with a hash check (the `skills-lock.json` pattern) if offline readability matters.
+- [x] **Rewrote the `mcp` backend directive for the generic surface** (2026-08-21) — it named ten
+      per-operation tools that #12692 deleted, so the round-trip would have hit the
+      no-silent-fallback rule and stopped. It now describes find → `loadSkill` → `invokeOperation`
+      and names operation KEYS (`org.dxos.plugin.{projects,tasks}.operation.*`, resolvable by final
+      segment) instead of tool names. All ten verbs re-tested; prose stays inert.
 - [ ] **Hook directives shrink to verb + args** — the HOW moves to the skill. What irreducibly
       stays hook-side: bare `/project` raw-text matching (or decide to retire the bare form and
       delete the hook entirely), plus the "needed tool absent → say so and STOP" invariant.
       Determinism is relocated, not lost: prose-directive + hand-edited YAML becomes command
       expansion + typed tool schemas validated server-side.
-- [ ] **`commands/project.md` → `$ARGUMENTS` alias** over the tools; `allowed-tools` pre-approves
-      the read tools using the full plugin-scoped prefix (`mcp__plugin_dxos_<server>__*` — matchers
-      without the `plugin_` segment never fire for plugin-bundled servers).
+- [ ] **`commands/project.md` → `$ARGUMENTS` alias** over the generic surface; `allowed-tools` can
+      pre-approve only `queryOperations` and `loadSkill`, using the full plugin-scoped prefix
+      (`mcp__plugin_dxos_<server>__*` — matchers without the `plugin_` segment never fire for
+      plugin-bundled servers). **`invokeOperation` cannot be auto-approved**: #12692 marks it
+      possibly-destructive because some operation behind it is, so every verb that writes prompts.
+      If that friction bites, the fix is the read/write split deferred at Milestone 9 question 2,
+      not a per-operation tool — do not re-litigate it here.
 
 ### Plugin bundles the server
 
