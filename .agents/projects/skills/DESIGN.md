@@ -50,8 +50,14 @@ in `TASKS.md`. The short version:
 
 ### Reject, and why
 
-- **The 21 `principle-*` skills.** Our Non-negotiables state the ones that
-  matter, and always-loaded beats on-demand for rules of that kind.
+Two of these were asserted, not measured, and the assertion about rule placement
+is contradicted by our own evidence. See "Open questions" below; the entries are
+kept here with that correction rather than deleted, so the reasoning stays
+auditable.
+
+- **The 21 `principle-*` skills.** ~~Our Non-negotiables state the ones that
+  matter, and always-loaded beats on-demand for rules of that kind.~~
+  **Unproven, and probably backwards.** Deferred to Experiment 1.
 - **`swarm` and `arena`.** The Workflow tool does this natively.
 - **Matt's planning stack** (`triage`, `wayfinder`, `to-spec`, `to-tickets`,
   `domain-modeling`). It pushes state into an issue tracker with blocking edges;
@@ -60,9 +66,15 @@ in `TASKS.md`. The short version:
 - **`recall`, `handoff`, `claude-handoff`.** `/dxos:project hydrate|resume`
   covers it, and ours is more reliable because the state is written down rather
   than reconstructed from chat history.
-- **`typescript-best-practices`, `no-comments`, `git-guardrails`,
-  `setup-pre-commit`, `migrate-to-shoehorn`.** Each duplicates something we have
-  with less authority, or adds a dependency to enforce a rule we already state.
+- **`typescript-best-practices`, `git-guardrails`, `setup-pre-commit`,
+  `migrate-to-shoehorn`.** Each duplicates something we have with less
+  authority, or adds a dependency to enforce a rule we already state. This one
+  holds: our hooks are strictly stricter than `git-guardrails`, and our lint and
+  CI cover `setup-pre-commit`.
+- **`no-comments`.** ~~Duplicates the `code-style` comment rule.~~ **Withdrawn.**
+  It does not duplicate the rule, it _checks_ it: a dedicated reviewer subagent
+  hunts violations, where ours only states the rule. Stated and checked are
+  different mechanisms. Deferred to Experiment 2.
 - **Personal and course material** from both repos.
 
 ### Replace nothing wholesale
@@ -116,6 +128,70 @@ One live conflict, fixed in `600f25af`: rule 26 banned "harness" as an abstract
 metaphor, but all 28 uses across `AGENTS.md` and the skills name the agent
 runtime, and `AGENTS.md` opens by calling itself harness-agnostic. Carved out
 alongside `Surface` and `primitive`, which are likewise real names here.
+
+## Open questions, and how to measure them
+
+The survey produced two claims I made without evidence. Both are testable with
+the `skill-creator` harness (`/mnt/skills/examples/skill-creator`), which spawns
+with-skill and baseline arms in the same turn, grades against objectively
+verifiable assertions, uses a **blind** comparator that does not know which arm
+produced which output, and aggregates pass rate, time, and tokens with
+mean +/- stddev via `scripts/aggregate_benchmark.py`.
+
+### Evidence that prompted the reopening
+
+1. **This repo already measured that always-loaded rules get diluted.** The
+   `agent-directives` project found response directives were 6 lines of ~7.2k
+   always-loaded tokens (~1.3%), never repeated, while a single skill invocation
+   (`composer-plugins/SKILL.md`, 42KB) lands later and therefore outranks them
+   positionally. Its recorded direct evidence: "Be as terse as possible" was
+   active every turn and ignored every turn. That project's whole fix was moving
+   the rule off always-loaded markdown onto the per-turn channel.
+2. **Our strongest always-loaded rule is violated at scale.** The no-cast
+   Non-negotiable is stated in `AGENTS.md`, repeated in `code-style`, and
+   encoded as an `.mdl` rule. In tree today: 1,121 `as any` and 182
+   `as unknown as`. One full-project `agentic-review` run
+   (`.agents/reviews/50877ea571`) produced 5,230 `no-casts` ERROR findings.
+3. **We already act as though stating is insufficient.** The no-cast rule ships
+   with a pre-commit audit command, and `agentic-review` exists at all, because
+   prose rules do not enforce themselves.
+
+The corrected model has three positions, not two: per-turn re-injected beats
+loaded-on-demand-at-the-point-of-need, which beats loaded-once-at-session-start.
+pstack's `principle-*` skills sit in the middle tier. That is plausibly _better_
+placed than a Non-negotiables bullet for the same rule, which is the opposite of
+what the rejection assumed.
+
+### Experiment 1: does rule placement change violation rate?
+
+- **Task set.** 8 to 12 coding tasks that tempt one specific violation each: a
+  type error easiest to silence with a cast, a test that wants a sleep, a moved
+  module that invites a compat shim.
+- **Arms.** (a) `AGENTS.md` as-is; (b) plus the matching `principle-*` skill
+  on demand; (c) principle skill only; (d) rule re-injected per turn by hook.
+- **Metric.** Violations in the produced diff, counted by the detector we
+  already own: the `.mdl` rules plus grep. Mechanical, not LLM-judged.
+- **Decides.** Whether to adopt `principle-*` skills, move Non-negotiables onto
+  the per-turn channel, or leave both alone.
+
+### Experiment 2: stated rule versus checked rule
+
+- **Task set.** 6 to 8 tasks that produce commentable code.
+- **Arms.** (a) `code-style` comment rule alone; (b) plus a `no-comments`-style
+  reviewer pass.
+- **Metric.** Comments in the final diff that restate the code, graded by the
+  grader agent; plus how many the reviewer pass removed. Partly judged, so run
+  the blind comparator too.
+- **Decides.** Whether the reviewer-subagent mechanism is worth adopting for the
+  comment rule, and by extension for other stated-only rules.
+
+### Experiment 3: triggering accuracy of our existing descriptions
+
+`scripts/improve_description.py` measures whether a skill fires when it should.
+Run it across our 32 skills. Purely mechanical, and it grades the convention
+this project already wrote down ("description is the trigger").
+
+Until these run, treat the two struck-through rejections as open.
 
 ## Deferred frictions
 

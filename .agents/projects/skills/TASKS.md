@@ -104,6 +104,31 @@ code, and these three land first because every later import is a writing job.
       PostHog, SigNoz) driven by the Workflow tool, plus five reference prompt
       files. Highest value per the survey, highest port cost.
 
+## Phase 1.5: Measure the two open questions
+
+Both rejections below were asserted, not measured, and the first is contradicted
+by our own `agent-directives` findings and by 5,230 `no-casts` review findings
+against an always-loaded rule. Harness: `skill-creator`
+(`/mnt/skills/examples/skill-creator`), with-skill versus baseline arms, blind
+comparator, `aggregate_benchmark.py` for pass rate, time, tokens with variance.
+Designs in `DESIGN.md`.
+
+### Tasks
+
+- [ ] **Experiment 1: rule placement.** 8 to 12 tasks that each tempt one
+      violation; arms are always-loaded, plus-principle-skill, principle-only,
+      and per-turn re-injected. Metric is violations in the diff, counted by our
+      existing `.mdl` rules and grep, so the assertion is mechanical. Decides
+      whether to adopt `principle-*` skills or move Non-negotiables onto the
+      per-turn channel.
+- [ ] **Experiment 2: stated versus checked.** `code-style` comment rule alone
+      against the rule plus a `no-comments`-style reviewer pass. Decides whether
+      the reviewer-subagent mechanism is worth adopting for stated-only rules.
+- [ ] **Experiment 3: triggering accuracy.** Run
+      `scripts/improve_description.py` across all 32 skill descriptions.
+- [ ] **Re-examine the other rejections** once a method exists. `swarm`/`arena` versus
+      the Workflow tool is measurable the same way.
+
 ## Deferred: style frictions
 
 Documented, not scheduled. The `unslop` and `technical-writing` rules are scoped
