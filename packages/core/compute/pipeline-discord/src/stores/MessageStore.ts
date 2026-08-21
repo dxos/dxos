@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -32,7 +34,7 @@ export type StoredMessage = {
   readonly raw: string;
 };
 
-export interface MessageStoreApi {
+export interface Service {
   readonly has: (id: string) => Effect.Effect<boolean, StoreError>;
   /** Idempotent upsert keyed on id. */
   readonly put: (message: StoredMessage) => Effect.Effect<void, StoreError>;
@@ -84,10 +86,10 @@ const toMessage = (row: Row): StoredMessage => ({
   raw: row.raw,
 });
 
-export class MessageStore extends Context.Service<MessageStore, MessageStoreApi>()(
-  '@dxos/pipeline-discord/MessageStore',
-) {
-  static layerSql: Layer.Layer<MessageStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.effect(
+export class MessageStore extends Context.Service<MessageStore, Service>()('@dxos/pipeline-discord/MessageStore') {}
+
+export const layerSql: Layer.Layer<MessageStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
+  Layer.effect(
     MessageStore,
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
@@ -101,11 +103,11 @@ export class MessageStore extends Context.Service<MessageStore, MessageStoreApi>
           ),
         put: (message) =>
           sql`INSERT INTO message (id, target_id, author_id, author_label, text, created_at, parent_id, raw)
-            VALUES (${message.id}, ${message.targetId}, ${message.authorId}, ${message.authorLabel ?? null},
-              ${message.text}, ${message.createdAt ?? null}, ${message.parentId ?? null}, ${message.raw})
-            ON CONFLICT(id) DO UPDATE SET target_id = excluded.target_id, author_id = excluded.author_id,
-              author_label = excluded.author_label, text = excluded.text, created_at = excluded.created_at,
-              parent_id = excluded.parent_id, raw = excluded.raw`.pipe(
+          VALUES (${message.id}, ${message.targetId}, ${message.authorId}, ${message.authorLabel ?? null},
+            ${message.text}, ${message.createdAt ?? null}, ${message.parentId ?? null}, ${message.raw})
+          ON CONFLICT(id) DO UPDATE SET target_id = excluded.target_id, author_id = excluded.author_id,
+            author_label = excluded.author_label, text = excluded.text, created_at = excluded.created_at,
+            parent_id = excluded.parent_id, raw = excluded.raw`.pipe(
             Effect.asVoid,
             Effect.mapError(fail('Failed to persist message')),
           ),
@@ -131,20 +133,26 @@ export class MessageStore extends Context.Service<MessageStore, MessageStoreApi>
     }),
   );
 
-  static layerMemory: Layer.Layer<MessageStore> = Layer.sync(MessageStore, () => {
-    const byId = new Map<string, StoredMessage>();
-    return {
-      has: (id) => Effect.sync(() => byId.has(id)),
-      put: (message) => Effect.sync(() => void byId.set(message.id, message)),
-      get: (id) => Effect.sync(() => byId.get(id)),
-      listByTarget: (targetId, options) =>
-        Effect.sync(() => {
-          const listed = [...byId.values()]
-            .filter((message) => message.targetId === targetId)
-            .sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
-          return options?.limit !== undefined ? listed.slice(0, options.limit) : listed;
-        }),
-      count: () => Effect.sync(() => byId.size),
-    };
-  });
-}
+export const layerMemory: Layer.Layer<MessageStore> = Layer.sync(MessageStore, () => {
+  const byId = new Map<string, StoredMessage>();
+  return {
+    has: (id) => Effect.sync(() => byId.has(id)),
+    put: (message) => Effect.sync(() => void byId.set(message.id, message)),
+    get: (id) => Effect.sync(() => byId.get(id)),
+    listByTarget: (targetId, options) =>
+      Effect.sync(() => {
+        const listed = [...byId.values()]
+          .filter((message) => message.targetId === targetId)
+          .sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
+        return options?.limit !== undefined ? listed.slice(0, options.limit) : listed;
+      }),
+    count: () => Effect.sync(() => byId.size),
+  };
+});
+
+export const has = (...args: Parameters<Service['has']>) => MessageStore.use((store) => store.has(...args));
+export const put = (...args: Parameters<Service['put']>) => MessageStore.use((store) => store.put(...args));
+export const get = (...args: Parameters<Service['get']>) => MessageStore.use((store) => store.get(...args));
+export const listByTarget = (...args: Parameters<Service['listByTarget']>) =>
+  MessageStore.use((store) => store.listByTarget(...args));
+export const count = (...args: Parameters<Service['count']>) => MessageStore.use((store) => store.count(...args));
