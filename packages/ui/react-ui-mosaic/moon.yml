@@ -13,7 +13,7 @@ tasks:
     # taking the web server down with it.
     deps:
       - '#vendor:build'
-      - '#storybook:prebuild'
+      - '#storybook:#prebuild'
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
