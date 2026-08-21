@@ -34,7 +34,7 @@ export const Flashcard = ({ word, revealed, onReveal, onAnswer, classNames }: Fl
 
       {revealed ? (
         <div className='flex flex-col items-center gap-2 text-center'>
-          <span className='text-2xl text-accent'>{word.translation}</span>
+          <span className='text-2xl text-accent-text'>{word.translation}</span>
           {word.partOfSpeech && <span className='text-sm text-description'>{word.partOfSpeech}</span>}
           {word.examples?.[0] && <span className='text-sm text-description italic'>{word.examples[0]}</span>}
         </div>

@@ -114,3 +114,26 @@ export const TranslateTerm = Operation.make({
   output: Candidate,
   services: [Database.Service, AiService.AiService],
 });
+
+/**
+ * Translates a whole passage into the learner's base language, preserving its markdown structure.
+ *
+ * Distinct from swapping known terms inline: the split view's second pane is a reading of the
+ * entire article, so grammar and word order have to move too, which only a passage-level pass does.
+ */
+export const TranslatePassage = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.plugin.lingo.operation.translatePassage'),
+    name: 'Translate passage',
+    description: 'Translates an entire passage into the base language, preserving markdown.',
+    icon: 'ph--translate--regular',
+  },
+  input: Schema.Struct({
+    text: Schema.String.annotate({ description: 'The passage to translate.' }),
+    language: Ref.Ref(Language.Language),
+  }),
+  output: Schema.Struct({
+    text: Schema.String.annotate({ description: 'The passage in the base language.' }),
+  }),
+  services: [Database.Service, AiService.AiService],
+});

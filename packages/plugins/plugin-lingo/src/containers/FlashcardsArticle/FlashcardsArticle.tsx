@@ -25,6 +25,9 @@ export type FlashcardsArticleProps = AppSurface.ObjectArticleProps<Vocabulary.Vo
 export const FlashcardsArticle = ({ role, subject: deck, attendableId }: FlashcardsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
+  // `Menu.Toolbar` gates itself on `useAttention(attendableId)`, so without an id the toolbar is
+  // permanently disabled; fall back to the subject's URI when the surface supplies none.
+  const attentionId = attendableId ?? Obj.getURI(deck);
   const words = useDeckWords(deck);
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
@@ -89,7 +92,7 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
+    <Menu.Root {...menuActions} attendableId={attentionId}>
       <Panel.Root role={role}>
         <Panel.Toolbar asChild classNames='dx-container'>
           <Menu.Toolbar>

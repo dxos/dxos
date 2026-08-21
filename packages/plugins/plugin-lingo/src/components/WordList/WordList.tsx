@@ -33,8 +33,8 @@ export const WordList = ({ words, selected, onSelect, classNames }: WordListProp
           key={word.id}
           className={mx(
             'grid grid-cols-[1fr_1fr_auto] items-baseline gap-3 p-2',
-            onSelect && 'cursor-pointer hover:bg-hoverSurface',
-            selected === word.id && 'bg-activeSurface',
+            onSelect && 'cursor-pointer hover:bg-hover-surface',
+            selected === word.id && 'bg-current-surface',
           )}
           onClick={onSelect && (() => onSelect(word))}
         >
@@ -62,7 +62,7 @@ const ProgressPips = ({ word }: { word: Word.Word }) => {
           key={index}
           icon={index < box ? 'ph--circle--fill' : 'ph--circle--regular'}
           size={2}
-          classNames={index < box ? 'text-accent' : 'text-subdued'}
+          classNames={index < box ? 'text-accent-text' : 'text-subdued'}
         />
       ))}
     </span>

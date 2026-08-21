@@ -38,6 +38,8 @@ export type VocabularyTooltipProps = {
 
 export type VocabularyOptions = {
   lookup: VocabularyLookup;
+  /** BCP-47 tag of the text being read; steers word segmentation. */
+  locale?: string;
   /**
    * Render known terms as their translation instead of underlining the original. The split view
    * mounts two editors over the same text, one with this set and one without.
@@ -50,22 +52,71 @@ export type VocabularyOptions = {
 };
 
 /**
- * Matches a word token. Trailing marks, hyphens and apostrophes stay inside the token so that
- * "l'école" and "well-being" resolve as single terms rather than three.
+ * How many adjacent segments a term may span. ICU splits compounds ("パン屋" → "パン" + "屋"), so a
+ * deck term is matched by joining neighbours; the cap bounds the per-token lookup count.
  */
-const TOKEN_RE = /\p{L}[\p{L}\p{M}’'-]*/gu;
+const MAX_SEGMENT_SPAN = 4;
+
+export type Token = { from: number; to: number; text: string };
+
+const segmenters = new Map<string, Intl.Segmenter>();
+
+/**
+ * Word segmentation via `Intl.Segmenter` rather than a `\p{L}+` regex: Japanese, Chinese and Thai
+ * write without delimiters, so a regex returns the whole sentence as one token and nothing matches.
+ */
+const getSegmenter = (locale?: string): Intl.Segmenter => {
+  const key = locale ?? '';
+  let segmenter = segmenters.get(key);
+  if (!segmenter) {
+    segmenter = new Intl.Segmenter(locale, { granularity: 'word' });
+    segmenters.set(key, segmenter);
+  }
+  return segmenter;
+};
+
+/** Word-like segments of `text`, with `offset` added so positions are document-absolute. */
+const segment = (text: string, offset: number, locale?: string): Token[] =>
+  Array.from(getSegmenter(locale).segment(text))
+    .filter(({ isWordLike }) => isWordLike)
+    .map(({ index, segment }) => ({ from: offset + index, to: offset + index + segment.length, text: segment }));
 
 /** Lookup key for a token: case- and accent-fold so "Buch" and "buch" hit the same entry. */
 export const normalizeToken = (token: string): string => token.toLocaleLowerCase().normalize('NFC').replace(/’/g, "'");
 
+/**
+ * The longest run of segments starting at `index` that the lookup resolves, or the single segment
+ * when nothing longer matches. Longest-first so "パン屋" wins over "パン".
+ */
+const matchAt = (
+  line: { text: string; from: number },
+  tokens: Token[],
+  index: number,
+  lookup: VocabularyLookup,
+): { token: Token; span: number; entry?: VocabularyEntry } => {
+  for (let span = Math.min(MAX_SEGMENT_SPAN, tokens.length - index); span > 0; span--) {
+    const from = tokens[index].from;
+    const to = tokens[index + span - 1].to;
+    const text = line.text.slice(from - line.from, to - line.from);
+    const entry = lookup(normalizeToken(text));
+    if (entry) {
+      return { token: { from, to, text }, span, entry };
+    }
+  }
+
+  return { token: tokens[index], span: 1 };
+};
+
 /** The token spanning `pos`, or undefined when the position is not inside a word. */
-export const tokenAt = (view: EditorView, pos: number): { from: number; to: number; text: string } | undefined => {
+export const tokenAt = (view: EditorView, pos: number, options?: VocabularyOptions): Token | undefined => {
   const line = view.state.doc.lineAt(pos);
-  for (const match of line.text.matchAll(TOKEN_RE)) {
-    const from = line.from + match.index;
-    const to = from + match[0].length;
-    if (pos >= from && pos <= to) {
-      return { from, to, text: match[0] };
+  const tokens = segment(line.text, line.from, options?.locale);
+  for (let index = 0; index < tokens.length; index++) {
+    // Prefer the term the reader would see decorated: hovering "屋" inside "パン屋" should card the
+    // compound, not the tail.
+    const { token } = options ? matchAt(line, tokens, index, options.lookup) : { token: tokens[index] };
+    if (pos >= token.from && pos <= token.to) {
+      return token;
     }
   }
   return undefined;
@@ -89,7 +140,7 @@ class TranslationWidget extends WidgetType {
 
   override toDOM(): HTMLElement {
     const el = document.createElement('span');
-    el.className = 'italic text-accent cursor-help';
+    el.className = 'italic text-accent-text cursor-help';
     el.textContent = this._entry.translation;
     el.title = this._entry.term;
     return el;
@@ -104,7 +155,10 @@ class TranslationWidget extends WidgetType {
  * Builds decorations for the visible ranges only: a long document holds tens of thousands of
  * tokens and the lookup runs per token, so scanning the whole doc would stall the first paint.
  */
-const buildDecorations = (view: EditorView, { lookup, translate, highlight }: VocabularyOptions): DecorationSet => {
+const buildDecorations = (
+  view: EditorView,
+  { lookup, locale, translate, highlight }: VocabularyOptions,
+): DecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
   if (!translate && !highlight) {
     return builder.finish();
@@ -114,14 +168,18 @@ const buildDecorations = (view: EditorView, { lookup, translate, highlight }: Vo
     let pos = from;
     while (pos <= to) {
       const line = view.state.doc.lineAt(pos);
-      for (const match of line.text.matchAll(TOKEN_RE)) {
-        const entry = lookup(normalizeToken(match[0]));
-        if (!entry) {
-          continue;
+      const tokens = segment(line.text, line.from, locale);
+      let index = 0;
+      while (index < tokens.length) {
+        const { token, span, entry } = matchAt(line, tokens, index, lookup);
+        if (entry) {
+          builder.add(
+            token.from,
+            token.to,
+            translate ? Decoration.replace({ widget: new TranslationWidget(entry) }) : knownMark,
+          );
         }
-        const start = line.from + match.index;
-        const end = start + match[0].length;
-        builder.add(start, end, translate ? Decoration.replace({ widget: new TranslationWidget(entry) }) : knownMark);
+        index += span;
       }
       pos = line.to + 1;
     }
@@ -164,7 +222,7 @@ export const vocabulary = (options: VocabularyOptions): Extension => {
   return [
     decorations,
     hoverTooltip((view, pos) => {
-      const token = tokenAt(view, pos);
+      const token = tokenAt(view, pos, options);
       if (!token) {
         return null;
       }

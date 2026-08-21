@@ -6,29 +6,44 @@ import { Ref } from '@dxos/echo';
 
 import { Language, Vocabulary, Word } from '#types';
 
-/** A short Spanish passage whose vocabulary overlaps {@link makeTestDeck}. */
+/**
+ * A short Japanese passage whose vocabulary overlaps {@link makeTestDeck}.
+ *
+ * Japanese on purpose: it has no word delimiters and it uses `reading`, so it exercises the
+ * segmenter and the furigana line that a space-delimited language leaves dead.
+ */
 export const TEST_PASSAGE = [
-  '# El mercado',
+  '# 朝の市場',
   '',
-  'Cada mañana el **panadero** abre su tienda antes del amanecer.',
-  'Compra la harina en el mercado y prepara el pan del día.',
+  '毎朝、**パン屋**は夜明け前に店を開けます。',
+  '市場で小麦粉を買って、その日のパンを作ります。',
   '',
-  'Los vecinos llegan temprano porque el pan caliente se acaba pronto.',
+  '近所の人たちは早く来ます。焼きたてのパンはすぐに売り切れるからです。',
 ].join('\n');
 
-const ENTRIES: Array<Pick<Word.Word, 'term' | 'translation' | 'partOfSpeech'> & { box?: number }> = [
-  { term: 'mercado', translation: 'market', partOfSpeech: 'noun', box: 3 },
-  { term: 'panadero', translation: 'baker', partOfSpeech: 'noun', box: 1 },
-  { term: 'tienda', translation: 'shop', partOfSpeech: 'noun', box: 5 },
-  { term: 'harina', translation: 'flour', partOfSpeech: 'noun' },
-  { term: 'amanecer', translation: 'dawn', partOfSpeech: 'noun', box: 2 },
-  { term: 'vecinos', translation: 'neighbours', partOfSpeech: 'noun', box: 4 },
+/** {@link TEST_PASSAGE} in English, standing in for a live passage translation in stories. */
+export const TEST_PASSAGE_TRANSLATION = [
+  '# The morning market',
+  '',
+  'Every morning the **bakery** opens its shop before dawn.',
+  "It buys flour at the market and makes the day's bread.",
+  '',
+  'The neighbours arrive early, because the fresh bread sells out quickly.',
+].join('\n');
+
+const ENTRIES: Array<Pick<Word.Word, 'term' | 'translation' | 'reading' | 'partOfSpeech'> & { box?: number }> = [
+  { term: '市場', translation: 'market', reading: 'いちば', partOfSpeech: 'noun', box: 3 },
+  { term: 'パン屋', translation: 'bakery', reading: 'パンや', partOfSpeech: 'noun', box: 1 },
+  { term: '店', translation: 'shop', reading: 'みせ', partOfSpeech: 'noun', box: 5 },
+  { term: '小麦粉', translation: 'flour', reading: 'こむぎこ', partOfSpeech: 'noun' },
+  { term: '夜明け', translation: 'dawn', reading: 'よあけ', partOfSpeech: 'noun', box: 2 },
+  { term: '近所', translation: 'neighbourhood', reading: 'きんじょ', partOfSpeech: 'noun', box: 4 },
 ];
 
 /** An unsaved language, deck and words for stories and tests. */
 export const makeTestDeck = () => {
-  const language = Language.make({ name: 'Spanish', code: 'es', baseCode: 'en', level: 'A2' });
-  const vocabulary = Vocabulary.make({ name: 'Market vocabulary', language: Ref.make(language) });
+  const language = Language.make({ name: 'Japanese', code: 'ja', baseCode: 'en', level: 'A2' });
+  const vocabulary = Vocabulary.make({ name: '市場の単語', language: Ref.make(language) });
   const words = ENTRIES.map(({ box, ...entry }) =>
     Word.make({
       ...entry,

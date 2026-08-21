@@ -5,6 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -27,6 +28,9 @@ export type VocabularyArticleProps = AppSurface.ObjectArticleProps<Vocabulary.Vo
 
 /** Deck contents: every word with its translation and drill progress. */
 export const VocabularyArticle = ({ role, subject, attendableId }: VocabularyArticleProps) => {
+  // `Menu.Toolbar` gates itself on `useAttention(attendableId)`, so without an id the toolbar is
+  // permanently disabled; fall back to the subject's URI when the surface supplies none.
+  const attentionId = attendableId ?? Obj.getURI(subject);
   const words = useDeckWords(subject);
   const [order, setOrder] = useState<Order>('deck');
 
@@ -56,7 +60,7 @@ export const VocabularyArticle = ({ role, subject, attendableId }: VocabularyArt
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
+    <Menu.Root {...menuActions} attendableId={attentionId}>
       <Panel.Root role={role}>
         <Panel.Toolbar asChild classNames='dx-container'>
           <Menu.Toolbar>

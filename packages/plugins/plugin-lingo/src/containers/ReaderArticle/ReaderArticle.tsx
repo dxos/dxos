@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -37,6 +37,9 @@ export type ReaderArticleProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
 export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
+  // `Menu.Toolbar` gates itself on `useAttention(attendableId)`, so without an id the toolbar is
+  // permanently disabled; fall back to the subject's URI when the surface supplies none.
+  const attentionId = attendableId ?? (subject && Obj.getURI(subject));
   const settings = useAtomValue(useCapability(LingoCapabilities.Settings));
   const { text, textRef } = useSourceText(subject);
 
@@ -100,6 +103,30 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
     () => createTooltipRenderer({ t, onAdd: deck && settings.translateUnknownWords ? handleAddWord : undefined }),
     [t, deck, settings.translateUnknownWords, handleAddWord],
   );
+
+  // The whole passage in the base language, for the split view's second pane. Keyed by the text it
+  // was produced from so a document edit invalidates it rather than showing a stale translation.
+  const [passage, setPassage] = useState<{ source: string; text: string }>();
+  useEffect(() => {
+    if (mode !== 'split' || !text || !deck || !invokePromise || passage?.source === text) {
+      return;
+    }
+
+    let cancelled = false;
+    void invokePromise(
+      LingoOperation.TranslatePassage,
+      { text, language: deck.language },
+      { spaceId: db?.spaceId, notify: { error: ['translate-error.message', { ns: meta.profile.key }] } },
+    ).then((result) => {
+      if (!cancelled && result.data) {
+        setPassage({ source: text, text: result.data.text });
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, text, deck, db, invokePromise, passage?.source]);
 
   const handleExtract = useCallback(() => {
     if (!deck || !textRef || !invokePromise) {
@@ -167,10 +194,16 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
     [mode, deck, decks, textRef, handleExtract, t],
   );
 
-  const paneProps = { content: text ?? '', lookup, render, highlight: settings.highlightKnownWords };
+  const paneProps = {
+    content: text ?? '',
+    lookup,
+    locale: deck?.language.target?.code,
+    render,
+    highlight: settings.highlightKnownWords,
+  };
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
+    <Menu.Root {...menuActions} attendableId={attentionId}>
       <Panel.Root role={role}>
         <Panel.Toolbar asChild classNames='dx-container'>
           <Menu.Toolbar>
@@ -181,12 +214,19 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
           {text === undefined ? (
             <div className='p-8 text-description'>{t('no-text.message')}</div>
           ) : mode === 'split' ? (
+            // Both panes render markdown identically so the two columns stay line-for-line
+            // comparable. The second is the whole article translated, not the source with known
+            // terms swapped — until it arrives, the term swap stands in.
             <div className='grid grid-cols-2 gap-2 min-h-0'>
-              <ReaderPane {...paneProps} markdown={false} />
-              <ReaderPane {...paneProps} translate />
+              <ReaderPane {...paneProps} />
+              {passage?.source === text ? (
+                <ReaderPane {...paneProps} content={passage.text} highlight={false} render={undefined} />
+              ) : (
+                <ReaderPane {...paneProps} translate />
+              )}
             </div>
           ) : (
-            <ReaderPane {...paneProps} markdown={mode !== 'original'} translate={mode === 'translation'} />
+            <ReaderPane {...paneProps} translate={mode === 'translation'} />
           )}
         </Panel.Content>
       </Panel.Root>

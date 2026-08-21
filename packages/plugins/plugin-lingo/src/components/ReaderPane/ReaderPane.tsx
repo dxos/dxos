@@ -11,6 +11,7 @@ import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -18,7 +19,7 @@ import { isTruthy } from '@dxos/util';
 import { type VocabularyOptions, vocabulary } from '#extensions';
 
 export type ReaderPaneProps = ThemedClassName<
-  Pick<VocabularyOptions, 'lookup' | 'render' | 'translate' | 'highlight'> & {
+  Pick<VocabularyOptions, 'lookup' | 'locale' | 'render' | 'translate' | 'highlight'> & {
     content: string;
     /** Render markdown decorations; pass `false` to read the source with its markup intact. */
     markdown?: boolean;
@@ -35,6 +36,7 @@ export const ReaderPane = ({
   content,
   markdown = true,
   lookup,
+  locale,
   render,
   translate,
   highlight = true,
@@ -47,10 +49,12 @@ export const ReaderPane = ({
       [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
         createThemeExtensions({ themeMode }),
-        markdown && createMarkdownExtensions(),
-        vocabulary({ lookup, render, translate, highlight }),
+        // The language bundle only highlights; `decorateMarkdown` is what hides the markup, so the
+        // reader needs both to show prose rather than source.
+        markdown && [createMarkdownExtensions(), decorateMarkdown()],
+        vocabulary({ lookup, locale, render, translate, highlight }),
       ].filter(isTruthy),
-    [themeMode, markdown, lookup, render, translate, highlight],
+    [themeMode, markdown, lookup, locale, render, translate, highlight],
   );
 
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
