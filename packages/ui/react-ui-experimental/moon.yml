@@ -17,3 +17,5 @@ tasks:
       - src/shaders/glsl/*.*
     outputs:
       - src/shaders/glsl/gen
+    tags:
+      - prebuild

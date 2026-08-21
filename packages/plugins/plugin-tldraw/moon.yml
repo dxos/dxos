@@ -19,3 +19,5 @@ tasks:
       - moon.yml
     outputs:
       - dist/assets
+    tags:
+      - prebuild

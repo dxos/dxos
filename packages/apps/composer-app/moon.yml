@@ -153,6 +153,8 @@ tasks:
       - moon.yml
     outputs:
       - public/assets/plugin-tldraw
+    tags:
+      - prebuild
   # Dev server (`vite dev`) — the everyday inner loop, with the full plugin registry. Vite dev
   # resolves @dxos/* from source (importSource), so pre-building the whole graph is wasted work:
   # only packages whose dist is actually consumed need it, and each kind declares itself by tag.

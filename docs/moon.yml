@@ -28,6 +28,8 @@ tasks:
       - '@group(sources)'
     outputs:
       - .astro
+    tags:
+      - prebuild
   serve:
     command: pnpm exec astro dev
     deps:

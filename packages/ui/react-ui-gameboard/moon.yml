@@ -17,3 +17,5 @@ tasks:
       - assets/*.*
     outputs:
       - src/gen
+    tags:
+      - prebuild

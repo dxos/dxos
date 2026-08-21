@@ -17,6 +17,8 @@ tasks:
       - test/proto/example/
     outputs:
       - test/proto/gen/
+    tags:
+      - prebuild
   test:
     command: pnpm run --silent test
     deps:

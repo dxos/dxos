@@ -19,3 +19,5 @@ tasks:
       - $NODE_ENV
     outputs:
       - src/cli-observability-secrets.json
+    tags:
+      - prebuild
