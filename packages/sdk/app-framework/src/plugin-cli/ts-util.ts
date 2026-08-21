@@ -8,20 +8,33 @@ import fs from 'node:fs';
 import { createRequire as nodeCreateRequire } from 'node:module';
 import path from 'node:path';
 
-// The tool operates on the consumer's TypeScript source, so it borrows the consumer's (or the
-// workspace's) `typescript` install instead of adding a heavyweight runtime dependency to
-// app-framework that every browser consumer would download.
+// The tool operates on the consumer's TypeScript source, so it borrows an existing compiler-API
+// install instead of adding a heavyweight runtime dependency to app-framework that every browser
+// consumer would download.
+//
+// `@typescript/typescript6` first: the `typescript` specifier now resolves to the 7.x native
+// preview, which ships only `version` — no `createSourceFile`, no `ScriptTarget`. Resolution
+// succeeding therefore proves nothing, so each candidate is probed for the API actually used here
+// and skipped when it is absent; the same package the protobuf compiler imports for this reason.
+const TYPESCRIPT_CANDIDATES = ['@typescript/typescript6', 'typescript'] as const;
+
 const resolveTypescript = (): typeof import('typescript') => {
-  const candidates = [path.join(process.cwd(), 'package.json'), import.meta.url];
-  for (const base of candidates) {
-    try {
-      const require = nodeCreateRequire(base);
-      return require('typescript');
-    } catch {
-      continue;
+  const bases = [path.join(process.cwd(), 'package.json'), import.meta.url];
+  for (const base of bases) {
+    for (const specifier of TYPESCRIPT_CANDIDATES) {
+      try {
+        const module = nodeCreateRequire(base)(specifier);
+        if (typeof module?.createSourceFile === 'function' && module.ScriptTarget) {
+          return module;
+        }
+      } catch {
+        continue;
+      }
     }
   }
-  throw new Error("dx-plugin requires 'typescript' to be installed in the target package or workspace.");
+  throw new Error(
+    `dx-plugin needs a TypeScript compiler API: install one of ${TYPESCRIPT_CANDIDATES.join(' or ')} in the target package or workspace.`,
+  );
 };
 
 export const ts = resolveTypescript();
