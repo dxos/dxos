@@ -24,8 +24,8 @@ describe('search-query', () => {
 
   test('buildSearchQuery is empty for blank input', ({ expect }) => {
     // `Filter.nothing()` is a negated match-all.
-    expect(buildSearchQuery(undefined).ast).toBeDefined();
-    expect(buildSearchQuery('  ').ast).toBeDefined();
+    expect(buildSearchQuery(undefined).ast).toMatchObject({ type: 'select', filter: { type: 'not' } });
+    expect(buildSearchQuery('  ').ast).toMatchObject({ type: 'select', filter: { type: 'not' } });
   });
 
   test('buildSearchQuery scopes the text search to the given type URIs', ({ expect }) => {
@@ -50,8 +50,7 @@ describe('search-query', () => {
   });
 
   test('toSearchResults takes each row icon from the type annotation', ({ expect }) => {
-    // Regression: the icon came from a property-sniffing heuristic returning names like
-    // 'organization', which are not sprite ids — the row rendered an empty icon box.
+    // A row renders an empty icon box unless the icon is a real sprite id.
     const org = Obj.make(TestSchema.Organization, { name: 'Bramble Coffee Roasters' });
     const [result] = toSearchResults([org], 'bramble');
     expect(result.icon).toBe('ph--building--regular');
