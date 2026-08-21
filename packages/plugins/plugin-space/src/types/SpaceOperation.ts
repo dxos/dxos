@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import { ClientService } from '@dxos/client';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import * as Operation from '@dxos/compute/Operation';
@@ -40,6 +41,42 @@ export const Create = Operation.make({
     space: SpaceSchema,
   }),
 });
+
+/**
+ * One space as a listing reports it. `name` and `memberCount` are what let a caller talk about a
+ * space the way the user does; both are best-effort, so a space whose properties or membership
+ * cannot be read is still listed with whatever resolved.
+ */
+export const SpaceSummary = Schema.Struct({
+  spaceId: Schema.String,
+  name: Schema.optional(Schema.String).annotate({
+    description: 'Display name of the space. Absent when the space is unnamed or its properties are unreadable.',
+  }),
+  memberCount: Schema.optional(Schema.Number).annotate({
+    description:
+      'Number of identities with membership. 1 means the space is private to this identity; more ' +
+      'means it is shared. Absent when membership could not be read.',
+  }),
+});
+
+export const QuerySpaces = Operation.make({
+  meta: {
+    key: makeKey('querySpaces'),
+    name: 'Query Spaces',
+    description:
+      'List the spaces this identity can work in, each with its name and member count. Refer to a ' +
+      'space by name when talking to the user, and pass its id as the space to target when calling a ' +
+      "space-addressed tool. Spaces the app manages on the user's behalf — the identity's own HALO " +
+      'space, the settings space — are never listed.',
+    icon: 'ph--planet--regular',
+  },
+  // The listing spans every space, so it reads the client rather than one space's database.
+  services: [ClientService],
+  input: Schema.Struct({}),
+  output: Schema.Struct({
+    spaces: Schema.Array(SpaceSummary),
+  }),
+}).pipe(Operation.mutation('none'));
 
 export const Join = Operation.make({
   meta: {
@@ -769,7 +806,8 @@ export const QueryTypes = Operation.make({
     key: makeKey('queryTypes'),
     name: 'Query Types',
     description:
-      'List the types registered in the space. Returns a summary per type — typename, kind, name, ' +
+      'List the types objects in this space can have — those persisted in the space and those the ' +
+      'host itself registers. Returns a summary per type — typename, version, kind, name, ' +
       'description, field names — or, for the typenames named, their full JSON Schema. Read the ' +
       "summary first and ask for a type's schema only when about to create or update one of it.",
     icon: 'ph--list--regular',

@@ -62,6 +62,22 @@ export const resolveId = (
   return Effect.succeed(resolved);
 };
 
+/**
+ * Resolves the target space for a call that may not need one.
+ *
+ * An operation declaring no database can still be space-addressed — `removeObjects` takes its
+ * space from a reference argument, or from the session default — but one that asks about the host
+ * rather than about its data (`queryPlugins`) must still answer where the session has no space at
+ * all. Same rules as {@link resolveId} once anything names a space.
+ */
+export const resolveOptionalId = (
+  sessionSpaceIds: readonly string[] | undefined,
+  spaceId: string | undefined,
+): Effect.Effect<string | undefined, ToolFailure, never> =>
+  spaceId === undefined && (sessionSpaceIds == null || sessionSpaceIds.length === 0)
+    ? Effect.succeed(undefined)
+    : resolveId(sessionSpaceIds, spaceId);
+
 /** `echo://<spaceId>/<entityId>`, or `echo:///<entityId>` when the reference is space-less. */
 const ECHO_URI_PATTERN = /^echo:\/\/([^/]*)\/(.+)$/;
 

@@ -43,16 +43,80 @@ changes what a model sees lives in the shared package or it is a bug.
 - [ ] **Fidelity check in CI** — one test running the same registry fixture through both hosts
       (edge worker + `dx mcp serve`), asserting identical `tools/list`, `prompts/list` and
       `loadSkill`. The contract enforced, not documented.
-- [ ] **Static tool descriptors shared** (do this first) — the two hosts' `Tool.make` blocks are
-      byte-identical; only the handlers genuinely differ. Moving the descriptors into the package
-      deletes every existing copy and makes an unannotated tool impossible, with no dependency on
-      the operations work. The annotation drift this already caused is the argument: DESIGN §1.1.
-- [ ] **Static toolkits → plugin operations** — then the handlers. `whoami`, `listSpaces`, the
-      object CRUD and the discovery tools are hand-written twice (TODOs in
-      `cli/src/commands/mcp/{space,object,discovery}-tools.ts` and edge's `src/mcp/*-tools.ts`).
-      Contributed as annotated operations they would project through `@dxos/mcp-server` like the
-      project and task verbs. The object tools are the easy half — both hosts already only wrap
-      `database.*` operations, differing in the invoke seam alone.
+- [x] **Static tool descriptors shared** — **dropped as a plan** (user, 2026-08-20: "the way to
+      solve these problems is we need to factor out these tools … they need to go into plugins").
+      Sharing the `Tool.make` blocks would have preserved the hand-written layer instead of
+      deleting it. Its premise was also already false: measured against edge main `0637a8b5`, the
+      space descriptors have **drifted** — CLI `whoami` returns `displayName`, edge's returns a
+      required `haloSpaceId` with a different `spaces` description, and edge's two space tools
+      carry no `failure` schema at all, so their errors escape as opaque `Die` envelopes. The
+      conversion below fixes each of those by construction.
+- [x] **Static toolkits → plugin operations** (2026-08-20, PR #12693; was stacked on #12692, which
+      MERGED 2026-08-21 as `e094f74f`, so this now targets main directly) —
+      `listTypes`, `listPlugins`, `listOperations` and `listSpaces` are gone from the CLI; what
+      replaces them is an ordinary operation, reached the way every other verb is, so `dx mcp serve`
+      hand-writes exactly one tool (`whoami`). Verified over a live stdio session on a profile with
+      no identity: the fixed surface plus `whoami`, the host verbs in the `queryOperations` catalog,
+      and `invokeOperation` on `queryPlugins` returning real data.
+  - [x] **`listTypes` retired into `queryTypes`** — not a move: `query-types.ts` already queried
+        `Scope.space()` **and** `Scope.registry()`, which is exactly what edge's `listTypes` reports
+        from `registry.baseTypes`. Same question, two implementations. `queryTypes` rows gained
+        `version` (the one field only `listTypes` carried) and its description now says it spans
+        both. Cost: `queryTypes` resolves `Database.Service`, so it is space-addressed where
+        `listTypes` was not — acceptable while every session has a space, and the honest shape,
+        since the schemas it returns are the ones that space accepts.
+  - [x] **`listPlugins` → plugin-registry `queryPlugins`** (`services: [Plugin.Service]`), on a new
+        `Registry` skill (`org.dxos.skill.registry`, `mcpPrompt`). The plugin that owns
+        install/enable/disable is the one that can answer what is installed. plugin-registry's node
+        barrel gained the `OperationHandler` module it never had, so the CLI registers it at all.
+        The handler reads `Plugin.Service` directly — `getCore`/`getEnabled`/`getActive`/`getPlugins`
+        — and shapes the result into the operation's own output schema.
+        **Extraction tried and reverted** (user, 2026-08-21: "why are we not able to just use the
+        existing plugin manager APIs"). An interim `@dxos/app-framework/Introspection` lifted the
+        listing out of `devtools.ts` so `queryPlugins` and `queryOperations` could share it with the
+        `composer.plugins()`/`operations()` console API. Dropping `queryOperations` left it sharing
+        eight lines of plain manager calls between two callers, at the price of a new module, a
+        public subpath, and a `PluginInfo` type duplicating the operation's own `PluginSummary`
+        closely enough that the handler had to strip `moduleIds` to fit. Reverted whole: devtools
+        owns its console types again.
+  - [x] **`listOperations` → nothing** (user, 2026-08-20: "consider that tool to get operations
+        can't itself be an operation with the new projection mechanism"). It was built as
+        `queryOperations` and **dropped on the rebase onto #12692**, which is right: once
+        `queryOperations` is the discovery tool, an operation-listing verb is reachable only _through_
+        `invokeOperation` — you would have to already know how to dispatch in order to discover what
+        to dispatch — and it would answer `queryOperations`' own question in a second shape, over the
+        same registry, without the filtering or the schemas. The `Registry` skill says so where a
+        future reader will look for it.
+  - [x] **`listSpaces` → `SpaceOperation.QuerySpaces`** (`services: [ClientService]` — the listing
+        spans every space, so it reads the client, not one space's database), on a new **`Space`
+        skill** (user-directed: separate from `database`). Contributed by the browser and node
+        capability barrels only: the `workerd` barrel gets `skill-definition.workerd.ts` with the
+        Database skill alone, because a worker host has no client — its session's spaces come from
+        its own grant. The operation still registers there; nothing names it, so nothing projects.
+  - [ ] **`whoami` deferred** (user, 2026-08-20: "omit the whoami tool from this pass") — the last
+        hand-written tool. Its identity half wants `ClientOperation.GetIdentity` beside
+        `createIdentity`/`updateProfile`, reusing plugin-client's existing `IdentitySchema`
+        (`identityDid`, `spaceId` = the HALO space, `profile.displayName` — the union of what the
+        two hosts drifted into). Blocked on the same question as the space listing was: EDGE
+        resolves identity from the OAuth grant in the MCP worker, not from a client in the
+        operation worker, so the session's identity has to reach a handler as a service. Its
+        `spaces` field is already reduced to ids, with names and member counts pointing at
+        `querySpaces`, and it reports **`identityDid`** rather than the identity key (user,
+        2026-08-21) — the DID is what EDGE authorizes against and what plugin-client's
+        `IdentitySchema` carries, so the eventual operation keeps the same field. The fold-it-in
+        TODO lives on the Space skill, where the verb will land.
+  - [x] **Dispatch bug this exposed** — the projection resolved a space for _every_ call, which
+        only worked while every reachable verb was space-addressed. A host verb then failed with
+        "No space in session context" on exactly the profile it is most useful on (no identity
+        yet). Resolution is conditional on `requiresSpace` now, with `resolveOptionalId` keeping the
+        reference-hint and session-default paths that `removeObjects` (which declares no database)
+        relies on. Written against `makeHandler`, then carried onto #12692's `invoke` across two
+        rebases as that branch was redesigned; `view.requiresSpace` is now the one definition of the
+        rule, read by the model-facing view and by dispatch. Sharper under #12692's later semantics,
+        where an empty session space list means "the host enumerated and found none" and refuses
+        every call: without this, a CLI profile with no identity could not call `queryPlugins`.
+        Three unit tests in `McpServer.test.ts`, and `serve.test` invokes `queryPlugins` over a live
+        session with no spaces.
 
   The object group goes to **plugin-space**, whose verbs mirror the ECHO API (`Database.add` /
   `Database.remove` → `addObject` / `removeObjects`); `database.objectCreate` / `objectDelete`
@@ -200,7 +264,7 @@ changes what a model sees lives in the shared package or it is a bug.
       assembly so both hosts register the same operations, skills and types.
 - [x] **Watch/reload** — `dx mcp serve --watch` (Milestone 7); an edit no longer needs a restart.
 
-## Milestone 8 — skills as the atomic MCP unit (user-directed 2026-08-19, PR #12616)
+## Milestone 8 — skills as the atomic MCP unit (user-directed 2026-08-19, PR #12616 MERGED 2026-08-20, `63e500bb`)
 
 Direction from the 2026-08-19 review: the skill definition is the unit of projection, not the
 operation. A host provides skill definitions; each opted-in skill becomes a prompt, and the
@@ -371,7 +435,12 @@ requiresSpace, hints: { mutation, idempotent } }, wireSchema }`: `parameters` (d
       in which case the shared core becomes a response pass; (3) decide whether tool _names_ should
       converge (needs a fixture-regeneration budget).
 - [ ] **Edge follow-through** — on the next `@dxos/*` pin bump the worker picks the reshape up via
-      the package; its `SkillRecord` marshalling in operation-service gains `tools`.
+      the package; its `SkillRecord` marshalling in operation-service gains `tools`. Now also:
+      delete `mcp-space-service/src/mcp/{discovery,space}-tools.ts` (the CLI's copies are gone;
+      `listTypes` answers as `queryTypes`), and activate `RegistryPlugin` in operation-service's
+      `PLUGINS` to serve `queryPlugins`. `querySpaces` is deliberately absent
+      there until the session's spaces reach a handler as a service — its skill is not contributed
+      by the workerd barrel, so nothing projects and nothing breaks in the meantime.
 
 Follow-ups from the 2026-08-19 audit (none block PR #12616):
 

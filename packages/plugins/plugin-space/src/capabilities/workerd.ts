@@ -10,4 +10,5 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 // React surface into a worker bundle that cannot load it.
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+// A worker host has no client, so it gets the space-scoped skills only — see the module's comment.
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.workerd'));

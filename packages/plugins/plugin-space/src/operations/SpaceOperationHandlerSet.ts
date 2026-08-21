@@ -11,6 +11,7 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.AddTag.pipe(Operation.lazyHandler(() => import('./add-tag'))),
   SpaceOperation.GetObjects.pipe(Operation.lazyHandler(() => import('./get-objects'))),
   SpaceOperation.QueryObjects.pipe(Operation.lazyHandler(() => import('./query-objects'))),
+  SpaceOperation.QuerySpaces.pipe(Operation.lazyHandler(() => import('./query-spaces'))),
   SpaceOperation.QueryTypes.pipe(Operation.lazyHandler(() => import('./query-types'))),
   SpaceOperation.RemoveTag.pipe(Operation.lazyHandler(() => import('./remove-tag'))),
   SpaceOperation.UpdateObject.pipe(Operation.lazyHandler(() => import('./update-object'))),

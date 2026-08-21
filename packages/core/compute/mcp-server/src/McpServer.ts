@@ -384,21 +384,29 @@ export const invoke = (
         return wireInput.pipe(
           // The space is resolved after encoding, because the wire form is where a reference
           // argument states which space it belongs to.
-          Effect.flatMap((wire) =>
-            spaceInternal
-              .resolveId(
-                host.spaceIds,
-                spaceId ?? (typeof declared === 'string' ? declared : undefined) ?? spaceInternal.hintFromInput(wire),
-              )
-              .pipe(
-                Effect.flatMap((resolvedSpaceId) =>
-                  host.invoke({ key: operationKey, input: wire, spaceId: resolvedSpaceId }).pipe(
-                    Effect.mapError((error) => failure('operation_failed', `${operationKey} failed: ${error.message}`)),
-                    Effect.map((output) => spaceInternal.qualifyRefs(output, resolvedSpaceId)),
+          Effect.flatMap((wire) => {
+            const named =
+              spaceId ?? (typeof declared === 'string' ? declared : undefined) ?? spaceInternal.hintFromInput(wire);
+            // An operation acting on no space is space-addressed only when something names one:
+            // demanding a space would refuse every call to a verb that asks about the host rather
+            // than about its data, on exactly the profile such a verb is most useful on — one with
+            // no identity, and so no spaces, yet.
+            const target = viewInternal.requiresSpace(record)
+              ? spaceInternal.resolveId(host.spaceIds, named)
+              : spaceInternal.resolveOptionalId(host.spaceIds, named);
+            return target.pipe(
+              Effect.flatMap((resolvedSpaceId) =>
+                host.invoke({ key: operationKey, input: wire, spaceId: resolvedSpaceId }).pipe(
+                  Effect.mapError((error) => failure('operation_failed', `${operationKey} failed: ${error.message}`)),
+                  // Nothing to qualify against when the call named no space: a space-less result
+                  // carries no same-space references.
+                  Effect.map((output) =>
+                    resolvedSpaceId === undefined ? output : spaceInternal.qualifyRefs(output, resolvedSpaceId),
                   ),
                 ),
               ),
-          ),
+            );
+          }),
           Effect.map((output) =>
             output !== null && typeof output === 'object' && !Array.isArray(output)
               ? (output as Record<string, unknown>)
