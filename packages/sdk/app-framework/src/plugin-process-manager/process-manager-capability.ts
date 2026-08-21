@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Stream from 'effect/Stream';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import {
@@ -19,6 +20,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -84,6 +86,30 @@ export const makeDynamicTraceSink = (
   return { write: (message) => Trace.mergeSinks(resolve()).write(message) };
 };
 
+/**
+ * Remote ephemeral-trace source over the LIVE contribution list (DX-1125), so a monitor contributed
+ * after this runtime was built still reaches every {@link Capabilities.ProcessMonitor} consumer. The
+ * swarm-backed monitor is client-aware and activates on demand, well after the Startup pass that
+ * builds the runtime — a one-shot snapshot would bake the no-op remote half into the aggregate for
+ * the rest of the session. Each subscription instead follows the contribution: empty until one
+ * arrives, then switched onto it.
+ */
+export const makeDynamicRemoteTraceMonitor = (
+  contributions: Pick<Capability.Contributions<RemoteTraceMonitor.Monitor>, 'get' | 'subscribe'>,
+): RemoteTraceMonitor.Monitor => ({
+  subscribeToTraceMessages: (filter) =>
+    EffectEx.streamFromEmitter<RemoteTraceMonitor.Monitor | undefined>((emit) => {
+      emit.single(contributions.get()[0]);
+      const unsubscribe = contributions.subscribe((values) => emit.single(values[0]));
+      return Effect.sync(unsubscribe);
+    }).pipe(
+      // First contribution wins, and a later change that leaves it in place must not tear the live
+      // swarm subscription down underneath a running consumer.
+      Stream.changes,
+      Stream.switchMap((monitor) => monitor?.subscribeToTraceMessages(filter) ?? Stream.empty),
+    ),
+});
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
@@ -120,8 +146,6 @@ export default Capability.makeModule(
       },
     );
     yield* Effect.addFinalizer(() => Effect.sync(cancelLayerSpecWatch));
-    // Optional swarm-backed remote trace source (DX-1125); first contribution wins, else empty.
-    const remoteTraceMonitors = remoteTraceMonitorContributions.get();
 
     log.info('setup process manager', { traceSinks: traceSinkContributions.get().length });
 
@@ -196,11 +220,11 @@ export default Capability.makeModule(
     // App-framework has no EDGE runtime, so the remote process view is empty;
     // the aggregate monitor therefore equals the local process tree.
     const remoteProcessManagerLayer = RemoteProcessManager.layerNoop.pipe(Layer.provide(baseLayer));
-    // Remote ephemeral trace (DX-1125): use the first contributed swarm-backed monitor, else no-op.
-    const remoteTraceMonitorLayer =
-      remoteTraceMonitors.length > 0
-        ? Layer.succeed(RemoteTraceMonitor.Service, remoteTraceMonitors[0])
-        : RemoteTraceMonitor.layerNoop;
+    // Remote ephemeral trace (DX-1125): live view, not a snapshot — see `makeDynamicRemoteTraceMonitor`.
+    const remoteTraceMonitorLayer = Layer.succeed(
+      RemoteTraceMonitor.Service,
+      makeDynamicRemoteTraceMonitor(remoteTraceMonitorContributions),
+    );
     const processMonitorLayer = ProcessMonitor.layer.pipe(
       Layer.provide(Layer.mergeAll(processManagerLayer, remoteProcessManagerLayer, remoteTraceMonitorLayer, baseLayer)),
     );
