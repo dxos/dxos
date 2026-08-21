@@ -22,6 +22,7 @@ export default defineConfig({
     'app/UrlPath': 'src/app/UrlPath.ts',
     'app/UrlResolution': 'src/app/UrlResolution.ts',
     'echo/AppAnnotation': 'src/echo/AppAnnotation.ts',
+    'echo/AppMigrations': 'src/echo/AppMigrations.ts',
     'echo/AppSpace': 'src/echo/AppSpace.ts',
     'echo/TypeOptions': 'src/echo/TypeOptions.ts',
     'operations/CollaborationOperation': 'src/operations/CollaborationOperation.ts',
