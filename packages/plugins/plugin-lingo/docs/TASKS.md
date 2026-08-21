@@ -1,30 +1,27 @@
 # plugin-lingo — Tasks
 
-_Resume: Phase 1 skeleton is committed and pushed on `claude/language-learning-plugin-eyedv0`
-(head `b8fa67d1`). It type-checks and lints clean, but **the build, unit tests and storybook tests
-have never run** — the cloud sandbox that produced it could not run `moon` at all. First action in
-a local worktree is to run them._
+_Resume: Phase 0 is complete — build, unit test, storybook test, lint and the full `composer-app`
+build all pass locally on `claude/language-learning-plugin-eyedv0`. One real defect surfaced and was
+fixed: the activation test never supplied `plugin-markdown`, which `dx.config.ts` declares in
+`dependsOn`, so plugin resolution failed outright. Next: `PLUGIN.mdl`, then open a PR or continue
+into Phase 2._
 
 Design, object model, and the reasoning behind each decision: `packages/plugins/plugin-lingo/docs/DESIGN.md`.
 
-## Phase 0: Verify the skeleton locally — NOT DONE
+## Phase 0: Verify the skeleton locally — DONE
 
-Nothing here was runnable in the sandbox (moon's ghcr toolchain plugins are policy-blocked), so
-every box below is genuinely unverified, not merely unticked.
+All five ran green in the `plugin-lingo` worktree on 2026-08-20.
 
-- [ ] `moon run plugin-lingo:build` — the real build (vite + tsc declarations, project references).
-      Typecheck passed only via a throwaway `customConditions: ["source"]` tsconfig, which does not
-      emit declarations or exercise references.
-- [ ] `moon run plugin-lingo:test` — `src/plugin.test.ts` asserts the schema module activates and
-      ReactSurface stays parked; copied from `plugin-template` and never executed.
-- [ ] `moon run plugin-lingo:test-storybook` — three component stories (WordList, Flashcard,
-      ReaderPane).
-- [ ] `moon run plugin-lingo:lint` — `pnpm exec oxlint` was clean, but the moon task may add
-      type-aware rules the standalone binary skipped.
-- [ ] `moon run composer-app:build` — plugin-lingo is registered in `plugin-defs.tsx`; confirm the
-      app still builds with it in the graph.
+- [x] `moon run plugin-lingo:build` — passes (152 tasks); declarations and project references are
+      genuinely exercised, unlike the sandbox's `customConditions: ["source"]` typecheck.
+- [x] `moon run plugin-lingo:test` — passes after adding `MarkdownPlugin.make()` to the harness.
+      It failed first with `Plugin dependency resolution failed: missing ["org.dxos.plugin.markdown"]`;
+      the test was copied from `plugin-template`, which declares no `dependsOn`.
+- [x] `moon run plugin-lingo:test-storybook` — 4 tests across the three component stories.
+- [x] `moon run plugin-lingo:lint` — clean; the moon task found nothing the standalone oxlint missed.
+- [x] `moon run composer-app:build` — passes with plugin-lingo in the graph (287 tasks).
 
-## Phase 1: Skeleton — DONE (unverified)
+## Phase 1: Skeleton — DONE
 
 - [x] `Language`, `Vocabulary`, `Word` ECHO types; Leitner schedule in `Word.applyReview`.
 - [x] Operations `ExtractVocabulary`, `AddWord`, `RecordReview`, `TranslateTerm` with handlers.
