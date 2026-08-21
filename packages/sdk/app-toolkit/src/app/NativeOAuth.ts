@@ -103,16 +103,21 @@ export const listenForNativeOAuthCallback = async (
  * The listener registers asynchronously and each callback is handled by an effect that needs its
  * caller's services, which a bare listener callback cannot carry.
  */
-export const nativeOAuthCallbacks = (callbackPath: string): Stream.Stream<URL> =>
-  EffectEx.streamFromEmitter<URL>((emit) => {
+export const nativeOAuthCallbacks = (callbackPath: string): Stream.Stream<URL, Error> =>
+  EffectEx.streamFromEmitter<URL, Error>((emit) => {
     let unlisten: (() => void) | undefined;
     let stopped = false;
-    void listenForNativeOAuthCallback(callbackPath, (url) => emit.single(url)).then((fn) => {
-      unlisten = fn;
-      if (stopped) {
-        fn();
-      }
-    });
+    void listenForNativeOAuthCallback(callbackPath, (url) => emit.single(url)).then(
+      (fn) => {
+        unlisten = fn;
+        if (stopped) {
+          fn();
+        }
+      },
+      // Registration failing silently would leave the flow waiting on a callback nothing is
+      // listening for, so it ends the stream instead of surfacing as an unhandled rejection.
+      (error) => emit.fail(error instanceof Error ? error : new Error(String(error))),
+    );
     return Effect.sync(() => {
       stopped = true;
       unlisten?.();

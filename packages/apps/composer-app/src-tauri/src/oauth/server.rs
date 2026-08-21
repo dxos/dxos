@@ -99,6 +99,7 @@ impl OAuthServer {
         self.shutdown_tx = Some(shutdown_tx);
 
         let state = Arc::clone(&self.state);
+        let port = self.port;
 
         // Spawn the server task.
         let handle = tokio::spawn(async move {
@@ -115,7 +116,7 @@ impl OAuthServer {
                                     let service = service_fn(|req| {
                                         let state = Arc::clone(&state);
                                         let app = app.clone();
-                                        async move { handle_request(req, state, app).await }
+                                        async move { handle_request(req, state, app, port).await }
                                     });
 
                                     if let Err(err) = http1::Builder::new()
@@ -174,25 +175,26 @@ async fn handle_request(
     req: Request<hyper::body::Incoming>,
     state: Arc<OAuthServerState>,
     app: AppHandle,
+    port: u16,
 ) -> Result<Response<Full<Bytes>>, hyper::Error> {
     let path = req.uri().path();
     let query = req.uri().query().unwrap_or("");
 
     match path {
         "/oauth-relay" => handle_oauth_relay(query).await,
-        "/redirect/oauth" => handle_oauth_redirect(query, state, app).await,
-        "/redirect/oauth-recovery" => handle_oauth_recovery_redirect(query, state, app).await,
+        "/redirect/oauth" => handle_oauth_redirect(query, state, app, port).await,
+        "/redirect/oauth-recovery" => handle_oauth_recovery_redirect(query, state, app, port).await,
         _ => Ok(not_found_response()),
     }
 }
 
-/// Hands the app a callback exactly as it arrived. The browser tab is a dead end — the flow
-/// continues against the client running in the app window — so the params have to cross over.
-fn emit_callback(app: &AppHandle, path: &str, query: &str) {
+/// Hands the app a callback exactly as it arrived, on the origin that received it — the browser tab
+/// is a dead end, and a consumer checking where the callback came from needs the port to match.
+fn emit_callback(app: &AppHandle, port: u16, path: &str, query: &str) {
     let url = if query.is_empty() {
-        format!("http://localhost{}", path)
+        format!("http://localhost:{}{}", port, path)
     } else {
-        format!("http://localhost{}?{}", path, query)
+        format!("http://localhost:{}{}?{}", port, path, query)
     };
     let _ = app.emit(OAUTH_CALLBACK_EVENT, url);
 }
@@ -220,6 +222,7 @@ async fn handle_oauth_redirect(
     query: &str,
     state: Arc<OAuthServerState>,
     app: AppHandle,
+    port: u16,
 ) -> Result<Response<Full<Bytes>>, hyper::Error> {
     let params: HashMap<String, String> = url::form_urlencoded::parse(query.as_bytes())
         .into_owned()
@@ -241,7 +244,7 @@ async fn handle_oauth_redirect(
             let mut results = state.results.lock().await;
             results.insert(id.clone(), result);
 
-            emit_callback(&app, "/redirect/oauth", query);
+            emit_callback(&app, port, "/redirect/oauth", query);
 
             Ok(html_response(
                 get_success_html().to_string(),
@@ -264,6 +267,7 @@ async fn handle_oauth_recovery_redirect(
     query: &str,
     state: Arc<OAuthServerState>,
     app: AppHandle,
+    port: u16,
 ) -> Result<Response<Full<Bytes>>, hyper::Error> {
     let params: HashMap<String, String> = url::form_urlencoded::parse(query.as_bytes())
         .into_owned()
@@ -286,7 +290,7 @@ async fn handle_oauth_recovery_redirect(
     let mut recovery = state.recovery.lock().await;
     *recovery = Some(result);
 
-    emit_callback(&app, "/redirect/oauth-recovery", query);
+    emit_callback(&app, port, "/redirect/oauth-recovery", query);
 
     Ok(html_response(
         get_success_html().to_string(),

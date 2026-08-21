@@ -29,10 +29,7 @@ import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } 
 const supportsPasskeys =
   (navigator.credentials && 'create' in navigator.credentials) || NativePasskey.supportsNativePasskeys();
 
-/**
- * Ceiling on the OAuth wait. The flow finishes by navigating this screen away, so a user who closes
- * the provider's page instead reports nothing — without this the form would stay locked for good.
- */
+/** Ceiling on the OAuth wait, since a user who closes the provider's page reports nothing. */
 const OAUTH_PENDING_TIMEOUT = 5 * 60 * 1000;
 
 /** OAuth provider backing the "Atmosphere account" option (atproto / Bluesky). */
@@ -123,14 +120,15 @@ export const Welcome = ({
   // atproto handle (e.g. `you.bsky.social`) forwarded to the OAuth flow as a login hint.
   const [atmosphereHandle, setAtmosphereHandle] = useState('');
   const [pending, setPending] = useState(false);
-  // Separate from `pending`: an OAuth flow leaves the app (system browser on desktop, a new tab on
-  // web) and its initiating call resolves as soon as that page is open, so `pending` would clear
-  // while the user is still authenticating. This stays set for the part the user actually waits on.
+  // Separate from `pending`, whose call resolves as soon as the provider's page opens — this stays
+  // set for the part the user actually waits on.
   const [oauthPending, setOauthPending] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
+  // OAuth leaves the app, so without this the other methods stay live and a competing attempt can
+  // start against a flow already in progress.
+  const formPending = pending || oauthPending;
 
-  // The flow completes by navigating or reloading this screen away, so nothing here reports success
-  // — only a failure clears the wait, plus a ceiling for the user who closes the auth page instead.
+  // Nothing reports success: the flow completes by navigating this screen away.
   useEffect(() => {
     if (error) {
       setOauthPending(false);
@@ -268,29 +266,28 @@ export const Welcome = ({
     }
   }, [waitlistEmail, onJoinWaitlist]);
 
-  // Hold `oauthPending` past the call's own resolution: it returns once the provider's page is
-  // open, and the user's wait has only just started. Keeping it set also stops a second click from
-  // starting a duplicate flow, which would clobber the first.
+  // Held past the call's own resolution, which lands when the provider's page opens rather than
+  // when the user is done with it.
   const handleCreateAccountWithOAuth = useCallback(
     async (args: { code: string; provider: string; loginHint?: string }) => {
-      if (pending || oauthPending) {
+      if (formPending) {
         return;
       }
       setOauthPending(true);
       await onCreateAccountWithOAuth?.(args);
     },
-    [pending, oauthPending, onCreateAccountWithOAuth],
+    [formPending, onCreateAccountWithOAuth],
   );
 
   const handleRecoverWithOAuth = useCallback(
     async (provider: string, loginHint?: string) => {
-      if (pending || oauthPending) {
+      if (formPending) {
         return;
       }
       setOauthPending(true);
       await onRecoverWithOAuth?.(provider, loginHint);
     },
-    [pending, oauthPending, onRecoverWithOAuth],
+    [formPending, onRecoverWithOAuth],
   );
 
   const handleCodeKeyDown = useCallback(
@@ -335,7 +332,7 @@ export const Welcome = ({
       setEmailValue={setEmail}
       emailRef={emailRef}
       error={error}
-      pending={pending}
+      pending={formPending}
       oauthPending={oauthPending}
       onPasskey={onPasskey ? handlePasskey : undefined}
       onSendSignInLink={onEmailLogin ? handleSendSignInLink : undefined}
@@ -407,7 +404,7 @@ export const Welcome = ({
                         onKeyDown: handleCodeKeyDown,
                       }}
                       submitLabel={t('continue-button.label')}
-                      submitDisabled={!Account.isValidAccessCodeFormat(code) || pending}
+                      submitDisabled={!Account.isValidAccessCodeFormat(code) || formPending}
                       onSubmit={handleValidateCode}
                       validation={codeError}
                     />
@@ -434,7 +431,7 @@ export const Welcome = ({
                         onKeyDown: handleWaitlistEmailKeyDown,
                       }}
                       submitLabel={t('waitlist-submit-button.label')}
-                      submitDisabled={!validEmail(waitlistEmail) || pending}
+                      submitDisabled={!validEmail(waitlistEmail) || formPending}
                       onSubmit={handleJoinWaitlist}
                     />
                     {codeSignupEnabled && (
@@ -460,7 +457,7 @@ export const Welcome = ({
                             onKeyDown: handleAuthEmailKeyDown,
                           }}
                           submitLabel={t('continue-button.label')}
-                          submitDisabled={!validEmail(email) || pending}
+                          submitDisabled={!validEmail(email) || formPending}
                           onSubmit={handleCreateAccount}
                           validation={signupEmailError}
                         />
@@ -480,7 +477,7 @@ export const Welcome = ({
                               value: atmosphereHandle,
                               onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
                               onKeyDown: (ev) => {
-                                if (ev.key === 'Enter' && atmosphereHandle && !pending && !oauthPending) {
+                                if (ev.key === 'Enter' && atmosphereHandle && !formPending) {
                                   void handleCreateAccountWithOAuth({
                                     code,
                                     provider: ATMOSPHERE_PROVIDER,
@@ -490,7 +487,7 @@ export const Welcome = ({
                               },
                             }}
                             submitLabel={oauthPending ? t('oauth-pending.label') : t('continue-button.label')}
-                            submitDisabled={!atmosphereHandle || pending || oauthPending}
+                            submitDisabled={!atmosphereHandle || pending}
                             pending={oauthPending}
                             onSubmit={() =>
                               handleCreateAccountWithOAuth({
@@ -778,7 +775,7 @@ const LoginTab = ({
               },
             }}
             submitLabel={oauthPending ? t('oauth-pending.label') : t('continue-button.label')}
-            submitDisabled={!atmosphereHandle || pending || oauthPending}
+            submitDisabled={!atmosphereHandle || pending}
             pending={oauthPending}
             onSubmit={() => onRecoverWithOAuth(ATMOSPHERE_PROVIDER, atmosphereHandle)}
             validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}

@@ -96,11 +96,14 @@ export const beginOAuthFlow = (
         // `useRedirectFlow` connectors (e.g. atproto) get a top-level tab: their auth server
         // nullifies `window.opener` and rejects popups, so the result comes back via a redirect to
         // this origin rather than `postMessage`.
-        yield* Effect.sync(() => {
-          if (oauth.useRedirectFlow) {
-            window.open(authUrl, '_blank');
-          } else {
-            window.open(authUrl, 'oauthPopup', 'width=500,height=600');
-          }
-        });
+        const authWindow = yield* Effect.sync(() =>
+          oauth.useRedirectFlow
+            ? window.open(authUrl, '_blank')
+            : window.open(authUrl, 'oauthPopup', 'width=500,height=600'),
+        );
+        // A null return means the popup was blocked. Fail so the caller's pending entry is cleaned
+        // up rather than left waiting on a callback that can never arrive.
+        if (!authWindow) {
+          return yield* Effect.fail(new Error('Unable to open OAuth window (popup blocked?).'));
+        }
       });

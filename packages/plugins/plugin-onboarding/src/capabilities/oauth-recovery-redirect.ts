@@ -172,6 +172,9 @@ export default Capability.makeModule(
               return callbackParams ? finalize(callbackParams) : Effect.void;
             }),
           ),
+          Effect.catch((error) =>
+            Effect.sync(() => log.warn('oauth recovery: native callback stream failed', { error })),
+          ),
         ),
       );
     }

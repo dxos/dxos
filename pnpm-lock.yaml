@@ -2652,9 +2652,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../common/sql-sqlite
@@ -6628,6 +6625,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
@@ -17366,6 +17366,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/migrations':
+        specifier: workspace:*
+        version: link:../migrations
       '@dxos/progress':
         specifier: workspace:*
         version: link:../../core/compute/progress

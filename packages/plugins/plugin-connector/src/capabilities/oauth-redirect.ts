@@ -78,6 +78,9 @@ export default Capability.makeModule(
               return callbackTokens ? finalize(callbackTokens) : Effect.void;
             }),
           ),
+          Effect.catch((error) =>
+            Effect.sync(() => log.warn('oauth redirect: native callback stream failed', { error })),
+          ),
         ),
       );
     }
