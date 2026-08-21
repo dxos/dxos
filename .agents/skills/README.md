@@ -28,11 +28,17 @@ instead of inlining it.
 - **`description` is the trigger.** Write it as "Use when …" with the concrete
   symptoms, file paths, and phrases that should load the skill — it carries the
   entire auto-invocation decision.
-- **Process skills with side effects set `disable-model-invocation: true`.**
-  A skill that commits, pushes, rewrites files, or spawns subagent fleets
-  (`submit-pr`, `land`, `agentic-review`, `migrate-oxfmt`) should only run when
-  a person asks for it; description wording alone is not a gate. Add an
-  `argument-hint` when the skill takes arguments.
+- **Gate with `disable-model-invocation: true` only when a prose ask should
+  NOT trigger the skill.** The flag is stronger than "don't auto-fire": it
+  removes the description from the model's context and hard-blocks model
+  invocation, so a plain-English request ("run the review") and UI affordances
+  like the Create PR button can never reach a gated skill — only a typed
+  `/<name>` can. Gate pure slash-workflows nobody asks for by accident
+  (`agentic-review`, `migrate-oxfmt`). Do NOT gate a skill that is the
+  sanctioned handler for a natural-language ask (`submit-pr`, `land`): those
+  must stay model-invocable or the ask silently falls back to the generic
+  flow, skipping the repo procedure. Add an `argument-hint` when the skill
+  takes arguments.
 
 ## Paths must stay real
 

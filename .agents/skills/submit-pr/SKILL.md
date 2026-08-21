@@ -5,7 +5,6 @@ description: >-
   format/lint/test, commit all changes, push, monitor the Check workflow, and
   surface the Composer PR deploy URL. Use when the user asks to open, submit, or
   raise a PR. To land an existing PR, use the `land` skill instead.
-disable-model-invocation: true
 ---
 
 # Submit PR

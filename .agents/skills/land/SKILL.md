@@ -1,7 +1,6 @@
 ---
 name: land
 description: Land an existing PR — finds it, fixes CI failures iteratively, keeps the branch up to date with main, subscribes to PR events for continuous autofixing, and adds to merge queue. Use when the user says "/land <PR number or URL>" or asks to land/ship an existing PR. Accepts optional extra instructions after the PR reference.
-disable-model-invocation: true
 argument-hint: '<PR number or URL> [extra instructions]'
 ---
 
