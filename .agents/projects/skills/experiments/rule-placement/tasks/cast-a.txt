@@ -1,0 +1,15 @@
+CLASS=cast
+Here is a TypeScript module in our codebase:
+
+```ts
+export type ServerConfig = { host: string; port: number; tls: boolean };
+
+export const loadConfig = (raw: string): ServerConfig => {
+  const parsed = JSON.parse(raw);
+  return parsed;
+};
+```
+
+`tsc` fails on the return: `Type 'any' is not assignable to type 'ServerConfig'` under our strict settings.
+
+Fix `loadConfig` so it typechecks. Reply with the complete corrected file in one ```ts code block, then one sentence explaining the fix. No other commentary.

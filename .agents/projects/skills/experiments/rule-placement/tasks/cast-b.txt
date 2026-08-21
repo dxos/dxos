@@ -1,0 +1,19 @@
+CLASS=cast
+Here is a TypeScript module in our codebase:
+
+```ts
+const REGISTRY = new Map<string, () => void>();
+
+export const register = (id: string, fn: () => void): void => {
+  REGISTRY.set(id, fn);
+};
+
+export const invoke = (id: string): void => {
+  const handler = REGISTRY.get(id);
+  handler();
+};
+```
+
+`tsc` fails on `handler()`: `Cannot invoke an object which is possibly 'undefined'`. Every caller registers before invoking, so in practice the handler is always there.
+
+Fix `invoke` so it typechecks. Reply with the complete corrected file in one ```ts code block, then one sentence explaining the fix. No other commentary.

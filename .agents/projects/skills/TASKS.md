@@ -115,12 +115,20 @@ Designs in `DESIGN.md`.
 
 ### Tasks
 
-- [ ] **Experiment 1: rule placement.** 8 to 12 tasks that each tempt one
-      violation; arms are always-loaded, plus-principle-skill, principle-only,
-      and per-turn re-injected. Metric is violations in the diff, counted by our
-      existing `.mdl` rules and grep, so the assertion is mechanical. Decides
-      whether to adopt `principle-*` skills or move Non-negotiables onto the
-      per-turn channel.
+- [x] **Experiment 1 run 1: rule placement.** INCONCLUSIVE. 65 runs, 5 arms
+      (control, ours-always-loaded, both, theirs-on-demand, ours-re-injected),
+      3 violation classes. Result: 3 violations in 65 runs, no arm separates
+      from the control. The tasks do not discriminate, so nothing can be
+      concluded either way. A detector bug (flagging narrowing casts inside type
+      guards) inflated the first pass to 14-36% and would have supported a
+      confident wrong answer. Harness, tasks, scorer and full writeup in
+      `experiments/rule-placement/`.
+- [ ] **Experiment 1 run 2.** Fix the floor effect: multi-turn sessions rather
+      than single-turn, real repo files where the correct fix touches several
+      call sites, surrounding code that already violates, and bulk edits where
+      the violation is one of forty. The single-turn small-file design is the
+      best case for an always-loaded rule and the least like the conditions that
+      produced 5,230 `no-casts` findings in the tree.
 - [ ] **Experiment 2: stated versus checked.** `code-style` comment rule alone
       against the rule plus a `no-comments`-style reviewer pass. Decides whether
       the reviewer-subagent mechanism is worth adopting for stated-only rules.

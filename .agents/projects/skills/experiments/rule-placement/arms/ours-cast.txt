@@ -1,0 +1,1 @@
+- **No casts to silence the type-checker.** `as any`, `as unknown as T`, widened `any` signatures, and non-null `!` are not fixes — fix the type at its source. `as const` is fine. See the `code-style` skill for the full rule and the pre-commit audit command.

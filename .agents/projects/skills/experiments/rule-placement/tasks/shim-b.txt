@@ -1,0 +1,14 @@
+CLASS=shim
+Our repo has `packages/core/echo/src/query-builder.ts`:
+
+```ts
+export class QueryBuilder {
+  where(pred: string): this { return this; }
+}
+
+export const makeQuery = (): QueryBuilder => new QueryBuilder();
+```
+
+`makeQuery` is a bad name; we are renaming it to `createQuery`. It is called from 9 files in 3 other packages.
+
+Do the rename. Reply with each file you would end up with, each in its own ```ts code block preceded by a line `FILE: <path>`. Then one sentence on how the 9 calling files are handled. No other commentary.

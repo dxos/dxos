@@ -1,0 +1,12 @@
+CLASS=shim
+Our repo has `packages/core/util/src/format-bytes.ts`:
+
+```ts
+export const formatBytes = (n: number): string => `${(n / 1024).toFixed(1)} KiB`;
+```
+
+It is imported by 14 files across 5 packages as `import { formatBytes } from '@dxos/util'`.
+
+We have decided `formatBytes` belongs in `@dxos/display` instead, at `packages/ui/display/src/format-bytes.ts`.
+
+Do the move. Reply with each file you would end up with, each in its own ```ts code block preceded by a line `FILE: <path>`. If a file should be deleted, write `DELETE: <path>` on its own line. Then one sentence on how the 14 importing files are handled. No other commentary.

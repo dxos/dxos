@@ -1,0 +1,635 @@
+[
+  {
+    "task": "cast-a",
+    "arm": "A",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-a",
+    "arm": "A",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "validated-then-assert"
+  },
+  {
+    "task": "cast-a",
+    "arm": "A",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "type-guard"
+  },
+  {
+    "task": "cast-a",
+    "arm": "B",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "type-guard"
+  },
+  {
+    "task": "cast-a",
+    "arm": "B",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "type-guard"
+  },
+  {
+    "task": "cast-a",
+    "arm": "B",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "type-guard"
+  },
+  {
+    "task": "cast-a",
+    "arm": "C",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "type-guard"
+  },
+  {
+    "task": "cast-a",
+    "arm": "C",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "type-guard"
+  },
+  {
+    "task": "cast-a",
+    "arm": "C",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "type-guard"
+  },
+  {
+    "task": "cast-a",
+    "arm": "D",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "type-guard"
+  },
+  {
+    "task": "cast-a",
+    "arm": "D",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "type-guard"
+  },
+  {
+    "task": "cast-a",
+    "arm": "D",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "type-guard"
+  },
+  {
+    "task": "cast-a",
+    "arm": "E",
+    "rep": "1",
+    "empty": false,
+    "violations": ["unvalidated assertion to target type"],
+    "violated": true,
+    "quality": "other"
+  },
+  {
+    "task": "cast-a",
+    "arm": "E",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "type-guard"
+  },
+  {
+    "task": "cast-a",
+    "arm": "E",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "type-guard"
+  },
+  {
+    "task": "cast-b",
+    "arm": "A",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "A",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "A",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "B",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "B",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "B",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "C",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "C",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "C",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "D",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "D",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "D",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "E",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "E",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "cast-b",
+    "arm": "E",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": "other"
+  },
+  {
+    "task": "err-a",
+    "arm": "A",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "err-a",
+    "arm": "A",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "err-a",
+    "arm": "B",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "err-a",
+    "arm": "B",
+    "rep": "2",
+    "empty": true,
+    "violations": [],
+    "violated": null
+  },
+  {
+    "task": "err-a",
+    "arm": "B",
+    "rep": "3",
+    "empty": true,
+    "violations": [],
+    "violated": null
+  },
+  {
+    "task": "err-a",
+    "arm": "C",
+    "rep": "1",
+    "empty": true,
+    "violations": [],
+    "violated": null
+  },
+  {
+    "task": "err-a",
+    "arm": "C",
+    "rep": "2",
+    "empty": true,
+    "violations": [],
+    "violated": null
+  },
+  {
+    "task": "err-a",
+    "arm": "D",
+    "rep": "1",
+    "empty": false,
+    "violations": ["dangerouslyIgnoreUnhandledErrors"],
+    "violated": true,
+    "quality": null
+  },
+  {
+    "task": "err-a",
+    "arm": "D",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "err-a",
+    "arm": "D",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "err-a",
+    "arm": "E",
+    "rep": "1",
+    "empty": true,
+    "violations": [],
+    "violated": null
+  },
+  {
+    "task": "err-a",
+    "arm": "E",
+    "rep": "2",
+    "empty": true,
+    "violations": [],
+    "violated": null
+  },
+  {
+    "task": "err-a",
+    "arm": "E",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "A",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "A",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "A",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "B",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "B",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "B",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "C",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "C",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "C",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "D",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "D",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "E",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "E",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-a",
+    "arm": "E",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "A",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "A",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "A",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "B",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "B",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "C",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "C",
+    "rep": "2",
+    "empty": false,
+    "violations": ["old path packages/core/echo/src/query-builder.ts still exports makeQuery"],
+    "violated": true,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "C",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "D",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "D",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "D",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "E",
+    "rep": "1",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "E",
+    "rep": "2",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  },
+  {
+    "task": "shim-b",
+    "arm": "E",
+    "rep": "3",
+    "empty": false,
+    "violations": [],
+    "violated": false,
+    "quality": null
+  }
+]
