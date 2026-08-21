@@ -31,8 +31,7 @@ export type ExtensionApiBase<K extends Kind = Kind> = {
 
 /**
  * Instrument-level metadata, declared once by the first caller for a given metric name.
- * Units must be UCUM as OTel requires — `s` for seconds, `By` for bytes, `{thing}` for
- * dimensionless counts.
+ * Units must be UCUM as OTel requires — `s`, `By`, `{thing}`.
  */
 export type MetricMeta = { unit?: string; description?: string };
 
@@ -45,9 +44,8 @@ export type Metrics = {
   distribution(name: string, value: number, tags?: Attributes, meta?: MetricMeta): void;
   /**
    * Registers a callback read once per export interval.
-   * Prefer this over {@link Metrics.gauge} for any "current value" metric — a pushed gauge
-   * only lands in the export windows its producer happens to tick in, so a producer on a
-   * slower cadence than the exporter leaves the series full of gaps.
+   * Prefer this over {@link Metrics.gauge} for any "current value" metric, since a pushed gauge
+   * only lands in the export windows its producer happens to tick in.
    */
   observe(name: string, callback: MetricObserver, tags?: Attributes, meta?: MetricMeta): CleanupFn;
 };

@@ -33,8 +33,13 @@ packages lint clean, and `composer-app:build` green downstream (285 tasks).
     collector exists, so without the replay they would never be read.
   - Tags resolve inside the collection callback, since `did`/`deviceKey` arrive
     asynchronously via `setTags`.
-  - 6 unit tests in `remote/metrics.test.ts` (fan-out, replay, double-register,
-    cleanup across late processors, no-processor no-op).
+  - `unregisterProcessor` detaches a collector and its observations on shutdown,
+    called from `OtelMetrics.close()` before provider shutdown. Without it a closed
+    processor kept receiving samples, later observations attached to its dead
+    provider, and a re-initialized collector double-reported alongside it.
+  - 9 unit tests in `remote/metrics.test.ts` (fan-out, replay, double-register,
+    cleanup across late processors, no-processor no-op, unregister, idempotent
+    unregister, close-and-reinitialize).
 - [x] **Pass `unit`/`description` through, register histogram `View`s** (P5) — added
       `description` to `MetricData` and a `MetricMeta` param on the extension API;
       instruments are created with both. Two non-overlapping explicit-bucket views

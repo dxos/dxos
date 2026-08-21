@@ -8,12 +8,7 @@ import { type MetricData, type MetricObserver, RemoteMetrics } from './metrics';
 
 type Recorded = { name: string; value?: number | string; data?: MetricData };
 
-/**
- * Records what a processor was asked to do.
- * A real recorder rather than a mock: every assertion below is about the fan-out and
- * replay behaviour of {@link RemoteMetrics} itself, which is observable from the
- * processor side without stubbing anything.
- */
+/** Records what a processor was asked to do — the fan-out under test is observable from this side. */
 class RecordingProcessor {
   readonly increments: Recorded[] = [];
   readonly observations: { name: string; callback: MetricObserver }[] = [];
@@ -100,6 +95,58 @@ describe('RemoteMetrics', () => {
 
     expect(early.detached).toEqual(['dxos.test.gauge']);
     expect(late.detached).toEqual(['dxos.test.gauge']);
+  });
+
+  test('unregistering detaches the processor and its observations', () => {
+    const metrics = new RemoteMetrics();
+    const processor = new RecordingProcessor();
+    metrics.registerProcessor(processor);
+    metrics.observe('dxos.test.gauge', () => 1);
+
+    metrics.unregisterProcessor(processor);
+
+    expect(processor.detached).toEqual(['dxos.test.gauge']);
+    metrics.increment('dxos.test.counter');
+    expect(processor.increments).toEqual([]);
+  });
+
+  test('unregistering an unknown processor is a no-op', () => {
+    const metrics = new RemoteMetrics();
+    const processor = new RecordingProcessor();
+
+    // Idempotent: a collector whose close path runs twice must not double-detach.
+    metrics.unregisterProcessor(processor);
+    metrics.registerProcessor(processor);
+    metrics.unregisterProcessor(processor);
+    metrics.unregisterProcessor(processor);
+
+    expect(processor.detached).toEqual([]);
+  });
+
+  test('only the live processor is used after close and re-initialize', () => {
+    const metrics = new RemoteMetrics();
+    const closed = new RecordingProcessor();
+    metrics.registerProcessor(closed);
+    const cleanup = metrics.observe('dxos.test.gauge', () => 1);
+
+    // A collector shutdown followed by a fresh one — the dead processor must not be
+    // re-attached to, and must not double-report alongside its replacement.
+    metrics.unregisterProcessor(closed);
+    const live = new RecordingProcessor();
+    metrics.registerProcessor(live);
+
+    metrics.increment('dxos.test.counter');
+    metrics.observe('dxos.test.other', () => 2);
+
+    expect(closed.increments).toEqual([]);
+    expect(closed.observations.map(({ name }) => name)).toEqual(['dxos.test.gauge']);
+    expect(live.increments).toHaveLength(1);
+    expect(live.observations.map(({ name }) => name)).toEqual(['dxos.test.gauge', 'dxos.test.other']);
+
+    // The pre-close registration's cleanup still resolves against the live processor only.
+    cleanup();
+    expect(live.detached).toEqual(['dxos.test.gauge']);
+    expect(closed.detached).toEqual(['dxos.test.gauge']);
   });
 
   test('a cleaned-up observation is not replayed to a new processor', () => {

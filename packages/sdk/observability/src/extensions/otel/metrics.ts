@@ -31,14 +31,9 @@ const EXPORT_INTERVAL = 60 * 1000;
 const METER_NAME = 'dxos-observability';
 
 /**
- * Explicit bucket boundaries for the SDK's duration histograms, in seconds.
- * The OTel defaults are millisecond-shaped and top out at 10,000, so every duration
- * past ten seconds would land in the overflow bucket.
- *
- * A histogram costs one series per boundary (plus `_count`/`_sum`) in the metrics
- * backend, so these are deliberately short and per-instrument: a single catch-all view
- * would have to span both ranges and pay for buckets neither instrument uses. Views
- * must not overlap — two matching views produce two duplicate metric streams.
+ * Second-scale boundaries for the SDK's duration histograms, since the OTel defaults are
+ * millisecond-shaped and cap at 10,000. Per-instrument rather than one catch-all: each
+ * boundary costs a series, and two views matching one instrument duplicate its stream.
  */
 const HISTOGRAM_VIEWS: ViewOptions[] = [
   {
@@ -61,13 +56,13 @@ const HISTOGRAM_VIEWS: ViewOptions[] = [
 
 export class OtelMetrics {
   private _meterProvider: MeterProvider;
-  // Instruments are cached rather than created per record: the meter dedupes by descriptor,
-  // so re-creating one on every sample is pure allocation on a hot path. One map per kind
-  // keeps the lookup exactly typed — a shared map would need a cast on every read.
+  // Cached because re-creating an instrument per sample is pure allocation; one map per kind
+  // keeps the lookup typed without a cast.
   readonly #counters = new Map<string, Counter>();
   readonly #gauges = new Map<string, Gauge>();
   readonly #histograms = new Map<string, Histogram>();
   readonly #observableGauges = new Map<string, ObservableGauge>();
+  readonly #processor: Parameters<typeof TRACE_PROCESSOR.remoteMetrics.registerProcessor>[0];
 
   constructor(private readonly options: OtelOptions) {
     // TODO: improve error handling/logging
@@ -78,8 +73,8 @@ export class OtelMetrics {
       exporter: new OTLPMetricExporter({
         url: resolveOtlpUrl(this.options.endpoint + '/v1/metrics'),
         headers: this.options.headers,
-        // Clients are short-lived and reload constantly. A cumulative counter restarting at 0
-        // on every reload reads as a counter reset downstream and corrupts every rate panel.
+        // Delta because a cumulative counter restarting at 0 on every client reload reads
+        // downstream as a counter reset.
         temporalityPreference: AggregationTemporalityPreference.DELTA,
       }),
       exportIntervalMillis: EXPORT_INTERVAL,
@@ -91,7 +86,7 @@ export class OtelMetrics {
       views: HISTOGRAM_VIEWS,
     });
 
-    const metrics = {
+    this.#processor = {
       // TODO: update metrics names and remove prefix?
       increment: (name: string, value?: number, data?: MetricData) => {
         this.increment(name, value, convertTags(data), data);
@@ -110,7 +105,7 @@ export class OtelMetrics {
       },
     };
 
-    TRACE_PROCESSOR.remoteMetrics.registerProcessor(metrics);
+    TRACE_PROCESSOR.remoteMetrics.registerProcessor(this.#processor);
   }
 
   gauge(name: string, value: number, tags?: Attributes, data?: MetricData): void {
@@ -135,9 +130,8 @@ export class OtelMetrics {
 
   /**
    * Registers a callback read once per export interval.
-   * Tags are resolved inside the callback because identity tags (`did`, `deviceKey`) are
-   * set asynchronously after startup — capturing them at registration time would pin
-   * every observed metric to the empty tag set.
+   * Tags resolve inside the callback because identity tags arrive asynchronously after startup,
+   * so capturing them at registration would pin the metric to the empty tag set.
    */
   observe(name: string, callback: MetricObserver, tags?: Attributes, data?: MetricData): CleanupFn {
     const gauge = this.#cached(this.#observableGauges, name, data, (options) =>
@@ -164,6 +158,8 @@ export class OtelMetrics {
   }
 
   close(): Promise<void> {
+    // Detach before shutdown, or later observations attach to this closed provider.
+    TRACE_PROCESSOR.remoteMetrics.unregisterProcessor(this.#processor);
     this.#counters.clear();
     this.#gauges.clear();
     this.#histograms.clear();
@@ -175,11 +171,7 @@ export class OtelMetrics {
     return this._meterProvider.getMeter(METER_NAME);
   }
 
-  /**
-   * Returns the cached instrument, creating it on first use.
-   * The unit/description of the first caller wins, matching OTel's own
-   * duplicate-instrument semantics.
-   */
+  /** Returns the cached instrument; the first caller's unit/description wins, as OTel itself does. */
   #cached<T>(
     cache: Map<string, T>,
     name: string,
@@ -197,11 +189,7 @@ export class OtelMetrics {
   }
 }
 
-/**
- * Projects {@link MetricData} tags onto OTel attributes.
- * Nullish values are dropped rather than forwarded: they are not valid attribute values,
- * so the SDK would warn and discard them anyway.
- */
+/** Projects tags onto OTel attributes, dropping nullish values that are not valid attribute values. */
 const convertTags = (data?: MetricData): Attributes => {
   const tags = data?.tags;
   if (!tags) {

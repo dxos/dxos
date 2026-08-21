@@ -227,13 +227,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
 /**
  * Builds the resource for logs/traces and the separate one for metrics.
- *
- * Metrics deliberately omit `session.id`. It is per-page-load, and a metrics backend keys
- * each series on its full attribute set, so a fresh UUID every reload mints a permanent new
- * series that never merges with any other — unbounded growth for no query value (correlating
- * a single session is what traces and logs are for). This has to be a separate resource
- * rather than a View: views filter datapoint attributes via `attributesProcessors` and have
- * no reach into provider-level resource attributes.
+ * Metrics omit `session.id` because a per-page-load attribute mints a new time series on every
+ * reload. A separate resource is the only option: views reach datapoint attributes, not resource ones.
  */
 export const createResources = (
   attributes: Record<string, string>,

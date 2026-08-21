@@ -2,7 +2,7 @@
 '@dxos/observability': minor
 ---
 
-Metrics can now be observed rather than pushed. `trace.metrics.observe(name, callback, data)` and `observability.metrics.observe(...)` register a callback that is read once per export interval and return a cleanup function, which is the correct instrument for any "current value" metric — a pushed gauge only lands in the export windows its producer happens to tick in, so a producer on a slower cadence than the exporter leaves the series full of gaps. Observations registered before a collector attaches are replayed to it, so SDK code can register at startup.
+Metrics can now be observed rather than pushed. `trace.metrics.observe(name, callback, data)` and `observability.metrics.observe(...)` register a callback that is read once per export interval and return a cleanup function, which is the correct instrument for any "current value" metric — a pushed gauge only lands in the export windows its producer happens to tick in, so a producer on a slower cadence than the exporter leaves the series full of gaps. Observations registered before a collector attaches are replayed to it, so SDK code can register at startup, and `RemoteMetrics.unregisterProcessor` detaches a collector on shutdown so a closed one neither keeps receiving samples nor double-reports alongside its replacement.
 
 Metric instruments now carry `unit` and `description`, supplied via the new fourth `meta` argument on `gauge`/`increment`/`distribution`/`observe`.
 

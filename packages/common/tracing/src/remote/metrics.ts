@@ -13,10 +13,7 @@ export interface MetricData {
   timestamp?: number;
 }
 
-/**
- * Reads the current value of an observed metric. Returning `undefined` skips the
- * collection cycle, so a value that is not available yet is absent rather than zero.
- */
+/** Reads the current value; `undefined` skips the cycle so an unavailable value is absent, not zero. */
 export type MetricObserver = () => number | undefined;
 
 interface MetricsMethods {
@@ -38,9 +35,8 @@ interface MetricsMethods {
   gauge(name: string, value: number, data?: MetricData): void;
   /**
    * Registers a callback read once per collection cycle.
-   * Preferred over {@link gauge} for any "current value" metric: a pushed gauge only
-   * lands in the export windows the producer happens to tick in, leaving the series
-   * full of gaps, whereas an observed one is read on every window.
+   * Preferred over {@link gauge} for any "current value" metric, since a pushed gauge only lands
+   * in the export windows its producer happens to tick in.
    */
   observe(name: string, callback: MetricObserver, data?: MetricData): CleanupFn;
 }
@@ -66,11 +62,30 @@ export class RemoteMetrics implements MetricsMethods {
 
     this.#processors.add(processor);
 
-    // Observations are long-lived registrations rather than point-in-time samples, so a
-    // processor attached after the SDK registered them must be given the backlog —
-    // otherwise every gauge registered during startup is silently never read.
+    // Replay the backlog, because SDK code registers observations at startup and would
+    // otherwise have them silently never read by a collector configured later.
     for (const observation of this.#observations) {
       this.#attach(observation, processor);
+    }
+  }
+
+  /**
+   * Detaches a processor and every observation attached to it.
+   * Required on collector shutdown: without it the dead processor keeps receiving samples,
+   * later observations attach to its closed provider, and a re-initialized collector
+   * double-reports alongside it.
+   */
+  unregisterProcessor(processor: MetricsMethods): void {
+    if (!this.#processors.delete(processor)) {
+      return;
+    }
+
+    for (const cleanups of this.#cleanups.values()) {
+      const cleanup = cleanups.get(processor);
+      if (cleanup) {
+        cleanups.delete(processor);
+        cleanup();
+      }
     }
   }
 
@@ -121,7 +136,7 @@ export class RemoteMetrics implements MetricsMethods {
       cleanups = new Map();
       this.#cleanups.set(observation, cleanups);
     }
-    // Guard re-registration so a processor added twice does not double-report the value.
+    // A processor added twice must not double-report.
     if (cleanups.has(processor)) {
       return;
     }

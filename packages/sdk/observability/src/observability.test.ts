@@ -396,8 +396,7 @@ describe('Observability', () => {
 
     it.effect('metrics.observe cleanup unregisters from every extension', () =>
       Effect.gen(function* () {
-        // Recorded rather than mocked: the contract under test is that one cleanup fn
-        // tears down the registration on every metrics extension, not just the first.
+        // The contract: one cleanup fn tears down every extension's registration, not just the first.
         const cleaned: string[] = [];
         const extensionFor = (name: string) =>
           createMockExtension({
