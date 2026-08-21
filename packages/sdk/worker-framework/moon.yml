@@ -7,3 +7,15 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
+tasks:
+  # Manually-run stress suite (`src/playwright/worker-stress.spec.ts`) — real Chromium, real tabs,
+  # real dedicated + shared workers. Its own task rather than the `e2e` tag so it never gates a PR:
+  # it deliberately wedges workers and waits out stale-timeout-driven failover, so a run takes
+  # minutes. Not cacheable — the point is to re-provoke the races, not to replay a verdict.
+  e2e-stress:
+    command: pnpm exec playwright test --config=src/playwright/playwright-stress.config.ts
+    options:
+      cache: false
+      outputStyle: stream
+    deps:
+      - ^:build
