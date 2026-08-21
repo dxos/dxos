@@ -797,6 +797,53 @@ describe('json-to-effect', () => {
     });
     expect((stripped as { closed: Record<string, unknown> }).closed).to.deep.eq({ name: 'ok' });
   });
+
+  // A `$ref` is only ever emitted for a genuine cycle (an acyclic suspend is inlined), so the
+  // decoder must reach every `$ref` through a suspend -- inlining the definition eagerly recurses
+  // until the stack blows.
+  test('decode a self-referential schema', () => {
+    interface Node {
+      readonly name: string;
+      readonly child?: Node;
+    }
+    const Node: Schema.Codec<Node> = Schema.Struct({
+      name: Schema.String,
+      child: Schema.optional(Schema.suspend((): Schema.Codec<Node> => Node)),
+    });
+
+    const jsonSchema = toJsonSchema(Node);
+    const decoded = toEffectSchema(jsonSchema);
+    expect(Schema.decodeUnknownSync(decoded)({ name: 'root', child: { name: 'leaf' } })).to.deep.eq({
+      name: 'root',
+      child: { name: 'leaf' },
+    });
+  });
+
+  test('decode a pair of mutually-recursive schemas', () => {
+    interface A {
+      readonly kind: 'a';
+      readonly b?: B;
+    }
+    interface B {
+      readonly kind: 'b';
+      readonly a?: A;
+    }
+    const A: Schema.Codec<A> = Schema.Struct({
+      kind: Schema.Literal('a'),
+      b: Schema.optional(Schema.suspend((): Schema.Codec<B> => B)),
+    });
+    const B: Schema.Codec<B> = Schema.Struct({
+      kind: Schema.Literal('b'),
+      a: Schema.optional(Schema.suspend((): Schema.Codec<A> => A)),
+    });
+
+    const jsonSchema = toJsonSchema(A);
+    const decoded = toEffectSchema(jsonSchema);
+    expect(Schema.decodeUnknownSync(decoded)({ kind: 'a', b: { kind: 'b' } })).to.deep.eq({
+      kind: 'a',
+      b: { kind: 'b' },
+    });
+  });
 });
 
 describe('reference', () => {

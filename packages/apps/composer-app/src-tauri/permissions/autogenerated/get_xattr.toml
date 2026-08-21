@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-xattr"
+description = "Enables the get_xattr command without any pre-configured scope."
+commands.allow = ["get_xattr"]
+
+[[permission]]
+identifier = "deny-get-xattr"
+description = "Denies the get_xattr command without any pre-configured scope."
+commands.deny = ["get_xattr"]
