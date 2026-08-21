@@ -197,7 +197,10 @@ export const CreateObjectDialog = ({
 
         const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
         invariant(db, 'Missing database');
-        const result = yield* metadata.createObject(data, { db, target, targetNodeId });
+        // The dialog targets a database to mean "the space root"; downstream that is the absence of
+        // a collection, since `db` already says which space.
+        const collection = Collection.isCollection(target) ? target : undefined;
+        const result = yield* metadata.createObject(data, { db, target: collection, targetNodeId });
         const shouldNavigate = _shouldNavigate ?? (() => true);
         if (shouldNavigate(result.object)) {
           // Where an object lands in the tree is the resolver's question, not the create's.

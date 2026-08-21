@@ -386,7 +386,7 @@ const createSchemaActions = ({
                   typename,
                 });
               } else {
-                const result = yield* createObjectFn({}, { db: space.db, target: space.db }).pipe(
+                const result = yield* createObjectFn({}, { db: space.db }).pipe(
                   Effect.provideService(Capability.Service, capabilities),
                 );
                 const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {

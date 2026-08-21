@@ -214,8 +214,13 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
  * `required` — the same contract ECHO's own emitter keeps (`stripUndefinedMember`) and the one the
  * pre-migration corpus was recorded against.
  */
-const toModelJsonSchema = (schema: Schema.Codec<any, any>): JsonSchema.JsonSchema =>
-  statePropertyOpenness(dropNullBranches(Schema.toJsonSchemaDocument(schema).schema, new Set(asStringArray(schema))));
+const toModelJsonSchema = (schema: Schema.Codec<any, any>): JsonSchema.JsonSchema => {
+  // A recursive parameter renders as `$ref: '#/$defs/…'` with the bodies in a separate `definitions`
+  // record; keeping only the root would advertise a dangling reference to the model.
+  const { schema: root, definitions } = Schema.toJsonSchemaDocument(schema);
+  const document = Object.keys(definitions).length > 0 ? { ...root, $defs: definitions } : root;
+  return statePropertyOpenness(dropNullBranches(document, new Set(asStringArray(schema))));
+};
 
 /**
  * States openness on every object node that leaves it implied.
@@ -296,10 +301,16 @@ export const createStructFieldsFromSchema = (
   schema: Schema.Codec<any, any>,
 ): Record<string, Schema.Codec<any, any>> => {
   switch (schema.ast._tag) {
-    case 'Objects':
+    case 'Objects': {
+      // One cache for the whole struct: sibling properties may reach the same recursive body.
+      const expansions = new Map<SchemaAST.AST, SchemaAST.AST>();
       return Object.fromEntries(
-        schema.ast.propertySignatures.map((prop) => [prop.name, Schema.make(mapSchemaTypeForLLM(prop.type))]),
+        schema.ast.propertySignatures.map((prop) => [
+          prop.name,
+          Schema.make(mapSchemaTypeForLLM(prop.type, expansions)),
+        ]),
       );
+    }
     case 'Void':
       return {};
     default:
@@ -311,7 +322,10 @@ export const createStructFieldsFromSchema = (
  * Picks an LLM-friendly schema type for the given schema AST.
  * The picked schema type decodes to the original schema type.
  */
-const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
+const mapSchemaTypeForLLM = (
+  ast: SchemaAST.AST,
+  expansions: Map<SchemaAST.AST, SchemaAST.AST> = new Map(),
+): SchemaAST.AST => {
   if (Ref.isRefType(ast)) {
     // v4's element and property nodes carry their own modifiers, so the wrapper types are gone and
     // the annotations record is optional.
@@ -322,9 +336,29 @@ const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
     return SchemaEx.retainContext(ast, RefFromLLM.annotate({ description }).ast);
   }
 
+  // `mapAst` evaluates a suspended body eagerly, so a recursive schema would walk its own cycle
+  // forever. Memoizing by body identity and rebuilding the suspend lazily closes the cycle: the
+  // re-entrant call returns this very node instead of expanding the body again.
+  if (SchemaAST.isSuspend(ast)) {
+    const body = ast.thunk();
+    let mapped = expansions.get(body);
+    if (!mapped) {
+      let expanded: SchemaAST.AST | undefined;
+      mapped = new SchemaAST.Suspend(
+        () => (expanded ??= mapSchemaTypeForLLM(body, expansions)),
+        ast.annotations,
+        undefined,
+        ast.encoding,
+        ast.context,
+      );
+      expansions.set(body, mapped);
+    }
+    return mapped;
+  }
+
   // `mapAst` carries annotations, checks, encoding and `context` across every rebuilt node; in v4
   // optionality rides on `context`, so rebuilding by hand silently makes an optional key required.
-  return SchemaEx.mapAst(ast, (child) => mapSchemaTypeForLLM(child));
+  return SchemaEx.mapAst(ast, (child) => mapSchemaTypeForLLM(child, expansions));
 };
 
 const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<Record<string, Tool.Any>> => {

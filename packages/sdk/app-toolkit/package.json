@@ -46,6 +46,11 @@
       "types": "./dist/types/src/app-framework/AppCapability.d.ts",
       "import": "./dist/lib/app-framework/AppCapability.mjs"
     },
+    "./AppMigrations": {
+      "source": "./src/echo/AppMigrations.ts",
+      "types": "./dist/types/src/echo/AppMigrations.d.ts",
+      "import": "./dist/lib/echo/AppMigrations.mjs"
+    },
     "./ObservabilityMapping": {
       "source": "./src/app-framework/ObservabilityMapping.ts",
       "types": "./dist/types/src/app-framework/ObservabilityMapping.d.ts",
@@ -95,6 +100,11 @@
       "source": "./src/operations/LayoutOperation.ts",
       "types": "./dist/types/src/operations/LayoutOperation.d.ts",
       "import": "./dist/lib/operations/LayoutOperation.mjs"
+    },
+    "./NativeOAuth": {
+      "source": "./src/app/NativeOAuth.ts",
+      "types": "./dist/types/src/app/NativeOAuth.d.ts",
+      "import": "./dist/lib/app/NativeOAuth.mjs"
     },
     "./NativePasskey": {
       "source": "./src/app/NativePasskey.ts",
@@ -203,6 +213,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/migrations": "workspace:*",
     "@dxos/progress": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -215,7 +226,8 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@tauri-apps/api": "catalog:"
+    "@tauri-apps/api": "catalog:",
+    "@tauri-apps/plugin-opener": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
