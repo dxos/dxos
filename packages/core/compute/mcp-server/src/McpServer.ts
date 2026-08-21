@@ -385,16 +385,13 @@ export const invoke = (
           // The space is resolved after encoding, because the wire form is where a reference
           // argument states which space it belongs to.
           Effect.flatMap((wire) => {
+            // The three ways a caller names a space, in precedence order: the ambient argument, a
+            // `spaceId` the operation declares in its own input, and a space-qualified reference
+            // it was handed. Nothing else — there is no session default, so a verb that acts on a
+            // space and was told none is refused rather than run somewhere arbitrary.
             const named =
               spaceId ?? (typeof declared === 'string' ? declared : undefined) ?? spaceInternal.hintFromInput(wire);
-            // An operation acting on no space is space-addressed only when something names one:
-            // demanding a space would refuse every call to a verb that asks about the host rather
-            // than about its data, on exactly the profile such a verb is most useful on — one with
-            // no identity, and so no spaces, yet.
-            const target = viewInternal.requiresSpace(record)
-              ? spaceInternal.resolveId(host.spaceIds, named)
-              : spaceInternal.resolveOptionalId(host.spaceIds, named);
-            return target.pipe(
+            return spaceInternal.resolveId(host.spaceIds, named, { required: viewInternal.requiresSpace(record) }).pipe(
               Effect.flatMap((resolvedSpaceId) =>
                 host.invoke({ key: operationKey, input: wire, spaceId: resolvedSpaceId }).pipe(
                   Effect.mapError((error) => failure('operation_failed', `${operationKey} failed: ${error.message}`)),

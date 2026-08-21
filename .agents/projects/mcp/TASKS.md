@@ -105,6 +105,19 @@ changes what a model sees lives in the shared package or it is a bug.
         2026-08-21) — the DID is what EDGE authorizes against and what plugin-client's
         `IdentitySchema` carries, so the eventual operation keeps the same field. The fold-it-in
         TODO lives on the Space skill, where the verb will land.
+  - [x] **No session-default space** (user, 2026-08-21: "we should only be passing space IDs when
+        they are provided explicitly to avoid acting on spaces unintentionally"). `resolveId` fell
+        back to `sessionSpaceIds[0]` when a call named none, so a write invoked without `spaceId`
+        landed in whichever space the session happened to list first — its own parameter description
+        called that "an arbitrary choice, not an inferred one", which is an admission, not a
+        safeguard. Nothing is inferred now: a space comes from the ambient argument, a `spaceId` the
+        operation declares in its own input, or a space-qualified reference it was handed, and an
+        operation that acts on a space and was told none is refused with a message naming how to
+        choose one. `resolveOptionalId` folded back into `resolveId` with a `required` flag — with
+        no defaulting the two differed only in whether absence is an error. Cost: a single-space
+        profile now calls `whoami`/`querySpaces` once before its first space-addressed call.
+        **`McpServer.resolveSpaceId` takes the flag**, so EDGE's hand-written verbs adopt the rule
+        (or state otherwise) on the next pin bump. `serve.test` pins the refusal over a live session.
   - [x] **Dispatch bug this exposed** — the projection resolved a space for _every_ call, which
         only worked while every reachable verb was space-addressed. A host verb then failed with
         "No space in session context" on exactly the profile it is most useful on (no identity

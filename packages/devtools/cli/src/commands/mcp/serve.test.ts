@@ -55,6 +55,12 @@ const REQUESTS = [
     params: { name: 'invokeOperation', arguments: { key: 'org.dxos.nope' } },
   },
   { jsonrpc: '2.0', id: 12, method: 'tools/call', params: { name: 'loadSkill', arguments: {} } },
+  {
+    jsonrpc: '2.0',
+    id: 13,
+    method: 'tools/call',
+    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.plugin.space.operation.queryTypes' } },
+  },
 ];
 
 /** All that is left of the host-local toolkits; see the TODO on `space-tools.ts`. */
@@ -143,7 +149,7 @@ describe('dx mcp serve', () => {
   // assertions, so one session answers every request and each test reads its own reply.
   let responses: Map<number, Response>;
   beforeAll(async () => {
-    responses = await runSession([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], 90_000);
+    responses = await runSession([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], 90_000);
   }, 120_000);
 
   test('serves a fixed tool surface, whatever the registry holds', ({ expect }) => {
@@ -221,6 +227,14 @@ describe('dx mcp serve', () => {
     expect(failure.isError).to.be.true;
     expect(failure.content[0].text).to.include('noSuchSkill');
     expect(failure.content[0].text).to.include(SKILL);
+  });
+
+  // Nothing infers a space: the session's first one has no relationship to the task, so a verb that
+  // acts on a space and was told none is refused rather than run somewhere arbitrary.
+  test('a space-addressed operation invoked without a space is refused, not defaulted', ({ expect }) => {
+    const failure = responses.get(13)!.result;
+    expect(failure.isError).to.be.true;
+    expect(failure.content[0].text).to.include('spaceId');
   });
 
   // What an agent reaches for first — which plugins, which spaces, which types — is dispatched like
