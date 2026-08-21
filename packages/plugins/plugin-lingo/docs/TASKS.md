@@ -53,7 +53,32 @@ Found by actually rendering the stories; every one was invisible to the type-che
 - [x] Fixtures are Japanese, which exercises `reading` (furigana) and the segmenter — a
       space-delimited language left both dead.
 
+## Phase 1.6: Structural selection — DONE
+
+- [x] `@dxos/nlp` gains `Segment`/`Segmentation` plus a hierarchical aligner. Children align inside
+      their parent's extent, and a segment carries a range in the source AND the translation —
+      the paired range is what makes cross-pane selection possible.
+- [x] `segmentText` in `@dxos/nlp`: one cheap-model call returns nested regions quoted verbatim;
+      offsets are computed deterministically, because a model cannot count characters but can copy
+      a phrase exactly. Same split `parseText` already uses for POS.
+- [x] `AnalyzeText` operation caching onto an ECHO `Analysis` object, keyed by subject + source
+      hash, so reopening a document costs a query rather than a model call.
+- [x] `segments` CodeMirror extension replacing `vocabulary`: hover/caret outlines the most
+      specific region, click commits it as a selection distinct from the text selection, and the
+      committed id drives the popover, the other pane, and the toolbar.
+- [x] Deck vocabulary now produces `vocab` segments rather than its own decorations, so the editor
+      has one selection mechanism; it stays deterministic and offline.
+- [x] Storybook play tests for hover→outline, click→commit, most-specific-wins, and cross-pane
+      mirroring. These caught a real bug: `ReaderPane`'s extension memo depended on its callbacks,
+      so an inline handler rebuilt the editor on every selection.
+
 ## Phase 2: Deeper integration — NOT STARTED
+
+- [ ] Reuse the analyzer in the email pipeline. `@dxos/nlp` is importable today (as `pipeline-rdf`
+      imports `@dxos/ai`); a `@dxos/pipeline-nlp` Stage wrapper is ~30 lines and should be added
+      when the email pipeline actually wires it, not before.
+- [ ] Escalate the selection to the parent segment (the model already carries `parent`), so a
+      learner can widen from a term to its clause to its sentence.
 
 - [ ] The split view's second pane asks for a whole-passage translation
       (`LingoOperation.TranslatePassage`), which needs a live model; the story falls back to the

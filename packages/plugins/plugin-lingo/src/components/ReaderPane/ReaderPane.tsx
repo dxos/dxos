@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { type Segmentation } from '@dxos/nlp';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
@@ -51,6 +51,24 @@ export const ReaderPane = ({
 }: ReaderPaneProps) => {
   const { themeMode } = useThemeContext();
 
+  // Callbacks are read through a ref so they stay out of the extension identity. An extension array
+  // that changes rebuilds the editor, and a caller passing an inline handler would then tear the
+  // editor down on every selection — losing the decorations the selection just produced.
+  const handlers = useRef({ render, onSelect, onActivate });
+  handlers.current = { render, onSelect, onActivate };
+  const stableRender = useCallback<NonNullable<SegmentsOptions['render']>>(
+    (el, props, view) => handlers.current.render?.(el, props, view),
+    [],
+  );
+  const stableSelect = useCallback<NonNullable<SegmentsOptions['onSelect']>>(
+    (segment) => handlers.current.onSelect?.(segment),
+    [],
+  );
+  const stableActivate = useCallback<NonNullable<SegmentsOptions['onActivate']>>(
+    (segment) => handlers.current.onActivate?.(segment),
+    [],
+  );
+
   const extensions = useMemo<Extension[]>(
     () =>
       [
@@ -59,9 +77,9 @@ export const ReaderPane = ({
         // The language bundle only highlights; `decorateMarkdown` is what hides the markup, so the
         // reader needs both to show prose rather than source.
         markdown && [createMarkdownExtensions(), decorateMarkdown()],
-        segments({ side, render, onSelect, onActivate }),
+        segments({ side, render: stableRender, onSelect: stableSelect, onActivate: stableActivate }),
       ].filter(isTruthy),
-    [themeMode, markdown, side, render, onSelect, onActivate],
+    [themeMode, markdown, side, stableRender, stableSelect, stableActivate],
   );
 
   const { parentRef, view } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);

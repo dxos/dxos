@@ -3,6 +3,7 @@
 //
 
 import { Ref } from '@dxos/echo';
+import { type Segmentation, alignSegments } from '@dxos/nlp';
 
 import { Language, Vocabulary, Word } from '#types';
 
@@ -55,3 +56,40 @@ export const makeTestDeck = () => {
 
   return { language, vocabulary, words };
 };
+
+/**
+ * The analysis a model would produce for {@link TEST_PASSAGE} and its translation, built through
+ * the real aligner so the ranges are computed exactly as they would be in production.
+ *
+ * A fixture rather than a live call because the interaction under test — hover, select, mirror — is
+ * about the ranges, not about how they were derived.
+ */
+export const PAIRED_ANALYSIS: Segmentation = alignSegments(
+  TEST_PASSAGE,
+  [
+    {
+      kind: 'sentence',
+      text: '毎朝、**パン屋**は夜明け前に店を開けます。',
+      translation: 'Every morning the **bakery** opens its shop before dawn.',
+      children: [
+        {
+          kind: 'clause',
+          text: '夜明け前に',
+          translation: 'before dawn',
+          children: [{ kind: 'vocab', text: '夜明け', translation: 'dawn', gloss: 'dawn', reading: 'よあけ' }],
+        },
+        { kind: 'vocab', text: '店', translation: 'shop', gloss: 'shop', reading: 'みせ' },
+      ],
+    },
+    {
+      kind: 'sentence',
+      text: '市場で小麦粉を買って、その日のパンを作ります。',
+      translation: "It buys flour at the market and makes the day's bread.",
+      children: [
+        { kind: 'vocab', text: '市場', translation: 'market', gloss: 'market', reading: 'いちば' },
+        { kind: 'vocab', text: '小麦粉', translation: 'flour', gloss: 'flour', reading: 'こむぎこ' },
+      ],
+    },
+  ],
+  TEST_PASSAGE_TRANSLATION,
+);
