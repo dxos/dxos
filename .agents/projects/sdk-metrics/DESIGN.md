@@ -2,7 +2,7 @@
 
 ## Goal
 
-Instrument the DXOS SDK with a small, fixed set of OTel metrics that answer four
+Instrument the DXOS SDK with a small, fixed set of OTel metrics that answer five
 operational questions about the deployed client fleet, and surface them on a
 SigNoz dashboard:
 
@@ -70,6 +70,14 @@ label set — a fresh UUID per page reload mints a permanent new fingerprint who
 samples never merge with anything. Compression (Gorilla + ZSTD on values) does
 nothing about series count. Keep `session.id` on traces and logs; drop it from
 metrics.
+
+The fix must be a **separate resource for the metrics provider**, not a `View`.
+`extension.ts` builds one resource and hands the same object to `OtelLogs`,
+`OtelMetrics`, and `OtelTraces`; `OtelMetrics` passes it straight to
+`MeterProvider`. OTel `View`s filter _datapoint attributes_ via `attributeKeys` —
+they have no reach into provider-level resource attributes, so a view cannot strip
+this. If a custom exporter transform is used instead, it needs an exported-payload
+test asserting `session.id` is absent from metrics and present on traces and logs.
 
 ### P3 — Cache instruments
 
@@ -188,6 +196,27 @@ healthy. Note that a client concurrently _creating_ documents raises the count, 
 the definition tracks the low-water mark within the episode rather than the raw
 value.
 
+**First-sample policy (startup and reload).** An episode opens on a
+`0 → non-zero` transition, but a provider that starts — or a tab that reloads —
+with `unsyncedDocumentCount` already non-zero never sees that transition. Without
+a rule, the in-flight episode is invisible to both instruments. The rule:
+
+- On the **first observation** with `unsynced > 0`, open an episode with
+  `openedAt = lastProgressAt = now`. Both are lower bounds: the backlog may have
+  existed for hours before the process started.
+- `stalled.duration` therefore starts from 0 at startup and becomes meaningful
+  after one collection interval. It never returns "unknown" — a stuck client is
+  visible within a minute of boot either way.
+- A truncated episode **is** recorded to the histogram when it closes, accepting
+  that it under-reports duration. The alternative — an `origin=observed|truncated`
+  attribute — doubles the histogram's series count (see
+  [Cardinality budget](#cardinality-budget), where histograms already dominate)
+  to fix a bias the `stalled.duration` gauge already covers. Document the bias
+  instead of paying for it.
+- Episode state is **not persisted across reloads**. Persisting it would need
+  storage plus a clock-skew story, and the gauge makes a genuinely stuck client
+  visible regardless. Explicitly out of scope.
+
 Suggested buckets for `episode.duration`:
 `[1, 5, 15, 30, 60, 120, 300, 600, 1800, 3600]`.
 
@@ -257,8 +286,41 @@ Every metric inherits the extension's global tags (`ctx.tag`, `did`, `deviceKey`
 - **Never add** `spaceId`, `objectId`, `peerId`, or a raw error string as a metric
   attribute.
 
-Budget: 18 instruments, ≤2 attribute values each except the 4-valued
-`memory.bytes` scope ≈ **24 series per device**.
+### Budget
+
+Inclusion set: the 16 instruments in the tables above, plus the 4 existing
+`dxos.client.space.*` gauges this project modifies. `dxos.client.network.*` and the
+extension's own internals are excluded — they are untouched here.
+
+| Group                               | Instruments                           | Series / device |
+| ----------------------------------- | ------------------------------------- | --------------- |
+| Spaces                              | 2 gauges                              | 2               |
+| Per-space (existing, `key` removed) | 4 gauges                              | 4               |
+| Documents                           | 2 gauges (one × 2 `location`)         | 3               |
+| EDGE non-histogram                  | 1 counter × 7 `reason`, 1 gauge       | 8               |
+| Memory                              | 6 gauges + 1 gauge × 4 `scope`        | 10              |
+| Sync `stalled.duration`             | 1 gauge                               | 1               |
+| **Subtotal, non-histogram**         | **16**                                | **28**          |
+| `edge.ws.connect.duration`          | histogram, 9 boundaries × 2 `outcome` | 24              |
+| `sync.episode.duration`             | histogram, 10 boundaries              | 13              |
+| **Total**                           | **20**                                | **65**          |
+
+**Histograms dominate — 37 of 65 series.** An explicit-bucket histogram is not one
+series: SigNoz stores it as one `_bucket` series per boundary (plus `+Inf`) along
+with `_count` and `_sum`, so 9 boundaries × 2 attribute values costs 24 series, more
+than every gauge in the Spaces, Documents, and EDGE groups combined. Two
+consequences:
+
+- The "≤2 attribute values" instinct is the wrong lever on a histogram. Adding one
+  binary attribute to a 10-bucket histogram costs 12 series; adding one to a gauge
+  costs 1.
+- **If the budget needs cutting, cut boundaries before labels.** Halving
+  `connect.duration` to `[0.5, 2, 10, 60]` saves 12 series on its own.
+
+At 65 series per device the fleet cost is linear in devices — 10k active devices is
+~650k series, before the `time_series_v4` row per series and one `samples_v4` row
+per series per 60s export. Phase 5 validates this against the live instance rather
+than trusting the arithmetic.
 
 ## Verification
 
@@ -267,9 +329,16 @@ Budget: 18 instruments, ≤2 attribute values each except the 4-valued
   repo's no-mock-tests rule).
 - `RemoteMetrics.observe` fan-out and cleanup: pure unit test in
   `packages/common/tracing`.
+- Exported-payload test for P2: `session.id` absent from the metrics payload,
+  present on traces and logs.
+- Sync first-sample policy: unit-test startup and reload with a non-zero backlog,
+  alongside the ordinary transition cases.
 - End-to-end: run Composer against a local OTLP endpoint and confirm the series
   land, then `signoz_check_metric_cardinality` on the `dxos.*` metrics to confirm
-  the budget above holds in practice.
+  the budget above holds in practice. **Await `observability.flush()` before
+  asserting** — the export interval is 60s, so a short run otherwise reports false
+  missing series. `test/e2e/tracing-invitation.test.ts:160` already does this for
+  traces; confirm the same call drains the metric reader.
 
 ## Open questions
 

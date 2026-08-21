@@ -18,8 +18,12 @@ new instruments yet.
 - [ ] **Drop `session.id` from the metrics resource** (P2)
   - `extension.ts` stamps it as a resource attribute, so it lands on metrics too —
     one new ClickHouse fingerprint per page reload, forever.
-  - Keep it on traces and logs; split the resource, or strip it in the metrics
-    reader's view.
+  - Build a **separate resource for `MeterProvider`** — `extension.ts` hands one
+    resource object to logs, metrics, and traces alike. A `View` cannot do this:
+    `attributeKeys` filters datapoint attributes, not provider-level resource
+    attributes.
+  - Add an exported-payload test: `session.id` absent from metrics, present on
+    traces and logs.
 - [ ] **Cache instruments in `OtelMetrics`** (P3)
   - `createGauge`/`createCounter` are currently called on every single record.
 - [ ] **Add `observe()` to `RemoteMetrics`** (P4)
@@ -100,17 +104,31 @@ The headline ask. Two instruments — neither alone answers it.
   - Progress is a **decrease** in `unsyncedDocumentCount`, not any state emission —
     a client re-reporting the same backlog must not look healthy. Track the
     low-water mark so concurrent local writes raising the count don't reset it.
-  - Pure function over a sequence, so testable with no mocks.
+  - **First-sample policy**: on the first observation with `unsynced > 0` (provider
+    startup, or a tab that reloads mid-backlog), open an episode with
+    `openedAt = lastProgressAt = now` — both lower bounds. Without this, an episode
+    already in flight has no `0 → non-zero` transition and is invisible to both
+    instruments.
+  - Truncated episodes are recorded to the histogram and under-report duration;
+    do **not** add an `origin` attribute to distinguish them (it doubles the
+    histogram's series count to fix a bias `stalled.duration` already covers).
+    Episode state is not persisted across reloads — out of scope.
+  - Pure function over a sequence, so testable with no mocks. Cover startup and
+    reload with a non-zero backlog, not just the transition cases.
 - [ ] **Non-React cross-space sync aggregator as a `DataProvider`**
   - Same shape as `useSyncState` (`packages/sdk/react-client/src/echo/useSyncState.ts`):
     `space.internal.db.subscribeToAutomergeSyncState` filtered to the EDGE peer via
     `isEdgePeerId`, resubscribing on `client.spaces.subscribe`.
-  - Carry over the 1Hz poll from `SpaceProxy._syncToEdge` (`space-proxy.ts:770`) —
-    the subscription alone gets stuck, per the existing TODO there.
-  - **Do not add a fresh 1Hz poll**: the `memory-usage` project's PR #12561 (open)
-    adds no-change backoff to space sync-state polling precisely because that tick
-    was idle churn. Reuse the backed-off source, or this provider re-introduces the
-    churn that PR removes.
+  - **A poll is required, but this provider must not own one.** The subscription
+    alone gets stuck — hence the existing 1Hz poll and its TODO in
+    `SpaceProxy._syncToEdge` (`space-proxy.ts:770`). But standing up a second timer
+    re-creates the idle churn that memory-usage PR #12561 exists to remove.
+  - **Blocking decision, resolve before writing the provider:** #12561's backed-off
+    sync-state ticker is not on `main` yet (verified — no backoff in
+    `packages/sdk/client/src/echo`), so there is no source to name today. Either
+    (a) wait for #12561 and consume whatever it exposes, or (b) land a shared
+    backed-off sync-state source first and have both this provider and the UI read
+    it. Do **not** proceed by adding a private timer.
 - [ ] **`dxos.echo.sync.episode.duration`** histogram, buckets
       `[1, 5, 15, 30, 60, 120, 300, 600, 1800, 3600]` s
   - "Longest stretch to sync" = `max` over merged buckets in SigNoz; `p99` for the tail.
@@ -129,7 +147,9 @@ and nothing has been verified against a live instance.
 - [ ] **Authorize the `signoz` MCP server** (user action, interactive session)
 - [ ] **Cardinality check** — `signoz_check_metric_cardinality` on the existing
       `dxos.client.*` series to quantify what `session.id` and `key` already cost, and
-      confirm the ~13-series-per-device budget after Phases 1-4.
+      confirm the 65-series-per-device budget in DESIGN.md after Phases 1-4.
+  - Histograms are 37 of those 65 series; if the number has to come down, cut
+    bucket boundaries before attributes.
 - [ ] **Build the dashboard**
   - Spaces: `avg`/`p90`/`max` of `dxos.client.spaces.count` across devices.
   - Connectivity: `avg` of `dxos.edge.ws.connected`; `sum by (reason)` rate of
@@ -148,6 +168,10 @@ and nothing has been verified against a live instance.
     imminent-OOM-kill predictor.
 - [ ] **End-to-end check** — Composer against a local OTLP endpoint, confirm every
       series lands with the intended unit and attribute set.
+  - `await observability.flush()` before asserting, and confirm that call actually
+    drains the metric reader — the export interval is 60s, so a short run otherwise
+    reports false missing series. `test/e2e/tracing-invitation.test.ts:160` already
+    uses this pattern for traces.
 
 ## References
 
