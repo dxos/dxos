@@ -32,8 +32,8 @@ export default Capability.makeModule(
               label: ['open-commands.label', { ns: meta.profile.key }],
               icon: 'ph--magnifying-glass--regular',
               keyBinding: {
-                macos: 'meta+k',
-                windows: 'ctrl+k',
+                macos: 'shift+meta+k',
+                windows: 'ctrl+shift+k',
               },
             },
           }),
