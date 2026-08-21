@@ -15,7 +15,7 @@ const handler: Operation.WithHandler<typeof BookmarkOperation.AddFromSnapshot> =
       const bookmark = Bookmark.fromSnapshot(snapshot);
       const { id } = yield* Operation.invoke(
         SpaceOperation.AddObject,
-        { object: bookmark, target },
+        { object: bookmark },
         { spaceId: target.spaceId },
       );
       return { id };

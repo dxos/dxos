@@ -28,11 +28,7 @@ export default Capability.makeModule(
         options: CreateOptions,
       ) =>
         draft
-          ? Operation.invoke(
-              SpaceOperation.AddObject,
-              { object: draft, target: options.db },
-              { spaceId: options.db.spaceId },
-            )
+          ? Operation.invoke(SpaceOperation.AddObject, { object: draft }, { spaceId: options.db.spaceId })
           : Operation.invoke(RoutineOperation.CreateRoutine, { db: options.db, templateId, name }),
     });
   }),

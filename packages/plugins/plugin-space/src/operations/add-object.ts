@@ -14,23 +14,31 @@ import { SpaceOperation } from '#types';
 const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOperation.AddObject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      // A remote caller can only name the target collection by reference; resolve it through the
-      // ref itself rather than `Database.Service`, which the app's call sites give no space to.
-      const targetRef = Ref.isRef(input.target) ? input.target : undefined;
-      const target = (targetRef ? yield* Effect.promise(() => targetRef.load()) : input.target) as any;
-      // The declared service is the fallback; a target that names a database wins, since the caller
-      // said where to file.
-      const { db: ambientDb } = yield* Database.Service;
-      const db = (target ? (Database.isDatabase(target) ? target : Obj.getDatabase(target)) : undefined) ?? ambientDb;
+      // A remote caller can only name the target collection by reference, so resolve it here;
+      // in-process callers pass the live collection.
+      const targetInput = input.target;
+      const target = Ref.isRef(targetInput) ? yield* Effect.promise(() => targetInput.load()) : targetInput;
+      // The database is the runtime's, resolved from the invocation's space id — never an input,
+      // so there is no second database to reconcile against and no service to override.
+      const { db } = yield* Database.Service;
       invariant(db, 'Database not found.');
+      // The space id names the database, so the target has to live in it: one from another space
+      // would take the reference there while the object persists here, and a detached one would
+      // take it nowhere at all — either way the two halves of the write come apart.
+      if (target && Obj.getDatabase(target)?.spaceId !== db.spaceId) {
+        return yield* Effect.fail(new Error(`Target collection does not belong to space ${db.spaceId}.`));
+      }
 
       // The union's two branches: a live entity passes through, a description is instantiated.
       const object = Obj.isObject(input.object) ? input.object : yield* instantiate(db, input.object);
 
-      yield* CollectionModel.add({
-        object,
-        target: Database.isDatabase(target) ? undefined : target,
-      }).pipe(Effect.provide(Database.layer(db)));
+      // An instantiated draft is detached, and the branch of `CollectionModel.add` that files into
+      // a collection only pushes a ref — so without this the object is never persisted and that
+      // ref dangles. A live entity arrives already in a database.
+      if (!Obj.getDatabase(object)) {
+        yield* Database.add(object);
+      }
+      yield* CollectionModel.add({ object, target });
 
       return {
         id: Obj.getURI(object),

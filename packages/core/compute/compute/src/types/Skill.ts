@@ -152,7 +152,7 @@ export const make: {
 
 /**
  * Annotation opting a skill into MCP projection: it becomes a prompt and is loadable by name
- * through the server's `skillLoad` tool.
+ * through the server's `loadSkill` tool.
  *
  * Opt-in: a skill written for an in-app chat runtime may assume tools an MCP client does not have,
  * and only the author can judge whether the workflow still holds on the MCP surface. Absent ⇒ the

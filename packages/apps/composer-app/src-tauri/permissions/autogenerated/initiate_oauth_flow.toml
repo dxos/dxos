@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-initiate-oauth-flow"
+description = "Enables the initiate_oauth_flow command without any pre-configured scope."
+commands.allow = ["initiate_oauth_flow"]
+
+[[permission]]
+identifier = "deny-initiate-oauth-flow"
+description = "Denies the initiate_oauth_flow command without any pre-configured scope."
+commands.deny = ["initiate_oauth_flow"]

@@ -22,11 +22,25 @@
     "fs:read-all",
     {
       "identifier": "fs:allow-watch",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
     },
     {
       "identifier": "fs:scope",
-      "allow": [{ "path": "**" }, { "path": "**/.composer" }, { "path": "**/.composer/**" }]
+      "allow": [
+        {
+          "path": "**"
+        },
+        {
+          "path": "**/.composer"
+        },
+        {
+          "path": "**/.composer/**"
+        }
+      ]
     },
     "fs:write-all",
     "macos-passkey:default",
@@ -44,6 +58,19 @@
     },
     "opener:allow-open-url",
     "opener:default",
-    "updater:default"
+    "updater:default",
+    "allow-cache-plugin-assets",
+    "allow-evict-plugin",
+    "allow-resolve-cached-url",
+    "allow-list-cached-plugins",
+    "allow-start-oauth-server",
+    "allow-stop-oauth-server",
+    "allow-get-oauth-result",
+    "allow-get-oauth-recovery-result",
+    "allow-initiate-oauth-flow",
+    "allow-get-xattr",
+    "allow-set-xattr",
+    "allow-remove-xattr",
+    "allow-hide-spotlight"
   ]
 }

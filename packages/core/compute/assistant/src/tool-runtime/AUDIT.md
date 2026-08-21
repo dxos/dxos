@@ -24,8 +24,8 @@ The tool name derives from the DXN key, in one shared derivation used by every s
   the model calls are one identifier space; the lookup that used to bridge them is gone.
 - The tool runtime (`assistant/src/tool-runtime/services.ts`) names projected tools with it, and resolves
   a registry record by re-deriving each record's name behind a cached index.
-- MCP projection (`mcp-server/src/internal/projection.ts`) uses it for both the skill-ownership match and
-  the projected tool name, replacing an NSID match plus final-segment naming.
+- MCP does not use it: since the generic discovery/invoke surface landed (#12692), an operation is a
+  row the client queries, not a tool it is advertised, so it is addressed by key and never by name.
 - Skill instruction texts interpolate `Operation.toolName(Op)` rather than spelling names out.
 
 The namespace segment prefixing the name is what removed the collisions a bare verb produced: `create`
