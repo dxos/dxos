@@ -27,9 +27,17 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       // The union's two branches: a live entity passes through, a description is instantiated.
       const object = Obj.isObject(input.object) ? input.object : yield* instantiate(db, input.object);
 
-      yield* CollectionModel.add({
-        object,
-        target: Database.isDatabase(target) ? undefined : target,
+      yield* Effect.gen(function* () {
+        // An instantiated draft is detached, and the branch of `CollectionModel.add` that files
+        // into an existing collection only pushes a ref — so without this the object is never
+        // persisted and that ref dangles. A live entity arrives already in a database.
+        if (!Obj.getDatabase(object)) {
+          yield* Database.add(object);
+        }
+        yield* CollectionModel.add({
+          object,
+          target: Database.isDatabase(target) ? undefined : target,
+        });
       }).pipe(Effect.provide(Database.layer(db)));
 
       return {

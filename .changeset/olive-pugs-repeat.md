@@ -135,3 +135,5 @@ signature's value type is unconstrained, and the serializer only restored it for
 the decoder rebuilt the struct closed and `addObject`'s draft silently dropped every field beyond
 `@type`. The restore now applies whenever the key is absent, which is unambiguous: a closed struct
 always carries `additionalProperties: false` explicitly.
+
+`addObject` persists a described object rather than only referencing it. A draft is instantiated detached and `CollectionModel.add` files it by pushing a ref — on the branch that mints a root collection for a space that has none, nothing added the object to the database, so the ref dangled: the call returned an id whose object could not be read back, and nothing replicated. Only the remote path was reachable, since in-process callers pass a live object that is already in a database.
