@@ -14,20 +14,23 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import { CommandConfig } from '@dxos/cli-util';
 import { DXOS_VERSION } from '@dxos/client';
+import { Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { McpRegistry, McpServer } from '@dxos/mcp-server';
+import { McpServer } from '@dxos/mcp-server';
 import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
 
-import { DiscoveryToolkit, discoveryHandlers } from './discovery-tools';
-import { makeRegistry } from './registry';
+import { makeLocalServer } from './local-server';
 import { SpaceToolkit, spaceHandlers } from './space-tools';
 import { WATCH_CHILD_ENV, formatReady } from './watch-protocol';
 
 /**
- * Names of the statically-defined tools; projected operations must not collide with them.
- * Task and project verbs are deliberately absent — they arrive via the annotation projection.
+ * Names of the statically-defined tools; the projection refuses to build if one of them collides
+ * with a name it defines. `whoami` is the last of them — the operation verbs are not tools at all
+ * any more, but rows `queryOperations` returns and `invokeOperation` dispatches, and the session's
+ * identity is the one fact a plugin operation cannot reach, since EDGE resolves it from an OAuth
+ * grant rather than from a local client.
  */
-const STATIC_TOOL_NAMES = ['whoami', 'listSpaces', 'listPlugins', 'listTypes', 'listOperations'] as const;
+const STATIC_TOOL_NAMES = ['whoami'] as const;
 
 declare global {
   /**
@@ -84,13 +87,12 @@ export const serve = Command.make(
     yield* manager.activate(ActivationEvents.Idle);
     yield* manager.activate(AppActivationEvents.AssistantStart);
 
-    const registry = yield* makeRegistry();
+    const server = yield* makeLocalServer();
     // stdout carries the protocol, so progress goes to the log (stderr).
-    log.info('serving MCP over stdio', { spaces: registry.spaceIds.length });
+    log.info('serving MCP over stdio', { spaces: server.host.spaceIds.length });
 
-    const staticToolkits = Layer.mergeAll(
-      McpServer.toolkit(SpaceToolkit).pipe(Layer.provide(SpaceToolkit.toLayer(spaceHandlers(registry)))),
-      McpServer.toolkit(DiscoveryToolkit).pipe(Layer.provide(DiscoveryToolkit.toLayer(discoveryHandlers(registry)))),
+    const staticToolkits = McpServer.toolkit(SpaceToolkit).pipe(
+      Layer.provide(SpaceToolkit.toLayer(spaceHandlers(server))),
     );
 
     // Written before the transport blocks: the child's stdin is a pipe, so anything the supervisor
@@ -102,7 +104,12 @@ export const serve = Command.make(
     yield* Layer.launch(
       Layer.mergeAll(
         McpServer.layer({ reservedToolNames: STATIC_TOOL_NAMES }).pipe(
-          Layer.provide(Layer.succeed(McpRegistry.Service, registry)),
+          Layer.provide(
+            Layer.mergeAll(
+              Layer.succeed(Registry.Service, server.registry),
+              Layer.succeed(McpServer.Host, server.host),
+            ),
+          ),
         ),
         staticToolkits,
       ).pipe(

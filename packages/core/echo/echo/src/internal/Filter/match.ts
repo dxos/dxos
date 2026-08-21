@@ -220,6 +220,9 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
 
 /**
  * Matches a filter against an entity proxy without full JSON serialization when possible.
+ *
+ * Text filters evaluate in memory here because this matcher serves executors with no index behind
+ * them (the registry, `Filter.toPredicate`); index-backed paths use `filterMatchDoc` instead.
  */
 export const filterMatchEntity = (filter: QueryAST.Filter, entity: AnyEntity): boolean => {
   switch (filter.type) {
@@ -280,7 +283,7 @@ export const filterMatchEntity = (filter: QueryAST.Filter, entity: AnyEntity): b
     }
 
     case 'text-search': {
-      return false;
+      return matchesTextSearch(filter, entity);
     }
 
     case 'timestamp': {
@@ -309,5 +312,47 @@ export const filterMatchEntity = (filter: QueryAST.Filter, entity: AnyEntity): b
 
     default:
       return false;
+  }
+};
+
+/**
+ * In-memory full-text match: every term must appear (case-insensitive) in the entity's serialized
+ * strings, meta included so a registry key is searchable. Containment, not tokenized ranking.
+ */
+const matchesTextSearch = (filter: QueryAST.Filter & { type: 'text-search' }, entity: AnyEntity): boolean => {
+  // A vector query is meaningless without an embedding index, whatever the executor.
+  if (filter.searchKind === 'vector') {
+    return false;
+  }
+  const terms = filter.text
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((term) => term.length > 0);
+  if (terms.length === 0) {
+    return true;
+  }
+  let json: unknown;
+  try {
+    json = objectToJSON(entity);
+  } catch {
+    return false;
+  }
+  const haystack: string[] = [];
+  collectStrings(json, haystack, new Set());
+  const text = haystack.join('\n').toLowerCase();
+  return terms.every((term) => text.includes(term));
+};
+
+const collectStrings = (value: unknown, out: string[], seen: Set<unknown>): void => {
+  if (typeof value === 'string') {
+    out.push(value);
+    return;
+  }
+  if (value === null || typeof value !== 'object' || seen.has(value)) {
+    return;
+  }
+  seen.add(value);
+  for (const entry of Array.isArray(value) ? value : Object.values(value)) {
+    collectStrings(entry, out, seen);
   }
 };
