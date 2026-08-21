@@ -40,10 +40,9 @@ export const getFilterTagUris = (filter: Filter.Any | undefined): string[] =>
 
 export type MailboxSelectionOptions = {
   /**
-   * Member ids for a tag uri, from the mailbox's `TagIndex`. Feed messages carry no `meta.tags` of
-   * their own — membership lives in the `TagIndex` — so a text search can only stay scoped to a tag
-   * view by rewriting its tag terms to id selections. Returning undefined (or omitting the
-   * resolver) drops that tag term from the text selection, as before.
+   * Member ids for a tag uri, from the mailbox's `TagIndex` — feed messages carry no `meta.tags` of
+   * their own, so a tag term can only scope a text search by becoming an id selection. Returning
+   * undefined drops that tag term.
    */
   resolveTagIds?: (tagUri: string) => readonly EntityId[] | undefined;
 };
@@ -52,12 +51,10 @@ export type MailboxSelectionOptions = {
  * Build the message-list view filter from the mailbox search box: messages matching this filter are
  * what qualify a thread for the list (see {@link buildThreadSemiJoin}).
  *
- * Free-text search routes to the FTS index, composed with the message type — and, in a tag view,
- * with the tag's members: root tag terms are rewritten to `TagIndex` id selections (intersected
- * when several) via {@link MailboxSelectionOptions.resolveTagIds}, so typing a term inside a tag
- * view searches within it. Structural terms other than tags are still dropped from a mixed query
- * (predicate search is tracked in plugin-search TASKS.md). Structural-only filters (`from:`,
- * `#tag`) compose with the message type as before.
+ * Free text composes with the message type and, via {@link MailboxSelectionOptions.resolveTagIds},
+ * with the members of any root tag terms, so a term typed inside a tag view searches within it.
+ * Other structural terms are still dropped from a mixed query (predicate search is tracked in
+ * plugin-search TASKS.md).
  */
 export const buildMailboxSelection = (
   filterText: string,
@@ -77,8 +74,13 @@ export const buildMailboxSelection = (
     if (idSets.length === 0) {
       return Filter.and(base, text);
     }
+    // Set membership per list, not `includes`: a system tag's membership runs to the whole mailbox,
+    // and this intersects on every debounced keystroke.
     const [first, ...rest] = idSets;
-    const memberIds = rest.reduce((acc, set) => acc.filter((id) => set.includes(id)), first);
+    const memberIds = rest.reduce<readonly EntityId[]>((acc, ids) => {
+      const candidates = new Set(ids);
+      return acc.filter((id) => candidates.has(id));
+    }, first);
     // `Filter.id()` of an empty intersection is `Filter.nothing()`: a tag with no members matches nothing.
     return Filter.and(base, Filter.id(...memberIds), text);
   }

@@ -426,10 +426,8 @@ export class QueryPlanner {
           return QueryPlan.Plan.make([...innerPlan.steps, ...childOfSteps]);
         }
 
-        // Text search composed via AND: the single text-search must drive the selection (the
-        // in-memory matcher cannot evaluate it), narrowed by any typename constraint found among
-        // the remaining filters; those are then re-checked in memory. Inverted selection would
-        // need objects outside the FTS hits, which the index cannot produce.
+        // The text search must drive the selection — the in-memory matcher cannot evaluate one —
+        // and inverting it would need objects outside the FTS hits, which the index cannot produce.
         const textFilters = flatFilters.filter((f): f is QueryAST.FilterTextSearch => f.type === 'text-search');
         if (textFilters.length === 1 && !context.selectionInverted) {
           const [textFilter] = textFilters;

@@ -14,6 +14,8 @@ import { Message } from '@dxos/types';
 
 import { buildMailboxSelection, buildSystemTagSelection, buildThreadSemiJoin, getSearchText } from './mailbox-search';
 
+const TAG_MAP = { 'tag:work': Tag.make({ label: 'work' }), 'tag:urgent': Tag.make({ label: 'urgent' }) };
+
 describe('buildMailboxSelection', () => {
   const build = (text: string) => new QueryBuilder({}).build(text).filter;
 
@@ -36,9 +38,6 @@ describe('buildMailboxSelection', () => {
     const selection = buildMailboxSelection(text, build(text));
     expect(selection.ast.type).toBe('and');
   });
-
-  const TAG_MAP = { 'tag:work': Tag.make({ label: 'work' }), 'tag:urgent': Tag.make({ label: 'urgent' }) };
-  const buildTagged = (text: string) => new QueryBuilder(TAG_MAP).build(text).filter;
 
   test('a tag term with a resolver scopes the text search to the tag members', () => {
     const tagged = EntityId.deterministic('tagged-message');
@@ -301,6 +300,8 @@ describe('buildThreadSemiJoin (results)', () => {
     }
   });
 });
+
+const buildTagged = (text: string) => new QueryBuilder(TAG_MAP).build(text).filter;
 
 /** The semi-join arm of the union (the other arm is the bare view filter). */
 const semiJoinArm = (query: ReturnType<typeof buildThreadSemiJoin>): any => (query.ast as any).queries[0];

@@ -16,11 +16,10 @@ const DEFAULT_ICON = 'ph--circle-dashed--regular';
 export const buildSearchFilter = (text: string): Filter.Any => Filter.text(text, { type: 'full-text' });
 
 /**
- * Build the ECHO query for a search box value. Empty input matches nothing. A term routes to
- * the FTS index, scoped to `typeUris` when given: the whole-object-JSON index has no per-field
- * choice yet, so without a scope it surfaces objects the app never renders (views, stored
- * schemas, relation rows). An empty scope also matches nothing — the caller not having resolved
- * its visible types yet must not flash unscoped results.
+ * Build the ECHO query for a search box value. A term routes to the FTS index, scoped to
+ * `typeUris` when given — the whole-object-JSON index has no per-field choice yet, so an
+ * unscoped search surfaces objects the app never renders. Empty input, and an empty scope,
+ * match nothing.
  */
 export const buildSearchQuery = (text: string | undefined, typeUris?: readonly URI.URI[]): Query.Any => {
   const trimmed = text?.trim();
@@ -87,8 +86,7 @@ export const toSearchResults = <T extends Entity.Unknown>(objects: T[], text: st
     const snippet = fields.content ?? fields.description ?? Object.values(fields).find((value) => value !== label);
     acc.push({
       id: object.id,
-      // Same type-annotation icon the nav tree and cards resolve, so a result reads as the object it is;
-      // always set, so every row aligns whether or not its type declares one.
+      // Always set, so a row without a type-declared icon still aligns with the rest.
       icon: Entity.getIcon(object)?.icon ?? DEFAULT_ICON,
       label,
       snippet,

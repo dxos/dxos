@@ -156,8 +156,8 @@ export const MailboxArticle = ({
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
 
-  // Root tag terms in an edited filter scope a text search to those tags' members (see
-  // `buildMailboxSelection`); memberships are read reactively so the selection tracks tag changes.
+  // Read reactively so a text search scoped to a tag's members (see `buildMailboxSelection`)
+  // re-runs when that tag's membership changes.
   const filterTagUris = useMemo(() => getFilterTagUris(debouncedFilter), [debouncedFilter]);
   const filterTagUrisKey = filterTagUris.join(',');
   const filterTagIdsAtom = useMemo(

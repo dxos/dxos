@@ -11,10 +11,9 @@ import { type URI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 
 /**
- * Type URIs of the user-facing types in the space — the set the nav tree's Database section
- * lists, plus collections — used to scope full-text search to objects the app renders. Returns
- * an empty list until the types query resolves, which `buildSearchQuery` treats as match-nothing
- * rather than falling back to an unscoped search.
+ * Type URIs of the space's user-facing types, for scoping search to objects the app renders.
+ * Empty until the types query resolves — `buildSearchQuery` treats that as match-nothing rather
+ * than falling back to an unscoped search.
  */
 export const useSearchableTypeUris = (space?: Space): URI.URI[] => {
   const types = useQuery(space?.db, TypeOptions.allTypesQuery);
