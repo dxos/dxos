@@ -142,7 +142,7 @@ const mutationOf = (record: Operation.PersistentOperation): Operation.Mutation |
 };
 
 /**
- * One operation as `findOperations` describes it. `schema` travels only on a `keys` lookup, because
+ * One operation as `queryOperations` describes it. `schema` travels only on a `keys` lookup, because
  * a schema costs the model hundreds of tokens where the rest of a view costs a description.
  */
 export type OperationView = {

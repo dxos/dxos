@@ -96,10 +96,10 @@ export const snapshot = snapshotInternal.entities;
  * clients without the extension — serving the resources alongside it is additive when the draft
  * settles.
  */
-export const SkillLoad = Tool.make('skillLoad', {
+export const LoadSkill = Tool.make('loadSkill', {
   description:
     'Loads a skill: the instructions for a multi-tool workflow hosted on this server. Call this ' +
-    'before first invoking any operation whose findOperations row names a skill, and follow the ' +
+    'before first invoking any operation whose queryOperations row names a skill, and follow the ' +
     'returned instructions — they define required setup, argument conventions, and ordering that ' +
     'operation descriptions alone do not carry. Omit the skill argument to list every skill this ' +
     'server offers. The same skills are exposed to users as prompts; loading one here brings the ' +
@@ -108,7 +108,7 @@ export const SkillLoad = Tool.make('skillLoad', {
     skill: Schema.optional(
       Schema.String.annotate({
         description:
-          "Skill name as given in a findOperations row or the prompt listing (e.g. 'codeProject'). " +
+          "Skill name as given in a queryOperations row or the prompt listing (e.g. 'codeProject'). " +
           'Omit to list the available skills instead of loading one.',
       }),
     ),
@@ -141,7 +141,7 @@ export const SkillLoad = Tool.make('skillLoad', {
  * the task will never touch. The cost of the indirection is one extra round trip before the first
  * call, which is why the schemas come back from this same tool rather than from a third one.
  */
-export const FindOperations = Tool.make('findOperations', {
+export const QueryOperations = Tool.make('queryOperations', {
   description:
     'Finds the operations this server can run — the verbs that read and write objects in DXOS ' +
     'spaces. Start here: search with a query describing the task, then call invokeOperation with ' +
@@ -175,7 +175,7 @@ export const FindOperations = Tool.make('findOperations', {
         name: Schema.optional(Schema.String),
         description: Schema.optional(Schema.String),
         skills: Schema.Array(Schema.String).annotate({
-          description: 'Skills this operation belongs to; load one with skillLoad before invoking.',
+          description: 'Skills this operation belongs to; load one with loadSkill before invoking.',
         }),
         requiresSpace: Schema.Boolean.annotate({
           description: 'Whether the operation acts on a space, making invokeOperation spaceId load-bearing.',
@@ -212,21 +212,21 @@ export const FindOperations = Tool.make('findOperations', {
  * tool once carried — and which a client turns into its permission prompt — cannot ride on the
  * annotations here: it is marked possibly-destructive because some operation reached through it
  * is. The per-operation classification still reaches the model, on the `mutation` field of the
- * `findOperations` row.
+ * `queryOperations` row.
  */
 export const InvokeOperation = Tool.make('invokeOperation', {
   description:
     'Invokes an operation by key — how every read and write on this server is performed. Find the ' +
-    'key with findOperations and fetch its input schema (findOperations with keys) before the ' +
+    'key with queryOperations and fetch its input schema (queryOperations with keys) before the ' +
     "first call; input must match that schema. Check the operation's mutation class in its row " +
     'before invoking: this tool is as destructive as whatever it is asked to run. References ' +
     'between objects travel as {"/": "echo://<spaceId>/<objectId>"} envelopes — pass them back ' +
     'exactly as received.',
   parameters: Schema.Struct({
-    key: Schema.String.annotate({ description: 'Operation key, exactly as findOperations reported it.' }),
+    key: Schema.String.annotate({ description: 'Operation key, exactly as queryOperations reported it.' }),
     input: Schema.optional(
       Schema.Record(Schema.String, Schema.Unknown).annotate({
-        description: "The operation's arguments, matching the input schema findOperations returned for this key.",
+        description: "The operation's arguments, matching the input schema queryOperations returned for this key.",
       }),
     ),
     spaceId: spaceInternal.idParameter,
@@ -238,10 +238,10 @@ export const InvokeOperation = Tool.make('invokeOperation', {
   .annotate(Tool.Destructive, true);
 
 /** The whole fixed tool surface: discovery, dispatch, and skill loading. */
-export const ServerToolkit = Toolkit.make(FindOperations, InvokeOperation, SkillLoad);
+export const ServerToolkit = Toolkit.make(QueryOperations, InvokeOperation, LoadSkill);
 
 /** Names this package claims; a host's static toolkit may not take one. */
-export const TOOL_NAMES = [FindOperations.name, InvokeOperation.name, SkillLoad.name] as const;
+export const TOOL_NAMES = [QueryOperations.name, InvokeOperation.name, LoadSkill.name] as const;
 
 //
 // Handlers.
@@ -257,7 +257,7 @@ const catchCollision = <A>(effect: Effect.Effect<A, ToolFailure>): Effect.Effect
   Effect.catchDefect(effect, (defect) => Effect.fail(failure('operation_failed', String(defect))));
 
 /**
- * Resolves a skill by prompt name (or full registry key) to the body `skillLoad` returns; with no
+ * Resolves a skill by prompt name (or full registry key) to the body `loadSkill` returns; with no
  * name, lists them all.
  */
 export const loadSkillByName = (
@@ -292,10 +292,10 @@ export const loadSkillByName = (
   );
 
 /**
- * Answers one `findOperations` call from the registry. The query runs live rather than against a
+ * Answers one `queryOperations` call from the registry. The query runs live rather than against a
  * capture, so an operation registered after startup is findable without a rebuild.
  */
-export const find = (
+export const queryOperations = (
   registry: Registry.Registry,
   { query, skill, keys }: { query?: string; skill?: string; keys?: readonly string[] },
 ): Effect.Effect<{ operations: viewInternal.OperationView[] }, ToolFailure> =>
@@ -357,7 +357,7 @@ export const invoke = (
           return Effect.fail(
             failure(
               'invalid_request',
-              `Unknown operation: '${key}'. Call findOperations to list the operations this server can run.`,
+              `Unknown operation: '${key}'. Call queryOperations to list the operations this server can run.`,
             ),
           );
         }
@@ -371,7 +371,7 @@ export const invoke = (
                 Effect.mapError((error) =>
                   failure(
                     'invalid_request',
-                    `${operationKey} input did not match its schema: ${String(error)}. Call findOperations ` +
+                    `${operationKey} input did not match its schema: ${String(error)}. Call queryOperations ` +
                       `with keys: ['${operationKey}'] for the schema it expects.`,
                   ),
                 ),
@@ -428,9 +428,9 @@ const surfaceLayer: Layer.Layer<never, never, Registry.Service | Host> = McpServ
         const registry = yield* Registry.Service;
         const host = yield* Host;
         return ServerToolkit.of({
-          findOperations: (query) => find(registry, query),
+          queryOperations: (query) => queryOperations(registry, query),
           invokeOperation: (request) => invoke(registry, host, request),
-          skillLoad: ({ skill }) => loadSkillByName(registry, skill),
+          loadSkill: ({ skill }) => loadSkillByName(registry, skill),
         });
       }),
     ),
@@ -456,7 +456,7 @@ export const promptsLayer = (skills: readonly viewInternal.McpSkill[]): Layer.La
   );
 
 /**
- * The whole projected surface — `findOperations` / `invokeOperation` / `skillLoad` over the
+ * The whole projected surface — `queryOperations` / `invokeOperation` / `loadSkill` over the
  * operations opted-in skills name, plus those skills as prompts. Hosts provide echo's
  * {@link Registry.Service} (holding `PersistentOperation` and `Skill` entities) and {@link Host},
  * merge their own static toolkits alongside, and declare those names as reserved.

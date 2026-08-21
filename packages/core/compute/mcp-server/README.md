@@ -17,9 +17,9 @@ Three tools, however many operations a host registers:
 
 | Tool              | What it does                                                                                  |
 | ----------------- | --------------------------------------------------------------------------------------------- |
-| `findOperations`  | Searches the operations by text, skill or key; a `keys` lookup returns their full JSON Schemas |
+| `queryOperations`  | Searches the operations by text, skill or key; a `keys` lookup returns their full JSON Schemas |
 | `invokeOperation` | Runs one by key, validating the input and resolving the target space                          |
-| `skillLoad`       | Returns a skill's workflow text, or lists the skills when called with no argument             |
+| `loadSkill`       | Returns a skill's workflow text, or lists the skills when called with no argument             |
 
 Operations are data the model searches rather than tools it is handed: advertising each as its own
 tool spent the client's context on schemas for operations the task would never touch, and the cost
@@ -27,7 +27,7 @@ grew with every plugin a host enabled. A skill is still the unit of governance �
 reachable only if an opted-in skill's `tools` list names it — and each opted-in skill is also
 served as an MCP prompt.
 
-Per-operation safety is reported on a `findOperations` row, at `operations[].hints.mutation`
+Per-operation safety is reported on a `queryOperations` row, at `operations[].hints.mutation`
 (`none` / `write` / `destructive`), rather than as tool annotations — one dispatch tool cannot be
 safer than whatever it is asked to run.
 

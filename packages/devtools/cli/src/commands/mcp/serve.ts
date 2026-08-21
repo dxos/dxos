@@ -27,7 +27,7 @@ import { WATCH_CHILD_ENV, formatReady } from './watch-protocol';
 /**
  * Names of the statically-defined tools; the projection refuses to build if one of them collides
  * with a name it defines. The operation verbs are deliberately absent — they are not tools at all
- * any more, but rows `findOperations` returns and `invokeOperation` dispatches.
+ * any more, but rows `queryOperations` returns and `invokeOperation` dispatches.
  */
 const STATIC_TOOL_NAMES = ['whoami', 'listSpaces', 'listPlugins', 'listTypes'] as const;
 

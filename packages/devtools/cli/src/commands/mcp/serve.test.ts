@@ -31,17 +31,17 @@ const REQUESTS = [
   { jsonrpc: '2.0', method: 'notifications/initialized' },
   { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} },
   { jsonrpc: '2.0', id: 3, method: 'prompts/list', params: {} },
-  { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'skillLoad', arguments: { skill: SKILL } } },
+  { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'loadSkill', arguments: { skill: SKILL } } },
   { jsonrpc: '2.0', id: 5, method: 'prompts/get', params: { name: SKILL, arguments: {} } },
-  { jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'skillLoad', arguments: { skill: 'noSuchSkill' } } },
+  { jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'loadSkill', arguments: { skill: 'noSuchSkill' } } },
   { jsonrpc: '2.0', id: 7, method: 'tools/call', params: { name: 'listTypes', arguments: {} } },
   { jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'whoami', arguments: {} } },
-  { jsonrpc: '2.0', id: 9, method: 'tools/call', params: { name: 'findOperations', arguments: {} } },
+  { jsonrpc: '2.0', id: 9, method: 'tools/call', params: { name: 'queryOperations', arguments: {} } },
   {
     jsonrpc: '2.0',
     id: 10,
     method: 'tools/call',
-    params: { name: 'findOperations', arguments: { keys: ['org.dxos.plugin.space.operation.addObject'] } },
+    params: { name: 'queryOperations', arguments: { keys: ['org.dxos.plugin.space.operation.addObject'] } },
   },
   {
     jsonrpc: '2.0',
@@ -49,18 +49,18 @@ const REQUESTS = [
     method: 'tools/call',
     params: { name: 'invokeOperation', arguments: { key: 'org.dxos.nope' } },
   },
-  { jsonrpc: '2.0', id: 12, method: 'tools/call', params: { name: 'skillLoad', arguments: {} } },
+  { jsonrpc: '2.0', id: 12, method: 'tools/call', params: { name: 'loadSkill', arguments: {} } },
 ];
 
 /** The host-local toolkits, named as EDGE names them; see the TODOs on each `*-tools.ts`. */
 const STATIC_TOOLS = ['whoami', 'listSpaces', 'listPlugins', 'listTypes'];
 
 /** This package's fixed surface: every operation is reached through these rather than as a tool. */
-const SURFACE_TOOLS = ['findOperations', 'invokeOperation', 'skillLoad'];
+const SURFACE_TOOLS = ['queryOperations', 'invokeOperation', 'loadSkill'];
 
 /**
  * Object CRUD contributed by plugin-space as operations. They prove the catalog reaches the
- * registry — as `findOperations` rows now, not as tools; named after the ECHO API
+ * registry — as `queryOperations` rows now, not as tools; named after the ECHO API
  * (`Database.add` / `Database.remove`).
  */
 const PROJECTED_OBJECT_OPERATIONS = [
@@ -143,7 +143,7 @@ describe('dx mcp serve', () => {
     const initialize = responses.get(1)!.result;
     expect(initialize.serverInfo.name).to.equal('DXOS Spaces');
     // The shared server instructions, applied by the projection's response passes over stdio.
-    expect(initialize.instructions).to.include('findOperations');
+    expect(initialize.instructions).to.include('queryOperations');
 
     const tools: { name: string; inputSchema: any }[] = responses.get(2)!.result.tools;
     const names = tools.map((tool) => tool.name);
@@ -162,7 +162,7 @@ describe('dx mcp serve', () => {
     expect(prompts.map((prompt) => prompt.name)).to.include(SKILL);
   });
 
-  test('findOperations reaches the registry, and keys returns the schema to write against', ({ expect }) => {
+  test('queryOperations reaches the registry, and keys returns the schema to write against', ({ expect }) => {
     const { operations } = JSON.parse(responses.get(9)!.result.content[0].text);
     const keys: string[] = operations.map((operation: { key: string }) => operation.key);
     // The registry the CLI assembles carries the project/task verbs and plugin-space's object CRUD.
@@ -187,15 +187,15 @@ describe('dx mcp serve', () => {
   });
 
   // A model recovers from a tool result; a wrong key has to name the tool that lists the right ones.
-  test('invokeOperation reports an unknown key as a tool failure naming findOperations', ({ expect }) => {
+  test('invokeOperation reports an unknown key as a tool failure naming queryOperations', ({ expect }) => {
     const failure = responses.get(11)!.result;
     expect(failure.isError).to.be.true;
-    expect(failure.content[0].text).to.include('findOperations');
+    expect(failure.content[0].text).to.include('queryOperations');
   });
 
   // SEP-2640's contract: a skill reaches the model either way, so a client without prompt support
   // loses nothing. Asserted on this host because only a live session exercises both paths at once.
-  test('serves the same skill through skillLoad and prompts/get', ({ expect }) => {
+  test('serves the same skill through loadSkill and prompts/get', ({ expect }) => {
     const loaded = JSON.parse(responses.get(4)!.result.content[0].text);
     expect(loaded.skills[0].name).to.equal(SKILL);
     expect(loaded.skills[0].key).to.equal('org.dxos.plugin.projects.skill.codeProject');
@@ -231,7 +231,7 @@ describe('dx mcp serve', () => {
 
   // A client renders these as the tool's safety badge, and an unset `destructiveHint` defaults to
   // true — so a read tool that annotates nothing shows up as destructive. Per-operation safety
-  // moved to the `mutation` field of a findOperations row, asserted above.
+  // moved to the `mutation` field of a queryOperations row, asserted above.
   test('advertises safety hints, with no read-only tool marked destructive', ({ expect }) => {
     const tools: { name: string; annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean } }[] =
       responses.get(2)!.result.tools;
@@ -244,14 +244,14 @@ describe('dx mcp serve', () => {
 
     const byName = new Map(tools.map((tool) => [tool.name, tool.annotations]));
     expect(byName.get('whoami')?.readOnlyHint).to.be.true;
-    expect(byName.get('findOperations')?.readOnlyHint).to.be.true;
+    expect(byName.get('queryOperations')?.readOnlyHint).to.be.true;
     // The one tool that dispatches everything cannot be safer than what it runs.
     expect(byName.get('invokeOperation')?.destructiveHint).to.be.true;
   });
 
-  // Discovery has to be reachable without having called findOperations first, or a model that
+  // Discovery has to be reachable without having called queryOperations first, or a model that
   // wants the workflow before the verbs has nowhere to start.
-  test('skillLoad with no argument lists the skills', ({ expect }) => {
+  test('loadSkill with no argument lists the skills', ({ expect }) => {
     const listing = JSON.parse(responses.get(12)!.result.content[0].text);
     expect(listing.skills.map((entry: { name: string }) => entry.name)).to.include(SKILL);
     expect(listing.instructions).to.be.undefined;

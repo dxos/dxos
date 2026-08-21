@@ -28,8 +28,8 @@ import { identity } from './identity';
  */
 export const SERVER_INSTRUCTIONS = [
   'This server reads and writes objects in DXOS spaces (collaborative databases). Its verbs are ' +
-    'not separate tools: call findOperations to search them, then invokeOperation to run one.',
-  'Before invoking an operation for the first time, call findOperations with its key to get the ' +
+    'not separate tools: call queryOperations to search them, then invokeOperation to run one.',
+  'Before invoking an operation for the first time, call queryOperations with its key to get the ' +
     'input schema, and match it exactly. Rows also carry a mutation class: none reads, write ' +
     'creates or updates, destructive deletes.',
   'Every write targets exactly one space. Pass spaceId explicitly on writes, taking it from the ' +
@@ -38,10 +38,10 @@ export const SERVER_INSTRUCTIONS = [
     'inferred choice; never guess a space from its name.',
   'References between objects travel as {"/": "echo://<spaceId>/<objectId>"} envelopes. Pass ' +
     'references back exactly as you received them.',
-  'Operations belong to larger workflows described by skills. When a findOperations row names a ' +
-    'skill, call skillLoad with that name and follow the returned instructions before invoking ' +
-    'the operation; skillLoad with no argument lists every skill. Skills are also offered to ' +
-    'users as prompts (slash commands); skillLoad brings the same text into context without user ' +
+  'Operations belong to larger workflows described by skills. When a queryOperations row names a ' +
+    'skill, call loadSkill with that name and follow the returned instructions before invoking ' +
+    'the operation; loadSkill with no argument lists every skill. Skills are also offered to ' +
+    'users as prompts (slash commands); loadSkill brings the same text into context without user ' +
     'action.',
 ].join('\n');
 

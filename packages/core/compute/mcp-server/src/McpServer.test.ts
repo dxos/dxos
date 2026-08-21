@@ -122,10 +122,10 @@ describe('McpServer', () => {
       expect(invocations).to.deep.equal([{ key: KEY, input: { title: 'Write tests' }, spaceId: SPACE_A }]);
     });
 
-    test('an unknown key points at findOperations rather than failing opaquely', async ({ expect }) => {
+    test('an unknown key points at queryOperations rather than failing opaquely', async ({ expect }) => {
       const { invocations, result } = runInvoke({ key: 'org.dxos.nope' });
       expect(failureOf(await result).code).to.equal('invalid_request');
-      expect(failureOf(await result).message).to.include('findOperations');
+      expect(failureOf(await result).message).to.include('queryOperations');
       expect(invocations).to.have.length(0);
     });
 
@@ -206,16 +206,16 @@ describe('McpServer', () => {
     test('input is validated against the schema, naming the lookup that returns it', async ({ expect }) => {
       const { result, invocations } = runInvoke({ input: { title: 42 as unknown as string } });
       expect(failureOf(await result).code).to.equal('invalid_request');
-      expect(failureOf(await result).message).to.include('findOperations');
+      expect(failureOf(await result).message).to.include('queryOperations');
       expect(invocations).to.have.length(0);
     });
   });
 
-  describe('findOperations', () => {
+  describe('queryOperations', () => {
     const run = (
       registry: Registry.Registry,
       query: { query?: string; skill?: string; keys?: readonly string[] } = {},
-    ) => EffectEx.runPromise(McpServer.find(registry, query)).then(({ operations }) => operations);
+    ) => EffectEx.runPromise(McpServer.queryOperations(registry, query)).then(({ operations }) => operations);
 
     const twoSkills = () =>
       testRegistry({
@@ -227,7 +227,7 @@ describe('McpServer', () => {
       });
 
     test('the fixed surface is three tools, whatever the registry holds', ({ expect }) => {
-      expect([...McpServer.TOOL_NAMES]).to.deep.equal(['findOperations', 'invokeOperation', 'skillLoad']);
+      expect([...McpServer.TOOL_NAMES]).to.deep.equal(['queryOperations', 'invokeOperation', 'loadSkill']);
     });
 
     test('lists the governed operations with their hints, without schemas', async ({ expect }) => {
@@ -324,7 +324,7 @@ describe('McpServer', () => {
     });
   });
 
-  describe('skillLoad', () => {
+  describe('loadSkill', () => {
     const run = (registry: Registry.Registry, name?: string) =>
       EffectEx.runPromise(Effect.result(McpServer.loadSkillByName(registry, name)));
 
@@ -346,7 +346,7 @@ describe('McpServer', () => {
     });
 
     // With no per-operation tool descriptions left to carry skill pointers, a model that has not
-    // called findOperations yet needs a way to see what workflows exist at all.
+    // called queryOperations yet needs a way to see what workflows exist at all.
     test('no skill named lists them all, without instructions', async ({ expect }) => {
       const listing = successOf(await run(withSkills()));
       expect(listing.skills.map((entry) => entry.name)).to.deep.equal(['codeProject', 'database']);
@@ -403,7 +403,7 @@ describe('McpServer', () => {
         }),
       );
 
-      const { operations } = await EffectEx.runPromise(McpServer.find(registry, {}));
+      const { operations } = await EffectEx.runPromise(McpServer.queryOperations(registry, {}));
       expect(operations.map((row) => row.key)).to.deep.equal([KEY]);
       expect(operations[0].hints.mutation).to.equal('write');
 
@@ -429,7 +429,7 @@ describe('McpServer', () => {
         await EffectEx.runPromise(Effect.result(McpServer.loadSkillByName(registry, undefined))),
       );
       expect(listing.skills).to.have.length(0);
-      const { operations } = await EffectEx.runPromise(McpServer.find(registry, {}));
+      const { operations } = await EffectEx.runPromise(McpServer.queryOperations(registry, {}));
       expect(operations).to.have.length(0);
     });
   });

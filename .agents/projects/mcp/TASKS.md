@@ -17,14 +17,14 @@ reconnect) and gives plugin authors a surface with no edge at all. Fidelity cont
 changes what a model sees lives in the shared package or it is a bug.
 
 - [x] **`@dxos/mcp-server`** — the projection extracted out of `mcp-space-service/src/mcp/`:
-      annotated operations as tools, opted-in skills as prompts, `skillLoad`, name/collision
+      annotated operations as tools, opted-in skills as prompts, `loadSkill`, name/collision
       rules, ref widening, and the wire response passes. Hosts supply a `Gateway` (reach the
       registry, invoke an operation, name the session's spaces) and a transport; nothing else
       about the surface is theirs. 32 unit tests, including parity tests that fail if an
       annotation id drifts from the combinator that writes it.
 - [x] **`dx mcp serve`** — stdio host over the CLI's own plugin registry. Verified live against a
-      real MCP handshake: 22 tools (project/task/outline verbs + `skillLoad`, plus the ported
-      static toolkits), `codeProject` as a prompt, `skillLoad` returning the skill body and the
+      real MCP handshake: 22 tools (project/task/outline verbs + `loadSkill`, plus the ported
+      static toolkits), `codeProject` as a prompt, `loadSkill` returning the skill body and the
       identical text via `prompts/get`, ref parameters narrowed to their object shape, safety hints
       on every tool, and the shared server instructions on `initialize`.
 - [x] **Static toolkits ported to the CLI** (2026-08-14) — `whoami`/`listSpaces`, the object CRUD,
@@ -42,7 +42,7 @@ changes what a model sees lives in the shared package or it is a bug.
       package as the sole source of shape.
 - [ ] **Fidelity check in CI** — one test running the same registry fixture through both hosts
       (edge worker + `dx mcp serve`), asserting identical `tools/list`, `prompts/list` and
-      `skillLoad`. The contract enforced, not documented.
+      `loadSkill`. The contract enforced, not documented.
 - [ ] **Static tool descriptors shared** (do this first) — the two hosts' `Tool.make` blocks are
       byte-identical; only the handlers genuinely differ. Moving the descriptors into the package
       deletes every existing copy and makes an unannotated tool impossible, with no dependency on
@@ -204,7 +204,7 @@ changes what a model sees lives in the shared package or it is a bug.
 
 Direction from the 2026-08-19 review: the skill definition is the unit of projection, not the
 operation. A host provides skill definitions; each opted-in skill becomes a prompt, and the
-operations its `tools` list names become the tools. The `skillLoad` pointer in a tool description
+operations its `tools` list names become the tools. The `loadSkill` pointer in a tool description
 derives from membership (the SEP-2640 shape) instead of the hand-maintained `mcpTool({ skill })`
 field, so a skill and its tools cannot drift — which also closes the audit's "`Skill.tools` unused
 by the projection" gap by construction. `Operation.mcpTool` keeps only per-operation metadata
@@ -229,7 +229,7 @@ field goes.
       for operations declaring `Database.Service`
       (`@dxos/echo/Database/Service` on the wire, drift-pinned in projection.test) — the
       parameter's presence tells the agent which calls are space-addressed. SEP-2640 comment on
-      `SkillLoad` updated to the current draft.
+      `LoadSkill` updated to the current draft.
 - [x] **Plugins** — `CodeProjectSkill.operations` lists the eleven project/task/outline verbs
       (plugin-projects → plugin-tasks was already a real dependency; `skill-keys.ts` died with the
       `skill:` fields); `DatabaseSkill` sets `mcpPrompt: true`. **Found on the way:** plugin-space's
@@ -375,20 +375,20 @@ requiresSpace, hints: { mutation, idempotent } }, wireSchema }`: `parameters` (d
 
 Follow-ups from the 2026-08-19 audit (none block PR #12616):
 
-- [ ] **`skillLoad` listing mode** (audit G2) — the model discovers a skill only via a tool
-      pointer or by failing a `skillLoad` whose error lists names; a pure-workflow skill referenced
+- [ ] **`loadSkill` listing mode** (audit G2) — the model discovers a skill only via a tool
+      pointer or by failing a `loadSkill` whose error lists names; a pure-workflow skill referenced
       by no projected tool is invisible. Make `skill` optional: omitted → return the listing
       (`name`, `description`, `key` per skill). One tool, two modes, pre-aligned with SEP-2640's
       `skills/list`/`skills/get` split. Mention the listing mode in `SERVER_INSTRUCTIONS` in one
       clause — stay under the 2KB truncation.
-- [ ] **SEP-2640 tracking** (audit G3) — the draft has drifted from the shape the `SkillLoad`
+- [ ] **SEP-2640 tracking** (audit G3) — the draft has drifted from the shape the `LoadSkill`
       comment cited: skills are now `skill://` _resources_ with `skills/list` / `skills/get`
       methods, markdown + YAML frontmatter, optional resource manifests (SHA-256 digests) and
       dependency declarations; the single load tool is the _client's_ affordance. Additive path
       when it settles: declare the extension capability (Effect's `McpServer` forwards
       `serverInfo.extensions`), serve `skills/list`/`skills/get` and `skill://<name>/SKILL.md` off
       the existing `projectSkills` output (`SkillRecord` maps 1:1 onto the frontmatter), keep
-      `skillLoad` as the polyfill indefinitely. Do not build the manifest/asset part until the PR
+      `loadSkill` as the polyfill indefinitely. Do not build the manifest/asset part until the PR
       settles. The stale Server.ts comment is fixed in the Milestone 8 projection work.
 - [ ] **`code-project-skill.md` fs fallback** (audit G5) — the space-binding gate reads
       `.agents/projects/space.yml`, silently inapplicable on an fs-less client (claude.ai
@@ -406,7 +406,7 @@ small fixed tool surface instead of one tool per operation, so the tool list sto
 model's context. The model _finds_ operations through a generic discovery tool and _calls_ them
 through a generic invoke tool; per-operation schemas enter context only on demand. Skills stay the
 unit of governance (only operations named by an opted-in skill's `tools` list are discoverable or
-invocable), and `skillLoad` stays. Branch `claude/operation-tool-projection-rykf3p`, PR #12692.
+invocable), and `loadSkill` stays. Branch `claude/operation-tool-projection-rykf3p`, PR #12692.
 Plan approved by the user 2026-08-20 on all four questions as recommended: replace the per-tool
 projection outright (no mode toggle), one `invokeOperation` rather than a read/write split, keep
 projecting skills as prompts, retire the CLI's static `listOperations` in the same PR. Design and
@@ -415,7 +415,7 @@ the three things that stopped being load-bearing: [DESIGN.md](./DESIGN.md) §1.0
 **Measured: `dx mcp serve` advertises 7 tools where it advertised 27** — 4 host statics plus the
 three below — and the count no longer grows with the registry.
 
-- [x] `findOperations` — optional `query` (all whitespace-separated terms must match key, name or
+- [x] `queryOperations` — optional `query` (all whitespace-separated terms must match key, name or
       description, case-insensitive), `skill`, and `keys`; compact rows by default (key, name,
       description, owning skills, requiresSpace, mutation/idempotent); full input/output JSON
       Schema only for a `keys` lookup, which also wins over the other filters. Read-only,
@@ -425,11 +425,11 @@ three below — and the count no longer grows with the registry.
       stringified-ref tolerance) and a failure names the `keys` lookup that returns the schema;
       space resolution is the unchanged `resolveId` / declared-`spaceId` / `hintFromInput` ladder;
       dispatch, ref qualification and non-object output wrapping are unchanged.
-- [x] `skillLoad` listing mode (closes audit G2) — `skill` is optional; omitted returns every
+- [x] `loadSkill` listing mode (closes audit G2) — `skill` is optional; omitted returns every
       skill (name, key, description) with no instructions. Load mode returns the single matched
       skill in the same `skills` array plus `instructions`, so there is one output shape rather
       than two optional halves.
-- [x] SERVER_INSTRUCTIONS rewritten around the find → skillLoad → invoke loop, still under the 2KB
+- [x] SERVER_INSTRUCTIONS rewritten around the find → loadSkill → invoke loop, still under the 2KB
       truncation. Pinned by a wire test, since nothing else tells a model the verbs are behind two
       tools rather than being tools.
 - [x] `McpServer.layer` / `fromSkills` serve the generic surface; `toolsLayer`, `makeTool`, the
@@ -439,19 +439,19 @@ three below — and the count no longer grows with the registry.
       advertised per-operation schemas, and nothing advertises one any more. The decode-side
       `tolerateStringifiedRefs` stays: a model writing `input` by hand from a ref declaration that
       carries no `type: object` may still send the envelope as a JSON string.
-- [x] CLI host: static `listOperations` retired (subsumed by `findOperations`, which filters and
+- [x] CLI host: static `listOperations` retired (subsumed by `queryOperations`, which filters and
       serves schemas as well); `whoami`, `listSpaces`, `listPlugins`, `listTypes` kept.
 - [x] Tests green: mcp-server 65 (catalog 9, projection 19, wire 7, server 30) and the CLI's live
       stdio session 9/9 over a real MCP handshake — fixed tool list, catalog reaching the registry
       (project/task verbs + plugin-space's object CRUD), a `keys` lookup returning a real schema,
-      an unknown key failing with a pointer to `findOperations`, and the skill listing.
+      an unknown key failing with a pointer to `queryOperations`, and the skill listing.
 - [x] **Second round (user, 2026-08-21) — the backend is echo's registry.** Projection/catalog
       abstractions deleted (`projection.ts`, `catalog.ts`, `McpRegistry` wrapper and its
       `OperationRecord`/`SkillRecord` wire types); the surface queries `Registry.Service` directly
       and hosts supply only `McpServer.Host` (`invoke` + `spaceIds`). Registry text filters
       implemented in echo (`Filter.text` evaluates in memory on the registry path only —
       `MatchEntityOptions.textSearch`; DB executors unchanged, vector stays index-only), so
-      `findOperations`' `query` runs through the query DSL rather than a custom matcher. Handlers
+      `queryOperations`' `query` runs through the query DSL rather than a custom matcher. Handlers
       query live — an operation registered after startup is findable without a rebuild (prompts
       still capture at layer build; effect's `McpServer` has no removal). `fromSkills` keeps the
       test/embedded path (own `makeRegistry` + live-definition `Host`); real hosts wire the
@@ -479,7 +479,7 @@ three below — and the count no longer grows with the registry.
       permission friction bites, the answer is the read/write split deferred at question 2, not a
       per-operation tool.
 - [ ] Follow-up: an advertised ref parameter is a bare `$id: '/schemas/echo/ref'` declaration in
-      the JSON Schema `findOperations` hands back, so the envelope shape is stated only in
+      the JSON Schema `queryOperations` hands back, so the envelope shape is stated only in
       SERVER_INSTRUCTIONS. Fixing ECHO's serialization to declare `type: 'object'` (the standing
       TODO now in `internal/input.ts`, which inherited it from the deleted `projection.ts`) would
       make the schema self-describing and retire the widening.
@@ -565,7 +565,7 @@ reads as though disabling does not exist. DESIGN §2.3.
       trusted-publisher-and-explicit-enable, or a worker boundary (which would also solve reload).
       The install/enable boundary above makes the cheap end a real consent step, but bounds
       nothing after enable.
-      **Same question for third-party instruction text** (audit G4): `skillLoad` returns text the
+      **Same question for third-party instruction text** (audit G4): `loadSkill` returns text the
       server instructions tell the model to follow, and `Skill` is an ECHO type a collaborator
       could edit in a space. Today projection is registry-only (`Gateway.listSkills` → registry),
       which is what makes it safe — but nothing states or tests that invariant. State it in

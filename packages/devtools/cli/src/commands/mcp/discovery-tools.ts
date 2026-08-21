@@ -55,7 +55,7 @@ export const ListTypes = Tool.make('listTypes', {
   .annotate(Tool.Readonly, true)
   .annotate(Tool.Destructive, false);
 
-/** `listOperations` is absent because `findOperations` lists the same registry, with filters and schemas. */
+/** `listOperations` is absent because `queryOperations` lists the same registry, with filters and schemas. */
 export const DiscoveryToolkit = Toolkit.make(ListPlugins, ListTypes);
 
 export const discoveryHandlers = (server: LocalServer) =>

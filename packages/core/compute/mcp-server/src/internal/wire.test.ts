@@ -28,7 +28,7 @@ describe('Wire', () => {
   });
 
   describe('decorateInitialize', () => {
-    test('the shared identity is merged and the instructions state the skillLoad convention', ({ expect }) => {
+    test('the shared identity is merged and the instructions state the loadSkill convention', ({ expect }) => {
       const message: any = { result: { serverInfo: { name: 'DXOS', version: '0.1.0' } } };
       expect(Wire.decorateInitialize(message)).to.be.true;
       expect(message.result.serverInfo).to.deep.equal({
@@ -37,7 +37,7 @@ describe('Wire', () => {
         title: Identity.identity.title,
         websiteUrl: Identity.identity.websiteUrl,
       });
-      expect(message.result.instructions).to.include('skillLoad');
+      expect(message.result.instructions).to.include('loadSkill');
     });
 
     // The instructions are the one server text a client loads before any tool is chosen, so they
@@ -46,7 +46,7 @@ describe('Wire', () => {
     test('the instructions state the find-then-invoke loop', ({ expect }) => {
       const message: any = { result: { serverInfo: { name: 'DXOS' } } };
       Wire.decorateInitialize(message);
-      expect(message.result.instructions).to.include('findOperations');
+      expect(message.result.instructions).to.include('queryOperations');
       expect(message.result.instructions).to.include('invokeOperation');
     });
 
