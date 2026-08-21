@@ -82,7 +82,7 @@ describe('inbox research project template', () => {
     expect(routineInstructions?.objects?.map((ref) => ref.target?.id)).toEqual([project.id]);
     const routineSkills = routineInstructions?.skills.map((ref) => ref.uri.toString()) ?? [];
     expect(routineSkills).toContain(Skill.registryURI('org.dxos.skill.table').toString());
-    expect(routineSkills).toContain(Skill.registryURI('org.dxos.skill.project').toString());
+    expect(routineSkills).toContain(Skill.registryURI('org.dxos.plugin.projects.skill.project').toString());
 
     // Feed trigger on the mailbox's feed, disabled until the user opts in, message as input.
     expect(routine!.triggers).toHaveLength(1);

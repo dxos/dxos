@@ -42,6 +42,8 @@ describe('operation serialization', () => {
     );
 
     expect(annotated).toEqual({
+      artifactAdd: 'write',
+      artifactList: 'none',
       projectCreate: 'write',
       projectGet: 'none',
       projectList: 'none',

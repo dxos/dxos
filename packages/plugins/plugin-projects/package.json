@@ -114,10 +114,10 @@
       "types": "./dist/types/src/operations/ProjectOperationHandlerSet.d.ts",
       "import": "./dist/lib/ProjectOperationHandlerSet.mjs"
     },
-    "./CodeProjectSkill": {
-      "source": "./src/skills/CodeProjectSkill.ts",
-      "types": "./dist/types/src/skills/CodeProjectSkill.d.ts",
-      "import": "./dist/lib/CodeProjectSkill.mjs"
+    "./ProjectSkill": {
+      "source": "./src/skills/ProjectSkill.ts",
+      "types": "./dist/types/src/skills/ProjectSkill.d.ts",
+      "import": "./dist/lib/ProjectSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -23,7 +23,7 @@ import { scaffoldProject } from './scaffold';
  * them — the `SkillsAnnotation` idiom.
  */
 const PROJECT_SKILL_KEYS = ['org.dxos.skill.inbox', 'org.dxos.skill.table'] as const;
-const ROUTINE_SKILL_KEYS = ['org.dxos.skill.table', 'org.dxos.skill.project'] as const;
+const ROUTINE_SKILL_KEYS = ['org.dxos.skill.table', 'org.dxos.plugin.projects.skill.project'] as const;
 
 /** Steers every chat opened in the project's context; the user edits it in the project article. */
 const PROJECT_INSTRUCTIONS = trim`

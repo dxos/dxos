@@ -23,8 +23,8 @@ const PROJECT_SKILL_KEYS = [
   'org.dxos.skill.markdown',
 ] as const;
 
-/** The starter routine additionally files its outputs into the project (`org.dxos.skill.project`). */
-const ROUTINE_SKILL_KEYS = [...PROJECT_SKILL_KEYS, 'org.dxos.skill.project'] as const;
+/** The starter routine additionally files its outputs into the project. */
+const ROUTINE_SKILL_KEYS = [...PROJECT_SKILL_KEYS, 'org.dxos.plugin.projects.skill.project'] as const;
 
 const PROJECT_INSTRUCTIONS = trim`
   This project researches the senders of the mailbox bound into its context.

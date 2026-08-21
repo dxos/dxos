@@ -19,7 +19,7 @@ import { dxBin } from '../../testing';
  */
 
 /** The one skill the CLI's registry opts in as a prompt; both halves of the round trip name it. */
-const SKILL = 'codeProject';
+const SKILL = 'project';
 
 const REQUESTS = [
   {
@@ -198,7 +198,7 @@ describe('dx mcp serve', () => {
   test('serves the same skill through loadSkill and prompts/get', ({ expect }) => {
     const loaded = JSON.parse(responses.get(4)!.result.content[0].text);
     expect(loaded.skills[0].name).to.equal(SKILL);
-    expect(loaded.skills[0].key).to.equal('org.dxos.plugin.projects.skill.codeProject');
+    expect(loaded.skills[0].key).to.equal('org.dxos.plugin.projects.skill.project');
     expect(loaded.instructions).to.be.a('string').and.to.have.length.greaterThan(0);
 
     const messages: { role: string; content: { type: string; text: string } }[] = responses.get(5)!.result.messages;

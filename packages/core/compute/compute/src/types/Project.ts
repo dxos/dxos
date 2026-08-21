@@ -50,8 +50,8 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
     // Only the project skill: filing created objects into `artifacts` is what a project-scoped
     // session structurally needs; artifact-type skills are enabled on demand. Plain dotted key, so
-    // the type does not depend on the plugin that owns the skill.
-    Skill.SkillsAnnotation.set(['org.dxos.skill.project']),
+    // the type does not depend on the plugin that owns it.
+    Skill.SkillsAnnotation.set(['org.dxos.plugin.projects.skill.project']),
   ),
 ) {}
 

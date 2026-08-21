@@ -108,7 +108,7 @@ export const LoadSkill = Tool.make('loadSkill', {
     skill: Schema.optional(
       Schema.String.annotate({
         description:
-          "Skill name as given in a queryOperations row or the prompt listing (e.g. 'codeProject'). " +
+          "Skill name as given in a queryOperations row or the prompt listing (e.g. 'project'). " +
           'Omit to list the available skills instead of loading one.',
       }),
     ),
@@ -158,7 +158,7 @@ export const QueryOperations = Tool.make('queryOperations', {
       }),
     ),
     skill: Schema.optional(
-      Schema.String.annotate({ description: "Only operations belonging to this skill (e.g. 'codeProject')." }),
+      Schema.String.annotate({ description: "Only operations belonging to this skill (e.g. 'project')." }),
     ),
     keys: Schema.optional(
       Schema.Array(Schema.String).annotate({
