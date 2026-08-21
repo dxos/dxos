@@ -61,7 +61,7 @@ export type InvokeRequest = {
 export type HostShape = {
   readonly invoke: (request: InvokeRequest) => Effect.Effect<unknown, HostError>;
   /**
-   * Spaces this session may address; the first is the fallback when a call omits `spaceId`.
+   * Spaces this session may address. No member is a default: a call that names none is refused.
    * Omitted is unrestricted; empty is a host that enumerated and found none, refusing every call.
    */
   readonly spaceIds?: readonly string[];
@@ -335,6 +335,29 @@ export const queryOperations = (
     ),
   );
 
+/** Re-encodes the arguments through the operation's own codec, so the handler sees its wire form. */
+const encodeInput = (
+  record: Operation.PersistentOperation,
+  arguments_: Record<string, unknown>,
+  operationKey: string,
+): Effect.Effect<unknown, ToolFailure> => {
+  const codec = inputInternal.codec(record);
+  if (codec == null) {
+    return Effect.succeed(arguments_);
+  }
+
+  return Schema.decodeUnknownEffect(codec.decode)(arguments_).pipe(
+    Effect.flatMap(Schema.encodeUnknownEffect(codec.encode)),
+    Effect.mapError((error) =>
+      failure(
+        'invalid_request',
+        `${operationKey} input did not match its schema: ${String(error)}. Call queryOperations ` +
+          `with keys: ['${operationKey}'] for the schema it expects.`,
+      ),
+    ),
+  );
+};
+
 /**
  * Dispatches one `invokeOperation` call: validate the input, resolve the space, invoke, qualify refs.
  *
@@ -347,77 +370,56 @@ export const queryOperations = (
 export const invoke = (
   registry: Registry.Registry,
   host: HostShape,
-  { key, input, spaceId }: { key: string; input?: Record<string, unknown>; spaceId?: string },
+  { key, input, spaceId }: { key: string; input?: Record<string, unknown>; spaceId?: SpaceId },
 ): Effect.Effect<Record<string, unknown>, ToolFailure> =>
   catchCollision(
-    viewInternal.mcpSkills(registry).pipe(
-      Effect.flatMap((skills) => {
-        const record = viewInternal.lookup(registry, key);
-        const operationKey = record != null ? viewInternal.nsid(Operation.getKey(record) ?? '') : undefined;
-        // Governance is keyed by the derived tool name, the form a skill's `tools` list carries; the
-        // operation is still invoked by key below.
-        const governedName = record != null ? viewInternal.toolNameOf(record) : undefined;
-        // Skills are the unit of governance: an operation in the registry but named by no opted-in
-        // skill is exactly as uninvocable as one that does not exist.
-        if (
-          record == null ||
-          operationKey == null ||
-          governedName == null ||
-          !viewInternal.ownersOf(skills).has(governedName)
-        ) {
-          return Effect.fail(
-            failure(
-              'invalid_request',
-              `Unknown operation: '${key}'. Call queryOperations to list the operations this server can run.`,
-            ),
-          );
-        }
-
-        const arguments_ = input ?? {};
-        const codec = inputInternal.codec(record);
-        const wireInput =
-          codec != null
-            ? Schema.decodeUnknownEffect(codec.decode)(arguments_).pipe(
-                Effect.flatMap(Schema.encodeUnknownEffect(codec.encode)),
-                Effect.mapError((error) =>
-                  failure(
-                    'invalid_request',
-                    `${operationKey} input did not match its schema: ${String(error)}. Call queryOperations ` +
-                      `with keys: ['${operationKey}'] for the schema it expects.`,
-                  ),
-                ),
-              )
-            : Effect.succeed<unknown>(arguments_);
-
-        // An operation that declares `spaceId` in its own input states its target there; that value
-        // is as much a statement of the call's space as the ambient parameter.
-        const declared = inputInternal.declaresSpaceId(record) ? arguments_.spaceId : undefined;
-        return wireInput.pipe(
-          // The space is resolved after encoding, because the wire form is where a reference
-          // argument states which space it belongs to.
-          Effect.flatMap((wire) =>
-            spaceInternal
-              .resolveId(
-                host.spaceIds,
-                spaceId ?? (typeof declared === 'string' ? declared : undefined) ?? spaceInternal.hintFromInput(wire),
-              )
-              .pipe(
-                Effect.flatMap((resolvedSpaceId) =>
-                  host.invoke({ key: operationKey, input: wire, spaceId: resolvedSpaceId }).pipe(
-                    Effect.mapError((error) => failure('operation_failed', `${operationKey} failed: ${error.message}`)),
-                    Effect.map((output) => spaceInternal.qualifyRefs(output, resolvedSpaceId)),
-                  ),
-                ),
-              ),
-          ),
-          Effect.map((output) =>
-            output !== null && typeof output === 'object' && !Array.isArray(output)
-              ? (output as Record<string, unknown>)
-              : { output },
+    Effect.gen(function* () {
+      const skills = yield* viewInternal.mcpSkills(registry);
+      const record = viewInternal.lookup(registry, key);
+      const operationKey = record != null ? viewInternal.nsid(Operation.getKey(record) ?? '') : undefined;
+      // Governance is keyed by the derived tool name, the form a skill's `tools` list carries; the
+      // operation is still invoked by key below.
+      const governedName = record != null ? viewInternal.toolNameOf(record) : undefined;
+      // Skills are the unit of governance: an operation in the registry but named by no opted-in
+      // skill is exactly as uninvocable as one that does not exist.
+      if (
+        record == null ||
+        operationKey == null ||
+        governedName == null ||
+        !viewInternal.ownersOf(skills).has(governedName)
+      ) {
+        return yield* Effect.fail(
+          failure(
+            'invalid_request',
+            `Unknown operation: '${key}'. Call queryOperations to list the operations this server can run.`,
           ),
         );
-      }),
-    ),
+      }
+
+      // Encoded before the space is resolved, because the wire form is where a reference argument
+      // states which space it belongs to.
+      const arguments_ = input ?? {};
+      const wire = yield* encodeInput(record, arguments_, operationKey);
+
+      // Only what names a space counts; there is no session default to fall back to.
+      const declared = inputInternal.declaresSpaceId(record) ? arguments_.spaceId : undefined;
+      const named =
+        spaceId ?? (typeof declared === 'string' ? declared : undefined) ?? spaceInternal.hintFromInput(wire);
+      const resolvedSpaceId = yield* spaceInternal.resolveId(host.spaceIds, named, {
+        required: viewInternal.requiresSpace(record),
+      });
+
+      const output = yield* host
+        .invoke({ key: operationKey, input: wire, spaceId: resolvedSpaceId })
+        .pipe(Effect.mapError((error) => failure('operation_failed', `${operationKey} failed: ${error.message}`)));
+
+      // Nothing to qualify against when the call named no space: a space-less result carries no
+      // same-space references.
+      const result = resolvedSpaceId === undefined ? output : spaceInternal.qualifyRefs(output, resolvedSpaceId);
+      return result !== null && typeof result === 'object' && !Array.isArray(result)
+        ? (result as Record<string, unknown>)
+        : { output: result };
+    }),
   );
 
 //
@@ -658,7 +660,7 @@ export type Options = {
    */
   skills: readonly Skill.Definition[];
   /**
-   * Spaces the session may address; the first is the fallback when a call omits `spaceId`.
+   * Spaces the session may address. No member is a default: a call that names none is refused.
    * Omitted (the default) means unrestricted — the invoker's own database context decides.
    */
   spaceIds?: readonly string[];

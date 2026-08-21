@@ -769,7 +769,8 @@ export const QueryTypes = Operation.make({
     key: makeKey('queryTypes'),
     name: 'Query Types',
     description:
-      'List the types registered in the space. Returns a summary per type — typename, kind, name, ' +
+      'List the types objects in this space can have — those persisted in the space and those the ' +
+      'host itself registers. Returns a summary per type — typename, version, kind, name, ' +
       'description, field names — or, for the typenames named, their full JSON Schema. Read the ' +
       "summary first and ask for a type's schema only when about to create or update one of it.",
     icon: 'ph--list--regular',

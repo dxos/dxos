@@ -176,6 +176,13 @@ export type OperationView = {
   };
 };
 
+/**
+ * Whether the operation acts on a space, which is what makes `invokeOperation`'s `spaceId`
+ * load-bearing: `Database.Service` materializes from it and from nothing else.
+ */
+export const requiresSpace = (record: Operation.PersistentOperation): boolean =>
+  (record.services ?? []).includes(Database.Service.key);
+
 export const operationView = (
   record: Operation.PersistentOperation,
   owners: Map<string, string[]>,
@@ -191,7 +198,7 @@ export const operationView = (
     name: record.name.length > 0 ? record.name : undefined,
     description: record.description,
     skills: (toolName == null ? undefined : owners.get(toolName)) ?? [],
-    requiresSpace: (record.services ?? []).includes(Database.Service.key),
+    requiresSpace: requiresSpace(record),
     hints: {
       mutation: mutationOf(record),
       idempotent: idempotent === true ? true : undefined,
