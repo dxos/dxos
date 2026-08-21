@@ -6,6 +6,9 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
+  # Selected by the `#model-fixture:test` CI target; without it the two model-fixture
+  # suites in this package are never picked up.
+  - model-fixture
 tasks:
   check-module-structure:
     # Fail when the ./plugin export pulls in `@dxos/react-ui`. The plugin entry must
