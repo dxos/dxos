@@ -13,7 +13,7 @@ import { useObject } from '@dxos/echo-react';
 import { type Identity } from '@dxos/halo';
 import { getSpace } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
-import { Selection, ViewState } from '@dxos/react-ui-attention';
+import { Selection, ViewState } from '@dxos/react-ui-attention/types';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {

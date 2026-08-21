@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { layoutStateAccess } from './state-access';
 

@@ -7,7 +7,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Node from '@dxos/app-graph/Node';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { Position } from '@dxos/util';
 
