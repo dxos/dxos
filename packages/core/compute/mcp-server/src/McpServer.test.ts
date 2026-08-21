@@ -82,8 +82,8 @@ const testHost = (
   invocations: Invocation[];
 } => {
   const { output = { ok: true }, fail: shouldFail } = options;
-  // Read through `in` rather than a destructuring default, which cannot tell an explicit
-  // `undefined` (unrestricted) from an omitted key.
+  // Read through `in`, since a destructuring default cannot tell an explicit `undefined` from an
+  // omitted key.
   const spaceIds = 'spaceIds' in options ? options.spaceIds : [SPACE_A];
   const invocations: Invocation[] = [];
   return {
@@ -181,9 +181,7 @@ describe('McpServer', () => {
       expect(invocations[0].input).to.deep.equal({ spaceId: SPACE_B });
     });
 
-    // A host that enumerated its addressable spaces and found none has stated a restriction, not
-    // the absence of one — treating empty as unrestricted would invert its filter exactly when it
-    // excluded everything.
+    // A host that enumerated and found none has stated a restriction, not the absence of one.
     test('an empty space context refuses every call, while an absent one is unrestricted', async ({ expect }) => {
       const none = runInvoke({ input: { title: 'x' }, spaceId: SPACE_B }, { host: testHost({ spaceIds: [] }) });
       expect(failureOf(await none.result).code).to.equal('space_not_in_context');
@@ -419,8 +417,7 @@ describe('McpServer', () => {
       expect(invocations).to.deep.equal([{ key: KEY, input: { title: 'Ship' }, spaceId: SPACE_A }]);
     });
 
-    // Instructions that did not survive the wire would otherwise be an empty-string skill the
-    // projection drops later, taking its operations off the surface with no attributable cause.
+    // Otherwise an empty-string skill reaches the projection, which drops it with no attributable cause.
     test('a skill whose instructions did not survive the wire is refused at hydration', async ({ expect }) => {
       const registry = await EffectEx.runPromise(
         McpServer.hydrateRegistry({

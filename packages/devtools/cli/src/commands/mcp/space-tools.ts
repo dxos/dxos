@@ -69,7 +69,7 @@ export const SpaceToolkit = Toolkit.make(WhoAmI, ListSpaces);
  * cannot be read is still listed, with whatever did resolve.
  */
 const describeSpaces = (server: LocalServer): readonly SpaceInfo[] => {
-  // Keyed as plain strings: the host reports its space ids in the wire shape, unbranded.
+  // Keyed as plain strings, since the host reports its space ids unbranded.
   const byId = new Map<string, Space>(server.client.spaces.get().map((space) => [space.id, space]));
   return (server.host.spaceIds ?? []).map((spaceId) => {
     const space = byId.get(spaceId);

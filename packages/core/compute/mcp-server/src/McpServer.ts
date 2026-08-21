@@ -62,8 +62,7 @@ export type HostShape = {
   readonly invoke: (request: InvokeRequest) => Effect.Effect<unknown, HostError>;
   /**
    * Spaces this session may address; the first is the fallback when a call omits `spaceId`.
-   * Omitted means unrestricted (the invoker's own database context decides); an empty array means
-   * the host enumerated its addressable spaces and found none, so every call is refused.
+   * Omitted is unrestricted; empty is a host that enumerated and found none, refusing every call.
    */
   readonly spaceIds?: readonly string[];
 };
@@ -613,9 +612,8 @@ export const hydrateRegistry = ({
   Effect.promise(async () => {
     const records = await Promise.all(operations.map((json) => Obj.fromJSON(json)));
     const built = skills.flatMap((record) => {
-      // A skill whose instructions did not survive the wire would be dropped later by the
-      // projection, silently taking its operations off the surface with it. Refused here instead,
-      // at the boundary where the omission happened and can be attributed to the host's marshalling.
+      // Refused here rather than dropped later by the projection, so the omission is attributable
+      // to the host's marshalling.
       if (record.mcpPrompt && (record.instructions == null || record.instructions.length === 0)) {
         log.error('hydrated skill has no instructions; it and its operations are not served', {
           key: record.key,

@@ -25,11 +25,8 @@ export const idParameter = Schema.optional(Schema.String).annotate({
 /**
  * Resolves the target space for a tool call against the session's space context.
  *
- * An `undefined` context is unrestricted — the host states no opinion and any valid `spaceId`
- * passes. An *empty* one is the opposite: the host enumerated the addressable spaces and found
- * none, so nothing is addressable. Overloading empty as unrestricted would invert a host's filter
- * exactly when it excluded everything — a profile whose only spaces are HALO and settings would
- * accept either by explicit id.
+ * Empty is distinguished from omitted because overloading empty as unrestricted would invert a
+ * host's filter exactly when it excluded everything.
  */
 export const resolveId = (
   sessionSpaceIds: readonly string[] | undefined,
