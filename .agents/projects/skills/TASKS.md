@@ -166,9 +166,26 @@ Designs in `DESIGN.md`.
       does not work here in any placement. `agentic-review` already has a
       `no-casts` rule that finds these reliably. Whether a mechanical check
       changes what gets written is the only untested lever left.
-- [ ] **Re-run Experiment 6 against a clean fixture.** The fixture carried six
-      casts in three functions. Does the rule work when the surrounding file is
-      clean, i.e. is local style the whole effect?
+- [x] **Experiment 7: the factoring question, finally answered.** Calibrated
+      first by sweeping cast density to find real separation, then ran three arms
+      at that point. **Result: no, not for this rule.** E 8/8 violated, A
+      (CLAUDE.md) 3/10, B (factored skill) 8/8 with the skill firing **0/8**.
+      E vs A p=0.004 (the rule works), A vs B p=0.004 (factoring breaks it),
+      E vs B p=1.0 (B is indistinguishable from nothing). Writeup in
+      `experiments/factoring-out-calibrated/`.
+- [x] **Experiment 6 corrected.** Its "no measurable effect" conclusion held only
+      at density 3, the saturated point. The sweep shows dose-response: 17%
+      violation at density 1, 30% at density 2, 100% at density 3, against a
+      100% control throughout.
+- [ ] **Apply the factoring rule of thumb.** Rules relevant _from the task
+      statement_ (moving code, opening a PR, writing a test) factor out safely.
+      Rules relevant only _mid-edit_ (casts, non-null, swallowed errors, any
+      "when tempted to..." rule) cannot, because no load-a-skill decision ever
+      occurs. Audit the Non-negotiables against that split before moving any.
+- [ ] **Test the hook mechanism for mid-edit rules.** Arm B varied only the
+      description. A `PreToolUse` hook that injects the rule on Edit/Write events
+      is a different mechanism and is the remaining candidate for factoring out
+      mid-edit rules without losing them.
 - [ ] **Audit the other Non-negotiables the same way.** Two are now measured:
       the no-shim rule has no failing baseline (Experiment 5), and the no-cast
       rule has a failing baseline the rule does not fix (Experiment 6). The rest

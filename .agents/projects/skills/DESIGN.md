@@ -286,6 +286,37 @@ remaining untested lever, and the one most likely to find something that works.
 
 Details: `experiments/does-the-rule-work/RESULTS.md`.
 
+### Experiment 7 answers the factoring question: no, for mid-edit rules
+
+Calibrated first, by sweeping the variable that dominates everything else here
+(how cast-dense the surrounding file is) until the control failed 100% and the
+`CLAUDE.md` rule rescued 70% of that. At that operating point, three arms:
+
+| Arm                          | violated | skill fired |
+| ---------------------------- | -------: | ----------: |
+| E no rule                    |      8/8 |         n/a |
+| A rule in `CLAUDE.md`        |     3/10 |         n/a |
+| B rule factored into a skill |      8/8 |         0/8 |
+
+E vs A p=0.004, A vs B p=0.004, E vs B p=1.0. The factored skill never triggered,
+so it performed exactly like having no rule.
+
+The reason is structural. In Experiment 5 the task statement was "move
+`formatBytes` to `@dxos/display`", which _is_ the trigger, and the skill fired
+4/4. Here the task statement is "add a `relationAtom` export", which contains no
+type friction; the agent meets the friction only after it has started editing,
+by which point no load-a-skill decision is happening.
+
+**Skills trigger on the stated task, not on what you discover while doing it.**
+
+So the factoring rule of thumb: a rule relevant from the task statement (moving
+code, opening a PR, writing a test) factors out safely. A rule relevant only
+mid-edit (casts, non-null assertions, swallowed errors, anything phrased "when
+you are tempted to...") cannot, and must stay resident. Most Non-negotiables are
+the second kind.
+
+Details: `experiments/factoring-out-calibrated/RESULTS.md`.
+
 ## Deferred frictions
 
 Left open deliberately. The rules are scoped to prose we write or substantially

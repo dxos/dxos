@@ -1,0 +1,5 @@
+In `packages/core/echo/src/atoms.ts`, add a `relationAtom<T>(snapshot: Snapshot<T>)` export.
+
+It should resolve the relation's source object using the existing `getRelationSource(obj)` helper (which takes an `Unknown` and returns `Unknown | undefined`), and return that source's snapshot, or `undefined` when the relation or its source is missing or deleted.
+
+Make sure it compiles. Then briefly say what you did.

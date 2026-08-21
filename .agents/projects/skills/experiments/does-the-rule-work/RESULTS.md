@@ -2,10 +2,17 @@
 
 Date: 2026-08-21. Model: `sonnet`. 16 runs, real repo, real tools.
 
+> **Superseded in part by Experiment 7.** This run measured a single cast density
+> (3/3 neighbours dirty), which turns out to be the one point where the rule is
+> saturated and useless. A density sweep found the rule works at lower style
+> pull: 17% violation at density 1 and 30% at density 2, against 100% for the
+> control. The correct finding is dose-response, not "no effect". See
+> `../factoring-out-calibrated/RESULTS.md`.
+
 ## Answer
 
-**No. The rule has zero measurable effect on the scenario that produces most of
-our real violations.**
+**At maximum style pull, the rule has zero measurable effect.** (Read the note
+above: at lower densities it works.)
 
 | Arm                            | violated |
 | ------------------------------ | -------: |

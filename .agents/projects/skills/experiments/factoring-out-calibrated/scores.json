@@ -1,0 +1,268 @@
+[
+  {
+    "density": 1,
+    "arm": "A",
+    "rep": "1",
+    "violated": false,
+    "skill_fired": false
+  },
+  {
+    "density": 1,
+    "arm": "A",
+    "rep": "2",
+    "violated": false,
+    "skill_fired": false
+  },
+  {
+    "density": 1,
+    "arm": "A",
+    "rep": "3",
+    "violated": false,
+    "skill_fired": false
+  },
+  {
+    "density": 1,
+    "arm": "A",
+    "rep": "4",
+    "violated": false,
+    "skill_fired": false
+  },
+  {
+    "density": 1,
+    "arm": "A",
+    "rep": "5",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 1,
+    "arm": "A",
+    "rep": "6",
+    "violated": false,
+    "skill_fired": false
+  },
+  {
+    "density": 1,
+    "arm": "E",
+    "rep": "1",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 1,
+    "arm": "E",
+    "rep": "2",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 1,
+    "arm": "E",
+    "rep": "3",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 1,
+    "arm": "E",
+    "rep": "4",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 1,
+    "arm": "E",
+    "rep": "5",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 1,
+    "arm": "E",
+    "rep": "6",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "A",
+    "rep": "1",
+    "violated": false,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "A",
+    "rep": "10",
+    "violated": false,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "A",
+    "rep": "2",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "A",
+    "rep": "3",
+    "violated": false,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "A",
+    "rep": "4",
+    "violated": false,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "A",
+    "rep": "5",
+    "violated": false,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "A",
+    "rep": "6",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "A",
+    "rep": "7",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "A",
+    "rep": "8",
+    "violated": false,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "A",
+    "rep": "9",
+    "violated": false,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "B",
+    "rep": "1",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "B",
+    "rep": "2",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "B",
+    "rep": "3",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "B",
+    "rep": "4",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "B",
+    "rep": "5",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "B",
+    "rep": "6",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "B",
+    "rep": "7",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "B",
+    "rep": "8",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "E",
+    "rep": "1",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "E",
+    "rep": "2",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "E",
+    "rep": "3",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "E",
+    "rep": "4",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "E",
+    "rep": "5",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "E",
+    "rep": "6",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "E",
+    "rep": "7",
+    "violated": true,
+    "skill_fired": false
+  },
+  {
+    "density": 2,
+    "arm": "E",
+    "rep": "8",
+    "violated": true,
+    "skill_fired": false
+  }
+]
