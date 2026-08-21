@@ -152,13 +152,10 @@ export const make: {
 
 /**
  * Annotation opting a skill into MCP projection: it becomes a prompt and is loadable by name
- * through the server's `skillLoad` tool.
+ * through the server's `loadSkill` tool.
  *
- * Opt-in, for the same reason {@link Operation.McpToolAnnotation} is. A skill written for an
- * in-app chat runtime assumes tools that an MCP client does not have — instructing an external
- * agent to call an operation that was never projected, or to enable another skill through
- * machinery MCP does not expose. Only the author can judge whether the workflow still holds when
- * the available surface is the MCP one, so the projection asks rather than assumes. Absent ⇒ the
+ * Opt-in: a skill written for an in-app chat runtime may assume tools an MCP client does not have,
+ * and only the author can judge whether the workflow still holds on the MCP surface. Absent ⇒ the
  * skill stays internal to hosts that resolve skills directly.
  *
  * Rides in the object's meta rather than on `Definition`, so it survives into a persisted skill —
@@ -206,8 +203,8 @@ export const toolDefinitions = ({
   tools = [],
   operations = [],
 }: {
-  tools?: string[];
-  operations?: Operation.Definition.Any[];
+  tools?: readonly string[];
+  operations?: readonly Operation.Definition.Any[];
 }) => [...operations.map((op) => ToolId.make(DXN.getName(op.meta.key))), ...tools.map((tool) => ToolId.make(tool))];
 
 /**
@@ -216,6 +213,12 @@ export const toolDefinitions = ({
 export type Definition = {
   key: DXN.Name<string>;
   make: () => Skill;
+  /**
+   * Operation definitions behind the skill's `tools` list, for hosts that serve the skill without
+   * a registry to resolve ToolIds against (see mcp-server `McpServer.fromSkills`). Absent ⇒ the skill is
+   * only served through a registry-backed host.
+   */
+  operations?: readonly Operation.Definition.Any[];
 };
 
 /**

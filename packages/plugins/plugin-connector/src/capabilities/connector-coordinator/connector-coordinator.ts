@@ -34,13 +34,7 @@ import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnava
 import * as SyncTemplate from '../../SyncTemplate';
 import { autoSyncConnection } from './auto-sync';
 import { createSingleCursor } from './create-single-cursor';
-import {
-  decodeOAuthMessageData,
-  initiateOAuthFlow,
-  isOAuthShapedMessage,
-  openOAuthPopupWindow,
-  openOAuthRedirectWindow,
-} from './oauth';
+import { beginOAuthFlow, decodeOAuthMessageData, isOAuthShapedMessage } from './oauth';
 import { deletePendingSnapshot, readPendingSnapshot, writePendingSnapshot } from './pending-snapshot';
 import { reconcileCursors } from './reconcile-cursors';
 
@@ -446,7 +440,7 @@ export default Capability.makeModule(
         const edge = getEdgeClient();
         edgeOrigin = new URL(edge.baseUrl).origin;
 
-        const { authUrl } = yield* initiateOAuthFlow(edge, spaceId, oauth, token.id, loginHint).pipe(
+        yield* beginOAuthFlow(edge, spaceId, oauth, token.id, loginHint).pipe(
           Effect.tapError(() =>
             Effect.sync(() => {
               pending.delete(token.id);
@@ -454,12 +448,6 @@ export default Capability.makeModule(
             }),
           ),
         );
-
-        if (oauth.useRedirectFlow) {
-          yield* openOAuthRedirectWindow(authUrl);
-        } else {
-          yield* openOAuthPopupWindow(authUrl);
-        }
 
         return { kind: 'oauth-started', draftConnectionId: connection.id } as const;
       }).pipe(Effect.mapError(mapCoordinatorError));
@@ -501,7 +489,7 @@ export default Capability.makeModule(
         const edge = getEdgeClient();
         edgeOrigin = new URL(edge.baseUrl).origin;
 
-        const { authUrl } = yield* initiateOAuthFlow(edge, spaceId, oauth, accessToken.id, loginHint).pipe(
+        yield* beginOAuthFlow(edge, spaceId, oauth, accessToken.id, loginHint).pipe(
           Effect.tapError(() =>
             Effect.sync(() => {
               pending.delete(accessToken.id);
@@ -509,12 +497,6 @@ export default Capability.makeModule(
             }),
           ),
         );
-
-        if (oauth.useRedirectFlow) {
-          yield* openOAuthRedirectWindow(authUrl);
-        } else {
-          yield* openOAuthPopupWindow(authUrl);
-        }
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));
 
     const finalizeRedirectFlow: ConnectorCoordination.ConnectorCoordinator['finalizeRedirectFlow'] = ({

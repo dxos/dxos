@@ -17,17 +17,23 @@ import React, {
 } from 'react';
 
 import * as Account from '@dxos/app-toolkit/Account';
+import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
+import { log } from '@dxos/log';
 import { Button, DropdownMenu, Flex, Icon, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../../meta';
+import { OAUTH_RECOVERY_REDIRECT_PATH } from '../../../operations/shared';
 import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } from './types';
 
 const supportsPasskeys =
   (navigator.credentials && 'create' in navigator.credentials) || NativePasskey.supportsNativePasskeys();
+
+/** Ceiling on the OAuth wait, since a user who closes the provider's page reports nothing. */
+const OAUTH_PENDING_TIMEOUT = 5 * 60 * 1000;
 
 /** OAuth provider backing the "Atmosphere account" option (atproto / Bluesky). */
 const ATMOSPHERE_PROVIDER = 'atproto';
@@ -117,7 +123,52 @@ export const Welcome = ({
   // atproto handle (e.g. `you.bsky.social`) forwarded to the OAuth flow as a login hint.
   const [atmosphereHandle, setAtmosphereHandle] = useState('');
   const [pending, setPending] = useState(false);
+  // Separate from `pending`, whose call resolves as soon as the provider's page opens — this stays
+  // set for the part the user actually waits on.
+  const [oauthPending, setOauthPending] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
+  // OAuth leaves the app, so without this the other methods stay live and a competing attempt can
+  // start against a flow already in progress.
+  const formPending = pending || oauthPending;
+
+  // Nothing reports success: the flow completes by navigating this screen away.
+  useEffect(() => {
+    if (error) {
+      setOauthPending(false);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (!oauthPending) {
+      return;
+    }
+    const timeout = setTimeout(() => setOauthPending(false), OAUTH_PENDING_TIMEOUT);
+    return () => clearTimeout(timeout);
+  }, [oauthPending]);
+
+  // On desktop the wait ends when the callback lands, whatever it says: finalizing navigates this
+  // screen away, and a failure is reported only as a toast, which would otherwise leave the form
+  // locked until the ceiling above. The browser path reloads instead, so it never gets here.
+  useEffect(() => {
+    if (!oauthPending || !NativeOAuth.supportsNativeOAuth()) {
+      return;
+    }
+    let unlisten: (() => void) | undefined;
+    let stopped = false;
+    void NativeOAuth.listenForNativeOAuthCallback(OAUTH_RECOVERY_REDIRECT_PATH, () => setOauthPending(false)).then(
+      (fn) => {
+        unlisten = fn;
+        if (stopped) {
+          fn();
+        }
+      },
+      (error) => log.warn('failed to listen for OAuth callback', { error }),
+    );
+    return () => {
+      stopped = true;
+      unlisten?.();
+    };
+  }, [oauthPending]);
 
   const focusPrimaryField = useCallback(() => {
     if (state !== WelcomeState.INIT) {
@@ -242,38 +293,28 @@ export const Welcome = ({
     }
   }, [waitlistEmail, onJoinWaitlist]);
 
-  // Wrap the OAuth flows so `pending` is set for their full duration. The OAuth popup flow is async
-  // and `pending` drives `submitDisabled`, so this keeps the Continue button disabled while the
-  // popup is open — preventing a second click from opening a duplicate popup (which clobbers the
-  // first and trips "OAuth popup closed before completing").
+  // Held past the call's own resolution, which lands when the provider's page opens rather than
+  // when the user is done with it.
   const handleCreateAccountWithOAuth = useCallback(
     async (args: { code: string; provider: string; loginHint?: string }) => {
-      if (pending) {
+      if (formPending) {
         return;
       }
-      setPending(true);
-      try {
-        await onCreateAccountWithOAuth?.(args);
-      } finally {
-        setPending(false);
-      }
+      setOauthPending(true);
+      await onCreateAccountWithOAuth?.(args);
     },
-    [pending, onCreateAccountWithOAuth],
+    [formPending, onCreateAccountWithOAuth],
   );
 
   const handleRecoverWithOAuth = useCallback(
     async (provider: string, loginHint?: string) => {
-      if (pending) {
+      if (formPending) {
         return;
       }
-      setPending(true);
-      try {
-        await onRecoverWithOAuth?.(provider, loginHint);
-      } finally {
-        setPending(false);
-      }
+      setOauthPending(true);
+      await onRecoverWithOAuth?.(provider, loginHint);
     },
-    [pending, onRecoverWithOAuth],
+    [formPending, onRecoverWithOAuth],
   );
 
   const handleCodeKeyDown = useCallback(
@@ -318,7 +359,8 @@ export const Welcome = ({
       setEmailValue={setEmail}
       emailRef={emailRef}
       error={error}
-      pending={pending}
+      pending={formPending}
+      oauthPending={oauthPending}
       onPasskey={onPasskey ? handlePasskey : undefined}
       onSendSignInLink={onEmailLogin ? handleSendSignInLink : undefined}
       onEmailKeyDown={handleEmailKeyDown}
@@ -389,7 +431,7 @@ export const Welcome = ({
                         onKeyDown: handleCodeKeyDown,
                       }}
                       submitLabel={t('continue-button.label')}
-                      submitDisabled={!Account.isValidAccessCodeFormat(code) || pending}
+                      submitDisabled={!Account.isValidAccessCodeFormat(code) || formPending}
                       onSubmit={handleValidateCode}
                       validation={codeError}
                     />
@@ -416,7 +458,7 @@ export const Welcome = ({
                         onKeyDown: handleWaitlistEmailKeyDown,
                       }}
                       submitLabel={t('waitlist-submit-button.label')}
-                      submitDisabled={!validEmail(waitlistEmail) || pending}
+                      submitDisabled={!validEmail(waitlistEmail) || formPending}
                       onSubmit={handleJoinWaitlist}
                     />
                     {codeSignupEnabled && (
@@ -442,7 +484,7 @@ export const Welcome = ({
                             onKeyDown: handleAuthEmailKeyDown,
                           }}
                           submitLabel={t('continue-button.label')}
-                          submitDisabled={!validEmail(email) || pending}
+                          submitDisabled={!validEmail(email) || formPending}
                           onSubmit={handleCreateAccount}
                           validation={signupEmailError}
                         />
@@ -462,7 +504,7 @@ export const Welcome = ({
                               value: atmosphereHandle,
                               onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
                               onKeyDown: (ev) => {
-                                if (ev.key === 'Enter' && atmosphereHandle && !pending) {
+                                if (ev.key === 'Enter' && atmosphereHandle && !formPending) {
                                   void handleCreateAccountWithOAuth({
                                     code,
                                     provider: ATMOSPHERE_PROVIDER,
@@ -471,8 +513,9 @@ export const Welcome = ({
                                 }
                               },
                             }}
-                            submitLabel={t('continue-button.label')}
+                            submitLabel={oauthPending ? t('oauth-pending.label') : t('continue-button.label')}
                             submitDisabled={!atmosphereHandle || pending}
+                            pending={oauthPending}
                             onSubmit={() =>
                               handleCreateAccountWithOAuth({
                                 code,
@@ -556,6 +599,8 @@ type LoginTabProps = {
   emailRef: React.Ref<HTMLInputElement>;
   error?: WelcomeError | null;
   pending: boolean;
+  /** An OAuth flow is waiting on the provider page, which the user completes outside this window. */
+  oauthPending: boolean;
   onPasskey?: () => unknown;
   onSendSignInLink?: () => void;
   onEmailKeyDown: (ev: KeyboardEvent<HTMLInputElement>) => void;
@@ -584,6 +629,7 @@ const LoginTab = ({
   emailRef,
   error,
   pending,
+  oauthPending,
   onPasskey,
   onSendSignInLink,
   onEmailKeyDown,
@@ -755,8 +801,9 @@ const LoginTab = ({
                 }
               },
             }}
-            submitLabel={t('continue-button.label')}
+            submitLabel={oauthPending ? t('oauth-pending.label') : t('continue-button.label')}
             submitDisabled={!atmosphereHandle || pending}
+            pending={oauthPending}
             onSubmit={() => onRecoverWithOAuth(ATMOSPHERE_PROVIDER, atmosphereHandle)}
             validation={error === 'oauth' ? t(errorMessageKeys.oauth) : null}
           />
@@ -819,6 +866,7 @@ const InlineForm = ({
   inputProps,
   submitLabel,
   submitDisabled,
+  pending,
   validation,
   onSubmit,
 }: {
@@ -828,6 +876,8 @@ const InlineForm = ({
   };
   submitLabel: string;
   submitDisabled?: boolean;
+  /** Waiting on a step the user takes elsewhere; the field is locked so its value still describes it. */
+  pending?: boolean;
   validation?: ReactNode;
   onSubmit: () => void;
 }) => {
@@ -837,6 +887,7 @@ const InlineForm = ({
       <div className='flex flex-col md:gap-1 flex-row gap-0 sm:items-stretch'>
         <Input.TextInput
           {...rest}
+          disabled={pending || rest.disabled}
           classNames={mx('bg-deck-surface flex-1 sm:rounded-r-none', inputClasses)}
           ref={ref}
         />

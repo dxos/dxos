@@ -16,9 +16,9 @@ tasks:
       # `ts-compile`, so they are not covered above; without their dist Vite's dep-scan aborts.
       - '#vendor:build'
       # Storybook resolves packages straight from source, so anything *generated* — assets, sprites,
-      # compiled shaders — is missing until its producer runs. Each such package exposes it as `prebuild`;
+      # compiled shaders — is missing until its producer runs. Each such producer tags its task `prebuild`;
       # depending on their `build` instead would drag in ts-vite-build's recursive `^:build`.
-      - '#storybook:prebuild'
+      - '#storybook:#prebuild'
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
@@ -43,7 +43,7 @@ tasks:
       - '#vendor:build'
       # See `bundle` — generated sources and static assets, which hang off each package's `build` and so
       # are absent in a fresh worktree.
-      - '#storybook:prebuild'
+      - '#storybook:#prebuild'
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
@@ -65,7 +65,7 @@ tasks:
       - '#ts-compile:build'
       - '#vendor:build'
       # See `bundle` — generated sources and static assets the tag deps above never produce.
-      - '#storybook:prebuild'
+      - '#storybook:#prebuild'
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
